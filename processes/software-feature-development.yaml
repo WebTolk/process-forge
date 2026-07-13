@@ -1,0 +1,164 @@
+schema_version: 1
+id: software-feature-development
+name: Software Feature Development
+version: 0.1.0
+status: active
+description: Govern a software feature from intake through release and evolution.
+required_capabilities:
+  - repository_read
+  - repository_write
+  - test_running
+  - review
+roles:
+  - id: orchestrator
+    title: Orchestrator
+    responsibility: Coordinates stages, assignments, and handoffs.
+  - id: developer
+    title: Developer
+    responsibility: Implements the approved change.
+  - id: reviewer
+    title: Reviewer
+    responsibility: Reviews behavior, risks, and evidence.
+stages:
+  - id: intake
+    title: Intake
+    description: Capture goal and scope.
+    required_inputs: []
+    produced_artifacts:
+      - brief
+      - scope
+    required_role: orchestrator
+    required_capabilities:
+      - process_coordination
+    allowed_tools: []
+    entry_gates: []
+    exit_gates:
+      - scope-recorded
+    handoff_required: true
+  - id: architecture
+    title: Architecture
+    description: Define design and implementation plan.
+    required_inputs:
+      - scope
+    produced_artifacts:
+      - decision-log
+      - implementation-plan
+    required_role: orchestrator
+    required_capabilities:
+      - architecture
+    allowed_tools:
+      - repository_symbol_analysis
+    entry_gates:
+      - scope-recorded
+    exit_gates:
+      - plan-approved
+    handoff_required: true
+  - id: implementation
+    title: Implementation
+    description: Make bounded changes.
+    required_inputs:
+      - implementation-plan
+    produced_artifacts:
+      - changed-files
+      - change-summary
+    required_role: developer
+    required_capabilities:
+      - repository_write
+    allowed_tools:
+      - editor
+      - test_runner
+    entry_gates:
+      - plan-approved
+    exit_gates:
+      - changes-recorded
+    handoff_required: true
+  - id: assurance
+    title: Assurance
+    description: Verify behavior and risks.
+    required_inputs:
+      - change-summary
+    produced_artifacts:
+      - review-findings
+      - test-report
+    required_role: reviewer
+    required_capabilities:
+      - review
+      - test_running
+    allowed_tools:
+      - test_runner
+      - validator
+    entry_gates:
+      - changes-recorded
+    exit_gates:
+      - assurance-complete
+    handoff_required: true
+artifact_definitions:
+  - id: brief
+    title: Brief
+    owner_role: orchestrator
+    template: artifact-template
+    lifecycle: [draft, ready_for_review, approved]
+  - id: scope
+    title: Scope
+    owner_role: orchestrator
+    template: artifact-template
+    lifecycle: [draft, ready_for_review, approved]
+  - id: implementation-plan
+    title: Implementation Plan
+    owner_role: orchestrator
+    template: artifact-template
+    lifecycle: [draft, ready_for_review, approved]
+  - id: change-summary
+    title: Change Summary
+    owner_role: developer
+    template: artifact-template
+    lifecycle: [draft, ready_for_review, approved]
+  - id: test-report
+    title: Test Report
+    owner_role: reviewer
+    template: validation-report-template
+    lifecycle: [draft, ready_for_review, approved]
+gates:
+  - id: scope-recorded
+    description: Goal, exclusions, and allowed files are explicit.
+    blocking: true
+  - id: plan-approved
+    description: Architecture and implementation plan are ready.
+    blocking: true
+  - id: changes-recorded
+    description: Changed files and summary are recorded.
+    blocking: true
+  - id: assurance-complete
+    description: Review and tests are complete.
+    blocking: true
+required_packages:
+  - process-forge-core
+  - process-forge-software-development
+required_templates:
+  - assignment-template
+  - artifact-template
+  - review-template
+  - handoff-template
+allowed_tools:
+  - repository_symbol_analysis
+  - test_runner
+  - validator
+forbidden_actions:
+  - edit_outside_assignment_scope
+  - skip_required_review
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - scope
+    - implementation-plan
+    - test-report
+  safe_changes:
+    - add_optional_artifact
+    - add_non_blocking_gate
+  blocked_changes:
+    - remove_existing_artifact_definition
+    - change_approved_artifact_meaning
+  requires_approval:
+    - add_required_gate
+    - change_exit_criteria

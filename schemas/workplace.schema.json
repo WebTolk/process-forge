@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/workplace.schema.json",
+  "title": "Workplace Manifest",
+  "type": "object",
+  "required": ["schema_version", "workplace", "paths", "policies"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "workplace": {
+      "type": "object",
+      "required": ["id", "name", "type", "os"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["workstation", "server", "ci_host", "runner_machine", "agent_environment"] },
+        "os": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "paths": { "type": "object", "additionalProperties": { "type": "string" } },
+    "tools": { "type": "array", "items": { "$ref": "#/$defs/capabilityProvider" } },
+    "mcp_servers": { "type": "array", "items": { "$ref": "#/$defs/capabilityProvider" } },
+    "policies": { "type": "object" },
+    "locked_policies": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "capabilityProvider": {
+      "type": "object",
+      "required": ["id", "capability"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "capability": { "type": "string", "minLength": 1 },
+        "required": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

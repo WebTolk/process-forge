@@ -1,0 +1,19 @@
+schema_version: 1
+id: example-template
+version: 0.1.0
+source_package: process-forge-core
+type: artifact
+compatible_stages: []
+compatible_platforms:
+  - any
+placeholders:
+  - "<placeholder>"
+allowed_modifications:
+  - replace_placeholders
+forbidden_modifications:
+  - remove_required_sections_without_reason
+post_copy_instructions:
+  - Mark non-applicable sections as "Not applicable" with a reason.
+validation_rules:
+  - no_unresolved_required_placeholders
+usage_recording_policy: record_template_id_version_source_target_and_changes

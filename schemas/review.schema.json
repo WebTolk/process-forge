@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/review.schema.json",
+  "title": "Review",
+  "type": "object",
+  "required": ["id", "reviewed_object", "reviewer", "criteria", "result", "findings", "timestamp"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "reviewed_object": { "type": "string" },
+    "reviewer": { "type": "string" },
+    "criteria": { "type": "array", "items": { "type": "string" } },
+    "result": { "enum": ["pass", "pass_with_conditions", "warn", "fail", "skipped"] },
+    "findings": { "type": "array", "items": { "type": "string" } },
+    "blocking_issues": { "type": "array", "items": { "type": "string" } },
+    "evidence": { "type": "array", "items": { "type": "string" } },
+    "recommendation": { "type": "string" },
+    "timestamp": { "type": "string" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+  },
+  "additionalProperties": true
+}

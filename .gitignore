@@ -1,0 +1,14 @@
+.idea/
+.serena/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+*.pyc
+*.pyo
+*.tmp
+*.bak
+.env
+.env.*
+!.env.example

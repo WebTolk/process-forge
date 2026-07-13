@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/assignment.schema.json",
+  "title": "Assignment",
+  "type": "object",
+  "required": ["id", "title", "role", "process", "stage", "goal", "allowed_files", "forbidden_files", "required_outputs", "status"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "title": { "type": "string" },
+    "role": { "type": "string" },
+    "process": {
+      "type": "object",
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "version": { "type": "string" }
+      }
+    },
+    "stage": { "$ref": "#/$defs/id" },
+    "goal": { "type": "string" },
+    "input_artifacts": { "type": "array", "items": { "type": "string" } },
+    "allowed_files": { "type": "array", "items": { "type": "string" } },
+    "forbidden_files": { "type": "array", "items": { "type": "string" } },
+    "required_outputs": { "type": "array", "items": { "type": "string" } },
+    "required_artifacts": { "type": "array", "items": { "type": "string" } },
+    "required_reviews": { "type": "array", "items": { "type": "string" } },
+    "allowed_templates": { "type": "array", "items": { "type": "string" } },
+    "allowed_tools": { "type": "array", "items": { "type": "string" } },
+    "quality_checklist": { "type": "array", "items": { "type": "string" } },
+    "completion_criteria": { "type": "array", "items": { "type": "string" } },
+    "log_file": { "type": "string" },
+    "handoff_requirements": { "type": "array", "items": { "type": "string" } },
+    "status": { "enum": ["draft", "ready", "in_progress", "blocked", "completed", "cancelled"] }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+  },
+  "additionalProperties": true
+}

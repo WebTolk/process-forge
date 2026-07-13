@@ -1,0 +1,25 @@
+schema_version: 1
+process_forge:
+  version: 0.1.0
+  mode: file_only
+  runner_required: false
+  backend_required: false
+project:
+  id: example-testing-project
+  name: Example Testing Project
+paths:
+  assignments: assignments
+  artifacts: artifacts
+  logs: logs
+processes:
+  - id: testing
+    path: processes/testing.yaml
+packages:
+  - id: process-forge-core
+    path: packages/process-forge-core.yaml
+  - id: process-forge-testing
+    path: packages/process-forge-testing.yaml
+policies:
+  one_writer_per_file_scope: true
+  approved_artifacts_are_protected: true
+  execution_context_is_immutable: true

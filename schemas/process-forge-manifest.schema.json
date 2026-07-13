@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/process-forge-manifest.schema.json",
+  "title": "ProcessForge Manifest",
+  "type": "object",
+  "required": ["schema_version", "process_forge", "project", "paths", "policies"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "process_forge": {
+      "type": "object",
+      "required": ["version", "mode", "runner_required", "backend_required"],
+      "properties": {
+        "version": { "type": "string" },
+        "mode": { "enum": ["file_only", "local_supervisor", "managed"] },
+        "runner_required": { "type": "boolean" },
+        "backend_required": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "project": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "paths": { "type": "object", "additionalProperties": { "type": "string" } },
+    "merge": { "type": "object" },
+    "policies": { "type": "object" },
+    "processes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/idPathRef" }
+    },
+    "packages": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/idPathRef" }
+    },
+    "validation": { "type": "object" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "idPathRef": {
+      "type": "object",
+      "required": ["id", "path"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "path": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

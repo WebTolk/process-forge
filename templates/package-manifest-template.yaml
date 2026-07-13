@@ -1,0 +1,13 @@
+schema_version: 1
+id: example-package
+name: Example Package
+version: 0.1.0
+kind: process
+scope: example
+description: Replace with package purpose.
+dependencies: []
+rules: []
+templates: []
+tools: []
+mcp_servers: []
+validation: []

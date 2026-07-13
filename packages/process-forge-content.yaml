@@ -1,0 +1,23 @@
+schema_version: 1
+id: process-forge-content
+name: ProcessForge Content
+version: 0.1.0
+kind: direction
+scope: content-work
+description: Optional package for content planning, drafting, review, and publication handoff.
+dependencies:
+  - process-forge-core
+rules:
+  - id: brief-before-draft
+    text: Content work starts from an explicit brief.
+templates:
+  - artifact-template
+  - review-template
+  - handoff-template
+tools:
+  - id: text-editor
+    capability: writing
+mcp_servers: []
+validation:
+  - id: publication-readiness-review
+    capability: editorial_review

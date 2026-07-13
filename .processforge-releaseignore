@@ -1,0 +1,10 @@
+processforge_master_prompt.md
+private-notes/
+logs/
+reviews/
+handoffs/
+artifacts/
+contexts/
+assignments/
+.idea/
+.serena/

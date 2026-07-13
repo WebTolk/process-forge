@@ -1,0 +1,29 @@
+schema_version: 1
+context:
+  id: example-context
+  created_at: "<timestamp>"
+  immutable: true
+assignment:
+  id: example-assignment
+  path: assignments/example-assignment.md
+process:
+  id: example-process
+  version: 0.1.0
+stage: intake
+role: orchestrator
+task_input: []
+sources:
+  - path: process-forge.yaml
+    checksum: pending
+packages: []
+templates: []
+selected_tools: []
+selected_mcp: []
+allowed_actions:
+  - read_allowed_files
+  - write_allowed_files
+forbidden_actions:
+  - edit_forbidden_files
+quality_gates: []
+checksums:
+  process_manifest: pending

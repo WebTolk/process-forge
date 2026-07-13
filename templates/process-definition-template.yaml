@@ -1,0 +1,57 @@
+schema_version: 1
+id: example-process
+name: Example Process
+version: 0.1.0
+status: draft
+description: Replace with a concise process description.
+required_capabilities: []
+roles:
+  - id: orchestrator
+    title: Orchestrator
+    responsibility: Coordinates the process.
+stages:
+  - id: intake
+    title: Intake
+    description: Capture goal and scope.
+    required_inputs: []
+    produced_artifacts:
+      - brief
+      - scope
+    required_role: orchestrator
+    required_capabilities:
+      - process_coordination
+    allowed_tools: []
+    entry_gates: []
+    exit_gates:
+      - scope-recorded
+    handoff_required: true
+artifact_definitions:
+  - id: brief
+    title: Brief
+    owner_role: orchestrator
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  - id: scope-recorded
+    description: Scope and exclusions are explicit.
+    blocking: true
+required_packages: []
+required_templates:
+  - artifact-template
+allowed_tools: []
+forbidden_actions:
+  - edit_outside_assignment_scope
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - brief
+  safe_changes:
+    - add_optional_artifact
+  blocked_changes:
+    - remove_existing_artifact_definition
+  requires_approval:
+    - add_required_gate

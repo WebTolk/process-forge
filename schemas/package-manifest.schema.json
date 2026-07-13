@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/package-manifest.schema.json",
+  "title": "Knowledge Package Manifest",
+  "type": "object",
+  "required": ["schema_version", "id", "name", "version", "kind", "scope"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "kind": { "enum": ["core", "organization", "direction", "specialization", "platform", "toolchain", "project", "process", "task", "agent_profile"] },
+    "scope": { "type": "string" },
+    "description": { "type": "string" },
+    "dependencies": { "type": "array", "items": { "type": "string" } },
+    "rules": { "type": "array", "items": { "type": "object" } },
+    "templates": { "type": "array", "items": { "type": "string" } },
+    "tools": { "type": "array", "items": { "type": "object" } },
+    "mcp_servers": { "type": "array", "items": { "type": "object" } },
+    "validation": { "type": "array", "items": { "type": "object" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+  },
+  "additionalProperties": true
+}

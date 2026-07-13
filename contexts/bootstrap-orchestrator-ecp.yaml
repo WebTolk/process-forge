@@ -1,0 +1,43 @@
+schema_version: 1
+context:
+  id: bootstrap-orchestrator-ecp
+  created_at: "2026-07-13T10:45:00+04:00"
+  immutable: true
+assignment:
+  id: pf-bootstrap-orchestrator
+  path: assignments/orchestrator-bootstrap.md
+process:
+  id: knowledge-package-improvement
+  version: 0.1.0
+stage: integrate
+role: orchestrator
+task_input:
+  - processforge_master_prompt.md
+sources:
+  - path: process-forge.yaml
+    checksum: pending
+packages:
+  - id: process-forge-core
+    version: 0.1.0
+templates:
+  - id: assignment-template
+    version: 0.1.0
+  - id: artifact-template
+    version: 0.1.0
+selected_tools:
+  - repository_symbol_analysis
+  - filesystem_editing
+  - validator
+selected_mcp:
+  - repository_symbol_analysis
+allowed_actions:
+  - create_bootstrap_files
+  - run_validation
+forbidden_actions:
+  - require_backend
+  - require_runner
+quality_gates:
+  - public-cleanliness
+  - schema-structure-check
+checksums:
+  process_manifest: pending

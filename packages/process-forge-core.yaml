@@ -1,0 +1,28 @@
+schema_version: 1
+id: process-forge-core
+name: ProcessForge Core
+version: 0.1.0
+kind: core
+scope: all-processes
+description: Core file-first rules, statuses, templates, and validation expectations.
+dependencies: []
+rules:
+  - id: one-writer-per-file-scope
+    text: One file scope has one responsible writer.
+  - id: immutable-execution-context
+    text: Execution Context Packages are immutable after creation.
+  - id: approved-artifacts-protected
+    text: Approved artifacts require explicit upgrade or replacement.
+templates:
+  - assignment-template
+  - artifact-template
+  - handoff-template
+  - review-template
+  - adr-template
+tools:
+  - id: validator
+    capability: validation
+mcp_servers: []
+validation:
+  - id: public-cleanliness
+    capability: public_file_review

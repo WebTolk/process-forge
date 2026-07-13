@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/log.schema.json",
+  "title": "Log Entry",
+  "type": "object",
+  "required": ["timestamp", "actor", "role", "task", "files_changed", "artifacts_changed", "tools_used", "status"],
+  "properties": {
+    "timestamp": { "type": "string" },
+    "actor": { "type": "string" },
+    "role": { "type": "string" },
+    "task": { "type": "string" },
+    "files_changed": { "type": "array", "items": { "type": "string" } },
+    "artifacts_changed": { "type": "array", "items": { "type": "string" } },
+    "templates_used": { "type": "array", "items": { "type": "string" } },
+    "tools_used": { "type": "array", "items": { "type": "string" } },
+    "decisions": { "type": "array", "items": { "type": "string" } },
+    "risks": { "type": "array", "items": { "type": "string" } },
+    "next_steps": { "type": "array", "items": { "type": "string" } },
+    "status": { "type": "string" }
+  },
+  "additionalProperties": true
+}

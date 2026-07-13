@@ -1,0 +1,22 @@
+schema_version: 1
+id: process-forge-knowledge-governance
+name: ProcessForge Knowledge Governance
+version: 0.1.0
+kind: direction
+scope: process-and-package-improvement
+description: Optional package for evolving reusable process knowledge safely.
+dependencies:
+  - process-forge-core
+rules:
+  - id: proposal-before-rule-change
+    text: Reusable rules require proposal, compatibility review, and approval.
+templates:
+  - process-upgrade-assessment-template
+  - review-template
+tools:
+  - id: validator
+    capability: validation
+mcp_servers: []
+validation:
+  - id: compatibility-review
+    capability: process_governance

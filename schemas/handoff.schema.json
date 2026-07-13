@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/handoff.schema.json",
+  "title": "Handoff",
+  "type": "object",
+  "required": ["id", "from", "to", "objective", "current_status", "input_artifacts", "changed_files", "next_steps"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "from": { "type": "string" },
+    "to": { "type": "string" },
+    "objective": { "type": "string" },
+    "current_status": { "type": "string" },
+    "input_artifacts": { "type": "array", "items": { "type": "string" } },
+    "changed_files": { "type": "array", "items": { "type": "string" } },
+    "used_templates": { "type": "array", "items": { "type": "string" } },
+    "known_issues": { "type": "array", "items": { "type": "string" } },
+    "risks": { "type": "array", "items": { "type": "string" } },
+    "next_steps": { "type": "array", "items": { "type": "string" } },
+    "forbidden_assumptions": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+  },
+  "additionalProperties": true
+}

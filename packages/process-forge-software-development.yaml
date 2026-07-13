@@ -1,0 +1,23 @@
+schema_version: 1
+id: process-forge-software-development
+name: ProcessForge Software Development
+version: 0.1.0
+kind: direction
+scope: software-work
+description: Optional software development package for feature and defect workflows.
+dependencies:
+  - process-forge-core
+rules:
+  - id: verify-behavior
+    text: Software changes require behavior evidence appropriate to risk.
+templates:
+  - validation-report-template
+tools:
+  - id: test-runner
+    capability: test_running
+  - id: repository-symbol-analysis
+    capability: repository_symbol_analysis
+mcp_servers: []
+validation:
+  - id: changed-files-recorded
+    capability: change_tracking

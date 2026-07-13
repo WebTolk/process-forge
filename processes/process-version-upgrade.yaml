@@ -1,0 +1,88 @@
+schema_version: 1
+id: process-version-upgrade
+name: Process Version Upgrade
+version: 0.1.0
+status: active
+description: Assess and perform safe upgrades between process versions.
+required_capabilities:
+  - process_governance
+  - artifact_review
+roles:
+  - id: assessor
+    title: Assessor
+    responsibility: Compares versions and existing artifacts.
+  - id: approver
+    title: Approver
+    responsibility: Decides whether upgrade may proceed.
+stages:
+  - id: compare
+    title: Compare Versions
+    description: Identify changed stages, gates, and artifacts.
+    required_inputs: []
+    produced_artifacts:
+      - upgrade-assessment
+    required_role: assessor
+    required_capabilities:
+      - process_governance
+    allowed_tools:
+      - validator
+    entry_gates: []
+    exit_gates:
+      - assessment-complete
+    handoff_required: true
+  - id: decide
+    title: Decide
+    description: Approve, migrate, or block the upgrade.
+    required_inputs:
+      - upgrade-assessment
+    produced_artifacts:
+      - upgrade-decision
+    required_role: approver
+    required_capabilities:
+      - artifact_review
+    allowed_tools: []
+    entry_gates:
+      - assessment-complete
+    exit_gates:
+      - decision-recorded
+    handoff_required: true
+artifact_definitions:
+  - id: upgrade-assessment
+    title: Upgrade Assessment
+    owner_role: assessor
+    template: process-upgrade-assessment-template
+    lifecycle: [draft, ready_for_review, approved]
+  - id: upgrade-decision
+    title: Upgrade Decision
+    owner_role: approver
+    template: artifact-template
+    lifecycle: [draft, ready_for_review, approved]
+gates:
+  - id: assessment-complete
+    description: Affected artifacts and gates are known.
+    blocking: true
+  - id: decision-recorded
+    description: Recommendation and approval state are recorded.
+    blocking: true
+required_packages:
+  - process-forge-core
+  - process-forge-knowledge-governance
+required_templates:
+  - process-upgrade-assessment-template
+  - artifact-template
+allowed_tools:
+  - validator
+forbidden_actions:
+  - upgrade_active_run_without_assessment
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - upgrade-assessment
+    - upgrade-decision
+  safe_changes:
+    - add_optional_assessment_field
+  blocked_changes:
+    - remove_blocking_condition_field
+  requires_approval:
+    - change_recommendation_statuses

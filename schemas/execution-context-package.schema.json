@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/execution-context-package.schema.json",
+  "title": "Execution Context Package",
+  "type": "object",
+  "required": ["schema_version", "context", "assignment", "process", "stage", "role", "checksums"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "context": {
+      "type": "object",
+      "required": ["id", "created_at", "immutable"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "created_at": { "type": "string" },
+        "immutable": { "const": true }
+      },
+      "additionalProperties": true
+    },
+    "assignment": { "type": "object" },
+    "process": { "type": "object" },
+    "stage": { "type": "string" },
+    "role": { "type": "string" },
+    "task_input": { "type": "array", "items": { "type": "string" } },
+    "sources": { "type": "array", "items": { "type": "object" } },
+    "packages": { "type": "array", "items": { "type": "object" } },
+    "templates": { "type": "array", "items": { "type": "object" } },
+    "selected_tools": { "type": "array", "items": { "type": "string" } },
+    "selected_mcp": { "type": "array", "items": { "type": "string" } },
+    "allowed_actions": { "type": "array", "items": { "type": "string" } },
+    "forbidden_actions": { "type": "array", "items": { "type": "string" } },
+    "quality_gates": { "type": "array", "items": { "type": "string" } },
+    "checksums": { "type": "object", "additionalProperties": { "type": "string" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+  },
+  "additionalProperties": true
+}

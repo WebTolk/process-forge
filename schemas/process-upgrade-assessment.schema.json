@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/process-upgrade-assessment.schema.json",
+  "title": "Process Upgrade Assessment",
+  "type": "object",
+  "required": ["id", "current_process_version", "target_process_version", "affected_artifacts", "blocking_conditions", "recommendation"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "current_process_version": { "type": "string" },
+    "target_process_version": { "type": "string" },
+    "affected_stages": { "type": "array", "items": { "type": "string" } },
+    "affected_artifacts": { "type": "array", "items": { "type": "string" } },
+    "preserved_artifacts": { "type": "array", "items": { "type": "string" } },
+    "artifacts_requiring_migration": { "type": "array", "items": { "type": "string" } },
+    "artifacts_requiring_revalidation": { "type": "array", "items": { "type": "string" } },
+    "gates_requiring_rerun": { "type": "array", "items": { "type": "string" } },
+    "blocking_conditions": { "type": "array", "items": { "type": "string" } },
+    "recommendation": { "enum": ["safe", "requires_approval", "requires_migration", "blocked"] },
+    "explanation": { "type": "string" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+  },
+  "additionalProperties": true
+}

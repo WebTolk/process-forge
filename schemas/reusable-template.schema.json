@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/reusable-template.schema.json",
+  "title": "Reusable Template Manifest",
+  "type": "object",
+  "required": ["schema_version", "id", "version", "source_package", "type"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "version": { "type": "string" },
+    "source_package": { "$ref": "#/$defs/id" },
+    "type": { "type": "string" },
+    "compatible_stages": { "type": "array", "items": { "type": "string" } },
+    "compatible_platforms": { "type": "array", "items": { "type": "string" } },
+    "placeholders": { "type": "array", "items": { "type": "string" } },
+    "allowed_modifications": { "type": "array", "items": { "type": "string" } },
+    "forbidden_modifications": { "type": "array", "items": { "type": "string" } },
+    "post_copy_instructions": { "type": "array", "items": { "type": "string" } },
+    "validation_rules": { "type": "array", "items": { "type": "string" } },
+    "usage_recording_policy": { "type": "string" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+  },
+  "additionalProperties": true
+}
