@@ -1,0 +1,17 @@
+schema_version: 1
+
+workplace:
+  manifest: "<absolute-path-to-workplace.yaml>"
+
+local:
+  project_root: "<absolute-path-to-project>"
+
+overrides:
+  package_roots: []
+  template_roots: []
+  tool_preferences: {}
+
+runtime:
+  mode: manual
+  queue: runtime/queue
+  events: runtime/events

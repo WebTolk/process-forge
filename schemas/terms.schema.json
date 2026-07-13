@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/terms.schema.json",
+  "title": "Terms Registry",
+  "type": "object",
+  "required": ["schema_version", "terms"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "terms": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["label", "definition"],
+        "properties": {
+          "label": { "type": "string" },
+          "aliases": { "type": "array", "items": { "type": "string" } },
+          "definition": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

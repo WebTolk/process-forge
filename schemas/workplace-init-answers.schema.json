@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/workplace-init-answers.schema.json",
+  "title": "Workplace Init Answers",
+  "type": "object",
+  "required": ["schema_version", "workplace", "paths"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "workplace": {
+      "type": "object",
+      "required": ["id", "name", "type", "os"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "os": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "paths": { "type": "object" },
+    "enabled_registries": { "type": "object" },
+    "policies": { "type": "object" }
+  },
+  "additionalProperties": true
+}

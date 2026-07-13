@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/project-init-answers.schema.json",
+  "title": "Project Init Answers",
+  "type": "object",
+  "required": ["schema_version", "project"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "project": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "mode": { "enum": ["greenfield", "brownfield", "auto"] }
+      },
+      "additionalProperties": true
+    },
+    "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "optional_capabilities": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

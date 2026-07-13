@@ -1,0 +1,236 @@
+schema_version: 1
+id: workplace-initialization
+name: Workplace Initialization
+version: 0.1.0
+status: active
+description: Initialize or update the machine-local ProcessForge workplace layer.
+required_capabilities:
+  - filesystem.write
+  - markdown.editing
+  - validation
+roles:
+  - id: orchestrator
+    title: Orchestrator
+    responsibility: Coordinates the initialization and safety checks.
+  - id: reviewer
+    title: Reviewer
+    responsibility: Reviews the proposal and doctor output.
+stages:
+  - id: intake
+    title: Intake
+    description: Capture root path and answers.
+    required_inputs: []
+    produced_artifacts:
+      - workplace-init-answers
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.read
+    allowed_tools:
+      - processforge-init
+    entry_gates: []
+    exit_gates:
+      - root-provided
+    handoff_required: true
+  - id: terms-setup
+    title: Terms Setup
+    description: Create or update terms aliases.
+    required_inputs:
+      - workplace-init-answers
+    produced_artifacts:
+      - terms-file
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - root-provided
+    exit_gates:
+      - terms-created
+    handoff_required: false
+  - id: registry-setup
+    title: Registry Setup
+    description: Create platform, knowledge, package, template, tool, and MCP registries.
+    required_inputs:
+      - workplace-init-answers
+    produced_artifacts:
+      - workplace-registries
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - terms-created
+    exit_gates:
+      - registries-created
+    handoff_required: false
+  - id: tool-discovery
+    title: Tool Discovery
+    description: Record configured tool providers from answers.
+    required_inputs:
+      - workplace-registries
+    produced_artifacts:
+      - tool-registry
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - registries-created
+    exit_gates:
+      - tools-recorded
+    handoff_required: false
+  - id: mcp-discovery
+    title: MCP Discovery
+    description: Record configured MCP providers from answers.
+    required_inputs:
+      - workplace-registries
+    produced_artifacts:
+      - mcp-registry
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - registries-created
+    exit_gates:
+      - mcp-recorded
+    handoff_required: false
+  - id: proposal
+    title: Proposal
+    description: Present the planned workplace changes.
+    required_inputs:
+      - workplace-init-answers
+    produced_artifacts:
+      - workplace-init-proposal
+    required_role: orchestrator
+    required_capabilities:
+      - reporting
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - root-provided
+    exit_gates:
+      - proposal-created
+    handoff_required: true
+  - id: review
+    title: Review
+    description: Review the proposed changes.
+    required_inputs:
+      - workplace-init-proposal
+    produced_artifacts:
+      - workplace-init-review
+    required_role: reviewer
+    required_capabilities:
+      - review
+    allowed_tools: []
+    entry_gates:
+      - proposal-created
+    exit_gates:
+      - review-recorded
+    handoff_required: true
+  - id: apply
+    title: Apply
+    description: Write workplace files.
+    required_inputs:
+      - workplace-init-review
+    produced_artifacts:
+      - workplace-files
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - review-recorded
+    exit_gates:
+      - workplace-files-written
+    handoff_required: true
+  - id: doctor
+    title: Doctor
+    description: Validate workplace setup.
+    required_inputs:
+      - workplace-files
+    produced_artifacts:
+      - workplace-doctor-report
+    required_role: orchestrator
+    required_capabilities:
+      - validation
+    allowed_tools:
+      - processforge-doctor
+    entry_gates:
+      - workplace-files-written
+    exit_gates:
+      - doctor-complete
+    handoff_required: true
+artifact_definitions:
+  - id: workplace-init-answers
+    title: Workplace Init Answers
+    owner_role: orchestrator
+    template: workplace-init.answers
+    lifecycle: [draft, ready_for_review, approved]
+  - id: workplace-init-proposal
+    title: Workplace Init Proposal
+    owner_role: orchestrator
+    template: artifact-template
+    lifecycle: [draft, ready_for_review, approved]
+  - id: workplace-doctor-report
+    title: Workplace Doctor Report
+    owner_role: orchestrator
+    template: validation-report-template
+    lifecycle: [draft, ready_for_review, approved]
+gates:
+  - id: root-provided
+    description: A workplace root was provided by the user.
+    blocking: true
+  - id: terms-created
+    description: Terms file exists or is planned.
+    blocking: true
+  - id: registries-created
+    description: Registry files exist or are planned.
+    blocking: true
+  - id: tools-recorded
+    description: Tool providers are recorded or explicitly empty.
+    blocking: false
+  - id: mcp-recorded
+    description: MCP providers are recorded or explicitly empty.
+    blocking: false
+  - id: proposal-created
+    description: Proposal-first output exists.
+    blocking: true
+  - id: review-recorded
+    description: Review or explicit approval exists.
+    blocking: true
+  - id: workplace-files-written
+    description: Files were written in apply mode.
+    blocking: true
+  - id: doctor-complete
+    description: Doctor result is recorded.
+    blocking: true
+required_packages:
+  - process-forge-core
+required_templates:
+  - workplace.yaml
+  - terms.yaml
+  - workplace-init.answers
+allowed_tools:
+  - processforge-init
+  - processforge-doctor
+forbidden_actions:
+  - invent_root_path
+  - store_secret_values
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - workplace-init-answers
+    - workplace-doctor-report
+  safe_changes:
+    - add_optional_registry
+  blocked_changes:
+    - store_secret_values
+  requires_approval:
+    - change_locked_policy

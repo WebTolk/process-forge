@@ -1,0 +1,43 @@
+schema_version: 1
+
+workplace:
+  id: "<workplace-id>"
+  name: "<human-readable-name>"
+  type: workstation
+  os: "<windows|linux|macos|server|ci>"
+  owner: null
+
+process_forge:
+  version_constraint: "^0.1"
+  supported_modes:
+    - file_only
+    - local_supervisor_ready
+
+paths:
+  root: "<workplace-root>"
+  terms: "terms.yaml"
+  registries: "registries"
+  cache: "cache"
+  runtime: "runtime"
+  logs: "logs"
+
+registries:
+  platforms: "registries/platforms.yaml"
+  knowledge_roots: "registries/knowledge-roots.yaml"
+  package_roots: "registries/package-roots.yaml"
+  templates: "registries/templates.yaml"
+  tools: "registries/tools.yaml"
+  mcp: "registries/mcp.yaml"
+
+policies:
+  prefer_project_overrides: true
+  require_explicit_override_for_locked_policies: true
+  shell_is_fallback: true
+  do_not_store_secret_values: true
+  require_public_cleanliness_check: true
+
+capability_resolution:
+  missing_required_capability: block
+  missing_optional_capability: warn
+  prefer_project_tool_over_global: true
+  allow_fallback_tools: true

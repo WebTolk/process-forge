@@ -11,6 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "examples", "tools"]
 PUBLIC_ROOT_FILES = ["README.md", "AGENTS.md", "process-forge.yaml", "LICENSE", "CHANGELOG.md"]
+SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
+SKIP_SUFFIXES = {".pyc", ".pyo"}
 
 INTERNAL_FLOW_MARKER = "." + "web" + "tolk"
 FORBIDDEN_LITERAL_PATTERNS = [
@@ -20,7 +22,6 @@ FORBIDDEN_LITERAL_PATTERNS = [
     "sec" + "ret=",
     "pass" + "word=",
     "api" + "_key",
-    "private" + "-notes",
     "scr" + "atch",
 ]
 
@@ -40,7 +41,13 @@ def public_files() -> list[Path]:
     for dirname in PUBLIC_DIRS:
         root = ROOT / dirname
         if root.is_dir():
-            files.extend(path for path in root.rglob("*") if path.is_file())
+            files.extend(
+                path
+                for path in root.rglob("*")
+                if path.is_file()
+                and not any(part in SKIP_DIRS for part in path.relative_to(root).parts)
+                and path.suffix not in SKIP_SUFFIXES
+            )
     return sorted(files, key=lambda path: path.relative_to(ROOT).as_posix())
 
 

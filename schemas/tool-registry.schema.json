@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/tool-registry.schema.json",
+  "title": "Tool Registry",
+  "type": "object",
+  "required": ["schema_version", "tools"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "tools": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tool" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$" },
+    "tool": {
+      "type": "object",
+      "required": ["id", "name", "capability", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "capability": { "type": "string" },
+        "scope": { "type": "string" },
+        "command": { "type": "string" },
+        "status": { "enum": ["configured", "optional", "missing", "disabled"] },
+        "healthcheck": { "type": "object" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

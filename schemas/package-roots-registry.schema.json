@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/package-roots-registry.schema.json",
+  "title": "Package Roots Registry",
+  "type": "object",
+  "required": ["schema_version", "package_roots"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "package_roots": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/rootItem" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$" },
+    "rootItem": {
+      "type": "object",
+      "required": ["id", "label", "path", "scope", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "label": { "type": "string" },
+        "path": { "type": "string" },
+        "scope": { "type": "string" },
+        "status": { "enum": ["available", "optional", "missing", "disabled"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

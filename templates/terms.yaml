@@ -1,0 +1,38 @@
+schema_version: 1
+
+terms:
+  knowledge_roots:
+    label: "knowledge roots"
+    aliases:
+      - "local knowledge"
+      - "knowledge folders"
+      - "documentation roots"
+    definition: "Directories with documentation, standards, references, and rules available on the workplace."
+
+  template_roots:
+    label: "template roots"
+    aliases:
+      - "global templates"
+      - "shared templates"
+    definition: "Template directories available to multiple projects on the workplace."
+
+  tool_registry:
+    label: "tool registry"
+    aliases:
+      - "tools"
+      - "global tools"
+    definition: "Configured tool capability providers available on the workplace."
+
+  mcp_registry:
+    label: "MCP registry"
+    aliases:
+      - "MCP"
+      - "MCP servers"
+    definition: "Configured MCP capability providers available on the workplace."
+
+  package_roots:
+    label: "package roots"
+    aliases:
+      - "knowledge packages"
+      - "process packages"
+    definition: "Directories containing versioned ProcessForge packages."

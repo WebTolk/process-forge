@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/platform-registry.schema.json",
+  "title": "Platform Registry",
+  "type": "object",
+  "required": ["schema_version", "platforms"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "platforms": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/registryItem" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$" },
+    "registryItem": {
+      "type": "object",
+      "required": ["id", "name", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "path": { "type": "string" },
+        "package_id": { "type": "string" },
+        "status": { "enum": ["available", "optional", "missing", "disabled"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

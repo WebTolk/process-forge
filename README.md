@@ -53,6 +53,22 @@ runtime/                 Optional future local supervisor draft area
 7. Save outputs in `artifacts/`, `reviews/`, `handoffs/`, and `logs/`.
 8. Run the validators from `tools/`.
 
+## Init Commands
+
+ProcessForge can initialize a machine-local workplace layer and a project layer:
+
+```bash
+python tools/processforge.py init-workplace --root <workplace-root> --dry-run
+python tools/processforge.py init-workplace --root <workplace-root> --apply
+python tools/processforge.py doctor-workplace --root <workplace-root>
+
+python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --dry-run
+python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --apply
+python tools/processforge.py doctor-project --project-root <project-root>
+```
+
+Dry run is proposal-first. Apply mode writes files. Brownfield project init does not overwrite existing files without `--force`; it writes `.candidate` files for conflicts.
+
 ## MVP Boundaries
 
 The MVP is file-only. It does not require a backend, database, web UI, or runner. Future local supervisor and managed modes are supported by the file model, but they are not required for current use.
@@ -67,6 +83,7 @@ Run the baseline checks:
 python tools/validate-process-forge-schemas.py
 python tools/validate-process-forge-checksums.py
 python tools/validate-public-cleanliness.py
+python tools/processforge.py --help
 ```
 
 See `docs/validation/validation.md` for details.

@@ -1,0 +1,54 @@
+schema_version: 1
+
+process_forge:
+  version: "0.1.0"
+  mode: file_only
+  runner_required: false
+  backend_required: false
+
+project:
+  id: "<project-id>"
+  name: "<project-name>"
+  type: "<project-type>"
+
+workplace:
+  reference: local_file
+  local_config: process-forge.local.yaml
+
+detected:
+  languages: []
+  platforms: []
+  project_kind: []
+
+paths:
+  processes: processes
+  packages: packages
+  templates: templates
+  assignments: assignments
+  artifacts: artifacts
+  contexts: contexts
+  logs: logs
+  handoffs: handoffs
+  reviews: reviews
+  adr: adr
+  schemas: schemas
+  runtime: runtime
+
+knowledge_stack:
+  - package: process-forge-core
+    version: "^0.1"
+    source: project
+
+required_capabilities:
+  - repository.read
+  - markdown.editing
+
+optional_capabilities:
+  - repository.symbol_analysis
+  - official_documentation
+
+policies:
+  one_writer_per_file_scope: true
+  approved_artifacts_are_protected: true
+  execution_context_is_immutable: true
+  public_files_must_not_contain_local_absolute_paths: true

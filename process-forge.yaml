@@ -99,6 +99,10 @@ processes:
     path: processes/knowledge-package-improvement.yaml
   - id: process-version-upgrade
     path: processes/process-version-upgrade.yaml
+  - id: workplace-initialization
+    path: processes/workplace-initialization.yaml
+  - id: project-initialization
+    path: processes/project-initialization.yaml
 
 packages:
   - id: process-forge-core
@@ -120,3 +124,5 @@ validation:
       command: python tools/validate-process-forge-checksums.py
     - id: public-cleanliness
       command: python tools/validate-public-cleanliness.py
+    - id: processforge-cli
+      command: python tools/processforge.py --help

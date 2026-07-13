@@ -24,11 +24,16 @@ Files not to touch:
 Known issues:
 - Semantic validation is intentionally lightweight.
 - Template usage records are not yet generated automatically.
+- Init resource matching is heuristic and should be hardened with a formal registry parser.
+- The YAML fallback parser supports the answers-file subset used by the templates; PyYAML is used automatically if available.
 
 Required checks:
 - python tools/validate-process-forge-schemas.py
 - python tools/validate-process-forge-checksums.py
 - python tools/validate-public-cleanliness.py
+- python tools/processforge.py --help
+- python tools/processforge.py doctor-workplace --root <workplace-root>
+- python tools/processforge.py doctor-project --project-root <project-root>
 
 Next recommended action:
-Tighten validators and add adapter manifests for capability providers.
+Tighten validators, formalize registry parsing, and add adapter manifests for capability providers.

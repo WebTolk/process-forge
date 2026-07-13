@@ -12,3 +12,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
+/process-forge.local.yaml
+/cache/
+/.secrets/

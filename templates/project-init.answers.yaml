@@ -1,0 +1,22 @@
+schema_version: 1
+
+project:
+  id: example-project
+  name: Example Project
+  type: auto
+  mode: auto
+
+required_capabilities:
+  - repository.read
+  - markdown.editing
+
+optional_capabilities:
+  - repository.symbol_analysis
+  - official_documentation
+  - test_running
+
+policies:
+  one_writer_per_file_scope: true
+  approved_artifacts_are_protected: true
+  execution_context_is_immutable: true
+  public_files_must_not_contain_local_absolute_paths: true

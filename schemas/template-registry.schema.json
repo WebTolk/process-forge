@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/template-registry.schema.json",
+  "title": "Template Registry",
+  "type": "object",
+  "required": ["schema_version", "template_roots"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "template_roots": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/rootItem" }
+    },
+    "template_policy": { "type": "object" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$" },
+    "rootItem": {
+      "type": "object",
+      "required": ["id", "label", "path", "scope"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "label": { "type": "string" },
+        "path": { "type": "string" },
+        "scope": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

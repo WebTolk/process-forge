@@ -1,0 +1,15 @@
+schema_version: 1
+
+project:
+  id: example-greenfield
+  name: Example Greenfield
+  type: auto
+  mode: greenfield
+
+required_capabilities:
+  - repository.read
+  - markdown.editing
+
+optional_capabilities:
+  - repository.symbol_analysis
+  - official_documentation

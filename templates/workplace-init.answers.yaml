@@ -1,0 +1,33 @@
+schema_version: 1
+
+workplace:
+  id: main-workstation
+  name: Main Workstation
+  type: workstation
+  os: windows
+
+paths:
+  root: "<processforge-workplace-root>"
+  knowledge_roots:
+    company: ""
+    local_docs: ""
+  package_roots:
+    global: ""
+  template_roots:
+    global: ""
+  tools_root: ""
+  mcp_root: ""
+
+enabled_registries:
+  platforms: true
+  knowledge_roots: true
+  package_roots: true
+  templates: true
+  tools: true
+  mcp: true
+
+policies:
+  shell_is_fallback: true
+  prefer_symbolic_analysis: true
+  require_template_usage_log: true
+  do_not_store_secret_values: true

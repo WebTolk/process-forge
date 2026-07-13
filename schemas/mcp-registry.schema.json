@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/mcp-registry.schema.json",
+  "title": "MCP Registry",
+  "type": "object",
+  "required": ["schema_version", "mcp_servers"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "mcp_servers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/mcpServer" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$" },
+    "mcpServer": {
+      "type": "object",
+      "required": ["id", "name", "capability", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "capability": { "type": "string" },
+        "status": { "enum": ["configured", "optional", "missing", "disabled"] },
+        "transport": { "type": "string" },
+        "command": { "type": "string" },
+        "auth_ref": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

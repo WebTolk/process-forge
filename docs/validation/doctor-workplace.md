@@ -1,0 +1,29 @@
+# Doctor Workplace
+
+Doctor Workplace validates a workplace root.
+
+## Command
+
+```bash
+python tools/processforge.py doctor-workplace --root <workplace-root>
+```
+
+## Checks
+
+- `workplace.yaml` exists.
+- Required registry files exist.
+- Required directories exist.
+- Registry files are readable.
+- Secret-like values are not stored.
+- Required capabilities have providers when declared.
+- Optional missing MCP providers are warnings, not failures.
+
+## Result Format
+
+```text
+PASS: workplace.yaml found
+WARN: optional MCP browser is not configured
+FAIL: required capability repository.symbol_analysis has no provider
+```
+
+The command exits with a non-zero code when any `FAIL` result exists.
