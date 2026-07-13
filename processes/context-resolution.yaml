@@ -160,18 +160,33 @@ stages:
     handoff_required: true
 artifact_definitions:
   - id: context-index
+    title: Context Index
+    owner_role: orchestrator
+    template: context-index-template
     path: contexts/context-index.yaml
     lifecycle: [draft, ready_for_review, approved, stale]
   - id: resolved-rules
+    title: Resolved Rules
+    owner_role: orchestrator
+    template: resolved-rules-template
     path: contexts/resolved-rules.yaml
     lifecycle: [draft, ready_for_review, approved, stale]
   - id: context-conflict-report
+    title: Context Conflict Report
+    owner_role: orchestrator
+    template: context-conflict-report-template
     path: contexts/context-conflict-report.md
     lifecycle: [draft, ready_for_review, approved, stale]
   - id: context-cache
+    title: Context Cache
+    owner_role: orchestrator
+    template: context-cache
     path: runtime/cache/context-cache.yaml
     lifecycle: [draft, stale]
   - id: context-capsule
+    title: Context Capsule
+    owner_role: orchestrator
+    template: context-capsule-template
     path: contexts/context-capsule.yaml
     lifecycle: [draft, ready_for_review, approved, stale]
 gates:

@@ -22,41 +22,163 @@ rules:
       id: processforge-cli
       source: tools/processforge.py
   templates:
-    - context-capsule-template.yaml
-    - context-index-template.yaml
-    - execution-context-package-template.yaml
-    - package-manifest-template.yaml
-    - process-definition-template.yaml
-    - process-forge.local.yaml
-    - process-forge.yaml
-    - project-init.answers.yaml
-    - resolved-rules-template.yaml
-    - reusable-template-template.yaml
-    - session-start-template.yaml
-    - terms.yaml
-    - workplace-init.answers.yaml
-    - workplace.yaml
-    - adr-template.md
-    - artifact-template.md
-    - assignment-template.md
-    - context-conflict-report-template.md
-    - execution-context-prompt-template.md
-    - global-resource-matching-report-template.md
-    - handoff-template.md
-    - process-upgrade-assessment-template.md
-    - project-agents-template.md
-    - project-conventions-template.md
-    - project-init-proposal-template.md
-    - project-init-review-template.md
-    - project-profile-template.md
-    - repository-map-template.md
-    - review-template.md
-    - session-status-report-template.md
-    - validation-report-template.md
+    -
+      id: context-capsule-template
+      path: templates/context-capsule-template.yaml
+      source: project
+      status: available
+    -
+      id: context-index-template
+      path: templates/context-index-template.yaml
+      source: project
+      status: available
+    -
+      id: execution-context-package-template
+      path: templates/execution-context-package-template.yaml
+      source: project
+      status: available
+    -
+      id: package-manifest-template
+      path: templates/package-manifest-template.yaml
+      source: project
+      status: available
+    -
+      id: process-definition-template
+      path: templates/process-definition-template.yaml
+      source: project
+      status: available
+    -
+      id: process-forge-local
+      path: templates/process-forge.local.yaml
+      source: project
+      status: available
+    -
+      id: process-forge
+      path: templates/process-forge.yaml
+      source: project
+      status: available
+    -
+      id: project-init-answers
+      path: templates/project-init.answers.yaml
+      source: project
+      status: available
+    -
+      id: resolved-rules-template
+      path: templates/resolved-rules-template.yaml
+      source: project
+      status: available
+    -
+      id: reusable-template-template
+      path: templates/reusable-template-template.yaml
+      source: project
+      status: available
+    -
+      id: session-start-template
+      path: templates/session-start-template.yaml
+      source: project
+      status: available
+    -
+      id: terms
+      path: templates/terms.yaml
+      source: project
+      status: available
+    -
+      id: workplace-init-answers
+      path: templates/workplace-init.answers.yaml
+      source: project
+      status: available
+    -
+      id: workplace
+      path: templates/workplace.yaml
+      source: project
+      status: available
+    -
+      id: adr-template
+      path: templates/adr-template.md
+      source: project
+      status: available
+    -
+      id: artifact-template
+      path: templates/artifact-template.md
+      source: project
+      status: available
+    -
+      id: assignment-template
+      path: templates/assignment-template.md
+      source: project
+      status: available
+    -
+      id: context-conflict-report-template
+      path: templates/context-conflict-report-template.md
+      source: project
+      status: available
+    -
+      id: execution-context-prompt-template
+      path: templates/execution-context-prompt-template.md
+      source: project
+      status: available
+    -
+      id: global-resource-matching-report-template
+      path: templates/global-resource-matching-report-template.md
+      source: project
+      status: available
+    -
+      id: handoff-template
+      path: templates/handoff-template.md
+      source: project
+      status: available
+    -
+      id: process-upgrade-assessment-template
+      path: templates/process-upgrade-assessment-template.md
+      source: project
+      status: available
+    -
+      id: project-agents-template
+      path: templates/project-agents-template.md
+      source: project
+      status: available
+    -
+      id: project-conventions-template
+      path: templates/project-conventions-template.md
+      source: project
+      status: available
+    -
+      id: project-init-proposal-template
+      path: templates/project-init-proposal-template.md
+      source: project
+      status: available
+    -
+      id: project-init-review-template
+      path: templates/project-init-review-template.md
+      source: project
+      status: available
+    -
+      id: project-profile-template
+      path: templates/project-profile-template.md
+      source: project
+      status: available
+    -
+      id: repository-map-template
+      path: templates/repository-map-template.md
+      source: project
+      status: available
+    -
+      id: review-template
+      path: templates/review-template.md
+      source: project
+      status: available
+    -
+      id: session-status-report-template
+      path: templates/session-status-report-template.md
+      source: project
+      status: available
+    -
+      id: validation-report-template
+      path: templates/validation-report-template.md
+      source: project
+      status: available
 allowed_actions:
-  - read_allowed_files
   - read_required_sources
-  - write_allowed_files
 forbidden_actions:
   - change_rules_without_review
   - claim_unexecuted_tests_as_passed
@@ -91,14 +213,14 @@ source_fingerprints:
   AGENTS.md: dbbdc87786f72d0c4219a24fcfa9632c72f70056f600e2966bb6da6077860876
   process-forge.yaml: 8ffc2fd7d60bd3e706cde9d71613fdebda4d94a2469fe6ef68ec7da1c79db86f
   process-forge.local.yaml: missing
-  tools/processforge.py: c449e00a6b298258a9c8563121cd0e182b3fbb1d9c3e4f2696172b2309a4b990
+  tools/processforge.py: 04b7d41afc30ae6d6904e0d828ffd39136cce69e1c6744ee1a36e9b261a3cb44
   processes/bug-fix.yaml: ff128128a7220afd23b46e646125806855030e4bc3f3b151d8a040419f6490f5
   processes/content-production.yaml: 2a3621f122419b70a3c2f0ab82947d380970f14b3cb910421fb46f23d41d0d2b
-  processes/context-resolution.yaml: afe844c38b76c1aa52d814b41cdecd668fd3f5c7be89832a270bb4d8408b58c9
+  processes/context-resolution.yaml: 2dfa61bd4a61b32241c1d31f588590342d7f892bcfdc834435eb1120e8985f93
   processes/knowledge-package-improvement.yaml: 2555110e38a44910275a5c2d27f17fd6bfa90f13e1358e91a9f1a09c60897ebf
   processes/process-version-upgrade.yaml: faaf60f41cbb5592db1e410f3c9b443e2aeafc1c443e8d8b2797a950de2ca5ba
   processes/project-initialization.yaml: 61aa43460cc1df6951767d6b13f012f477b2cddf7c893ee5ae57a5c8e4870521
-  processes/session-bootstrap.yaml: 8a400aa543eea27b95e23dc0ee5f75beab3e4570a25c5e8466f0247b4734af5a
+  processes/session-bootstrap.yaml: def12c175fa8f1282996b6f4fb5e6d4bc7b12f5acd9a430294f0edbca31b10c8
   processes/software-feature-development.yaml: 2bc975c95587af484248cb3dded8f202fbeed907cc10658ab5624b718a6ab0c0
   processes/testing.yaml: 66cf9005f8146eae0468b7afdd2c1fc46d1eb7439a4332353f2a6af6851b76a5
   processes/workplace-initialization.yaml: 53797fd0b7c6414ee75b73d39c782cd769c3c782fc8344d93a01229a5d416d7b
@@ -109,7 +231,7 @@ source_fingerprints:
   packages/process-forge-testing.yaml: 1446954bc23d0868e2adffe1f24dfbdded8585be710daa6b488ed6c98a321af8
   templates/context-capsule-template.yaml: 35be4bae6cd8f983767951918b9b8eeacda4b723b330c596800624c8ae7eb617
   templates/context-index-template.yaml: 1c8eff1b2001f252c6eb6a7d56981541034436a0a0ab3415b35878ddf22641a1
-  templates/execution-context-package-template.yaml: c52294e30413298a57496b6e140a3a7d2d819d0f1ea259a3a6afe74960d08970
+  templates/execution-context-package-template.yaml: 6bf2a688eaf0dfdb955dc9db21f31f35d80ae1b830caea16a57de2a3c1b74e6a
   templates/package-manifest-template.yaml: 0bf672553624ff28675a7513ac79877cf2b10c7a3627b12e438eb91d889a2846
   templates/process-definition-template.yaml: efe071db6f581d6629268f6a7cb0333d7a0e72a527aae90de2f50910f883ed8c
   templates/process-forge.local.yaml: e2380f0c8cb155e8ead202d82de5ff1b4160820838fdb2f2d087b7f2c6ca7957

@@ -5,12 +5,13 @@ from __future__ import annotations
 
 import re
 import sys
+import argparse
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "examples", "tools"]
-PUBLIC_ROOT_FILES = ["README.md", "AGENTS.md", "process-forge.yaml", "LICENSE", "CHANGELOG.md"]
+PUBLIC_ROOT_FILES = ["README.md", "AGENTS.md", "process-forge.yaml", "LICENSE", "CHANGELOG.md", ".processforge-releaseignore"]
 SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 SKIP_SUFFIXES = {".pyc", ".pyo"}
 
@@ -32,14 +33,14 @@ FORBIDDEN_REGEX_PATTERNS = [
 ]
 
 
-def public_files() -> list[Path]:
+def public_files(root_path: Path) -> list[Path]:
     files: list[Path] = []
     for name in PUBLIC_ROOT_FILES:
-        path = ROOT / name
+        path = root_path / name
         if path.is_file():
             files.append(path)
     for dirname in PUBLIC_DIRS:
-        root = ROOT / dirname
+        root = root_path / dirname
         if root.is_dir():
             files.extend(
                 path
@@ -48,13 +49,54 @@ def public_files() -> list[Path]:
                 and not any(part in SKIP_DIRS for part in path.relative_to(root).parts)
                 and path.suffix not in SKIP_SUFFIXES
             )
-    return sorted(files, key=lambda path: path.relative_to(ROOT).as_posix())
+    return sorted(files, key=lambda path: path.relative_to(root_path).as_posix())
+
+
+def validate_releaseignore(root_path: Path) -> list[str]:
+    failures: list[str] = []
+    path = root_path / ".processforge-releaseignore"
+    if not path.is_file():
+        failures.append(".processforge-releaseignore missing")
+        return failures
+    lines = [line.strip() for line in path.read_text(encoding="utf-8", errors="replace").splitlines() if line.strip() and not line.strip().startswith("#")]
+    required = [
+        ".idea/",
+        ".serena/",
+        "private-notes/",
+        "runtime/cache/",
+        "tools/__pycache__/",
+        "*.pyc",
+        "artifacts/*",
+        "!artifacts/README.md",
+        "assignments/*",
+        "!assignments/README.md",
+        "logs/*",
+        "!logs/README.md",
+        "reviews/*",
+        "!reviews/README.md",
+        "handoffs/*",
+        "!handoffs/README.md",
+        "contexts/*",
+        "!contexts/README.md",
+    ]
+    for item in required:
+        if item not in lines:
+            failures.append(f".processforge-releaseignore missing {item}")
+    broad_forbidden = {"artifacts/", "assignments/", "logs/", "reviews/", "handoffs/", "contexts/"}
+    for item in broad_forbidden:
+        if item in lines:
+            failures.append(f".processforge-releaseignore excludes whole skeleton directory {item}")
+    return failures
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
+    args = parser.parse_args()
+    root_path = Path(args.root).expanduser().resolve()
     failures: list[str] = []
-    for path in public_files():
-        rel = path.relative_to(ROOT).as_posix()
+    for path in public_files(root_path):
+        rel = path.relative_to(root_path).as_posix()
         text = path.read_text(encoding="utf-8", errors="replace")
         lower = text.lower()
         for marker in FORBIDDEN_LITERAL_PATTERNS:
@@ -63,6 +105,7 @@ def main() -> int:
         for pattern in FORBIDDEN_REGEX_PATTERNS:
             if pattern.search(text):
                 failures.append(f"{rel}: forbidden private/local path pattern {pattern.pattern!r}")
+    failures.extend(validate_releaseignore(root_path))
     if failures:
         for failure in failures:
             print(f"FAIL: {failure}")

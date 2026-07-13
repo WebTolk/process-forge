@@ -9,28 +9,18 @@ assignment:
 context:
   freshness: fresh
   conflict_status: warn
+  context_status: warn
+  conflict_report: contexts/processforge-session-bootstrap-implementation.conflicts.md
 required_sources:
   - AGENTS.md
   - process-forge.yaml
-  - processes/bug-fix.yaml
-  - processes/content-production.yaml
-  - processes/context-resolution.yaml
-  - processes/knowledge-package-improvement.yaml
-  - processes/process-version-upgrade.yaml
-  - processes/project-initialization.yaml
-  - processes/session-bootstrap.yaml
-  - processes/software-feature-development.yaml
-  - processes/testing.yaml
-  - processes/workplace-initialization.yaml
   - assignments/processforge-session-bootstrap-implementation.md
 allowed_files:
   - assignments/processforge-session-bootstrap-implementation.md
 forbidden_files:
   []
 allowed_actions:
-  - read_allowed_files
   - read_required_sources
-  - write_allowed_files
 forbidden_actions:
   - change_rules_without_review
   - claim_unexecuted_tests_as_passed

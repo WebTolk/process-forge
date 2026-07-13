@@ -60,3 +60,32 @@ ProcessForge bootstrap product tree.
 ## Recommendation
 
 Treat the bootstrap as ready for the next hardening pass.
+
+## Context Hardening Addendum
+
+Timestamp: 2026-07-13T16:45:25+04:00.
+
+Commands and smoke scenarios added for context hardening:
+
+- `python tools/validate-process-forge-schemas.py --root .`
+- `python tools/validate-public-cleanliness.py --root .`
+- `python tools/validate-process-forge-checksums.py --check`
+- `python tools/processforge.py context-resolve --project-root .`
+- `python tools/processforge.py context-compile --project-root . --assignment assignments/processforge-session-bootstrap-implementation.md --capsule`
+- `python tools/processforge.py doctor-context --project-root . --assignment assignments/processforge-session-bootstrap-implementation.md`
+- Negative assignment smoke with `unknown.required.capability`.
+- Negative invalid generated ECP schema smoke.
+- Negative stale checksum inventory smoke.
+- Repeated ECP compile immutability smoke.
+- Missing-workplace `init-project --apply` smoke.
+- Explicit `init-project --apply --allow-missing-workplace` smoke.
+
+Results:
+
+- Real schema validation passes on corrected repository files and fails on invalid generated ECP.
+- Checksum `--check` passes on a fresh inventory and fails on stale inventory.
+- Assignment-specific blocked context prevents ECP/capsule creation.
+- Existing assignment ECP is not overwritten silently.
+- Missing workplace blocks project init apply mode by default.
+- Missing workplace can proceed only with explicit `--allow-missing-workplace`.
+- Public cleanliness preserves skeleton directories and excludes private/runtime/cache/IDE/Python cache files.

@@ -39,7 +39,9 @@
         "required": { "type": "boolean" },
         "exists": { "type": "boolean" },
         "checksum": { "type": "string" },
-        "fingerprint": { "type": "string" }
+        "fingerprint": { "type": "string" },
+        "selection_reason": { "type": "string" },
+        "load_policy": { "type": "string" }
       },
       "additionalProperties": true
     }

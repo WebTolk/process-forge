@@ -3,12 +3,85 @@
   "$id": "https://processforge.local/schemas/execution-context-package.schema.json",
   "title": "Execution Context Package",
   "type": "object",
-  "required": ["schema_version", "context", "assignment", "process", "stage", "role", "checksums"],
+  "required": [
+    "schema_version",
+    "id",
+    "type",
+    "assignment",
+    "process",
+    "stage",
+    "role",
+    "context_status",
+    "source_fingerprints",
+    "read_sources",
+    "resolved_rules",
+    "allowed_files",
+    "forbidden_files",
+    "required_outputs",
+    "required_capabilities",
+    "selected_tools",
+    "selected_mcp",
+    "selected_templates",
+    "conflict_report",
+    "created_at",
+    "checksum"
+  ],
   "properties": {
     "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "type": { "const": "execution_context_package" },
+    "assignment": { "$ref": "#/$defs/id" },
+    "assignment_path": { "type": "string" },
+    "process": { "type": ["string", "null"] },
+    "stage": { "type": ["string", "null"] },
+    "role": { "type": ["string", "null"] },
+    "context_status": {
+      "type": "string",
+      "enum": ["pass", "warn", "requires_approval", "blocked"]
+    },
+    "blocking_conflicts": { "type": "integer", "minimum": 0 },
+    "warnings": { "type": "integer", "minimum": 0 },
+    "requires_approval": { "type": "integer", "minimum": 0 },
+    "source_fingerprints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "checksum"],
+        "properties": {
+          "path": { "type": "string" },
+          "checksum": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "read_sources": { "type": "array", "items": { "type": "string" } },
+    "resolved_rules": { "type": "object" },
+    "allowed_files": { "type": "array", "items": { "type": "string" } },
+    "forbidden_files": { "type": "array", "items": { "type": "string" } },
+    "required_outputs": { "type": "array", "items": { "type": "string" } },
+    "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "selected_tools": { "type": "array", "items": { "type": "string" } },
+    "selected_mcp": { "type": "array", "items": { "type": "string" } },
+    "selected_templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "path", "source", "status"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "path": { "type": "string" },
+          "source": { "type": "string" },
+          "status": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "conflict_report": { "type": "string" },
+    "created_at": { "type": "string" },
+    "checksum": { "type": "string", "minLength": 1 },
+    "supersedes": { "type": "string" },
     "context": {
       "type": "object",
-      "required": ["id", "created_at", "immutable"],
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "created_at": { "type": "string" },
@@ -16,16 +89,10 @@
       },
       "additionalProperties": true
     },
-    "assignment": { "type": "object" },
-    "process": { "type": "object" },
-    "stage": { "type": "string" },
-    "role": { "type": "string" },
     "task_input": { "type": "array", "items": { "type": "string" } },
     "sources": { "type": "array", "items": { "type": "object" } },
     "packages": { "type": "array", "items": { "type": "object" } },
     "templates": { "type": "array", "items": { "type": "object" } },
-    "selected_tools": { "type": "array", "items": { "type": "string" } },
-    "selected_mcp": { "type": "array", "items": { "type": "string" } },
     "allowed_actions": { "type": "array", "items": { "type": "string" } },
     "forbidden_actions": { "type": "array", "items": { "type": "string" } },
     "quality_gates": { "type": "array", "items": { "type": "string" } },

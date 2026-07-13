@@ -29,6 +29,35 @@ Run validation and update review artifacts.
 Handoff:
 handoffs/orchestrator-to-next.md
 
+## 2026-07-13 16:45 - Context Hardening Developer
+
+Task:
+Implement context hardening from `processforge_context_hardening_assignment.md`.
+
+Files changed:
+tools/processforge.py, tools/validate-process-forge-schemas.py, tools/validate-process-forge-checksums.py, tools/validate-public-cleanliness.py, schemas, templates, process definitions, generated contexts, release ignore policy, artifacts, and reviews.
+
+Artifacts changed:
+artifacts/context-hardening-report.md, reviews/context-hardening-review.md, contexts/processforge-session-bootstrap-implementation.ecp.yaml, contexts/processforge-session-bootstrap-implementation.capsule.yaml, contexts/processforge-session-bootstrap-implementation.conflicts.md.
+
+Templates used:
+ProcessForge report and review artifact conventions.
+
+Tools used:
+Shell fallback after Serena was not useful for this language-less repository; apply_patch; ProcessForge CLI; schema/checksum/public-cleanliness validators; negative smoke tests.
+
+Decisions:
+Treat assignment-specific blocking conflicts as compile blockers, keep assignment conflict reports even for blocked assignments, enforce ECP immutability by default, and make checksum validation compare current public files against an inventory.
+
+Risks:
+Schema validation covers the JSON Schema subset used by this repository; provider selection remains registry-ready but heuristic.
+
+Next steps:
+Run final validation sweep, refresh checksum inventory, and report local hardening status.
+
+Handoff:
+handoffs/orchestrator-to-next.md
+
 ## 2026-07-13 15:58 - Session Bootstrap Developer
 
 Task:

@@ -134,9 +134,15 @@ stages:
     handoff_required: true
 artifact_definitions:
   - id: session-start-request
+    title: Session Start Request
+    owner_role: orchestrator
+    template: session-start-template
     path: templates/session-start-template.yaml
     lifecycle: [draft, ready_for_review, approved]
   - id: session-status-report
+    title: Session Status Report
+    owner_role: orchestrator
+    template: session-status-report-template
     path: artifacts/session-status-report.md
     lifecycle: [draft, ready_for_review, approved]
 gates:

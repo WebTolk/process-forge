@@ -1,29 +1,55 @@
 schema_version: 1
+id: example-context
+type: execution_context_package
+assignment: example-assignment
+assignment_path: assignments/example-assignment.md
+process: example-process
+stage: intake
+role: orchestrator
+context_status: pass
+blocking_conflicts: 0
+warnings: 0
+requires_approval: 0
+source_fingerprints:
+  - path: process-forge.yaml
+    checksum: pending
+read_sources:
+  - process-forge.yaml
+resolved_rules:
+  allowed_actions:
+    - read_required_sources
+  forbidden_actions:
+    - edit_forbidden_files
+allowed_files: []
+forbidden_files: []
+required_outputs: []
+required_capabilities: []
+selected_tools: []
+selected_mcp: []
+selected_templates: []
+conflict_report: contexts/example-assignment.conflicts.md
+created_at: "<timestamp>"
+checksum: pending
 context:
   id: example-context
   created_at: "<timestamp>"
   immutable: true
-assignment:
-  id: example-assignment
-  path: assignments/example-assignment.md
-process:
-  id: example-process
-  version: 0.1.0
-stage: intake
-role: orchestrator
-task_input: []
+  context_index: contexts/context-index.yaml
+  conflict_report: contexts/example-assignment.conflicts.md
+task_input:
+  - assignments/example-assignment.md
 sources:
   - path: process-forge.yaml
     checksum: pending
+    kind: project-flow
 packages: []
 templates: []
-selected_tools: []
-selected_mcp: []
 allowed_actions:
-  - read_allowed_files
-  - write_allowed_files
+  - read_required_sources
 forbidden_actions:
   - edit_forbidden_files
-quality_gates: []
+quality_gates:
+  - doctor-context
 checksums:
-  process_manifest: pending
+  assignment: pending
+  context_index: pending
