@@ -1,0 +1,163 @@
+schema_version: 1
+id: session-bootstrap
+name: Session Bootstrap
+version: 0.1.0
+status: active
+description: Convert a short launch request into a formal ProcessForge session mode and status report.
+required_capabilities:
+  - filesystem.read
+  - context.status
+roles:
+  - id: orchestrator
+    title: Orchestrator
+    responsibility: Resolves session mode, flow location, and context freshness.
+  - id: reviewer
+    title: Reviewer
+    responsibility: Reviews session status and blocked items.
+stages:
+  - id: intake
+    title: Intake
+    description: Capture the Session Start Request or derive it from a short prompt.
+    required_inputs: []
+    produced_artifacts:
+      - session-start-request
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.read
+    allowed_tools:
+      - processforge-session
+    entry_gates: []
+    exit_gates:
+      - request-captured
+    handoff_required: false
+  - id: mode-detection
+    title: Mode Detection
+    description: Classify the session as resume, project_init, assignment_execute, context_resolve, context_compile, or doctor_context.
+    required_inputs:
+      - session-start-request
+    produced_artifacts:
+      - session-mode-decision
+    required_role: orchestrator
+    required_capabilities:
+      - context.status
+    allowed_tools:
+      - processforge-session
+    entry_gates:
+      - request-captured
+    exit_gates:
+      - mode-detected
+    handoff_required: false
+  - id: flow-location
+    title: Flow Location
+    description: Locate project AGENTS.md, process-forge.yaml, and optional local config.
+    required_inputs:
+      - session-mode-decision
+    produced_artifacts:
+      - flow-location-report
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.read
+    allowed_tools:
+      - processforge-session
+    entry_gates:
+      - mode-detected
+    exit_gates:
+      - flow-located
+    handoff_required: false
+  - id: workplace-resolution
+    title: Workplace Resolution
+    description: Resolve workplace references and available registries.
+    required_inputs:
+      - flow-location-report
+    produced_artifacts:
+      - workplace-resolution-report
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.read
+    allowed_tools:
+      - processforge-session
+    entry_gates:
+      - flow-located
+    exit_gates:
+      - workplace-resolved
+    handoff_required: false
+  - id: context-freshness-check
+    title: Context Freshness Check
+    description: Check context index, cache, and execution context fingerprints.
+    required_inputs:
+      - flow-location-report
+    produced_artifacts:
+      - context-freshness-report
+    required_role: orchestrator
+    required_capabilities:
+      - context.status
+    allowed_tools:
+      - processforge-session
+    entry_gates:
+      - flow-located
+    exit_gates:
+      - context-freshness-known
+    handoff_required: false
+  - id: status-scan
+    title: Status Scan
+    description: Read assignments, artifacts, reviews, handoffs, ADRs, logs, and validation reports relevant to the session.
+    required_inputs:
+      - context-freshness-report
+    produced_artifacts:
+      - session-status-inputs
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.read
+    allowed_tools:
+      - processforge-session
+    entry_gates:
+      - context-freshness-known
+    exit_gates:
+      - status-inputs-collected
+    handoff_required: false
+  - id: session-report
+    title: Session Report
+    description: Produce the session status report or hand off to the next mode.
+    required_inputs:
+      - session-status-inputs
+    produced_artifacts:
+      - session-status-report
+    required_role: orchestrator
+    required_capabilities:
+      - context.status
+    allowed_tools:
+      - processforge-session
+    entry_gates:
+      - status-inputs-collected
+    exit_gates:
+      - session-status-produced
+    handoff_required: true
+artifact_definitions:
+  - id: session-start-request
+    path: templates/session-start-template.yaml
+    lifecycle: [draft, ready_for_review, approved]
+  - id: session-status-report
+    path: artifacts/session-status-report.md
+    lifecycle: [draft, ready_for_review, approved]
+gates:
+  - id: request-captured
+    description: Session request exists or has been derived from prompt.
+  - id: mode-detected
+    description: Session mode is explicit.
+  - id: flow-located
+    description: Project flow files were located.
+  - id: workplace-resolved
+    description: Workplace layer was resolved or reported missing.
+  - id: context-freshness-known
+    description: Context freshness is fresh, stale, or missing.
+  - id: status-inputs-collected
+    description: Relevant status artifacts were scanned.
+  - id: session-status-produced
+    description: Session status report was printed or written.
+evolution_policy:
+  versioning: immutable_after_approval
+  changes_require_review: true
+  compatible_extensions:
+    - add_session_mode
+    - add_status_section
+    - add_freshness_check

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/context-index.schema.json",
+  "title": "Context Index",
+  "type": "object",
+  "required": ["schema_version", "context", "sources", "fingerprints"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "context": {
+      "type": "object",
+      "required": ["id", "generated_at", "mode"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "generated_at": { "type": "string" },
+        "mode": { "type": "string" },
+        "project_flow": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "selected_processes": { "type": "array", "items": { "type": "string" } },
+    "selected_packages": { "type": "array", "items": { "type": "string" } },
+    "selected_templates": { "type": "array", "items": { "type": "string" } },
+    "capabilities": { "type": "object", "additionalProperties": true },
+    "fingerprints": { "type": "object", "additionalProperties": { "type": "string" } },
+    "freshness": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "source": {
+      "type": "object",
+      "required": ["path", "kind", "required", "exists"],
+      "properties": {
+        "path": { "type": "string" },
+        "kind": { "type": "string" },
+        "required": { "type": "boolean" },
+        "exists": { "type": "boolean" },
+        "checksum": { "type": "string" },
+        "fingerprint": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

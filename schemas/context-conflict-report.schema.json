@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/context-conflict-report.schema.json",
+  "title": "Context Conflict Report",
+  "type": "object",
+  "required": ["schema_version", "status", "conflicts"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["resolved", "warn", "requires_approval", "blocked"]
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["status", "message"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["resolved", "warn", "requires_approval", "blocked"]
+          },
+          "message": { "type": "string" },
+          "source": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "source_fingerprints": { "type": "object", "additionalProperties": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

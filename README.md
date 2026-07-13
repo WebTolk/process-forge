@@ -69,6 +69,19 @@ python tools/processforge.py doctor-project --project-root <project-root>
 
 Dry run is proposal-first. Apply mode writes files. Brownfield project init does not overwrite existing files without `--force`; it writes `.candidate` files for conflicts.
 
+## Session And Context Commands
+
+ProcessForge can also start a session, resolve context, compile assignment context, and verify context freshness:
+
+```bash
+python tools/processforge.py session-start --mode resume --project-root <project-root>
+python tools/processforge.py context-resolve --project-root <project-root>
+python tools/processforge.py context-compile --project-root <project-root> --assignment <assignment-path> --capsule
+python tools/processforge.py doctor-context --project-root <project-root>
+```
+
+Session bootstrap keeps global `AGENTS.md` as a small bootloader. Context resolution creates a Context Index, Resolved Rules, Conflict Report, source fingerprints, and assignment-specific context packages instead of one large prompt.
+
 ## MVP Boundaries
 
 The MVP is file-only. It does not require a backend, database, web UI, or runner. Future local supervisor and managed modes are supported by the file model, but they are not required for current use.
@@ -84,6 +97,7 @@ python tools/validate-process-forge-schemas.py
 python tools/validate-process-forge-checksums.py
 python tools/validate-public-cleanliness.py
 python tools/processforge.py --help
+python tools/processforge.py doctor-context --project-root .
 ```
 
 See `docs/validation/validation.md` for details.

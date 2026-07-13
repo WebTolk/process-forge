@@ -1,0 +1,19 @@
+schema_version: 1
+rules:
+  hard: []
+  locked: []
+  preferences: []
+  gates: []
+  tools: []
+  templates: []
+allowed_actions: []
+forbidden_actions: []
+merge:
+  order:
+    - core
+    - workplace
+    - project
+    - process
+    - task
+  conflict_policy: block_on_locked_policy_conflict
+source_fingerprints: {}

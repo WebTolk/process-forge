@@ -1,0 +1,27 @@
+schema_version: 1
+session:
+  id: session-example
+  mode: resume
+  actor: human
+  role: orchestrator
+flow:
+  project_flow_path: process-forge.yaml
+  process_forge_root: null
+project:
+  root: "."
+assignment:
+  id: null
+  path: null
+context:
+  ecp: null
+  capsule: null
+init:
+  mode: null
+  dry_run_first: true
+  apply_after_approval: true
+options:
+  allow_write: false
+  use_cache: true
+  rebuild_context_if_stale: false
+  report_only: true
+  no_overwrite_without_approval: true

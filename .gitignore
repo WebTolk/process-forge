@@ -14,4 +14,7 @@ __pycache__/
 !.env.example
 /process-forge.local.yaml
 /cache/
+runtime/cache/
+/private-notes/
 /.secrets/
+processforge_*_master_prompt.md

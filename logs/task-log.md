@@ -29,6 +29,36 @@ Run validation and update review artifacts.
 Handoff:
 handoffs/orchestrator-to-next.md
 
+## 2026-07-13 15:58 - Session Bootstrap Developer
+
+Task:
+Implement ProcessForge Session Bootstrap and Context Resolution from `processforge_session_bootstrap_master_prompt.md`.
+
+Files changed:
+docs, schemas, templates, processes, tools, artifacts, reviews, logs, README.md, process-forge.yaml, .gitignore.
+
+Artifacts changed:
+artifacts/session-bootstrap-implementation-report.md, artifacts/context-resolution-validation-report.md, reviews/session-bootstrap-review.md.
+
+Templates used:
+ProcessForge assignment, implementation report, validation report, review, context index, resolved rules, conflict report, and context capsule templates.
+
+Tools used:
+Serena attempted for symbol overview but unavailable for language-less project; shell fallback; apply_patch; Python CLI smoke checks; read-only pattern QA subagent.
+
+Decisions:
+Keep session bootstrap file-only, with global boot rules remaining small and context compiled into index/rules/conflict/ECP/capsule artifacts.
+Treat seed process capability labels as built-in ProcessForge capabilities while still blocking unknown required capabilities.
+
+Risks:
+Semantic merge and capability resolution are MVP-level and should be hardened with real sessions.
+
+Next steps:
+Run context compile, doctor-context, validators, checksum update, and final review status update.
+
+Handoff:
+handoffs/orchestrator-to-next.md
+
 ## 2026-07-13 11:05 - Orchestrator
 
 Task:

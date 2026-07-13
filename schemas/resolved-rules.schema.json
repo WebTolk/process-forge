@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/resolved-rules.schema.json",
+  "title": "Resolved Rules",
+  "type": "object",
+  "required": ["schema_version", "rules", "merge"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "rules": {
+      "type": "object",
+      "properties": {
+        "hard": { "type": "array", "items": { "type": "object" } },
+        "locked": { "type": "array", "items": { "type": "object" } },
+        "preferences": { "type": "array", "items": { "type": "object" } },
+        "gates": { "type": "array", "items": { "type": "object" } },
+        "tools": { "type": "array", "items": { "type": "object" } },
+        "templates": { "type": "array", "items": { "type": "object" } }
+      },
+      "additionalProperties": true
+    },
+    "allowed_actions": { "type": "array", "items": { "type": "string" } },
+    "forbidden_actions": { "type": "array", "items": { "type": "string" } },
+    "merge": { "type": "object", "additionalProperties": true },
+    "source_fingerprints": { "type": "object", "additionalProperties": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

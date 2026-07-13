@@ -103,6 +103,10 @@ processes:
     path: processes/workplace-initialization.yaml
   - id: project-initialization
     path: processes/project-initialization.yaml
+  - id: session-bootstrap
+    path: processes/session-bootstrap.yaml
+  - id: context-resolution
+    path: processes/context-resolution.yaml
 
 packages:
   - id: process-forge-core
@@ -126,3 +130,5 @@ validation:
       command: python tools/validate-public-cleanliness.py
     - id: processforge-cli
       command: python tools/processforge.py --help
+    - id: doctor-context
+      command: python tools/processforge.py doctor-context --project-root .

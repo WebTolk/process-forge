@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/session-start.schema.json",
+  "title": "Session Start Request",
+  "type": "object",
+  "required": ["schema_version", "session", "options"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "session": {
+      "type": "object",
+      "required": ["id", "mode", "actor", "role"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "mode": {
+          "type": "string",
+          "enum": ["resume", "project_init", "assignment_execute", "context_resolve", "context_compile", "doctor_context"]
+        },
+        "actor": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "flow": { "type": "object", "additionalProperties": true },
+    "project": { "type": "object", "additionalProperties": true },
+    "assignment": { "type": "object", "additionalProperties": true },
+    "context": { "type": "object", "additionalProperties": true },
+    "init": { "type": "object", "additionalProperties": true },
+    "options": {
+      "type": "object",
+      "properties": {
+        "allow_write": { "type": "boolean" },
+        "use_cache": { "type": "boolean" },
+        "rebuild_context_if_stale": { "type": "boolean" },
+        "report_only": { "type": "boolean" },
+        "no_overwrite_without_approval": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+  },
+  "additionalProperties": true
+}

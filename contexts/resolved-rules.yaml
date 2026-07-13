@@ -1,0 +1,140 @@
+schema_version: 1
+rules:
+  hard:
+    -
+      id: public-files-no-local-paths
+      source: process-forge.yaml
+    -
+      id: no-secret-values-in-generated-files
+      source: process-forge.yaml
+  locked:
+    -
+      id: locked-hard-policies-cannot-be-weakened
+      source: process-forge.yaml
+  preferences:
+    []
+  gates:
+    -
+      id: blocked-conflicts-stop-context-compile
+      source: context-resolution
+  tools:
+    -
+      id: processforge-cli
+      source: tools/processforge.py
+  templates:
+    - context-capsule-template.yaml
+    - context-index-template.yaml
+    - execution-context-package-template.yaml
+    - package-manifest-template.yaml
+    - process-definition-template.yaml
+    - process-forge.local.yaml
+    - process-forge.yaml
+    - project-init.answers.yaml
+    - resolved-rules-template.yaml
+    - reusable-template-template.yaml
+    - session-start-template.yaml
+    - terms.yaml
+    - workplace-init.answers.yaml
+    - workplace.yaml
+    - adr-template.md
+    - artifact-template.md
+    - assignment-template.md
+    - context-conflict-report-template.md
+    - execution-context-prompt-template.md
+    - global-resource-matching-report-template.md
+    - handoff-template.md
+    - process-upgrade-assessment-template.md
+    - project-agents-template.md
+    - project-conventions-template.md
+    - project-init-proposal-template.md
+    - project-init-review-template.md
+    - project-profile-template.md
+    - repository-map-template.md
+    - review-template.md
+    - session-status-report-template.md
+    - validation-report-template.md
+allowed_actions:
+  - read_allowed_files
+  - read_required_sources
+  - write_allowed_files
+forbidden_actions:
+  - change_rules_without_review
+  - claim_unexecuted_tests_as_passed
+  - edit_forbidden_files
+  - edit_outside_assignment_scope
+  - invent_root_path
+  - overwrite_brownfield_files_without_force
+  - publish_without_review
+  - rebuild_context_without_approval
+  - scan_outside_project_root
+  - skip_required_review
+  - store_secret_values
+  - upgrade_active_run_without_assessment
+  - widen_scope_without_handoff
+  - write_absolute_paths_to_public_manifest
+merge:
+  order:
+    - core
+    - workplace
+    - organization
+    - direction
+    - specialization
+    - platform
+    - toolchain
+    - project
+    - process
+    - stage
+    - task
+    - agent_profile
+  conflict_policy: block_on_locked_policy_conflict
+source_fingerprints:
+  AGENTS.md: dbbdc87786f72d0c4219a24fcfa9632c72f70056f600e2966bb6da6077860876
+  process-forge.yaml: 8ffc2fd7d60bd3e706cde9d71613fdebda4d94a2469fe6ef68ec7da1c79db86f
+  process-forge.local.yaml: missing
+  tools/processforge.py: c449e00a6b298258a9c8563121cd0e182b3fbb1d9c3e4f2696172b2309a4b990
+  processes/bug-fix.yaml: ff128128a7220afd23b46e646125806855030e4bc3f3b151d8a040419f6490f5
+  processes/content-production.yaml: 2a3621f122419b70a3c2f0ab82947d380970f14b3cb910421fb46f23d41d0d2b
+  processes/context-resolution.yaml: afe844c38b76c1aa52d814b41cdecd668fd3f5c7be89832a270bb4d8408b58c9
+  processes/knowledge-package-improvement.yaml: 2555110e38a44910275a5c2d27f17fd6bfa90f13e1358e91a9f1a09c60897ebf
+  processes/process-version-upgrade.yaml: faaf60f41cbb5592db1e410f3c9b443e2aeafc1c443e8d8b2797a950de2ca5ba
+  processes/project-initialization.yaml: 61aa43460cc1df6951767d6b13f012f477b2cddf7c893ee5ae57a5c8e4870521
+  processes/session-bootstrap.yaml: 8a400aa543eea27b95e23dc0ee5f75beab3e4570a25c5e8466f0247b4734af5a
+  processes/software-feature-development.yaml: 2bc975c95587af484248cb3dded8f202fbeed907cc10658ab5624b718a6ab0c0
+  processes/testing.yaml: 66cf9005f8146eae0468b7afdd2c1fc46d1eb7439a4332353f2a6af6851b76a5
+  processes/workplace-initialization.yaml: 53797fd0b7c6414ee75b73d39c782cd769c3c782fc8344d93a01229a5d416d7b
+  packages/process-forge-content.yaml: 359b014bca2e2e6288c4d0a10f27b84dab7a7c76e714d086d4adc50bf3e4ef4e
+  packages/process-forge-core.yaml: 170d1f7abf77f9e470ca177c1dba2fd140423de29aed2a07c4774ddfbb7c0791
+  packages/process-forge-knowledge-governance.yaml: d1d46b126a1e314bf9e908eebd5a1abe0ef762f3e7a83df3ae505e7d446b0bbf
+  packages/process-forge-software-development.yaml: c3c812d40436f9fb3958d44904baaa19575437c895d1edc0161f4c23f1542a7e
+  packages/process-forge-testing.yaml: 1446954bc23d0868e2adffe1f24dfbdded8585be710daa6b488ed6c98a321af8
+  templates/context-capsule-template.yaml: 35be4bae6cd8f983767951918b9b8eeacda4b723b330c596800624c8ae7eb617
+  templates/context-index-template.yaml: 1c8eff1b2001f252c6eb6a7d56981541034436a0a0ab3415b35878ddf22641a1
+  templates/execution-context-package-template.yaml: c52294e30413298a57496b6e140a3a7d2d819d0f1ea259a3a6afe74960d08970
+  templates/package-manifest-template.yaml: 0bf672553624ff28675a7513ac79877cf2b10c7a3627b12e438eb91d889a2846
+  templates/process-definition-template.yaml: efe071db6f581d6629268f6a7cb0333d7a0e72a527aae90de2f50910f883ed8c
+  templates/process-forge.local.yaml: e2380f0c8cb155e8ead202d82de5ff1b4160820838fdb2f2d087b7f2c6ca7957
+  templates/process-forge.yaml: 5474bf15dbbe6f6b0fdc036d87128384939832a9b62412b4af50cc296d954e79
+  templates/project-init.answers.yaml: edbe849a582b7e4dcf17f11a005a702d4463acdb7e48e0e0b8fd37d91eeaac55
+  templates/resolved-rules-template.yaml: 2d1a65d739fd7759972ced2a23b557be05e7508caab7e166314d371894d7ba8c
+  templates/reusable-template-template.yaml: 4de0439272acb73e9c57ad06f5ac7c462173390cbdec69debeb861beab10a985
+  templates/session-start-template.yaml: a7bc4c7de2a750c09fff6e5fc19841b13ced598175f3fb221484f29a05e3be41
+  templates/terms.yaml: aba88a9780ab9949f84568535b6b01d024cfffc6bf2ddcf4b06818905e0b5fef
+  templates/workplace-init.answers.yaml: a03b51ceac2adbb904c229062abbf5560542225b0c95ac1ef9428058659fc2ad
+  templates/workplace.yaml: ebac29a87aa2100dd52397fcd939d324f59a1ce3ea2b72e66ac857c666bb1f28
+  templates/adr-template.md: a0adf8d12fbfd1b1d92fce3d5dcc83d74c4d67c03743b42827b26bafbadba8b3
+  templates/artifact-template.md: e7797827a7ca07ecf4372c31140e438cbaffbce7286cd30aeed13f3d71ef0070
+  templates/assignment-template.md: fbedac3468bf36f6af330547901c5a53f909c4a6ced1ba5af3ef4ae592122e18
+  templates/context-conflict-report-template.md: b685f76a005d8fc90d8abc5a8d4a9d5f0bcf5be0def23600cf7c326d34713b51
+  templates/execution-context-prompt-template.md: 5faaa1c34d8bab7dc04eb9f85cc32c6d70df73e0d86379a45909578552c0c546
+  templates/global-resource-matching-report-template.md: f9f25180162cf21f202b4b29320173462260ba7c9b560d7336daf6ebea73796c
+  templates/handoff-template.md: fa4c2c7e9164626581e2a2fee3a11e9b18536f30d6a9a9a258111fdf0f39ee27
+  templates/process-upgrade-assessment-template.md: 71c93743fe7be7f5175ede264be409906d0de372f474330b37e19e3959fd5c7e
+  templates/project-agents-template.md: 6b6c2ca29978f1a2b2a8542f77b7e40c61233aa2b23cbf82efc0b8f34160b4a3
+  templates/project-conventions-template.md: 918efb094f5407d47b42d11b5f4a9b1958dc5800b70b3c6a20f839d62885febd
+  templates/project-init-proposal-template.md: ee31738b1a8554e7b872ba2ad5e591fe5c5bf05b8924c9db684c34d1c5aac149
+  templates/project-init-review-template.md: 99fd54f4ecec29bd37f361f71c80fba4ccba5ef8045be3af836c4f4900d9c35d
+  templates/project-profile-template.md: 6f140206bb91f10ace0204d0e004d91d28126676c768ad14003d1ac2b00b7dd2
+  templates/repository-map-template.md: 991b3d435e98919fcfbdb9c6b0fe2372023755428ea37d1c4422971f3aa19405
+  templates/review-template.md: d18da363bd84950662df92cfba6382f54248337b3885203eada5e9a30d820e96
+  templates/session-status-report-template.md: 28a8217dc8aa803942bb39a6963d84153ab7ceadea73c91b195ea6b4f5401094
+  templates/validation-report-template.md: 2005dfb1212b07829f63bad04f6ac5283a786502348672cb0487d6d3e1f0e65a

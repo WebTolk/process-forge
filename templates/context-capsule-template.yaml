@@ -1,0 +1,19 @@
+schema_version: 1
+capsule:
+  id: example-capsule
+  ecp: contexts/example.ecp.yaml
+  worker_may_rebuild_context: false
+assignment:
+  id: example-assignment
+  path: assignments/example-assignment.md
+context:
+  freshness: fresh
+  conflict_status: resolved
+required_sources:
+  - process-forge.yaml
+allowed_files: []
+forbidden_files: []
+allowed_actions:
+  - read_required_sources
+forbidden_actions:
+  - rebuild_context_without_approval

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/context-cache.schema.json",
+  "title": "Context Cache",
+  "type": "object",
+  "required": ["schema_version", "cache", "fingerprints"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "cache": {
+      "type": "object",
+      "required": ["id", "generated_at", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "generated_at": { "type": "string" },
+        "status": { "type": "string", "enum": ["fresh", "stale", "missing", "warn"] }
+      },
+      "additionalProperties": true
+    },
+    "fingerprints": { "type": "object", "additionalProperties": { "type": "string" } },
+    "sources": { "type": "array", "items": { "type": "object" } },
+    "health": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+  },
+  "additionalProperties": true
+}

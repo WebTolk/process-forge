@@ -26,6 +26,8 @@ Known issues:
 - Template usage records are not yet generated automatically.
 - Init resource matching is heuristic and should be hardened with a formal registry parser.
 - The YAML fallback parser supports the answers-file subset used by the templates; PyYAML is used automatically if available.
+- Session/context semantic merge is MVP-level and should be hardened with formal rule parsing.
+- Context capability resolution currently treats seed ProcessForge capability labels as built in and blocks unknown required capabilities.
 
 Required checks:
 - python tools/validate-process-forge-schemas.py
@@ -34,6 +36,9 @@ Required checks:
 - python tools/processforge.py --help
 - python tools/processforge.py doctor-workplace --root <workplace-root>
 - python tools/processforge.py doctor-project --project-root <project-root>
+- python tools/processforge.py context-resolve --project-root <project-root>
+- python tools/processforge.py context-compile --project-root <project-root> --assignment <assignment-path> --capsule
+- python tools/processforge.py doctor-context --project-root <project-root>
 
 Next recommended action:
-Tighten validators, formalize registry parsing, and add adapter manifests for capability providers.
+Tighten validators, formalize registry parsing, add adapter manifests for capability providers, and expand stale ECP semantic checks.

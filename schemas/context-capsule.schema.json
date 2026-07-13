@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/context-capsule.schema.json",
+  "title": "Context Capsule",
+  "type": "object",
+  "required": ["schema_version", "capsule", "assignment", "context"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "capsule": {
+      "type": "object",
+      "required": ["id", "ecp", "worker_may_rebuild_context"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "ecp": { "type": "string" },
+        "worker_may_rebuild_context": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "assignment": { "type": "object", "additionalProperties": true },
+    "context": { "type": "object", "additionalProperties": true },
+    "required_sources": { "type": "array", "items": { "type": "string" } },
+    "allowed_files": { "type": "array", "items": { "type": "string" } },
+    "forbidden_files": { "type": "array", "items": { "type": "string" } },
+    "allowed_actions": { "type": "array", "items": { "type": "string" } },
+    "forbidden_actions": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+  },
+  "additionalProperties": true
+}

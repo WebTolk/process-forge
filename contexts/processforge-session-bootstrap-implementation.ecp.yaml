@@ -1,0 +1,137 @@
+schema_version: 1
+context:
+  id: processforge-session-bootstrap-implementation-context
+  created_at: "2026-07-13T12:01:44Z"
+  immutable: true
+  context_index: contexts/context-index.yaml
+  conflict_report: contexts/context-conflict-report.md
+assignment:
+  id: processforge-session-bootstrap-implementation
+  path: assignments/processforge-session-bootstrap-implementation.md
+  checksum: 0564fa2842529283a49e679033f053328bc50b2cd69d31c6610127f99c2d9c2b
+process:
+  id: assignment-execute
+  version: 0.1.0
+stage: assignment_execute
+role: worker
+task_input:
+  - assignments/processforge-session-bootstrap-implementation.md
+sources:
+  -
+    path: AGENTS.md
+    checksum: dbbdc87786f72d0c4219a24fcfa9632c72f70056f600e2966bb6da6077860876
+    kind: agent-boot
+  -
+    path: process-forge.yaml
+    checksum: 8ffc2fd7d60bd3e706cde9d71613fdebda4d94a2469fe6ef68ec7da1c79db86f
+    kind: project-flow
+  -
+    path: processes/bug-fix.yaml
+    checksum: ff128128a7220afd23b46e646125806855030e4bc3f3b151d8a040419f6490f5
+    kind: process
+  -
+    path: processes/content-production.yaml
+    checksum: 2a3621f122419b70a3c2f0ab82947d380970f14b3cb910421fb46f23d41d0d2b
+    kind: process
+  -
+    path: processes/context-resolution.yaml
+    checksum: afe844c38b76c1aa52d814b41cdecd668fd3f5c7be89832a270bb4d8408b58c9
+    kind: process
+  -
+    path: processes/knowledge-package-improvement.yaml
+    checksum: 2555110e38a44910275a5c2d27f17fd6bfa90f13e1358e91a9f1a09c60897ebf
+    kind: process
+  -
+    path: processes/process-version-upgrade.yaml
+    checksum: faaf60f41cbb5592db1e410f3c9b443e2aeafc1c443e8d8b2797a950de2ca5ba
+    kind: process
+  -
+    path: processes/project-initialization.yaml
+    checksum: 61aa43460cc1df6951767d6b13f012f477b2cddf7c893ee5ae57a5c8e4870521
+    kind: process
+  -
+    path: processes/session-bootstrap.yaml
+    checksum: 8a400aa543eea27b95e23dc0ee5f75beab3e4570a25c5e8466f0247b4734af5a
+    kind: process
+  -
+    path: processes/software-feature-development.yaml
+    checksum: 2bc975c95587af484248cb3dded8f202fbeed907cc10658ab5624b718a6ab0c0
+    kind: process
+  -
+    path: processes/testing.yaml
+    checksum: 66cf9005f8146eae0468b7afdd2c1fc46d1eb7439a4332353f2a6af6851b76a5
+    kind: process
+  -
+    path: processes/workplace-initialization.yaml
+    checksum: 53797fd0b7c6414ee75b73d39c782cd769c3c782fc8344d93a01229a5d416d7b
+    kind: process
+  -
+    path: assignments/processforge-session-bootstrap-implementation.md
+    checksum: 0564fa2842529283a49e679033f053328bc50b2cd69d31c6610127f99c2d9c2b
+    kind: assignment
+packages:
+  - process-forge-content
+  - process-forge-core
+  - process-forge-knowledge-governance
+  - process-forge-software-development
+  - process-forge-testing
+templates:
+  - context-capsule-template.yaml
+  - context-index-template.yaml
+  - execution-context-package-template.yaml
+  - package-manifest-template.yaml
+  - process-definition-template.yaml
+  - process-forge.local.yaml
+  - process-forge.yaml
+  - project-init.answers.yaml
+  - resolved-rules-template.yaml
+  - reusable-template-template.yaml
+  - session-start-template.yaml
+  - terms.yaml
+  - workplace-init.answers.yaml
+  - workplace.yaml
+  - adr-template.md
+  - artifact-template.md
+  - assignment-template.md
+  - context-conflict-report-template.md
+  - execution-context-prompt-template.md
+  - global-resource-matching-report-template.md
+  - handoff-template.md
+  - process-upgrade-assessment-template.md
+  - project-agents-template.md
+  - project-conventions-template.md
+  - project-init-proposal-template.md
+  - project-init-review-template.md
+  - project-profile-template.md
+  - repository-map-template.md
+  - review-template.md
+  - session-status-report-template.md
+  - validation-report-template.md
+selected_tools:
+  - processforge-cli
+selected_mcp:
+  []
+allowed_actions:
+  - read_allowed_files
+  - read_required_sources
+  - write_allowed_files
+forbidden_actions:
+  - change_rules_without_review
+  - claim_unexecuted_tests_as_passed
+  - edit_forbidden_files
+  - edit_outside_assignment_scope
+  - invent_root_path
+  - overwrite_brownfield_files_without_force
+  - publish_without_review
+  - rebuild_context_without_approval
+  - scan_outside_project_root
+  - skip_required_review
+  - store_secret_values
+  - upgrade_active_run_without_assessment
+  - widen_scope_without_handoff
+  - write_absolute_paths_to_public_manifest
+quality_gates:
+  - doctor-context
+checksums:
+  assignment: 0564fa2842529283a49e679033f053328bc50b2cd69d31c6610127f99c2d9c2b
+  context_index: 56eea8c9deda0acb6226419b11daf9e15574110e4645f24f7159326fbeee3505

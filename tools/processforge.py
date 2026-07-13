@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import os
 import platform
 import re
 import sys
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 PROJECT_PRIVATE_GITIGNORE = [
     "process-forge.local.yaml",
+    "runtime/cache/",
     "runtime/",
     "cache/",
     "private-notes/",
@@ -27,12 +30,36 @@ PROJECT_PRIVATE_GITIGNORE = [
 
 BUILTIN_CAPABILITIES = {
     "repository.read",
+    "repository.scan",
+    "repository_read",
     "markdown.editing",
+    "markdown_editing",
     "filesystem.read",
     "filesystem.write",
+    "schema_validation",
+    "validation",
+    "context.status",
+    "context.resolve",
+    "processforge-cli",
+    "architecture",
+    "artifact_review",
+    "content_planning",
+    "editorial_review",
+    "investigation",
+    "process_coordination",
+    "process_governance",
+    "reporting",
+    "repository_write",
+    "research",
+    "review",
+    "test_execution",
+    "test_planning",
+    "test_running",
+    "writing",
 }
 
 BACKSLASH = chr(92)
+COLON_WS = ":" + r"\s*"
 LOCAL_PATH_PATTERNS = [
     re.compile("[A-Za-z]:" + re.escape(BACKSLASH)),
     re.compile("/" + "home" + "/[A-Za-z0-9_.-]+/"),
@@ -1158,6 +1185,568 @@ def report_has_missing_required_capabilities(path: Path) -> bool:
     return any(line != "- None." for line in listed)
 
 
+def now_utc() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def yaml_list_values(text: str, key: str) -> list[str]:
+    values: list[str] = []
+    lines = text.splitlines()
+    key_pattern = re.compile(rf"^(\s*){re.escape(key)}\s*:\s*$")
+    inline_pattern = re.compile(rf"^\s*{re.escape(key)}\s*:\s*\[(.*?)\]\s*$")
+    for index, line in enumerate(lines):
+        inline = inline_pattern.match(line)
+        if inline:
+            values.extend(item.strip().strip('"').strip("'") for item in inline.group(1).split(",") if item.strip())
+            continue
+        match = key_pattern.match(line)
+        if not match:
+            continue
+        indent = len(match.group(1))
+        for child in lines[index + 1 :]:
+            if not child.strip():
+                continue
+            child_indent = len(child) - len(child.lstrip(" "))
+            if child_indent <= indent:
+                break
+            stripped = child.strip()
+            if stripped.startswith("- "):
+                values.append(stripped[2:].strip().strip('"').strip("'"))
+    return values
+
+
+def source_record(path: Path, root: Path, kind: str, required: bool) -> dict[str, Any]:
+    exists = path.is_file()
+    record: dict[str, Any] = {
+        "path": rel(path, root),
+        "kind": kind,
+        "required": required,
+        "exists": exists,
+    }
+    if exists:
+        checksum = sha256_file(path)
+        record["checksum"] = checksum
+        record["fingerprint"] = checksum
+    else:
+        record["checksum"] = "missing"
+        record["fingerprint"] = "missing"
+    return record
+
+
+def collect_context_sources(project_root: Path, assignment: Path | None = None) -> list[dict[str, Any]]:
+    candidates: list[tuple[Path, str, bool]] = [
+        (project_root / "AGENTS.md", "agent-boot", True),
+        (project_root / "process-forge.yaml", "project-flow", True),
+        (project_root / "process-forge.local.yaml", "local-config", False),
+        (project_root / "tools" / "processforge.py", "tool", False),
+    ]
+    for dirname, kind in [("processes", "process"), ("packages", "package")]:
+        root = project_root / dirname
+        if root.is_dir():
+            candidates.extend((path, kind, False) for path in sorted(root.glob("*.yaml")))
+    template_root = project_root / "templates"
+    if template_root.is_dir():
+        candidates.extend((path, "template", False) for path in sorted(template_root.glob("*.yaml")))
+        candidates.extend((path, "template", False) for path in sorted(template_root.glob("*.md")))
+    if assignment is not None:
+        candidates.append((assignment, "assignment", True))
+
+    seen: set[Path] = set()
+    records: list[dict[str, Any]] = []
+    for path, kind, required in candidates:
+        resolved = path.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        records.append(source_record(path, project_root, kind, required))
+    return records
+
+
+def source_fingerprints(sources: list[dict[str, Any]]) -> dict[str, str]:
+    return {str(item["path"]): str(item.get("fingerprint", "missing")) for item in sources}
+
+
+def source_texts(project_root: Path, sources: list[dict[str, Any]]) -> dict[str, str]:
+    texts: dict[str, str] = {}
+    for item in sources:
+        path = project_root / str(item["path"])
+        if path.is_file():
+            texts[str(item["path"])] = path.read_text(encoding="utf-8", errors="replace")
+    return texts
+
+
+def resolve_capabilities(texts: dict[str, str]) -> dict[str, list[str]]:
+    required: list[str] = []
+    optional: list[str] = []
+    for text in texts.values():
+        required.extend(yaml_list_values(text, "required_capabilities"))
+        optional.extend(yaml_list_values(text, "optional_capabilities"))
+    required = sorted(set(item for item in required if item))
+    optional = sorted(set(item for item in optional if item))
+    missing_required = [item for item in required if item not in BUILTIN_CAPABILITIES]
+    missing_optional = [item for item in optional if item not in BUILTIN_CAPABILITIES]
+    return {
+        "required": required,
+        "optional": optional,
+        "missing_required": missing_required,
+        "missing_optional": missing_optional,
+    }
+
+
+def collect_action_rules(texts: dict[str, str]) -> tuple[list[str], list[str]]:
+    allowed = {"read_required_sources"}
+    forbidden = {"edit_forbidden_files", "rebuild_context_without_approval"}
+    for text in texts.values():
+        allowed.update(yaml_list_values(text, "allowed_actions"))
+        forbidden.update(yaml_list_values(text, "forbidden_actions"))
+    return sorted(allowed), sorted(forbidden)
+
+
+def build_context_payload(project_root: Path, assignment: Path | None = None) -> tuple[dict[str, Any], dict[str, Any], str, str]:
+    sources = collect_context_sources(project_root, assignment)
+    fingerprints = source_fingerprints(sources)
+    texts = source_texts(project_root, sources)
+    capabilities = resolve_capabilities(texts)
+    allowed_actions, forbidden_actions = collect_action_rules(texts)
+
+    conflicts: list[dict[str, str]] = []
+    for item in sources:
+        if item.get("required") and not item.get("exists"):
+            conflicts.append({"status": "blocked", "message": f"required source missing: {item['path']}", "source": str(item["path"])})
+    manifest_text = texts.get("process-forge.yaml", "")
+    if manifest_text:
+        if not is_public_path_safe(manifest_text):
+            conflicts.append({"status": "blocked", "message": "public manifest contains a local absolute path", "source": "process-forge.yaml"})
+        if contains_secret_value(manifest_text):
+            conflicts.append({"status": "blocked", "message": "public manifest contains a secret-like value", "source": "process-forge.yaml"})
+    for capability in capabilities["missing_required"]:
+        conflicts.append({"status": "blocked", "message": f"required capability is unresolved: {capability}", "source": "capabilities"})
+    for capability in capabilities["missing_optional"]:
+        conflicts.append({"status": "warn", "message": f"optional capability is unresolved: {capability}", "source": "capabilities"})
+
+    overlap = sorted(set(allowed_actions).intersection(forbidden_actions))
+    for action in overlap:
+        conflicts.append({"status": "blocked", "message": f"action is both allowed and forbidden: {action}", "source": "resolved-rules"})
+
+    gitignore = project_root / ".gitignore"
+    if gitignore.is_file():
+        ignore_text = gitignore.read_text(encoding="utf-8", errors="replace")
+        if "runtime/cache/" not in ignore_text and "/runtime/cache/" not in ignore_text and "runtime/" not in ignore_text:
+            conflicts.append({"status": "warn", "message": "runtime cache path is not ignored", "source": ".gitignore"})
+
+    if any(item["status"] == "blocked" for item in conflicts):
+        status = "blocked"
+    elif any(item["status"] == "requires_approval" for item in conflicts):
+        status = "requires_approval"
+    elif any(item["status"] == "warn" for item in conflicts):
+        status = "warn"
+    else:
+        status = "resolved"
+
+    selected_processes = [Path(str(item["path"])).stem for item in sources if item["kind"] == "process" and item["exists"]]
+    selected_packages = [Path(str(item["path"])).stem for item in sources if item["kind"] == "package" and item["exists"]]
+    selected_templates = [Path(str(item["path"])).name for item in sources if item["kind"] == "template" and item["exists"]]
+
+    index = {
+        "schema_version": 1,
+        "context": {
+            "id": "context-index",
+            "generated_at": now_utc(),
+            "mode": "context_resolve",
+            "project_flow": "process-forge.yaml",
+        },
+        "sources": sources,
+        "selected_processes": selected_processes,
+        "selected_packages": selected_packages,
+        "selected_templates": selected_templates,
+        "capabilities": capabilities,
+        "fingerprints": fingerprints,
+        "freshness": {"status": "fresh", "stale_sources": []},
+    }
+    resolved = {
+        "schema_version": 1,
+        "rules": {
+            "hard": [
+                {"id": "public-files-no-local-paths", "source": "process-forge.yaml"},
+                {"id": "no-secret-values-in-generated-files", "source": "process-forge.yaml"},
+            ],
+            "locked": [{"id": "locked-hard-policies-cannot-be-weakened", "source": "process-forge.yaml"}],
+            "preferences": [],
+            "gates": [{"id": "blocked-conflicts-stop-context-compile", "source": "context-resolution"}],
+            "tools": [{"id": "processforge-cli", "source": "tools/processforge.py"}],
+            "templates": selected_templates,
+        },
+        "allowed_actions": allowed_actions,
+        "forbidden_actions": forbidden_actions,
+        "merge": {
+            "order": [
+                "core",
+                "workplace",
+                "organization",
+                "direction",
+                "specialization",
+                "platform",
+                "toolchain",
+                "project",
+                "process",
+                "stage",
+                "task",
+                "agent_profile",
+            ],
+            "conflict_policy": "block_on_locked_policy_conflict",
+        },
+        "source_fingerprints": fingerprints,
+    }
+    report = render_conflict_report(status, conflicts, fingerprints)
+    return index, resolved, report, status
+
+
+def render_conflict_report(status: str, conflicts: list[dict[str, str]], fingerprints: dict[str, str]) -> str:
+    blocking = [item for item in conflicts if item["status"] == "blocked"]
+    warnings = [item for item in conflicts if item["status"] == "warn"]
+    approvals = [item for item in conflicts if item["status"] == "requires_approval"]
+    resolved = [item for item in conflicts if item["status"] == "resolved"]
+
+    def lines(items: list[dict[str, str]]) -> list[str]:
+        return [f"- {item['message']} ({item.get('source', 'unknown')})" for item in items] or ["- None."]
+
+    output: list[str] = [
+        "schema_version: 1",
+        f"status: {status}",
+        f"blocking_conflicts: {len(blocking)}",
+        f"warnings: {len(warnings)}",
+        f"requires_approval: {len(approvals)}",
+        "",
+        "# Context Conflict Report",
+        "",
+        "## Blocking Conflicts",
+        "",
+        *lines(blocking),
+        "",
+        "## Warnings",
+        "",
+        *lines(warnings),
+        "",
+        "## Requires Approval",
+        "",
+        *lines(approvals),
+        "",
+        "## Resolved",
+        "",
+        *lines(resolved),
+        "",
+        "## Source Fingerprints",
+        "",
+    ]
+    output.extend(f"- {path}: {fingerprint}" for path, fingerprint in fingerprints.items())
+    return "\n".join(output) + "\n"
+
+
+def write_context_outputs(project_root: Path, assignment: Path | None = None) -> tuple[str, dict[str, Path]]:
+    index, resolved, report, status = build_context_payload(project_root, assignment)
+    contexts = project_root / "contexts"
+    cache = project_root / "runtime" / "cache"
+    contexts.mkdir(parents=True, exist_ok=True)
+    cache.mkdir(parents=True, exist_ok=True)
+    paths = {
+        "context_index": contexts / "context-index.yaml",
+        "resolved_rules": contexts / "resolved-rules.yaml",
+        "conflict_report": contexts / "context-conflict-report.md",
+        "context_cache": cache / "context-cache.yaml",
+    }
+    paths["context_index"].write_text(ensure_trailing_newline(dump_yaml(index)), encoding="utf-8")
+    paths["resolved_rules"].write_text(ensure_trailing_newline(dump_yaml(resolved)), encoding="utf-8")
+    paths["conflict_report"].write_text(report, encoding="utf-8")
+    cache_payload = {
+        "schema_version": 1,
+        "cache": {"id": "context-cache", "generated_at": now_utc(), "status": "fresh" if status != "blocked" else "stale"},
+        "fingerprints": index["fingerprints"],
+        "sources": index["sources"],
+        "health": {"conflict_status": status},
+    }
+    paths["context_cache"].write_text(ensure_trailing_newline(dump_yaml(cache_payload)), encoding="utf-8")
+    return status, paths
+
+
+def context_report_status(path: Path) -> str:
+    if not path.is_file():
+        return "missing"
+    text = path.read_text(encoding="utf-8", errors="replace")
+    match = re.search(r"(?m)^status" + COLON_WS + r"([a-z_]+)\s*$", text)
+    return match.group(1) if match else "missing"
+
+
+def context_freshness(project_root: Path) -> tuple[str, list[str]]:
+    index_path = project_root / "contexts" / "context-index.yaml"
+    if not index_path.is_file():
+        return "missing", []
+    text = index_path.read_text(encoding="utf-8", errors="replace")
+    current_sources = collect_context_sources(project_root)
+    stale: list[str] = []
+    for item in current_sources:
+        path = str(item["path"])
+        fingerprint = str(item.get("fingerprint", "missing"))
+        if path not in text or fingerprint not in text:
+            stale.append(path)
+    return ("fresh" if not stale else "stale"), stale
+
+
+def assignment_id(path: Path) -> str:
+    return safe_id(path.stem, "assignment")
+
+
+def compile_execution_context(project_root: Path, assignment: Path, *, write_capsule: bool = False) -> tuple[Path, Path | None]:
+    if not assignment.is_file():
+        raise SystemExit(f"FAIL: assignment not found: {assignment}")
+    conflict_status = context_report_status(project_root / "contexts" / "context-conflict-report.md")
+    if conflict_status == "blocked":
+        raise SystemExit("FAIL: context has blocking conflicts; run doctor-context for details")
+    if conflict_status == "missing":
+        raise SystemExit("FAIL: context conflict report missing; run context-resolve first")
+
+    index, resolved, _report, _status = build_context_payload(project_root, assignment)
+    assn_id = assignment_id(assignment)
+    contexts = project_root / "contexts"
+    contexts.mkdir(parents=True, exist_ok=True)
+    ecp_path = contexts / f"{assn_id}.ecp.yaml"
+    sources = [
+        {
+            "path": item["path"],
+            "checksum": item.get("checksum", "missing"),
+            "kind": item.get("kind", "source"),
+        }
+        for item in index["sources"]
+        if item.get("required") or item.get("kind") in {"project-flow", "agent-boot", "process", "assignment"}
+    ]
+    ecp = {
+        "schema_version": 1,
+        "context": {
+            "id": f"{assn_id}-context",
+            "created_at": now_utc(),
+            "immutable": True,
+            "context_index": "contexts/context-index.yaml",
+            "conflict_report": "contexts/context-conflict-report.md",
+        },
+        "assignment": {"id": assn_id, "path": rel(assignment, project_root), "checksum": sha256_file(assignment)},
+        "process": {"id": "assignment-execute", "version": "0.1.0"},
+        "stage": "assignment_execute",
+        "role": "worker",
+        "task_input": [rel(assignment, project_root)],
+        "sources": sources,
+        "packages": index.get("selected_packages", []),
+        "templates": index.get("selected_templates", []),
+        "selected_tools": ["processforge-cli"],
+        "selected_mcp": [],
+        "allowed_actions": resolved["allowed_actions"],
+        "forbidden_actions": resolved["forbidden_actions"],
+        "quality_gates": ["doctor-context"],
+        "checksums": {"assignment": sha256_file(assignment), "context_index": sha256_file(project_root / "contexts" / "context-index.yaml")},
+    }
+    ecp_path.write_text(ensure_trailing_newline(dump_yaml(ecp)), encoding="utf-8")
+
+    capsule_path: Path | None = None
+    if write_capsule:
+        capsule_path = contexts / f"{assn_id}.capsule.yaml"
+        capsule = {
+            "schema_version": 1,
+            "capsule": {
+                "id": f"{assn_id}-capsule",
+                "ecp": rel(ecp_path, project_root),
+                "worker_may_rebuild_context": False,
+            },
+            "assignment": {"id": assn_id, "path": rel(assignment, project_root)},
+            "context": {"freshness": context_freshness(project_root)[0], "conflict_status": conflict_status},
+            "required_sources": [str(item["path"]) for item in sources],
+            "allowed_files": [rel(assignment, project_root)],
+            "forbidden_files": [],
+            "allowed_actions": resolved["allowed_actions"],
+            "forbidden_actions": resolved["forbidden_actions"],
+        }
+        capsule_path.write_text(ensure_trailing_newline(dump_yaml(capsule)), encoding="utf-8")
+    return ecp_path, capsule_path
+
+
+def recent_files(root: Path, dirname: str, limit: int = 5) -> list[str]:
+    directory = root / dirname
+    if not directory.is_dir():
+        return []
+    files = sorted((path for path in directory.rglob("*") if path.is_file()), key=lambda path: path.stat().st_mtime, reverse=True)
+    return [rel(path, root) for path in files[:limit]]
+
+
+def render_session_status(project_root: Path, mode: str) -> str:
+    manifest = project_root / "process-forge.yaml"
+    manifest_text = manifest.read_text(encoding="utf-8", errors="replace") if manifest.is_file() else ""
+    name_match = re.search(r"(?m)^\s*name" + COLON_WS + r"(.+?)\s*$", manifest_text)
+    version_match = re.search(r"(?m)^\s*version" + COLON_WS + r"(.+?)\s*$", manifest_text)
+    project_name = name_match.group(1).strip() if name_match else project_root.name
+    flow_version = version_match.group(1).strip() if version_match else "unknown"
+    freshness, stale = context_freshness(project_root)
+    conflict_status = context_report_status(project_root / "contexts" / "context-conflict-report.md")
+    assignments = recent_files(project_root, "assignments")
+    artifacts = recent_files(project_root, "artifacts")
+    reviews = recent_files(project_root, "reviews")
+    adrs = recent_files(project_root, "adr")
+
+    def markdown_items(items: list[str]) -> str:
+        return "\n".join(f"- {item}" for item in items) if items else "- None."
+
+    blocked = []
+    if conflict_status == "blocked":
+        blocked.append("Context conflict report is blocked.")
+    if freshness in {"missing", "stale"}:
+        blocked.append(f"Context freshness is {freshness}.")
+
+    return "\n".join(
+        [
+            "# ProcessForge Session Status",
+            "",
+            "## Project",
+            "",
+            project_name,
+            "",
+            "## Flow Version",
+            "",
+            flow_version,
+            "",
+            "## Session Mode",
+            "",
+            mode,
+            "",
+            "## Context Freshness",
+            "",
+            freshness + (f": {', '.join(stale)}" if stale else ""),
+            "",
+            "## Completed Work",
+            "",
+            markdown_items(artifacts),
+            "",
+            "## Current Active Assignments",
+            "",
+            markdown_items(assignments),
+            "",
+            "## Blocked Items",
+            "",
+            markdown_items(blocked),
+            "",
+            "## Latest Reviews",
+            "",
+            markdown_items(reviews),
+            "",
+            "## Important ADR",
+            "",
+            markdown_items(adrs),
+            "",
+            "## Risks",
+            "",
+            "- Context cache is an accelerator and must not replace source files.",
+            "",
+            "## Recommended Next Steps",
+            "",
+            "- Run context-resolve if context is stale or missing.",
+            "- Run context-compile before starting assignment workers.",
+            "",
+            "## Suggested Assignments",
+            "",
+            "- None.",
+            "",
+        ]
+    )
+
+
+def command_session_start(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    if not project_root.is_dir():
+        raise SystemExit(f"FAIL: project root not found: {project_root}")
+    freshness, _stale = context_freshness(project_root)
+    if args.rebuild_context_if_stale and freshness in {"missing", "stale"}:
+        status, paths = write_context_outputs(project_root)
+        print(f"CONTEXT: {status}")
+        for path in paths.values():
+            print(f"WROTE: {rel(path, project_root)}")
+    report = render_session_status(project_root, args.mode)
+    print(report, end="")
+    if args.allow_write:
+        target = project_root / "artifacts" / "session-status-report.md"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(report, encoding="utf-8")
+        print(f"WROTE: {rel(target, project_root)}")
+    return 0
+
+
+def command_context_resolve(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    if not project_root.is_dir():
+        raise SystemExit(f"FAIL: project root not found: {project_root}")
+    status, paths = write_context_outputs(project_root)
+    print(f"STATUS: {status}")
+    for path in paths.values():
+        print(f"WROTE: {rel(path, project_root)}")
+    return 1 if status == "blocked" else 0
+
+
+def command_context_compile(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    assignment = Path(args.assignment).expanduser().resolve()
+    ecp_path, capsule_path = compile_execution_context(project_root, assignment, write_capsule=args.capsule)
+    print(f"WROTE: {rel(ecp_path, project_root)}")
+    if capsule_path:
+        print(f"WROTE: {rel(capsule_path, project_root)}")
+    return 0
+
+
+def command_doctor_context(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    checks: list[Check] = []
+    manifest = project_root / "process-forge.yaml"
+    checks.append(check("PASS" if manifest.is_file() else "FAIL", "process-forge.yaml found"))
+    if manifest.is_file():
+        manifest_text = manifest.read_text(encoding="utf-8", errors="replace")
+        checks.append(check("PASS" if is_public_path_safe(manifest_text) else "FAIL", "public manifest has no local absolute paths"))
+        checks.append(check("PASS" if not contains_secret_value(manifest_text) else "FAIL", "public manifest contains no secret values"))
+
+    context_index = project_root / "contexts" / "context-index.yaml"
+    resolved_rules = project_root / "contexts" / "resolved-rules.yaml"
+    conflict_report = project_root / "contexts" / "context-conflict-report.md"
+    cache = project_root / "runtime" / "cache" / "context-cache.yaml"
+    checks.append(check("PASS" if context_index.is_file() else "FAIL", "context index found"))
+    checks.append(check("PASS" if resolved_rules.is_file() else "FAIL", "resolved rules found"))
+    checks.append(check("PASS" if conflict_report.is_file() else "FAIL", "conflict report found"))
+    status = context_report_status(conflict_report)
+    checks.append(check("PASS" if status in {"resolved", "warn", "requires_approval"} else "FAIL", f"conflict status is {status}"))
+    freshness, stale = context_freshness(project_root)
+    checks.append(check("PASS" if freshness == "fresh" else "FAIL", f"context freshness is {freshness}" + (f": {', '.join(stale)}" if stale else "")))
+    checks.append(check("PASS" if cache.is_file() else "WARN", "context cache found"))
+
+    gitignore = project_root / ".gitignore"
+    if gitignore.is_file():
+        ignore_text = gitignore.read_text(encoding="utf-8", errors="replace")
+        runtime_cache_ignored = "runtime/cache/" in ignore_text or "/runtime/cache/" in ignore_text or "runtime/" in ignore_text
+        checks.append(check("PASS" if runtime_cache_ignored else "FAIL", ".gitignore contains runtime/cache/"))
+    else:
+        checks.append(check("WARN", ".gitignore missing"))
+
+    if args.assignment:
+        assignment = Path(args.assignment).expanduser().resolve()
+        ecp = project_root / "contexts" / f"{assignment_id(assignment)}.ecp.yaml"
+        if ecp.is_file():
+            ecp_text = ecp.read_text(encoding="utf-8", errors="replace")
+            checksum = sha256_file(assignment) if assignment.is_file() else "missing"
+            checks.append(check("PASS" if checksum in ecp_text else "FAIL", "assignment ECP is fresh"))
+        else:
+            checks.append(check("FAIL", "assignment ECP missing"))
+
+    return print_checks(checks)
+
+
 def command_doctor_project(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     checks: list[Check] = []
@@ -1241,6 +1830,28 @@ def build_parser() -> argparse.ArgumentParser:
     doctor_project = sub.add_parser("doctor-project", help="Validate a ProcessForge project layer.")
     doctor_project.add_argument("--project-root", required=True, help="Project root path.")
     doctor_project.set_defaults(func=command_doctor_project)
+
+    session_start = sub.add_parser("session-start", help="Start or inspect a ProcessForge session.")
+    session_start.add_argument("--mode", required=True, choices=["resume", "project_init", "assignment_execute", "context_resolve", "context_compile", "doctor_context"], help="Session mode.")
+    session_start.add_argument("--project-root", required=True, help="Project root path.")
+    session_start.add_argument("--allow-write", action="store_true", help="Write artifacts/session-status-report.md.")
+    session_start.add_argument("--rebuild-context-if-stale", action="store_true", help="Run context resolution when context is missing or stale.")
+    session_start.set_defaults(func=command_session_start)
+
+    context_resolve = sub.add_parser("context-resolve", help="Resolve context index, rules, conflicts, and cache.")
+    context_resolve.add_argument("--project-root", required=True, help="Project root path.")
+    context_resolve.set_defaults(func=command_context_resolve)
+
+    context_compile = sub.add_parser("context-compile", help="Compile an assignment Execution Context Package.")
+    context_compile.add_argument("--project-root", default=".", help="Project root path.")
+    context_compile.add_argument("--assignment", required=True, help="Assignment path.")
+    context_compile.add_argument("--capsule", action="store_true", help="Also write a context capsule.")
+    context_compile.set_defaults(func=command_context_compile)
+
+    doctor_context = sub.add_parser("doctor-context", help="Validate context resolution outputs.")
+    doctor_context.add_argument("--project-root", required=True, help="Project root path.")
+    doctor_context.add_argument("--assignment", help="Optional assignment path for ECP freshness check.")
+    doctor_context.set_defaults(func=command_doctor_context)
     return parser
 
 

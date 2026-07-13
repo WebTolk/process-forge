@@ -12,6 +12,10 @@ ProcessForge bootstrap product tree.
 - `python tools/validate-public-cleanliness.py`
 - `python -m py_compile tools/processforge.py tools/validate-process-forge-checksums.py tools/validate-process-forge-schemas.py tools/validate-public-cleanliness.py`
 - `python tools/processforge.py --help`
+- `python tools/processforge.py context-resolve --project-root .`
+- `python tools/processforge.py session-start --mode resume --project-root .`
+- `python tools/processforge.py context-compile --project-root . --assignment assignments/processforge-session-bootstrap-implementation.md --capsule`
+- `python tools/processforge.py doctor-context --project-root . --assignment assignments/processforge-session-bootstrap-implementation.md`
 - `git diff --check`
 
 ## Results
@@ -22,6 +26,7 @@ ProcessForge bootstrap product tree.
 - `PASS: public cleanliness checks passed.`
 - `py_compile` exited 0.
 - `processforge.py --help` exited 0.
+- Session/context CLI smoke checks passed.
 - `git diff --check` exited 0; Git reported only LF-to-CRLF working-copy warnings.
 
 ## Init Smoke Results

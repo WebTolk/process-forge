@@ -1,0 +1,200 @@
+schema_version: 1
+id: context-resolution
+name: Context Resolution
+version: 0.1.0
+status: active
+description: Resolve ProcessForge sources into context index, rules, conflict report, and assignment context packages.
+required_capabilities:
+  - filesystem.read
+  - filesystem.write
+  - context.resolve
+roles:
+  - id: orchestrator
+    title: Orchestrator
+    responsibility: Resolves context once and distributes bounded context to workers.
+  - id: worker
+    title: Worker
+    responsibility: Uses the assigned context package without rebuilding whole-project context.
+  - id: reviewer
+    title: Reviewer
+    responsibility: Reviews conflicts, freshness, and source scope.
+stages:
+  - id: source-discovery
+    title: Source Discovery
+    description: Discover required workplace, project, process, package, template, and assignment sources.
+    required_inputs: []
+    produced_artifacts:
+      - source-inventory
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.read
+    allowed_tools:
+      - processforge-context
+    entry_gates: []
+    exit_gates:
+      - sources-discovered
+    handoff_required: false
+  - id: rule-classification
+    title: Rule Classification
+    description: Classify rules as hard, locked, preference, gate, tool, or template.
+    required_inputs:
+      - source-inventory
+    produced_artifacts:
+      - classified-rules
+    required_role: orchestrator
+    required_capabilities:
+      - context.resolve
+    allowed_tools:
+      - processforge-context
+    entry_gates:
+      - sources-discovered
+    exit_gates:
+      - rules-classified
+    handoff_required: false
+  - id: cascade-merge
+    title: Cascade Merge
+    description: Merge rules in the configured cascade order without weakening locked hard policies.
+    required_inputs:
+      - classified-rules
+    produced_artifacts:
+      - resolved-rules
+    required_role: orchestrator
+    required_capabilities:
+      - context.resolve
+    allowed_tools:
+      - processforge-context
+    entry_gates:
+      - rules-classified
+    exit_gates:
+      - rules-resolved
+    handoff_required: false
+  - id: conflict-detection
+    title: Conflict Detection
+    description: Detect blocked, warn, requires_approval, and resolved outcomes.
+    required_inputs:
+      - resolved-rules
+    produced_artifacts:
+      - context-conflict-report
+    required_role: orchestrator
+    required_capabilities:
+      - context.resolve
+    allowed_tools:
+      - processforge-context
+    entry_gates:
+      - rules-resolved
+    exit_gates:
+      - conflicts-reported
+    handoff_required: false
+  - id: context-index-generation
+    title: Context Index Generation
+    description: Write source list, checksums, selected packages, templates, tools, and capabilities.
+    required_inputs:
+      - source-inventory
+      - context-conflict-report
+    produced_artifacts:
+      - context-index
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-context
+    entry_gates:
+      - conflicts-reported
+    exit_gates:
+      - context-index-written
+    handoff_required: false
+  - id: resolved-rules-generation
+    title: Resolved Rules Generation
+    description: Write resolved rules grouped by classification.
+    required_inputs:
+      - resolved-rules
+    produced_artifacts:
+      - resolved-rules
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-context
+    entry_gates:
+      - rules-resolved
+    exit_gates:
+      - resolved-rules-written
+    handoff_required: false
+  - id: fingerprint-recording
+    title: Fingerprint Recording
+    description: Record source fingerprints for cache and freshness checks.
+    required_inputs:
+      - context-index
+    produced_artifacts:
+      - context-cache
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-context
+    entry_gates:
+      - context-index-written
+    exit_gates:
+      - fingerprints-recorded
+    handoff_required: false
+  - id: ecp-capsule-generation
+    title: ECP And Capsule Generation
+    description: Compile assignment-specific ECP and optional context capsule.
+    required_inputs:
+      - context-index
+      - resolved-rules
+      - context-conflict-report
+      - assignment
+    produced_artifacts:
+      - execution-context-package
+      - context-capsule
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-context
+    entry_gates:
+      - fingerprints-recorded
+    exit_gates:
+      - ecp-ready
+    handoff_required: true
+artifact_definitions:
+  - id: context-index
+    path: contexts/context-index.yaml
+    lifecycle: [draft, ready_for_review, approved, stale]
+  - id: resolved-rules
+    path: contexts/resolved-rules.yaml
+    lifecycle: [draft, ready_for_review, approved, stale]
+  - id: context-conflict-report
+    path: contexts/context-conflict-report.md
+    lifecycle: [draft, ready_for_review, approved, stale]
+  - id: context-cache
+    path: runtime/cache/context-cache.yaml
+    lifecycle: [draft, stale]
+  - id: context-capsule
+    path: contexts/context-capsule.yaml
+    lifecycle: [draft, ready_for_review, approved, stale]
+gates:
+  - id: sources-discovered
+    description: Required source list exists.
+  - id: rules-classified
+    description: Instructions are classified before merge.
+  - id: rules-resolved
+    description: Merge completed without weakening locked hard policies.
+  - id: conflicts-reported
+    description: Conflict report exists.
+  - id: context-index-written
+    description: Context index exists.
+  - id: resolved-rules-written
+    description: Resolved rules exist.
+  - id: fingerprints-recorded
+    description: Fingerprints were written.
+  - id: ecp-ready
+    description: Assignment ECP is ready or blocked with a conflict report.
+evolution_policy:
+  versioning: immutable_after_approval
+  changes_require_review: true
+  compatible_extensions:
+    - add_rule_class
+    - add_context_source_kind
+    - add_conflict_status
