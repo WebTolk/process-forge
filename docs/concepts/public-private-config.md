@@ -1,28 +1,33 @@
 # Public And Private Configuration
 
-ProcessForge separates portable project configuration from local machine configuration.
+ProcessForge separates portable project configuration from local machine
+configuration.
 
 ## Public Files
 
 Public files can be committed.
 
-Examples:
+Examples for new `.pf` projects:
 
 ```text
-AGENTS.md
-process-forge.yaml
-docs/**
-schemas/**
-processes/**
-packages/**
-templates/**
-assignments/**
-artifacts/**
-reviews/**
-handoffs/**
+.pf/AGENTS.md
+.pf/process-forge.yaml
+.pf/contexts/project-context.snapshot.yaml
+.pf/contexts/project-context.snapshot.md
+.pf/schemas/**
+.pf/processes/**
+.pf/packages/**
+.pf/templates/**
+.pf/assignments/**
+.pf/artifacts/**
+.pf/reviews/**
+.pf/handoffs/**
+.pf/logs/**
+.pf/adr/**
 ```
 
-Public files must not contain local absolute paths, secret values, private machine names, or local-only knowledge roots.
+Public files must not contain local absolute paths, secret values, private
+machine names, or local-only knowledge roots.
 
 ## Private Files
 
@@ -31,24 +36,25 @@ Private files stay local.
 Examples:
 
 ```text
-process-forge.local.yaml
-cache/**
+.pf/process-forge.local.yaml
+.pf/runtime/**
+.pf/cache/**
+.pf/private-notes/**
 .secrets/**
 ```
 
-Runtime files may be private in generated projects. In the ProcessForge product repository, `runtime/` is kept as a draft protocol directory.
+Legacy root-layout projects may still use root-level `process-forge.local.yaml`
+and `runtime/` until migration is reviewed.
 
 ## Required Ignore Policy
 
 Project Init adds these entries to project `.gitignore`:
 
 ```gitignore
-process-forge.local.yaml
-runtime/
-cache/
-.secrets/
-*.tmp
-*.bak
+.pf/process-forge.local.yaml
+.pf/runtime/
+.pf/private-notes/
+.pf/cache/
 ```
 
 If a local runner is used later, queue and agent runtime state remain private.

@@ -1,18 +1,27 @@
 schema_version: 1
 capsule:
   id: example-capsule
-  ecp: contexts/example.ecp.yaml
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: "<sha256>"
   worker_may_rebuild_context: false
 assignment:
   id: example-assignment
-  path: assignments/example-assignment.md
+  path: .pf/assignments/example-assignment.md
 context:
+  snapshot_id: project-context
   freshness: fresh
   conflict_status: resolved
 required_sources:
-  - process-forge.yaml
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/example-assignment.md
 allowed_files: []
 forbidden_files: []
+required_outputs: []
+required_capabilities: []
+optional_capabilities: []
+selected_sources: []
+telemetry:
+  events: .pf/runtime/telemetry/example-assignment.ndjson
 allowed_actions:
   - read_required_sources
 forbidden_actions:

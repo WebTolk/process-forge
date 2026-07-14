@@ -1,0 +1,38 @@
+schema_version: 1
+capsule:
+  id: processforge-project-snapshot-session-telemetry-master-prompt-capsule
+  ecp: contexts/processforge-project-snapshot-session-telemetry-master-prompt.20260714T043333z.ecp.yaml
+  worker_may_rebuild_context: false
+assignment:
+  id: processforge-project-snapshot-session-telemetry-master-prompt
+  path: задания/processforge_project_snapshot_session_telemetry_master_prompt.md
+context:
+  freshness: fresh
+  conflict_status: warn
+  context_status: warn
+  conflict_report: contexts/processforge-project-snapshot-session-telemetry-master-prompt.conflicts.md
+required_sources:
+  - AGENTS.md
+  - process-forge.yaml
+  - задания/processforge_project_snapshot_session_telemetry_master_prompt.md
+allowed_files:
+  - задания/processforge_project_snapshot_session_telemetry_master_prompt.md
+forbidden_files:
+  []
+allowed_actions:
+  - read_required_sources
+forbidden_actions:
+  - change_rules_without_review
+  - claim_unexecuted_tests_as_passed
+  - edit_forbidden_files
+  - edit_outside_assignment_scope
+  - invent_root_path
+  - overwrite_brownfield_files_without_force
+  - publish_without_review
+  - rebuild_context_without_approval
+  - scan_outside_project_root
+  - skip_required_review
+  - store_secret_values
+  - upgrade_active_run_without_assessment
+  - widen_scope_without_handoff
+  - write_absolute_paths_to_public_manifest

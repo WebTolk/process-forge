@@ -11,9 +11,14 @@ project:
   name: "<project-name>"
   type: "<project-type>"
 
+flow:
+  root: ".pf"
+  manifest: ".pf/process-forge.yaml"
+  local_config: ".pf/process-forge.local.yaml"
+
 workplace:
   reference: local_file
-  local_config: process-forge.local.yaml
+  local_config: .pf/process-forge.local.yaml
 
 detected:
   languages: []

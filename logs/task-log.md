@@ -175,3 +175,51 @@ Commit/push only if explicitly requested for this completed init slice.
 
 Handoff:
 handoffs/orchestrator-to-next.md
+
+## 2026-07-14 08:34 - Snapshot/Telemetry Architect
+
+Task:
+Implement `задания/processforge_project_snapshot_session_telemetry_master_prompt.md`.
+
+Files changed:
+`tools/processforge.py`, validators, schemas, templates, docs, `.gitignore`,
+`.processforge-releaseignore`, contexts, artifacts, reviews, handoffs, and this
+log.
+
+Artifacts changed:
+`contexts/project-context.snapshot.yaml`,
+`contexts/project-context.snapshot.md`,
+`contexts/processforge-project-snapshot-session-telemetry-master-prompt.*`,
+`artifacts/checksum-inventory.sha256`,
+`artifacts/project-snapshot-refactor-report.md`,
+`artifacts/pf-layout-migration-proposal.md`,
+`reviews/project-snapshot-refactor-review.md`,
+`handoffs/project-snapshot-refactor-handoff.md`.
+
+Templates used:
+Project artifact, review, handoff, and append-only task log formats.
+
+Tools used:
+Serena attempted first but symbol extraction was unavailable because the project
+has no active languages; shell fallback, apply_patch, py_compile,
+`project-context-refresh`, `project-context-check`, `context-resolve`,
+`context-compile`, `doctor-context`, schema validation, public cleanliness, and
+checksum validation, `git diff --check`, and temporary `.pf` smoke projects.
+
+Decisions:
+Implement Stage 1 support only: new projects use `.pf/`, current root layout is
+kept as legacy-compatible, and no root flow directories are moved without review.
+Treat Markdown assignments without YAML front matter as human-readable only for
+the new assignment capsule command.
+
+Risks:
+Snapshot health is `warn` until optional providers for browser verification and
+official documentation lookup are registered. Tool/MCP health checks remain
+MVP-level.
+
+Next steps:
+Review `artifacts/pf-layout-migration-proposal.md` before any repository layout
+move.
+
+Handoff:
+handoffs/project-snapshot-refactor-handoff.md

@@ -1,0 +1,13 @@
+schema_version: 1
+session:
+  id: session-20260101T120000z
+  mode: resume
+  actor_type: human_started_agent
+  role: orchestrator
+  started_at: "2026-01-01T12:00:00Z"
+context:
+  project_flow_root: ".pf"
+  snapshot: ".pf/contexts/project-context.snapshot.yaml"
+  snapshot_status: fresh
+telemetry:
+  events: ".pf/runtime/telemetry/session-20260101T120000z.ndjson"

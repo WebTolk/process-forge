@@ -22,9 +22,9 @@ Apply writes the public and private project files. Existing brownfield files are
 
 After apply, review:
 
-- `artifacts/project-init-proposal.md`
-- `artifacts/project-classification-report.md`
-- `artifacts/global-resource-matching-report.md`
-- `reviews/project-init-review.md`
+- `.pf/artifacts/project-init-proposal.md`
+- `.pf/artifacts/project-classification-report.md`
+- `.pf/artifacts/global-resource-matching-report.md`
+- `.pf/reviews/project-init-review.md`
 
 Observed conventions are not automatically confirmed.

@@ -1,0 +1,526 @@
+schema_version: 1
+id: processforge-project-snapshot-session-telemetry-master-prompt-context
+type: execution_context_package
+assignment: processforge-project-snapshot-session-telemetry-master-prompt
+assignment_path: задания/processforge_project_snapshot_session_telemetry_master_prompt.md
+process: assignment-execute
+stage: assignment_execute
+role: worker
+context_status: warn
+blocking_conflicts: 0
+warnings: 5
+requires_approval: 0
+conflict_report: contexts/processforge-project-snapshot-session-telemetry-master-prompt.conflicts.md
+source_fingerprints:
+  -
+    path: AGENTS.md
+    checksum: dbbdc87786f72d0c4219a24fcfa9632c72f70056f600e2966bb6da6077860876
+  -
+    path: process-forge.yaml
+    checksum: 8ffc2fd7d60bd3e706cde9d71613fdebda4d94a2469fe6ef68ec7da1c79db86f
+  -
+    path: задания/processforge_project_snapshot_session_telemetry_master_prompt.md
+    checksum: aa12621f8e8bebfe0740ce5e6b379811510bcfc85676ea934563f2ef852bdcf1
+read_sources:
+  - AGENTS.md
+  - process-forge.yaml
+  - задания/processforge_project_snapshot_session_telemetry_master_prompt.md
+resolved_rules:
+  allowed_actions:
+    - read_required_sources
+  forbidden_actions:
+    - change_rules_without_review
+    - claim_unexecuted_tests_as_passed
+    - edit_forbidden_files
+    - edit_outside_assignment_scope
+    - invent_root_path
+    - overwrite_brownfield_files_without_force
+    - publish_without_review
+    - rebuild_context_without_approval
+    - scan_outside_project_root
+    - skip_required_review
+    - store_secret_values
+    - upgrade_active_run_without_assessment
+    - widen_scope_without_handoff
+    - write_absolute_paths_to_public_manifest
+  merge:
+    order:
+      - core
+      - workplace
+      - organization
+      - direction
+      - specialization
+      - platform
+      - toolchain
+      - project
+      - process
+      - stage
+      - task
+      - agent_profile
+    conflict_policy: block_on_locked_policy_conflict
+allowed_files:
+  - задания/processforge_project_snapshot_session_telemetry_master_prompt.md
+forbidden_files:
+  []
+required_outputs:
+  []
+required_capabilities:
+  - architecture
+  - artifact_review
+  - content_planning
+  - context.resolve
+  - context.status
+  - editorial_review
+  - filesystem.read
+  - filesystem.write
+  - investigation
+  - markdown.editing
+  - markdown_editing
+  - process_coordination
+  - process_governance
+  - reporting
+  - repository.read
+  - repository.scan
+  - repository_read
+  - repository_write
+  - research
+  - review
+  - schema_validation
+  - test_execution
+  - test_planning
+  - test_running
+  - validation
+  - writing
+selected_tools:
+  - processforge-cli
+selected_mcp:
+  []
+selected_templates:
+  -
+    id: context-capsule-template
+    path: templates/context-capsule-template.yaml
+    source: project
+    status: available
+  -
+    id: context-index-template
+    path: templates/context-index-template.yaml
+    source: project
+    status: available
+  -
+    id: execution-context-package-template
+    path: templates/execution-context-package-template.yaml
+    source: project
+    status: available
+  -
+    id: package-manifest-template
+    path: templates/package-manifest-template.yaml
+    source: project
+    status: available
+  -
+    id: process-definition-template
+    path: templates/process-definition-template.yaml
+    source: project
+    status: available
+  -
+    id: process-forge-local
+    path: templates/process-forge.local.yaml
+    source: project
+    status: available
+  -
+    id: process-forge
+    path: templates/process-forge.yaml
+    source: project
+    status: available
+  -
+    id: project-context-snapshot
+    path: templates/project-context.snapshot.yaml
+    source: project
+    status: available
+  -
+    id: project-init-answers
+    path: templates/project-init.answers.yaml
+    source: project
+    status: available
+  -
+    id: resolved-rules-template
+    path: templates/resolved-rules-template.yaml
+    source: project
+    status: available
+  -
+    id: reusable-template-template
+    path: templates/reusable-template-template.yaml
+    source: project
+    status: available
+  -
+    id: session-metadata-template
+    path: templates/session-metadata-template.yaml
+    source: project
+    status: available
+  -
+    id: session-start-template
+    path: templates/session-start-template.yaml
+    source: project
+    status: available
+  -
+    id: terms
+    path: templates/terms.yaml
+    source: project
+    status: available
+  -
+    id: workplace-init-answers
+    path: templates/workplace-init.answers.yaml
+    source: project
+    status: available
+  -
+    id: workplace
+    path: templates/workplace.yaml
+    source: project
+    status: available
+  -
+    id: adr-template
+    path: templates/adr-template.md
+    source: project
+    status: available
+  -
+    id: artifact-template
+    path: templates/artifact-template.md
+    source: project
+    status: available
+  -
+    id: assignment-front-matter-template
+    path: templates/assignment-front-matter-template.md
+    source: project
+    status: available
+  -
+    id: assignment-template
+    path: templates/assignment-template.md
+    source: project
+    status: available
+  -
+    id: context-conflict-report-template
+    path: templates/context-conflict-report-template.md
+    source: project
+    status: available
+  -
+    id: execution-context-prompt-template
+    path: templates/execution-context-prompt-template.md
+    source: project
+    status: available
+  -
+    id: global-agents-processforge-section
+    path: templates/global-agents-processforge-section.md
+    source: project
+    status: available
+  -
+    id: global-resource-matching-report-template
+    path: templates/global-resource-matching-report-template.md
+    source: project
+    status: available
+  -
+    id: handoff-template
+    path: templates/handoff-template.md
+    source: project
+    status: available
+  -
+    id: process-upgrade-assessment-template
+    path: templates/process-upgrade-assessment-template.md
+    source: project
+    status: available
+  -
+    id: project-agents-template
+    path: templates/project-agents-template.md
+    source: project
+    status: available
+  -
+    id: project-context-snapshot
+    path: templates/project-context.snapshot.md
+    source: project
+    status: available
+  -
+    id: project-conventions-template
+    path: templates/project-conventions-template.md
+    source: project
+    status: available
+  -
+    id: project-init-proposal-template
+    path: templates/project-init-proposal-template.md
+    source: project
+    status: available
+  -
+    id: project-init-review-template
+    path: templates/project-init-review-template.md
+    source: project
+    status: available
+  -
+    id: project-profile-template
+    path: templates/project-profile-template.md
+    source: project
+    status: available
+  -
+    id: repository-map-template
+    path: templates/repository-map-template.md
+    source: project
+    status: available
+  -
+    id: review-template
+    path: templates/review-template.md
+    source: project
+    status: available
+  -
+    id: session-status-report-template
+    path: templates/session-status-report-template.md
+    source: project
+    status: available
+  -
+    id: validation-report-template
+    path: templates/validation-report-template.md
+    source: project
+    status: available
+created_at: "2026-07-14T04:33:02Z"
+checksum: 6f125768bf15a2a1bf4ce61cf522127900e2e0ae2d2aceb7f9a49a7ebd55084a
+context:
+  id: processforge-project-snapshot-session-telemetry-master-prompt-context
+  created_at: "2026-07-14T04:33:02Z"
+  immutable: true
+  context_index: contexts/context-index.yaml
+  conflict_report: contexts/processforge-project-snapshot-session-telemetry-master-prompt.conflicts.md
+task_input:
+  - задания/processforge_project_snapshot_session_telemetry_master_prompt.md
+sources:
+  -
+    path: AGENTS.md
+    checksum: dbbdc87786f72d0c4219a24fcfa9632c72f70056f600e2966bb6da6077860876
+    kind: agent-boot
+    selection_reason: required for session bootstrap
+    load_policy: read_required
+  -
+    path: process-forge.yaml
+    checksum: 8ffc2fd7d60bd3e706cde9d71613fdebda4d94a2469fe6ef68ec7da1c79db86f
+    kind: project-flow
+    selection_reason: required for session bootstrap
+    load_policy: read_required
+  -
+    path: задания/processforge_project_snapshot_session_telemetry_master_prompt.md
+    checksum: aa12621f8e8bebfe0740ce5e6b379811510bcfc85676ea934563f2ef852bdcf1
+    kind: assignment
+    selection_reason: required by context compile assignment
+    load_policy: read_required
+packages:
+  -
+    id: process-forge-content
+    status: available
+  -
+    id: process-forge-core
+    status: available
+  -
+    id: process-forge-knowledge-governance
+    status: available
+  -
+    id: process-forge-software-development
+    status: available
+  -
+    id: process-forge-testing
+    status: available
+templates:
+  -
+    id: context-capsule-template
+    path: templates/context-capsule-template.yaml
+    source: project
+    status: available
+  -
+    id: context-index-template
+    path: templates/context-index-template.yaml
+    source: project
+    status: available
+  -
+    id: execution-context-package-template
+    path: templates/execution-context-package-template.yaml
+    source: project
+    status: available
+  -
+    id: package-manifest-template
+    path: templates/package-manifest-template.yaml
+    source: project
+    status: available
+  -
+    id: process-definition-template
+    path: templates/process-definition-template.yaml
+    source: project
+    status: available
+  -
+    id: process-forge-local
+    path: templates/process-forge.local.yaml
+    source: project
+    status: available
+  -
+    id: process-forge
+    path: templates/process-forge.yaml
+    source: project
+    status: available
+  -
+    id: project-context-snapshot
+    path: templates/project-context.snapshot.yaml
+    source: project
+    status: available
+  -
+    id: project-init-answers
+    path: templates/project-init.answers.yaml
+    source: project
+    status: available
+  -
+    id: resolved-rules-template
+    path: templates/resolved-rules-template.yaml
+    source: project
+    status: available
+  -
+    id: reusable-template-template
+    path: templates/reusable-template-template.yaml
+    source: project
+    status: available
+  -
+    id: session-metadata-template
+    path: templates/session-metadata-template.yaml
+    source: project
+    status: available
+  -
+    id: session-start-template
+    path: templates/session-start-template.yaml
+    source: project
+    status: available
+  -
+    id: terms
+    path: templates/terms.yaml
+    source: project
+    status: available
+  -
+    id: workplace-init-answers
+    path: templates/workplace-init.answers.yaml
+    source: project
+    status: available
+  -
+    id: workplace
+    path: templates/workplace.yaml
+    source: project
+    status: available
+  -
+    id: adr-template
+    path: templates/adr-template.md
+    source: project
+    status: available
+  -
+    id: artifact-template
+    path: templates/artifact-template.md
+    source: project
+    status: available
+  -
+    id: assignment-front-matter-template
+    path: templates/assignment-front-matter-template.md
+    source: project
+    status: available
+  -
+    id: assignment-template
+    path: templates/assignment-template.md
+    source: project
+    status: available
+  -
+    id: context-conflict-report-template
+    path: templates/context-conflict-report-template.md
+    source: project
+    status: available
+  -
+    id: execution-context-prompt-template
+    path: templates/execution-context-prompt-template.md
+    source: project
+    status: available
+  -
+    id: global-agents-processforge-section
+    path: templates/global-agents-processforge-section.md
+    source: project
+    status: available
+  -
+    id: global-resource-matching-report-template
+    path: templates/global-resource-matching-report-template.md
+    source: project
+    status: available
+  -
+    id: handoff-template
+    path: templates/handoff-template.md
+    source: project
+    status: available
+  -
+    id: process-upgrade-assessment-template
+    path: templates/process-upgrade-assessment-template.md
+    source: project
+    status: available
+  -
+    id: project-agents-template
+    path: templates/project-agents-template.md
+    source: project
+    status: available
+  -
+    id: project-context-snapshot
+    path: templates/project-context.snapshot.md
+    source: project
+    status: available
+  -
+    id: project-conventions-template
+    path: templates/project-conventions-template.md
+    source: project
+    status: available
+  -
+    id: project-init-proposal-template
+    path: templates/project-init-proposal-template.md
+    source: project
+    status: available
+  -
+    id: project-init-review-template
+    path: templates/project-init-review-template.md
+    source: project
+    status: available
+  -
+    id: project-profile-template
+    path: templates/project-profile-template.md
+    source: project
+    status: available
+  -
+    id: repository-map-template
+    path: templates/repository-map-template.md
+    source: project
+    status: available
+  -
+    id: review-template
+    path: templates/review-template.md
+    source: project
+    status: available
+  -
+    id: session-status-report-template
+    path: templates/session-status-report-template.md
+    source: project
+    status: available
+  -
+    id: validation-report-template
+    path: templates/validation-report-template.md
+    source: project
+    status: available
+allowed_actions:
+  - read_required_sources
+forbidden_actions:
+  - change_rules_without_review
+  - claim_unexecuted_tests_as_passed
+  - edit_forbidden_files
+  - edit_outside_assignment_scope
+  - invent_root_path
+  - overwrite_brownfield_files_without_force
+  - publish_without_review
+  - rebuild_context_without_approval
+  - scan_outside_project_root
+  - skip_required_review
+  - store_secret_values
+  - upgrade_active_run_without_assessment
+  - widen_scope_without_handoff
+  - write_absolute_paths_to_public_manifest
+quality_gates:
+  - doctor-context
+checksums:
+  assignment: aa12621f8e8bebfe0740ce5e6b379811510bcfc85676ea934563f2ef852bdcf1
+  context_index: 4faefd0756c753f40d8b97e37c2c3095f9e50c4ee606c83f685bed7f580dcfea

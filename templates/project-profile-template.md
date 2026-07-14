@@ -32,8 +32,9 @@ Unknown.
 
 ## Private Zones
 
-- `process-forge.local.yaml`
-- `cache/`
+- `.pf/process-forge.local.yaml`
+- `.pf/runtime/`
+- `.pf/cache/`
 - `.secrets/`
 
 ## Suggested Processes

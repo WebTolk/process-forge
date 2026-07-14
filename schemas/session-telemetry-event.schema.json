@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/session-telemetry-event.schema.json",
+  "title": "Session Telemetry Event",
+  "type": "object",
+  "required": ["ts", "event"],
+  "properties": {
+    "ts": { "type": "string", "minLength": 1 },
+    "event": {
+      "type": "string",
+      "enum": [
+        "session_start",
+        "session_end",
+        "snapshot_check",
+        "source_read",
+        "assignment_loaded",
+        "capability_check",
+        "tool_selected",
+        "tool_invoked",
+        "tool_failed",
+        "mcp_check",
+        "fallback_used",
+        "conflict_detected",
+        "file_scope_checked",
+        "artifact_written",
+        "review_requested",
+        "handoff_created",
+        "doctor_run"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

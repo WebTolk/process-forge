@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/assignment-front-matter.schema.json",
+  "title": "Assignment Front Matter",
+  "type": "object",
+  "required": ["schema_version", "id", "status", "role", "process", "stage", "allowed_files", "forbidden_files", "required_outputs"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["draft", "ready", "in_progress", "blocked", "completed", "cancelled"] },
+    "role": { "type": "string", "minLength": 1 },
+    "process": { "type": ["string", "object"] },
+    "stage": { "type": "string", "minLength": 1 },
+    "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "optional_capabilities": { "type": "array", "items": { "type": "string" } },
+    "allowed_files": { "type": "array", "items": { "type": "string" } },
+    "forbidden_files": { "type": "array", "items": { "type": "string" } },
+    "required_outputs": { "type": "array", "items": { "type": "string" } },
+    "selected_sources": { "type": "array", "items": { "type": "string" } },
+    "telemetry_path": { "type": "string" }
+  },
+  "additionalProperties": true
+}

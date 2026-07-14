@@ -5,6 +5,12 @@ processforge_context_hardening_assignment.md
 
 private-notes/
 runtime/cache/
+runtime/sessions/
+runtime/telemetry/
+.pf/process-forge.local.yaml
+.pf/runtime/
+.pf/private-notes/
+.pf/cache/
 cache/
 .secrets/
 .idea/

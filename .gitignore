@@ -13,9 +13,14 @@ __pycache__/
 .env.*
 !.env.example
 /process-forge.local.yaml
+.pf/process-forge.local.yaml
+.pf/runtime/
+.pf/private-notes/
+.pf/cache/
 /cache/
 runtime/cache/
+runtime/sessions/
+runtime/telemetry/
 /private-notes/
 /.secrets/
-processforge_*_master_prompt.md
-processforge_*_assignment.md
+/задания

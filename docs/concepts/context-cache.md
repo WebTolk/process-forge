@@ -9,10 +9,12 @@ artifacts, reviews, logs, handoffs, and ADRs.
 Runtime cache files live under:
 
 ```text
-runtime/cache/
+.pf/runtime/cache/
 ```
 
 This path is private runtime state and must be ignored by version control.
+Legacy root-layout projects may use `runtime/cache/` until migration is
+reviewed.
 
 ## Cache Records
 

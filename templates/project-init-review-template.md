@@ -30,9 +30,9 @@ pass_with_conditions
 
 ## Evidence
 
-- artifacts/project-init-proposal.md
-- process-forge.yaml
-- process-forge.local.yaml
+- .pf/artifacts/project-init-proposal.md
+- .pf/process-forge.yaml
+- .pf/process-forge.local.yaml
 
 ## Recommendation
 

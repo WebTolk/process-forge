@@ -1,7 +1,7 @@
 schema_version: 1
 status: warn
 blocking_conflicts: 0
-warnings: 6
+warnings: 5
 requires_approval: 0
 
 # Context Conflict Report
@@ -17,7 +17,6 @@ requires_approval: 0
 - optional capability is unresolved: official_documentation_lookup (capabilities)
 - optional capability is unresolved: repository.symbol_analysis (capabilities)
 - optional capability is unresolved: repository_symbol_analysis (capabilities)
-- broad project context includes available sources that workers should not load by default (context-index)
 
 ## Requires Approval
 
@@ -84,3 +83,4 @@ requires_approval: 0
 - templates/review-template.md: d18da363bd84950662df92cfba6382f54248337b3885203eada5e9a30d820e96
 - templates/session-status-report-template.md: 28a8217dc8aa803942bb39a6963d84153ab7ceadea73c91b195ea6b4f5401094
 - templates/validation-report-template.md: 2005dfb1212b07829f63bad04f6ac5283a786502348672cb0487d6d3e1f0e65a
+- задания/processforge_project_snapshot_session_telemetry_master_prompt.md: aa12621f8e8bebfe0740ce5e6b379811510bcfc85676ea934563f2ef852bdcf1

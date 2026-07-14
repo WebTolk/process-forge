@@ -5,7 +5,7 @@ session:
   actor: human
   role: orchestrator
 flow:
-  project_flow_path: process-forge.yaml
+  project_flow_path: .pf/process-forge.yaml
   process_forge_root: null
 project:
   root: "."
@@ -13,6 +13,7 @@ assignment:
   id: null
   path: null
 context:
+  snapshot: .pf/contexts/project-context.snapshot.yaml
   ecp: null
   capsule: null
 init:

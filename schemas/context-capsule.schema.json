@@ -8,10 +8,12 @@
     "schema_version": { "type": "integer", "minimum": 1 },
     "capsule": {
       "type": "object",
-      "required": ["id", "ecp", "worker_may_rebuild_context"],
+      "required": ["id", "worker_may_rebuild_context"],
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "ecp": { "type": "string" },
+        "snapshot": { "type": "string" },
+        "snapshot_checksum": { "type": "string" },
         "worker_may_rebuild_context": { "type": "boolean" }
       },
       "additionalProperties": true
@@ -21,6 +23,11 @@
     "required_sources": { "type": "array", "items": { "type": "string" } },
     "allowed_files": { "type": "array", "items": { "type": "string" } },
     "forbidden_files": { "type": "array", "items": { "type": "string" } },
+    "required_outputs": { "type": "array", "items": { "type": "string" } },
+    "required_capabilities": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "optional_capabilities": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "selected_sources": { "type": "array", "items": { "type": "string" } },
+    "telemetry": { "type": "object", "additionalProperties": true },
     "allowed_actions": { "type": "array", "items": { "type": "string" } },
     "forbidden_actions": { "type": "array", "items": { "type": "string" } }
   },

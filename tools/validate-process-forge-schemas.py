@@ -29,6 +29,12 @@ REQUIRED_FILES = [
     "docs/concepts/public-private-config.md",
     "docs/concepts/capability-resolution.md",
     "docs/concepts/session-bootstrap.md",
+    "docs/concepts/project-context-snapshot.md",
+    "docs/concepts/session-telemetry.md",
+    "docs/concepts/global-agent-section.md",
+    "docs/concepts/project-flow-root.md",
+    "docs/concepts/assignment-front-matter.md",
+    "docs/concepts/context-freshness.md",
     "docs/concepts/context-resolution.md",
     "docs/concepts/instruction-conflicts.md",
     "docs/concepts/context-cache.md",
@@ -51,6 +57,10 @@ REQUIRED_FILES = [
     "schemas/workplace-init-answers.schema.json",
     "schemas/project-init-answers.schema.json",
     "schemas/session-start.schema.json",
+    "schemas/project-context-snapshot.schema.json",
+    "schemas/session-metadata.schema.json",
+    "schemas/session-telemetry-event.schema.json",
+    "schemas/assignment-front-matter.schema.json",
     "schemas/context-index.schema.json",
     "schemas/resolved-rules.schema.json",
     "schemas/context-conflict-report.schema.json",
@@ -95,6 +105,11 @@ REQUIRED_FILES = [
     "templates/project-init-review-template.md",
     "templates/session-start-template.yaml",
     "templates/session-status-report-template.md",
+    "templates/project-context.snapshot.yaml",
+    "templates/project-context.snapshot.md",
+    "templates/global-agents-processforge-section.md",
+    "templates/session-metadata-template.yaml",
+    "templates/assignment-front-matter-template.md",
     "templates/context-index-template.yaml",
     "templates/resolved-rules-template.yaml",
     "templates/context-conflict-report-template.md",
@@ -290,13 +305,19 @@ def validate_yaml_schema_files(root: Path) -> None:
     mappings.extend((path, "process-definition.schema.json") for path in sorted((root / "processes").glob("*.yaml")))
     mappings.extend((path, "package-manifest.schema.json") for path in sorted((root / "packages").glob("*.yaml")))
 
-    context_root = root / "contexts"
-    if (context_root / "context-index.yaml").is_file():
-        mappings.append((context_root / "context-index.yaml", "context-index.schema.json"))
-    if (context_root / "resolved-rules.yaml").is_file():
-        mappings.append((context_root / "resolved-rules.yaml", "resolved-rules.schema.json"))
-    mappings.extend((path, "execution-context-package.schema.json") for path in sorted(context_root.glob("*.ecp.yaml")))
-    mappings.extend((path, "context-capsule.schema.json") for path in sorted(context_root.glob("*.capsule.yaml")))
+    for context_root in [root / "contexts", root / ".pf" / "contexts"]:
+        if (context_root / "context-index.yaml").is_file():
+            mappings.append((context_root / "context-index.yaml", "context-index.schema.json"))
+        if (context_root / "resolved-rules.yaml").is_file():
+            mappings.append((context_root / "resolved-rules.yaml", "resolved-rules.schema.json"))
+        if (context_root / "project-context.snapshot.yaml").is_file():
+            mappings.append((context_root / "project-context.snapshot.yaml", "project-context-snapshot.schema.json"))
+        mappings.extend((path, "execution-context-package.schema.json") for path in sorted(context_root.rglob("*.ecp.yaml")))
+        mappings.extend((path, "context-capsule.schema.json") for path in sorted(context_root.rglob("*.capsule.yaml")))
+
+    for session_root in [root / "runtime" / "sessions", root / ".pf" / "runtime" / "sessions"]:
+        if session_root.is_dir():
+            mappings.extend((path, "session-metadata.schema.json") for path in sorted(session_root.glob("*.yaml")))
 
     if (root / "workplace.yaml").is_file():
         mappings.append((root / "workplace.yaml", "workplace.schema.json"))

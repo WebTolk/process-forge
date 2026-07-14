@@ -1,0 +1,53 @@
+schema_version: 1
+snapshot:
+  id: project-context
+  generated_at: "2026-01-01T00:00:00Z"
+  valid_until: "2026-01-08T00:00:00Z"
+  refresh_policy:
+    max_age_days: 7
+    refresh_when_sources_change: true
+    refresh_when_workplace_changes: true
+    refresh_when_package_versions_change: true
+    refresh_when_required_tools_change: true
+project:
+  id: example-project
+  name: Example Project
+  type:
+    - software_project
+flow:
+  root: ".pf"
+  layout: pf
+  manifest: ".pf/process-forge.yaml"
+  local_config: ".pf/process-forge.local.yaml"
+sources:
+  fingerprints:
+    - id: project_manifest
+      path: ".pf/process-forge.yaml"
+      checksum: "<sha256>"
+resolved_policies:
+  hard:
+    - id: public.no_local_absolute_paths
+      value: true
+      locked: true
+  preferences:
+    - id: templates.project_overrides_global
+      value: true
+capabilities:
+  required: []
+  optional: []
+tools:
+  required: []
+  optional: []
+mcp:
+  required: []
+  optional: []
+templates:
+  project: []
+  global: []
+processes:
+  enabled: []
+session:
+  startup_read_order:
+    - ".pf/AGENTS.md"
+    - ".pf/process-forge.yaml"
+    - ".pf/contexts/project-context.snapshot.md"

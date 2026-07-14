@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/project-context-snapshot.schema.json",
+  "title": "Project Context Snapshot",
+  "type": "object",
+  "required": ["schema_version", "snapshot", "project", "flow", "sources", "resolved_policies", "capabilities", "session"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "snapshot": {
+      "type": "object",
+      "required": ["id", "generated_at", "valid_until", "refresh_policy"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "generated_at": { "type": "string", "minLength": 1 },
+        "valid_until": { "type": "string", "minLength": 1 },
+        "refresh_policy": { "type": "object", "additionalProperties": true },
+        "health": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
+    "project": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "type": ["array", "string"] }
+      },
+      "additionalProperties": true
+    },
+    "flow": {
+      "type": "object",
+      "required": ["root", "manifest", "local_config"],
+      "properties": {
+        "root": { "type": "string" },
+        "layout": { "type": "string" },
+        "manifest": { "type": "string" },
+        "local_config": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "sources": {
+      "type": "object",
+      "required": ["fingerprints"],
+      "properties": {
+        "fingerprints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "path", "checksum"],
+            "properties": {
+              "id": { "type": "string" },
+              "path": { "type": "string" },
+              "checksum": { "type": "string" },
+              "private": { "type": "boolean" }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "knowledge_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "resolved_policies": { "type": "object", "additionalProperties": true },
+    "capabilities": { "type": "object", "additionalProperties": true },
+    "tools": { "type": "object", "additionalProperties": true },
+    "mcp": { "type": "object", "additionalProperties": true },
+    "templates": { "type": "object", "additionalProperties": true },
+    "processes": { "type": "object", "additionalProperties": true },
+    "packages": { "type": "object", "additionalProperties": true },
+    "session": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}
