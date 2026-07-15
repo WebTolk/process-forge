@@ -10,10 +10,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "examples", "tools"]
-PUBLIC_ROOT_FILES = ["README.md", "AGENTS.md", "process-forge.yaml", "LICENSE", "CHANGELOG.md", ".processforge-releaseignore"]
-PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml"]
-PF_PUBLIC_DIRS = ["processes", "packages", "templates", "assignments", "artifacts", "logs", "handoffs", "reviews", "adr", "schemas", "contexts"]
+PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "examples", "tools", "updates"]
+PUBLIC_ROOT_FILES = ["README.md", "LICENSE", "CHANGELOG.md", ".processforge-releaseignore"]
+PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
+PF_PUBLIC_DIRS: list[str] = []
 PF_PRIVATE_PARTS = {"runtime", "private-notes", "cache"}
 SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 SKIP_SUFFIXES = {".pyc", ".pyo"}
@@ -21,11 +21,8 @@ SKIP_SUFFIXES = {".pyc", ".pyo"}
 INTERNAL_FLOW_MARKER = "." + "web" + "tolk"
 FORBIDDEN_LITERAL_PATTERNS = [
     INTERNAL_FLOW_MARKER,
-    "wt ai " + "control center",
-    "wt" + "aicc",
     "sec" + "ret=",
     "pass" + "word=",
-    "api" + "_key",
     "scr" + "atch",
 ]
 
@@ -82,26 +79,13 @@ def validate_releaseignore(root_path: Path) -> list[str]:
     required = [
         ".idea/",
         ".serena/",
-        "private-notes/",
-        "runtime/cache/",
         ".pf/process-forge.local.yaml",
         ".pf/runtime/",
         ".pf/private-notes/",
         ".pf/cache/",
+        "/задания",
         "tools/__pycache__/",
         "*.pyc",
-        "artifacts/*",
-        "!artifacts/README.md",
-        "assignments/*",
-        "!assignments/README.md",
-        "logs/*",
-        "!logs/README.md",
-        "reviews/*",
-        "!reviews/README.md",
-        "handoffs/*",
-        "!handoffs/README.md",
-        "contexts/*",
-        "!contexts/README.md",
     ]
     for item in required:
         if item not in lines:

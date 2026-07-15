@@ -1,0 +1,15 @@
+schema_version: 1
+
+distributions:
+  - id: processforge
+    name: ProcessForge
+    path: "<absolute-path-to-processforge-distribution>"
+    version: "0.1.0"
+    channel: stable
+    status: available
+    provides:
+      - processforge.core
+      - processforge.schemas
+      - processforge.tools
+      - processforge.templates
+      - processforge.processes

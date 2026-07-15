@@ -16,3 +16,5 @@ runtime:
   queue: runtime/queue
   events: runtime/events
   telemetry: runtime/telemetry
+  hooks: runtime/hooks
+  chat: runtime/chat

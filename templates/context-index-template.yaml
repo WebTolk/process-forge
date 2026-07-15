@@ -3,9 +3,9 @@ context:
   id: context-index
   generated_at: "<timestamp>"
   mode: context_resolve
-  project_flow: process-forge.yaml
+  project_flow: .pf/process-forge.yaml
 sources:
-  - path: process-forge.yaml
+  - path: .pf/process-forge.yaml
     kind: project-flow
     required: true
     exists: true
@@ -19,7 +19,7 @@ capabilities:
   missing_required: []
   missing_optional: []
 fingerprints:
-  process-forge.yaml: pending
+  .pf/process-forge.yaml: pending
 freshness:
   status: fresh
   stale_sources: []

@@ -1,0 +1,15 @@
+schema_version: 1
+id: package-example
+name: "Example Knowledge Package"
+version: "0.1.0"
+kind: project
+scope: project
+
+resources:
+  - id: example-resource
+    kind: reference
+    title: "Example resource"
+    path: "README.md"
+    load_policy: on_demand
+    index_policy: full_text
+    description: "Use when the current task needs this package reference."

@@ -4,8 +4,8 @@ You are working inside ProcessForge.
 
 Read:
 
-- `AGENTS.md`
-- `process-forge.yaml`
+- `.pf/AGENTS.md`
+- `.pf/process-forge.yaml`
 - the active assignment
 - the active Execution Context Package
 

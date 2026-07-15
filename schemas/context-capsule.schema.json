@@ -28,6 +28,7 @@
     "optional_capabilities": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "selected_sources": { "type": "array", "items": { "type": "string" } },
     "telemetry": { "type": "object", "additionalProperties": true },
+    "event_correlation_id": { "type": "string" },
     "allowed_actions": { "type": "array", "items": { "type": "string" } },
     "forbidden_actions": { "type": "array", "items": { "type": "string" } }
   },

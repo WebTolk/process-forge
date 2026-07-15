@@ -9,6 +9,7 @@ workplace:
 
 process_forge:
   version_constraint: "^0.1"
+  install_mode: linked
   supported_modes:
     - file_only
     - local_supervisor_ready
@@ -22,6 +23,7 @@ paths:
   logs: "logs"
 
 registries:
+  distributions: "registries/distributions.yaml"
   platforms: "registries/platforms.yaml"
   knowledge_roots: "registries/knowledge-roots.yaml"
   package_roots: "registries/package-roots.yaml"

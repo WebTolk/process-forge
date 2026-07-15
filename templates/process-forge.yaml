@@ -2,7 +2,12 @@ schema_version: 1
 
 process_forge:
   version: "0.1.0"
+  version_constraint: "^0.1"
   mode: file_only
+  install_mode: linked
+  distribution:
+    id: processforge
+    source: workplace
   runner_required: false
   backend_required: false
 
@@ -38,11 +43,14 @@ paths:
   adr: adr
   schemas: schemas
   runtime: runtime
+  hooks: hooks.yaml
+  chat: runtime/chat
 
 knowledge_stack:
-  - package: process-forge-core
+  - id: processforge.core
     version: "^0.1"
-    source: project
+    source: distribution
+    distribution: processforge
 
 required_capabilities:
   - repository.read

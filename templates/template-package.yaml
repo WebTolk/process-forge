@@ -1,0 +1,7 @@
+id: template-example
+type: file
+version: "1.0.0"
+payload:
+  - README.md
+metadata_optional: true
+compatible_platforms: []

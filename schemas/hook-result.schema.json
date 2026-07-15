@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/hook-result.schema.json",
+  "title": "Hook Result",
+  "type": "object",
+  "required": ["schema_version", "delivery_id", "target_id", "status", "exit_code", "blocking", "message"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "delivery_id": { "type": "string", "pattern": "^del_[a-z0-9]+$" },
+    "target_id": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["dry_run", "written", "skipped", "failed"] },
+    "exit_code": { "type": "integer" },
+    "blocking": { "type": "boolean" },
+    "message": { "type": "string" },
+    "outbox": { "type": "string" }
+  },
+  "additionalProperties": true
+}

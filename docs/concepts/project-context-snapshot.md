@@ -4,15 +4,16 @@ Project context snapshot is the computed operational map for a ProcessForge
 project. It is created during project init or project refresh and is read at
 session start before broad package or template scans.
 
-Default paths for new projects:
+Default paths:
 
 ```text
 .pf/contexts/project-context.snapshot.yaml
 .pf/contexts/project-context.snapshot.md
+.pf/runtime/cache/workplace-context.snapshot.yaml
 ```
 
-Legacy root-layout projects may keep the same filenames under `contexts/` until
-a migration is reviewed.
+Commands write these files under `.pf/`; root-level context files are not the
+canonical layout.
 
 ## Machine Sources
 
@@ -42,6 +43,9 @@ The YAML snapshot records:
 - required and optional capabilities
 - selected processes, packages, templates, tools, and MCP entries
 - session startup read order
+
+The runtime workplace snapshot may contain local tool or MCP availability state.
+It lives under `.pf/runtime/cache/` and is private.
 
 Use:
 

@@ -1,34 +1,97 @@
 schema_version: 1
 
 terms:
-  knowledge_roots:
-    label: "knowledge roots"
+  local_knowledge_base:
+    label: "local knowledge base"
+    label_ru: "локальная база знаний"
     aliases:
       - "local knowledge"
       - "knowledge folders"
       - "documentation roots"
-    definition: "Directories with documentation, standards, references, and rules available on the workplace."
+    aliases_ru:
+      - "локальные знания"
+      - "папки со знаниями"
+      - "локальная база знаний"
+    definition: "Workplace-scoped directories with documentation, standards, references, and rules."
+    resolves_to:
+      registry: knowledge_roots
+      scope: workplace
 
-  template_roots:
-    label: "template roots"
+  project_knowledge_base:
+    label: "project knowledge base"
+    label_ru: "проектная база знаний"
     aliases:
-      - "global templates"
+      - "project knowledge"
+      - "project notes"
+    aliases_ru:
+      - "проектные знания"
+      - "знания проекта"
+    definition: "Project-scoped knowledge stored in the project flow."
+    resolves_to:
+      type: project_knowledge
+      project_paths:
+        - ".pf/packages"
+        - ".pf/artifacts"
+
+  joomla_platform_knowledge:
+    label: "Joomla platform knowledge"
+    label_ru: "платформенные знания Joomla"
+    aliases:
+      - "Joomla knowledge"
+      - "Joomla platform"
+    aliases_ru:
+      - "знания Joomla"
+      - "платформа Joomla"
+    definition: "Joomla platform contract and referenced knowledge resources."
+    resolves_to:
+      registry: platform_contracts
+      id: joomla
+
+  global_templates:
+    label: "global templates"
+    label_ru: "глобальные шаблоны"
+    aliases:
+      - "template roots"
       - "shared templates"
-    definition: "Template directories available to multiple projects on the workplace."
+      - "reusable templates"
+    aliases_ru:
+      - "общие шаблоны"
+      - "межпроектные шаблоны"
+      - "копируемые шаблоны"
+    definition: "Reusable template directories available through the workplace."
+    resolves_to:
+      registry: templates
+      scope: workplace
 
-  tool_registry:
-    label: "tool registry"
+  global_tools:
+    label: "global tools"
+    label_ru: "глобальные инструменты"
     aliases:
+      - "tool registry"
       - "tools"
       - "global tools"
-    definition: "Configured tool capability providers available on the workplace."
+    aliases_ru:
+      - "сборщики"
+      - "линтеры"
+      - "генераторы"
+      - "утилиты"
+    definition: "Configured tool capability providers available through the workplace."
+    resolves_to:
+      registry: tools
+      scope: workplace
 
   mcp_registry:
     label: "MCP registry"
     aliases:
       - "MCP"
       - "MCP servers"
-    definition: "Configured MCP capability providers available on the workplace."
+    aliases_ru:
+      - "MCP"
+      - "MCP-серверы"
+    definition: "Configured MCP capability providers."
+    resolves_to:
+      registry: mcp
+      scope: workplace
 
   package_roots:
     label: "package roots"
@@ -36,3 +99,17 @@ terms:
       - "knowledge packages"
       - "process packages"
     definition: "Directories containing versioned ProcessForge packages."
+    resolves_to:
+      registry: package_roots
+      scope: workplace
+
+  distribution_registry:
+    label: "distribution registry"
+    aliases:
+      - "ProcessForge distribution"
+      - "linked core"
+      - "core registry"
+    definition: "Registry that points projects to versioned ProcessForge distributions."
+    resolves_to:
+      registry: distributions
+      scope: workplace

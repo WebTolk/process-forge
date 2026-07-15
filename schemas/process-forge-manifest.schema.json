@@ -11,7 +11,10 @@
       "required": ["version", "mode", "runner_required", "backend_required"],
       "properties": {
         "version": { "type": "string" },
+        "version_constraint": { "type": "string" },
         "mode": { "enum": ["file_only", "local_supervisor", "managed"] },
+        "install_mode": { "enum": ["linked", "embedded", "future_optional"] },
+        "distribution": { "type": "object", "additionalProperties": true },
         "runner_required": { "type": "boolean" },
         "backend_required": { "type": "boolean" }
       },
@@ -38,6 +41,9 @@
       "type": "array",
       "items": { "$ref": "#/$defs/idPathRef" }
     },
+    "knowledge_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "platform_contracts": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "selected_resources": { "type": "object", "additionalProperties": true },
     "validation": { "type": "object" }
   },
   "$defs": {

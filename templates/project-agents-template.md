@@ -12,6 +12,7 @@ This project uses ProcessForge.
 6. Read latest relevant logs/reviews/handoffs.
 7. Use only tools/templates listed in snapshot or assignment.
 8. Write session telemetry to `.pf/runtime/telemetry/`.
+9. Let ProcessForge commands emit flow events to `.pf/runtime/events/`.
 
 ## Important Rules
 
@@ -22,3 +23,4 @@ This project uses ProcessForge.
 - Use project-local templates before global templates when allowed.
 - Record template usage.
 - Record tool/MCP usage in session telemetry.
+- Do not commit `.pf/runtime/events/` or webhook outbox payloads.

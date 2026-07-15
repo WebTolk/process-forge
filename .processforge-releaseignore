@@ -3,15 +3,10 @@ processforge_init_master_prompt.md
 processforge_session_bootstrap_master_prompt.md
 processforge_context_hardening_assignment.md
 
-private-notes/
-runtime/cache/
-runtime/sessions/
-runtime/telemetry/
 .pf/process-forge.local.yaml
 .pf/runtime/
 .pf/private-notes/
 .pf/cache/
-cache/
 .secrets/
 .idea/
 .serena/
@@ -19,16 +14,4 @@ tools/__pycache__/
 __pycache__/
 *.pyc
 *.pyo
-
-artifacts/*
-!artifacts/README.md
-assignments/*
-!assignments/README.md
-logs/*
-!logs/README.md
-reviews/*
-!reviews/README.md
-handoffs/*
-!handoffs/README.md
-contexts/*
-!contexts/README.md
+/задания

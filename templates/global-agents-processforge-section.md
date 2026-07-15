@@ -16,4 +16,5 @@ Rules:
 5. If the snapshot is missing or stale, run/request project context refresh.
 6. Never write secrets or local absolute paths to public files.
 7. Follow assignment boundaries.
+8. Write session telemetry when working inside ProcessForge.
 <!-- PROCESSFORGE:END -->

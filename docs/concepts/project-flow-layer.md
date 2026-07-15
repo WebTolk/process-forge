@@ -8,9 +8,8 @@ It answers:
 How should this project run repeatable work?
 ```
 
-The default flow root is `.pf/`, and the default manifest is
-`.pf/process-forge.yaml`. Legacy root-layout projects remain supported until a
-reviewed migration moves their flow files.
+The flow root is `.pf/`, and the project-local manifest is
+`.pf/process-forge.yaml`. Commands do not create root-layout flow files.
 
 ## Responsibilities
 

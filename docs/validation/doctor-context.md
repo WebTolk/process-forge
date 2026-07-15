@@ -1,8 +1,8 @@
 # Doctor Context
 
 `doctor-context` validates the session bootstrap and context layer for a
-project. Project context snapshot is the preferred proof point; legacy
-context-index files remain supported.
+project. Project context snapshot is the preferred proof point; context-index
+files are compatibility artifacts under `.pf/contexts/`.
 
 ## Command
 
@@ -20,12 +20,12 @@ python tools/processforge.py doctor-context --project-root <project-root> --assi
 
 The command verifies:
 
-- project manifest exists under `.pf/` or legacy root layout
+- project manifest exists under `.pf/`
 - public project manifest has no local absolute paths
 - project context snapshot YAML and MD exist when snapshot mode is used
 - snapshot freshness is `fresh`
 - required capabilities are available
-- legacy context index, resolved rules, and conflict report are valid when present
+- context index, resolved rules, and conflict report are valid when present
 - private cache/runtime path is ignored
 - ECP is fresh for the supplied assignment when an assignment is provided
 - public/private policy is not violated

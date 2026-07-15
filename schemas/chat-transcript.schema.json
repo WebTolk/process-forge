@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/chat-transcript.schema.json",
+  "title": "Chat Transcript",
+  "type": "object",
+  "required": ["schema_version", "session_id", "messages"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "messages": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+  },
+  "additionalProperties": true
+}

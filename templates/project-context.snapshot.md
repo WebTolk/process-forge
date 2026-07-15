@@ -59,6 +59,9 @@ Read in this order:
 4. current assignment
 5. relevant logs/reviews/handoffs
 
+Telemetry is written to `.pf/runtime/telemetry/`.
+Flow events are written to `.pf/runtime/events/events.ndjson`.
+
 ## Current Risks
 
 - Refresh before relying on required capability decisions when freshness is stale.

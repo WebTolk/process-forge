@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/template-package.schema.json",
+  "title": "Template Package",
+  "type": "object",
+  "required": ["id", "type", "version"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "type": { "enum": ["file", "media", "prompt", "directory", "multi-file"] },
+    "version": { "type": "string", "minLength": 1 },
+    "payload": { "type": "array", "items": { "type": "string" } },
+    "compatible_platforms": { "type": "array", "items": { "type": "string" } },
+    "metadata_optional": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

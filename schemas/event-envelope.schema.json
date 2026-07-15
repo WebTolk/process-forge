@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/event-envelope.schema.json",
+  "title": "Event Envelope",
+  "type": "object",
+  "required": ["schema_version", "event_id", "event_type", "source", "subject", "time", "correlation_id", "project", "process", "assignment", "actor", "data"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "event_id": { "type": "string", "pattern": "^evt_[a-z0-9]+$" },
+    "event_type": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$" },
+    "source": { "type": "string", "minLength": 1 },
+    "subject": { "type": "string", "minLength": 1 },
+    "time": { "type": "string", "minLength": 1 },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "causation_id": { "type": ["string", "null"] },
+    "project": { "type": "object", "required": ["flow_root", "project_id"], "additionalProperties": true },
+    "process": { "type": "object", "additionalProperties": true },
+    "assignment": { "type": "object", "additionalProperties": true },
+    "actor": { "type": "object", "required": ["type", "id", "role"], "additionalProperties": true },
+    "session": { "type": "object", "additionalProperties": true },
+    "data": { "type": "object", "additionalProperties": true },
+    "severity": { "type": "string", "enum": ["info", "warn", "error"] },
+    "privacy": { "type": "string", "enum": ["public", "private", "sanitized"] }
+  },
+  "additionalProperties": true
+}

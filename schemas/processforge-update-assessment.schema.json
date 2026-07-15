@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/processforge-update-assessment.schema.json",
+  "title": "ProcessForge Update Assessment",
+  "type": "object",
+  "required": ["schema_version", "assessment", "versions", "review"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "assessment": {
+      "type": "object",
+      "required": ["id", "result", "channel"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "result": { "enum": ["safe", "requires_approval", "requires_migration", "blocked"] },
+        "channel": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "versions": { "type": "object", "additionalProperties": true },
+    "review": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

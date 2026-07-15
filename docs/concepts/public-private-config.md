@@ -7,17 +7,14 @@ configuration.
 
 Public files can be committed.
 
-Examples for new `.pf` projects:
+Examples for `.pf` projects:
 
 ```text
 .pf/AGENTS.md
 .pf/process-forge.yaml
+.pf/hooks.yaml
 .pf/contexts/project-context.snapshot.yaml
 .pf/contexts/project-context.snapshot.md
-.pf/schemas/**
-.pf/processes/**
-.pf/packages/**
-.pf/templates/**
 .pf/assignments/**
 .pf/artifacts/**
 .pf/reviews/**
@@ -25,6 +22,10 @@ Examples for new `.pf` projects:
 .pf/logs/**
 .pf/adr/**
 ```
+
+Product distribution files such as root `docs/`, `schemas/`, `tools/`,
+`processes/`, `packages/`, `templates/`, and `examples/` are also public product
+files.
 
 Public files must not contain local absolute paths, secret values, private
 machine names, or local-only knowledge roots.
@@ -42,9 +43,6 @@ Examples:
 .pf/private-notes/**
 .secrets/**
 ```
-
-Legacy root-layout projects may still use root-level `process-forge.local.yaml`
-and `runtime/` until migration is reviewed.
 
 ## Required Ignore Policy
 

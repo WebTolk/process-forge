@@ -18,6 +18,19 @@
       "additionalProperties": true
     },
     "paths": { "type": "object", "additionalProperties": { "type": "string" } },
+    "registries": {
+      "type": "object",
+      "properties": {
+        "distributions": { "type": "string" },
+        "platforms": { "type": "string" },
+        "knowledge_roots": { "type": "string" },
+        "package_roots": { "type": "string" },
+        "templates": { "type": "string" },
+        "tools": { "type": "string" },
+        "mcp": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
     "tools": { "type": "array", "items": { "$ref": "#/$defs/capabilityProvider" } },
     "mcp_servers": { "type": "array", "items": { "$ref": "#/$defs/capabilityProvider" } },
     "policies": { "type": "object" },

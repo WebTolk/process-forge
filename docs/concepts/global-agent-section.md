@@ -21,6 +21,20 @@ the project-local flow entrypoint:
 Existing user instructions outside the markers are preserved. Re-running the
 operation is idempotent.
 
+## Agent-Specific Snippets
+
+Agent-specific files such as `CODEX.md`, `CLAUDE.md`, `GEMINI.md`, and
+`.cursor/rules` should use the same short adapter idea:
+
+```markdown
+When ProcessForge applies, read `.pf/AGENTS.md`, `.pf/process-forge.yaml`, and
+`.pf/contexts/project-context.snapshot.md`. Follow assignment boundaries and
+write session telemetry.
+```
+
+These snippets complement the global section; they do not replace local agent
+or device instructions.
+
 Use:
 
 ```bash

@@ -24,6 +24,7 @@
     "status": { "enum": ["draft", "active", "deprecated", "archived"] },
     "description": { "type": "string" },
     "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "hooks": { "$ref": "#/$defs/processHooks" },
     "roles": {
       "type": "array",
       "items": {
@@ -81,6 +82,7 @@
         "allowed_tools": { "type": "array", "items": { "type": "string" } },
         "entry_gates": { "type": "array", "items": { "type": "string" } },
         "exit_gates": { "type": "array", "items": { "type": "string" } },
+        "hooks": { "$ref": "#/$defs/stageHooks" },
         "handoff_required": { "type": "boolean" }
       },
       "additionalProperties": true
@@ -94,6 +96,77 @@
         "owner_role": { "$ref": "#/$defs/id" },
         "template": { "type": "string" },
         "lifecycle": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "processHooks": {
+      "type": "object",
+      "properties": {
+        "emit": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["event"],
+            "properties": {
+              "event": { "type": "string", "minLength": 1 },
+              "required": { "type": "boolean" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "subscriptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["event", "actions"],
+            "properties": {
+              "event": { "type": "string", "minLength": 1 },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["type"],
+                  "properties": { "type": { "type": "string", "minLength": 1 } },
+                  "additionalProperties": true
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "tracking": {
+          "type": "object",
+          "properties": { "include": { "type": "array", "items": { "type": "string" } } },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "stageHooks": {
+      "type": "object",
+      "properties": {
+        "emit": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "event": { "type": "string", "minLength": 1 },
+              "required": { "type": "boolean" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "stop_gates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "event": { "type": "string", "minLength": 1 },
+              "require": { "type": "array", "items": { "type": "string" } }
+            },
+            "additionalProperties": true
+          }
+        }
       },
       "additionalProperties": true
     }

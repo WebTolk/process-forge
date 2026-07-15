@@ -15,8 +15,9 @@ DEFAULT_ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = [
     "README.md",
-    "AGENTS.md",
-    "process-forge.yaml",
+    ".pf/AGENTS.md",
+    ".pf/process-forge.yaml",
+    ".pf/hooks.yaml",
     "docs/concepts/file-first-processes.md",
     "docs/concepts/workplace-layer.md",
     "docs/concepts/project-flow-layer.md",
@@ -26,11 +27,21 @@ REQUIRED_FILES = [
     "docs/concepts/process-evolution.md",
     "docs/concepts/workplace-init.md",
     "docs/concepts/project-init.md",
+    "docs/concepts/linked-workplace-model.md",
+    "docs/concepts/knowledge-resources.md",
+    "docs/concepts/template-packages.md",
+    "docs/concepts/platform-contracts.md",
+    "docs/concepts/processforge-self-update.md",
+    "docs/concepts/workplace-terms.md",
+    "docs/concepts/wtaicc-future-compatibility.md",
     "docs/concepts/public-private-config.md",
     "docs/concepts/capability-resolution.md",
     "docs/concepts/session-bootstrap.md",
     "docs/concepts/project-context-snapshot.md",
     "docs/concepts/session-telemetry.md",
+    "docs/concepts/process-events.md",
+    "docs/concepts/hooks-and-webhooks.md",
+    "docs/concepts/chat-relay.md",
     "docs/concepts/global-agent-section.md",
     "docs/concepts/project-flow-root.md",
     "docs/concepts/assignment-front-matter.md",
@@ -48,6 +59,12 @@ REQUIRED_FILES = [
     "schemas/process-forge-manifest.schema.json",
     "schemas/workplace.schema.json",
     "schemas/terms.schema.json",
+    "schemas/distributions-registry.schema.json",
+    "schemas/knowledge-resource.schema.json",
+    "schemas/platform-contract.schema.json",
+    "schemas/template-package.schema.json",
+    "schemas/processforge-update-index.schema.json",
+    "schemas/processforge-update-assessment.schema.json",
     "schemas/platform-registry.schema.json",
     "schemas/knowledge-roots-registry.schema.json",
     "schemas/package-roots-registry.schema.json",
@@ -60,6 +77,15 @@ REQUIRED_FILES = [
     "schemas/project-context-snapshot.schema.json",
     "schemas/session-metadata.schema.json",
     "schemas/session-telemetry-event.schema.json",
+    "schemas/event-envelope.schema.json",
+    "schemas/process-event.schema.json",
+    "schemas/processforge-event.schema.json",
+    "schemas/hooks.schema.json",
+    "schemas/hook-delivery.schema.json",
+    "schemas/hook-result.schema.json",
+    "schemas/chat-message.schema.json",
+    "schemas/chat-transcript.schema.json",
+    "schemas/wtaicc-outbox-payload.schema.json",
     "schemas/assignment-front-matter.schema.json",
     "schemas/context-index.schema.json",
     "schemas/resolved-rules.schema.json",
@@ -84,8 +110,10 @@ REQUIRED_FILES = [
     "processes/project-initialization.yaml",
     "processes/session-bootstrap.yaml",
     "processes/context-resolution.yaml",
+    "processes/processforge-update-check.yaml",
     "templates/workplace.yaml",
     "templates/terms.yaml",
+    "templates/registries/distributions.yaml",
     "templates/registries/platforms.yaml",
     "templates/registries/knowledge-roots.yaml",
     "templates/registries/package-roots.yaml",
@@ -109,12 +137,24 @@ REQUIRED_FILES = [
     "templates/project-context.snapshot.md",
     "templates/global-agents-processforge-section.md",
     "templates/session-metadata-template.yaml",
+    "templates/session-telemetry-event-template.json",
+    "templates/processforge-event-template.json",
+    "templates/hooks-template.yaml",
+    "templates/platform-contract.yaml",
+    "templates/platform-contract-joomla.yaml",
+    "templates/knowledge-package.yaml",
+    "templates/template-readme-template.md",
+    "templates/template-package.yaml",
+    "templates/processforge-update-index.yaml",
+    "templates/processforge-update-assessment-template.md",
     "templates/assignment-front-matter-template.md",
     "templates/context-index-template.yaml",
     "templates/resolved-rules-template.yaml",
     "templates/context-conflict-report-template.md",
     "templates/context-capsule-template.yaml",
     "tools/processforge.py",
+    "updates/processforge-update-index.yaml",
+    "updates/migrations/0.1.0-linked-workplace.md",
 ]
 
 PROCESS_REQUIRED_KEYS = [
@@ -271,10 +311,10 @@ def validate_json_schemas(root: Path) -> None:
 
 
 def validate_yaml_like_files(root: Path) -> None:
-    manifest = read_text(root / "process-forge.yaml")
+    manifest = read_text(root / ".pf" / "process-forge.yaml")
     for key in ("schema_version", "process_forge", "project", "paths", "policies"):
         if not has_yaml_key(manifest, key):
-            fail(f"process-forge.yaml missing {key}")
+            fail(f".pf/process-forge.yaml missing {key}")
 
     process_count = 0
     non_development = False
@@ -300,10 +340,17 @@ def validate_yaml_like_files(root: Path) -> None:
 
 def validate_yaml_schema_files(root: Path) -> None:
     mappings: list[tuple[Path, str]] = [
-        (root / "process-forge.yaml", "process-forge-manifest.schema.json"),
+        (root / ".pf" / "process-forge.yaml", "process-forge-manifest.schema.json"),
     ]
     mappings.extend((path, "process-definition.schema.json") for path in sorted((root / "processes").glob("*.yaml")))
     mappings.extend((path, "package-manifest.schema.json") for path in sorted((root / "packages").glob("*.yaml")))
+    if (root / "updates" / "processforge-update-index.yaml").is_file():
+        mappings.append((root / "updates" / "processforge-update-index.yaml", "processforge-update-index.schema.json"))
+    if (root / "templates" / "registries" / "distributions.yaml").is_file():
+        mappings.append((root / "templates" / "registries" / "distributions.yaml", "distributions-registry.schema.json"))
+    for path in [root / "templates" / "platform-contract.yaml", root / "templates" / "platform-contract-joomla.yaml"]:
+        if path.is_file():
+            mappings.append((path, "platform-contract.schema.json"))
 
     for context_root in [root / "contexts", root / ".pf" / "contexts"]:
         if (context_root / "context-index.yaml").is_file():
@@ -321,11 +368,56 @@ def validate_yaml_schema_files(root: Path) -> None:
 
     if (root / "workplace.yaml").is_file():
         mappings.append((root / "workplace.yaml", "workplace.schema.json"))
+    if (root / ".pf" / "hooks.yaml").is_file():
+        mappings.append((root / ".pf" / "hooks.yaml", "hooks.schema.json"))
 
     for path, schema_name in mappings:
         data = load_yaml(path)
         schema = load_schema(root, schema_name)
         validate_against_schema(data, schema, path.relative_to(root).as_posix())
+
+
+def validate_ndjson_events(root: Path) -> None:
+    checks = [
+        (".pf/runtime/events/events.ndjson", "event-envelope.schema.json"),
+        (".pf/runtime/telemetry", "session-telemetry-event.schema.json"),
+        (".pf/runtime/chat/transcripts", "chat-message.schema.json"),
+    ]
+    for rel_path, schema_name in checks:
+        path = root / rel_path
+        schema = load_schema(root, schema_name)
+        if path.is_file():
+            files = [path]
+        elif path.is_dir():
+            files = sorted(path.glob("*.ndjson"))
+        else:
+            files = []
+        for ndjson in files:
+            for line_number, line in enumerate(ndjson.read_text(encoding="utf-8-sig").splitlines(), start=1):
+                if not line.strip():
+                    continue
+                try:
+                    data = json.loads(line)
+                except json.JSONDecodeError as exc:
+                    fail(f"{ndjson.relative_to(root)}:{line_number} invalid NDJSON: {exc}")
+                validate_against_schema(data, schema, f"{ndjson.relative_to(root).as_posix()}:{line_number}")
+
+
+def validate_runtime_json_payloads(root: Path) -> None:
+    mappings = [
+        (root / ".pf" / "runtime" / "hooks" / "results", "hook-result.schema.json"),
+        (root / ".pf" / "runtime" / "hooks" / "outbox" / "wtaicc", "wtaicc-outbox-payload.schema.json"),
+    ]
+    for folder, schema_name in mappings:
+        if not folder.is_dir():
+            continue
+        schema = load_schema(root, schema_name)
+        for path in sorted(folder.glob("*.json")):
+            try:
+                data = json.loads(read_text(path))
+            except json.JSONDecodeError as exc:
+                fail(f"{path.relative_to(root)} is invalid JSON: {exc}")
+            validate_against_schema(data, schema, path.relative_to(root).as_posix())
 
 
 def main() -> int:
@@ -337,6 +429,8 @@ def main() -> int:
     validate_json_schemas(root)
     validate_yaml_like_files(root)
     validate_yaml_schema_files(root)
+    validate_ndjson_events(root)
+    validate_runtime_json_payloads(root)
     print("PASS: ProcessForge structure and JSON Schema validation passed.")
     return 0
 

@@ -39,6 +39,8 @@
       },
       "additionalProperties": true
     },
+    "process_forge": { "type": "object", "additionalProperties": true },
+    "platform_contracts": { "type": "object", "additionalProperties": true },
     "sources": {
       "type": "object",
       "required": ["fingerprints"],
@@ -61,6 +63,7 @@
       "additionalProperties": true
     },
     "knowledge_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "knowledge_resources": { "type": "object", "additionalProperties": true },
     "resolved_policies": { "type": "object", "additionalProperties": true },
     "capabilities": { "type": "object", "additionalProperties": true },
     "tools": { "type": "object", "additionalProperties": true },

@@ -13,8 +13,11 @@
         "required": ["label", "definition"],
         "properties": {
           "label": { "type": "string" },
+          "label_ru": { "type": "string" },
           "aliases": { "type": "array", "items": { "type": "string" } },
-          "definition": { "type": "string" }
+          "aliases_ru": { "type": "array", "items": { "type": "string" } },
+          "definition": { "type": "string" },
+          "resolves_to": { "type": "object", "additionalProperties": true }
         },
         "additionalProperties": true
       }

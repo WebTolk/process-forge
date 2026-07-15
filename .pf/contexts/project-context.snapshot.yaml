@@ -1,0 +1,282 @@
+schema_version: 1
+snapshot:
+  id: project-context
+  generated_at: '2026-07-15T07:57:53Z'
+  valid_until: '2026-07-22T07:57:53Z'
+  refresh_policy:
+    max_age_days: 7
+    refresh_when_sources_change: true
+    refresh_when_workplace_changes: true
+    refresh_when_package_versions_change: true
+    refresh_when_required_tools_change: true
+  health:
+    status: warn
+project:
+  id: process-forge
+  name: ProcessForge
+  type:
+    - software_project
+flow:
+  root: .pf
+  layout: pf
+  manifest: .pf/process-forge.yaml
+  local_config: .pf/process-forge.local.yaml
+process_forge:
+  version: 0.1.0
+  version_constraint: ^0.1
+  install_mode: linked
+  distribution:
+    id: processforge
+    source: project
+    path: <private-distribution-ref>
+    status: available
+platform_contracts:
+  selected:
+    []
+  missing_required:
+    []
+  missing_optional_resources:
+    []
+sources:
+  fingerprints:
+    -
+      id: project_manifest
+      path: .pf/process-forge.yaml
+      kind: manifest
+      checksum: a61d48c191e4894ae2a7b56fe96a9e03cf9ffd9016cd24a84b1821eba3bc5603
+    -
+      id: process-processes-software-feature-development-yaml
+      path: processes/software-feature-development.yaml
+      kind: process
+      checksum: 40b87049ae6bcf120b13b5de2bc88db9934721d9713d36f52dd2a87e699995e6
+    -
+      id: process-processes-bug-fix-yaml
+      path: processes/bug-fix.yaml
+      kind: process
+      checksum: b5f00bbfc37aab65f0a1fde69baaa8decb87e7ab004f700ac5dd1761d3359502
+    -
+      id: process-processes-testing-yaml
+      path: processes/testing.yaml
+      kind: process
+      checksum: 94346c40b1b49169b4e37b7c11b4ee7b2c2dacfebe0e0578f8af788946b20d3e
+    -
+      id: process-processes-content-production-yaml
+      path: processes/content-production.yaml
+      kind: process
+      checksum: c01a0e09293733b12f0336f864dbf4cee9846df8c24117aacb0e262577257bf3
+    -
+      id: process-processes-knowledge-package-improvement-yaml
+      path: processes/knowledge-package-improvement.yaml
+      kind: process
+      checksum: 536ebb95a759ac542e49784953bea0f713e5f118aed2cc4006770270dfc4d05d
+    -
+      id: process-processes-process-version-upgrade-yaml
+      path: processes/process-version-upgrade.yaml
+      kind: process
+      checksum: d220d1e1515e9c58941ca277f7c819d0c7c600af818a8c97d7de9495aabad89d
+    -
+      id: process-processes-workplace-initialization-yaml
+      path: processes/workplace-initialization.yaml
+      kind: process
+      checksum: 8925770fc0bb1fb905dd27375457df15f24eaef79a7ace0c8605ba052d915479
+    -
+      id: process-processes-project-initialization-yaml
+      path: processes/project-initialization.yaml
+      kind: process
+      checksum: 6ff5bd3a1d341daefc0b8f26983c9fafb56b53b8f983f64c4cb915d3117cb6af
+    -
+      id: process-processes-session-bootstrap-yaml
+      path: processes/session-bootstrap.yaml
+      kind: process
+      checksum: 929bcaaaa75a04dfb862051da2e2289020b0ab6573437551a29a466f1e561945
+    -
+      id: process-processes-context-resolution-yaml
+      path: processes/context-resolution.yaml
+      kind: process
+      checksum: d59e0de574f70a77494ad56f16994ed468e9f7ea1ece57ab1fa485e5c0625753
+    -
+      id: process-processes-processforge-update-check-yaml
+      path: processes/processforge-update-check.yaml
+      kind: process
+      checksum: b6ed78953141a9b882298872ccbda5e83c66b7d08d18d325f0f411f50dad7831
+    -
+      id: package-packages-process-forge-core-yaml
+      path: packages/process-forge-core.yaml
+      kind: package
+      checksum: 170d1f7abf77f9e470ca177c1dba2fd140423de29aed2a07c4774ddfbb7c0791
+    -
+      id: package-packages-process-forge-software-development-yaml
+      path: packages/process-forge-software-development.yaml
+      kind: package
+      checksum: c3c812d40436f9fb3958d44904baaa19575437c895d1edc0161f4c23f1542a7e
+    -
+      id: package-packages-process-forge-content-yaml
+      path: packages/process-forge-content.yaml
+      kind: package
+      checksum: 359b014bca2e2e6288c4d0a10f27b84dab7a7c76e714d086d4adc50bf3e4ef4e
+    -
+      id: package-packages-process-forge-testing-yaml
+      path: packages/process-forge-testing.yaml
+      kind: package
+      checksum: 1446954bc23d0868e2adffe1f24dfbdded8585be710daa6b488ed6c98a321af8
+    -
+      id: package-packages-process-forge-knowledge-governance-yaml
+      path: packages/process-forge-knowledge-governance.yaml
+      kind: package
+      checksum: d1d46b126a1e314bf9e908eebd5a1abe0ef762f3e7a83df3ae505e7d446b0bbf
+knowledge_stack:
+  -
+    id: processforge.core
+    version: ^0.1
+    source: distribution
+    distribution: processforge
+  -
+    id: project.process-forge
+    version: 0.1.0
+    source: project
+resolved_policies:
+  hard:
+    -
+      id: public.no_local_absolute_paths
+      value: true
+      locked: true
+    -
+      id: files.one_writer_per_scope
+      value: true
+      locked: true
+    -
+      id: secrets.do_not_store
+      value: true
+      locked: true
+    -
+      id: runtime.private
+      value: true
+      locked: true
+    -
+      id: markdown.not_machine_merge_source
+      value: true
+      locked: true
+  preferences:
+    -
+      id: templates.project_overrides_global
+      value: true
+    -
+      id: session.prefer_project_context_snapshot
+      value: true
+capabilities:
+  required:
+    -
+      id: markdown_editing
+      status: available
+      provider: builtin
+      severity: info
+    -
+      id: repository_read
+      status: available
+      provider: builtin
+      severity: info
+    -
+      id: schema_validation
+      status: available
+      provider: builtin
+      severity: info
+  optional:
+    -
+      id: browser_verification
+      status: missing
+      provider: null
+      severity: warn
+    -
+      id: official_documentation_lookup
+      status: missing
+      provider: null
+      severity: warn
+    -
+      id: repository_symbol_analysis
+      status: missing
+      provider: null
+      severity: warn
+knowledge_resources:
+  selected:
+    []
+  missing_optional:
+    []
+tools:
+  required:
+    []
+  optional:
+    []
+  source: workplace-registry
+mcp:
+  required:
+    []
+  optional:
+    []
+  source: workplace-registry
+templates:
+  project:
+    []
+  global:
+    []
+  source: workplace-registry
+processes:
+  enabled:
+    -
+      id: software-feature-development
+      path: ../processes/software-feature-development.yaml
+    -
+      id: bug-fix
+      path: ../processes/bug-fix.yaml
+    -
+      id: testing
+      path: ../processes/testing.yaml
+    -
+      id: content-production
+      path: ../processes/content-production.yaml
+    -
+      id: knowledge-package-improvement
+      path: ../processes/knowledge-package-improvement.yaml
+    -
+      id: process-version-upgrade
+      path: ../processes/process-version-upgrade.yaml
+    -
+      id: workplace-initialization
+      path: ../processes/workplace-initialization.yaml
+    -
+      id: project-initialization
+      path: ../processes/project-initialization.yaml
+    -
+      id: session-bootstrap
+      path: ../processes/session-bootstrap.yaml
+    -
+      id: context-resolution
+      path: ../processes/context-resolution.yaml
+    -
+      id: processforge-update-check
+      path: ../processes/processforge-update-check.yaml
+packages:
+  selected:
+    -
+      id: process-forge-core
+      path: ../packages/process-forge-core.yaml
+    -
+      id: process-forge-software-development
+      path: ../packages/process-forge-software-development.yaml
+    -
+      id: process-forge-content
+      path: ../packages/process-forge-content.yaml
+    -
+      id: process-forge-testing
+      path: ../packages/process-forge-testing.yaml
+    -
+      id: process-forge-knowledge-governance
+      path: ../packages/process-forge-knowledge-governance.yaml
+session:
+  startup_read_order:
+    - .pf/AGENTS.md
+    - .pf/process-forge.yaml
+    - .pf/contexts/project-context.snapshot.md
+    - current assignment
+    - relevant logs/reviews/handoffs
+  telemetry_root: .pf/runtime/telemetry
+  events_log: .pf/runtime/events/events.ndjson

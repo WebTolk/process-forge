@@ -10,6 +10,7 @@
 
 - .pf/AGENTS.md
 - .pf/process-forge.yaml
+- .pf/hooks.yaml
 - .pf/packages/project.<project-id>.yaml
 - .pf/artifacts/project-profile.md
 - .pf/artifacts/repository-map.md

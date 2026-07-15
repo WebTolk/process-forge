@@ -10,8 +10,9 @@ from pathlib import Path
 
 
 DEFAULT_ROOT = Path(__file__).resolve().parents[1]
-PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "examples", "tools"]
-PUBLIC_ROOT_FILES = ["README.md", "AGENTS.md", "process-forge.yaml", "LICENSE", "CHANGELOG.md", ".processforge-releaseignore"]
+PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "examples", "tools", "updates"]
+PUBLIC_ROOT_FILES = ["README.md", "LICENSE", "CHANGELOG.md", ".processforge-releaseignore"]
+PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 SKIP_SUFFIXES = {".pyc", ".pyo"}
 
@@ -27,6 +28,10 @@ def sha256(path: Path) -> str:
 def public_files(root_path: Path) -> list[Path]:
     files: list[Path] = []
     for name in PUBLIC_ROOT_FILES:
+        path = root_path / name
+        if path.is_file():
+            files.append(path)
+    for name in PF_PUBLIC_ROOT_FILES:
         path = root_path / name
         if path.is_file():
             files.append(path)
@@ -77,11 +82,11 @@ def check_inventory(root_path: Path, output: Path) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", default=str(DEFAULT_ROOT), help="ProcessForge root path.")
-    parser.add_argument("--write", action="store_true", help="write artifacts/checksum-inventory.sha256")
+    parser.add_argument("--write", action="store_true", help="write .pf/artifacts/checksum-inventory.sha256")
     parser.add_argument("--check", action="store_true", help="compare current public files with existing checksum inventory")
     args = parser.parse_args()
     root = Path(args.root).expanduser().resolve()
-    output = root / "artifacts" / "checksum-inventory.sha256"
+    output = root / ".pf" / "artifacts" / "checksum-inventory.sha256"
     if args.write and args.check:
         parser.error("choose either --write or --check")
     if args.write:

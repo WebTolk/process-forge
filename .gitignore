@@ -21,6 +21,8 @@ __pycache__/
 runtime/cache/
 runtime/sessions/
 runtime/telemetry/
+runtime/events/events.ndjson
+runtime/events/outbox/
 /private-notes/
 /.secrets/
 /задания

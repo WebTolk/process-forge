@@ -2,7 +2,7 @@ schema_version: 1
 id: example-context
 type: execution_context_package
 assignment: example-assignment
-assignment_path: assignments/example-assignment.md
+assignment_path: .pf/assignments/example-assignment.md
 process: example-process
 stage: intake
 role: orchestrator
@@ -11,10 +11,10 @@ blocking_conflicts: 0
 warnings: 0
 requires_approval: 0
 source_fingerprints:
-  - path: process-forge.yaml
+  - path: .pf/process-forge.yaml
     checksum: pending
 read_sources:
-  - process-forge.yaml
+  - .pf/process-forge.yaml
 resolved_rules:
   allowed_actions:
     - read_required_sources
@@ -27,19 +27,19 @@ required_capabilities: []
 selected_tools: []
 selected_mcp: []
 selected_templates: []
-conflict_report: contexts/example-assignment.conflicts.md
+conflict_report: .pf/contexts/example-assignment.conflicts.md
 created_at: "<timestamp>"
 checksum: pending
 context:
   id: example-context
   created_at: "<timestamp>"
   immutable: true
-  context_index: contexts/context-index.yaml
-  conflict_report: contexts/example-assignment.conflicts.md
+  context_index: .pf/contexts/context-index.yaml
+  conflict_report: .pf/contexts/example-assignment.conflicts.md
 task_input:
-  - assignments/example-assignment.md
+  - .pf/assignments/example-assignment.md
 sources:
-  - path: process-forge.yaml
+  - path: .pf/process-forge.yaml
     checksum: pending
     kind: project-flow
 packages: []

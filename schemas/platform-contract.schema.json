@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/platform-contract.schema.json",
+  "title": "Platform Contract",
+  "type": "object",
+  "required": ["schema_version", "id", "type", "version"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "type": { "const": "platform_contract" },
+    "version": { "type": "string", "minLength": 1 },
+    "applies_to": { "type": "object", "additionalProperties": true },
+    "requires": { "type": "object", "additionalProperties": true },
+    "includes": { "type": "object", "additionalProperties": true },
+    "policies": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

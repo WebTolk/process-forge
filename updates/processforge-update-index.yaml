@@ -1,0 +1,28 @@
+schema_version: 1
+
+product:
+  id: processforge
+  current_version: "0.1.0"
+
+channels:
+  stable:
+    latest: "0.1.0"
+
+versions:
+  - version: "0.1.0"
+    channel: stable
+    released_at: "2026-07-15"
+    compatibility:
+      min_project_schema: 1
+      max_project_schema: 1
+    migration:
+      required: false
+      guide: null
+    changes:
+      - type: architecture
+        summary: "Linked workplace model, resource references, hooks validation, and update assessment contracts."
+        breaking: false
+    affected_files:
+      - .pf/process-forge.yaml
+      - .pf/hooks.yaml
+      - .pf/contexts/project-context.snapshot.yaml

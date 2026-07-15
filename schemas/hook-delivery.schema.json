@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/hook-delivery.schema.json",
+  "title": "Hook Delivery",
+  "type": "object",
+  "required": ["schema_version", "delivery_id", "delivery_time", "target_id", "mode", "event"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "delivery_id": { "type": "string", "pattern": "^del_[a-z0-9]+$" },
+    "delivery_time": { "type": "string", "minLength": 1 },
+    "target_id": { "type": "string", "minLength": 1 },
+    "mode": { "type": "string", "enum": ["dry_run", "outbox", "send_future"] },
+    "event": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

@@ -12,10 +12,14 @@
         "id": { "type": "string" },
         "name": { "type": "string" },
         "type": { "type": "string" },
+        "type_hint": { "type": "string" },
+        "platform": { "type": "string" },
+        "platform_hint": { "type": "string" },
         "mode": { "enum": ["greenfield", "brownfield", "auto"] }
       },
       "additionalProperties": true
     },
+    "intake": { "type": "object", "additionalProperties": true },
     "required_capabilities": { "type": "array", "items": { "type": "string" } },
     "optional_capabilities": { "type": "array", "items": { "type": "string" } }
   },

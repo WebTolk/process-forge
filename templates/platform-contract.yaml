@@ -1,0 +1,27 @@
+schema_version: 1
+
+id: platform.example
+type: platform_contract
+version: "1.0.0"
+
+applies_to:
+  platforms:
+    - example
+
+requires:
+  capabilities:
+    - repository.read
+
+includes:
+  knowledge_packages:
+    - example.official-docs
+  tools:
+    - example.syntax-check
+  mcp:
+    - repository.symbol-analysis
+  templates:
+    - example.file-template
+
+policies:
+  missing_required_capability: block
+  missing_optional_capability: warn

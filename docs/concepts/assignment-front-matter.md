@@ -24,6 +24,14 @@ forbidden_files:
   - .pf/runtime/**
 required_outputs:
   - .pf/artifacts/example-report.md
+hooks:
+  tracking: detailed
+  chat_capture: enabled
+  emit_on_complete: true
+  notify_wtaicc: outbox
+chat_capture:
+  enabled: false
+  include_content: false
 ---
 
 # Assignment: Example
@@ -37,3 +45,11 @@ Use:
 ```bash
 python tools/processforge.py assignment-capsule --project-root <project-root> --assignment <assignment-file>
 ```
+
+The generated capsule includes the snapshot checksum, scope, capabilities,
+required outputs, telemetry path, and event correlation id.
+
+Assignment hook options can request detailed tracking or chat capture, but they
+cannot disable process-required events unless the process policy allows it. Chat
+content remains metadata-only for outbox delivery unless `include_content` is
+explicitly enabled.

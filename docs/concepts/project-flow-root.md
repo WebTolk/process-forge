@@ -1,6 +1,6 @@
 # Project Flow Root
 
-New ProcessForge projects use `.pf/` as the default project flow root.
+ProcessForge projects use `.pf/` as the canonical project flow root.
 
 ```text
 project/
@@ -8,6 +8,7 @@ project/
     AGENTS.md
     process-forge.yaml
     process-forge.local.yaml
+    hooks.yaml
     contexts/
     processes/
     packages/
@@ -20,6 +21,17 @@ project/
     adr/
     schemas/
     runtime/
+      cache/
+      sessions/
+      telemetry/
+      events/
+        events.ndjson
+      hooks/
+        outbox/
+        results/
+      chat/
+        transcripts/
+      queue/
 ```
 
 Root `AGENTS.md` is not created by default for a project. A root shim can be a
@@ -27,8 +39,12 @@ future opt-in, but it is not the default install layout.
 
 ## Public Files
 
-Commit `.pf/AGENTS.md`, `.pf/process-forge.yaml`, `.pf/contexts/project-context.snapshot.*`,
-and reviewed project flow artifacts.
+Commit `.pf/AGENTS.md`, `.pf/process-forge.yaml`, `.pf/hooks.yaml`,
+`.pf/contexts/project-context.snapshot.*`, and reviewed project flow artifacts
+when the repository intentionally dogfoods ProcessForge.
+
+Product distribution files such as `docs/`, `schemas/`, `tools/`, `processes/`,
+`packages/`, `templates/`, and `examples/` may remain at repository root.
 
 ## Private Files
 
@@ -41,5 +57,5 @@ Ignore:
 .pf/cache/
 ```
 
-Legacy root-layout projects are still supported. Migration to `.pf/` must be
-planned and reviewed before moving existing evidence.
+Commands must not create root-layout flow state. If `.pf/process-forge.yaml` is
+missing, they should tell the operator to run `init-project`.

@@ -22,6 +22,7 @@ optional_capabilities: []
 selected_sources: []
 telemetry:
   events: .pf/runtime/telemetry/example-assignment.ndjson
+event_correlation_id: assignment-example-assignment
 allowed_actions:
   - read_required_sources
 forbidden_actions:

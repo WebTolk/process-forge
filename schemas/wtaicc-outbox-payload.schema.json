@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/wtaicc-outbox-payload.schema.json",
+  "title": "WTAICC Outbox Payload",
+  "type": "object",
+  "required": ["schema_version", "target", "delivery_mode", "created_at", "event", "chat"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "target": { "type": "string", "enum": ["wtaicc"] },
+    "delivery_mode": { "type": "string", "enum": ["outbox"] },
+    "created_at": { "type": "string", "minLength": 1 },
+    "event": { "type": "object", "additionalProperties": true },
+    "chat": {
+      "type": "object",
+      "required": ["included", "mode", "messages"],
+      "properties": {
+        "included": { "type": "boolean" },
+        "mode": { "type": "string", "enum": ["metadata_only", "redacted", "full", "content_ref"] },
+        "messages": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

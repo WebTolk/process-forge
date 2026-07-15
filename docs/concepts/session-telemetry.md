@@ -8,10 +8,13 @@ Default paths for new projects:
 ```text
 .pf/runtime/sessions/<session-id>.yaml
 .pf/runtime/telemetry/<session-id>.ndjson
+.pf/runtime/events/events.ndjson
+.pf/runtime/hooks/
+.pf/runtime/chat/
 ```
 
-`runtime/` is private and ignored by default. Public reports may summarize
-results, but they must not copy private telemetry payloads.
+`.pf/runtime/` is private and ignored by default. Public reports may summarize
+results, but they must not copy private telemetry, hook outbox, or chat payloads.
 
 ## Minimum Events
 
@@ -38,3 +41,8 @@ Session telemetry uses NDJSON. The required event vocabulary is:
 Events must avoid secrets, tokens, passwords, and large source-code excerpts.
 Private telemetry may include diagnostic paths when needed, but public summaries
 must stay sanitized.
+
+Telemetry describes what the agent did inside one session. Process events
+describe flow-level facts that hooks or future consumers can observe. Chat relay
+records conversation messages separately under `.pf/runtime/chat/transcripts/`
+and emits `chat.message.recorded` with metadata-only content by default.

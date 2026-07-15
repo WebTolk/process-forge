@@ -28,8 +28,8 @@ For `.pf` projects, read:
 6. the current assignment
 7. relevant recent status, log, review, handoff, and ADR files
 
-Legacy root-layout projects use the same filenames without the `.pf/` prefix
-until migration is reviewed.
+Root-layout flow files are not the canonical path. If `.pf/process-forge.yaml`
+is missing, initialize the project flow before running session commands.
 
 ## Modes
 
@@ -44,8 +44,8 @@ create a root project `AGENTS.md`.
 assignment plus either an Execution Context Package or a snapshot-based context
 capsule. It should not rediscover the whole project unless explicitly allowed.
 
-`context_resolve`, `context_compile`, and `doctor_context` remain compatibility
-modes for legacy context index workflows.
+`context_resolve` and `context_compile` remain deprecated compatibility modes
+that write into `.pf/contexts/`.
 
 ## Rules
 
@@ -54,7 +54,8 @@ modes for legacy context index workflows.
 - Do not silently continue when a required capability is missing.
 - Treat assignment front matter or assignment YAML as machine authority.
 - Treat Markdown body text as human-readable context.
-- Write private session metadata and telemetry under `runtime/`.
+- Write private session metadata and telemetry under `.pf/runtime/`.
+- Emit flow events under `.pf/runtime/events/`.
 
 The bootstrap layer is file-only. It does not require a backend, database,
 dashboard, or mandatory runner.

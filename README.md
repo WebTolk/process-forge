@@ -1,103 +1,112 @@
 # ProcessForge
 
-ProcessForge is a file-first process system for turning repeatable work into governed workflows.
+ProcessForge is a file-first process system for governed repeatable workflows.
+It turns process definitions, assignments, artifacts, reviews, handoffs, logs,
+telemetry, events, hooks, and chat transcripts into durable context for AI
+agents and humans.
 
-It composes workplace configuration, knowledge packages, tools, MCP servers, reusable templates, project rules, process definitions, task inputs, and agent profiles into executable contexts for AI agents and humans.
+ProcessForge does not require a backend, database, web UI, network transport, or
+mandatory runner.
 
-## What It Is
+## Core Model
 
-ProcessForge is a portable file system for defining and running repeatable work without requiring a server, database, dashboard, or external control plane.
-
-It is suitable for software work, testing, content production, media production, SEO and GEO work, documentation, operations, and other repeatable processes that benefit from explicit stages, artifacts, reviews, handoffs, and logs.
-
-## Core Ideas
-
-- A process is described as files.
-- A workplace layer describes what is available on the current machine.
-- A project flow layer describes how a specific project works.
-- Knowledge packages, tools, templates, and process rules are merged into an execution context.
-- Assignments define bounded work for one agent or human.
-- Artifacts, reviews, handoffs, and logs make progress durable.
-- Process versions are immutable; upgrades are assessed through existing artifacts.
+- The project flow root is `.pf/`.
+- `.pf/AGENTS.md` is the project flow entrypoint.
+- `.pf/process-forge.yaml` is the project-local manifest.
+- Product distribution files can remain at repository root.
+- Project context is refreshed into `.pf/contexts/project-context.snapshot.*`.
+- Runtime telemetry, events, hooks, outbox payloads, and chat transcripts stay
+  under `.pf/runtime/` and are ignored by git.
+- Process definitions declare which events matter.
+- `.pf/hooks.yaml` declares where matching events are delivered.
+- Chat relay is opt-in and metadata-only by default for outbox payloads.
 
 ## Repository Layout
 
 ```text
-process-forge.yaml       Root manifest for this ProcessForge project
-AGENTS.md                Agent boot and working rules
-docs/                    Concepts, authoring guides, validation docs, examples
-schemas/                 JSON schemas for manifests, assignments, artifacts, and reviews
-processes/               Seed process definitions
-packages/                Seed knowledge package manifests
-templates/               Reusable templates for process work
-examples/                Starter projects for different domains
-assignments/             File-based work assignments
-artifacts/               Durable outputs from work stages
-contexts/                Execution Context Packages
-logs/                    Append-only work logs
-reviews/                 Review artifacts
-handoffs/                Handoff notes between roles
-adr/                     Architecture Decision Records
-tools/                   Local validation tools
-runtime/                 Optional future local supervisor draft area
+project/
+  docs/                      # product documentation
+  schemas/                   # public schemas
+  tools/                     # CLI and validators
+  processes/                 # seed process packs
+  packages/                  # seed package manifests
+  templates/                 # seed templates
+  examples/                  # public examples
+  .pf/                       # project flow state
+    AGENTS.md
+    process-forge.yaml
+    hooks.yaml
+    contexts/
+    assignments/
+    artifacts/
+    logs/
+    handoffs/
+    reviews/
+    adr/
+    runtime/
+      events/events.ndjson
+      hooks/outbox/wtaicc/
+      hooks/results/
+      chat/transcripts/
 ```
 
+Root project `AGENTS.md` is not created by default.
+
 ## Quick Start
-
-1. Copy the ProcessForge directory into a project.
-2. Read `AGENTS.md`.
-3. Read `process-forge.yaml`.
-4. Create or select an assignment in `assignments/`.
-5. Create an Execution Context Package in `contexts/`.
-6. Work only inside the assignment's allowed file scope.
-7. Save outputs in `artifacts/`, `reviews/`, `handoffs/`, and `logs/`.
-8. Run the validators from `tools/`.
-
-## Init Commands
-
-ProcessForge can initialize a machine-local workplace layer and a project layer:
 
 ```bash
 python tools/processforge.py init-workplace --root <workplace-root> --dry-run
 python tools/processforge.py init-workplace --root <workplace-root> --apply
-python tools/processforge.py doctor-workplace --root <workplace-root>
 
 python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --dry-run
 python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --apply
-python tools/processforge.py doctor-project --project-root <project-root>
+
+python tools/processforge.py project-context-refresh --project-root <project-root>
+python tools/processforge.py project-context-check --project-root <project-root>
+python tools/processforge.py session-start --mode resume --project-root <project-root> --report-only
+python tools/processforge.py assignment-capsule --project-root <project-root> --assignment .pf/assignments/example.md
 ```
 
-Dry run is proposal-first. Apply mode writes files. Brownfield project init does not overwrite existing files without `--force`; it writes `.candidate` files for conflicts.
+## Events, Hooks, And Chat
 
-## Session And Context Commands
+Events are written to `.pf/runtime/events/events.ndjson` with a portable
+CloudEvents-inspired envelope.
 
-ProcessForge can also start a session, resolve context, compile assignment context, and verify context freshness:
+Hook matching can be tested without writing payloads:
 
 ```bash
-python tools/processforge.py session-start --mode resume --project-root <project-root>
-python tools/processforge.py context-resolve --project-root <project-root>
-python tools/processforge.py context-compile --project-root <project-root> --assignment <assignment-path> --capsule
-python tools/processforge.py doctor-context --project-root <project-root>
+python tools/processforge.py hooks-dispatch --project-root <project-root> --event-type session.ended --dry-run
 ```
 
-Session bootstrap keeps global `AGENTS.md` as a small bootloader. Context resolution creates a Context Index, Resolved Rules, Conflict Report, source fingerprints, and assignment-specific context packages instead of one large prompt.
+Outbox delivery writes payloads under `.pf/runtime/hooks/outbox/`:
 
-## MVP Boundaries
+```bash
+python tools/processforge.py hooks-dispatch --project-root <project-root> --event-type assignment.completed --outbox
+```
 
-The MVP is file-only. It does not require a backend, database, web UI, or runner. Future local supervisor and managed modes are supported by the file model, but they are not required for current use.
+Chat capture writes local transcripts and emits `chat.message.recorded`:
 
-The core is not tied to a specific platform, programming language, CMS, or software-development-only workflow.
+```bash
+python tools/processforge.py chat-record --project-root <project-root> --session-id session-demo --participant operator --role user --content "Start the assignment"
+python tools/processforge.py chat-export --project-root <project-root> --session-id session-demo --target wtaicc --outbox
+```
+
+The MVP does not send network webhooks or execute local commands.
+
+## Legacy Compatibility
+
+`context-resolve` and `context-compile` remain deprecated compatibility commands.
+They write into `.pf/contexts/`; new flows should use `project-context-refresh`,
+`project-context-check`, and `assignment-capsule`.
 
 ## Validation
-
-Run the baseline checks:
 
 ```bash
 python tools/validate-process-forge-schemas.py
 python tools/validate-process-forge-checksums.py
 python tools/validate-public-cleanliness.py
-python tools/processforge.py --help
+python tools/processforge.py events-validate --project-root .
 python tools/processforge.py doctor-context --project-root .
 ```
 
-See `docs/validation/validation.md` for details.
+See `docs/getting-started.md` and `docs/concepts/` for the detailed model.

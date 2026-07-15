@@ -9,6 +9,40 @@ required_capabilities:
   - repository_write
   - test_running
   - review
+hooks:
+  emit:
+    - event: process.started
+      required: true
+    - event: stage.started
+      required: true
+    - event: stage.completed
+      required: true
+    - event: assignment.created
+      required: true
+    - event: artifact.created
+      required: true
+    - event: gate.failed
+      required: true
+    - event: chat.message.recorded
+      required: false
+  subscriptions:
+    - event: assignment.completed
+      actions:
+        - type: create_review_request
+    - event: gate.failed
+      actions:
+        - type: block_stage
+        - type: notify_orchestrator
+  tracking:
+    include:
+      - process_id
+      - process_version
+      - stage_id
+      - assignment_id
+      - artifact_refs
+      - actor
+      - session_id
+      - status
 roles:
   - id: orchestrator
     title: Orchestrator
@@ -67,6 +101,15 @@ stages:
     allowed_tools:
       - editor
       - test_runner
+    hooks:
+      emit:
+        - event: tool.invoked
+        - event: artifact.created
+        - event: artifact.updated
+      stop_gates:
+        - event: session.ended
+          require:
+            - gate.passed
     entry_gates:
       - plan-approved
     exit_gates:

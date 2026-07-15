@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/hooks.schema.json",
+  "title": "ProcessForge Hooks",
+  "type": "object",
+  "required": ["schema_version", "hooks", "policies"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "hooks": {
+      "type": "object",
+      "required": ["mode", "default_timeout", "network_send_enabled", "targets"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["dry_run", "outbox", "send_future"] },
+        "default_timeout": { "type": "integer", "minimum": 0 },
+        "network_send_enabled": { "type": "boolean" },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "type", "enabled", "event_types"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "type": { "type": "string", "enum": ["command", "outbox", "webhook", "webhook_future"] },
+              "enabled": { "type": "boolean" },
+              "command": { "type": "array", "items": { "type": "string" } },
+              "timeout": { "type": "integer", "minimum": 0 },
+              "blocking": { "type": "boolean" },
+              "path": { "type": "string" },
+              "url_ref": { "type": "string" },
+              "secret_ref": { "type": "string" },
+              "event_types": { "type": "array", "items": { "type": "string" } }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "policies": {
+      "type": "object",
+      "required": ["do_not_send_network_by_default", "secrets_are_refs_only", "chat_content_requires_opt_in"],
+      "properties": {
+        "do_not_send_network_by_default": { "type": "boolean" },
+        "secrets_are_refs_only": { "type": "boolean" },
+        "chat_content_requires_opt_in": { "type": "boolean" },
+        "command_hooks_can_block": { "type": "boolean" },
+        "outbox_hooks_are_non_blocking": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

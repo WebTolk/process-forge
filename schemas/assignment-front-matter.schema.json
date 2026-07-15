@@ -17,7 +17,29 @@
     "forbidden_files": { "type": "array", "items": { "type": "string" } },
     "required_outputs": { "type": "array", "items": { "type": "string" } },
     "selected_sources": { "type": "array", "items": { "type": "string" } },
-    "telemetry_path": { "type": "string" }
+    "telemetry_path": { "type": "string" },
+    "hooks": {
+      "type": "object",
+      "properties": {
+        "tracking": { "type": "string" },
+        "chat_capture": { "type": "string", "enum": ["enabled", "disabled"] },
+        "emit_on_complete": { "type": "boolean" },
+        "notify_wtaicc": { "type": "string", "enum": ["outbox", "disabled"] }
+      },
+      "additionalProperties": true
+    },
+    "chat_capture": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "include_content": { "type": "boolean" },
+        "max_message_chars": { "type": "integer", "minimum": 0 },
+        "redact_patterns": { "type": "array", "items": { "type": "string" } },
+        "allow_private_paths": { "type": "boolean" },
+        "send_to_outbox": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": true
 }

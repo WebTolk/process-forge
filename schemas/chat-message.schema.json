@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/chat-message.schema.json",
+  "title": "Chat Message",
+  "type": "object",
+  "required": ["schema_version", "message_id", "session_id", "turn_id", "timestamp", "participant", "message", "source", "process", "assignment"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "message_id": { "type": "string", "pattern": "^msg_[a-z0-9]+$" },
+    "session_id": { "type": "string", "minLength": 1 },
+    "turn_id": { "type": "string", "minLength": 1 },
+    "parent_message_id": { "type": ["string", "null"] },
+    "timestamp": { "type": "string", "minLength": 1 },
+    "participant": {
+      "type": "object",
+      "required": ["id", "type", "role"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "enum": ["human", "agent", "subagent", "tool"] },
+        "role": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "message": {
+      "type": "object",
+      "required": ["role", "content_type", "content", "content_hash", "redaction"],
+      "properties": {
+        "role": { "type": "string", "enum": ["user", "assistant", "system", "tool", "subagent"] },
+        "content_type": { "type": "string", "minLength": 1 },
+        "content": { "type": "string" },
+        "content_hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "redaction": { "type": "string", "enum": ["none", "redacted", "truncated", "redacted_truncated"] }
+      },
+      "additionalProperties": true
+    },
+    "source": { "type": "object", "required": ["kind"], "additionalProperties": true },
+    "process": { "type": "object", "additionalProperties": true },
+    "assignment": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

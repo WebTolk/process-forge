@@ -12,6 +12,14 @@ A snapshot is stale when:
 - selected package or process sources changed
 - a required capability provider is missing
 
+The check output separates freshness from health:
+
+```text
+STATUS: fresh | stale | missing
+HEALTH: pass | warn | blocked
+RESULT: pass | fail
+```
+
 `generated_at` alone is not part of source freshness. Regenerating a snapshot
 without source changes must not make the previous snapshot stale by itself.
 

@@ -51,3 +51,5 @@ session:
     - ".pf/AGENTS.md"
     - ".pf/process-forge.yaml"
     - ".pf/contexts/project-context.snapshot.md"
+  telemetry_root: ".pf/runtime/telemetry"
+  events_log: ".pf/runtime/events/events.ndjson"

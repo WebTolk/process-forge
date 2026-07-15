@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "event_id": "evt_example",
+  "event_type": "session.started",
+  "source": "processforge.cli",
+  "subject": "session/session-example",
+  "time": "2026-01-01T12:00:00Z",
+  "correlation_id": "session-example",
+  "causation_id": null,
+  "project": {
+    "flow_root": ".pf",
+    "project_id": "example-project"
+  },
+  "process": {
+    "id": null,
+    "version": null,
+    "stage_id": null,
+    "process_run_id": null
+  },
+  "assignment": {
+    "id": null,
+    "path": null
+  },
+  "actor": {
+    "type": "agent",
+    "id": "processforge-cli",
+    "role": "orchestrator"
+  },
+  "session": {
+    "id": "session-example"
+  },
+  "data": {},
+  "severity": "info",
+  "privacy": "private"
+}
