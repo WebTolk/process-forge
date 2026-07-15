@@ -151,6 +151,14 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "knowledge.resource.path.unresolved",
     "project.snapshot.path_redacted",
     "doctor.path.failed",
+    "package.root.resolved",
+    "package.root.missing",
+    "package.root.unavailable",
+    "package.created",
+    "package.updated",
+    "package.index.updated",
+    "package.doctor.failed",
+    "package.duplicate.detected",
 ]
 
 BUILTIN_CAPABILITIES = {
@@ -287,6 +295,17 @@ class WriteResult:
     path: Path
     status: str
     target: Path
+
+
+@dataclass
+class PackageRootResolution:
+    root_id: str
+    original_path: str
+    resolved_path: Path
+    status: str
+    warnings: list[str]
+    fallback: bool = False
+    entry: dict[str, Any] | None = None
 
 
 def safe_id(value: str, default: str = "project") -> str:
@@ -810,6 +829,18 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
         entry["indexing_policy"] = "allowed"
 
     package_entries = dict_entries_from_answers(paths_answers.get("package_roots"), "package-root", "workplace")
+    if not package_entries:
+        package_entries = [
+            {
+                "id": "global",
+                "label": "Global packages",
+                "path": "${PF_WORKPLACE}/packages",
+                "scope": "workplace",
+                "status": "available",
+                "writable": True,
+                "default": True,
+            }
+        ]
     template_entries = dict_entries_from_answers(paths_answers.get("template_roots"), "template-root", "workplace")
     distribution_entries = dict_entries_from_answers(paths_answers.get("distributions"), "distribution", "workplace")
     if not distribution_entries:
@@ -917,7 +948,7 @@ def command_init_workplace(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
     answers = load_answers(Path(args.answers).expanduser().resolve() if args.answers else None)
     files = build_workplace_files(root, answers)
-    planned_dirs = [root / "cache", root / "runtime", root / "logs"]
+    planned_dirs = [root / "cache", root / "runtime", root / "logs", root / "packages"]
     if not args.apply:
         print_plan("workplace init dry run", list(files) + planned_dirs, root)
         return 0
@@ -1038,6 +1069,41 @@ def registry_path_resolution_checks(workplace_root: Path, workplace_manifest: Pa
     return checks
 
 
+def package_root_registry_checks(workplace_root: Path) -> list[Check]:
+    checks: list[Check] = []
+    registry_path = workplace_root / "registries" / "package-roots.yaml"
+    if not registry_path.is_file():
+        return [check("WARN", "registries/package-roots.yaml missing; package writes will use fallback <workplace-root>/packages")]
+    entries = package_root_entries(workplace_root)
+    if not entries:
+        return [check("WARN", "package_roots registry is empty; package writes will use fallback <workplace-root>/packages")]
+    ids: dict[str, int] = {}
+    for entry in entries:
+        root_id = str(entry.get("id", ""))
+        ids[root_id] = ids.get(root_id, 0) + 1
+    for root_id, count in sorted(ids.items()):
+        checks.append(check("FAIL" if count > 1 else "PASS", f"package_root id {root_id or '<missing>'} unique"))
+    selectable = False
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        root = package_root_resolution_from_entry(workplace_root, entry)
+        label = f"package_root {root.root_id}"
+        if root.warnings:
+            checks.append(check("FAIL", f"{label} path cannot resolve: {'; '.join(root.warnings)}"))
+            continue
+        exists = root.resolved_path.is_dir()
+        status = str(entry.get("status", "available"))
+        must_exist = status == "available" or bool(entry.get("must_exist", False))
+        checks.append(check("PASS" if exists or not must_exist else "FAIL", f"{label} path {'exists' if exists else 'missing'}"))
+        if exists and status == "available":
+            selectable = True
+        if str(entry.get("writable", True)).lower() != "false" and exists:
+            checks.append(check("PASS", f"{label} writable candidate"))
+    checks.append(check("PASS" if selectable else "FAIL", "default/first available package_root can be selected"))
+    return checks
+
+
 def command_doctor_workplace(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
     checks: list[Check] = []
@@ -1051,6 +1117,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
             checks.append(check("PASS", "workplace.yaml contains no obvious secret values"))
         checks.extend(path_constant_checks(root, manifest))
         checks.extend(registry_path_resolution_checks(root, manifest))
+        checks.extend(package_root_registry_checks(root))
     else:
         checks.append(check("FAIL", "workplace.yaml missing"))
 
@@ -2461,19 +2528,93 @@ def collect_project_snapshot_sources(project_root: Path) -> list[dict[str, Any]]
     return sources
 
 
-def workplace_package_root_paths(workplace_manifest: Path | None) -> list[Path]:
+def package_root_entries(workplace_root: Path) -> list[dict[str, Any]]:
+    registry = load_yaml_document(workplace_root / "registries" / "package-roots.yaml")
+    entries = registry.get("package_roots") if isinstance(registry, dict) else None
+    return [entry for entry in entries if isinstance(entry, dict)] if isinstance(entries, list) else []
+
+
+def package_root_resolution_from_entry(workplace_root: Path, entry: dict[str, Any]) -> PackageRootResolution:
+    root_id = str(entry.get("id", "package-root"))
+    original = str(entry.get("path", ""))
+    resolution = workplace_path_resolution(workplace_root, original)
+    warnings = [str(item) for item in resolution.get("errors", [])]
+    return PackageRootResolution(
+        root_id=root_id,
+        original_path=original,
+        resolved_path=path_resolution_to_path(resolution),
+        status=str(entry.get("status", "available")),
+        warnings=warnings,
+        fallback=False,
+        entry=entry,
+    )
+
+
+def resolve_package_root(workplace_root: Path, package_root_id: str | None = None, *, mode: str = "read") -> PackageRootResolution:
+    entries = package_root_entries(workplace_root)
+    fallback = PackageRootResolution(
+        root_id="fallback",
+        original_path="packages",
+        resolved_path=workplace_root / "packages",
+        status="fallback",
+        warnings=["WARN: registries/package-roots.yaml is missing or empty; using fallback <workplace-root>/packages"],
+        fallback=True,
+        entry=None,
+    )
+    if not entries:
+        return fallback
+    if package_root_id:
+        for entry in entries:
+            if str(entry.get("id")) == package_root_id:
+                selected = package_root_resolution_from_entry(workplace_root, entry)
+                break
+        else:
+            raise SystemExit(f"FAIL: package root '{package_root_id}' not found in registries/package-roots.yaml")
+    else:
+        available = [entry for entry in entries if str(entry.get("status", "available")) == "available"]
+        default_entries = [entry for entry in available if bool(entry.get("default", False))]
+        selected_entry = default_entries[0] if default_entries else (available[0] if available else None)
+        if selected_entry is None:
+            existing = [
+                entry for entry in entries
+                if entry.get("path") and package_root_resolution_from_entry(workplace_root, entry).resolved_path.exists()
+            ]
+            selected_entry = existing[0] if existing else entries[0]
+        selected = package_root_resolution_from_entry(workplace_root, selected_entry)
+    if selected.warnings:
+        if mode == "write":
+            if not selected.fallback:
+                raise SystemExit("FAIL: package root path cannot be resolved: " + "; ".join(selected.warnings))
+    if not selected.fallback and not selected.resolved_path.is_dir():
+        selected.warnings.append(f"WARN: package root '{selected.root_id}' path does not exist: {selected.resolved_path.as_posix()}")
+    if selected.entry is not None and str(selected.entry.get("writable", True)).lower() == "false" and mode == "write":
+        raise SystemExit(f"FAIL: package root '{selected.root_id}' is not writable")
+    if mode == "write" and not selected.fallback and not selected.resolved_path.is_dir():
+        raise SystemExit(f"FAIL: selected package root '{selected.root_id}' path does not exist: {selected.resolved_path.as_posix()}")
+    return selected
+
+
+def package_path_candidates(root_path: Path, package_id: str) -> list[Path]:
+    return [
+        root_path / package_id / "package.yaml",
+        root_path / f"{package_id}.yaml",
+    ]
+
+
+def resolve_package_path(workplace_root: Path, package_id: str, package_root_id: str | None = None, *, mode: str = "read") -> tuple[PackageRootResolution, Path]:
+    root = resolve_package_root(workplace_root, package_root_id, mode=mode)
+    return root, root.resolved_path / package_id / "package.yaml"
+
+
+def workplace_package_roots(workplace_manifest: Path | None) -> list[PackageRootResolution]:
     if not workplace_manifest or not workplace_manifest.is_file():
         return []
-    registry = load_workplace_registry(workplace_manifest, "package_roots", "package-roots.yaml")
-    entries = registry.get("package_roots") if isinstance(registry, dict) else None
-    roots: list[Path] = []
-    if not isinstance(entries, list):
-        return roots
-    for entry in entries:
-        if not isinstance(entry, dict) or not entry.get("path"):
-            continue
-        roots.append(resolve_registry_relative_path(workplace_manifest.parent, str(entry["path"]), workplace_manifest))
-    return roots
+    workplace_root = workplace_manifest.parent
+    return [package_root_resolution_from_entry(workplace_root, entry) for entry in package_root_entries(workplace_root)]
+
+
+def workplace_package_root_paths(workplace_manifest: Path | None) -> list[Path]:
+    return [root.resolved_path for root in workplace_package_roots(workplace_manifest)]
 
 
 def package_manifest_candidates(project_root: Path, distribution_root: Path | None, workplace_manifest: Path | None = None) -> list[Path]:
@@ -2486,6 +2627,8 @@ def package_manifest_candidates(project_root: Path, distribution_root: Path | No
         if root and root.is_dir():
             candidates.extend(sorted(root.glob("*.yaml")))
             candidates.extend(sorted(root.glob("*.yml")))
+            candidates.extend(sorted(root.glob("*/package.yaml")))
+            candidates.extend(sorted(root.glob("*/package.yml")))
     unique: list[Path] = []
     seen: set[Path] = set()
     for path in candidates:
@@ -2498,6 +2641,8 @@ def package_manifest_candidates(project_root: Path, distribution_root: Path | No
 
 def package_manifest_index(project_root: Path, distribution_root: Path | None, workplace_manifest: Path | None = None) -> dict[str, dict[str, Any]]:
     index: dict[str, dict[str, Any]] = {}
+    duplicates: dict[str, list[str]] = {}
+    workplace_roots = workplace_package_roots(workplace_manifest)
     for path in package_manifest_candidates(project_root, distribution_root, workplace_manifest):
         data = load_yaml_document(path)
         if not data or yaml_error(data):
@@ -2507,11 +2652,22 @@ def package_manifest_index(project_root: Path, distribution_root: Path | None, w
             continue
         record = dict(data)
         record["__manifest_path"] = path
+        for root in workplace_roots:
+            try:
+                path.relative_to(root.resolved_path)
+                record["__package_root_id"] = root.root_id
+                break
+            except ValueError:
+                continue
+        if str(package_id) in index:
+            duplicates.setdefault(str(package_id), [index[str(package_id)]["__manifest_path"].as_posix()]).append(path.as_posix())
         index[str(package_id)] = record
+    if duplicates:
+        index["__duplicates__"] = {"packages": duplicates}
     return index
 
 
-def resource_record_from_package(package_id: str, resource: dict[str, Any], requirement: str) -> dict[str, Any]:
+def resource_record_from_package(package_id: str, resource: dict[str, Any], requirement: str, package_root_id: str | None = None) -> dict[str, Any]:
     resource_id = str(resource.get("id", "resource"))
     record: dict[str, Any] = {
         "id": f"{package_id}:{resource_id}",
@@ -2532,7 +2688,10 @@ def resource_record_from_package(package_id: str, resource: dict[str, Any], requ
             record["path_ref"] = {"registry": "private_resource_paths", "id": resource_id}
             record["path_status"] = "private_absolute_path_redacted"
         elif raw_path:
-            record["path_ref"] = {"package": package_id, "relative_path": raw_path}
+            if package_root_id:
+                record["path_ref"] = {"registry": "package_roots", "id": package_root_id, "relative_path": f"{package_id}/{raw_path}"}
+            else:
+                record["path_ref"] = {"package": package_id, "relative_path": raw_path}
     for key in ["version", "description"]:
         if key in resource:
             record[key] = resource[key]
@@ -2559,7 +2718,7 @@ def resolve_package_resources(
             continue
         for resource in package_resources:
             if isinstance(resource, dict):
-                resources.append(resource_record_from_package(package_id, resource, requirement))
+                resources.append(resource_record_from_package(package_id, resource, requirement, manifest.get("__package_root_id")))
     return resources
 
 
@@ -2744,22 +2903,62 @@ def resource_id_from_url(url: str, fallback: str = "resource") -> str:
     return safe_id("-".join(piece for piece in pieces if piece), fallback)
 
 
-def package_manifest_locations(workplace_root: Path, package_id: str) -> list[Path]:
-    return [
-        workplace_root / "packages" / f"{package_id}.yaml",
-        workplace_root / "packages" / package_id / "package.yaml",
-    ]
+def find_workplace_package_manifests(workplace_root: Path, package_id: str) -> list[tuple[PackageRootResolution, Path]]:
+    manifests: list[tuple[PackageRootResolution, Path]] = []
+    roots = package_root_entries(workplace_root)
+    if roots:
+        root_resolutions = [package_root_resolution_from_entry(workplace_root, entry) for entry in roots]
+    else:
+        root_resolutions = [resolve_package_root(workplace_root, None, mode="read")]
+    for root in root_resolutions:
+        if root.warnings and not root.fallback:
+            continue
+        for path in package_path_candidates(root.resolved_path, package_id):
+            if path.is_file():
+                manifests.append((root, path))
+    return manifests
 
 
-def package_manifest_path_for_write(workplace_root: Path, package_id: str) -> Path:
-    for path in package_manifest_locations(workplace_root, package_id):
-        if path.is_file():
-            return path
-    return workplace_root / "packages" / package_id / "package.yaml"
+def package_manifest_path_for_write(workplace_root: Path, package_id: str, package_root_id: str | None = None) -> tuple[PackageRootResolution, Path]:
+    existing = find_workplace_package_manifests(workplace_root, package_id)
+    if package_root_id:
+        root, default_path = resolve_package_path(workplace_root, package_id, package_root_id, mode="write")
+        for existing_root, existing_path in existing:
+            if existing_root.root_id == root.root_id:
+                return existing_root, existing_path
+        return root, default_path
+    if len(existing) > 1:
+        roots = ", ".join(f"{root.root_id}:{path.as_posix()}" for root, path in existing)
+        raise SystemExit(f"FAIL: duplicate package id '{package_id}' found across package roots: {roots}; pass --package-root")
+    if len(existing) == 1:
+        root, path = existing[0]
+        if not root.resolved_path.is_dir() and not root.fallback:
+            raise SystemExit(f"FAIL: package root '{root.root_id}' path does not exist: {root.resolved_path.as_posix()}")
+        return root, path
+    root, default_path = resolve_package_path(workplace_root, package_id, None, mode="write")
+    if root.fallback:
+        root.resolved_path.mkdir(parents=True, exist_ok=True)
+    return root, default_path
 
 
-def load_workplace_package_manifest(workplace_root: Path, package_id: str) -> tuple[Path, dict[str, Any]]:
-    path = package_manifest_path_for_write(workplace_root, package_id)
+def load_workplace_package_manifest(workplace_root: Path, package_id: str, package_root_id: str | None = None, *, mode: str = "read") -> tuple[Path, dict[str, Any], PackageRootResolution]:
+    existing = find_workplace_package_manifests(workplace_root, package_id)
+    if package_root_id:
+        root, default_path = resolve_package_path(workplace_root, package_id, package_root_id, mode=mode)
+        path = default_path
+        for existing_root, existing_path in existing:
+            if existing_root.root_id == root.root_id:
+                root, path = existing_root, existing_path
+                break
+    elif existing:
+        if len(existing) > 1:
+            roots = ", ".join(f"{root.root_id}:{path.as_posix()}" for root, path in existing)
+            root, path = existing[0]
+            root.warnings.append(f"WARN: duplicate package id '{package_id}' found across package roots: {roots}")
+        else:
+            root, path = existing[0]
+    else:
+        root, path = resolve_package_path(workplace_root, package_id, None, mode=mode)
     data = load_yaml_document(path)
     if not data or yaml_error(data):
         data = {
@@ -2773,7 +2972,7 @@ def load_workplace_package_manifest(workplace_root: Path, package_id: str) -> tu
         }
     if "resources" not in data or not isinstance(data.get("resources"), list):
         data["resources"] = []
-    return path, data
+    return path, data, root
 
 
 def resource_index_path_for_package(manifest_path: Path, workplace_root: Path, package_id: str) -> Path:
@@ -2782,7 +2981,7 @@ def resource_index_path_for_package(manifest_path: Path, workplace_root: Path, p
     return workplace_root / "packages" / package_id / "indexes" / "resource-index.yaml"
 
 
-def build_resource_index(package_manifest: dict[str, Any], workplace_root: Path | None = None) -> dict[str, Any]:
+def build_resource_index(package_manifest: dict[str, Any], workplace_root: Path | None = None, package_root_id: str | None = None) -> dict[str, Any]:
     package_id = str(package_manifest.get("id", "package"))
     resources = [
         normalize_resource_record(resource, package_id, workplace_root)
@@ -2794,6 +2993,7 @@ def build_resource_index(package_manifest: dict[str, Any], workplace_root: Path 
         "package": {
             "id": package_id,
             "version": str(package_manifest.get("version", "0.1.0")),
+            "package_root": package_root_id or str(package_manifest.get("package_root", "")) or None,
         },
         "generated_at": now_utc(),
         "load_policy": {
@@ -2814,14 +3014,15 @@ def upsert_resource(resources: list[Any], resource: dict[str, Any]) -> str:
     return "added"
 
 
-def write_package_manifest_and_index(workplace_root: Path, package_id: str, package_manifest: dict[str, Any]) -> tuple[Path, Path]:
-    manifest_path = package_manifest_path_for_write(workplace_root, package_id)
+def write_package_manifest_and_index(workplace_root: Path, package_id: str, package_manifest: dict[str, Any], package_root_id: str | None = None) -> tuple[Path, Path, PackageRootResolution]:
+    package_root, manifest_path = package_manifest_path_for_write(workplace_root, package_id, package_root_id)
+    package_manifest["package_root"] = package_root.root_id
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(ensure_trailing_newline(dump_yaml(package_manifest)), encoding="utf-8")
     index_path = resource_index_path_for_package(manifest_path, workplace_root, package_id)
     index_path.parent.mkdir(parents=True, exist_ok=True)
-    index_path.write_text(ensure_trailing_newline(dump_yaml(build_resource_index(package_manifest, workplace_root))), encoding="utf-8")
-    return manifest_path, index_path
+    index_path.write_text(ensure_trailing_newline(dump_yaml(build_resource_index(package_manifest, workplace_root, package_root.root_id))), encoding="utf-8")
+    return manifest_path, index_path, package_root
 
 
 def registry_ids_from_workplace(workplace_root: Path, registry_name: str, collection_key: str) -> set[str]:
@@ -2855,11 +3056,17 @@ def resource_path_ref_missing(workplace_root: Path, resource: dict[str, Any]) ->
     return None
 
 
-def knowledge_package_doctor_checks(workplace_root: Path, package_id: str) -> list[Check]:
-    _manifest_path, manifest = load_workplace_package_manifest(workplace_root, package_id)
+def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, package_root_id: str | None = None) -> list[Check]:
+    manifest_path, manifest, package_root = load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode="read")
     checks: list[Check] = []
     if not manifest:
         return [check("FAIL", f"package {package_id} manifest missing")]
+    for warning in package_root.warnings:
+        checks.append(check("WARN" if warning.startswith("WARN:") else "FAIL", warning))
+    if not manifest_path.is_file():
+        checks.append(check("FAIL", f"package {package_id} not found through package_roots"))
+        return checks
+    checks.append(check("PASS", f"package {package_id} resolved through package root {package_root.root_id}"))
     resources = manifest.get("resources") if isinstance(manifest.get("resources"), list) else []
     checks.append(check("PASS", f"package {package_id} manifest loaded"))
     for resource in resources:
@@ -2875,7 +3082,7 @@ def knowledge_package_doctor_checks(workplace_root: Path, package_id: str) -> li
             checks.append(check("WARN", f"{package_id}:{resource_id} heavy resource should declare load_policy"))
         elif kind in HEAVY_RESOURCE_KINDS and str(resource.get("load_policy")) in {"always_index", "session_start", "project_init"}:
             checks.append(check("WARN", f"{package_id}:{resource_id} heavy resource should normally use on_demand"))
-    index_path = resource_index_path_for_package(package_manifest_path_for_write(workplace_root, package_id), workplace_root, package_id)
+    index_path = resource_index_path_for_package(manifest_path, workplace_root, package_id)
     if index_path.is_file():
         index = load_yaml_document(index_path)
         checks.append(check("PASS" if not yaml_error(index) else "FAIL", f"{rel(index_path, workplace_root)} is valid YAML"))
@@ -5074,9 +5281,27 @@ def write_resource_proposal(workplace_root: Path, command: str, object_id: str, 
     return slug, path
 
 
+def emit_package_root_resolution_event(workplace_root: Path, command: str, package_id: str, package_root: PackageRootResolution) -> None:
+    has_unavailable = any("path does not exist" in warning or "cannot" in warning for warning in package_root.warnings)
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command=command,
+            event_type="package.root.unavailable" if has_unavailable else "package.root.resolved",
+            target={"package_id": package_id, "package_root": package_root.root_id},
+            status="warn" if has_unavailable or package_root.fallback else "resolved",
+            message="; ".join(package_root.warnings) if package_root.warnings else "package root resolved",
+        ),
+    )
+
+
 def command_knowledge_add_url(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     package_id = str(args.package)
+    package_root_id = getattr(args, "package_root", None)
+    package_root = resolve_package_root(workplace_root, package_root_id, mode="read" if args.dry_run else "write")
+    emit_package_root_resolution_event(workplace_root, "knowledge-add-url", package_id, package_root)
     resource_id = safe_id(args.id or resource_id_from_url(args.url, "article"), "resource")
     resource = normalize_resource_record(
         {
@@ -5096,7 +5321,13 @@ def command_knowledge_add_url(args: argparse.Namespace) -> int:
         workplace_root,
         "knowledge-add-url",
         resource_id,
-        {"package_id": package_id, "resource": resource, "apply_writes": ["package.yaml", "indexes/resource-index.yaml"]},
+        {
+            "package_id": package_id,
+            "package_root": package_root.root_id,
+            "package_root_warnings": package_root.warnings,
+            "resource": resource,
+            "apply_writes": ["package.yaml", "indexes/resource-index.yaml"],
+        },
     )
     append_workplace_resource_event(
         workplace_root,
@@ -5110,11 +5341,14 @@ def command_knowledge_add_url(args: argparse.Namespace) -> int:
         ),
     )
     if args.dry_run:
+        for warning in package_root.warnings:
+            print(warning)
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
         return 0
-    _manifest_path, manifest = load_workplace_package_manifest(workplace_root, package_id)
+    _manifest_path, manifest, package_root = load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode="write")
+    package_existed = _manifest_path.is_file()
     result = upsert_resource(manifest["resources"], resource)
-    manifest_path, index_path = write_package_manifest_and_index(workplace_root, package_id, manifest)
+    manifest_path, index_path, package_root = write_package_manifest_and_index(workplace_root, package_id, manifest, package_root_id)
     append_workplace_resource_event(
         workplace_root,
         resource_management_event(
@@ -5131,8 +5365,19 @@ def command_knowledge_add_url(args: argparse.Namespace) -> int:
         resource_management_event(
             scope="workplace",
             command="knowledge-add-url",
+            event_type="package.updated" if package_existed else "package.created",
+            target={"package_id": package_id, "package_root": package_root.root_id},
+            status=result,
+            message="package manifest updated through package root" if package_existed else "package manifest created through package root",
+        ),
+    )
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="knowledge-add-url",
             event_type="knowledge.package.updated",
-            target={"package_id": package_id, "resource_id": resource_id},
+            target={"package_id": package_id, "resource_id": resource_id, "package_root": package_root.root_id},
             status="updated",
             message="package resource index refreshed",
         ),
@@ -5143,6 +5388,7 @@ def command_knowledge_add_url(args: argparse.Namespace) -> int:
         "Knowledge URL Add Report",
         [
             f"- package: {package_id}",
+            f"- package_root: {package_root.root_id}",
             f"- resource: {resource_id}",
             f"- manifest: {rel(manifest_path, workplace_root)}",
             f"- index: {rel(index_path, workplace_root)}",
@@ -5150,6 +5396,7 @@ def command_knowledge_add_url(args: argparse.Namespace) -> int:
         ],
     )
     print(f"{result.upper()}: {resource_id}")
+    print(f"PACKAGE_ROOT: {package_root.root_id}")
     print(f"MANIFEST: {rel(manifest_path, workplace_root)}")
     print(f"INDEX: {rel(index_path, workplace_root)}")
     print(f"REPORT: {rel(report, workplace_root)}")
@@ -5159,6 +5406,9 @@ def command_knowledge_add_url(args: argparse.Namespace) -> int:
 def command_knowledge_add_resource(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     package_id = str(args.package)
+    package_root_id = getattr(args, "package_root", None)
+    package_root = resolve_package_root(workplace_root, package_root_id, mode="read" if args.dry_run else "write")
+    emit_package_root_resolution_event(workplace_root, "knowledge-add-resource", package_id, package_root)
     data = load_yaml_document(Path(args.resource_file).expanduser().resolve())
     if not data or yaml_error(data):
         raise SystemExit(f"FAIL: resource file is missing or invalid: {args.resource_file}")
@@ -5170,6 +5420,8 @@ def command_knowledge_add_resource(args: argparse.Namespace) -> int:
         resource_id,
         {
             "package_id": package_id,
+            "package_root": package_root.root_id,
+            "package_root_warnings": package_root.warnings,
             "resource": resource,
             "private_input_path": data.get("path"),
             "suggested_registration": "register a knowledge_root/template_root/package_root when the path should be reused" if data.get("path") else None,
@@ -5201,18 +5453,32 @@ def command_knowledge_add_resource(args: argparse.Namespace) -> int:
             ),
         )
     if args.dry_run:
+        for warning in package_root.warnings:
+            print(warning)
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
         return 0
-    _manifest_path, manifest = load_workplace_package_manifest(workplace_root, package_id)
+    _manifest_path, manifest, package_root = load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode="write")
+    package_existed = _manifest_path.is_file()
     result = upsert_resource(manifest["resources"], resource)
-    manifest_path, index_path = write_package_manifest_and_index(workplace_root, package_id, manifest)
+    manifest_path, index_path, package_root = write_package_manifest_and_index(workplace_root, package_id, manifest, package_root_id)
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="knowledge-add-resource",
+            event_type="package.updated" if package_existed else "package.created",
+            target={"package_id": package_id, "package_root": package_root.root_id},
+            status=result,
+            message="package manifest updated through package root" if package_existed else "package manifest created through package root",
+        ),
+    )
     append_workplace_resource_event(
         workplace_root,
         resource_management_event(
             scope="workplace",
             command="knowledge-add-resource",
             event_type="knowledge.resource.added",
-            target={"package_id": package_id, "resource_id": resource_id},
+            target={"package_id": package_id, "resource_id": resource_id, "package_root": package_root.root_id},
             status=result,
             message="resource manifest and index updated",
         ),
@@ -5223,6 +5489,7 @@ def command_knowledge_add_resource(args: argparse.Namespace) -> int:
         "Knowledge Resource Add Report",
         [
             f"- package: {package_id}",
+            f"- package_root: {package_root.root_id}",
             f"- resource: {resource_id}",
             f"- manifest: {rel(manifest_path, workplace_root)}",
             f"- index: {rel(index_path, workplace_root)}",
@@ -5230,6 +5497,7 @@ def command_knowledge_add_resource(args: argparse.Namespace) -> int:
         ],
     )
     print(f"{result.upper()}: {resource_id}")
+    print(f"PACKAGE_ROOT: {package_root.root_id}")
     print(f"REPORT: {rel(report, workplace_root)}")
     return 0
 
@@ -5237,26 +5505,30 @@ def command_knowledge_add_resource(args: argparse.Namespace) -> int:
 def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     package_id = str(args.package)
-    manifest_path, manifest = load_workplace_package_manifest(workplace_root, package_id)
+    package_root_id = getattr(args, "package_root", None)
+    manifest_path, manifest, package_root = load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode="read" if args.dry_run else "write")
+    emit_package_root_resolution_event(workplace_root, "knowledge-index-refresh", package_id, package_root)
     index_path = resource_index_path_for_package(manifest_path, workplace_root, package_id)
     slug, proposal_path = write_resource_proposal(
         workplace_root,
         "knowledge-index-refresh",
         package_id,
-        {"package_id": package_id, "index_path": rel(index_path, workplace_root), "resource_count": len(manifest.get("resources", []))},
+        {"package_id": package_id, "package_root": package_root.root_id, "package_root_warnings": package_root.warnings, "index_path": rel(index_path, workplace_root), "resource_count": len(manifest.get("resources", []))},
     )
     if args.dry_run:
+        for warning in package_root.warnings:
+            print(warning)
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
         return 0
     index_path.parent.mkdir(parents=True, exist_ok=True)
-    index_path.write_text(ensure_trailing_newline(dump_yaml(build_resource_index(manifest, workplace_root))), encoding="utf-8")
+    index_path.write_text(ensure_trailing_newline(dump_yaml(build_resource_index(manifest, workplace_root, package_root.root_id))), encoding="utf-8")
     append_workplace_resource_event(
         workplace_root,
         resource_management_event(
             scope="workplace",
             command="knowledge-index-refresh",
-            event_type="knowledge.package.updated",
-            target={"package_id": package_id},
+            event_type="package.index.updated",
+            target={"package_id": package_id, "package_root": package_root.root_id},
             status="updated",
             message="resource index refreshed",
         ),
@@ -5265,8 +5537,9 @@ def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
         workplace_root,
         slug,
         "Knowledge Index Refresh Report",
-        [f"- package: {package_id}", f"- index: {rel(index_path, workplace_root)}", "- heavy content loaded: no"],
+        [f"- package: {package_id}", f"- package_root: {package_root.root_id}", f"- index: {rel(index_path, workplace_root)}", "- heavy content loaded: no"],
     )
+    print(f"PACKAGE_ROOT: {package_root.root_id}")
     print(f"INDEX: {rel(index_path, workplace_root)}")
     print(f"REPORT: {rel(report, workplace_root)}")
     return 0
@@ -5274,7 +5547,34 @@ def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
 
 def command_knowledge_package_doctor(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
-    return print_checks(knowledge_package_doctor_checks(workplace_root, str(args.package)))
+    package_id = str(args.package)
+    checks = knowledge_package_doctor_checks(workplace_root, package_id, getattr(args, "package_root", None))
+    for item in checks:
+        if "duplicate package id" in item.message:
+            append_workplace_resource_event(
+                workplace_root,
+                resource_management_event(
+                    scope="workplace",
+                    command="knowledge-package-doctor",
+                    event_type="package.duplicate.detected",
+                    target={"package_id": package_id},
+                    status="warn",
+                    message=item.message,
+                ),
+            )
+    if any(item.level == "FAIL" for item in checks):
+        append_workplace_resource_event(
+            workplace_root,
+            resource_management_event(
+                scope="workplace",
+                command="knowledge-package-doctor",
+                event_type="package.doctor.failed",
+                target={"package_id": package_id},
+                status="failed",
+                message="; ".join(item.message for item in checks if item.level == "FAIL"),
+            ),
+        )
+    return print_checks(checks)
 
 
 def command_docs_import_plan(args: argparse.Namespace) -> int:
@@ -5566,6 +5866,7 @@ def build_parser() -> argparse.ArgumentParser:
     knowledge_add_url = sub.add_parser("knowledge-add-url", help="Create or apply a proposal to add a URL-backed knowledge resource.")
     knowledge_add_url.add_argument("--workplace", required=True, help="Workplace root path.")
     knowledge_add_url.add_argument("--package", required=True, help="Knowledge package id.")
+    knowledge_add_url.add_argument("--package-root", dest="package_root", help="Package root id from registries/package-roots.yaml.")
     knowledge_add_url.add_argument("--url", required=True, help="External source URL.")
     knowledge_add_url.add_argument("--kind", default="article", help="Resource kind.")
     knowledge_add_url.add_argument("--id", help="Resource id override.")
@@ -5581,6 +5882,7 @@ def build_parser() -> argparse.ArgumentParser:
     knowledge_add_resource = sub.add_parser("knowledge-add-resource", help="Create or apply a proposal to add a YAML resource record.")
     knowledge_add_resource.add_argument("--workplace", required=True, help="Workplace root path.")
     knowledge_add_resource.add_argument("--package", required=True, help="Knowledge package id.")
+    knowledge_add_resource.add_argument("--package-root", dest="package_root", help="Package root id from registries/package-roots.yaml.")
     knowledge_add_resource.add_argument("--resource-file", required=True, help="YAML knowledge resource record.")
     knowledge_add_resource.add_argument("--dry-run", action="store_true", help="Write proposal only.")
     knowledge_add_resource.add_argument("--apply", action="store_true", help="Update package manifest and resource index.")
@@ -5589,11 +5891,13 @@ def build_parser() -> argparse.ArgumentParser:
     knowledge_package_doctor = sub.add_parser("knowledge-package-doctor", help="Validate a knowledge package manifest and resource index.")
     knowledge_package_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
     knowledge_package_doctor.add_argument("--package", required=True, help="Knowledge package id.")
+    knowledge_package_doctor.add_argument("--package-root", dest="package_root", help="Package root id from registries/package-roots.yaml.")
     knowledge_package_doctor.set_defaults(func=command_knowledge_package_doctor)
 
     knowledge_index_refresh = sub.add_parser("knowledge-index-refresh", help="Refresh a package resource index without loading heavy resources.")
     knowledge_index_refresh.add_argument("--workplace", required=True, help="Workplace root path.")
     knowledge_index_refresh.add_argument("--package", required=True, help="Knowledge package id.")
+    knowledge_index_refresh.add_argument("--package-root", dest="package_root", help="Package root id from registries/package-roots.yaml.")
     knowledge_index_refresh.add_argument("--dry-run", action="store_true", help="Write proposal only.")
     knowledge_index_refresh.add_argument("--apply", action="store_true", help="Write resource index.")
     knowledge_index_refresh.set_defaults(func=command_knowledge_index_refresh)

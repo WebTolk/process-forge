@@ -11,6 +11,7 @@
     "version": { "type": "string" },
     "kind": { "enum": ["core", "organization", "direction", "specialization", "platform", "toolchain", "documentation", "project", "process", "task", "agent_profile"] },
     "scope": { "type": "string" },
+    "package_root": { "type": "string" },
     "description": { "type": "string" },
     "dependencies": { "type": "array", "items": { "type": "string" } },
     "rules": { "type": "array", "items": { "type": "object" } },

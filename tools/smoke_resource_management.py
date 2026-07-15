@@ -37,6 +37,10 @@ def main() -> int:
         workplace = Path(tmp) / "workplace"
         workplace.mkdir()
         (workplace / "knowledge" / "joomla" / "docs").mkdir(parents=True)
+        package_root = workplace / "knowledge" / "packages"
+        package_root.mkdir(parents=True)
+        alt_package_root = workplace / "knowledge" / "alt-packages"
+        alt_package_root.mkdir(parents=True)
         (workplace / "reusable-templates" / "file").mkdir(parents=True)
         (workplace / "tools").mkdir()
         (workplace / "mcp").mkdir()
@@ -82,7 +86,35 @@ def main() -> int:
         )
         (workplace / "registries" / "distributions.yaml").write_text("schema_version: 1\ndistributions: []\n", encoding="utf-8")
         (workplace / "registries" / "platforms.yaml").write_text("schema_version: 1\nplatforms: []\n", encoding="utf-8")
-        (workplace / "registries" / "package-roots.yaml").write_text("schema_version: 1\npackage_roots: []\n", encoding="utf-8")
+        (workplace / "registries" / "package-roots.yaml").write_text(
+            "\n".join(
+                [
+                    "schema_version: 1",
+                    "package_roots:",
+                    "  - id: global",
+                    "    label: Global packages",
+                    "    path: ${PF_KNOWLEDGE}/packages",
+                    "    scope: workplace",
+                    "    status: available",
+                    "    writable: true",
+                    "    default: true",
+                    "  - id: alternate",
+                    "    label: Alternate packages",
+                    "    path: ${PF_KNOWLEDGE}/alt-packages",
+                    "    scope: workplace",
+                    "    status: available",
+                    "    writable: true",
+                    "  - id: missing-root",
+                    "    label: Missing packages",
+                    "    path: ${PF_KNOWLEDGE}/missing-packages",
+                    "    scope: workplace",
+                    "    status: optional",
+                    "    writable: true",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
         windows_abs = "D" + ":/" + "Knowledge/Joomla"
         posix_abs = "/" + "srv" + "/knowledge/joomla"
         (workplace / "registries" / "knowledge-roots.yaml").write_text(
@@ -143,6 +175,8 @@ def main() -> int:
             str(workplace),
             "--package",
             "platform.joomla",
+            "--package-root",
+            "global",
             "--url",
             "https://example.com/joomla/article",
             "--kind",
@@ -151,6 +185,24 @@ def main() -> int:
         proposals = list((workplace / "runtime" / "resource-management" / "proposals").glob("*knowledge-add-url*.yaml"))
         if not proposals:
             raise AssertionError("knowledge-add-url dry-run did not create a proposal")
+        proposal_text = proposals[-1].read_text(encoding="utf-8")
+        if "package_root: global" not in proposal_text:
+            raise AssertionError("knowledge-add-url dry-run proposal did not record selected package root")
+
+        run(
+            "knowledge-add-url",
+            "--workplace",
+            str(workplace),
+            "--package",
+            "platform.joomla",
+            "--package-root",
+            "global",
+            "--url",
+            "https://example.com/joomla/applied",
+            "--kind",
+            "article",
+            "--apply",
+        )
 
         resource_file = Path(tmp) / "resource.yaml"
         resource_file.write_text(
@@ -173,17 +225,61 @@ def main() -> int:
             str(workplace),
             "--package",
             "platform.joomla",
+            "--package-root",
+            "global",
             "--resource-file",
             str(resource_file),
             "--apply",
         )
-        assert_exists(workplace / "packages" / "platform.joomla" / "package.yaml")
-        assert_exists(workplace / "packages" / "platform.joomla" / "indexes" / "resource-index.yaml")
-        package_text = (workplace / "packages" / "platform.joomla" / "package.yaml").read_text(encoding="utf-8")
+        package_manifest = package_root / "platform.joomla" / "package.yaml"
+        resource_index = package_root / "platform.joomla" / "indexes" / "resource-index.yaml"
+        assert_exists(package_manifest)
+        assert_exists(resource_index)
+        if (workplace / "packages" / "platform.joomla" / "package.yaml").exists():
+            raise AssertionError("package was written to legacy workplace/packages despite package_roots registry")
+        package_text = package_manifest.read_text(encoding="utf-8")
         if "registry: knowledge_roots" not in package_text or "id: joomla-root" not in package_text:
             raise AssertionError("absolute resource path under known root did not become knowledge_roots path_ref")
+        if "package_root: global" not in package_text:
+            raise AssertionError("package manifest did not record authoritative package_root")
         if str((workplace / "knowledge").as_posix()) in package_text:
             raise AssertionError("package manifest retained resolved absolute resource path")
+        index_text = resource_index.read_text(encoding="utf-8")
+        if "package_root: global" not in index_text:
+            raise AssertionError("resource index did not record selected package_root")
+
+        run("knowledge-index-refresh", "--workplace", str(workplace), "--package", "platform.joomla", "--package-root", "global", "--apply")
+        run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "platform.joomla", "--package-root", "global")
+        unknown_root = run(
+            "knowledge-add-resource",
+            "--workplace",
+            str(workplace),
+            "--package",
+            "platform.joomla",
+            "--package-root",
+            "unknown-root",
+            "--resource-file",
+            str(resource_file),
+            "--apply",
+            expect=1,
+        )
+        if "package root 'unknown-root' not found" not in unknown_root.stdout:
+            raise AssertionError("unknown package root id did not fail")
+        missing_root = run(
+            "knowledge-add-resource",
+            "--workplace",
+            str(workplace),
+            "--package",
+            "platform.joomla",
+            "--package-root",
+            "missing-root",
+            "--resource-file",
+            str(resource_file),
+            "--apply",
+            expect=1,
+        )
+        if "path does not exist" not in missing_root.stdout:
+            raise AssertionError("missing selected package root path did not fail on apply")
 
         template_source = Path(tmp) / "template-source"
         template_source.mkdir()
@@ -192,7 +288,7 @@ def main() -> int:
         run("tool-register", "--workplace", str(workplace), "--id", "phpstan", "--capability", "php.static_analysis", "--command", "phpstan")
         run("mcp-register", "--workplace", str(workplace), "--id", "context7", "--capability", "official_documentation", "--command", "context7")
 
-        missing_pkg = workplace / "packages" / "missing-ref" / "package.yaml"
+        missing_pkg = package_root / "missing-ref" / "package.yaml"
         missing_pkg.parent.mkdir(parents=True)
         missing_pkg.write_text(
             "\n".join(
@@ -221,7 +317,7 @@ def main() -> int:
         if "FAIL" not in failed.stdout:
             raise AssertionError("knowledge-package-doctor did not fail on missing path_ref target")
 
-        heavy_pkg = workplace / "packages" / "heavy-warning" / "package.yaml"
+        heavy_pkg = package_root / "heavy-warning" / "package.yaml"
         heavy_pkg.parent.mkdir(parents=True)
         heavy_pkg.write_text(
             "\n".join(
@@ -248,6 +344,26 @@ def main() -> int:
         warned = run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "heavy-warning")
         if "WARN" not in warned.stdout:
             raise AssertionError("knowledge-package-doctor did not warn on heavy resource without load_policy")
+
+        duplicate_pkg = alt_package_root / "platform.joomla" / "package.yaml"
+        duplicate_pkg.parent.mkdir(parents=True)
+        duplicate_pkg.write_text(package_text, encoding="utf-8")
+        duplicate_doctor = run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "platform.joomla")
+        if "duplicate package id" not in duplicate_doctor.stdout:
+            raise AssertionError("knowledge-package-doctor did not warn on duplicate package id across roots")
+        duplicate_write = run(
+            "knowledge-add-resource",
+            "--workplace",
+            str(workplace),
+            "--package",
+            "platform.joomla",
+            "--resource-file",
+            str(resource_file),
+            "--apply",
+            expect=1,
+        )
+        if "duplicate package id" not in duplicate_write.stdout or "--package-root" not in duplicate_write.stdout:
+            raise AssertionError("write without --package-root did not fail on duplicate package id")
 
         bad_workplace = Path(tmp) / "bad-workplace"
         bad_workplace.mkdir()

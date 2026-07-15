@@ -22,3 +22,15 @@ relative/path
 Doctor checks fail on unknown or empty constants. Cyclic constant references are reported as failures.
 
 When a user provides a new absolute resource path, Resource Management first tries to map it under existing roots. If no root matches, apply mode registers it in the workplace private resource path registry and public package/snapshot records use `path_ref`.
+
+## Package Roots
+
+`registries/package-roots.yaml` is the authoritative resolver for package
+manifests and package resource indexes. A package command resolves the selected
+root by `--package-root <id>` or by the default package root. Unknown root ids
+fail. A selected root with a missing path warns in dry-run and fails in apply.
+
+The legacy `<workplace-root>/packages` fallback is only used when the package
+root registry is missing or empty, and commands report that fallback as a
+warning. Public snapshots keep package root ids and `path_ref` records; they do
+not expose resolved package root paths.

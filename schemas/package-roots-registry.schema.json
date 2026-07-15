@@ -21,7 +21,12 @@
         "label": { "type": "string" },
         "path": { "type": "string" },
         "scope": { "type": "string" },
-        "status": { "enum": ["available", "optional", "missing", "disabled"] }
+        "status": { "enum": ["available", "optional", "missing", "disabled"] },
+        "description": { "type": "string" },
+        "priority": { "type": "integer" },
+        "writable": { "type": "boolean" },
+        "default": { "type": "boolean" },
+        "channel": { "type": "string" }
       },
       "additionalProperties": true
     }

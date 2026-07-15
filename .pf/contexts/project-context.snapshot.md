@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-15T11:09:26Z
-- valid_until: 2026-07-22T11:09:26Z
+- generated_at: 2026-07-15T11:51:48Z
+- valid_until: 2026-07-22T11:51:48Z
 
 ## Freshness
 

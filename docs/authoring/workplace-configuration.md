@@ -49,3 +49,22 @@ path_constants:
 Registry entries may use `${PF_KNOWLEDGE}/joomla/docs` or an explicit absolute path. Absolute paths are allowed in workplace/private files, but never in public project snapshots.
 
 Run `python tools/processforge.py path-resolve --workplace <workplace-root> --path "${PF_KNOWLEDGE}/joomla/docs"` to inspect expansion.
+
+## Package Roots
+
+Configure package roots in `registries/package-roots.yaml`:
+
+```yaml
+package_roots:
+  - id: global
+    path: ${PF_WORKPLACE}/packages
+    status: available
+    writable: true
+    default: true
+```
+
+Package roots control where Resource Management reads and writes knowledge
+packages. If the registry contains more than one candidate for the same package
+id, write commands require `--package-root <id>` to avoid updating the wrong
+copy. `doctor-workplace` validates root ids, path constants, availability, and
+writability.

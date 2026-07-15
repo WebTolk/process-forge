@@ -325,6 +325,27 @@ Inspect existing CLI generation/validation paths, schemas, templates, and proces
 Handoff:
 None.
 
+## 2026-07-15 15:50 - codex
+
+Task:
+Implement authoritative package roots for Resource Management package reads/writes.
+Files changed:
+`tools/processforge.py`, `tools/smoke_resource_management.py`, package root/package manifest schemas, package/resource index templates, knowledge/resource/path/workplace docs, package-roots report/review/handoff artifacts.
+Artifacts changed:
+`.pf/artifacts/package-roots-authoritative-report.md`, `.pf/reviews/package-roots-authoritative-review.md`, `.pf/handoffs/package-roots-authoritative-handoff.md`.
+Templates used:
+`templates/registries/package-roots.yaml`, `templates/knowledge-package.yaml`, `templates/knowledge-resource-index.yaml`.
+Tools used:
+Serena discovery, PowerShell, ProcessForge CLI smoke checks.
+Decisions:
+`registries/package-roots.yaml` is authoritative when present and non-empty. Fallback to `<workplace-root>/packages` remains only for missing/empty registries and emits a warning. Duplicate package ids across roots require explicit `--package-root` for writes.
+Risks:
+Package duplicate detection is id-based and does not compare versions or package content.
+Next steps:
+Refresh root snapshot/checksum inventory and run full validator suite.
+Handoff:
+`.pf/handoffs/package-roots-authoritative-handoff.md`.
+
 ## 2026-07-15 12:57 - codex
 
 Task:

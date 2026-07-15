@@ -1,3 +1,24 @@
 schema_version: 1
 
-package_roots: []
+package_roots:
+  - id: global
+    label: "Global packages"
+    path: "${PF_WORKPLACE}/packages"
+    scope: workplace
+    status: available
+    writable: true
+    default: true
+
+  - id: platform-packages
+    label: "Platform packages"
+    path: "${PF_KNOWLEDGE}/platforms"
+    scope: platform
+    status: optional
+    writable: true
+
+  - id: organization-packages
+    label: "Organization packages"
+    path: "${PF_KNOWLEDGE}/organization"
+    scope: organization
+    status: optional
+    writable: true
