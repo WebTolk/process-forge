@@ -18,6 +18,10 @@
       "additionalProperties": true
     },
     "paths": { "type": "object", "additionalProperties": { "type": "string" } },
+    "path_constants": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
     "registries": {
       "type": "object",
       "properties": {

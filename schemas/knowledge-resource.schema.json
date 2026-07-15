@@ -10,23 +10,31 @@
       "enum": [
         "source_tree",
         "documentation",
+        "article",
         "article_collection",
+        "note",
         "note_collection",
+        "snippet",
         "snippet_collection",
+        "example",
         "example_collection",
         "reference",
         "dataset"
+        ,"media_reference"
       ]
     },
     "title": { "type": "string", "minLength": 1 },
-    "path": { "type": "string" },
     "path_ref": { "type": "object", "additionalProperties": true },
+    "path_status": { "type": "string" },
     "version": { "type": "string" },
     "load_policy": {
       "enum": ["always_index", "project_init", "session_start", "when_relevant", "on_demand", "never_auto_load"]
     },
     "index_policy": { "type": "string" },
-    "description": { "type": "string" }
+    "description": { "type": "string" },
+    "license": { "type": "object", "additionalProperties": true },
+    "source": { "type": "object", "additionalProperties": true },
+    "update_policy": { "type": "object", "additionalProperties": true }
   },
   "additionalProperties": true
 }

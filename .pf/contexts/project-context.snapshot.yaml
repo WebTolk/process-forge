@@ -1,8 +1,8 @@
 schema_version: 1
 snapshot:
   id: project-context
-  generated_at: '2026-07-15T08:27:46Z'
-  valid_until: '2026-07-22T08:27:46Z'
+  generated_at: '2026-07-15T11:09:26Z'
+  valid_until: '2026-07-22T11:09:26Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -45,7 +45,7 @@ sources:
       id: project_manifest
       path: .pf/process-forge.yaml
       kind: manifest
-      checksum: a61d48c191e4894ae2a7b56fe96a9e03cf9ffd9016cd24a84b1821eba3bc5603
+      checksum: af74a541a11ef1f7c29106b730500f45378ff72079a5656dca130463917d6a26
     -
       id: process-processes-software-feature-development-yaml
       path: processes/software-feature-development.yaml
@@ -101,6 +101,46 @@ sources:
       path: processes/processforge-update-check.yaml
       kind: process
       checksum: b6ed78953141a9b882298872ccbda5e83c66b7d08d18d325f0f411f50dad7831
+    -
+      id: process-processes-knowledge-resource-add-yaml
+      path: processes/knowledge-resource-add.yaml
+      kind: process
+      checksum: b869a3b2caf67e909db07965a3d119433321de02adaac71b1c127487820e44fd
+    -
+      id: process-processes-documentation-mirror-import-yaml
+      path: processes/documentation-mirror-import.yaml
+      kind: process
+      checksum: 1fec1c95ab17daf6a66699a46d40022779f92fad270e452883190dd191d51039
+    -
+      id: process-processes-knowledge-package-update-yaml
+      path: processes/knowledge-package-update.yaml
+      kind: process
+      checksum: 13d937a3548dd50f010e6830612baee81c84d2881801d64aa11d24ab93273f10
+    -
+      id: process-processes-template-add-yaml
+      path: processes/template-add.yaml
+      kind: process
+      checksum: 8cfbb40d21e69f7ab686e9a897664c5dba0a62a7967c2fd6f396583f141bc291
+    -
+      id: process-processes-tool-register-yaml
+      path: processes/tool-register.yaml
+      kind: process
+      checksum: 0027972570354c8438aa988ed6ea96f677dbddfd35395f353bc9bb9b6a3eec6f
+    -
+      id: process-processes-mcp-register-yaml
+      path: processes/mcp-register.yaml
+      kind: process
+      checksum: a2640a814260f593aac8e50b29d696eda5d7f651108363b47dffe9e08a53d320
+    -
+      id: process-processes-platform-contract-install-yaml
+      path: processes/platform-contract-install.yaml
+      kind: process
+      checksum: c489bb8d0b570718f28cd539a27d3e44bf36c292f1e0a869ad2e46cfd6e41e6a
+    -
+      id: process-processes-process-template-install-yaml
+      path: processes/process-template-install.yaml
+      kind: process
+      checksum: 1de6964a16156948d7cdb589dc16c8810b53572d143b2fc659c66093ec4b2ca2
     -
       id: package-packages-process-forge-core-yaml
       path: packages/process-forge-core.yaml
@@ -264,6 +304,30 @@ processes:
     -
       id: processforge-update-check
       path: ../processes/processforge-update-check.yaml
+    -
+      id: knowledge-resource-add
+      path: ../processes/knowledge-resource-add.yaml
+    -
+      id: documentation-mirror-import
+      path: ../processes/documentation-mirror-import.yaml
+    -
+      id: knowledge-package-update
+      path: ../processes/knowledge-package-update.yaml
+    -
+      id: template-add
+      path: ../processes/template-add.yaml
+    -
+      id: tool-register
+      path: ../processes/tool-register.yaml
+    -
+      id: mcp-register
+      path: ../processes/mcp-register.yaml
+    -
+      id: platform-contract-install
+      path: ../processes/platform-contract-install.yaml
+    -
+      id: process-template-install
+      path: ../processes/process-template-install.yaml
 packages:
   selected:
     -

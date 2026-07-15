@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/knowledge-resource-index.schema.json",
+  "title": "Knowledge Resource Index",
+  "type": "object",
+  "required": ["schema_version", "package", "resources"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "package": {
+      "type": "object",
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "generated_at": { "type": "string" },
+    "load_policy": { "type": "object", "additionalProperties": true },
+    "resources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/resource" }
+    }
+  },
+  "$defs": {
+    "resource": {
+      "type": "object",
+      "required": ["id", "kind", "title", "path_ref", "load_policy", "index_policy"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "path_ref": { "type": "object", "additionalProperties": true },
+        "path_status": { "type": "string" },
+        "load_policy": { "type": "string", "minLength": 1 },
+        "index_policy": { "type": "string", "minLength": 1 },
+        "license": { "type": "object", "additionalProperties": true },
+        "source": { "type": "object", "additionalProperties": true },
+        "update_policy": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

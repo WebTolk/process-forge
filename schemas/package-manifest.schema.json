@@ -9,7 +9,7 @@
     "id": { "$ref": "#/$defs/id" },
     "name": { "type": "string" },
     "version": { "type": "string" },
-    "kind": { "enum": ["core", "organization", "direction", "specialization", "platform", "toolchain", "project", "process", "task", "agent_profile"] },
+    "kind": { "enum": ["core", "organization", "direction", "specialization", "platform", "toolchain", "documentation", "project", "process", "task", "agent_profile"] },
     "scope": { "type": "string" },
     "description": { "type": "string" },
     "dependencies": { "type": "array", "items": { "type": "string" } },
@@ -29,10 +29,13 @@
         "id": { "type": "string", "minLength": 1 },
         "kind": { "type": "string", "minLength": 1 },
         "title": { "type": "string", "minLength": 1 },
-        "path": { "type": "string" },
         "path_ref": { "type": "object", "additionalProperties": true },
+        "path_status": { "type": "string" },
         "load_policy": { "type": "string", "minLength": 1 },
-        "index_policy": { "type": "string" }
+        "index_policy": { "type": "string" },
+        "license": { "type": "object", "additionalProperties": true },
+        "source": { "type": "object", "additionalProperties": true },
+        "update_policy": { "type": "object", "additionalProperties": true }
       },
       "additionalProperties": true
     }

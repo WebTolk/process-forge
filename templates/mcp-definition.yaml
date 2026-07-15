@@ -1,0 +1,7 @@
+id: example-mcp
+name: "Example MCP"
+capability: official_documentation
+transport: stdio
+command: "example-mcp"
+auth_ref: null
+status: configured

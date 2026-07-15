@@ -9,12 +9,14 @@ import json
 import os
 import platform
 import re
+import shutil
 import sys
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -128,6 +130,27 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "context.snapshot.refreshed",
     "context.snapshot.stale",
     "capability.missing",
+    "knowledge.resource.add.requested",
+    "knowledge.resource.added",
+    "knowledge.package.updated",
+    "snapshot.stale",
+    "template.add.requested",
+    "template.added",
+    "template.updated",
+    "tool.registered",
+    "tool.healthcheck.passed",
+    "tool.healthcheck.failed",
+    "mcp.registered",
+    "mcp.healthcheck.passed",
+    "mcp.healthcheck.failed",
+    "platform.contract.updated",
+    "path.constant.added",
+    "path.constant.updated",
+    "registry.path.added",
+    "knowledge.resource.path.resolved",
+    "knowledge.resource.path.unresolved",
+    "project.snapshot.path_redacted",
+    "doctor.path.failed",
 ]
 
 BUILTIN_CAPABILITIES = {
@@ -226,14 +249,31 @@ BACKSLASH = chr(92)
 COLON_WS = ":" + r"\s*"
 LOCAL_PATH_PATTERNS = [
     re.compile("[A-Za-z]:" + re.escape(BACKSLASH)),
+    re.compile(r"[A-Za-z]:/"),
     re.compile("/" + "home" + "/[A-Za-z0-9_.-]+/"),
     re.compile("/" + "Users" + "/[A-Za-z0-9_.-]+/"),
+    re.compile("/" + "srv" + "/"),
 ]
 
 SECRET_VALUE_PATTERNS = [
     re.compile(r"(?i)(api[_-]?key|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{8,}"),
     re.compile(r"-----BEGIN [A-Z ]+PRIVATE KEY-----"),
 ]
+
+DEFAULT_PATH_CONSTANTS = {
+    "PF_WORKPLACE": ".",
+    "PF_DISTRIBUTION": "distributions/processforge",
+    "PF_KNOWLEDGE": "knowledge",
+    "PF_TEMPLATES": "reusable-templates",
+    "PF_TOOLS": "tools",
+    "PF_MCP": "mcp",
+    "PF_PLATFORM_CONTRACTS": "platform-contracts",
+    "PF_PROCESS_TEMPLATES": "process-templates",
+    "PF_RUNTIME": "runtime",
+    "PF_CACHE": "cache",
+}
+
+PATH_CONSTANT_PATTERN = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
 
 
 @dataclass
@@ -259,6 +299,106 @@ def rel(path: Path, root: Path) -> str:
         return path.relative_to(root).as_posix()
     except ValueError:
         return path.as_posix()
+
+
+def path_string_is_absolute(value: str) -> bool:
+    text = value.strip().replace("\\", "/")
+    return bool(re.match(r"^[A-Za-z]:/", text) or text.startswith("/") or text.startswith("//"))
+
+
+def normalize_path_string(value: str) -> str:
+    return value.replace("\\", "/")
+
+
+def load_workplace_path_constants(workplace_manifest: Path | None, workplace_root: Path | None = None) -> dict[str, str]:
+    root = workplace_root or (workplace_manifest.parent if workplace_manifest else Path(".").resolve())
+    constants = dict(DEFAULT_PATH_CONSTANTS)
+    if workplace_manifest and workplace_manifest.is_file():
+        data = load_yaml_document(workplace_manifest)
+        raw_constants = data.get("path_constants") if isinstance(data, dict) else None
+        if isinstance(raw_constants, dict):
+            for key, value in raw_constants.items():
+                if isinstance(key, str):
+                    constants[key] = "" if value is None else str(value)
+    constants.setdefault("PF_WORKPLACE", ".")
+    constants["_WORKPLACE_ROOT"] = root.as_posix()
+    return constants
+
+
+def expand_path_constants(raw_path: str, constants: dict[str, str]) -> tuple[str, list[str], list[str]]:
+    expanded = raw_path
+    used: list[str] = []
+    errors: list[str] = []
+    visiting: list[str] = []
+
+    def expand_const(name: str) -> str:
+        if name in visiting:
+            errors.append("cyclic path constant reference: " + " -> ".join([*visiting, name]))
+            return "${" + name + "}"
+        if name not in constants:
+            errors.append(f"unknown path constant: {name}")
+            return "${" + name + "}"
+        value = str(constants.get(name, ""))
+        if value == "":
+            errors.append(f"empty path constant: {name}")
+            return ""
+        used.append(name)
+        visiting.append(name)
+        result = PATH_CONSTANT_PATTERN.sub(lambda match: expand_const(match.group(1)), value)
+        visiting.pop()
+        return result
+
+    for _ in range(20):
+        if not PATH_CONSTANT_PATTERN.search(expanded):
+            break
+        before = expanded
+        expanded = PATH_CONSTANT_PATTERN.sub(lambda match: expand_const(match.group(1)), expanded)
+        if expanded == before:
+            break
+    if PATH_CONSTANT_PATTERN.search(expanded):
+        errors.append("unresolved path constant reference remains")
+    return expanded, sorted(set(used)), sorted(set(errors))
+
+
+def resolve_path_with_constants(raw_path: str | None, base_dir: Path, constants: dict[str, str] | None = None) -> dict[str, Any]:
+    original = "" if raw_path is None else str(raw_path)
+    constants = constants or load_workplace_path_constants(None, base_dir)
+    expanded, used_constants, errors = expand_path_constants(original, constants)
+    expanded = normalize_path_string(expanded)
+    status = "resolved"
+    if errors:
+        status = "error"
+    elif used_constants:
+        status = "resolved_from_constant"
+    elif path_string_is_absolute(expanded):
+        status = "absolute"
+    else:
+        status = "resolved_relative"
+    if path_string_is_absolute(expanded):
+        resolved = expanded
+        is_absolute = True
+    else:
+        resolved = normalize_path_string((base_dir / expanded).resolve().as_posix())
+        is_absolute = True
+    return {
+        "original": original,
+        "expanded": expanded,
+        "resolved": resolved,
+        "is_absolute": is_absolute,
+        "is_private": is_absolute,
+        "path_status": status,
+        "constants": used_constants,
+        "errors": errors,
+    }
+
+
+def workplace_path_resolution(workplace_root: Path, raw_path: str | None) -> dict[str, Any]:
+    manifest = workplace_root / "workplace.yaml"
+    return resolve_path_with_constants(raw_path, workplace_root, load_workplace_path_constants(manifest, workplace_root))
+
+
+def path_resolution_to_path(resolution: dict[str, Any]) -> Path:
+    return Path(str(resolution.get("resolved") or resolution.get("expanded") or resolution.get("original") or ""))
 
 
 def locate_flow_root(project_root: Path, *, prefer_pf: bool = True) -> Path:
@@ -559,6 +699,22 @@ def build_terms() -> dict[str, Any]:
                 "definition": "Directories containing versioned ProcessForge packages.",
                 "resolves_to": {"registry": "package_roots", "scope": "workplace"},
             },
+            "resource_management": {
+                "label": "resource management",
+                "label_ru": "управление ресурсами",
+                "aliases": ["knowledge resource add", "resource index", "documentation import"],
+                "aliases_ru": ["управление знаниями", "индекс ресурсов", "импорт документации"],
+                "definition": "Proposal-first workplace processes and commands for maintaining knowledge resources, templates, tools, MCP, and platform contracts.",
+                "resolves_to": {"processes": ["knowledge-resource-add", "documentation-mirror-import", "template-add", "tool-register", "mcp-register"]},
+            },
+            "resource_index": {
+                "label": "resource index",
+                "label_ru": "индекс ресурсов",
+                "aliases": ["knowledge resource index", "package resource index"],
+                "aliases_ru": ["индекс знаний", "индекс пакета"],
+                "definition": "Metadata-only package index describing available resources, path_ref, load_policy, index_policy, source, license, and update policy.",
+                "resolves_to": {"file": "indexes/resource-index.yaml"},
+            },
             "distribution_registry": {
                 "label": "distribution registry",
                 "aliases": ["ProcessForge distribution", "linked core", "core registry"],
@@ -592,6 +748,12 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
     defaults = workplace_defaults(root, answers)
     paths_answers = answers.get("paths", {}) if isinstance(answers.get("paths"), dict) else {}
     policies_answers = answers.get("policies", {}) if isinstance(answers.get("policies"), dict) else {}
+    path_constants = dict(DEFAULT_PATH_CONSTANTS)
+    answer_constants = paths_answers.get("path_constants")
+    if isinstance(answer_constants, dict):
+        for key, value in answer_constants.items():
+            if isinstance(key, str) and value not in (None, ""):
+                path_constants[key] = str(value)
 
     workplace = {
         "schema_version": 1,
@@ -615,6 +777,7 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
             "runtime": "runtime",
             "logs": "logs",
         },
+        "path_constants": path_constants,
         "registries": {
             "distributions": "registries/distributions.yaml",
             "platforms": "registries/platforms.yaml",
@@ -790,6 +953,91 @@ def print_checks(checks: list[Check]) -> int:
     return 1 if failed else 0
 
 
+def path_constant_checks(workplace_root: Path, workplace_manifest: Path) -> list[Check]:
+    checks: list[Check] = []
+    data = load_yaml_document(workplace_manifest)
+    constants_data = data.get("path_constants") if isinstance(data, dict) else None
+    checks.append(check("PASS" if isinstance(constants_data, dict) else "WARN", "path_constants configured" if isinstance(constants_data, dict) else "path_constants missing; defaults will be used"))
+    constants = load_workplace_path_constants(workplace_manifest, workplace_root)
+    for name, value in constants.items():
+        if name.startswith("_"):
+            continue
+        if not isinstance(value, str) or value == "":
+            checks.append(check("FAIL", f"path constant {name} has empty value"))
+            continue
+        resolution = resolve_path_with_constants("${" + name + "}", workplace_root, constants)
+        errors = resolution.get("errors", [])
+        if errors:
+            checks.append(check("FAIL", f"path constant {name} failed: {', '.join(errors)}"))
+        else:
+            checks.append(check("PASS", f"path constant {name} resolves ({resolution.get('path_status')})"))
+    return checks
+
+
+def registry_path_resolution_checks(workplace_root: Path, workplace_manifest: Path) -> list[Check]:
+    checks: list[Check] = []
+    constants = load_workplace_path_constants(workplace_manifest, workplace_root)
+    manifest_data = load_yaml_document(workplace_manifest)
+    registries = manifest_data.get("registries", {}) if isinstance(manifest_data.get("registries"), dict) else {}
+    for key, default_name in [
+        ("distributions", "distributions.yaml"),
+        ("platforms", "platforms.yaml"),
+        ("knowledge_roots", "knowledge-roots.yaml"),
+        ("package_roots", "package-roots.yaml"),
+        ("templates", "templates.yaml"),
+        ("tools", "tools.yaml"),
+        ("mcp", "mcp.yaml"),
+    ]:
+        raw_path = str(registries.get(key) or f"registries/{default_name}")
+        resolution = resolve_path_with_constants(raw_path, workplace_root, constants)
+        errors = resolution.get("errors", [])
+        if errors:
+            checks.append(check("FAIL", f"registry {key} path failed: {', '.join(errors)}"))
+        else:
+            path = path_resolution_to_path(resolution)
+            checks.append(check("PASS" if path.is_file() else "FAIL", f"registry {key} resolves to {normalize_path_string(str(path))}"))
+    registry_specs = [
+        ("knowledge-roots.yaml", "knowledge_roots", "path"),
+        ("package-roots.yaml", "package_roots", "path"),
+        ("templates.yaml", "template_roots", "path"),
+        ("tools.yaml", "tools", "command"),
+        ("mcp.yaml", "mcp_servers", "command"),
+    ]
+    for registry_file, collection_key, path_key in registry_specs:
+        registry_path = resolve_registry_path(workplace_manifest, collection_key if collection_key != "mcp_servers" else "mcp", registry_file)
+        if collection_key == "template_roots":
+            registry_path = resolve_registry_path(workplace_manifest, "templates", registry_file)
+        elif collection_key == "tools":
+            registry_path = resolve_registry_path(workplace_manifest, "tools", registry_file)
+        elif collection_key == "knowledge_roots":
+            registry_path = resolve_registry_path(workplace_manifest, "knowledge_roots", registry_file)
+        elif collection_key == "package_roots":
+            registry_path = resolve_registry_path(workplace_manifest, "package_roots", registry_file)
+        if not registry_path.is_file():
+            continue
+        data = load_yaml_document(registry_path)
+        entries = data.get(collection_key) if isinstance(data, dict) else None
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict) or not entry.get(path_key):
+                continue
+            entry_id = str(entry.get("id", "entry"))
+            resolution = resolve_path_with_constants(str(entry[path_key]), workplace_root, constants)
+            errors = resolution.get("errors", [])
+            if errors:
+                checks.append(check("FAIL", f"{collection_key}.{entry_id}.{path_key} failed: {', '.join(errors)}"))
+                continue
+            if path_key == "path":
+                resolved_path = path_resolution_to_path(resolution)
+                requires_existing = str(entry.get("status", "available")) == "available" or bool(entry.get("must_exist", False))
+                level = "PASS" if resolved_path.exists() or not requires_existing else "WARN"
+                checks.append(check(level, f"{collection_key}.{entry_id}.path resolves ({resolution.get('path_status')})"))
+            else:
+                checks.append(check("PASS", f"{collection_key}.{entry_id}.{path_key} resolves constants"))
+    return checks
+
+
 def command_doctor_workplace(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
     checks: list[Check] = []
@@ -801,6 +1049,8 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
             checks.append(check("FAIL", "workplace.yaml appears to contain a secret value"))
         else:
             checks.append(check("PASS", "workplace.yaml contains no obvious secret values"))
+        checks.extend(path_constant_checks(root, manifest))
+        checks.extend(registry_path_resolution_checks(root, manifest))
     else:
         checks.append(check("FAIL", "workplace.yaml missing"))
 
@@ -1022,11 +1272,10 @@ def platform_contract_registry_entry(workplace_manifest: Path | None, contract_i
     return None
 
 
-def resolve_registry_relative_path(base: Path, raw_path: str) -> Path:
-    path = Path(raw_path)
-    if path.is_absolute():
-        return path
-    return (base / path).resolve()
+def resolve_registry_relative_path(base: Path, raw_path: str, workplace_manifest: Path | None = None) -> Path:
+    constants = load_workplace_path_constants(workplace_manifest, base) if workplace_manifest else load_workplace_path_constants(None, base)
+    resolution = resolve_path_with_constants(raw_path, base, constants)
+    return path_resolution_to_path(resolution)
 
 
 def load_platform_contract(workplace_manifest: Path | None, contract_id: str) -> tuple[dict[str, Any], dict[str, Any] | None, str]:
@@ -1038,7 +1287,7 @@ def load_platform_contract(workplace_manifest: Path | None, contract_id: str) ->
         return builtin, entry, str(entry.get("status"))
     raw_path = entry.get("path")
     if raw_path and workplace_manifest:
-        contract_path = resolve_registry_relative_path(workplace_manifest.parent, str(raw_path))
+        contract_path = resolve_registry_relative_path(workplace_manifest.parent, str(raw_path), workplace_manifest)
         contract_data = load_yaml_document(contract_path)
         if contract_data and not yaml_error(contract_data):
             return contract_data, entry, "available"
@@ -1869,10 +2118,7 @@ def resolve_registry_path(workplace_manifest: Path, registry_key: str, default_n
     workplace = load_yaml_document(workplace_manifest)
     registries = workplace.get("registries", {}) if isinstance(workplace, dict) and isinstance(workplace.get("registries"), dict) else {}
     raw_path = str(registries.get(registry_key) or f"registries/{default_name}")
-    path = Path(raw_path)
-    if path.is_absolute():
-        return path
-    return (workplace_manifest.parent / path).resolve()
+    return resolve_registry_relative_path(workplace_manifest.parent, raw_path, workplace_manifest)
 
 
 def distribution_registry_entries(workplace_manifest: Path) -> list[dict[str, Any]]:
@@ -1889,10 +2135,7 @@ def resolve_distribution_path(workplace_manifest: Path, distribution_id: str = "
         raw_path = entry.get("path")
         if not raw_path:
             return None
-        path = Path(str(raw_path))
-        if path.is_absolute():
-            return path
-        return (workplace_manifest.parent / path).resolve()
+        return resolve_registry_relative_path(workplace_manifest.parent, str(raw_path), workplace_manifest)
     return None
 
 
@@ -2229,7 +2472,7 @@ def workplace_package_root_paths(workplace_manifest: Path | None) -> list[Path]:
     for entry in entries:
         if not isinstance(entry, dict) or not entry.get("path"):
             continue
-        roots.append(resolve_registry_relative_path(workplace_manifest.parent, str(entry["path"])))
+        roots.append(resolve_registry_relative_path(workplace_manifest.parent, str(entry["path"]), workplace_manifest))
     return roots
 
 
@@ -2318,6 +2561,369 @@ def resolve_package_resources(
             if isinstance(resource, dict):
                 resources.append(resource_record_from_package(package_id, resource, requirement))
     return resources
+
+
+HEAVY_RESOURCE_KINDS = {
+    "source_tree",
+    "documentation",
+    "article_collection",
+    "note_collection",
+    "snippet_collection",
+    "example_collection",
+    "dataset",
+    "media_reference",
+}
+
+
+def resource_management_root(workplace_root: Path) -> Path:
+    return workplace_root / "runtime" / "resource-management"
+
+
+def resource_management_slug(command: str, object_id: str) -> str:
+    stamp = now_utc().replace(":", "").replace("-", "").replace("Z", "z")
+    return f"{stamp}-{safe_id(command, 'command')}-{safe_id(object_id, 'resource')}"
+
+
+def write_resource_management_artifact(workplace_root: Path, kind: str, slug: str, content: str) -> Path:
+    target = resource_management_root(workplace_root) / kind / f"{slug}.yaml"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(ensure_trailing_newline(content), encoding="utf-8")
+    return target
+
+
+def write_resource_management_report(workplace_root: Path, slug: str, title: str, lines: list[str]) -> Path:
+    target = resource_management_root(workplace_root) / "reports" / f"{slug}.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    body = ["# " + title, "", *lines, ""]
+    target.write_text("\n".join(body), encoding="utf-8")
+    return target
+
+
+def resource_management_event(
+    *,
+    scope: str,
+    command: str,
+    event_type: str,
+    target: dict[str, Any],
+    status: str,
+    message: str,
+) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "event_id": f"evt_{uuid.uuid4().hex}",
+        "event_type": event_type,
+        "occurred_at": now_utc(),
+        "scope": scope,
+        "source": {"command": command, "actor_type": "agent"},
+        "target": target,
+        "result": {"status": status, "message": message},
+    }
+
+
+def append_workplace_resource_event(workplace_root: Path, event: dict[str, Any]) -> Path:
+    target = workplace_root / "runtime" / "events" / "events.ndjson"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        (target.read_text(encoding="utf-8") if target.is_file() else "")
+        + json.dumps(redact_telemetry_value(event), ensure_ascii=False, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
+    return target
+
+
+def default_load_policy(kind: str, requested: str | None = None) -> str:
+    if requested:
+        return requested
+    return "on_demand" if kind in HEAVY_RESOURCE_KINDS else "when_relevant"
+
+
+def default_index_policy(kind: str, requested: str | None = None) -> str:
+    if requested:
+        return requested
+    if kind in {"source_tree"}:
+        return "symbols"
+    if kind in {"documentation", "article", "article_collection"}:
+        return "full_text"
+    return "metadata"
+
+
+def path_ref_for_known_root(workplace_root: Path, raw_path: str) -> dict[str, Any] | None:
+    resource_resolution = workplace_path_resolution(workplace_root, raw_path)
+    if resource_resolution.get("errors"):
+        return None
+    resource_resolved = normalize_path_string(str(resource_resolution.get("resolved", ""))).rstrip("/")
+    registry_specs = [
+        ("knowledge_roots", "knowledge-roots.yaml", "knowledge_roots"),
+        ("template_roots", "templates.yaml", "template_roots"),
+        ("package_roots", "package-roots.yaml", "package_roots"),
+    ]
+    for registry_name, registry_file, collection_key in registry_specs:
+        registry = load_yaml_document(workplace_root / "registries" / registry_file)
+        entries = registry.get(collection_key) if isinstance(registry, dict) else None
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict) or not entry.get("id") or not entry.get("path"):
+                continue
+            root_resolution = workplace_path_resolution(workplace_root, str(entry["path"]))
+            if root_resolution.get("errors"):
+                continue
+            root_resolved = normalize_path_string(str(root_resolution.get("resolved", ""))).rstrip("/")
+            if resource_resolved == root_resolved or resource_resolved.startswith(root_resolved + "/"):
+                path_ref: dict[str, Any] = {"registry": registry_name, "id": str(entry["id"])}
+                if resource_resolved != root_resolved:
+                    path_ref["relative_path"] = resource_resolved[len(root_resolved) + 1 :]
+                return path_ref
+    return None
+
+
+def ensure_private_resource_path(workplace_root: Path, resource_id: str, raw_path: str) -> Path:
+    target = workplace_root / "registries" / "private-resource-paths.yaml"
+    entry = {
+        "id": resource_id,
+        "label": resource_id.replace("-", " ").title(),
+        "path": raw_path,
+        "visibility": "private",
+        "status": "available",
+    }
+    upsert_registry_entry(target, "private_resource_paths", entry)
+    return target
+
+
+def public_resource_path_ref(resource_id: str, raw_path: str | None, source_url: str | None = None, workplace_root: Path | None = None) -> dict[str, Any]:
+    if source_url:
+        return {"registry": "external_resources", "id": resource_id, "url": source_url}
+    if raw_path:
+        if workplace_root:
+            known_ref = path_ref_for_known_root(workplace_root, raw_path)
+            if known_ref:
+                return known_ref
+        if path_string_is_absolute(raw_path) or PATH_CONSTANT_PATTERN.search(raw_path):
+            return {"registry": "private_resource_paths", "id": resource_id}
+        return {"package": "self", "relative_path": raw_path}
+    return {"registry": "external_resources", "id": resource_id}
+
+
+def normalize_resource_record(resource: dict[str, Any], package_id: str, workplace_root: Path | None = None, *, register_private_path: bool = False) -> dict[str, Any]:
+    record = dict(resource)
+    resource_id = safe_id(str(record.get("id") or record.get("title") or "resource"), "resource")
+    kind = str(record.get("kind") or "reference")
+    raw_path = str(record.get("path")) if record.get("path") else None
+    source = record.get("source") if isinstance(record.get("source"), dict) else {}
+    source_url = str(source.get("url") or record.get("url") or "") or None
+    record["id"] = resource_id
+    record["kind"] = kind
+    record["title"] = str(record.get("title") or resource_id.replace("-", " ").title())
+    record["load_policy"] = default_load_policy(kind, str(record.get("load_policy")) if record.get("load_policy") else None)
+    record["index_policy"] = default_index_policy(kind, str(record.get("index_policy")) if record.get("index_policy") else None)
+    if "path_ref" not in record:
+        record["path_ref"] = public_resource_path_ref(resource_id, raw_path, source_url, workplace_root)
+    if raw_path and (path_string_is_absolute(raw_path) or PATH_CONSTANT_PATTERN.search(raw_path)):
+        if workplace_root and register_private_path and record.get("path_ref", {}).get("registry") == "private_resource_paths":
+            ensure_private_resource_path(workplace_root, resource_id, raw_path)
+        record["path_status"] = "resolved_private_path_hidden"
+        resolution = workplace_path_resolution(workplace_root, raw_path) if workplace_root else None
+        if resolution and resolution.get("errors"):
+            record["path_resolution"] = {"status": "error", "errors": resolution.get("errors")}
+        elif record.get("path_ref", {}).get("registry") == "private_resource_paths":
+            record["registration_hint"] = "register a knowledge_root/template_root/package_root if this path should be shared by multiple resources"
+    record.pop("path", None)
+    if source_url and "source" not in record:
+        record["source"] = {"type": "url", "url": source_url}
+    if "update_policy" not in record:
+        record["update_policy"] = {"mode": "manual"}
+    if "package" not in record:
+        record["package"] = package_id
+    return record
+
+
+def resource_id_from_url(url: str, fallback: str = "resource") -> str:
+    parsed = urlparse(url)
+    pieces = [parsed.netloc, parsed.path.strip("/").split("/")[-1]]
+    return safe_id("-".join(piece for piece in pieces if piece), fallback)
+
+
+def package_manifest_locations(workplace_root: Path, package_id: str) -> list[Path]:
+    return [
+        workplace_root / "packages" / f"{package_id}.yaml",
+        workplace_root / "packages" / package_id / "package.yaml",
+    ]
+
+
+def package_manifest_path_for_write(workplace_root: Path, package_id: str) -> Path:
+    for path in package_manifest_locations(workplace_root, package_id):
+        if path.is_file():
+            return path
+    return workplace_root / "packages" / package_id / "package.yaml"
+
+
+def load_workplace_package_manifest(workplace_root: Path, package_id: str) -> tuple[Path, dict[str, Any]]:
+    path = package_manifest_path_for_write(workplace_root, package_id)
+    data = load_yaml_document(path)
+    if not data or yaml_error(data):
+        data = {
+            "schema_version": 1,
+            "id": package_id,
+            "name": package_id.replace(".", " ").replace("-", " ").title(),
+            "version": "0.1.0",
+            "kind": "documentation" if "docs" in package_id or "documentation" in package_id else "platform",
+            "scope": "workplace",
+            "resources": [],
+        }
+    if "resources" not in data or not isinstance(data.get("resources"), list):
+        data["resources"] = []
+    return path, data
+
+
+def resource_index_path_for_package(manifest_path: Path, workplace_root: Path, package_id: str) -> Path:
+    if manifest_path.name == "package.yaml":
+        return manifest_path.parent / "indexes" / "resource-index.yaml"
+    return workplace_root / "packages" / package_id / "indexes" / "resource-index.yaml"
+
+
+def build_resource_index(package_manifest: dict[str, Any], workplace_root: Path | None = None) -> dict[str, Any]:
+    package_id = str(package_manifest.get("id", "package"))
+    resources = [
+        normalize_resource_record(resource, package_id, workplace_root)
+        for resource in package_manifest.get("resources", [])
+        if isinstance(resource, dict)
+    ]
+    return {
+        "schema_version": 1,
+        "package": {
+            "id": package_id,
+            "version": str(package_manifest.get("version", "0.1.0")),
+        },
+        "generated_at": now_utc(),
+        "load_policy": {
+            "default": "on_demand",
+            "heavy_resources": "index_only_until_requested",
+            "do_not_load_full_content": True,
+        },
+        "resources": resources,
+    }
+
+
+def upsert_resource(resources: list[Any], resource: dict[str, Any]) -> str:
+    for index, item in enumerate(resources):
+        if isinstance(item, dict) and str(item.get("id")) == str(resource["id"]):
+            resources[index] = resource
+            return "updated"
+    resources.append(resource)
+    return "added"
+
+
+def write_package_manifest_and_index(workplace_root: Path, package_id: str, package_manifest: dict[str, Any]) -> tuple[Path, Path]:
+    manifest_path = package_manifest_path_for_write(workplace_root, package_id)
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(ensure_trailing_newline(dump_yaml(package_manifest)), encoding="utf-8")
+    index_path = resource_index_path_for_package(manifest_path, workplace_root, package_id)
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    index_path.write_text(ensure_trailing_newline(dump_yaml(build_resource_index(package_manifest, workplace_root))), encoding="utf-8")
+    return manifest_path, index_path
+
+
+def registry_ids_from_workplace(workplace_root: Path, registry_name: str, collection_key: str) -> set[str]:
+    data = load_yaml_document(workplace_root / "registries" / registry_name)
+    return registry_ids(data, collection_key)
+
+
+def resource_path_ref_missing(workplace_root: Path, resource: dict[str, Any]) -> str | None:
+    path_ref = resource.get("path_ref")
+    if not isinstance(path_ref, dict):
+        return "missing path_ref"
+    registry = str(path_ref.get("registry") or "")
+    ref_id = str(path_ref.get("id") or "")
+    if not registry or not ref_id:
+        return None if path_ref.get("package") else "path_ref must include registry/id or package/relative_path"
+    known = {
+        "knowledge_roots": ("knowledge-roots.yaml", "knowledge_roots"),
+        "package_roots": ("package-roots.yaml", "package_roots"),
+        "templates": ("templates.yaml", "template_roots"),
+        "tools": ("tools.yaml", "tools"),
+        "mcp": ("mcp.yaml", "mcp_servers"),
+        "private_resource_paths": ("private-resource-paths.yaml", "private_resource_paths"),
+    }
+    if registry in {"external_resources"}:
+        return None
+    if registry not in known:
+        return f"unknown path_ref registry {registry}"
+    registry_file, collection_key = known[registry]
+    if ref_id not in registry_ids_from_workplace(workplace_root, registry_file, collection_key):
+        return f"path_ref target missing: {registry}/{ref_id}"
+    return None
+
+
+def knowledge_package_doctor_checks(workplace_root: Path, package_id: str) -> list[Check]:
+    _manifest_path, manifest = load_workplace_package_manifest(workplace_root, package_id)
+    checks: list[Check] = []
+    if not manifest:
+        return [check("FAIL", f"package {package_id} manifest missing")]
+    resources = manifest.get("resources") if isinstance(manifest.get("resources"), list) else []
+    checks.append(check("PASS", f"package {package_id} manifest loaded"))
+    for resource in resources:
+        if not isinstance(resource, dict):
+            checks.append(check("FAIL", f"package {package_id} contains non-object resource"))
+            continue
+        resource_id = str(resource.get("id", "resource"))
+        normalized = normalize_resource_record(resource, package_id, workplace_root)
+        missing = resource_path_ref_missing(workplace_root, normalized)
+        checks.append(check("FAIL" if missing else "PASS", f"{package_id}:{resource_id} path_ref" + (f" - {missing}" if missing else " resolved")))
+        kind = str(resource.get("kind") or "reference")
+        if kind in HEAVY_RESOURCE_KINDS and not resource.get("load_policy"):
+            checks.append(check("WARN", f"{package_id}:{resource_id} heavy resource should declare load_policy"))
+        elif kind in HEAVY_RESOURCE_KINDS and str(resource.get("load_policy")) in {"always_index", "session_start", "project_init"}:
+            checks.append(check("WARN", f"{package_id}:{resource_id} heavy resource should normally use on_demand"))
+    index_path = resource_index_path_for_package(package_manifest_path_for_write(workplace_root, package_id), workplace_root, package_id)
+    if index_path.is_file():
+        index = load_yaml_document(index_path)
+        checks.append(check("PASS" if not yaml_error(index) else "FAIL", f"{rel(index_path, workplace_root)} is valid YAML"))
+        indexed_ids = {str(item.get("id")) for item in index.get("resources", []) if isinstance(item, dict)}
+        for resource in resources:
+            if isinstance(resource, dict) and str(resource.get("id")) not in indexed_ids:
+                checks.append(check("WARN", f"{package_id}:{resource.get('id')} missing from resource index"))
+    else:
+        checks.append(check("WARN", f"{rel(index_path, workplace_root)} missing; run knowledge-index-refresh --apply"))
+    return checks
+
+
+def project_knowledge_resource_index_checks(project_root: Path, distribution_root: Path | None, workplace_manifest: Path | None) -> list[Check]:
+    checks: list[Check] = []
+    checked = 0
+    for manifest_path in package_manifest_candidates(project_root, distribution_root, workplace_manifest):
+        manifest = load_yaml_document(manifest_path)
+        if not manifest or yaml_error(manifest):
+            continue
+        resources = manifest.get("resources")
+        if not isinstance(resources, list) or not resources:
+            continue
+        checked += 1
+        package_id = str(manifest.get("id", manifest_path.stem))
+        root_for_index = manifest_path.parent.parent if manifest_path.parent.name == "packages" else project_root
+        if distribution_root:
+            try:
+                manifest_path.relative_to(distribution_root)
+                root_for_index = distribution_root
+            except ValueError:
+                pass
+        index_path = resource_index_path_for_package(manifest_path, root_for_index, package_id)
+        checks.append(check("PASS" if index_path.is_file() else "WARN", f"knowledge resource index for {package_id} {'found' if index_path.is_file() else 'missing'}"))
+        for resource in resources:
+            if not isinstance(resource, dict):
+                checks.append(check("FAIL", f"{package_id} contains non-object resource"))
+                continue
+            normalized = normalize_resource_record(resource, package_id)
+            if "path" in resource and Path(str(resource.get("path"))).is_absolute():
+                checks.append(check("FAIL", f"{package_id}:{resource.get('id', 'resource')} exposes an absolute path instead of path_ref"))
+            if "path_ref" not in normalized:
+                checks.append(check("FAIL", f"{package_id}:{resource.get('id', 'resource')} missing path_ref"))
+            kind = str(resource.get("kind") or "reference")
+            if kind in HEAVY_RESOURCE_KINDS and not resource.get("load_policy"):
+                checks.append(check("WARN", f"{package_id}:{resource.get('id', 'resource')} heavy resource should declare load_policy"))
+    if checked == 0:
+        checks.append(check("PASS", "knowledge resource indexes checked (no package resources declared)"))
+    return checks
 
 
 def capability_records(required: list[str], optional: list[str], providers: dict[str, str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -4215,6 +4821,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
     local_manifest = flow_root / "process-forge.local.yaml"
     gitignore = project_root / ".gitignore"
     auto_workplace_mode = False
+    workplace_manifest_path: Path | None = None
 
     if manifest.is_file():
         checks.append(check("PASS", f"{rel(manifest, project_root)} found"))
@@ -4231,6 +4838,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
         checks.append(check("PASS", "process-forge.local.yaml found"))
         workplace = resolve_workplace_manifest(local_manifest)
         if workplace and workplace.is_file():
+            workplace_manifest_path = workplace
             checks.append(check("PASS", "workplace manifest is reachable"))
             registry = resolve_registry_path(workplace, "distributions", "distributions.yaml")
             checks.append(check("PASS" if registry.is_file() else "FAIL", "workplace distributions registry is reachable"))
@@ -4270,6 +4878,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
     if report_section_has_items(resource_report, "## Missing Recommended Platform Resources"):
         checks.append(check("WARN", "recommended platform resources are missing from workplace registries"))
     checks.extend(public_snapshot_path_checks(project_root))
+    checks.extend(project_knowledge_resource_index_checks(project_root, distribution_root, workplace_manifest_path))
 
     for rel_path in [
         "artifacts/project-profile.md",
@@ -4434,6 +5043,485 @@ def command_project_upgrade_check(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_path_resolve(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    resolution = workplace_path_resolution(workplace_root, args.path)
+    for key in ["original", "expanded", "resolved", "is_absolute", "is_private", "path_status"]:
+        print(f"{key}: {resolution.get(key)}")
+    if resolution.get("constants"):
+        print("constants: " + ", ".join(resolution["constants"]))
+    if resolution.get("errors"):
+        print("errors: " + ", ".join(resolution["errors"]))
+        return 1
+    return 0
+
+
+def write_resource_proposal(workplace_root: Path, command: str, object_id: str, payload: dict[str, Any]) -> tuple[str, Path]:
+    slug = resource_management_slug(command, object_id)
+    proposal = {
+        "schema_version": 1,
+        "proposal_id": slug,
+        "command": command,
+        "created_at": now_utc(),
+        "mode": "proposal_first",
+        "payload": payload,
+        "privacy": {
+            "public_project_files_must_not_contain_absolute_paths": True,
+            "secret_values_stored": False,
+        },
+    }
+    path = write_resource_management_artifact(workplace_root, "proposals", slug, dump_yaml(proposal))
+    return slug, path
+
+
+def command_knowledge_add_url(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    package_id = str(args.package)
+    resource_id = safe_id(args.id or resource_id_from_url(args.url, "article"), "resource")
+    resource = normalize_resource_record(
+        {
+            "id": resource_id,
+            "kind": args.kind,
+            "title": args.title or resource_id.replace("-", " ").title(),
+            "description": args.description or f"External {args.kind} resource registered from URL.",
+            "source": {"type": "url", "url": args.url},
+            "license": {"name": args.license or "unknown"},
+            "load_policy": args.load_policy,
+            "index_policy": args.index_policy,
+        },
+        package_id,
+        workplace_root,
+    )
+    slug, proposal_path = write_resource_proposal(
+        workplace_root,
+        "knowledge-add-url",
+        resource_id,
+        {"package_id": package_id, "resource": resource, "apply_writes": ["package.yaml", "indexes/resource-index.yaml"]},
+    )
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="knowledge-add-url",
+            event_type="knowledge.resource.add.requested",
+            target={"package_id": package_id, "resource_id": resource_id},
+            status="dry_run" if args.dry_run else "requested",
+            message="resource add proposal created",
+        ),
+    )
+    if args.dry_run:
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        return 0
+    _manifest_path, manifest = load_workplace_package_manifest(workplace_root, package_id)
+    result = upsert_resource(manifest["resources"], resource)
+    manifest_path, index_path = write_package_manifest_and_index(workplace_root, package_id, manifest)
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="knowledge-add-url",
+            event_type="knowledge.resource.added",
+            target={"package_id": package_id, "resource_id": resource_id},
+            status=result,
+            message="resource manifest and index updated",
+        ),
+    )
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="knowledge-add-url",
+            event_type="knowledge.package.updated",
+            target={"package_id": package_id, "resource_id": resource_id},
+            status="updated",
+            message="package resource index refreshed",
+        ),
+    )
+    report = write_resource_management_report(
+        workplace_root,
+        slug,
+        "Knowledge URL Add Report",
+        [
+            f"- package: {package_id}",
+            f"- resource: {resource_id}",
+            f"- manifest: {rel(manifest_path, workplace_root)}",
+            f"- index: {rel(index_path, workplace_root)}",
+            "- heavy content loaded: no",
+        ],
+    )
+    print(f"{result.upper()}: {resource_id}")
+    print(f"MANIFEST: {rel(manifest_path, workplace_root)}")
+    print(f"INDEX: {rel(index_path, workplace_root)}")
+    print(f"REPORT: {rel(report, workplace_root)}")
+    return 0
+
+
+def command_knowledge_add_resource(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    package_id = str(args.package)
+    data = load_yaml_document(Path(args.resource_file).expanduser().resolve())
+    if not data or yaml_error(data):
+        raise SystemExit(f"FAIL: resource file is missing or invalid: {args.resource_file}")
+    resource = normalize_resource_record(data, package_id, workplace_root, register_private_path=args.apply)
+    resource_id = str(resource["id"])
+    slug, proposal_path = write_resource_proposal(
+        workplace_root,
+        "knowledge-add-resource",
+        resource_id,
+        {
+            "package_id": package_id,
+            "resource": resource,
+            "private_input_path": data.get("path"),
+            "suggested_registration": "register a knowledge_root/template_root/package_root when the path should be reused" if data.get("path") else None,
+            "apply_writes": ["package.yaml", "indexes/resource-index.yaml"],
+        },
+    )
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="knowledge-add-resource",
+            event_type="knowledge.resource.add.requested",
+            target={"package_id": package_id, "resource_id": resource_id},
+            status="dry_run" if args.dry_run else "requested",
+            message="resource add proposal created",
+        ),
+    )
+    if data.get("path"):
+        path_errors = resource.get("path_resolution", {}).get("errors") if isinstance(resource.get("path_resolution"), dict) else []
+        append_workplace_resource_event(
+            workplace_root,
+            resource_management_event(
+                scope="workplace",
+                command="knowledge-add-resource",
+                event_type="knowledge.resource.path.unresolved" if path_errors else "knowledge.resource.path.resolved",
+                target={"package_id": package_id, "resource_id": resource_id},
+                status="error" if path_errors else "resolved",
+                message=", ".join(path_errors) if path_errors else "resource path resolved to public path_ref",
+            ),
+        )
+    if args.dry_run:
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        return 0
+    _manifest_path, manifest = load_workplace_package_manifest(workplace_root, package_id)
+    result = upsert_resource(manifest["resources"], resource)
+    manifest_path, index_path = write_package_manifest_and_index(workplace_root, package_id, manifest)
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="knowledge-add-resource",
+            event_type="knowledge.resource.added",
+            target={"package_id": package_id, "resource_id": resource_id},
+            status=result,
+            message="resource manifest and index updated",
+        ),
+    )
+    report = write_resource_management_report(
+        workplace_root,
+        slug,
+        "Knowledge Resource Add Report",
+        [
+            f"- package: {package_id}",
+            f"- resource: {resource_id}",
+            f"- manifest: {rel(manifest_path, workplace_root)}",
+            f"- index: {rel(index_path, workplace_root)}",
+            f"- path_ref: {resource.get('path_ref')}",
+        ],
+    )
+    print(f"{result.upper()}: {resource_id}")
+    print(f"REPORT: {rel(report, workplace_root)}")
+    return 0
+
+
+def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    package_id = str(args.package)
+    manifest_path, manifest = load_workplace_package_manifest(workplace_root, package_id)
+    index_path = resource_index_path_for_package(manifest_path, workplace_root, package_id)
+    slug, proposal_path = write_resource_proposal(
+        workplace_root,
+        "knowledge-index-refresh",
+        package_id,
+        {"package_id": package_id, "index_path": rel(index_path, workplace_root), "resource_count": len(manifest.get("resources", []))},
+    )
+    if args.dry_run:
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        return 0
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    index_path.write_text(ensure_trailing_newline(dump_yaml(build_resource_index(manifest, workplace_root))), encoding="utf-8")
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="knowledge-index-refresh",
+            event_type="knowledge.package.updated",
+            target={"package_id": package_id},
+            status="updated",
+            message="resource index refreshed",
+        ),
+    )
+    report = write_resource_management_report(
+        workplace_root,
+        slug,
+        "Knowledge Index Refresh Report",
+        [f"- package: {package_id}", f"- index: {rel(index_path, workplace_root)}", "- heavy content loaded: no"],
+    )
+    print(f"INDEX: {rel(index_path, workplace_root)}")
+    print(f"REPORT: {rel(report, workplace_root)}")
+    return 0
+
+
+def command_knowledge_package_doctor(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    return print_checks(knowledge_package_doctor_checks(workplace_root, str(args.package)))
+
+
+def command_docs_import_plan(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    source = safe_id(args.source, "source")
+    topics = [safe_id(item.strip(), "topic") for item in str(args.topics).split(",") if item.strip()]
+    plan_id = safe_id(args.id or f"{source}-{'-'.join(topics)}", "documentation-import")
+    resources = [
+        {
+            "id": f"{source}-{topic}-docs",
+            "kind": "documentation",
+            "title": f"{source.upper()} {topic.upper()} documentation mirror",
+            "path_ref": {"registry": "external_resources", "id": f"{source}-{topic}-docs"},
+            "load_policy": "on_demand",
+            "index_policy": "full_text",
+            "source": {"type": "documentation_source", "id": source, "topic": topic},
+            "license": {"name": args.license or "source-specific"},
+            "update_policy": {"mode": "manual_plan_first"},
+        }
+        for topic in topics
+    ]
+    plan = {
+        "schema_version": 1,
+        "id": plan_id,
+        "source": source,
+        "topics": topics,
+        "created_at": now_utc(),
+        "mode": "plan_only",
+        "download": {"enabled": False, "reason": "MVP does not crawl or download large documentation sets"},
+        "resources": resources,
+        "index_policy": "write_resource_index_without_loading_full_content",
+    }
+    target = resource_management_root(workplace_root) / "documentation-import-plans" / f"{plan_id}.yaml"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(ensure_trailing_newline(dump_yaml(plan)), encoding="utf-8")
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="docs-import-plan",
+            event_type="knowledge.resource.add.requested",
+            target={"package_id": args.package or "documentation", "resource_id": plan_id},
+            status="planned",
+            message="documentation import plan created without downloading content",
+        ),
+    )
+    print(f"PLAN: {rel(target, workplace_root)}")
+    return 0
+
+
+def command_template_add(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    template_id = safe_id(args.id, "template")
+    source = Path(args.source).expanduser().resolve()
+    target_root = path_resolution_to_path(workplace_path_resolution(workplace_root, f"${{PF_TEMPLATES}}/{args.type}/{template_id}"))
+    slug, proposal_path = write_resource_proposal(
+        workplace_root,
+        "template-add",
+        template_id,
+        {"template_id": template_id, "source": str(source), "target": rel(target_root, workplace_root)},
+    )
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="template-add",
+            event_type="template.add.requested",
+            target={"template_id": template_id},
+            status="dry_run" if args.dry_run else "requested",
+            message="template add proposal created",
+        ),
+    )
+    if args.dry_run:
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        return 0
+    if not source.is_dir():
+        raise SystemExit(f"FAIL: template source folder not found: {source}")
+    target_root.mkdir(parents=True, exist_ok=True)
+    for item in source.rglob("*"):
+        if item.is_file():
+            relative = item.relative_to(source)
+            destination = target_root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(item, destination)
+    readme = target_root / "README.md"
+    if not readme.is_file():
+        readme.write_text(
+            ensure_trailing_newline(
+                f"# {template_id}\n\nUse this {args.type} template when the current package or platform contract selects it.\n\n## Placeholders\n\nDocument placeholders before production use.\n\n## Verification\n\nReview generated files before applying them to a project."
+            ),
+            encoding="utf-8",
+        )
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="template-add",
+            event_type="template.added",
+            target={"template_id": template_id},
+            status="added",
+            message="template payload copied",
+        ),
+    )
+    print(f"TEMPLATE: {rel(target_root, workplace_root)}")
+    return 0
+
+
+def upsert_registry_entry(path: Path, collection_key: str, entry: dict[str, Any]) -> str:
+    data = load_yaml_document(path)
+    if not data or yaml_error(data):
+        data = {"schema_version": 1, collection_key: []}
+    entries = data.get(collection_key)
+    if not isinstance(entries, list):
+        entries = []
+        data[collection_key] = entries
+    result = upsert_resource(entries, entry)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(ensure_trailing_newline(dump_yaml(data)), encoding="utf-8")
+    return result
+
+
+def command_tool_register(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    if contains_secret_value(args.command):
+        raise SystemExit("FAIL: command appears to contain a secret value")
+    tool_id = safe_id(args.id, "tool")
+    entry = {
+        "id": tool_id,
+        "name": args.name or tool_id,
+        "capability": args.capability,
+        "command": args.command,
+        "scope": "workplace",
+        "healthcheck": {"command": args.healthcheck or f"{args.command} --version"},
+        "status": args.status,
+    }
+    slug, proposal_path = write_resource_proposal(workplace_root, "tool-register", tool_id, {"tool": entry})
+    if args.dry_run:
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        return 0
+    result = upsert_registry_entry(workplace_root / "registries" / "tools.yaml", "tools", entry)
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="tool-register",
+            event_type="tool.registered",
+            target={"tool_id": tool_id},
+            status=result,
+            message="tool registry updated",
+        ),
+    )
+    report = write_resource_management_report(workplace_root, slug, "Tool Register Report", [f"- tool: {tool_id}", f"- status: {result}"])
+    print(f"{result.upper()}: {tool_id}")
+    print(f"REPORT: {rel(report, workplace_root)}")
+    return 0
+
+
+def command_mcp_register(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    if contains_secret_value(args.command):
+        raise SystemExit("FAIL: command appears to contain a secret value")
+    mcp_id = safe_id(args.id, "mcp")
+    entry = {
+        "id": mcp_id,
+        "name": args.name or mcp_id,
+        "capability": args.capability,
+        "transport": args.transport,
+        "command": args.command,
+        "auth_ref": args.auth_ref,
+        "status": args.status,
+    }
+    slug, proposal_path = write_resource_proposal(workplace_root, "mcp-register", mcp_id, {"mcp": entry})
+    if args.dry_run:
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        return 0
+    result = upsert_registry_entry(workplace_root / "registries" / "mcp.yaml", "mcp_servers", entry)
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="mcp-register",
+            event_type="mcp.registered",
+            target={"mcp_id": mcp_id},
+            status=result,
+            message="MCP registry updated",
+        ),
+    )
+    report = write_resource_management_report(workplace_root, slug, "MCP Register Report", [f"- mcp: {mcp_id}", f"- status: {result}"])
+    print(f"{result.upper()}: {mcp_id}")
+    print(f"REPORT: {rel(report, workplace_root)}")
+    return 0
+
+
+def command_platform_contract_install(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    platform_id = safe_id(args.id.removeprefix("platform."), "platform")
+    contract_id = platform_contract_id(platform_id)
+    contract_path = workplace_root / "platforms" / platform_id / "platform.yaml"
+    contract = {
+        "schema_version": 1,
+        "id": contract_id,
+        "type": "platform_contract",
+        "version": args.version,
+        "applies_to": {"platforms": [platform_id]},
+        "requires": {
+            "capabilities": [item for item in args.required_capabilities.split(",") if item],
+            "knowledge_packages": [item for item in args.required_packages.split(",") if item],
+            "tools": [item for item in args.required_tools.split(",") if item],
+            "mcp": [item for item in args.required_mcp.split(",") if item],
+            "templates": [item for item in args.required_templates.split(",") if item],
+        },
+        "includes": {
+            "knowledge_packages": [item for item in args.recommended_packages.split(",") if item],
+            "tools": [item for item in args.recommended_tools.split(",") if item],
+            "mcp": [item for item in args.recommended_mcp.split(",") if item],
+            "templates": [item for item in args.recommended_templates.split(",") if item],
+        },
+        "policies": {"missing_required_capability": "block", "missing_optional_resource": "warn"},
+    }
+    slug, proposal_path = write_resource_proposal(workplace_root, "platform-contract-install", platform_id, {"contract": contract})
+    if args.dry_run:
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        return 0
+    contract_path.parent.mkdir(parents=True, exist_ok=True)
+    contract_path.write_text(ensure_trailing_newline(dump_yaml(contract)), encoding="utf-8")
+    upsert_registry_entry(
+        workplace_root / "registries" / "platforms.yaml",
+        "platforms",
+        {"id": platform_id, "package_id": contract_id, "path": rel(contract_path, workplace_root), "status": "available"},
+    )
+    append_workplace_resource_event(
+        workplace_root,
+        resource_management_event(
+            scope="workplace",
+            command="platform-contract-install",
+            event_type="platform.contract.updated",
+            target={"package_id": contract_id},
+            status="updated",
+            message="platform contract and registry updated",
+        ),
+    )
+    report = write_resource_management_report(workplace_root, slug, "Platform Contract Install Report", [f"- contract: {contract_id}", f"- path: {rel(contract_path, workplace_root)}"])
+    print(f"CONTRACT: {rel(contract_path, workplace_root)}")
+    print(f"REPORT: {rel(report, workplace_root)}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ProcessForge MVP init and doctor commands.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -4469,6 +5557,106 @@ def build_parser() -> argparse.ArgumentParser:
     doctor_project = sub.add_parser("doctor-project", help="Validate a ProcessForge project layer.")
     doctor_project.add_argument("--project-root", required=True, help="Project root path.")
     doctor_project.set_defaults(func=command_doctor_project)
+
+    path_resolve = sub.add_parser("path-resolve", help="Resolve a workplace path using path_constants.")
+    path_resolve.add_argument("--workplace", required=True, help="Workplace root path.")
+    path_resolve.add_argument("--path", required=True, help="Raw path with optional ${CONST}.")
+    path_resolve.set_defaults(func=command_path_resolve)
+
+    knowledge_add_url = sub.add_parser("knowledge-add-url", help="Create or apply a proposal to add a URL-backed knowledge resource.")
+    knowledge_add_url.add_argument("--workplace", required=True, help="Workplace root path.")
+    knowledge_add_url.add_argument("--package", required=True, help="Knowledge package id.")
+    knowledge_add_url.add_argument("--url", required=True, help="External source URL.")
+    knowledge_add_url.add_argument("--kind", default="article", help="Resource kind.")
+    knowledge_add_url.add_argument("--id", help="Resource id override.")
+    knowledge_add_url.add_argument("--title", help="Resource title.")
+    knowledge_add_url.add_argument("--description", help="Resource description.")
+    knowledge_add_url.add_argument("--license", help="License note.")
+    knowledge_add_url.add_argument("--load-policy", dest="load_policy", help="Load policy override.")
+    knowledge_add_url.add_argument("--index-policy", dest="index_policy", help="Index policy override.")
+    knowledge_add_url.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    knowledge_add_url.add_argument("--apply", action="store_true", help="Update package manifest and resource index.")
+    knowledge_add_url.set_defaults(func=command_knowledge_add_url)
+
+    knowledge_add_resource = sub.add_parser("knowledge-add-resource", help="Create or apply a proposal to add a YAML resource record.")
+    knowledge_add_resource.add_argument("--workplace", required=True, help="Workplace root path.")
+    knowledge_add_resource.add_argument("--package", required=True, help="Knowledge package id.")
+    knowledge_add_resource.add_argument("--resource-file", required=True, help="YAML knowledge resource record.")
+    knowledge_add_resource.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    knowledge_add_resource.add_argument("--apply", action="store_true", help="Update package manifest and resource index.")
+    knowledge_add_resource.set_defaults(func=command_knowledge_add_resource)
+
+    knowledge_package_doctor = sub.add_parser("knowledge-package-doctor", help="Validate a knowledge package manifest and resource index.")
+    knowledge_package_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
+    knowledge_package_doctor.add_argument("--package", required=True, help="Knowledge package id.")
+    knowledge_package_doctor.set_defaults(func=command_knowledge_package_doctor)
+
+    knowledge_index_refresh = sub.add_parser("knowledge-index-refresh", help="Refresh a package resource index without loading heavy resources.")
+    knowledge_index_refresh.add_argument("--workplace", required=True, help="Workplace root path.")
+    knowledge_index_refresh.add_argument("--package", required=True, help="Knowledge package id.")
+    knowledge_index_refresh.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    knowledge_index_refresh.add_argument("--apply", action="store_true", help="Write resource index.")
+    knowledge_index_refresh.set_defaults(func=command_knowledge_index_refresh)
+
+    docs_import_plan = sub.add_parser("docs-import-plan", help="Create a documentation mirror import plan without downloading content.")
+    docs_import_plan.add_argument("--workplace", required=True, help="Workplace root path.")
+    docs_import_plan.add_argument("--source", required=True, help="Documentation source id, for example mdn.")
+    docs_import_plan.add_argument("--topics", required=True, help="Comma-separated topics.")
+    docs_import_plan.add_argument("--package", help="Target documentation package id.")
+    docs_import_plan.add_argument("--id", help="Plan id override.")
+    docs_import_plan.add_argument("--license", help="License note.")
+    docs_import_plan.set_defaults(func=command_docs_import_plan)
+
+    template_add = sub.add_parser("template-add", help="Register a simple workplace template package.")
+    template_add.add_argument("--workplace", required=True, help="Workplace root path.")
+    template_add.add_argument("--type", required=True, choices=["file", "media", "prompt", "directory", "multi-file"], help="Template type.")
+    template_add.add_argument("--id", required=True, help="Template id.")
+    template_add.add_argument("--source", required=True, help="Source folder to copy on apply.")
+    template_add.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    template_add.add_argument("--apply", action="store_true", help="Copy template payload.")
+    template_add.set_defaults(func=command_template_add)
+
+    tool_register = sub.add_parser("tool-register", help="Register a workplace tool capability provider.")
+    tool_register.add_argument("--workplace", required=True, help="Workplace root path.")
+    tool_register.add_argument("--id", required=True, help="Tool id.")
+    tool_register.add_argument("--name", help="Tool display name.")
+    tool_register.add_argument("--capability", required=True, help="Capability provided by the tool.")
+    tool_register.add_argument("--command", required=True, help="Command without secrets.")
+    tool_register.add_argument("--healthcheck", help="Healthcheck command.")
+    tool_register.add_argument("--status", default="configured", choices=["configured", "optional", "missing", "disabled"], help="Tool status.")
+    tool_register.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    tool_register.add_argument("--apply", action="store_true", help="Update tools registry.")
+    tool_register.set_defaults(func=command_tool_register)
+
+    mcp_register = sub.add_parser("mcp-register", help="Register a workplace MCP capability provider.")
+    mcp_register.add_argument("--workplace", required=True, help="Workplace root path.")
+    mcp_register.add_argument("--id", required=True, help="MCP id.")
+    mcp_register.add_argument("--name", help="MCP display name.")
+    mcp_register.add_argument("--capability", required=True, help="Capability provided by the MCP server.")
+    mcp_register.add_argument("--command", required=True, help="Command without secrets.")
+    mcp_register.add_argument("--transport", default="stdio", help="MCP transport.")
+    mcp_register.add_argument("--auth-ref", dest="auth_ref", help="Optional auth reference name, never the secret value.")
+    mcp_register.add_argument("--status", default="configured", choices=["configured", "optional", "missing", "disabled"], help="MCP status.")
+    mcp_register.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    mcp_register.add_argument("--apply", action="store_true", help="Update MCP registry.")
+    mcp_register.set_defaults(func=command_mcp_register)
+
+    platform_contract_install = sub.add_parser("platform-contract-install", help="Create or update a workplace platform contract.")
+    platform_contract_install.add_argument("--workplace", required=True, help="Workplace root path.")
+    platform_contract_install.add_argument("--id", required=True, help="Platform id, with or without platform. prefix.")
+    platform_contract_install.add_argument("--version", default="1.0.0", help="Contract version.")
+    platform_contract_install.add_argument("--required-capabilities", default="", help="Comma-separated required capabilities.")
+    platform_contract_install.add_argument("--required-packages", default="", help="Comma-separated required knowledge package ids.")
+    platform_contract_install.add_argument("--required-tools", default="", help="Comma-separated required tool ids.")
+    platform_contract_install.add_argument("--required-mcp", default="", help="Comma-separated required MCP ids.")
+    platform_contract_install.add_argument("--required-templates", default="", help="Comma-separated required template ids.")
+    platform_contract_install.add_argument("--recommended-packages", default="", help="Comma-separated recommended knowledge package ids.")
+    platform_contract_install.add_argument("--recommended-tools", default="", help="Comma-separated recommended tool ids.")
+    platform_contract_install.add_argument("--recommended-mcp", default="", help="Comma-separated recommended MCP ids.")
+    platform_contract_install.add_argument("--recommended-templates", default="", help="Comma-separated recommended template ids.")
+    platform_contract_install.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    platform_contract_install.add_argument("--apply", action="store_true", help="Write contract and registry entry.")
+    platform_contract_install.set_defaults(func=command_platform_contract_install)
 
     self_update = sub.add_parser("self-update-check", help="Check the current ProcessForge distribution update index.")
     self_update.add_argument("--distribution-root", help="ProcessForge distribution root. Defaults to this checkout.")

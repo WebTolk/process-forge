@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/path-constants.schema.json",
+  "title": "Path Constants",
+  "type": "object",
+  "required": ["PF_WORKPLACE"],
+  "properties": {
+    "PF_WORKPLACE": { "type": "string", "minLength": 1 },
+    "PF_DISTRIBUTION": { "type": "string" },
+    "PF_KNOWLEDGE": { "type": "string" },
+    "PF_TEMPLATES": { "type": "string" },
+    "PF_TOOLS": { "type": "string" },
+    "PF_MCP": { "type": "string" },
+    "PF_PLATFORM_CONTRACTS": { "type": "string" },
+    "PF_PROCESS_TEMPLATES": { "type": "string" },
+    "PF_RUNTIME": { "type": "string" },
+    "PF_CACHE": { "type": "string" }
+  },
+  "additionalProperties": { "type": "string" }
+}

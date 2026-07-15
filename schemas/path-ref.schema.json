@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/path-ref.schema.json",
+  "title": "Path Reference",
+  "type": "object",
+  "required": ["registry", "id"],
+  "properties": {
+    "registry": { "type": "string", "minLength": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "relative_path": { "type": "string" },
+    "url": { "type": "string" }
+  },
+  "additionalProperties": true
+}

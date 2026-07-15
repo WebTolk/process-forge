@@ -25,3 +25,9 @@ Describe what this template creates.
 ## Validation Hints
 
 - Run the relevant ProcessForge validator after use.
+
+## Resource Management Notes
+
+- A simple template folder with this README is valid for MVP.
+- `template.yaml` is optional unless the package needs extra metadata.
+- Keep private local paths out of reusable template documentation.

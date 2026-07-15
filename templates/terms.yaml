@@ -103,6 +103,39 @@ terms:
       registry: package_roots
       scope: workplace
 
+  resource_management:
+    label: "resource management"
+    label_ru: "управление ресурсами"
+    aliases:
+      - "knowledge resource add"
+      - "resource index"
+      - "documentation import"
+    aliases_ru:
+      - "управление знаниями"
+      - "индекс ресурсов"
+      - "импорт документации"
+    definition: "Proposal-first workplace processes and commands for maintaining knowledge resources, templates, tools, MCP, and platform contracts."
+    resolves_to:
+      processes:
+        - knowledge-resource-add
+        - documentation-mirror-import
+        - template-add
+        - tool-register
+        - mcp-register
+
+  resource_index:
+    label: "resource index"
+    label_ru: "индекс ресурсов"
+    aliases:
+      - "knowledge resource index"
+      - "package resource index"
+    aliases_ru:
+      - "индекс знаний"
+      - "индекс пакета"
+    definition: "Metadata-only package index describing available resources, path_ref, load_policy, index_policy, source, license, and update policy."
+    resolves_to:
+      file: indexes/resource-index.yaml
+
   distribution_registry:
     label: "distribution registry"
     aliases:

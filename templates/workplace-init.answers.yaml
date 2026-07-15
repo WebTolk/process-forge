@@ -8,6 +8,11 @@ workplace:
 
 paths:
   root: "<processforge-workplace-root>"
+  path_constants:
+    PF_KNOWLEDGE: "knowledge"
+    PF_TEMPLATES: "reusable-templates"
+    PF_TOOLS: "tools"
+    PF_MCP: "mcp"
   knowledge_roots:
     company: ""
     local_docs: ""

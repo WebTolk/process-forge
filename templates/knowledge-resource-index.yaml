@@ -1,0 +1,28 @@
+schema_version: 1
+
+package:
+  id: example-package
+  version: "0.1.0"
+
+generated_at: "1970-01-01T00:00:00Z"
+load_policy:
+  default: on_demand
+  heavy_resources: index_only_until_requested
+  do_not_load_full_content: true
+
+resources:
+  - id: example-resource
+    kind: reference
+    title: "Example resource"
+    path_ref:
+      registry: external_resources
+      id: example-resource
+    load_policy: on_demand
+    index_policy: metadata
+    license:
+      name: unknown
+    source:
+      type: manual
+      url: null
+    update_policy:
+      mode: manual

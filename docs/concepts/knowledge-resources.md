@@ -31,3 +31,10 @@ Supported MVP resource kinds:
 
 Resource references can point relative to the package, relative to a knowledge
 root, or through a workplace registry entry.
+# Resource Indexes
+
+Knowledge packages should publish `indexes/resource-index.yaml` for agent consumption. The index lists available resources, `path_ref`, `load_policy`, `index_policy`, source, license, and update policy.
+
+Large resources such as source trees, full documentation mirrors, and article collections must default to `load_policy: on_demand`. Project snapshots select index records and do not load full resource content.
+
+External and local private resources use `path_ref`; public snapshot records must not contain absolute local paths.

@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-15T08:27:46Z
-- valid_until: 2026-07-22T08:27:46Z
+- generated_at: 2026-07-15T11:09:26Z
+- valid_until: 2026-07-22T11:09:26Z
 
 ## Freshness
 
@@ -55,6 +55,14 @@ fresh
 - session-bootstrap
 - context-resolution
 - processforge-update-check
+- knowledge-resource-add
+- documentation-mirror-import
+- knowledge-package-update
+- template-add
+- tool-register
+- mcp-register
+- platform-contract-install
+- process-template-install
 
 ## Required Capabilities
 

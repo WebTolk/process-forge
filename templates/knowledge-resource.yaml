@@ -1,0 +1,17 @@
+schema_version: 1
+id: example-resource
+kind: reference
+title: "Example resource"
+description: "Describe when an agent should use this resource."
+path_ref:
+  registry: external_resources
+  id: example-resource
+load_policy: on_demand
+index_policy: metadata
+license:
+  name: unknown
+source:
+  type: manual
+  url: null
+update_policy:
+  mode: manual

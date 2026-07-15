@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/knowledge-resource-add-request.schema.json",
+  "title": "Knowledge Resource Add Request",
+  "type": "object",
+  "required": ["schema_version", "package_id", "resource"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "package_id": { "type": "string", "minLength": 1 },
+    "requested_by": { "type": "string" },
+    "intent": { "type": "string" },
+    "resource": { "type": "object", "additionalProperties": true },
+    "dry_run": { "type": "boolean" },
+    "apply": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

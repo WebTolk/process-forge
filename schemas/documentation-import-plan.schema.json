@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/documentation-import-plan.schema.json",
+  "title": "Documentation Import Plan",
+  "type": "object",
+  "required": ["schema_version", "id", "source", "topics", "download", "resources"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "source": { "type": "string", "minLength": 1 },
+    "topics": { "type": "array", "items": { "type": "string" } },
+    "download": { "type": "object", "additionalProperties": true },
+    "resources": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "index_policy": { "type": "string" }
+  },
+  "additionalProperties": true
+}

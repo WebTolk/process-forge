@@ -1,0 +1,8 @@
+id: example-tool
+name: "Example Tool"
+capability: example.capability
+command: "example --version"
+scope: workplace
+healthcheck:
+  command: "example --version"
+status: configured

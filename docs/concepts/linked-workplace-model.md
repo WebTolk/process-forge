@@ -28,3 +28,14 @@ The required workplace files are:
 
 Embedded copies of the ProcessForge core are future/optional and are not the
 default path.
+# Path Constants In Linked Mode
+
+Linked projects do not copy global knowledge, templates, tools, MCP, or platform contracts. They reference workplace registries.
+
+`workplace.yaml:path_constants` defines base paths such as `PF_KNOWLEDGE`, `PF_TEMPLATES`, and `PF_TOOLS`. Registry entries may use `${CONST}/relative/path`, while project `.pf/` snapshots keep only ids, `path_ref`, load policy, and metadata.
+
+This keeps the three surfaces separate:
+
+- project-local `.pf/` state;
+- ProcessForge distribution files in the repository root;
+- private/global workplace infrastructure outside the project.

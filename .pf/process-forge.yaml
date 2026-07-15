@@ -116,6 +116,22 @@ processes:
     path: ../processes/context-resolution.yaml
   - id: processforge-update-check
     path: ../processes/processforge-update-check.yaml
+  - id: knowledge-resource-add
+    path: ../processes/knowledge-resource-add.yaml
+  - id: documentation-mirror-import
+    path: ../processes/documentation-mirror-import.yaml
+  - id: knowledge-package-update
+    path: ../processes/knowledge-package-update.yaml
+  - id: template-add
+    path: ../processes/template-add.yaml
+  - id: tool-register
+    path: ../processes/tool-register.yaml
+  - id: mcp-register
+    path: ../processes/mcp-register.yaml
+  - id: platform-contract-install
+    path: ../processes/platform-contract-install.yaml
+  - id: process-template-install
+    path: ../processes/process-template-install.yaml
 
 knowledge_stack:
   - id: processforge.core

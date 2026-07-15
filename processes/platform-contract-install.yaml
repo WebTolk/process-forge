@@ -1,0 +1,83 @@
+schema_version: 1
+id: platform-contract-install
+name: Platform Contract Install
+version: 0.1.0
+status: active
+description: Create or update a platform contract mapping capabilities, knowledge packages, tools, MCP, and templates.
+required_capabilities:
+  - repository_write
+  - schema_validation
+hooks:
+  emit:
+    - event: platform.contract.updated
+      required: true
+roles:
+  - id: maintainer
+    title: Maintainer
+    responsibility: Defines platform requirements, maps resources, writes contract, and validates.
+stages:
+  - id: platform-definition
+    title: Platform Definition
+    description: Capture platform id, project types, capabilities, and resource mapping.
+    required_inputs: []
+    produced_artifacts:
+      - platform-contract-proposal
+    required_role: maintainer
+    required_capabilities:
+      - markdown_editing
+    allowed_tools: []
+    entry_gates: []
+    exit_gates:
+      - proposal-complete
+    handoff_required: false
+  - id: contract-creation
+    title: Contract Creation
+    description: Write platform contract and registry entry, then run platform doctor.
+    required_inputs:
+      - platform-contract-proposal
+    produced_artifacts:
+      - platform-contract
+      - validation-report
+      - review
+    required_role: maintainer
+    required_capabilities:
+      - repository_write
+    allowed_tools:
+      - processforge-cli
+      - validator
+    entry_gates:
+      - proposal-complete
+    exit_gates:
+      - contract-reviewed
+    handoff_required: true
+artifact_definitions:
+  - id: platform-contract
+    title: Platform Contract
+    owner_role: maintainer
+    template: platform-contract
+    lifecycle: [draft, ready_for_review, approved]
+gates:
+  - id: proposal-complete
+    description: Required vs recommended resources are clearly separated.
+    blocking: true
+  - id: contract-reviewed
+    description: Contract validates and missing required resources fail doctor checks.
+    blocking: true
+required_packages:
+  - process-forge-core
+required_templates:
+  - platform-contract.yaml
+allowed_tools:
+  - processforge-cli
+  - validator
+forbidden_actions:
+  - mix_required_and_recommended_contract_items
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - review
+  safe_changes:
+    - add_recommended_resource
+  blocked_changes:
+    - weaken_required_contract_without_review

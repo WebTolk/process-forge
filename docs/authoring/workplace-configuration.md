@@ -34,3 +34,18 @@ python tools/processforge.py init-workplace --root <workplace-root> --answers <a
 ```bash
 python tools/processforge.py doctor-workplace --root <workplace-root>
 ```
+# Path Constants
+
+Define reusable path bases in `workplace.yaml`:
+
+```yaml
+path_constants:
+  PF_WORKPLACE: "."
+  PF_KNOWLEDGE: "knowledge"
+  PF_TEMPLATES: "reusable-templates"
+  PF_TOOLS: "tools"
+```
+
+Registry entries may use `${PF_KNOWLEDGE}/joomla/docs` or an explicit absolute path. Absolute paths are allowed in workplace/private files, but never in public project snapshots.
+
+Run `python tools/processforge.py path-resolve --workplace <workplace-root> --path "${PF_KNOWLEDGE}/joomla/docs"` to inspect expansion.

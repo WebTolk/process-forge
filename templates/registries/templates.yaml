@@ -1,6 +1,10 @@
 schema_version: 1
 
-template_roots: []
+template_roots:
+  - id: global-file-templates
+    label: "Global file templates"
+    path: "${PF_TEMPLATES}/file"
+    scope: workplace
 
 template_policy:
   project_templates_override_global: true

@@ -325,6 +325,48 @@ Inspect existing CLI generation/validation paths, schemas, templates, and proces
 Handoff:
 None.
 
+## 2026-07-15 12:57 - codex
+
+Task:
+Implement ProcessForge Resource Management MVP from `processforge_resource_management_mvp_master_prompt.md`.
+Files changed:
+`tools/processforge.py`, `tools/smoke_resource_management.py`, resource management schemas/templates/processes/docs, `.pf/process-forge.yaml`, `.pf/contexts/project-context.snapshot.*`.
+Artifacts changed:
+`.pf/artifacts/resource-management-mvp-report.md`, `.pf/reviews/resource-management-mvp-review.md`, `.pf/handoffs/resource-management-mvp-handoff.md`.
+Templates used:
+ProcessForge report, review, and handoff conventions.
+Tools used:
+Serena discovery, PowerShell, Python validators, ProcessForge CLI smoke commands.
+Decisions:
+Keep Resource Management proposal-first. Dry-run writes private runtime proposals only; `--apply` updates package manifests, resource indexes, registries, or platform contracts. Use `path_ref` for public resource records and default heavy resources to `load_policy: on_demand`.
+Risks:
+Tool/MCP healthchecks and documentation download/import remain declarative/manual MVP steps. Multi-project snapshot invalidation is event-backed but not automated.
+Next steps:
+Run final schema/public/checksum/event/doctor checks and refresh checksum inventory.
+Handoff:
+`.pf/handoffs/resource-management-mvp-handoff.md`.
+
+## 2026-07-15 15:09 - codex
+
+Task:
+Implement ProcessForge path constants / path aliases from `processforge_path_constants_assignment.md`.
+Files changed:
+`tools/processforge.py`, `tools/smoke_resource_management.py`, path schemas/templates/docs, workplace templates, registry templates, `.pf/contexts/project-context.snapshot.*`.
+Artifacts changed:
+`.pf/artifacts/path-constants-resource-paths-report.md`, `.pf/reviews/path-constants-resource-paths-review.md`, `.pf/handoffs/path-constants-resource-paths-handoff.md`.
+Templates used:
+ProcessForge report, review, and handoff conventions.
+Tools used:
+Serena search, PowerShell, Python validators, ProcessForge CLI.
+Decisions:
+Use a simple resolver: expand `${PF_*}`, accept absolute paths in workplace/private files, resolve relatives from workplace root, and expose only `path_ref` in public resource/snapshot records. Store unmatched absolute resource paths in a workplace private registry during apply mode rather than dropping them.
+Risks:
+No VFS or runner was introduced. Optional external roots may warn instead of failing. Tool/MCP healthcheck command execution remains future work.
+Next steps:
+Run final validators and refresh checksum inventory.
+Handoff:
+`.pf/handoffs/path-constants-resource-paths-handoff.md`.
+
 ## 2026-07-15 12:32 - codex
 
 Task:

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/mcp-definition.schema.json",
+  "title": "MCP Definition",
+  "type": "object",
+  "required": ["id", "capability", "transport", "command", "status"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string" },
+    "capability": { "type": "string", "minLength": 1 },
+    "transport": { "type": "string", "minLength": 1 },
+    "command": { "type": "string", "minLength": 1 },
+    "auth_ref": { "type": ["string", "null"] },
+    "status": { "enum": ["configured", "optional", "missing", "disabled"] }
+  },
+  "additionalProperties": true
+}

@@ -1,3 +1,11 @@
 schema_version: 1
 
-tools: []
+tools:
+  - id: example-tool
+    name: "Example Tool"
+    capability: example.capability
+    command: "${PF_TOOLS}/example/example-tool"
+    scope: workplace
+    healthcheck:
+      command: "${PF_TOOLS}/example/example-tool --version"
+    status: optional

@@ -1,0 +1,85 @@
+schema_version: 1
+id: template-add
+name: Template Add
+version: 0.1.0
+status: active
+description: Add a simple reusable template folder with README guidance and optional registry update.
+required_capabilities:
+  - repository_read
+  - repository_write
+hooks:
+  emit:
+    - event: template.add.requested
+      required: true
+    - event: template.added
+      required: true
+    - event: template.updated
+      required: false
+roles:
+  - id: maintainer
+    title: Maintainer
+    responsibility: Resolves template type, creates folder, writes README, copies payload, and validates.
+stages:
+  - id: intake
+    title: Intake
+    description: Capture template type, id, source, and target use case.
+    required_inputs: []
+    produced_artifacts:
+      - template-add-request
+    required_role: maintainer
+    required_capabilities:
+      - markdown_editing
+    allowed_tools: []
+    entry_gates: []
+    exit_gates:
+      - request-complete
+    handoff_required: false
+  - id: template-folder-creation
+    title: Template Folder Creation
+    description: Create templates/file/<template-id>/ with README and payload files.
+    required_inputs:
+      - template-add-request
+    produced_artifacts:
+      - template-package
+      - validation-report
+      - review
+    required_role: maintainer
+    required_capabilities:
+      - repository_write
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - request-complete
+    exit_gates:
+      - template-reviewed
+    handoff_required: true
+artifact_definitions:
+  - id: template-package
+    title: Template Package
+    owner_role: maintainer
+    template: template-package
+    lifecycle: [draft, ready_for_review, approved]
+gates:
+  - id: request-complete
+    description: Template id, type, and source are clear.
+    blocking: true
+  - id: template-reviewed
+    description: README explains placeholders, adaptation, limits, and verification.
+    blocking: true
+required_packages:
+  - process-forge-core
+required_templates:
+  - template-readme-template.md
+allowed_tools:
+  - processforge-cli
+forbidden_actions:
+  - add_template_without_readme
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - review
+  safe_changes:
+    - add_payload_file
+  blocked_changes:
+    - overwrite_existing_template_without_review
