@@ -1,8 +1,8 @@
 schema_version: 1
 snapshot:
   id: project-context
-  generated_at: '2026-07-15T07:57:53Z'
-  valid_until: '2026-07-22T07:57:53Z'
+  generated_at: '2026-07-15T08:27:46Z'
+  valid_until: '2026-07-22T08:27:46Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -35,7 +35,9 @@ platform_contracts:
     []
   missing_required:
     []
-  missing_optional_resources:
+  missing_required_resources:
+    []
+  missing_recommended_resources:
     []
 sources:
   fingerprints:
@@ -199,24 +201,32 @@ capabilities:
 knowledge_resources:
   selected:
     []
-  missing_optional:
+  required:
+    []
+  recommended:
+    []
+  missing_required:
+    []
+  missing_recommended:
     []
 tools:
   required:
     []
-  optional:
+  recommended:
     []
   source: workplace-registry
 mcp:
   required:
     []
-  optional:
+  recommended:
     []
   source: workplace-registry
 templates:
   project:
     []
-  global:
+  required:
+    []
+  recommended:
     []
   source: workplace-registry
 processes:

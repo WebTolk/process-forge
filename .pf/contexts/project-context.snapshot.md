@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-15T07:57:53Z
-- valid_until: 2026-07-22T07:57:53Z
+- generated_at: 2026-07-15T08:27:46Z
+- valid_until: 2026-07-22T08:27:46Z
 
 ## Freshness
 
@@ -34,7 +34,11 @@ fresh
 
 - None.
 
-## Knowledge Resources
+## Required Knowledge Resources
+
+- None.
+
+## Recommended Knowledge Resources
 
 - None.
 
@@ -64,9 +68,21 @@ fresh
 - official_documentation_lookup (missing, warn)
 - repository_symbol_analysis (missing, warn)
 
-## Missing Tools / MCP
+## Required Tools
 
-- None recorded in this snapshot.
+- None.
+
+## Recommended Tools
+
+- None.
+
+## Required MCP
+
+- None.
+
+## Recommended MCP
+
+- None.
 
 ## Hard Policies
 
@@ -81,7 +97,15 @@ fresh
 - templates.project_overrides_global
 - session.prefer_project_context_snapshot
 
-## Templates
+## Project Templates
+
+- None.
+
+## Required Templates
+
+- None.
+
+## Recommended Templates
 
 - None.
 

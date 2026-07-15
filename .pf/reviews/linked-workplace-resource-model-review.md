@@ -18,6 +18,8 @@ Codex
 - Resource, platform, template, and update contracts exist.
 - `platform.joomla` is selected from Joomla project hints and resolves contract includes.
 - Package resources are indexed into the snapshot without loading resource contents.
+- External package resource paths are represented with `path_ref`; absolute local paths are redacted from public snapshots.
+- Required and recommended platform tools/MCP/templates are separated in snapshot output.
 - Existing validators pass.
 
 ## Result
@@ -29,6 +31,7 @@ pass_with_conditions
 - No blocking findings.
 - Update checks are local MVP stubs; they do not perform automatic migration or remote version discovery.
 - Required platform contracts block when missing; optional platform resources warn when absent from workplace registries.
+- Public snapshot path checks now block absolute local path leaks.
 
 ## Evidence
 

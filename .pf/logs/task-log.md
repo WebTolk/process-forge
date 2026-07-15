@@ -325,6 +325,27 @@ Inspect existing CLI generation/validation paths, schemas, templates, and proces
 Handoff:
 None.
 
+## 2026-07-15 12:32 - codex
+
+Task:
+Harden public snapshot resource records and required/recommended platform resources.
+Files changed:
+`tools/processforge.py`, `templates/platform-contract.yaml`, `templates/platform-contract-joomla.yaml`, report/review/log artifacts.
+Artifacts changed:
+`.pf/artifacts/linked-workplace-resource-model-report.md`, `.pf/reviews/linked-workplace-resource-model-review.md`.
+Templates used:
+Platform contract templates.
+Tools used:
+Serena search, PowerShell smoke tests, ProcessForge CLI.
+Decisions:
+Resource records use `path_ref` in snapshots. Absolute local package resource paths are redacted to `path_ref.registry: private_resource_paths` and marked with `path_status: private_absolute_path_redacted`. Platform `requires.*` resources are required and missing entries fail; `includes.*` resources are recommended and missing entries warn.
+Risks:
+The MVP still checks resource availability by registry ids and package manifest presence, not by probing external resources.
+Next steps:
+Refresh root snapshot, checksum inventory, and run validators.
+Handoff:
+None.
+
 ## 2026-07-15 12:58 - codex
 
 Task:

@@ -185,7 +185,12 @@ BUILTIN_PLATFORM_CONTRACTS: dict[str, dict[str, Any]] = {
                 "repository.read",
                 "markdown.editing",
                 "schema_validation",
-            ]
+            ],
+            "tools": [
+                "php.syntax-check",
+            ],
+            "templates": [],
+            "mcp": [],
         },
         "includes": {
             "knowledge_packages": [
@@ -196,7 +201,6 @@ BUILTIN_PLATFORM_CONTRACTS: dict[str, dict[str, Any]] = {
                 "joomla.snippets",
             ],
             "tools": [
-                "php.syntax-check",
                 "php.static-analysis",
                 "package.builder",
             ],
@@ -1062,6 +1066,11 @@ def contract_required_capabilities(contract: dict[str, Any]) -> list[str]:
     return list_value(requires.get("capabilities"))
 
 
+def contract_required_items(contract: dict[str, Any], key: str) -> list[str]:
+    requires = contract.get("requires", {}) if isinstance(contract.get("requires"), dict) else {}
+    return list_value(requires.get(key))
+
+
 def contract_includes(contract: dict[str, Any], key: str) -> list[str]:
     includes = contract.get("includes", {}) if isinstance(contract.get("includes"), dict) else {}
     return list_value(includes.get(key))
@@ -1070,20 +1079,28 @@ def contract_includes(contract: dict[str, Any], key: str) -> list[str]:
 def resolve_platform_contracts(workplace_manifest: Path | None, platform_ids: list[str]) -> dict[str, Any]:
     contracts: list[dict[str, Any]] = []
     required_capabilities: set[str] = set()
-    knowledge_packages: set[str] = set()
-    tools: set[str] = set()
-    mcp: set[str] = set()
-    templates: set[str] = set()
+    required_knowledge_packages: set[str] = set()
+    recommended_knowledge_packages: set[str] = set()
+    required_tools: set[str] = set()
+    recommended_tools: set[str] = set()
+    required_mcp: set[str] = set()
+    recommended_mcp: set[str] = set()
+    required_templates: set[str] = set()
+    recommended_templates: set[str] = set()
     missing_required_contracts: list[str] = []
 
     for platform_id in platform_ids:
         contract_id = platform_contract_id(platform_id)
         contract, entry, status = load_platform_contract(workplace_manifest, contract_id)
         required_capabilities.update(contract_required_capabilities(contract))
-        knowledge_packages.update(contract_includes(contract, "knowledge_packages"))
-        tools.update(contract_includes(contract, "tools"))
-        mcp.update(contract_includes(contract, "mcp"))
-        templates.update(contract_includes(contract, "templates"))
+        required_knowledge_packages.update(contract_required_items(contract, "knowledge_packages"))
+        recommended_knowledge_packages.update(contract_includes(contract, "knowledge_packages"))
+        required_tools.update(contract_required_items(contract, "tools"))
+        recommended_tools.update(contract_includes(contract, "tools"))
+        required_mcp.update(contract_required_items(contract, "mcp"))
+        recommended_mcp.update(contract_includes(contract, "mcp"))
+        required_templates.update(contract_required_items(contract, "templates"))
+        recommended_templates.update(contract_includes(contract, "templates"))
         if status != "available":
             missing_required_contracts.append(contract_id)
         contracts.append(
@@ -1093,23 +1110,43 @@ def resolve_platform_contracts(workplace_manifest: Path | None, platform_ids: li
                 "source": "workplace",
                 "status": "available" if status == "available" else "missing",
                 "registry_entry": str(entry.get("id")) if isinstance(entry, dict) and entry.get("id") else None,
-                "required": True,
+                "required_contract": True,
                 "required_capabilities": sorted(contract_required_capabilities(contract)),
-                "knowledge_packages": sorted(contract_includes(contract, "knowledge_packages")),
-                "tools": sorted(contract_includes(contract, "tools")),
-                "mcp": sorted(contract_includes(contract, "mcp")),
-                "templates": sorted(contract_includes(contract, "templates")),
+                "required": {
+                    "knowledge_packages": sorted(contract_required_items(contract, "knowledge_packages")),
+                    "tools": sorted(contract_required_items(contract, "tools")),
+                    "mcp": sorted(contract_required_items(contract, "mcp")),
+                    "templates": sorted(contract_required_items(contract, "templates")),
+                },
+                "recommended": {
+                    "knowledge_packages": sorted(contract_includes(contract, "knowledge_packages")),
+                    "tools": sorted(contract_includes(contract, "tools")),
+                    "mcp": sorted(contract_includes(contract, "mcp")),
+                    "templates": sorted(contract_includes(contract, "templates")),
+                },
             }
         )
 
+    all_knowledge_packages = required_knowledge_packages.union(recommended_knowledge_packages)
+    all_tools = required_tools.union(recommended_tools)
+    all_mcp = required_mcp.union(recommended_mcp)
+    all_templates = required_templates.union(recommended_templates)
     return {
         "contracts": contracts,
         "missing_required_contracts": sorted(set(missing_required_contracts)),
         "required_capabilities": sorted(required_capabilities),
-        "knowledge_packages": sorted(knowledge_packages),
-        "tools": sorted(tools),
-        "mcp": sorted(mcp),
-        "templates": sorted(templates),
+        "required_knowledge_packages": sorted(required_knowledge_packages),
+        "recommended_knowledge_packages": sorted(recommended_knowledge_packages),
+        "knowledge_packages": sorted(all_knowledge_packages),
+        "required_tools": sorted(required_tools),
+        "recommended_tools": sorted(recommended_tools),
+        "tools": sorted(all_tools),
+        "required_mcp": sorted(required_mcp),
+        "recommended_mcp": sorted(recommended_mcp),
+        "mcp": sorted(all_mcp),
+        "required_templates": sorted(required_templates),
+        "recommended_templates": sorted(recommended_templates),
+        "templates": sorted(all_templates),
     }
 
 
@@ -1127,24 +1164,41 @@ def registry_ids(data: dict[str, Any], collection_key: str) -> set[str]:
     return ids
 
 
-def optional_platform_resource_warnings(workplace_manifest: Path | None, resolved: dict[str, Any], package_index_ids: set[str] | None = None) -> list[dict[str, Any]]:
+def platform_resource_findings(workplace_manifest: Path | None, resolved: dict[str, Any], package_index_ids: set[str] | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     package_ids = registry_ids(load_workplace_registry(workplace_manifest, "package_roots", "package-roots.yaml"), "package_roots")
     if package_index_ids:
         package_ids = package_ids.union(package_index_ids)
     tool_ids = registry_ids(load_workplace_registry(workplace_manifest, "tools", "tools.yaml"), "tools")
     mcp_ids = registry_ids(load_workplace_registry(workplace_manifest, "mcp", "mcp.yaml"), "mcp_servers")
     template_ids = registry_ids(load_workplace_registry(workplace_manifest, "templates", "templates.yaml"), "template_roots")
-    warnings: list[dict[str, Any]] = []
+    required_missing: list[dict[str, Any]] = []
+    recommended_missing: list[dict[str, Any]] = []
+
     for group, available, collection in [
-        ("knowledge_package", package_ids, resolved.get("knowledge_packages", [])),
-        ("tool", tool_ids, resolved.get("tools", [])),
-        ("mcp", mcp_ids, resolved.get("mcp", [])),
-        ("template", template_ids, resolved.get("templates", [])),
+        ("knowledge_package", package_ids, resolved.get("required_knowledge_packages", [])),
+        ("tool", tool_ids, resolved.get("required_tools", [])),
+        ("mcp", mcp_ids, resolved.get("required_mcp", [])),
+        ("template", template_ids, resolved.get("required_templates", [])),
     ]:
         for item in collection:
             if item not in available:
-                warnings.append({"kind": group, "id": item, "status": "missing", "severity": "warn"})
-    return warnings
+                required_missing.append({"kind": group, "id": item, "status": "missing", "severity": "fail", "requirement": "required"})
+
+    for group, available, collection in [
+        ("knowledge_package", package_ids, resolved.get("recommended_knowledge_packages", [])),
+        ("tool", tool_ids, resolved.get("recommended_tools", [])),
+        ("mcp", mcp_ids, resolved.get("recommended_mcp", [])),
+        ("template", template_ids, resolved.get("recommended_templates", [])),
+    ]:
+        for item in collection:
+            if item not in available:
+                recommended_missing.append({"kind": group, "id": item, "status": "missing", "severity": "warn", "requirement": "recommended"})
+    return required_missing, recommended_missing
+
+
+def optional_platform_resource_warnings(workplace_manifest: Path | None, resolved: dict[str, Any], package_index_ids: set[str] | None = None) -> list[dict[str, Any]]:
+    _required_missing, recommended_missing = platform_resource_findings(workplace_manifest, resolved, package_index_ids)
+    return recommended_missing
 
 
 def match_global_resources(workplace_manifest: Path, detected: dict[str, Any], required: list[str], optional: list[str]) -> dict[str, list[str]]:
@@ -1188,6 +1242,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
     required = required or ["repository.read", "markdown.editing"]
     optional = optional or ["repository.symbol_analysis", "official_documentation"]
     platform_resolution = resolve_platform_contracts(workplace_manifest, detected["platforms"])
+    required_platform_missing, recommended_platform_missing = platform_resource_findings(workplace_manifest, platform_resolution)
     required = sorted(set(required).union(platform_resolution["required_capabilities"]))
     matches = match_global_resources(workplace_manifest, detected, required, optional)
     knowledge_stack = [
@@ -1257,10 +1312,18 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
         "required_capabilities": required,
         "optional_capabilities": optional,
         "selected_resources": {
-            "knowledge_packages": platform_resolution["knowledge_packages"],
-            "tools": platform_resolution["tools"],
-            "mcp": platform_resolution["mcp"],
-            "templates": platform_resolution["templates"],
+            "required": {
+                "knowledge_packages": platform_resolution["required_knowledge_packages"],
+                "tools": platform_resolution["required_tools"],
+                "mcp": platform_resolution["required_mcp"],
+                "templates": platform_resolution["required_templates"],
+            },
+            "recommended": {
+                "knowledge_packages": platform_resolution["recommended_knowledge_packages"],
+                "tools": platform_resolution["recommended_tools"],
+                "mcp": platform_resolution["recommended_mcp"],
+                "templates": platform_resolution["recommended_templates"],
+            },
         },
         "policies": {
             "one_writer_per_file_scope": True,
@@ -1522,9 +1585,13 @@ observed
 
 {markdown_list(platform_resolution["missing_required_contracts"])}
 
-## Missing Optional Platform Resources
+## Missing Required Platform Resources
 
-{markdown_list([f"{item['kind']}: {item['id']}" for item in optional_platform_resource_warnings(workplace_manifest, platform_resolution)])}
+{markdown_list([f"{item['kind']}: {item['id']}" for item in required_platform_missing])}
+
+## Missing Recommended Platform Resources
+
+{markdown_list([f"{item['kind']}: {item['id']}" for item in recommended_platform_missing])}
 
 ## Matched Packages
 
@@ -1853,6 +1920,23 @@ def report_section_has_items(path: Path, marker: str) -> bool:
     section = text.split(marker, 1)[1].split("\n## ", 1)[0]
     listed = [line.strip() for line in section.splitlines() if line.strip().startswith("- ")]
     return any(line != "- None." for line in listed)
+
+
+def public_snapshot_path_checks(project_root: Path) -> list[Check]:
+    snapshot_yaml, snapshot_md = project_context_snapshot_paths(project_root)
+    checks: list[Check] = []
+    for path in [snapshot_yaml, snapshot_md]:
+        if not path.is_file():
+            checks.append(check("WARN", f"{rel(path, project_root)} missing"))
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        checks.append(
+            check(
+                "PASS" if is_public_path_safe(text) else "FAIL",
+                f"{rel(path, project_root)} contains no local absolute paths",
+            )
+        )
+    return checks
 
 
 def now_utc() -> str:
@@ -2184,37 +2268,55 @@ def package_manifest_index(project_root: Path, distribution_root: Path | None, w
     return index
 
 
-def resource_record_from_package(package_id: str, resource: dict[str, Any]) -> dict[str, Any]:
+def resource_record_from_package(package_id: str, resource: dict[str, Any], requirement: str) -> dict[str, Any]:
     resource_id = str(resource.get("id", "resource"))
     record: dict[str, Any] = {
         "id": f"{package_id}:{resource_id}",
         "resource_id": resource_id,
         "package": package_id,
+        "requirement": requirement,
         "kind": str(resource.get("kind", "reference")),
         "title": str(resource.get("title", resource_id)),
         "load_policy": str(resource.get("load_policy", "on_demand")),
         "index_policy": str(resource.get("index_policy", "metadata")),
         "status": "indexed",
     }
-    for key in ["path", "path_ref", "version", "description"]:
+    if "path_ref" in resource:
+        record["path_ref"] = resource["path_ref"]
+    elif "path" in resource:
+        raw_path = str(resource.get("path", ""))
+        if raw_path and Path(raw_path).is_absolute():
+            record["path_ref"] = {"registry": "private_resource_paths", "id": resource_id}
+            record["path_status"] = "private_absolute_path_redacted"
+        elif raw_path:
+            record["path_ref"] = {"package": package_id, "relative_path": raw_path}
+    for key in ["version", "description"]:
         if key in resource:
             record[key] = resource[key]
     return record
 
 
-def resolve_package_resources(project_root: Path, distribution_root: Path | None, workplace_manifest: Path | None, package_ids: list[str]) -> list[dict[str, Any]]:
+def resolve_package_resources(
+    project_root: Path,
+    distribution_root: Path | None,
+    workplace_manifest: Path | None,
+    package_ids: list[str],
+    required_package_ids: list[str] | None = None,
+) -> list[dict[str, Any]]:
     package_index = package_manifest_index(project_root, distribution_root, workplace_manifest)
     resources: list[dict[str, Any]] = []
+    required_set = set(required_package_ids or [])
     for package_id in package_ids:
         manifest = package_index.get(package_id)
         if not manifest:
             continue
+        requirement = "required" if package_id in required_set else "recommended"
         package_resources = manifest.get("resources")
         if not isinstance(package_resources, list):
             continue
         for resource in package_resources:
             if isinstance(resource, dict):
-                resources.append(resource_record_from_package(package_id, resource))
+                resources.append(resource_record_from_package(package_id, resource, requirement))
     return resources
 
 
@@ -2275,7 +2377,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7)
         manifest_platform_ids = [str(item) for item in detected_data.get("platforms", []) if isinstance(item, str)]
     platform_resolution = resolve_platform_contracts(workplace_manifest_path, manifest_platform_ids)
     package_index_ids = set(package_manifest_index(project_root, distribution_root, workplace_manifest_path))
-    platform_resource_warnings = optional_platform_resource_warnings(workplace_manifest_path, platform_resolution, package_index_ids)
+    required_resource_missing, recommended_resource_missing = platform_resource_findings(workplace_manifest_path, platform_resolution, package_index_ids)
     package_ids = [
         str(item.get("id"))
         for item in manifest_data.get("knowledge_stack", [])
@@ -2295,8 +2397,15 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7)
         if isinstance(item, dict)
     ]
     package_ids.extend(item["id"] for item in selected_packages)
-    package_resources = resolve_package_resources(project_root, distribution_root, workplace_manifest_path, sorted(set(package_ids)))
-    health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] else ("warn" if any(item["severity"] == "warn" for item in optional_records) or platform_resource_warnings else "pass")
+    required_package_ids = platform_resolution["required_knowledge_packages"]
+    package_resources = resolve_package_resources(
+        project_root,
+        distribution_root,
+        workplace_manifest_path,
+        sorted(set(package_ids)),
+        required_package_ids,
+    )
+    health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] or required_resource_missing else ("warn" if any(item["severity"] == "warn" for item in optional_records) or recommended_resource_missing else "pass")
     return {
         "schema_version": 1,
         "snapshot": {
@@ -2337,7 +2446,8 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7)
         "platform_contracts": {
             "selected": platform_resolution["contracts"],
             "missing_required": platform_resolution["missing_required_contracts"],
-            "missing_optional_resources": platform_resource_warnings,
+            "missing_required_resources": required_resource_missing,
+            "missing_recommended_resources": recommended_resource_missing,
         },
         "sources": {"fingerprints": sources},
         "knowledge_stack": manifest_data.get("knowledge_stack", [{"id": "processforge.core", "version": "0.1.0", "source": "distribution"}]),
@@ -2357,11 +2467,19 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7)
         "capabilities": {"required": required_records, "optional": optional_records},
         "knowledge_resources": {
             "selected": package_resources,
-            "missing_optional": platform_resource_warnings,
+            "required": [item for item in package_resources if item.get("requirement") == "required"],
+            "recommended": [item for item in package_resources if item.get("requirement") == "recommended"],
+            "missing_required": required_resource_missing,
+            "missing_recommended": recommended_resource_missing,
         },
-        "tools": {"required": platform_resolution["tools"], "optional": [], "source": "workplace-registry"},
-        "mcp": {"required": platform_resolution["mcp"], "optional": [], "source": "workplace-registry"},
-        "templates": {"project": [str(item["path"]) for item in sources if item.get("kind") == "template"], "global": platform_resolution["templates"], "source": "workplace-registry"},
+        "tools": {"required": platform_resolution["required_tools"], "recommended": platform_resolution["recommended_tools"], "source": "workplace-registry"},
+        "mcp": {"required": platform_resolution["required_mcp"], "recommended": platform_resolution["recommended_mcp"], "source": "workplace-registry"},
+        "templates": {
+            "project": [str(item["path"]) for item in sources if item.get("kind") == "template"],
+            "required": platform_resolution["required_templates"],
+            "recommended": platform_resolution["recommended_templates"],
+            "source": "workplace-registry",
+        },
         "processes": {"enabled": enabled_processes},
         "packages": {"selected": selected_packages},
         "session": {
@@ -2387,9 +2505,14 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
     process_forge = snapshot.get("process_forge", {}) if isinstance(snapshot.get("process_forge"), dict) else {}
     distribution = process_forge.get("distribution", {}) if isinstance(process_forge.get("distribution"), dict) else {}
     platforms = snapshot.get("platform_contracts", {}).get("selected", []) if isinstance(snapshot.get("platform_contracts"), dict) else []
-    resources = snapshot.get("knowledge_resources", {}).get("selected", []) if isinstance(snapshot.get("knowledge_resources"), dict) else []
+    knowledge_resources = snapshot.get("knowledge_resources", {}) if isinstance(snapshot.get("knowledge_resources"), dict) else {}
+    required_resources = knowledge_resources.get("required", []) if isinstance(knowledge_resources.get("required"), list) else []
+    recommended_resources = knowledge_resources.get("recommended", []) if isinstance(knowledge_resources.get("recommended"), list) else []
+    tools = snapshot.get("tools", {}) if isinstance(snapshot.get("tools"), dict) else {}
+    mcp = snapshot.get("mcp", {}) if isinstance(snapshot.get("mcp"), dict) else {}
+    template_groups = snapshot.get("templates", {}) if isinstance(snapshot.get("templates"), dict) else {}
     processes = snapshot.get("processes", {}).get("enabled", []) if isinstance(snapshot.get("processes"), dict) else []
-    templates = snapshot.get("templates", {}).get("project", []) if isinstance(snapshot.get("templates"), dict) else []
+    project_templates = template_groups.get("project", []) if isinstance(template_groups.get("project"), list) else []
 
     def md_items(items: list[Any], empty: str = "None.") -> str:
         if not items:
@@ -2444,9 +2567,13 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
             "",
             md_items(platforms),
             "",
-            "## Knowledge Resources",
+            "## Required Knowledge Resources",
             "",
-            md_items(resources),
+            md_items(required_resources),
+            "",
+            "## Recommended Knowledge Resources",
+            "",
+            md_items(recommended_resources),
             "",
             "## Enabled Processes",
             "",
@@ -2460,9 +2587,21 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
             "",
             md_items(capabilities.get("optional", [])),
             "",
-            "## Missing Tools / MCP",
+            "## Required Tools",
             "",
-            "- None recorded in this snapshot.",
+            md_items(tools.get("required", []) if isinstance(tools, dict) else []),
+            "",
+            "## Recommended Tools",
+            "",
+            md_items(tools.get("recommended", []) if isinstance(tools, dict) else []),
+            "",
+            "## Required MCP",
+            "",
+            md_items(mcp.get("required", []) if isinstance(mcp, dict) else []),
+            "",
+            "## Recommended MCP",
+            "",
+            md_items(mcp.get("recommended", []) if isinstance(mcp, dict) else []),
             "",
             "## Hard Policies",
             "",
@@ -2472,9 +2611,17 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
             "",
             md_items(policies.get("preferences", []) if isinstance(policies, dict) else []),
             "",
-            "## Templates",
+            "## Project Templates",
             "",
-            md_items(templates),
+            md_items(project_templates),
+            "",
+            "## Required Templates",
+            "",
+            md_items(template_groups.get("required", []) if isinstance(template_groups, dict) else []),
+            "",
+            "## Recommended Templates",
+            "",
+            md_items(template_groups.get("recommended", []) if isinstance(template_groups, dict) else []),
             "",
             "## Session Start",
             "",
@@ -4118,8 +4265,11 @@ def command_doctor_project(args: argparse.Namespace) -> int:
         checks.append(check("PASS", "required capabilities are resolved or built in"))
     if report_section_has_items(resource_report, "## Missing Required Platform Contracts"):
         checks.append(check("FAIL", "required platform contract is missing from workplace registry"))
-    if report_section_has_items(resource_report, "## Missing Optional Platform Resources"):
-        checks.append(check("WARN", "optional platform resources are missing from workplace registries"))
+    if report_section_has_items(resource_report, "## Missing Required Platform Resources"):
+        checks.append(check("FAIL", "required platform resources are missing from workplace registries"))
+    if report_section_has_items(resource_report, "## Missing Recommended Platform Resources"):
+        checks.append(check("WARN", "recommended platform resources are missing from workplace registries"))
+    checks.extend(public_snapshot_path_checks(project_root))
 
     for rel_path in [
         "artifacts/project-profile.md",

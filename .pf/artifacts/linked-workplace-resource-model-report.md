@@ -19,9 +19,13 @@ Implemented the MVP linked workplace/resource/self-update slice from
 - `joomla-component`, `joomla-plugin`, and `joomla-library` hints select `platform.joomla`.
 - Platform contract resolution expands required capabilities plus knowledge package, tool, MCP, and template ids.
 - Snapshot resolution indexes package `resources` into `snapshot.knowledge_resources.selected` without reading heavy resource paths.
+- Snapshot resource records never expose absolute local paths; resource `path` values are converted to `path_ref`, and private absolute paths are redacted.
+- Platform contract `requires.tools/templates/mcp` are treated as required, while `includes.tools/templates/mcp` are treated as recommended.
+- Snapshot output clearly separates required and recommended knowledge resources, tools, MCP, and templates.
 - Generated `.pf/hooks.yaml` quotes wildcard event types as `"*"`.
 - `doctor-project` validates hooks YAML and linked distribution availability.
 - `doctor-project` fails on missing required platform contracts and warns on missing optional platform resources.
+- `doctor-project` fails when a public project context snapshot contains a local absolute path.
 - Invalid hooks produce friendly `FAIL` output instead of Python traceback.
 - `project-context-refresh` continues to work when hooks are invalid.
 - `terms.yaml` supports Russian semantic aliases and `resolves_to`.
@@ -55,10 +59,12 @@ Implemented the MVP linked workplace/resource/self-update slice from
 - `python tools/processforge.py hooks-dispatch --project-root . --event-type assignment.completed --dry-run`: pass
 - Temporary init-project smoke: pass
 - Joomla type-hint/platform/resource resolver smoke: pass
+- Snapshot public path smoke: pass
 - Invalid hooks negative smoke: friendly FAIL, no traceback
 - Missing linked distribution negative smoke: FAIL
 - Missing required capability negative smoke: blocked refresh
 - Missing required platform contract negative smoke: FAIL
+- Public snapshot absolute local path negative smoke: FAIL
 
 ## Residual Risks
 

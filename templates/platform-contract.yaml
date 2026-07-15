@@ -11,6 +11,9 @@ applies_to:
 requires:
   capabilities:
     - repository.read
+  tools: []
+  mcp: []
+  templates: []
 
 includes:
   knowledge_packages:

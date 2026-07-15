@@ -17,6 +17,10 @@ requires:
     - repository.read
     - markdown.editing
     - schema_validation
+  tools:
+    - php.syntax-check
+  mcp: []
+  templates: []
 
 includes:
   knowledge_packages:
@@ -26,7 +30,6 @@ includes:
     - joomla.development-articles
     - joomla.snippets
   tools:
-    - php.syntax-check
     - php.static-analysis
     - package.builder
   mcp:
