@@ -4,14 +4,16 @@ A knowledge package is a versioned manifest plus optional local folders:
 
 ```text
 <package-root>/
-├── package.yaml
-├── README.md
-├── resources/
-├── indexes/
-├── notes/
-├── snippets/
-├── examples/
-└── templates/
+|-- package.yaml
+|-- README.md
+|-- resources/
+|-- indexes/
+|-- prompts/
+|-- summaries/
+|-- tests/
+|-- artifacts/
+|-- reviews/
+`-- handoffs/
 ```
 
 Resources may live outside the package. Reference them through `path_ref` and workplace registries.
@@ -21,6 +23,15 @@ location. Resource Management commands write under the selected package root,
 not under a hardcoded `<workplace-root>/packages` directory. Use
 `--package-root <id>` when a workplace has more than one writable package root
 or when updating a package that exists in duplicate roots.
+
+## CLI
+
+Create the package with the canonical Python launcher:
+
+```bash
+python bin/pf.py knowledge-package-create --workplace ./workplace --id docs.joomla.local --title "Local Joomla Documentation" --package-root global --apply
+python bin/pf.py knowledge-package-doctor --workplace ./workplace --package docs.joomla.local --package-root global
+```
 
 ## Rules
 

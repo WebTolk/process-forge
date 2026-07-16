@@ -1,26 +1,37 @@
 # Getting Started
 
 ProcessForge starts with files, not services. A project flow lives under `.pf/`.
+Python CLI is the canonical runtime.
 
 ## Initialize A Workplace
 
 ```bash
-python tools/processforge.py init-workplace --root <workplace-root> --dry-run
-python tools/processforge.py init-workplace --root <workplace-root> --apply
+python tools/processforge.py workplace-init --workplace <workplace-root> --dry-run
+python tools/processforge.py workplace-init --workplace <workplace-root> --apply
 python tools/processforge.py doctor-workplace --root <workplace-root>
 ```
 
 ## Initialize A Project
 
 ```bash
-python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --dry-run
-python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --apply
+python tools/processforge.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --dry-run
+python tools/processforge.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply
 python tools/processforge.py doctor-project --project-root <project-root>
+python tools/processforge.py agent-start-prompt --project-root <project-root>
 ```
 
-Project init creates `.pf/AGENTS.md`, `.pf/process-forge.yaml`,
-`.pf/process-forge.local.yaml`, `.pf/hooks.yaml`, and the project flow folders.
-It does not create root project `AGENTS.md` by default.
+Project onboarding creates `.pf/AGENTS.md`, `.pf/START_AGENT_HERE.md`,
+`.pf/process-forge.yaml`, `.pf/process-forge.local.yaml`, `.pf/hooks.yaml`,
+`.pf/assignments/first-assignment.yaml`, `.pf/runtime/bin/pf.py`, context
+snapshot files, onboarding artifacts, and the project flow folders. It does not create root project
+`AGENTS.md` by default and does not recreate the workplace.
+
+Inside a linked project, run:
+
+```bash
+pf doctor-project --project-root .
+python .pf/runtime/bin/pf.py doctor-project --project-root .
+```
 
 If a command needs a flow root and `.pf/process-forge.yaml` is missing, it tells
 the operator to run `init-project` instead of creating root-layout files.

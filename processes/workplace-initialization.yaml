@@ -1,6 +1,8 @@
 schema_version: 1
 id: workplace-initialization
 name: Workplace Initialization
+kind: first_run
+scope: workplace
 version: 0.1.0
 status: active
 description: Initialize or update the machine-local ProcessForge workplace layer.
@@ -10,6 +12,20 @@ required_capabilities:
   - validation
 hooks:
   emit:
+    - event: workplace.initialization.started
+      required: true
+    - event: workplace.structure.created
+      required: true
+    - event: workplace.path_constants.created
+      required: true
+    - event: workplace.registry.created
+      required: true
+    - event: workplace.doctor.passed
+      required: true
+    - event: workplace.doctor.failed
+      required: true
+    - event: workplace.initialization.completed
+      required: true
     - event: process.started
       required: true
     - event: stage.started
@@ -215,6 +231,16 @@ artifact_definitions:
     title: Workplace Doctor Report
     owner_role: orchestrator
     template: validation-report-template
+    lifecycle: [draft, ready_for_review, approved]
+  - id: workplace-bootstrap-report
+    title: Workplace Bootstrap Report
+    owner_role: orchestrator
+    template: artifact-template
+    lifecycle: [draft, ready_for_review, approved]
+  - id: workplace-ready-handoff
+    title: Workplace Ready Handoff
+    owner_role: orchestrator
+    template: handoff-template
     lifecycle: [draft, ready_for_review, approved]
 gates:
   - id: root-provided

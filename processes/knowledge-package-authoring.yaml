@@ -1,0 +1,126 @@
+schema_version: 1
+id: knowledge-package-authoring
+name: Knowledge Package Authoring
+kind: resource_authoring
+scope: workplace
+version: 0.1.0
+status: active
+description: Create a workplace knowledge package through authoritative package roots.
+purpose: Create package.yaml, resource index, and handoff artifacts for a knowledge package.
+required_capabilities:
+  - filesystem.write
+  - validation
+hooks:
+  emit:
+    - event: knowledge_package.authoring.started
+      required: true
+    - event: knowledge_package.created
+      required: true
+    - event: knowledge_package.resource_index.created
+      required: true
+    - event: knowledge_package.doctor.passed
+      required: true
+    - event: knowledge_package.doctor.failed
+      required: true
+    - event: knowledge_package.authoring.completed
+      required: true
+roles:
+  - id: author
+    title: Knowledge Author
+    responsibility: Creates the package manifest and resource index.
+  - id: reviewer
+    title: Reviewer
+    responsibility: Reviews package readiness.
+stages:
+  - id: intake
+    title: Intake
+    required_role: author
+    produced_artifacts: [knowledge-package-inputs]
+    exit_gates: [inputs-provided]
+  - id: select-package-root
+    title: Select Package Root
+    required_role: author
+    produced_artifacts: [package-root-selection]
+    exit_gates: [package-root-resolved]
+  - id: create-package-structure
+    title: Create Package Structure
+    required_role: author
+    produced_artifacts: [package-structure]
+    exit_gates: [package-structure-created]
+  - id: write-package-manifest
+    title: Write Package Manifest
+    required_role: author
+    produced_artifacts: [package-manifest]
+    exit_gates: [manifest-written]
+  - id: create-resource-index
+    title: Create Resource Index
+    required_role: author
+    produced_artifacts: [resource-index]
+    exit_gates: [resource-index-created]
+  - id: add-initial-resources
+    title: Add Initial Resources
+    required_role: author
+    produced_artifacts: [initial-resources]
+    exit_gates: [resources-recorded]
+  - id: run-package-doctor
+    title: Run Package Doctor
+    required_role: author
+    produced_artifacts: [package-doctor-report]
+    exit_gates: [package-doctor-complete]
+  - id: handoff
+    title: Handoff
+    required_role: author
+    produced_artifacts: [knowledge-package-ready-handoff]
+    exit_gates: [handoff-created]
+artifact_definitions:
+  - id: package-manifest
+    title: Package Manifest
+    owner_role: author
+    lifecycle: [draft, ready_for_review, approved]
+  - id: resource-index
+    title: Resource Index
+    owner_role: author
+    lifecycle: [draft, ready_for_review, approved]
+  - id: knowledge-package-ready-handoff
+    title: Knowledge Package Ready Handoff
+    owner_role: author
+    lifecycle: [draft, ready_for_review, approved]
+gates:
+  - id: inputs-provided
+    description: Package id, title, and package root are available.
+    blocking: true
+  - id: package-root-resolved
+    description: Package root resolved through authoritative package_roots.
+    blocking: true
+  - id: package-structure-created
+    description: Package folders were created.
+    blocking: true
+  - id: manifest-written
+    description: package.yaml was written.
+    blocking: true
+  - id: resource-index-created
+    description: indexes/resource-index.yaml was written.
+    blocking: true
+  - id: resources-recorded
+    description: Initial resources were recorded or explicitly empty.
+    blocking: false
+  - id: package-doctor-complete
+    description: Knowledge package doctor passed or produced fix hints.
+    blocking: true
+  - id: handoff-created
+    description: Knowledge package ready handoff exists.
+    blocking: true
+expected_artifacts:
+  - package.yaml
+  - indexes/resource-index.yaml
+  - artifacts/knowledge-package-authoring-report.md
+  - reviews/knowledge-package-authoring-review.md
+  - handoffs/knowledge-package-ready-handoff.md
+allowed_tools:
+  - processforge-cli
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  blocked_changes:
+    - bypass_package_roots
+    - write_private_absolute_paths_to_public_package_manifest

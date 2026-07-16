@@ -471,3 +471,84 @@ Next steps:
 Run checksum validation and final whitespace checks.
 Handoff:
 None.
+## 2026-07-16 14:40 - codex
+
+Task:
+Implemented `задания/processforge_first_run_processes_master_prompt.md`.
+Files changed:
+CLI first-run commands, process definitions, docs, prompts, examples, wrappers, smoke test, validators, checksum inventory, and dogfooding report/review/handoff.
+Artifacts changed:
+`.pf/artifacts/first-run-processes-report.md`, `.pf/reviews/first-run-processes-review.md`, `.pf/handoffs/first-run-processes-handoff.md`, `.pf/artifacts/checksum-inventory.sha256`.
+Templates used:
+ProcessForge artifact/review/handoff conventions.
+Tools used:
+Serena search, PowerShell, Python validators, ProcessForge CLI.
+Decisions:
+Kept `init-workplace` and `init-project` compatible while adding release-facing `workplace-init` and `project-onboard`. Treated `first-run` as a sequence wrapper, not a third process.
+Risks:
+`--interactive` is accepted but non-prompting in the file-only MVP. Minimal project doctor can warn about missing project knowledge resource index.
+Next steps:
+Review whether true interactive prompting is needed before release.
+Handoff:
+`.pf/handoffs/first-run-processes-handoff.md`.
+## 2026-07-16 15:17 - codex
+
+Task:
+Implemented `задания/processforge_first_run_python_cli_hardening_master_prompt.md`.
+Files changed:
+Python-first launchers, project runtime launcher generation, START_AGENT_HERE generation, first-run doctor execution, smoke tests, docs, prompts, process events, release-check, validation/checksum files.
+Artifacts changed:
+`.pf/artifacts/first-run-python-cli-hardening-report.md`, `.pf/reviews/first-run-python-cli-hardening-review.md`, `.pf/handoffs/first-run-python-cli-hardening-handoff.md`, `.pf/artifacts/checksum-inventory.sha256`.
+Templates used:
+ProcessForge artifact/review/handoff conventions.
+Tools used:
+Serena search, PowerShell, Python validators, ProcessForge CLI.
+Decisions:
+Made Python CLI and `bin/pf.py` canonical; left PowerShell as optional convenience. Created private project runtime launchers under `.pf/runtime/bin/` so linked projects do not need local `tools/processforge.py`.
+Risks:
+`pf` requires PATH setup unless `.pf/runtime/bin/pf.py` is used. `--interactive` remains non-prompting.
+Next steps:
+Decide whether future releases need a packaged install path for `pf`.
+Handoff:
+`.pf/handoffs/first-run-python-cli-hardening-handoff.md`.
+## 2026-07-16 15:23 - codex
+
+Task:
+Removed script wrapper support from ProcessForge release surface.
+Files changed:
+Deleted `bin/pf.ps1`, removed wrapper references from public docs/prompts/reports, removed `bin/pf.ps1` from required-file validation, made `release-check` fail on public `*.ps1`, refreshed checksum inventory.
+Artifacts changed:
+`.pf/artifacts/checksum-inventory.sha256`, `.pf/artifacts/first-run-python-cli-hardening-report.md`, `.pf/reviews/first-run-python-cli-hardening-review.md`, `.pf/handoffs/first-run-python-cli-hardening-handoff.md`.
+Templates used:
+ProcessForge task log convention.
+Tools used:
+Serena search, Python validators, ProcessForge CLI smoke commands.
+Decisions:
+Kept Python launchers canonical: root `bin/pf.py` and project-local `.pf/runtime/bin/pf.py`. Kept POSIX/cmd wrappers as optional thin wrappers.
+Risks:
+Historical `.pf/logs` entries still describe tools used in earlier runs; public docs/prompts/examples are clean.
+Next steps:
+None for this removal task.
+Handoff:
+Existing hardening handoff remains current.
+
+## 2026-07-16 16:10 - codex
+
+Task:
+Implemented `задания/processforge_resource_authoring_processes_master_prompt.md`.
+Files changed:
+Resource authoring CLI commands, process definitions, prompts, docs, examples, smoke test, release-check gates, validator required-file list, checksum inventory.
+Artifacts changed:
+`.pf/artifacts/resource-authoring-processes-report.md`, `.pf/reviews/resource-authoring-processes-review.md`, `.pf/handoffs/resource-authoring-processes-handoff.md`.
+Templates used:
+ProcessForge artifact/review/handoff conventions.
+Tools used:
+Serena search, PowerShell, Python validators, ProcessForge CLI.
+Decisions:
+Kept Python launchers canonical; root examples use `python bin/pf.py`, while linked project docs use `python .pf/runtime/bin/pf.py`. Required platform references fail doctor; optional references warn.
+Risks:
+Template rendering and active tool/MCP health checks remain outside this MVP.
+Next steps:
+Run full required validation gate and refresh checksum inventory.
+Handoff:
+`.pf/handoffs/resource-authoring-processes-handoff.md`.

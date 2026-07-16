@@ -19,6 +19,11 @@ Project initialization can select a platform contract from detected project
 markers or operator answers. For example, a Joomla component hint selects
 `platform.joomla` when the workplace registry provides it.
 
+Resource authoring uses `platform-create` to write contracts under the workplace
+platform contract root. `project_type_hints` is the bridge to `project-onboard`:
+matching hints add the platform to the project snapshot together with linked
+knowledge packages and templates.
+
 Missing required platform capabilities block strict automation. Missing
 optional capabilities produce warnings.
 # Resource Management Contract Use

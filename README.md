@@ -54,18 +54,31 @@ Root project `AGENTS.md` is not created by default.
 
 ## Quick Start
 
+Python CLI is the canonical runtime. `bin/pf.py` is the root launcher;
+`bin/pf` and `bin/pf.bat` are thin optional wrappers over it.
+
 ```bash
-python tools/processforge.py init-workplace --root <workplace-root> --dry-run
-python tools/processforge.py init-workplace --root <workplace-root> --apply
+python bin/pf.py workplace-init --workplace <workplace-root> --dry-run
+python bin/pf.py workplace-init --workplace <workplace-root> --apply
 
-python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --dry-run
-python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --apply
+python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --dry-run
+python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply
 
-python tools/processforge.py project-context-refresh --project-root <project-root>
-python tools/processforge.py project-context-check --project-root <project-root>
-python tools/processforge.py session-start --mode resume --project-root <project-root> --report-only
-python tools/processforge.py assignment-capsule --project-root <project-root> --assignment .pf/assignments/example.md
+python bin/pf.py agent-start-prompt --project-root <project-root>
+
+python bin/pf.py project-context-refresh --project-root <project-root>
+python bin/pf.py project-context-check --project-root <project-root>
+python bin/pf.py session-start --mode resume --project-root <project-root> --report-only
+python bin/pf.py assignment-capsule --project-root <project-root> --assignment .pf/assignments/example.md
 ```
+
+`init-workplace` and `init-project` remain compatibility commands. The first-run
+UX uses `workplace-init` and `project-onboard` so workplace setup and project
+onboarding stay separate.
+
+Inside a normal linked project, use `pf doctor-project --project-root .` or
+`python .pf/runtime/bin/pf.py doctor-project --project-root .`. Do not assume
+that `tools/processforge.py` exists in the linked project root.
 
 ## Events, Hooks, And Chat
 
@@ -75,20 +88,20 @@ CloudEvents-inspired envelope.
 Hook matching can be tested without writing payloads:
 
 ```bash
-python tools/processforge.py hooks-dispatch --project-root <project-root> --event-type session.ended --dry-run
+python bin/pf.py hooks-dispatch --project-root <project-root> --event-type session.ended --dry-run
 ```
 
 Outbox delivery writes payloads under `.pf/runtime/hooks/outbox/`:
 
 ```bash
-python tools/processforge.py hooks-dispatch --project-root <project-root> --event-type assignment.completed --outbox
+python bin/pf.py hooks-dispatch --project-root <project-root> --event-type assignment.completed --outbox
 ```
 
 Chat capture writes local transcripts and emits `chat.message.recorded`:
 
 ```bash
-python tools/processforge.py chat-record --project-root <project-root> --session-id session-demo --participant operator --role user --content "Start the assignment"
-python tools/processforge.py chat-export --project-root <project-root> --session-id session-demo --target wtaicc --outbox
+python bin/pf.py chat-record --project-root <project-root> --session-id session-demo --participant operator --role user --content "Start the assignment"
+python bin/pf.py chat-export --project-root <project-root> --session-id session-demo --target wtaicc --outbox
 ```
 
 The MVP does not send network webhooks or execute local commands.
@@ -105,8 +118,8 @@ They write into `.pf/contexts/`; new flows should use `project-context-refresh`,
 python tools/validate-process-forge-schemas.py
 python tools/validate-process-forge-checksums.py
 python tools/validate-public-cleanliness.py
-python tools/processforge.py events-validate --project-root .
-python tools/processforge.py doctor-context --project-root .
+python bin/pf.py events-validate --project-root .
+python bin/pf.py doctor-context --project-root .
 ```
 
 See `docs/getting-started.md` and `docs/concepts/` for the detailed model.

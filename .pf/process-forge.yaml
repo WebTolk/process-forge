@@ -108,6 +108,8 @@ processes:
     path: ../processes/process-version-upgrade.yaml
   - id: workplace-initialization
     path: ../processes/workplace-initialization.yaml
+  - id: project-onboarding
+    path: ../processes/project-onboarding.yaml
   - id: project-initialization
     path: ../processes/project-initialization.yaml
   - id: session-bootstrap
@@ -132,6 +134,12 @@ processes:
     path: ../processes/platform-contract-install.yaml
   - id: process-template-install
     path: ../processes/process-template-install.yaml
+  - id: reusable-template-authoring
+    path: ../processes/reusable-template-authoring.yaml
+  - id: knowledge-package-authoring
+    path: ../processes/knowledge-package-authoring.yaml
+  - id: platform-contract-authoring
+    path: ../processes/platform-contract-authoring.yaml
 
 knowledge_stack:
   - id: processforge.core

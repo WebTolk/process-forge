@@ -18,6 +18,14 @@ Template manifests should state:
 - usage recording policy
 
 Template bodies should keep placeholders explicit and avoid hidden local assumptions.
+
+For workplace resource authoring, prefer the structured CLI:
+
+```bash
+python bin/pf.py template-create --workplace ./workplace --id report.audit.basic --title "Basic Audit Report" --apply
+python bin/pf.py template-doctor --workplace ./workplace --template report.audit.basic
+```
+
 # Resource Management Template Rules
 
 Template packages remain simple by default. A folder under `templates/file/<template-id>/` with a clear `README.md` is enough for MVP.

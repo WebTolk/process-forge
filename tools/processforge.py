@@ -4,12 +4,15 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
+import io
 import json
 import os
 import platform
 import re
 import shutil
+import subprocess
 import sys
 import uuid
 from dataclasses import dataclass
@@ -159,6 +162,40 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "package.index.updated",
     "package.doctor.failed",
     "package.duplicate.detected",
+    "workplace.initialization.started",
+    "workplace.structure.created",
+    "workplace.path_constants.created",
+    "workplace.registry.created",
+    "workplace.doctor.passed",
+    "workplace.doctor.failed",
+    "workplace.initialization.completed",
+    "project.onboarding.started",
+    "project.flow_root.created",
+    "project.platform.detected",
+    "project.snapshot.refreshed",
+    "project.doctor.passed",
+    "project.doctor.failed",
+    "project.onboarding.completed",
+    "agent.start_prompt.generated",
+    "launcher.project_runtime.created",
+    "template.authoring.started",
+    "template.created",
+    "template.registered",
+    "template.doctor.passed",
+    "template.doctor.failed",
+    "template.authoring.completed",
+    "knowledge_package.authoring.started",
+    "knowledge_package.created",
+    "knowledge_package.resource_index.created",
+    "knowledge_package.doctor.passed",
+    "knowledge_package.doctor.failed",
+    "knowledge_package.authoring.completed",
+    "platform.authoring.started",
+    "platform.contract.created",
+    "platform.contract.linked",
+    "platform.contract.doctor.passed",
+    "platform.contract.doctor.failed",
+    "platform.authoring.completed",
 ]
 
 BUILTIN_CAPABILITIES = {
@@ -430,7 +467,7 @@ def require_flow_root(project_root: Path) -> Path:
     if not manifest.is_file():
         raise SystemExit(
             f"FAIL: .pf/process-forge.yaml not found under {project_root}. "
-            "Run `processforge init-project --project-root <project-root> --workplace <workplace.yaml> --apply` first."
+            "Run `python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type <project-type> --apply` first."
         )
     return flow_root
 
@@ -912,6 +949,76 @@ applied
 - Project public manifests must keep local paths out.
 """
 
+    bootstrap_report = f"""# Workplace Bootstrap Report
+
+## Status
+
+created
+
+## Workplace
+
+- id: {defaults["id"]}
+- root: {root}
+
+## Created Files
+
+- workplace.yaml
+- terms.yaml
+- registries/
+- artifacts/
+- reviews/
+- handoffs/
+- runtime/events/events.ndjson
+
+## Next Required Check
+
+`workplace-init --apply` runs `doctor-workplace` automatically and updates this report with the doctor result.
+"""
+
+    bootstrap_review = """# Workplace Bootstrap Review
+
+## Reviewed Object
+
+Workplace initialization output.
+
+## Result
+
+pending
+
+## Notes
+
+This review is finalized after `doctor-workplace` runs.
+"""
+
+    workplace_handoff = """# Handoff: workplace-initialization -> project-onboarding
+
+Objective:
+Prepare the workplace for future project onboarding.
+
+Current status:
+Workplace files were created.
+
+Input artifacts:
+- workplace.yaml
+- terms.yaml
+- registries/
+
+Files changed:
+- workplace root
+
+Files not to touch:
+- Project `.pf/` folders; those belong to `project-onboarding`.
+
+Known issues:
+- Doctor status is finalized by `workplace-init --apply`.
+
+Required checks:
+- `pf doctor-workplace --root <workplace-root>`
+
+Next recommended action:
+Run `project-onboard` for a concrete project.
+"""
+
     files = {
         root / "AGENTS.md": agents,
         root / "workplace.yaml": dump_yaml(workplace),
@@ -940,18 +1047,126 @@ applied
         root / "registries" / "tools.yaml": dump_yaml({"schema_version": 1, "tools": []}),
         root / "registries" / "mcp.yaml": dump_yaml({"schema_version": 1, "mcp_servers": []}),
         root / "logs" / "workplace-init-report.md": report,
+        root / "artifacts" / "workplace-bootstrap-report.md": bootstrap_report,
+        root / "reviews" / "workplace-bootstrap-review.md": bootstrap_review,
+        root / "handoffs" / "workplace-ready-handoff.md": workplace_handoff,
     }
     return files
+
+
+def finalize_workplace_doctor_artifacts(root: Path, status: int, output: str) -> None:
+    result = "pass" if status == 0 else "fail"
+    report = f"""# Workplace Bootstrap Report
+
+## Status
+
+{result}
+
+## Doctor Command
+
+```bash
+pf doctor-workplace --root <workplace-root>
+```
+
+## Doctor Output
+
+```text
+{output.rstrip()}
+```
+"""
+    review = f"""# Workplace Bootstrap Review
+
+## Reviewed Object
+
+Workplace initialization output.
+
+## Result
+
+{result}
+
+## Evidence
+
+- artifacts/workplace-bootstrap-report.md
+- runtime/events/events.ndjson
+"""
+    handoff = f"""# Handoff: workplace-initialization -> project-onboarding
+
+Objective:
+Prepare the workplace for future project onboarding.
+
+Current status:
+Doctor status: {result}.
+
+Input artifacts:
+- workplace.yaml
+- terms.yaml
+- registries/
+- artifacts/workplace-bootstrap-report.md
+
+Files changed:
+- workplace root
+
+Files not to touch:
+- Project `.pf/` folders; those belong to `project-onboarding`.
+
+Known issues:
+{("- Doctor failed; read artifacts/workplace-bootstrap-report.md for fix hints." if status else "- None recorded.")}
+
+Required checks:
+- `pf doctor-workplace --root <workplace-root>`
+
+Next recommended action:
+Run `project-onboard` for a concrete project.
+"""
+    write_file(root / "artifacts" / "workplace-bootstrap-report.md", report, force=True)
+    write_file(root / "reviews" / "workplace-bootstrap-review.md", review, force=True)
+    write_file(root / "handoffs" / "workplace-ready-handoff.md", handoff, force=True)
+
+
+def workplace_event(root: Path, event_type: str, *, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    manifest = root / "workplace.yaml"
+    workplace_id = safe_id(root.name or "workplace", "workplace")
+    if manifest.is_file():
+        data = load_yaml_document(manifest)
+        workplace = data.get("workplace") if isinstance(data, dict) else None
+        if isinstance(workplace, dict) and workplace.get("id"):
+            workplace_id = safe_id(str(workplace["id"]), "workplace")
+    return {
+        "schema_version": 1,
+        "event_id": f"evt_{uuid.uuid4().hex}",
+        "event_type": event_type,
+        "source": "processforge.cli",
+        "subject": workplace_id,
+        "time": now_utc(),
+        "correlation_id": f"workplace-init-{workplace_id}",
+        "project": {"flow_root": "workplace", "project_id": workplace_id},
+        "process": {"id": "workplace-initialization", "version": "0.1.0", "stage_id": None, "process_run_id": None},
+        "assignment": {"id": None, "path": None},
+        "actor": {"type": "agent", "id": "processforge-cli", "role": "orchestrator"},
+        "session": {"id": None},
+        "data": payload or {},
+        "severity": "info",
+        "privacy": "private",
+    }
+
+
+def append_workplace_event(root: Path, event_type: str, *, payload: dict[str, Any] | None = None) -> Path:
+    events_path = root / "runtime" / "events" / "events.ndjson"
+    events_path.parent.mkdir(parents=True, exist_ok=True)
+    with events_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(workplace_event(root, event_type, payload=payload), ensure_ascii=False, sort_keys=True) + "\n")
+    return events_path
 
 
 def command_init_workplace(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
     answers = load_answers(Path(args.answers).expanduser().resolve() if args.answers else None)
     files = build_workplace_files(root, answers)
-    planned_dirs = [root / "cache", root / "runtime", root / "logs", root / "packages"]
+    planned_dirs = [root / "cache", root / "runtime", root / "runtime" / "events", root / "logs", root / "artifacts", root / "reviews", root / "handoffs", root / "packages", root / "knowledge", root / "reusable-templates", root / "platform-contracts", root / "tools", root / "mcp"]
     if not args.apply:
         print_plan("workplace init dry run", list(files) + planned_dirs, root)
         return 0
+    append_workplace_event(root, "workplace.initialization.started", payload={"command": getattr(args, "command", "init-workplace")})
     for directory in planned_dirs:
         directory.mkdir(parents=True, exist_ok=True)
     results: list[WriteResult] = []
@@ -960,9 +1175,21 @@ def command_init_workplace(args: argparse.Namespace) -> int:
             results.append(write_global_agent_section(path, force=args.force))
         else:
             results.append(write_file(path, content, force=args.force))
+    append_workplace_event(root, "workplace.structure.created", payload={"directories": [rel(path, root) for path in planned_dirs]})
+    append_workplace_event(root, "workplace.path_constants.created", payload={"manifest": "workplace.yaml"})
+    append_workplace_event(root, "workplace.registry.created", payload={"registries": "registries/"})
+    doctor_status, doctor_output = run_command_capture(command_doctor_workplace, argparse.Namespace(root=str(root)))
+    print(doctor_output, end="")
+    finalize_workplace_doctor_artifacts(root, doctor_status, doctor_output)
+    append_workplace_event(
+        root,
+        "workplace.doctor.passed" if doctor_status == 0 else "workplace.doctor.failed",
+        payload={"status": "pass" if doctor_status == 0 else "fail"},
+    )
+    append_workplace_event(root, "workplace.initialization.completed", payload={"files": [rel(result.target, root) for result in results], "doctor_status": doctor_status})
     for result in results:
         print(f"{result.status.upper()}: {rel(result.target, root)}")
-    return 0
+    return doctor_status
 
 
 def command_global_agents_section(args: argparse.Namespace) -> int:
@@ -982,6 +1209,19 @@ def print_checks(checks: list[Check]) -> int:
         print(f"{item.level}: {item.message}")
         failed = failed or item.level == "FAIL"
     return 1 if failed else 0
+
+
+def run_command_capture(func: Any, args: argparse.Namespace) -> tuple[int, str]:
+    buffer = io.StringIO()
+    status = 0
+    with contextlib.redirect_stdout(buffer):
+        try:
+            status = int(func(args) or 0)
+        except SystemExit as exc:
+            status = int(exc.code) if isinstance(exc.code, int) else 1
+            if exc.code and not isinstance(exc.code, int):
+                print(str(exc.code))
+    return status, buffer.getvalue()
 
 
 def path_constant_checks(workplace_root: Path, workplace_manifest: Path) -> list[Check]:
@@ -1277,6 +1517,31 @@ def selected_project_platforms(detected: dict[str, Any], answers: dict[str, Any]
     return sorted(selected)
 
 
+def workplace_platform_ids_for_project_type(workplace_manifest: Path | None, project_type: str) -> list[str]:
+    if not workplace_manifest or not workplace_manifest.is_file():
+        return []
+    registry = load_workplace_registry(workplace_manifest, "platforms", "platforms.yaml")
+    entries = registry.get("platforms") if isinstance(registry, dict) else None
+    matched: list[str] = []
+    if not isinstance(entries, list):
+        return matched
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        raw_path = entry.get("path")
+        if not raw_path:
+            continue
+        contract_path = resolve_registry_relative_path(workplace_manifest.parent, str(raw_path), workplace_manifest)
+        contract = load_yaml_document(contract_path)
+        hints = contract.get("project_type_hints")
+        if not isinstance(hints, list):
+            applies_to = contract.get("applies_to") if isinstance(contract.get("applies_to"), dict) else {}
+            hints = applies_to.get("project_type_hints") if isinstance(applies_to.get("project_type_hints"), list) else []
+        if project_type in [str(item) for item in hints]:
+            matched.append(str(entry.get("id") or contract.get("id", "")).removeprefix("platform."))
+    return sorted(set(item for item in matched if item))
+
+
 def project_mode(project_root: Path, answers: dict[str, Any]) -> str:
     project_answers = answers.get("project", {}) if isinstance(answers.get("project"), dict) else {}
     requested = str(project_answers.get("mode") or "auto")
@@ -1297,6 +1562,129 @@ def project_defaults(project_root: Path, answers: dict[str, Any], detected: dict
     if project_type == "auto":
         project_type = detected_kind
     return {"id": project_id, "name": project_name, "type": project_type}
+
+
+def project_runtime_launcher_files(flow_root: Path) -> dict[Path, str]:
+    launcher_py = r'''#!/usr/bin/env python3
+"""Project-local ProcessForge launcher.
+
+This file lives under .pf/runtime/ and may read private local paths from
+.pf/process-forge.local.yaml. Public project files should use `pf` or this
+launcher without exposing resolved local paths.
+"""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+
+def find_project_root(start: Path) -> Path:
+    current = start.resolve()
+    for candidate in [current, *current.parents]:
+        if (candidate / ".pf" / "process-forge.local.yaml").is_file():
+            return candidate
+    return current
+
+
+def yaml_scalar(text: str, key: str) -> str | None:
+    prefix = key + ":"
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith(prefix):
+            value = stripped[len(prefix) :].strip()
+            if value in {"", "null", "None", "~"}:
+                return None
+            return value.strip("'\"")
+    return None
+
+
+def resolve_path(base: Path, raw: str) -> Path:
+    path = Path(raw)
+    if path.is_absolute():
+        return path
+    return (base / path).resolve()
+
+
+def distribution_from_workplace(workplace_manifest: Path) -> Path | None:
+    registry = workplace_manifest.parent / "registries" / "distributions.yaml"
+    if not registry.is_file():
+        return None
+    lines = registry.read_text(encoding="utf-8", errors="replace").splitlines()
+    in_processforge = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("id:"):
+            in_processforge = stripped.split(":", 1)[1].strip().strip("'\"") == "processforge"
+        elif in_processforge and stripped.startswith("path:"):
+            raw = stripped.split(":", 1)[1].strip().strip("'\"")
+            raw = raw.replace("${PF_WORKPLACE}", str(workplace_manifest.parent))
+            return resolve_path(workplace_manifest.parent, raw)
+    return None
+
+
+def distribution_root(project_root: Path) -> Path | None:
+    env_home = os.environ.get("PROCESSFORGE_HOME")
+    local_manifest = project_root / ".pf" / "process-forge.local.yaml"
+    if local_manifest.is_file():
+        text = local_manifest.read_text(encoding="utf-8", errors="replace")
+        override = yaml_scalar(text, "distribution_override")
+        if override:
+            return resolve_path(local_manifest.parent, override)
+        workplace_raw = yaml_scalar(text, "manifest")
+        if workplace_raw:
+            workplace = resolve_path(local_manifest.parent, workplace_raw)
+            found = distribution_from_workplace(workplace)
+            if found:
+                return found
+    if env_home:
+        return Path(env_home).expanduser().resolve()
+    return None
+
+
+def main(argv: list[str]) -> int:
+    project_root = find_project_root(Path.cwd())
+    distribution = distribution_root(project_root)
+    if not distribution:
+        message = """FAIL: ProcessForge distribution not found.
+
+Fix:
+  Set PROCESSFORGE_HOME to the ProcessForge distribution root, or rerun project-onboard from the distribution."""
+        print(message, file=sys.stderr)
+        return 1
+    cli = distribution / "tools" / "processforge.py"
+    if not cli.is_file():
+        message = f"""FAIL: ProcessForge CLI not found under distribution root: {distribution}
+
+Fix:
+  Check PROCESSFORGE_HOME or rerun project-onboard so .pf/process-forge.local.yaml points to a valid distribution."""
+        print(message, file=sys.stderr)
+        return 1
+    return subprocess.call([sys.executable, str(cli), *argv])
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
+'''
+    launcher_sh = """#!/usr/bin/env sh
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if command -v python3 >/dev/null 2>&1; then
+  exec python3 "$SCRIPT_DIR/pf.py" "$@"
+fi
+exec python "$SCRIPT_DIR/pf.py" "$@"
+"""
+    launcher_bat = """@echo off
+set SCRIPT_DIR=%~dp0
+py -3 "%SCRIPT_DIR%pf.py" %*
+if errorlevel 9009 python "%SCRIPT_DIR%pf.py" %*
+"""
+    return {
+        flow_root / "runtime" / "bin" / "pf.py": launcher_py,
+        flow_root / "runtime" / "bin" / "pf": launcher_sh,
+        flow_root / "runtime" / "bin" / "pf.bat": launcher_bat,
+    }
 
 
 def markdown_list(items: list[str], empty: str = "None.") -> str:
@@ -1552,6 +1940,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
     detected = detect_project(project_root)
     defaults = project_defaults(project_root, answers, detected)
     detected["platforms"] = selected_project_platforms(detected, answers, defaults["type"])
+    detected["platforms"] = sorted(set(detected["platforms"]).union(workplace_platform_ids_for_project_type(workplace_manifest, defaults["type"])))
     mode = project_mode(project_root, answers)
     required = answers.get("required_capabilities") if isinstance(answers.get("required_capabilities"), list) else []
     optional = answers.get("optional_capabilities") if isinstance(answers.get("optional_capabilities"), list) else []
@@ -1652,7 +2041,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
     local_manifest = {
         "schema_version": 1,
         "workplace": {"manifest": str(workplace_manifest.resolve())},
-        "process_forge": {"distribution_override": None},
+        "process_forge": {"distribution_override": str(ROOT.resolve())},
         "local": {"project_root": str(project_root.resolve())},
         "overrides": {"package_roots": [], "template_roots": [], "tool_preferences": {}},
         "runtime": {
@@ -2032,6 +2421,147 @@ Unknown until reviewed.
 Run doctor after apply mode.
 """
 
+    first_assignment = {
+        "schema_version": 1,
+        "id": "first-assignment",
+        "title": "Verify ProcessForge project onboarding",
+        "process": "project-onboarding",
+        "status": "open",
+        "objective": "Verify that this project is connected to ProcessForge and ready for future assignment work.",
+        "tasks": [
+            "Read .pf/AGENTS.md",
+            "Read .pf/contexts/project-context.snapshot.yaml",
+            "Run doctor-project",
+            "Review .pf/hooks.yaml",
+            "Confirm the first working process for this project",
+            "Create .pf/artifacts/first-assignment-readiness-note.md",
+        ],
+        "expected_artifacts": [
+            ".pf/artifacts/first-assignment-readiness-note.md",
+        ],
+    }
+
+    start_agent_here = f"""# Start Agent Here
+
+You are working inside a ProcessForge-enabled project.
+
+## First Steps
+
+1. Read `.pf/AGENTS.md`.
+2. Read `.pf/contexts/project-context.snapshot.yaml`.
+3. Read the active assignment in `.pf/assignments/`.
+4. Run:
+
+```bash
+python .pf/runtime/bin/pf.py doctor-project --project-root .
+```
+
+If `pf` is available in PATH, this short form is also acceptable:
+
+```bash
+pf doctor-project --project-root .
+```
+
+5. If doctor fails, report the failures and propose safe fixes.
+6. Do not expose local absolute paths from `.pf/process-forge.local.yaml`.
+7. Use ProcessForge artifacts, reviews, and handoffs for outputs.
+8. Do not call a distribution-local CLI path from this project root unless this project is the ProcessForge distribution itself.
+
+## Current Assignment
+
+- File: `.pf/assignments/first-assignment.yaml`
+- Goal: Verify ProcessForge project onboarding for `{defaults["id"]}`.
+
+## Useful Commands
+
+```bash
+python .pf/runtime/bin/pf.py project-context-refresh --project-root .
+python .pf/runtime/bin/pf.py assignment-capsule --project-root . --assignment .pf/assignments/first-assignment.yaml
+python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type project.onboarding.completed --dry-run
+```
+"""
+
+    onboarding_report = f"""# Project Onboarding Report
+
+## Status
+
+applied
+
+## Project
+
+- id: {defaults["id"]}
+- name: {defaults["name"]}
+- type: {defaults["type"]}
+
+## Process Boundary
+
+Project onboarding creates only the project-local `.pf/` flow root and links it to an existing workplace. It does not recreate the workplace, copy global packages into the project, or write local absolute paths to public files.
+
+## Created First-Run Files
+
+- .pf/START_AGENT_HERE.md
+- .pf/assignments/first-assignment.yaml
+- .pf/contexts/project-context.snapshot.yaml
+- .pf/artifacts/project-onboarding-report.md
+- .pf/reviews/project-onboarding-review.md
+- .pf/handoffs/project-ready-handoff.md
+"""
+
+    onboarding_review = """# Project Onboarding Review
+
+## Reviewed Object
+
+Project onboarding output.
+
+## Result
+
+pass_with_conditions
+
+## Findings
+
+- The onboarding output is file-only and keeps workplace and project responsibilities separate.
+- Detection results are observed until manually confirmed.
+
+## Required Follow-Up
+
+- Run `doctor-project` after onboarding.
+- Review the generated first assignment before assigning work.
+"""
+
+    onboarding_handoff = f"""# Handoff: project-onboarding -> first-assignment
+
+Objective:
+Connect `{defaults["id"]}` to ProcessForge and prepare the first assignment.
+
+Current status:
+Project onboarding files were generated.
+
+Input artifacts:
+- .pf/process-forge.yaml
+- .pf/process-forge.local.yaml
+- .pf/contexts/project-context.snapshot.yaml
+- .pf/START_AGENT_HERE.md
+- .pf/assignments/first-assignment.yaml
+
+Files changed:
+- .pf/
+- .gitignore
+
+Files not to touch:
+- Workplace registry files unless the user explicitly requests workplace changes.
+- Global packages unless a separate workplace process approves it.
+
+Known issues:
+- Detection is observed, not domain-approved.
+
+Required checks:
+- `python tools/processforge.py doctor-project --project-root .`
+- `python tools/processforge.py project-context-check --project-root .`
+
+Next recommended action:
+Start `.pf/assignments/first-assignment.yaml`.
+"""
+
     package = {
         "schema_version": 1,
         "id": f"project.{defaults['id']}",
@@ -2116,11 +2646,13 @@ pass_with_conditions
 Review and confirm observed conventions.
 """
 
-    return {
+    files = {
         flow_root / "AGENTS.md": agents,
+        flow_root / "START_AGENT_HERE.md": start_agent_here,
         flow_root / "process-forge.yaml": dump_yaml(public_manifest),
         flow_root / "process-forge.local.yaml": dump_yaml(local_manifest),
         flow_root / "hooks.yaml": dump_yaml(hooks),
+        flow_root / "assignments" / "first-assignment.yaml": dump_yaml(first_assignment),
         flow_root / "packages" / f"project.{defaults['id']}.yaml": dump_yaml(package),
         flow_root / "artifacts" / "project-profile.md": profile,
         flow_root / "artifacts" / "project-classification-report.md": classification_report,
@@ -2131,16 +2663,61 @@ Review and confirm observed conventions.
         flow_root / "artifacts" / "template-matching-report.md": template_report,
         flow_root / "artifacts" / "global-resource-matching-report.md": resource_report,
         flow_root / "artifacts" / "project-init-proposal.md": proposal,
+        flow_root / "artifacts" / "project-onboarding-report.md": onboarding_report,
         flow_root / "reviews" / "project-init-review.md": review,
+        flow_root / "reviews" / "project-onboarding-review.md": onboarding_review,
+        flow_root / "handoffs" / "project-ready-handoff.md": onboarding_handoff,
     }
+    files.update(project_runtime_launcher_files(flow_root))
+    return files
+
+
+def finalize_project_onboarding_doctor_artifacts(project_root: Path, status: int, output: str) -> None:
+    flow_root = project_root / PROJECT_FLOW_ROOT
+    result = "pass" if status == 0 else "fail"
+    report = flow_root / "artifacts" / "project-onboarding-report.md"
+    existing = report.read_text(encoding="utf-8", errors="replace") if report.is_file() else "# Project Onboarding Report\n"
+    content = existing.rstrip() + f"""
+
+## Doctor Status
+
+{result}
+
+## Doctor Output
+
+```text
+{output.rstrip()}
+```
+
+## Fix Hints
+
+{"- None required." if status == 0 else "- Resolve the FAIL lines above, then rerun `pf doctor-project --project-root .`."}
+"""
+    write_file(report, content, force=True)
 
 
 def command_init_project(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     workplace = Path(args.workplace).expanduser().resolve()
+    if workplace.is_dir():
+        workplace = workplace / "workplace.yaml"
     answers = load_answers(Path(args.answers).expanduser().resolve() if args.answers else None)
+    project_type = getattr(args, "project_type", None)
+    if project_type:
+        project_answers = answers.get("project") if isinstance(answers.get("project"), dict) else {}
+        project_answers["type"] = project_type
+        answers["project"] = project_answers
     if args.apply and not workplace.is_file() and not args.allow_missing_workplace:
-        raise SystemExit(f"FAIL: workplace manifest not found: {workplace}")
+        raise SystemExit(
+            f"""FAIL: workplace manifest is required before project onboarding.
+
+Why:
+  Project onboarding links a project to an existing ProcessForge workplace.
+
+Fix:
+  python tools/processforge.py workplace-init --workplace {workplace.parent} --apply
+  python tools/processforge.py project-onboard --project-root {project_root} --workplace {workplace.parent} --type {project_type or '<project-type>'} --apply"""
+        )
     if not project_root.exists() and args.apply:
         project_root.mkdir(parents=True)
     if not project_root.exists() and args.apply:
@@ -2156,10 +2733,168 @@ def command_init_project(args: argparse.Namespace) -> int:
 
     for dirname in PROJECT_FLOW_DIRS:
         (flow_root / dirname).mkdir(parents=True, exist_ok=True)
+    emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="0.1.0", payload={"command": getattr(args, "command", "init-project")})
     results = [write_file(path, content, force=args.force) for path, content in files.items()]
     results.append(append_gitignore_entries(project_root / ".gitignore", PROJECT_PRIVATE_GITIGNORE, force=args.force))
+    emit_process_event(project_root, "project.flow_root.created", process_id="project-onboarding", process_version="0.1.0", payload={"flow_root": PROJECT_FLOW_ROOT})
+    emit_process_event(project_root, "project.platform.detected", process_id="project-onboarding", process_version="0.1.0", payload={"project_type": project_type or "auto"})
+    snapshot_status, snapshot_paths, _snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root)
+    emit_process_event(project_root, "project.snapshot.refreshed", process_id="project-onboarding", process_version="0.1.0", payload={"status": snapshot_status, "paths": {key: rel(value, project_root) for key, value in snapshot_paths.items()}})
+    emit_process_event(project_root, "launcher.project_runtime.created", process_id="project-onboarding", process_version="0.1.0", payload={"path": ".pf/runtime/bin/pf.py"})
+    emit_process_event(project_root, "agent.start_prompt.generated", process_id="project-onboarding", process_version="0.1.0", payload={"path": ".pf/START_AGENT_HERE.md"})
+    emit_process_event(project_root, "assignment.created", process_id="project-onboarding", process_version="0.1.0", assignment_id_value="first-assignment", assignment_path=".pf/assignments/first-assignment.yaml", payload={"path": ".pf/assignments/first-assignment.yaml"})
+    doctor_status, doctor_output = run_command_capture(command_doctor_project, argparse.Namespace(project_root=str(project_root)))
+    print(doctor_output, end="")
+    finalize_project_onboarding_doctor_artifacts(project_root, doctor_status, doctor_output)
+    emit_process_event(
+        project_root,
+        "project.doctor.passed" if doctor_status == 0 else "project.doctor.failed",
+        process_id="project-onboarding",
+        process_version="0.1.0",
+        payload={"status": "pass" if doctor_status == 0 else "fail"},
+    )
+    emit_process_event(project_root, "project.onboarding.completed", process_id="project-onboarding", process_version="0.1.0", payload={"files": [rel(result.target, project_root) for result in results], "doctor_status": doctor_status})
     for result in results:
         print(f"{result.status.upper()}: {rel(result.target, project_root)}")
+    for path in snapshot_paths.values():
+        print(f"WROTE: {rel(path, project_root)}")
+    return doctor_status
+
+
+def default_start_agent_here(project_root: Path) -> str:
+    assignment_path = locate_flow_root(project_root) / "assignments" / "first-assignment.yaml"
+    assignment_rel = rel(assignment_path, project_root) if assignment_path.is_file() else ".pf/assignments/"
+    return f"""# Start Agent Here
+
+You are working inside a ProcessForge-enabled project.
+
+## First Steps
+
+1. Read `.pf/AGENTS.md`.
+2. Read `.pf/contexts/project-context.snapshot.yaml`.
+3. Read the active assignment in `.pf/assignments/`.
+4. Run:
+
+```bash
+python .pf/runtime/bin/pf.py doctor-project --project-root .
+```
+
+If `pf` is available in PATH, this short form is also acceptable:
+
+```bash
+pf doctor-project --project-root .
+```
+
+5. If doctor fails, report the failures and propose safe fixes.
+6. Do not expose local absolute paths from `.pf/process-forge.local.yaml`.
+7. Use ProcessForge artifacts, reviews, and handoffs for outputs.
+8. Do not call a distribution-local CLI path from this project root unless this project is the ProcessForge distribution itself.
+
+## Current Assignment
+
+- File: `{assignment_rel}`
+- Goal: Verify this project is ready for ProcessForge assignment work.
+"""
+
+
+def command_agent_start_prompt(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    flow_root = require_flow_root(project_root)
+    target = flow_root / "START_AGENT_HERE.md"
+    if target.is_file() and "python tools/processforge.py" not in target.read_text(encoding="utf-8", errors="replace"):
+        text = target.read_text(encoding="utf-8", errors="replace")
+    else:
+        text = default_start_agent_here(project_root)
+        target.write_text(ensure_trailing_newline(text), encoding="utf-8")
+        emit_process_event(project_root, "artifact.created", payload={"path": rel(target, project_root)})
+        emit_process_event(project_root, "agent.start_prompt.generated", payload={"path": rel(target, project_root)})
+    print(text.rstrip())
+    return 0
+
+
+def command_first_run(args: argparse.Namespace) -> int:
+    workplace_args = argparse.Namespace(
+        command="workplace-init",
+        root=args.workplace,
+        answers=None,
+        dry_run=args.dry_run,
+        apply=args.apply,
+        force=args.force,
+        interactive=args.interactive,
+    )
+    project_args = argparse.Namespace(
+        command="project-onboard",
+        project_root=args.project_root,
+        workplace=args.workplace,
+        project_type=args.project_type,
+        answers=None,
+        dry_run=args.dry_run,
+        apply=args.apply,
+        force=args.force,
+        interactive=args.interactive,
+        allow_missing_workplace=False,
+    )
+    workplace_status = command_init_workplace(workplace_args)
+    if workplace_status != 0:
+        return workplace_status
+    return command_init_project(project_args)
+
+
+def command_release_check(args: argparse.Namespace) -> int:
+    root = Path(args.root).expanduser().resolve()
+    release_dirs = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "bin", "tools", "updates"]
+    ps1_files: list[str] = []
+    pycache_dirs: list[str] = []
+    for dirname in release_dirs:
+        release_root = root / dirname
+        if release_root.is_dir():
+            ps1_files.extend(rel(path, root) for path in sorted(release_root.rglob("*.ps1")))
+            pycache_dirs.extend(rel(path, root) for path in sorted(release_root.rglob("__pycache__")) if path.is_dir())
+    if ps1_files:
+        for path in ps1_files:
+            print(f"FAIL: release contains unsupported script wrapper: {path}")
+        return 1
+    if pycache_dirs:
+        for path in pycache_dirs:
+            print(f"FAIL: release contains Python cache directory: {path}")
+        return 1
+    powershell_refs: list[str] = []
+    text_roots = ["README.md", "QUICKSTART.md", "docs", "prompts", "examples", "processes"]
+    for item in text_roots:
+        base = root / item
+        candidates = [base] if base.is_file() else sorted(base.rglob("*")) if base.is_dir() else []
+        for path in candidates:
+            if path.is_file() and path.suffix.lower() in {".md", ".yaml", ".yml", ".json", ".txt"}:
+                text = path.read_text(encoding="utf-8", errors="replace").lower()
+                if "powershell" in text or ".ps1" in text:
+                    powershell_refs.append(rel(path, root))
+    if powershell_refs:
+        for path in powershell_refs:
+            print(f"FAIL: public release text references PowerShell: {path}")
+        return 1
+    commands = [
+        [
+            sys.executable,
+            "-c",
+            "import pathlib, py_compile, sys, tempfile; "
+            "target = pathlib.Path(tempfile.gettempdir()) / 'processforge-release-check.pyc'; "
+            "py_compile.compile(sys.argv[1], cfile=str(target), doraise=True)",
+            str(root / "tools" / "processforge.py"),
+        ],
+        [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)],
+        [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)],
+        [sys.executable, str(root / "tools" / "validate-process-forge-checksums.py"), "--root", str(root), "--check"],
+    ]
+    failed = False
+    for command in commands:
+        print("RUN: " + " ".join(command))
+        result = subprocess.run(command, cwd=root, text=True, check=False)
+        if result.returncode != 0:
+            failed = True
+    if failed:
+        print("FAIL: release check failed")
+        return 1
+    print("PASS: release check passed.")
     return 0
 
 
@@ -5079,22 +5814,36 @@ def command_doctor_project(args: argparse.Namespace) -> int:
     elif resource_report.is_file():
         checks.append(check("PASS", "required capabilities are resolved or built in"))
     if report_section_has_items(resource_report, "## Missing Required Platform Contracts"):
-        checks.append(check("FAIL", "required platform contract is missing from workplace registry"))
+        checks.append(check("FAIL", """required platform contract is missing from workplace registry
+Why:
+  The selected project type requires platform knowledge and rules.
+Fix:
+  python tools/processforge.py platform-contract-install --workplace <workplace-root> --id <platform> --apply"""))
     if report_section_has_items(resource_report, "## Missing Required Platform Resources"):
-        checks.append(check("FAIL", "required platform resources are missing from workplace registries"))
+        checks.append(check("FAIL", """required platform resources are missing from workplace registries
+Why:
+  A platform contract declared required packages, tools, MCP providers, or templates that are not registered.
+Fix:
+  Register the missing resource in the workplace registry, then rerun project-onboard or project-context-refresh."""))
     if report_section_has_items(resource_report, "## Missing Recommended Platform Resources"):
         checks.append(check("WARN", "recommended platform resources are missing from workplace registries"))
     checks.extend(public_snapshot_path_checks(project_root))
     checks.extend(project_knowledge_resource_index_checks(project_root, distribution_root, workplace_manifest_path))
 
     for rel_path in [
+        "START_AGENT_HERE.md",
+        "runtime/bin/pf.py",
+        "assignments/first-assignment.yaml",
         "artifacts/project-profile.md",
         "artifacts/project-classification-report.md",
         "artifacts/repository-map.md",
         "artifacts/project-conventions.md",
         "artifacts/global-resource-matching-report.md",
         "artifacts/project-init-proposal.md",
+        "artifacts/project-onboarding-report.md",
         "reviews/project-init-review.md",
+        "reviews/project-onboarding-review.md",
+        "handoffs/project-ready-handoff.md",
     ]:
         path = flow_root / rel_path
         checks.append(check("PASS" if path.is_file() else ("WARN" if auto_workplace_mode else "FAIL"), f"{rel(path, project_root)} {'found' if path.is_file() else 'missing'}"))
@@ -5577,6 +6326,173 @@ def command_knowledge_package_doctor(args: argparse.Namespace) -> int:
     return print_checks(checks)
 
 
+def command_knowledge_package_create(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    package_id = str(args.id)
+    package_root = resolve_package_root(workplace_root, args.package_root, mode="write" if args.apply else "read")
+    package_dir = package_root.resolved_path / package_id
+    manifest_path = package_dir / "package.yaml"
+    slug, proposal_path = write_resource_proposal(workplace_root, "knowledge-package-create", package_id, {"package_id": package_id, "package_root": package_root.root_id, "target": rel(manifest_path, workplace_root)})
+    emit_package_root_resolution_event(workplace_root, "knowledge-package-create", package_id, package_root)
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.authoring.started", target={"package_id": package_id, "package_root": package_root.root_id}, status="dry_run" if args.dry_run else "started", message="knowledge package authoring started"))
+    if args.dry_run:
+        for warning in package_root.warnings:
+            print(warning)
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        return 0
+    if manifest_path.exists() and not args.force:
+        raise SystemExit(f"FAIL: knowledge package already exists: {rel(manifest_path, workplace_root)}")
+    for dirname in ["resources", "indexes", "prompts", "summaries", "tests", "artifacts", "reviews", "handoffs"]:
+        (package_dir / dirname).mkdir(parents=True, exist_ok=True)
+    package = {
+        "schema_version": 1,
+        "id": package_id,
+        "name": args.title,
+        "title": args.title,
+        "kind": args.kind,
+        "scope": "workplace",
+        "version": "0.1.0",
+        "status": "draft",
+        "description": args.description or f"Workplace knowledge package {args.title}.",
+        "visibility": "workplace",
+        "load_policy": "on_demand",
+        "resources": [],
+        "indexes": {"resource_index": "indexes/resource-index.yaml"},
+        "tags": [args.kind, "knowledge"],
+    }
+    write_authoring_text(manifest_path, dump_yaml(package))
+    write_authoring_text(package_dir / "README.md", f"# {args.title}\n\nKnowledge package `{package_id}`.")
+    write_authoring_text(package_dir / "indexes" / "resource-index.yaml", dump_yaml({"schema_version": 1, "package": package_id, "resources": []}))
+    write_authoring_text(package_dir / "artifacts" / "knowledge-package-authoring-report.md", f"# Knowledge Package Authoring Report\n\n- package: {package_id}\n- package_root: {package_root.root_id}")
+    write_authoring_text(package_dir / "reviews" / "knowledge-package-authoring-review.md", "# Knowledge Package Authoring Review\n\nResult: pass_with_conditions")
+    write_authoring_text(package_dir / "handoffs" / "knowledge-package-ready-handoff.md", f"# Handoff: knowledge-package-create -> knowledge consumers\n\nPackage `{package_id}` is ready for resource additions.")
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.created", target={"package_id": package_id, "package_root": package_root.root_id}, status="created", message="knowledge package created"))
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.resource_index.created", target={"package_id": package_id}, status="created", message="resource index created"))
+    doctor_status, doctor_output = run_command_capture(command_knowledge_package_doctor, argparse.Namespace(workplace=str(workplace_root), package=package_id, package_root=package_root.root_id))
+    print(doctor_output, end="")
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.doctor.passed" if doctor_status == 0 else "knowledge_package.doctor.failed", target={"package_id": package_id}, status="passed" if doctor_status == 0 else "failed", message="knowledge package doctor completed"))
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.authoring.completed", target={"package_id": package_id}, status="completed", message="knowledge package authoring completed"))
+    print(f"PACKAGE: {rel(manifest_path, workplace_root)}")
+    return doctor_status
+
+
+def normalize_platform_id(raw: str) -> tuple[str, str]:
+    platform_id = safe_id(raw.removeprefix("platform."), "platform")
+    return platform_id, platform_contract_id(platform_id)
+
+
+def command_platform_create(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    platform_id, contract_id = normalize_platform_id(args.id)
+    root_id, platform_root = resolve_platform_root(workplace_root, getattr(args, "platform_root", None), mode="write" if args.apply else "read")
+    target = platform_root / contract_id
+    contract_path = target / "platform-contract.yaml"
+    knowledge_packages = [item for item in getattr(args, "knowledge_package", []) if item]
+    templates = [item for item in getattr(args, "template", []) if item]
+    project_types = [item for item in getattr(args, "project_type", []) if item] or [platform_id]
+    slug, proposal_path = write_resource_proposal(workplace_root, "platform-create", contract_id, {"platform": contract_id, "platform_root": root_id, "target": rel(contract_path, workplace_root)})
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-create", event_type="platform.authoring.started", target={"platform": contract_id}, status="dry_run" if args.dry_run else "started", message="platform authoring started"))
+    if args.dry_run:
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        return 0
+    if contract_path.exists() and not args.force:
+        raise SystemExit(f"FAIL: platform contract already exists: {rel(contract_path, workplace_root)}")
+    for dirname in ["tests", "artifacts", "reviews", "handoffs"]:
+        (target / dirname).mkdir(parents=True, exist_ok=True)
+    contract = {
+        "schema_version": 1,
+        "id": contract_id,
+        "title": args.title,
+        "type": "platform_contract",
+        "version": "0.1.0",
+        "status": "draft",
+        "project_type_hints": project_types,
+        "applies_to": {"platforms": [platform_id], "project_type_hints": project_types},
+        "requires": {"capabilities": ["filesystem.read", "filesystem.write"], "knowledge_packages": [], "tools": [], "mcp": [], "templates": []},
+        "includes": {
+            "knowledge_packages": knowledge_packages,
+            "templates": templates,
+            "tools": [item for item in getattr(args, "tool", []) if item],
+            "mcp": [item for item in getattr(args, "mcp", []) if item],
+            "processes": [item for item in getattr(args, "process", []) if item] or ["software-feature-development"],
+        },
+        "policies": {"missing_required_capability": "block", "missing_optional_resource": "warn"},
+    }
+    write_authoring_text(contract_path, dump_yaml(contract))
+    write_authoring_text(target / "README.md", f"# {args.title}\n\nPlatform contract `{contract_id}`.")
+    write_authoring_text(target / "project-types.yaml", dump_yaml({"schema_version": 1, "project_type_hints": project_types}))
+    write_authoring_text(target / "capabilities.yaml", dump_yaml({"schema_version": 1, "capabilities": contract["requires"]["capabilities"]}))
+    write_authoring_text(target / "knowledge.yaml", dump_yaml({"schema_version": 1, "knowledge_packages": knowledge_packages}))
+    write_authoring_text(target / "templates.yaml", dump_yaml({"schema_version": 1, "templates": templates}))
+    write_authoring_text(target / "tools.yaml", dump_yaml({"schema_version": 1, "tools": contract["includes"]["tools"]}))
+    write_authoring_text(target / "mcp.yaml", dump_yaml({"schema_version": 1, "mcp": contract["includes"]["mcp"]}))
+    write_authoring_text(target / "processes.yaml", dump_yaml({"schema_version": 1, "processes": contract["includes"]["processes"]}))
+    write_authoring_text(target / "artifacts" / "platform-contract-authoring-report.md", f"# Platform Contract Authoring Report\n\n- platform: {contract_id}\n- platform_root: {root_id}")
+    write_authoring_text(target / "reviews" / "platform-contract-authoring-review.md", "# Platform Contract Authoring Review\n\nResult: pass_with_conditions")
+    write_authoring_text(target / "handoffs" / "platform-contract-ready-handoff.md", f"# Handoff: platform-create -> project-onboarding\n\nPlatform `{contract_id}` is ready for project type matching.")
+    upsert_registry_entry(workplace_root / "registries" / "platforms.yaml", "platforms", {"id": platform_id, "package_id": contract_id, "path": rel(contract_path, workplace_root), "status": "available"})
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-create", event_type="platform.contract.created", target={"platform": contract_id}, status="created", message="platform contract created"))
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-create", event_type="platform.contract.linked", target={"platform": contract_id}, status="linked", message="platform registry updated"))
+    doctor_status, doctor_output = run_command_capture(command_platform_contract_doctor, argparse.Namespace(workplace=str(workplace_root), platform=contract_id))
+    print(doctor_output, end="")
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-create", event_type="platform.contract.doctor.passed" if doctor_status == 0 else "platform.contract.doctor.failed", target={"platform": contract_id}, status="passed" if doctor_status == 0 else "failed", message="platform doctor completed"))
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-create", event_type="platform.authoring.completed", target={"platform": contract_id}, status="completed", message="platform authoring completed"))
+    print(f"PLATFORM: {rel(contract_path, workplace_root)}")
+    return doctor_status
+
+
+def platform_contract_path(workplace_root: Path, platform: str) -> Path | None:
+    platform_id, contract_id = normalize_platform_id(platform)
+    for candidate_id in [contract_id, platform_id]:
+        entry = platform_contract_registry_entry(workplace_root / "workplace.yaml", candidate_id)
+        if entry and entry.get("path"):
+            path = workplace_root / str(entry["path"])
+            if path.is_file():
+                return path
+    _root_id, root_path = resolve_platform_root(workplace_root, None, mode="read")
+    for candidate in [root_path / contract_id / "platform-contract.yaml", root_path / platform_id / "platform-contract.yaml", workplace_root / "platforms" / platform_id / "platform.yaml"]:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def command_platform_contract_doctor(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    platform = str(args.platform)
+    checks: list[Check] = []
+    contract_path = platform_contract_path(workplace_root, platform)
+    checks.append(check("PASS" if contract_path else "FAIL", "platform contract found"))
+    if contract_path:
+        text = contract_path.read_text(encoding="utf-8", errors="replace")
+        checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "platform contract has no local absolute paths"))
+        data = load_yaml_document(contract_path)
+        checks.append(check("PASS" if data.get("id") else "FAIL", "platform contract id present"))
+        hints = data.get("project_type_hints")
+        if not isinstance(hints, list):
+            applies_to = data.get("applies_to") if isinstance(data.get("applies_to"), dict) else {}
+            hints = applies_to.get("project_type_hints") if isinstance(applies_to.get("project_type_hints"), list) else []
+        checks.append(check("PASS" if isinstance(hints, list) and hints else "WARN", "project_type_hints configured"))
+        requires = data.get("requires") if isinstance(data.get("requires"), dict) else {}
+        checks.append(check("PASS" if requires.get("capabilities") else "WARN", "required capabilities listed"))
+        includes = data.get("includes") if isinstance(data.get("includes"), dict) else {}
+        for package_id in list_value(requires.get("knowledge_packages")):
+            manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
+            checks.append(check("PASS" if manifest else "FAIL", f"required knowledge package available: {package_id}"))
+        for package_id in list_value(includes.get("knowledge_packages")):
+            manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
+            checks.append(check("PASS" if manifest else "WARN", f"optional knowledge package available: {package_id}"))
+        for template_id in list_value(requires.get("templates")):
+            checks.append(check("PASS" if template_manifest_path(workplace_root, template_id) else "FAIL", f"required template available: {template_id}"))
+        for template_id in list_value(includes.get("templates")):
+            checks.append(check("PASS" if template_manifest_path(workplace_root, template_id) else "WARN", f"optional template available: {template_id}"))
+        for forbidden in ["package.yaml", "template.yaml"]:
+            copied = [path for path in contract_path.parent.rglob(forbidden) if path != contract_path]
+            checks.append(check("PASS" if not copied else "FAIL", f"no copied {forbidden} inside platform contract"))
+    failed = any(item.level == "FAIL" for item in checks)
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-contract-doctor", event_type="platform.contract.doctor.failed" if failed else "platform.contract.doctor.passed", target={"platform": platform}, status="failed" if failed else "passed", message="platform contract doctor completed"))
+    return print_checks(checks)
+
+
 def command_docs_import_plan(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     source = safe_id(args.source, "source")
@@ -5680,6 +6596,154 @@ def command_template_add(args: argparse.Namespace) -> int:
     )
     print(f"TEMPLATE: {rel(target_root, workplace_root)}")
     return 0
+
+
+def resolve_template_root(workplace_root: Path, template_root_id: str | None = None, *, mode: str = "read") -> tuple[str, Path]:
+    registry_path = workplace_root / "registries" / "templates.yaml"
+    data = load_yaml_document(registry_path)
+    roots = data.get("template_roots") if isinstance(data, dict) else None
+    entries = [entry for entry in roots if isinstance(entry, dict)] if isinstance(roots, list) else []
+    if not entries:
+        entries = [{"id": "global", "label": "Global reusable templates", "path": "${PF_TEMPLATES}", "scope": "workplace", "status": "available"}]
+        if mode == "write":
+            upsert_registry_entry(registry_path, "template_roots", entries[0])
+    selected = None
+    if template_root_id:
+        for entry in entries:
+            if str(entry.get("id")) == template_root_id:
+                selected = entry
+                break
+        if selected is None:
+            raise SystemExit(f"FAIL: template root '{template_root_id}' not found in registries/templates.yaml")
+    else:
+        available = [entry for entry in entries if str(entry.get("status", "available")) == "available"]
+        selected = available[0] if available else entries[0]
+    root_id = str(selected.get("id", "global"))
+    root_path = path_resolution_to_path(workplace_path_resolution(workplace_root, str(selected.get("path") or "${PF_TEMPLATES}")))
+    if mode == "write":
+        root_path.mkdir(parents=True, exist_ok=True)
+    return root_id, root_path
+
+
+def resolve_platform_root(workplace_root: Path, platform_root_id: str | None = None, *, mode: str = "read") -> tuple[str, Path]:
+    registry_path = workplace_root / "registries" / "platform-contract-roots.yaml"
+    data = load_yaml_document(registry_path)
+    roots = data.get("platform_contract_roots") if isinstance(data, dict) else None
+    entries = [entry for entry in roots if isinstance(entry, dict)] if isinstance(roots, list) else []
+    if not entries:
+        entries = [{"id": "global", "label": "Global platform contracts", "path": "${PF_PLATFORM_CONTRACTS}", "scope": "workplace", "status": "available"}]
+        if mode == "write":
+            upsert_registry_entry(registry_path, "platform_contract_roots", entries[0])
+    selected = None
+    if platform_root_id:
+        for entry in entries:
+            if str(entry.get("id")) == platform_root_id:
+                selected = entry
+                break
+        if selected is None:
+            raise SystemExit(f"FAIL: platform root '{platform_root_id}' not found in registries/platform-contract-roots.yaml")
+    else:
+        available = [entry for entry in entries if str(entry.get("status", "available")) == "available"]
+        selected = available[0] if available else entries[0]
+    root_id = str(selected.get("id", "global"))
+    root_path = path_resolution_to_path(workplace_path_resolution(workplace_root, str(selected.get("path") or "${PF_PLATFORM_CONTRACTS}")))
+    if mode == "write":
+        root_path.mkdir(parents=True, exist_ok=True)
+    return root_id, root_path
+
+
+def write_authoring_text(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(ensure_trailing_newline(content), encoding="utf-8")
+
+
+def command_template_create(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    template_id = str(args.id)
+    if not re.fullmatch(r"[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*", template_id):
+        raise SystemExit("FAIL: template id must be lowercase and may use dots or dashes")
+    root_id, template_root = resolve_template_root(workplace_root, getattr(args, "template_root", None), mode="write" if args.apply else "read")
+    target = template_root / template_id
+    slug, proposal_path = write_resource_proposal(workplace_root, "template-create", template_id, {"template_id": template_id, "template_root": root_id, "target": rel(target, workplace_root)})
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.authoring.started", target={"template_id": template_id}, status="dry_run" if args.dry_run else "started", message="template authoring started"))
+    if args.dry_run:
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        return 0
+    if target.exists() and not args.force:
+        raise SystemExit(f"FAIL: template already exists: {rel(target, workplace_root)}")
+    for dirname in ["files", "prompts", "examples", "tests", "artifacts", "reviews", "handoffs"]:
+        (target / dirname).mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "schema_version": 1,
+        "id": template_id,
+        "title": args.title,
+        "kind": args.kind,
+        "version": "0.1.0",
+        "description": args.description or f"Reusable template {args.title}.",
+        "inputs": [{"id": "project_name", "required": True}, {"id": "template_scope", "required": False}],
+        "outputs": [{"path": f"{safe_id(template_id, 'template')}.md"}],
+        "files": [{"source": f"files/{safe_id(template_id, 'template')}.md", "target": "{{ output_path }}"}],
+        "prompts": [{"path": "prompts/authoring-notes.md"}],
+        "tags": [args.kind, "processforge-template"],
+    }
+    write_authoring_text(target / "template.yaml", dump_yaml(manifest))
+    write_authoring_text(target / "README.md", f"# {args.title}\n\nReusable template `{template_id}`.")
+    write_authoring_text(target / "files" / f"{safe_id(template_id, 'template')}.md", f"# {{{{ project_name }}}}\n\nTemplate scope: {{{{ template_scope }}}}")
+    write_authoring_text(target / "prompts" / "authoring-notes.md", f"# Authoring Notes\n\nUse template `{template_id}` through ProcessForge template selection.")
+    write_authoring_text(target / "artifacts" / "template-authoring-report.md", f"# Template Authoring Report\n\n- template: {template_id}\n- template_root: {root_id}")
+    write_authoring_text(target / "reviews" / "template-authoring-review.md", "# Template Authoring Review\n\nResult: pass_with_conditions")
+    write_authoring_text(target / "handoffs" / "template-ready-handoff.md", f"# Handoff: template-create -> template consumers\n\nTemplate `{template_id}` is ready for review.")
+    upsert_registry_entry(workplace_root / "registries" / "templates.yaml", "templates", {"id": template_id, "title": args.title, "path": rel(target / "template.yaml", workplace_root), "template_root": root_id, "kind": args.kind, "status": "available"})
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.created", target={"template_id": template_id}, status="created", message="template structure created"))
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.registered", target={"template_id": template_id}, status="registered", message="template registry updated"))
+    doctor_status, doctor_output = run_command_capture(command_template_doctor, argparse.Namespace(workplace=str(workplace_root), template=template_id))
+    print(doctor_output, end="")
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.doctor.passed" if doctor_status == 0 else "template.doctor.failed", target={"template_id": template_id}, status="passed" if doctor_status == 0 else "failed", message="template doctor completed"))
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.authoring.completed", target={"template_id": template_id}, status="completed", message="template authoring completed"))
+    print(f"TEMPLATE: {rel(target, workplace_root)}")
+    return doctor_status
+
+
+def template_manifest_path(workplace_root: Path, template_id: str) -> Path | None:
+    _root_id, root_path = resolve_template_root(workplace_root, None, mode="read")
+    candidate = root_path / template_id / "template.yaml"
+    if candidate.is_file():
+        return candidate
+    registry = load_yaml_document(workplace_root / "registries" / "templates.yaml")
+    entries = registry.get("templates") if isinstance(registry, dict) else None
+    if isinstance(entries, list):
+        for entry in entries:
+            if isinstance(entry, dict) and str(entry.get("id")) == template_id and entry.get("path"):
+                path = workplace_root / str(entry["path"])
+                return path if path.is_file() else None
+    return None
+
+
+def command_template_doctor(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    template_id = str(args.template)
+    checks: list[Check] = []
+    manifest_path = template_manifest_path(workplace_root, template_id)
+    checks.append(check("PASS" if manifest_path else "FAIL", "template manifest found"))
+    if manifest_path:
+        text = manifest_path.read_text(encoding="utf-8", errors="replace")
+        checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "template manifest has no local absolute paths"))
+        data = load_yaml_document(manifest_path)
+        checks.append(check("PASS" if data.get("id") == template_id else "FAIL", "template id matches requested id"))
+        root = manifest_path.parent
+        for dirname in ["files", "prompts", "examples", "artifacts", "reviews", "handoffs"]:
+            checks.append(check("PASS" if (root / dirname).exists() else "WARN", f"{dirname}/ exists"))
+        for item in data.get("files", []) if isinstance(data.get("files"), list) else []:
+            source = item.get("source") if isinstance(item, dict) else None
+            if source:
+                checks.append(check("PASS" if (root / str(source)).is_file() else "FAIL", f"referenced file exists: {source}"))
+        for item in data.get("prompts", []) if isinstance(data.get("prompts"), list) else []:
+            prompt_path = item.get("path") if isinstance(item, dict) else None
+            if prompt_path:
+                checks.append(check("PASS" if (root / str(prompt_path)).is_file() else "FAIL", f"referenced prompt exists: {prompt_path}"))
+    failed = any(item.level == "FAIL" for item in checks)
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-doctor", event_type="template.doctor.failed" if failed else "template.doctor.passed", target={"template_id": template_id}, status="failed" if failed else "passed", message="template doctor completed"))
+    return print_checks(checks)
 
 
 def upsert_registry_entry(path: Path, collection_key: str, entry: dict[str, Any]) -> str:
@@ -5829,10 +6893,20 @@ def build_parser() -> argparse.ArgumentParser:
     init_workplace = sub.add_parser("init-workplace", help="Initialize a ProcessForge workplace layer.")
     init_workplace.add_argument("--root", required=True, help="Workplace root path.")
     init_workplace.add_argument("--answers", help="Optional workplace answers YAML.")
+    init_workplace.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     init_workplace.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     init_workplace.add_argument("--apply", action="store_true", help="Write files.")
     init_workplace.add_argument("--force", action="store_true", help="Overwrite existing files.")
     init_workplace.set_defaults(func=command_init_workplace)
+
+    workplace_init = sub.add_parser("workplace-init", help="First-run alias for init-workplace.")
+    workplace_init.add_argument("--workplace", dest="root", required=True, help="Workplace root path.")
+    workplace_init.add_argument("--answers", help="Optional workplace answers YAML.")
+    workplace_init.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
+    workplace_init.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    workplace_init.add_argument("--apply", action="store_true", help="Write files.")
+    workplace_init.add_argument("--force", action="store_true", help="Overwrite existing files.")
+    workplace_init.set_defaults(func=command_init_workplace)
 
     global_agents = sub.add_parser("global-agents-section", help="Insert or update the bounded ProcessForge section in an agent instructions file.")
     global_agents.add_argument("--path", required=True, help="Path to AGENTS.md, CODEX.md, or another agent instruction file.")
@@ -5847,16 +6921,48 @@ def build_parser() -> argparse.ArgumentParser:
     init_project = sub.add_parser("init-project", help="Initialize a ProcessForge project layer.")
     init_project.add_argument("--project-root", required=True, help="Project root path.")
     init_project.add_argument("--workplace", required=True, help="Path to workplace.yaml.")
+    init_project.add_argument("--type", dest="project_type", help="Project type override.")
     init_project.add_argument("--answers", help="Optional project answers YAML.")
+    init_project.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     init_project.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     init_project.add_argument("--apply", action="store_true", help="Write files.")
     init_project.add_argument("--force", action="store_true", help="Overwrite existing files.")
     init_project.add_argument("--allow-missing-workplace", action="store_true", help="Allow apply mode with a missing workplace manifest.")
     init_project.set_defaults(func=command_init_project)
 
+    project_onboard = sub.add_parser("project-onboard", help="Onboard a project into an existing ProcessForge workplace.")
+    project_onboard.add_argument("--project-root", required=True, help="Project root path.")
+    project_onboard.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    project_onboard.add_argument("--type", dest="project_type", required=True, help="Project type, for example generic-software-project or joomla-component.")
+    project_onboard.add_argument("--answers", help="Optional project answers YAML.")
+    project_onboard.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
+    project_onboard.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    project_onboard.add_argument("--apply", action="store_true", help="Write files.")
+    project_onboard.add_argument("--force", action="store_true", help="Overwrite existing files.")
+    project_onboard.add_argument("--allow-missing-workplace", action="store_true", help="Allow apply mode with a missing workplace manifest.")
+    project_onboard.set_defaults(func=command_init_project)
+
     doctor_project = sub.add_parser("doctor-project", help="Validate a ProcessForge project layer.")
     doctor_project.add_argument("--project-root", required=True, help="Project root path.")
     doctor_project.set_defaults(func=command_doctor_project)
+
+    agent_start_prompt = sub.add_parser("agent-start-prompt", help="Print and ensure the project START_AGENT_HERE prompt.")
+    agent_start_prompt.add_argument("--project-root", required=True, help="Project root path.")
+    agent_start_prompt.set_defaults(func=command_agent_start_prompt)
+
+    first_run = sub.add_parser("first-run", help="Convenience command that runs workplace-init and then project-onboard.")
+    first_run.add_argument("--workplace", required=True, help="Workplace root path.")
+    first_run.add_argument("--project-root", required=True, help="Project root path.")
+    first_run.add_argument("--type", dest="project_type", required=True, help="Project type.")
+    first_run.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
+    first_run.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    first_run.add_argument("--apply", action="store_true", help="Write files.")
+    first_run.add_argument("--force", action="store_true", help="Overwrite existing files.")
+    first_run.set_defaults(func=command_first_run)
+
+    release_check = sub.add_parser("release-check", help="Run MVP release hygiene checks.")
+    release_check.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
+    release_check.set_defaults(func=command_release_check)
 
     path_resolve = sub.add_parser("path-resolve", help="Resolve a workplace path using path_constants.")
     path_resolve.add_argument("--workplace", required=True, help="Workplace root path.")
@@ -5920,6 +7026,23 @@ def build_parser() -> argparse.ArgumentParser:
     template_add.add_argument("--apply", action="store_true", help="Copy template payload.")
     template_add.set_defaults(func=command_template_add)
 
+    template_create = sub.add_parser("template-create", help="Author a reusable workplace template.")
+    template_create.add_argument("--workplace", required=True, help="Workplace root path.")
+    template_create.add_argument("--id", required=True, help="Template id, for example report.audit.basic.")
+    template_create.add_argument("--title", required=True, help="Template title.")
+    template_create.add_argument("--description", help="Template description.")
+    template_create.add_argument("--kind", default="document", choices=["document", "scaffold", "prompt", "assignment", "media_prompt"], help="Template kind.")
+    template_create.add_argument("--template-root", dest="template_root", help="Template root id from registries/templates.yaml.")
+    template_create.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    template_create.add_argument("--apply", action="store_true", help="Write template files.")
+    template_create.add_argument("--force", action="store_true", help="Overwrite an existing template.")
+    template_create.set_defaults(func=command_template_create)
+
+    template_doctor = sub.add_parser("template-doctor", help="Validate a reusable workplace template.")
+    template_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
+    template_doctor.add_argument("--template", required=True, help="Template id.")
+    template_doctor.set_defaults(func=command_template_doctor)
+
     tool_register = sub.add_parser("tool-register", help="Register a workplace tool capability provider.")
     tool_register.add_argument("--workplace", required=True, help="Workplace root path.")
     tool_register.add_argument("--id", required=True, help="Tool id.")
@@ -5961,6 +7084,39 @@ def build_parser() -> argparse.ArgumentParser:
     platform_contract_install.add_argument("--dry-run", action="store_true", help="Write proposal only.")
     platform_contract_install.add_argument("--apply", action="store_true", help="Write contract and registry entry.")
     platform_contract_install.set_defaults(func=command_platform_contract_install)
+
+    knowledge_package_create = sub.add_parser("knowledge-package-create", help="Author a workplace knowledge package.")
+    knowledge_package_create.add_argument("--workplace", required=True, help="Workplace root path.")
+    knowledge_package_create.add_argument("--id", required=True, help="Package id.")
+    knowledge_package_create.add_argument("--title", required=True, help="Package title.")
+    knowledge_package_create.add_argument("--description", help="Package description.")
+    knowledge_package_create.add_argument("--package-root", dest="package_root", required=True, help="Package root id from registries/package-roots.yaml.")
+    knowledge_package_create.add_argument("--kind", default="documentation", choices=["documentation", "rules", "source", "project", "platform", "mixed"], help="Package kind.")
+    knowledge_package_create.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    knowledge_package_create.add_argument("--apply", action="store_true", help="Write package files.")
+    knowledge_package_create.add_argument("--force", action="store_true", help="Overwrite an existing package.")
+    knowledge_package_create.set_defaults(func=command_knowledge_package_create)
+
+    platform_create = sub.add_parser("platform-create", help="Author a workplace platform contract.")
+    platform_create.add_argument("--workplace", required=True, help="Workplace root path.")
+    platform_create.add_argument("--id", required=True, help="Platform id, with or without platform. prefix.")
+    platform_create.add_argument("--title", required=True, help="Platform title.")
+    platform_create.add_argument("--platform-root", dest="platform_root", help="Platform contract root id.")
+    platform_create.add_argument("--project-type", action="append", default=[], help="Project type hint. May be repeated.")
+    platform_create.add_argument("--knowledge-package", action="append", default=[], help="Referenced knowledge package id. May be repeated.")
+    platform_create.add_argument("--template", action="append", default=[], help="Referenced template id. May be repeated.")
+    platform_create.add_argument("--tool", action="append", default=[], help="Referenced tool id. May be repeated.")
+    platform_create.add_argument("--mcp", action="append", default=[], help="Referenced MCP id. May be repeated.")
+    platform_create.add_argument("--process", action="append", default=[], help="Referenced process id. May be repeated.")
+    platform_create.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    platform_create.add_argument("--apply", action="store_true", help="Write platform contract files.")
+    platform_create.add_argument("--force", action="store_true", help="Overwrite an existing platform contract.")
+    platform_create.set_defaults(func=command_platform_create)
+
+    platform_contract_doctor = sub.add_parser("platform-contract-doctor", help="Validate a workplace platform contract.")
+    platform_contract_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
+    platform_contract_doctor.add_argument("--platform", required=True, help="Platform id, with or without platform. prefix.")
+    platform_contract_doctor.set_defaults(func=command_platform_contract_doctor)
 
     self_update = sub.add_parser("self-update-check", help="Check the current ProcessForge distribution update index.")
     self_update.add_argument("--distribution-root", help="ProcessForge distribution root. Defaults to this checkout.")
