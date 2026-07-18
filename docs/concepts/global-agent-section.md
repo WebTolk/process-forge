@@ -1,4 +1,4 @@
-# Global Agent Section
+﻿# Global Agent Section
 
 ProcessForge does not own a workplace-level `AGENTS.md`, `CODEX.md`, or similar
 agent instruction file. It inserts or updates only a bounded section.
@@ -38,6 +38,6 @@ or device instructions.
 Use:
 
 ```bash
-python tools/processforge.py global-agents-section --path <agent-file> --dry-run
-python tools/processforge.py global-agents-section --path <agent-file> --force
+python bin/pf.py global-agents-section --path <agent-file> --dry-run
+python bin/pf.py global-agents-section --path <agent-file> --force
 ```

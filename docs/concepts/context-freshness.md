@@ -1,4 +1,4 @@
-# Context Freshness
+﻿# Context Freshness
 
 Project context freshness answers whether the current snapshot still represents
 the project flow inputs.
@@ -26,11 +26,11 @@ without source changes must not make the previous snapshot stale by itself.
 Use:
 
 ```bash
-python tools/processforge.py project-context-check --project-root <project-root>
+python bin/pf.py project-context-check --project-root <project-root>
 ```
 
 Refresh with:
 
 ```bash
-python tools/processforge.py project-context-refresh --project-root <project-root>
+python bin/pf.py project-context-refresh --project-root <project-root>
 ```

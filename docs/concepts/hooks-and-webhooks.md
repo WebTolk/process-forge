@@ -1,4 +1,4 @@
-# Hooks And Webhooks
+﻿# Hooks And Webhooks
 
 Hooks deliver ProcessForge events without requiring a backend or network send.
 The process definition declares which events matter; `.pf/hooks.yaml` declares
@@ -43,13 +43,13 @@ Both paths are private runtime state and ignored by git.
 Use dry-run to see which targets would match:
 
 ```bash
-python tools/processforge.py hooks-dispatch --project-root <project-root> --event-type session.ended --dry-run
+python bin/pf.py hooks-dispatch --project-root <project-root> --event-type session.ended --dry-run
 ```
 
 Use outbox mode to write payloads without network send:
 
 ```bash
-python tools/processforge.py hooks-dispatch --project-root <project-root> --event-type assignment.completed --outbox
+python bin/pf.py hooks-dispatch --project-root <project-root> --event-type assignment.completed --outbox
 ```
 
 `--send` is reserved for a future transport and fails in the MVP.

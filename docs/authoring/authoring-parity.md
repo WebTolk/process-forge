@@ -1,5 +1,7 @@
 # Authoring Parity
 
+![Authoring parity](../assets/processforge-authoring-parity.svg)
+
 Authoring parity checks whether an existing ProcessForge process or resource can
 be represented by the current authoring workflows without losing its meaning.
 
@@ -11,18 +13,18 @@ events, run model, requirements, tools, and privacy constraints.
 ## Commands
 
 ```bash
-python bin/pf.py process-authoring-import --project-root . --process task-batch-execution --apply
-python bin/pf.py process-parity-check --project-root . --process task-batch-execution
-python bin/pf.py process-parity-check-all --project-root .
-python bin/pf.py authoring-parity-check-all --project-root .
+python .pf/runtime/bin/pf.py process-authoring-import --project-root . --process task-batch-execution --apply
+python .pf/runtime/bin/pf.py process-parity-check --project-root . --process task-batch-execution
+python .pf/runtime/bin/pf.py process-parity-check-all --project-root .
+python .pf/runtime/bin/pf.py authoring-parity-check-all --project-root .
 ```
 
 Resource parity commands are available for discoverable resources:
 
 ```bash
-python bin/pf.py template-parity-check --project-root . --template process-agent-prompt
-python bin/pf.py knowledge-package-parity-check --project-root . --package process-forge-core
-python bin/pf.py platform-parity-check --project-root . --platform platform-contract-joomla
+python .pf/runtime/bin/pf.py template-parity-check --project-root . --template process-agent-prompt
+python .pf/runtime/bin/pf.py knowledge-package-parity-check --project-root . --package process-forge-core
+python .pf/runtime/bin/pf.py platform-parity-check --project-root . --platform platform-contract-joomla
 ```
 
 If discovery is not available for a resource kind or id, the command records

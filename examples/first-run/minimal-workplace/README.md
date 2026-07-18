@@ -1,10 +1,10 @@
-# Minimal Workplace Example
+﻿# Minimal Workplace Example
 
 Create a workplace outside a project:
 
 ```bash
-python tools/processforge.py workplace-init --workplace ./pf-workplace --apply
-python tools/processforge.py doctor-workplace --root ./pf-workplace
+python bin/pf.py workplace-init --workplace ./pf-workplace --apply
+python bin/pf.py doctor-workplace --root ./pf-workplace
 ```
 
 Expected result:

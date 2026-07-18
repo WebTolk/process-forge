@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Run task iteration lifecycle</title>
+  <desc id="desc">A flow diagram from process definition to run, task, iterations, summary, and handoff.</desc>
+  <style>
+    .bg { fill: #fbfbf8; }
+    .box { fill: #ffffff; stroke: #bac5c0; stroke-width: 2; rx: 12; }
+    .run { fill: #edf6ff; stroke: #6f94b8; }
+    .task { fill: #eff8f2; stroke: #6fa174; }
+    .iter { fill: #fff7e6; stroke: #b4934d; }
+    .done { fill: #f3eff8; stroke: #9070b5; }
+    .title { font: 700 24px Arial, sans-serif; fill: #1f2a24; }
+    .label { font: 700 17px Arial, sans-serif; fill: #1f2a24; }
+    .text { font: 14px Arial, sans-serif; fill: #33443a; }
+    .small { font: 12px Arial, sans-serif; fill: #526158; }
+    .arrow { fill: none; stroke: #526158; stroke-width: 2.4; marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#526158"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="960" height="420"/>
+  <text class="title" x="40" y="48">Process execution record</text>
+  <text class="small" x="40" y="74">A process definition becomes a run; the run contains tasks; each task records iterations and evidence.</text>
+  <rect class="box" x="40" y="145" width="165" height="115" rx="12"/>
+  <text class="label" x="62" y="184">Process</text>
+  <text class="text" x="62" y="214">stages</text>
+  <text class="text" x="62" y="238">gates</text>
+  <rect class="box run" x="250" y="125" width="165" height="155" rx="12"/>
+  <text class="label" x="272" y="164">Run</text>
+  <text class="text" x="272" y="194">objective</text>
+  <text class="text" x="272" y="218">task index</text>
+  <text class="text" x="272" y="242">final artifacts</text>
+  <rect class="box task" x="460" y="125" width="165" height="155" rx="12"/>
+  <text class="label" x="482" y="164">Task</text>
+  <text class="text" x="482" y="194">scope</text>
+  <text class="text" x="482" y="218">status</text>
+  <text class="text" x="482" y="242">assignment</text>
+  <rect class="box iter" x="670" y="90" width="210" height="220" rx="12"/>
+  <text class="label" x="692" y="129">Iterations</text>
+  <text class="text" x="692" y="159">work</text>
+  <text class="text" x="692" y="183">debug</text>
+  <text class="text" x="692" y="207">fix</text>
+  <text class="text" x="692" y="231">review</text>
+  <text class="text" x="692" y="255">handoff</text>
+  <rect class="box done" x="305" y="330" width="350" height="58" rx="12"/>
+  <text class="label" x="328" y="366">run-summary + handoff close the session</text>
+  <path class="arrow" d="M205 202 L250 202"/>
+  <path class="arrow" d="M415 202 L460 202"/>
+  <path class="arrow" d="M625 202 L670 202"/>
+  <path class="arrow" d="M775 310 C775 355, 705 360, 655 360"/>
+  <path class="arrow" d="M480 330 C460 305, 410 285, 345 280"/>
+</svg>

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="460" viewBox="0 0 960 460" role="img" aria-labelledby="title desc">
+  <title id="title">Authoring parity and backfill</title>
+  <desc id="desc">A diagram showing source process import, backfill files, generated draft, semantic comparison, and parity reports.</desc>
+  <style>
+    .bg { fill: #fafbf8; }
+    .box { fill: #ffffff; stroke: #bbc7c0; stroke-width: 2; rx: 12; }
+    .source { fill: #eef6ff; stroke: #7293b5; }
+    .backfill { fill: #eff8f2; stroke: #6fa174; }
+    .compare { fill: #fff7e6; stroke: #b4934d; }
+    .report { fill: #f4effa; stroke: #9070b5; }
+    .title { font: 700 24px Arial, sans-serif; fill: #1f2a24; }
+    .label { font: 700 17px Arial, sans-serif; fill: #1f2a24; }
+    .text { font: 14px Arial, sans-serif; fill: #33443a; }
+    .small { font: 12px Arial, sans-serif; fill: #526158; }
+    .arrow { fill: none; stroke: #526158; stroke-width: 2.4; marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#526158"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="960" height="460"/>
+  <text class="title" x="40" y="48">Authoring parity: preserve process meaning</text>
+  <text class="small" x="40" y="74">Backfill imports an existing process, regenerates a draft, and compares semantics rather than YAML byte order.</text>
+  <rect class="box source" x="40" y="135" width="185" height="150" rx="12"/>
+  <text class="label" x="62" y="174">Source process</text>
+  <text class="text" x="62" y="204">processes/*.yaml</text>
+  <text class="text" x="62" y="228">stages, gates</text>
+  <text class="text" x="62" y="252">run_model, events</text>
+  <rect class="box backfill" x="285" y="105" width="210" height="210" rx="12"/>
+  <text class="label" x="307" y="144">Backfill files</text>
+  <text class="text" x="307" y="174">answers.yaml</text>
+  <text class="text" x="307" y="198">source.process.yaml</text>
+  <text class="text" x="307" y="222">draft.process.yaml</text>
+  <text class="text" x="307" y="246">semantic-map.yaml</text>
+  <text class="text" x="307" y="270">unsupported-fields.yaml</text>
+  <rect class="box compare" x="555" y="135" width="165" height="150" rx="12"/>
+  <text class="label" x="577" y="174">Compare</text>
+  <text class="text" x="577" y="204">meaning</text>
+  <text class="text" x="577" y="228">not key order</text>
+  <text class="text" x="577" y="252">PASS/WARN/FAIL</text>
+  <rect class="box report" x="780" y="105" width="140" height="210" rx="12"/>
+  <text class="label" x="802" y="144">Reports</text>
+  <text class="text" x="802" y="174">summary.yaml</text>
+  <text class="text" x="802" y="198">index.md</text>
+  <text class="text" x="802" y="222">diff.yaml</text>
+  <text class="text" x="802" y="246">review.md</text>
+  <path class="arrow" d="M225 210 L285 210"/>
+  <path class="arrow" d="M495 210 L555 210"/>
+  <path class="arrow" d="M720 210 L780 210"/>
+  <rect class="box" x="225" y="360" width="510" height="52" rx="12"/>
+  <text class="label" x="250" y="394">Missing stage, gate, artifact, or run_model is FAIL; unsupported custom fields are WARN.</text>
+</svg>

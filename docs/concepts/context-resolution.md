@@ -1,4 +1,4 @@
-# Context Resolution
+﻿# Context Resolution
 
 Context resolution converts workplace, project, process, package, template, tool,
 and assignment inputs into a small set of files that a worker can use without
@@ -50,7 +50,7 @@ class and source of each rule so conflicts can be explained.
 
 ## Minimal Tool Behavior
 
-`python tools/processforge.py context-resolve --project-root <path>` writes the
+`python bin/pf.py context-resolve --project-root <path>` writes the
 context index, resolved rules, conflict report, and a private cache record. The
 command is conservative: missing required sources or blocked conflicts prevent a
 clean context status.

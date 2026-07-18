@@ -1,5 +1,7 @@
 # Runs, Tasks, And Iterations
 
+![Run lifecycle](../assets/processforge-run-lifecycle.svg)
+
 ProcessForge separates a reusable process definition from a concrete work session.
 
 ```text

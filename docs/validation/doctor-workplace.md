@@ -1,11 +1,11 @@
-# Doctor Workplace
+﻿# Doctor Workplace
 
 Doctor Workplace validates a workplace root.
 
 ## Command
 
 ```bash
-python tools/processforge.py doctor-workplace --root <workplace-root>
+python bin/pf.py doctor-workplace --root <workplace-root>
 ```
 
 ## Checks

@@ -4,7 +4,7 @@ Backfill reconstructs authoring metadata for process definitions that already
 exist. It does not change the source process.
 
 ```bash
-python bin/pf.py process-authoring-import --project-root . --process task-batch-execution --apply
+python .pf/runtime/bin/pf.py process-authoring-import --project-root . --process task-batch-execution --apply
 ```
 
 The command writes:
@@ -24,7 +24,7 @@ or narrow the process source.
 Run a parity check after import:
 
 ```bash
-python bin/pf.py process-parity-check --project-root . --process task-batch-execution
+python .pf/runtime/bin/pf.py process-parity-check --project-root . --process task-batch-execution
 ```
 
 Reports are written under `.pf/reviews/parity/` and `.pf/artifacts/parity/`.

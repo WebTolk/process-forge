@@ -1,8 +1,8 @@
 schema_version: 1
 snapshot:
   id: project-context
-  generated_at: '2026-07-18T09:32:10Z'
-  valid_until: '2026-07-25T09:32:10Z'
+  generated_at: '2026-07-18T10:33:57Z'
+  valid_until: '2026-07-25T10:33:57Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true

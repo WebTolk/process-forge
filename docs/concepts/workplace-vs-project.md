@@ -20,6 +20,6 @@ Project onboarding may reference workplace registries through local config, but 
 
 ## Launchers
 
-ProcessForge is Python-first. The canonical distribution entrypoint is `tools/processforge.py`, and `bin/pf.py` is the cross-platform wrapper. Shell and cmd wrappers are thin optional convenience layers.
+ProcessForge is Python-first. The canonical public distribution entrypoint is `bin/pf.py`. Thin optional wrappers may call the same CLI, but public docs should teach the Python launcher first.
 
 A normal linked project does not contain ProcessForge core. It may contain `.pf/runtime/bin/pf.py`, which reads private local config and calls the distribution CLI.

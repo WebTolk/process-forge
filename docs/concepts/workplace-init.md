@@ -1,4 +1,4 @@
-# Workplace Init
+﻿# Workplace Init
 
 Workplace Init creates the machine-local ProcessForge layer.
 
@@ -22,9 +22,9 @@ processforge doctor workplace
 MVP script equivalent:
 
 ```bash
-python tools/processforge.py init-workplace --root <workplace-root> --answers <answers.yaml> --dry-run
-python tools/processforge.py init-workplace --root <workplace-root> --answers <answers.yaml> --apply
-python tools/processforge.py doctor-workplace --root <workplace-root>
+python bin/pf.py workplace-init --workplace <workplace-root> --dry-run
+python bin/pf.py workplace-init --workplace <workplace-root> --apply
+python bin/pf.py doctor-workplace --root <workplace-root>
 ```
 
 `--dry-run` is proposal-first and does not write files. `--apply` writes the files.

@@ -1,4 +1,4 @@
-# Workplace Configuration
+﻿# Workplace Configuration
 
 Use Workplace Init when setting up a machine or runner host for ProcessForge.
 
@@ -26,13 +26,13 @@ Set:
 ## Apply
 
 ```bash
-python tools/processforge.py init-workplace --root <workplace-root> --answers <answers.yaml> --apply
+python bin/pf.py workplace-init --workplace <workplace-root> --apply
 ```
 
 ## Verify
 
 ```bash
-python tools/processforge.py doctor-workplace --root <workplace-root>
+python bin/pf.py doctor-workplace --root <workplace-root>
 ```
 # Path Constants
 
@@ -48,7 +48,7 @@ path_constants:
 
 Registry entries may use `${PF_KNOWLEDGE}/joomla/docs` or an explicit absolute path. Absolute paths are allowed in workplace/private files, but never in public project snapshots.
 
-Run `python tools/processforge.py path-resolve --workplace <workplace-root> --path "${PF_KNOWLEDGE}/joomla/docs"` to inspect expansion.
+Run `python bin/pf.py path-resolve --workplace <workplace-root> --path "${PF_KNOWLEDGE}/joomla/docs"` to inspect expansion.
 
 ## Package Roots
 

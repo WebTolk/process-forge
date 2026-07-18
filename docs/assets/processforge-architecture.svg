@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-labelledby="title desc">
+  <title id="title">ProcessForge architecture</title>
+  <desc id="desc">A file-first architecture diagram showing distribution root, workplace, project .pf folder, and AI agent entrypoint.</desc>
+  <style>
+    .bg { fill: #f8faf7; }
+    .panel { fill: #ffffff; stroke: #bcc8bd; stroke-width: 2; rx: 12; }
+    .project { fill: #eef6ff; stroke: #7293b5; }
+    .workplace { fill: #eff8f2; stroke: #6fa174; }
+    .tool { fill: #fff7e6; stroke: #b4934d; }
+    .agent { fill: #f4effa; stroke: #9070b5; }
+    .title { font: 700 24px Arial, sans-serif; fill: #1f2a24; }
+    .label { font: 700 17px Arial, sans-serif; fill: #1f2a24; }
+    .text { font: 14px Arial, sans-serif; fill: #33443a; }
+    .small { font: 12px Arial, sans-serif; fill: #526158; }
+    .arrow { fill: none; stroke: #526158; stroke-width: 2.4; marker-end: url(#arrow); }
+    .line { stroke: #c6d0c8; stroke-width: 1.5; }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#526158"/>
+    </marker>
+  </defs>
+  <rect class="bg" x="0" y="0" width="960" height="520"/>
+  <text class="title" x="40" y="48">ProcessForge file-first model</text>
+  <text class="small" x="40" y="74">Install once, initialize a workplace, onboard projects, then let agents read project-local instructions.</text>
+  <rect class="panel tool" x="40" y="110" width="220" height="300" rx="12"/>
+  <text class="label" x="64" y="146">Distribution root</text>
+  <line class="line" x1="64" y1="162" x2="236" y2="162"/>
+  <text class="text" x="64" y="192">bin/pf.py</text>
+  <text class="text" x="64" y="218">docs/</text>
+  <text class="text" x="64" y="244">schemas/</text>
+  <text class="text" x="64" y="270">processes/</text>
+  <text class="text" x="64" y="296">templates/</text>
+  <text class="small" x="64" y="346">Release checks and</text>
+  <text class="small" x="64" y="364">packaging run here.</text>
+  <rect class="panel workplace" x="370" y="100" width="250" height="150" rx="12"/>
+  <text class="label" x="394" y="136">Workplace</text>
+  <line class="line" x1="394" y1="152" x2="590" y2="152"/>
+  <text class="text" x="394" y="181">knowledge packages</text>
+  <text class="text" x="394" y="207">reusable templates</text>
+  <text class="text" x="394" y="233">platform contracts</text>
+  <rect class="panel project" x="370" y="310" width="250" height="160" rx="12"/>
+  <text class="label" x="394" y="346">Project .pf/</text>
+  <line class="line" x1="394" y1="362" x2="590" y2="362"/>
+  <text class="text" x="394" y="390">START_AGENT_HERE.md</text>
+  <text class="text" x="394" y="416">runs, tasks, iterations</text>
+  <text class="text" x="394" y="442">artifacts, reviews, handoffs</text>
+  <rect class="panel agent" x="720" y="190" width="200" height="180" rx="12"/>
+  <text class="label" x="744" y="226">AI agent</text>
+  <line class="line" x1="744" y1="242" x2="892" y2="242"/>
+  <text class="text" x="744" y="272">reads .pf entrypoint</text>
+  <text class="text" x="744" y="298">uses runtime launcher</text>
+  <text class="text" x="744" y="324">writes evidence files</text>
+  <path class="arrow" d="M260 210 C310 210, 320 175, 370 175"/>
+  <text class="small" x="286" y="194">workplace-init</text>
+  <path class="arrow" d="M260 300 C315 300, 320 385, 370 390"/>
+  <text class="small" x="282" y="342">project-onboard</text>
+  <path class="arrow" d="M620 180 C670 180, 675 230, 720 250"/>
+  <text class="small" x="648" y="198">resources</text>
+  <path class="arrow" d="M620 390 C672 390, 680 330, 720 314"/>
+  <text class="small" x="646" y="378">instructions</text>
+</svg>

@@ -1,4 +1,4 @@
-# Project Context Snapshot
+﻿# Project Context Snapshot
 
 Project context snapshot is the computed operational map for a ProcessForge
 project. It is created during project init or project refresh and is read at
@@ -50,6 +50,6 @@ It lives under `.pf/runtime/cache/` and is private.
 Use:
 
 ```bash
-python tools/processforge.py project-context-refresh --project-root <project-root>
-python tools/processforge.py project-context-check --project-root <project-root>
+python bin/pf.py project-context-refresh --project-root <project-root>
+python bin/pf.py project-context-check --project-root <project-root>
 ```

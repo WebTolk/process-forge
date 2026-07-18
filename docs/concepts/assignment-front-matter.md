@@ -1,4 +1,4 @@
-# Assignment Front Matter
+﻿# Assignment Front Matter
 
 Automated assignment execution uses YAML front matter or a separate assignment
 YAML file as its machine-readable source. Markdown headings and prose are for
@@ -43,7 +43,7 @@ manual work, but it cannot produce an automated context capsule.
 Use:
 
 ```bash
-python tools/processforge.py assignment-capsule --project-root <project-root> --assignment <assignment-file>
+python bin/pf.py assignment-capsule --project-root <project-root> --assignment <assignment-file>
 ```
 
 The generated capsule includes the snapshot checksum, scope, capabilities,

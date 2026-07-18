@@ -1,4 +1,4 @@
-# Chat Relay
+﻿# Chat Relay
 
 Chat relay records session conversation content in private runtime files and can
 prepare metadata-only outbox payloads for future managed consumers.
@@ -15,7 +15,7 @@ human operators, orchestrator agents, regular agents, subagents, or tools.
 ## Recording
 
 ```bash
-python tools/processforge.py chat-record --project-root <project-root> --session-id session-demo --participant operator --role user --content "Start"
+python bin/pf.py chat-record --project-root <project-root> --session-id session-demo --participant operator --role user --content "Start"
 ```
 
 `chat-record` writes the transcript line and emits `chat.message.recorded`.
@@ -34,7 +34,7 @@ It does not include full content unless `--include-content` is passed.
 ## Export
 
 ```bash
-python tools/processforge.py chat-export --project-root <project-root> --session-id session-demo --target wtaicc --outbox
+python bin/pf.py chat-export --project-root <project-root> --session-id session-demo --target wtaicc --outbox
 ```
 
 `chat-export` writes a file-only payload under:

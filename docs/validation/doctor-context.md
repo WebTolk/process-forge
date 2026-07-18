@@ -1,4 +1,4 @@
-# Doctor Context
+﻿# Doctor Context
 
 `doctor-context` validates the session bootstrap and context layer for a
 project. Project context snapshot is the preferred proof point; context-index
@@ -7,13 +7,13 @@ files are compatibility artifacts under `.pf/contexts/`.
 ## Command
 
 ```bash
-python tools/processforge.py doctor-context --project-root <project-root>
+python bin/pf.py doctor-context --project-root <project-root>
 ```
 
 Optional assignment freshness check:
 
 ```bash
-python tools/processforge.py doctor-context --project-root <project-root> --assignment <assignment-path>
+python bin/pf.py doctor-context --project-root <project-root> --assignment <assignment-path>
 ```
 
 ## Checks

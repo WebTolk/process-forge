@@ -1,11 +1,11 @@
-# Project Initialization
+﻿# Project Initialization
 
 Use Project Init to connect a project to ProcessForge.
 
 ## Dry Run
 
 ```bash
-python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --dry-run
+python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --dry-run
 ```
 
 Dry run prints the planned changes and classification evidence.
@@ -13,7 +13,7 @@ Dry run prints the planned changes and classification evidence.
 ## Apply
 
 ```bash
-python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --apply
+python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply
 ```
 
 Apply writes the public and private project files. Existing brownfield files are not overwritten without `--force`.
