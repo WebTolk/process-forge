@@ -1,92 +1,91 @@
-# Быстрый старт ProcessForge
+# Prompts быстрого старта ProcessForge
 
-Этот guide предполагает, что вы находитесь в distribution root ProcessForge.
+Этот quickstart написан для человека. Скопируйте нужный prompt в ИИ-агента.
+Полный набор команд агент должен брать из
+[docs/ru/getting-started/agent-prompts.md](docs/ru/getting-started/agent-prompts.md).
 
-```bash
-git clone <processforge-repo> process-forge
-cd process-forge
+## 1. Подготовить инструмент
 
-python bin/pf.py version
-python bin/pf.py release-test --root .
+```text
+Подготовь ProcessForge на этой машине.
+
+Найди checkout или распакованный дистрибутив ProcessForge, изучи документацию и
+используй docs/ru/getting-started/agent-prompts.md как операционный command
+runbook.
+
+Проверь, что distribution root пригоден к работе, и назови точный путь, который
+нужно использовать как <processforge-root>.
 ```
 
-## 1. Инициализировать workplace
+## 2. Инициализировать workplace
 
-```bash
-python bin/pf.py workplace-init --workplace ../pf-workplace --apply
-python bin/pf.py doctor-workplace --root ../pf-workplace
+```text
+Инициализируй ProcessForge workplace.
+
+Используй агентский command runbook ProcessForge. Создай workplace по указанному
+мной пути или предложи понятный локальный путь. Запусти doctor-workplace,
+исправь структурные проблемы, которые можно безопасно исправить, и сообщи
+результат.
 ```
 
-## 2. Подключить проект
+## 3. Подключить проект
 
-```bash
-python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-workplace --type generic-software-project --apply
-python bin/pf.py agent-start-prompt --project-root ../my-project
+```text
+Подключи этот репозиторий к ProcessForge.
+
+Сначала изучи структуру репозитория, выбери консервативный project type,
+подключи его к существующему workplace, прочитай созданный
+.pf/START_AGENT_HERE.md, запусти doctor-project и кратко опиши, что теперь
+ProcessForge знает о проекте.
 ```
 
-## 3. Работать внутри подключенного проекта
+## 4. Начать run
 
-```bash
-cd ../my-project
-python .pf/runtime/bin/pf.py doctor-project --project-root .
-python .pf/runtime/bin/pf.py run-create --project-root . --id first-run --title "First ProcessForge run" --process task-batch-execution --apply
-```
+```text
+Создай ProcessForge run для моего текущего запроса.
 
-## 4. Создать tasks и iterations
-
-```bash
-python .pf/runtime/bin/pf.py task-create --project-root . --run first-run --id task-001-example --title "Example task" --process software-feature-development --apply
-python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-001-example --kind work --summary "Initial work done." --apply
-python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-001-example --kind review --summary "Reviewed the result." --apply
-python .pf/runtime/bin/pf.py task-complete --project-root . --task task-001-example --summary "Task completed." --apply
-python .pf/runtime/bin/pf.py run-summary --project-root . --run first-run --apply
-python .pf/runtime/bin/pf.py run-doctor --project-root . --run first-run
+Используй task-batch execution. Разбей работу на tasks, фиксируй iterations по
+ходу работы, записывай artifacts/reviews/handoffs там, где этого требует
+процесс, и заверши run-summary и run-doctor.
 ```
 
 ## 5. Создать собственный процесс
 
-```bash
-python .pf/runtime/bin/pf.py process-authoring-start --project-root . --id seo-audit --title "SEO Audit" --scope project --kind operational --apply
-python .pf/runtime/bin/pf.py process-authoring-review --project-root . --id seo-audit
-python .pf/runtime/bin/pf.py process-authoring-apply --project-root . --id seo-audit --apply
-python .pf/runtime/bin/pf.py process-doctor --project-root . --process seo-audit
-python .pf/runtime/bin/pf.py process-list --project-root .
-python .pf/runtime/bin/pf.py process-describe --project-root . --process seo-audit
+```text
+Создай новый ProcessForge process.
+
+Используй process authoring flow, а не ручное написание YAML первым шагом.
+Спроси цель процесса, stages, roles, gates, artifacts, нужные знания и ожидаемый
+task loop. Проверь draft, примени его и проверь итоговый process.
 ```
 
-## 6. Создать общие ресурсы workplace
+## 6. Создать общие resources
 
-Из distribution root ProcessForge:
+```text
+Создай общие ProcessForge resources для этого проекта.
 
-```bash
-python bin/pf.py template-create --workplace ../pf-workplace --id release-note --title "Release Note" --apply
-python bin/pf.py template-doctor --workplace ../pf-workplace --template release-note
-
-python bin/pf.py knowledge-package-create --workplace ../pf-workplace --id project-docs --title "Project Docs" --package-root global --apply
-python bin/pf.py knowledge-package-doctor --workplace ../pf-workplace --package project-docs
-
-python bin/pf.py platform-create --workplace ../pf-workplace --id generic-platform --title "Generic Platform" --apply
-python bin/pf.py platform-contract-doctor --workplace ../pf-workplace --platform generic-platform
+Спроси, нужны ли reusable templates, knowledge packages, platform contracts или
+всё сразу. Общие resources держи в workplace, ссылайся на них по id и запускай
+соответствующие doctor-проверки.
 ```
 
-## 7. Дать агенту правильный prompt
+## 7. Использовать subagents
 
-В подключенном проекте прочитайте `.pf/START_AGENT_HERE.md`. Готовые prompts
-для типовых задач находятся в
-[docs/ru/getting-started/agent-prompts.md](docs/ru/getting-started/agent-prompts.md).
+```text
+Спланируй ProcessForge-assisted multi-agent run.
 
-Не копируйте весь репозиторий ProcessForge в `.codex`, `.claude`, `.agents`
-или похожие папки конфигурации агентов. Установите ProcessForge один раз как
-инструмент и укажите агенту на проектный `.pf/START_AGENT_HERE.md`.
+Тесно связанную работу оставь в main agent. Subagents используй только для
+независимых scopes, каждому дай непересекающуюся зону ответственности, требуй
+file-based evidence и сверяй их результаты в текущем run перед финальной
+доставкой.
+```
 
-## 8. Проверить релиз
+## 8. Проверить перед delivery
 
-Из distribution root ProcessForge:
+```text
+Проверь репозиторий перед delivery.
 
-```bash
-python tools/validate-public-cleanliness.py --root .
-python tools/validate-process-forge-checksums.py --root . --check
-python bin/pf.py release-test --root .
-python bin/pf.py release-pack --root . --output dist/processforge-v0.1.0.zip
-python bin/pf.py release-archive-test --archive dist/processforge-v0.1.0.zip
+Используй ProcessForge release и validation runbook для агентов. Запусти нужные
+проверки, пересобери release archive с нейтральным именем, проверь архив и
+сообщи точные pass/fail evidence перед commit или push.
 ```

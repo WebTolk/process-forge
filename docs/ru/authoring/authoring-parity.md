@@ -16,5 +16,6 @@ python .pf/runtime/bin/pf.py authoring-parity-check-all --project-root .
 events и required resources. Порядок ключей YAML и форматирование не считаются
 семантической разницей.
 
-Resource parity для templates, knowledge packages и platform contracts в v0.1
-является поверхностным и сообщает WARN, пока нет полного authoring round-trip.
+Resource parity для templates, knowledge packages и platform contracts пока
+является поверхностным и сообщает WARN до появления полного authoring
+round-trip.

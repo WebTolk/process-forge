@@ -2,9 +2,9 @@
 
 ![Lifecycle run/task/iteration](../../assets/processforge-run-lifecycle.svg)
 
-В v0.1 ProcessForge работает через короткие CLI-команды. Команда читает файлы
-workplace и project, записывает нужный artifact или runtime record, emits events
-и завершается.
+ProcessForge работает через короткие CLI-команды. Команда читает файлы workplace
+и project, записывает нужный artifact или runtime record, emits events и
+завершается.
 
 Основные runtime files:
 
@@ -17,5 +17,5 @@ workplace и project, записывает нужный artifact или runtime 
 - `.pf/handoffs/`;
 - `.pf/runtime/events/events.ndjson`.
 
-Долгоживущий watcher или runner может появиться отдельным слоем позже, но
-текущий релиз не требует daemon.
+Долгоживущий watcher или runner может появиться отдельным слоем позже, но core
+runtime не требует daemon.

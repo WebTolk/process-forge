@@ -11,7 +11,7 @@ The MVP update model is file-first:
 - `project-upgrade-check` writes `.pf/artifacts/processforge-update-assessment.md`
 - no project files are modified automatically
 
-The assessment records current version, available version, channel, breaking
+The assessment records installed version, available version, channel, breaking
 changes, required migrations, affected files, manual review needs, recommended
 steps, and rollback notes.
 

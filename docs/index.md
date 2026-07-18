@@ -8,7 +8,7 @@
 - [Installation](getting-started/installation.md)
 - [Workplace initialization](getting-started/workplace-initialization.md)
 - [Project onboarding](getting-started/project-onboarding.md)
-- [Agent prompts](getting-started/agent-prompts.md)
+- [Agent command runbook and prompts](getting-started/agent-prompts.md)
 - [Create your first process](getting-started/create-your-first-process.md)
 - [Task batch workflow](getting-started/task-batch-workflow.md)
 - [Quick getting started path](getting-started.md)
@@ -44,5 +44,5 @@
 ## Release And Validation
 
 - [Release checklist](release-checklist.md)
-- [v0.1.0 release notes](releases/v0.1.0.md)
+- [Initial release notes](releases/initial-release.md)
 - [Validation](validation/validation.md)

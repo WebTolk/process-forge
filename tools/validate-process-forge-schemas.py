@@ -108,7 +108,7 @@ REQUIRED_FILES = [
     "docs/ru/concepts/platform-contracts.md",
     "docs/ru/concepts/hooks-events.md",
     "docs/ru/concepts/semantic-parity.md",
-    "docs/ru/releases/v0.1.0.md",
+    "docs/ru/releases/initial-release.md",
     "docs/ru/known-limitations.md",
     "docs/assets/processforge-architecture.svg",
     "docs/assets/processforge-run-lifecycle.svg",

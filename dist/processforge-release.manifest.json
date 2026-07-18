@@ -10,7 +10,7 @@
     },
     {
       "path": ".pf/artifacts/checksum-inventory.sha256",
-      "sha256": "60825cf3e974878723f9722965669cd385315ed1dd4fb32355b359942d61597d"
+      "sha256": "b9688b7885de335945de05012ec10fc82dfc1315094a9823daf839fbb78767c1"
     },
     {
       "path": ".pf/hooks.yaml",
@@ -38,19 +38,19 @@
     },
     {
       "path": "QUICKSTART.md",
-      "sha256": "72fc85fa75b1c0133e5db49719a4d02baf7b50ddf166d8d3b8e1e06a4cb77951"
+      "sha256": "21e49f0690a3c3f60f649c390c1aef3f3a96373152e82084f173ab0db30ebe1d"
     },
     {
       "path": "QUICKSTART.ru.md",
-      "sha256": "95e165aaf6940664b17931f42743ef61dbdb95faf9505b2a2d13ef5c96150609"
+      "sha256": "87d1b458bf5bc65eca52c32ab4607fd9e7d0190dfeda1917abb2e2ad53b9ac6d"
     },
     {
       "path": "README.md",
-      "sha256": "426463e22d62febcb19259dc24eb1d470d7c1031d67bdf8715c6a55b91acdc33"
+      "sha256": "07374e7c89b89bc92b388ab5906f69159666d476952f745b86200807f3ca31cb"
     },
     {
       "path": "README.ru.md",
-      "sha256": "32c83713b9f6b05c689bd2d13889c86fbb4a93df1ba29885178faebadf2f128d"
+      "sha256": "db04b332cdea8d049c4dfc4900d39ae754309f309fe7698e9b481f4e166b5c53"
     },
     {
       "path": "VERSION",
@@ -186,7 +186,7 @@
     },
     {
       "path": "docs/concepts/hooks-events.md",
-      "sha256": "a7c01bb8ec966c54ce326beac9f29a93968c7b5c0a0aae915959b60d97371c86"
+      "sha256": "2920b8df08453d283b884b4b5e2956801d6626772b5237fd59c5b12763c14dd1"
     },
     {
       "path": "docs/concepts/instruction-conflicts.md",
@@ -238,7 +238,7 @@
     },
     {
       "path": "docs/concepts/processforge-self-update.md",
-      "sha256": "903fcc6b01a24db1a90b24b2188a7c71f4b06d16d6aa8138f822eaca9a5d79c7"
+      "sha256": "159b629ddfac759c7c57af24a23a4e8343d8905a09a41cefd80286e1d03b5f2e"
     },
     {
       "path": "docs/concepts/project-context-snapshot.md",
@@ -286,7 +286,7 @@
     },
     {
       "path": "docs/concepts/runtime-model.md",
-      "sha256": "049ff2eb13b407be658efa887ae177be1b35ad1399da19dc35d6301bb6b2f893"
+      "sha256": "0d66b27a77183800c490f1d2f4d68b5e32fdcad0579cca3ba56ad4ba35686b94"
     },
     {
       "path": "docs/concepts/semantic-parity.md",
@@ -350,7 +350,7 @@
     },
     {
       "path": "docs/getting-started/agent-prompts.md",
-      "sha256": "f61f76a662e1be0e0b7213fca6e2f8351df1f42c63c519caa24643f2ad700288"
+      "sha256": "e1f6cbdffea8c189ad8227b281bdcb92b170f29a3290fcc0313da910c9735329"
     },
     {
       "path": "docs/getting-started/create-your-first-process.md",
@@ -382,11 +382,11 @@
     },
     {
       "path": "docs/index.md",
-      "sha256": "35d0671b7aae4f403182dd01615394725a7884dd46b8620cd1b9fb29c5e1da33"
+      "sha256": "7b349bb09b33beb30bd7083b9e27660f2bd435cccea7eb51cef27ca5d1fa8203"
     },
     {
       "path": "docs/known-limitations.md",
-      "sha256": "39aeb95ada1e12ad76050312db3c24031781714eb9d949fd1f9302f670318bd6"
+      "sha256": "a9ca10a8170fc9748fa0bb0ce6f01e6ed86c6cacd21b7fcdc3c2e5ce82cae3db"
     },
     {
       "path": "docs/processes/process-authoring.md",
@@ -394,15 +394,15 @@
     },
     {
       "path": "docs/release-checklist.md",
-      "sha256": "a418459832f41f40edd95e734cbb774236bdc08dd8a1ef346e2ea5fae57ccdc9"
+      "sha256": "f6be80cf72924656dbbbeeb497d549a13fdd319eb63061682714469933fad966"
     },
     {
-      "path": "docs/releases/v0.1.0.md",
-      "sha256": "2c4852ae8de6d3588e2d36407afa0c3e1b1dc782c9f6e3ad363732af472faeda"
+      "path": "docs/releases/initial-release.md",
+      "sha256": "c8cc74884ac0427b8fb7f1b1143749bebf05b25f645651cb2f9db37473faa2f0"
     },
     {
       "path": "docs/ru/authoring/authoring-parity.md",
-      "sha256": "ce573707ae713571252a6c0441378a505a22f8849adc5136023df6b62f223409"
+      "sha256": "17fc3aff57105d05024950760e1d1f273226f890b1302b3261444667fb35e33a"
     },
     {
       "path": "docs/ru/authoring/backfill-existing-processes.md",
@@ -426,7 +426,7 @@
     },
     {
       "path": "docs/ru/concepts/hooks-events.md",
-      "sha256": "ea9dc8b46f5a0b671869b87b29227ef16653dc9daded0e0675e51bf4cc27dbc3"
+      "sha256": "c887e3af0fd7241b595fdf2a40d2dd5fb143a5d42baa325182fb58903aa7f08e"
     },
     {
       "path": "docs/ru/concepts/package-roots.md",
@@ -454,7 +454,7 @@
     },
     {
       "path": "docs/ru/concepts/runtime-model.md",
-      "sha256": "1096c914439de77580189a1ce28304369c10d02d18c0957b80345e0259c25c3f"
+      "sha256": "9bc25c14d2c6f304a213b18f8e4cbd28201319913cebccfd997f6c987672f3d3"
     },
     {
       "path": "docs/ru/concepts/semantic-parity.md",
@@ -466,7 +466,7 @@
     },
     {
       "path": "docs/ru/getting-started/agent-prompts.md",
-      "sha256": "9fd0a64f60a18d15f6943429823d8434465e9a8a17c7a33680e74ee0a64311d0"
+      "sha256": "577423ed79687c0953f53549488f64c1c2ebd8bc9597327228505b6b550ae8f6"
     },
     {
       "path": "docs/ru/getting-started/create-your-first-process.md",
@@ -494,15 +494,15 @@
     },
     {
       "path": "docs/ru/index.md",
-      "sha256": "721077db0cf12bf27a52243d8280e121aae5509d626688f6df5440324fd80bb3"
+      "sha256": "be6c188d9e181aaa77bd083d6a32b7ea33f516658597a090577c5416d3ab7ba0"
     },
     {
       "path": "docs/ru/known-limitations.md",
-      "sha256": "d9f5089233f1601fd85258213b87ce2b7ea6c11099daa0a5a05977f6adb78cd0"
+      "sha256": "3026f2d8e0ae34897c5f7666eac642b4a06d7a7bfd2e7010c856965e2fef52e9"
     },
     {
-      "path": "docs/ru/releases/v0.1.0.md",
-      "sha256": "e19a6ace0583ca588c9560140ddbca522ea4452bc8779dceea1e52f9ff78db71"
+      "path": "docs/ru/releases/initial-release.md",
+      "sha256": "b22fce68170ada22f94a1d4bb4a790da24d64123a23763073d697b15f0e41838"
     },
     {
       "path": "docs/runner-protocol-draft.md",
@@ -1354,7 +1354,7 @@
     },
     {
       "path": "tools/validate-process-forge-schemas.py",
-      "sha256": "28c7bb33c94d0755f7c154ad156ca96c90a1b76caac8d9e95672d2021174f2bd"
+      "sha256": "16c26c4e196319b642c1a782f667f03144187fc44fd79b36715959bde7882b95"
     },
     {
       "path": "tools/validate-public-cleanliness.py",
@@ -1369,7 +1369,7 @@
       "sha256": "93660d25f3346ef5a89638d3a7728829af9de87da271bf247f96df77c3911012"
     }
   ],
-  "generated_at": "2026-07-18T10:35:19Z",
+  "generated_at": "2026-07-18T11:10:08Z",
   "name": "processforge",
   "version": "0.1.0"
 }

@@ -27,5 +27,5 @@ Write an outbox payload:
 python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type assignment.completed --outbox
 ```
 
-The v0.1 release writes local files. Network delivery and long-running event
-processing are outside this release.
+The current file-first runtime writes local files. Network delivery and
+long-running event processing are outside the core runtime.

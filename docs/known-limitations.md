@@ -1,6 +1,6 @@
 # Known Limitations
 
-ProcessForge v0.1 is a file-first, single-agent release candidate.
+ProcessForge currently runs as a file-first, single-agent tool.
 
 - File-only mode is the supported operating mode.
 - There is no live AI session interception.
@@ -12,15 +12,15 @@ ProcessForge v0.1 is a file-first, single-agent release candidate.
 - WTAICC integration is not implemented.
 - `--interactive` is a first-run UX marker, not a terminal wizard.
 - External documentation mirroring is a plan or stub unless resources are explicitly imported.
-- Process Run / Task Batch MVP is file-only. It records runs, tasks, iterations, summaries, events, and outbox payloads, but it does not schedule or execute work in the background.
-- Process Authoring MVP creates file-first process packs and companion docs. It does not include a process marketplace, visual editor, background scheduler, network delivery, database-backed storage, or automatic migration of already active runs.
+- Process Run / Task Batch is file-only. It records runs, tasks, iterations, summaries, events, and outbox payloads, but it does not schedule or execute work in the background.
+- Process Authoring creates file-first process packs and companion docs. It does not include a process marketplace, visual editor, background scheduler, network delivery, database-backed storage, or automatic migration of already active runs.
 - Authoring parity is semantic and file-first. Resource parity records SKIP when a resource kind or id cannot yet be discovered through the current project model.
 
 ## Runtime Model
 
-- ProcessForge v0.1 core is a short-lived Python CLI.
+- ProcessForge core is a short-lived Python CLI.
 - It does not start background daemons by default.
 - `release-test` and smoke commands use per-command process-tree timeouts; a hung child process should fail with command, cwd, timeout, stdout tail, and stderr tail diagnostics instead of hanging silently.
-- A long-running watcher or runner is a future optional layer, not part of the v0.1 core.
+- A long-running watcher or runner is a future optional layer, not part of the core runtime.
 - Future watcher/runner work must stay bounded: streaming reads, offsets or checkpoints, bounded queues, subprocess timeouts, and no full-project in-memory cache by default.
 - Platform-specific shell scripts are not required for release validation and are not part of the release surface.

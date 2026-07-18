@@ -27,4 +27,5 @@ python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type assign
 python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type assignment.completed --outbox
 ```
 
-В v0.1 ProcessForge пишет локальные файлы. Сетевая доставка не входит в релиз.
+File-first runtime ProcessForge пишет локальные файлы. Сетевая доставка не
+входит в core runtime.

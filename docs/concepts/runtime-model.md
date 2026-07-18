@@ -16,8 +16,8 @@ The file layout is the runtime contract:
   delivery material.
 - `.pf/runtime/events/events.ndjson` stores event envelopes.
 
-The optional future watcher or runner can observe these files, but v0.1 does
-not require a daemon.
+The optional future watcher or runner can observe these files, but the core
+runtime does not require a daemon.
 
 ## Distribution Root Versus Linked Project
 

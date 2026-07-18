@@ -14,7 +14,7 @@ ProcessForge — файловый framework для управляемой раб
 - [Первый запуск](getting-started/first-run.md)
 - [Инициализация workplace](getting-started/workplace-initialization.md)
 - [Подключение проекта](getting-started/project-onboarding.md)
-- [Agent prompts](getting-started/agent-prompts.md)
+- [Агентский command runbook и prompts](getting-started/agent-prompts.md)
 - [Первый собственный процесс](getting-started/create-your-first-process.md)
 - [Task batch workflow](getting-started/task-batch-workflow.md)
 
@@ -42,5 +42,5 @@ ProcessForge — файловый framework для управляемой раб
 
 ## Релизы
 
-- [v0.1.0](releases/v0.1.0.md)
+- [Initial release notes](releases/initial-release.md)
 - [Ограничения](known-limitations.md)
