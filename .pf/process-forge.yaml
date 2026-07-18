@@ -1,7 +1,7 @@
 schema_version: 1
 
 process_forge:
-  version: 0.1.0
+  version: 0.1.0-rc.1
   version_constraint: "^0.1"
   mode: file_only
   install_mode: linked
@@ -140,6 +140,8 @@ processes:
     path: ../processes/knowledge-package-authoring.yaml
   - id: platform-contract-authoring
     path: ../processes/platform-contract-authoring.yaml
+  - id: task-batch-execution
+    path: ../processes/task-batch-execution.yaml
 
 knowledge_stack:
   - id: processforge.core

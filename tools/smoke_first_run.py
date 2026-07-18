@@ -12,39 +12,59 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "processforge.py"
+DEFAULT_TIMEOUT = 60
+
+
+def output_tail(text: str, lines: int = 40) -> str:
+    return "\n".join(text.splitlines()[-lines:])
+
+
+def run_subprocess(command: list[str], cwd: Path, env: dict[str, str] | None = None, timeout: int = DEFAULT_TIMEOUT) -> subprocess.CompletedProcess[str]:
+    try:
+        return subprocess.run(
+            command,
+            cwd=cwd,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        output = exc.stdout or ""
+        if not isinstance(output, str):
+            output = output.decode(errors="replace")
+        print("TIMEOUT: smoke_first_run command exceeded timeout")
+        print("Command:")
+        print("  " + " ".join(command))
+        print("CWD:")
+        print(f"  {cwd}")
+        print("Timeout seconds:")
+        print(f"  {timeout}")
+        if output:
+            print("STDOUT tail:")
+            print(output_tail(output))
+        raise AssertionError(f"timeout after {timeout}s: {' '.join(command)}") from exc
 
 
 def run_command(*args: str, cwd: Path = ROOT, env: dict[str, str] | None = None, expect_success: bool = True) -> subprocess.CompletedProcess[str]:
-    result = subprocess.run(
-        [sys.executable, str(CLI), *args],
-        cwd=cwd,
-        env=env,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
-    )
+    command = [sys.executable, str(CLI), *args]
+    result = run_subprocess(command, cwd=cwd, env=env)
     if expect_success and result.returncode != 0:
-        raise AssertionError("command failed: " + " ".join(args) + "\n" + result.stdout)
+        raise AssertionError("command failed: " + " ".join(args) + "\n" + output_tail(result.stdout))
     if not expect_success and result.returncode == 0:
-        raise AssertionError("command unexpectedly succeeded: " + " ".join(args) + "\n" + result.stdout)
+        raise AssertionError("command unexpectedly succeeded: " + " ".join(args) + "\n" + output_tail(result.stdout))
     return result
 
 
 def run_python(script: Path, *args: str, cwd: Path, env: dict[str, str] | None = None, expect_success: bool = True) -> subprocess.CompletedProcess[str]:
-    result = subprocess.run(
-        [sys.executable, str(script), *args],
-        cwd=cwd,
-        env=env,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
-    )
+    command = [sys.executable, str(script), *args]
+    result = run_subprocess(command, cwd=cwd, env=env)
     if expect_success and result.returncode != 0:
-        raise AssertionError(f"python launcher failed: {script}\n{result.stdout}")
+        raise AssertionError(f"python launcher failed: {script}\n{output_tail(result.stdout)}")
     if not expect_success and result.returncode == 0:
-        raise AssertionError(f"python launcher unexpectedly succeeded: {script}\n{result.stdout}")
+        raise AssertionError(f"python launcher unexpectedly succeeded: {script}\n{output_tail(result.stdout)}")
     return result
 
 

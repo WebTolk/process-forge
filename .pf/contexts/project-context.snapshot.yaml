@@ -1,8 +1,8 @@
 schema_version: 1
 snapshot:
   id: project-context
-  generated_at: '2026-07-15T11:51:48Z'
-  valid_until: '2026-07-22T11:51:48Z'
+  generated_at: '2026-07-18T06:00:53Z'
+  valid_until: '2026-07-25T06:00:53Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -22,7 +22,7 @@ flow:
   manifest: .pf/process-forge.yaml
   local_config: .pf/process-forge.local.yaml
 process_forge:
-  version: 0.1.0
+  version: 0.1.0-rc.1
   version_constraint: ^0.1
   install_mode: linked
   distribution:
@@ -45,7 +45,7 @@ sources:
       id: project_manifest
       path: .pf/process-forge.yaml
       kind: manifest
-      checksum: af74a541a11ef1f7c29106b730500f45378ff72079a5656dca130463917d6a26
+      checksum: 6915b635e2ca9084333571c44657f94a23ec4787856bd8eecf8350b44a83a101
     -
       id: process-processes-software-feature-development-yaml
       path: processes/software-feature-development.yaml
@@ -80,7 +80,12 @@ sources:
       id: process-processes-workplace-initialization-yaml
       path: processes/workplace-initialization.yaml
       kind: process
-      checksum: 8925770fc0bb1fb905dd27375457df15f24eaef79a7ace0c8605ba052d915479
+      checksum: c58935b256b01f9ac8b8134e75331fac374f0c017528b365e72894de21b59987
+    -
+      id: process-processes-project-onboarding-yaml
+      path: processes/project-onboarding.yaml
+      kind: process
+      checksum: eeeab58d1da5f490afe1da75c08866277905029e65561ac5030d40a58fb8d0e6
     -
       id: process-processes-project-initialization-yaml
       path: processes/project-initialization.yaml
@@ -141,6 +146,26 @@ sources:
       path: processes/process-template-install.yaml
       kind: process
       checksum: 1de6964a16156948d7cdb589dc16c8810b53572d143b2fc659c66093ec4b2ca2
+    -
+      id: process-processes-reusable-template-authoring-yaml
+      path: processes/reusable-template-authoring.yaml
+      kind: process
+      checksum: 4ad87e8fb6b4224c35f5b5f94b42533fea21792d1e3baefb6e23862dc43b2821
+    -
+      id: process-processes-knowledge-package-authoring-yaml
+      path: processes/knowledge-package-authoring.yaml
+      kind: process
+      checksum: a62b45fb25d89345dc2bed2e0ee4f07ad9c41ed39c7434de3df691d012889eb7
+    -
+      id: process-processes-platform-contract-authoring-yaml
+      path: processes/platform-contract-authoring.yaml
+      kind: process
+      checksum: e95dd69b781412b16ef9830a80898507ac92f2e303e2f3295decece924018ab7
+    -
+      id: process-processes-task-batch-execution-yaml
+      path: processes/task-batch-execution.yaml
+      kind: process
+      checksum: b45e0cf7c9379816e45afd209dfac6080b85cc4444b4c1d2159cbf902f8dc0f2
     -
       id: package-packages-process-forge-core-yaml
       path: packages/process-forge-core.yaml
@@ -293,6 +318,9 @@ processes:
       id: workplace-initialization
       path: ../processes/workplace-initialization.yaml
     -
+      id: project-onboarding
+      path: ../processes/project-onboarding.yaml
+    -
       id: project-initialization
       path: ../processes/project-initialization.yaml
     -
@@ -328,6 +356,18 @@ processes:
     -
       id: process-template-install
       path: ../processes/process-template-install.yaml
+    -
+      id: reusable-template-authoring
+      path: ../processes/reusable-template-authoring.yaml
+    -
+      id: knowledge-package-authoring
+      path: ../processes/knowledge-package-authoring.yaml
+    -
+      id: platform-contract-authoring
+      path: ../processes/platform-contract-authoring.yaml
+    -
+      id: task-batch-execution
+      path: ../processes/task-batch-execution.yaml
 packages:
   selected:
     -

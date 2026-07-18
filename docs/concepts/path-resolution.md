@@ -13,8 +13,8 @@ Supported forms:
 
 ```text
 ${PF_KNOWLEDGE}/joomla/docs
-D:/Knowledge/Joomla/docs
-/srv/knowledge/joomla/docs
+<knowledge-root>/Joomla/docs
+<shared-knowledge-root>/joomla/docs
 ../relative/path
 relative/path
 ```

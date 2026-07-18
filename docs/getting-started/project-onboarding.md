@@ -19,8 +19,8 @@ It creates the project-local `.pf/` flow root:
 Command:
 
 ```bash
-python tools/processforge.py project-onboard --project-root ./my-project --workplace ./pf-workplace --type generic-software-project --apply
-python tools/processforge.py doctor-project --project-root ./my-project
+python bin/pf.py project-onboard --project-root ./my-project --workplace ./pf-workplace --type generic-software-project --apply
+python bin/pf.py doctor-project --project-root ./my-project
 ```
 
 This process does not recreate the workplace and does not copy global packages into the project.

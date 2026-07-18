@@ -11,20 +11,76 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "processforge.py"
+DEFAULT_TIMEOUT = 60
+
+
+def output_tail(text: str, lines: int = 40) -> str:
+    return "\n".join(text.splitlines()[-lines:])
+
+
+def run_cmd(command: list[str], cwd: Path = ROOT, timeout: int = DEFAULT_TIMEOUT, expect: int = 0) -> subprocess.CompletedProcess[str]:
+    try:
+        result = subprocess.run(
+            command,
+            cwd=cwd,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        output = exc.stdout or ""
+        if not isinstance(output, str):
+            output = output.decode(errors="replace")
+        print("FAIL smoke_resource_management: timeout")
+        print("Command:")
+        print("  " + " ".join(command))
+        print("CWD:")
+        print(f"  {cwd}")
+        print("Timeout seconds:")
+        print(f"  {timeout}")
+        if output:
+            print("STDOUT tail:")
+            print(output_tail(output))
+        raise AssertionError(f"timeout after {timeout}s: {' '.join(command)}") from exc
+    if result.returncode != expect:
+        print("FAIL smoke_resource_management: unexpected command exit")
+        print("Command:")
+        print("  " + " ".join(command))
+        print("CWD:")
+        print(f"  {cwd}")
+        print("Exit code:")
+        print(f"  {result.returncode}")
+        print("Expected exit code:")
+        print(f"  {expect}")
+        if result.stdout:
+            print("STDOUT tail:")
+            print(output_tail(result.stdout))
+        raise AssertionError(f"expected exit {expect}, got {result.returncode}: {' '.join(command)}")
+    return result
 
 
 def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
-    result = subprocess.run(
-        [sys.executable, str(CLI), *args],
+    return run_cmd([sys.executable, str(CLI), *args], expect=expect)
+
+
+def run_test(name: str, func: object) -> None:
+    print(f"RUN: {name}")
+    try:
+        func()
+    except Exception as exc:
+        print(f"FAIL smoke_resource_management: {name}")
+        raise
+    print(f"PASS: {name}")
+
+
+def run_public_cleanliness() -> None:
+    run_cmd(
+        [sys.executable, str(ROOT / "tools" / "validate-public-cleanliness.py"), "--root", str(ROOT)],
         cwd=ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        timeout=60,
     )
-    if result.returncode != expect:
-        print(result.stdout)
-        raise AssertionError(f"expected exit {expect}, got {result.returncode}: {' '.join(args)}")
-    return result
 
 
 def assert_exists(path: Path) -> None:
@@ -438,16 +494,7 @@ def main() -> int:
         if "contains no local absolute paths" not in leaked.stdout:
             raise AssertionError("doctor-project did not fail on absolute path in public snapshot")
 
-    cleanliness = run("python-placeholder", expect=2) if False else subprocess.run(
-        [sys.executable, str(ROOT / "tools" / "validate-public-cleanliness.py"), "--root", str(ROOT)],
-        cwd=ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    if cleanliness.returncode != 0:
-        print(cleanliness.stdout)
-        raise AssertionError("public cleanliness failed")
+    run_public_cleanliness()
     print("PASS: resource management smoke checks passed.")
     return 0
 

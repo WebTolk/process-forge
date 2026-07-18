@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/iteration.schema.json",
+  "title": "ProcessForge Task Iteration",
+  "type": "object",
+  "required": ["id", "kind", "status", "summary"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^iter-[0-9]{3}$|^[a-z0-9][a-z0-9-]*[a-z0-9]$" },
+    "kind": { "enum": ["work", "debug", "fix", "review", "test", "research", "handoff", "note"] },
+    "status": { "enum": ["planned", "in_progress", "completed", "passed", "failed", "cancelled"] },
+    "started_at": { "type": "string" },
+    "completed_at": { "type": "string" },
+    "summary": { "type": "string" },
+    "artifacts": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

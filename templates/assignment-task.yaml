@@ -1,0 +1,18 @@
+schema_version: 1
+id: task-001-example
+title: Example Task
+run_id: example-run
+process: software-feature-development
+status: open
+created_at: "2026-01-01T00:00:00Z"
+updated_at: "2026-01-01T00:00:00Z"
+objective: Complete one task inside the current run.
+order: 1
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations: []
+result:
+  status: pending
+  summary: ""
+  artifacts: []

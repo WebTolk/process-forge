@@ -552,3 +552,145 @@ Next steps:
 Run full required validation gate and refresh checksum inventory.
 Handoff:
 `.pf/handoffs/resource-authoring-processes-handoff.md`.
+
+## 2026-07-18 08:22 - codex
+
+Task:
+Implemented `задания/processforge_v0_1_release_hardening_master_prompt.md`.
+
+Files changed:
+`tools/processforge.py`, `tools/smoke_resource_authoring_processes.py`,
+validators, README, QUICKSTART, CHANGELOG, VERSION, docs, examples, `.pf`
+manifest/snapshot/checksum, release archive outputs, and release-hardening
+dogfooding artifacts.
+
+Artifacts changed:
+`.pf/artifacts/v0-1-release-hardening-report.md`,
+`.pf/reviews/v0-1-release-hardening-review.md`,
+`.pf/handoffs/v0-1-release-hardening-handoff.md`,
+`.pf/artifacts/checksum-inventory.sha256`,
+`dist/processforge-v0.1.0.zip`,
+`dist/processforge-v0.1.0.manifest.json`.
+
+Templates used:
+ProcessForge report, review, handoff, and append-only task log conventions.
+
+Tools used:
+Serena onboarding/search, PowerShell fallback for file reading and validation,
+`apply_patch`, ProcessForge CLI, smoke tests, schema/public/checksum validators,
+ZIP manifest inspection, and `git diff --check`.
+
+Decisions:
+Keep `release-check` strict for release-surface garbage while `release-test`
+runs `clean --release` after `py_compile`. Map `.pf/AGENTS.md` to `AGENTS.md`
+inside the release archive when no root `AGENTS.md` exists. Keep v0.1 scoped to
+file-first single-agent release hardening.
+
+Risks:
+`doctor-project` keeps expected WARN entries for this repo's self-contained
+dogfooding mode. `dist/` is generated release output and needs an owner decision
+before commit/publish.
+
+Next steps:
+Review the diff and decide the release candidate commit/publish boundary.
+
+Handoff:
+`.pf/handoffs/v0-1-release-hardening-handoff.md`.
+
+## 2026-07-18 09:13 - codex
+
+Task:
+Implemented `задания/processforge_release_test_reliability_fix_master_prompt.md`.
+
+Files changed:
+`bin/pf.py`, `tools/processforge.py`, `tools/smoke_first_run.py`,
+`tools/smoke_resource_management.py`, release docs, checksum inventory, release
+archive outputs, and release-test reliability dogfooding artifacts.
+
+Artifacts changed:
+`.pf/artifacts/release-test-reliability-fix-report.md`,
+`.pf/reviews/release-test-reliability-fix-review.md`,
+`.pf/handoffs/release-test-reliability-fix-handoff.md`,
+`.pf/artifacts/checksum-inventory.sha256`,
+`dist/processforge-v0.1.0.zip`,
+`dist/processforge-v0.1.0.manifest.json`.
+
+Templates used:
+ProcessForge report, review, handoff, and append-only task log conventions.
+
+Tools used:
+PowerShell file reads/searches, `apply_patch`, Python smoke tests, ProcessForge
+release-test/release-pack/release-archive-test, schema/public/checksum
+validators, and git whitespace checks.
+
+Decisions:
+Use `os.execv` for POSIX launchers. Use explicit Windows `os.spawnv(os.P_WAIT,
+...)` fallback with `subprocess.list2cmdline` argument quoting because local
+Windows `os.execv` split arguments with spaces and returned false success exit
+codes. Include the minimal public `.pf` skeleton and `.gitignore` in the release
+archive so extracted archive `release-test` can run.
+
+Risks:
+Windows fallback is not a true process replacement, but it avoids
+`subprocess.call` and pipe chains and preserves child exit codes. A manual
+diagnostic command created a test template under `C:\Temp`; removal was blocked
+by the tool policy, and it is outside this repository/release surface.
+
+Next steps:
+Review the combined v0.1 internal release candidate diff. Process Authoring MVP
+is the next product stage after acceptance.
+
+Handoff:
+`.pf/handoffs/release-test-reliability-fix-handoff.md`.
+
+## 2026-07-18 09:57 - codex
+
+Task:
+Implemented `задания/processforge_process_run_task_batch_mvp_master_prompt.md`.
+
+Files changed:
+`tools/processforge.py`, `tools/smoke_process_run_task_batch.py`,
+`tools/validate-process-forge-schemas.py`, schemas, templates, process and
+prompt files, docs, examples, `.pf/process-forge.yaml`, checksum inventory, and
+Process Run / Task Batch dogfooding artifacts.
+
+Artifacts changed:
+`.pf/artifacts/process-run-task-batch-report.md`,
+`.pf/reviews/process-run-task-batch-review.md`,
+`.pf/handoffs/process-run-task-batch-handoff.md`,
+`.pf/artifacts/checksum-inventory.sha256`.
+
+Templates used:
+ProcessForge report, review, handoff, and append-only task log conventions.
+
+Tools used:
+Serena onboarding/search with shell fallback, `apply_patch`, Python compile,
+ProcessForge smoke/schema/checksum validators.
+
+Decisions:
+Keep tasks canonical in `.pf/assignments/<task-id>.yaml` and expose `task-*` as
+CLI aliases. Store run grouping in `.pf/runs/<run-id>/run.yaml`. Keep hooks
+observational/outbox-only and avoid locks, daemons, watchers, schedulers,
+runners, WTAICC drivers, GUI, database, and process authoring wizard work.
+
+Validation:
+Passed `python -m py_compile tools\processforge.py
+tools\smoke_process_run_task_batch.py`, `python
+tools\smoke_process_run_task_batch.py`, `python
+tools\validate-process-forge-schemas.py --root .`, `python
+tools\processforge.py release-test --root .`, `python tools\processforge.py
+release-pack --root . --output dist\processforge-v0.1.0.zip`, `python
+tools\processforge.py release-archive-test --archive
+dist\processforge-v0.1.0.zip`, and `python tools\processforge.py
+project-context-refresh --project-root .`.
+
+Risks:
+`run-doctor` and `task-doctor` provide pragmatic MVP consistency checks rather
+than full JSON Schema validation over every runtime run/task file.
+
+Next steps:
+Review the combined dirty tree from this and the previous release-hardening
+tasks, then decide the commit/push boundary.
+
+Handoff:
+`.pf/handoffs/process-run-task-batch-handoff.md`.

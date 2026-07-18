@@ -12,9 +12,9 @@ How does this project use ProcessForge on this workplace?
 ## Command Model
 
 ```bash
-python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --answers <answers.yaml> --dry-run
-python tools/processforge.py init-project --project-root <project-root> --workplace <workplace.yaml> --answers <answers.yaml> --apply
-python tools/processforge.py doctor-project --project-root <project-root>
+python bin/pf.py init-project --project-root <project-root> --workplace <workplace.yaml> --answers <answers.yaml> --dry-run
+python bin/pf.py init-project --project-root <project-root> --workplace <workplace.yaml> --answers <answers.yaml> --apply
+python bin/pf.py doctor-project --project-root <project-root>
 ```
 
 ## Modes

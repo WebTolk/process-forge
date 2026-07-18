@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-15T11:51:48Z
-- valid_until: 2026-07-22T11:51:48Z
+- generated_at: 2026-07-18T06:00:53Z
+- valid_until: 2026-07-25T06:00:53Z
 
 ## Freshness
 
@@ -20,7 +20,7 @@ fresh
 
 ## Linked ProcessForge
 
-- version: 0.1.0
+- version: 0.1.0-rc.1
 - constraint: ^0.1
 - install_mode: linked
 - distribution: processforge (available)
@@ -51,6 +51,7 @@ fresh
 - knowledge-package-improvement
 - process-version-upgrade
 - workplace-initialization
+- project-onboarding
 - project-initialization
 - session-bootstrap
 - context-resolution
@@ -63,6 +64,10 @@ fresh
 - mcp-register
 - platform-contract-install
 - process-template-install
+- reusable-template-authoring
+- knowledge-package-authoring
+- platform-contract-authoring
+- task-batch-execution
 
 ## Required Capabilities
 
@@ -137,4 +142,4 @@ Events log: `.pf/runtime/events/events.ndjson`
 
 ## Refresh Instructions
 
-Run `python tools/processforge.py project-context-refresh --project-root <project-root>`.
+Run `python bin/pf.py project-context-refresh --project-root <project-root>` from the ProcessForge distribution root, or `python .pf/runtime/bin/pf.py project-context-refresh --project-root .` inside the linked project.

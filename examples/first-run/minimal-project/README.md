@@ -3,11 +3,11 @@
 Create a workplace and onboard a generic project:
 
 ```bash
-python tools/processforge.py workplace-init --workplace ./pf-workplace --apply
+python bin/pf.py workplace-init --workplace ./pf-workplace --apply
 mkdir my-project
-python tools/processforge.py project-onboard --project-root ./my-project --workplace ./pf-workplace --type generic-software-project --apply
-python tools/processforge.py agent-start-prompt --project-root ./my-project
-python tools/processforge.py doctor-project --project-root ./my-project
+python bin/pf.py project-onboard --project-root ./my-project --workplace ./pf-workplace --type generic-software-project --apply
+python bin/pf.py agent-start-prompt --project-root ./my-project
+python bin/pf.py doctor-project --project-root ./my-project
 ```
 
 Expected project result:

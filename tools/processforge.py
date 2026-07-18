@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import fnmatch
 import hashlib
 import io
 import json
@@ -14,7 +15,9 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import uuid
+import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -24,6 +27,11 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT_FLOW_ROOT = ".pf"
+PROCESSFORGE_VERSION = "0.1.0-rc.1"
+PROCESSFORGE_SPEC_VERSION = "0.1"
+PROCESSFORGE_SCHEMA_BUNDLE_VERSION = "0.1"
+RELEASE_NAME = "processforge"
+RELEASE_ARCHIVE_VERSION = "0.1.0"
 
 PROJECT_PRIVATE_GITIGNORE = [
     ".pf/process-forge.local.yaml",
@@ -39,13 +47,17 @@ PROJECT_FLOW_DIRS = [
     "processes",
     "packages",
     "templates",
+    "runs",
     "assignments",
     "artifacts",
+    "artifacts/runs",
     "contexts",
     "contexts/assignment-capsules",
     "logs",
     "handoffs",
+    "handoffs/runs",
     "reviews",
+    "reviews/runs",
     "adr",
     "schemas",
     "runtime/cache",
@@ -196,6 +208,27 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "platform.contract.doctor.passed",
     "platform.contract.doctor.failed",
     "platform.authoring.completed",
+    "run.created",
+    "run.started",
+    "run.updated",
+    "run.summary.created",
+    "run.completed",
+    "run.failed",
+    "run.cancelled",
+    "run.doctor.passed",
+    "run.doctor.failed",
+    "task.created",
+    "task.started",
+    "task.updated",
+    "task.completed",
+    "task.failed",
+    "task.cancelled",
+    "task.doctor.passed",
+    "task.doctor.failed",
+    "iteration.added",
+    "iteration.started",
+    "iteration.completed",
+    "iteration.failed",
 ]
 
 BUILTIN_CAPABILITIES = {
@@ -293,8 +326,8 @@ BUILTIN_PLATFORM_CONTRACTS: dict[str, dict[str, Any]] = {
 BACKSLASH = chr(92)
 COLON_WS = ":" + r"\s*"
 LOCAL_PATH_PATTERNS = [
-    re.compile("[A-Za-z]:" + re.escape(BACKSLASH)),
-    re.compile(r"[A-Za-z]:/"),
+    re.compile(r"(?<![A-Za-z])[A-Za-z]:" + re.escape(BACKSLASH)),
+    re.compile(r"(?<![A-Za-z])[A-Za-z]:/"),
     re.compile("/" + "home" + "/[A-Za-z0-9_.-]+/"),
     re.compile("/" + "Users" + "/[A-Za-z0-9_.-]+/"),
     re.compile("/" + "srv" + "/"),
@@ -1211,6 +1244,15 @@ def print_checks(checks: list[Check]) -> int:
     return 1 if failed else 0
 
 
+def check_with_hint(level: str, message: str, why: str, fix: str, alternative: str | None = None) -> Check:
+    details = [message, "", "Why:", f"  {why}", "", "Fix:"]
+    details.extend(f"  {line}" if line else "" for line in fix.splitlines())
+    if alternative:
+        details.extend(["", "Or:"])
+        details.extend(f"  {line}" if line else "" for line in alternative.splitlines())
+    return check(level, "\n".join(details))
+
+
 def run_command_capture(func: Any, args: argparse.Namespace) -> tuple[int, str]:
     buffer = io.StringIO()
     status = 0
@@ -1330,17 +1372,43 @@ def package_root_registry_checks(workplace_root: Path) -> list[Check]:
         root = package_root_resolution_from_entry(workplace_root, entry)
         label = f"package_root {root.root_id}"
         if root.warnings:
-            checks.append(check("FAIL", f"{label} path cannot resolve: {'; '.join(root.warnings)}"))
+            checks.append(
+                check_with_hint(
+                    "FAIL",
+                    f"{label} path cannot resolve: {'; '.join(root.warnings)}",
+                    "The package root registry points to a path ProcessForge cannot use.",
+                    "edit registries/package-roots.yaml so this package_root path exists and is relative to the workplace when possible",
+                )
+            )
             continue
         exists = root.resolved_path.is_dir()
         status = str(entry.get("status", "available"))
         must_exist = status == "available" or bool(entry.get("must_exist", False))
-        checks.append(check("PASS" if exists or not must_exist else "FAIL", f"{label} path {'exists' if exists else 'missing'}"))
+        checks.append(
+            check("PASS", f"{label} path exists")
+            if exists or not must_exist
+            else check_with_hint(
+                "FAIL",
+                f"{label} path missing",
+                "This package_root is marked available or must_exist but the directory is absent.",
+                f"create the package root directory or update registries/package-roots.yaml for {root.root_id}",
+            )
+        )
         if exists and status == "available":
             selectable = True
         if str(entry.get("writable", True)).lower() != "false" and exists:
             checks.append(check("PASS", f"{label} writable candidate"))
-    checks.append(check("PASS" if selectable else "FAIL", "default/first available package_root can be selected"))
+    checks.append(
+        check("PASS", "default/first available package_root can be selected")
+        if selectable
+        else check_with_hint(
+            "FAIL",
+            "default/first available package_root can be selected",
+            "Authoring commands need at least one available package_root unless every write passes an explicit --package-root.",
+            "python tools/processforge.py workplace-init --workplace <workplace-root> --apply",
+            "add an available entry to registries/package-roots.yaml",
+        )
+    )
     return checks
 
 
@@ -1359,7 +1427,14 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
         checks.extend(registry_path_resolution_checks(root, manifest))
         checks.extend(package_root_registry_checks(root))
     else:
-        checks.append(check("FAIL", "workplace.yaml missing"))
+        checks.append(
+            check_with_hint(
+                "FAIL",
+                "workplace.yaml missing",
+                "The selected path is not an initialized ProcessForge workplace.",
+                "python bin/pf.py workplace-init --workplace <workplace-root> --apply",
+            )
+        )
 
     for rel_path in [
         "registries/distributions.yaml",
@@ -1371,7 +1446,16 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
         "registries/mcp.yaml",
     ]:
         path = root / rel_path
-        checks.append(check("PASS" if path.is_file() else "FAIL", f"{rel_path} {'found' if path.is_file() else 'missing'}"))
+        checks.append(
+            check("PASS", f"{rel_path} found")
+            if path.is_file()
+            else check_with_hint(
+                "FAIL",
+                f"{rel_path} missing",
+                "A required workplace registry is absent.",
+                "python bin/pf.py workplace-init --workplace <workplace-root> --apply",
+            )
+        )
         if path.is_file() and contains_secret_value(path.read_text(encoding="utf-8", errors="replace")):
             checks.append(check("FAIL", f"{rel_path} appears to contain a secret value"))
 
@@ -1608,6 +1692,20 @@ def resolve_path(base: Path, raw: str) -> Path:
     return (base / path).resolve()
 
 
+def exec_args(args: list[str]) -> list[str]:
+    if os.name != "nt":
+        return args
+    return [subprocess.list2cmdline([arg]) for arg in args]
+
+
+def exec_processforge(cli: Path, argv: list[str]) -> int:
+    args = exec_args([sys.executable, str(cli), *argv])
+    if os.name == "nt":
+        return os.spawnv(os.P_WAIT, sys.executable, args)
+    os.execv(sys.executable, args)
+    return 2
+
+
 def distribution_from_workplace(workplace_manifest: Path) -> Path | None:
     registry = workplace_manifest.parent / "registries" / "distributions.yaml"
     if not registry.is_file():
@@ -1662,7 +1760,12 @@ Fix:
   Check PROCESSFORGE_HOME or rerun project-onboard so .pf/process-forge.local.yaml points to a valid distribution."""
         print(message, file=sys.stderr)
         return 1
-    return subprocess.call([sys.executable, str(cli), *argv])
+    try:
+        return exec_processforge(cli, argv)
+    except OSError as exc:
+        print("FAIL: could not exec ProcessForge CLI", file=sys.stderr)
+        print(f"Reason: {exc}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":
@@ -2555,8 +2658,8 @@ Known issues:
 - Detection is observed, not domain-approved.
 
 Required checks:
-- `python tools/processforge.py doctor-project --project-root .`
-- `python tools/processforge.py project-context-check --project-root .`
+- `python .pf/runtime/bin/pf.py doctor-project --project-root .`
+- `python .pf/runtime/bin/pf.py project-context-check --project-root .`
 
 Next recommended action:
 Start `.pf/assignments/first-assignment.yaml`.
@@ -2764,6 +2867,7 @@ Fix:
 def default_start_agent_here(project_root: Path) -> str:
     assignment_path = locate_flow_root(project_root) / "assignments" / "first-assignment.yaml"
     assignment_rel = rel(assignment_path, project_root) if assignment_path.is_file() else ".pf/assignments/"
+    run_block = start_agent_run_block(project_root)
     return f"""# Start Agent Here
 
 You are working inside a ProcessForge-enabled project.
@@ -2794,7 +2898,48 @@ pf doctor-project --project-root .
 
 - File: `{assignment_rel}`
 - Goal: Verify this project is ready for ProcessForge assignment work.
+
+{run_block}
 """
+
+
+def start_agent_run_block(project_root: Path) -> str:
+    active_runs = active_run_ids(project_root)
+    if active_runs:
+        return f"""## Active Run
+
+Current ProcessForge run:
+
+```bash
+python .pf/runtime/bin/pf.py run-status --project-root . --run {active_runs[0]}
+```
+
+Work loop:
+
+```bash
+python .pf/runtime/bin/pf.py task-list --project-root . --run {active_runs[0]}
+python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --kind work --summary "..." --apply
+python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --kind debug --summary "..." --apply
+python .pf/runtime/bin/pf.py task-complete --project-root . --task <task-id> --summary "..." --apply
+python .pf/runtime/bin/pf.py run-summary --project-root . --run {active_runs[0]} --apply
+```
+"""
+    return """## Create A Run
+
+```bash
+python .pf/runtime/bin/pf.py run-create --project-root . --id <run-id> --title "<title>" --process task-batch-execution --apply
+```
+"""
+
+
+def refresh_start_agent_run_block(project_root: Path, text: str) -> str:
+    block = start_agent_run_block(project_root).rstrip() + "\n"
+    markers = ["## Active Run", "## Create A Run"]
+    positions = [text.find(marker) for marker in markers if marker in text]
+    if positions:
+        start = min(positions)
+        return text[:start].rstrip() + "\n\n" + block
+    return text.rstrip() + "\n\n" + block
 
 
 def command_agent_start_prompt(args: argparse.Namespace) -> int:
@@ -2802,7 +2947,8 @@ def command_agent_start_prompt(args: argparse.Namespace) -> int:
     flow_root = require_flow_root(project_root)
     target = flow_root / "START_AGENT_HERE.md"
     if target.is_file() and "python tools/processforge.py" not in target.read_text(encoding="utf-8", errors="replace"):
-        text = target.read_text(encoding="utf-8", errors="replace")
+        text = refresh_start_agent_run_block(project_root, target.read_text(encoding="utf-8", errors="replace"))
+        target.write_text(ensure_trailing_newline(text), encoding="utf-8")
     else:
         text = default_start_agent_here(project_root)
         target.write_text(ensure_trailing_newline(text), encoding="utf-8")
@@ -2840,61 +2986,479 @@ def command_first_run(args: argparse.Namespace) -> int:
     return command_init_project(project_args)
 
 
+RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "bin", "tools", "updates"]
+RELEASE_ROOT_FILES = ["README.md", "QUICKSTART.md", "CHANGELOG.md", "LICENSE", "VERSION", ".gitignore", ".processforge-releaseignore"]
+RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml", ".pf/artifacts/checksum-inventory.sha256"]
+RELEASE_REQUIRED_PATHS = [
+    "README.md",
+    "QUICKSTART.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "AGENTS.md",
+    ".gitignore",
+    ".processforge-releaseignore",
+    ".pf/AGENTS.md",
+    ".pf/process-forge.yaml",
+    ".pf/hooks.yaml",
+    ".pf/artifacts/checksum-inventory.sha256",
+    "bin/pf.py",
+    "bin/pf",
+    "bin/pf.bat",
+    "tools",
+    "schemas",
+    "templates",
+    "processes",
+    "prompts",
+    "docs",
+    "examples",
+]
+RELEASE_TEXT_SUFFIXES = {".md", ".yaml", ".yml", ".json", ".txt", ".py", ".sh", ".bat"}
+RELEASE_FORBIDDEN_DIR_PARTS = {
+    ".git",
+    ".idea",
+    ".serena",
+    ".vscode",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "private-notes",
+}
+RELEASE_FORBIDDEN_SUFFIXES = {".pyc", ".pyo", ".ps1", ".zip"}
+RELEASE_GENERATED_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
+RELEASE_GENERATED_SUFFIXES = {".pyc", ".pyo"}
+
+
+def release_ignore_patterns(root: Path) -> list[str]:
+    path = root / ".processforge-releaseignore"
+    if not path.is_file():
+        return []
+    patterns: list[str] = []
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        value = line.strip()
+        if value and not value.startswith("#"):
+            patterns.append(value.replace("\\", "/"))
+    return patterns
+
+
+def release_ignore_match(rel_path: str, patterns: list[str]) -> bool:
+    normalized = rel_path.replace("\\", "/").lstrip("./")
+    for pattern in patterns:
+        candidate = pattern.lstrip("./")
+        if candidate.startswith("/"):
+            candidate = candidate[1:]
+        if candidate.endswith("/"):
+            prefix = candidate.rstrip("/")
+            if normalized == prefix or normalized.startswith(prefix + "/"):
+                return True
+        if fnmatch.fnmatch(normalized, candidate) or fnmatch.fnmatch(Path(normalized).name, candidate):
+            return True
+        if normalized == candidate:
+            return True
+    return False
+
+
+def release_source_files(root: Path) -> list[tuple[str, Path]]:
+    files: list[tuple[str, Path]] = []
+    for name in RELEASE_ROOT_FILES:
+        path = root / name
+        if path.is_file():
+            files.append((name, path))
+    root_agents = root / "AGENTS.md"
+    pf_agents = root / ".pf" / "AGENTS.md"
+    if root_agents.is_file():
+        files.append(("AGENTS.md", root_agents))
+    elif pf_agents.is_file():
+        files.append(("AGENTS.md", pf_agents))
+    for name in RELEASE_PF_PUBLIC_FILES:
+        path = root / name
+        if path.is_file():
+            files.append((name, path))
+    for dirname in RELEASE_DIRS:
+        base = root / dirname
+        if base.is_dir():
+            for path in base.rglob("*"):
+                if path.is_file():
+                    files.append((rel(path, root), path))
+    return sorted(files, key=lambda item: item[0])
+
+
+def release_path_is_forbidden(rel_path: str) -> str | None:
+    parts = Path(rel_path).parts
+    suffix = Path(rel_path).suffix.lower()
+    for part in parts:
+        if part in RELEASE_FORBIDDEN_DIR_PARTS:
+            return f"forbidden directory part {part}"
+    if suffix in RELEASE_FORBIDDEN_SUFFIXES:
+        return f"forbidden suffix {suffix}"
+    if rel_path.endswith(".env") or "/.env" in rel_path or Path(rel_path).name.startswith(".env."):
+        return "private env file"
+    if Path(rel_path).name == "process-forge.local.yaml" and not rel_path.startswith(("examples/", "templates/")):
+        return "private local config"
+    if "runtime/hooks/outbox" in rel_path or "hooks/outbox" in rel_path:
+        return "hook outbox payload"
+    if "runtime/chat/transcripts" in rel_path or "chat/transcripts" in rel_path:
+        return "local chat transcript"
+    return None
+
+
+def release_required_path_exists(root: Path, archive_path: str) -> bool:
+    if archive_path == "AGENTS.md":
+        return (root / "AGENTS.md").is_file() or (root / ".pf" / "AGENTS.md").is_file()
+    return (root / archive_path).exists()
+
+
+def release_checks(root: Path) -> list[Check]:
+    checks: list[Check] = []
+    patterns = release_ignore_patterns(root)
+    if not patterns:
+        checks.append(
+            check_with_hint(
+                "FAIL",
+                ".processforge-releaseignore missing or empty",
+                "The release packer needs an explicit exclusion policy.",
+                "create .processforge-releaseignore with runtime, private, cache, IDE, and archive exclusions",
+            )
+        )
+    else:
+        checks.append(check("PASS", ".processforge-releaseignore loaded"))
+
+    for required in RELEASE_REQUIRED_PATHS:
+        checks.append(
+            check_with_hint(
+                "FAIL",
+                f"required release path missing: {required}",
+                "The v0.1 archive contract lists this path as part of the public distribution.",
+                f"restore or generate {required} before release-pack",
+            )
+            if not release_required_path_exists(root, required)
+            else check("PASS", f"required release path present: {required}")
+        )
+
+    for archive_path, path in release_source_files(root):
+        if release_ignore_match(archive_path, patterns):
+            continue
+        forbidden = release_path_is_forbidden(archive_path)
+        if forbidden:
+            checks.append(
+                check_with_hint(
+                    "FAIL",
+                    f"{archive_path}: {forbidden}",
+                    "Release archives must not contain runtime, private, cache, script-wrapper, or previous archive artifacts.",
+                    "python tools/processforge.py clean --root . --release",
+                )
+            )
+            continue
+        if path.suffix.lower() in RELEASE_TEXT_SUFFIXES:
+            text = path.read_text(encoding="utf-8", errors="replace")
+            lower = text.lower()
+            release_text_group = archive_path.split("/", 1)[0]
+            user_facing_text = release_text_group in {"README.md", "QUICKSTART.md", "CHANGELOG.md", "VERSION", "AGENTS.md", "docs", "prompts", "examples", "processes", "packages", "templates"}
+            if release_text_group in {"README.md", "QUICKSTART.md", "docs", "prompts", "examples"} and ("powershell" in lower or ".ps1" in lower):
+                checks.append(
+                    check_with_hint(
+                        "FAIL",
+                        f"{archive_path}: public release text references PowerShell/.ps1",
+                        "The v0.1 flow is Python-first and public docs should not direct users to unsupported wrappers.",
+                        "replace the command with python bin/pf.py or python .pf/runtime/bin/pf.py",
+                    )
+                )
+            if user_facing_text and not is_public_path_safe(text):
+                checks.append(
+                    check_with_hint(
+                        "FAIL",
+                        f"{archive_path}: public text contains a private absolute path",
+                        "Public release files must be portable across machines.",
+                        "replace local filesystem values with path_ref, placeholders, or relative paths",
+                    )
+                )
+            if user_facing_text and contains_secret_value(text):
+                checks.append(
+                    check_with_hint(
+                        "FAIL",
+                        f"{archive_path}: public text appears to contain a secret value",
+                        "Release files cannot contain credentials, tokens, or private keys.",
+                        "remove the secret and keep only a named secret reference",
+                    )
+                )
+    if not any(item.level == "FAIL" for item in checks):
+        checks.append(check("PASS", "release surface excludes runtime/private/cache/script/archive artifacts"))
+    return checks
+
+
 def command_release_check(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
-    release_dirs = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "bin", "tools", "updates"]
-    ps1_files: list[str] = []
-    pycache_dirs: list[str] = []
-    for dirname in release_dirs:
-        release_root = root / dirname
-        if release_root.is_dir():
-            ps1_files.extend(rel(path, root) for path in sorted(release_root.rglob("*.ps1")))
-            pycache_dirs.extend(rel(path, root) for path in sorted(release_root.rglob("__pycache__")) if path.is_dir())
-    if ps1_files:
-        for path in ps1_files:
-            print(f"FAIL: release contains unsupported script wrapper: {path}")
-        return 1
-    if pycache_dirs:
-        for path in pycache_dirs:
-            print(f"FAIL: release contains Python cache directory: {path}")
-        return 1
-    powershell_refs: list[str] = []
-    text_roots = ["README.md", "QUICKSTART.md", "docs", "prompts", "examples", "processes"]
-    for item in text_roots:
-        base = root / item
-        candidates = [base] if base.is_file() else sorted(base.rglob("*")) if base.is_dir() else []
-        for path in candidates:
-            if path.is_file() and path.suffix.lower() in {".md", ".yaml", ".yml", ".json", ".txt"}:
-                text = path.read_text(encoding="utf-8", errors="replace").lower()
-                if "powershell" in text or ".ps1" in text:
-                    powershell_refs.append(rel(path, root))
-    if powershell_refs:
-        for path in powershell_refs:
-            print(f"FAIL: public release text references PowerShell: {path}")
-        return 1
-    commands = [
-        [
-            sys.executable,
-            "-c",
-            "import pathlib, py_compile, sys, tempfile; "
-            "target = pathlib.Path(tempfile.gettempdir()) / 'processforge-release-check.pyc'; "
-            "py_compile.compile(sys.argv[1], cfile=str(target), doraise=True)",
-            str(root / "tools" / "processforge.py"),
-        ],
-        [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)],
-        [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)],
-        [sys.executable, str(root / "tools" / "validate-process-forge-checksums.py"), "--root", str(root), "--check"],
+    return print_checks(release_checks(root))
+
+
+def safe_remove_generated_path(path: Path, root: Path) -> bool:
+    resolved_root = root.resolve()
+    resolved_path = path.resolve()
+    try:
+        resolved_path.relative_to(resolved_root)
+    except ValueError:
+        return False
+    if path.is_dir() and path.name in RELEASE_GENERATED_DIRS:
+        shutil.rmtree(path)
+        return True
+    if path.is_file() and path.suffix.lower() in RELEASE_GENERATED_SUFFIXES:
+        path.unlink()
+        return True
+    return False
+
+
+def command_clean(args: argparse.Namespace) -> int:
+    root = Path(args.root).expanduser().resolve()
+    if not args.release:
+        print("WARN: nothing selected; use --release to remove safe generated release artifacts")
+        return 0
+    removed: list[str] = []
+    for path in sorted(root.rglob("*"), key=lambda item: len(item.parts), reverse=True):
+        if path.name in {".git", ".idea", ".serena"}:
+            continue
+        if safe_remove_generated_path(path, root):
+            removed.append(rel(path, root))
+    for item in removed:
+        print(f"REMOVED: {item}")
+    print(f"PASS: release cleanup removed {len(removed)} generated paths.")
+    return 0
+
+
+def command_examples_check(args: argparse.Namespace) -> int:
+    root = Path(args.root).expanduser().resolve()
+    examples = root / "examples"
+    checks: list[Check] = []
+    checks.append(check("PASS" if examples.is_dir() else "FAIL", "examples/ found"))
+    for required in ["first-run", "resource-authoring"]:
+        base = examples / required
+        checks.append(check("PASS" if base.is_dir() else "FAIL", f"examples/{required}/ found"))
+        readmes = list(base.rglob("README.md")) if base.is_dir() else []
+        checks.append(check("PASS" if readmes else "FAIL", f"examples/{required}/ has README files"))
+    if examples.is_dir():
+        for path in sorted(examples.rglob("*")):
+            rel_path = rel(path, root)
+            if path.is_dir() and path.name in {"runtime", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}:
+                checks.append(
+                    check_with_hint(
+                        "FAIL",
+                        f"{rel_path}: stale generated directory",
+                        "Examples must remain source examples, not runtime output snapshots.",
+                        "remove generated runtime/cache data from examples",
+                    )
+                )
+            if not path.is_file():
+                continue
+            if path.suffix.lower() == ".ps1":
+                checks.append(check_with_hint("FAIL", f"{rel_path}: unsupported .ps1 file", "The release is Python-first.", "replace with python bin/pf.py examples"))
+            if path.suffix.lower() in {".md", ".yaml", ".yml", ".json", ".txt"}:
+                text = path.read_text(encoding="utf-8", errors="replace")
+                lower = text.lower()
+                if "powershell" in lower or ".ps1" in lower:
+                    checks.append(check_with_hint("FAIL", f"{rel_path}: mentions PowerShell/.ps1", "Public examples should not mention removed wrappers.", "use python bin/pf.py or python .pf/runtime/bin/pf.py"))
+                if not is_public_path_safe(text):
+                    checks.append(check_with_hint("FAIL", f"{rel_path}: contains private absolute path", "Examples must be portable.", "replace local paths with relative paths or placeholders"))
+                if "python tools/processforge.py doctor-project --project-root" in text:
+                    checks.append(
+                        check_with_hint(
+                            "FAIL",
+                            f"{rel_path}: linked-project doctor command is misleading",
+                            "Normal onboarded projects do not contain tools/processforge.py.",
+                            "use python .pf/runtime/bin/pf.py doctor-project --project-root . inside linked projects",
+                        )
+                    )
+    return print_checks(checks)
+
+
+@dataclass
+class ReleaseCommand:
+    label: str
+    command: list[str]
+    timeout: int
+    allow_warn: bool = False
+
+
+def format_command(command: list[str]) -> str:
+    return " ".join(command)
+
+
+def run_release_command(label: str, command: list[str], cwd: Path, timeout: int, allow_warn: bool = False) -> tuple[str, int, str]:
+    print(f"RUN {label}:")
+    print(f"  {format_command(command)}")
+    sys.stdout.flush()
+    try:
+        result = subprocess.run(command, cwd=cwd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        output = exc.stdout or ""
+        if not isinstance(output, str):
+            output = output.decode(errors="replace")
+        return "FAIL", 124, f"timeout after {timeout}s\n{output}"
+    if result.returncode == 0:
+        return "PASS", 0, result.stdout
+    if allow_warn:
+        return "WARN", result.returncode, result.stdout
+    return "FAIL", result.returncode, result.stdout
+
+
+def print_release_command_output(label: str, status: str, code: int, output: str) -> None:
+    print(f"{status} {label}")
+    if status != "PASS":
+        print(f"  exit: {code}")
+        tail_lines = output.splitlines()[-30:]
+        for line in tail_lines:
+            print(f"  {line}")
+
+
+def command_release_test(args: argparse.Namespace) -> int:
+    root = Path(args.root).expanduser().resolve()
+    print("ProcessForge release-test")
+    commands: list[ReleaseCommand] = [
+        ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py")], 30),
+        ReleaseCommand("clean release artifacts", [sys.executable, str(root / "tools" / "processforge.py"), "clean", "--root", str(root), "--release"], 60),
+        ReleaseCommand("schema validation", [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)], 60),
+        ReleaseCommand("public cleanliness", [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)], 60),
+        ReleaseCommand("checksum", [sys.executable, str(root / "tools" / "validate-process-forge-checksums.py"), "--root", str(root), "--check"], 60),
+        ReleaseCommand("smoke_first_run", [sys.executable, str(root / "tools" / "smoke_first_run.py")], 120),
+        ReleaseCommand("smoke_resource_management", [sys.executable, str(root / "tools" / "smoke_resource_management.py")], 180),
+        ReleaseCommand("smoke_resource_authoring", [sys.executable, str(root / "tools" / "smoke_resource_authoring_processes.py")], 180),
+        ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
+        ReleaseCommand("release-check", [sys.executable, str(root / "tools" / "processforge.py"), "release-check", "--root", str(root)], 60),
+        ReleaseCommand("examples-check", [sys.executable, str(root / "tools" / "processforge.py"), "examples-check", "--root", str(root)], 60),
+        ReleaseCommand("events-validate", [sys.executable, str(root / "tools" / "processforge.py"), "events-validate", "--project-root", str(root)], 60),
+        ReleaseCommand("doctor-project", [sys.executable, str(root / "tools" / "processforge.py"), "doctor-project", "--project-root", str(root)], 60),
     ]
     failed = False
-    for command in commands:
-        print("RUN: " + " ".join(command))
-        result = subprocess.run(command, cwd=root, text=True, check=False)
-        if result.returncode != 0:
-            failed = True
+    warned = False
+    for item in commands:
+        status, code, output = run_release_command(item.label, item.command, root, timeout=item.timeout, allow_warn=item.allow_warn)
+        print_release_command_output(item.label, status, code, output)
+        failed = failed or status == "FAIL"
+        warned = warned or status == "WARN"
+    git_dir = root / ".git"
+    if git_dir.exists():
+        status, code, output = run_release_command("git diff --check", ["git", "diff", "--check"], root, timeout=60)
+        print_release_command_output("git diff --check", status, code, output)
+        failed = failed or status == "FAIL"
+        warned = warned or status == "WARN"
+    else:
+        print("WARN git diff --check skipped: not a git repo")
+        warned = True
     if failed:
-        print("FAIL: release check failed")
+        print("RESULT: FAIL")
         return 1
-    print("PASS: release check passed.")
+    print("RESULT: PASS with warnings" if warned else "RESULT: PASS")
+    return 0
+
+
+def command_version(args: argparse.Namespace) -> int:
+    version_file = ROOT / "VERSION"
+    version = version_file.read_text(encoding="utf-8", errors="replace").strip() if version_file.is_file() else PROCESSFORGE_VERSION
+    print(f"ProcessForge {version}")
+    print(f"Spec: {PROCESSFORGE_SPEC_VERSION}")
+    print(f"Schema bundle: {PROCESSFORGE_SCHEMA_BUNDLE_VERSION}")
+    return 0
+
+
+def command_release_pack(args: argparse.Namespace) -> int:
+    root = Path(args.root).expanduser().resolve()
+    output = Path(args.output).expanduser()
+    if not output.is_absolute():
+        output = (root / output).resolve()
+    manifest_path = output.with_suffix(".manifest.json")
+    checks = release_checks(root)
+    failures = [item for item in checks if item.level == "FAIL"]
+    if failures:
+        for item in failures:
+            print(f"FAIL: {item.message}")
+        return 1
+    patterns = release_ignore_patterns(root)
+    files = [(archive_path, path) for archive_path, path in release_source_files(root) if not release_ignore_match(archive_path, patterns) and not release_path_is_forbidden(archive_path)]
+    if args.dry_run:
+        print(f"DRY-RUN: would write {output}")
+        print(f"DRY-RUN: would write {manifest_path}")
+        print(f"FILES: {len(files)}")
+        for archive_path, _path in files[:50]:
+            print(f"INCLUDE: {archive_path}")
+        if len(files) > 50:
+            print(f"... {len(files) - 50} more files")
+        return 0
+    output.parent.mkdir(parents=True, exist_ok=True)
+    manifest_files = []
+    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for archive_path, source_path in files:
+            archive.write(source_path, archive_path)
+            manifest_files.append({"path": archive_path, "sha256": sha256_file(source_path)})
+    manifest = {
+        "name": RELEASE_NAME,
+        "version": RELEASE_ARCHIVE_VERSION,
+        "generated_at": now_utc(),
+        "files": manifest_files,
+    }
+    manifest_path.write_text(ensure_trailing_newline(json.dumps(manifest, indent=2, sort_keys=True)), encoding="utf-8")
+    print(f"WROTE: {rel(output, root)}")
+    print(f"WROTE: {rel(manifest_path, root)}")
+    print(f"FILES: {len(files)}")
+    return 0
+
+
+def archive_manifest_path(archive_path: Path) -> Path:
+    return archive_path.with_suffix(".manifest.json")
+
+
+def inspect_release_archive(archive_path: Path, manifest_path: Path | None = None) -> list[Check]:
+    checks: list[Check] = []
+    checks.append(check("PASS" if archive_path.is_file() else "FAIL", f"archive exists: {archive_path}"))
+    if not archive_path.is_file():
+        return checks
+    manifest = manifest_path or archive_manifest_path(archive_path)
+    checks.append(check("PASS" if manifest.is_file() else "FAIL", f"manifest exists: {manifest}"))
+    with zipfile.ZipFile(archive_path) as archive:
+        names = sorted(name for name in archive.namelist() if not name.endswith("/"))
+        forbidden = [name for name in names if release_path_is_forbidden(name) or name.startswith(".pf/runtime/") or name.startswith(".serena/") or name.startswith(".idea/") or name.startswith(".vscode/")]
+        checks.append(check("PASS" if not forbidden else "FAIL", f"archive forbidden entries: {len(forbidden)}"))
+        for name in forbidden[:20]:
+            checks.append(check("FAIL", f"forbidden archive entry: {name}"))
+        if manifest.is_file():
+            data = json.loads(manifest.read_text(encoding="utf-8"))
+            manifest_files = data.get("files") if isinstance(data, dict) else None
+            manifest_names = sorted(str(item.get("path")) for item in manifest_files if isinstance(item, dict) and item.get("path")) if isinstance(manifest_files, list) else []
+            checks.append(check("PASS" if manifest_names == names else "FAIL", "manifest file list matches zip entries"))
+            if manifest_names == names:
+                checks.append(check("PASS", f"manifest files: {len(manifest_names)}"))
+            else:
+                missing = sorted(set(names) - set(manifest_names))
+                extra = sorted(set(manifest_names) - set(names))
+                for name in missing[:10]:
+                    checks.append(check("FAIL", f"zip entry missing from manifest: {name}"))
+                for name in extra[:10]:
+                    checks.append(check("FAIL", f"manifest entry missing from zip: {name}"))
+    return checks
+
+
+def command_release_archive_test(args: argparse.Namespace) -> int:
+    archive_path = Path(args.archive).expanduser().resolve()
+    manifest_path = Path(args.manifest).expanduser().resolve() if args.manifest else archive_manifest_path(archive_path)
+    checks = inspect_release_archive(archive_path, manifest_path)
+    if print_checks(checks) != 0:
+        return 1
+    with tempfile.TemporaryDirectory(prefix="processforge-release-archive-") as temp:
+        extract_root = Path(temp)
+        with zipfile.ZipFile(archive_path) as archive:
+            archive.extractall(extract_root)
+        cli = extract_root / "tools" / "processforge.py"
+        if not cli.is_file():
+            print(f"FAIL: extracted archive has no CLI: {cli}")
+            return 1
+        status, code, output = run_release_command(
+            "release-test extracted archive",
+            [sys.executable, str(cli), "release-test", "--root", str(extract_root)],
+            extract_root,
+            timeout=300,
+        )
+        print_release_command_output("release-test extracted archive", status, code, output)
+        if status != "PASS":
+            print("RESULT: FAIL")
+            return 1
+    print("RESULT: PASS")
     return 0
 
 
@@ -3795,11 +4359,33 @@ def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, packa
     manifest_path, manifest, package_root = load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode="read")
     checks: list[Check] = []
     if not manifest:
-        return [check("FAIL", f"package {package_id} manifest missing")]
+        return [
+            check_with_hint(
+                "FAIL",
+                f"package {package_id} manifest missing",
+                "The package id cannot be resolved through registries/package-roots.yaml.",
+                f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title \"{package_id}\" --apply",
+            )
+        ]
     for warning in package_root.warnings:
-        checks.append(check("WARN" if warning.startswith("WARN:") else "FAIL", warning))
+        level = "WARN" if warning.startswith("WARN:") else "FAIL"
+        checks.append(
+            check_with_hint(
+                level,
+                warning,
+                "The package_root resolver found a registry/path issue.",
+                "check registries/package-roots.yaml and pass --package-root when multiple roots contain the same package id",
+            )
+        )
     if not manifest_path.is_file():
-        checks.append(check("FAIL", f"package {package_id} not found through package_roots"))
+        checks.append(
+            check_with_hint(
+                "FAIL",
+                f"package {package_id} not found through package_roots",
+                "The package manifest is missing from the selected package_root.",
+                f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root <package-root> --title \"{package_id}\" --apply",
+            )
+        )
         return checks
     checks.append(check("PASS", f"package {package_id} resolved through package root {package_root.root_id}"))
     resources = manifest.get("resources") if isinstance(manifest.get("resources"), list) else []
@@ -3811,7 +4397,16 @@ def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, packa
         resource_id = str(resource.get("id", "resource"))
         normalized = normalize_resource_record(resource, package_id, workplace_root)
         missing = resource_path_ref_missing(workplace_root, normalized)
-        checks.append(check("FAIL" if missing else "PASS", f"{package_id}:{resource_id} path_ref" + (f" - {missing}" if missing else " resolved")))
+        checks.append(
+            check("PASS", f"{package_id}:{resource_id} path_ref resolved")
+            if not missing
+            else check_with_hint(
+                "FAIL",
+                f"{package_id}:{resource_id} path_ref - {missing}",
+                "Public resource records must resolve through a known registry instead of embedding private paths.",
+                "update the resource to use path_ref.registry and path_ref.id from the workplace registries",
+            )
+        )
         kind = str(resource.get("kind") or "reference")
         if kind in HEAVY_RESOURCE_KINDS and not resource.get("load_policy"):
             checks.append(check("WARN", f"{package_id}:{resource_id} heavy resource should declare load_policy"))
@@ -4191,7 +4786,7 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
             "",
             "## Refresh Instructions",
             "",
-            "Run `python tools/processforge.py project-context-refresh --project-root <project-root>`.",
+            "Run `python bin/pf.py project-context-refresh --project-root <project-root>` from the ProcessForge distribution root, or `python .pf/runtime/bin/pf.py project-context-refresh --project-root .` inside the linked project.",
             "",
         ]
     )
@@ -5492,6 +6087,525 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     return 0
 
 
+RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review", "completed", "cancelled", "failed"}
+TASK_STATUSES = {"open", "in_progress", "blocked", "debugging", "review", "done", "cancelled", "failed"}
+ITERATION_KINDS = {"work", "debug", "fix", "review", "test", "research", "handoff", "note"}
+ITERATION_STATUSES = {"planned", "in_progress", "completed", "passed", "failed", "cancelled"}
+
+
+def run_root(project_root: Path, run_id: str) -> Path:
+    return locate_flow_root(project_root) / "runs" / safe_id(run_id, "run")
+
+
+def run_yaml_path(project_root: Path, run_id: str) -> Path:
+    return run_root(project_root, run_id) / "run.yaml"
+
+
+def assignment_yaml_path(project_root: Path, task_id: str) -> Path:
+    return locate_flow_root(project_root) / "assignments" / f"{safe_id(task_id, 'task')}.yaml"
+
+
+def task_artifacts_root(project_root: Path, run_id: str, task_id: str) -> Path:
+    return locate_flow_root(project_root) / "artifacts" / "runs" / safe_id(run_id, "run") / safe_id(task_id, "task")
+
+
+def read_yaml_file(path: Path) -> dict[str, Any]:
+    data = load_yaml_document(path)
+    error = yaml_error(data)
+    if error:
+        raise SystemExit(f"FAIL: {path} is invalid YAML: {error}")
+    return data
+
+
+def write_yaml_file(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(ensure_trailing_newline(dump_yaml(data)), encoding="utf-8")
+
+
+def process_definition_exists(project_root: Path, process_id: str) -> bool:
+    process_file = f"{safe_id(process_id, 'process')}.yaml"
+    flow_root = locate_flow_root(project_root)
+    return (
+        (project_root / "processes" / process_file).is_file()
+        or (flow_root / "processes" / process_file).is_file()
+        or (ROOT / "processes" / process_file).is_file()
+    )
+
+
+def active_run_ids(project_root: Path) -> list[str]:
+    root = locate_flow_root(project_root) / "runs"
+    ids: list[str] = []
+    if not root.is_dir():
+        return ids
+    for path in sorted(root.glob("*/run.yaml")):
+        data = load_yaml_document(path)
+        if yaml_error(data):
+            continue
+        status = str(data.get("status", ""))
+        if status in {"draft", "open", "in_progress", "blocked", "review"}:
+            ids.append(str(data.get("id") or path.parent.name))
+    return ids
+
+
+def task_process_id(task: dict[str, Any]) -> str:
+    value = task.get("process")
+    if isinstance(value, dict):
+        return str(value.get("id", ""))
+    return str(value or "")
+
+
+def next_iteration_id(task: dict[str, Any]) -> str:
+    iterations = task.get("iterations") if isinstance(task.get("iterations"), list) else []
+    used = {str(item.get("id")) for item in iterations if isinstance(item, dict)}
+    index = 1
+    while True:
+        candidate = f"iter-{index:03d}"
+        if candidate not in used:
+            return candidate
+        index += 1
+
+
+def render_task_index(project_root: Path, run: dict[str, Any]) -> str:
+    tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
+    lines = [
+        f"# Task Index: {run.get('id', 'run')}",
+        "",
+        f"Run status: `{run.get('status', 'unknown')}`",
+        "",
+        "| Order | Task | Status | Assignment |",
+        "| --- | --- | --- | --- |",
+    ]
+    for item in sorted([task for task in tasks if isinstance(task, dict)], key=lambda value: int(value.get("order", 0) or 0)):
+        lines.append(f"| {item.get('order', '')} | `{item.get('id', '')}` | `{item.get('status', '')}` | `{item.get('assignment', '')}` |")
+    if not tasks:
+        lines.append("| | No tasks yet | | |")
+    return "\n".join(lines) + "\n"
+
+
+def write_task_index(project_root: Path, run: dict[str, Any]) -> None:
+    run_id = str(run.get("id", "run"))
+    (run_root(project_root, run_id) / "task-index.md").write_text(render_task_index(project_root, run), encoding="utf-8")
+
+
+def load_run(project_root: Path, run_id: str) -> dict[str, Any]:
+    path = run_yaml_path(project_root, run_id)
+    if not path.is_file():
+        raise SystemExit(f"FAIL: run not found: {safe_id(run_id, 'run')}")
+    return read_yaml_file(path)
+
+
+def save_run(project_root: Path, run: dict[str, Any]) -> None:
+    run["updated_at"] = now_utc()
+    write_yaml_file(run_yaml_path(project_root, str(run.get("id", "run"))), run)
+    write_task_index(project_root, run)
+
+
+def load_task(project_root: Path, task_id: str) -> dict[str, Any]:
+    path = assignment_yaml_path(project_root, task_id)
+    if not path.is_file():
+        raise SystemExit(f"FAIL: task/assignment not found: {safe_id(task_id, 'task')}")
+    return read_yaml_file(path)
+
+
+def save_task(project_root: Path, task: dict[str, Any]) -> None:
+    task["updated_at"] = now_utc()
+    write_yaml_file(assignment_yaml_path(project_root, str(task.get("id", "task"))), task)
+
+
+def update_run_task_status(project_root: Path, run_id: str, task_id: str, status: str) -> None:
+    run = load_run(project_root, run_id)
+    changed = False
+    for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
+        if isinstance(item, dict) and str(item.get("id")) == task_id:
+            item["status"] = status
+            changed = True
+    if changed:
+        save_run(project_root, run)
+
+
+def public_yaml_has_private_path(data: dict[str, Any]) -> bool:
+    return not is_public_path_safe(json.dumps(data, ensure_ascii=False))
+
+
+def validate_run_consistency(project_root: Path, run_id: str) -> list[Check]:
+    flow_root = require_flow_root(project_root)
+    checks: list[Check] = []
+    path = run_yaml_path(project_root, run_id)
+    if not path.is_file():
+        return [check("FAIL", f"{rel(path, project_root)} missing")]
+    run = read_yaml_file(path)
+    error = yaml_error(run)
+    if error:
+        return [check("FAIL", f"{rel(path, project_root)} invalid YAML: {error}")]
+    for key in ["schema_version", "id", "title", "process", "status", "created_at", "updated_at", "tasks"]:
+        checks.append(check("PASS" if key in run else "FAIL", f"run.{key} present"))
+    status = str(run.get("status", ""))
+    checks.append(check("PASS" if status in RUN_STATUSES else "FAIL", f"run status valid: {status or 'missing'}"))
+    process_id = str(run.get("process", ""))
+    checks.append(check("PASS" if process_definition_exists(project_root, process_id) else "FAIL", f"process exists: {process_id or 'missing'}"))
+    checks.append(check("PASS" if not public_yaml_has_private_path(run) else "FAIL", f"{rel(path, project_root)} has no private absolute paths"))
+    tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
+    seen: set[str] = set()
+    if not isinstance(tasks, list):
+        checks.append(check("FAIL", "run.tasks must be a list"))
+        tasks = []
+    for item in tasks:
+        if not isinstance(item, dict):
+            checks.append(check("FAIL", "run.tasks item must be an object"))
+            continue
+        task_id = str(item.get("id", ""))
+        assignment_rel = str(item.get("assignment", ""))
+        task_status = str(item.get("status", ""))
+        checks.append(check("PASS" if task_id and task_id not in seen else "FAIL", f"task id unique: {task_id or 'missing'}"))
+        seen.add(task_id)
+        checks.append(check("PASS" if task_status in TASK_STATUSES else "FAIL", f"task status valid for {task_id}: {task_status or 'missing'}"))
+        assignment_path = project_root / assignment_rel if assignment_rel.startswith(PROJECT_FLOW_ROOT + "/") else flow_root / "assignments" / f"{safe_id(task_id, 'task')}.yaml"
+        checks.append(check("PASS" if assignment_path.is_file() else "FAIL", f"assignment exists for {task_id}: {assignment_rel or rel(assignment_path, project_root)}"))
+        if assignment_path.is_file():
+            task = read_yaml_file(assignment_path)
+            checks.append(check("PASS" if str(task.get("run_id", "")) == str(run.get("id", "")) else "FAIL", f"{task_id} run_id matches run"))
+    if status == "completed":
+        incomplete = [str(item.get("id")) for item in tasks if isinstance(item, dict) and item.get("blocking", True) is not False and str(item.get("status")) != "done"]
+        checks.append(check("PASS" if not incomplete else "FAIL", "completed run has all blocking tasks done" + (f": {', '.join(incomplete)}" if incomplete else "")))
+        summary = run_root(project_root, str(run.get("id", run_id))) / "summary.md"
+        handoff = flow_root / "handoffs" / "runs" / f"{safe_id(str(run.get('id', run_id)), 'run')}-handoff.md"
+        checks.append(check("PASS" if summary.is_file() else "FAIL", f"{rel(summary, project_root)} exists"))
+        checks.append(check("PASS" if handoff.is_file() else "FAIL", f"{rel(handoff, project_root)} exists"))
+    events_path, _outbox = event_runtime_paths(project_root)
+    event_text = events_path.read_text(encoding="utf-8", errors="replace") if events_path.is_file() else ""
+    checks.append(check("PASS" if str(run.get("id", run_id)) in event_text else "WARN", "run events exist"))
+    return checks
+
+
+def validate_task_consistency(project_root: Path, task_id: str) -> list[Check]:
+    require_flow_root(project_root)
+    checks: list[Check] = []
+    path = assignment_yaml_path(project_root, task_id)
+    if not path.is_file():
+        return [check("FAIL", f"{rel(path, project_root)} missing")]
+    task = read_yaml_file(path)
+    for key in ["schema_version", "id", "title", "run_id", "process", "status", "iterations", "result"]:
+        checks.append(check("PASS" if key in task else "FAIL", f"task.{key} present"))
+    status = str(task.get("status", ""))
+    checks.append(check("PASS" if status in TASK_STATUSES else "FAIL", f"task status valid: {status or 'missing'}"))
+    run_id = str(task.get("run_id", ""))
+    checks.append(check("PASS" if run_id and run_yaml_path(project_root, run_id).is_file() else "FAIL", f"referenced run exists: {run_id or 'missing'}"))
+    process_id = task_process_id(task)
+    checks.append(check("PASS" if process_definition_exists(project_root, process_id) else "FAIL", f"process exists: {process_id or 'missing'}"))
+    checks.append(check("PASS" if not public_yaml_has_private_path(task) else "FAIL", f"{rel(path, project_root)} has no private absolute paths"))
+    iterations = task.get("iterations") if isinstance(task.get("iterations"), list) else []
+    seen: set[str] = set()
+    if not isinstance(iterations, list):
+        checks.append(check("FAIL", "task.iterations must be a list"))
+        iterations = []
+    for item in iterations:
+        if not isinstance(item, dict):
+            checks.append(check("FAIL", "iteration item must be an object"))
+            continue
+        iter_id = str(item.get("id", ""))
+        kind = str(item.get("kind", ""))
+        iter_status = str(item.get("status", ""))
+        checks.append(check("PASS" if iter_id and iter_id not in seen else "FAIL", f"iteration id unique: {iter_id or 'missing'}"))
+        seen.add(iter_id)
+        checks.append(check("PASS" if kind in ITERATION_KINDS else "FAIL", f"iteration kind valid for {iter_id}: {kind or 'missing'}"))
+        checks.append(check("PASS" if iter_status in ITERATION_STATUSES else "FAIL", f"iteration status valid for {iter_id}: {iter_status or 'missing'}"))
+    result = task.get("result") if isinstance(task.get("result"), dict) else {}
+    if status == "done":
+        result_summary = str(result.get("summary", "")).strip()
+        result_artifacts = result.get("artifacts") if isinstance(result.get("artifacts"), list) else []
+        checks.append(check("PASS" if result_summary or result_artifacts else "FAIL", "completed task has result summary or artifact"))
+    return checks
+
+
+def command_run_create(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    run_id = safe_id(args.id, "run")
+    path = run_yaml_path(project_root, run_id)
+    if path.exists():
+        raise SystemExit(f"FAIL: run already exists: {rel(path, project_root)}")
+    run = {
+        "schema_version": 1,
+        "id": run_id,
+        "title": args.title,
+        "process": safe_id(args.process, "task-batch-execution"),
+        "status": args.status,
+        "created_at": now_utc(),
+        "updated_at": now_utc(),
+        "objective": args.objective or "",
+        "scope": {"type": "project", "project_root": "."},
+        "tasks": [],
+        "final_artifacts": [],
+        "events": {"emitted": ["run.created"]},
+        "privacy": {"public_safe": True},
+    }
+    planned = [path, run_root(project_root, run_id) / "plan.md", run_root(project_root, run_id) / "task-index.md"]
+    if getattr(args, "dry_run", False):
+        print_plan("run-create dry run", planned, project_root)
+        return 0
+    root = run_root(project_root, run_id)
+    (root / "artifacts").mkdir(parents=True, exist_ok=True)
+    (root / "reviews").mkdir(parents=True, exist_ok=True)
+    write_yaml_file(path, run)
+    (root / "plan.md").write_text(f"# Run Plan: {args.title}\n\nObjective: {args.objective or 'TBD'}\n", encoding="utf-8")
+    write_task_index(project_root, run)
+    emit_process_event(project_root, "run.created", process_id=run["process"], subject=run_id, payload={"run_id": run_id, "path": rel(path, project_root)}, correlation_id=f"run-{run_id}")
+    print(f"WROTE: {rel(path, project_root)}")
+    return 0
+
+
+def command_run_list(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    root = locate_flow_root(project_root) / "runs"
+    runs = sorted(root.glob("*/run.yaml")) if root.is_dir() else []
+    if not runs:
+        print("No runs found.")
+        return 0
+    for path in runs:
+        data = load_yaml_document(path)
+        print(f"{data.get('id', path.parent.name)}\t{data.get('status', 'unknown')}\t{data.get('title', '')}")
+    return 0
+
+
+def command_run_status(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    run = load_run(project_root, args.run)
+    tasks = [item for item in run.get("tasks", []) if isinstance(item, dict)] if isinstance(run.get("tasks"), list) else []
+    counts: dict[str, int] = {}
+    for item in tasks:
+        counts[str(item.get("status", "unknown"))] = counts.get(str(item.get("status", "unknown")), 0) + 1
+    print(f"RUN: {run.get('id')}")
+    print(f"TITLE: {run.get('title')}")
+    print(f"STATUS: {run.get('status')}")
+    print("TASKS: " + ", ".join(f"{key}={value}" for key, value in sorted(counts.items())) if counts else "TASKS: none")
+    for item in sorted(tasks, key=lambda value: int(value.get("order", 0) or 0)):
+        task = load_yaml_document(assignment_yaml_path(project_root, str(item.get("id", ""))))
+        iterations = task.get("iterations") if isinstance(task.get("iterations"), list) else []
+        latest = iterations[-1] if iterations and isinstance(iterations[-1], dict) else {}
+        latest_text = f" latest={latest.get('id')}:{latest.get('kind')}:{latest.get('status')}" if latest else ""
+        print(f"- {item.get('order')}: {item.get('id')} [{item.get('status')}]{latest_text}")
+    blockers = [str(item.get("id")) for item in tasks if item.get("blocking", True) is not False and str(item.get("status")) in {"blocked", "failed"}]
+    if blockers:
+        print("BLOCKERS: " + ", ".join(blockers))
+    return 0
+
+
+def command_run_doctor(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    checks = validate_run_consistency(project_root, args.run)
+    result = print_checks(checks)
+    run_id = safe_id(args.run, "run")
+    emit_process_event(project_root, "run.doctor.failed" if result else "run.doctor.passed", severity="error" if result else "info", subject=run_id, payload={"run_id": run_id, "result": "fail" if result else "pass"}, correlation_id=f"run-{run_id}")
+    return result
+
+
+def command_run_summary(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    run = load_run(project_root, args.run)
+    run_id = str(run.get("id", safe_id(args.run, "run")))
+    summary = run_root(project_root, run_id) / "summary.md"
+    handoff = locate_flow_root(project_root) / "handoffs" / "runs" / f"{run_id}-handoff.md"
+    lines = [f"# Run Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", f"- status: `{run.get('status')}`", "", "## Tasks", ""]
+    for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
+        if isinstance(item, dict):
+            task = load_yaml_document(assignment_yaml_path(project_root, str(item.get("id", ""))))
+            result = task.get("result") if isinstance(task.get("result"), dict) else {}
+            lines.append(f"- `{item.get('id')}`: `{item.get('status')}` - {result.get('summary', task.get('title', ''))}")
+    if len(lines) == 7:
+        lines.append("- No tasks recorded.")
+    handoff_text = f"# Run Handoff: {run_id}\n\nStatus: `{run.get('status')}`\n\nSummary: `{rel(summary, project_root)}`\n"
+    if getattr(args, "dry_run", False):
+        print_plan("run-summary dry run", [summary, handoff], project_root)
+        return 0
+    summary.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    handoff.parent.mkdir(parents=True, exist_ok=True)
+    handoff.write_text(handoff_text, encoding="utf-8")
+    artifacts = [rel(summary, project_root), rel(handoff, project_root)]
+    run["final_artifacts"] = artifacts
+    emitted = run.setdefault("events", {}).setdefault("emitted", []) if isinstance(run.setdefault("events", {}), dict) else []
+    if isinstance(emitted, list) and "run.summary.created" not in emitted:
+        emitted.append("run.summary.created")
+    save_run(project_root, run)
+    emit_process_event(project_root, "run.summary.created", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id, "artifacts": artifacts}, correlation_id=f"run-{run_id}")
+    print(f"WROTE: {rel(summary, project_root)}")
+    print(f"WROTE: {rel(handoff, project_root)}")
+    return 0
+
+
+def command_run_complete(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    run = load_run(project_root, args.run)
+    run_id = str(run.get("id", safe_id(args.run, "run")))
+    tasks = [item for item in run.get("tasks", []) if isinstance(item, dict)] if isinstance(run.get("tasks"), list) else []
+    incomplete = [str(item.get("id")) for item in tasks if item.get("blocking", True) is not False and str(item.get("status")) != "done"]
+    if incomplete:
+        raise SystemExit("FAIL: blocking tasks are not done: " + ", ".join(incomplete))
+    if getattr(args, "dry_run", False):
+        print(f"DRY-RUN: would complete run {run_id}")
+        return 0
+    run["status"] = "completed"
+    emitted = run.setdefault("events", {}).setdefault("emitted", []) if isinstance(run.setdefault("events", {}), dict) else []
+    if isinstance(emitted, list) and "run.completed" not in emitted:
+        emitted.append("run.completed")
+    save_run(project_root, run)
+    emit_process_event(project_root, "run.completed", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id}, correlation_id=f"run-{run_id}")
+    print(f"COMPLETED: {run_id}")
+    return 0
+
+
+def command_task_create(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    run = load_run(project_root, args.run)
+    run_id = str(run.get("id", safe_id(args.run, "run")))
+    task_id = safe_id(args.id, "task")
+    path = assignment_yaml_path(project_root, task_id)
+    if path.exists():
+        raise SystemExit(f"FAIL: task already exists: {rel(path, project_root)}")
+    tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
+    if any(isinstance(item, dict) and item.get("id") == task_id for item in tasks):
+        raise SystemExit(f"FAIL: run already contains task id: {task_id}")
+    order = args.order or (len(tasks) + 1)
+    task = {
+        "schema_version": 1,
+        "id": task_id,
+        "title": args.title,
+        "run_id": run_id,
+        "process": safe_id(args.process, "task"),
+        "status": "open",
+        "created_at": now_utc(),
+        "updated_at": now_utc(),
+        "objective": args.objective or "",
+        "order": order,
+        "dependencies": {"blocked_by": [], "blocks": []},
+        "iterations": [],
+        "result": {"status": "pending", "summary": "", "artifacts": []},
+    }
+    planned = [path, task_artifacts_root(project_root, run_id, task_id), run_root(project_root, run_id) / "task-index.md"]
+    if getattr(args, "dry_run", False):
+        print_plan("task-create dry run", planned, project_root)
+        return 0
+    task_artifacts_root(project_root, run_id, task_id).mkdir(parents=True, exist_ok=True)
+    write_yaml_file(path, task)
+    tasks.append({"id": task_id, "assignment": rel(path, project_root), "status": "open", "order": order, "blocking": True})
+    run["tasks"] = tasks
+    save_run(project_root, run)
+    for event_type in ["task.created", "assignment.created"]:
+        emit_process_event(project_root, event_type, process_id=task["process"], subject=task_id, assignment_id_value=task_id, assignment_path=rel(path, project_root), payload={"run_id": run_id, "task_id": task_id, "path": rel(path, project_root)}, correlation_id=f"run-{run_id}")
+    print(f"WROTE: {rel(path, project_root)}")
+    return 0
+
+
+def command_task_list(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    run = load_run(project_root, args.run)
+    for item in sorted([task for task in run.get("tasks", []) if isinstance(task, dict)], key=lambda value: int(value.get("order", 0) or 0)):
+        print(f"{item.get('order')}\t{item.get('id')}\t{item.get('status')}\t{item.get('assignment')}")
+    return 0
+
+
+def command_task_start(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
+    task["status"] = "in_progress"
+    save_task(project_root, task)
+    update_run_task_status(project_root, str(task.get("run_id", "")), task_id, "in_progress")
+    for event_type in ["task.started", "assignment.started"]:
+        emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id}, correlation_id=f"run-{task.get('run_id')}")
+    print(f"STARTED: {task_id}")
+    return 0
+
+
+def command_task_complete(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
+    if getattr(args, "dry_run", False):
+        print(f"DRY-RUN: would complete task {task_id}")
+        return 0
+    artifacts = [item for item in (args.artifact or [])]
+    task["status"] = "done"
+    task["result"] = {"status": "done", "summary": args.summary, "artifacts": artifacts}
+    save_task(project_root, task)
+    update_run_task_status(project_root, str(task.get("run_id", "")), task_id, "done")
+    for event_type in ["task.completed", "assignment.completed"]:
+        emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "summary": args.summary}, correlation_id=f"run-{task.get('run_id')}")
+    print(f"DONE: {task_id}")
+    return 0
+
+
+def command_task_doctor(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    task_id = safe_id(args.task, "task")
+    checks = validate_task_consistency(project_root, task_id)
+    result = print_checks(checks)
+    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass"})
+    return result
+
+
+def command_iteration_add(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
+    kind = safe_id(args.kind, "work")
+    if kind not in ITERATION_KINDS:
+        raise SystemExit(f"FAIL: invalid iteration kind: {kind}")
+    status = args.status
+    if status not in ITERATION_STATUSES:
+        raise SystemExit(f"FAIL: invalid iteration status: {status}")
+    iter_id = safe_id(args.id, "iter") if args.id else next_iteration_id(task)
+    iterations = task.get("iterations") if isinstance(task.get("iterations"), list) else []
+    if any(isinstance(item, dict) and item.get("id") == iter_id for item in iterations):
+        raise SystemExit(f"FAIL: duplicate iteration id: {iter_id}")
+    artifact_kind = "debug-log.md" if kind == "debug" else "work-log.md"
+    artifact = rel(task_artifacts_root(project_root, str(task.get("run_id", "")), task_id) / artifact_kind, project_root)
+    iteration = {"id": iter_id, "kind": kind, "status": status, "started_at": now_utc(), "summary": args.summary, "artifacts": [artifact]}
+    if status in {"completed", "passed", "failed", "cancelled"}:
+        iteration["completed_at"] = now_utc()
+    if getattr(args, "dry_run", False):
+        print(f"DRY-RUN: would add {iter_id} to {task_id}")
+        return 0
+    task_artifacts_root(project_root, str(task.get("run_id", "")), task_id).mkdir(parents=True, exist_ok=True)
+    iterations.append(iteration)
+    task["iterations"] = iterations
+    if status == "in_progress":
+        task["status"] = "debugging" if kind == "debug" else "in_progress"
+    save_task(project_root, task)
+    emit_process_event(project_root, "iteration.added", process_id=task_process_id(task), subject=iter_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": iter_id, "kind": kind, "status": status}, correlation_id=f"run-{task.get('run_id')}")
+    print(f"ADDED: {iter_id}")
+    return 0
+
+
+def command_iteration_complete(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
+    status = args.status
+    if status not in ITERATION_STATUSES:
+        raise SystemExit(f"FAIL: invalid iteration status: {status}")
+    iterations = task.get("iterations") if isinstance(task.get("iterations"), list) else []
+    found = False
+    for item in iterations:
+        if isinstance(item, dict) and item.get("id") == args.iteration:
+            item["status"] = status
+            item["completed_at"] = now_utc()
+            if args.summary:
+                item["summary"] = args.summary
+            found = True
+            break
+    if not found:
+        raise SystemExit(f"FAIL: iteration not found: {args.iteration}")
+    if getattr(args, "dry_run", False):
+        print(f"DRY-RUN: would complete iteration {args.iteration}")
+        return 0
+    task["iterations"] = iterations
+    save_task(project_root, task)
+    emit_process_event(project_root, "iteration.completed" if status in {"completed", "passed"} else "iteration.failed", process_id=task_process_id(task), subject=args.iteration, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "iteration_id": args.iteration, "status": status}, correlation_id=f"run-{task.get('run_id')}")
+    print(f"UPDATED: {args.iteration}")
+    return 0
+
+
 def command_hooks_dispatch(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
@@ -5772,7 +6886,14 @@ def command_doctor_project(args: argparse.Namespace) -> int:
         checks.append(check("PASS" if not contains_secret_value(text) else "FAIL", "public manifest contains no secret values"))
         manifest_data = load_yaml_document(manifest)
     else:
-        checks.append(check("FAIL", f"{rel(manifest, project_root)} missing"))
+        checks.append(
+            check_with_hint(
+                "FAIL",
+                f"{rel(manifest, project_root)} missing",
+                "The project has not been onboarded into ProcessForge or the .pf flow root is incomplete.",
+                "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply",
+            )
+        )
         manifest_data = {}
 
     distribution_root: Path | None = None
@@ -5786,7 +6907,14 @@ def command_doctor_project(args: argparse.Namespace) -> int:
             checks.append(check("PASS" if registry.is_file() else "FAIL", "workplace distributions registry is reachable"))
             distribution_root = resolve_distribution_path(workplace, "processforge")
         else:
-            checks.append(check("FAIL", "workplace manifest is missing or unreachable"))
+            checks.append(
+                check_with_hint(
+                    "FAIL",
+                    "workplace manifest is missing or unreachable",
+                    "The local project config points to a workplace manifest that cannot be read.",
+                    "update .pf/process-forge.local.yaml so manifest points to an existing workplace.yaml",
+                )
+            )
     else:
         workplace_data = manifest_data.get("workplace", {}) if isinstance(manifest_data.get("workplace"), dict) else {}
         if workplace_data.get("reference") == "auto":
@@ -5794,7 +6922,15 @@ def command_doctor_project(args: argparse.Namespace) -> int:
             checks.append(check("PASS", "process-forge.local.yaml omitted by explicit workplace.reference auto mode"))
             distribution_root = project_root
         else:
-            checks.append(check("FAIL", "process-forge.local.yaml missing"))
+            checks.append(
+                check_with_hint(
+                    "FAIL",
+                    "process-forge.local.yaml missing",
+                    "Linked projects need private local workplace/distribution coordinates.",
+                    "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply",
+                    "set workplace.reference: auto only for self-contained distribution dogfooding projects",
+                )
+            )
 
     checks.extend(distribution_checks(distribution_root))
     checks.extend(validate_hooks_config(project_root))
@@ -5802,7 +6938,16 @@ def command_doctor_project(args: argparse.Namespace) -> int:
     if gitignore.is_file():
         ignore_text = gitignore.read_text(encoding="utf-8", errors="replace")
         for entry in [".pf/process-forge.local.yaml", ".pf/runtime/", ".pf/cache/"]:
-            checks.append(check("PASS" if entry in ignore_text else "FAIL", f".gitignore contains {entry}"))
+            checks.append(
+                check("PASS", f".gitignore contains {entry}")
+                if entry in ignore_text
+                else check_with_hint(
+                    "FAIL",
+                    f".gitignore missing {entry}",
+                    "Private local config and runtime data must stay out of public project files.",
+                    f"add {entry} to .gitignore",
+                )
+            )
     else:
         checks.append(check("FAIL", ".gitignore missing"))
 
@@ -5846,7 +6991,30 @@ Fix:
         "handoffs/project-ready-handoff.md",
     ]:
         path = flow_root / rel_path
-        checks.append(check("PASS" if path.is_file() else ("WARN" if auto_workplace_mode else "FAIL"), f"{rel(path, project_root)} {'found' if path.is_file() else 'missing'}"))
+        if path.is_file():
+            checks.append(check("PASS", f"{rel(path, project_root)} found"))
+        elif auto_workplace_mode:
+            checks.append(check("WARN", f"{rel(path, project_root)} missing"))
+        elif rel_path == "runtime/bin/pf.py":
+            checks.append(
+                check_with_hint(
+                    "FAIL",
+                    f"{rel(path, project_root)} missing",
+                    "A linked project needs its local Python launcher because it does not contain ProcessForge core tools.",
+                    "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply",
+                )
+            )
+        elif rel_path.startswith("contexts/project-context.snapshot"):
+            checks.append(
+                check_with_hint(
+                    "FAIL",
+                    f"{rel(path, project_root)} missing",
+                    "The project context snapshot is stale or absent.",
+                    "python .pf/runtime/bin/pf.py project-context-refresh --project-root .",
+                )
+            )
+        else:
+            checks.append(check("FAIL", f"{rel(path, project_root)} missing"))
     return print_checks(checks)
 
 
@@ -6461,7 +7629,16 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
     platform = str(args.platform)
     checks: list[Check] = []
     contract_path = platform_contract_path(workplace_root, platform)
-    checks.append(check("PASS" if contract_path else "FAIL", "platform contract found"))
+    checks.append(
+        check("PASS", "platform contract found")
+        if contract_path
+        else check_with_hint(
+            "FAIL",
+            "platform contract found",
+            "The requested platform is not registered or its platform contract path is missing.",
+            f"python bin/pf.py platform-create --workplace <workplace-root> --id {platform} --title \"{platform}\" --apply",
+        )
+    )
     if contract_path:
         text = contract_path.read_text(encoding="utf-8", errors="replace")
         checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "platform contract has no local absolute paths"))
@@ -6477,14 +7654,52 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
         includes = data.get("includes") if isinstance(data.get("includes"), dict) else {}
         for package_id in list_value(requires.get("knowledge_packages")):
             manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
-            checks.append(check("PASS" if manifest else "FAIL", f"required knowledge package available: {package_id}"))
+            checks.append(
+                check("PASS", f"required knowledge package available: {package_id}")
+                if manifest
+                else check_with_hint(
+                    "FAIL",
+                    f"required knowledge package available: {package_id}",
+                    "This platform contract marks the package as required.",
+                    f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title \"{package_id}\" --apply",
+                    "mark it as required: false or move it to includes.knowledge_packages if optional",
+                )
+            )
         for package_id in list_value(includes.get("knowledge_packages")):
             manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
-            checks.append(check("PASS" if manifest else "WARN", f"optional knowledge package available: {package_id}"))
+            checks.append(
+                check("PASS", f"optional knowledge package available: {package_id}")
+                if manifest
+                else check_with_hint(
+                    "WARN",
+                    f"optional knowledge package available: {package_id}",
+                    "This platform contract recommends the package, but onboarding can continue without it.",
+                    f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title \"{package_id}\" --apply",
+                )
+            )
         for template_id in list_value(requires.get("templates")):
-            checks.append(check("PASS" if template_manifest_path(workplace_root, template_id) else "FAIL", f"required template available: {template_id}"))
+            checks.append(
+                check("PASS", f"required template available: {template_id}")
+                if template_manifest_path(workplace_root, template_id)
+                else check_with_hint(
+                    "FAIL",
+                    f"required template available: {template_id}",
+                    "This platform contract marks the template as required.",
+                    f"python bin/pf.py template-create --workplace <workplace-root> --id {template_id} --title \"{template_id}\" --apply",
+                    "move it to includes.templates if optional",
+                )
+            )
         for template_id in list_value(includes.get("templates")):
-            checks.append(check("PASS" if template_manifest_path(workplace_root, template_id) else "WARN", f"optional template available: {template_id}"))
+            checks.append(
+                check("PASS", f"optional template available: {template_id}")
+                if template_manifest_path(workplace_root, template_id)
+                else check_with_hint(
+                    "WARN",
+                    f"optional template available: {template_id}",
+                    "This platform contract recommends the template, but onboarding can continue without it.",
+                    f"python bin/pf.py template-create --workplace <workplace-root> --id {template_id} --title \"{template_id}\" --apply",
+                )
+            )
         for forbidden in ["package.yaml", "template.yaml"]:
             copied = [path for path in contract_path.parent.rglob(forbidden) if path != contract_path]
             checks.append(check("PASS" if not copied else "FAIL", f"no copied {forbidden} inside platform contract"))
@@ -6724,7 +7939,16 @@ def command_template_doctor(args: argparse.Namespace) -> int:
     template_id = str(args.template)
     checks: list[Check] = []
     manifest_path = template_manifest_path(workplace_root, template_id)
-    checks.append(check("PASS" if manifest_path else "FAIL", "template manifest found"))
+    checks.append(
+        check("PASS", "template manifest found")
+        if manifest_path
+        else check_with_hint(
+            "FAIL",
+            "template manifest found",
+            "The template id cannot be resolved through registries/templates.yaml or the default template root.",
+            f"python bin/pf.py template-create --workplace <workplace-root> --id {template_id} --title \"{template_id}\" --apply",
+        )
+    )
     if manifest_path:
         text = manifest_path.read_text(encoding="utf-8", errors="replace")
         checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "template manifest has no local absolute paths"))
@@ -6736,11 +7960,29 @@ def command_template_doctor(args: argparse.Namespace) -> int:
         for item in data.get("files", []) if isinstance(data.get("files"), list) else []:
             source = item.get("source") if isinstance(item, dict) else None
             if source:
-                checks.append(check("PASS" if (root / str(source)).is_file() else "FAIL", f"referenced file exists: {source}"))
+                checks.append(
+                    check("PASS", f"referenced file exists: {source}")
+                    if (root / str(source)).is_file()
+                    else check_with_hint(
+                        "FAIL",
+                        f"referenced file exists: {source}",
+                        "The template manifest references a payload file that is not present.",
+                        f"restore {source} under the template root or remove the file entry from template.yaml",
+                    )
+                )
         for item in data.get("prompts", []) if isinstance(data.get("prompts"), list) else []:
             prompt_path = item.get("path") if isinstance(item, dict) else None
             if prompt_path:
-                checks.append(check("PASS" if (root / str(prompt_path)).is_file() else "FAIL", f"referenced prompt exists: {prompt_path}"))
+                checks.append(
+                    check("PASS", f"referenced prompt exists: {prompt_path}")
+                    if (root / str(prompt_path)).is_file()
+                    else check_with_hint(
+                        "FAIL",
+                        f"referenced prompt exists: {prompt_path}",
+                        "The template manifest references a prompt file that is not present.",
+                        f"restore {prompt_path} under the template root or remove the prompt entry from template.yaml",
+                    )
+                )
     failed = any(item.level == "FAIL" for item in checks)
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-doctor", event_type="template.doctor.failed" if failed else "template.doctor.passed", target={"template_id": template_id}, status="failed" if failed else "passed", message="template doctor completed"))
     return print_checks(checks)
@@ -6964,6 +8206,37 @@ def build_parser() -> argparse.ArgumentParser:
     release_check.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
     release_check.set_defaults(func=command_release_check)
 
+    release_test = sub.add_parser("release-test", help="Run the v0.1 release validation suite.")
+    release_test.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
+    release_test.set_defaults(func=command_release_test)
+
+    smoke_all = sub.add_parser("smoke-all", help="Alias for release-test.")
+    smoke_all.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
+    smoke_all.set_defaults(func=command_release_test)
+
+    clean = sub.add_parser("clean", help="Remove safe generated ProcessForge artifacts.")
+    clean.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
+    clean.add_argument("--release", action="store_true", help="Remove safe generated release artifacts.")
+    clean.set_defaults(func=command_clean)
+
+    release_pack = sub.add_parser("release-pack", help="Build a portable ProcessForge release archive and manifest.")
+    release_pack.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
+    release_pack.add_argument("--output", required=True, help="Release archive path.")
+    release_pack.add_argument("--dry-run", action="store_true", help="Print archive contents without writing files.")
+    release_pack.set_defaults(func=command_release_pack)
+
+    release_archive_test = sub.add_parser("release-archive-test", help="Inspect a release archive and run release-test after extraction.")
+    release_archive_test.add_argument("--archive", required=True, help="Release archive ZIP path.")
+    release_archive_test.add_argument("--manifest", help="Optional release manifest path. Defaults to archive path with .manifest.json suffix.")
+    release_archive_test.set_defaults(func=command_release_archive_test)
+
+    examples_check = sub.add_parser("examples-check", help="Validate release examples for portability and stale generated data.")
+    examples_check.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
+    examples_check.set_defaults(func=command_examples_check)
+
+    version = sub.add_parser("version", help="Print ProcessForge distribution and spec versions.")
+    version.set_defaults(func=command_version)
+
     path_resolve = sub.add_parser("path-resolve", help="Resolve a workplace path using path_constants.")
     path_resolve.add_argument("--workplace", required=True, help="Workplace root path.")
     path_resolve.add_argument("--path", required=True, help="Raw path with optional ${CONST}.")
@@ -7152,6 +8425,95 @@ def build_parser() -> argparse.ArgumentParser:
     assignment_capsule.add_argument("--assignment", required=True, help="Assignment Markdown with YAML front matter or assignment YAML.")
     assignment_capsule.add_argument("--force", action="store_true", help="Overwrite an existing capsule.")
     assignment_capsule.set_defaults(func=command_assignment_capsule)
+
+    run_create = sub.add_parser("run-create", help="Create a project run/work session.")
+    run_create.add_argument("--project-root", required=True, help="Project root path.")
+    run_create.add_argument("--id", required=True, help="Run id.")
+    run_create.add_argument("--title", required=True, help="Run title.")
+    run_create.add_argument("--process", default="task-batch-execution", help="Process definition id.")
+    run_create.add_argument("--objective", help="Run objective.")
+    run_create.add_argument("--status", default="in_progress", choices=sorted(RUN_STATUSES), help="Initial run status.")
+    run_create.add_argument("--apply", action="store_true", help="Write run files.")
+    run_create.set_defaults(func=command_run_create)
+
+    run_list = sub.add_parser("run-list", help="List project runs.")
+    run_list.add_argument("--project-root", required=True, help="Project root path.")
+    run_list.set_defaults(func=command_run_list)
+
+    run_status = sub.add_parser("run-status", help="Show run status and task summary.")
+    run_status.add_argument("--project-root", required=True, help="Project root path.")
+    run_status.add_argument("--run", required=True, help="Run id.")
+    run_status.set_defaults(func=command_run_status)
+
+    run_doctor = sub.add_parser("run-doctor", help="Validate run consistency.")
+    run_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    run_doctor.add_argument("--run", required=True, help="Run id.")
+    run_doctor.set_defaults(func=command_run_doctor)
+
+    run_summary = sub.add_parser("run-summary", help="Create or refresh run summary and handoff.")
+    run_summary.add_argument("--project-root", required=True, help="Project root path.")
+    run_summary.add_argument("--run", required=True, help="Run id.")
+    run_summary.add_argument("--apply", action="store_true", help="Write summary and handoff files.")
+    run_summary.set_defaults(func=command_run_summary)
+
+    run_complete = sub.add_parser("run-complete", help="Complete a run after blocking tasks are done.")
+    run_complete.add_argument("--project-root", required=True, help="Project root path.")
+    run_complete.add_argument("--run", required=True, help="Run id.")
+    run_complete.add_argument("--apply", action="store_true", help="Mark the run completed.")
+    run_complete.set_defaults(func=command_run_complete)
+
+    task_create = sub.add_parser("task-create", help="Create a task assignment inside a run.")
+    task_create.add_argument("--project-root", required=True, help="Project root path.")
+    task_create.add_argument("--run", required=True, help="Run id.")
+    task_create.add_argument("--id", required=True, help="Task id.")
+    task_create.add_argument("--title", required=True, help="Task title.")
+    task_create.add_argument("--process", required=True, help="Task process id.")
+    task_create.add_argument("--objective", help="Task objective.")
+    task_create.add_argument("--order", type=int, help="Task order override.")
+    task_create.add_argument("--apply", action="store_true", help="Write task files.")
+    task_create.set_defaults(func=command_task_create)
+
+    task_list = sub.add_parser("task-list", help="List tasks in a run.")
+    task_list.add_argument("--project-root", required=True, help="Project root path.")
+    task_list.add_argument("--run", required=True, help="Run id.")
+    task_list.set_defaults(func=command_task_list)
+
+    task_start = sub.add_parser("task-start", help="Mark a task assignment in progress.")
+    task_start.add_argument("--project-root", required=True, help="Project root path.")
+    task_start.add_argument("--task", required=True, help="Task id.")
+    task_start.set_defaults(func=command_task_start)
+
+    task_complete = sub.add_parser("task-complete", help="Complete a task assignment and record its result.")
+    task_complete.add_argument("--project-root", required=True, help="Project root path.")
+    task_complete.add_argument("--task", required=True, help="Task id.")
+    task_complete.add_argument("--summary", required=True, help="Task result summary.")
+    task_complete.add_argument("--artifact", action="append", help="Result artifact path. May be repeated.")
+    task_complete.add_argument("--apply", action="store_true", help="Mark the task done.")
+    task_complete.set_defaults(func=command_task_complete)
+
+    task_doctor = sub.add_parser("task-doctor", help="Validate task assignment consistency.")
+    task_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    task_doctor.add_argument("--task", required=True, help="Task id.")
+    task_doctor.set_defaults(func=command_task_doctor)
+
+    iteration_add = sub.add_parser("iteration-add", help="Add a work/debug/fix/review iteration to a task.")
+    iteration_add.add_argument("--project-root", required=True, help="Project root path.")
+    iteration_add.add_argument("--task", required=True, help="Task id.")
+    iteration_add.add_argument("--id", help="Iteration id. Defaults to the next iter-NNN value.")
+    iteration_add.add_argument("--kind", required=True, choices=sorted(ITERATION_KINDS), help="Iteration kind.")
+    iteration_add.add_argument("--status", default="completed", choices=sorted(ITERATION_STATUSES), help="Iteration status.")
+    iteration_add.add_argument("--summary", required=True, help="Iteration summary.")
+    iteration_add.add_argument("--apply", action="store_true", help="Write the iteration.")
+    iteration_add.set_defaults(func=command_iteration_add)
+
+    iteration_complete = sub.add_parser("iteration-complete", help="Update an existing iteration status and summary.")
+    iteration_complete.add_argument("--project-root", required=True, help="Project root path.")
+    iteration_complete.add_argument("--task", required=True, help="Task id.")
+    iteration_complete.add_argument("--iteration", required=True, help="Iteration id.")
+    iteration_complete.add_argument("--status", required=True, choices=sorted(ITERATION_STATUSES), help="Final iteration status.")
+    iteration_complete.add_argument("--summary", help="Replacement iteration summary.")
+    iteration_complete.add_argument("--apply", action="store_true", help="Write the iteration update.")
+    iteration_complete.set_defaults(func=command_iteration_complete)
 
     hooks_dispatch = sub.add_parser("hooks-dispatch", help="Dry-run or enqueue hook delivery for a ProcessForge event.")
     hooks_dispatch.add_argument("--project-root", required=True, help="Project root path.")

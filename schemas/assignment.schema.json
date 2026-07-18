@@ -3,21 +3,27 @@
   "$id": "https://processforge.local/schemas/assignment.schema.json",
   "title": "Assignment",
   "type": "object",
-  "required": ["id", "title", "role", "process", "stage", "goal", "allowed_files", "forbidden_files", "required_outputs", "status"],
+  "required": ["id", "title", "process", "status"],
   "properties": {
     "id": { "$ref": "#/$defs/id" },
     "title": { "type": "string" },
     "role": { "type": "string" },
     "process": {
-      "type": "object",
+      "type": ["object", "string"],
       "required": ["id", "version"],
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "version": { "type": "string" }
       }
     },
+    "run_id": { "$ref": "#/$defs/id" },
     "stage": { "$ref": "#/$defs/id" },
     "goal": { "type": "string" },
+    "objective": { "type": "string" },
+    "order": { "type": "integer", "minimum": 1 },
+    "dependencies": { "type": "object", "additionalProperties": true },
+    "iterations": { "type": "array", "items": { "$ref": "#/$defs/iteration" } },
+    "result": { "$ref": "#/$defs/result" },
     "input_artifacts": { "type": "array", "items": { "type": "string" } },
     "allowed_files": { "type": "array", "items": { "type": "string" } },
     "forbidden_files": { "type": "array", "items": { "type": "string" } },
@@ -30,10 +36,33 @@
     "completion_criteria": { "type": "array", "items": { "type": "string" } },
     "log_file": { "type": "string" },
     "handoff_requirements": { "type": "array", "items": { "type": "string" } },
-    "status": { "enum": ["draft", "ready", "in_progress", "blocked", "completed", "cancelled"] }
+    "status": { "enum": ["draft", "ready", "open", "in_progress", "blocked", "debugging", "review", "completed", "done", "cancelled", "failed"] }
   },
   "$defs": {
-    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$|^[0-9]{4}-[0-9]{2}-[0-9]{2}[a-z0-9-]*$" },
+    "iteration": {
+      "type": "object",
+      "required": ["id", "kind", "status", "summary"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^iter-[0-9]{3}$|^[a-z0-9][a-z0-9-]*[a-z0-9]$" },
+        "kind": { "enum": ["work", "debug", "fix", "review", "test", "research", "handoff", "note"] },
+        "status": { "enum": ["planned", "in_progress", "completed", "passed", "failed", "cancelled"] },
+        "started_at": { "type": "string" },
+        "completed_at": { "type": "string" },
+        "summary": { "type": "string" },
+        "artifacts": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "status": { "enum": ["pending", "done", "failed", "cancelled"] },
+        "summary": { "type": "string" },
+        "artifacts": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": true
 }

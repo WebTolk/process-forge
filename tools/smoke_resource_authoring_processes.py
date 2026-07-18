@@ -11,19 +11,55 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "bin" / "pf.py"
+DEFAULT_TIMEOUT = 30
 
 
-def run(*args: str, cwd: Path = ROOT, expect: int = 0) -> subprocess.CompletedProcess[str]:
-    result = subprocess.run(
-        [sys.executable, str(CLI), *args],
-        cwd=cwd,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
-    )
+def tail(text: str, lines: int = 40) -> str:
+    parts = text.splitlines()
+    return "\n".join(parts[-lines:])
+
+
+def format_command(command: list[str]) -> str:
+    return " ".join(command)
+
+
+def run_cmd(args: list[str], cwd: Path = ROOT, expect: int = 0, timeout: int = DEFAULT_TIMEOUT) -> subprocess.CompletedProcess[str]:
+    command = [sys.executable, str(CLI), *args]
+    try:
+        result = subprocess.run(
+            command,
+            cwd=cwd,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout or ""
+        stderr = exc.stderr or ""
+        output = stdout if isinstance(stdout, str) else stdout.decode(errors="replace")
+        error = stderr if isinstance(stderr, str) else stderr.decode(errors="replace")
+        print("TIMEOUT: command exceeded timeout")
+        print(f"CMD: {format_command(command)}")
+        print(f"CWD: {cwd}")
+        print(f"TIMEOUT_SECONDS: {timeout}")
+        if output:
+            print("STDOUT_TAIL:")
+            print(tail(output))
+        if error:
+            print("STDERR_TAIL:")
+            print(tail(error))
+        raise AssertionError(f"timeout after {timeout}s: {' '.join(args)}") from exc
     if result.returncode != expect:
-        print(result.stdout)
+        print("FAIL: unexpected command exit")
+        print(f"CMD: {format_command(command)}")
+        print(f"CWD: {cwd}")
+        print(f"EXPECTED_EXIT: {expect}")
+        print(f"ACTUAL_EXIT: {result.returncode}")
+        if result.stdout:
+            print("OUTPUT_TAIL:")
+            print(tail(result.stdout))
         raise AssertionError(f"expected exit {expect}, got {result.returncode}: {' '.join(args)}")
     return result
 
@@ -47,191 +83,234 @@ def assert_no_ps1(root: Path) -> None:
         raise AssertionError("unexpected ps1 file: " + str(matches[0]))
 
 
+def run(*args: str, cwd: Path = ROOT, expect: int = 0, timeout: int = DEFAULT_TIMEOUT) -> subprocess.CompletedProcess[str]:
+    return run_cmd(list(args), cwd=cwd, expect=expect, timeout=timeout)
+
+
+def create_workplace_with_template_and_package(root: Path) -> tuple[Path, Path]:
+    workplace = root / "workplace"
+    run("workplace-init", "--workplace", str(workplace), "--apply")
+    run(
+        "template-create",
+        "--workplace",
+        str(workplace),
+        "--id",
+        "report.audit.basic",
+        "--title",
+        "Basic Audit Report",
+        "--apply",
+    )
+    run("template-doctor", "--workplace", str(workplace), "--template", "report.audit.basic")
+    run(
+        "knowledge-package-create",
+        "--workplace",
+        str(workplace),
+        "--id",
+        "docs.joomla.local",
+        "--title",
+        "Local Joomla Documentation",
+        "--package-root",
+        "global",
+        "--apply",
+    )
+    run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "docs.joomla.local", "--package-root", "global")
+    return root, workplace
+
+
+def test_full_chain(root: Path) -> None:
+    _root, workplace = create_workplace_with_template_and_package(root)
+    project = root / "joomla-component"
+    project.mkdir()
+    (project / "README.md").write_text("# Joomla Component Smoke\n", encoding="utf-8")
+
+    run(
+        "platform-create",
+        "--workplace",
+        str(workplace),
+        "--id",
+        "platform.joomla",
+        "--title",
+        "Joomla Platform",
+        "--project-type",
+        "joomla-component",
+        "--knowledge-package",
+        "docs.joomla.local",
+        "--template",
+        "report.audit.basic",
+        "--apply",
+    )
+    run("platform-contract-doctor", "--workplace", str(workplace), "--platform", "platform.joomla")
+    run(
+        "project-onboard",
+        "--project-root",
+        str(project),
+        "--workplace",
+        str(workplace),
+        "--type",
+        "joomla-component",
+        "--apply",
+    )
+    run("project-context-refresh", "--project-root", str(project))
+    snapshot = project / ".pf" / "contexts" / "project-context.snapshot.yaml"
+    assert_file(snapshot)
+    assert_contains(snapshot, "platform.joomla", "docs.joomla.local", "report.audit.basic")
+
+    run("hooks-dispatch", "--project-root", str(project), "--event-type", "template.authoring.completed", "--outbox")
+    outbox = project / ".pf" / "runtime" / "hooks" / "outbox"
+    if not any(outbox.rglob("*.json")):
+        raise AssertionError("hooks-dispatch did not write an authoring outbox payload")
+
+    events = workplace / "runtime" / "events" / "events.ndjson"
+    assert_contains(
+        events,
+        "template.authoring.started",
+        "template.created",
+        "knowledge_package.created",
+        "platform.contract.created",
+        "platform.contract.linked",
+        "platform.authoring.completed",
+    )
+    for path in [
+        workplace / "reusable-templates" / "report.audit.basic" / "template.yaml",
+        workplace / "packages" / "docs.joomla.local" / "package.yaml",
+        workplace / "platform-contracts" / "platform.joomla" / "platform-contract.yaml",
+    ]:
+        assert_file(path)
+        text = path.read_text(encoding="utf-8", errors="replace")
+        if ":\\\\" in text:
+            raise AssertionError(f"public authoring artifact contains Windows absolute path marker: {path}")
+    assert_no_ps1(workplace)
+    assert_no_ps1(project)
+
+
+def test_negative_duplicate_template(root: Path) -> None:
+    _root, workplace = create_workplace_with_template_and_package(root)
+    run(
+        "template-create",
+        "--workplace",
+        str(workplace),
+        "--id",
+        "report.audit.basic",
+        "--title",
+        "Duplicate Audit Report",
+        "--apply",
+        expect=1,
+    )
+
+
+def test_negative_missing_package_root(root: Path) -> None:
+    workplace = root / "workplace"
+    run("workplace-init", "--workplace", str(workplace), "--apply")
+    run(
+        "knowledge-package-create",
+        "--workplace",
+        str(workplace),
+        "--id",
+        "docs.bad.root",
+        "--title",
+        "Bad Root",
+        "--package-root",
+        "missing-root",
+        "--apply",
+        expect=1,
+    )
+
+
+def test_negative_missing_required_platform_package(root: Path) -> None:
+    workplace = root / "workplace"
+    run("workplace-init", "--workplace", str(workplace), "--apply")
+    broken_contract = workplace / "platform-contracts" / "platform.broken" / "platform-contract.yaml"
+    broken_contract.parent.mkdir(parents=True, exist_ok=True)
+    broken_contract.write_text(
+        "\n".join(
+            [
+                "schema_version: 1",
+                "id: platform.broken",
+                "title: Broken Platform",
+                "project_type_hints: [broken-project]",
+                "requires:",
+                "  capabilities: [filesystem.read]",
+                "  knowledge_packages: [docs.required.missing]",
+                "  templates: [template.required.missing]",
+                "includes:",
+                "  knowledge_packages: []",
+                "  templates: []",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    platforms_registry = workplace / "registries" / "platforms.yaml"
+    platforms_registry.write_text(
+        "\n".join(
+            [
+                "schema_version: 1",
+                "platforms:",
+                "  - id: broken",
+                "    package_id: platform.broken",
+                "    path: platform-contracts/platform.broken/platform-contract.yaml",
+                "    status: available",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    broken = run("platform-contract-doctor", "--workplace", str(workplace), "--platform", "platform.broken", expect=1)
+    if "FAIL: required knowledge package available: docs.required.missing" not in broken.stdout:
+        raise AssertionError("missing required knowledge package did not fail")
+    if "FAIL: required template available: template.required.missing" not in broken.stdout:
+        raise AssertionError("missing required template did not fail")
+
+
+def test_optional_platform_resource_warns(root: Path) -> None:
+    _root, workplace = create_workplace_with_template_and_package(root)
+    optional = run(
+        "platform-create",
+        "--workplace",
+        str(workplace),
+        "--id",
+        "platform.optional",
+        "--title",
+        "Optional Missing Platform",
+        "--knowledge-package",
+        "docs.optional.missing",
+        "--apply",
+    )
+    if "WARN: optional knowledge package available: docs.optional.missing" not in optional.stdout:
+        raise AssertionError("optional missing knowledge package did not warn")
+
+
+def test_no_powershell(root: Path) -> None:
+    _root, workplace = create_workplace_with_template_and_package(root)
+    assert_no_ps1(workplace)
+
+
 def main() -> int:
-    with tempfile.TemporaryDirectory(prefix="pf-resource-authoring-") as temp:
-        root = Path(temp)
-        workplace = root / "workplace"
-        project = root / "joomla-component"
-        project.mkdir()
-        (project / "README.md").write_text("# Joomla Component Smoke\n", encoding="utf-8")
-
-        run("workplace-init", "--workplace", str(workplace), "--apply")
-        run(
-            "template-create",
-            "--workplace",
-            str(workplace),
-            "--id",
-            "report.audit.basic",
-            "--title",
-            "Basic Audit Report",
-            "--apply",
-        )
-        run("template-doctor", "--workplace", str(workplace), "--template", "report.audit.basic")
-        run(
-            "template-create",
-            "--workplace",
-            str(workplace),
-            "--id",
-            "report.audit.basic",
-            "--title",
-            "Duplicate Audit Report",
-            "--apply",
-            expect=1,
-        )
-
-        run(
-            "knowledge-package-create",
-            "--workplace",
-            str(workplace),
-            "--id",
-            "docs.joomla.local",
-            "--title",
-            "Local Joomla Documentation",
-            "--package-root",
-            "global",
-            "--apply",
-        )
-        run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "docs.joomla.local", "--package-root", "global")
-        run(
-            "knowledge-package-create",
-            "--workplace",
-            str(workplace),
-            "--id",
-            "docs.bad.root",
-            "--title",
-            "Bad Root",
-            "--package-root",
-            "missing-root",
-            "--apply",
-            expect=1,
-        )
-
-        run(
-            "platform-create",
-            "--workplace",
-            str(workplace),
-            "--id",
-            "platform.joomla",
-            "--title",
-            "Joomla Platform",
-            "--project-type",
-            "joomla-component",
-            "--knowledge-package",
-            "docs.joomla.local",
-            "--template",
-            "report.audit.basic",
-            "--apply",
-        )
-        run("platform-contract-doctor", "--workplace", str(workplace), "--platform", "platform.joomla")
-
-        optional = run(
-            "platform-create",
-            "--workplace",
-            str(workplace),
-            "--id",
-            "platform.optional",
-            "--title",
-            "Optional Missing Platform",
-            "--knowledge-package",
-            "docs.optional.missing",
-            "--apply",
-        )
-        if "WARN: optional knowledge package available: docs.optional.missing" not in optional.stdout:
-            raise AssertionError("optional missing knowledge package did not warn")
-
-        broken_contract = workplace / "platform-contracts" / "platform.broken" / "platform-contract.yaml"
-        broken_contract.parent.mkdir(parents=True, exist_ok=True)
-        broken_contract.write_text(
-            "\n".join(
-                [
-                    "schema_version: 1",
-                    "id: platform.broken",
-                    "title: Broken Platform",
-                    "project_type_hints: [broken-project]",
-                    "requires:",
-                    "  capabilities: [filesystem.read]",
-                    "  knowledge_packages: [docs.required.missing]",
-                    "  templates: [template.required.missing]",
-                    "includes:",
-                    "  knowledge_packages: []",
-                    "  templates: []",
-                    "",
-                ]
-            ),
-            encoding="utf-8",
-        )
-        platforms_registry = workplace / "registries" / "platforms.yaml"
-        platforms_registry.write_text(
-            "\n".join(
-                [
-                    "schema_version: 1",
-                    "platforms:",
-                    "  - id: joomla",
-                    "    package_id: platform.joomla",
-                    "    path: platform-contracts/platform.joomla/platform-contract.yaml",
-                    "    status: available",
-                    "  - id: optional",
-                    "    package_id: platform.optional",
-                    "    path: platform-contracts/platform.optional/platform-contract.yaml",
-                    "    status: available",
-                    "  - id: broken",
-                    "    package_id: platform.broken",
-                    "    path: platform-contracts/platform.broken/platform-contract.yaml",
-                    "    status: available",
-                    "",
-                ]
-            ),
-            encoding="utf-8",
-        )
-        broken = run("platform-contract-doctor", "--workplace", str(workplace), "--platform", "platform.broken", expect=1)
-        if "FAIL: required knowledge package available: docs.required.missing" not in broken.stdout:
-            raise AssertionError("missing required knowledge package did not fail")
-        if "FAIL: required template available: template.required.missing" not in broken.stdout:
-            raise AssertionError("missing required template did not fail")
-
-        run(
-            "project-onboard",
-            "--project-root",
-            str(project),
-            "--workplace",
-            str(workplace),
-            "--type",
-            "joomla-component",
-            "--apply",
-        )
-        run("project-context-refresh", "--project-root", str(project))
-        snapshot = project / ".pf" / "contexts" / "project-context.snapshot.yaml"
-        assert_file(snapshot)
-        assert_contains(snapshot, "platform.joomla", "docs.joomla.local", "report.audit.basic")
-
-        run("hooks-dispatch", "--project-root", str(project), "--event-type", "template.authoring.completed", "--outbox")
-        outbox = project / ".pf" / "runtime" / "hooks" / "outbox"
-        if not any(outbox.rglob("*.json")):
-            raise AssertionError("hooks-dispatch did not write an authoring outbox payload")
-
-        events = workplace / "runtime" / "events" / "events.ndjson"
-        assert_contains(
-            events,
-            "template.authoring.started",
-            "template.created",
-            "knowledge_package.created",
-            "platform.contract.created",
-            "platform.contract.linked",
-            "platform.authoring.completed",
-        )
-        for path in [
-            workplace / "reusable-templates" / "report.audit.basic" / "template.yaml",
-            workplace / "packages" / "docs.joomla.local" / "package.yaml",
-            workplace / "platform-contracts" / "platform.joomla" / "platform-contract.yaml",
-        ]:
-            assert_file(path)
-            text = path.read_text(encoding="utf-8", errors="replace")
-            if ":\\\\" in text:
-                raise AssertionError(f"public authoring artifact contains Windows absolute path marker: {path}")
-        assert_no_ps1(workplace)
-        assert_no_ps1(project)
-
-    print("PASS: resource authoring smoke test passed.")
+    tests = [
+        test_full_chain,
+        test_negative_duplicate_template,
+        test_negative_missing_package_root,
+        test_negative_missing_required_platform_package,
+        test_optional_platform_resource_warns,
+        test_no_powershell,
+    ]
+    failures: list[str] = []
+    for test in tests:
+        with tempfile.TemporaryDirectory(prefix=f"pf-{test.__name__}-") as temp:
+            print(f"RUN: {test.__name__}")
+            try:
+                test(Path(temp))
+            except Exception as exc:
+                failures.append(f"{test.__name__}: {exc}")
+                print(f"FAIL: {test.__name__}: {exc}")
+            else:
+                print(f"PASS: {test.__name__}")
+    if failures:
+        print("RESULT: FAIL")
+        for failure in failures:
+            print(f"- {failure}")
+        return 1
+    print("RESULT: PASS")
     return 0
 
 

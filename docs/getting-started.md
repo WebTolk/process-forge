@@ -6,18 +6,18 @@ Python CLI is the canonical runtime.
 ## Initialize A Workplace
 
 ```bash
-python tools/processforge.py workplace-init --workplace <workplace-root> --dry-run
-python tools/processforge.py workplace-init --workplace <workplace-root> --apply
-python tools/processforge.py doctor-workplace --root <workplace-root>
+python bin/pf.py workplace-init --workplace <workplace-root> --dry-run
+python bin/pf.py workplace-init --workplace <workplace-root> --apply
+python bin/pf.py doctor-workplace --root <workplace-root>
 ```
 
 ## Initialize A Project
 
 ```bash
-python tools/processforge.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --dry-run
-python tools/processforge.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply
-python tools/processforge.py doctor-project --project-root <project-root>
-python tools/processforge.py agent-start-prompt --project-root <project-root>
+python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --dry-run
+python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply
+python bin/pf.py doctor-project --project-root <project-root>
+python bin/pf.py agent-start-prompt --project-root <project-root>
 ```
 
 Project onboarding creates `.pf/AGENTS.md`, `.pf/START_AGENT_HERE.md`,
@@ -39,8 +39,8 @@ the operator to run `init-project` instead of creating root-layout files.
 ## Refresh Project Context
 
 ```bash
-python tools/processforge.py project-context-refresh --project-root <project-root>
-python tools/processforge.py project-context-check --project-root <project-root>
+python bin/pf.py project-context-refresh --project-root <project-root>
+python bin/pf.py project-context-check --project-root <project-root>
 ```
 
 The refresh command writes:
@@ -54,7 +54,7 @@ The refresh command writes:
 ## Start A Session
 
 ```bash
-python tools/processforge.py session-start --mode resume --project-root <project-root> --report-only
+python bin/pf.py session-start --mode resume --project-root <project-root> --report-only
 ```
 
 Session start reads the snapshot, reports freshness, writes private telemetry,
@@ -66,7 +66,7 @@ Assignments use YAML front matter or assignment YAML for machine-readable
 metadata. Markdown body text is human-readable context.
 
 ```bash
-python tools/processforge.py assignment-capsule --project-root <project-root> --assignment .pf/assignments/example.md
+python bin/pf.py assignment-capsule --project-root <project-root> --assignment .pf/assignments/example.md
 ```
 
 The capsule is written to `.pf/contexts/assignment-capsules/` and includes the
@@ -84,13 +84,13 @@ Core commands emit events to:
 Hook matching can be tested without sending or writing payloads:
 
 ```bash
-python tools/processforge.py hooks-dispatch --project-root <project-root> --event-type session.ended --dry-run
+python bin/pf.py hooks-dispatch --project-root <project-root> --event-type session.ended --dry-run
 ```
 
 Outbox delivery writes private payloads under `.pf/runtime/hooks/outbox/`:
 
 ```bash
-python tools/processforge.py hooks-dispatch --project-root <project-root> --event-type assignment.completed --outbox
+python bin/pf.py hooks-dispatch --project-root <project-root> --event-type assignment.completed --outbox
 ```
 
 Network send is disabled in the MVP.
@@ -100,8 +100,8 @@ Network send is disabled in the MVP.
 Chat transcript capture is local and opt-in:
 
 ```bash
-python tools/processforge.py chat-record --project-root <project-root> --session-id session-demo --participant operator --role user --content "Start"
-python tools/processforge.py chat-export --project-root <project-root> --session-id session-demo --target wtaicc --outbox
+python bin/pf.py chat-record --project-root <project-root> --session-id session-demo --participant operator --role user --content "Start"
+python bin/pf.py chat-export --project-root <project-root> --session-id session-demo --target wtaicc --outbox
 ```
 
 `chat-record` writes `.pf/runtime/chat/transcripts/<session-id>.ndjson` and
@@ -117,8 +117,9 @@ Run:
 python tools/validate-process-forge-schemas.py
 python tools/validate-process-forge-checksums.py
 python tools/validate-public-cleanliness.py
-python tools/processforge.py events-validate --project-root .
-python tools/processforge.py doctor-context --project-root .
+python bin/pf.py events-validate --project-root .
+python bin/pf.py doctor-context --project-root .
+python bin/pf.py release-test --root .
 ```
 
 `context-resolve` and `context-compile` are compatibility-only commands. New

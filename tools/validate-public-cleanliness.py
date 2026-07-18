@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "bin", "tools", "updates"]
-PUBLIC_ROOT_FILES = ["README.md", "QUICKSTART.md", "LICENSE", "CHANGELOG.md", ".processforge-releaseignore"]
+PUBLIC_ROOT_FILES = ["README.md", "QUICKSTART.md", "LICENSE", "CHANGELOG.md", "VERSION", ".processforge-releaseignore"]
 PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 PF_PUBLIC_DIRS: list[str] = []
 PF_PRIVATE_PARTS = {"runtime", "private-notes", "cache"}

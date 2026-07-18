@@ -8,6 +8,8 @@ agents and humans.
 ProcessForge does not require a backend, database, web UI, network transport, or
 mandatory runner.
 
+Current release candidate: `0.1.0-rc.1`.
+
 ## Core Model
 
 - The project flow root is `.pf/`.
@@ -20,6 +22,9 @@ mandatory runner.
 - Process definitions declare which events matter.
 - `.pf/hooks.yaml` declares where matching events are delivered.
 - Chat relay is opt-in and metadata-only by default for outbox payloads.
+- Runs live in `.pf/runs/<run-id>/run.yaml` and group assignment-backed tasks.
+- Task iterations record repeated `work`, `debug`, `fix`, `review`, `test`,
+  `research`, `handoff`, or `note` attempts inside `.pf/assignments/`.
 
 ## Repository Layout
 
@@ -72,6 +77,16 @@ python bin/pf.py session-start --mode resume --project-root <project-root> --rep
 python bin/pf.py assignment-capsule --project-root <project-root> --assignment .pf/assignments/example.md
 ```
 
+Run a task batch:
+
+```bash
+python bin/pf.py run-create --project-root <project-root> --id <run-id> --title "<title>" --process task-batch-execution --apply
+python bin/pf.py task-create --project-root <project-root> --run <run-id> --id task-001-example --title "Example task" --process software-feature-development --apply
+python bin/pf.py iteration-add --project-root <project-root> --task task-001-example --kind work --summary "..." --apply
+python bin/pf.py task-complete --project-root <project-root> --task task-001-example --summary "..." --apply
+python bin/pf.py run-summary --project-root <project-root> --run <run-id> --apply
+```
+
 `init-workplace` and `init-project` remain compatibility commands. The first-run
 UX uses `workplace-init` and `project-onboard` so workplace setup and project
 onboarding stay separate.
@@ -120,6 +135,16 @@ python tools/validate-process-forge-checksums.py
 python tools/validate-public-cleanliness.py
 python bin/pf.py events-validate --project-root .
 python bin/pf.py doctor-context --project-root .
+python bin/pf.py release-test --root .
 ```
 
-See `docs/getting-started.md` and `docs/concepts/` for the detailed model.
+Release hygiene and packaging:
+
+```bash
+python bin/pf.py clean --root . --release
+python bin/pf.py release-check --root .
+python bin/pf.py release-pack --root . --output dist/processforge-v0.1.0.zip
+```
+
+See `docs/index.md`, `docs/getting-started.md`, `docs/concepts/`, and
+`docs/known-limitations.md` for the detailed model.

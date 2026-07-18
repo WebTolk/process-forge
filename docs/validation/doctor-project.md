@@ -5,7 +5,13 @@ Doctor Project validates a ProcessForge project layer.
 ## Command
 
 ```bash
-python tools/processforge.py doctor-project --project-root <project-root>
+python bin/pf.py doctor-project --project-root <project-root>
+```
+
+Inside a linked project, prefer:
+
+```bash
+python .pf/runtime/bin/pf.py doctor-project --project-root .
 ```
 
 ## Checks

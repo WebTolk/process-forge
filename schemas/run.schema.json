@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/run.schema.json",
+  "title": "ProcessForge Run",
+  "type": "object",
+  "required": ["schema_version", "id", "title", "process", "status", "created_at", "updated_at", "tasks"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "title": { "type": "string", "minLength": 1 },
+    "process": { "$ref": "#/$defs/id" },
+    "status": { "enum": ["draft", "open", "in_progress", "blocked", "review", "completed", "cancelled", "failed"] },
+    "created_at": { "type": "string", "minLength": 1 },
+    "updated_at": { "type": "string", "minLength": 1 },
+    "objective": { "type": "string" },
+    "scope": { "type": "object", "additionalProperties": true },
+    "tasks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/task_ref" }
+    },
+    "final_artifacts": { "type": "array", "items": { "type": "string" } },
+    "events": { "type": "object", "additionalProperties": true },
+    "privacy": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" },
+    "task_ref": {
+      "type": "object",
+      "required": ["id", "assignment", "status", "order"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "assignment": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["open", "in_progress", "blocked", "debugging", "review", "done", "cancelled", "failed"] },
+        "order": { "type": "integer", "minimum": 1 },
+        "blocking": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
