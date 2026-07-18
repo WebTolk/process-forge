@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-18T06:32:04Z
-- valid_until: 2026-07-25T06:32:04Z
+- generated_at: 2026-07-18T08:12:19Z
+- valid_until: 2026-07-25T08:12:19Z
 
 ## Freshness
 
@@ -67,6 +67,7 @@ fresh
 - reusable-template-authoring
 - knowledge-package-authoring
 - platform-contract-authoring
+- process-authoring
 - task-batch-execution
 
 ## Required Capabilities

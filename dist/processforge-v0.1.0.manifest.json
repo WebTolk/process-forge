@@ -10,7 +10,7 @@
     },
     {
       "path": ".pf/artifacts/checksum-inventory.sha256",
-      "sha256": "9cc06eccc22f3b21b453707306a156de68332ad86a39c936534e2379ed4d2751"
+      "sha256": "e0090b43e1bd56f4f5420f88193e82f96ee59e0fa2377130bdd8894aea1bf4ad"
     },
     {
       "path": ".pf/hooks.yaml",
@@ -18,7 +18,7 @@
     },
     {
       "path": ".pf/process-forge.yaml",
-      "sha256": "6915b635e2ca9084333571c44657f94a23ec4787856bd8eecf8350b44a83a101"
+      "sha256": "47c5589914b0468144563b6fe9e0ecb1966e5e59d9ebbd711105387a4978befb"
     },
     {
       "path": ".processforge-releaseignore",
@@ -38,11 +38,11 @@
     },
     {
       "path": "QUICKSTART.md",
-      "sha256": "e5fcf4670173719384026636358268ddcaf4b30d212fd6f432d0a837946e5643"
+      "sha256": "5a64732d044d1e7539bcbdb264c1541da557567e24a3965a04f8c1905607c931"
     },
     {
       "path": "README.md",
-      "sha256": "2edbebb308c483b09dc70bad3143199a757f4e55a58d6fccb8f6708ebcc8ace7"
+      "sha256": "b5fae304c36cd1886c411cce6abc7572174667b7e6ae4eb91c2ab32d92b46cc9"
     },
     {
       "path": "VERSION",
@@ -78,7 +78,7 @@
     },
     {
       "path": "docs/authoring/process-authoring.md",
-      "sha256": "36b8b81e1e4e6e98a67182d461daf030b9a69fd2b49d2efadacce4cf557f79b6"
+      "sha256": "98463fd46f6b83c7ee6cd633aa599207d029cd8811c0138da81ed6798e7369b8"
     },
     {
       "path": "docs/authoring/project-initialization.md",
@@ -183,6 +183,10 @@
     {
       "path": "docs/concepts/platform-contracts.md",
       "sha256": "8f123642ea39518e0a89e7a8bdc626e1b0bcc18afc33c76efcd32816fa1f2494"
+    },
+    {
+      "path": "docs/concepts/process-definition-run-task-iteration.md",
+      "sha256": "77422893c813aa3fd39dfbc322fba389fd20b42e8e1f43470f8caa9d847f0bc8"
     },
     {
       "path": "docs/concepts/process-events.md",
@@ -301,6 +305,10 @@
       "sha256": "2daa1a137a9eec790c4357353e263c3b1a1e3df3698990d1c236a983fa40d096"
     },
     {
+      "path": "docs/getting-started/create-your-first-process.md",
+      "sha256": "80a05aae7db75e63be0ab0d18da702a1b28023fbaff92339ba56dc8829468ab6"
+    },
+    {
       "path": "docs/getting-started/first-run.md",
       "sha256": "2edc4a3dc0d9ba1fa96be4cb994f925e46c9cc115408d10a3f6ffeaf03932c45"
     },
@@ -322,11 +330,15 @@
     },
     {
       "path": "docs/index.md",
-      "sha256": "15a09586b2ea4d1ece3bd7f693176b0e505602a4bb8760f3b7c76a196205e8a3"
+      "sha256": "1b7ed6cc6a57e10c997a95c1bddb3dfb9483efa5f38e6dda652346949612136e"
     },
     {
       "path": "docs/known-limitations.md",
-      "sha256": "f98db4044c28c58f99ead0e13240aad1d94ba62c72666fcbf2637175737b0f28"
+      "sha256": "66e6f97cd5346a8cb7342e759f112e3fee55bbda62cb830660e5cd0a5182caf5"
+    },
+    {
+      "path": "docs/processes/process-authoring.md",
+      "sha256": "9e5d590ffb7ab906f0bee17be6c9a61bc86cb2a4c8ba539bada74d1395c80931"
     },
     {
       "path": "docs/release-checklist.md",
@@ -383,6 +395,46 @@
     {
       "path": "examples/media-generation-project/process-forge.yaml",
       "sha256": "eb29d93d289099c7aba7aa31f361c5580856706ea6373e7eac64a9de472d2391"
+    },
+    {
+      "path": "examples/process-authoring/bugfix-batch/README.md",
+      "sha256": "c07ee00026837b046c614527d9b910108bb4db87ff1d98e665962f3c5731a890"
+    },
+    {
+      "path": "examples/process-authoring/bugfix-batch/answers.yaml",
+      "sha256": "a92407a1db41ebdf5a5827d86957d1fc089d9af6973226cfaf4d655a79554032"
+    },
+    {
+      "path": "examples/process-authoring/content-update/README.md",
+      "sha256": "3de3a16cca1c96abf2942308f01c8f8ac3e1cc514447c7552c747ff3bfec7963"
+    },
+    {
+      "path": "examples/process-authoring/content-update/answers.yaml",
+      "sha256": "f38b56f47e7e841208f2e56ea821a4db7e3c64f00273959bde217f6dbfbf3d36"
+    },
+    {
+      "path": "examples/process-authoring/process-authoring/README.md",
+      "sha256": "3670b1d340c0d4bca15abee3560a5779979a99374a86fd8a62a71f4238678bfc"
+    },
+    {
+      "path": "examples/process-authoring/seo-audit/README.md",
+      "sha256": "0951634999e7af2e24f4e020b12aab1f615d2cc05618835725b65d704efb1fc3"
+    },
+    {
+      "path": "examples/process-authoring/seo-audit/answers.yaml",
+      "sha256": "9deb8b750b34330b03fab56821ebd74c8aa8f314c782f4a464f46f49f3012ecb"
+    },
+    {
+      "path": "examples/process-authoring/seo-audit/process-authoring-seo-audit-handoff.md",
+      "sha256": "4b2196f59f33c79c61b0e9bdb6ab1e3cb4537327adcb9442b920278502138447"
+    },
+    {
+      "path": "examples/process-authoring/seo-audit/process-authoring-seo-audit-report.md",
+      "sha256": "a10bb4582f10371d4ba23f5bd1eee6606ee252fbe30bd831b436303b7752a21d"
+    },
+    {
+      "path": "examples/process-authoring/seo-audit/process-authoring-seo-audit-review.md",
+      "sha256": "ae487688648d4b692680fff8f980078e89b4e5d74cd6afffafc0f195a014e685"
     },
     {
       "path": "examples/processforge-init/README.md",
@@ -505,6 +557,10 @@
       "sha256": "c489bb8d0b570718f28cd539a27d3e44bf36c292f1e0a869ad2e46cfd6e41e6a"
     },
     {
+      "path": "processes/process-authoring.yaml",
+      "sha256": "3614667cd4811345ac3fe62a4b962ca11da5b57040410f356ed2478ea8d7d551"
+    },
+    {
       "path": "processes/process-template-install.yaml",
       "sha256": "1de6964a16156948d7cdb589dc16c8810b53572d143b2fc659c66093ec4b2ca2"
     },
@@ -563,6 +619,10 @@
     {
       "path": "prompts/platform-contract-authoring-agent.md",
       "sha256": "47cb8177232066545ad48ff53e35a58abc80a2e8cd93003091e77cc97e83767a"
+    },
+    {
+      "path": "prompts/process-authoring-agent.md",
+      "sha256": "d45762aa72b5992714a58872d4da6aada2070431c4b63a744a18e34110012ac6"
     },
     {
       "path": "prompts/project-onboarding-agent.md",
@@ -626,7 +686,7 @@
     },
     {
       "path": "schemas/event-envelope.schema.json",
-      "sha256": "a0105a32687bd1e686e31fa847df250009f6cf0e199030984e3817c16cf240d6"
+      "sha256": "4805cf24f12c18db23692aaefb79853f4cad3cad5b1a76e6562c79cf450545c3"
     },
     {
       "path": "schemas/execution-context-package.schema.json",
@@ -705,12 +765,20 @@
       "sha256": "110f21d59ad6ad0dab6cca9c60cc7c76af0c3b243c1418be573fb0aabcdc9646"
     },
     {
+      "path": "schemas/process-authoring-answers.schema.json",
+      "sha256": "932b1787ee9051acbe5f8b3210f2e6d2229f25cabf886b7f72650cb6c726f936"
+    },
+    {
+      "path": "schemas/process-authoring-session.schema.json",
+      "sha256": "f622cb467fee2d59188ff242c68bb945eaa9aa0e3acfbae160a41e987adc5fec"
+    },
+    {
       "path": "schemas/process-definition.schema.json",
       "sha256": "01a4c84baca3e1ae6cbf3be11b05647066fad34782a3e2c0652a2115955eb1a9"
     },
     {
       "path": "schemas/process-event.schema.json",
-      "sha256": "ac83d1ef66870df30b604f5556a2ce55f16f9c61426878848b89a30217fa03b5"
+      "sha256": "9b6fa8bae7ec0db295c3212851af651dac9b2242c09438906466d9df661610f4"
     },
     {
       "path": "schemas/process-forge-manifest.schema.json",
@@ -722,7 +790,7 @@
     },
     {
       "path": "schemas/processforge-event.schema.json",
-      "sha256": "dc1434132f3cbc510b19f70031f1c178719b7e9f613543aa8dcb18ac8a7c557a"
+      "sha256": "e79666b5c9f9fe20007302245e5604fd4e0ebb1aa1af784b42d04caaa1f318ed"
     },
     {
       "path": "schemas/processforge-update-assessment.schema.json",
@@ -913,8 +981,20 @@
       "sha256": "ca618bb865ebbbfb721eaf3c15d13017fd2d6b6d73ce1d97d777f98f81b20f6c"
     },
     {
+      "path": "templates/process-agent-prompt.md",
+      "sha256": "7f43be781447a112ab17acae2d319df70305e74070a1f1575bdc94f7a2fee185"
+    },
+    {
+      "path": "templates/process-authoring-answers.yaml",
+      "sha256": "1931a6916e155a8d8458cd2b15194a2e7b5ec30faf4fbd692a1b5ce88ebd7807"
+    },
+    {
       "path": "templates/process-definition-template.yaml",
       "sha256": "31d21d9a9698f576a8a40698488db87ae917d80abfed7b2969438a56b983d670"
+    },
+    {
+      "path": "templates/process-doc.md",
+      "sha256": "7eb59f1d36608f9a0cf2276b661b9ebbd2bfbb563bca3744f28b5cb80ece50d1"
     },
     {
       "path": "templates/process-forge.local.yaml",
@@ -922,7 +1002,7 @@
     },
     {
       "path": "templates/process-forge.yaml",
-      "sha256": "32a45e8a2e840f7f73be5047159d723d4d82ea6cda1480d3c4362698e1f53f17"
+      "sha256": "ffbf76ca0c045dd7bbc5232d5a1dce44ca9e563a7ad78b939643b6b4f72eca80"
     },
     {
       "path": "templates/process-upgrade-assessment-template.md",
@@ -1074,7 +1154,7 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "d38f0694d65471e318232b92af0c4ea76827934bd0af545bb1b4f2d6e2961d0c"
+      "sha256": "878ec0187908a5e08e248cab6bcdc11286084d26021abbc96090cf5b324abbf8"
     },
     {
       "path": "tools/processforge_subprocess.py",
@@ -1083,6 +1163,10 @@
     {
       "path": "tools/smoke_first_run.py",
       "sha256": "3f6692f67f17b061ac3f2df44ee3f48211097c353199d4f834a5ba6732c881e0"
+    },
+    {
+      "path": "tools/smoke_process_authoring.py",
+      "sha256": "2eca2e10ce95c97aac4a6d5581cbd86041d87f1dcbd1559fa731f762010e9ce5"
     },
     {
       "path": "tools/smoke_process_run_task_batch.py",
@@ -1102,7 +1186,7 @@
     },
     {
       "path": "tools/validate-process-forge-schemas.py",
-      "sha256": "af64190a7e6d85bcd8abf8d1e0aafae2c0e77bfc78207cc669f4ed464b4921fc"
+      "sha256": "77be015a18280e1945adbf268fbc98cea1e4ff57edee5e0cdf4df7c4e01b412a"
     },
     {
       "path": "tools/validate-public-cleanliness.py",
@@ -1117,7 +1201,7 @@
       "sha256": "93660d25f3346ef5a89638d3a7728829af9de87da271bf247f96df77c3911012"
     }
   ],
-  "generated_at": "2026-07-18T07:55:25Z",
+  "generated_at": "2026-07-18T08:16:07Z",
   "name": "processforge",
   "version": "0.1.0"
 }

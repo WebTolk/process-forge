@@ -22,6 +22,8 @@ Current release candidate: `0.1.0-rc.1`.
 - Process definitions declare which events matter.
 - `.pf/hooks.yaml` declares where matching events are delivered.
 - Chat relay is opt-in and metadata-only by default for outbox payloads.
+- Process authoring sessions live in `.pf/authoring/processes/<process-id>/`
+  before they apply public process packs.
 - Runs live in `.pf/runs/<run-id>/run.yaml` and group assignment-backed tasks.
 - Task iterations record repeated `work`, `debug`, `fix`, `review`, `test`,
   `research`, `handoff`, or `note` attempts inside `.pf/assignments/`.
@@ -42,6 +44,7 @@ project/
     process-forge.yaml
     hooks.yaml
     contexts/
+    authoring/processes/
     assignments/
     artifacts/
     logs/
@@ -88,6 +91,15 @@ python bin/pf.py task-create --project-root <project-root> --run <run-id> --id t
 python bin/pf.py iteration-add --project-root <project-root> --task task-001-example --kind work --summary "..." --apply
 python bin/pf.py task-complete --project-root <project-root> --task task-001-example --summary "..." --apply
 python bin/pf.py run-summary --project-root <project-root> --run <run-id> --apply
+```
+
+Create a process:
+
+```bash
+python bin/pf.py process-authoring-start --project-root <project-root> --id seo-audit --title "SEO Audit" --apply
+python bin/pf.py process-authoring-review --project-root <project-root> --process seo-audit
+python bin/pf.py process-authoring-apply --project-root <project-root> --process seo-audit
+python bin/pf.py process-doctor --project-root <project-root> --process seo-audit
 ```
 
 `init-workplace` and `init-project` remain compatibility commands. The first-run
@@ -149,5 +161,5 @@ python bin/pf.py release-check --root .
 python bin/pf.py release-pack --root . --output dist/processforge-v0.1.0.zip
 ```
 
-See `docs/index.md`, `docs/getting-started.md`, `docs/concepts/`, and
-`docs/known-limitations.md` for the detailed model.
+See `docs/index.md`, `docs/getting-started/create-your-first-process.md`,
+`docs/concepts/`, and `docs/known-limitations.md` for the detailed model.

@@ -1,0 +1,88 @@
+schema_version: 1
+process:
+  id: bugfix-batch
+  name: Bugfix Batch
+  version: 0.1.0
+  status: draft
+  kind: development
+  scope: project
+  description: Coordinate a batch of related bug fixes with explicit debug and review loops.
+run_model:
+  supports_multiple_tasks: true
+  default_task_loop:
+    enabled: true
+    iteration_kinds: [work, debug, fix, review, handoff]
+roles:
+  - id: fixer
+    title: Fixer
+    responsibility: Implements fixes and records debug evidence.
+  - id: reviewer
+    title: Reviewer
+    responsibility: Reviews fix quality and residual risk.
+stages:
+  - id: triage
+    title: Triage
+    required_role: fixer
+    produced_artifacts: [bugfix-plan]
+    exit_gates: [bugfix-plan-approved]
+  - id: fix-loop
+    title: Fix Loop
+    required_role: fixer
+    required_inputs: [bugfix-plan]
+    produced_artifacts: [fix-log]
+    entry_gates: [bugfix-plan-approved]
+    exit_gates: [fix-log-ready]
+  - id: review
+    title: Review
+    required_role: reviewer
+    required_inputs: [fix-log]
+    produced_artifacts: [fix-review]
+    entry_gates: [fix-log-ready]
+    exit_gates: [fix-review-passed]
+  - id: handoff
+    title: Handoff
+    required_role: fixer
+    required_inputs: [fix-review]
+    produced_artifacts: [fix-handoff]
+    entry_gates: [fix-review-passed]
+    exit_gates: [fix-handoff-created]
+    handoff_required: true
+artifacts:
+  - id: bugfix-plan
+    title: Bugfix Plan
+    owner_role: fixer
+    template: artifact-template
+  - id: fix-log
+    title: Fix Log
+    owner_role: fixer
+    template: artifact-template
+  - id: fix-review
+    title: Fix Review
+    owner_role: reviewer
+    template: review-template
+  - id: fix-handoff
+    title: Fix Handoff
+    owner_role: fixer
+    template: handoff-template
+gates:
+  - id: bugfix-plan-approved
+    description: Bugs, scope, and expected proof are listed.
+    blocking: true
+    required_artifact: bugfix-plan
+  - id: fix-log-ready
+    description: Fix log contains work and debug evidence.
+    blocking: true
+    required_artifact: fix-log
+  - id: fix-review-passed
+    description: Review has no blocking failures.
+    blocking: true
+    required_artifact: fix-review
+  - id: fix-handoff-created
+    description: Handoff captures shipped state and remaining risks.
+    blocking: true
+    required_artifact: fix-handoff
+required_capabilities: [repository_read, test_execution, artifact_review]
+required_packages: [process-forge-core]
+required_templates: [artifact-template, review-template, handoff-template]
+allowed_tools: [processforge-cli, test_runner, validator]
+forbidden_actions: [write_private_absolute_paths_to_public_files, mark_task_done_without_result]

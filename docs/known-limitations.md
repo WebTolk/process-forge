@@ -13,6 +13,7 @@ ProcessForge v0.1 is a file-first, single-agent release candidate.
 - `--interactive` is a first-run UX marker, not a terminal wizard.
 - External documentation mirroring is a plan or stub unless resources are explicitly imported.
 - Process Run / Task Batch MVP is file-only. It records runs, tasks, iterations, summaries, events, and outbox payloads, but it does not schedule or execute work in the background.
+- Process Authoring MVP creates file-first process packs and companion docs. It does not include a process marketplace, visual editor, background scheduler, network delivery, database-backed storage, or automatic migration of already active runs.
 
 ## Runtime Model
 

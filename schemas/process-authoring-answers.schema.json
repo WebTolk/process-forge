@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/process-authoring-answers.schema.json",
+  "title": "Process Authoring Answers",
+  "type": "object",
+  "required": ["schema_version", "process", "roles", "stages", "artifacts", "gates"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "process": {
+      "type": "object",
+      "required": ["id", "name", "description"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string" },
+        "status": { "type": "string" },
+        "kind": { "type": "string" },
+        "scope": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "run_model": {
+      "type": "object",
+      "properties": {
+        "supports_multiple_tasks": { "type": "boolean" },
+        "default_task_loop": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
+    "roles": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "stages": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "artifacts": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "gates": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "required_packages": { "type": "array", "items": { "type": "string" } },
+    "required_templates": { "type": "array", "items": { "type": "string" } },
+    "allowed_tools": { "type": "array", "items": { "type": "string" } },
+    "forbidden_actions": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

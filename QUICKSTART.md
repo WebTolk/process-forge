@@ -46,6 +46,17 @@ python bin/pf.py run-summary --project-root ../my-project --run example-run --ap
 python bin/pf.py run-doctor --project-root ../my-project --run example-run
 ```
 
+## Step 6. Create A Process
+
+```bash
+python bin/pf.py process-authoring-start --project-root ../my-project --id seo-audit --title "SEO Audit" --apply
+python bin/pf.py process-authoring-review --project-root ../my-project --process seo-audit
+python bin/pf.py process-authoring-apply --project-root ../my-project --process seo-audit
+python bin/pf.py process-doctor --project-root ../my-project --process seo-audit
+python bin/pf.py process-list --project-root ../my-project
+python bin/pf.py process-describe --project-root ../my-project --process seo-audit
+```
+
 Inside a normal linked project, do not run `python tools/processforge.py` from the project root. The project does not contain ProcessForge core. Use:
 
 ```bash

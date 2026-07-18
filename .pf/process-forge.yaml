@@ -140,6 +140,8 @@ processes:
     path: ../processes/knowledge-package-authoring.yaml
   - id: platform-contract-authoring
     path: ../processes/platform-contract-authoring.yaml
+  - id: process-authoring
+    path: ../processes/process-authoring.yaml
   - id: task-batch-execution
     path: ../processes/task-batch-execution.yaml
 

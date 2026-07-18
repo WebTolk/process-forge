@@ -35,6 +35,7 @@ paths:
   packages: packages
   templates: templates
   assignments: assignments
+  authoring: authoring
   artifacts: artifacts
   contexts: contexts
   logs: logs

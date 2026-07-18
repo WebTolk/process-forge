@@ -1,0 +1,88 @@
+schema_version: 1
+process:
+  id: content-update
+  name: Content Update
+  version: 0.1.0
+  status: draft
+  kind: content
+  scope: project
+  description: Update existing content with explicit brief, draft, review, and handoff artifacts.
+run_model:
+  supports_multiple_tasks: false
+  default_task_loop:
+    enabled: false
+    iteration_kinds: [work, review, handoff]
+roles:
+  - id: writer
+    title: Writer
+    responsibility: Produces the content update.
+  - id: editor
+    title: Editor
+    responsibility: Reviews factual accuracy, tone, and readiness.
+stages:
+  - id: intake
+    title: Intake
+    required_role: writer
+    produced_artifacts: [content-brief]
+    exit_gates: [content-brief-approved]
+  - id: draft
+    title: Draft
+    required_role: writer
+    required_inputs: [content-brief]
+    produced_artifacts: [content-draft]
+    entry_gates: [content-brief-approved]
+    exit_gates: [content-draft-ready]
+  - id: review
+    title: Review
+    required_role: editor
+    required_inputs: [content-draft]
+    produced_artifacts: [content-review]
+    entry_gates: [content-draft-ready]
+    exit_gates: [content-review-passed]
+  - id: handoff
+    title: Handoff
+    required_role: writer
+    required_inputs: [content-review]
+    produced_artifacts: [content-handoff]
+    entry_gates: [content-review-passed]
+    exit_gates: [content-handoff-created]
+    handoff_required: true
+artifacts:
+  - id: content-brief
+    title: Content Brief
+    owner_role: writer
+    template: artifact-template
+  - id: content-draft
+    title: Content Draft
+    owner_role: writer
+    template: artifact-template
+  - id: content-review
+    title: Content Review
+    owner_role: editor
+    template: review-template
+  - id: content-handoff
+    title: Content Handoff
+    owner_role: writer
+    template: handoff-template
+gates:
+  - id: content-brief-approved
+    description: Brief names source, target audience, and acceptance criteria.
+    blocking: true
+    required_artifact: content-brief
+  - id: content-draft-ready
+    description: Draft is complete enough for review.
+    blocking: true
+    required_artifact: content-draft
+  - id: content-review-passed
+    description: Review has no blocking failures.
+    blocking: true
+    required_artifact: content-review
+  - id: content-handoff-created
+    description: Handoff records final state.
+    blocking: true
+    required_artifact: content-handoff
+required_capabilities: [markdown_editing, reporting, artifact_review]
+required_packages: [process-forge-core, process-forge-content]
+required_templates: [artifact-template, review-template, handoff-template]
+allowed_tools: [processforge-cli, validator]
+forbidden_actions: [write_private_absolute_paths_to_public_files, skip_editorial_review]

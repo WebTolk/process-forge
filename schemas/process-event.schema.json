@@ -56,7 +56,17 @@
         "iteration.added",
         "iteration.started",
         "iteration.completed",
-        "iteration.failed"
+        "iteration.failed",
+        "process_authoring.started",
+        "process_authoring.answers.created",
+        "process_authoring.draft.created",
+        "process_authoring.logic_review.created",
+        "process_authoring.applied",
+        "process_authoring.completed",
+        "process_authoring.failed",
+        "process.created",
+        "process.doctor.passed",
+        "process.doctor.failed"
       ]
     },
     "source": { "type": "string", "minLength": 1 },

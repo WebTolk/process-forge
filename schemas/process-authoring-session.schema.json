@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/process-authoring-session.schema.json",
+  "title": "Process Authoring Session",
+  "type": "object",
+  "required": ["schema_version", "process_id", "status", "files"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "process_id": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["started", "drafted", "reviewed", "applied", "failed"] },
+    "files": {
+      "type": "object",
+      "properties": {
+        "answers": { "type": "string" },
+        "draft": { "type": "string" },
+        "questions": { "type": "string" },
+        "logic_review": { "type": "string" },
+        "apply_report": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "events": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

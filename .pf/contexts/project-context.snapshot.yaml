@@ -1,8 +1,8 @@
 schema_version: 1
 snapshot:
   id: project-context
-  generated_at: '2026-07-18T06:32:04Z'
-  valid_until: '2026-07-25T06:32:04Z'
+  generated_at: '2026-07-18T08:12:19Z'
+  valid_until: '2026-07-25T08:12:19Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -45,7 +45,7 @@ sources:
       id: project_manifest
       path: .pf/process-forge.yaml
       kind: manifest
-      checksum: 6915b635e2ca9084333571c44657f94a23ec4787856bd8eecf8350b44a83a101
+      checksum: 47c5589914b0468144563b6fe9e0ecb1966e5e59d9ebbd711105387a4978befb
     -
       id: process-processes-software-feature-development-yaml
       path: processes/software-feature-development.yaml
@@ -161,6 +161,11 @@ sources:
       path: processes/platform-contract-authoring.yaml
       kind: process
       checksum: e95dd69b781412b16ef9830a80898507ac92f2e303e2f3295decece924018ab7
+    -
+      id: process-processes-process-authoring-yaml
+      path: processes/process-authoring.yaml
+      kind: process
+      checksum: 3614667cd4811345ac3fe62a4b962ca11da5b57040410f356ed2478ea8d7d551
     -
       id: process-processes-task-batch-execution-yaml
       path: processes/task-batch-execution.yaml
@@ -365,6 +370,9 @@ processes:
     -
       id: platform-contract-authoring
       path: ../processes/platform-contract-authoring.yaml
+    -
+      id: process-authoring
+      path: ../processes/process-authoring.yaml
     -
       id: task-batch-execution
       path: ../processes/task-batch-execution.yaml

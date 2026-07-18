@@ -46,6 +46,8 @@ PROJECT_PRIVATE_GITIGNORE = [
 
 PROJECT_FLOW_DIRS = [
     "processes",
+    "authoring",
+    "authoring/processes",
     "packages",
     "templates",
     "runs",
@@ -230,6 +232,16 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "iteration.started",
     "iteration.completed",
     "iteration.failed",
+    "process_authoring.started",
+    "process_authoring.answers.created",
+    "process_authoring.draft.created",
+    "process_authoring.logic_review.created",
+    "process_authoring.applied",
+    "process_authoring.completed",
+    "process_authoring.failed",
+    "process.created",
+    "process.doctor.passed",
+    "process.doctor.failed",
 ]
 
 BUILTIN_CAPABILITIES = {
@@ -2947,6 +2959,15 @@ python .pf/runtime/bin/pf.py run-summary --project-root . --run {active_runs[0]}
 ```bash
 python .pf/runtime/bin/pf.py run-create --project-root . --id <run-id> --title "<title>" --process task-batch-execution --apply
 ```
+
+## Create A Process
+
+```bash
+python .pf/runtime/bin/pf.py process-authoring-start --project-root . --id <process-id> --title "<title>" --apply
+python .pf/runtime/bin/pf.py process-authoring-review --project-root . --process <process-id>
+python .pf/runtime/bin/pf.py process-authoring-apply --project-root . --process <process-id>
+python .pf/runtime/bin/pf.py process-doctor --project-root . --process <process-id>
+```
 """
 
 
@@ -3247,7 +3268,7 @@ def command_examples_check(args: argparse.Namespace) -> int:
     examples = root / "examples"
     checks: list[Check] = []
     checks.append(check("PASS" if examples.is_dir() else "FAIL", "examples/ found"))
-    for required in ["first-run", "resource-authoring"]:
+    for required in ["first-run", "resource-authoring", "process-authoring"]:
         base = examples / required
         checks.append(check("PASS" if base.is_dir() else "FAIL", f"examples/{required}/ found"))
         readmes = list(base.rglob("README.md")) if base.is_dir() else []
@@ -3337,6 +3358,7 @@ def command_release_test(args: argparse.Namespace) -> int:
         ReleaseCommand("smoke_resource_management", [sys.executable, str(root / "tools" / "smoke_resource_management.py")], 180),
         ReleaseCommand("smoke_resource_authoring", [sys.executable, str(root / "tools" / "smoke_resource_authoring_processes.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
+        ReleaseCommand("smoke_process_authoring", [sys.executable, str(root / "tools" / "smoke_process_authoring.py")], 180),
         ReleaseCommand("release-check", [sys.executable, str(root / "tools" / "processforge.py"), "release-check", "--root", str(root)], 60),
         ReleaseCommand("examples-check", [sys.executable, str(root / "tools" / "processforge.py"), "examples-check", "--root", str(root)], 60),
         ReleaseCommand("events-validate", [sys.executable, str(root / "tools" / "processforge.py"), "events-validate", "--project-root", str(root)], 60),
@@ -5147,7 +5169,7 @@ def emit_process_event(project_root: Path, event_type: str, **kwargs: Any) -> di
     return event
 
 
-EVENT_TYPE_PATTERN = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$")
+EVENT_TYPE_PATTERN = re.compile(r"^[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)+$")
 
 
 def validate_event_object(event: Any, label: str) -> list[str]:
@@ -6331,6 +6353,691 @@ def validate_task_consistency(project_root: Path, task_id: str) -> list[Check]:
         result_artifacts = result.get("artifacts") if isinstance(result.get("artifacts"), list) else []
         checks.append(check("PASS" if result_summary or result_artifacts else "FAIL", "completed task has result summary or artifact"))
     return checks
+
+
+def process_authoring_root(project_root: Path, process_id: str) -> Path:
+    return locate_flow_root(project_root) / "authoring" / "processes" / safe_id(process_id, "process")
+
+
+def process_authoring_paths(project_root: Path, process_id: str) -> dict[str, Path]:
+    root = process_authoring_root(project_root, process_id)
+    return {
+        "root": root,
+        "answers": root / "answers.yaml",
+        "draft": root / "draft.process.yaml",
+        "questions": root / "questions.md",
+        "logic_review": root / "logic-review.md",
+        "log": root / "authoring-log.md",
+        "apply_report": root / "apply-report.md",
+    }
+
+
+def split_csv(value: str | None) -> list[str]:
+    if not value:
+        return []
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def as_list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
+def string_list(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item) for item in value if str(item).strip()]
+    if isinstance(value, str) and value.strip():
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return []
+
+
+def title_from_id(value: str) -> str:
+    return " ".join(part.capitalize() for part in safe_id(value, "item").split("-"))
+
+
+def default_process_authoring_answers(process_id: str, title: str, description: str = "") -> dict[str, Any]:
+    process_id = safe_id(process_id, "new-process")
+    title = title or title_from_id(process_id)
+    return {
+        "schema_version": 1,
+        "process": {
+            "id": process_id,
+            "name": title,
+            "version": "0.1.0",
+            "status": "draft",
+            "kind": "project_process",
+            "scope": "project",
+            "description": description or f"Guide repeatable work for {title}.",
+        },
+        "run_model": {
+            "supports_multiple_tasks": False,
+            "default_task_loop": {
+                "enabled": False,
+                "iteration_kinds": ["work", "debug", "fix", "review", "handoff"],
+            },
+        },
+        "roles": [
+            {"id": "author", "title": "Author", "responsibility": "Creates the main work artifacts."},
+            {"id": "reviewer", "title": "Reviewer", "responsibility": "Checks quality gates before handoff."},
+        ],
+        "stages": [
+            {
+                "id": "intake",
+                "title": "Intake",
+                "description": "Capture objective, constraints, and expected outputs.",
+                "required_role": "author",
+                "produced_artifacts": ["brief"],
+                "exit_gates": ["brief-approved"],
+                "handoff_required": False,
+            },
+            {
+                "id": "work",
+                "title": "Work",
+                "description": "Create the requested outputs.",
+                "required_role": "author",
+                "required_inputs": ["brief"],
+                "produced_artifacts": ["work-output"],
+                "entry_gates": ["brief-approved"],
+                "exit_gates": ["work-ready-for-review"],
+                "handoff_required": False,
+            },
+            {
+                "id": "review",
+                "title": "Review",
+                "description": "Validate the output and record risks.",
+                "required_role": "reviewer",
+                "required_inputs": ["work-output"],
+                "produced_artifacts": ["review-notes"],
+                "entry_gates": ["work-ready-for-review"],
+                "exit_gates": ["review-passed"],
+                "handoff_required": False,
+            },
+            {
+                "id": "handoff",
+                "title": "Handoff",
+                "description": "Summarize delivered state and next steps.",
+                "required_role": "author",
+                "required_inputs": ["review-notes"],
+                "produced_artifacts": ["handoff"],
+                "entry_gates": ["review-passed"],
+                "exit_gates": ["handoff-created"],
+                "handoff_required": True,
+            },
+        ],
+        "artifacts": [
+            {"id": "brief", "title": "Brief", "owner_role": "author", "template": "artifact-template"},
+            {"id": "work-output", "title": "Work Output", "owner_role": "author", "template": "artifact-template"},
+            {"id": "review-notes", "title": "Review Notes", "owner_role": "reviewer", "template": "review-template"},
+            {"id": "handoff", "title": "Handoff", "owner_role": "author", "template": "handoff-template"},
+        ],
+        "gates": [
+            {"id": "brief-approved", "description": "Brief is explicit enough to start work.", "blocking": True, "required_artifact": "brief"},
+            {"id": "work-ready-for-review", "description": "Work output exists and is ready for review.", "blocking": True, "required_artifact": "work-output"},
+            {"id": "review-passed", "description": "Review has no blocking failures.", "blocking": True, "required_artifact": "review-notes"},
+            {"id": "handoff-created", "description": "Handoff artifact exists.", "blocking": True, "required_artifact": "handoff"},
+        ],
+        "required_capabilities": ["process_coordination", "artifact_review", "reporting"],
+        "required_packages": ["process-forge-core"],
+        "required_templates": ["artifact-template", "review-template", "handoff-template"],
+        "allowed_tools": ["processforge-cli", "validator"],
+        "forbidden_actions": ["write_private_absolute_paths_to_public_files", "skip_blocking_review"],
+    }
+
+
+def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = "new-process", fallback_title: str = "") -> dict[str, Any]:
+    base = default_process_authoring_answers(fallback_id, fallback_title or title_from_id(fallback_id))
+    if not raw:
+        return base
+    process = raw.get("process") if isinstance(raw.get("process"), dict) else {}
+    if not process and ("id" in raw or "name" in raw or "title" in raw):
+        process = raw
+    process_id = safe_id(str(process.get("id") or raw.get("id") or fallback_id), "new-process")
+    base["process"].update(
+        {
+            "id": process_id,
+            "name": str(process.get("name") or process.get("title") or raw.get("name") or raw.get("title") or title_from_id(process_id)),
+            "version": str(process.get("version") or raw.get("version") or "0.1.0"),
+            "status": str(process.get("status") or raw.get("status") or "draft"),
+            "kind": str(process.get("kind") or raw.get("kind") or base["process"]["kind"]),
+            "scope": str(process.get("scope") or raw.get("scope") or base["process"]["scope"]),
+            "description": str(process.get("description") or raw.get("description") or base["process"]["description"]),
+        }
+    )
+    for key in ["run_model", "roles", "stages", "artifacts", "artifact_definitions", "gates"]:
+        if key in raw:
+            base[key] = raw[key]
+    if "artifact_definitions" in raw and "artifacts" not in raw:
+        base["artifacts"] = raw["artifact_definitions"]
+    for key in ["required_capabilities", "required_packages", "required_templates", "allowed_tools", "forbidden_actions"]:
+        if key in raw:
+            base[key] = string_list(raw[key])
+    return base
+
+
+def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
+    process = answers.get("process") if isinstance(answers.get("process"), dict) else {}
+    process_id = safe_id(str(process.get("id", "new-process")), "new-process")
+    roles: list[dict[str, Any]] = []
+    for item in as_list(answers.get("roles")):
+        if isinstance(item, dict):
+            role_id = safe_id(str(item.get("id") or item.get("title") or "role"), "role")
+            roles.append({"id": role_id, "title": str(item.get("title") or title_from_id(role_id)), "responsibility": str(item.get("responsibility") or "")})
+    if not roles:
+        roles = [{"id": "author", "title": "Author", "responsibility": "Creates process artifacts."}]
+    role_ids = {item["id"] for item in roles}
+
+    artifacts: list[dict[str, Any]] = []
+    for item in as_list(answers.get("artifacts")):
+        if isinstance(item, dict):
+            artifact_id = safe_id(str(item.get("id") or item.get("title") or "artifact"), "artifact")
+            owner_role = safe_id(str(item.get("owner_role") or roles[0]["id"]), roles[0]["id"])
+            if owner_role not in role_ids:
+                owner_role = roles[0]["id"]
+            artifacts.append(
+                {
+                    "id": artifact_id,
+                    "title": str(item.get("title") or title_from_id(artifact_id)),
+                    "owner_role": owner_role,
+                    "template": str(item.get("template") or "artifact-template"),
+                    "lifecycle": string_list(item.get("lifecycle")) or ["draft", "ready_for_review", "approved"],
+                }
+            )
+    artifact_ids = {item["id"] for item in artifacts}
+
+    gates: list[dict[str, Any]] = []
+    for item in as_list(answers.get("gates")):
+        if isinstance(item, dict):
+            gate_id = safe_id(str(item.get("id") or item.get("description") or "gate"), "gate")
+            gate: dict[str, Any] = {
+                "id": gate_id,
+                "description": str(item.get("description") or title_from_id(gate_id)),
+                "blocking": bool(item.get("blocking", True)),
+            }
+            if item.get("required_artifact"):
+                gate["required_artifact"] = safe_id(str(item.get("required_artifact")), "artifact")
+            gates.append(gate)
+    gate_ids = {item["id"] for item in gates}
+
+    stages: list[dict[str, Any]] = []
+    for item in as_list(answers.get("stages")):
+        if isinstance(item, dict):
+            stage_id = safe_id(str(item.get("id") or item.get("title") or "stage"), "stage")
+            produced = [safe_id(value, "artifact") for value in string_list(item.get("produced_artifacts"))]
+            exits = [safe_id(value, "gate") for value in string_list(item.get("exit_gates"))]
+            if not produced and artifact_ids:
+                produced = [sorted(artifact_ids)[0]]
+            if not exits and gate_ids:
+                exits = [sorted(gate_ids)[0]]
+            role_id = safe_id(str(item.get("required_role") or roles[0]["id"]), roles[0]["id"])
+            if role_id not in role_ids:
+                role_id = roles[0]["id"]
+            stages.append(
+                {
+                    "id": stage_id,
+                    "title": str(item.get("title") or title_from_id(stage_id)),
+                    "description": str(item.get("description") or ""),
+                    "required_inputs": [safe_id(value, "artifact") for value in string_list(item.get("required_inputs"))],
+                    "produced_artifacts": produced,
+                    "required_role": role_id,
+                    "required_capabilities": string_list(item.get("required_capabilities")),
+                    "allowed_tools": string_list(item.get("allowed_tools")),
+                    "entry_gates": [safe_id(value, "gate") for value in string_list(item.get("entry_gates"))],
+                    "exit_gates": exits,
+                    "handoff_required": bool(item.get("handoff_required", False)),
+                }
+            )
+    if not artifacts:
+        artifacts = [{"id": "brief", "title": "Brief", "owner_role": roles[0]["id"], "template": "artifact-template", "lifecycle": ["draft", "ready_for_review", "approved"]}]
+        artifact_ids = {"brief"}
+    if not gates:
+        gates = [{"id": "brief-approved", "description": "Brief is approved.", "blocking": True, "required_artifact": "brief"}]
+        gate_ids = {"brief-approved"}
+    if not stages:
+        stages = [{"id": "intake", "title": "Intake", "description": "Capture scope.", "required_inputs": [], "produced_artifacts": list(artifact_ids), "required_role": roles[0]["id"], "exit_gates": list(gate_ids), "handoff_required": True}]
+
+    run_model = answers.get("run_model") if isinstance(answers.get("run_model"), dict) else {}
+    return {
+        "schema_version": 1,
+        "id": process_id,
+        "name": str(process.get("name") or title_from_id(process_id)),
+        "kind": str(process.get("kind") or "project_process"),
+        "scope": str(process.get("scope") or "project"),
+        "version": str(process.get("version") or "0.1.0"),
+        "status": str(process.get("status") or "draft"),
+        "description": str(process.get("description") or ""),
+        "purpose": str(process.get("purpose") or process.get("description") or ""),
+        "run_model": run_model,
+        "required_capabilities": string_list(answers.get("required_capabilities")),
+        "hooks": {
+            "emit": [
+                {"event": "process.created", "required": True},
+                {"event": "process.started", "required": True},
+                {"event": "stage.started", "required": True},
+                {"event": "stage.completed", "required": True},
+                {"event": "artifact.created", "required": True},
+                {"event": "review.completed", "required": True},
+                {"event": "process.completed", "required": True},
+            ],
+            "tracking": {"include": ["process_id", "stage_id", "artifact_refs", "assignment_id", "run_id", "task_id", "status"]},
+        },
+        "roles": roles,
+        "stages": stages,
+        "artifact_definitions": artifacts,
+        "gates": gates,
+        "required_packages": string_list(answers.get("required_packages")) or ["process-forge-core"],
+        "required_templates": string_list(answers.get("required_templates")) or ["artifact-template"],
+        "allowed_tools": string_list(answers.get("allowed_tools")) or ["processforge-cli"],
+        "forbidden_actions": string_list(answers.get("forbidden_actions")) or ["write_private_absolute_paths_to_public_files"],
+        "evolution_policy": {
+            "active_run_upgrade": {"default": "manual_only"},
+            "safe_changes": ["add_optional_stage", "add_non_blocking_gate"],
+            "blocked_changes": ["remove_existing_required_artifact", "weaken_blocking_gate_without_review"],
+            "requires_approval": ["change_stage_order", "change_required_artifact_lifecycle"],
+        },
+    }
+
+
+def render_authoring_questions(answers: dict[str, Any]) -> str:
+    process = answers.get("process") if isinstance(answers.get("process"), dict) else {}
+    return "\n".join(
+        [
+            f"# Process Authoring Questions: {process.get('name', process.get('id', 'process'))}",
+            "",
+            "- What concrete outcome must this process produce?",
+            "- Which roles own each stage and artifact?",
+            "- Which artifacts prove that a stage is complete?",
+            "- Which blocking gates can stop apply or completion?",
+            "- Does the process need multiple assignment-backed tasks or one linear flow?",
+            "- Which examples should prove the generated process is usable?",
+            "",
+            "Answers are stored in `answers.yaml`; the generated candidate is `draft.process.yaml`.",
+        ]
+    ) + "\n"
+
+
+def append_authoring_log(paths: dict[str, Path], message: str) -> None:
+    paths["root"].mkdir(parents=True, exist_ok=True)
+    line = f"- {now_utc()}: {message}\n"
+    with paths["log"].open("a", encoding="utf-8") as handle:
+        handle.write(line)
+
+
+def render_logic_review(process: dict[str, Any], checks: list[Check]) -> str:
+    lines = [f"# Process Logic Review: {process.get('id', 'process')}", "", "| Level | Check |", "| --- | --- |"]
+    for item in checks:
+        lines.append(f"| {item.level} | {item.message} |")
+    failures = [item for item in checks if item.level == "FAIL"]
+    warnings = [item for item in checks if item.level == "WARN"]
+    lines.extend(["", f"Result: `{'fail' if failures else 'pass'}`", f"Failures: `{len(failures)}`", f"Warnings: `{len(warnings)}`", ""])
+    return "\n".join(lines)
+
+
+def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str, Any] | None = None) -> list[Check]:
+    checks: list[Check] = []
+    text = json.dumps({"process": process, "answers": answers or {}}, ensure_ascii=False)
+    checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "authoring data has no private absolute paths"))
+    checks.append(check("PASS" if not contains_secret_value(text) else "FAIL", "authoring data contains no secret-like values"))
+    for key in ["schema_version", "id", "name", "version", "status", "description", "stages", "roles", "artifact_definitions", "gates", "evolution_policy"]:
+        checks.append(check("PASS" if key in process else "FAIL", f"process.{key} present"))
+    roles = [item for item in as_list(process.get("roles")) if isinstance(item, dict)]
+    stages = [item for item in as_list(process.get("stages")) if isinstance(item, dict)]
+    artifacts = [item for item in as_list(process.get("artifact_definitions")) if isinstance(item, dict)]
+    gates = [item for item in as_list(process.get("gates")) if isinstance(item, dict)]
+
+    def id_values(items: list[dict[str, Any]], label: str) -> set[str]:
+        values: list[str] = [safe_id(str(item.get("id", "")), label) for item in items]
+        duplicates = sorted({item for item in values if values.count(item) > 1})
+        checks.append(check("PASS" if not duplicates else "FAIL", f"{label} ids unique" + (f": {', '.join(duplicates)}" if duplicates else "")))
+        return set(values)
+
+    role_ids = id_values(roles, "role")
+    artifact_ids = id_values(artifacts, "artifact")
+    gate_ids = id_values(gates, "gate")
+    stage_ids = id_values(stages, "stage")
+    checks.append(check("PASS" if stage_ids else "FAIL", "at least one stage exists"))
+    checks.append(check("PASS" if role_ids else "FAIL", "at least one role exists"))
+    checks.append(check("PASS" if artifact_ids else "FAIL", "at least one artifact exists"))
+    checks.append(check("PASS" if gate_ids else "FAIL", "at least one gate exists"))
+
+    for stage in stages:
+        stage_id = safe_id(str(stage.get("id", "")), "stage")
+        role_id = safe_id(str(stage.get("required_role", "")), "role")
+        checks.append(check("PASS" if role_id in role_ids else "FAIL", f"stage {stage_id} references existing role"))
+        for artifact_id in [safe_id(value, "artifact") for value in string_list(stage.get("produced_artifacts"))]:
+            checks.append(check("PASS" if artifact_id in artifact_ids else "FAIL", f"stage {stage_id} produces known artifact {artifact_id}"))
+        for gate_id in [safe_id(value, "gate") for value in string_list(stage.get("entry_gates")) + string_list(stage.get("exit_gates"))]:
+            checks.append(check("PASS" if gate_id in gate_ids else "FAIL", f"stage {stage_id} references known gate {gate_id}"))
+    for artifact in artifacts:
+        owner = safe_id(str(artifact.get("owner_role", "")), "role")
+        checks.append(check("PASS" if owner in role_ids else "FAIL", f"artifact {artifact.get('id', '')} owner role exists"))
+    for gate_item in gates:
+        gate_id = safe_id(str(gate_item.get("id", "")), "gate")
+        required_artifact = gate_item.get("required_artifact")
+        if required_artifact:
+            artifact_id = safe_id(str(required_artifact), "artifact")
+            checks.append(check("PASS" if artifact_id in artifact_ids else "FAIL", f"gate {gate_id} required artifact exists: {artifact_id}"))
+    review_index = next((index for index, item in enumerate(stages) if "review" in safe_id(str(item.get("id", "")), "stage")), -1)
+    for index, stage in enumerate(stages):
+        if bool(stage.get("handoff_required")) and (review_index < 0 or review_index > index):
+            checks.append(check("WARN", f"handoff stage {stage.get('id', '')} appears before review"))
+    run_model = process.get("run_model") if isinstance(process.get("run_model"), dict) else {}
+    task_loop = run_model.get("default_task_loop") if isinstance(run_model.get("default_task_loop"), dict) else {}
+    if run_model.get("supports_multiple_tasks") is True:
+        loop_enabled = task_loop.get("enabled") is True
+        kinds = string_list(task_loop.get("iteration_kinds"))
+        checks.append(check("PASS" if loop_enabled and kinds else "FAIL", "multiple-task processes define a default task loop"))
+        for kind in kinds:
+            checks.append(check("PASS" if kind in ITERATION_KINDS else "FAIL", f"default task loop iteration kind valid: {kind}"))
+    return checks
+
+
+def command_process_authoring_start(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    raw_answers = load_answers(Path(args.answers).expanduser().resolve()) if args.answers else {}
+    fallback_id = args.id or str((raw_answers.get("process") or {}).get("id") if isinstance(raw_answers.get("process"), dict) else raw_answers.get("id") or "new-process")
+    answers = normalize_process_authoring_answers(raw_answers, fallback_id, args.title or "")
+    if args.description:
+        answers["process"]["description"] = args.description
+    process_id = safe_id(str(answers["process"]["id"]), "new-process")
+    draft = process_from_authoring_answers(answers)
+    paths = process_authoring_paths(project_root, process_id)
+    planned = [paths["answers"], paths["draft"], paths["questions"], paths["log"]]
+    if getattr(args, "dry_run", False):
+        print_plan("process-authoring-start dry run", planned, project_root)
+        return 0
+    write_yaml_file(paths["answers"], answers)
+    write_yaml_file(paths["draft"], draft)
+    paths["questions"].write_text(render_authoring_questions(answers), encoding="utf-8")
+    append_authoring_log(paths, "authoring session started")
+    emit_process_event(project_root, "process_authoring.started", process_id=process_id, subject=process_id, payload={"process_id": process_id, "session": rel(paths["root"], project_root)}, correlation_id=f"process-authoring-{process_id}")
+    emit_process_event(project_root, "process_authoring.answers.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["answers"], project_root)}, correlation_id=f"process-authoring-{process_id}")
+    emit_process_event(project_root, "process_authoring.draft.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["draft"], project_root)}, correlation_id=f"process-authoring-{process_id}")
+    print(f"WROTE: {rel(paths['answers'], project_root)}")
+    print(f"WROTE: {rel(paths['draft'], project_root)}")
+    return 0
+
+
+def command_process_authoring_review(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    process_id = safe_id(args.process, "process")
+    paths = process_authoring_paths(project_root, process_id)
+    if not paths["draft"].is_file():
+        raise SystemExit(f"FAIL: draft not found: {rel(paths['draft'], project_root)}")
+    answers = read_yaml_file(paths["answers"]) if paths["answers"].is_file() else {}
+    draft = read_yaml_file(paths["draft"])
+    checks = validate_process_authoring_logic(draft, answers)
+    paths["logic_review"].write_text(render_logic_review(draft, checks), encoding="utf-8")
+    append_authoring_log(paths, "logic review created")
+    result = print_checks(checks)
+    emit_process_event(project_root, "process_authoring.logic_review.created", process_id=process_id, subject=process_id, severity="error" if result else "info", payload={"path": rel(paths["logic_review"], project_root), "result": "fail" if result else "pass"}, correlation_id=f"process-authoring-{process_id}")
+    print(f"WROTE: {rel(paths['logic_review'], project_root)}")
+    return result
+
+
+def render_process_agent_prompt(process: dict[str, Any]) -> str:
+    process_id = str(process.get("id", "process"))
+    stages = [item for item in as_list(process.get("stages")) if isinstance(item, dict)]
+    lines = [
+        f"# {process.get('name', title_from_id(process_id))} Agent",
+        "",
+        f"Process id: `{process_id}`",
+        "",
+        "Use the canonical Python launcher:",
+        "",
+        "```bash",
+        f"python bin/pf.py process-doctor --project-root <project-root> --process {process_id}",
+        f"python bin/pf.py run-create --project-root <project-root> --id <run-id> --title \"<title>\" --process {process_id} --apply",
+        "```",
+        "",
+        "Rules:",
+        "",
+        "- Read the process definition before starting work.",
+        "- Record durable artifacts for every blocking gate.",
+        "- Run review before handoff when the process defines a review stage.",
+        "- Keep public files portable and free of secrets.",
+        "- Use run, task, iteration, review, and handoff files for traceable work.",
+        "",
+        "Stages:",
+        "",
+    ]
+    for stage in stages:
+        lines.append(f"- `{stage.get('id')}`: {stage.get('title', '')}")
+    return "\n".join(lines) + "\n"
+
+
+def render_process_doc(process: dict[str, Any]) -> str:
+    process_id = str(process.get("id", "process"))
+    lines = [
+        f"# {process.get('name', title_from_id(process_id))}",
+        "",
+        str(process.get("description", "")),
+        "",
+        f"- process_id: `{process_id}`",
+        f"- version: `{process.get('version', '')}`",
+        f"- status: `{process.get('status', '')}`",
+        f"- scope: `{process.get('scope', 'project')}`",
+        "",
+        "## Stages",
+        "",
+    ]
+    for stage in as_list(process.get("stages")):
+        if isinstance(stage, dict):
+            lines.append(f"- `{stage.get('id')}`: {stage.get('description') or stage.get('title', '')}")
+    lines.extend(["", "## Artifacts", ""])
+    for artifact in as_list(process.get("artifact_definitions")):
+        if isinstance(artifact, dict):
+            lines.append(f"- `{artifact.get('id')}`: {artifact.get('title', '')}")
+    lines.extend(["", "## Gates", ""])
+    for gate_item in as_list(process.get("gates")):
+        if isinstance(gate_item, dict):
+            lines.append(f"- `{gate_item.get('id')}`: {gate_item.get('description', '')}")
+    return "\n".join(lines) + "\n"
+
+
+def write_process_authoring_example(project_root: Path, process: dict[str, Any], answers: dict[str, Any], review_text: str) -> list[Path]:
+    process_id = str(process.get("id", "process"))
+    example_root = project_root / "examples" / "process-authoring" / process_id
+    files = [
+        example_root / "README.md",
+        example_root / "answers.yaml",
+        example_root / "draft.process.yaml",
+        example_root / "logic-review.md",
+    ]
+    readme = "\n".join(
+        [
+            f"# Process Authoring Example: {process.get('name', title_from_id(process_id))}",
+            "",
+            "This example shows the authoring inputs, generated process draft, and logic review produced before apply.",
+            "",
+            "```bash",
+            f"python bin/pf.py process-create --project-root <project-root> --answers examples/process-authoring/{process_id}/answers.yaml --apply",
+            f"python bin/pf.py process-doctor --project-root <project-root> --process {process_id}",
+            "```",
+            "",
+        ]
+    )
+    files[0].parent.mkdir(parents=True, exist_ok=True)
+    files[0].write_text(readme, encoding="utf-8")
+    write_yaml_file(files[1], answers)
+    write_yaml_file(files[2], process)
+    files[3].write_text(review_text, encoding="utf-8")
+    if process_id == "seo-audit":
+        dogfood = {
+            example_root / "process-authoring-seo-audit-report.md": "# SEO Audit Process Authoring Report\n\nStatus: authored and applied through ProcessForge process authoring.\n",
+            example_root / "process-authoring-seo-audit-review.md": "# SEO Audit Process Authoring Review\n\nResult: pass.\n",
+            example_root / "process-authoring-seo-audit-handoff.md": "# SEO Audit Process Authoring Handoff\n\nThe example process is ready for `process-doctor` and task-batch use.\n",
+        }
+        for path, content in dogfood.items():
+            path.write_text(content, encoding="utf-8")
+            files.append(path)
+    return files
+
+
+def command_process_authoring_apply(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    process_id = safe_id(args.process, "process")
+    paths = process_authoring_paths(project_root, process_id)
+    if not paths["draft"].is_file():
+        raise SystemExit(f"FAIL: draft not found: {rel(paths['draft'], project_root)}")
+    answers = read_yaml_file(paths["answers"]) if paths["answers"].is_file() else {}
+    draft = read_yaml_file(paths["draft"])
+    checks = validate_process_authoring_logic(draft, answers)
+    review_text = render_logic_review(draft, checks)
+    paths["logic_review"].write_text(review_text, encoding="utf-8")
+    failures = [item for item in checks if item.level == "FAIL"]
+    if failures:
+        emit_process_event(project_root, "process_authoring.failed", process_id=process_id, subject=process_id, severity="error", payload={"failures": [item.message for item in failures]}, correlation_id=f"process-authoring-{process_id}")
+        return print_checks(checks)
+    target_process = project_root / "processes" / f"{process_id}.yaml"
+    target_prompt = project_root / "prompts" / f"{process_id}-agent.md"
+    target_doc = project_root / "docs" / "processes" / f"{process_id}.md"
+    write_yaml_file(target_process, draft)
+    target_prompt.parent.mkdir(parents=True, exist_ok=True)
+    target_prompt.write_text(render_process_agent_prompt(draft), encoding="utf-8")
+    target_doc.parent.mkdir(parents=True, exist_ok=True)
+    target_doc.write_text(render_process_doc(draft), encoding="utf-8")
+    example_files = write_process_authoring_example(project_root, draft, answers, review_text)
+    report_lines = [
+        f"# Process Authoring Apply Report: {process_id}",
+        "",
+        "- result: `applied`",
+        f"- process: `{rel(target_process, project_root)}`",
+        f"- prompt: `{rel(target_prompt, project_root)}`",
+        f"- docs: `{rel(target_doc, project_root)}`",
+        "",
+        "## Example Files",
+        "",
+    ]
+    report_lines.extend(f"- `{rel(path, project_root)}`" for path in example_files)
+    paths["apply_report"].write_text("\n".join(report_lines) + "\n", encoding="utf-8")
+    append_authoring_log(paths, "authoring session applied")
+    emit_process_event(project_root, "process.created", process_id=process_id, subject=process_id, payload={"path": rel(target_process, project_root)}, correlation_id=f"process-authoring-{process_id}")
+    emit_process_event(project_root, "process_authoring.applied", process_id=process_id, subject=process_id, payload={"process": rel(target_process, project_root), "prompt": rel(target_prompt, project_root), "docs": rel(target_doc, project_root)}, correlation_id=f"process-authoring-{process_id}")
+    emit_process_event(project_root, "process_authoring.completed", process_id=process_id, subject=process_id, payload={"report": rel(paths["apply_report"], project_root)}, correlation_id=f"process-authoring-{process_id}")
+    print(f"WROTE: {rel(target_process, project_root)}")
+    print(f"WROTE: {rel(target_prompt, project_root)}")
+    print(f"WROTE: {rel(target_doc, project_root)}")
+    print(f"WROTE: {rel(paths['apply_report'], project_root)}")
+    return 0
+
+
+def command_process_create(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    raw_answers = load_answers(Path(args.answers).expanduser().resolve()) if args.answers else {}
+    fallback_id = args.id or str((raw_answers.get("process") or {}).get("id") if isinstance(raw_answers.get("process"), dict) else raw_answers.get("id") or "new-process")
+    answers = normalize_process_authoring_answers(raw_answers, fallback_id, args.title or "")
+    process_id = safe_id(str(answers["process"]["id"]), "new-process")
+    start_args = argparse.Namespace(project_root=str(project_root), answers=None, id=process_id, title=str(answers["process"]["name"]), description=str(answers["process"]["description"]), dry_run=getattr(args, "dry_run", False))
+    if getattr(args, "dry_run", False):
+        return command_process_authoring_start(start_args)
+    paths = process_authoring_paths(project_root, process_id)
+    write_yaml_file(paths["answers"], answers)
+    write_yaml_file(paths["draft"], process_from_authoring_answers(answers))
+    paths["questions"].write_text(render_authoring_questions(answers), encoding="utf-8")
+    append_authoring_log(paths, "authoring session created by process-create")
+    emit_process_event(project_root, "process_authoring.started", process_id=process_id, subject=process_id, payload={"process_id": process_id, "session": rel(paths["root"], project_root)}, correlation_id=f"process-authoring-{process_id}")
+    emit_process_event(project_root, "process_authoring.answers.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["answers"], project_root)}, correlation_id=f"process-authoring-{process_id}")
+    emit_process_event(project_root, "process_authoring.draft.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["draft"], project_root)}, correlation_id=f"process-authoring-{process_id}")
+    return command_process_authoring_apply(argparse.Namespace(project_root=str(project_root), process=process_id))
+
+
+def process_definition_path(project_root: Path, process_or_path: str) -> Path:
+    candidate = Path(process_or_path)
+    if candidate.suffix in {".yaml", ".yml"}:
+        path = candidate if candidate.is_absolute() else project_root / candidate
+        if path.is_file():
+            return path
+    process_id = safe_id(process_or_path, "process")
+    for path in [project_root / "processes" / f"{process_id}.yaml", locate_flow_root(project_root) / "processes" / f"{process_id}.yaml", ROOT / "processes" / f"{process_id}.yaml"]:
+        if path.is_file():
+            return path
+    raise SystemExit(f"FAIL: process not found: {process_id}")
+
+
+def validate_process_definition_files(project_root: Path, process: dict[str, Any], process_path: Path) -> list[Check]:
+    process_id = str(process.get("id") or process_path.stem)
+    checks = validate_process_authoring_logic(process, {})
+    checks.append(check("PASS" if not public_yaml_has_private_path(process) else "FAIL", f"{rel(process_path, project_root)} has no private absolute paths"))
+    prompt = project_root / "prompts" / f"{process_id}-agent.md"
+    doc = project_root / "docs" / "processes" / f"{process_id}.md"
+    example = project_root / "examples" / "process-authoring" / process_id / "README.md"
+    checks.append(check("PASS" if prompt.is_file() else "FAIL", f"{rel(prompt, project_root)} exists"))
+    checks.append(check("PASS" if doc.is_file() else "FAIL", f"{rel(doc, project_root)} exists"))
+    checks.append(check("PASS" if example.is_file() else "FAIL", f"{rel(example, project_root)} exists"))
+    return checks
+
+
+def command_process_doctor(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    path = process_definition_path(project_root, args.process)
+    process = read_yaml_file(path)
+    checks = validate_process_definition_files(project_root, process, path)
+    result = print_checks(checks)
+    process_id = str(process.get("id") or path.stem)
+    emit_process_event(project_root, "process.doctor.failed" if result else "process.doctor.passed", process_id=process_id, severity="error" if result else "info", subject=process_id, payload={"path": rel(path, project_root), "result": "fail" if result else "pass"}, correlation_id=f"process-{process_id}")
+    return result
+
+
+def iter_process_definitions(project_root: Path) -> list[tuple[str, Path, dict[str, Any]]]:
+    seen: set[str] = set()
+    items: list[tuple[str, Path, dict[str, Any]]] = []
+    for root in [project_root / "processes", locate_flow_root(project_root) / "processes", ROOT / "processes"]:
+        if not root.is_dir():
+            continue
+        for path in sorted(root.glob("*.yaml")):
+            data = load_yaml_document(path)
+            if yaml_error(data):
+                continue
+            process_id = str(data.get("id") or path.stem)
+            if process_id in seen:
+                continue
+            seen.add(process_id)
+            items.append((process_id, path, data))
+    return items
+
+
+def command_process_list(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    items = iter_process_definitions(project_root)
+    if not items:
+        print("No processes found.")
+        return 0
+    for process_id, path, data in items:
+        print(f"{process_id}\t{data.get('status', 'unknown')}\t{data.get('version', '')}\t{data.get('name', '')}\t{rel(path, project_root)}")
+    return 0
+
+
+def command_process_describe(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    path = process_definition_path(project_root, args.process)
+    data = read_yaml_file(path)
+    print(f"PROCESS: {data.get('id', path.stem)}")
+    print(f"NAME: {data.get('name', '')}")
+    print(f"STATUS: {data.get('status', '')}")
+    print(f"VERSION: {data.get('version', '')}")
+    print(f"PATH: {rel(path, project_root)}")
+    print("STAGES:")
+    for stage in as_list(data.get("stages")):
+        if isinstance(stage, dict):
+            print(f"- {stage.get('id')}: {stage.get('title', '')}")
+    print("ROLES:")
+    for role in as_list(data.get("roles")):
+        if isinstance(role, dict):
+            print(f"- {role.get('id')}: {role.get('title', '')}")
+    print("ARTIFACTS:")
+    for artifact in as_list(data.get("artifact_definitions")):
+        if isinstance(artifact, dict):
+            print(f"- {artifact.get('id')}: {artifact.get('title', '')}")
+    print("GATES:")
+    for gate_item in as_list(data.get("gates")):
+        if isinstance(gate_item, dict):
+            print(f"- {gate_item.get('id')}: {gate_item.get('description', '')}")
+    return 0
 
 
 def command_run_create(args: argparse.Namespace) -> int:
@@ -8441,6 +9148,49 @@ def build_parser() -> argparse.ArgumentParser:
     assignment_capsule.add_argument("--assignment", required=True, help="Assignment Markdown with YAML front matter or assignment YAML.")
     assignment_capsule.add_argument("--force", action="store_true", help="Overwrite an existing capsule.")
     assignment_capsule.set_defaults(func=command_assignment_capsule)
+
+    process_authoring_start = sub.add_parser("process-authoring-start", help="Start a guided process authoring session.")
+    process_authoring_start.add_argument("--project-root", required=True, help="Project root path.")
+    process_authoring_start.add_argument("--id", help="Process id.")
+    process_authoring_start.add_argument("--title", help="Process title.")
+    process_authoring_start.add_argument("--description", help="Process description.")
+    process_authoring_start.add_argument("--answers", help="Optional process authoring answers YAML.")
+    process_authoring_start.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    process_authoring_start.add_argument("--apply", action="store_true", help="Write authoring session files.")
+    process_authoring_start.set_defaults(func=command_process_authoring_start)
+
+    process_authoring_review = sub.add_parser("process-authoring-review", help="Review a process authoring draft for structural logic issues.")
+    process_authoring_review.add_argument("--project-root", required=True, help="Project root path.")
+    process_authoring_review.add_argument("--process", required=True, help="Process id.")
+    process_authoring_review.set_defaults(func=command_process_authoring_review)
+
+    process_authoring_apply = sub.add_parser("process-authoring-apply", help="Apply a reviewed process authoring draft.")
+    process_authoring_apply.add_argument("--project-root", required=True, help="Project root path.")
+    process_authoring_apply.add_argument("--process", required=True, help="Process id.")
+    process_authoring_apply.set_defaults(func=command_process_authoring_apply)
+
+    process_create = sub.add_parser("process-create", help="Create a new process from answers in one command.")
+    process_create.add_argument("--project-root", required=True, help="Project root path.")
+    process_create.add_argument("--id", help="Process id when no answers file supplies one.")
+    process_create.add_argument("--title", help="Process title when no answers file supplies one.")
+    process_create.add_argument("--answers", help="Optional process authoring answers YAML.")
+    process_create.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    process_create.add_argument("--apply", action="store_true", help="Write the process, prompt, docs, and example.")
+    process_create.set_defaults(func=command_process_create)
+
+    process_doctor = sub.add_parser("process-doctor", help="Validate a process definition and its generated companion files.")
+    process_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    process_doctor.add_argument("--process", required=True, help="Process id or YAML path.")
+    process_doctor.set_defaults(func=command_process_doctor)
+
+    process_list = sub.add_parser("process-list", help="List available process definitions.")
+    process_list.add_argument("--project-root", required=True, help="Project root path.")
+    process_list.set_defaults(func=command_process_list)
+
+    process_describe = sub.add_parser("process-describe", help="Describe a process definition.")
+    process_describe.add_argument("--project-root", required=True, help="Project root path.")
+    process_describe.add_argument("--process", required=True, help="Process id or YAML path.")
+    process_describe.set_defaults(func=command_process_describe)
 
     run_create = sub.add_parser("run-create", help="Create a project run/work session.")
     run_create.add_argument("--project-root", required=True, help="Project root path.")
