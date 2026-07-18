@@ -1,0 +1,348 @@
+schema_version: 1
+id: process-authoring
+name: Process Authoring
+kind: resource_authoring
+scope: project
+version: 0.1.0
+status: active
+description: Create, review, apply, and validate a new ProcessForge process definition with companion prompt, documentation, and examples.
+purpose: Turn guided process answers into a usable process pack without requiring manual YAML authoring by hand.
+required_capabilities:
+  - process_coordination
+  - artifact_review
+  - reporting
+hooks:
+  emit:
+    -
+      event: process_authoring.started
+      required: true
+    -
+      event: process_authoring.answers.created
+      required: true
+    -
+      event: process_authoring.draft.created
+      required: true
+    -
+      event: process_authoring.logic_review.created
+      required: true
+    -
+      event: process_authoring.applied
+      required: true
+    -
+      event: process_authoring.completed
+      required: true
+    -
+      event: process_authoring.failed
+      required: true
+    -
+      event: process.created
+      required: true
+    -
+      event: process.doctor.passed
+      required: true
+    -
+      event: process.doctor.failed
+      required: true
+  tracking:
+    include:
+      - process_id
+      - authoring_session
+      - artifact_refs
+      - run_id
+      - task_id
+      - status
+run_model:
+  supports_multiple_tasks: false
+  default_task_loop:
+    enabled: false
+    iteration_kinds:
+      - work
+      - debug
+      - review
+      - handoff
+roles:
+  -
+    id: process-author
+    title: Process Author
+    responsibility: Captures process intent and creates the candidate definition.
+  -
+    id: process-reviewer
+    title: Process Reviewer
+    responsibility: Reviews stage, gate, role, and artifact logic before apply.
+  -
+    id: documentation-author
+    title: Documentation Author
+    responsibility: Produces prompt, docs, examples, and handoff notes.
+stages:
+  -
+    id: intake
+    title: Intake
+    description: Capture process id, purpose, scope, run model, roles, stages, artifacts, gates, and exclusions.
+    required_inputs:
+      []
+    produced_artifacts:
+      - authoring-answers
+      - authoring-questions
+    required_role: process-author
+    required_capabilities:
+      - process_coordination
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      []
+    exit_gates:
+      - answers-complete
+    handoff_required: false
+  -
+    id: draft-process
+    title: Draft Process
+    description: Generate a schema-compatible candidate process definition from the answers.
+    required_inputs:
+      - authoring-answers
+    produced_artifacts:
+      - process-draft
+    required_role: process-author
+    required_capabilities:
+      - process_coordination
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - answers-complete
+    exit_gates:
+      - draft-created
+    handoff_required: false
+  -
+    id: logic-review
+    title: Logic Review
+    description: Check duplicate ids, dangling roles, dangling artifacts, gate references, handoff order, and task loop consistency.
+    required_inputs:
+      - process-draft
+    produced_artifacts:
+      - logic-review
+    required_role: process-reviewer
+    required_capabilities:
+      - artifact_review
+    allowed_tools:
+      - processforge-cli
+      - validator
+    entry_gates:
+      - draft-created
+    exit_gates:
+      - logic-review-passed
+    handoff_required: false
+  -
+    id: apply-process
+    title: Apply Process
+    description: Write the process definition, agent prompt, documentation, and example pack.
+    required_inputs:
+      - process-draft
+      - logic-review
+    produced_artifacts:
+      - applied-process
+      - process-agent-prompt
+      - process-doc
+      - process-example
+    required_role: process-author
+    required_capabilities:
+      - reporting
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - logic-review-passed
+    exit_gates:
+      - process-applied
+    handoff_required: false
+  -
+    id: process-doctor
+    title: Process Doctor
+    description: Validate the applied process and companion files.
+    required_inputs:
+      - applied-process
+      - process-agent-prompt
+      - process-doc
+      - process-example
+    produced_artifacts:
+      - process-doctor-report
+    required_role: process-reviewer
+    required_capabilities:
+      - artifact_review
+    allowed_tools:
+      - processforge-cli
+      - validator
+    entry_gates:
+      - process-applied
+    exit_gates:
+      - process-doctor-passed
+    handoff_required: false
+  -
+    id: handoff
+    title: Handoff
+    description: Record delivered files, validation evidence, and residual risks.
+    required_inputs:
+      - process-doctor-report
+    produced_artifacts:
+      - authoring-handoff
+    required_role: documentation-author
+    required_capabilities:
+      - reporting
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - process-doctor-passed
+    exit_gates:
+      - authoring-handoff-created
+    handoff_required: true
+artifact_definitions:
+  -
+    id: authoring-answers
+    title: Authoring Answers
+    owner_role: process-author
+    template: process-authoring-answers
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: authoring-questions
+    title: Authoring Questions
+    owner_role: process-author
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: process-draft
+    title: Process Draft
+    owner_role: process-author
+    template: process-definition-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: logic-review
+    title: Logic Review
+    owner_role: process-reviewer
+    template: review-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: applied-process
+    title: Applied Process
+    owner_role: process-author
+    template: process-definition-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: process-agent-prompt
+    title: Process Agent Prompt
+    owner_role: documentation-author
+    template: process-agent-prompt
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: process-doc
+    title: Process Documentation
+    owner_role: documentation-author
+    template: process-doc
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: process-example
+    title: Process Example
+    owner_role: documentation-author
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: process-doctor-report
+    title: Process Doctor Report
+    owner_role: process-reviewer
+    template: validation-report-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: authoring-handoff
+    title: Authoring Handoff
+    owner_role: documentation-author
+    template: handoff-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: answers-complete
+    description: Answers include process identity, roles, stages, artifacts, gates, and run model.
+    blocking: true
+    required_artifact: authoring-answers
+  -
+    id: draft-created
+    description: Draft process definition exists and has required schema keys.
+    blocking: true
+    required_artifact: process-draft
+  -
+    id: logic-review-passed
+    description: Logic review has no blocking failures.
+    blocking: true
+    required_artifact: logic-review
+  -
+    id: process-applied
+    description: Process, prompt, documentation, and example files were written.
+    blocking: true
+    required_artifact: applied-process
+  -
+    id: process-doctor-passed
+    description: process-doctor reports no failures.
+    blocking: true
+    required_artifact: process-doctor-report
+  -
+    id: authoring-handoff-created
+    description: Handoff records delivered state and residual risks.
+    blocking: true
+    required_artifact: authoring-handoff
+required_packages:
+  - process-forge-core
+required_templates:
+  - process-authoring-answers
+  - process-definition-template
+  - process-agent-prompt
+  - process-doc
+  - review-template
+  - handoff-template
+allowed_tools:
+  - processforge-cli
+  - validator
+forbidden_actions:
+  - create_background_runner
+  - execute_command_hooks
+  - send_network_webhooks
+  - write_private_absolute_paths_to_public_files
+  - skip_blocking_logic_review
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - applied-process
+    - authoring-handoff
+  safe_changes:
+    - add_optional_authoring_question
+    - add_non_blocking_logic_warning
+  blocked_changes:
+    - remove_logic_review_before_apply
+    - weaken_public_path_checks
+  requires_approval:
+    - change_generated_process_schema

@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-18T08:12:19Z
-- valid_until: 2026-07-25T08:12:19Z
+- generated_at: 2026-07-18T09:04:27Z
+- valid_until: 2026-07-25T09:04:27Z
 
 ## Freshness
 
@@ -68,6 +68,7 @@ fresh
 - knowledge-package-authoring
 - platform-contract-authoring
 - process-authoring
+- authoring-parity-audit
 - task-batch-execution
 
 ## Required Capabilities

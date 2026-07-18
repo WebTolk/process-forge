@@ -1,0 +1,14 @@
+schema_version: 1
+process_id: knowledge-resource-add
+result: WARN
+diffs:
+  -
+    level: WARN
+    area: kind
+    message: kind differs
+  -
+    level: WARN
+    area: scope
+    message: scope differs
+unsupported:
+  []

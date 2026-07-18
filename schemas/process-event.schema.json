@@ -66,7 +66,13 @@
         "process_authoring.failed",
         "process.created",
         "process.doctor.passed",
-        "process.doctor.failed"
+        "process.doctor.failed",
+        "authoring_parity.started",
+        "authoring_parity.process.checked",
+        "authoring_parity.resource.checked",
+        "authoring_parity.warning",
+        "authoring_parity.failed",
+        "authoring_parity.completed"
       ]
     },
     "source": { "type": "string", "minLength": 1 },

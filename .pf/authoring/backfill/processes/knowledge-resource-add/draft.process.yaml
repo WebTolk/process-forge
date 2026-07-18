@@ -1,0 +1,180 @@
+schema_version: 1
+id: knowledge-resource-add
+name: Knowledge Resource Add
+kind: process
+scope: project
+version: 0.1.0
+status: active
+description: Add a knowledge resource through proposal, classification, package update, index refresh, validation, and review.
+purpose: Add a knowledge resource through proposal, classification, package update, index refresh, validation, and review.
+run_model:
+
+required_capabilities:
+  - repository_read
+  - markdown_editing
+  - schema_validation
+hooks:
+  emit:
+    -
+      event: knowledge.resource.add.requested
+      required: true
+    -
+      event: knowledge.resource.added
+      required: true
+    -
+      event: knowledge.package.updated
+      required: true
+    -
+      event: snapshot.stale
+      required: false
+roles:
+  -
+    id: requester
+    title: Requester
+    responsibility: Provides URL, local source, or resource metadata.
+  -
+    id: maintainer
+    title: Maintainer
+    responsibility: Resolves target package, normalizes path_ref, updates indexes, and validates output.
+stages:
+  -
+    id: intake
+    title: Intake
+    description: Capture the resource request and target package.
+    required_inputs:
+      []
+    produced_artifacts:
+      - knowledge-resource-add-request
+    required_role: requester
+    required_capabilities:
+      - markdown_editing
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - request-complete
+    handoff_required: false
+  -
+    id: target-resolution
+    title: Target Resolution
+    description: Resolve package, resource kind, path_ref, source, license, and load_policy.
+    required_inputs:
+      - knowledge-resource-add-request
+    produced_artifacts:
+      - target-resolution-report
+      - source-note
+      - license-note
+    required_role: maintainer
+    required_capabilities:
+      - repository_read
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - request-complete
+    exit_gates:
+      - target-resolved
+    handoff_required: false
+  -
+    id: package-index-update
+    title: Package Index Update
+    description: Update package manifest and resource index without loading heavy content.
+    required_inputs:
+      - target-resolution-report
+    produced_artifacts:
+      - resource-record
+      - package-index-update
+    required_role: maintainer
+    required_capabilities:
+      - repository_write
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - target-resolved
+    exit_gates:
+      - index-updated
+    handoff_required: false
+  -
+    id: validation
+    title: Validation
+    description: Run package doctor and public cleanliness checks.
+    required_inputs:
+      - package-index-update
+    produced_artifacts:
+      - validation-report
+      - review
+    required_role: maintainer
+    required_capabilities:
+      - schema_validation
+    allowed_tools:
+      - validator
+    entry_gates:
+      - index-updated
+    exit_gates:
+      - resource-reviewed
+    handoff_required: true
+artifact_definitions:
+  -
+    id: knowledge-resource-add-request
+    title: Knowledge Resource Add Request
+    owner_role: requester
+    template: knowledge-resource-add-request
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: resource-record
+    title: Resource Record
+    owner_role: maintainer
+    template: knowledge-resource
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: package-index-update
+    title: Package Index Update
+    owner_role: maintainer
+    template: knowledge-resource-index
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: request-complete
+    description: Request identifies source, target package, and intended resource kind.
+    blocking: true
+  -
+    id: target-resolved
+    description: Resource uses path_ref, license/source notes, and load_policy.
+    blocking: true
+  -
+    id: index-updated
+    description: Package manifest and index are updated without heavy content loading.
+    blocking: true
+  -
+    id: resource-reviewed
+    description: Validation report and review record are complete.
+    blocking: true
+required_packages:
+  - process-forge-knowledge-governance
+required_templates:
+  - knowledge-resource.yaml
+  - knowledge-resource-index.yaml
+allowed_tools:
+  - processforge-cli
+  - validator
+forbidden_actions:
+  - store_secret_values
+  - write_private_absolute_paths_to_public_project_files
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - review
+  safe_changes:
+    - add_optional_resource_metadata
+  blocked_changes:
+    - remove_path_ref_privacy

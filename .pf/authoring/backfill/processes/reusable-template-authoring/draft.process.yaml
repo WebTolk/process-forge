@@ -1,0 +1,267 @@
+schema_version: 1
+id: reusable-template-authoring
+name: Reusable Template Authoring
+kind: resource_authoring
+scope: workplace
+version: 0.1.0
+status: active
+description: Create, register, validate, and hand off a reusable ProcessForge workplace template.
+purpose: Create a reusable template in a workplace template root without touching project onboarding.
+run_model:
+
+required_capabilities:
+  - filesystem.write
+  - validation
+hooks:
+  emit:
+    -
+      event: template.authoring.started
+      required: true
+    -
+      event: template.created
+      required: true
+    -
+      event: template.registered
+      required: true
+    -
+      event: template.doctor.passed
+      required: true
+    -
+      event: template.doctor.failed
+      required: true
+    -
+      event: template.authoring.completed
+      required: true
+roles:
+  -
+    id: author
+    title: Template Author
+    responsibility: Creates the reusable template and its manifest.
+  -
+    id: reviewer
+    title: Reviewer
+    responsibility: Reviews the template before consumption.
+stages:
+  -
+    id: intake
+    title: Intake
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - template-authoring-inputs
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - inputs-provided
+    handoff_required: false
+  -
+    id: select-template-root
+    title: Select Template Root
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - template-root-selection
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - template-root-resolved
+    handoff_required: false
+  -
+    id: create-template-structure
+    title: Create Template Structure
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - template-structure
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - template-structure-created
+    handoff_required: false
+  -
+    id: write-manifest
+    title: Write Manifest
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - template-manifest
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - manifest-written
+    handoff_required: false
+  -
+    id: write-example-files
+    title: Write Example Files
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - template-examples
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - examples-written
+    handoff_required: false
+  -
+    id: register-template
+    title: Register Template
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - template-registry-entry
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - template-registered
+    handoff_required: false
+  -
+    id: run-template-doctor
+    title: Run Template Doctor
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - template-doctor-report
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - template-doctor-complete
+    handoff_required: false
+  -
+    id: handoff
+    title: Handoff
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - template-ready-handoff
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - handoff-created
+    handoff_required: false
+artifact_definitions:
+  -
+    id: template-authoring-inputs
+    title: Template Authoring Inputs
+    owner_role: author
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: template-manifest
+    title: Template Manifest
+    owner_role: author
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: template-ready-handoff
+    title: Template Ready Handoff
+    owner_role: author
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: inputs-provided
+    description: Template id and title are available.
+    blocking: true
+  -
+    id: template-root-resolved
+    description: Template root resolved through workplace registries and path constants.
+    blocking: true
+  -
+    id: template-structure-created
+    description: Template folders were created.
+    blocking: true
+  -
+    id: manifest-written
+    description: template.yaml was written.
+    blocking: true
+  -
+    id: examples-written
+    description: Example payload files were written.
+    blocking: false
+  -
+    id: template-registered
+    description: Template registry entry exists.
+    blocking: true
+  -
+    id: template-doctor-complete
+    description: Template doctor passed or produced fix hints.
+    blocking: true
+  -
+    id: handoff-created
+    description: Template ready handoff exists.
+    blocking: true
+required_packages:
+  - process-forge-core
+required_templates:
+  - artifact-template
+allowed_tools:
+  - processforge-cli
+forbidden_actions:
+  - write_private_absolute_paths_to_public_files
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  blocked_changes:
+    - write_private_absolute_paths_to_public_template_manifest
+expected_artifacts:
+  - template.yaml
+  - artifacts/template-authoring-report.md
+  - reviews/template-authoring-review.md
+  - handoffs/template-ready-handoff.md

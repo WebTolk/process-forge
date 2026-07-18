@@ -1,0 +1,99 @@
+schema_version: 1
+id: tool-register
+name: Tool Register
+version: 0.1.0
+status: active
+description: Register a workplace tool capability provider through proposal, healthcheck definition, registry update, and review.
+required_capabilities:
+  - repository_write
+hooks:
+  emit:
+    -
+      event: tool.registered
+      required: true
+    -
+      event: tool.healthcheck.passed
+      required: false
+    -
+      event: tool.healthcheck.failed
+      required: false
+roles:
+  -
+    id: maintainer
+    title: Maintainer
+    responsibility: Resolves capability, command, healthcheck, and registry entry.
+stages:
+  -
+    id: intake
+    title: Intake
+    description: Capture tool id, capability, command, status, and healthcheck.
+    required_inputs:
+      []
+    produced_artifacts:
+      - tool-registration-request
+    required_role: maintainer
+    required_capabilities:
+      - markdown_editing
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - request-complete
+    handoff_required: false
+  -
+    id: registry-update
+    title: Registry Update
+    description: Update registries/tools.yaml without storing secrets.
+    required_inputs:
+      - tool-registration-request
+    produced_artifacts:
+      - tool-definition
+      - validation-report
+      - review
+    required_role: maintainer
+    required_capabilities:
+      - repository_write
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - request-complete
+    exit_gates:
+      - tool-reviewed
+    handoff_required: true
+artifact_definitions:
+  -
+    id: tool-definition
+    title: Tool Definition
+    owner_role: maintainer
+    template: tool-definition
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: request-complete
+    description: Tool id, capability, command, and status are explicit.
+    blocking: true
+  -
+    id: tool-reviewed
+    description: Registry entry contains no secrets and healthcheck is documented.
+    blocking: true
+required_packages:
+  - process-forge-core
+required_templates:
+  - tool-definition.yaml
+allowed_tools:
+  - processforge-cli
+forbidden_actions:
+  - store_secret_values
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - review
+  safe_changes:
+    - add_optional_tool
+  blocked_changes:
+    - store_secret_in_command

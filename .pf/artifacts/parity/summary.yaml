@@ -1,0 +1,16 @@
+schema_version: 1
+result: PASS
+process_result: 0
+resources:
+  -
+    id: process-agent-prompt
+    kind: template
+    result: PASS_OR_SKIP
+  -
+    id: process-forge-core
+    kind: knowledge-package
+    result: PASS_OR_SKIP
+  -
+    id: platform-contract-joomla
+    kind: platform
+    result: PASS_OR_SKIP

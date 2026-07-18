@@ -1,0 +1,269 @@
+schema_version: 1
+id: knowledge-package-authoring
+name: Knowledge Package Authoring
+kind: resource_authoring
+scope: workplace
+version: 0.1.0
+status: active
+description: Create a workplace knowledge package through authoritative package roots.
+purpose: Create package.yaml, resource index, and handoff artifacts for a knowledge package.
+run_model:
+
+required_capabilities:
+  - filesystem.write
+  - validation
+hooks:
+  emit:
+    -
+      event: knowledge_package.authoring.started
+      required: true
+    -
+      event: knowledge_package.created
+      required: true
+    -
+      event: knowledge_package.resource_index.created
+      required: true
+    -
+      event: knowledge_package.doctor.passed
+      required: true
+    -
+      event: knowledge_package.doctor.failed
+      required: true
+    -
+      event: knowledge_package.authoring.completed
+      required: true
+roles:
+  -
+    id: author
+    title: Knowledge Author
+    responsibility: Creates the package manifest and resource index.
+  -
+    id: reviewer
+    title: Reviewer
+    responsibility: Reviews package readiness.
+stages:
+  -
+    id: intake
+    title: Intake
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - knowledge-package-inputs
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - inputs-provided
+    handoff_required: false
+  -
+    id: select-package-root
+    title: Select Package Root
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - package-root-selection
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - package-root-resolved
+    handoff_required: false
+  -
+    id: create-package-structure
+    title: Create Package Structure
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - package-structure
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - package-structure-created
+    handoff_required: false
+  -
+    id: write-package-manifest
+    title: Write Package Manifest
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - package-manifest
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - manifest-written
+    handoff_required: false
+  -
+    id: create-resource-index
+    title: Create Resource Index
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - resource-index
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - resource-index-created
+    handoff_required: false
+  -
+    id: add-initial-resources
+    title: Add Initial Resources
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - initial-resources
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - resources-recorded
+    handoff_required: false
+  -
+    id: run-package-doctor
+    title: Run Package Doctor
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - package-doctor-report
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - package-doctor-complete
+    handoff_required: false
+  -
+    id: handoff
+    title: Handoff
+    description: ""
+    required_inputs:
+      []
+    produced_artifacts:
+      - knowledge-package-ready-handoff
+    required_role: author
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - handoff-created
+    handoff_required: false
+artifact_definitions:
+  -
+    id: package-manifest
+    title: Package Manifest
+    owner_role: author
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: resource-index
+    title: Resource Index
+    owner_role: author
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: knowledge-package-ready-handoff
+    title: Knowledge Package Ready Handoff
+    owner_role: author
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: inputs-provided
+    description: Package id, title, and package root are available.
+    blocking: true
+  -
+    id: package-root-resolved
+    description: Package root resolved through authoritative package_roots.
+    blocking: true
+  -
+    id: package-structure-created
+    description: Package folders were created.
+    blocking: true
+  -
+    id: manifest-written
+    description: package.yaml was written.
+    blocking: true
+  -
+    id: resource-index-created
+    description: indexes/resource-index.yaml was written.
+    blocking: true
+  -
+    id: resources-recorded
+    description: Initial resources were recorded or explicitly empty.
+    blocking: false
+  -
+    id: package-doctor-complete
+    description: Knowledge package doctor passed or produced fix hints.
+    blocking: true
+  -
+    id: handoff-created
+    description: Knowledge package ready handoff exists.
+    blocking: true
+required_packages:
+  - process-forge-core
+required_templates:
+  - artifact-template
+allowed_tools:
+  - processforge-cli
+forbidden_actions:
+  - write_private_absolute_paths_to_public_files
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  blocked_changes:
+    - bypass_package_roots
+    - write_private_absolute_paths_to_public_package_manifest
+expected_artifacts:
+  - package.yaml
+  - indexes/resource-index.yaml
+  - artifacts/knowledge-package-authoring-report.md
+  - reviews/knowledge-package-authoring-review.md
+  - handoffs/knowledge-package-ready-handoff.md

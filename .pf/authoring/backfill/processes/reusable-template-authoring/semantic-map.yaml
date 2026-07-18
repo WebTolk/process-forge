@@ -1,0 +1,18 @@
+schema_version: 1
+source:
+  type: process
+  id: reusable-template-authoring
+  path: processes/reusable-template-authoring.yaml
+mapped:
+  id: process.id
+  title: process.name
+  purpose: process.description
+  stages: stages
+  roles: roles
+  gates: gates
+  artifacts: artifact_definitions
+  events: hooks.emit
+  run_model: run_model
+  requirements: required_packages|required_templates|allowed_tools|required_capabilities
+unsupported:
+  []

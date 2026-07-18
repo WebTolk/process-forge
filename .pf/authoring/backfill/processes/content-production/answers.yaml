@@ -1,0 +1,196 @@
+schema_version: 1
+process:
+  id: content-production
+  name: Content Production
+  version: 0.1.0
+  status: active
+  kind: process
+  scope: project
+  description: Produce, review, and prepare content for publication.
+  purpose: Produce, review, and prepare content for publication.
+run_model:
+
+roles:
+  -
+    id: editor
+    title: Editor
+    responsibility: Defines brief, audience, and quality bar.
+  -
+    id: writer
+    title: Writer
+    responsibility: Produces the draft.
+  -
+    id: reviewer
+    title: Reviewer
+    responsibility: Reviews accuracy, structure, and publication readiness.
+stages:
+  -
+    id: brief
+    title: Brief
+    description: Define audience, purpose, constraints, and sources.
+    required_inputs:
+      []
+    produced_artifacts:
+      - content-brief
+    required_role: editor
+    required_capabilities:
+      - content_planning
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - brief-approved
+    handoff_required: true
+  -
+    id: draft
+    title: Draft
+    description: Produce the first complete draft.
+    required_inputs:
+      - content-brief
+    produced_artifacts:
+      - content-draft
+    required_role: writer
+    required_capabilities:
+      - writing
+    allowed_tools:
+      - text_editor
+    entry_gates:
+      - brief-approved
+    exit_gates:
+      - draft-ready
+    handoff_required: true
+  -
+    id: editorial-review
+    title: Editorial Review
+    description: Review accuracy, structure, and publication readiness.
+    required_inputs:
+      - content-draft
+    produced_artifacts:
+      - editorial-review
+      - publication-handoff
+    required_role: reviewer
+    required_capabilities:
+      - editorial_review
+    allowed_tools:
+      - validator
+    entry_gates:
+      - draft-ready
+    exit_gates:
+      - publication-ready
+    handoff_required: true
+artifacts:
+  -
+    id: content-brief
+    title: Content Brief
+    owner_role: editor
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: content-draft
+    title: Content Draft
+    owner_role: writer
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: editorial-review
+    title: Editorial Review
+    owner_role: reviewer
+    template: review-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: brief-approved
+    description: Brief is accepted and source constraints are explicit.
+    blocking: true
+  -
+    id: draft-ready
+    description: Draft is complete enough for review.
+    blocking: true
+  -
+    id: publication-ready
+    description: Review is complete and handoff exists.
+    blocking: true
+required_capabilities:
+  - content_planning
+  - writing
+  - editorial_review
+required_packages:
+  - process-forge-core
+  - process-forge-content
+required_templates:
+  - artifact-template
+  - review-template
+  - handoff-template
+allowed_tools:
+  - text_editor
+  - validator
+forbidden_actions:
+  - publish_without_review
+hooks:
+  emit:
+    -
+      event: process.started
+      required: true
+    -
+      event: stage.started
+      required: true
+    -
+      event: stage.completed
+      required: true
+    -
+      event: assignment.created
+      required: true
+    -
+      event: artifact.created
+      required: true
+    -
+      event: gate.failed
+      required: true
+    -
+      event: chat.message.recorded
+      required: false
+  subscriptions:
+    -
+      event: assignment.completed
+      actions:
+        -
+          type: create_review_request
+    -
+      event: gate.failed
+      actions:
+        -
+          type: block_stage
+        -
+          type: notify_orchestrator
+  tracking:
+    include:
+      - process_id
+      - process_version
+      - stage_id
+      - assignment_id
+      - artifact_refs
+      - actor
+      - session_id
+      - status
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - content-brief
+    - editorial-review
+  safe_changes:
+    - add_optional_review_check
+  blocked_changes:
+    - remove_source_requirements_after_drafting
+  requires_approval:
+    - change_publication_criteria

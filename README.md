@@ -102,6 +102,14 @@ python bin/pf.py process-authoring-apply --project-root <project-root> --process
 python bin/pf.py process-doctor --project-root <project-root> --process seo-audit
 ```
 
+Audit authoring parity for existing processes:
+
+```bash
+python bin/pf.py process-authoring-import --project-root <project-root> --process task-batch-execution --apply
+python bin/pf.py process-parity-check --project-root <project-root> --process task-batch-execution
+python bin/pf.py authoring-parity-check-all --project-root <project-root>
+```
+
 `init-workplace` and `init-project` remain compatibility commands. The first-run
 UX uses `workplace-init` and `project-onboard` so workplace setup and project
 onboarding stay separate.
@@ -162,4 +170,5 @@ python bin/pf.py release-pack --root . --output dist/processforge-v0.1.0.zip
 ```
 
 See `docs/index.md`, `docs/getting-started/create-your-first-process.md`,
-`docs/concepts/`, and `docs/known-limitations.md` for the detailed model.
+`docs/authoring/authoring-parity.md`, `docs/concepts/`, and
+`docs/known-limitations.md` for the detailed model.

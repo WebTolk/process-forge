@@ -1,0 +1,10 @@
+schema_version: 1
+process_id: platform-contract-authoring
+result: WARN
+diffs:
+  -
+    level: WARN
+    area: logic_review
+    message: 'source definition already has logic review findings: stage create-platform-structure produces known artifact platform-structure; stage intake produces known artifact platform-contract-inputs; stage link-capabilities produces known artifact capability-links; stage link-knowledge-packages produces known artifact knowledge-links; stage link-templates produces known artifact template-links; stage link-tools-mcp produces known artifact tool-mcp-links; stage select-platform-root produces known artifact platform-root-selection'
+unsupported:
+  []

@@ -1,0 +1,10 @@
+schema_version: 1
+process_id: knowledge-package-authoring
+result: WARN
+diffs:
+  -
+    level: WARN
+    area: logic_review
+    message: 'source definition already has logic review findings: stage add-initial-resources produces known artifact initial-resources; stage create-package-structure produces known artifact package-structure; stage intake produces known artifact knowledge-package-inputs; stage run-package-doctor produces known artifact package-doctor-report; stage select-package-root produces known artifact package-root-selection'
+unsupported:
+  []

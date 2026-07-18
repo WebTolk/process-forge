@@ -1,0 +1,387 @@
+schema_version: 1
+process:
+  id: project-initialization
+  name: Project Initialization
+  version: 0.1.0
+  status: active
+  kind: process
+  scope: project
+  description: Connect a project to ProcessForge and a configured workplace layer.
+  purpose: Connect a project to ProcessForge and a configured workplace layer.
+run_model:
+
+roles:
+  -
+    id: orchestrator
+    title: Orchestrator
+    responsibility: Coordinates project init and proposal-first safety.
+  -
+    id: reviewer
+    title: Reviewer
+    responsibility: Reviews the proposal and observed project facts.
+stages:
+  -
+    id: intake
+    title: Intake
+    description: Capture project root, workplace manifest, and answers.
+    required_inputs:
+      []
+    produced_artifacts:
+      - project-init-answers
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.read
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      []
+    exit_gates:
+      - inputs-provided
+    handoff_required: true
+  -
+    id: workplace-resolution
+    title: Workplace Resolution
+    description: Read workplace manifest and registries.
+    required_inputs:
+      - project-init-answers
+    produced_artifacts:
+      - mcp-capability-report
+      - toolchain-detection-report
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.read
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - inputs-provided
+    exit_gates:
+      - workplace-resolved
+    handoff_required: false
+  -
+    id: repository-scan
+    title: Repository Scan
+    description: Scan only the supplied project root.
+    required_inputs:
+      - project-init-answers
+    produced_artifacts:
+      - repository-map
+    required_role: orchestrator
+    required_capabilities:
+      - repository.scan
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - inputs-provided
+    exit_gates:
+      - repository-mapped
+    handoff_required: false
+  -
+    id: project-classification
+    title: Project Classification
+    description: Classify languages, platforms, frameworks, and project type.
+    required_inputs:
+      - repository-map
+    produced_artifacts:
+      - project-classification-report
+      - project-profile
+    required_role: orchestrator
+    required_capabilities:
+      - repository.scan
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - repository-mapped
+    exit_gates:
+      - classification-recorded
+    handoff_required: false
+  -
+    id: global-resource-matching
+    title: Global Resource Matching
+    description: Match detected project needs against workplace registries.
+    required_inputs:
+      - project-classification-report
+    produced_artifacts:
+      - global-resource-matching-report
+      - template-matching-report
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.read
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - classification-recorded
+    exit_gates:
+      - resources-matched
+    handoff_required: false
+  -
+    id: project-specificity-extraction
+    title: Project Specificity Extraction
+    description: Create observed project conventions and project package draft.
+    required_inputs:
+      - project-classification-report
+    produced_artifacts:
+      - project-conventions
+      - project-package-draft
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - classification-recorded
+    exit_gates:
+      - project-specificity-recorded
+    handoff_required: false
+  -
+    id: proposal
+    title: Proposal
+    description: Produce project init proposal before applying changes.
+    required_inputs:
+      - global-resource-matching-report
+      - project-package-draft
+    produced_artifacts:
+      - project-init-proposal
+    required_role: orchestrator
+    required_capabilities:
+      - reporting
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - resources-matched
+    exit_gates:
+      - proposal-created
+    handoff_required: true
+  -
+    id: review
+    title: Review
+    description: Review proposed project init changes.
+    required_inputs:
+      - project-init-proposal
+    produced_artifacts:
+      - project-init-review
+    required_role: reviewer
+    required_capabilities:
+      - review
+    allowed_tools:
+      []
+    entry_gates:
+      - proposal-created
+    exit_gates:
+      - review-recorded
+    handoff_required: true
+  -
+    id: apply
+    title: Apply
+    description: Write project files without unsafe overwrite.
+    required_inputs:
+      - project-init-review
+    produced_artifacts:
+      - project-files
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-init
+    entry_gates:
+      - review-recorded
+    exit_gates:
+      - project-files-written
+    handoff_required: true
+  -
+    id: doctor
+    title: Doctor
+    description: Validate project init output.
+    required_inputs:
+      - project-files
+    produced_artifacts:
+      - project-doctor-report
+    required_role: orchestrator
+    required_capabilities:
+      - validation
+    allowed_tools:
+      - processforge-doctor
+    entry_gates:
+      - project-files-written
+    exit_gates:
+      - doctor-complete
+    handoff_required: true
+artifacts:
+  -
+    id: project-init-answers
+    title: Project Init Answers
+    owner_role: orchestrator
+    template: project-init.answers
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: project-classification-report
+    title: Project Classification Report
+    owner_role: orchestrator
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: repository-map
+    title: Repository Map
+    owner_role: orchestrator
+    template: repository-map-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: project-conventions
+    title: Project Conventions
+    owner_role: orchestrator
+    template: project-conventions-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: global-resource-matching-report
+    title: Global Resource Matching Report
+    owner_role: orchestrator
+    template: global-resource-matching-report-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: project-init-proposal
+    title: Project Init Proposal
+    owner_role: orchestrator
+    template: project-init-proposal-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: project-init-review
+    title: Project Init Review
+    owner_role: reviewer
+    template: project-init-review-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: inputs-provided
+    description: Project root and workplace manifest were provided.
+    blocking: true
+  -
+    id: workplace-resolved
+    description: Workplace manifest was read or missing state was reported.
+    blocking: true
+  -
+    id: repository-mapped
+    description: Repository map was produced from the supplied root only.
+    blocking: true
+  -
+    id: classification-recorded
+    description: Detection evidence was recorded as observed.
+    blocking: true
+  -
+    id: resources-matched
+    description: Global resources were matched or missing capabilities were reported.
+    blocking: true
+  -
+    id: project-specificity-recorded
+    description: Project conventions and package draft were produced.
+    blocking: true
+  -
+    id: proposal-created
+    description: Proposal-first output exists.
+    blocking: true
+  -
+    id: review-recorded
+    description: Review or explicit approval exists.
+    blocking: true
+  -
+    id: project-files-written
+    description: Files were written in apply mode.
+    blocking: true
+  -
+    id: doctor-complete
+    description: Doctor result is recorded.
+    blocking: true
+required_capabilities:
+  - filesystem.write
+  - repository.scan
+  - validation
+required_packages:
+  - process-forge-core
+required_templates:
+  - process-forge.yaml
+  - process-forge.local.yaml
+  - project-agents-template
+allowed_tools:
+  - processforge-init
+  - processforge-doctor
+forbidden_actions:
+  - scan_outside_project_root
+  - overwrite_brownfield_files_without_force
+  - write_absolute_paths_to_public_manifest
+hooks:
+  emit:
+    -
+      event: process.started
+      required: true
+    -
+      event: stage.started
+      required: true
+    -
+      event: stage.completed
+      required: true
+    -
+      event: assignment.created
+      required: true
+    -
+      event: artifact.created
+      required: true
+    -
+      event: gate.failed
+      required: true
+    -
+      event: chat.message.recorded
+      required: false
+  subscriptions:
+    -
+      event: assignment.completed
+      actions:
+        -
+          type: create_review_request
+    -
+      event: gate.failed
+      actions:
+        -
+          type: block_stage
+        -
+          type: notify_orchestrator
+  tracking:
+    include:
+      - process_id
+      - process_version
+      - stage_id
+      - assignment_id
+      - artifact_refs
+      - actor
+      - session_id
+      - status
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - project-init-proposal
+    - project-init-review
+  safe_changes:
+    - add_optional_report
+  blocked_changes:
+    - remove_public_private_separation
+  requires_approval:
+    - change_overwrite_policy

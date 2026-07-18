@@ -1,0 +1,10 @@
+schema_version: 1
+process_id: reusable-template-authoring
+result: WARN
+diffs:
+  -
+    level: WARN
+    area: logic_review
+    message: 'source definition already has logic review findings: stage create-template-structure produces known artifact template-structure; stage register-template produces known artifact template-registry-entry; stage run-template-doctor produces known artifact template-doctor-report; stage select-template-root produces known artifact template-root-selection; stage write-example-files produces known artifact template-examples'
+unsupported:
+  []

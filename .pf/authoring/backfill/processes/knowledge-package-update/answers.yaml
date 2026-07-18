@@ -1,0 +1,137 @@
+schema_version: 1
+process:
+  id: knowledge-package-update
+  name: Knowledge Package Update
+  version: 0.1.0
+  status: active
+  kind: process
+  scope: project
+  description: Update a knowledge package through current inspection, change proposal, resource/index update, compatibility check, and review.
+  purpose: Update a knowledge package through current inspection, change proposal, resource/index update, compatibility check, and review.
+run_model:
+
+roles:
+  -
+    id: maintainer
+    title: Maintainer
+    responsibility: Inspects package state, applies accepted updates, and validates indexes.
+stages:
+  -
+    id: current-package-inspection
+    title: Current Package Inspection
+    description: Read package manifest and resource index metadata.
+    required_inputs:
+      []
+    produced_artifacts:
+      - package-inspection-report
+    required_role: maintainer
+    required_capabilities:
+      - repository_read
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      []
+    exit_gates:
+      - package-inspected
+    handoff_required: false
+  -
+    id: change-proposal
+    title: Change Proposal
+    description: Record resource, template, tool, or MCP changes before apply.
+    required_inputs:
+      - package-inspection-report
+    produced_artifacts:
+      - change-proposal
+    required_role: maintainer
+    required_capabilities:
+      - markdown_editing
+    allowed_tools:
+      []
+    entry_gates:
+      - package-inspected
+    exit_gates:
+      - proposal-approved
+    handoff_required: true
+  -
+    id: resource-update
+    title: Resource Update
+    description: Apply accepted changes and refresh index.
+    required_inputs:
+      - change-proposal
+    produced_artifacts:
+      - resource-index
+      - compatibility-check
+      - review
+    required_role: maintainer
+    required_capabilities:
+      - repository_write
+    allowed_tools:
+      - processforge-cli
+      - validator
+    entry_gates:
+      - proposal-approved
+    exit_gates:
+      - package-updated
+    handoff_required: true
+artifacts:
+  -
+    id: package-inspection-report
+    title: Package Inspection Report
+    owner_role: maintainer
+    template: validation-report-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: resource-index
+    title: Resource Index
+    owner_role: maintainer
+    template: knowledge-resource-index
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: package-inspected
+    description: Package manifest and current index were inspected.
+    blocking: true
+  -
+    id: proposal-approved
+    description: Proposed package changes are explicit.
+    blocking: true
+  -
+    id: package-updated
+    description: Manifest, index, and validation are complete.
+    blocking: true
+required_capabilities:
+  - repository_read
+  - repository_write
+  - schema_validation
+required_packages:
+  - process-forge-knowledge-governance
+required_templates:
+  - knowledge-resource-index.yaml
+allowed_tools:
+  - processforge-cli
+  - validator
+forbidden_actions:
+  - load_heavy_resource_content_into_prompt
+hooks:
+  emit:
+    -
+      event: knowledge.package.updated
+      required: true
+    -
+      event: snapshot.stale
+      required: false
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - compatibility-check
+  safe_changes:
+    - add_optional_resource
+  blocked_changes:
+    - remove_required_resource_without_review

@@ -1,0 +1,10 @@
+schema_version: 1
+process_id: project-onboarding
+result: WARN
+diffs:
+  -
+    level: WARN
+    area: logic_review
+    message: 'source definition already has logic review findings: stage detect-project produces known artifact global-resource-matching-report; stage detect-project produces known artifact project-classification-report; stage validate produces known artifact project-doctor-report'
+unsupported:
+  []

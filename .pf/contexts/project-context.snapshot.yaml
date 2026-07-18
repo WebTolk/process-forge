@@ -1,8 +1,8 @@
 schema_version: 1
 snapshot:
   id: project-context
-  generated_at: '2026-07-18T08:12:19Z'
-  valid_until: '2026-07-25T08:12:19Z'
+  generated_at: '2026-07-18T09:04:27Z'
+  valid_until: '2026-07-25T09:04:27Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -45,7 +45,7 @@ sources:
       id: project_manifest
       path: .pf/process-forge.yaml
       kind: manifest
-      checksum: 47c5589914b0468144563b6fe9e0ecb1966e5e59d9ebbd711105387a4978befb
+      checksum: 044fb7d35915deb653f88fd2d931eb45d0ac01437f1995176341caef393801ae
     -
       id: process-processes-software-feature-development-yaml
       path: processes/software-feature-development.yaml
@@ -166,6 +166,11 @@ sources:
       path: processes/process-authoring.yaml
       kind: process
       checksum: 3614667cd4811345ac3fe62a4b962ca11da5b57040410f356ed2478ea8d7d551
+    -
+      id: process-processes-authoring-parity-audit-yaml
+      path: processes/authoring-parity-audit.yaml
+      kind: process
+      checksum: 6f292273f79b952884ef8bca433bfd42d78c2b810234cd657f55e6bc4c0764c7
     -
       id: process-processes-task-batch-execution-yaml
       path: processes/task-batch-execution.yaml
@@ -373,6 +378,9 @@ processes:
     -
       id: process-authoring
       path: ../processes/process-authoring.yaml
+    -
+      id: authoring-parity-audit
+      path: ../processes/authoring-parity-audit.yaml
     -
       id: task-batch-execution
       path: ../processes/task-batch-execution.yaml

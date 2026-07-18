@@ -16,6 +16,8 @@
 - [Knowledge packages](authoring/knowledge-package-authoring.md)
 - [Platform contracts](authoring/platform-contract-authoring.md)
 - [Process authoring](authoring/process-authoring.md)
+- [Authoring parity](authoring/authoring-parity.md)
+- [Backfill existing processes](authoring/backfill-existing-processes.md)
 - [Resource authoring](getting-started/resource-authoring.md)
 - [Task batch execution](authoring/task-batch-execution.md)
 
@@ -27,6 +29,7 @@
 - [Project snapshot](concepts/project-context-snapshot.md)
 - [Hooks and events](concepts/processforge-events.md)
 - [Process definition, run, task, iteration](concepts/process-definition-run-task-iteration.md)
+- [Semantic parity](concepts/semantic-parity.md)
 - [Runs, tasks, and iterations](concepts/runs-tasks-iterations.md)
 - [Known limitations](known-limitations.md)
 

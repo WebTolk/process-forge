@@ -1,0 +1,376 @@
+schema_version: 1
+id: authoring-parity-audit
+name: Authoring Parity Audit
+kind: release_audit
+scope: project
+version: 0.1.0
+status: active
+description: Audit existing ProcessForge processes and resources against authoring workflows to prove they can be reproduced or explained through authoring metadata.
+purpose: Ensure built-in ProcessForge processes and resources are not untracked manual exceptions before public release.
+run_model:
+  supports_multiple_tasks: false
+  default_task_loop:
+    enabled: false
+    iteration_kinds:
+      - work
+      - review
+      - handoff
+required_capabilities:
+  - repository_read
+  - artifact_review
+  - reporting
+hooks:
+  emit:
+    -
+      event: authoring_parity.started
+      required: true
+    -
+      event: authoring_parity.process.checked
+      required: true
+    -
+      event: authoring_parity.resource.checked
+      required: true
+    -
+      event: authoring_parity.warning
+      required: true
+    -
+      event: authoring_parity.failed
+      required: true
+    -
+      event: authoring_parity.completed
+      required: true
+  tracking:
+    include:
+      - process_id
+      - resource_id
+      - parity_result
+      - artifact_refs
+      - status
+roles:
+  -
+    id: parity-auditor
+    title: Parity Auditor
+    responsibility: Imports existing definitions and compares authoring candidates.
+  -
+    id: release-reviewer
+    title: Release Reviewer
+    responsibility: Reviews WARN and FAIL findings before release.
+stages:
+  -
+    id: intake
+    title: Intake
+    description: Define audit scope and critical built-in processes.
+    required_inputs:
+      []
+    produced_artifacts:
+      - parity-scope
+    required_role: parity-auditor
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - parity-scope-approved
+    handoff_required: false
+  -
+    id: discover-existing-processes
+    title: Discover Existing Processes
+    description: Enumerate process definitions and discover resource candidates.
+    required_inputs:
+      - parity-scope
+    produced_artifacts:
+      - parity-inventory
+    required_role: parity-auditor
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      - parity-scope-approved
+    exit_gates:
+      - parity-inventory-ready
+    handoff_required: false
+  -
+    id: import-authoring-answers
+    title: Import Authoring Answers
+    description: Backfill authoring answers, source snapshots, semantic maps, and unsupported-field records.
+    required_inputs:
+      - parity-inventory
+    produced_artifacts:
+      - authoring-backfill
+    required_role: parity-auditor
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      - parity-inventory-ready
+    exit_gates:
+      - authoring-backfill-created
+    handoff_required: false
+  -
+    id: generate-candidates
+    title: Generate Candidates
+    description: Generate draft process candidates from backfilled answers.
+    required_inputs:
+      - authoring-backfill
+    produced_artifacts:
+      - parity-candidates
+    required_role: parity-auditor
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      - authoring-backfill-created
+    exit_gates:
+      - parity-candidates-ready
+    handoff_required: false
+  -
+    id: semantic-compare
+    title: Semantic Compare
+    description: Compare process meaning instead of byte-identical YAML formatting.
+    required_inputs:
+      - parity-candidates
+    produced_artifacts:
+      - semantic-diff
+    required_role: parity-auditor
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      - parity-candidates-ready
+    exit_gates:
+      - semantic-diff-reviewed
+    handoff_required: false
+  -
+    id: doctor-candidates
+    title: Doctor Candidates
+    description: Validate candidate definitions with process logic checks.
+    required_inputs:
+      - semantic-diff
+    produced_artifacts:
+      - candidate-doctor-report
+    required_role: parity-auditor
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      - semantic-diff-reviewed
+    exit_gates:
+      - candidate-doctor-complete
+    handoff_required: false
+  -
+    id: resource-parity-checks
+    title: Resource Parity Checks
+    description: Check templates, knowledge packages, and platform contracts where discovery is available.
+    required_inputs:
+      - parity-inventory
+    produced_artifacts:
+      - resource-parity-report
+    required_role: parity-auditor
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      - parity-inventory-ready
+    exit_gates:
+      - resource-parity-reviewed
+    handoff_required: false
+  -
+    id: report-findings
+    title: Report Findings
+    description: Summarize PASS, WARN, FAIL, unsupported fields, and recommendations.
+    required_inputs:
+      - semantic-diff
+      - resource-parity-report
+    produced_artifacts:
+      - authoring-parity-report
+    required_role: release-reviewer
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      - candidate-doctor-complete
+      - resource-parity-reviewed
+    exit_gates:
+      - authoring-parity-report-approved
+    handoff_required: false
+  -
+    id: handoff
+    title: Handoff
+    description: Hand off release risks and follow-up actions.
+    required_inputs:
+      - authoring-parity-report
+    produced_artifacts:
+      - authoring-parity-handoff
+    required_role: release-reviewer
+    required_capabilities:
+      []
+    allowed_tools:
+      []
+    entry_gates:
+      - authoring-parity-report-approved
+    exit_gates:
+      - authoring-parity-handoff-created
+    handoff_required: true
+artifact_definitions:
+  -
+    id: parity-scope
+    title: Parity Scope
+    owner_role: parity-auditor
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: parity-inventory
+    title: Parity Inventory
+    owner_role: parity-auditor
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: authoring-backfill
+    title: Authoring Backfill
+    owner_role: parity-auditor
+    template: process-authoring-answers
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: parity-candidates
+    title: Parity Candidates
+    owner_role: parity-auditor
+    template: process-definition-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: semantic-diff
+    title: Semantic Diff
+    owner_role: parity-auditor
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: candidate-doctor-report
+    title: Candidate Doctor Report
+    owner_role: parity-auditor
+    template: validation-report-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: resource-parity-report
+    title: Resource Parity Report
+    owner_role: parity-auditor
+    template: validation-report-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: authoring-parity-report
+    title: Authoring Parity Report
+    owner_role: release-reviewer
+    template: validation-report-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: authoring-parity-handoff
+    title: Authoring Parity Handoff
+    owner_role: release-reviewer
+    template: handoff-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: parity-scope-approved
+    description: Audit scope and critical built-ins are explicit.
+    blocking: true
+    required_artifact: parity-scope
+  -
+    id: parity-inventory-ready
+    description: Existing processes and discoverable resources are listed.
+    blocking: true
+    required_artifact: parity-inventory
+  -
+    id: authoring-backfill-created
+    description: Backfill files exist without changing source definitions.
+    blocking: true
+    required_artifact: authoring-backfill
+  -
+    id: parity-candidates-ready
+    description: Candidate drafts were generated from backfilled answers.
+    blocking: true
+    required_artifact: parity-candidates
+  -
+    id: semantic-diff-reviewed
+    description: Semantic differences are classified as PASS, WARN, or FAIL.
+    blocking: true
+    required_artifact: semantic-diff
+  -
+    id: candidate-doctor-complete
+    description: Candidate logic checks completed and critical built-ins do not FAIL.
+    blocking: true
+    required_artifact: candidate-doctor-report
+  -
+    id: resource-parity-reviewed
+    description: Resource parity checks ran or recorded SKIP reasons.
+    blocking: true
+    required_artifact: resource-parity-report
+  -
+    id: authoring-parity-report-approved
+    description: Report lists counts, unsupported fields, commands, docs, tests, and limitations.
+    blocking: true
+    required_artifact: authoring-parity-report
+  -
+    id: authoring-parity-handoff-created
+    description: Handoff records release risks and next actions.
+    blocking: true
+    required_artifact: authoring-parity-handoff
+required_packages:
+  - process-forge-core
+required_templates:
+  - process-authoring-answers
+  - process-definition-template
+  - validation-report-template
+  - handoff-template
+allowed_tools:
+  - processforge-cli
+  - validator
+forbidden_actions:
+  - edit_source_process_without_apply_to_source
+  - require_byte_identical_yaml
+  - hide_warn_findings
+  - write_private_absolute_paths_to_public_files
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  safe_changes:
+    - add_resource_discovery_skip_reason
+    - add_warn_classification
+  blocked_changes:
+    - change_source_process_during_backfill
+    - weaken_fail_on_missing_stage_gate_artifact
+  requires_approval:
+    - add_apply_to_source_mode

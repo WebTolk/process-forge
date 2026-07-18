@@ -1,0 +1,210 @@
+schema_version: 1
+process:
+  id: platform-contract-authoring
+  name: Platform Contract Authoring
+  version: 0.1.0
+  status: active
+  kind: resource_authoring
+  scope: workplace
+  description: Create a platform contract that links project type hints to packages, templates, tools, MCP, and processes.
+  purpose: Author platform contracts without copying package or template payloads.
+run_model:
+
+roles:
+  -
+    id: author
+    title: Platform Author
+    responsibility: Creates the platform contract and links resource ids.
+  -
+    id: reviewer
+    title: Reviewer
+    responsibility: Reviews platform contract safety.
+stages:
+  -
+    id: intake
+    title: Intake
+    required_role: author
+    produced_artifacts:
+      - platform-contract-inputs
+    exit_gates:
+      - inputs-provided
+  -
+    id: select-platform-root
+    title: Select Platform Root
+    required_role: author
+    produced_artifacts:
+      - platform-root-selection
+    exit_gates:
+      - platform-root-resolved
+  -
+    id: create-platform-structure
+    title: Create Platform Structure
+    required_role: author
+    produced_artifacts:
+      - platform-structure
+    exit_gates:
+      - platform-structure-created
+  -
+    id: write-platform-contract
+    title: Write Platform Contract
+    required_role: author
+    produced_artifacts:
+      - platform-contract
+    exit_gates:
+      - platform-contract-written
+  -
+    id: link-capabilities
+    title: Link Capabilities
+    required_role: author
+    produced_artifacts:
+      - capability-links
+    exit_gates:
+      - capabilities-linked
+  -
+    id: link-knowledge-packages
+    title: Link Knowledge Packages
+    required_role: author
+    produced_artifacts:
+      - knowledge-links
+    exit_gates:
+      - knowledge-linked
+  -
+    id: link-templates
+    title: Link Templates
+    required_role: author
+    produced_artifacts:
+      - template-links
+    exit_gates:
+      - templates-linked
+  -
+    id: link-tools-mcp
+    title: Link Tools MCP
+    required_role: author
+    produced_artifacts:
+      - tool-mcp-links
+    exit_gates:
+      - tools-mcp-linked
+  -
+    id: run-platform-doctor
+    title: Run Platform Doctor
+    required_role: author
+    produced_artifacts:
+      - platform-doctor-report
+    exit_gates:
+      - platform-doctor-complete
+  -
+    id: handoff
+    title: Handoff
+    required_role: author
+    produced_artifacts:
+      - platform-contract-ready-handoff
+    exit_gates:
+      - handoff-created
+artifacts:
+  -
+    id: platform-contract
+    title: Platform Contract
+    owner_role: author
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: platform-doctor-report
+    title: Platform Doctor Report
+    owner_role: author
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: platform-contract-ready-handoff
+    title: Platform Contract Ready Handoff
+    owner_role: author
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: inputs-provided
+    description: Platform id and title are available.
+    blocking: true
+  -
+    id: platform-root-resolved
+    description: Platform root resolved through registry/path constants.
+    blocking: true
+  -
+    id: platform-structure-created
+    description: Platform folders were created.
+    blocking: true
+  -
+    id: platform-contract-written
+    description: platform-contract.yaml was written.
+    blocking: true
+  -
+    id: capabilities-linked
+    description: Capability ids were recorded.
+    blocking: true
+  -
+    id: knowledge-linked
+    description: Knowledge package ids were referenced without copying content.
+    blocking: false
+  -
+    id: templates-linked
+    description: Template ids were referenced without copying content.
+    blocking: false
+  -
+    id: tools-mcp-linked
+    description: Tool and MCP ids were recorded.
+    blocking: false
+  -
+    id: platform-doctor-complete
+    description: Platform contract doctor passed or produced fix hints.
+    blocking: true
+  -
+    id: handoff-created
+    description: Platform ready handoff exists.
+    blocking: true
+required_capabilities:
+  - filesystem.write
+  - validation
+required_packages:
+  []
+required_templates:
+  []
+allowed_tools:
+  - processforge-cli
+forbidden_actions:
+  []
+hooks:
+  emit:
+    -
+      event: platform.authoring.started
+      required: true
+    -
+      event: platform.contract.created
+      required: true
+    -
+      event: platform.contract.linked
+      required: true
+    -
+      event: platform.contract.doctor.passed
+      required: true
+    -
+      event: platform.contract.doctor.failed
+      required: true
+    -
+      event: platform.authoring.completed
+      required: true
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  blocked_changes:
+    - copy_package_payloads_into_platform_contract
+    - copy_template_payloads_into_platform_contract
+expected_artifacts:
+  - platform-contract.yaml
+  - artifacts/platform-contract-authoring-report.md
+  - reviews/platform-contract-authoring-review.md
+  - handoffs/platform-contract-ready-handoff.md

@@ -1,0 +1,315 @@
+schema_version: 1
+id: project-onboarding
+name: Project Onboarding
+kind: first_run
+scope: project
+version: 0.1.0
+status: active
+description: Attach a project to an existing ProcessForge workplace without recreating the workplace.
+required_capabilities:
+  - filesystem.write
+  - repository.scan
+  - validation
+hooks:
+  emit:
+    -
+      event: project.onboarding.started
+      required: true
+    -
+      event: project.flow_root.created
+      required: true
+    -
+      event: project.platform.detected
+      required: true
+    -
+      event: project.snapshot.refreshed
+      required: true
+    -
+      event: launcher.project_runtime.created
+      required: true
+    -
+      event: agent.start_prompt.generated
+      required: true
+    -
+      event: assignment.created
+      required: true
+    -
+      event: project.doctor.passed
+      required: true
+    -
+      event: project.doctor.failed
+      required: true
+    -
+      event: project.onboarding.completed
+      required: true
+  subscriptions:
+    -
+      event: project.doctor.failed
+      actions:
+        -
+          type: create_fix_hints
+    -
+      event: assignment.completed
+      actions:
+        -
+          type: create_review_request
+  tracking:
+    include:
+      - process_id
+      - process_version
+      - stage_id
+      - assignment_id
+      - artifact_refs
+      - actor
+      - session_id
+      - status
+roles:
+  -
+    id: orchestrator
+    title: Orchestrator
+    responsibility: Creates the project flow root and coordinates onboarding checks.
+  -
+    id: reviewer
+    title: Reviewer
+    responsibility: Reviews the generated onboarding artifacts and readiness state.
+stages:
+  -
+    id: intake
+    title: Intake
+    description: Capture project root, workplace root, project type, and optional answers.
+    required_inputs:
+      []
+    produced_artifacts:
+      - project-onboarding-inputs
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.read
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      []
+    exit_gates:
+      - inputs-provided
+    handoff_required: false
+  -
+    id: create-project-flow
+    title: Create Project Flow
+    description: Create `.pf/`, public manifest, private local config, hooks config, and flow folders.
+    required_inputs:
+      - project-onboarding-inputs
+    produced_artifacts:
+      - project-flow-root
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - linked-workplace-available
+    exit_gates:
+      - flow-root-created
+    handoff_required: false
+  -
+    id: detect-project
+    title: Detect Project
+    description: Detect project type, language markers, and platform contract requirements.
+    required_inputs:
+      - project-flow-root
+    produced_artifacts:
+      - project-classification-report
+      - global-resource-matching-report
+    required_role: orchestrator
+    required_capabilities:
+      - repository.scan
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - flow-root-created
+    exit_gates:
+      - platform-contracts-resolved
+    handoff_required: false
+  -
+    id: snapshot
+    title: Snapshot
+    description: Refresh the project context snapshot after `.pf/` is created.
+    required_inputs:
+      - project-flow-root
+    produced_artifacts:
+      - project-context-snapshot
+    required_role: orchestrator
+    required_capabilities:
+      - filesystem.write
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - flow-root-created
+    exit_gates:
+      - snapshot-valid
+    handoff_required: false
+  -
+    id: first-assignment
+    title: First Assignment
+    description: Create the initial verification assignment for the newly onboarded project.
+    required_inputs:
+      - project-context-snapshot
+    produced_artifacts:
+      - first-assignment
+      - start-agent-here
+    required_role: orchestrator
+    required_capabilities:
+      - markdown.editing
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - snapshot-valid
+    exit_gates:
+      - first-assignment-created
+    handoff_required: false
+  -
+    id: validate
+    title: Validate
+    description: Run doctor-project and record readable fix hints when checks fail.
+    required_inputs:
+      - first-assignment
+      - start-agent-here
+    produced_artifacts:
+      - project-doctor-report
+    required_role: orchestrator
+    required_capabilities:
+      - validation
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - first-assignment-created
+    exit_gates:
+      - doctor-project-passed
+    handoff_required: true
+  -
+    id: handoff
+    title: Handoff
+    description: Create project ready handoff for the first assignment.
+    required_inputs:
+      - project-doctor-report
+    produced_artifacts:
+      - project-ready-handoff
+    required_role: orchestrator
+    required_capabilities:
+      - markdown.editing
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - doctor-project-passed
+    exit_gates:
+      - project-ready
+    handoff_required: true
+artifact_definitions:
+  -
+    id: project-onboarding-inputs
+    title: Project Onboarding Inputs
+    owner_role: orchestrator
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: project-flow-root
+    title: Project Flow Root
+    owner_role: orchestrator
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: project-context-snapshot
+    title: Project Context Snapshot
+    owner_role: orchestrator
+    template: project-context.snapshot
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: first-assignment
+    title: First Assignment
+    owner_role: orchestrator
+    template: assignment-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: start-agent-here
+    title: Start Agent Here
+    owner_role: orchestrator
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: project-ready-handoff
+    title: Project Ready Handoff
+    owner_role: orchestrator
+    template: handoff-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: inputs-provided
+    description: Project root, workplace root, and project type were provided.
+    blocking: true
+  -
+    id: linked-workplace-available
+    description: Existing workplace manifest is reachable.
+    blocking: true
+  -
+    id: flow-root-created
+    description: Project-local `.pf/` flow root was created.
+    blocking: true
+  -
+    id: platform-contracts-resolved
+    description: Required platform contracts are available or reported with fix hints.
+    blocking: true
+  -
+    id: snapshot-valid
+    description: Project context snapshot was written.
+    blocking: true
+  -
+    id: first-assignment-created
+    description: First assignment and START_AGENT_HERE were written.
+    blocking: true
+  -
+    id: doctor-project-passed
+    description: Doctor Project passed or produced actionable fix hints.
+    blocking: true
+  -
+    id: project-ready
+    description: Project ready handoff exists.
+    blocking: true
+required_packages:
+  - process-forge-core
+required_templates:
+  - process-forge.yaml
+  - process-forge.local.yaml
+  - project-agents-template
+allowed_tools:
+  - processforge-cli
+forbidden_actions:
+  - recreate_workplace
+  - copy_global_packages_into_project
+  - write_absolute_paths_to_public_manifest
+  - overwrite_brownfield_files_without_force
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - project-onboarding-report
+    - project-onboarding-review
+    - project-ready-handoff
+  safe_changes:
+    - add_optional_report
+  blocked_changes:
+    - merge_workplace_and_project_processes
+  requires_approval:
+    - change_public_private_separation

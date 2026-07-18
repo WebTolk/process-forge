@@ -1,0 +1,192 @@
+schema_version: 1
+process:
+  id: testing
+  name: Testing
+  version: 0.1.0
+  status: active
+  kind: process
+  scope: project
+  description: Plan, execute, and report a testing pass.
+  purpose: Plan, execute, and report a testing pass.
+run_model:
+
+roles:
+  -
+    id: test-lead
+    title: Test Lead
+    responsibility: Defines test scope and evidence requirements.
+  -
+    id: tester
+    title: Tester
+    responsibility: Executes tests and records evidence.
+stages:
+  -
+    id: plan
+    title: Plan
+    description: Define test coverage and data.
+    required_inputs:
+      []
+    produced_artifacts:
+      - test-plan
+    required_role: test-lead
+    required_capabilities:
+      - test_planning
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - test-plan-ready
+    handoff_required: true
+  -
+    id: execute
+    title: Execute
+    description: Run test cases and record evidence.
+    required_inputs:
+      - test-plan
+    produced_artifacts:
+      - test-cases
+      - evidence-log
+    required_role: tester
+    required_capabilities:
+      - test_execution
+    allowed_tools:
+      - test_runner
+      - browser_verification
+    entry_gates:
+      - test-plan-ready
+    exit_gates:
+      - evidence-recorded
+    handoff_required: true
+  -
+    id: report
+    title: Report
+    description: Summarize findings and residual risk.
+    required_inputs:
+      - evidence-log
+    produced_artifacts:
+      - test-report
+    required_role: test-lead
+    required_capabilities:
+      - reporting
+    allowed_tools:
+      - validator
+    entry_gates:
+      - evidence-recorded
+    exit_gates:
+      - report-ready
+    handoff_required: true
+artifacts:
+  -
+    id: test-plan
+    title: Test Plan
+    owner_role: test-lead
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: evidence-log
+    title: Evidence Log
+    owner_role: tester
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: test-report
+    title: Test Report
+    owner_role: test-lead
+    template: validation-report-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: test-plan-ready
+    description: Test scope and data are explicit.
+    blocking: true
+  -
+    id: evidence-recorded
+    description: Evidence exists for executed cases.
+    blocking: true
+  -
+    id: report-ready
+    description: Results and residual risks are recorded.
+    blocking: true
+required_capabilities:
+  - test_planning
+  - test_execution
+  - reporting
+required_packages:
+  - process-forge-core
+  - process-forge-testing
+required_templates:
+  - artifact-template
+  - validation-report-template
+allowed_tools:
+  - test_runner
+  - browser_verification
+  - validator
+forbidden_actions:
+  - claim_unexecuted_tests_as_passed
+hooks:
+  emit:
+    -
+      event: process.started
+      required: true
+    -
+      event: stage.started
+      required: true
+    -
+      event: stage.completed
+      required: true
+    -
+      event: assignment.created
+      required: true
+    -
+      event: artifact.created
+      required: true
+    -
+      event: gate.failed
+      required: true
+    -
+      event: chat.message.recorded
+      required: false
+  subscriptions:
+    -
+      event: assignment.completed
+      actions:
+        -
+          type: create_review_request
+    -
+      event: gate.failed
+      actions:
+        -
+          type: block_stage
+        -
+          type: notify_orchestrator
+  tracking:
+    include:
+      - process_id
+      - process_version
+      - stage_id
+      - assignment_id
+      - artifact_refs
+      - actor
+      - session_id
+      - status
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - test-report
+  safe_changes:
+    - add_optional_case
+  blocked_changes:
+    - remove_required_evidence_after_execution
+  requires_approval:
+    - change_pass_criteria

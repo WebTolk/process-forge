@@ -242,6 +242,12 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "process.created",
     "process.doctor.passed",
     "process.doctor.failed",
+    "authoring_parity.started",
+    "authoring_parity.process.checked",
+    "authoring_parity.resource.checked",
+    "authoring_parity.warning",
+    "authoring_parity.failed",
+    "authoring_parity.completed",
 ]
 
 BUILTIN_CAPABILITIES = {
@@ -3359,6 +3365,7 @@ def command_release_test(args: argparse.Namespace) -> int:
         ReleaseCommand("smoke_resource_authoring", [sys.executable, str(root / "tools" / "smoke_resource_authoring_processes.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
         ReleaseCommand("smoke_process_authoring", [sys.executable, str(root / "tools" / "smoke_process_authoring.py")], 180),
+        ReleaseCommand("smoke_authoring_parity", [sys.executable, str(root / "tools" / "smoke_authoring_parity.py")], 180),
         ReleaseCommand("release-check", [sys.executable, str(root / "tools" / "processforge.py"), "release-check", "--root", str(root)], 60),
         ReleaseCommand("examples-check", [sys.executable, str(root / "tools" / "processforge.py"), "examples-check", "--root", str(root)], 60),
         ReleaseCommand("events-validate", [sys.executable, str(root / "tools" / "processforge.py"), "events-validate", "--project-root", str(root)], 60),
@@ -6502,7 +6509,7 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
             "description": str(process.get("description") or raw.get("description") or base["process"]["description"]),
         }
     )
-    for key in ["run_model", "roles", "stages", "artifacts", "artifact_definitions", "gates"]:
+    for key in ["run_model", "roles", "stages", "artifacts", "artifact_definitions", "gates", "hooks", "evolution_policy", "expected_artifacts"]:
         if key in raw:
             base[key] = raw[key]
     if "artifact_definitions" in raw and "artifacts" not in raw:
@@ -6595,7 +6602,7 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         stages = [{"id": "intake", "title": "Intake", "description": "Capture scope.", "required_inputs": [], "produced_artifacts": list(artifact_ids), "required_role": roles[0]["id"], "exit_gates": list(gate_ids), "handoff_required": True}]
 
     run_model = answers.get("run_model") if isinstance(answers.get("run_model"), dict) else {}
-    return {
+    output = {
         "schema_version": 1,
         "id": process_id,
         "name": str(process.get("name") or title_from_id(process_id)),
@@ -6607,7 +6614,7 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         "purpose": str(process.get("purpose") or process.get("description") or ""),
         "run_model": run_model,
         "required_capabilities": string_list(answers.get("required_capabilities")),
-        "hooks": {
+        "hooks": answers.get("hooks") if isinstance(answers.get("hooks"), dict) else {
             "emit": [
                 {"event": "process.created", "required": True},
                 {"event": "process.started", "required": True},
@@ -6627,13 +6634,16 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         "required_templates": string_list(answers.get("required_templates")) or ["artifact-template"],
         "allowed_tools": string_list(answers.get("allowed_tools")) or ["processforge-cli"],
         "forbidden_actions": string_list(answers.get("forbidden_actions")) or ["write_private_absolute_paths_to_public_files"],
-        "evolution_policy": {
+        "evolution_policy": answers.get("evolution_policy") if isinstance(answers.get("evolution_policy"), dict) else {
             "active_run_upgrade": {"default": "manual_only"},
             "safe_changes": ["add_optional_stage", "add_non_blocking_gate"],
             "blocked_changes": ["remove_existing_required_artifact", "weaken_blocking_gate_without_review"],
             "requires_approval": ["change_stage_order", "change_required_artifact_lifecycle"],
         },
     }
+    if "expected_artifacts" in answers:
+        output["expected_artifacts"] = answers["expected_artifacts"]
+    return output
 
 
 def render_authoring_questions(answers: dict[str, Any]) -> str:
@@ -6738,6 +6748,10 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
     answers = normalize_process_authoring_answers(raw_answers, fallback_id, args.title or "")
     if args.description:
         answers["process"]["description"] = args.description
+    if getattr(args, "scope", None):
+        answers["process"]["scope"] = args.scope
+    if getattr(args, "kind", None):
+        answers["process"]["kind"] = args.kind
     process_id = safe_id(str(answers["process"]["id"]), "new-process")
     draft = process_from_authoring_answers(answers)
     paths = process_authoring_paths(project_root, process_id)
@@ -6760,7 +6774,7 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
 def command_process_authoring_review(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    process_id = safe_id(args.process, "process")
+    process_id = safe_id(args.process or getattr(args, "id", ""), "process")
     paths = process_authoring_paths(project_root, process_id)
     if not paths["draft"].is_file():
         raise SystemExit(f"FAIL: draft not found: {rel(paths['draft'], project_root)}")
@@ -6877,7 +6891,7 @@ def write_process_authoring_example(project_root: Path, process: dict[str, Any],
 def command_process_authoring_apply(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    process_id = safe_id(args.process, "process")
+    process_id = safe_id(args.process or getattr(args, "id", ""), "process")
     paths = process_authoring_paths(project_root, process_id)
     if not paths["draft"].is_file():
         raise SystemExit(f"FAIL: draft not found: {rel(paths['draft'], project_root)}")
@@ -7038,6 +7052,473 @@ def command_process_describe(args: argparse.Namespace) -> int:
         if isinstance(gate_item, dict):
             print(f"- {gate_item.get('id')}: {gate_item.get('description', '')}")
     return 0
+
+
+PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
+    "schema_version",
+    "id",
+    "name",
+    "kind",
+    "scope",
+    "version",
+    "status",
+    "description",
+    "purpose",
+    "run_model",
+    "required_capabilities",
+    "hooks",
+    "roles",
+    "stages",
+    "artifact_definitions",
+    "gates",
+    "required_packages",
+    "required_templates",
+    "allowed_tools",
+    "forbidden_actions",
+    "evolution_policy",
+    "expected_artifacts",
+}
+
+
+def process_backfill_root(project_root: Path, process_id: str) -> Path:
+    return locate_flow_root(project_root) / "authoring" / "backfill" / "processes" / safe_id(process_id, "process")
+
+
+def process_backfill_paths(project_root: Path, process_id: str) -> dict[str, Path]:
+    root = process_backfill_root(project_root, process_id)
+    return {
+        "root": root,
+        "answers": root / "answers.yaml",
+        "draft": root / "draft.process.yaml",
+        "source": root / "source.process.yaml",
+        "semantic_map": root / "semantic-map.yaml",
+        "unsupported": root / "unsupported-fields.yaml",
+        "import_report": root / "import-report.md",
+    }
+
+
+def process_to_authoring_answers(process: dict[str, Any]) -> dict[str, Any]:
+    process_id = safe_id(str(process.get("id", "process")), "process")
+    answers: dict[str, Any] = {
+        "schema_version": 1,
+        "process": {
+            "id": process_id,
+            "name": str(process.get("name") or title_from_id(process_id)),
+            "version": str(process.get("version") or "0.1.0"),
+            "status": str(process.get("status") or "draft"),
+            "kind": str(process.get("kind") or "process"),
+            "scope": str(process.get("scope") or "project"),
+            "description": str(process.get("description") or ""),
+            "purpose": str(process.get("purpose") or process.get("description") or ""),
+        },
+        "run_model": process.get("run_model") if isinstance(process.get("run_model"), dict) else {},
+        "roles": as_list(process.get("roles")),
+        "stages": as_list(process.get("stages")),
+        "artifacts": as_list(process.get("artifact_definitions")),
+        "gates": as_list(process.get("gates")),
+        "required_capabilities": string_list(process.get("required_capabilities")),
+        "required_packages": string_list(process.get("required_packages")),
+        "required_templates": string_list(process.get("required_templates")),
+        "allowed_tools": string_list(process.get("allowed_tools")),
+        "forbidden_actions": string_list(process.get("forbidden_actions")),
+    }
+    for key in ["hooks", "evolution_policy", "expected_artifacts"]:
+        if key in process:
+            answers[key] = process[key]
+    return answers
+
+
+def process_unsupported_fields(process: dict[str, Any]) -> list[dict[str, str]]:
+    unsupported: list[dict[str, str]] = []
+    for key in sorted(process.keys()):
+        if key not in PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL:
+            unsupported.append({"path": key, "reason": "not represented in process-authoring answers schema"})
+    return unsupported
+
+
+def process_semantic_map(process: dict[str, Any], process_path: Path, project_root: Path, unsupported: list[dict[str, str]]) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "source": {"type": "process", "id": str(process.get("id", process_path.stem)), "path": rel(process_path, project_root)},
+        "mapped": {
+            "id": "process.id",
+            "title": "process.name",
+            "purpose": "process.description",
+            "stages": "stages",
+            "roles": "roles",
+            "gates": "gates",
+            "artifacts": "artifact_definitions",
+            "events": "hooks.emit",
+            "run_model": "run_model",
+            "requirements": "required_packages|required_templates|allowed_tools|required_capabilities",
+        },
+        "unsupported": unsupported,
+    }
+
+
+def render_process_import_report(process: dict[str, Any], process_path: Path, paths: dict[str, Path], project_root: Path, unsupported: list[dict[str, str]]) -> str:
+    status = "WARN" if unsupported else "PASS"
+    lines = [
+        f"# Process Authoring Import: {process.get('id', process_path.stem)}",
+        "",
+        "## Result",
+        "",
+        status,
+        "",
+        "## Source",
+        "",
+        f"- Path: `{rel(process_path, project_root)}`",
+        f"- Process id: `{process.get('id', process_path.stem)}`",
+        "",
+        "## Created",
+        "",
+        f"- `{rel(paths['answers'], project_root)}`",
+        f"- `{rel(paths['draft'], project_root)}`",
+        f"- `{rel(paths['source'], project_root)}`",
+        f"- `{rel(paths['semantic_map'], project_root)}`",
+        f"- `{rel(paths['unsupported'], project_root)}`",
+        "",
+        "## Unsupported Fields",
+        "",
+    ]
+    if unsupported:
+        lines.extend(f"- `{item['path']}`: {item['reason']}" for item in unsupported)
+    else:
+        lines.append("- None.")
+    return "\n".join(lines) + "\n"
+
+
+def command_process_authoring_import(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    if args.process_file:
+        process_path = Path(args.process_file).expanduser()
+        process_path = process_path if process_path.is_absolute() else project_root / process_path
+        if not process_path.is_file():
+            raise SystemExit(f"FAIL: process file not found: {process_path}")
+    elif args.process:
+        process_path = process_definition_path(project_root, args.process)
+    else:
+        raise SystemExit("FAIL: provide --process or --process-file")
+    process = read_yaml_file(process_path)
+    process_id = safe_id(str(process.get("id") or process_path.stem), "process")
+    answers = process_to_authoring_answers(process)
+    draft = process_from_authoring_answers(answers)
+    unsupported = process_unsupported_fields(process)
+    paths = process_backfill_paths(project_root, process_id)
+    planned = [paths["answers"], paths["draft"], paths["source"], paths["semantic_map"], paths["unsupported"], paths["import_report"]]
+    if getattr(args, "dry_run", False):
+        print_plan("process-authoring-import dry run", planned, project_root)
+        return 0
+    write_yaml_file(paths["answers"], answers)
+    write_yaml_file(paths["draft"], draft)
+    write_yaml_file(paths["source"], process)
+    write_yaml_file(paths["semantic_map"], process_semantic_map(process, process_path, project_root, unsupported))
+    write_yaml_file(paths["unsupported"], {"schema_version": 1, "unsupported": unsupported})
+    paths["import_report"].write_text(render_process_import_report(process, process_path, paths, project_root, unsupported), encoding="utf-8")
+    emit_process_event(project_root, "authoring_parity.started", process_id=process_id, subject=process_id, payload={"command": "process-authoring-import", "source": rel(process_path, project_root)}, correlation_id=f"authoring-parity-{process_id}")
+    if unsupported:
+        emit_process_event(project_root, "authoring_parity.warning", process_id=process_id, subject=process_id, severity="warn", payload={"unsupported": unsupported}, correlation_id=f"authoring-parity-{process_id}")
+    print(f"WROTE: {rel(paths['answers'], project_root)}")
+    print(f"WROTE: {rel(paths['draft'], project_root)}")
+    print(f"WROTE: {rel(paths['semantic_map'], project_root)}")
+    return 0
+
+
+def sorted_strings(values: Any) -> list[str]:
+    return sorted(set(string_list(values)))
+
+
+def event_emits(process: dict[str, Any]) -> list[str]:
+    hooks = process.get("hooks") if isinstance(process.get("hooks"), dict) else {}
+    emits = hooks.get("emit") if isinstance(hooks.get("emit"), list) else []
+    return sorted({str(item.get("event")) for item in emits if isinstance(item, dict) and item.get("event")})
+
+
+def object_by_id(items: Any, keys: list[str]) -> dict[str, dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {}
+    for item in as_list(items):
+        if not isinstance(item, dict):
+            continue
+        item_id = safe_id(str(item.get("id", "")), "item")
+        result[item_id] = {key: item.get(key) for key in keys if key in item}
+    return result
+
+
+def process_semantics(process: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": safe_id(str(process.get("id", "")), "process"),
+        "title": str(process.get("name") or ""),
+        "kind": str(process.get("kind") or ""),
+        "scope": str(process.get("scope") or ""),
+        "purpose": str(process.get("purpose") or process.get("description") or ""),
+        "run_model": process.get("run_model") if isinstance(process.get("run_model"), dict) else {},
+        "roles": object_by_id(process.get("roles"), ["title", "responsibility"]),
+        "stages": object_by_id(process.get("stages"), ["title", "required_role", "required_inputs", "produced_artifacts", "entry_gates", "exit_gates", "handoff_required"]),
+        "artifact_definitions": object_by_id(process.get("artifact_definitions"), ["title", "owner_role", "template", "lifecycle"]),
+        "gates": object_by_id(process.get("gates"), ["description", "blocking", "required_artifact", "stage", "stage_id"]),
+        "events": {"emits": event_emits(process)},
+        "requirements": {
+            "required_capabilities": sorted_strings(process.get("required_capabilities")),
+            "required_packages": sorted_strings(process.get("required_packages")),
+            "required_templates": sorted_strings(process.get("required_templates")),
+            "allowed_tools": sorted_strings(process.get("allowed_tools")),
+            "forbidden_actions": sorted_strings(process.get("forbidden_actions")),
+        },
+    }
+
+
+def compare_process_semantics(source: dict[str, Any], candidate: dict[str, Any]) -> tuple[str, list[dict[str, str]]]:
+    source_sem = process_semantics(source)
+    candidate_sem = process_semantics(candidate)
+    diffs: list[dict[str, str]] = []
+
+    def add(level: str, area: str, message: str) -> None:
+        diffs.append({"level": level, "area": area, "message": message})
+
+    for area in ["id", "run_model"]:
+        if source_sem.get(area) != candidate_sem.get(area):
+            add("FAIL", area, f"{area} differs")
+    for area in ["title", "kind", "scope", "purpose"]:
+        if source_sem.get(area) != candidate_sem.get(area):
+            add("WARN", area, f"{area} differs")
+    for area in ["roles", "stages", "artifact_definitions", "gates"]:
+        source_ids = set(source_sem[area].keys())
+        candidate_ids = set(candidate_sem[area].keys())
+        for missing in sorted(source_ids - candidate_ids):
+            add("FAIL", area, f"{area} missing: {missing}")
+        for extra in sorted(candidate_ids - source_ids):
+            add("WARN", area, f"{area} extra: {extra}")
+    for area, label in [("events", "emits")]:
+        source_values = set(source_sem[area][label])
+        candidate_values = set(candidate_sem[area][label])
+        for missing in sorted(source_values - candidate_values):
+            add("FAIL", area, f"event missing: {missing}")
+    for key, source_values in source_sem["requirements"].items():
+        candidate_values = set(candidate_sem["requirements"].get(key, []))
+        for missing in sorted(set(source_values) - candidate_values):
+            add("FAIL", key, f"{key} missing: {missing}")
+    status = "FAIL" if any(item["level"] == "FAIL" for item in diffs) else ("WARN" if any(item["level"] == "WARN" for item in diffs) else "PASS")
+    return status, diffs
+
+
+def render_process_parity_report(process_id: str, source_path: Path, project_root: Path, status: str, diffs: list[dict[str, str]], unsupported: list[dict[str, str]], logic_checks: list[Check]) -> str:
+    lines = [
+        f"# Process Parity: {process_id}",
+        "",
+        "## Result",
+        "",
+        status,
+        "",
+        "## Source",
+        "",
+        f"- Path: `{rel(source_path, project_root)}`",
+        f"- Process id: `{process_id}`",
+        "",
+        "## Authoring Coverage",
+        "",
+        "| Area | Status | Notes |",
+        "|---|---|---|",
+    ]
+    logic_failures = [item for item in logic_checks if item.level == "FAIL"]
+    lines.append(f"| logic_review | {'FAIL' if logic_failures else 'PASS'} | {len(logic_checks)} checks |")
+    lines.append(f"| unsupported_fields | {'WARN' if unsupported else 'PASS'} | {len(unsupported)} unsupported fields |")
+    lines.append(f"| semantic_diff | {status} | {len(diffs)} differences |")
+    lines.extend(["", "## Semantic Diff", ""])
+    if diffs:
+        lines.extend(f"- {item['level']} `{item['area']}`: {item['message']}" for item in diffs)
+    else:
+        lines.append("- No meaningful differences.")
+    lines.extend(["", "## Unsupported Fields", ""])
+    if unsupported:
+        lines.extend(f"- `{item['path']}`: {item['reason']}" for item in unsupported)
+    else:
+        lines.append("- None.")
+    lines.extend(["", "## Recommendation", ""])
+    if status == "PASS":
+        lines.append("Process is semantically reproducible through authoring import.")
+    elif status == "WARN":
+        lines.append("Process is reproducible with documented notes; review unsupported fields before public release.")
+    else:
+        lines.append("Process is not reproducible enough for release parity; fix FAIL items before public release.")
+    return "\n".join(lines) + "\n"
+
+
+def run_process_parity_check(project_root: Path, process_path: Path, candidate_path: Path | None = None) -> tuple[str, Path, Path, list[dict[str, str]]]:
+    source = read_yaml_file(process_path)
+    process_id = safe_id(str(source.get("id") or process_path.stem), "process")
+    paths = process_backfill_paths(project_root, process_id)
+    if not paths["draft"].is_file():
+        args = argparse.Namespace(project_root=str(project_root), process=process_id, process_file=str(process_path), dry_run=False)
+        command_process_authoring_import(args)
+    candidate = read_yaml_file(candidate_path) if candidate_path else read_yaml_file(paths["draft"])
+    unsupported = process_unsupported_fields(source)
+    status, diffs = compare_process_semantics(source, candidate)
+    answers = read_yaml_file(paths["answers"]) if paths["answers"].is_file() else {}
+    logic_checks = validate_process_authoring_logic(candidate, answers)
+    source_logic_checks = validate_process_authoring_logic(source, answers)
+    source_failures = {item.message for item in source_logic_checks if item.level == "FAIL"}
+    candidate_failures = {item.message for item in logic_checks if item.level == "FAIL"}
+    introduced_failures = sorted(candidate_failures - source_failures)
+    inherited_failures = sorted(candidate_failures & source_failures)
+    if introduced_failures:
+        status = "FAIL"
+        diffs.append({"level": "FAIL", "area": "logic_review", "message": "candidate logic review failed: " + "; ".join(introduced_failures)})
+    elif inherited_failures and status == "PASS":
+        status = "WARN"
+        diffs.append({"level": "WARN", "area": "logic_review", "message": "source definition already has logic review findings: " + "; ".join(inherited_failures)})
+    if unsupported and status == "PASS":
+        status = "WARN"
+    review = locate_flow_root(project_root) / "reviews" / "parity" / "processes" / f"{process_id}-parity.md"
+    diff_path = locate_flow_root(project_root) / "artifacts" / "parity" / "processes" / f"{process_id}-semantic-diff.yaml"
+    review.parent.mkdir(parents=True, exist_ok=True)
+    diff_path.parent.mkdir(parents=True, exist_ok=True)
+    review.write_text(render_process_parity_report(process_id, process_path, project_root, status, diffs, unsupported, logic_checks), encoding="utf-8")
+    write_yaml_file(diff_path, {"schema_version": 1, "process_id": process_id, "result": status, "diffs": diffs, "unsupported": unsupported})
+    emit_process_event(project_root, "authoring_parity.process.checked", process_id=process_id, subject=process_id, severity="error" if status == "FAIL" else ("warn" if status == "WARN" else "info"), payload={"result": status, "review": rel(review, project_root), "semantic_diff": rel(diff_path, project_root)}, correlation_id=f"authoring-parity-{process_id}")
+    if status == "FAIL":
+        emit_process_event(project_root, "authoring_parity.failed", process_id=process_id, subject=process_id, severity="error", payload={"diffs": diffs}, correlation_id=f"authoring-parity-{process_id}")
+    return status, review, diff_path, diffs
+
+
+def command_process_parity_check(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    process_path = Path(args.process_file).expanduser() if getattr(args, "process_file", None) else process_definition_path(project_root, args.process)
+    if not process_path.is_absolute():
+        process_path = project_root / process_path
+    candidate_path = Path(args.candidate_file).expanduser() if getattr(args, "candidate_file", None) else None
+    if candidate_path and not candidate_path.is_absolute():
+        candidate_path = project_root / candidate_path
+    status, review, diff_path, _diffs = run_process_parity_check(project_root, process_path, candidate_path)
+    print(f"{status}: {rel(review, project_root)}")
+    print(f"DIFF: {rel(diff_path, project_root)}")
+    return 1 if status == "FAIL" else 0
+
+
+CRITICAL_PARITY_PROCESSES = {
+    "workplace-initialization",
+    "project-onboarding",
+    "task-batch-execution",
+    "process-authoring",
+    "reusable-template-authoring",
+    "knowledge-package-authoring",
+    "platform-contract-authoring",
+}
+
+
+def command_process_parity_check_all(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    rows: list[dict[str, Any]] = []
+    failed = False
+    warned = False
+    for process_id, path, _data in iter_process_definitions(project_root):
+        status, review, diff_path, _diffs = run_process_parity_check(project_root, path)
+        rows.append({"process_id": process_id, "result": status, "source": rel(path, project_root), "review": rel(review, project_root), "semantic_diff": rel(diff_path, project_root)})
+        failed = failed or status == "FAIL"
+        warned = warned or status == "WARN"
+        print(f"{status}: {process_id}")
+    summary = locate_flow_root(project_root) / "artifacts" / "parity" / "processes" / "summary.yaml"
+    index = locate_flow_root(project_root) / "reviews" / "parity" / "processes" / "index.md"
+    write_yaml_file(summary, {"schema_version": 1, "result": "FAIL" if failed else ("WARN" if warned else "PASS"), "processes": rows})
+    index.parent.mkdir(parents=True, exist_ok=True)
+    index.write_text(render_parity_index(rows, "Process Authoring Parity"), encoding="utf-8")
+    emit_process_event(project_root, "authoring_parity.completed" if not failed else "authoring_parity.failed", severity="error" if failed else ("warn" if warned else "info"), subject="process-parity-check-all", payload={"summary": rel(summary, project_root), "index": rel(index, project_root), "result": "FAIL" if failed else ("WARN" if warned else "PASS")}, correlation_id="authoring-parity-all")
+    print(f"SUMMARY: {rel(summary, project_root)}")
+    print(f"INDEX: {rel(index, project_root)}")
+    return 1 if failed else 0
+
+
+def render_parity_index(rows: list[dict[str, Any]], title: str) -> str:
+    lines = [f"# {title}", "", "| Item | Result | Source | Review |", "|---|---|---|---|"]
+    for item in rows:
+        name = str(item.get("process_id") or item.get("id") or "item")
+        lines.append(f"| `{name}` | {item.get('result', '')} | `{item.get('source', '')}` | `{item.get('review', '')}` |")
+    return "\n".join(lines) + "\n"
+
+
+def resource_parity_report(project_root: Path, kind: str, resource_id: str, status: str, notes: list[str], source: str = "") -> Path:
+    report = locate_flow_root(project_root) / "reviews" / "parity" / "resources" / f"{safe_id(kind + '-' + resource_id, 'resource')}.md"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    lines = [f"# {title_from_id(kind)} Parity: {resource_id}", "", f"Result: `{status}`", "", f"- source: `{source or 'not-discovered'}`", "", "## Notes", ""]
+    lines.extend(f"- {item}" for item in notes)
+    report.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    emit_process_event(project_root, "authoring_parity.resource.checked", subject=f"{kind}/{resource_id}", severity="warn" if status in {"WARN", "SKIP"} else ("error" if status == "FAIL" else "info"), payload={"kind": kind, "id": resource_id, "result": status, "review": rel(report, project_root)}, correlation_id=f"authoring-parity-{safe_id(kind + '-' + resource_id, 'resource')}")
+    return report
+
+
+def command_template_parity_check(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else ROOT
+    if getattr(args, "project_root", None):
+        require_flow_root(project_root)
+    template_id = safe_id(args.template, "template")
+    candidates = [project_root / "templates" / f"{template_id}.yaml", project_root / "templates" / f"{template_id}.md", project_root / "templates" / args.template]
+    found = next((path for path in candidates if path.is_file()), None)
+    if not found:
+        report = resource_parity_report(project_root, "template", template_id, "SKIP", ["No template manifest discovery model is available for this id in the project root."], "")
+        print(f"SKIP: {rel(report, project_root)}")
+        return 0
+    text = found.read_text(encoding="utf-8", errors="replace")
+    status = "FAIL" if not is_public_path_safe(text) or contains_secret_value(text) else "PASS"
+    report = resource_parity_report(project_root, "template", template_id, status, ["Template file is discoverable.", "Template authoring parity is file-level in this MVP."], rel(found, project_root))
+    print(f"{status}: {rel(report, project_root)}")
+    return 1 if status == "FAIL" else 0
+
+
+def command_knowledge_package_parity_check(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else ROOT
+    if getattr(args, "project_root", None):
+        require_flow_root(project_root)
+    package_id = safe_id(args.package, "package")
+    path = project_root / "packages" / f"{package_id}.yaml"
+    if not path.is_file():
+        report = resource_parity_report(project_root, "knowledge-package", package_id, "SKIP", ["Package manifest was not found in project packages/."], "")
+        print(f"SKIP: {rel(report, project_root)}")
+        return 0
+    data = read_yaml_file(path)
+    notes = ["Package manifest is discoverable.", "Package root is not hardcoded by this parity check.", "Heavy resources are not copied."]
+    status = "FAIL" if public_yaml_has_private_path(data) else "PASS"
+    report = resource_parity_report(project_root, "knowledge-package", package_id, status, notes, rel(path, project_root))
+    print(f"{status}: {rel(report, project_root)}")
+    return 1 if status == "FAIL" else 0
+
+
+def command_platform_parity_check(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else ROOT
+    if getattr(args, "project_root", None):
+        require_flow_root(project_root)
+    platform_id = safe_id(args.platform, "platform")
+    candidates = [project_root / "templates" / f"{platform_id}.yaml", project_root / "templates" / f"{platform_id.replace('platform-', 'platform-contract-')}.yaml"]
+    path = next((item for item in candidates if item.is_file()), None)
+    if not path:
+        report = resource_parity_report(project_root, "platform", platform_id, "SKIP", ["Platform contract was not found through the current project discovery model."], "")
+        print(f"SKIP: {rel(report, project_root)}")
+        return 0
+    data = read_yaml_file(path)
+    notes = ["Platform contract is discoverable.", "Required and recommended resource references remain in the contract file.", "Referenced packages/templates are not copied into the contract."]
+    status = "FAIL" if public_yaml_has_private_path(data) else "PASS"
+    report = resource_parity_report(project_root, "platform", platform_id, status, notes, rel(path, project_root))
+    print(f"{status}: {rel(report, project_root)}")
+    return 1 if status == "FAIL" else 0
+
+
+def command_authoring_parity_check_all(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    process_result = command_process_parity_check_all(argparse.Namespace(project_root=str(project_root)))
+    resource_rows: list[dict[str, Any]] = []
+    for kind, resource_id, func in [
+        ("template", "process-agent-prompt", command_template_parity_check),
+        ("knowledge-package", "process-forge-core", command_knowledge_package_parity_check),
+        ("platform", "platform-contract-joomla", command_platform_parity_check),
+    ]:
+        code = func(argparse.Namespace(project_root=str(project_root), template=resource_id, package=resource_id, platform=resource_id))
+        resource_rows.append({"id": resource_id, "kind": kind, "result": "FAIL" if code else "PASS_OR_SKIP"})
+    summary = locate_flow_root(project_root) / "artifacts" / "parity" / "summary.yaml"
+    write_yaml_file(summary, {"schema_version": 1, "result": "FAIL" if process_result else "PASS", "process_result": process_result, "resources": resource_rows})
+    print(f"SUMMARY: {rel(summary, project_root)}")
+    return process_result
 
 
 def command_run_create(args: argparse.Namespace) -> int:
@@ -9154,6 +9635,8 @@ def build_parser() -> argparse.ArgumentParser:
     process_authoring_start.add_argument("--id", help="Process id.")
     process_authoring_start.add_argument("--title", help="Process title.")
     process_authoring_start.add_argument("--description", help="Process description.")
+    process_authoring_start.add_argument("--scope", help="Optional process scope recorded in answers.")
+    process_authoring_start.add_argument("--kind", help="Optional process kind recorded in answers.")
     process_authoring_start.add_argument("--answers", help="Optional process authoring answers YAML.")
     process_authoring_start.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     process_authoring_start.add_argument("--apply", action="store_true", help="Write authoring session files.")
@@ -9161,13 +9644,57 @@ def build_parser() -> argparse.ArgumentParser:
 
     process_authoring_review = sub.add_parser("process-authoring-review", help="Review a process authoring draft for structural logic issues.")
     process_authoring_review.add_argument("--project-root", required=True, help="Project root path.")
-    process_authoring_review.add_argument("--process", required=True, help="Process id.")
+    process_authoring_review.add_argument("--process", help="Process id.")
+    process_authoring_review.add_argument("--id", help="Compatibility alias for --process.")
     process_authoring_review.set_defaults(func=command_process_authoring_review)
 
     process_authoring_apply = sub.add_parser("process-authoring-apply", help="Apply a reviewed process authoring draft.")
     process_authoring_apply.add_argument("--project-root", required=True, help="Project root path.")
-    process_authoring_apply.add_argument("--process", required=True, help="Process id.")
+    process_authoring_apply.add_argument("--process", help="Process id.")
+    process_authoring_apply.add_argument("--id", help="Compatibility alias for --process.")
+    process_authoring_apply.add_argument("--apply", action="store_true", help="Accepted for command symmetry; apply is the default action.")
     process_authoring_apply.set_defaults(func=command_process_authoring_apply)
+
+    process_authoring_import = sub.add_parser("process-authoring-import", help="Backfill an authoring session from an existing process definition.")
+    process_authoring_import.add_argument("--project-root", required=True, help="Project root path.")
+    process_authoring_import.add_argument("--process", help="Process id.")
+    process_authoring_import.add_argument("--process-file", help="Process YAML path.")
+    process_authoring_import.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    process_authoring_import.add_argument("--apply", action="store_true", help="Write backfill files.")
+    process_authoring_import.set_defaults(func=command_process_authoring_import)
+
+    process_parity_check = sub.add_parser("process-parity-check", help="Check semantic parity between a process and its authoring-import draft.")
+    process_parity_check.add_argument("--project-root", required=True, help="Project root path.")
+    process_parity_check.add_argument("--process", help="Process id.")
+    process_parity_check.add_argument("--process-file", help="Process YAML path.")
+    process_parity_check.add_argument("--candidate-file", help="Optional candidate YAML for diagnostics.")
+    process_parity_check.set_defaults(func=command_process_parity_check)
+
+    process_parity_check_all = sub.add_parser("process-parity-check-all", help="Check semantic authoring parity for every process definition.")
+    process_parity_check_all.add_argument("--project-root", required=True, help="Project root path.")
+    process_parity_check_all.set_defaults(func=command_process_parity_check_all)
+
+    template_parity_check = sub.add_parser("template-parity-check", help="Check template authoring parity or record a SKIP reason.")
+    template_parity_check.add_argument("--project-root", help="Project root path.")
+    template_parity_check.add_argument("--workplace", help="Workplace root path; accepted for future discovery.")
+    template_parity_check.add_argument("--template", required=True, help="Template id.")
+    template_parity_check.set_defaults(func=command_template_parity_check)
+
+    knowledge_package_parity_check = sub.add_parser("knowledge-package-parity-check", help="Check knowledge package authoring parity or record a SKIP reason.")
+    knowledge_package_parity_check.add_argument("--project-root", help="Project root path.")
+    knowledge_package_parity_check.add_argument("--workplace", help="Workplace root path; accepted for future discovery.")
+    knowledge_package_parity_check.add_argument("--package", required=True, help="Package id.")
+    knowledge_package_parity_check.set_defaults(func=command_knowledge_package_parity_check)
+
+    platform_parity_check = sub.add_parser("platform-parity-check", help="Check platform contract authoring parity or record a SKIP reason.")
+    platform_parity_check.add_argument("--project-root", help="Project root path.")
+    platform_parity_check.add_argument("--workplace", help="Workplace root path; accepted for future discovery.")
+    platform_parity_check.add_argument("--platform", required=True, help="Platform id.")
+    platform_parity_check.set_defaults(func=command_platform_parity_check)
+
+    authoring_parity_check_all = sub.add_parser("authoring-parity-check-all", help="Run process and resource authoring parity checks.")
+    authoring_parity_check_all.add_argument("--project-root", required=True, help="Project root path.")
+    authoring_parity_check_all.set_defaults(func=command_authoring_parity_check_all)
 
     process_create = sub.add_parser("process-create", help="Create a new process from answers in one command.")
     process_create.add_argument("--project-root", required=True, help="Project root path.")

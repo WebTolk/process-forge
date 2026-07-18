@@ -1,0 +1,159 @@
+schema_version: 1
+result: WARN
+processes:
+  -
+    process_id: authoring-parity-audit
+    result: PASS
+    source: processes/authoring-parity-audit.yaml
+    review: .pf/reviews/parity/processes/authoring-parity-audit-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/authoring-parity-audit-semantic-diff.yaml
+  -
+    process_id: bug-fix
+    result: WARN
+    source: processes/bug-fix.yaml
+    review: .pf/reviews/parity/processes/bug-fix-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/bug-fix-semantic-diff.yaml
+  -
+    process_id: content-production
+    result: WARN
+    source: processes/content-production.yaml
+    review: .pf/reviews/parity/processes/content-production-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/content-production-semantic-diff.yaml
+  -
+    process_id: context-resolution
+    result: WARN
+    source: processes/context-resolution.yaml
+    review: .pf/reviews/parity/processes/context-resolution-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/context-resolution-semantic-diff.yaml
+  -
+    process_id: documentation-mirror-import
+    result: WARN
+    source: processes/documentation-mirror-import.yaml
+    review: .pf/reviews/parity/processes/documentation-mirror-import-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/documentation-mirror-import-semantic-diff.yaml
+  -
+    process_id: knowledge-package-authoring
+    result: WARN
+    source: processes/knowledge-package-authoring.yaml
+    review: .pf/reviews/parity/processes/knowledge-package-authoring-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/knowledge-package-authoring-semantic-diff.yaml
+  -
+    process_id: knowledge-package-improvement
+    result: WARN
+    source: processes/knowledge-package-improvement.yaml
+    review: .pf/reviews/parity/processes/knowledge-package-improvement-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/knowledge-package-improvement-semantic-diff.yaml
+  -
+    process_id: knowledge-package-update
+    result: WARN
+    source: processes/knowledge-package-update.yaml
+    review: .pf/reviews/parity/processes/knowledge-package-update-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/knowledge-package-update-semantic-diff.yaml
+  -
+    process_id: knowledge-resource-add
+    result: WARN
+    source: processes/knowledge-resource-add.yaml
+    review: .pf/reviews/parity/processes/knowledge-resource-add-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/knowledge-resource-add-semantic-diff.yaml
+  -
+    process_id: mcp-register
+    result: WARN
+    source: processes/mcp-register.yaml
+    review: .pf/reviews/parity/processes/mcp-register-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/mcp-register-semantic-diff.yaml
+  -
+    process_id: platform-contract-authoring
+    result: WARN
+    source: processes/platform-contract-authoring.yaml
+    review: .pf/reviews/parity/processes/platform-contract-authoring-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/platform-contract-authoring-semantic-diff.yaml
+  -
+    process_id: platform-contract-install
+    result: WARN
+    source: processes/platform-contract-install.yaml
+    review: .pf/reviews/parity/processes/platform-contract-install-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/platform-contract-install-semantic-diff.yaml
+  -
+    process_id: process-authoring
+    result: PASS
+    source: processes/process-authoring.yaml
+    review: .pf/reviews/parity/processes/process-authoring-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/process-authoring-semantic-diff.yaml
+  -
+    process_id: process-template-install
+    result: WARN
+    source: processes/process-template-install.yaml
+    review: .pf/reviews/parity/processes/process-template-install-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/process-template-install-semantic-diff.yaml
+  -
+    process_id: process-version-upgrade
+    result: WARN
+    source: processes/process-version-upgrade.yaml
+    review: .pf/reviews/parity/processes/process-version-upgrade-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/process-version-upgrade-semantic-diff.yaml
+  -
+    process_id: processforge-update-check
+    result: WARN
+    source: processes/processforge-update-check.yaml
+    review: .pf/reviews/parity/processes/processforge-update-check-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/processforge-update-check-semantic-diff.yaml
+  -
+    process_id: project-initialization
+    result: WARN
+    source: processes/project-initialization.yaml
+    review: .pf/reviews/parity/processes/project-initialization-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/project-initialization-semantic-diff.yaml
+  -
+    process_id: project-onboarding
+    result: WARN
+    source: processes/project-onboarding.yaml
+    review: .pf/reviews/parity/processes/project-onboarding-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/project-onboarding-semantic-diff.yaml
+  -
+    process_id: reusable-template-authoring
+    result: WARN
+    source: processes/reusable-template-authoring.yaml
+    review: .pf/reviews/parity/processes/reusable-template-authoring-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/reusable-template-authoring-semantic-diff.yaml
+  -
+    process_id: session-bootstrap
+    result: WARN
+    source: processes/session-bootstrap.yaml
+    review: .pf/reviews/parity/processes/session-bootstrap-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/session-bootstrap-semantic-diff.yaml
+  -
+    process_id: software-feature-development
+    result: WARN
+    source: processes/software-feature-development.yaml
+    review: .pf/reviews/parity/processes/software-feature-development-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/software-feature-development-semantic-diff.yaml
+  -
+    process_id: task-batch-execution
+    result: WARN
+    source: processes/task-batch-execution.yaml
+    review: .pf/reviews/parity/processes/task-batch-execution-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/task-batch-execution-semantic-diff.yaml
+  -
+    process_id: template-add
+    result: WARN
+    source: processes/template-add.yaml
+    review: .pf/reviews/parity/processes/template-add-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/template-add-semantic-diff.yaml
+  -
+    process_id: testing
+    result: WARN
+    source: processes/testing.yaml
+    review: .pf/reviews/parity/processes/testing-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/testing-semantic-diff.yaml
+  -
+    process_id: tool-register
+    result: WARN
+    source: processes/tool-register.yaml
+    review: .pf/reviews/parity/processes/tool-register-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/tool-register-semantic-diff.yaml
+  -
+    process_id: workplace-initialization
+    result: WARN
+    source: processes/workplace-initialization.yaml
+    review: .pf/reviews/parity/processes/workplace-initialization-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/workplace-initialization-semantic-diff.yaml

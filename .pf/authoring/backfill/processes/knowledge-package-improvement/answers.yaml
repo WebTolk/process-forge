@@ -1,0 +1,180 @@
+schema_version: 1
+process:
+  id: knowledge-package-improvement
+  name: Knowledge Package Improvement
+  version: 0.1.0
+  status: active
+  kind: process
+  scope: project
+  description: Propose, review, and integrate reusable process knowledge.
+  purpose: Propose, review, and integrate reusable process knowledge.
+run_model:
+
+roles:
+  -
+    id: proposer
+    title: Proposer
+    responsibility: Captures reusable learning.
+  -
+    id: maintainer
+    title: Maintainer
+    responsibility: Reviews compatibility and applies accepted changes.
+stages:
+  -
+    id: propose
+    title: Propose
+    description: Create an evolution proposal.
+    required_inputs:
+      []
+    produced_artifacts:
+      - evolution-proposal
+    required_role: proposer
+    required_capabilities:
+      - research
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - proposal-complete
+    handoff_required: true
+  -
+    id: assess
+    title: Assess
+    description: Evaluate target layer and compatibility.
+    required_inputs:
+      - evolution-proposal
+    produced_artifacts:
+      - compatibility-review
+    required_role: maintainer
+    required_capabilities:
+      - process_governance
+    allowed_tools:
+      - validator
+    entry_gates:
+      - proposal-complete
+    exit_gates:
+      - compatibility-reviewed
+    handoff_required: true
+  -
+    id: integrate
+    title: Integrate
+    description: Apply accepted reusable knowledge.
+    required_inputs:
+      - compatibility-review
+    produced_artifacts:
+      - change-summary
+    required_role: maintainer
+    required_capabilities:
+      - repository_write
+    allowed_tools:
+      - editor
+      - validator
+    entry_gates:
+      - compatibility-reviewed
+    exit_gates:
+      - package-updated
+    handoff_required: true
+artifacts:
+  -
+    id: evolution-proposal
+    title: Evolution Proposal
+    owner_role: proposer
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: compatibility-review
+    title: Compatibility Review
+    owner_role: maintainer
+    template: review-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: proposal-complete
+    description: Proposal includes target layer, rationale, and risk.
+    blocking: true
+  -
+    id: compatibility-reviewed
+    description: Compatibility and approval needs are recorded.
+    blocking: true
+  -
+    id: package-updated
+    description: Accepted change is integrated and validated.
+    blocking: true
+required_capabilities:
+  - research
+  - process_governance
+  - review
+required_packages:
+  - process-forge-core
+  - process-forge-knowledge-governance
+required_templates:
+  - artifact-template
+  - review-template
+allowed_tools:
+  - validator
+forbidden_actions:
+  - change_rules_without_review
+hooks:
+  emit:
+    -
+      event: process.started
+      required: true
+    -
+      event: stage.started
+      required: true
+    -
+      event: stage.completed
+      required: true
+    -
+      event: assignment.created
+      required: true
+    -
+      event: artifact.created
+      required: true
+    -
+      event: gate.failed
+      required: true
+    -
+      event: chat.message.recorded
+      required: false
+  subscriptions:
+    -
+      event: assignment.completed
+      actions:
+        -
+          type: create_review_request
+    -
+      event: gate.failed
+      actions:
+        -
+          type: block_stage
+        -
+          type: notify_orchestrator
+  tracking:
+    include:
+      - process_id
+      - process_version
+      - stage_id
+      - assignment_id
+      - artifact_refs
+      - actor
+      - session_id
+      - status
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - compatibility-review
+  safe_changes:
+    - add_optional_rule
+  blocked_changes:
+    - weaken_locked_policy_without_approval
+  requires_approval:
+    - promote_task_learning_to_core_rule

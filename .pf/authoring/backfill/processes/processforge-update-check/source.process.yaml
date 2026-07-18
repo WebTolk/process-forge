@@ -1,0 +1,77 @@
+schema_version: 1
+id: processforge-update-check
+name: ProcessForge Update Check
+version: 0.1.0
+status: active
+description: Check a linked ProcessForge distribution update index and produce a project assessment without automatic migration.
+required_capabilities:
+  - repository.read
+  - markdown.editing
+  - schema_validation
+hooks:
+  emit:
+    -
+      event: process.started
+      required: true
+    -
+      event: artifact.created
+      required: true
+    -
+      event: review.requested
+      required: false
+    -
+      event: gate.passed
+      required: true
+    -
+      event: gate.failed
+      required: true
+roles:
+  -
+    id: update-assessor
+    title: Update assessor
+    responsibility: Read update metadata, compare versions, and write the assessment.
+stages:
+  -
+    id: discover
+    title: Discover Current State
+    description: Resolve the project manifest, local config, workplace registry, and distribution update index.
+    required_role: update-assessor
+    required_inputs:
+      - .pf/process-forge.yaml
+      - .pf/process-forge.local.yaml or explicit no-local mode
+      - updates/processforge-update-index.yaml
+    produced_artifacts:
+      - update-assessment
+    exit_gates:
+      - update-index-readable
+  -
+    id: assess
+    title: Assess Project Impact
+    description: Compare the current version with the selected channel and record migration impact.
+    required_role: update-assessor
+    produced_artifacts:
+      - update-assessment
+    exit_gates:
+      - assessment-written
+artifact_definitions:
+  -
+    id: update-assessment
+    title: ProcessForge update assessment
+    owner_role: update-assessor
+    template: processforge-update-assessment-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: update-index-readable
+    description: The update index is present and parseable.
+    blocking: true
+  -
+    id: assessment-written
+    description: The assessment records current version, available version, migration guide, affected files, manual review, recommended steps, and rollback notes.
+    blocking: true
+evolution_policy:
+  versioned: true
+  breaking_changes_require_new_version: true

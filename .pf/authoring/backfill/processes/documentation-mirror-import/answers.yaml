@@ -1,0 +1,113 @@
+schema_version: 1
+process:
+  id: documentation-mirror-import
+  name: Documentation Mirror Import
+  version: 0.1.0
+  status: active
+  kind: process
+  scope: project
+  description: Plan documentation mirror imports and resource indexes without crawling large documentation by default.
+  purpose: Plan documentation mirror imports and resource indexes without crawling large documentation by default.
+run_model:
+
+roles:
+  -
+    id: planner
+    title: Planner
+    responsibility: Assesses source, license, topics, mirror boundaries, and index policy.
+stages:
+  -
+    id: intake
+    title: Intake
+    description: Capture source, topics, target package, and import intent.
+    required_inputs:
+      []
+    produced_artifacts:
+      - documentation-import-request
+    required_role: planner
+    required_capabilities:
+      - research
+    allowed_tools:
+      []
+    entry_gates:
+      []
+    exit_gates:
+      - request-complete
+    handoff_required: false
+  -
+    id: mirror-plan
+    title: Mirror Plan
+    description: Create license assessment, mirror plan, and resource index plan without downloading content.
+    required_inputs:
+      - documentation-import-request
+    produced_artifacts:
+      - source-register
+      - license-assessment
+      - mirror-plan
+      - resource-index
+    required_role: planner
+    required_capabilities:
+      - research
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - request-complete
+    exit_gates:
+      - mirror-plan-reviewed
+    handoff_required: true
+artifacts:
+  -
+    id: documentation-import-request
+    title: Documentation Import Request
+    owner_role: planner
+    template: knowledge-resource-add-request
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: mirror-plan
+    title: Mirror Plan
+    owner_role: planner
+    template: documentation-import-plan
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: request-complete
+    description: Request includes source and topics.
+    blocking: true
+  -
+    id: mirror-plan-reviewed
+    description: Plan records source, license, update policy, and load_policy for heavy resources.
+    blocking: true
+required_capabilities:
+  - research
+  - schema_validation
+required_packages:
+  - process-forge-knowledge-governance
+required_templates:
+  - documentation-import-plan.yaml
+allowed_tools:
+  - processforge-cli
+forbidden_actions:
+  - silently_download_large_sites
+hooks:
+  emit:
+    -
+      event: knowledge.resource.add.requested
+      required: true
+    -
+      event: knowledge.package.updated
+      required: false
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - mirror-plan
+  safe_changes:
+    - add_topic
+  blocked_changes:
+    - enable_crawler_by_default

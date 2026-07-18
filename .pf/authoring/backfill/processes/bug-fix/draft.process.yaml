@@ -1,0 +1,198 @@
+schema_version: 1
+id: bug-fix
+name: Bug Fix
+kind: process
+scope: project
+version: 0.1.0
+status: active
+description: Reproduce, fix, verify, and document a defect.
+purpose: Reproduce, fix, verify, and document a defect.
+run_model:
+
+required_capabilities:
+  - repository_read
+  - repository_write
+  - test_running
+hooks:
+  emit:
+    -
+      event: process.started
+      required: true
+    -
+      event: stage.started
+      required: true
+    -
+      event: stage.completed
+      required: true
+    -
+      event: assignment.created
+      required: true
+    -
+      event: artifact.created
+      required: true
+    -
+      event: gate.failed
+      required: true
+    -
+      event: chat.message.recorded
+      required: false
+  subscriptions:
+    -
+      event: assignment.completed
+      actions:
+        -
+          type: create_review_request
+    -
+      event: gate.failed
+      actions:
+        -
+          type: block_stage
+        -
+          type: notify_orchestrator
+  tracking:
+    include:
+      - process_id
+      - process_version
+      - stage_id
+      - assignment_id
+      - artifact_refs
+      - actor
+      - session_id
+      - status
+roles:
+  -
+    id: triager
+    title: Triager
+    responsibility: Confirms the defect and impact.
+  -
+    id: developer
+    title: Developer
+    responsibility: Fixes the defect.
+  -
+    id: reviewer
+    title: Reviewer
+    responsibility: Checks regression risk.
+stages:
+  -
+    id: reproduce
+    title: Reproduce
+    description: Capture expected and actual behavior.
+    required_inputs:
+      []
+    produced_artifacts:
+      - reproduction-report
+    required_role: triager
+    required_capabilities:
+      - investigation
+    allowed_tools:
+      - test_runner
+    entry_gates:
+      []
+    exit_gates:
+      - defect-reproduced
+    handoff_required: true
+  -
+    id: fix
+    title: Fix
+    description: Apply the smallest coherent fix.
+    required_inputs:
+      - reproduction-report
+    produced_artifacts:
+      - changed-files
+      - change-summary
+    required_role: developer
+    required_capabilities:
+      - repository_write
+    allowed_tools:
+      - editor
+      - test_runner
+    entry_gates:
+      - defect-reproduced
+    exit_gates:
+      - fix-recorded
+    handoff_required: true
+  -
+    id: verify
+    title: Verify
+    description: Check fix and regression risk.
+    required_inputs:
+      - change-summary
+    produced_artifacts:
+      - test-report
+      - review-findings
+    required_role: reviewer
+    required_capabilities:
+      - review
+      - test_running
+    allowed_tools:
+      - test_runner
+      - validator
+    entry_gates:
+      - fix-recorded
+    exit_gates:
+      - verification-complete
+    handoff_required: true
+artifact_definitions:
+  -
+    id: reproduction-report
+    title: Reproduction Report
+    owner_role: triager
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: change-summary
+    title: Change Summary
+    owner_role: developer
+    template: artifact-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: test-report
+    title: Test Report
+    owner_role: reviewer
+    template: validation-report-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: defect-reproduced
+    description: The defect is observable or explicitly accepted as not reproducible.
+    blocking: true
+  -
+    id: fix-recorded
+    description: The fix and changed files are recorded.
+    blocking: true
+  -
+    id: verification-complete
+    description: Tests and review findings are recorded.
+    blocking: true
+required_packages:
+  - process-forge-core
+  - process-forge-software-development
+required_templates:
+  - artifact-template
+  - validation-report-template
+allowed_tools:
+  - test_runner
+  - validator
+forbidden_actions:
+  - widen_scope_without_handoff
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - reproduction-report
+    - test-report
+  safe_changes:
+    - add_optional_artifact
+  blocked_changes:
+    - remove_existing_artifact_definition
+  requires_approval:
+    - add_required_gate
