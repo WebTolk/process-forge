@@ -4,11 +4,7 @@ result: WARN
 diffs:
   -
     level: WARN
-    area: kind
-    message: kind differs
-  -
-    level: WARN
-    area: scope
-    message: scope differs
+    area: logic_review
+    message: 'source definition already has logic review findings: stage contract-creation produces known artifact review; stage contract-creation produces known artifact validation-report; stage platform-definition produces known artifact platform-contract-proposal'
 unsupported:
   []

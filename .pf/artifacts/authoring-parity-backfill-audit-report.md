@@ -37,3 +37,13 @@ Generated: 2026-07-18 13:04:02 +04:00
 ## Status
 
 Implementation smoke passed. Full release gates still need the final post-refresh run.
+
+## Warning Cleanup Update
+
+Updated: 2026-07-18 13:31:50 +04:00
+
+- Top-level parity summary now preserves WARN when process or resource parity contains WARN.
+- The former ambiguous resource status is no longer emitted by `authoring-parity-check-all`.
+- Shallow template, knowledge package, and platform parity checks now report WARN instead of PASS when they only prove discovery and basic public-safety checks.
+- False `kind` and `scope` warnings were removed when those fields are absent from the source process and only appear as import defaults.
+- Remaining process WARN entries are source-inherited logic findings, not authoring candidate regressions.

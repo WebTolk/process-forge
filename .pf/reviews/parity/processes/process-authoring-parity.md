@@ -25,6 +25,23 @@ PASS
 
 - None.
 
+## Checked
+
+- Process id, run model, roles, stages, artifacts, gates, emitted events, and resource requirements.
+- Candidate process logic against ProcessForge authoring rules.
+
+## Skipped
+
+- Byte-for-byte YAML formatting and key order are intentionally not compared.
+
+## Expected WARN
+
+- None.
+
+## WARN To Fix Before Public Release
+
+- None.
+
 ## Recommendation
 
 Process is semantically reproducible through authoring import.

@@ -1,5 +1,17 @@
 schema_version: 1
 result: WARN
+counts:
+  PASS: 5
+  WARN: 21
+  SKIP: 0
+  FAIL: 0
+checked:
+  - process semantic parity
+  - authoring backfill candidate
+  - process logic review
+skipped:
+  - byte-for-byte YAML formatting
+  - YAML key order
 processes:
   -
     process_id: authoring-parity-audit
@@ -87,13 +99,13 @@ processes:
     semantic_diff: .pf/artifacts/parity/processes/process-template-install-semantic-diff.yaml
   -
     process_id: process-version-upgrade
-    result: WARN
+    result: PASS
     source: processes/process-version-upgrade.yaml
     review: .pf/reviews/parity/processes/process-version-upgrade-parity.md
     semantic_diff: .pf/artifacts/parity/processes/process-version-upgrade-semantic-diff.yaml
   -
     process_id: processforge-update-check
-    result: WARN
+    result: PASS
     source: processes/processforge-update-check.yaml
     review: .pf/reviews/parity/processes/processforge-update-check-parity.md
     semantic_diff: .pf/artifacts/parity/processes/processforge-update-check-semantic-diff.yaml
@@ -129,7 +141,7 @@ processes:
     semantic_diff: .pf/artifacts/parity/processes/software-feature-development-semantic-diff.yaml
   -
     process_id: task-batch-execution
-    result: WARN
+    result: PASS
     source: processes/task-batch-execution.yaml
     review: .pf/reviews/parity/processes/task-batch-execution-parity.md
     semantic_diff: .pf/artifacts/parity/processes/task-batch-execution-semantic-diff.yaml

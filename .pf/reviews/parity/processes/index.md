@@ -1,5 +1,25 @@
 # Process Authoring Parity
 
+Result: `WARN`
+
+## Summary
+
+- PASS: 5
+- WARN: 21
+- SKIP: 0
+- FAIL: 0
+
+## Checked
+
+- Semantic parity for process definitions discovered by ProcessForge.
+- Generated authoring backfill candidates and semantic diff artifacts.
+
+## Skipped
+
+- Byte-for-byte YAML formatting and key order are intentionally not compared.
+
+## Items
+
 | Item | Result | Source | Review |
 |---|---|---|---|
 | `authoring-parity-audit` | PASS | `processes/authoring-parity-audit.yaml` | `.pf/reviews/parity/processes/authoring-parity-audit-parity.md` |
@@ -16,14 +36,14 @@
 | `platform-contract-install` | WARN | `processes/platform-contract-install.yaml` | `.pf/reviews/parity/processes/platform-contract-install-parity.md` |
 | `process-authoring` | PASS | `processes/process-authoring.yaml` | `.pf/reviews/parity/processes/process-authoring-parity.md` |
 | `process-template-install` | WARN | `processes/process-template-install.yaml` | `.pf/reviews/parity/processes/process-template-install-parity.md` |
-| `process-version-upgrade` | WARN | `processes/process-version-upgrade.yaml` | `.pf/reviews/parity/processes/process-version-upgrade-parity.md` |
-| `processforge-update-check` | WARN | `processes/processforge-update-check.yaml` | `.pf/reviews/parity/processes/processforge-update-check-parity.md` |
+| `process-version-upgrade` | PASS | `processes/process-version-upgrade.yaml` | `.pf/reviews/parity/processes/process-version-upgrade-parity.md` |
+| `processforge-update-check` | PASS | `processes/processforge-update-check.yaml` | `.pf/reviews/parity/processes/processforge-update-check-parity.md` |
 | `project-initialization` | WARN | `processes/project-initialization.yaml` | `.pf/reviews/parity/processes/project-initialization-parity.md` |
 | `project-onboarding` | WARN | `processes/project-onboarding.yaml` | `.pf/reviews/parity/processes/project-onboarding-parity.md` |
 | `reusable-template-authoring` | WARN | `processes/reusable-template-authoring.yaml` | `.pf/reviews/parity/processes/reusable-template-authoring-parity.md` |
 | `session-bootstrap` | WARN | `processes/session-bootstrap.yaml` | `.pf/reviews/parity/processes/session-bootstrap-parity.md` |
 | `software-feature-development` | WARN | `processes/software-feature-development.yaml` | `.pf/reviews/parity/processes/software-feature-development-parity.md` |
-| `task-batch-execution` | WARN | `processes/task-batch-execution.yaml` | `.pf/reviews/parity/processes/task-batch-execution-parity.md` |
+| `task-batch-execution` | PASS | `processes/task-batch-execution.yaml` | `.pf/reviews/parity/processes/task-batch-execution-parity.md` |
 | `template-add` | WARN | `processes/template-add.yaml` | `.pf/reviews/parity/processes/template-add-parity.md` |
 | `testing` | WARN | `processes/testing.yaml` | `.pf/reviews/parity/processes/testing-parity.md` |
 | `tool-register` | WARN | `processes/tool-register.yaml` | `.pf/reviews/parity/processes/tool-register-parity.md` |

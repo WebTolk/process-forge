@@ -4,11 +4,7 @@ result: WARN
 diffs:
   -
     level: WARN
-    area: kind
-    message: kind differs
-  -
-    level: WARN
-    area: scope
-    message: scope differs
+    area: logic_review
+    message: 'source definition already has logic review findings: stage intake produces known artifact template-add-request; stage template-folder-creation produces known artifact review; stage template-folder-creation produces known artifact validation-report'
 unsupported:
   []

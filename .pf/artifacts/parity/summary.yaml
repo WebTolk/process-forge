@@ -1,16 +1,32 @@
 schema_version: 1
-result: PASS
+result: WARN
 process_result: 0
+process_status: WARN
+resource_counts:
+  PASS: 0
+  WARN: 3
+  SKIP: 0
+  FAIL: 0
+checked:
+  - process parity aggregate
+  - template resource discovery
+  - knowledge package resource discovery
+  - platform contract resource discovery
+skipped:
+  - full resource authoring round-trip for templates, knowledge packages, and platform contracts
 resources:
   -
     id: process-agent-prompt
     kind: template
-    result: PASS_OR_SKIP
+    result: WARN
+    review: .pf/reviews/parity/resources/template-process-agent-prompt.md
   -
     id: process-forge-core
     kind: knowledge-package
-    result: PASS_OR_SKIP
+    result: WARN
+    review: .pf/reviews/parity/resources/knowledge-package-process-forge-core.md
   -
     id: platform-contract-joomla
     kind: platform
-    result: PASS_OR_SKIP
+    result: WARN
+    review: .pf/reviews/parity/resources/platform-platform-contract-joomla.md

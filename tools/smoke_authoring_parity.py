@@ -87,6 +87,25 @@ def positive_root_checks() -> None:
     pf("knowledge-package-parity-check", "--project-root", str(ROOT), "--package", "process-forge-core")
     pf("platform-parity-check", "--project-root", str(ROOT), "--platform", "platform-contract-joomla")
     pf("authoring-parity-check-all", "--project-root", str(ROOT), timeout=180)
+    top_summary = ROOT / ".pf" / "artifacts" / "parity" / "summary.yaml"
+    assert_file(top_summary)
+    top_text = top_summary.read_text(encoding="utf-8", errors="replace")
+    ambiguous_status = "PASS" + "_OR_" + "SKIP"
+    if ambiguous_status in top_text:
+        raise AssertionError("top parity summary still contains ambiguous resource status")
+    if "result: WARN" in text and "result: WARN" not in top_text:
+        raise AssertionError("top parity summary did not preserve WARN aggregate")
+    for report in [
+        ROOT / ".pf" / "reviews" / "parity" / "resources" / "template-process-agent-prompt.md",
+        ROOT / ".pf" / "reviews" / "parity" / "resources" / "knowledge-package-process-forge-core.md",
+        ROOT / ".pf" / "reviews" / "parity" / "resources" / "platform-platform-contract-joomla.md",
+    ]:
+        assert_file(report)
+        report_text = report.read_text(encoding="utf-8", errors="replace")
+        if "Result: `PASS`" in report_text:
+            raise AssertionError(f"shallow resource parity reported PASS: {report}")
+        if "shallow parity check" not in report_text and "round-trip is not implemented" not in report_text:
+            raise AssertionError(f"resource parity report lacks shallow/SKIP explanation: {report}")
 
 
 def temp_process_checks(root: Path) -> None:

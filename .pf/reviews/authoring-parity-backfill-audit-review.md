@@ -24,3 +24,14 @@ The parity checker compares normalized semantic structures, not raw YAML bytes. 
 ## Residual Risk
 
 Full `release-test`, package creation, and archive test must still pass after context and checksum refresh.
+
+## Warning Cleanup Review
+
+Reviewed: 2026-07-18 13:31:50 +04:00
+
+- PASS: Top-level aggregate status is WARN when inner process/resource checks warn.
+- PASS: Resource statuses use only PASS, WARN, SKIP, and FAIL.
+- PASS: Shallow resource checks are explicitly WARN with skipped round-trip notes.
+- PASS: Defaulted kind/scope drift warnings no longer appear in generated parity reports for source-absent defaults.
+- PASS: Critical built-ins are PASS or documented WARN.
+- Follow-up: Source process YAML still has missing artifact definitions in several built-in processes; parity reports list those as WARN to fix before public release.

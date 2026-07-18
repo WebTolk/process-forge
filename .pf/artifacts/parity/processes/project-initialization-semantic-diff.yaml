@@ -4,11 +4,7 @@ result: WARN
 diffs:
   -
     level: WARN
-    area: kind
-    message: kind differs
-  -
-    level: WARN
-    area: scope
-    message: scope differs
+    area: logic_review
+    message: 'source definition already has logic review findings: stage apply produces known artifact project-files; stage doctor produces known artifact project-doctor-report; stage global-resource-matching produces known artifact template-matching-report; stage project-classification produces known artifact project-profile; stage project-specificity-extraction produces known artifact project-package-draft; stage workplace-resolution produces known artifact mcp-capability-report; stage workplace-resolution produces known artifact toolchain-detection-report'
 unsupported:
   []

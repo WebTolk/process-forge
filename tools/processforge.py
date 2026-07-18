@@ -7280,6 +7280,8 @@ def compare_process_semantics(source: dict[str, Any], candidate: dict[str, Any])
         if source_sem.get(area) != candidate_sem.get(area):
             add("FAIL", area, f"{area} differs")
     for area in ["title", "kind", "scope", "purpose"]:
+        if area in {"kind", "scope"} and area not in source:
+            continue
         if source_sem.get(area) != candidate_sem.get(area):
             add("WARN", area, f"{area} differs")
     for area in ["roles", "stages", "artifact_definitions", "gates"]:
@@ -7320,8 +7322,9 @@ def render_process_parity_report(process_id: str, source_path: Path, project_roo
         "| Area | Status | Notes |",
         "|---|---|---|",
     ]
-    logic_failures = [item for item in logic_checks if item.level == "FAIL"]
-    lines.append(f"| logic_review | {'FAIL' if logic_failures else 'PASS'} | {len(logic_checks)} checks |")
+    logic_diff_levels = [item["level"] for item in diffs if item["area"] == "logic_review"]
+    logic_status = "FAIL" if "FAIL" in logic_diff_levels else ("WARN" if "WARN" in logic_diff_levels else "PASS")
+    lines.append(f"| logic_review | {logic_status} | {len(logic_checks)} checks |")
     lines.append(f"| unsupported_fields | {'WARN' if unsupported else 'PASS'} | {len(unsupported)} unsupported fields |")
     lines.append(f"| semantic_diff | {status} | {len(diffs)} differences |")
     lines.extend(["", "## Semantic Diff", ""])
@@ -7334,11 +7337,28 @@ def render_process_parity_report(process_id: str, source_path: Path, project_roo
         lines.extend(f"- `{item['path']}`: {item['reason']}" for item in unsupported)
     else:
         lines.append("- None.")
+    expected_warns = [item for item in diffs if item["level"] == "WARN" and item["area"] in {"logic_review", "unsupported_fields"}]
+    action_warns = [item for item in diffs if item["level"] == "WARN" and (item["area"] != "unsupported_fields")]
+    lines.extend(["", "## Checked", ""])
+    lines.append("- Process id, run model, roles, stages, artifacts, gates, emitted events, and resource requirements.")
+    lines.append("- Candidate process logic against ProcessForge authoring rules.")
+    lines.extend(["", "## Skipped", ""])
+    lines.append("- Byte-for-byte YAML formatting and key order are intentionally not compared.")
+    lines.extend(["", "## Expected WARN", ""])
+    if expected_warns:
+        lines.extend(f"- `{item['area']}`: {item['message']}" for item in expected_warns)
+    else:
+        lines.append("- None.")
+    lines.extend(["", "## WARN To Fix Before Public Release", ""])
+    if action_warns:
+        lines.extend(f"- `{item['area']}`: {item['message']}" for item in action_warns)
+    else:
+        lines.append("- None.")
     lines.extend(["", "## Recommendation", ""])
     if status == "PASS":
         lines.append("Process is semantically reproducible through authoring import.")
     elif status == "WARN":
-        lines.append("Process is reproducible with documented notes; review unsupported fields before public release.")
+        lines.append("Process is reproducible with documented warnings; fix action WARN items before public release.")
     else:
         lines.append("Process is not reproducible enough for release parity; fix FAIL items before public release.")
     return "\n".join(lines) + "\n"
@@ -7421,7 +7441,19 @@ def command_process_parity_check_all(args: argparse.Namespace) -> int:
         print(f"{status}: {process_id}")
     summary = locate_flow_root(project_root) / "artifacts" / "parity" / "processes" / "summary.yaml"
     index = locate_flow_root(project_root) / "reviews" / "parity" / "processes" / "index.md"
-    write_yaml_file(summary, {"schema_version": 1, "result": "FAIL" if failed else ("WARN" if warned else "PASS"), "processes": rows})
+    result = "FAIL" if failed else ("WARN" if warned else "PASS")
+    counts = {status: sum(1 for item in rows if item.get("result") == status) for status in ["PASS", "WARN", "SKIP", "FAIL"]}
+    write_yaml_file(
+        summary,
+        {
+            "schema_version": 1,
+            "result": result,
+            "counts": counts,
+            "checked": ["process semantic parity", "authoring backfill candidate", "process logic review"],
+            "skipped": ["byte-for-byte YAML formatting", "YAML key order"],
+            "processes": rows,
+        },
+    )
     index.parent.mkdir(parents=True, exist_ok=True)
     index.write_text(render_parity_index(rows, "Process Authoring Parity"), encoding="utf-8")
     emit_process_event(project_root, "authoring_parity.completed" if not failed else "authoring_parity.failed", severity="error" if failed else ("warn" if warned else "info"), subject="process-parity-check-all", payload={"summary": rel(summary, project_root), "index": rel(index, project_root), "result": "FAIL" if failed else ("WARN" if warned else "PASS")}, correlation_id="authoring-parity-all")
@@ -7431,7 +7463,34 @@ def command_process_parity_check_all(args: argparse.Namespace) -> int:
 
 
 def render_parity_index(rows: list[dict[str, Any]], title: str) -> str:
-    lines = [f"# {title}", "", "| Item | Result | Source | Review |", "|---|---|---|---|"]
+    result = aggregate_status([str(item.get("result", "")) for item in rows])
+    counts = {status: sum(1 for item in rows if item.get("result") == status) for status in ["PASS", "WARN", "SKIP", "FAIL"]}
+    lines = [
+        f"# {title}",
+        "",
+        f"Result: `{result}`",
+        "",
+        "## Summary",
+        "",
+        f"- PASS: {counts['PASS']}",
+        f"- WARN: {counts['WARN']}",
+        f"- SKIP: {counts['SKIP']}",
+        f"- FAIL: {counts['FAIL']}",
+        "",
+        "## Checked",
+        "",
+        "- Semantic parity for process definitions discovered by ProcessForge.",
+        "- Generated authoring backfill candidates and semantic diff artifacts.",
+        "",
+        "## Skipped",
+        "",
+        "- Byte-for-byte YAML formatting and key order are intentionally not compared.",
+        "",
+        "## Items",
+        "",
+        "| Item | Result | Source | Review |",
+        "|---|---|---|---|",
+    ]
     for item in rows:
         name = str(item.get("process_id") or item.get("id") or "item")
         lines.append(f"| `{name}` | {item.get('result', '')} | `{item.get('source', '')}` | `{item.get('review', '')}` |")
@@ -7441,8 +7500,29 @@ def render_parity_index(rows: list[dict[str, Any]], title: str) -> str:
 def resource_parity_report(project_root: Path, kind: str, resource_id: str, status: str, notes: list[str], source: str = "") -> Path:
     report = locate_flow_root(project_root) / "reviews" / "parity" / "resources" / f"{safe_id(kind + '-' + resource_id, 'resource')}.md"
     report.parent.mkdir(parents=True, exist_ok=True)
-    lines = [f"# {title_from_id(kind)} Parity: {resource_id}", "", f"Result: `{status}`", "", f"- source: `{source or 'not-discovered'}`", "", "## Notes", ""]
+    lines = [
+        f"# {title_from_id(kind)} Parity: {resource_id}",
+        "",
+        f"Result: `{status}`",
+        "",
+        "## Checked",
+        "",
+        f"- source: `{source or 'not-discovered'}`",
+        "",
+        "## Skipped",
+        "",
+    ]
+    if status in {"WARN", "SKIP"}:
+        lines.append("- Full authoring round-trip for this resource type is not implemented in this MVP.")
+    else:
+        lines.append("- None.")
+    lines.extend(["", "## Notes", ""])
     lines.extend(f"- {item}" for item in notes)
+    lines.extend(["", "## WARN To Fix Before Public Release", ""])
+    if status == "WARN":
+        lines.append("- Replace shallow resource parity with a full authoring round-trip check.")
+    else:
+        lines.append("- None.")
     report.write_text("\n".join(lines) + "\n", encoding="utf-8")
     emit_process_event(project_root, "authoring_parity.resource.checked", subject=f"{kind}/{resource_id}", severity="warn" if status in {"WARN", "SKIP"} else ("error" if status == "FAIL" else "info"), payload={"kind": kind, "id": resource_id, "result": status, "review": rel(report, project_root)}, correlation_id=f"authoring-parity-{safe_id(kind + '-' + resource_id, 'resource')}")
     return report
@@ -7460,8 +7540,11 @@ def command_template_parity_check(args: argparse.Namespace) -> int:
         print(f"SKIP: {rel(report, project_root)}")
         return 0
     text = found.read_text(encoding="utf-8", errors="replace")
-    status = "FAIL" if not is_public_path_safe(text) or contains_secret_value(text) else "PASS"
-    report = resource_parity_report(project_root, "template", template_id, status, ["Template file is discoverable.", "Template authoring parity is file-level in this MVP."], rel(found, project_root))
+    status = "FAIL" if not is_public_path_safe(text) or contains_secret_value(text) else "WARN"
+    notes = ["Template file is discoverable."]
+    if status == "WARN":
+        notes.append("WARN: shallow parity check.")
+    report = resource_parity_report(project_root, "template", template_id, status, notes, rel(found, project_root))
     print(f"{status}: {rel(report, project_root)}")
     return 1 if status == "FAIL" else 0
 
@@ -7478,7 +7561,9 @@ def command_knowledge_package_parity_check(args: argparse.Namespace) -> int:
         return 0
     data = read_yaml_file(path)
     notes = ["Package manifest is discoverable.", "Package root is not hardcoded by this parity check.", "Heavy resources are not copied."]
-    status = "FAIL" if public_yaml_has_private_path(data) else "PASS"
+    status = "FAIL" if public_yaml_has_private_path(data) else "WARN"
+    if status == "WARN":
+        notes.append("WARN: shallow parity check.")
     report = resource_parity_report(project_root, "knowledge-package", package_id, status, notes, rel(path, project_root))
     print(f"{status}: {rel(report, project_root)}")
     return 1 if status == "FAIL" else 0
@@ -7497,16 +7582,44 @@ def command_platform_parity_check(args: argparse.Namespace) -> int:
         return 0
     data = read_yaml_file(path)
     notes = ["Platform contract is discoverable.", "Required and recommended resource references remain in the contract file.", "Referenced packages/templates are not copied into the contract."]
-    status = "FAIL" if public_yaml_has_private_path(data) else "PASS"
+    status = "FAIL" if public_yaml_has_private_path(data) else "WARN"
+    if status == "WARN":
+        notes.append("WARN: shallow parity check.")
     report = resource_parity_report(project_root, "platform", platform_id, status, notes, rel(path, project_root))
     print(f"{status}: {rel(report, project_root)}")
     return 1 if status == "FAIL" else 0
+
+
+def aggregate_status(statuses: list[str]) -> str:
+    normalized = [status for status in statuses if status]
+    if not normalized:
+        return "SKIP"
+    if "FAIL" in normalized:
+        return "FAIL"
+    if "WARN" in normalized:
+        return "WARN"
+    if all(status == "SKIP" for status in normalized):
+        return "SKIP"
+    return "PASS"
+
+
+def resource_report_status(project_root: Path, kind: str, resource_id: str) -> tuple[str, str]:
+    report = locate_flow_root(project_root) / "reviews" / "parity" / "resources" / f"{safe_id(kind + '-' + resource_id, 'resource')}.md"
+    if not report.is_file():
+        return "SKIP", ""
+    text = report.read_text(encoding="utf-8", errors="replace")
+    match = re.search("Result:" + r"\s+`(PASS|WARN|SKIP|FAIL)`", text)
+    return (match.group(1) if match else "WARN"), rel(report, project_root)
 
 
 def command_authoring_parity_check_all(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     process_result = command_process_parity_check_all(argparse.Namespace(project_root=str(project_root)))
+    process_summary = locate_flow_root(project_root) / "artifacts" / "parity" / "processes" / "summary.yaml"
+    process_status = "FAIL" if process_result else "PASS"
+    if process_summary.is_file():
+        process_status = str(read_yaml_file(process_summary).get("result") or process_status)
     resource_rows: list[dict[str, Any]] = []
     for kind, resource_id, func in [
         ("template", "process-agent-prompt", command_template_parity_check),
@@ -7514,9 +7627,26 @@ def command_authoring_parity_check_all(args: argparse.Namespace) -> int:
         ("platform", "platform-contract-joomla", command_platform_parity_check),
     ]:
         code = func(argparse.Namespace(project_root=str(project_root), template=resource_id, package=resource_id, platform=resource_id))
-        resource_rows.append({"id": resource_id, "kind": kind, "result": "FAIL" if code else "PASS_OR_SKIP"})
+        status, review = resource_report_status(project_root, kind, resource_id)
+        if code:
+            status = "FAIL"
+        resource_rows.append({"id": resource_id, "kind": kind, "result": status, "review": review})
     summary = locate_flow_root(project_root) / "artifacts" / "parity" / "summary.yaml"
-    write_yaml_file(summary, {"schema_version": 1, "result": "FAIL" if process_result else "PASS", "process_result": process_result, "resources": resource_rows})
+    result = aggregate_status([process_status, *[str(item.get("result", "")) for item in resource_rows]])
+    resource_counts = {status: sum(1 for item in resource_rows if item.get("result") == status) for status in ["PASS", "WARN", "SKIP", "FAIL"]}
+    write_yaml_file(
+        summary,
+        {
+            "schema_version": 1,
+            "result": result,
+            "process_result": process_result,
+            "process_status": process_status,
+            "resource_counts": resource_counts,
+            "checked": ["process parity aggregate", "template resource discovery", "knowledge package resource discovery", "platform contract resource discovery"],
+            "skipped": ["full resource authoring round-trip for templates, knowledge packages, and platform contracts"],
+            "resources": resource_rows,
+        },
+    )
     print(f"SUMMARY: {rel(summary, project_root)}")
     return process_result
 

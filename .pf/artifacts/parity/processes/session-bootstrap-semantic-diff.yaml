@@ -4,11 +4,7 @@ result: WARN
 diffs:
   -
     level: WARN
-    area: kind
-    message: kind differs
-  -
-    level: WARN
-    area: scope
-    message: scope differs
+    area: logic_review
+    message: 'source definition already has logic review findings: stage context-freshness-check produces known artifact context-freshness-report; stage flow-location produces known artifact flow-location-report; stage mode-detection produces known artifact session-mode-decision; stage status-scan produces known artifact session-status-inputs; stage workplace-resolution produces known artifact workplace-resolution-report'
 unsupported:
   []

@@ -4,11 +4,7 @@ result: WARN
 diffs:
   -
     level: WARN
-    area: kind
-    message: kind differs
-  -
-    level: WARN
-    area: scope
-    message: scope differs
+    area: logic_review
+    message: 'source definition already has logic review findings: stage ecp-capsule-generation produces known artifact execution-context-package; stage rule-classification produces known artifact classified-rules; stage source-discovery produces known artifact source-inventory'
 unsupported:
   []

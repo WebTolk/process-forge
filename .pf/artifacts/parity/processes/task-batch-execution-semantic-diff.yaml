@@ -1,14 +1,7 @@
 schema_version: 1
 process_id: task-batch-execution
-result: WARN
+result: PASS
 diffs:
-  -
-    level: WARN
-    area: kind
-    message: kind differs
-  -
-    level: WARN
-    area: scope
-    message: scope differs
+  []
 unsupported:
   []

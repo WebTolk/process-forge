@@ -13,19 +13,35 @@ WARN
 
 | Area | Status | Notes |
 |---|---|---|
-| logic_review | FAIL | 32 checks |
+| logic_review | WARN | 32 checks |
 | unsupported_fields | PASS | 0 unsupported fields |
-| semantic_diff | WARN | 2 differences |
+| semantic_diff | WARN | 1 differences |
 
 ## Semantic Diff
 
-- WARN `kind`: kind differs
-- WARN `scope`: scope differs
+- WARN `logic_review`: source definition already has logic review findings: stage contract-creation produces known artifact review; stage contract-creation produces known artifact validation-report; stage platform-definition produces known artifact platform-contract-proposal
 
 ## Unsupported Fields
 
 - None.
 
+## Checked
+
+- Process id, run model, roles, stages, artifacts, gates, emitted events, and resource requirements.
+- Candidate process logic against ProcessForge authoring rules.
+
+## Skipped
+
+- Byte-for-byte YAML formatting and key order are intentionally not compared.
+
+## Expected WARN
+
+- `logic_review`: source definition already has logic review findings: stage contract-creation produces known artifact review; stage contract-creation produces known artifact validation-report; stage platform-definition produces known artifact platform-contract-proposal
+
+## WARN To Fix Before Public Release
+
+- `logic_review`: source definition already has logic review findings: stage contract-creation produces known artifact review; stage contract-creation produces known artifact validation-report; stage platform-definition produces known artifact platform-contract-proposal
+
 ## Recommendation
 
-Process is reproducible with documented notes; review unsupported fields before public release.
+Process is reproducible with documented warnings; fix action WARN items before public release.
