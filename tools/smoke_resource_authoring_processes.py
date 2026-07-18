@@ -3,10 +3,11 @@
 
 from __future__ import annotations
 
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+from processforge_subprocess import CommandResult, diagnostic_text, format_command, run_command as run_processforge_command
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,52 +15,18 @@ CLI = ROOT / "bin" / "pf.py"
 DEFAULT_TIMEOUT = 30
 
 
-def tail(text: str, lines: int = 40) -> str:
-    parts = text.splitlines()
-    return "\n".join(parts[-lines:])
-
-
-def format_command(command: list[str]) -> str:
-    return " ".join(command)
-
-
-def run_cmd(args: list[str], cwd: Path = ROOT, expect: int = 0, timeout: int = DEFAULT_TIMEOUT) -> subprocess.CompletedProcess[str]:
+def run_cmd(args: list[str], cwd: Path = ROOT, expect: int = 0, timeout: int = DEFAULT_TIMEOUT) -> CommandResult:
     command = [sys.executable, str(CLI), *args]
-    try:
-        result = subprocess.run(
-            command,
-            cwd=cwd,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=False,
-            timeout=timeout,
-        )
-    except subprocess.TimeoutExpired as exc:
-        stdout = exc.stdout or ""
-        stderr = exc.stderr or ""
-        output = stdout if isinstance(stdout, str) else stdout.decode(errors="replace")
-        error = stderr if isinstance(stderr, str) else stderr.decode(errors="replace")
+    result = run_processforge_command(command, cwd=cwd, timeout=timeout)
+    if result.timed_out:
         print("TIMEOUT: command exceeded timeout")
-        print(f"CMD: {format_command(command)}")
-        print(f"CWD: {cwd}")
-        print(f"TIMEOUT_SECONDS: {timeout}")
-        if output:
-            print("STDOUT_TAIL:")
-            print(tail(output))
-        if error:
-            print("STDERR_TAIL:")
-            print(tail(error))
-        raise AssertionError(f"timeout after {timeout}s: {' '.join(args)}") from exc
+        print(diagnostic_text(result))
+        raise AssertionError(f"timeout after {timeout}s: {' '.join(args)}")
     if result.returncode != expect:
         print("FAIL: unexpected command exit")
         print(f"CMD: {format_command(command)}")
-        print(f"CWD: {cwd}")
         print(f"EXPECTED_EXIT: {expect}")
-        print(f"ACTUAL_EXIT: {result.returncode}")
-        if result.stdout:
-            print("OUTPUT_TAIL:")
-            print(tail(result.stdout))
+        print(diagnostic_text(result))
         raise AssertionError(f"expected exit {expect}, got {result.returncode}: {' '.join(args)}")
     return result
 
@@ -83,8 +50,12 @@ def assert_no_ps1(root: Path) -> None:
         raise AssertionError("unexpected ps1 file: " + str(matches[0]))
 
 
-def run(*args: str, cwd: Path = ROOT, expect: int = 0, timeout: int = DEFAULT_TIMEOUT) -> subprocess.CompletedProcess[str]:
+def run(*args: str, cwd: Path = ROOT, expect: int = 0, timeout: int = DEFAULT_TIMEOUT) -> CommandResult:
     return run_cmd(list(args), cwd=cwd, expect=expect, timeout=timeout)
+
+
+def command_output(result: CommandResult) -> str:
+    return result.stdout + result.stderr
 
 
 def create_workplace_with_template_and_package(root: Path) -> tuple[Path, Path]:
@@ -256,9 +227,10 @@ def test_negative_missing_required_platform_package(root: Path) -> None:
         encoding="utf-8",
     )
     broken = run("platform-contract-doctor", "--workplace", str(workplace), "--platform", "platform.broken", expect=1)
-    if "FAIL: required knowledge package available: docs.required.missing" not in broken.stdout:
+    broken_output = command_output(broken)
+    if "FAIL: required knowledge package available: docs.required.missing" not in broken_output:
         raise AssertionError("missing required knowledge package did not fail")
-    if "FAIL: required template available: template.required.missing" not in broken.stdout:
+    if "FAIL: required template available: template.required.missing" not in broken_output:
         raise AssertionError("missing required template did not fail")
 
 
@@ -276,7 +248,7 @@ def test_optional_platform_resource_warns(root: Path) -> None:
         "docs.optional.missing",
         "--apply",
     )
-    if "WARN: optional knowledge package available: docs.optional.missing" not in optional.stdout:
+    if "WARN: optional knowledge package available: docs.optional.missing" not in command_output(optional):
         raise AssertionError("optional missing knowledge package did not warn")
 
 

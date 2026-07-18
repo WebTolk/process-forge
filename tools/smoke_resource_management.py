@@ -3,10 +3,11 @@
 
 from __future__ import annotations
 
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,55 +15,27 @@ CLI = ROOT / "tools" / "processforge.py"
 DEFAULT_TIMEOUT = 60
 
 
-def output_tail(text: str, lines: int = 40) -> str:
-    return "\n".join(text.splitlines()[-lines:])
-
-
-def run_cmd(command: list[str], cwd: Path = ROOT, timeout: int = DEFAULT_TIMEOUT, expect: int = 0) -> subprocess.CompletedProcess[str]:
-    try:
-        result = subprocess.run(
-            command,
-            cwd=cwd,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=False,
-            timeout=timeout,
-        )
-    except subprocess.TimeoutExpired as exc:
-        output = exc.stdout or ""
-        if not isinstance(output, str):
-            output = output.decode(errors="replace")
+def run_cmd(command: list[str], cwd: Path = ROOT, timeout: int = DEFAULT_TIMEOUT, expect: int = 0) -> CommandResult:
+    result = run_processforge_command(command, cwd=cwd, timeout=timeout)
+    if result.timed_out:
         print("FAIL smoke_resource_management: timeout")
-        print("Command:")
-        print("  " + " ".join(command))
-        print("CWD:")
-        print(f"  {cwd}")
-        print("Timeout seconds:")
-        print(f"  {timeout}")
-        if output:
-            print("STDOUT tail:")
-            print(output_tail(output))
-        raise AssertionError(f"timeout after {timeout}s: {' '.join(command)}") from exc
+        print(diagnostic_text(result))
+        raise AssertionError(f"timeout after {timeout}s: {' '.join(command)}")
     if result.returncode != expect:
         print("FAIL smoke_resource_management: unexpected command exit")
-        print("Command:")
-        print("  " + " ".join(command))
-        print("CWD:")
-        print(f"  {cwd}")
-        print("Exit code:")
-        print(f"  {result.returncode}")
         print("Expected exit code:")
         print(f"  {expect}")
-        if result.stdout:
-            print("STDOUT tail:")
-            print(output_tail(result.stdout))
+        print(diagnostic_text(result))
         raise AssertionError(f"expected exit {expect}, got {result.returncode}: {' '.join(command)}")
     return result
 
 
-def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
+def run(*args: str, expect: int = 0) -> CommandResult:
     return run_cmd([sys.executable, str(CLI), *args], expect=expect)
+
+
+def command_output(result: CommandResult) -> str:
+    return result.stdout + result.stderr
 
 
 def run_test(name: str, func: object) -> None:
@@ -221,7 +194,7 @@ def main() -> int:
         (workplace / "registries" / "mcp.yaml").write_text("schema_version: 1\nmcp_servers: []\n", encoding="utf-8")
 
         resolved = run("path-resolve", "--workplace", str(workplace), "--path", "${PF_KNOWLEDGE}/joomla/docs")
-        if "resolved_from_constant" not in resolved.stdout:
+        if "resolved_from_constant" not in command_output(resolved):
             raise AssertionError("path-resolve did not expand PF_KNOWLEDGE")
         run("doctor-workplace", "--root", str(workplace))
 
@@ -319,7 +292,7 @@ def main() -> int:
             "--apply",
             expect=1,
         )
-        if "package root 'unknown-root' not found" not in unknown_root.stdout:
+        if "package root 'unknown-root' not found" not in command_output(unknown_root):
             raise AssertionError("unknown package root id did not fail")
         missing_root = run(
             "knowledge-add-resource",
@@ -334,7 +307,7 @@ def main() -> int:
             "--apply",
             expect=1,
         )
-        if "path does not exist" not in missing_root.stdout:
+        if "path does not exist" not in command_output(missing_root):
             raise AssertionError("missing selected package root path did not fail on apply")
 
         template_source = Path(tmp) / "template-source"
@@ -370,7 +343,7 @@ def main() -> int:
             encoding="utf-8",
         )
         failed = run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "missing-ref", expect=1)
-        if "FAIL" not in failed.stdout:
+        if "FAIL" not in command_output(failed):
             raise AssertionError("knowledge-package-doctor did not fail on missing path_ref target")
 
         heavy_pkg = package_root / "heavy-warning" / "package.yaml"
@@ -398,14 +371,14 @@ def main() -> int:
             encoding="utf-8",
         )
         warned = run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "heavy-warning")
-        if "WARN" not in warned.stdout:
+        if "WARN" not in command_output(warned):
             raise AssertionError("knowledge-package-doctor did not warn on heavy resource without load_policy")
 
         duplicate_pkg = alt_package_root / "platform.joomla" / "package.yaml"
         duplicate_pkg.parent.mkdir(parents=True)
         duplicate_pkg.write_text(package_text, encoding="utf-8")
         duplicate_doctor = run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "platform.joomla")
-        if "duplicate package id" not in duplicate_doctor.stdout:
+        if "duplicate package id" not in command_output(duplicate_doctor):
             raise AssertionError("knowledge-package-doctor did not warn on duplicate package id across roots")
         duplicate_write = run(
             "knowledge-add-resource",
@@ -418,7 +391,8 @@ def main() -> int:
             "--apply",
             expect=1,
         )
-        if "duplicate package id" not in duplicate_write.stdout or "--package-root" not in duplicate_write.stdout:
+        duplicate_write_output = command_output(duplicate_write)
+        if "duplicate package id" not in duplicate_write_output or "--package-root" not in duplicate_write_output:
             raise AssertionError("write without --package-root did not fail on duplicate package id")
 
         bad_workplace = Path(tmp) / "bad-workplace"
@@ -446,7 +420,7 @@ def main() -> int:
             encoding="utf-8",
         )
         unknown = run("doctor-workplace", "--root", str(bad_workplace), expect=1)
-        if "unknown path constant" not in unknown.stdout:
+        if "unknown path constant" not in command_output(unknown):
             raise AssertionError("doctor-workplace did not fail on unknown path constant")
 
         project = Path(tmp) / "project"
@@ -491,7 +465,7 @@ def main() -> int:
         (project / ".pf" / "contexts" / "project-context.snapshot.yaml").write_text(f"schema_version: 1\nleak: {private_leak}\n", encoding="utf-8")
         (project / ".pf" / "contexts" / "project-context.snapshot.md").write_text(private_leak + "\n", encoding="utf-8")
         leaked = run("doctor-project", "--project-root", str(project), expect=1)
-        if "contains no local absolute paths" not in leaked.stdout:
+        if "contains no local absolute paths" not in command_output(leaked):
             raise AssertionError("doctor-project did not fail on absolute path in public snapshot")
 
     run_public_cleanliness()

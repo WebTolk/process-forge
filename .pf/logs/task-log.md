@@ -694,3 +694,85 @@ tasks, then decide the commit/push boundary.
 
 Handoff:
 `.pf/handoffs/process-run-task-batch-handoff.md`.
+
+## 2026-07-18 10:31 - codex
+
+Task:
+Implemented `задания/processforge_process_tree_timeout_hardening_master_prompt.md`.
+
+Files changed:
+`tools/processforge_subprocess.py`, `tools/processforge.py`,
+`tools/smoke_first_run.py`, `tools/smoke_resource_management.py`,
+`tools/smoke_resource_authoring_processes.py`,
+`tools/smoke_process_run_task_batch.py`,
+`tools/validate-process-forge-schemas.py`, `README.md`,
+`docs/known-limitations.md`, and Process Tree Timeout dogfooding artifacts.
+
+Artifacts changed:
+`.pf/artifacts/process-tree-timeout-hardening-report.md`,
+`.pf/reviews/process-tree-timeout-hardening-review.md`,
+`.pf/handoffs/process-tree-timeout-hardening-handoff.md`.
+
+Tools used:
+Serena pattern search, PowerShell file reads and validation commands,
+`apply_patch`, Python compile, ProcessForge smoke scripts, schema/public
+validators, release-check, and events validation.
+
+Decisions:
+Centralize external command execution in `tools/processforge_subprocess.py`.
+Keep ProcessForge v0.1 as a short-lived Python CLI. Do not add product
+entities, background execution, watcher, scheduler, runner, WTAICC driver,
+command-hook execution, webhook send, GUI, marketplace, or database behavior.
+
+Validation:
+Passed py_compile for changed Python files, all four smoke scripts, schema
+validation, public cleanliness, checksum check, release-check, release-test,
+release-pack, release-archive-test, doctor-project, events validation, and git
+whitespace check. `doctor-project` reported only known non-blocking WARN entries
+for this repository's self-dogfooding state.
+
+Risks:
+Windows tree cleanup remains an MVP fallback around standard process group and
+termination behavior; no background supervisor is introduced.
+
+Next steps:
+Review and commit the completed release-test timeout hardening slice.
+
+Handoff:
+`.pf/handoffs/process-tree-timeout-hardening-handoff.md`.
+
+## 2026-07-18 11:31 - codex
+
+Task:
+Executed `задания/processforge_local_release_test_diagnostics_prompt.md`.
+
+Files changed:
+`.pf/logs/task-log.md`, checksum inventory, and release archive outputs after
+post-diagnostic consistency refresh. The local diagnostics report was removed
+from the commit set per user request because it contained machine-local paths.
+
+Artifacts changed:
+- None retained in the repository for this diagnostics-only task.
+
+Tools used:
+Serena pattern search, Python-driven local diagnostic runner, Python-first
+ProcessForge commands, git status/branch/diff checks, and Windows `where`/process
+listing commands.
+
+Diagnostics:
+No local hang reproduced. The isolated smoke commands passed, `release-test`
+finished with `RESULT: PASS`, `release-pack` wrote the archive and manifest,
+`release-archive-test` finished with `RESULT: PASS` from the extracted archive,
+both project-local launcher modes passed, and no test-owned hanging Python
+process was identified after diagnostics.
+
+Risks:
+The diagnostics were run against the current working tree, which already
+contains the uncommitted process-tree timeout hardening slice. No additional
+product code changes were made for this diagnostics task.
+
+Next steps:
+Commit the timeout hardening slice without the local diagnostics report.
+
+Handoff:
+Diagnostics summary is recorded in this task log entry only.

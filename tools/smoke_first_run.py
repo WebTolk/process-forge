@@ -3,11 +3,12 @@
 
 from __future__ import annotations
 
-import subprocess
 import sys
 import tempfile
 import os
 from pathlib import Path
+
+from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,56 +16,32 @@ CLI = ROOT / "tools" / "processforge.py"
 DEFAULT_TIMEOUT = 60
 
 
-def output_tail(text: str, lines: int = 40) -> str:
-    return "\n".join(text.splitlines()[-lines:])
-
-
-def run_subprocess(command: list[str], cwd: Path, env: dict[str, str] | None = None, timeout: int = DEFAULT_TIMEOUT) -> subprocess.CompletedProcess[str]:
-    try:
-        return subprocess.run(
-            command,
-            cwd=cwd,
-            env=env,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=False,
-            timeout=timeout,
-        )
-    except subprocess.TimeoutExpired as exc:
-        output = exc.stdout or ""
-        if not isinstance(output, str):
-            output = output.decode(errors="replace")
+def run_subprocess(command: list[str], cwd: Path, env: dict[str, str] | None = None, timeout: int = DEFAULT_TIMEOUT) -> CommandResult:
+    result = run_processforge_command(command, cwd=cwd, env=env, timeout=timeout)
+    if result.timed_out:
         print("TIMEOUT: smoke_first_run command exceeded timeout")
-        print("Command:")
-        print("  " + " ".join(command))
-        print("CWD:")
-        print(f"  {cwd}")
-        print("Timeout seconds:")
-        print(f"  {timeout}")
-        if output:
-            print("STDOUT tail:")
-            print(output_tail(output))
-        raise AssertionError(f"timeout after {timeout}s: {' '.join(command)}") from exc
-
-
-def run_command(*args: str, cwd: Path = ROOT, env: dict[str, str] | None = None, expect_success: bool = True) -> subprocess.CompletedProcess[str]:
-    command = [sys.executable, str(CLI), *args]
-    result = run_subprocess(command, cwd=cwd, env=env)
-    if expect_success and result.returncode != 0:
-        raise AssertionError("command failed: " + " ".join(args) + "\n" + output_tail(result.stdout))
-    if not expect_success and result.returncode == 0:
-        raise AssertionError("command unexpectedly succeeded: " + " ".join(args) + "\n" + output_tail(result.stdout))
+        print(diagnostic_text(result))
+        raise AssertionError(f"timeout after {timeout}s: {' '.join(command)}")
     return result
 
 
-def run_python(script: Path, *args: str, cwd: Path, env: dict[str, str] | None = None, expect_success: bool = True) -> subprocess.CompletedProcess[str]:
+def run_command(*args: str, cwd: Path = ROOT, env: dict[str, str] | None = None, expect_success: bool = True) -> CommandResult:
+    command = [sys.executable, str(CLI), *args]
+    result = run_subprocess(command, cwd=cwd, env=env)
+    if expect_success and result.returncode != 0:
+        raise AssertionError("command failed: " + " ".join(args) + "\n" + diagnostic_text(result))
+    if not expect_success and result.returncode == 0:
+        raise AssertionError("command unexpectedly succeeded: " + " ".join(args) + "\n" + diagnostic_text(result))
+    return result
+
+
+def run_python(script: Path, *args: str, cwd: Path, env: dict[str, str] | None = None, expect_success: bool = True) -> CommandResult:
     command = [sys.executable, str(script), *args]
     result = run_subprocess(command, cwd=cwd, env=env)
     if expect_success and result.returncode != 0:
-        raise AssertionError(f"python launcher failed: {script}\n{output_tail(result.stdout)}")
+        raise AssertionError(f"python launcher failed: {script}\n{diagnostic_text(result)}")
     if not expect_success and result.returncode == 0:
-        raise AssertionError(f"python launcher unexpectedly succeeded: {script}\n{output_tail(result.stdout)}")
+        raise AssertionError(f"python launcher unexpectedly succeeded: {script}\n{diagnostic_text(result)}")
     return result
 
 
@@ -144,6 +121,15 @@ def main() -> int:
             raise AssertionError("agent-start-prompt printed broken linked-project command")
 
         run_python(project / ".pf" / "runtime" / "bin" / "pf.py", "doctor-project", "--project-root", ".", cwd=project)
+        outside_cwd = root / "outside-cwd"
+        outside_cwd.mkdir()
+        run_python(
+            project / ".pf" / "runtime" / "bin" / "pf.py",
+            "doctor-project",
+            "--project-root",
+            str(project),
+            cwd=outside_cwd,
+        )
 
         run_command("project-context-refresh", "--project-root", str(project))
         run_command("doctor-project", "--project-root", str(project))
@@ -187,7 +173,8 @@ def main() -> int:
             env=env,
             expect_success=False,
         )
-        if "FAIL: ProcessForge CLI not found" not in failed.stdout and "FAIL: ProcessForge distribution not found" not in failed.stdout:
+        failed_output = failed.stdout + failed.stderr
+        if "FAIL: ProcessForge CLI not found" not in failed_output and "FAIL: ProcessForge distribution not found" not in failed_output:
             raise AssertionError("broken launcher did not produce a clear FAIL message")
         local_config.write_text(original_local, encoding="utf-8")
 

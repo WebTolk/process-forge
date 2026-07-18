@@ -200,6 +200,7 @@ REQUIRED_FILES = [
     "tools/smoke_first_run.py",
     "tools/smoke_resource_authoring_processes.py",
     "tools/smoke_process_run_task_batch.py",
+    "tools/processforge_subprocess.py",
     "templates/session-start-template.yaml",
     "templates/session-status-report-template.md",
     "templates/project-context.snapshot.yaml",

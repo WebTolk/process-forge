@@ -13,7 +13,6 @@ import os
 import platform
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
 import uuid
@@ -23,6 +22,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+
+from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1665,12 +1666,22 @@ import sys
 from pathlib import Path
 
 
-def find_project_root(start: Path) -> Path:
+def project_marker(path: Path) -> bool:
+    return (path / ".pf" / "process-forge.local.yaml").is_file()
+
+
+def find_project_root(start: Path) -> Path | None:
     current = start.resolve()
-    for candidate in [current, *current.parents]:
-        if (candidate / ".pf" / "process-forge.local.yaml").is_file():
+    if project_marker(current):
+        return current
+    script_path = Path(__file__).resolve()
+    script_project = script_path.parents[3] if len(script_path.parents) > 3 else None
+    if script_project and project_marker(script_project):
+        return script_project
+    for candidate in [current, *current.parents, *script_path.parents]:
+        if project_marker(candidate):
             return candidate
-    return current
+    return None
 
 
 def yaml_scalar(text: str, key: str) -> str | None:
@@ -1744,6 +1755,13 @@ def distribution_root(project_root: Path) -> Path | None:
 
 def main(argv: list[str]) -> int:
     project_root = find_project_root(Path.cwd())
+    if project_root is None:
+        message = """FAIL: ProcessForge project root not found.
+
+Fix:
+  Run this launcher from a ProcessForge project root, pass --project-root to the command, or rerun project-onboard."""
+        print(message, file=sys.stderr)
+        return 1
     distribution = distribution_root(project_root)
     if not distribution:
         message = """FAIL: ProcessForge distribution not found.
@@ -3278,25 +3296,23 @@ class ReleaseCommand:
 
 
 def format_command(command: list[str]) -> str:
-    return " ".join(command)
+    return format_subprocess_command(command)
 
 
 def run_release_command(label: str, command: list[str], cwd: Path, timeout: int, allow_warn: bool = False) -> tuple[str, int, str]:
     print(f"RUN {label}:")
     print(f"  {format_command(command)}")
     sys.stdout.flush()
-    try:
-        result = subprocess.run(command, cwd=cwd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, timeout=timeout)
-    except subprocess.TimeoutExpired as exc:
-        output = exc.stdout or ""
-        if not isinstance(output, str):
-            output = output.decode(errors="replace")
-        return "FAIL", 124, f"timeout after {timeout}s\n{output}"
-    if result.returncode == 0:
-        return "PASS", 0, result.stdout
+    result = run_subprocess_command(command, cwd=cwd, timeout=timeout)
+    output = "\n".join(part for part in [result.stdout, result.stderr] if part)
+    if result.timed_out:
+        return "FAIL", 124, f"timeout after {timeout}s\n{diagnostic_text(result)}"
+    code = int(result.returncode or 0)
+    if code == 0:
+        return "PASS", 0, output
     if allow_warn:
-        return "WARN", result.returncode, result.stdout
-    return "FAIL", result.returncode, result.stdout
+        return "WARN", code, output
+    return "FAIL", code, output
 
 
 def print_release_command_output(label: str, status: str, code: int, output: str) -> None:

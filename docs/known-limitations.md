@@ -18,5 +18,7 @@ ProcessForge v0.1 is a file-first, single-agent release candidate.
 
 - ProcessForge v0.1 core is a short-lived Python CLI.
 - It does not start background daemons by default.
+- `release-test` and smoke commands use per-command process-tree timeouts; a hung child process should fail with command, cwd, timeout, stdout tail, and stderr tail diagnostics instead of hanging silently.
 - A long-running watcher or runner is a future optional layer, not part of the v0.1 core.
 - Future watcher/runner work must stay bounded: streaming reads, offsets or checkpoints, bounded queues, subprocess timeouts, and no full-project in-memory cache by default.
+- Platform-specific shell scripts are not required for release validation and are not part of the release surface.

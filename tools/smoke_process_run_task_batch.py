@@ -5,10 +5,11 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,46 +18,21 @@ DEFAULT_TIMEOUT = 60
 PRIVATE_PATH_PATTERN = re.compile(r"[A-Za-z]:[\\/]|/[Uu]sers/|/[Hh]ome/")
 
 
-def output_tail(text: str, lines: int = 60) -> str:
-    return "\n".join(text.splitlines()[-lines:])
-
-
-def run_cmd(command: list[str], cwd: Path = ROOT, timeout: int = DEFAULT_TIMEOUT, expect: int = 0) -> subprocess.CompletedProcess[str]:
-    try:
-        result = subprocess.run(
-            command,
-            cwd=cwd,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=False,
-            timeout=timeout,
-        )
-    except subprocess.TimeoutExpired as exc:
-        output = exc.stdout or ""
-        if not isinstance(output, str):
-            output = output.decode(errors="replace")
+def run_cmd(command: list[str], cwd: Path = ROOT, timeout: int = DEFAULT_TIMEOUT, expect: int = 0) -> CommandResult:
+    result = run_processforge_command(command, cwd=cwd, timeout=timeout)
+    if result.timed_out:
         print("FAIL smoke_process_run_task_batch: timeout")
-        print("Command:")
-        print("  " + " ".join(command))
-        if output:
-            print("STDOUT tail:")
-            print(output_tail(output))
-        raise AssertionError(f"timeout after {timeout}s: {' '.join(command)}") from exc
+        print(diagnostic_text(result))
+        raise AssertionError(f"timeout after {timeout}s: {' '.join(command)}")
     if result.returncode != expect:
         print("FAIL smoke_process_run_task_batch: unexpected command exit")
-        print("Command:")
-        print("  " + " ".join(command))
-        print(f"Exit code: {result.returncode}")
         print(f"Expected exit code: {expect}")
-        if result.stdout:
-            print("STDOUT tail:")
-            print(output_tail(result.stdout))
+        print(diagnostic_text(result))
         raise AssertionError(f"expected exit {expect}, got {result.returncode}: {' '.join(command)}")
     return result
 
 
-def pf(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
+def pf(*args: str, expect: int = 0) -> CommandResult:
     return run_cmd([sys.executable, str(CLI), *args], expect=expect)
 
 

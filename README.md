@@ -61,6 +61,9 @@ Root project `AGENTS.md` is not created by default.
 
 Python CLI is the canonical runtime. `bin/pf.py` is the root launcher;
 `bin/pf` and `bin/pf.bat` are thin optional wrappers over it.
+Release validation uses per-command process-tree timeouts, so a hung smoke
+command fails with command/cwd/output-tail diagnostics instead of hanging
+silently.
 
 ```bash
 python bin/pf.py workplace-init --workplace <workplace-root> --dry-run

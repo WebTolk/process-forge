@@ -10,7 +10,7 @@
     },
     {
       "path": ".pf/artifacts/checksum-inventory.sha256",
-      "sha256": "1fe5d2d298fdcf52728a553a5d99d36f8197e1c8974cf9cf07fb83ed30a8ed46"
+      "sha256": "9cc06eccc22f3b21b453707306a156de68332ad86a39c936534e2379ed4d2751"
     },
     {
       "path": ".pf/hooks.yaml",
@@ -42,7 +42,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "1eafb9c0bee9e8bead812efd9b0c1e6be9e8bd852181dce85c207780a693e5f1"
+      "sha256": "2edbebb308c483b09dc70bad3143199a757f4e55a58d6fccb8f6708ebcc8ace7"
     },
     {
       "path": "VERSION",
@@ -326,7 +326,7 @@
     },
     {
       "path": "docs/known-limitations.md",
-      "sha256": "b4eee4d8df86d17121916b8b58984360bf79dcb0b223dc514f16788270a83490"
+      "sha256": "f98db4044c28c58f99ead0e13240aad1d94ba62c72666fcbf2637175737b0f28"
     },
     {
       "path": "docs/release-checklist.md",
@@ -1074,23 +1074,27 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "afd8cafccd6bf99dd2e36375c4f3c036c644cd63ab667b32c495590cf4635894"
+      "sha256": "d38f0694d65471e318232b92af0c4ea76827934bd0af545bb1b4f2d6e2961d0c"
+    },
+    {
+      "path": "tools/processforge_subprocess.py",
+      "sha256": "b9e3cff13cc656aa42b414245ef042a8a905c528093ec8037b298c55eb45e70c"
     },
     {
       "path": "tools/smoke_first_run.py",
-      "sha256": "f7fe6689060ec3e79d2d313ae9a83fa41d60127af43b0db73bc2d22ea18c69f3"
+      "sha256": "3f6692f67f17b061ac3f2df44ee3f48211097c353199d4f834a5ba6732c881e0"
     },
     {
       "path": "tools/smoke_process_run_task_batch.py",
-      "sha256": "ce01d641a82b500beda75b1eaa4f12295e04238033ecb7709917beeed8b8d1fa"
+      "sha256": "d64f085ea2e6b8f34fac939729194a05e223d61e7c29c624f91b040367cba906"
     },
     {
       "path": "tools/smoke_resource_authoring_processes.py",
-      "sha256": "7b1ca1d24c169a506b9637bcdff319f233b21d94abe46508544864b277f707cf"
+      "sha256": "62782dcb49a638223f9219c825169a6f70467c6155b82d34984b5301460210e9"
     },
     {
       "path": "tools/smoke_resource_management.py",
-      "sha256": "732bc5ac5b36fbf876ad8bac3fbeff2a7d9a31e2ac529451a98ac8c83e31cff5"
+      "sha256": "5f416d1c6d65d5ea8f47662c1291782bc0064d5b5a77564841d476607306cd4a"
     },
     {
       "path": "tools/validate-process-forge-checksums.py",
@@ -1098,7 +1102,7 @@
     },
     {
       "path": "tools/validate-process-forge-schemas.py",
-      "sha256": "1ce7813e6e80467813367c55b2513a8d5dd0e8fe8544e7bef68ae01e3296aacc"
+      "sha256": "af64190a7e6d85bcd8abf8d1e0aafae2c0e77bfc78207cc669f4ed464b4921fc"
     },
     {
       "path": "tools/validate-public-cleanliness.py",
@@ -1113,7 +1117,7 @@
       "sha256": "93660d25f3346ef5a89638d3a7728829af9de87da271bf247f96df77c3911012"
     }
   ],
-  "generated_at": "2026-07-18T06:01:36Z",
+  "generated_at": "2026-07-18T07:55:25Z",
   "name": "processforge",
   "version": "0.1.0"
 }
