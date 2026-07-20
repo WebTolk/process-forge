@@ -19,8 +19,9 @@
   собирают knowledge packages, templates, tools, MCP providers, capabilities,
   processes, coding standards, project type hints, policies и optional
   parent/child platform inheritance.
-- В публичных примерах и отчётах используйте нейтральные имена release archives,
-  например `dist/processforge-release.zip`.
+- Для текущего релиза используйте canonical versioned release archive names:
+  `dist/processforge-v1.0.0.zip` и
+  `dist/processforge-v1.0.0.manifest.json`.
 - `--interactive` принимается first-run initialization commands для UX
   compatibility; текущие commands остаются file-first и не требуют terminal
   prompting.
@@ -33,8 +34,8 @@ python tools/validate-process-forge-schemas.py --root .
 python tools/validate-public-cleanliness.py --root .
 python tools/validate-process-forge-checksums.py --root . --check
 python bin/pf.py release-test --root .
-python bin/pf.py release-pack --root . --output dist/processforge-release.zip
-python bin/pf.py release-archive-test --archive dist/processforge-release.zip
+python bin/pf.py release-pack --root . --output dist/processforge-v1.0.0.zip
+python bin/pf.py release-archive-test --archive dist/processforge-v1.0.0.zip
 git diff --check
 ```
 

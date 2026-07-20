@@ -19,8 +19,9 @@ archive names, and reports.
   knowledge packages, templates, tools, MCP providers, capabilities, processes,
   coding standards, project type hints, policies, and optional parent/child
   platform inheritance.
-- For public examples and reports, use neutral release archive names such as
-  `dist/processforge-release.zip`.
+- For the current release, use the canonical versioned release archive names:
+  `dist/processforge-v1.0.0.zip` and
+  `dist/processforge-v1.0.0.manifest.json`.
 - `--interactive` is accepted by first-run initialization commands for UX
   compatibility; current commands remain file-first and do not require terminal
   prompting.
@@ -33,8 +34,8 @@ python tools/validate-process-forge-schemas.py --root .
 python tools/validate-public-cleanliness.py --root .
 python tools/validate-process-forge-checksums.py --root . --check
 python bin/pf.py release-test --root .
-python bin/pf.py release-pack --root . --output dist/processforge-release.zip
-python bin/pf.py release-archive-test --archive dist/processforge-release.zip
+python bin/pf.py release-pack --root . --output dist/processforge-v1.0.0.zip
+python bin/pf.py release-archive-test --archive dist/processforge-v1.0.0.zip
 git diff --check
 ```
 

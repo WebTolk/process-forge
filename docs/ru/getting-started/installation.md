@@ -6,6 +6,7 @@
 ```bash
 git clone <processforge-repo> process-forge
 cd process-forge
+python -m pip install -r requirements.txt
 
 python bin/pf.py version
 python bin/pf.py release-test --root .
@@ -38,6 +39,7 @@ Runtime requirements:
 
 - Рекомендуется Python 3.11+.
 - Python 3.10+ допустим только если текущие тесты подтверждают совместимость.
+- Python package dependencies из `requirements.txt`, сейчас `PyYAML`.
 - Нужна файловая система с UTF-8.
 - Нужен read/write access к ProcessForge distribution, workplace и папкам проекта.
 - PowerShell для runtime не требуется.
@@ -46,6 +48,7 @@ Runtime requirements:
 Development / release-check requirements:
 
 - Python 3.11+.
+- Python package dependencies из `requirements.txt`.
 - Git для установки из исходников и release checks, например `git diff --check`.
 - Возможность запускать subprocesses и создавать temporary directories.
 - ZIP support из стандартной библиотеки Python.

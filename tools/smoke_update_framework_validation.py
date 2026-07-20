@@ -14,16 +14,27 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "bin" / "pf.py"
 VALID_SHA256 = "0" * 64
+PF_TIMEOUT_SECONDS = 30
 
 
 def run_pf(*args: str, expect_success: bool) -> str:
-    result = subprocess.run(
-        [sys.executable, str(CLI), *args],
-        cwd=str(ROOT),
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    command_label = "pf " + " ".join(args)
+    print(f"RUN: {command_label}")
+    try:
+        result = subprocess.run(
+            [sys.executable, str(CLI), *args],
+            cwd=str(ROOT),
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=PF_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout if isinstance(exc.stdout, str) else ""
+        stderr = exc.stderr if isinstance(exc.stderr, str) else ""
+        raise AssertionError(
+            f"{command_label} timed out after {PF_TIMEOUT_SECONDS}s\nstdout follows\n{stdout}\nstderr follows\n{stderr}"
+        ) from exc
     if expect_success and result.returncode != 0:
         raise AssertionError(
             f"pf {' '.join(args)} failed with {result.returncode}\nstdout follows\n{result.stdout}\nstderr follows\n{result.stderr}"
@@ -175,6 +186,8 @@ def main() -> int:
 """
         write_text(registry_path, registry_yaml(trusted_http_source))
         run_pf("update", "bootstrap-source", "validate", "--workplace", str(workplace), expect_success=True)
+
+        write_text(registry_path, registry_yaml(valid_source_body()))
 
         overrides_path = workplace / "registries" / "update-site-overrides.yaml"
         write_text(

@@ -173,6 +173,7 @@ Runtime requirements:
 
 - Рекомендуется Python 3.11+.
 - Python 3.10+ допустим только если текущие tests подтверждают совместимость.
+- Python package dependencies из `requirements.txt`, сейчас `PyYAML`.
 - Нужна файловая система с UTF-8.
 - Пользователю или агенту нужен read/write access к ProcessForge distribution,
   workplace и project folders.
@@ -182,6 +183,7 @@ Runtime requirements:
 Development and release-check requirements:
 
 - Python 3.11+.
+- Python package dependencies из `requirements.txt`.
 - Git для source installation и release checks, например `git diff --check`.
 - Возможность запускать subprocesses и создавать temporary directories.
 - ZIP support из стандартной библиотеки Python.

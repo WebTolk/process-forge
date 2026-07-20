@@ -142,6 +142,7 @@ resources:
         before = sha256(installed_subjects)
         validate_out = run_pf("update", "bootstrap-source", "validate", "--workplace", str(workplace))
         list_out = run_pf("update", "bootstrap-source", "list", "--workplace", str(workplace))
+        sources_list_out = run_pf("update", "sources-list", "--workplace", str(workplace), "--validate")
         rebuild_out = run_pf("update", "entity-sources", "rebuild", "--workplace", str(workplace))
         entity_out = run_pf("update", "entity-sources", "list", "--workplace", str(workplace), "--subject-type", "knowledge_package")
         manifest_out = run_pf("update", "manifest", "validate", "--file", str(normalized))
@@ -152,6 +153,8 @@ resources:
             raise AssertionError(validate_out)
         if "official" not in list_out:
             raise AssertionError(list_out)
+        if "official" not in sources_list_out or "PASS:" not in sources_list_out:
+            raise AssertionError(sources_list_out)
         if "SITES: 2" not in rebuild_out:
             raise AssertionError(rebuild_out)
         if "knowledge_package:docs-example:official" not in entity_out:

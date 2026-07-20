@@ -10,7 +10,7 @@
     },
     {
       "path": ".pf/artifacts/checksum-inventory.sha256",
-      "sha256": "8d70d5d8d608510909e41356ada06106542ee0c877c19378fe261435d2db30c4"
+      "sha256": "d20e9044e873dea2acdccc86b75470c8433adc0bcfd341fb7f73beb0397bdebc"
     },
     {
       "path": ".pf/hooks.yaml",
@@ -46,11 +46,11 @@
     },
     {
       "path": "README.md",
-      "sha256": "3d9c6d606af35aa605d5b04905b69c04da1eba4521c70868d8439e7ee96871ed"
+      "sha256": "77dc9568e7354f44e962c42ff15ffb9958a9f8064b27646ab254391e02de44ed"
     },
     {
       "path": "README.ru.md",
-      "sha256": "54d869d71839b25e9235ea977fdd5e2ddff36e1fd2a9fe8e30c9756b9e7a09d5"
+      "sha256": "2e54fa17af98998372ab09f356a111c2cc943bf007f4f98c8fce87acf5073b0a"
     },
     {
       "path": "VERSION",
@@ -246,7 +246,7 @@
     },
     {
       "path": "docs/concepts/processforge-self-update.md",
-      "sha256": "159b629ddfac759c7c57af24a23a4e8343d8905a09a41cefd80286e1d03b5f2e"
+      "sha256": "2865920547065facf1c1105fd8ac1fd2ac8c2a30fd79365bfa9be5f97827d219"
     },
     {
       "path": "docs/concepts/project-context-snapshot.md",
@@ -294,7 +294,7 @@
     },
     {
       "path": "docs/concepts/runtime-model.md",
-      "sha256": "1daa3d0ca787b47c298b4f9822b3f642b2d373783a1380b2d6c2e8e6ab49e7c7"
+      "sha256": "534d6ec09d74eae9890975615df8caef472da6eb05ecdb67e0317b7b0f40dddf"
     },
     {
       "path": "docs/concepts/semantic-parity.md",
@@ -358,7 +358,7 @@
     },
     {
       "path": "docs/getting-started/agent-prompts.md",
-      "sha256": "817ac07b19c0af8e3308a7c9cd3e4896bd0311f5358f68d4ed990361bb02bf22"
+      "sha256": "9bba5d4002bd316018d35148b387a9e68f1188dbd3741672395925870dc234b9"
     },
     {
       "path": "docs/getting-started/create-your-first-process.md",
@@ -374,7 +374,7 @@
     },
     {
       "path": "docs/getting-started/installation.md",
-      "sha256": "b6427964ea866aa1b44300141dd96c88a1176cde877ac1363dd8df6e1e030d82"
+      "sha256": "e1cd25cef2f703c6035803ec88e0d716663ae25921e6e3d2e48f722271f98455"
     },
     {
       "path": "docs/getting-started/project-onboarding.md",
@@ -406,7 +406,7 @@
     },
     {
       "path": "docs/release-checklist.md",
-      "sha256": "bbfdc91f95d5241976005f402b2e636dd19f6252b85795d8651d2886706ccdd2"
+      "sha256": "ff3149b999e5e415b90f52cdb483f2ce6ad47c904a538d1ddc7edc19ccf442c2"
     },
     {
       "path": "docs/releases/initial-release.md",
@@ -474,7 +474,7 @@
     },
     {
       "path": "docs/ru/concepts/runtime-model.md",
-      "sha256": "43eaafe1304afe83144d3fd247bb12191cecb6cc4b5b8efe078f2f964cfbc36c"
+      "sha256": "1921b0f53c8f1a6aea7c5cbc6dc95db195564e6f3acc37a7a20b64d7d29f7a72"
     },
     {
       "path": "docs/ru/concepts/semantic-parity.md",
@@ -486,7 +486,7 @@
     },
     {
       "path": "docs/ru/getting-started/agent-prompts.md",
-      "sha256": "50a3ba450cebf0e1ce20cb65a4d91dcef5f05bdb1647d3fa068ee02490d7b2eb"
+      "sha256": "198642a0cf9541cdf854b904d239e90ecf0702922f40c33a447432e7b88ff15f"
     },
     {
       "path": "docs/ru/getting-started/create-your-first-process.md",
@@ -502,7 +502,7 @@
     },
     {
       "path": "docs/ru/getting-started/installation.md",
-      "sha256": "50b33ac08668848a21bf81bec9ebda243d0a492a4c437ce42810f45b3382f40c"
+      "sha256": "4f2416cf03d814635b76e7a83dc8d7e129756cb7f1905f40777265a09bc6f6f2"
     },
     {
       "path": "docs/ru/getting-started/project-onboarding.md",
@@ -861,6 +861,10 @@
       "sha256": "0caba3dff22ed907155b64a78530dfc65bd24a9962f97c264ada2e5fc304355e"
     },
     {
+      "path": "requirements.txt",
+      "sha256": "71749243f84428fee225bfaa796dca5ef6c1e83a98f6d2a407df615b0390d6fb"
+    },
+    {
       "path": "schemas/artifact.schema.json",
       "sha256": "3af023864239c69bd242a8e04e7a69a56d1b208d3b830a483246c765d5ddbf58"
     },
@@ -870,7 +874,7 @@
     },
     {
       "path": "schemas/assignment.schema.json",
-      "sha256": "1027318ce32c23898d1bd4fcda64f355040a3a1bfee481f385f1bc4adf5dde21"
+      "sha256": "d7bf9c2771e77eec8257e7daa79ad638675aa9bf7b998a2673dc6c928f5f0e8b"
     },
     {
       "path": "schemas/chat-message.schema.json",
@@ -886,7 +890,7 @@
     },
     {
       "path": "schemas/context-capsule.schema.json",
-      "sha256": "0951dc15e8682e79b44f2357a381b7a2783a32481932d3bf34a49ffe85f02635"
+      "sha256": "58347225a0aaf1f79f2f29cb3e7720462b4ce571ab110ba212786d8793ca8282"
     },
     {
       "path": "schemas/context-conflict-report.schema.json",
@@ -903,6 +907,10 @@
     {
       "path": "schemas/documentation-import-plan.schema.json",
       "sha256": "6029c8a5c97fa0b007bc90a82a3245c844c00eaf7a2964f3f7e34867fd7a3418"
+    },
+    {
+      "path": "schemas/entity-update-sites.schema.json",
+      "sha256": "c8eed9699996851a8a7bd34487b05e5cd53772d25d4733ce675b2af2868b28b9"
     },
     {
       "path": "schemas/event-envelope.schema.json",
@@ -927,6 +935,14 @@
     {
       "path": "schemas/hooks.schema.json",
       "sha256": "2b893e4d15e5af33648f16eea859807185faf1f7bdacf30f9930da1bbc5297ee"
+    },
+    {
+      "path": "schemas/installed-subjects.schema.json",
+      "sha256": "c5d43edce509b7c6b0c85baa534abc39876baa21b69bd06a36c67cc0ffd2b21f"
+    },
+    {
+      "path": "schemas/installed-update-sites.schema.json",
+      "sha256": "ed8b76b45ea4c45af5b53dba1190a0693b8ff4d08881b607ac021e212920603c"
     },
     {
       "path": "schemas/iteration.schema.json",
@@ -954,15 +970,19 @@
     },
     {
       "path": "schemas/mcp-definition.schema.json",
-      "sha256": "48e7986f13d47357ace0fcd373c275818012698d758822ea27d40387d011940f"
+      "sha256": "cabead5f1f4ce22ddd0e555274ab0790e41e357b6f7b4c5ed2fcd7ddccb98fef"
     },
     {
       "path": "schemas/mcp-registry.schema.json",
       "sha256": "fb94d704ba79a6061b0383669974505cb17c3de8d9ecd3721e8f90cdd18a0075"
     },
     {
+      "path": "schemas/normalized-update-manifest.schema.json",
+      "sha256": "334c52a30e7a0905b4a990a9ffc4cbe7220b5fd196cc6a4a6e51f59c9f64dc8f"
+    },
+    {
       "path": "schemas/package-manifest.schema.json",
-      "sha256": "4fc8b2ad1be5292af03b5cb5200f23fddf949dc9e8a09cdc8192a1bceb499576"
+      "sha256": "c262411080528b6e47a7bcb6d19c6a570b09aa37be10f74fb10ff3bc9d2c20f5"
     },
     {
       "path": "schemas/package-roots-registry.schema.json",
@@ -978,7 +998,7 @@
     },
     {
       "path": "schemas/platform-contract.schema.json",
-      "sha256": "ca64b2278f6684b1934e7a6481a2a633d57764012b98b9810efafeef8981dccd"
+      "sha256": "7e14fbdfe1fa5b67030d95475dc4c49f38908e1e3051e1ac1d5458592debb56f"
     },
     {
       "path": "schemas/platform-registry.schema.json",
@@ -994,7 +1014,7 @@
     },
     {
       "path": "schemas/process-definition.schema.json",
-      "sha256": "01a4c84baca3e1ae6cbf3be11b05647066fad34782a3e2c0652a2115955eb1a9"
+      "sha256": "4ed3950bb5a6649ee30b7ecd4ea4877d03e7f2afe0b2160fba5d66f17d602f23"
     },
     {
       "path": "schemas/process-event.schema.json",
@@ -1038,7 +1058,7 @@
     },
     {
       "path": "schemas/reusable-template.schema.json",
-      "sha256": "87e424e56a06ae61ef829567a011f8e8d8e906af96054a48866395394d2209a9"
+      "sha256": "8d93e4f5f8efa9298b6d1f32cfebf16425717b6fedfea1d0fdda86e743bdbc6d"
     },
     {
       "path": "schemas/review.schema.json",
@@ -1074,11 +1094,27 @@
     },
     {
       "path": "schemas/tool-definition.schema.json",
-      "sha256": "11bee555a19f296a3aafcaa9d3305e59654835c580d4238ff15820c2ac890ee8"
+      "sha256": "738e82caf2658b23ebba91553cea7906cdaa1e6798444c42963478a219f6e506"
     },
     {
       "path": "schemas/tool-registry.schema.json",
       "sha256": "a7bd7283fceb95557a624530ff756831252efb967e38936d0ef6440eef898101"
+    },
+    {
+      "path": "schemas/update-candidates.schema.json",
+      "sha256": "0414a0c8b1a250a25ed387694ad27753f5aabad06f09c00b1ff349b5309b8fdb"
+    },
+    {
+      "path": "schemas/update-notifications.schema.json",
+      "sha256": "b247de665612d2a3aa8a8f2baf0e1a4bec842fd5e0dd23d0c29f271a8678c65a"
+    },
+    {
+      "path": "schemas/update-site-overrides.schema.json",
+      "sha256": "acc4cea32f051a59a51118be5379350efbbb4dfb79bfe466884b511c5c5522ed"
+    },
+    {
+      "path": "schemas/update-source-registry.schema.json",
+      "sha256": "17fa7cb6a3c6ef3c3cea028fe7a55cc5b02fdd235dfc2b669f1946b64efc1e09"
     },
     {
       "path": "schemas/workplace-init-answers.schema.json",
@@ -1086,7 +1122,7 @@
     },
     {
       "path": "schemas/workplace.schema.json",
-      "sha256": "04d617e867205f7adbd025d459da80536a03bed7df8bf168e83abdfd60e893e1"
+      "sha256": "7665647dcf67a91bb6183133f3d6091a879bce99ddf50a761f3a447e2e8f4f04"
     },
     {
       "path": "schemas/wtaicc-outbox-payload.schema.json",
@@ -1146,7 +1182,7 @@
     },
     {
       "path": "templates/assignment-task.yaml",
-      "sha256": "7f2c362a918df97516c427b36068dee5895472d66251720bbb1983198bf3850f"
+      "sha256": "99f0ffe09966a6500e751535269d3a8cf0e22a4294e2629c01e8e1d79ef8e5d5"
     },
     {
       "path": "templates/assignment-template.md",
@@ -1317,6 +1353,10 @@
       "sha256": "374a4dc9dad49e4d92936822580cde2951f783907f2e7d2859af79afa8cccb44"
     },
     {
+      "path": "templates/registries/installed-subjects.yaml",
+      "sha256": "9a17a8fd31ca3cb433f8f4fdc5e9225a7de06e486060a5196ffd29a647c829ff"
+    },
+    {
       "path": "templates/registries/knowledge-roots.yaml",
       "sha256": "9826fc06d99b5293d2ad9284a6bff018788ef86b4d2768f02238abf9b6e77755"
     },
@@ -1341,6 +1381,14 @@
       "sha256": "f5a75644934fd392e1e347577010dc031d1b429ddf18f08134c5667a02ac800e"
     },
     {
+      "path": "templates/registries/update-site-overrides.yaml",
+      "sha256": "6007119f9a0dd430d3433ff0c88c3d11d3c20e0a29632ee4a03898be9491007b"
+    },
+    {
+      "path": "templates/registries/update-sources.yaml",
+      "sha256": "9644595d3b159e27319845ae3eacbbaabbe75061edb7fea9698e0c416492bcb0"
+    },
+    {
       "path": "templates/repository-map-template.md",
       "sha256": "991b3d435e98919fcfbdb9c6b0fe2372023755428ea37d1c4422971f3aa19405"
     },
@@ -1363,6 +1411,10 @@
     {
       "path": "templates/run.yaml",
       "sha256": "ee3f892421ba6b5c3ce1655a6102415bf5297d134780c0dfef59749b3a0d9323"
+    },
+    {
+      "path": "templates/runtime/update/installed-update-sites.json",
+      "sha256": "d71ba12f3d80397be93f48ea3be36ae7e0f9a65329492c71d19acc97f154aa12"
     },
     {
       "path": "templates/session-metadata-template.yaml",
@@ -1406,7 +1458,7 @@
     },
     {
       "path": "templates/workplace.yaml",
-      "sha256": "61cb395ed9e70c7277c17d38a0b5b00e38b717e2807aff865d81adddbda4c9aa"
+      "sha256": "4eaf2da0d540f8fbd38e9ff4fd68e2452586f5e30667e7ca7406ad912e92fe49"
     },
     {
       "path": "tools/README.md",
@@ -1414,7 +1466,7 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "a965c2019b507beea95e83a0dd09aadbc3e59d4e9ba1e4303d40702e263fde93"
+      "sha256": "c468a9c97f953a0342aeeb879585017b058d9e14eb6852c503cac2af30fa2dba"
     },
     {
       "path": "tools/processforge_subprocess.py",
@@ -1431,6 +1483,10 @@
     {
       "path": "tools/smoke_manifest_driven_platforms.py",
       "sha256": "c2fde5b6e9f71df4a31127f35461e7f48647d4a82b44c5c99a3e435c9fc129b9"
+    },
+    {
+      "path": "tools/smoke_multiagent_assignment_contract.py",
+      "sha256": "d50abfe12ff3b4c88a42a466be5dda8bd822e6a59143f297c9ea4829356d44aa"
     },
     {
       "path": "tools/smoke_platform_inheritance.py",
@@ -1453,16 +1509,24 @@
       "sha256": "3c9f3e9e1f5e03e74e1fcbd9ce17edb26dde6327644c554162a3b1c5866337bb"
     },
     {
+      "path": "tools/smoke_update_framework_readonly.py",
+      "sha256": "e36457bb10eeb8b4d42c4036f66b145c98c768725f3875b531ac12a9b5086083"
+    },
+    {
+      "path": "tools/smoke_update_framework_validation.py",
+      "sha256": "c204a9e86b5643c39804e200e37667bd08b753934f27dd90b40e3acb873e7ed9"
+    },
+    {
       "path": "tools/validate-process-forge-checksums.py",
-      "sha256": "85bd55ec4d0e6fc6a90bdbe3e367997c004acd9e6eae0a0e8a662b8001bed975"
+      "sha256": "0d8c361beb8057f87731fcbf0e3806e5d1a84f60c37be571e4ad614d860aff34"
     },
     {
       "path": "tools/validate-process-forge-schemas.py",
-      "sha256": "6d636900b978699ab5c52c7ccc541eb52e933df7e06e49c3cfd77e73091a371f"
+      "sha256": "152d8f5276c214e9d8389eacedb72546d8abcdf4942f8f457942904e5291f5ef"
     },
     {
       "path": "tools/validate-public-cleanliness.py",
-      "sha256": "7807cd2519ef143a6f707c0401a5d3692bf066eec0e77f97e838800af7f54c3d"
+      "sha256": "f1eb9b491aec2513efb0d4c467602bb12a6ab4da9b35b1f7a88696ddce742ec0"
     },
     {
       "path": "updates/migrations/0.1.0-linked-workplace.md",
@@ -1477,7 +1541,7 @@
       "sha256": "81b436180a2b3276df5c9b9ea95d8cba646fa908424c129ccb4faccbcd3bf00b"
     }
   ],
-  "generated_at": "2026-07-20T07:09:54Z",
+  "generated_at": "2026-07-20T18:44:19Z",
   "name": "processforge",
   "version": "1.0.0"
 }

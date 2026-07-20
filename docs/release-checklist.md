@@ -12,8 +12,8 @@ python tools/smoke_first_run.py
 python tools/smoke_resource_management.py
 python tools/smoke_resource_authoring_processes.py
 python bin/pf.py release-test --root .
-python bin/pf.py release-pack --root . --output dist/processforge-release.zip
-python bin/pf.py release-archive-test --archive dist/processforge-release.zip
+python bin/pf.py release-pack --root . --output dist/processforge-v1.0.0.zip
+python bin/pf.py release-archive-test --archive dist/processforge-v1.0.0.zip
 git diff --check
 ```
 

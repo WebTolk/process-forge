@@ -324,7 +324,6 @@ Next steps:
 Inspect existing CLI generation/validation paths, schemas, templates, and process definitions before editing.
 Handoff:
 None.
-
 ## 2026-07-20 14:24 - worker-update-framework-fixes
 
 Task:
@@ -366,6 +365,7 @@ follow-up refresh checksums with
 `python tools\validate-process-forge-checksums.py --root . --write`.
 Handoff:
 None.
+
 ## 2026-07-20 13:24 - update-framework-audit
 
 Task:
@@ -1133,5 +1133,103 @@ slice preserved them and added only bounded update-framework sections.
 Next steps:
 Future slices can implement provider fetch/discovery, candidate merge,
 download, verification, install planning, and approved installation.
+Handoff:
+None.
+
+## 2026-07-20 21:48 - release-archive-sync-multiagent-smoke-fix
+
+Task:
+Sync the 1.0.0 release archive with current source, fix the multiagent
+assignment smoke portability issue, remove stale dist artifacts, and write
+dogfooding evidence.
+Files changed:
+`tools/processforge.py`, `tools/smoke_multiagent_assignment_contract.py`,
+`tools/smoke_update_framework_readonly.py`, agent release docs, checksum
+inventory, `dist/processforge-v1.0.0.*`, `.pf` report/review/handoff, and this
+log.
+Artifacts changed:
+`.pf/artifacts/release-archive-sync-multiagent-smoke-fix-report.md`,
+`.pf/reviews/release-archive-sync-multiagent-smoke-fix-review.md`,
+`.pf/handoffs/release-archive-sync-multiagent-smoke-fix-handoff.md`,
+`.pf/artifacts/checksum-inventory.sha256`.
+Templates used:
+Project-local ProcessForge log, report, review, and handoff conventions.
+Tools used:
+Serena search, read-only subagent audit, `apply_patch`, release clean,
+smoke tests, schema/public/checksum validators, release-test, release-pack,
+release-archive-test, archive inspection, boundary grep, and git diff checks.
+Decisions:
+The exact-overlap smoke now uses identical normalized `tools/processforge.py`
+paths, removing filesystem case-sensitivity from the universal smoke. The
+`update sources-list --validate` CLI surface was added as an alias while
+preserving existing `update sources`. Release cleanup removes `.pf/runtime/`
+but preserves release runtime fixtures under `templates/runtime/update/`.
+Risks:
+POSIX was not executed in this Windows workspace. `doctor-project` keeps
+non-blocking warnings for optional onboarding skeleton files after runtime
+cleanup.
+Next steps:
+Review the final git diff and commit the accepted release sync slice.
+Handoff:
+`.pf/handoffs/release-archive-sync-multiagent-smoke-fix-handoff.md`.
+
+## 2026-07-20 22:26 - audit-hypotheses-verification
+
+Task:
+Verify external audit hypotheses H1-H5, fix only confirmed problems, retest,
+rebuild the canonical release archive, and record dogfooding evidence.
+Files changed:
+`tools/smoke_update_framework_validation.py`, checksum inventory,
+`dist/processforge-v1.0.0.*`, `.pf` report/review/handoff, and this log.
+Artifacts changed:
+`.pf/artifacts/audit-hypotheses-verification-report.md`,
+`.pf/reviews/audit-hypotheses-verification-review.md`,
+`.pf/handoffs/audit-hypotheses-verification-handoff.md`,
+`.pf/artifacts/checksum-inventory.sha256`.
+Templates used:
+Project-local ProcessForge log, report, review, and handoff conventions.
+Tools used:
+Serena search, timed subprocess diagnostics, `apply_patch`, release clean,
+smoke tests, schema/public/checksum validators, release-test, release-pack,
+release-archive-test, archive inspection, boundary grep, and git diff checks.
+Decisions:
+H1 was partial and fixed only in the smoke: timeout diagnostics, RUN step
+output, and safe registry reset before negative rebuild validation. H4 was
+handled by `clean --release`. H2, H3, and H5 did not require code changes.
+Risks:
+POSIX was not executed in this Windows workspace. Release tests can recreate
+private `.pf/runtime`, so clean must run before final packaging.
+Next steps:
+Review the combined working tree and commit the accepted release/audit slices.
+Handoff:
+`.pf/handoffs/audit-hypotheses-verification-handoff.md`.
+
+## 2026-07-20 22:46 - pyyaml-dependency-surface
+
+Task:
+Add PyYAML to ProcessForge dependencies across release and documentation
+artifacts so YAML-dependent scripts do not fail in fresh environments.
+Files changed:
+`requirements.txt`, README EN/RU, installation docs EN/RU, runtime model docs
+EN/RU, release/checksum/public/schema validators, `tools/processforge.py`,
+checksum inventory, `dist/processforge-v1.0.0.*`, and this log.
+Artifacts changed:
+`.pf/artifacts/checksum-inventory.sha256`, `dist/processforge-v1.0.0.zip`,
+`dist/processforge-v1.0.0.manifest.json`.
+Templates used:
+Project-local ProcessForge log convention.
+Tools used:
+Serena activation, targeted `rg`, `apply_patch`, py_compile, schema/public/
+checksum validators, release-test, release-pack, release-archive-test, archive
+inspection, and release clean.
+Decisions:
+`requirements.txt` is now the machine-readable Python dependency artifact and
+is included in release root files. Runtime and release-check docs point to it
+and name `PyYAML` as the current dependency.
+Risks:
+No package manager metadata existed before this change; `requirements.txt` is
+the current dependency contract unless a future packaging format is introduced.
+Next steps:
+Review and commit with the surrounding release/audit changes.
 Handoff:
 None.

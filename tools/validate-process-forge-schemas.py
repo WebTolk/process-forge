@@ -21,6 +21,7 @@ REQUIRED_FILES = [
     "CHANGELOG.md",
     "LICENSE",
     "VERSION",
+    "requirements.txt",
     ".pf/AGENTS.md",
     ".pf/process-forge.yaml",
     ".pf/hooks.yaml",

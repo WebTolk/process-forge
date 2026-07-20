@@ -41,8 +41,8 @@ def smoke_exact_overlap() -> None:
             "title": "Task A",
             "process": "software-feature-development",
             "status": "in_progress",
-            "allowed_files": ["Tools/ProcessForge.py"],
-            "ownership": {"owner_id": "task-a", "writer": True, "owned_files": ["Tools/ProcessForge.py"], "owned_globs": []},
+            "allowed_files": ["tools/processforge.py"],
+            "ownership": {"owner_id": "task-a", "writer": True, "owned_files": ["tools/processforge.py"], "owned_globs": []},
         },
     )
     result = processforge.validate_assignment_scope_overlaps(root, {"id": "task-b", "allowed_files": ["tools/processforge.py"]})

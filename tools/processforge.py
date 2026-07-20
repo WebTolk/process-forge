@@ -3310,7 +3310,7 @@ def command_first_run(args: argparse.Namespace) -> int:
 
 
 RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates"]
-RELEASE_ROOT_FILES = ["README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md", "CHANGELOG.md", "LICENSE", "VERSION", ".gitignore", ".processforge-releaseignore"]
+RELEASE_ROOT_FILES = ["README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md", "CHANGELOG.md", "LICENSE", "VERSION", "requirements.txt", ".gitignore", ".processforge-releaseignore"]
 RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml", ".pf/artifacts/checksum-inventory.sha256"]
 RELEASE_REQUIRED_PATHS = [
     "README.md",
@@ -3319,6 +3319,7 @@ RELEASE_REQUIRED_PATHS = [
     "QUICKSTART.ru.md",
     "CHANGELOG.md",
     "LICENSE",
+    "requirements.txt",
     "AGENTS.md",
     ".gitignore",
     ".processforge-releaseignore",
@@ -3667,6 +3668,9 @@ def safe_remove_generated_path(path: Path, root: Path) -> bool:
         resolved_path.relative_to(resolved_root)
     except ValueError:
         return False
+    if path.is_dir() and resolved_path == (resolved_root / ".pf" / "runtime"):
+        shutil.rmtree(path)
+        return True
     if path.is_dir() and path.name in RELEASE_GENERATED_DIRS:
         shutil.rmtree(path)
         return True
@@ -11437,7 +11441,7 @@ def build_parser() -> argparse.ArgumentParser:
     release_check.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
     release_check.set_defaults(func=command_release_check)
 
-    release_test = sub.add_parser("release-test", help="Run the v0.1 release validation suite.")
+    release_test = sub.add_parser("release-test", help="Run the release validation suite.")
     release_test.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
     release_test.set_defaults(func=command_release_test)
 
@@ -11641,6 +11645,12 @@ def build_parser() -> argparse.ArgumentParser:
     update_sources.add_argument("--validate", action="store_true", help="Validate global bootstrap update sources.")
     update_sources.add_argument("--json", action="store_true", help="Print JSON for --list.")
     update_sources.set_defaults(func=command_update_sources)
+
+    update_sources_list = update_sub.add_parser("sources-list", help="List or validate global bootstrap update sources.")
+    update_sources_list.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_sources_list.add_argument("--validate", action="store_true", help="Validate global bootstrap update sources before listing.")
+    update_sources_list.add_argument("--json", action="store_true", help="Print JSON.")
+    update_sources_list.set_defaults(func=command_update_sources, list=True)
 
     entity_sources = update_sub.add_parser("entity-sources", help="Read derived installed entity update sources.")
     entity_sources_sub = entity_sources.add_subparsers(dest="entity_sources_command", required=True)
