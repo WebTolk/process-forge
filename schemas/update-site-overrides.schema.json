@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/update-site-overrides.schema.json",
+  "title": "ProcessForge Update Site Overrides",
+  "type": "object",
+  "required": ["schema_version", "overrides"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "updated_at": { "type": ["string", "null"] },
+    "overrides": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/override" }
+    }
+  },
+  "$defs": {
+    "envRef": { "type": "string", "pattern": "^([A-Z_][A-Z0-9_]*|\\$\\{[A-Z_][A-Z0-9_]*\\}|(auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$" },
+    "siteId": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+$" },
+    "envMap": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/envRef" }
+    },
+    "preservedLocal": {
+      "type": "object",
+      "properties": {
+        "auth_ref": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+        "headers_env": { "$ref": "#/$defs/envMap" },
+        "query_env": { "$ref": "#/$defs/envMap" },
+        "custom_headers_env": { "$ref": "#/$defs/envMap" },
+        "channel_override": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "override": {
+      "type": "object",
+      "required": ["site_id"],
+      "properties": {
+        "site_id": { "$ref": "#/$defs/siteId" },
+        "enabled": { "type": "boolean" },
+        "channels": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "auth_ref": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+        "headers_env": { "$ref": "#/$defs/envMap" },
+        "query_env": { "$ref": "#/$defs/envMap" },
+        "custom_headers_env": { "$ref": "#/$defs/envMap" },
+        "channel_override": { "type": "string", "minLength": 1 },
+        "preserved_local": { "$ref": "#/$defs/preservedLocal" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

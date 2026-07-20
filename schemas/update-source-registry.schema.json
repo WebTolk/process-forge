@@ -27,6 +27,8 @@
   },
   "$defs": {
     "sourceId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+    "envRef": { "type": "string", "pattern": "^([A-Z_][A-Z0-9_]*|\\$\\{[A-Z_][A-Z0-9_]*\\}|(auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$" },
+    "remoteUrl": { "type": "string", "pattern": "^https?://[^\\s/?#]+[^\\s]*$" },
     "subjectType": {
       "enum": [
         "*",
@@ -94,18 +96,20 @@
         "enabled": { "type": "boolean" },
         "provider": { "$ref": "#/$defs/provider" },
         "priority": { "type": "integer" },
-        "url": { "type": "string" },
+        "url": { "$ref": "#/$defs/remoteUrl" },
         "path": { "type": "string" },
         "owner": { "type": "string" },
         "repo": { "type": "string" },
-        "api_base_url": { "type": "string" },
+        "api_base_url": { "$ref": "#/$defs/remoteUrl" },
         "channels": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "include_prereleases": { "type": "boolean" },
         "subjects": { "type": "array", "items": { "$ref": "#/$defs/subjectFilter" } },
         "asset_patterns": { "$ref": "#/$defs/assetPatterns" },
         "auth": { "type": "object", "additionalProperties": true },
-        "auth_ref": { "type": "string" },
-        "headers_env": { "type": "object", "additionalProperties": { "type": "string" } },
+        "auth_ref": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+        "headers_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
+        "query_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
+        "custom_headers_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
         "trust": { "$ref": "#/$defs/trust" }
       },
       "additionalProperties": true

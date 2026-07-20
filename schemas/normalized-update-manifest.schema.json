@@ -36,6 +36,8 @@
       },
       "additionalProperties": true
     },
+    "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+    "artifactUrl": { "type": "string", "pattern": "^(?:https?://[^\\s/?#]+[^\\s]*|file://[^\\s]+)$" },
     "version": {
       "type": "object",
       "required": ["version", "channels", "stability", "prerelease", "yanked", "source", "artifacts"],
@@ -58,13 +60,13 @@
     },
     "artifact": {
       "type": "object",
-      "required": ["type", "format", "url"],
+      "required": ["type", "format", "url", "sha256"],
       "properties": {
         "type": { "type": "string", "minLength": 1 },
         "format": { "type": "string", "minLength": 1 },
-        "url": { "type": "string", "minLength": 1 },
+        "url": { "$ref": "#/$defs/artifactUrl" },
         "size": { "type": "integer", "minimum": 0 },
-        "sha256": { "type": "string" },
+        "sha256": { "$ref": "#/$defs/sha256" },
         "signature": { "type": "object", "additionalProperties": true },
         "provenance_url": { "type": "string" }
       },

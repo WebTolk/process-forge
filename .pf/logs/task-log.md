@@ -325,6 +325,98 @@ Inspect existing CLI generation/validation paths, schemas, templates, and proces
 Handoff:
 None.
 
+## 2026-07-20 14:24 - worker-update-framework-fixes
+
+Task:
+Execute `.pf/assignments/task-001-fix-update-framework-validation.yaml`.
+Files changed:
+`tools/processforge.py`, `tools/validate-process-forge-schemas.py`,
+`tools/smoke_update_framework_validation.py`,
+`schemas/update-source-registry.schema.json`,
+`schemas/entity-update-sites.schema.json`,
+`schemas/normalized-update-manifest.schema.json`,
+`schemas/update-site-overrides.schema.json`,
+`schemas/package-manifest.schema.json`,
+`schemas/process-definition.schema.json`,
+`schemas/tool-definition.schema.json`,
+`schemas/mcp-definition.schema.json`,
+`schemas/reusable-template.schema.json`,
+`schemas/platform-contract.schema.json`,
+`docs/concepts/processforge-self-update.md`,
+`.pf/artifacts/update-framework-fixes-report-20260720.md`, and this log.
+Artifacts changed:
+`.pf/artifacts/update-framework-fixes-report-20260720.md`.
+Tools used:
+Serena search, targeted PowerShell reads/searches, `apply_patch`,
+`py_compile`, schema validation, and update framework smokes.
+Decisions:
+Kept the slice read-only. `installed-subjects.yaml` remains future local
+installed-state truth, with only safe version annotation for scanned manifests.
+Global bootstrap sources require explicit `priority`; entity update-site
+priority remains optional to match the current entity validator.
+Risks:
+Full fetch/discovery/candidate/download/install/rollback CLI remains
+intentionally unimplemented. Update-site schema copies are now closer but still
+duplicated across entity schemas until a later shared-schema extraction.
+Checksum inventory is stale, but `.pf/artifacts/checksum-inventory.sha256` is
+outside this assignment's write scope, so checksum `--write` was not run.
+Next steps:
+Extend scope to `.pf/artifacts/checksum-inventory.sha256` or let the owning
+follow-up refresh checksums with
+`python tools\validate-process-forge-checksums.py --root . --write`.
+Handoff:
+None.
+## 2026-07-20 13:24 - update-framework-audit
+
+Task:
+Audit the current ProcessForge update framework after the 1.0.0 update
+framework commit.
+Files analyzed:
+`tools/processforge.py`, update-related schemas, update templates,
+`tools/validate-process-forge-schemas.py`, `tools/smoke_update_framework_readonly.py`,
+`docs/concepts/processforge-self-update.md`, and the implementation spec.
+Artifacts changed:
+`.pf/artifacts/update-framework-audit-20260720.md`,
+`.pf/artifacts/update-framework-audit-issues-20260720.md`,
+`.pf/assignments/task-001-update-framework-audit.yaml`, and this log.
+Tools used:
+Serena targeted search, `rg`, focused CLI negative checks with temporary
+manifests/registries, and `apply_patch`.
+Findings:
+The read-only framework slice is present, but validation has several false
+PASS cases: incomplete normalized manifests, malformed source URLs, invalid
+SHA-256 values, HTTP artifact URLs, missing source priority, and raw-looking
+`headers_env` values. `installed-subjects.yaml` is declared but not consumed,
+and `update-site-overrides.yaml` has no schema validation.
+Next steps:
+Use `.pf/artifacts/update-framework-audit-issues-20260720.md` as the fix
+backlog before implementing remote discovery, download, install, or rollback.
+## 2026-07-20 13:42 - update-framework-fixes
+
+Task:
+Fix validation and contract gaps from the update framework audit.
+Agent:
+Darwin / `worker-update-framework-fixes`.
+Files changed:
+`tools/processforge.py`, update schemas, entity update-site schema copies,
+`tools/validate-process-forge-schemas.py`,
+`tools/smoke_update_framework_validation.py`,
+`docs/concepts/processforge-self-update.md`, checksum inventory, and process
+artifacts.
+Artifacts changed:
+`.pf/artifacts/update-framework-fixes-report-20260720.md`.
+Decisions:
+Kept the update framework in the current read-only boundary. Did not implement
+network fetch, candidate merge, download, install, rollback, or project `.pf`
+migration. Added validation hardening and regression coverage for audit false
+PASS cases.
+Verification:
+`py_compile`, schema validation, public cleanliness, checksum validation,
+`smoke_update_framework_readonly`, `smoke_update_framework_validation`, and
+full `release-test` passed. `release-test` now includes the validation smoke.
+Next steps:
+Close the fix task/run after final task/run doctor checks.
+
 ## 2026-07-15 15:50 - codex
 
 Task:

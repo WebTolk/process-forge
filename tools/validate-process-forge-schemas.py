@@ -149,6 +149,7 @@ REQUIRED_FILES = [
     "schemas/mcp-registry.schema.json",
     "schemas/update-source-registry.schema.json",
     "schemas/entity-update-sites.schema.json",
+    "schemas/update-site-overrides.schema.json",
     "schemas/installed-update-sites.schema.json",
     "schemas/normalized-update-manifest.schema.json",
     "schemas/installed-subjects.schema.json",
@@ -530,6 +531,8 @@ def validate_yaml_schema_files(root: Path) -> None:
         mappings.append((root / "templates" / "registries" / "update-sources.yaml", "update-source-registry.schema.json"))
     if (root / "templates" / "registries" / "installed-subjects.yaml").is_file():
         mappings.append((root / "templates" / "registries" / "installed-subjects.yaml", "installed-subjects.schema.json"))
+    if (root / "templates" / "registries" / "update-site-overrides.yaml").is_file():
+        mappings.append((root / "templates" / "registries" / "update-site-overrides.yaml", "update-site-overrides.schema.json"))
     for path in [root / "templates" / "platform-contract.yaml", root / "templates" / "platform-contract-example-parent.yaml"]:
         if path.is_file():
             mappings.append((path, "platform-contract.schema.json"))

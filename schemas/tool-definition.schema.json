@@ -15,6 +15,8 @@
     "healthcheck": { "type": "object", "additionalProperties": true }
   },
   "$defs": {
+    "envRef": { "type": "string", "pattern": "^([A-Z_][A-Z0-9_]*|\\$\\{[A-Z_][A-Z0-9_]*\\}|(auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$" },
+    "remoteUrl": { "type": "string", "pattern": "^https?://[^\\s/?#]+[^\\s]*$" },
     "updateSite": {
       "type": "object",
       "required": ["id", "enabled", "type"],
@@ -23,12 +25,18 @@
         "enabled": { "type": "boolean" },
         "type": { "type": "string", "minLength": 1 },
         "priority": { "type": "integer" },
-        "url": { "type": "string" },
+        "url": { "$ref": "#/$defs/remoteUrl" },
         "path": { "type": "string" },
         "owner": { "type": "string" },
         "repo": { "type": "string" },
+        "api_base_url": { "$ref": "#/$defs/remoteUrl" },
         "channels": { "type": "array", "items": { "type": "string" } },
-        "auth_ref": { "type": "string" },
+        "include_prereleases": { "type": "boolean" },
+        "asset_patterns": { "type": "object", "additionalProperties": true },
+        "auth_ref": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+        "headers_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
+        "query_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
+        "custom_headers_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
         "trust": { "type": "object", "additionalProperties": true }
       },
       "additionalProperties": true

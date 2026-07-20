@@ -1,0 +1,77 @@
+schema_version: 1
+id: task-001-update-framework-audit
+title: Audit update framework
+run_id: pf-update-framework-audit-20260720
+process: testing
+status: done
+created_at: '2026-07-20T09:19:32Z'
+updated_at: '2026-07-20T09:25:49Z'
+objective: Review update framework implementation, schemas, templates, CLI commands, tests, and known limitations; produce a durable audit report with findings and recommendations.
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Update framework audit completed; findings recorded in report and issues backlog.
+  artifacts:
+    - .pf/artifacts/update-framework-audit-20260720.md
+    - .pf/artifacts/update-framework-audit-issues-20260720.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/update-framework-implementation-spec-20260720.md
+  - tools/processforge.py
+  - schemas/update-source-registry.schema.json
+  - schemas/entity-update-sites.schema.json
+  - schemas/normalized-update-manifest.schema.json
+  - tools/smoke_update_framework_readonly.py
+allowed_files:
+  - .pf/artifacts/update-framework-audit-20260720.md
+  - .pf/artifacts/update-framework-audit-issues-20260720.md
+  - .pf/logs/task-log.md
+  - .pf/runs/pf-update-framework-audit-20260720/*
+forbidden_files:
+  - tools/processforge.py
+  - schemas/*.json
+  - templates/**/*.yaml
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: auditor
+  writer: true
+  owned_files:
+    - .pf/artifacts/update-framework-audit-20260720.md
+    - .pf/artifacts/update-framework-audit-issues-20260720.md
+    - .pf/logs/task-log.md
+    - .pf/runs/pf-update-framework-audit-20260720/*
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/update-framework-audit-20260720.md
+    - .pf/artifacts/update-framework-audit-issues-20260720.md
+    - .pf/logs/task-log.md
+    - .pf/runs/pf-update-framework-audit-20260720/*
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: update-framework-audit-report
+    type: unspecified
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/update-framework-audit-20260720.md
+  format: concise_markdown
+  include:
+    - update-framework-audit-report

@@ -3789,6 +3789,7 @@ def command_release_test(args: argparse.Namespace) -> int:
         ReleaseCommand("smoke_resource_management", [sys.executable, str(root / "tools" / "smoke_resource_management.py")], 180),
         ReleaseCommand("smoke_resource_authoring", [sys.executable, str(root / "tools" / "smoke_resource_authoring_processes.py")], 180),
         ReleaseCommand("smoke_update_framework_readonly", [sys.executable, str(root / "tools" / "smoke_update_framework_readonly.py")], 180),
+        ReleaseCommand("smoke_update_framework_validation", [sys.executable, str(root / "tools" / "smoke_update_framework_validation.py")], 180),
         ReleaseCommand("smoke_manifest_driven_platforms", [sys.executable, str(root / "tools" / "smoke_manifest_driven_platforms.py")], 180),
         ReleaseCommand("smoke_platform_inheritance", [sys.executable, str(root / "tools" / "smoke_platform_inheritance.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
@@ -6767,8 +6768,8 @@ def assignment_patterns_overlap(left: str, right: str, repo_files: list[str]) ->
         return True, "same_glob"
     if any(fnmatch.fnmatch(item, left_key) and fnmatch.fnmatch(item, right_key) for item in files):
         return True, "glob_matches_same_file"
-    left_prefix = re.split(r"[*?\[]", left_key, 1)[0]
-    right_prefix = re.split(r"[*?\[]", right_key, 1)[0]
+    left_prefix = re.split(r"[*?\[]", left_key, maxsplit=1)[0]
+    right_prefix = re.split(r"[*?\[]", right_key, maxsplit=1)[0]
     if left_prefix and right_prefix and (left_prefix.startswith(right_prefix) or right_prefix.startswith(left_prefix)):
         return True, "possible_glob_overlap"
     return False, ""
@@ -9293,6 +9294,12 @@ UPDATE_SOURCE_LOCAL_KEYS = [
     "channel_override",
 ]
 
+SHA256_HEX_RE = re.compile(r"^[A-Fa-f0-9]{64}$")
+ENV_REFERENCE_RE = re.compile(r"^(?:[A-Z_][A-Z0-9_]*|\$\{[A-Z_][A-Z0-9_]*\}|(?:auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$")
+CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
+UPDATE_REMOTE_PROVIDERS = {"processforge_json", "generic_http_directory", "tuf_repository"}
+UPDATE_RELEASE_PROVIDERS = {"github_releases", "gitverse_releases", "gitlab_releases"}
+
 
 def update_workplace_root(raw: str) -> Path:
     path = Path(raw).expanduser().resolve()
@@ -9357,6 +9364,149 @@ def source_requires_https(source: dict[str, Any], defaults: dict[str, Any] | Non
     return True
 
 
+def update_schema_type_matches(value: Any, expected: str) -> bool:
+    if expected == "object":
+        return isinstance(value, dict)
+    if expected == "array":
+        return isinstance(value, list)
+    if expected == "string":
+        return isinstance(value, str)
+    if expected == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if expected == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if expected == "boolean":
+        return isinstance(value, bool)
+    if expected == "null":
+        return value is None
+    return True
+
+
+def update_resolve_schema_ref(schema: dict[str, Any], ref: str) -> dict[str, Any]:
+    if not ref.startswith("#/"):
+        raise ValueError(f"unsupported external ref {ref}")
+    node: Any = schema
+    for part in ref[2:].split("/"):
+        node = node[part]
+    if not isinstance(node, dict):
+        raise ValueError(f"ref {ref} does not resolve to schema object")
+    return node
+
+
+def validate_update_instance_against_schema(value: Any, node: dict[str, Any], root_schema: dict[str, Any], path: str) -> list[str]:
+    errors: list[str] = []
+    if "$ref" in node:
+        return validate_update_instance_against_schema(value, update_resolve_schema_ref(root_schema, str(node["$ref"])), root_schema, path)
+
+    expected_type = node.get("type")
+    if isinstance(expected_type, list):
+        if not any(update_schema_type_matches(value, item) for item in expected_type):
+            errors.append(f"{path}: expected one of {expected_type}, got {type(value).__name__}")
+            return errors
+    elif isinstance(expected_type, str) and not update_schema_type_matches(value, expected_type):
+        errors.append(f"{path}: expected {expected_type}, got {type(value).__name__}")
+        return errors
+
+    if "const" in node and value != node["const"]:
+        errors.append(f"{path}: expected const {node['const']!r}")
+    if "enum" in node and value not in node["enum"]:
+        errors.append(f"{path}: expected one of {node['enum']!r}")
+    if "minimum" in node and isinstance(value, (int, float)) and value < node["minimum"]:
+        errors.append(f"{path}: expected minimum {node['minimum']}")
+    if "minLength" in node and isinstance(value, str) and len(value) < node["minLength"]:
+        errors.append(f"{path}: expected minLength {node['minLength']}")
+    if "minItems" in node and isinstance(value, list) and len(value) < node["minItems"]:
+        errors.append(f"{path}: expected minItems {node['minItems']}")
+    if "pattern" in node and isinstance(value, str) and not re.fullmatch(str(node["pattern"]), value):
+        errors.append(f"{path}: does not match pattern {node['pattern']!r}")
+
+    if isinstance(value, dict):
+        required = node.get("required", [])
+        if isinstance(required, list):
+            for key in required:
+                if key not in value:
+                    errors.append(f"{path}: missing required key {key}")
+        properties = node.get("properties", {})
+        if isinstance(properties, dict):
+            for key, child_schema in properties.items():
+                if key in value and isinstance(child_schema, dict):
+                    errors.extend(validate_update_instance_against_schema(value[key], child_schema, root_schema, f"{path}.{key}"))
+        additional = node.get("additionalProperties", True)
+        if additional is False and isinstance(properties, dict):
+            for key in value:
+                if key not in properties:
+                    errors.append(f"{path}: unexpected key {key}")
+        elif isinstance(additional, dict) and isinstance(properties, dict):
+            for key, child_schema in value.items():
+                if key not in properties:
+                    errors.extend(validate_update_instance_against_schema(child_schema, additional, root_schema, f"{path}.{key}"))
+
+    if isinstance(value, list):
+        items_schema = node.get("items")
+        if isinstance(items_schema, dict):
+            for index, item in enumerate(value):
+                errors.extend(validate_update_instance_against_schema(item, items_schema, root_schema, f"{path}[{index}]"))
+
+    return errors
+
+
+def append_json_schema_checks(checks: list[Check], data: Any, schema_name: str, label: str) -> None:
+    schema_path = ROOT / "schemas" / schema_name
+    try:
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        checks.append(check("FAIL", f"{label} schema {schema_name} could not be loaded: {exc}"))
+        return
+    try:
+        errors = validate_update_instance_against_schema(data, schema, schema, "$")
+    except (KeyError, ValueError) as exc:
+        checks.append(check("FAIL", f"{label} schema {schema_name} is unsupported: {exc}"))
+        return
+    for message in errors:
+        checks.append(check("FAIL", f"{label} schema validation failed: {message}"))
+
+
+def valid_remote_url_shape(url: str, *, require_https: bool) -> tuple[bool, str]:
+    if CONTROL_CHAR_RE.search(url) or any(char.isspace() for char in url):
+        return False, "must not contain whitespace or control characters"
+    parsed = urlparse(url)
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        return False, "must be a valid remote URL with scheme and host"
+    if require_https and parsed.scheme.lower() != "https":
+        return False, "must use https unless local trust policy disables require_https"
+    return True, ""
+
+
+def valid_artifact_url_shape(url: str, artifact: dict[str, Any]) -> tuple[bool, str]:
+    if CONTROL_CHAR_RE.search(url) or any(char.isspace() for char in url):
+        return False, "must not contain whitespace or control characters"
+    parsed = urlparse(url)
+    if parsed.scheme.lower() == "file":
+        if parsed.path or parsed.netloc:
+            return True, ""
+        return False, "file URL must include a path"
+    if parsed.scheme.lower() in {"http", "https"}:
+        if not parsed.netloc:
+            return False, "remote URL must include a host"
+        if source_requires_https(artifact) and parsed.scheme.lower() != "https":
+            return False, "remote URL must use https unless local trust policy disables require_https"
+        return True, ""
+    return False, "must be an https or file URL"
+
+
+def append_env_reference_checks(checks: list[Check], source: dict[str, Any], label: str) -> None:
+    for field in ("headers_env", "query_env", "custom_headers_env"):
+        values = source.get(field)
+        if values is None:
+            continue
+        if not isinstance(values, dict):
+            checks.append(check("FAIL", f"{label} {field} must be an object"))
+            continue
+        for key, value in values.items():
+            if not isinstance(value, str) or not ENV_REFERENCE_RE.fullmatch(value):
+                checks.append(check("FAIL", f"{label} {field}.{key} must be an env variable name or auth_ref:/secret_ref: reference"))
+
+
 def append_update_source_checks(
     checks: list[Check],
     source: Any,
@@ -9365,6 +9515,7 @@ def append_update_source_checks(
     provider_key: str,
     defaults: dict[str, Any] | None = None,
     require_subjects: bool = False,
+    require_priority: bool = False,
 ) -> None:
     if not isinstance(source, dict):
         checks.append(check("FAIL", f"{label} must be an object"))
@@ -9386,7 +9537,10 @@ def append_update_source_checks(
     elif provider not in UPDATE_PROVIDER_TYPES:
         checks.append(check("FAIL", f"{label} unsupported {provider_key} {provider!r}"))
 
-    if "priority" in source and not isinstance(source.get("priority"), int):
+    if "priority" not in source:
+        if require_priority:
+            checks.append(check("FAIL", f"{label} missing priority"))
+    elif not isinstance(source.get("priority"), int):
         checks.append(check("FAIL", f"{label} priority must be an integer"))
 
     channels = source.get("channels")
@@ -9413,25 +9567,33 @@ def append_update_source_checks(
                     checks.append(check("FAIL", f"{subject_label}.ids must be a list of non-empty strings"))
 
     provider_text = str(provider or "")
-    if provider_text in {"processforge_json", "generic_http_directory", "tuf_repository"}:
+    if provider_text in UPDATE_REMOTE_PROVIDERS:
         url = source.get("url")
         if not isinstance(url, str) or not url.strip():
             checks.append(check("FAIL", f"{label} provider {provider_text} requires url"))
-        elif source_requires_https(source, defaults) and urlparse(url).scheme.lower() != "https":
-            checks.append(check("FAIL", f"{label} url must use https unless local trust policy disables require_https"))
+        else:
+            valid, reason = valid_remote_url_shape(url, require_https=source_requires_https(source, defaults))
+            if not valid:
+                checks.append(check("FAIL", f"{label} url {reason}"))
     elif provider_text == "processforge_json_file":
         if not isinstance(source.get("path"), str) or not str(source.get("path")).strip():
             checks.append(check("FAIL", f"{label} provider processforge_json_file requires path"))
-    elif provider_text in {"github_releases", "gitverse_releases", "gitlab_releases"}:
+    elif provider_text in UPDATE_RELEASE_PROVIDERS:
         for key in ("owner", "repo"):
             if not isinstance(source.get(key), str) or not str(source.get(key)).strip():
                 checks.append(check("FAIL", f"{label} provider {provider_text} requires {key}"))
+        api_base_url = source.get("api_base_url")
+        if isinstance(api_base_url, str) and api_base_url.strip():
+            valid, reason = valid_remote_url_shape(api_base_url, require_https=source_requires_https(source, defaults))
+            if not valid:
+                checks.append(check("FAIL", f"{label} api_base_url {reason}"))
 
     auth = source.get("auth")
     if isinstance(auth, dict):
         for key in auth:
             if str(key).lower() in {"token", "password", "secret", "authorization", "api_key"}:
                 checks.append(check("FAIL", f"{label} auth must not contain raw secret key {key!r}; use *_env or auth_ref"))
+    append_env_reference_checks(checks, source, label)
 
 
 def validate_update_source_registry_data(data: dict[str, Any], path: Path) -> list[Check]:
@@ -9462,6 +9624,7 @@ def validate_update_source_registry_data(data: dict[str, Any], path: Path) -> li
             provider_key="provider",
             defaults=defaults,
             require_subjects=True,
+            require_priority=True,
         )
     if not checks:
         checks.append(check("PASS", f"{path} valid"))
@@ -9680,6 +9843,57 @@ def update_site_overrides(workplace_root: Path) -> dict[str, dict[str, Any]]:
     return result
 
 
+def validate_update_site_overrides_data(data: dict[str, Any], path: Path) -> list[Check]:
+    checks: list[Check] = []
+    if not data:
+        return [check("FAIL", f"{path} missing or invalid")]
+    append_json_schema_checks(checks, data, "update-site-overrides.schema.json", str(path))
+    overrides = data.get("overrides")
+    if not isinstance(overrides, list):
+        checks.append(check("FAIL", f"{path} overrides must be a list"))
+        return checks
+    seen: set[str] = set()
+    for index, item in enumerate(overrides):
+        label = f"overrides[{index}]"
+        if not isinstance(item, dict):
+            checks.append(check("FAIL", f"{label} must be an object"))
+            continue
+        site_id = item.get("site_id")
+        if isinstance(site_id, str) and site_id.strip():
+            if site_id in seen:
+                checks.append(check("FAIL", f"{label} duplicate site_id {site_id}"))
+            seen.add(site_id)
+        else:
+            checks.append(check("FAIL", f"{label} missing site_id"))
+        if "enabled" in item and not isinstance(item.get("enabled"), bool):
+            checks.append(check("FAIL", f"{label}.enabled must be boolean"))
+        if "channels" in item and (
+            not isinstance(item.get("channels"), list) or not all(isinstance(channel, str) and channel.strip() for channel in item.get("channels", []))
+        ):
+            checks.append(check("FAIL", f"{label}.channels must be a list of non-empty strings"))
+        append_env_reference_checks(checks, item, label)
+        preserved = item.get("preserved_local") if isinstance(item.get("preserved_local"), dict) else {}
+        append_env_reference_checks(checks, preserved, f"{label}.preserved_local")
+    if not checks:
+        checks.append(check("PASS", f"{path} valid update site overrides"))
+    return checks
+
+
+def installed_subject_version_map(workplace_root: Path) -> dict[tuple[str, str], str]:
+    data = load_update_yaml(installed_subjects_registry_path(workplace_root))
+    subjects = data.get("subjects") if isinstance(data.get("subjects"), list) else []
+    result: dict[tuple[str, str], str] = {}
+    for subject in subjects:
+        if not isinstance(subject, dict):
+            continue
+        subject_type = subject.get("type")
+        subject_id = subject.get("id")
+        version = subject.get("version")
+        if isinstance(subject_type, str) and isinstance(subject_id, str) and isinstance(version, str) and version:
+            result[(subject_type, subject_id)] = version
+    return result
+
+
 def derived_update_site_record(
     workplace_root: Path,
     subject_type: str,
@@ -9730,9 +9944,14 @@ def derived_update_site_record(
 
 def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], list[Check]]:
     checks: list[Check] = []
+    overrides_path = update_site_overrides_path(workplace_root)
+    if overrides_path.is_file():
+        checks.extend(validate_update_site_overrides_data(load_update_yaml(overrides_path), overrides_path))
     overrides = update_site_overrides(workplace_root)
+    installed_versions = installed_subject_version_map(workplace_root)
     sites: list[dict[str, Any]] = []
     for record in update_entity_manifest_records(workplace_root):
+        installed_version = installed_versions.get((record["type"], record["id"]), record["version"])
         data = record["data"]
         update_sites = data.get("update_sites")
         if isinstance(update_sites, list):
@@ -9750,7 +9969,7 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], 
                             record["type"],
                             record["id"],
                             record["scope"],
-                            record["version"],
+                            installed_version,
                             record["manifest_path"],
                             site,
                             overrides,
@@ -9864,6 +10083,7 @@ def command_update_entity_sources_list(args: argparse.Namespace) -> int:
 
 def validate_normalized_update_manifest_data(data: dict[str, Any], path: Path) -> list[Check]:
     checks: list[Check] = []
+    append_json_schema_checks(checks, data, "normalized-update-manifest.schema.json", str(path))
     if data.get("schema_version") != 1:
         checks.append(check("FAIL", f"{path} schema_version must be 1"))
     product = data.get("product") if isinstance(data.get("product"), dict) else {}
@@ -9896,10 +10116,20 @@ def validate_normalized_update_manifest_data(data: dict[str, Any], path: Path) -
                 if not isinstance(artifact, dict):
                     checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}] must be an object"))
                     continue
-                if not artifact.get("url"):
+                artifact_url = artifact.get("url")
+                if not artifact_url:
                     checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url missing"))
-                if not artifact.get("sha256"):
+                elif not isinstance(artifact_url, str):
+                    checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url must be a string"))
+                else:
+                    valid, reason = valid_artifact_url_shape(artifact_url, artifact)
+                    if not valid:
+                        checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].url {reason}"))
+                artifact_sha256 = artifact.get("sha256")
+                if not artifact_sha256:
                     checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].sha256 missing"))
+                elif not isinstance(artifact_sha256, str) or not SHA256_HEX_RE.fullmatch(artifact_sha256):
+                    checks.append(check("FAIL", f"subjects[{subject_index}].versions[{version_index}].artifacts[{artifact_index}].sha256 must be 64 hex characters"))
     if not checks:
         checks.append(check("PASS", f"{path} valid normalized update manifest"))
     return checks
