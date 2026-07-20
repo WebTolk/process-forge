@@ -1,4 +1,4 @@
-﻿# ProcessForge Init Examples
+# ProcessForge Init Examples
 
 These examples show the expected inputs for workplace and project initialization.
 

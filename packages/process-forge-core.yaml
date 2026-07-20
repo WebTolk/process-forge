@@ -1,7 +1,7 @@
 schema_version: 1
 id: process-forge-core
 name: ProcessForge Core
-version: 0.1.0
+version: 1.0.0
 kind: core
 scope: all-processes
 description: Core file-first rules, statuses, templates, and validation expectations.

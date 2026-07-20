@@ -1,0 +1,30 @@
+schema_version: 1
+id: task-001-entity-update-scope
+title: Add typed entity update scope
+run_id: pf-entity-update-scope-20260720
+process: process-version-upgrade
+status: done
+created_at: '2026-07-20T07:55:00Z'
+updated_at: '2026-07-20T07:55:22Z'
+objective: 'Record that the updater must support typed update subjects: distribution, knowledge packages, resources, processes, templates, tools, MCP, platform contracts, and packages.'
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  -
+    id: iter-001
+    kind: work
+    status: completed
+    started_at: '2026-07-20T07:55:14Z'
+    summary: Extended updater planning with typed update subjects for global ProcessForge-managed entities.
+    artifacts:
+      - .pf/artifacts/runs/pf-entity-update-scope-20260720/task-001-entity-update-scope/work-log.md
+    completed_at: '2026-07-20T07:55:14Z'
+result:
+  status: done
+  summary: Updater planning now covers typed global update subjects, including knowledge packages and other ProcessForge-managed entities, not only the distribution archive.
+  artifacts:
+    - .pf/artifacts/global-update-entity-scope-addendum-20260720.md

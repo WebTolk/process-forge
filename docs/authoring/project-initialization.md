@@ -1,4 +1,4 @@
-﻿# Project Initialization
+# Project Initialization
 
 Use Project Init to connect a project to ProcessForge.
 

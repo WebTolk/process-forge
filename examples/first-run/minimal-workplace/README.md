@@ -1,4 +1,4 @@
-﻿# Minimal Workplace Example
+# Minimal Workplace Example
 
 Create a workplace outside a project:
 

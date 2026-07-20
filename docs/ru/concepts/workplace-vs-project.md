@@ -22,3 +22,7 @@ Project хранит проектный flow:
 Не копируйте весь ProcessForge в проект или в agent config folders. Установите
 ProcessForge как инструмент, создайте workplace и подключайте проекты через
 `project-onboard`.
+
+Agent configuration folders вроде `.codex`, `.claude` и `.agents` должны содержать только короткую инструкцию: где установлен ProcessForge и что project-specific instructions находятся в `.pf/START_AGENT_HERE.md`.
+
+Workplace хранит machine-level knowledge packages, reusable templates, tools, MCP servers, platform contracts и roots вроде `knowledge_roots.local-docs`. Project получает `.pf/` папку через `project-onboard`; он не получает копию репозитория ProcessForge или тяжёлые documentation/source trees.

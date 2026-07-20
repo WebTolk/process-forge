@@ -12,6 +12,9 @@
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "ecp": { "type": "string" },
+        "generated_at": { "type": "string" },
+        "assignment_id": { "type": "string" },
+        "assignment_path": { "type": "string" },
         "snapshot": { "type": "string" },
         "snapshot_checksum": { "type": "string" },
         "worker_may_rebuild_context": { "type": "boolean" }
@@ -19,11 +22,47 @@
       "additionalProperties": true
     },
     "assignment": { "type": "object", "additionalProperties": true },
-    "context": { "type": "object", "additionalProperties": true },
+    "context": {
+      "type": "object",
+      "properties": {
+        "snapshot_id": { "type": "string" },
+        "freshness": { "type": "string" },
+        "required_sources": { "type": "array", "items": { "type": "string" } },
+        "context_artifacts": { "type": "array", "items": { "$ref": "#/$defs/context_artifact" } }
+      },
+      "additionalProperties": true
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "allowed_files": { "type": "array", "items": { "type": "string" } },
+        "allowed_read_files": { "type": "array", "items": { "type": "string" } },
+        "forbidden_files": { "type": "array", "items": { "type": "string" } },
+        "ownership": { "$ref": "#/$defs/ownership" },
+        "non_overlap": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
+    "outputs": {
+      "type": "object",
+      "properties": {
+        "required_outputs": { "type": "array", "items": { "$ref": "#/$defs/required_output" } },
+        "expected_report": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "required": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "optional": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      },
+      "additionalProperties": true
+    },
     "required_sources": { "type": "array", "items": { "type": "string" } },
     "allowed_files": { "type": "array", "items": { "type": "string" } },
     "forbidden_files": { "type": "array", "items": { "type": "string" } },
-    "required_outputs": { "type": "array", "items": { "type": "string" } },
+    "required_outputs": { "type": "array", "items": { "$ref": "#/$defs/required_output" } },
     "required_capabilities": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "optional_capabilities": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "selected_sources": { "type": "array", "items": { "type": "string" } },
@@ -33,7 +72,39 @@
     "forbidden_actions": { "type": "array", "items": { "type": "string" } }
   },
   "$defs": {
-    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "context_artifact": {
+      "type": ["object", "string"],
+      "properties": {
+        "path": { "type": "string" },
+        "role": { "type": "string" },
+        "required": { "type": "boolean" },
+        "mutable_by_worker": { "type": "boolean" },
+        "checksum": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "ownership": {
+      "type": "object",
+      "properties": {
+        "owner_id": { "type": "string" },
+        "owner_label": { "type": "string" },
+        "role": { "type": "string" },
+        "writer": { "type": "boolean" },
+        "owned_files": { "type": "array", "items": { "type": "string" } },
+        "owned_globs": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "required_output": {
+      "type": ["object", "string"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "required": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": true
 }

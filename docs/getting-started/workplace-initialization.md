@@ -1,4 +1,4 @@
-﻿# Workplace Initialization
+# Workplace Initialization
 
 Workplace initialization is run once per machine, device, server, or runner host.
 

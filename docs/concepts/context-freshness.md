@@ -1,4 +1,4 @@
-﻿# Context Freshness
+# Context Freshness
 
 Project context freshness answers whether the current snapshot still represents
 the project flow inputs.

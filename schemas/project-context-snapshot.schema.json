@@ -63,6 +63,7 @@
       "additionalProperties": true
     },
     "knowledge_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "platform_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "knowledge_resources": { "type": "object", "additionalProperties": true },
     "resolved_policies": { "type": "object", "additionalProperties": true },
     "capabilities": { "type": "object", "additionalProperties": true },

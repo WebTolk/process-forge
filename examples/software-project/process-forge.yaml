@@ -1,6 +1,6 @@
 schema_version: 1
 process_forge:
-  version: 0.1.0
+  version: 1.0.0
   mode: file_only
   runner_required: false
   backend_required: false

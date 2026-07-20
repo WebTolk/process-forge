@@ -1,6 +1,6 @@
 # Path Resolution
 
-ProcessForge resolves paths with a small Joomla-style model:
+ProcessForge resolves paths with a small registry-based model:
 
 1. Read the raw path string.
 2. Expand `${CONST}` from `workplace.yaml:path_constants`.
@@ -12,9 +12,9 @@ ProcessForge resolves paths with a small Joomla-style model:
 Supported forms:
 
 ```text
-${PF_KNOWLEDGE}/joomla/docs
-<knowledge-root>/Joomla/docs
-<shared-knowledge-root>/joomla/docs
+${PF_KNOWLEDGE}/example/docs
+<knowledge-root>/example/docs
+<shared-knowledge-root>/example/docs
 ../relative/path
 relative/path
 ```

@@ -4,7 +4,9 @@ You are acting as the agent that attaches a concrete project to an existing Proc
 
 Your task is to create `.pf/` in the project and prepare it for assignment-based work. Do not recreate the workplace.
 
-Use Python CLI or `pf` as the canonical runtime. A normal linked project does not contain ProcessForge core or `tools/processforge.py`.
+Use `python bin/pf.py` from the ProcessForge distribution root, or `pf` /
+`python .pf/runtime/bin/pf.py` inside an onboarded project. A normal linked
+project does not contain ProcessForge core or `tools/processforge.py`.
 
 ## Do
 
@@ -36,8 +38,8 @@ Use Python CLI or `pf` as the canonical runtime. A normal linked project does no
 ## CLI
 
 ```bash
-python tools/processforge.py project-onboard --project-root <project-root> --workplace <workplace-root> --type <project-type> --apply
-python tools/processforge.py agent-start-prompt --project-root <project-root>
+python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type <project-type> --apply
+python bin/pf.py agent-start-prompt --project-root <project-root>
 ```
 
 Inside the onboarded project:

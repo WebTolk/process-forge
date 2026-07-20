@@ -26,7 +26,7 @@ resources:
     result: WARN
     review: .pf/reviews/parity/resources/knowledge-package-process-forge-core.md
   -
-    id: platform-contract-joomla
+    id: platform-contract-example-parent
     kind: platform
     result: WARN
-    review: .pf/reviews/parity/resources/platform-platform-contract-joomla.md
+    review: .pf/reviews/parity/resources/platform-platform-contract-example-parent.md

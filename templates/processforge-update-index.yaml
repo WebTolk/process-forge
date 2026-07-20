@@ -2,16 +2,16 @@ schema_version: 1
 
 product:
   id: processforge
-  current_version: "0.1.0"
+  current_version: "1.0.0"
 
 channels:
   stable:
-    latest: "0.1.0"
+    latest: "1.0.0"
 
 versions:
-  - version: "0.1.0"
+  - version: "1.0.0"
     channel: stable
-    released_at: "2026-07-15"
+    released_at: "2026-07-20"
     compatibility:
       min_project_schema: 1
       max_project_schema: 1
@@ -20,5 +20,6 @@ versions:
       guide: null
     changes:
       - type: baseline
-        summary: "Initial linked workplace MVP."
+        summary: "Stable ProcessForge file-first workplace and project flow."
+        breaking: false
     affected_files: []

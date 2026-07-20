@@ -15,7 +15,7 @@ Use Python CLI or `pf` as the canonical runtime.
 5. Configure package roots.
 6. Configure knowledge roots.
 7. Configure tools and MCP registries when available.
-8. Generate `AGENTS.processforge-section.md` or an equivalent bounded section.
+8. Write or update `AGENTS.md` with the bounded ProcessForge section.
 9. Run `doctor-workplace`.
 10. Fix safe local setup issues.
 11. Create bootstrap report, review, and handoff.
@@ -31,6 +31,6 @@ Use Python CLI or `pf` as the canonical runtime.
 ## CLI
 
 ```bash
-python tools/processforge.py workplace-init --workplace <workplace-root> --apply
-pf doctor-workplace --root <workplace-root>
+python bin/pf.py workplace-init --workplace <workplace-root> --apply
+python bin/pf.py doctor-workplace --root <workplace-root>
 ```

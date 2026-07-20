@@ -1,7 +1,7 @@
 schema_version: 1
 id: process-forge-content
 name: ProcessForge Content
-version: 0.1.0
+version: 1.0.0
 kind: direction
 scope: content-work
 description: Optional package for content planning, drafting, review, and publication handoff.

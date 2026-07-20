@@ -19,3 +19,9 @@ ProcessForge работает через короткие CLI-команды. К
 
 Долгоживущий watcher или runner может появиться отдельным слоем позже, но core
 runtime не требует daemon.
+
+## Runtime requirements
+
+Для runtime рекомендуется Python 3.11+. Python 3.10+ допустим только когда текущие тесты подтверждают совместимость. Также нужна UTF-8 файловая система и read/write access к ProcessForge distribution, workplace и папкам проекта.
+
+Runtime usage не требует PowerShell, Git, daemon или фонового процесса. Git нужен только для version-control integration или для development/release checks.

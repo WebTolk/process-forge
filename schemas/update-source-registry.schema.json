@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/update-source-registry.schema.json",
+  "title": "ProcessForge Global Bootstrap Update Source Registry",
+  "type": "object",
+  "required": ["schema_version", "product", "sources"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "product": { "const": "processforge" },
+    "updated_at": { "type": ["string", "null"] },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "channel": { "type": "string", "minLength": 1 },
+        "cache_ttl_seconds": { "type": "integer", "minimum": 0 },
+        "require_https": { "type": "boolean" },
+        "require_sha256_for_download": { "type": "boolean" },
+        "require_sha256_for_install": { "type": "boolean" },
+        "require_signature_for_install": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" }
+    }
+  },
+  "$defs": {
+    "sourceId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+    "subjectType": {
+      "enum": [
+        "*",
+        "processforge_distribution",
+        "knowledge_package",
+        "knowledge_resource",
+        "process_definition",
+        "template",
+        "tool",
+        "mcp_server",
+        "platform_contract",
+        "package"
+      ]
+    },
+    "provider": {
+      "enum": [
+        "processforge_json",
+        "processforge_json_file",
+        "github_releases",
+        "gitverse_releases",
+        "gitlab_releases",
+        "generic_http_directory",
+        "tuf_repository"
+      ]
+    },
+    "subjectFilter": {
+      "type": "object",
+      "required": ["type", "ids"],
+      "properties": {
+        "type": { "$ref": "#/$defs/subjectType" },
+        "ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "assetPatterns": {
+      "type": "object",
+      "properties": {
+        "package": { "type": "string", "minLength": 1 },
+        "manifest": { "type": "string", "minLength": 1 },
+        "checksum": { "type": "string", "minLength": 1 },
+        "signature": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "trust": {
+      "type": "object",
+      "properties": {
+        "require_https": { "type": "boolean" },
+        "require_sha256_for_install": { "type": "boolean" },
+        "require_signature_for_install": { "type": "boolean" },
+        "trusted_signers": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "source": {
+      "type": "object",
+      "required": ["id", "enabled", "provider", "priority"],
+      "properties": {
+        "id": { "$ref": "#/$defs/sourceId" },
+        "name": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "provider": { "$ref": "#/$defs/provider" },
+        "priority": { "type": "integer" },
+        "url": { "type": "string" },
+        "path": { "type": "string" },
+        "owner": { "type": "string" },
+        "repo": { "type": "string" },
+        "api_base_url": { "type": "string" },
+        "channels": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "include_prereleases": { "type": "boolean" },
+        "subjects": { "type": "array", "items": { "$ref": "#/$defs/subjectFilter" } },
+        "asset_patterns": { "$ref": "#/$defs/assetPatterns" },
+        "auth": { "type": "object", "additionalProperties": true },
+        "auth_ref": { "type": "string" },
+        "headers_env": { "type": "object", "additionalProperties": { "type": "string" } },
+        "trust": { "$ref": "#/$defs/trust" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

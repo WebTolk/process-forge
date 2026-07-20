@@ -11,7 +11,28 @@
     "transport": { "type": "string", "minLength": 1 },
     "command": { "type": "string", "minLength": 1 },
     "auth_ref": { "type": ["string", "null"] },
+    "update_sites": { "type": "array", "items": { "$ref": "#/$defs/updateSite" } },
     "status": { "enum": ["configured", "optional", "missing", "disabled"] }
+  },
+  "$defs": {
+    "updateSite": {
+      "type": "object",
+      "required": ["id", "enabled", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "enabled": { "type": "boolean" },
+        "type": { "type": "string", "minLength": 1 },
+        "priority": { "type": "integer" },
+        "url": { "type": "string" },
+        "path": { "type": "string" },
+        "owner": { "type": "string" },
+        "repo": { "type": "string" },
+        "channels": { "type": "array", "items": { "type": "string" } },
+        "auth_ref": { "type": "string" },
+        "trust": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": true
 }

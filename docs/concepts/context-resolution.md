@@ -1,4 +1,4 @@
-﻿# Context Resolution
+# Context Resolution
 
 Context resolution converts workplace, project, process, package, template, tool,
 and assignment inputs into a small set of files that a worker can use without

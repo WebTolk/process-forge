@@ -1,4 +1,4 @@
-﻿# Release Checklist
+# Release Checklist
 
 Run these checks before publishing a ProcessForge release:
 

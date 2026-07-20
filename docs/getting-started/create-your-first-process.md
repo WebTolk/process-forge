@@ -4,14 +4,14 @@ Start with guided authoring:
 
 ```bash
 cd ../my-project
-python .pf/runtime/bin/pf.py process-authoring-start --project-root . --id seo-audit --title "SEO Audit" --scope project --kind operational --apply
-python .pf/runtime/bin/pf.py process-authoring-review --project-root . --id seo-audit
-python .pf/runtime/bin/pf.py process-authoring-apply --project-root . --id seo-audit --apply
-python .pf/runtime/bin/pf.py process-doctor --project-root . --process seo-audit
+python .pf/runtime/bin/pf.py process-authoring-start --project-root . --id quality-audit --title "Quality Audit" --scope project --kind operational --apply
+python .pf/runtime/bin/pf.py process-authoring-review --project-root . --id quality-audit
+python .pf/runtime/bin/pf.py process-authoring-apply --project-root . --id quality-audit --apply
+python .pf/runtime/bin/pf.py process-doctor --project-root . --process quality-audit
 ```
 
 The authoring session is private project flow state under
-`.pf/authoring/processes/seo-audit/`. The applied process pack is public project
+`.pf/authoring/processes/quality-audit/`. The applied process pack is public project
 content under `processes/`, `prompts/`, `docs/processes/`, and
 `examples/process-authoring/`.
 
@@ -24,11 +24,11 @@ python .pf/runtime/bin/pf.py process-create --project-root . --answers templates
 Then use the process in a run:
 
 ```bash
-python .pf/runtime/bin/pf.py run-create --project-root . --id seo-audit-run --title "SEO audit run" --process seo-audit --apply
-python .pf/runtime/bin/pf.py task-create --project-root . --run seo-audit-run --id task-001-audit --title "Audit homepage" --process seo-audit --apply
+python .pf/runtime/bin/pf.py run-create --project-root . --id quality-audit-run --title "Quality audit run" --process quality-audit --apply
+python .pf/runtime/bin/pf.py task-create --project-root . --run quality-audit-run --id task-001-audit --title "Audit input" --process quality-audit --apply
 python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-001-audit --kind work --summary "Initial audit completed." --apply
 python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-001-audit --kind debug --summary "Checked missing evidence." --apply
 python .pf/runtime/bin/pf.py task-complete --project-root . --task task-001-audit --summary "Audit task completed." --apply
-python .pf/runtime/bin/pf.py run-summary --project-root . --run seo-audit-run --apply
-python .pf/runtime/bin/pf.py run-doctor --project-root . --run seo-audit-run
+python .pf/runtime/bin/pf.py run-summary --project-root . --run quality-audit-run --apply
+python .pf/runtime/bin/pf.py run-doctor --project-root . --run quality-audit-run
 ```

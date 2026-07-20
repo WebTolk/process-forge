@@ -1,7 +1,7 @@
 schema_version: 1
 id: process-forge-testing
 name: ProcessForge Testing
-version: 0.1.0
+version: 1.0.0
 kind: direction
 scope: testing-work
 description: Optional package for test planning, execution, evidence, and reporting.

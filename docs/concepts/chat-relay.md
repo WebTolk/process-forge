@@ -1,4 +1,4 @@
-﻿# Chat Relay
+# Chat Relay
 
 Chat relay records session conversation content in private runtime files and can
 prepare metadata-only outbox payloads for future managed consumers.

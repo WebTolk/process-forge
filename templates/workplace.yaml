@@ -8,7 +8,7 @@ workplace:
   owner: null
 
 process_forge:
-  version_constraint: "^0.1"
+  version_constraint: "^1.0"
   install_mode: linked
   supported_modes:
     - file_only
@@ -42,6 +42,9 @@ registries:
   templates: "registries/templates.yaml"
   tools: "registries/tools.yaml"
   mcp: "registries/mcp.yaml"
+  update_sources: "registries/update-sources.yaml"
+  installed_subjects: "registries/installed-subjects.yaml"
+  update_site_overrides: "registries/update-site-overrides.yaml"
 
 policies:
   prefer_project_overrides: true

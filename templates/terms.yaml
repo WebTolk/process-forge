@@ -33,19 +33,19 @@ terms:
         - ".pf/packages"
         - ".pf/artifacts"
 
-  joomla_platform_knowledge:
-    label: "Joomla platform knowledge"
-    label_ru: "платформенные знания Joomla"
+  platform_knowledge:
+    label: "platform knowledge"
+    label_ru: "платформенные знания"
     aliases:
-      - "Joomla knowledge"
-      - "Joomla platform"
+      - "platform knowledge"
+      - "platform contract"
     aliases_ru:
-      - "знания Joomla"
-      - "платформа Joomla"
-    definition: "Joomla platform contract and referenced knowledge resources."
+      - "знания платформы"
+      - "контракт платформы"
+    definition: "Platform contract and referenced knowledge resources."
     resolves_to:
       registry: platform_contracts
-      id: joomla
+      id: "<platform-id>"
 
   global_templates:
     label: "global templates"

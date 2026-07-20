@@ -2,7 +2,7 @@ schema_version: 1
 process:
   id: bugfix-batch
   name: Bugfix Batch
-  version: 0.1.0
+  version: 1.0.0
   status: draft
   kind: development
   scope: project

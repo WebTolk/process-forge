@@ -3,9 +3,11 @@
 ```bash
 python bin/pf.py workplace-init --workplace ./workplace --apply
 python bin/pf.py template-create --workplace ./workplace --id report.audit.basic --title "Basic Audit Report" --apply
-python bin/pf.py knowledge-package-create --workplace ./workplace --id docs.joomla.local --title "Local Joomla Documentation" --package-root global --apply
-python bin/pf.py platform-create --workplace ./workplace --id platform.joomla --title "Joomla Platform" --project-type joomla-component --knowledge-package docs.joomla.local --template report.audit.basic --apply
-python bin/pf.py project-onboard --project-root ./project --workplace ./workplace --type joomla-component --apply
+python bin/pf.py knowledge-package-create --workplace ./workplace --id docs.example-domain --title "Example Domain Documentation" --package-root global --apply
+python bin/pf.py platform-create --workplace ./workplace --id platform.example-app --title "Example Application Platform" --project-type example-app --knowledge-package docs.example-domain --template report.audit.basic --apply
+python bin/pf.py project-onboard --project-root ./project --workplace ./workplace --type example-app --apply
 ```
 
-The project snapshot should include `platform.joomla`, `docs.joomla.local`, and `report.audit.basic`.
+The project snapshot should include `platform.example-app`, `docs.example-domain`, and `report.audit.basic`.
+
+Private local docs and source trees belong behind workplace knowledge roots and package `path_ref` records.

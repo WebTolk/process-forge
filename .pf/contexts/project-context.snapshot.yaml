@@ -1,8 +1,8 @@
 schema_version: 1
 snapshot:
   id: project-context
-  generated_at: '2026-07-18T11:08:47Z'
-  valid_until: '2026-07-25T11:08:47Z'
+  generated_at: '2026-07-20T06:57:07Z'
+  valid_until: '2026-07-27T06:57:07Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -22,8 +22,8 @@ flow:
   manifest: .pf/process-forge.yaml
   local_config: .pf/process-forge.local.yaml
 process_forge:
-  version: 0.1.0-rc.1
-  version_constraint: ^0.1
+  version: 1.0.0
+  version_constraint: ^1.0
   install_mode: linked
   distribution:
     id: processforge
@@ -33,183 +33,189 @@ process_forge:
 platform_contracts:
   selected:
     []
+  stack:
+    []
   missing_required:
+    []
+  circular:
     []
   missing_required_resources:
     []
   missing_recommended_resources:
     []
+platform_stack:
+  []
 sources:
   fingerprints:
     -
       id: project_manifest
       path: .pf/process-forge.yaml
       kind: manifest
-      checksum: 044fb7d35915deb653f88fd2d931eb45d0ac01437f1995176341caef393801ae
+      checksum: 06ccd714ff995e22344573c4c0c0fa8c155500b93b7b01f3e05e5cc8cc58f608
     -
       id: process-processes-software-feature-development-yaml
       path: processes/software-feature-development.yaml
       kind: process
-      checksum: 40b87049ae6bcf120b13b5de2bc88db9934721d9713d36f52dd2a87e699995e6
+      checksum: ab1c4f57fe5dc179a0b0881f2ae54dbfddfba4fdb9e2ddfa7ba3024c625d0daf
     -
       id: process-processes-bug-fix-yaml
       path: processes/bug-fix.yaml
       kind: process
-      checksum: b5f00bbfc37aab65f0a1fde69baaa8decb87e7ab004f700ac5dd1761d3359502
+      checksum: a0e69c1d47638b7d3baf187f5d355b8582c9df6e3e595266e85cc61b576f65f4
     -
       id: process-processes-testing-yaml
       path: processes/testing.yaml
       kind: process
-      checksum: 94346c40b1b49169b4e37b7c11b4ee7b2c2dacfebe0e0578f8af788946b20d3e
+      checksum: 4dc6061fa13152c71e28bc27e4c309ba5f91500cacfeab29111e94d01c9222dd
     -
       id: process-processes-content-production-yaml
       path: processes/content-production.yaml
       kind: process
-      checksum: c01a0e09293733b12f0336f864dbf4cee9846df8c24117aacb0e262577257bf3
+      checksum: f49443a19ae019597bdc8b95675729cc439aa53bb4a20230f0d50198807d1c51
     -
       id: process-processes-knowledge-package-improvement-yaml
       path: processes/knowledge-package-improvement.yaml
       kind: process
-      checksum: 536ebb95a759ac542e49784953bea0f713e5f118aed2cc4006770270dfc4d05d
+      checksum: 506decc3d564b8ca90063be38f9798a3e300d0022d13def19a862c8c9f1b4ed7
     -
       id: process-processes-process-version-upgrade-yaml
       path: processes/process-version-upgrade.yaml
       kind: process
-      checksum: d220d1e1515e9c58941ca277f7c819d0c7c600af818a8c97d7de9495aabad89d
+      checksum: 93bb09946805e04ab8b8952b62e91ff5bc8fda88af55e80e2f8dbcd118319011
     -
       id: process-processes-workplace-initialization-yaml
       path: processes/workplace-initialization.yaml
       kind: process
-      checksum: c58935b256b01f9ac8b8134e75331fac374f0c017528b365e72894de21b59987
+      checksum: 545d47896897c43468d3fe441f1c9a06a4dd276c5650f439be0ad4f2de3fc450
     -
       id: process-processes-project-onboarding-yaml
       path: processes/project-onboarding.yaml
       kind: process
-      checksum: eeeab58d1da5f490afe1da75c08866277905029e65561ac5030d40a58fb8d0e6
+      checksum: 114eb5bb60eb3e43473a097989b9c162b7a7497d8ae39a14df38df2a27eb5d36
     -
       id: process-processes-project-initialization-yaml
       path: processes/project-initialization.yaml
       kind: process
-      checksum: 6ff5bd3a1d341daefc0b8f26983c9fafb56b53b8f983f64c4cb915d3117cb6af
+      checksum: d5a06505b144263a0379a157523fea105810b2b6d514f60fcd266d66a5ebd053
     -
       id: process-processes-session-bootstrap-yaml
       path: processes/session-bootstrap.yaml
       kind: process
-      checksum: 929bcaaaa75a04dfb862051da2e2289020b0ab6573437551a29a466f1e561945
+      checksum: 2fb9b75897b381e096c52ece25f4c4eea682b427b569aa76c58f861b571cf0b8
     -
       id: process-processes-context-resolution-yaml
       path: processes/context-resolution.yaml
       kind: process
-      checksum: d59e0de574f70a77494ad56f16994ed468e9f7ea1ece57ab1fa485e5c0625753
+      checksum: 8564f327f40929f6332b4c41fa3251ecbd79b39a52074e058ad7549c888299d4
     -
       id: process-processes-processforge-update-check-yaml
       path: processes/processforge-update-check.yaml
       kind: process
-      checksum: b6ed78953141a9b882298872ccbda5e83c66b7d08d18d325f0f411f50dad7831
+      checksum: aa7475228a69ce9b1b2441cadf8ee43534bad90d13e1f864c2f3f5d37f2d4ecd
     -
       id: process-processes-knowledge-resource-add-yaml
       path: processes/knowledge-resource-add.yaml
       kind: process
-      checksum: b869a3b2caf67e909db07965a3d119433321de02adaac71b1c127487820e44fd
+      checksum: 905afc71a408b84d875771411f2a781ac3915769c9171789603bb753c8d49dac
     -
       id: process-processes-documentation-mirror-import-yaml
       path: processes/documentation-mirror-import.yaml
       kind: process
-      checksum: 1fec1c95ab17daf6a66699a46d40022779f92fad270e452883190dd191d51039
+      checksum: 750b3c510e85f36636572a3247ffaa8483c37c0f3a16f46ba2d520e4280cfcf0
     -
       id: process-processes-knowledge-package-update-yaml
       path: processes/knowledge-package-update.yaml
       kind: process
-      checksum: 13d937a3548dd50f010e6830612baee81c84d2881801d64aa11d24ab93273f10
+      checksum: 2bf01fe856ddf8660db68db3384a340a9242d2a1ebc5836f4b16a2a598ec792b
     -
       id: process-processes-template-add-yaml
       path: processes/template-add.yaml
       kind: process
-      checksum: 8cfbb40d21e69f7ab686e9a897664c5dba0a62a7967c2fd6f396583f141bc291
+      checksum: 3f88e45d5c4553551471c00b04cb9f22aa8b634d82f3d595bf6579ad1ec53c15
     -
       id: process-processes-tool-register-yaml
       path: processes/tool-register.yaml
       kind: process
-      checksum: 0027972570354c8438aa988ed6ea96f677dbddfd35395f353bc9bb9b6a3eec6f
+      checksum: bdffcce2cddcaf2c8c0fa3e1ac63cdf66667c2e46667c0296a8de5b85a738ba6
     -
       id: process-processes-mcp-register-yaml
       path: processes/mcp-register.yaml
       kind: process
-      checksum: a2640a814260f593aac8e50b29d696eda5d7f651108363b47dffe9e08a53d320
+      checksum: 7f483529bd49117c6549a2351218fcb54dffa9efb3123b15055dd0666ed93014
     -
       id: process-processes-platform-contract-install-yaml
       path: processes/platform-contract-install.yaml
       kind: process
-      checksum: c489bb8d0b570718f28cd539a27d3e44bf36c292f1e0a869ad2e46cfd6e41e6a
+      checksum: 90a4a96f7b3c17322b0a4543684e7885607b8ebd670fd499ef0679a1167c492b
     -
       id: process-processes-process-template-install-yaml
       path: processes/process-template-install.yaml
       kind: process
-      checksum: 1de6964a16156948d7cdb589dc16c8810b53572d143b2fc659c66093ec4b2ca2
+      checksum: 7437ae56449420648b5e59ca2d32f46cf1df21e61af111dfa5cf1101a8159326
     -
       id: process-processes-reusable-template-authoring-yaml
       path: processes/reusable-template-authoring.yaml
       kind: process
-      checksum: 4ad87e8fb6b4224c35f5b5f94b42533fea21792d1e3baefb6e23862dc43b2821
+      checksum: d979c588a25191dbfdf3217d17c3320803f9a9ea1c646a74406cd133c1c4f363
     -
       id: process-processes-knowledge-package-authoring-yaml
       path: processes/knowledge-package-authoring.yaml
       kind: process
-      checksum: a62b45fb25d89345dc2bed2e0ee4f07ad9c41ed39c7434de3df691d012889eb7
+      checksum: d756645e6c14845f5041f5dc749b8b1d4766a5731b0610d3bbe1082220f2a59c
     -
       id: process-processes-platform-contract-authoring-yaml
       path: processes/platform-contract-authoring.yaml
       kind: process
-      checksum: e95dd69b781412b16ef9830a80898507ac92f2e303e2f3295decece924018ab7
+      checksum: 2b08b9e8ced47021dddad7ebaf603f3c7d07afa392e64f637496f4c3fcc963b5
     -
       id: process-processes-process-authoring-yaml
       path: processes/process-authoring.yaml
       kind: process
-      checksum: 3614667cd4811345ac3fe62a4b962ca11da5b57040410f356ed2478ea8d7d551
+      checksum: 66f1e4acde5664a176cd917dc82a63984a465b866b8d41e0cb68a9851b02932b
     -
       id: process-processes-authoring-parity-audit-yaml
       path: processes/authoring-parity-audit.yaml
       kind: process
-      checksum: 6f292273f79b952884ef8bca433bfd42d78c2b810234cd657f55e6bc4c0764c7
+      checksum: 79b011c6c267cb599f5cc5751443624788c72faa0f31186a578fa81ff7ce03f1
     -
       id: process-processes-task-batch-execution-yaml
       path: processes/task-batch-execution.yaml
       kind: process
-      checksum: b45e0cf7c9379816e45afd209dfac6080b85cc4444b4c1d2159cbf902f8dc0f2
+      checksum: f761bf4044fdd08bba36b02753935ff77d3dcf03694d9bdf18d7a555789e505d
     -
       id: package-packages-process-forge-core-yaml
       path: packages/process-forge-core.yaml
       kind: package
-      checksum: 170d1f7abf77f9e470ca177c1dba2fd140423de29aed2a07c4774ddfbb7c0791
+      checksum: ce0c1ff08465b9475526f614c5f66432334cb38e571562f0599bb213a5b2cb96
     -
       id: package-packages-process-forge-software-development-yaml
       path: packages/process-forge-software-development.yaml
       kind: package
-      checksum: c3c812d40436f9fb3958d44904baaa19575437c895d1edc0161f4c23f1542a7e
+      checksum: ee811d3c2e0bc1d9fc7558109305e081132ca0ce37c6f74a4afd4e9e1ccbf4de
     -
       id: package-packages-process-forge-content-yaml
       path: packages/process-forge-content.yaml
       kind: package
-      checksum: 359b014bca2e2e6288c4d0a10f27b84dab7a7c76e714d086d4adc50bf3e4ef4e
+      checksum: d7b648c47e9c0ea245fbcd5beb12b3f8d6619e11d9d89b5af2e9900f18c168ec
     -
       id: package-packages-process-forge-testing-yaml
       path: packages/process-forge-testing.yaml
       kind: package
-      checksum: 1446954bc23d0868e2adffe1f24dfbdded8585be710daa6b488ed6c98a321af8
+      checksum: 8d26693f376495f490e3416f4cb0688b4d87baf445cfaf417dfa892893b724dd
     -
       id: package-packages-process-forge-knowledge-governance-yaml
       path: packages/process-forge-knowledge-governance.yaml
       kind: package
-      checksum: d1d46b126a1e314bf9e908eebd5a1abe0ef762f3e7a83df3ae505e7d446b0bbf
+      checksum: 5595ac155a35b71d9e0382c07d9aebaa37a25f82532c35326e3291df950e0d3a
 knowledge_stack:
   -
     id: processforge.core
-    version: ^0.1
+    version: ^1.0
     source: distribution
     distribution: processforge
   -
     id: project.process-forge
-    version: 0.1.0
+    version: 1.0.0
     source: project
 resolved_policies:
   hard:

@@ -85,8 +85,8 @@ def write_answers(path: Path, body: str) -> Path:
 
 def positive_workflow(root: Path) -> None:
     project = make_project(root, "positive")
-    process_id = "seo-audit"
-    pf("process-authoring-start", "--project-root", str(project), "--id", process_id, "--title", "SEO Audit", "--apply")
+    process_id = "quality-audit"
+    pf("process-authoring-start", "--project-root", str(project), "--id", process_id, "--title", "Quality Audit", "--apply")
     session = project / ".pf" / "authoring" / "processes" / process_id
     assert_file(session / "answers.yaml")
     assert_file(session / "draft.process.yaml")
@@ -99,9 +99,9 @@ def positive_workflow(root: Path) -> None:
         project / "prompts" / f"{process_id}-agent.md",
         project / "docs" / "processes" / f"{process_id}.md",
         project / "examples" / "process-authoring" / process_id / "README.md",
-        project / "examples" / "process-authoring" / process_id / "process-authoring-seo-audit-report.md",
-        project / "examples" / "process-authoring" / process_id / "process-authoring-seo-audit-review.md",
-        project / "examples" / "process-authoring" / process_id / "process-authoring-seo-audit-handoff.md",
+        project / "examples" / "process-authoring" / process_id / f"process-authoring-{process_id}-report.md",
+        project / "examples" / "process-authoring" / process_id / f"process-authoring-{process_id}-review.md",
+        project / "examples" / "process-authoring" / process_id / f"process-authoring-{process_id}-handoff.md",
     ]:
         assert_file(path)
     pf("process-doctor", "--project-root", str(project), "--process", process_id)
@@ -109,8 +109,8 @@ def positive_workflow(root: Path) -> None:
         raise AssertionError("process-list did not include authored process")
     if "STAGES:" not in pf("process-describe", "--project-root", str(project), "--process", process_id).stdout:
         raise AssertionError("process-describe did not print stages")
-    run_id = "seo-audit-run"
-    pf("run-create", "--project-root", str(project), "--id", run_id, "--title", "SEO audit run", "--process", process_id, "--apply")
+    run_id = "quality-audit-run"
+    pf("run-create", "--project-root", str(project), "--id", run_id, "--title", "Quality audit run", "--process", process_id, "--apply")
     pf("task-create", "--project-root", str(project), "--run", run_id, "--id", "task-001-audit", "--title", "Audit task", "--process", process_id, "--apply")
     pf("iteration-add", "--project-root", str(project), "--task", "task-001-audit", "--kind", "work", "--summary", "Initial audit work.", "--apply")
     pf("iteration-add", "--project-root", str(project), "--task", "task-001-audit", "--kind", "debug", "--summary", "Checked missing evidence.", "--apply")

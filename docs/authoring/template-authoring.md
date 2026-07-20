@@ -5,11 +5,11 @@ A reusable template must be stable enough to copy and adapt.
 Template manifests should state:
 
 - id
+- title
 - version
-- source package
-- type
-- compatible stages
-- compatible platforms
+- kind or type
+- compatible stages or processes when relevant
+- compatible platforms when relevant
 - placeholders
 - allowed modifications
 - forbidden modifications
@@ -17,7 +17,10 @@ Template manifests should state:
 - validation rules
 - usage recording policy
 
-Template bodies should keep placeholders explicit and avoid hidden local assumptions.
+Template bodies should keep placeholders explicit and avoid hidden local
+assumptions.
+
+## Current CLI
 
 For workplace resource authoring, prefer the structured CLI:
 
@@ -26,8 +29,22 @@ python bin/pf.py template-create --workplace ./workplace --id report.audit.basic
 python bin/pf.py template-doctor --workplace ./workplace --template report.audit.basic
 ```
 
-# Resource Management Template Rules
+`template-create` writes a reusable template under the selected workplace
+template root. If no `--template-root` is supplied, the command uses the
+registry/default root, normally `${PF_TEMPLATES}` / `reusable-templates`.
+The command creates `template.yaml` and companion template files.
 
-Template packages remain simple by default. A folder under `templates/file/<template-id>/` with a clear `README.md` is enough for MVP.
+`template-add` is the proposal/copy command for registering an existing source
+folder:
 
-Add `template.yaml` only when metadata is needed. Do not put private absolute paths or secrets in template documentation or payload files.
+```bash
+python bin/pf.py template-add --workplace ./workplace --type file --id <template-id> --source <source-folder> --apply
+```
+
+## Resource Management Template Rules
+
+Template roots are selected through the workplace `templates` registry. Do not
+assume a hardcoded `templates/file/<template-id>/` path for new authoring.
+
+Do not put private absolute paths or secrets in template documentation or
+payload files.

@@ -1,0 +1,30 @@
+schema_version: 1
+
+id: platform.example-child
+title: "Example Child Platform"
+type: platform_contract
+version: "1.0.0"
+
+extends:
+  - id: platform.example-parent
+    required: true
+
+requires:
+  platforms:
+    - id: platform.example-parent
+      required: true
+  knowledge_packages:
+    - docs.example-child
+
+project_type_hints:
+  - example-child-project
+
+detection:
+  project_type_hints:
+    - example-child-project
+
+includes:
+  knowledge_packages:
+    - id: docs.example-child
+      required: true
+      load_policy: on_demand

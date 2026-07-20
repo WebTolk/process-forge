@@ -2,16 +2,17 @@
 
 `terms.yaml` maps human phrases to ProcessForge registries and resource scopes.
 
-The registry supports Russian aliases such as:
+The registry supports aliases such as:
 
-- `локальная база знаний`
-- `локальные знания`
-- `папки со знаниями`
-- `проектная база знаний`
-- `платформенные знания Joomla`
-- `глобальные шаблоны`
-- `проектные шаблоны`
-- `глобальные инструменты`
+- `local knowledge base`
+- `local knowledge`
+- `knowledge folders`
+- `documentation roots`
+- `project knowledge base`
+- `platform knowledge`
+- `global templates`
+- `project templates`
+- `global tools`
 - `MCP`
 
 Terms can include `resolves_to` metadata so agents can map a user phrase to a

@@ -13,8 +13,17 @@ archive names, and reports.
 - Read `.pf/START_AGENT_HERE.md` before project work.
 - Keep workplace resources at the workplace level and project execution records
   under the project-local `.pf/` folder.
+- Keep process definitions platform-agnostic. A process describes mechanics:
+  stages, roles, gates, artifacts, capabilities, tools, hooks, and task loops.
+- Treat platform contracts as workplace composition manifests. They compose
+  knowledge packages, templates, tools, MCP providers, capabilities, processes,
+  coding standards, project type hints, policies, and optional parent/child
+  platform inheritance.
 - For public examples and reports, use neutral release archive names such as
   `dist/processforge-release.zip`.
+- `--interactive` is accepted by first-run initialization commands for UX
+  compatibility; current commands remain file-first and do not require terminal
+  prompting.
 
 ## Distribution Root Checks
 
@@ -79,6 +88,13 @@ python .pf/runtime/bin/pf.py run-doctor --project-root . --run <run-id>
 
 ## Workplace Resource Authoring
 
+Register tools and MCP providers:
+
+```bash
+python <processforge-root>/bin/pf.py tool-register --workplace <workplace-path> --id <tool-id> --capability <capability> --command "<command without secrets>" --apply
+python <processforge-root>/bin/pf.py mcp-register --workplace <workplace-path> --id <mcp-id> --capability <capability> --command "<command without secrets>" --apply
+```
+
 Reusable template:
 
 ```bash
@@ -97,8 +113,20 @@ Platform contract:
 
 ```bash
 python <processforge-root>/bin/pf.py platform-create --workplace <workplace-path> --id <platform-id> --title "<title>" --apply
+python <processforge-root>/bin/pf.py platform-contract-install --workplace <workplace-path> --id <platform-id> --required-packages <package-id> --required-tools <tool-id> --required-mcp <mcp-id> --required-templates <template-id> --apply
 python <processforge-root>/bin/pf.py platform-contract-doctor --workplace <workplace-path> --platform <platform-id>
 ```
+
+Knowledge resources:
+
+```bash
+python <processforge-root>/bin/pf.py knowledge-add-url --workplace <workplace-path> --package <package-id> --url <url> --apply
+python <processforge-root>/bin/pf.py knowledge-add-resource --workplace <workplace-path> --package <package-id> --resource-file <resource-yaml> --apply
+python <processforge-root>/bin/pf.py knowledge-index-refresh --workplace <workplace-path> --package <package-id> --apply
+```
+
+Platform contracts should be created after their required packages, templates,
+tools, MCP providers, processes, coding standards, and capabilities exist.
 
 ## Human Prompt: Setup
 

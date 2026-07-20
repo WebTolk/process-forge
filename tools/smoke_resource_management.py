@@ -65,7 +65,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-rm-smoke-") as tmp:
         workplace = Path(tmp) / "workplace"
         workplace.mkdir()
-        (workplace / "knowledge" / "joomla" / "docs").mkdir(parents=True)
+        (workplace / "knowledge" / "example" / "docs").mkdir(parents=True)
         package_root = workplace / "knowledge" / "packages"
         package_root.mkdir(parents=True)
         alt_package_root = workplace / "knowledge" / "alt-packages"
@@ -144,16 +144,16 @@ def main() -> int:
             ),
             encoding="utf-8",
         )
-        windows_abs = "D" + ":/" + "Knowledge/Joomla"
-        posix_abs = "/" + "srv" + "/knowledge/joomla"
+        windows_abs = "D" + ":/" + "Knowledge/Example"
+        posix_abs = "/" + "srv" + "/knowledge/example"
         (workplace / "registries" / "knowledge-roots.yaml").write_text(
             "\n".join(
                 [
                     "schema_version: 1",
                     "knowledge_roots:",
-                    "  - id: joomla-root",
-                    "    label: Joomla Root",
-                    "    path: ${PF_KNOWLEDGE}/joomla",
+                    "  - id: example-root",
+                    "    label: Example Root",
+                    "    path: ${PF_KNOWLEDGE}/example",
                     "    scope: workplace",
                     "    visibility: private",
                     "    indexing_policy: manual",
@@ -193,7 +193,7 @@ def main() -> int:
         (workplace / "registries" / "tools.yaml").write_text("schema_version: 1\ntools: []\n", encoding="utf-8")
         (workplace / "registries" / "mcp.yaml").write_text("schema_version: 1\nmcp_servers: []\n", encoding="utf-8")
 
-        resolved = run("path-resolve", "--workplace", str(workplace), "--path", "${PF_KNOWLEDGE}/joomla/docs")
+        resolved = run("path-resolve", "--workplace", str(workplace), "--path", "${PF_KNOWLEDGE}/example/docs")
         if "resolved_from_constant" not in command_output(resolved):
             raise AssertionError("path-resolve did not expand PF_KNOWLEDGE")
         run("doctor-workplace", "--root", str(workplace))
@@ -203,11 +203,11 @@ def main() -> int:
             "--workplace",
             str(workplace),
             "--package",
-            "platform.joomla",
+            "platform.example",
             "--package-root",
             "global",
             "--url",
-            "https://example.com/joomla/article",
+            "https://example.com/example/article",
             "--kind",
             "article",
         )
@@ -223,11 +223,11 @@ def main() -> int:
             "--workplace",
             str(workplace),
             "--package",
-            "platform.joomla",
+            "platform.example",
             "--package-root",
             "global",
             "--url",
-            "https://example.com/joomla/applied",
+            "https://example.com/example/applied",
             "--kind",
             "article",
             "--apply",
@@ -237,10 +237,10 @@ def main() -> int:
         resource_file.write_text(
             "\n".join(
                 [
-                    "id: joomla-source",
+                    "id: example-source",
                     "kind: source_tree",
-                    "title: Joomla source mirror",
-                    f"path: {str((workplace / 'knowledge' / 'joomla' / 'docs').as_posix())}",
+                    "title: Example source mirror",
+                    f"path: {str((workplace / 'knowledge' / 'example' / 'docs').as_posix())}",
                     "load_policy: on_demand",
                     "index_policy: symbols",
                     "",
@@ -253,21 +253,21 @@ def main() -> int:
             "--workplace",
             str(workplace),
             "--package",
-            "platform.joomla",
+            "platform.example",
             "--package-root",
             "global",
             "--resource-file",
             str(resource_file),
             "--apply",
         )
-        package_manifest = package_root / "platform.joomla" / "package.yaml"
-        resource_index = package_root / "platform.joomla" / "indexes" / "resource-index.yaml"
+        package_manifest = package_root / "platform.example" / "package.yaml"
+        resource_index = package_root / "platform.example" / "indexes" / "resource-index.yaml"
         assert_exists(package_manifest)
         assert_exists(resource_index)
-        if (workplace / "packages" / "platform.joomla" / "package.yaml").exists():
+        if (workplace / "packages" / "platform.example" / "package.yaml").exists():
             raise AssertionError("package was written to legacy workplace/packages despite package_roots registry")
         package_text = package_manifest.read_text(encoding="utf-8")
-        if "registry: knowledge_roots" not in package_text or "id: joomla-root" not in package_text:
+        if "registry: knowledge_roots" not in package_text or "id: example-root" not in package_text:
             raise AssertionError("absolute resource path under known root did not become knowledge_roots path_ref")
         if "package_root: global" not in package_text:
             raise AssertionError("package manifest did not record authoritative package_root")
@@ -277,14 +277,14 @@ def main() -> int:
         if "package_root: global" not in index_text:
             raise AssertionError("resource index did not record selected package_root")
 
-        run("knowledge-index-refresh", "--workplace", str(workplace), "--package", "platform.joomla", "--package-root", "global", "--apply")
-        run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "platform.joomla", "--package-root", "global")
+        run("knowledge-index-refresh", "--workplace", str(workplace), "--package", "platform.example", "--package-root", "global", "--apply")
+        run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "platform.example", "--package-root", "global")
         unknown_root = run(
             "knowledge-add-resource",
             "--workplace",
             str(workplace),
             "--package",
-            "platform.joomla",
+            "platform.example",
             "--package-root",
             "unknown-root",
             "--resource-file",
@@ -299,7 +299,7 @@ def main() -> int:
             "--workplace",
             str(workplace),
             "--package",
-            "platform.joomla",
+            "platform.example",
             "--package-root",
             "missing-root",
             "--resource-file",
@@ -313,7 +313,7 @@ def main() -> int:
         template_source = Path(tmp) / "template-source"
         template_source.mkdir()
         (template_source / "README.md").write_text("# Template\n", encoding="utf-8")
-        run("template-add", "--workplace", str(workplace), "--type", "file", "--id", "joomla-form-field", "--source", str(template_source))
+        run("template-add", "--workplace", str(workplace), "--type", "file", "--id", "example-file-template", "--source", str(template_source))
         run("tool-register", "--workplace", str(workplace), "--id", "phpstan", "--capability", "php.static_analysis", "--command", "phpstan")
         run("mcp-register", "--workplace", str(workplace), "--id", "context7", "--capability", "official_documentation", "--command", "context7")
 
@@ -374,10 +374,10 @@ def main() -> int:
         if "WARN" not in command_output(warned):
             raise AssertionError("knowledge-package-doctor did not warn on heavy resource without load_policy")
 
-        duplicate_pkg = alt_package_root / "platform.joomla" / "package.yaml"
+        duplicate_pkg = alt_package_root / "platform.example" / "package.yaml"
         duplicate_pkg.parent.mkdir(parents=True)
         duplicate_pkg.write_text(package_text, encoding="utf-8")
-        duplicate_doctor = run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "platform.joomla")
+        duplicate_doctor = run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "platform.example")
         if "duplicate package id" not in command_output(duplicate_doctor):
             raise AssertionError("knowledge-package-doctor did not warn on duplicate package id across roots")
         duplicate_write = run(
@@ -385,7 +385,7 @@ def main() -> int:
             "--workplace",
             str(workplace),
             "--package",
-            "platform.joomla",
+            "platform.example",
             "--resource-file",
             str(resource_file),
             "--apply",

@@ -11,7 +11,28 @@
     "command": { "type": "string", "minLength": 1 },
     "scope": { "type": "string" },
     "status": { "enum": ["configured", "optional", "missing", "disabled"] },
+    "update_sites": { "type": "array", "items": { "$ref": "#/$defs/updateSite" } },
     "healthcheck": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "updateSite": {
+      "type": "object",
+      "required": ["id", "enabled", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "enabled": { "type": "boolean" },
+        "type": { "type": "string", "minLength": 1 },
+        "priority": { "type": "integer" },
+        "url": { "type": "string" },
+        "path": { "type": "string" },
+        "owner": { "type": "string" },
+        "repo": { "type": "string" },
+        "channels": { "type": "array", "items": { "type": "string" } },
+        "auth_ref": { "type": "string" },
+        "trust": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": true
 }

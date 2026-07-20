@@ -16,7 +16,7 @@ Implemented the MVP linked workplace/resource/self-update slice from
 - Workplace initialization now creates `registries/distributions.yaml`.
 - Project initialization records `processforge.core` as `source: distribution`.
 - Project initialization now selects platforms from detected files, `project.type`, `project.type_hint`, platform hints, and `intake`.
-- `joomla-component`, `joomla-plugin`, and `joomla-library` hints select `platform.joomla`.
+- `example-parent-project`, `example-extension`, and `example-library` hints select `platform.example-parent`.
 - Platform contract resolution expands required capabilities plus knowledge package, tool, MCP, and template ids.
 - Snapshot resolution indexes package `resources` into `snapshot.knowledge_resources.selected` without reading heavy resource paths.
 - Snapshot resource records never expose absolute local paths; resource `path` values are converted to `path_ref`, and private absolute paths are redacted.
@@ -58,7 +58,7 @@ Implemented the MVP linked workplace/resource/self-update slice from
 - `python tools/processforge.py events-validate --project-root .`: pass
 - `python tools/processforge.py hooks-dispatch --project-root . --event-type assignment.completed --dry-run`: pass
 - Temporary init-project smoke: pass
-- Joomla type-hint/platform/resource resolver smoke: pass
+- Example Parent Platform type-hint/platform/resource resolver smoke: pass
 - Snapshot public path smoke: pass
 - Invalid hooks negative smoke: friendly FAIL, no traceback
 - Missing linked distribution negative smoke: FAIL

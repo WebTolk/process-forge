@@ -1,0 +1,108 @@
+schema_version: 1
+capsule:
+  id: task-004-subagent-launch-smoke-capsule
+  generated_at: '2026-07-20T08:56:23Z'
+  assignment_id: task-004-subagent-launch-smoke
+  assignment_path: .pf/assignments/task-004-subagent-launch-smoke.yaml
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 3a6ce27b93ce773c4ca1545128ecb1dbc0313499f7b5474b0da14dcb528ad55c
+  worker_may_rebuild_context: false
+assignment:
+  id: task-004-subagent-launch-smoke
+  path: .pf/assignments/task-004-subagent-launch-smoke.yaml
+  status: in_progress
+  objective: Verify that a subagent can receive a scoped assignment capsule and produce only the allowed smoke artifact.
+  execution_mode:
+    kind: planning_only
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: project-context
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/task-004-subagent-launch-smoke.yaml
+  context_artifacts:
+    -
+      path: .pf/artifacts/multiagent-assignment-contract-20260720.md
+      role: input
+      required: true
+      mutable_by_worker: false
+scope:
+  allowed_files:
+    - .pf/artifacts/multiagent-subagent-smoke-20260720.md
+  allowed_read_files:
+    []
+  forbidden_files:
+    - tools/processforge.py
+    - schemas/*
+  ownership:
+    owner_id: task-004-subagent-launch-smoke
+    owner_label: worker-task-004-subagent-launch-smoke
+    role: smoke-worker
+    writer: true
+    owned_files:
+      - .pf/artifacts/multiagent-subagent-smoke-20260720.md
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/artifacts/multiagent-subagent-smoke-20260720.md
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: changed_files
+      type: unspecified
+      required: true
+    -
+      id: smoke_result
+      type: unspecified
+      required: true
+  expected_report:
+    language: ru
+    artifact: .pf/artifacts/multiagent-subagent-smoke-20260720.md
+    format: concise_markdown
+    include:
+      - changed_files
+      - smoke_result
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/task-004-subagent-launch-smoke.ndjson
+  event_correlation_id: assignment-task-004-subagent-launch-smoke
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/task-004-subagent-launch-smoke.yaml
+allowed_files:
+  - .pf/artifacts/multiagent-subagent-smoke-20260720.md
+forbidden_files:
+  - tools/processforge.py
+  - schemas/*
+required_outputs:
+  -
+    id: changed_files
+    type: unspecified
+    required: true
+  -
+    id: smoke_result
+    type: unspecified
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-task-004-subagent-launch-smoke

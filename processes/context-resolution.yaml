@@ -1,7 +1,7 @@
 schema_version: 1
 id: context-resolution
 name: Context Resolution
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Resolve ProcessForge sources into context index, rules, conflict report, and assignment context packages.
 required_capabilities:

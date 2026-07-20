@@ -28,7 +28,7 @@ Each line is a JSON event envelope with:
 The schema is `schemas/event-envelope.schema.json`. The process taxonomy is
 described by `schemas/process-event.schema.json`.
 
-Required event categories include:
+Common event categories include:
 
 - `session.started`
 - `session.ended`
@@ -56,6 +56,11 @@ Required event categories include:
 - `context.snapshot.refreshed`
 - `context.snapshot.stale`
 - `capability.missing`
+
+This is a readable core subset, not the complete enum. The code-level source of
+truth for the current accepted event types is `REQUIRED_PROCESSFORGE_EVENT_TYPES`
+in `tools/processforge.py`; event envelope structure is validated by
+`schemas/event-envelope.schema.json`.
 
 Process definitions declare the events they require or subscribe to. Runtime hook
 delivery is configured separately in `.pf/hooks.yaml`.

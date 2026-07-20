@@ -1,0 +1,39 @@
+schema_version: 1
+id: task-002-workplace-refresh
+title: Refresh shared workplace
+run_id: docs-workplace-audit-20260720
+process: workplace-initialization
+status: done
+created_at: '2026-07-20T06:03:44Z'
+updated_at: '2026-07-20T06:33:28Z'
+objective: 'Update D:\\.agents workplace installation to current ProcessForge and verify workplace and project onboarding flows.'
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  -
+    id: iter-001
+    kind: work
+    status: completed
+    started_at: '2026-07-20T06:33:27Z'
+    summary: 'Updated D:\\.agents\\process-forge from validated archive, normalized distribution registry metadata, and preserved installed backups.'
+    artifacts:
+      - .pf/artifacts/runs/docs-workplace-audit-20260720/task-002-workplace-refresh/work-log.md
+    completed_at: '2026-07-20T06:33:27Z'
+  -
+    id: iter-002
+    kind: debug
+    status: passed
+    started_at: '2026-07-20T06:33:28Z'
+    summary: Ran doctor-workplace, package/platform/template audits, and Joomla-plugin-like project onboarding smoke; context check passed.
+    artifacts:
+      - .pf/artifacts/runs/docs-workplace-audit-20260720/task-002-workplace-refresh/debug-log.md
+    completed_at: '2026-07-20T06:33:28Z'
+result:
+  status: done
+  summary: Shared workplace update and onboarding smoke completed with documented residual unmanaged directories.
+  artifacts:
+    - .pf/artifacts/documentation-workplace-audit-20260720.md

@@ -85,7 +85,7 @@ def positive_root_checks() -> None:
             raise AssertionError(f"critical process failed parity: {process_id}")
     pf("template-parity-check", "--project-root", str(ROOT), "--template", "process-agent-prompt")
     pf("knowledge-package-parity-check", "--project-root", str(ROOT), "--package", "process-forge-core")
-    pf("platform-parity-check", "--project-root", str(ROOT), "--platform", "platform-contract-joomla")
+    pf("platform-parity-check", "--project-root", str(ROOT), "--platform", "platform-contract-example-parent")
     pf("authoring-parity-check-all", "--project-root", str(ROOT), timeout=180)
     top_summary = ROOT / ".pf" / "artifacts" / "parity" / "summary.yaml"
     assert_file(top_summary)
@@ -98,7 +98,7 @@ def positive_root_checks() -> None:
     for report in [
         ROOT / ".pf" / "reviews" / "parity" / "resources" / "template-process-agent-prompt.md",
         ROOT / ".pf" / "reviews" / "parity" / "resources" / "knowledge-package-process-forge-core.md",
-        ROOT / ".pf" / "reviews" / "parity" / "resources" / "platform-platform-contract-joomla.md",
+        ROOT / ".pf" / "reviews" / "parity" / "resources" / "platform-platform-contract-example-parent.md",
     ]:
         assert_file(report)
         report_text = report.read_text(encoding="utf-8", errors="replace")
@@ -110,9 +110,9 @@ def positive_root_checks() -> None:
 
 def temp_process_checks(root: Path) -> None:
     project = make_project(root, "created-process")
-    answers = ROOT / "examples" / "process-authoring" / "seo-audit" / "answers.yaml"
+    answers = ROOT / "examples" / "process-authoring" / "quality-audit" / "answers.yaml"
     pf("process-create", "--project-root", str(project), "--answers", str(answers), "--apply")
-    pf("process-parity-check", "--project-root", str(project), "--process", "seo-audit")
+    pf("process-parity-check", "--project-root", str(project), "--process", "quality-audit")
 
 
 def write_yaml(path: Path, text: str) -> Path:

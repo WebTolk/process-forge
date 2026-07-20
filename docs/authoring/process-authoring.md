@@ -7,10 +7,10 @@ applies public process files only after the draft passes blocking checks.
 ## Commands
 
 ```bash
-python bin/pf.py process-authoring-start --project-root <project-root> --id seo-audit --title "SEO Audit" --apply
-python bin/pf.py process-authoring-review --project-root <project-root> --process seo-audit
-python bin/pf.py process-authoring-apply --project-root <project-root> --process seo-audit
-python bin/pf.py process-doctor --project-root <project-root> --process seo-audit
+python bin/pf.py process-authoring-start --project-root <project-root> --id quality-audit --title "Quality Audit" --apply
+python bin/pf.py process-authoring-review --project-root <project-root> --process quality-audit
+python bin/pf.py process-authoring-apply --project-root <project-root> --process quality-audit
+python bin/pf.py process-doctor --project-root <project-root> --process quality-audit
 ```
 
 One-command creation is available when an answers file already exists:

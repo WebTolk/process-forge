@@ -1,4 +1,4 @@
-﻿# Project Context Snapshot
+# Project Context Snapshot
 
 Project context snapshot is the computed operational map for a ProcessForge
 project. It is created during project init or project refresh and is read at

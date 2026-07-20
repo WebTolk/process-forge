@@ -1,4 +1,4 @@
-﻿# Hooks And Webhooks
+# Hooks And Webhooks
 
 Hooks deliver ProcessForge events without requiring a backend or network send.
 The process definition declares which events matter; `.pf/hooks.yaml` declares

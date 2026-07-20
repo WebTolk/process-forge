@@ -1,0 +1,41 @@
+schema_version: 1
+capsule:
+  id: task-002-multiagent-assignment-contract-capsule
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 3a6ce27b93ce773c4ca1545128ecb1dbc0313499f7b5474b0da14dcb528ad55c
+  worker_may_rebuild_context: false
+assignment:
+  id: task-002-multiagent-assignment-contract
+  path: .pf/assignments/task-002-multiagent-assignment-contract.yaml
+  status: in_progress
+context:
+  snapshot_id: project-context
+  freshness: fresh
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/task-002-multiagent-assignment-contract.yaml
+allowed_files:
+  - .pf/assignments/task-002-multiagent-assignment-contract.yaml
+  - .pf/artifacts/multiagent-assignment-contract-20260720.md
+forbidden_files:
+  - tools/processforge.py
+  - tools/validate-process-forge-schemas.py
+  - schemas/*
+  - templates/*
+  - .pf/assignments/task-001-update-contracts-readonly.yaml
+  - .pf/artifacts/update-framework-implementation-spec-20260720.md
+required_outputs:
+  - changed_files
+  - proposed_assignment_schema_fields
+  - capsule_generation_requirements
+  - non_overlap_rules
+  - implementation_followup_tasks
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+telemetry:
+  events: .pf/runtime/telemetry/task-002-multiagent-assignment-contract.ndjson
+event_correlation_id: assignment-task-002-multiagent-assignment-contract

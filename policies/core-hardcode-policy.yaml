@@ -1,0 +1,12 @@
+schema_version: 1
+
+targets:
+  - tools/processforge.py
+
+forbidden_core_patterns:
+  - id: builtin-platform-contracts-constant
+    pattern: "BUILTIN_PLATFORM_CONTRACTS"
+  - id: platform-required-parents-constant
+    pattern: "PLATFORM_REQUIRED_PARENTS"
+  - id: base-tech-platform-ids-constant
+    pattern: "BASE_TECHNOLOGY_PLATFORM_IDS"

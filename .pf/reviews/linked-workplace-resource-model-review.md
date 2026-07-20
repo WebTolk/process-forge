@@ -16,7 +16,7 @@ Codex
 - Doctor validates hooks and linked distribution.
 - Invalid hooks fail gracefully.
 - Resource, platform, template, and update contracts exist.
-- `platform.joomla` is selected from Joomla project hints and resolves contract includes.
+- `platform.example-parent` is selected from Example Parent Platform project hints and resolves contract includes.
 - Package resources are indexed into the snapshot without loading resource contents.
 - External package resource paths are represented with `path_ref`; absolute local paths are redacted from public snapshots.
 - Required and recommended platform tools/MCP/templates are separated in snapshot output.
@@ -40,7 +40,7 @@ pass_with_conditions
 - `.pf/contexts/project-context.snapshot.yaml`
 - `docs/concepts/linked-workplace-model.md`
 - `schemas/distributions-registry.schema.json`
-- `templates/platform-contract-joomla.yaml`
+- `templates/platform-contract-example-parent.yaml`
 - `processes/processforge-update-check.yaml`
 
 ## Recommendation

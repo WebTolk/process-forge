@@ -17,3 +17,7 @@ python bin/pf.py knowledge-package-doctor --workplace <workplace-path> --package
 Public package manifests should reference resources by ids or portable path
 references. Private machine paths belong in private registries, not in public
 release files.
+
+Heavy documentation and source trees are not copied into package manifests or package indexes. Public package YAML must use `path_ref`, especially `registry: knowledge_roots` and `id: local-docs`, for private local documentation roots.
+
+Package manifests should stay portable. Do not write private absolute paths such as user home directories or machine-local drive paths into public package/index YAML.

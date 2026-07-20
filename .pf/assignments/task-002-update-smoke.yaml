@@ -1,0 +1,30 @@
+schema_version: 1
+id: task-002-update-smoke
+title: Test local update path
+run_id: pf-1-0-version-update-20260720
+process: processforge-update-check
+status: done
+created_at: '2026-07-20T06:49:30Z'
+updated_at: '2026-07-20T07:03:01Z'
+objective: 'Use current update-check commands and validated archive to test updating D:\\.agents ProcessForge installation.'
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  -
+    id: iter-001
+    kind: test
+    status: passed
+    started_at: '2026-07-20T07:02:52Z'
+    summary: Validated update discovery from 0.1.0 to 1.0.0, replaced the machine installation, and verified the installed distribution and workplace doctor.
+    artifacts:
+      - .pf/artifacts/runs/pf-1-0-version-update-20260720/task-002-update-smoke/work-log.md
+    completed_at: '2026-07-20T07:02:52Z'
+result:
+  status: done
+  summary: 'Machine update path from the 0.1.0 line to 1.0.0 was tested with the installed distribution under D:\.agents.'
+  artifacts:
+    - .pf/artifacts/pf-1-0-update-report-20260720.md

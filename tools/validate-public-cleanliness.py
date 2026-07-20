@@ -14,9 +14,11 @@ PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts
 PUBLIC_ROOT_FILES = ["README.md", "QUICKSTART.md", "LICENSE", "CHANGELOG.md", "VERSION", ".processforge-releaseignore"]
 PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 PF_PUBLIC_DIRS: list[str] = []
+PF_FLOW_DIRS = ["artifacts", "assignments", "contexts", "handoffs", "logs", "reviews"]
 PF_PRIVATE_PARTS = {"runtime", "private-notes", "cache"}
 SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 SKIP_SUFFIXES = {".pyc", ".pyo"}
+TEXT_SUFFIXES = {".md", ".yaml", ".yml", ".json", ".txt", ".py", ".csv", ".sha256"}
 
 INTERNAL_FLOW_MARKER = "." + "web" + "tolk"
 FORBIDDEN_LITERAL_PATTERNS = [
@@ -31,6 +33,43 @@ FORBIDDEN_REGEX_PATTERNS = [
     re.compile(r"/home/[A-Za-z0-9_.-]+/"),
     re.compile(r"users\\[A-Za-z0-9_.-]+", re.IGNORECASE),
 ]
+
+FLOW_CORE_DIRS = {"schemas", "processes", "packages", "templates", "prompts", "bin", "tools", "updates", "policies", "seeds"}
+ALLOWED_PLATFORM_ID_PREFIXES = (
+    "platform.example",
+    "platform.test",
+    "platform.child",
+    "platform.parent",
+    "platform.broken",
+    "platform.optional",
+    "platform.missing",
+    "platform.a",
+    "platform.b",
+    "platform.api-example-provider",
+    "platform.contract",
+    "platform.authoring",
+    "platform.detected",
+    "platform.system",
+    "platform.yaml",
+    "platform.yml",
+)
+ALLOWED_DOCS_ID_PREFIXES = (
+    "docs.example",
+    "docs.test",
+    "docs.php",
+    "docs.web",
+    "docs.api",
+    "docs.child",
+    "docs.parent",
+    "docs.required",
+    "docs.optional",
+    "docs.missing",
+    "docs.bad",
+    "docs.private",
+    "docs.a",
+)
+PLATFORM_ID_RE = re.compile(r"(?<![A-Za-z0-9_-])(platform\.[A-Za-z0-9][A-Za-z0-9.-]*)")
+DOCS_ID_RE = re.compile(r"(?<![A-Za-z0-9_-])(docs\.[A-Za-z0-9][A-Za-z0-9.-]*)")
 
 
 def public_files(root_path: Path) -> list[Path]:
@@ -67,6 +106,51 @@ def public_files(root_path: Path) -> list[Path]:
                     and path.name != "process-forge.local.yaml"
                 )
     return sorted(files, key=lambda path: path.relative_to(root_path).as_posix())
+
+
+def flow_core_files(root_path: Path) -> list[Path]:
+    files: list[Path] = []
+    for dirname in FLOW_CORE_DIRS:
+        root = root_path / dirname
+        if not root.is_dir():
+            continue
+        files.extend(
+            path
+            for path in root.rglob("*")
+            if path.is_file()
+            and not any(part in SKIP_DIRS for part in path.relative_to(root).parts)
+            and path.suffix.lower() in TEXT_SUFFIXES
+        )
+    pf_root = root_path / ".pf"
+    if pf_root.is_dir():
+        for dirname in PF_FLOW_DIRS:
+            root = pf_root / dirname
+            if not root.is_dir():
+                continue
+            files.extend(
+                path
+                for path in root.rglob("*")
+                if path.is_file()
+                and not any(part in SKIP_DIRS or part in PF_PRIVATE_PARTS for part in path.relative_to(pf_root).parts)
+                and path.suffix.lower() in TEXT_SUFFIXES
+            )
+    return sorted(set(files), key=lambda path: path.relative_to(root_path).as_posix())
+
+
+def platform_neutrality_failures(root_path: Path) -> list[str]:
+    failures: list[str] = []
+    for path in flow_core_files(root_path):
+        rel = path.relative_to(root_path).as_posix()
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for match in PLATFORM_ID_RE.findall(text):
+            normalized = match.rstrip(".,;:)]}'\"`").lower()
+            if not normalized.startswith(ALLOWED_PLATFORM_ID_PREFIXES):
+                failures.append(f"{rel}: non-neutral platform id {match!r}")
+        for match in DOCS_ID_RE.findall(text):
+            normalized = match.rstrip(".,;:)]}'\"`").lower()
+            if not normalized.startswith(ALLOWED_DOCS_ID_PREFIXES):
+                failures.append(f"{rel}: non-neutral docs package id {match!r}")
+    return failures
 
 
 def validate_releaseignore(root_path: Path) -> list[str]:
@@ -113,6 +197,7 @@ def main() -> int:
         for pattern in FORBIDDEN_REGEX_PATTERNS:
             if pattern.search(text):
                 failures.append(f"{rel}: forbidden private/local path pattern {pattern.pattern!r}")
+    failures.extend(platform_neutrality_failures(root_path))
     failures.extend(validate_releaseignore(root_path))
     if failures:
         for failure in failures:

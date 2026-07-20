@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/update-candidates.schema.json",
+  "title": "ProcessForge Update Candidate Cache",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "channel", "candidates", "conflicts"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "generated_at": { "type": "string", "minLength": 1 },
+    "channel": { "type": "string", "minLength": 1 },
+    "candidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+    "conflicts": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+  },
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "required": ["type", "id", "scope"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "scope": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["subject", "available_version", "source_id", "status", "installable"],
+      "properties": {
+        "subject": { "$ref": "#/$defs/subject" },
+        "current_version": { "type": ["string", "null"] },
+        "available_version": { "type": "string", "minLength": 1 },
+        "source_id": { "type": "string", "minLength": 1 },
+        "status": {
+          "enum": [
+            "available",
+            "current",
+            "incompatible",
+            "yanked",
+            "conflict",
+            "missing_required_hash",
+            "missing_required_signature",
+            "source_failed"
+          ]
+        },
+        "installable": { "type": "boolean" },
+        "reason": { "type": ["string", "null"] },
+        "artifact_sha256": { "type": ["string", "null"] },
+        "migration_required": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

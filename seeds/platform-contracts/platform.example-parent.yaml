@@ -1,0 +1,46 @@
+schema_version: 1
+
+id: platform.example-parent
+title: "Example Parent Platform"
+type: platform_contract
+version: "1.0.0"
+
+project_type_hints:
+  - example-parent-project
+
+detection:
+  project_type_hints:
+    - example-parent-project
+  files:
+    any:
+      - "processforge-example.project"
+  file_contains:
+    - pattern: "example-parent"
+      files:
+        - "processforge-example.project"
+
+requires:
+  capabilities:
+    - filesystem.read
+    - filesystem.write
+    - repository.read
+    - markdown.editing
+    - schema_validation
+  knowledge_packages: []
+  tools: []
+  mcp: []
+  templates: []
+
+includes:
+  knowledge_packages:
+    - id: docs.example-parent
+      required: true
+      load_policy: on_demand
+  tools: []
+  mcp: []
+  templates:
+    - example.parent-artifact
+
+policies:
+  missing_required_capability: block
+  missing_optional_resource: warn

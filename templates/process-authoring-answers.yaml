@@ -1,12 +1,12 @@
 schema_version: 1
 process:
-  id: seo-audit
-  name: SEO Audit
-  version: 0.1.0
+  id: quality-audit
+  name: Quality Audit
+  version: 1.0.0
   status: draft
   kind: audit
   scope: project
-  description: Audit search visibility inputs and produce a prioritized report.
+  description: Audit project inputs and produce a prioritized quality report.
 run_model:
   supports_multiple_tasks: true
   default_task_loop:

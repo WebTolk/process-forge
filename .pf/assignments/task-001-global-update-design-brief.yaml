@@ -1,0 +1,39 @@
+schema_version: 1
+id: task-001-global-update-design-brief
+title: Design global ProcessForge update sources
+run_id: pf-global-update-design-20260720
+process: process-version-upgrade
+status: in_progress
+created_at: '2026-07-20T07:32:12Z'
+updated_at: '2026-07-20T07:42:52Z'
+objective: Plan URL-based global ProcessForge update sources and checks using Joomla updater as reference. Produce a planning assignment and collect a subagent report. No code edits.
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  -
+    id: iter-001
+    kind: research
+    status: completed
+    started_at: '2026-07-20T07:35:03Z'
+    summary: Created planning brief for global ProcessForge update sources and reviewed Joomla updater reference paths.
+    artifacts:
+      - .pf/artifacts/runs/pf-global-update-design-20260720/task-001-global-update-design-brief/work-log.md
+    completed_at: '2026-07-20T07:35:03Z'
+  -
+    id: iter-002
+    kind: review
+    status: completed
+    started_at: '2026-07-20T07:42:52Z'
+    summary: Collected subagent report for global update source registry, normalized manifests, discovery cache, notification flow, and operator approval boundaries.
+    artifacts:
+      - .pf/artifacts/runs/pf-global-update-design-20260720/task-001-global-update-design-brief/work-log.md
+    completed_at: '2026-07-20T07:42:52Z'
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []

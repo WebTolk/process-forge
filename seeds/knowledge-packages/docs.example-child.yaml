@@ -1,0 +1,13 @@
+schema_version: 1
+id: docs.example-child
+name: Example Child Documentation
+version: "1.0.0"
+kind: documentation
+scope: distribution
+dependencies:
+  - docs.example-parent
+requires:
+  knowledge_packages:
+    - id: docs.example-parent
+      required: true
+resources: []

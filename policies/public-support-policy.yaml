@@ -1,0 +1,13 @@
+schema_version: 1
+
+blocked_public_surface_patterns:
+  - id: non-example-platform-seed
+    message: "non-example platform support manifest leaked into the neutral core surface"
+    pattern: "platform\\.(?!example|test|child|parent|broken|optional|missing|contract|authoring|detected)[a-z0-9][a-z0-9.-]*"
+    groups: [seeds, templates, packages, processes, prompts]
+    case_insensitive: true
+  - id: non-example-docs-seed
+    message: "non-example documentation support package leaked into the neutral core surface"
+    pattern: "docs\\.(?!example|test|php|web|api\\.example-provider|child|parent|required|optional|missing|bad|private)[a-z0-9][a-z0-9.-]*"
+    groups: [seeds, templates, packages, processes, prompts]
+    case_insensitive: true

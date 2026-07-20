@@ -11,7 +11,7 @@ Developer
 ## Process
 
 - id: software-feature-development
-- version: 0.1.0
+- version: 1.0.0
 - stage: implementation
 
 ## Goal

@@ -393,7 +393,7 @@ Handoff:
 Task:
 Harden public snapshot resource records and required/recommended platform resources.
 Files changed:
-`tools/processforge.py`, `templates/platform-contract.yaml`, `templates/platform-contract-joomla.yaml`, report/review/log artifacts.
+`tools/processforge.py`, `templates/platform-contract.yaml`, `templates/platform-contract-example-parent.yaml`, report/review/log artifacts.
 Artifacts changed:
 `.pf/artifacts/linked-workplace-resource-model-report.md`, `.pf/reviews/linked-workplace-resource-model-review.md`.
 Templates used:
@@ -414,15 +414,15 @@ None.
 Task:
 Refine Project Init and Snapshot Resolver for platform contracts and resource indexes.
 Files changed:
-`tools/processforge.py`, `schemas/project-init-answers.schema.json`, `schemas/process-forge-manifest.schema.json`, `templates/platform-contract.yaml`, `templates/platform-contract-joomla.yaml`, validator required-file list, report/review/log artifacts.
+`tools/processforge.py`, `schemas/project-init-answers.schema.json`, `schemas/process-forge-manifest.schema.json`, `templates/platform-contract.yaml`, `templates/platform-contract-example-parent.yaml`, validator required-file list, report/review/log artifacts.
 Artifacts changed:
 `.pf/artifacts/linked-workplace-resource-model-report.md`, `.pf/reviews/linked-workplace-resource-model-review.md`.
 Templates used:
-`templates/platform-contract-joomla.yaml` for smoke setup.
+`templates/platform-contract-example-parent.yaml` for smoke setup.
 Tools used:
 Serena search, PowerShell, ProcessForge CLI smoke commands.
 Decisions:
-Use a built-in minimal `platform.joomla` contract shape to expand expected capability/resource ids, but require a workplace platform registry entry for the contract to be considered available. Package resource paths are indexed from package manifests only; the resolver does not read resource contents.
+Use a built-in minimal `platform.example-parent` contract shape to expand expected capability/resource ids, but require a workplace platform registry entry for the contract to be considered available. Package resource paths are indexed from package manifests only; the resolver does not read resource contents.
 Risks:
 Optional tool/MCP/template existence is registry-id based in the MVP and does not healthcheck the external tool itself.
 Next steps:
@@ -776,3 +776,270 @@ Commit the timeout hardening slice without the local diagnostics report.
 
 Handoff:
 Diagnostics summary is recorded in this task log entry only.
+## 2026-07-19 00:00 - final-pre-release-refinements
+
+Task:
+Execute `задания/processforge_final_pre_release_refinements_master_prompt.md` as a final pre-release refinement slice.
+Files changed:
+- In progress.
+Artifacts changed:
+- Planned: `.pf/artifacts/final-pre-release-refinements-report.md`, `.pf/reviews/final-pre-release-refinements-review.md`, `.pf/handoffs/final-pre-release-refinements-handoff.md`.
+Templates used:
+- Project-local `.pf/AGENTS.md` logging and handoff format.
+Tools used:
+- Serena search for repository mapping; PowerShell for targeted reads; Codex subagent `Bernoulli` for read-only documentation audit.
+Decisions:
+- Keep code implementation in the main agent because platform inheritance, doctors, onboarding, smoke, and docs must remain consistent.
+Risks:
+- Broad doc and checksum changes must be revalidated through release-test and archive-test.
+Next steps:
+- Implement platform inheritance and update release smoke coverage, then update docs/examples and dogfooding artifacts.
+Handoff:
+- None yet.
+
+## 2026-07-19 16:13 - final-pre-release-refinements
+
+Task:
+Continue final pre-release refinements implementation and documentation.
+Files changed:
+- `tools/processforge.py`
+- `tools/smoke_platform_inheritance.py`
+- `tools/validate-process-forge-schemas.py`
+- `schemas/platform-contract.schema.json`
+- `schemas/process-forge-manifest.schema.json`
+- `schemas/project-context-snapshot.schema.json`
+- README/QUICKSTART EN/RU, docs EN/RU, examples.
+Artifacts changed:
+- `.pf/artifacts/final-pre-release-refinements-report.md`
+- `.pf/reviews/final-pre-release-refinements-review.md`
+- `.pf/handoffs/final-pre-release-refinements-handoff.md`
+Templates used:
+- Project-local dogfooding report/review/handoff conventions.
+Tools used:
+- Serena search; PowerShell targeted reads; `python -m py_compile`; schema validator; platform/resource smoke tests.
+Decisions:
+- Platform inheritance now uses explicit `extends` and `requires.platforms`; shorthand is only accepted for `extends` because the assignment requires it.
+- Private local docs/source trees are routed through `knowledge_roots.local-docs`.
+Risks:
+- Full release gates and checksum refresh are still pending.
+Next steps:
+- Run public cleanliness, checksum, release-test, release-pack, release-archive-test, and `git diff --check`.
+Handoff:
+- `.pf/handoffs/final-pre-release-refinements-handoff.md`
+
+## 2026-07-19 16:13 - release-validation
+
+Task:
+Run final release validation for the pre-release refinement slice.
+Files changed:
+- `.pf/artifacts/checksum-inventory.sha256`
+- `dist/processforge-v0.1.0.zip`
+- `dist/processforge-v0.1.0.manifest.json`
+Artifacts changed:
+- `.pf/artifacts/final-pre-release-refinements-report.md`
+- `.pf/reviews/final-pre-release-refinements-review.md`
+- `.pf/handoffs/final-pre-release-refinements-handoff.md`
+Templates used:
+- Release validation checklist from the assignment.
+Tools used:
+- `python tools/validate-public-cleanliness.py --root .`
+- `python tools/validate-process-forge-checksums.py --root . --write`
+- `python tools/validate-process-forge-checksums.py --root . --check`
+- `python bin/pf.py release-test --root .`
+- `python bin/pf.py release-pack --root . --output dist/processforge-v0.1.0.zip`
+- `python bin/pf.py release-archive-test --archive dist/processforge-v0.1.0.zip`
+- `git diff --check`
+Decisions:
+- Release gate now permits only explicit negative runtime statements that PowerShell is not required, while `.ps1` references remain forbidden.
+Risks:
+- None recorded after archive-test pass.
+Next steps:
+- Repeat checksum/release/archive gates after the final dogfooding artifact updates.
+Handoff:
+- `.pf/handoffs/final-pre-release-refinements-handoff.md`
+## 2026-07-19 16:41 - codex
+
+Task:
+Execute `задания/processforge_base_technologies_as_knowledge_packages_followup_prompt.md` and prepare a combined report for the two latest assignments.
+Files changed:
+`tools/processforge.py`, `tools/smoke_platform_inheritance.py`, `tools/validate-process-forge-schemas.py`, `templates/platform-contract-example-parent.yaml`, EN/RU README/quickstart/concept/authoring docs, platform inheritance examples, and base technology knowledge package examples.
+Artifacts changed:
+`.pf/artifacts/base-technologies-as-knowledge-packages-report.md`, `.pf/reviews/base-technologies-as-knowledge-packages-review.md`, `.pf/handoffs/base-technologies-as-knowledge-packages-handoff.md`, `.pf/artifacts/final-pre-release-two-task-summary.md`.
+Templates used:
+Project-local ProcessForge artifact/review/handoff conventions.
+Tools used:
+Serena onboarding check, `rg`, `python -m py_compile`, `python tools/smoke_platform_inheritance.py`, schema/public/release checks, release pack/archive test, `git diff --check`.
+Decisions:
+Base languages and web technologies are knowledge packages and capabilities, not platform contracts. Example Parent Platform includes base PHP/web knowledge packages directly. Example Child Platform and Example Child Platform extend only Example Parent Platform.
+Risks:
+Existing user-authored base technology platform contracts are not deleted; doctors warn and public built-in examples fail if they introduce those ids as real platforms.
+Next steps:
+Review and commit the combined pre-release slice when ready.
+Handoff:
+`.pf/handoffs/base-technologies-as-knowledge-packages-handoff.md`.
+## 2026-07-19 17:27 - codex
+
+Task:
+Execute `задания/processforge_platform_hardcode_cleanup_prompt.md`.
+Files changed:
+`tools/processforge.py`, `tools/smoke_platform_inheritance.py`, `tools/smoke_manifest_driven_platforms.py`, `tools/validate-process-forge-schemas.py`, `policies/`, `seeds/`, EN/RU platform docs, README/quickstart docs, and prior dogfooding artifacts with superseded built-in wording.
+Artifacts changed:
+`.pf/artifacts/platform-hardcode-cleanup-report.md`, `.pf/reviews/platform-hardcode-cleanup-review.md`, `.pf/handoffs/platform-hardcode-cleanup-handoff.md`.
+Templates used:
+Project-local ProcessForge artifact/review/handoff conventions.
+Tools used:
+Serena onboarding check, `rg`, `python -m py_compile`, platform smoke tests, schema/public/release checks, release pack/archive test, and `git diff --check`.
+Decisions:
+Platform contracts, platform detection, package dependencies, discouraged platform ids, package id rules, and core hardcode scans are manifest/policy-driven. Example Parent Platform -> Example Child Platform remains only seed/example data.
+Risks:
+Historical docs/examples/artifacts can still mention Example Parent Platform ids as allowed examples. `tools/processforge.py` must remain free of concrete platform/package ids.
+Next steps:
+Review and commit the cleanup slice when ready.
+Handoff:
+`.pf/handoffs/platform-hardcode-cleanup-handoff.md`.
+
+## 2026-07-19 18:05 - codex
+
+Task:
+Execute `processforge_neutral_public_surface_cleanup_prompt.md`.
+Files changed:
+`tools/processforge.py`, platform and process smoke tests, schema validation
+required paths, neutral public examples, public docs/templates, `policies/`,
+and `seeds/`.
+Artifacts changed:
+`.pf/artifacts/neutral-public-surface-cleanup-report.md`,
+`.pf/reviews/neutral-public-surface-cleanup-review.md`, and
+`.pf/handoffs/neutral-public-surface-cleanup-handoff.md`.
+Templates used:
+Project-local ProcessForge artifact/review/handoff conventions.
+Tools used:
+Serena onboarding check, `rg`, targeted PowerShell UTF-8 replacement for
+mojibake RU docs, and `apply_patch`.
+Decisions:
+Public built-in surface stays neutral. Real-world support-pack blockers live in
+`policies/public-support-policy.yaml`; Python release logic only reads policy
+YAML. Example Parent Platform -> Example Child Platform remains the accepted demo stack.
+Risks:
+None recorded after archive-test pass.
+Next steps:
+Review and commit the completed neutral public surface cleanup slice when ready.
+Handoff:
+`.pf/handoffs/neutral-public-surface-cleanup-handoff.md`.
+
+## 2026-07-20 08:41 - codex
+
+Task:
+Remove concrete platform mentions from ProcessForge flow/core artifacts while
+preserving platform inheritance, resource authoring, and release validation
+functionality.
+Files changed:
+`tools/`, `templates/`, `seeds/`, `policies/`, `examples/`, `docs/`, current
+`.pf` artifacts/reviews/handoffs/logs, and release archive outputs.
+Artifacts changed:
+`.pf/artifacts/platform-agnostic-flow-cleanup-report.md`,
+`.pf/reviews/platform-agnostic-flow-cleanup-review.md`,
+`.pf/handoffs/platform-agnostic-flow-cleanup-handoff.md`.
+Templates used:
+Project-local ProcessForge artifact/review/handoff conventions.
+Tools used:
+Serena search, targeted `rg`, `apply_patch`, platform/resource/authoring smoke
+tests, schema validation, public cleanliness, checksum validation,
+release-test, release-pack, release-archive-test, and `git diff --check`.
+Decisions:
+Flow/core artifacts now use neutral parent/child fixture ids. Concrete platform
+examples are documentation-only and must not appear as built-in seeds,
+templates, smoke fixtures, or flow evidence.
+Risks:
+Future intentional support packs need explicit docs/example treatment and a
+clear policy exception rather than accidental inclusion in flow/core mechanics.
+Next steps:
+Review and commit the completed platform-agnostic flow cleanup slice when
+ready.
+Handoff:
+`.pf/handoffs/platform-agnostic-flow-cleanup-handoff.md`.
+
+## 2026-07-20 08:52 - codex
+
+Task:
+Remove exact base-technology platform ids from core negative checks and public
+root prose.
+Files changed:
+`tools/smoke_platform_inheritance.py`, `tools/validate-public-cleanliness.py`,
+`policies/platform-id-policy.yaml`, README/QUICKSTART EN/RU, and checksum
+inventory.
+Artifacts changed:
+`.pf/logs/task-log.md`.
+Templates used:
+Project-local ProcessForge log convention.
+Tools used:
+Serena search, targeted `rg`, `apply_patch`, public cleanliness, and platform
+inheritance smoke.
+Decisions:
+The inheritance smoke now checks for legacy builtin platform registry constants
+without listing specific negative platform ids. Exact base-technology
+`platform.*` ids are not carried by core policy or core tests.
+Risks:
+None recorded.
+Next steps:
+Run final schema, checksum, release-check, and release-test gates.
+Handoff:
+None.
+## 2026-07-20 10:36 - Documentation and workplace audit
+
+Agent: Codex
+Scope: Documentation, examples, prompts, installed `D:\.agents` ProcessForge
+distribution, workplace audit, and Joomla-plugin-like project onboarding smoke.
+
+Actions:
+- Reworked human docs around workplace -> ProcessForge -> global workplace
+  resources -> project `.pf/` layers.
+- Replaced `docs/assets/processforge-architecture.svg` with a workplace layout
+  infographic.
+- Aligned agent runbooks, resource docs, init docs, authoring docs, prompts, and
+  task-batch examples with current `bin/pf.py` commands.
+- Fixed template registry matching in `platform_resource_findings()`.
+- Updated `D:\.agents\process-forge` from a validated release archive and kept
+  backups under `D:\.agents\process-forge.backup-*`.
+- Ran workplace/package/platform/template audits and a `joomla-plugin` project
+  onboarding smoke without writing plugin code.
+
+Status:
+- Repo release-test and release-archive-test passed.
+- `D:\.agents\pf-workplace` doctor passed.
+- Smoke project context check passed with one expected project-local package
+  resource-index warning.
+
+Follow-up:
+- `D:\.agents\pf-workplace` has unmanaged package/platform-contract folders
+  without manifests.
+- Review whether old installed-distribution backups should be removed after the
+  user accepts the update.
+
+## 2026-07-20 12:36 - update-framework-readonly-worker
+
+Task:
+Implement the first update framework implementation slice for schemas,
+templates, and read-only CLI surfaces.
+Files changed:
+`schemas/*update*`, selected entity manifest schemas, update registry/state
+templates, `tools/processforge.py`, `tools/validate-process-forge-schemas.py`,
+and `tools/smoke_update_framework_readonly.py`.
+Artifacts changed:
+`.pf/logs/task-log.md`.
+Templates used:
+Project-local ProcessForge log convention.
+Tools used:
+Serena fallback search, targeted shell inspection, `apply_patch`,
+`py_compile`, schema validation, update CLI help, and focused update smoke.
+Decisions:
+Global bootstrap sources live in workplace registries. Entity update sites live
+in installed manifests and are rebuilt into derived runtime JSON without
+fetching, downloading, installing, rollback, or project `.pf` migration.
+Risks:
+The checkout already had broad dirty changes in several touched files; this
+slice preserved them and added only bounded update-framework sections.
+Next steps:
+Future slices can implement provider fetch/discovery, candidate merge,
+download, verification, install planning, and approved installation.
+Handoff:
+None.

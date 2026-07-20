@@ -1,4 +1,4 @@
-﻿# Doctor Workplace
+# Doctor Workplace
 
 Doctor Workplace validates a workplace root.
 

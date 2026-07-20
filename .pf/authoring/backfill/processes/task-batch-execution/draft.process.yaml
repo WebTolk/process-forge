@@ -3,7 +3,7 @@ id: task-batch-execution
 name: Task Batch Execution
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Execute a group of tasks inside one run/work session with repeated work, debug, fix, review, and handoff iterations.
 purpose: Execute a group of tasks inside one run/work session with repeated work, debug, fix, review, and handoff iterations.

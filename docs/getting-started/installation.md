@@ -32,3 +32,23 @@ python tools/validate-public-cleanliness.py --root .
 python tools/validate-process-forge-checksums.py --root . --check
 python bin/pf.py release-test --root .
 ```
+
+## Requirements
+
+Runtime requirements:
+
+- Python 3.11+ is recommended.
+- Python 3.10+ is allowed only when the current tests confirm compatibility.
+- Use a UTF-8 capable filesystem.
+- Read/write access is required for the ProcessForge distribution, workplace, and project folders.
+- PowerShell is not required for runtime usage.
+- ProcessForge v0.1 does not require a daemon or background process.
+
+Development and release-check requirements:
+
+- Python 3.11+.
+- Git for source installation and release checks such as `git diff --check`.
+- Ability to run subprocesses and create temporary directories.
+- ZIP support from the Python standard library.
+
+Git is recommended for installing from source and required for development/release checks. Normal runtime usage from a release archive does not require Git unless the user wants version-control integration.

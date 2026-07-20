@@ -48,6 +48,8 @@ REQUIRED_FILES = [
     "docs/concepts/tool-mcp-registration.md",
     "docs/concepts/template-packages.md",
     "docs/concepts/platform-contracts.md",
+    "docs/concepts/platform-inheritance.md",
+    "docs/concepts/knowledge-resource-navigation.md",
     "docs/concepts/resource-privacy.md",
     "docs/concepts/resource-events.md",
     "docs/concepts/processforge-self-update.md",
@@ -106,10 +108,13 @@ REQUIRED_FILES = [
     "docs/ru/concepts/runs-tasks-iterations.md",
     "docs/ru/concepts/process-definition-run-task-iteration.md",
     "docs/ru/concepts/platform-contracts.md",
+    "docs/ru/concepts/platform-inheritance.md",
+    "docs/ru/concepts/knowledge-resource-navigation.md",
     "docs/ru/concepts/hooks-events.md",
     "docs/ru/concepts/semantic-parity.md",
     "docs/ru/releases/initial-release.md",
     "docs/ru/known-limitations.md",
+    "docs/known-limitations.md",
     "docs/assets/processforge-architecture.svg",
     "docs/assets/processforge-run-lifecycle.svg",
     "docs/assets/processforge-authoring-parity.svg",
@@ -142,6 +147,13 @@ REQUIRED_FILES = [
     "schemas/template-registry.schema.json",
     "schemas/tool-registry.schema.json",
     "schemas/mcp-registry.schema.json",
+    "schemas/update-source-registry.schema.json",
+    "schemas/entity-update-sites.schema.json",
+    "schemas/installed-update-sites.schema.json",
+    "schemas/normalized-update-manifest.schema.json",
+    "schemas/installed-subjects.schema.json",
+    "schemas/update-candidates.schema.json",
+    "schemas/update-notifications.schema.json",
     "schemas/workplace-init-answers.schema.json",
     "schemas/project-init-answers.schema.json",
     "schemas/session-start.schema.json",
@@ -210,6 +222,15 @@ REQUIRED_FILES = [
     "templates/registries/templates.yaml",
     "templates/registries/tools.yaml",
     "templates/registries/mcp.yaml",
+    "templates/registries/update-sources.yaml",
+    "templates/registries/installed-subjects.yaml",
+    "templates/registries/update-site-overrides.yaml",
+    "templates/runtime/update/installed-update-sites.json",
+    "policies/platform-id-policy.yaml",
+    "policies/package-id-policy.yaml",
+    "policies/core-hardcode-policy.yaml",
+    "policies/public-support-policy.yaml",
+    "tools/smoke_manifest_driven_platforms.py",
     "templates/workplace-init.answers.yaml",
     "templates/project-init.answers.yaml",
     "templates/process-forge.yaml",
@@ -234,6 +255,8 @@ REQUIRED_FILES = [
     "prompts/authoring-parity-audit-agent.md",
     "prompts/task-batch-execution-agent.md",
     "docs/getting-started/first-run.md",
+    "docs/getting-started/initialization-order.md",
+    "docs/ru/getting-started/initialization-order.md",
     "docs/getting-started/installation.md",
     "docs/getting-started/workplace-initialization.md",
     "docs/getting-started/project-onboarding.md",
@@ -242,17 +265,19 @@ REQUIRED_FILES = [
     "docs/release-checklist.md",
     "examples/first-run/minimal-workplace/README.md",
     "examples/first-run/minimal-project/README.md",
-    "examples/first-run/joomla-component-project/README.md",
+    "examples/first-run/example-component-project/README.md",
     "examples/resource-authoring/reusable-template/README.md",
     "examples/resource-authoring/knowledge-package/README.md",
+    "examples/knowledge-packages/base-technologies/README.md",
     "examples/resource-authoring/platform-contract/README.md",
     "examples/resource-authoring/full-chain/README.md",
+    "examples/api-platforms/example-provider/README.md",
     "examples/task-batch/minimal-run/README.md",
     "examples/task-batch/release-preparation/README.md",
     "examples/task-batch/debug-loop/README.md",
-    "examples/process-authoring/seo-audit/README.md",
+    "examples/process-authoring/quality-audit/README.md",
     "examples/process-authoring/process-authoring/README.md",
-    "examples/process-authoring/seo-audit/answers.yaml",
+    "examples/process-authoring/quality-audit/answers.yaml",
     "examples/process-authoring/bugfix-batch/README.md",
     "examples/process-authoring/bugfix-batch/answers.yaml",
     "examples/process-authoring/content-update/README.md",
@@ -261,7 +286,10 @@ REQUIRED_FILES = [
     "bin/pf",
     "bin/pf.bat",
     "tools/smoke_first_run.py",
+    "tools/smoke_platform_inheritance.py",
     "tools/smoke_resource_authoring_processes.py",
+    "tools/smoke_update_framework_readonly.py",
+    "tools/smoke_multiagent_assignment_contract.py",
     "tools/smoke_process_run_task_batch.py",
     "tools/smoke_process_authoring.py",
     "tools/smoke_authoring_parity.py",
@@ -278,7 +306,7 @@ REQUIRED_FILES = [
     "templates/path-constants.yaml",
     "templates/path-ref.yaml",
     "templates/platform-contract.yaml",
-    "templates/platform-contract-joomla.yaml",
+    "templates/platform-contract-example-parent.yaml",
     "templates/knowledge-package.yaml",
     "templates/knowledge-resource.yaml",
     "templates/knowledge-resource-index.yaml",
@@ -303,6 +331,7 @@ REQUIRED_FILES = [
     "tools/processforge.py",
     "updates/processforge-update-index.yaml",
     "updates/migrations/0.1.0-linked-workplace.md",
+    "updates/migrations/1.0.0-stable-release.md",
 ]
 
 PROCESS_REQUIRED_KEYS = [
@@ -492,11 +521,16 @@ def validate_yaml_schema_files(root: Path) -> None:
     ]
     mappings.extend((path, "process-definition.schema.json") for path in sorted((root / "processes").glob("*.yaml")))
     mappings.extend((path, "package-manifest.schema.json") for path in sorted((root / "packages").glob("*.yaml")))
+    mappings.extend((path, "assignment.schema.json") for path in sorted((root / ".pf" / "assignments").glob("*.yaml")))
     if (root / "updates" / "processforge-update-index.yaml").is_file():
         mappings.append((root / "updates" / "processforge-update-index.yaml", "processforge-update-index.schema.json"))
     if (root / "templates" / "registries" / "distributions.yaml").is_file():
         mappings.append((root / "templates" / "registries" / "distributions.yaml", "distributions-registry.schema.json"))
-    for path in [root / "templates" / "platform-contract.yaml", root / "templates" / "platform-contract-joomla.yaml"]:
+    if (root / "templates" / "registries" / "update-sources.yaml").is_file():
+        mappings.append((root / "templates" / "registries" / "update-sources.yaml", "update-source-registry.schema.json"))
+    if (root / "templates" / "registries" / "installed-subjects.yaml").is_file():
+        mappings.append((root / "templates" / "registries" / "installed-subjects.yaml", "installed-subjects.schema.json"))
+    for path in [root / "templates" / "platform-contract.yaml", root / "templates" / "platform-contract-example-parent.yaml"]:
         if path.is_file():
             mappings.append((path, "platform-contract.schema.json"))
 
@@ -553,6 +587,7 @@ def validate_ndjson_events(root: Path) -> None:
 
 def validate_runtime_json_payloads(root: Path) -> None:
     mappings = [
+        (root / "templates" / "runtime" / "update", "installed-update-sites.schema.json"),
         (root / ".pf" / "runtime" / "hooks" / "results", "hook-result.schema.json"),
         (root / ".pf" / "runtime" / "hooks" / "outbox" / "wtaicc", "wtaicc-outbox-payload.schema.json"),
     ]
@@ -585,3 +620,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+    "examples/platform-inheritance/example-parent/README.md",
+    "examples/platform-inheritance/example-child/README.md",

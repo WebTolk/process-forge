@@ -1,4 +1,4 @@
-﻿# Workplace Configuration
+# Workplace Configuration
 
 Use Workplace Init when setting up a machine or runner host for ProcessForge.
 

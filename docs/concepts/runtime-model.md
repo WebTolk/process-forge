@@ -32,3 +32,9 @@ Inside a linked project, run:
 ```bash
 python .pf/runtime/bin/pf.py doctor-project --project-root .
 ```
+
+## Runtime Requirements
+
+Runtime usage expects Python 3.11+ recommended, Python 3.10+ only when the current tests confirm compatibility, a UTF-8 capable filesystem, and read/write access to the ProcessForge distribution, workplace, and project folders.
+
+Runtime usage does not require PowerShell, Git, a daemon, or a background process. Git is only needed when the user wants version-control integration or when development/release checks are being run.

@@ -1,4 +1,4 @@
-﻿# First Run
+# First Run
 
 First run has two separate processes:
 
@@ -29,3 +29,7 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 ```
 
 Do not call `python bin/pf.py` from a normal linked project root.
+
+For a full setup, follow [Initialization order](initialization-order.md): install and verify ProcessForge, initialize workplace, configure roots including `knowledge_roots.local-docs`, register tools and MCP servers, create or import knowledge packages and templates, then create platform contracts and onboard projects.
+
+Do not start with a platform contract if its required packages, templates, or tools do not exist yet. Create or register dependencies first.

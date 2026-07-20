@@ -24,7 +24,7 @@ Resource parity commands are available for discoverable resources:
 ```bash
 python .pf/runtime/bin/pf.py template-parity-check --project-root . --template process-agent-prompt
 python .pf/runtime/bin/pf.py knowledge-package-parity-check --project-root . --package process-forge-core
-python .pf/runtime/bin/pf.py platform-parity-check --project-root . --platform platform-contract-joomla
+python .pf/runtime/bin/pf.py platform-parity-check --project-root . --platform platform-contract-example-parent
 ```
 
 If discovery is not available for a resource kind or id, the command records

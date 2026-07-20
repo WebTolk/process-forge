@@ -1,7 +1,7 @@
 schema_version: 1
 id: platform-contract-install
 name: Platform Contract Install
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Create or update a platform contract mapping capabilities, knowledge packages, tools, MCP, and templates.
 required_capabilities:

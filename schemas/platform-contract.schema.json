@@ -9,10 +9,59 @@
     "id": { "type": "string", "minLength": 1 },
     "type": { "const": "platform_contract" },
     "version": { "type": "string", "minLength": 1 },
+    "extends": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/platformRef" }
+    },
     "applies_to": { "type": "object", "additionalProperties": true },
-    "requires": { "type": "object", "additionalProperties": true },
+    "requires": {
+      "type": "object",
+      "properties": {
+        "platforms": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/platformRef" }
+        }
+      },
+      "additionalProperties": true
+    },
     "includes": { "type": "object", "additionalProperties": true },
+    "update_sites": { "type": "array", "items": { "$ref": "#/$defs/updateSite" } },
     "policies": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "updateSite": {
+      "type": "object",
+      "required": ["id", "enabled", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "enabled": { "type": "boolean" },
+        "type": { "type": "string", "minLength": 1 },
+        "priority": { "type": "integer" },
+        "url": { "type": "string" },
+        "path": { "type": "string" },
+        "owner": { "type": "string" },
+        "repo": { "type": "string" },
+        "channels": { "type": "array", "items": { "type": "string" } },
+        "auth_ref": { "type": "string" },
+        "trust": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
+    "platformRef": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "version": { "type": "string", "minLength": 1 },
+            "required": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        }
+      ]
+    }
   },
   "additionalProperties": true
 }

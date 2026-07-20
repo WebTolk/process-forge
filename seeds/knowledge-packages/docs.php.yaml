@@ -1,0 +1,7 @@
+schema_version: 1
+id: docs.php
+name: PHP Documentation
+version: "1.0.0"
+kind: documentation
+scope: distribution
+resources: []

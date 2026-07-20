@@ -19,10 +19,34 @@
     "resources": { "type": "array", "items": { "$ref": "#/$defs/resource" } },
     "tools": { "type": "array", "items": { "type": "object" } },
     "mcp_servers": { "type": "array", "items": { "type": "object" } },
+    "update_sites": { "type": "array", "items": { "$ref": "#/$defs/updateSite" } },
     "validation": { "type": "array", "items": { "type": "object" } }
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "updateSite": {
+      "type": "object",
+      "required": ["id", "enabled", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "type": { "type": "string", "minLength": 1 },
+        "priority": { "type": "integer" },
+        "url": { "type": "string" },
+        "path": { "type": "string" },
+        "owner": { "type": "string" },
+        "repo": { "type": "string" },
+        "api_base_url": { "type": "string" },
+        "channels": { "type": "array", "items": { "type": "string" } },
+        "include_prereleases": { "type": "boolean" },
+        "asset_patterns": { "type": "object", "additionalProperties": true },
+        "auth_ref": { "type": "string" },
+        "headers_env": { "type": "object", "additionalProperties": { "type": "string" } },
+        "trust": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
     "resource": {
       "type": "object",
       "required": ["id", "kind", "title", "load_policy"],

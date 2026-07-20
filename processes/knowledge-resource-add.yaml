@@ -1,7 +1,7 @@
 schema_version: 1
 id: knowledge-resource-add
 name: Knowledge Resource Add
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Add a knowledge resource through proposal, classification, package update, index refresh, validation, and review.
 required_capabilities:

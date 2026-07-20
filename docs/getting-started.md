@@ -33,8 +33,10 @@ pf doctor-project --project-root .
 python .pf/runtime/bin/pf.py doctor-project --project-root .
 ```
 
-If a command needs a flow root and `.pf/process-forge.yaml` is missing, it tells
-the operator to run `init-project` instead of creating root-layout files.
+If a command needs a flow root and `.pf/process-forge.yaml` is missing, it should
+tell the operator to run `project-onboard --project-root <project-root>
+--workplace <workplace-root> --type <project-type> --apply` instead of creating
+root-layout files. `init-project` is a compatibility command name.
 
 ## Refresh Project Context
 

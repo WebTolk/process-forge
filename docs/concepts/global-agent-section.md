@@ -1,4 +1,4 @@
-﻿# Global Agent Section
+# Global Agent Section
 
 ProcessForge does not own a workplace-level `AGENTS.md`, `CODEX.md`, or similar
 agent instruction file. It inserts or updates only a bounded section.

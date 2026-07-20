@@ -1,6 +1,6 @@
 schema_version: 1
 id: example-template
-version: 0.1.0
+version: 1.0.0
 source_package: process-forge-core
 type: artifact
 compatible_stages: []

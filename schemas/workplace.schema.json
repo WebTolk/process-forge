@@ -31,7 +31,10 @@
         "package_roots": { "type": "string" },
         "templates": { "type": "string" },
         "tools": { "type": "string" },
-        "mcp": { "type": "string" }
+        "mcp": { "type": "string" },
+        "update_sources": { "type": "string" },
+        "installed_subjects": { "type": "string" },
+        "update_site_overrides": { "type": "string" }
       },
       "additionalProperties": true
     },

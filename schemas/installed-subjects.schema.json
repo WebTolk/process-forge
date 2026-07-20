@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/installed-subjects.schema.json",
+  "title": "ProcessForge Installed Subjects State",
+  "type": "object",
+  "required": ["schema_version", "subjects"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "updated_at": { "type": ["string", "null"] },
+    "subjects": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/subject" }
+    }
+  },
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "required": ["type", "id", "scope", "version"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "scope": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "source_id": { "type": "string" },
+        "installed_at": { "type": "string" },
+        "artifact": { "type": "object", "additionalProperties": true },
+        "install_path": { "type": "string" },
+        "verification": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

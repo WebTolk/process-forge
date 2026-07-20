@@ -4,7 +4,7 @@ distributions:
   - id: processforge
     name: ProcessForge
     path: "<absolute-path-to-processforge-distribution>"
-    version: "0.1.0"
+    version: "1.0.0"
     channel: stable
     status: available
     provides:

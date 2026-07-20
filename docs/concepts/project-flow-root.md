@@ -58,4 +58,6 @@ Ignore:
 ```
 
 Commands must not create root-layout flow state. If `.pf/process-forge.yaml` is
-missing, they should tell the operator to run `init-project`.
+missing, they should tell the operator to run `project-onboard --project-root
+<project-root> --workplace <workplace-root> --type <project-type> --apply`.
+`init-project` is a compatibility command name.

@@ -1,0 +1,208 @@
+schema_version: 1
+capsule:
+  id: task-003-implement-multiagent-assignment-contract-capsule
+  generated_at: '2026-07-20T08:55:55Z'
+  assignment_id: task-003-implement-multiagent-assignment-contract
+  assignment_path: .pf/assignments/task-003-implement-multiagent-assignment-contract.yaml
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 3a6ce27b93ce773c4ca1545128ecb1dbc0313499f7b5474b0da14dcb528ad55c
+  worker_may_rebuild_context: false
+assignment:
+  id: task-003-implement-multiagent-assignment-contract
+  path: .pf/assignments/task-003-implement-multiagent-assignment-contract.yaml
+  status: ready_for_review
+  objective: 'Implement the multiagent assignment handoff contract from .pf/artifacts/multiagent-assignment-contract-20260720.md: assignment schema support, richer task-create metadata, assignment-capsule scope/output fields, and read-only/non-overlap validation. Work with existing update framework changes; do not implement update provider/download/install work.'
+  execution_mode:
+    kind: implementation
+    code_changes_allowed: true
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: project-context
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/task-003-implement-multiagent-assignment-contract.yaml
+  context_artifacts:
+    -
+      path: .pf/artifacts/multiagent-assignment-contract-20260720.md
+      role: input
+      required: true
+      mutable_by_worker: false
+    -
+      path: .pf/artifacts/update-framework-implementation-spec-20260720.md
+      role: input
+      required: true
+      mutable_by_worker: false
+    -
+      path: .pf/assignments/task-001-update-contracts-readonly.yaml
+      role: input
+      required: true
+      mutable_by_worker: false
+    -
+      path: .pf/assignments/task-002-multiagent-assignment-contract.yaml
+      role: input
+      required: true
+      mutable_by_worker: false
+    -
+      path: .pf/assignments/task-003-implement-multiagent-assignment-contract.yaml
+      role: input
+      required: true
+      mutable_by_worker: false
+scope:
+  allowed_files:
+    - tools/processforge.py
+    - schemas/assignment.schema.json
+    - schemas/context-capsule.schema.json
+    - templates/assignment-task.yaml
+    - tools/smoke_multiagent_assignment_contract.py
+    - tools/validate-process-forge-schemas.py
+    - .pf/assignments/task-003-implement-multiagent-assignment-contract.yaml
+    - .pf/artifacts/multiagent-assignment-implementation-report-20260720.md
+  allowed_read_files:
+    []
+  forbidden_files:
+    - schemas/update-source-registry.schema.json
+    - schemas/entity-update-sites.schema.json
+    - schemas/installed-update-sites.schema.json
+    - schemas/normalized-update-manifest.schema.json
+    - schemas/installed-subjects.schema.json
+    - schemas/update-candidates.schema.json
+    - schemas/update-notifications.schema.json
+    - templates/registries/update-sources.yaml
+    - templates/registries/installed-subjects.yaml
+    - templates/registries/update-site-overrides.yaml
+    - templates/runtime/update/installed-update-sites.json
+    - tools/smoke_update_framework_readonly.py
+    - .pf/assignments/task-001-update-contracts-readonly.yaml
+    - .pf/artifacts/update-framework-implementation-spec-20260720.md
+  ownership:
+    owner_id: task-003-implement-multiagent-assignment-contract
+    owner_label: worker-task-003
+    role: implementation-worker
+    writer: true
+    owned_files:
+      - tools/processforge.py
+      - schemas/assignment.schema.json
+      - schemas/context-capsule.schema.json
+      - templates/assignment-task.yaml
+      - tools/smoke_multiagent_assignment_contract.py
+      - .pf/artifacts/multiagent-assignment-implementation-report-20260720.md
+    owned_globs:
+      []
+  non_overlap:
+    policy: work_after_task_001_subagent_completed
+    completed_parallel_task:
+      id: task-001-update-contracts-readonly
+      owner: Descartes
+      note: Task-001 subagent has completed but orchestrator has not yet accepted or closed the task. Work with its current file changes and do not revert update framework changes.
+    active_parallel_tasks:
+      []
+    rule: Do not edit update-framework-specific schema/template/smoke files listed in forbidden_files.
+    current_write_scope:
+      - tools/processforge.py
+      - schemas/assignment.schema.json
+      - schemas/context-capsule.schema.json
+      - templates/assignment-task.yaml
+      - tools/smoke_multiagent_assignment_contract.py
+      - tools/validate-process-forge-schemas.py
+      - .pf/assignments/task-003-implement-multiagent-assignment-contract.yaml
+      - .pf/artifacts/multiagent-assignment-implementation-report-20260720.md
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: changed_files
+      type: unspecified
+      required: true
+    -
+      id: checks_run
+      type: unspecified
+      required: true
+    -
+      id: checks_not_run
+      type: unspecified
+      required: true
+    -
+      id: implementation_summary
+      type: unspecified
+      required: true
+    -
+      id: residual_risks
+      type: unspecified
+      required: true
+  expected_report:
+    language: ru
+    format: concise_markdown
+    include:
+      - changed_files
+      - checks_run
+      - checks_not_run
+      - residual_risks
+    artifact: .pf/artifacts/multiagent-assignment-implementation-report-20260720.md
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/task-003-implement-multiagent-assignment-contract.ndjson
+  event_correlation_id: assignment-task-003-implement-multiagent-assignment-contract
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/task-003-implement-multiagent-assignment-contract.yaml
+allowed_files:
+  - tools/processforge.py
+  - schemas/assignment.schema.json
+  - schemas/context-capsule.schema.json
+  - templates/assignment-task.yaml
+  - tools/smoke_multiagent_assignment_contract.py
+  - tools/validate-process-forge-schemas.py
+  - .pf/assignments/task-003-implement-multiagent-assignment-contract.yaml
+  - .pf/artifacts/multiagent-assignment-implementation-report-20260720.md
+forbidden_files:
+  - schemas/update-source-registry.schema.json
+  - schemas/entity-update-sites.schema.json
+  - schemas/installed-update-sites.schema.json
+  - schemas/normalized-update-manifest.schema.json
+  - schemas/installed-subjects.schema.json
+  - schemas/update-candidates.schema.json
+  - schemas/update-notifications.schema.json
+  - templates/registries/update-sources.yaml
+  - templates/registries/installed-subjects.yaml
+  - templates/registries/update-site-overrides.yaml
+  - templates/runtime/update/installed-update-sites.json
+  - tools/smoke_update_framework_readonly.py
+  - .pf/assignments/task-001-update-contracts-readonly.yaml
+  - .pf/artifacts/update-framework-implementation-spec-20260720.md
+required_outputs:
+  -
+    id: changed_files
+    type: unspecified
+    required: true
+  -
+    id: checks_run
+    type: unspecified
+    required: true
+  -
+    id: checks_not_run
+    type: unspecified
+    required: true
+  -
+    id: implementation_summary
+    type: unspecified
+    required: true
+  -
+    id: residual_risks
+    type: unspecified
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-task-003-implement-multiagent-assignment-contract

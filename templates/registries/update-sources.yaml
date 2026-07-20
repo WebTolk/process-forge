@@ -1,0 +1,13 @@
+schema_version: 1
+product: processforge
+updated_at: null
+
+defaults:
+  channel: stable
+  cache_ttl_seconds: 3600
+  require_https: true
+  require_sha256_for_download: true
+  require_sha256_for_install: true
+  require_signature_for_install: false
+
+sources: []

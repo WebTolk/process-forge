@@ -11,12 +11,20 @@ The layer is proposal-first. Commands may write proposal/report artifacts under 
 - Linked mode keeps global resources in the workplace and exposes only selected indexes through project snapshots.
 - Heavy content is not loaded into prompts; agents consume resource indexes and request specific files on demand.
 
-## MVP Commands
+## Current Create And Doctor Commands
+
+- `knowledge-package-create`
+- `knowledge-package-doctor`
+- `template-create`
+- `template-doctor`
+- `platform-create`
+- `platform-contract-doctor`
+
+## Proposal, Update, And Registry Commands
 
 - `knowledge-add-url`
 - `knowledge-add-resource`
 - `knowledge-index-refresh`
-- `knowledge-package-doctor`
 - `docs-import-plan`
 - `template-add`
 - `tool-register`

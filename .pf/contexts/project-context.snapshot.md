@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-18T11:08:47Z
-- valid_until: 2026-07-25T11:08:47Z
+- generated_at: 2026-07-20T06:57:07Z
+- valid_until: 2026-07-27T06:57:07Z
 
 ## Freshness
 
@@ -20,8 +20,8 @@ fresh
 
 ## Linked ProcessForge
 
-- version: 0.1.0-rc.1
-- constraint: ^0.1
+- version: 1.0.0
+- constraint: ^1.0
 - install_mode: linked
 - distribution: processforge (available)
 
@@ -31,6 +31,10 @@ fresh
 - project.process-forge
 
 ## Platform Contracts
+
+- None.
+
+## Platform Stack
 
 - None.
 

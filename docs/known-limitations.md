@@ -24,3 +24,11 @@ ProcessForge currently runs as a file-first, single-agent tool.
 - A long-running watcher or runner is a future optional layer, not part of the core runtime.
 - Future watcher/runner work must stay bounded: streaming reads, offsets or checkpoints, bounded queues, subprocess timeouts, and no full-project in-memory cache by default.
 - Platform-specific shell scripts are not required for release validation and are not part of the release surface.
+
+## Requirements Boundary
+
+- Python 3.11+ is recommended for runtime usage.
+- Python 3.10+ is allowed only when the current tests confirm compatibility.
+- Runtime usage does not require PowerShell.
+- Runtime usage from a release archive does not require Git unless version-control integration is wanted.
+- Development and release checks require Python 3.11+, Git, subprocess execution, temporary directories, and Python standard-library ZIP support.

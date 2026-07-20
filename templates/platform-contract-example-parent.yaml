@@ -1,0 +1,40 @@
+schema_version: 1
+
+id: platform.example-parent
+type: platform_contract
+version: "1.0.0"
+
+applies_to:
+  platforms:
+    - example-parent
+  project_types:
+    - example-parent-project
+
+project_type_hints:
+  - example-parent-project
+
+requires:
+  capabilities:
+    - filesystem.read
+    - filesystem.write
+    - repository.read
+    - markdown.editing
+    - schema_validation
+  knowledge_packages: []
+  tools: []
+  mcp: []
+  templates: []
+
+includes:
+  knowledge_packages:
+    - id: docs.example-parent
+      required: true
+      load_policy: on_demand
+  tools: []
+  mcp: []
+  templates:
+    - example.parent-artifact
+
+policies:
+  missing_required_capability: block
+  missing_optional_resource: warn

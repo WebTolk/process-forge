@@ -1,7 +1,7 @@
 schema_version: 1
 id: process-forge-software-development
 name: ProcessForge Software Development
-version: 0.1.0
+version: 1.0.0
 kind: direction
 scope: software-work
 description: Optional software development package for feature and defect workflows.

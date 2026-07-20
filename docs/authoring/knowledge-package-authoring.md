@@ -29,8 +29,8 @@ or when updating a package that exists in duplicate roots.
 Create the package with the canonical Python launcher:
 
 ```bash
-python bin/pf.py knowledge-package-create --workplace ./workplace --id docs.joomla.local --title "Local Joomla Documentation" --package-root global --apply
-python bin/pf.py knowledge-package-doctor --workplace ./workplace --package docs.joomla.local --package-root global
+python bin/pf.py knowledge-package-create --workplace ./workplace --id docs.example-domain --title "Example Domain Documentation" --package-root global --apply
+python bin/pf.py knowledge-package-doctor --workplace ./workplace --package docs.example-domain --package-root global
 ```
 
 ## Rules
@@ -49,7 +49,7 @@ If a resource is stored under a workplace root, reference it through `path_ref`:
 ```yaml
 path_ref:
   registry: knowledge_roots
-  id: joomla-docs
+  id: local-docs
   relative_path: official
 ```
 
@@ -62,5 +62,14 @@ indexes:
 path_ref:
   registry: package_roots
   id: global
-  relative_path: platform.joomla/resources/rules.md
+  relative_path: docs.example-domain/resources/rules.md
 ```
+
+## Package Rules
+
+- Knowledge package ids should identify the subject matter or provider clearly.
+- Base technology knowledge is represented as knowledge packages plus
+  capabilities, not as platform contracts.
+- Private local documentation and source trees use workplace knowledge roots.
+- API packages use provider-specific ids such as `docs.api.example-provider`;
+  do not create one generic `docs.api` package.

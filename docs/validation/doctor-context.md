@@ -1,4 +1,4 @@
-﻿# Doctor Context
+# Doctor Context
 
 `doctor-context` validates the session bootstrap and context layer for a
 project. Project context snapshot is the preferred proof point; context-index
@@ -18,20 +18,21 @@ python bin/pf.py doctor-context --project-root <project-root> --assignment <assi
 
 ## Checks
 
-The command verifies:
+The command checks the context artifacts that exist for the project:
 
 - project manifest exists under `.pf/`
 - public project manifest has no local absolute paths
 - project context snapshot YAML and MD exist when snapshot mode is used
 - snapshot freshness is `fresh`
-- required capabilities are available
 - context index, resolved rules, and conflict report are valid when present
 - private cache/runtime path is ignored
-- ECP is fresh for the supplied assignment when an assignment is provided
-- public/private policy is not violated
+- assignment ECP/conflict freshness is acceptable when an assignment is supplied
+
+Capability availability and selected workplace resource health belong to
+`doctor-project`.
 
 ## Expected Result
 
-A healthy project returns PASS checks. A missing optional cache is a WARN.
-Missing required sources, blocking conflicts, or stale snapshot/ECP checks are
-FAIL.
+A healthy project returns PASS checks. A missing optional cache can be WARN.
+Missing required sources, blocking conflicts, stale snapshot checks, or stale
+assignment context checks are FAIL.

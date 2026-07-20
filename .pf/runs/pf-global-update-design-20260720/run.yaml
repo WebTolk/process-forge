@@ -1,0 +1,28 @@
+schema_version: 1
+id: pf-global-update-design-20260720
+title: Global ProcessForge update mechanism design
+process: process-version-upgrade
+status: completed
+created_at: '2026-07-20T07:32:03Z'
+updated_at: '2026-07-20T07:43:07Z'
+objective: Design the global ProcessForge distribution update mechanism with URL-based update sources, source priorities, release discovery, notification flow, and Joomla updater references. Planning only; no code changes.
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: task-001-global-update-design-brief
+    assignment: .pf/assignments/task-001-global-update-design-brief.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/pf-global-update-design-20260720/summary.md
+  - .pf/handoffs/runs/pf-global-update-design-20260720-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true

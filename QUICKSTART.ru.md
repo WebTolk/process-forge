@@ -1,23 +1,23 @@
-# Prompts быстрого старта ProcessForge
+# Prompts Быстрого Старта ProcessForge
 
 Этот quickstart написан для человека. Скопируйте нужный prompt в ИИ-агента.
 Полный набор команд агент должен брать из
 [docs/ru/getting-started/agent-prompts.md](docs/ru/getting-started/agent-prompts.md).
 
-## 1. Подготовить инструмент
+## 1. Подготовить Инструмент
 
 ```text
 Подготовь ProcessForge на этой машине.
 
-Найди checkout или распакованный дистрибутив ProcessForge, изучи документацию и
-используй docs/ru/getting-started/agent-prompts.md как операционный command
+Найди ProcessForge checkout или распакованный distribution, изучи README и
+используй docs/ru/getting-started/agent-prompts.md как operational command
 runbook.
 
 Проверь, что distribution root пригоден к работе, и назови точный путь, который
-нужно использовать как <processforge-root>.
+мне нужно использовать как <processforge-root>.
 ```
 
-## 2. Инициализировать workplace
+## 2. Инициализировать Workplace
 
 ```text
 Инициализируй ProcessForge workplace.
@@ -26,20 +26,48 @@ runbook.
 мной пути или предложи понятный локальный путь. Запусти doctor-workplace,
 исправь структурные проблемы, которые можно безопасно исправить, и сообщи
 результат.
+
+До создания knowledge packages или platform contracts настрой path constants,
+package roots, knowledge roots, tool registries и MCP registries.
 ```
 
-## 3. Подключить проект
+## 3. Создать Общие Resources
+
+```text
+Создай shared ProcessForge resources для этого workplace.
+
+Спроси, какие resources нужны: knowledge packages, reusable templates, tools,
+MCP providers, platform contracts или всё сразу.
+
+Иди dependency-first. Зарегистрируй tools и MCP providers, создай или импортируй
+knowledge packages, создай reusable templates, затем создай platform contracts,
+которые композируют эти resources для конкретного project context.
+```
+
+## 4. Подключить Проект
 
 ```text
 Подключи этот репозиторий к ProcessForge.
 
 Сначала изучи структуру репозитория, выбери консервативный project type,
 подключи его к существующему workplace, прочитай созданный
-.pf/START_AGENT_HERE.md, запусти doctor-project и кратко опиши, что теперь
-ProcessForge знает о проекте.
+.pf/START_AGENT_HERE.md, запусти doctor-project, refresh project context и
+кратко опиши, что ProcessForge теперь знает о проекте.
 ```
 
-## 4. Начать run
+## 5. Собрать Platform Stack
+
+```text
+Собери project platform stack в ProcessForge.
+
+Используй platform contracts как composition manifests. Если у stack есть
+parent и child platform, опиши parent/child relationship в extends или
+requires.platforms. Подключи knowledge packages, templates, tools, MCP
+providers, capabilities, processes, coding standards и project type hints по id.
+Запусти platform doctor и затем refresh project context snapshot.
+```
+
+## 6. Начать Run
 
 ```text
 Создай ProcessForge run для моего текущего запроса.
@@ -49,27 +77,17 @@ ProcessForge знает о проекте.
 процесс, и заверши run-summary и run-doctor.
 ```
 
-## 5. Создать собственный процесс
+## 7. Создать Собственный Process
 
 ```text
 Создай новый ProcessForge process.
 
 Используй process authoring flow, а не ручное написание YAML первым шагом.
-Спроси цель процесса, stages, roles, gates, artifacts, нужные знания и ожидаемый
-task loop. Проверь draft, примени его и проверь итоговый process.
+Спроси цель процесса, stages, roles, gates, artifacts, нужные знания и
+ожидаемый task loop. Проверь draft, примени его и проверь итоговый process.
 ```
 
-## 6. Создать общие resources
-
-```text
-Создай общие ProcessForge resources для этого проекта.
-
-Спроси, нужны ли reusable templates, knowledge packages, platform contracts или
-всё сразу. Общие resources держи в workplace, ссылайся на них по id и запускай
-соответствующие doctor-проверки.
-```
-
-## 7. Использовать subagents
+## 8. Использовать Subagents
 
 ```text
 Спланируй ProcessForge-assisted multi-agent run.
@@ -80,7 +98,7 @@ file-based evidence и сверяй их результаты в текущем 
 доставкой.
 ```
 
-## 8. Проверить перед delivery
+## 9. Проверить Перед Delivery
 
 ```text
 Проверь репозиторий перед delivery.
@@ -89,3 +107,31 @@ file-based evidence и сверяй их результаты в текущем 
 проверки, пересобери release archive с нейтральным именем, проверь архив и
 сообщи точные pass/fail evidence перед commit или push.
 ```
+
+## Обязательный Порядок
+
+1. Install ProcessForge distribution.
+2. Verify ProcessForge itself.
+3. Initialize workplace.
+4. Configure path constants and roots.
+5. Configure knowledge roots.
+6. Register tools and MCP servers.
+7. Create/import knowledge packages.
+8. Create reusable templates.
+9. Create platform contracts.
+10. Onboard project.
+11. Create run/task workflow.
+12. Create custom processes as needed.
+
+Capabilities описывают нужные действия, knowledge packages - где читать
+правила, а platform contracts собирают application/domain stacks для проектов.
+Base technologies являются knowledge packages и capabilities, а не platform
+contracts.
+
+Ядро ProcessForge domain-agnostic. Platforms, inheritance, package dependencies
+и detection rules приходят из manifests и policy data.
+
+Не копируйте весь репозиторий ProcessForge в `.codex`, `.claude`, `.agents` или
+похожие папки конфигурации агентов. Установите ProcessForge один раз как
+инструмент и укажите агенту, где он установлен; проектные инструкции находятся
+в `.pf/START_AGENT_HERE.md`.

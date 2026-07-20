@@ -1,4 +1,4 @@
-﻿# Assignment Front Matter
+# Assignment Front Matter
 
 Automated assignment execution uses YAML front matter or a separate assignment
 YAML file as its machine-readable source. Markdown headings and prose are for

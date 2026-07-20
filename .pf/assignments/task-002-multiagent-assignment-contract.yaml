@@ -1,0 +1,59 @@
+schema_version: 1
+id: task-002-multiagent-assignment-contract
+title: Design non-overlapping multiagent assignment contract
+run_id: pf-update-framework-implementation-20260720
+process: software-feature-development
+status: done
+created_at: '2026-07-20T08:27:41Z'
+updated_at: '2026-07-20T08:35:03Z'
+objective: Design a richer ProcessForge assignment/handoff contract for subagents so implementation tasks include assignment path, context artifacts, ownership, forbidden files, required outputs, and non-overlap rules. Planning/spec only; do not edit tools/processforge.py, schemas, templates, or validator files owned by task-001.
+order: 2
+context_artifacts:
+  - .pf/artifacts/update-framework-implementation-spec-20260720.md
+  - .pf/assignments/task-001-update-contracts-readonly.yaml
+  - .pf/assignments/task-002-multiagent-assignment-contract.yaml
+allowed_files:
+  - .pf/assignments/task-002-multiagent-assignment-contract.yaml
+  - .pf/artifacts/multiagent-assignment-contract-20260720.md
+forbidden_files:
+  - tools/processforge.py
+  - tools/validate-process-forge-schemas.py
+  - schemas/*
+  - templates/*
+  - .pf/assignments/task-001-update-contracts-readonly.yaml
+  - .pf/artifacts/update-framework-implementation-spec-20260720.md
+non_overlap:
+  active_parallel_task: task-001-update-contracts-readonly
+  active_parallel_owner: Descartes
+  active_parallel_scope:
+    - schemas/*
+    - templates/*
+    - tools/processforge.py
+    - tools/validate-process-forge-schemas.py
+  rule: Do not edit files owned by the active parallel task. Produce a planning artifact only.
+required_outputs:
+  - changed_files
+  - proposed_assignment_schema_fields
+  - capsule_generation_requirements
+  - non_overlap_rules
+  - implementation_followup_tasks
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  -
+    id: iter-001
+    kind: work
+    status: completed
+    started_at: '2026-07-20T08:34:54Z'
+    summary: Subagent Faraday produced multiagent assignment handoff contract artifact without touching task-001 owned files.
+    artifacts:
+      - .pf/artifacts/runs/pf-update-framework-implementation-20260720/task-002-multiagent-assignment-contract/work-log.md
+    completed_at: '2026-07-20T08:34:54Z'
+result:
+  status: done
+  summary: Subagent Faraday produced the multiagent assignment handoff contract planning artifact with non-overlap rules and future implementation requirements.
+  artifacts:
+    - .pf/artifacts/multiagent-assignment-contract-20260720.md

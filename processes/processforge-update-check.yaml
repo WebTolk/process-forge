@@ -1,7 +1,7 @@
 schema_version: 1
 id: processforge-update-check
 name: ProcessForge Update Check
-version: "0.1.0"
+version: "1.0.0"
 status: active
 description: Check a linked ProcessForge distribution update index and produce a project assessment without automatic migration.
 

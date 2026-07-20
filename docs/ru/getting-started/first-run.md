@@ -30,3 +30,7 @@ cd ../my-project
 python .pf/runtime/bin/pf.py doctor-project --project-root .
 python .pf/runtime/bin/pf.py project-context-check --project-root .
 ```
+
+Полный порядок см. в [Порядке инициализации](initialization-order.md): install and verify ProcessForge, initialize workplace, configure roots включая `knowledge_roots.local-docs`, register tools и MCP servers, create/import knowledge packages и templates, затем create platform contracts и onboard projects.
+
+Не начинайте с platform contract, если его обязательные packages, templates или tools ещё не существуют. Сначала создайте или зарегистрируйте зависимости.

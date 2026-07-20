@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/installed-update-sites.schema.json",
+  "title": "ProcessForge Derived Installed Entity Update Sites",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "sites"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "generated_at": { "type": "string", "minLength": 1 },
+    "sites": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/site" }
+    }
+  },
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "required": ["type", "id", "scope"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "scope": { "type": "string", "minLength": 1 },
+        "installed_version": { "type": "string" },
+        "parent": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
+    "source": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "priority": { "type": "integer" },
+        "url": { "type": "string" },
+        "path": { "type": "string" },
+        "owner": { "type": "string" },
+        "repo": { "type": "string" },
+        "api_base_url": { "type": "string" },
+        "channels": { "type": "array", "items": { "type": "string" } },
+        "include_prereleases": { "type": "boolean" },
+        "asset_patterns": { "type": "object", "additionalProperties": true },
+        "trust": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
+    "site": {
+      "type": "object",
+      "required": ["site_id", "subject", "source", "manifest_path", "enabled"],
+      "properties": {
+        "site_id": { "type": "string", "minLength": 1 },
+        "subject": { "$ref": "#/$defs/subject" },
+        "source": { "$ref": "#/$defs/source" },
+        "manifest_path": { "type": "string", "minLength": 1 },
+        "enabled": { "type": "boolean" },
+        "preserved_local": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

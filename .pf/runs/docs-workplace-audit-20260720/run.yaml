@@ -1,0 +1,34 @@
+schema_version: 1
+id: docs-workplace-audit-20260720
+title: Documentation and workplace audit
+process: task-batch-execution
+status: completed
+created_at: '2026-07-20T06:03:44Z'
+updated_at: '2026-07-20T06:33:40Z'
+objective: Audit and align ProcessForge documentation, examples, prompts, workplace initialization, and project onboarding against the current codebase.
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: task-001-docs-audit
+    assignment: .pf/assignments/task-001-docs-audit.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: task-002-workplace-refresh
+    assignment: .pf/assignments/task-002-workplace-refresh.yaml
+    status: done
+    order: 2
+    blocking: true
+final_artifacts:
+  - .pf/runs/docs-workplace-audit-20260720/summary.md
+  - .pf/handoffs/runs/docs-workplace-audit-20260720-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true

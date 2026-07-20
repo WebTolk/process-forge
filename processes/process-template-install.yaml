@@ -1,7 +1,7 @@
 schema_version: 1
 id: process-template-install
 name: Process Template Install
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Add a reusable process definition template with artifact, gate, resource, and validation mapping.
 required_capabilities:

@@ -1,0 +1,28 @@
+schema_version: 1
+id: pf-entity-update-scope-20260720
+title: ProcessForge entity update scope addendum
+process: process-version-upgrade
+status: completed
+created_at: '2026-07-20T07:55:00Z'
+updated_at: '2026-07-20T07:55:48Z'
+objective: Extend global updater planning so it covers knowledge packages and other ProcessForge-managed entities, not only the ProcessForge distribution. Planning only; no code changes.
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: task-001-entity-update-scope
+    assignment: .pf/assignments/task-001-entity-update-scope.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/pf-entity-update-scope-20260720/summary.md
+  - .pf/handoffs/runs/pf-entity-update-scope-20260720-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true

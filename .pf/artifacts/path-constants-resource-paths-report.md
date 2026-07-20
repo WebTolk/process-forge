@@ -17,7 +17,7 @@ implemented
 
 ## Supported Path Forms
 
-- `${PF_KNOWLEDGE}/joomla/docs`
+- `${PF_KNOWLEDGE}/example/docs`
 - Windows-style absolute paths in workplace/private files
 - POSIX-style absolute paths in workplace/private files
 - `../relative/path`

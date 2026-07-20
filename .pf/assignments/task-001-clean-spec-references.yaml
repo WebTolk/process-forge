@@ -1,0 +1,30 @@
+schema_version: 1
+id: task-001-clean-spec-references
+title: Remove reference material from update spec
+run_id: pf-update-spec-reference-cleanup-20260720
+process: process-version-upgrade
+status: done
+created_at: '2026-07-20T08:15:32Z'
+updated_at: '2026-07-20T08:17:15Z'
+objective: Edit the update framework implementation spec so it does not mention external reference systems and describes only the target PF update system.
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  -
+    id: iter-001
+    kind: fix
+    status: completed
+    started_at: '2026-07-20T08:17:09Z'
+    summary: Removed external reference material from update framework specification and rewrote it as PF-native system requirements for implementers.
+    artifacts:
+      - .pf/artifacts/runs/pf-update-spec-reference-cleanup-20260720/task-001-clean-spec-references/work-log.md
+    completed_at: '2026-07-20T08:17:09Z'
+result:
+  status: done
+  summary: Update framework specification now contains only PF-native system requirements and no external reference sections or reference-system mentions.
+  artifacts:
+    - .pf/artifacts/update-framework-implementation-spec-20260720.md

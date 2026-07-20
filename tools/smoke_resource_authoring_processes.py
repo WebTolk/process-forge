@@ -77,40 +77,40 @@ def create_workplace_with_template_and_package(root: Path) -> tuple[Path, Path]:
         "--workplace",
         str(workplace),
         "--id",
-        "docs.joomla.local",
+        "docs.example",
         "--title",
-        "Local Joomla Documentation",
+        "Example Documentation",
         "--package-root",
         "global",
         "--apply",
     )
-    run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "docs.joomla.local", "--package-root", "global")
+    run("knowledge-package-doctor", "--workplace", str(workplace), "--package", "docs.example", "--package-root", "global")
     return root, workplace
 
 
 def test_full_chain(root: Path) -> None:
     _root, workplace = create_workplace_with_template_and_package(root)
-    project = root / "joomla-component"
+    project = root / "example-project"
     project.mkdir()
-    (project / "README.md").write_text("# Joomla Component Smoke\n", encoding="utf-8")
+    (project / "README.md").write_text("# Example Project Smoke\n", encoding="utf-8")
 
     run(
         "platform-create",
         "--workplace",
         str(workplace),
         "--id",
-        "platform.joomla",
+        "platform.example",
         "--title",
-        "Joomla Platform",
+        "Example Platform",
         "--project-type",
-        "joomla-component",
+        "example-project",
         "--knowledge-package",
-        "docs.joomla.local",
+        "docs.example",
         "--template",
         "report.audit.basic",
         "--apply",
     )
-    run("platform-contract-doctor", "--workplace", str(workplace), "--platform", "platform.joomla")
+    run("platform-contract-doctor", "--workplace", str(workplace), "--platform", "platform.example")
     run(
         "project-onboard",
         "--project-root",
@@ -118,13 +118,13 @@ def test_full_chain(root: Path) -> None:
         "--workplace",
         str(workplace),
         "--type",
-        "joomla-component",
+        "example-project",
         "--apply",
     )
     run("project-context-refresh", "--project-root", str(project))
     snapshot = project / ".pf" / "contexts" / "project-context.snapshot.yaml"
     assert_file(snapshot)
-    assert_contains(snapshot, "platform.joomla", "docs.joomla.local", "report.audit.basic")
+    assert_contains(snapshot, "platform.example", "docs.example", "report.audit.basic")
 
     run("hooks-dispatch", "--project-root", str(project), "--event-type", "template.authoring.completed", "--outbox")
     outbox = project / ".pf" / "runtime" / "hooks" / "outbox"
@@ -143,8 +143,8 @@ def test_full_chain(root: Path) -> None:
     )
     for path in [
         workplace / "reusable-templates" / "report.audit.basic" / "template.yaml",
-        workplace / "packages" / "docs.joomla.local" / "package.yaml",
-        workplace / "platform-contracts" / "platform.joomla" / "platform-contract.yaml",
+        workplace / "packages" / "docs.example" / "package.yaml",
+        workplace / "platform-contracts" / "platform.example" / "platform-contract.yaml",
     ]:
         assert_file(path)
         text = path.read_text(encoding="utf-8", errors="replace")

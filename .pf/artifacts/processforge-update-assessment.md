@@ -2,13 +2,13 @@
 
 ## Status
 
-safe
+requires_approval
 
 ## Project
 
 - root: process-forge
 - current_version: 0.1.0
-- available_version: 0.1.0
+- available_version: 1.0.0
 - channel: stable
 
 ## Breaking Changes
@@ -18,17 +18,19 @@ safe
 ## Required Migrations
 
 - required: False
-- guide: None
+- guide: updates/migrations/1.0.0-stable-release.md
 
 ## Changes
 
-- architecture: Linked workplace model, resource references, hooks validation, and update assessment contracts.
+- release: Stable ProcessForge 1.0.0 distribution with platform-agnostic core docs, resource authoring, update checks, release packaging, and project onboarding validation.
+- documentation: Human docs now start from workplace/device abstractions; agent docs reflect implemented CLI commands.
 
 ## Affected Files
 
 - .pf/process-forge.yaml
 - .pf/hooks.yaml
 - .pf/contexts/project-context.snapshot.yaml
+- .pf/runtime/bin/pf.py
 
 ## Required Manual Review
 

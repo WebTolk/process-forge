@@ -1,7 +1,7 @@
 schema_version: 1
 id: process-forge-knowledge-governance
 name: ProcessForge Knowledge Governance
-version: 0.1.0
+version: 1.0.0
 kind: direction
 scope: process-and-package-improvement
 description: Optional package for evolving reusable process knowledge safely.

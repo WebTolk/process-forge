@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.0.0 - 2026-07-20
+
+### Added
+
+- Promoted ProcessForge distribution, schema bundle, generated project flow
+  manifests, process definitions, packages, templates, examples, and update
+  index to `1.0.0`.
+- Added a stable update-index entry for checking upgrades from `0.1.0` to
+  `1.0.0`.
+
+### Changed
+
+- Human documentation now starts from workplace/device abstractions and separates
+  ProcessForge core mechanics from workplace/project resources.
+- Agent documentation and prompts now prefer implemented `bin/pf.py` commands.
+- Platform contracts remain data-driven composition manifests; ProcessForge core
+  stays platform-agnostic.
+
 ## 0.1.0-rc.1 - 2026-07-18
 
 ### Added

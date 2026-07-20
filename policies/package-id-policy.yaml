@@ -1,0 +1,8 @@
+schema_version: 1
+
+package_id_rules:
+  - id: docs.api
+    level: FAIL
+    message: "API package uses provider-specific id"
+    why: "ProcessForge does not use one generic docs.api package for all providers."
+    fix: "rename the package to docs.api.<provider>, for example docs.api.example-provider"

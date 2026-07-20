@@ -1,0 +1,39 @@
+schema_version: 1
+id: task-001-update-framework-spec
+title: Write update framework implementation specification
+run_id: pf-update-implementation-spec-20260720
+process: process-version-upgrade
+status: done
+created_at: '2026-07-20T08:03:59Z'
+updated_at: '2026-07-20T08:13:10Z'
+objective: Produce the implementation-ready specification for PF global update framework, including Composer/npm/pip lessons, schemas, storage layout, state machine, CLI, provider behavior, and test matrix.
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  -
+    id: iter-001
+    kind: research
+    status: completed
+    started_at: '2026-07-20T08:10:05Z'
+    summary: 'Refined source ownership model: global URLs are bootstrap/workplace policy, while installed entities declare their own update_sites in manifests following the Joomla pattern.'
+    artifacts:
+      - .pf/artifacts/runs/pf-update-implementation-spec-20260720/task-001-update-framework-spec/work-log.md
+    completed_at: '2026-07-20T08:10:05Z'
+  -
+    id: iter-002
+    kind: fix
+    status: completed
+    started_at: '2026-07-20T08:12:59Z'
+    summary: 'Adjusted update specification so Joomla remains a reference only: global bootstrap URLs are configured at workplace setup, while installed entities carry their own update sources in manifests.'
+    artifacts:
+      - .pf/artifacts/runs/pf-update-implementation-spec-20260720/task-001-update-framework-spec/work-log.md
+    completed_at: '2026-07-20T08:12:59Z'
+result:
+  status: done
+  summary: 'Implementation-ready update framework specification completed and corrected: PF-native updater, global bootstrap update URLs for process flow, entity-owned update sources in manifests, discovery/notification/download/verify/install flows, CLI, security, and test matrix.'
+  artifacts:
+    - .pf/artifacts/update-framework-implementation-spec-20260720.md

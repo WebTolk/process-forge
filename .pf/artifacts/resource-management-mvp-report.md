@@ -23,11 +23,11 @@ implemented
 ## Example Command Flows
 
 ```bash
-python tools/processforge.py knowledge-add-url --workplace <workplace-root> --package platform.joomla --url <url> --kind article
-python tools/processforge.py knowledge-add-resource --workplace <workplace-root> --package platform.joomla --resource-file resource.yaml --apply
-python tools/processforge.py knowledge-index-refresh --workplace <workplace-root> --package platform.joomla --apply
+python tools/processforge.py knowledge-add-url --workplace <workplace-root> --package platform.example-parent --url <url> --kind article
+python tools/processforge.py knowledge-add-resource --workplace <workplace-root> --package platform.example-parent --resource-file resource.yaml --apply
+python tools/processforge.py knowledge-index-refresh --workplace <workplace-root> --package platform.example-parent --apply
 python tools/processforge.py docs-import-plan --workplace <workplace-root> --source mdn --topics html,css,js
-python tools/processforge.py template-add --workplace <workplace-root> --type file --id joomla-form-field --source <folder>
+python tools/processforge.py template-add --workplace <workplace-root> --type file --id example-file-template --source <folder>
 python tools/processforge.py tool-register --workplace <workplace-root> --id phpstan --capability php.static_analysis --command phpstan
 python tools/processforge.py mcp-register --workplace <workplace-root> --id context7 --capability official_documentation --command context7
 ```
