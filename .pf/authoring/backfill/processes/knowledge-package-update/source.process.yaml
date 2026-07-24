@@ -1,7 +1,7 @@
 schema_version: 1
 id: knowledge-package-update
 name: Knowledge Package Update
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Update a knowledge package through current inspection, change proposal, resource/index update, compatibility check, and review.
 required_capabilities:

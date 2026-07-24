@@ -38,10 +38,10 @@ WARN
 
 - `logic_review`: source definition already has logic review findings: stage context-freshness-check produces known artifact context-freshness-report; stage flow-location produces known artifact flow-location-report; stage mode-detection produces known artifact session-mode-decision; stage status-scan produces known artifact session-status-inputs; stage workplace-resolution produces known artifact workplace-resolution-report
 
-## WARN To Fix Before Public Release
+## Public Release WARN Actions
 
-- `logic_review`: source definition already has logic review findings: stage context-freshness-check produces known artifact context-freshness-report; stage flow-location produces known artifact flow-location-report; stage mode-detection produces known artifact session-mode-decision; stage status-scan produces known artifact session-status-inputs; stage workplace-resolution produces known artifact workplace-resolution-report
+- None.
 
 ## Recommendation
 
-Process is reproducible with documented warnings; fix action WARN items before public release.
+Process is reproducible with documented warnings; public-release action items are listed explicitly when present.

@@ -38,10 +38,10 @@ WARN
 
 - `logic_review`: source definition already has logic review findings: stage ecp-capsule-generation produces known artifact execution-context-package; stage rule-classification produces known artifact classified-rules; stage source-discovery produces known artifact source-inventory
 
-## WARN To Fix Before Public Release
+## Public Release WARN Actions
 
-- `logic_review`: source definition already has logic review findings: stage ecp-capsule-generation produces known artifact execution-context-package; stage rule-classification produces known artifact classified-rules; stage source-discovery produces known artifact source-inventory
+- None.
 
 ## Recommendation
 
-Process is reproducible with documented warnings; fix action WARN items before public release.
+Process is reproducible with documented warnings; public-release action items are listed explicitly when present.

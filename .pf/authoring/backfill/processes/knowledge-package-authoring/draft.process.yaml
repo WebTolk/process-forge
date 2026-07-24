@@ -3,7 +3,7 @@ id: knowledge-package-authoring
 name: Knowledge Package Authoring
 kind: resource_authoring
 scope: workplace
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Create a workplace knowledge package through authoritative package roots.
 purpose: Create package.yaml, resource index, and handoff artifacts for a knowledge package.

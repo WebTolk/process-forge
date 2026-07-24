@@ -3,7 +3,7 @@ id: content-production
 name: Content Production
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Produce, review, and prepare content for publication.
 purpose: Produce, review, and prepare content for publication.

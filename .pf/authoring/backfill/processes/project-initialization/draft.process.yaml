@@ -3,7 +3,7 @@ id: project-initialization
 name: Project Initialization
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Connect a project to ProcessForge and a configured workplace layer.
 purpose: Connect a project to ProcessForge and a configured workplace layer.

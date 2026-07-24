@@ -38,10 +38,10 @@ WARN
 
 - `logic_review`: source definition already has logic review findings: stage mirror-plan produces known artifact license-assessment; stage mirror-plan produces known artifact resource-index; stage mirror-plan produces known artifact source-register
 
-## WARN To Fix Before Public Release
+## Public Release WARN Actions
 
-- `logic_review`: source definition already has logic review findings: stage mirror-plan produces known artifact license-assessment; stage mirror-plan produces known artifact resource-index; stage mirror-plan produces known artifact source-register
+- None.
 
 ## Recommendation
 
-Process is reproducible with documented warnings; fix action WARN items before public release.
+Process is reproducible with documented warnings; public-release action items are listed explicitly when present.

@@ -1,0 +1,89 @@
+schema_version: 1
+capsule:
+  id: subagent-release-auditor-capsule
+  generated_at: '2026-07-24T18:17:46Z'
+  assignment_id: subagent-release-auditor
+  assignment_path: .pf/assignments/subagent-release-auditor.yaml
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 3c5b415c353e43d74129d961459ab8de9692df10c2fe079da01e13fe9e79ada7
+  worker_may_rebuild_context: false
+assignment:
+  id: subagent-release-auditor
+  path: .pf/assignments/subagent-release-auditor.yaml
+  status: in_progress
+  objective: ""
+  execution_mode:
+
+context:
+  snapshot_id: project-context
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/subagent-release-auditor.yaml
+  context_artifacts:
+    []
+scope:
+  allowed_files:
+    []
+  allowed_read_files:
+    - tools/smoke_resource_authoring_processes.py
+    - tools/validate-*.py
+    - tools/processforge.py
+    - .processforge-releaseignore
+    - docs/release-checklist.md
+  forbidden_files:
+    - dist/**
+    - .pf/runtime/**
+  ownership:
+    owner_id: subagent-release-auditor
+    owner_label: worker-subagent-release-auditor
+    role: ""
+    writer: false
+    owned_files:
+      []
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      []
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    []
+  expected_report:
+    artifact: .pf/artifacts/subagent-stabilization-audit/release-auditor-report.md
+    format: concise_markdown
+    include:
+      []
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/subagent-release-auditor.ndjson
+  event_correlation_id: assignment-subagent-release-auditor
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/subagent-release-auditor.yaml
+allowed_files:
+  []
+forbidden_files:
+  - dist/**
+  - .pf/runtime/**
+required_outputs:
+  []
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-subagent-release-auditor

@@ -3,7 +3,7 @@ id: project-onboarding
 name: Project Onboarding
 kind: first_run
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Attach a project to an existing ProcessForge workplace without recreating the workplace.
 purpose: Attach a project to an existing ProcessForge workplace without recreating the workplace.

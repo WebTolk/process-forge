@@ -21,10 +21,11 @@ Runtime layout:
 ```bash
 python .pf/runtime/bin/pf.py worker-run prepare --project-root . --task docs-worker --driver manual
 python .pf/runtime/bin/pf.py worker-run start --project-root . --task test-worker --driver test-echo-worker
+python .pf/runtime/bin/pf.py worker-run start --project-root . --task test-worker --driver test-echo-worker --detach
 python .pf/runtime/bin/pf.py worker-run status --project-root . --task test-worker
 python .pf/runtime/bin/pf.py worker-run collect --project-root . --task test-worker
 python .pf/runtime/bin/pf.py supervisor tick --project-root . --run example-run
-python .pf/runtime/bin/pf.py supervisor run --project-root . --run example-run --max-ticks 2
+python .pf/runtime/bin/pf.py supervisor run --project-root . --run example-run --max-ticks 5
 ```
 
 `supervisor tick` учитывает `depends_on` и `dependencies`. Последовательные

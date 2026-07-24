@@ -1,0 +1,61 @@
+schema_version: 1
+id: audit-release-tooling-worker
+title: Release and tooling audit
+run_id: post-runtime-supervisor-audit
+process: testing
+status: done
+created_at: '2026-07-24T11:41:17Z'
+updated_at: '2026-07-24T11:52:49Z'
+objective: Release and tooling audit
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Release tooling audit completed with confirmed findings.
+  artifacts:
+    - .pf/artifacts/audits/post-runtime-supervisor/release-tooling-worker.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+allowed_read_files:
+  - tools/**
+  - bin/**
+  - dist/**
+  - .processforge-releaseignore
+  - .pf/artifacts/checksum-inventory.sha256
+  - .pf/artifacts/parity/**
+  - .pf/reviews/parity/**
+  - docs/release-checklist.md
+ownership:
+  owner_id: audit-release-tooling-worker
+  owner_label: worker-audit-release-tooling-worker
+  role: release-assurance
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: release-tooling-audit-report
+    path: .pf/artifacts/audits/post-runtime-supervisor/release-tooling-worker.md
+    type: markdown
+    required: true
+expected_report:
+  language: en
+  artifact: .pf/artifacts/audits/post-runtime-supervisor/release-tooling-worker.md
+  format: concise_markdown
+  include:
+    - release-tooling-audit-report
+worker_may_rebuild_context: false
+runtime_driver: manual

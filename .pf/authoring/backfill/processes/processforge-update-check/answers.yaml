@@ -2,7 +2,7 @@ schema_version: 1
 process:
   id: processforge-update-check
   name: ProcessForge Update Check
-  version: 0.1.0
+  version: 1.0.0
   status: active
   kind: process
   scope: project

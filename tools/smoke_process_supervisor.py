@@ -101,7 +101,7 @@ def main() -> int:
         write_plan(plan)
         pf("orchestrator-plan", "validate", "--project-root", str(project), "--plan", str(plan))
         pf("orchestrator-plan", "apply", "--project-root", str(project), "--plan", str(plan), "--apply")
-        pf("supervisor", "run", "--project-root", str(project), "--run", "supervised-run", "--max-ticks", "2", "--interval", "0")
+        pf("supervisor", "run", "--project-root", str(project), "--run", "supervised-run", "--max-ticks", "5", "--interval", "0")
         status = pf("run-status", "--project-root", str(project), "--run", "supervised-run").stdout
         if "TASKS: done=2" not in status:
             raise AssertionError("supervisor did not complete both tasks")

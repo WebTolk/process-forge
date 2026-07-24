@@ -3,7 +3,7 @@ id: documentation-mirror-import
 name: Documentation Mirror Import
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Plan documentation mirror imports and resource indexes without crawling large documentation by default.
 purpose: Plan documentation mirror imports and resource indexes without crawling large documentation by default.

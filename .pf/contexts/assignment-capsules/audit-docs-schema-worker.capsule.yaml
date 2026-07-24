@@ -1,0 +1,104 @@
+schema_version: 1
+capsule:
+  id: audit-docs-schema-worker-capsule
+  generated_at: '2026-07-24T11:41:19Z'
+  assignment_id: audit-docs-schema-worker
+  assignment_path: .pf/assignments/audit-docs-schema-worker.yaml
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 3ec557fb7085b14e79cc015dec908bf0c3fe98c9985df823bcd6d856ec8ec1dc
+  worker_may_rebuild_context: false
+assignment:
+  id: audit-docs-schema-worker
+  path: .pf/assignments/audit-docs-schema-worker.yaml
+  status: open
+  objective: Documentation and schema consistency audit
+  execution_mode:
+    kind: read_only
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: project-context
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/audit-docs-schema-worker.yaml
+  context_artifacts:
+    []
+scope:
+  allowed_files:
+    []
+  allowed_read_files:
+    - README.md
+    - QUICKSTART.md
+    - README.ru.md
+    - QUICKSTART.ru.md
+    - docs/**
+    - schemas/**
+    - templates/**
+    - examples/runtime-supervisor/**
+    - processes/runtime-driver-registry.yaml
+    - processes/process-supervisor.yaml
+    - .pf/process-forge.yaml
+  forbidden_files:
+    []
+  ownership:
+    owner_id: audit-docs-schema-worker
+    owner_label: worker-audit-docs-schema-worker
+    role: docs-review
+    writer: false
+    owned_files:
+      []
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      []
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: docs-schema-audit-report
+      path: .pf/artifacts/audits/post-runtime-supervisor/docs-schema-worker.md
+      type: markdown
+      required: true
+  expected_report:
+    language: en
+    artifact: .pf/artifacts/audits/post-runtime-supervisor/docs-schema-worker.md
+    format: concise_markdown
+    include:
+      - docs-schema-audit-report
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/audit-docs-schema-worker.ndjson
+  event_correlation_id: assignment-audit-docs-schema-worker
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/audit-docs-schema-worker.yaml
+allowed_files:
+  []
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: docs-schema-audit-report
+    path: .pf/artifacts/audits/post-runtime-supervisor/docs-schema-worker.md
+    type: markdown
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-audit-docs-schema-worker

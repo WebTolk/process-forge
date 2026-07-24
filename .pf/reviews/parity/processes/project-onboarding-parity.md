@@ -38,10 +38,10 @@ WARN
 
 - `logic_review`: source definition already has logic review findings: stage detect-project produces known artifact global-resource-matching-report; stage detect-project produces known artifact project-classification-report; stage validate produces known artifact project-doctor-report
 
-## WARN To Fix Before Public Release
+## Public Release WARN Actions
 
-- `logic_review`: source definition already has logic review findings: stage detect-project produces known artifact global-resource-matching-report; stage detect-project produces known artifact project-classification-report; stage validate produces known artifact project-doctor-report
+- None.
 
 ## Recommendation
 
-Process is reproducible with documented warnings; fix action WARN items before public release.
+Process is reproducible with documented warnings; public-release action items are listed explicitly when present.

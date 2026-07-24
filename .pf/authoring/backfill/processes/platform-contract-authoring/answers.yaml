@@ -2,7 +2,7 @@ schema_version: 1
 process:
   id: platform-contract-authoring
   name: Platform Contract Authoring
-  version: 0.1.0
+  version: 1.0.0
   status: active
   kind: resource_authoring
   scope: workplace

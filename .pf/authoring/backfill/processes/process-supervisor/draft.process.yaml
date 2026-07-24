@@ -126,6 +126,33 @@ artifact_definitions:
       - active
       - archived
   -
+    id: process-record
+    title: Process Record
+    owner_role: supervisor
+    template: process-record
+    lifecycle:
+      - draft
+      - active
+      - archived
+  -
+    id: worker-logs
+    title: Worker Logs
+    owner_role: supervisor
+    template: worker-logs
+    lifecycle:
+      - draft
+      - active
+      - archived
+  -
+    id: exit-record
+    title: Exit Record
+    owner_role: supervisor
+    template: exit-record
+    lifecycle:
+      - draft
+      - active
+      - archived
+  -
     id: collection-report
     title: Collection Report
     owner_role: supervisor

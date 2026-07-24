@@ -1,0 +1,123 @@
+schema_version: 1
+id: task-003-release-docs-metadata
+title: Release docs and metadata fixes
+run_id: runtime-supervisor-audit-fix-shell-agents
+process: content-production
+status: done
+created_at: '2026-07-24T12:02:49Z'
+updated_at: '2026-07-24T12:33:58Z'
+objective: Fix process metadata/templates, archive freshness/public gate, RU docs encoding, docs, dogfooding artifacts, and release checks.
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Process metadata, release gates, docs, checksums, and archive refreshed
+  artifacts:
+    - .pf/artifacts/runtime-supervisor-audit-fix-report.md
+    - .pf/reviews/runtime-supervisor-audit-fix-review.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - docs/**
+  - README*.md
+  - QUICKSTART*.md
+  - processes/**
+  - templates/**
+  - tools/**
+  - dist/**
+  - .pf/**
+ownership:
+  owner_id: task-003-release-docs-metadata
+  owner_label: worker-task-003-release-docs-metadata
+  role: ""
+  writer: true
+  owned_files:
+    - docs/**
+    - README*.md
+    - QUICKSTART*.md
+    - processes/**
+    - templates/**
+    - tools/**
+    - dist/**
+    - .pf/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - docs/**
+    - README*.md
+    - QUICKSTART*.md
+    - processes/**
+    - templates/**
+    - tools/**
+    - dist/**
+    - .pf/**
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: task-003-release-docs-metadata
+        current_scope: templates/**
+        other_assignment: task-001-runtime-supervisor-fixes
+        other_scope: templates/runtime-drivers/**
+        reason: glob_matches_same_file
+      -
+        current_assignment: task-003-release-docs-metadata
+        current_scope: tools/**
+        other_assignment: task-001-runtime-supervisor-fixes
+        other_scope: tools/processforge.py
+        reason: glob_matches_file
+      -
+        current_assignment: task-003-release-docs-metadata
+        current_scope: templates/**
+        other_assignment: task-002-shell-agent-smokes
+        other_scope: templates/runtime-drivers/**
+        reason: glob_matches_same_file
+      -
+        current_assignment: task-003-release-docs-metadata
+        current_scope: tools/**
+        other_assignment: task-002-shell-agent-smokes
+        other_scope: tools/test_agents/**
+        reason: possible_glob_overlap
+      -
+        current_assignment: task-003-release-docs-metadata
+        current_scope: tools/**
+        other_assignment: task-002-shell-agent-smokes
+        other_scope: tools/smoke*.py
+        reason: glob_matches_same_file
+      -
+        current_assignment: task-003-release-docs-metadata
+        current_scope: tools/**
+        other_assignment: task-002-shell-agent-smokes
+        other_scope: tools/processforge.py
+        reason: glob_matches_file
+required_outputs:
+  -
+    id: review
+    path: .pf/reviews/runtime-supervisor-audit-fix-review.md
+    type: markdown
+    required: true
+  -
+    id: handoff
+    path: .pf/handoffs/runtime-supervisor-audit-fix-handoff.md
+    type: markdown
+    required: true
+expected_report:
+  artifact: .pf/artifacts/runtime-supervisor-audit-fix-report.md
+  format: concise_markdown
+  include:
+    - review
+    - handoff

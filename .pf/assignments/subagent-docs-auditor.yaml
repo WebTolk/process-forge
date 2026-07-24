@@ -1,0 +1,53 @@
+schema_version: 1
+id: subagent-docs-auditor
+title: Documentation stabilization audit
+run_id: subagent-stabilization-audit
+process: testing
+status: in_progress
+created_at: '2026-07-24T18:16:38Z'
+updated_at: '2026-07-24T18:17:04Z'
+objective: ""
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+allowed_read_files:
+  - README.md
+  - README.ru.md
+  - QUICKSTART.md
+  - QUICKSTART.ru.md
+  - docs/**
+  - examples/**
+forbidden_files:
+  - dist/**
+  - .pf/runtime/**
+ownership:
+  owner_id: subagent-docs-auditor
+  owner_label: worker-subagent-docs-auditor
+  role: ""
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    []
+  rule: Do not edit files owned by active parallel tasks.
+expected_report:
+  artifact: .pf/artifacts/subagent-stabilization-audit/docs-auditor-report.md
+  format: concise_markdown
+  include:
+    []

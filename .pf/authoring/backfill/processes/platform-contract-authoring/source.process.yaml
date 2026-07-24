@@ -3,7 +3,7 @@ id: platform-contract-authoring
 name: Platform Contract Authoring
 kind: resource_authoring
 scope: workplace
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Create a platform contract that links project type hints to packages, templates, tools, MCP, and processes.
 purpose: Author platform contracts without copying package or template payloads.

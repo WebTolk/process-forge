@@ -38,10 +38,10 @@ WARN
 
 - `logic_review`: source definition already has logic review findings: stage create-platform-structure produces known artifact platform-structure; stage intake produces known artifact platform-contract-inputs; stage link-capabilities produces known artifact capability-links; stage link-knowledge-packages produces known artifact knowledge-links; stage link-templates produces known artifact template-links; stage link-tools-mcp produces known artifact tool-mcp-links; stage select-platform-root produces known artifact platform-root-selection
 
-## WARN To Fix Before Public Release
+## Public Release WARN Actions
 
-- `logic_review`: source definition already has logic review findings: stage create-platform-structure produces known artifact platform-structure; stage intake produces known artifact platform-contract-inputs; stage link-capabilities produces known artifact capability-links; stage link-knowledge-packages produces known artifact knowledge-links; stage link-templates produces known artifact template-links; stage link-tools-mcp produces known artifact tool-mcp-links; stage select-platform-root produces known artifact platform-root-selection
+- None.
 
 ## Recommendation
 
-Process is reproducible with documented warnings; fix action WARN items before public release.
+Process is reproducible with documented warnings; public-release action items are listed explicitly when present.

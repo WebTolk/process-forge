@@ -5,28 +5,22 @@ from __future__ import annotations
 
 import hashlib
 import json
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
+from processforge_subprocess import diagnostic_text, run_command as run_processforge_command
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "bin" / "pf.py"
+PF_TIMEOUT_SECONDS = 30
 
 
 def run_pf(*args: str) -> str:
-    result = subprocess.run(
-        [sys.executable, str(CLI), *args],
-        cwd=str(ROOT),
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        raise AssertionError(
-            f"pf {' '.join(args)} failed with {result.returncode}\nstdout follows\n{result.stdout}\nstderr follows\n{result.stderr}"
-        )
+    result = run_processforge_command([sys.executable, str(CLI), *args], cwd=ROOT, timeout=PF_TIMEOUT_SECONDS)
+    if result.timed_out or result.returncode != 0:
+        raise AssertionError(diagnostic_text(result))
     return result.stdout
 
 

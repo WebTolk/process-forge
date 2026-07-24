@@ -3,7 +3,7 @@ id: reusable-template-authoring
 name: Reusable Template Authoring
 kind: resource_authoring
 scope: workplace
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Create, register, validate, and hand off a reusable ProcessForge workplace template.
 purpose: Create a reusable template in a workplace template root without touching project onboarding.

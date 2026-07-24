@@ -1,0 +1,44 @@
+schema_version: 1
+id: post-runtime-supervisor-audit
+title: Post Runtime Supervisor Audit
+process: multi-agent-task-orchestration
+status: completed
+created_at: '2026-07-24T11:40:47Z'
+updated_at: '2026-07-24T11:52:58Z'
+objective: Audit the recently created runtime driver registry and process supervisor MVP for mismatches, logical flaws, and broken tools.
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: audit-runtime-cli-worker
+    assignment: .pf/assignments/audit-runtime-cli-worker.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: audit-docs-schema-worker
+    assignment: .pf/assignments/audit-docs-schema-worker.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: audit-release-tooling-worker
+    assignment: .pf/assignments/audit-release-tooling-worker.yaml
+    status: done
+    order: 3
+    blocking: true
+final_artifacts:
+  - .pf/runs/post-runtime-supervisor-audit/summary.md
+  - .pf/handoffs/runs/post-runtime-supervisor-audit-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true
+runtime:
+  default_driver: manual
+  supervisor_profile: default
+  start_policy: manual

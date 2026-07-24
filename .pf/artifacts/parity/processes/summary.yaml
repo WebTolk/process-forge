@@ -1,8 +1,8 @@
 schema_version: 1
 result: WARN
 counts:
-  PASS: 8
-  WARN: 22
+  PASS: 9
+  WARN: 21
   SKIP: 0
   FAIL: 0
 checked:
@@ -105,7 +105,7 @@ processes:
     semantic_diff: .pf/artifacts/parity/processes/process-authoring-semantic-diff.yaml
   -
     process_id: process-supervisor
-    result: WARN
+    result: PASS
     source: processes/process-supervisor.yaml
     review: .pf/reviews/parity/processes/process-supervisor-parity.md
     semantic_diff: .pf/artifacts/parity/processes/process-supervisor-semantic-diff.yaml

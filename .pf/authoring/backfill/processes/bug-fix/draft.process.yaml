@@ -3,7 +3,7 @@ id: bug-fix
 name: Bug Fix
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Reproduce, fix, verify, and document a defect.
 purpose: Reproduce, fix, verify, and document a defect.

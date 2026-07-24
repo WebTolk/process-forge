@@ -3,7 +3,7 @@ id: testing
 name: Testing
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Plan, execute, and report a testing pass.
 purpose: Plan, execute, and report a testing pass.

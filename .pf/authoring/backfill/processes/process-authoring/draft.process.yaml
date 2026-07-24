@@ -3,7 +3,7 @@ id: process-authoring
 name: Process Authoring
 kind: resource_authoring
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Create, review, apply, and validate a new ProcessForge process definition with companion prompt, documentation, and examples.
 purpose: Turn guided process answers into a usable process pack without requiring manual YAML authoring by hand.

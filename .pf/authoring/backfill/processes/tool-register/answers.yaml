@@ -2,7 +2,7 @@ schema_version: 1
 process:
   id: tool-register
   name: Tool Register
-  version: 0.1.0
+  version: 1.0.0
   status: active
   kind: process
   scope: project

@@ -3,7 +3,7 @@ id: processforge-update-check
 name: ProcessForge Update Check
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Check a linked ProcessForge distribution update index and produce a project assessment without automatic migration.
 purpose: Check a linked ProcessForge distribution update index and produce a project assessment without automatic migration.

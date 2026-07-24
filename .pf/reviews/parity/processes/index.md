@@ -4,8 +4,8 @@ Result: `WARN`
 
 ## Summary
 
-- PASS: 8
-- WARN: 22
+- PASS: 9
+- WARN: 21
 - SKIP: 0
 - FAIL: 0
 
@@ -37,7 +37,7 @@ Result: `WARN`
 | `platform-contract-authoring` | WARN | `processes/platform-contract-authoring.yaml` | `.pf/reviews/parity/processes/platform-contract-authoring-parity.md` |
 | `platform-contract-install` | WARN | `processes/platform-contract-install.yaml` | `.pf/reviews/parity/processes/platform-contract-install-parity.md` |
 | `process-authoring` | PASS | `processes/process-authoring.yaml` | `.pf/reviews/parity/processes/process-authoring-parity.md` |
-| `process-supervisor` | WARN | `processes/process-supervisor.yaml` | `.pf/reviews/parity/processes/process-supervisor-parity.md` |
+| `process-supervisor` | PASS | `processes/process-supervisor.yaml` | `.pf/reviews/parity/processes/process-supervisor-parity.md` |
 | `process-template-install` | WARN | `processes/process-template-install.yaml` | `.pf/reviews/parity/processes/process-template-install-parity.md` |
 | `process-version-upgrade` | PASS | `processes/process-version-upgrade.yaml` | `.pf/reviews/parity/processes/process-version-upgrade-parity.md` |
 | `processforge-update-check` | PASS | `processes/processforge-update-check.yaml` | `.pf/reviews/parity/processes/processforge-update-check-parity.md` |

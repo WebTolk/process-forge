@@ -1,7 +1,7 @@
 schema_version: 1
 id: knowledge-package-improvement
 name: Knowledge Package Improvement
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Propose, review, and integrate reusable process knowledge.
 required_capabilities:

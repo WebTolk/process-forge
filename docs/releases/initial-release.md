@@ -13,6 +13,8 @@ documentation version.
   platform contracts.
 - Path constants and authoritative package roots for portable resource records.
 - Project context snapshot refresh/check and assignment capsule generation.
+- Runtime driver registry, worker-run lifecycle commands, and file-first process
+  supervisor for bounded shell worker execution.
 - Events/hooks/outbox MVP for file-only observational delivery.
 - Release, smoke, examples, cleanup, package, and archive validation commands.
 
@@ -28,10 +30,9 @@ documentation version.
 
 ## Known Limitations
 
-- No multi-agent coordination, claim, or lease system.
+- No claim or lease system for distributed coordination.
 - Hooks are observational and outbox-only.
-- No daemon, runner, supervisor, GUI, marketplace, remote sync, or publish
-  service.
+- No daemon, GUI, marketplace, remote sync, or publish service.
 - No live command hook execution or network webhook send.
 
 See [known limitations](../known-limitations.md).

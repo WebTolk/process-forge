@@ -1,0 +1,24 @@
+schema_version: 1
+run_id: example-run
+task_id: example-task
+driver_id: manual
+kind: manual
+command:
+  executable: ""
+  args: []
+  argv: []
+  working_directory: "."
+  environment: {}
+  environment_inherit: false
+  shell: false
+paths:
+  status: .pf/runtime/agent-runs/example-run/example-task/status.json
+  command: .pf/runtime/agent-runs/example-run/example-task/command.json
+  process: .pf/runtime/agent-runs/example-run/example-task/process.json
+  exit: .pf/runtime/agent-runs/example-run/example-task/exit.json
+  stdout: .pf/runtime/agent-runs/example-run/example-task/stdout.log
+  stderr: .pf/runtime/agent-runs/example-run/example-task/stderr.log
+  heartbeat: .pf/runtime/agent-runs/example-run/example-task/heartbeat.json
+limits:
+  timeout_seconds: 30
+  max_retries: 0

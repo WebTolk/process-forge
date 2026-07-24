@@ -15,3 +15,8 @@ runtime_drivers:
     path: ../runtime-drivers/test-echo-worker.yaml
     status: available
     builtin: true
+  -
+    id: test-shell-agent
+    path: ../runtime-drivers/test-shell-agent.yaml
+    status: available
+    builtin: true

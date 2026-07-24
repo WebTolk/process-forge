@@ -38,10 +38,10 @@ WARN
 
 - `logic_review`: source definition already has logic review findings: stage intake produces known artifact process-template-request; stage process-definition-creation produces known artifact review; stage process-definition-creation produces known artifact validation-report
 
-## WARN To Fix Before Public Release
+## Public Release WARN Actions
 
-- `logic_review`: source definition already has logic review findings: stage intake produces known artifact process-template-request; stage process-definition-creation produces known artifact review; stage process-definition-creation produces known artifact validation-report
+- None.
 
 ## Recommendation
 
-Process is reproducible with documented warnings; fix action WARN items before public release.
+Process is reproducible with documented warnings; public-release action items are listed explicitly when present.

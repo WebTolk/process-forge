@@ -1,0 +1,64 @@
+schema_version: 1
+id: audit-docs-schema-worker
+title: Documentation and schema consistency audit
+run_id: post-runtime-supervisor-audit
+process: testing
+status: done
+created_at: '2026-07-24T11:41:17Z'
+updated_at: '2026-07-24T11:52:49Z'
+objective: Documentation and schema consistency audit
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Docs and schema audit completed with confirmed findings.
+  artifacts:
+    - .pf/artifacts/audits/post-runtime-supervisor/docs-schema-worker.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+allowed_read_files:
+  - README.md
+  - QUICKSTART.md
+  - README.ru.md
+  - QUICKSTART.ru.md
+  - docs/**
+  - schemas/**
+  - templates/**
+  - examples/runtime-supervisor/**
+  - processes/runtime-driver-registry.yaml
+  - processes/process-supervisor.yaml
+  - .pf/process-forge.yaml
+ownership:
+  owner_id: audit-docs-schema-worker
+  owner_label: worker-audit-docs-schema-worker
+  role: docs-review
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: docs-schema-audit-report
+    path: .pf/artifacts/audits/post-runtime-supervisor/docs-schema-worker.md
+    type: markdown
+    required: true
+expected_report:
+  language: en
+  artifact: .pf/artifacts/audits/post-runtime-supervisor/docs-schema-worker.md
+  format: concise_markdown
+  include:
+    - docs-schema-audit-report
+worker_may_rebuild_context: false
+runtime_driver: manual

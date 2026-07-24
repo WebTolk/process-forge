@@ -1,0 +1,62 @@
+schema_version: 1
+id: task-001-runtime-supervisor-fixes
+title: Runtime and supervisor fixes
+run_id: runtime-supervisor-audit-fix-shell-agents
+process: bug-fix
+status: done
+created_at: '2026-07-24T12:02:38Z'
+updated_at: '2026-07-24T12:33:58Z'
+objective: Fix environment inheritance, driver readiness, limit validation, and supervisor failure propagation.
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Runtime driver validation, env isolation, and supervisor failure propagation fixed
+  artifacts:
+    - .pf/artifacts/runtime-supervisor-audit-fix-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - schemas/runtime-driver.schema.json
+  - templates/runtime-drivers/**
+ownership:
+  owner_id: task-001-runtime-supervisor-fixes
+  owner_label: worker-task-001-runtime-supervisor-fixes
+  role: ""
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - schemas/runtime-driver.schema.json
+    - templates/runtime-drivers/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - schemas/runtime-driver.schema.json
+    - templates/runtime-drivers/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-fix-report
+    path: .pf/artifacts/runtime-supervisor-audit-fix-report.md
+    type: markdown
+    required: true
+expected_report:
+  artifact: .pf/artifacts/runtime-supervisor-audit-fix-report.md
+  format: concise_markdown
+  include:
+    - runtime-fix-report

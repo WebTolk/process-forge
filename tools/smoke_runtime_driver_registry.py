@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 from pathlib import Path
 
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
@@ -22,13 +23,42 @@ def pf(*args: str, expect: int = 0) -> CommandResult:
 
 def main() -> int:
     listed = pf("runtime-driver", "list", "--project-root", str(ROOT)).stdout
-    for driver_id in ["manual", "generic-shell", "test-echo-worker"]:
+    for driver_id in ["manual", "generic-shell", "test-echo-worker", "test-shell-agent"]:
         if driver_id not in listed:
             raise AssertionError(f"missing runtime driver in list: {driver_id}")
-        pf("runtime-driver", "validate", "--project-root", str(ROOT), "--driver", driver_id)
+        if driver_id == "generic-shell":
+            not_ready = pf("runtime-driver", "validate", "--project-root", str(ROOT), "--driver", driver_id, expect=1).stdout
+            if "start readiness executable override required" not in not_ready:
+                raise AssertionError("generic-shell validate did not report missing executable readiness")
+            pf("runtime-driver", "validate", "--project-root", str(ROOT), "--driver", driver_id, "--executable", sys.executable)
+        else:
+            pf("runtime-driver", "validate", "--project-root", str(ROOT), "--driver", driver_id)
         described = pf("runtime-driver", "describe", "--project-root", str(ROOT), "--driver", driver_id).stdout
         if f"id: {driver_id}" not in described:
             raise AssertionError(f"describe output missing id: {driver_id}")
+    with tempfile.TemporaryDirectory(prefix="pf-runtime-driver-invalid-") as temp:
+        invalid = Path(temp) / "invalid-limits.yaml"
+        invalid.write_text(
+            """schema_version: 1
+id: invalid-limits
+title: Invalid Limits
+kind: shell
+command:
+  executable: "{python_executable}"
+  args: []
+limits:
+  timeout_seconds: abc
+  max_retries: -1
+security:
+  allow_shell: false
+  require_explicit_executable: false
+  allow_network: false
+""",
+            encoding="utf-8",
+        )
+        output = pf("runtime-driver", "validate", "--project-root", str(ROOT), "--driver", str(invalid), expect=1).stdout
+        if "limits.timeout_seconds" not in output or "limits.max_retries" not in output:
+            raise AssertionError("invalid limits validation did not report both bad fields")
     print("PASS: runtime driver registry smoke")
     return 0
 

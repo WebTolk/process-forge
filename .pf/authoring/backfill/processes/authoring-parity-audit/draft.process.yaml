@@ -3,7 +3,7 @@ id: authoring-parity-audit
 name: Authoring Parity Audit
 kind: release_audit
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Audit existing ProcessForge processes and resources against authoring workflows to prove they can be reproduced or explained through authoring metadata.
 purpose: Ensure built-in ProcessForge processes and resources are not untracked manual exceptions before public release.

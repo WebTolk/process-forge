@@ -1,7 +1,7 @@
 schema_version: 1
 id: project-initialization
 name: Project Initialization
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Connect a project to ProcessForge and a configured workplace layer.
 required_capabilities:

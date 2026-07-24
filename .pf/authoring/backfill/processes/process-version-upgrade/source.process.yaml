@@ -1,7 +1,7 @@
 schema_version: 1
 id: process-version-upgrade
 name: Process Version Upgrade
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Assess and perform safe upgrades between process versions.
 required_capabilities:

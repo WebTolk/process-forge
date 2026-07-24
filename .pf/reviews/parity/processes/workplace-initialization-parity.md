@@ -38,10 +38,10 @@ WARN
 
 - `logic_review`: source definition already has logic review findings: stage apply produces known artifact workplace-files; stage mcp-discovery produces known artifact mcp-registry; stage registry-setup produces known artifact workplace-registries; stage review produces known artifact workplace-init-review; stage terms-setup produces known artifact terms-file; stage tool-discovery produces known artifact tool-registry
 
-## WARN To Fix Before Public Release
+## Public Release WARN Actions
 
-- `logic_review`: source definition already has logic review findings: stage apply produces known artifact workplace-files; stage mcp-discovery produces known artifact mcp-registry; stage registry-setup produces known artifact workplace-registries; stage review produces known artifact workplace-init-review; stage terms-setup produces known artifact terms-file; stage tool-discovery produces known artifact tool-registry
+- None.
 
 ## Recommendation
 
-Process is reproducible with documented warnings; fix action WARN items before public release.
+Process is reproducible with documented warnings; public-release action items are listed explicitly when present.

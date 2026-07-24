@@ -17,6 +17,6 @@ Result: `WARN`
 - Referenced packages/templates are not copied into the contract.
 - WARN: shallow parity check.
 
-## WARN To Fix Before Public Release
+## Deferred Parity Coverage
 
 - Replace shallow resource parity with a full authoring round-trip check.

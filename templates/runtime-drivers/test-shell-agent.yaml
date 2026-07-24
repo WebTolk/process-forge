@@ -1,0 +1,39 @@
+schema_version: 1
+id: test-shell-agent
+title: Test Shell Agent
+kind: shell
+command:
+  executable: "{python_executable}"
+  args:
+    - "{processforge_root}/tools/test_agents/pf_shell_agent.py"
+    - "--capsule"
+    - "{capsule_path}"
+    - "--worker-prompt"
+    - "{worker_prompt_path}"
+    - "--output"
+    - "{expected_report_path}"
+    - "--heartbeat"
+    - "{heartbeat_path}"
+    - "--mode"
+    - "success"
+working_directory: "{project_root}"
+environment:
+  inherit: false
+  variables:
+    PF_WORKER_RUN_ID: "{run_id}"
+    PF_WORKER_TASK_ID: "{task_id}"
+io:
+  stdin: none
+  stdout: .pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log
+  stderr: .pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log
+heartbeat:
+  mode: file
+  path: .pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json
+  optional: false
+limits:
+  timeout_seconds: 30
+  max_retries: 0
+security:
+  allow_shell: false
+  require_explicit_executable: false
+  allow_network: false

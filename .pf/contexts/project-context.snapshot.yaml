@@ -1,8 +1,8 @@
 schema_version: 1
 snapshot:
   id: project-context
-  generated_at: '2026-07-24T10:35:37Z'
-  valid_until: '2026-07-31T10:35:37Z'
+  generated_at: '2026-07-24T18:42:16Z'
+  valid_until: '2026-07-31T18:42:16Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -51,7 +51,7 @@ sources:
       id: project_manifest
       path: .pf/process-forge.yaml
       kind: manifest
-      checksum: b0cd17493412997700ae0986318e8c18bdd499df1a1de6494414eee9a919f922
+      checksum: 2e01675a42a40652d8f62e6ddce1b0789242d6edf51463a4d3584e7e5de21b66
     -
       id: process-processes-software-feature-development-yaml
       path: processes/software-feature-development.yaml
@@ -192,6 +192,16 @@ sources:
       path: processes/multi-agent-task-orchestration.yaml
       kind: process
       checksum: 321b08d7cc9df34eb4ff01247f4e90475f5a37159c7f71443b454227f5edc7d8
+    -
+      id: process-processes-runtime-driver-registry-yaml
+      path: processes/runtime-driver-registry.yaml
+      kind: process
+      checksum: 183b5fa4d6312c6ebcb4c06e7cd07e9cd600a1709fddd2a24f03c29acd1a703f
+    -
+      id: process-processes-process-supervisor-yaml
+      path: processes/process-supervisor.yaml
+      kind: process
+      checksum: e9fe5d44e7b09f851e5ec33ab537cfd31eb5111307e5efb37b3fad5ef1229807
     -
       id: package-packages-process-forge-core-yaml
       path: packages/process-forge-core.yaml
@@ -406,6 +416,12 @@ processes:
     -
       id: multi-agent-task-orchestration
       path: ../processes/multi-agent-task-orchestration.yaml
+    -
+      id: runtime-driver-registry
+      path: ../processes/runtime-driver-registry.yaml
+    -
+      id: process-supervisor
+      path: ../processes/process-supervisor.yaml
 packages:
   selected:
     -

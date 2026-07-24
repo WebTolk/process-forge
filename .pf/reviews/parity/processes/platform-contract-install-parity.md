@@ -38,10 +38,10 @@ WARN
 
 - `logic_review`: source definition already has logic review findings: stage contract-creation produces known artifact review; stage contract-creation produces known artifact validation-report; stage platform-definition produces known artifact platform-contract-proposal
 
-## WARN To Fix Before Public Release
+## Public Release WARN Actions
 
-- `logic_review`: source definition already has logic review findings: stage contract-creation produces known artifact review; stage contract-creation produces known artifact validation-report; stage platform-definition produces known artifact platform-contract-proposal
+- None.
 
 ## Recommendation
 
-Process is reproducible with documented warnings; fix action WARN items before public release.
+Process is reproducible with documented warnings; public-release action items are listed explicitly when present.

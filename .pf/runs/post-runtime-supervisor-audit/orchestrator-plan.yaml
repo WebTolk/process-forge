@@ -1,0 +1,120 @@
+schema_version: 1
+run:
+  id: post-runtime-supervisor-audit
+  title: Post Runtime Supervisor Audit
+  process: multi-agent-task-orchestration
+  objective: Audit the runtime driver registry and process supervisor MVP for mismatches, logical flaws, and broken tools.
+orchestrator:
+  role: orchestrator
+  responsibilities:
+    - decompose audit work
+    - collect worker findings
+    - verify critical findings locally
+    - write final audit report
+runtime:
+  default_driver: manual
+  supervisor_profile: default
+  start_policy: manual
+workers:
+  -
+    id: audit-runtime-cli-worker
+    title: Runtime CLI logic audit
+    role: code-review
+    process: testing
+    execution_mode: read_only
+    writer: false
+    allowed_files:
+      []
+    allowed_read_files:
+      - tools/processforge.py
+      - tools/test_workers/**
+      - tools/smoke_runtime_driver_registry.py
+      - tools/smoke_worker_run_lifecycle.py
+      - tools/smoke_process_supervisor.py
+      - schemas/*runtime*.json
+      - schemas/*supervisor*.json
+      - schemas/worker-process-command.schema.json
+      - templates/runtime-drivers/**
+      - templates/supervisor-profile.yaml
+    forbidden_files:
+      []
+    required_sources:
+      - .pf/contexts/project-context.snapshot.yaml
+    required_outputs:
+      -
+        id: runtime-cli-audit-report
+        path: .pf/artifacts/audits/post-runtime-supervisor/runtime-cli-worker.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/audits/post-runtime-supervisor/runtime-cli-worker.md
+    runtime_driver: manual
+    worker_may_rebuild_context: false
+  -
+    id: audit-docs-schema-worker
+    title: Documentation and schema consistency audit
+    role: docs-review
+    process: testing
+    execution_mode: read_only
+    writer: false
+    allowed_files:
+      []
+    allowed_read_files:
+      - README.md
+      - QUICKSTART.md
+      - README.ru.md
+      - QUICKSTART.ru.md
+      - docs/**
+      - schemas/**
+      - templates/**
+      - examples/runtime-supervisor/**
+      - processes/runtime-driver-registry.yaml
+      - processes/process-supervisor.yaml
+      - .pf/process-forge.yaml
+    forbidden_files:
+      []
+    required_sources:
+      - .pf/contexts/project-context.snapshot.yaml
+    required_outputs:
+      -
+        id: docs-schema-audit-report
+        path: .pf/artifacts/audits/post-runtime-supervisor/docs-schema-worker.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/audits/post-runtime-supervisor/docs-schema-worker.md
+    runtime_driver: manual
+    worker_may_rebuild_context: false
+  -
+    id: audit-release-tooling-worker
+    title: Release and tooling audit
+    role: release-assurance
+    process: testing
+    execution_mode: read_only
+    writer: false
+    allowed_files:
+      []
+    allowed_read_files:
+      - tools/**
+      - bin/**
+      - dist/**
+      - .processforge-releaseignore
+      - .pf/artifacts/checksum-inventory.sha256
+      - .pf/artifacts/parity/**
+      - .pf/reviews/parity/**
+      - docs/release-checklist.md
+    forbidden_files:
+      []
+    required_sources:
+      - .pf/contexts/project-context.snapshot.yaml
+    required_outputs:
+      -
+        id: release-tooling-audit-report
+        path: .pf/artifacts/audits/post-runtime-supervisor/release-tooling-worker.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/audits/post-runtime-supervisor/release-tooling-worker.md
+    runtime_driver: manual
+    worker_may_rebuild_context: false
+integration:
+  required: true
+  role: orchestrator
+  expected_output: .pf/artifacts/audits/post-runtime-supervisor/final-audit-report.md

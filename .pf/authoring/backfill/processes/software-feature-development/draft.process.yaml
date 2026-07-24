@@ -3,7 +3,7 @@ id: software-feature-development
 name: Software Feature Development
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Govern a software feature from intake through release and evolution.
 purpose: Govern a software feature from intake through release and evolution.

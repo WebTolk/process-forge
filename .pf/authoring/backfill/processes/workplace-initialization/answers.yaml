@@ -2,7 +2,7 @@ schema_version: 1
 process:
   id: workplace-initialization
   name: Workplace Initialization
-  version: 0.1.0
+  version: 1.0.0
   status: active
   kind: first_run
   scope: workplace

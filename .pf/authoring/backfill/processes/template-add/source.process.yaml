@@ -1,7 +1,7 @@
 schema_version: 1
 id: template-add
 name: Template Add
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Add a simple reusable template folder with README guidance and optional registry update.
 required_capabilities:

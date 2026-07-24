@@ -3,7 +3,7 @@ id: workplace-initialization
 name: Workplace Initialization
 kind: first_run
 scope: workplace
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Initialize or update the machine-local ProcessForge workplace layer.
 purpose: Initialize or update the machine-local ProcessForge workplace layer.

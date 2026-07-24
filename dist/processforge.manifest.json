@@ -10,7 +10,7 @@
     },
     {
       "path": ".pf/artifacts/checksum-inventory.sha256",
-      "sha256": "a52d1d9820828395384417af058b75f7746fd4dd4c5929c609ab102e83967a0c"
+      "sha256": "74462a175bbb7f41f62b065de80048bf4ab867a88d80b4780d026997cef19a08"
     },
     {
       "path": ".pf/hooks.yaml",
@@ -246,7 +246,7 @@
     },
     {
       "path": "docs/concepts/process-supervisor.md",
-      "sha256": "4ba32b48142148938f10953a2340d83bd12e4156a701b97527773a22b51b976d"
+      "sha256": "116ced7bb5f0bc1e92de9d5e21677bf28ab4af5ea5252e60ce6f06ddc86ac439"
     },
     {
       "path": "docs/concepts/processforge-events.md",
@@ -370,7 +370,7 @@
     },
     {
       "path": "docs/getting-started/agent-prompts.md",
-      "sha256": "6ec6e986a11f04fd4ea2c43d53a9f3a20a12bcad9a0e47e53950fab209caaba3"
+      "sha256": "b41bace3b2cc94c0ba3e0a3797395ec6d70b918e195378fcbe90214097870ebc"
     },
     {
       "path": "docs/getting-started/create-your-first-process.md",
@@ -406,7 +406,7 @@
     },
     {
       "path": "docs/getting-started/runtime-driver-supervisor.md",
-      "sha256": "1668cf976642122520062343960fdd2c6bd1eb1c1d14a0b527ac52cd0bffc4ac"
+      "sha256": "0b75d7ed9ff94852939ea483e382b756e999270577f66873474a92dacfe87073"
     },
     {
       "path": "docs/getting-started/task-batch-workflow.md",
@@ -422,19 +422,23 @@
     },
     {
       "path": "docs/known-limitations.md",
-      "sha256": "dd6403e4a9789f17af665fe44f4528a04dd464bc514391ebe5bb78bf3a5e12f1"
+      "sha256": "1326bc129ddae2f3fe556a4978c335ea6882a4811bd30757cc6acb515307d465"
     },
     {
       "path": "docs/processes/process-authoring.md",
       "sha256": "9e5d590ffb7ab906f0bee17be6c9a61bc86cb2a4c8ba539bada74d1395c80931"
     },
     {
+      "path": "docs/processes/process-supervisor.md",
+      "sha256": "a028b3811c238e17f6ba6973a5a693ea0ad74fa9c2c1ef676c83bd626d42ca7c"
+    },
+    {
       "path": "docs/release-checklist.md",
-      "sha256": "3746b662e33143f387baec01a0a031e6cd7b5c7cf2efdb91f96055abba5a627c"
+      "sha256": "98dfcaa3d7731933064ce203a2babce38f53911790ad18307665e979a2f3105b"
     },
     {
       "path": "docs/releases/initial-release.md",
-      "sha256": "c8cc74884ac0427b8fb7f1b1143749bebf05b25f645651cb2f9db37473faa2f0"
+      "sha256": "8f55529a95ada5fc146df13f245ab9d47a0e19a111997fa2ab84a0067d246322"
     },
     {
       "path": "docs/ru/authoring/authoring-parity.md",
@@ -502,7 +506,7 @@
     },
     {
       "path": "docs/ru/concepts/process-supervisor.md",
-      "sha256": "fd43d7a538f36248d952120320485234b5a33e8a746c40606b03aaaded9f5bfa"
+      "sha256": "099784f1cbc7426a3c08b42f1f51801c724a054d831ac2021c05ed7b4de0d254"
     },
     {
       "path": "docs/ru/concepts/project-snapshot.md",
@@ -530,7 +534,7 @@
     },
     {
       "path": "docs/ru/getting-started/agent-prompts.md",
-      "sha256": "8999dc9392eaa066ada18902f4f09da7f65885a00952dd9b62ed44c68322f283"
+      "sha256": "ab7958b40a62913d31dbbe90d40d3b8d171f9670880ac234c9e186bfd0a29095"
     },
     {
       "path": "docs/ru/getting-started/create-your-first-process.md",
@@ -562,7 +566,7 @@
     },
     {
       "path": "docs/ru/getting-started/runtime-driver-supervisor.md",
-      "sha256": "44780ae85a73bf6d64548458eb1a8ee844e0bac7f65f433d7e0d697561e051fc"
+      "sha256": "64539d6f7f1262b18034f27b93d6cb50e708a5fa7632d96df18e4635ab5cc693"
     },
     {
       "path": "docs/ru/getting-started/task-batch-workflow.md",
@@ -582,7 +586,7 @@
     },
     {
       "path": "docs/ru/releases/initial-release.md",
-      "sha256": "b22fce68170ada22f94a1d4bb4a790da24d64123a23763073d697b15f0e41838"
+      "sha256": "9a0ab88edcc5f5cb695524224716af943b53163c1c2ad3cd1666f591cf8a449b"
     },
     {
       "path": "docs/runner-protocol-draft.md",
@@ -697,6 +701,10 @@
       "sha256": "3670b1d340c0d4bca15abee3560a5779979a99374a86fd8a62a71f4238678bfc"
     },
     {
+      "path": "examples/process-authoring/process-supervisor/README.md",
+      "sha256": "f184cdbc926421583cc4a7ddc571e6391377b1da1c47f7e52bc549d7489f3db3"
+    },
+    {
       "path": "examples/process-authoring/quality-audit/README.md",
       "sha256": "32575b4a5a7496580316e9a158311dda700b3ed50dde628cdfe05e726d487bef"
     },
@@ -746,7 +754,7 @@
     },
     {
       "path": "examples/runtime-supervisor/minimal/README.md",
-      "sha256": "303b3c49d52ebcb789dccbbcdb0b6c5f507890a784ef91b5ace21e014b9938fc"
+      "sha256": "7e19db1e7c3f25b82235245f4667e612e198b3b8c7dcf702252ab469e4f87360"
     },
     {
       "path": "examples/runtime-supervisor/minimal/orchestrator-task-plan.yaml",
@@ -878,7 +886,7 @@
     },
     {
       "path": "processes/process-supervisor.yaml",
-      "sha256": "f51e4d13dd6abdad2cc56e9fe9d4a8cc908f78d92fa393c41b22783657c8f687"
+      "sha256": "e9fe5d44e7b09f851e5ec33ab537cfd31eb5111307e5efb37b3fad5ef1229807"
     },
     {
       "path": "processes/process-template-install.yaml",
@@ -963,6 +971,10 @@
     {
       "path": "prompts/process-authoring-agent.md",
       "sha256": "d45762aa72b5992714a58872d4da6aada2070431c4b63a744a18e34110012ac6"
+    },
+    {
+      "path": "prompts/process-supervisor-agent.md",
+      "sha256": "1b65b2a4cbff4f0a2b064b89bc58be319ac71da1364cebfdb25f53c20023228e"
     },
     {
       "path": "prompts/project-onboarding-agent.md",
@@ -1333,6 +1345,10 @@
       "sha256": "a0adf8d12fbfd1b1d92fce3d5dcc83d74c4d67c03743b42827b26bafbadba8b3"
     },
     {
+      "path": "templates/agent-run-state.yaml",
+      "sha256": "8486398374ae5b3eb4df648600f6ab43bf136d81959475b9b3afd864daadcdd0"
+    },
+    {
       "path": "templates/artifact-template.md",
       "sha256": "e7797827a7ca07ecf4372c31140e438cbaffbce7286cd30aeed13f3d71ef0070"
     },
@@ -1375,6 +1391,10 @@
     {
       "path": "templates/execution-context-prompt-template.md",
       "sha256": "594931bae24f6e012bd6622001d6627a3b61010318669804bd76f063ba1af858"
+    },
+    {
+      "path": "templates/exit-record.yaml",
+      "sha256": "12039280f0689149a366a1da1904c6977664c8dbb9b9f6973c4c341ef7fd92ad"
     },
     {
       "path": "templates/global-agents-processforge-section.md",
@@ -1473,6 +1493,10 @@
       "sha256": "7fd6de944f95c6bd341ea2fe9e6101cafe7b204d990031f36dd368ffd5685a7b"
     },
     {
+      "path": "templates/process-record.yaml",
+      "sha256": "3d73f01cfeca12dda41f4fc6d408ffdbedbb5afe52e41463b0860c8a3d327444"
+    },
+    {
       "path": "templates/process-upgrade-assessment-template.md",
       "sha256": "71c93743fe7be7f5175ede264be409906d0de372f474330b37e19e3959fd5c7e"
     },
@@ -1546,7 +1570,7 @@
     },
     {
       "path": "templates/registries/runtime-drivers.yaml",
-      "sha256": "0f5c7b3d986d5a73d1b1daf5e7a5e55ddb5c75f62907a267046e2bad551c47da"
+      "sha256": "c4e6f2c6715f55fdd919bd804607820f547fb72464f25ca55dbca54fa1874e02"
     },
     {
       "path": "templates/registries/templates.yaml",
@@ -1601,6 +1625,10 @@
       "sha256": "b332561b4ef01b0faf61a99dc7eb2dc49d68b4ab9030fb8b9df547d751d41a7e"
     },
     {
+      "path": "templates/runtime-drivers/test-shell-agent.yaml",
+      "sha256": "7fc9134d462ca37e0bd70b87c4dbe7826ca2f035f7a6924301cda331ad99804b"
+    },
+    {
       "path": "templates/runtime/update/installed-update-sites.json",
       "sha256": "d71ba12f3d80397be93f48ea3be36ae7e0f9a65329492c71d19acc97f154aa12"
     },
@@ -1649,6 +1677,14 @@
       "sha256": "9c393ccaad88ffdc3c1d2fbd23b23e5844d2a756ed12fa43f2a7615c31978a5b"
     },
     {
+      "path": "templates/worker-logs.md",
+      "sha256": "efca851f466f99583a580e42aa8b626b681f36ff8a4ca51b3853456564a4a457"
+    },
+    {
+      "path": "templates/worker-process-command.yaml",
+      "sha256": "50235c9ca84296cb9409a47bc50c9544e2a8f168a1221d08dcb0b28b3b71148d"
+    },
+    {
       "path": "templates/workplace-init.answers.yaml",
       "sha256": "52e0691e3adf6239b2914f188f164c9828cc912b8cb78d301073c543d4ba91d2"
     },
@@ -1662,11 +1698,11 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "49e5744090b68da46e380aa408c517a44eb181657135eb478464389982c45d15"
+      "sha256": "837eca32d189f6108670a93ae20bc7fe310f8ab77b6342d8d71b99f2fb610acc"
     },
     {
       "path": "tools/processforge_subprocess.py",
-      "sha256": "b9e3cff13cc656aa42b414245ef042a8a905c528093ec8037b298c55eb45e70c"
+      "sha256": "26f3b9bf8502afeb69ce5245df40aa80ed4cd1a19cab0abc6fb5ddc5d39f424f"
     },
     {
       "path": "tools/smoke_authoring_parity.py",
@@ -1675,6 +1711,10 @@
     {
       "path": "tools/smoke_first_run.py",
       "sha256": "3f6692f67f17b061ac3f2df44ee3f48211097c353199d4f834a5ba6732c881e0"
+    },
+    {
+      "path": "tools/smoke_full_shell_agents_supervisor.py",
+      "sha256": "dbb318d865b0051dbb493d9b94de750bf9481e8b481e902920eea6ccbb0fa0d8"
     },
     {
       "path": "tools/smoke_guided_workplace_setup.py",
@@ -1706,11 +1746,19 @@
     },
     {
       "path": "tools/smoke_process_supervisor.py",
-      "sha256": "b54ed20a36809585aa31937266efd3f718bb712b336794777b367cfa34799fd4"
+      "sha256": "6378201f940c76d3219b8cca430d174cb653e63ceaa9f516070fc77aa978b729"
+    },
+    {
+      "path": "tools/smoke_process_supervisor_lifecycle.py",
+      "sha256": "dd13824af2e04757416573e46104c8951c31d3cd65031ff1979dbe07794f7de5"
+    },
+    {
+      "path": "tools/smoke_process_supervisor_tick.py",
+      "sha256": "d69752ef397db6c15ea3942bb00d53254a343cf956f4d84fffed35c65b0bd95a"
     },
     {
       "path": "tools/smoke_resource_authoring_processes.py",
-      "sha256": "b0d0999a23a49b95de683a358437054cf5ac5b7bd341ea3f1ce7119a2799d693"
+      "sha256": "d61bec386a049e7cc3c9ce2d171b793a8f356764f94c123cfe9c78f760a621ac"
     },
     {
       "path": "tools/smoke_resource_management.py",
@@ -1718,19 +1766,35 @@
     },
     {
       "path": "tools/smoke_runtime_driver_registry.py",
-      "sha256": "2b7c783eb1a0f0a679b1cf630f2c71c273b70f43d24bc152f885d919d6816fbb"
+      "sha256": "700166760578899682a7c69bd3da5d04b6db7390db90aaf16466e83d1e3637cc"
+    },
+    {
+      "path": "tools/smoke_shell_launched_agents_supervisor_fix.py",
+      "sha256": "12ebb2c8d0f949bfa930296153751f7ff53ad151e5dc78bb88524d2c760ac19d"
     },
     {
       "path": "tools/smoke_update_framework_readonly.py",
-      "sha256": "e36457bb10eeb8b4d42c4036f66b145c98c768725f3875b531ac12a9b5086083"
+      "sha256": "948247e2815fd8d1e42beb2f0a4a41261da4e58135828053ca6d8c5fbc834588"
     },
     {
       "path": "tools/smoke_update_framework_validation.py",
-      "sha256": "c204a9e86b5643c39804e200e37667bd08b753934f27dd90b40e3acb873e7ed9"
+      "sha256": "cf66e81b285e3a132eb314574f0f4f207136d234641e72821268870d06e90761"
     },
     {
       "path": "tools/smoke_worker_run_lifecycle.py",
       "sha256": "d9dfb2f4d3a47117559116330bf53b51853264dbdf2cfe5f9301d8cb76e7f1c7"
+    },
+    {
+      "path": "tools/smoke_worker_run_manual.py",
+      "sha256": "e9c4226009436e059a6bc1a966c163e3332f83ed401963c3aee96028af8393e7"
+    },
+    {
+      "path": "tools/smoke_worker_run_shell.py",
+      "sha256": "177fa6e35ee3a2519b4d0086edd31ae12eb8ab042007386217c109624fce65e4"
+    },
+    {
+      "path": "tools/test_agents/pf_shell_agent.py",
+      "sha256": "d1f30f6b0147c31627ee86b1e343ee01895ffa4e35df914f599c1268d25951ee"
     },
     {
       "path": "tools/test_workers/echo_worker.py",
@@ -1742,11 +1806,11 @@
     },
     {
       "path": "tools/validate-process-forge-schemas.py",
-      "sha256": "1c51311b03051c962056b7bac7eb374fa249b5b50bef144380d4cecfc6025660"
+      "sha256": "89382b12d0a123ff3a1906ccf16e560c48880a968582199447afe04c36d3d134"
     },
     {
       "path": "tools/validate-public-cleanliness.py",
-      "sha256": "820ccf13fb66ffaf9d111be95771004a730363b07b03d0271449fded0d7e4b05"
+      "sha256": "0b6483eb5eeac5612f57e70e96f0ffff20ca3b6430ee0b9e88b0b0f248a7c2b7"
     },
     {
       "path": "updates/migrations/0.1.0-linked-workplace.md",
@@ -1761,7 +1825,7 @@
       "sha256": "81b436180a2b3276df5c9b9ea95d8cba646fa908424c129ccb4faccbcd3bf00b"
     }
   ],
-  "generated_at": "2026-07-24T11:08:03Z",
+  "generated_at": "2026-07-24T18:46:37Z",
   "name": "processforge",
   "version": "1.0.0"
 }

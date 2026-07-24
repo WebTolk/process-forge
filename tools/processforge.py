@@ -888,6 +888,46 @@ def default_runtime_driver_documents() -> dict[str, dict[str, Any]]:
                 "allow_network": False,
             },
         },
+        "test-shell-agent": {
+            "schema_version": 1,
+            "id": "test-shell-agent",
+            "title": "Test Shell Agent",
+            "kind": "shell",
+            "command": {
+                "executable": "{python_executable}",
+                "args": [
+                    "{processforge_root}/tools/test_agents/pf_shell_agent.py",
+                    "--capsule",
+                    "{capsule_path}",
+                    "--worker-prompt",
+                    "{worker_prompt_path}",
+                    "--output",
+                    "{expected_report_path}",
+                    "--heartbeat",
+                    "{heartbeat_path}",
+                    "--mode",
+                    "success",
+                ],
+            },
+            "working_directory": "{project_root}",
+            "environment": {"inherit": False, "variables": {"PF_WORKER_RUN_ID": "{run_id}", "PF_WORKER_TASK_ID": "{task_id}"}},
+            "io": {
+                "stdin": "none",
+                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
+                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
+            },
+            "heartbeat": {
+                "mode": "file",
+                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
+                "optional": False,
+            },
+            "limits": {"timeout_seconds": 30, "max_retries": 0},
+            "security": {
+                "allow_shell": False,
+                "require_explicit_executable": False,
+                "allow_network": False,
+            },
+        },
     }
 
 
@@ -901,7 +941,7 @@ def default_runtime_driver_registry() -> dict[str, Any]:
                 "status": "available",
                 "builtin": True,
             }
-            for driver_id in ["manual", "generic-shell", "test-echo-worker"]
+            for driver_id in ["manual", "generic-shell", "test-echo-worker", "test-shell-agent"]
         ],
     }
 
@@ -4080,6 +4120,63 @@ def release_checks(root: Path) -> list[Check]:
     return checks
 
 
+RUSSIAN_MOJIBAKE_MARKERS = ("Рџ", "РЎ", "РЋ", "Р€", "вЂ", "Гђ", "Г‘")
+
+
+def russian_documentation_files(root: Path) -> list[Path]:
+    files = [root / "README.ru.md", root / "QUICKSTART.ru.md"]
+    ru_root = root / "docs" / "ru"
+    if ru_root.is_dir():
+        files.extend(path for path in ru_root.rglob("*.md") if path.is_file())
+    return sorted({path for path in files if path.is_file()}, key=lambda path: rel(path, root))
+
+
+def russian_mojibake_checks(root: Path) -> list[Check]:
+    checks: list[Check] = []
+    failures: list[str] = []
+    for path in russian_documentation_files(root):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        markers = [marker for marker in RUSSIAN_MOJIBAKE_MARKERS if marker in text]
+        if markers:
+            failures.append(f"{rel(path, root)} markers={','.join(markers)}")
+    if failures:
+        checks.extend(check("FAIL", f"Russian documentation mojibake: {item}") for item in failures)
+    else:
+        checks.append(check("PASS", "Russian documentation has no known mojibake markers"))
+    return checks
+
+
+def public_release_checks(root: Path) -> list[Check]:
+    checks: list[Check] = []
+    dist = root / "dist"
+    stale: list[str] = []
+    if dist.is_dir():
+        for path in sorted(dist.glob("processforge*")):
+            if path.name in {"processforge.zip", "processforge.manifest.json"}:
+                continue
+            if path.suffix.lower() == ".zip" or path.name.endswith(".manifest.json"):
+                stale.append(rel(path, root))
+    if stale:
+        checks.extend(check("FAIL", f"stale public distribution artifact: {item}") for item in stale)
+    else:
+        checks.append(check("PASS", "dist contains no stale ProcessForge release artifacts"))
+
+    tagged_warns: list[str] = []
+    parity_root = locate_flow_root(root) / "reviews" / "parity"
+    if parity_root.is_dir():
+        for path in sorted(parity_root.rglob("*.md")):
+            text = path.read_text(encoding="utf-8", errors="replace")
+            if "WARN To Fix Before Public Release" in text:
+                tagged_warns.append(rel(path, root))
+    if tagged_warns:
+        checks.extend(check("FAIL", f"parity WARN tagged before public release: {item}") for item in tagged_warns)
+    else:
+        checks.append(check("PASS", "no parity WARN remains tagged before public release"))
+
+    checks.extend(russian_mojibake_checks(root))
+    return checks
+
+
 def command_release_check(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
     return print_checks(release_checks(root))
@@ -4175,41 +4272,58 @@ class ReleaseCommand:
     allow_warn: bool = False
 
 
+@dataclass
+class ReleaseCommandResult:
+    label: str
+    status: str
+    code: int
+    output: str
+    started_at: str
+    finished_at: str
+    elapsed_seconds: float
+    timeout_seconds: int
+    command: list[str]
+
+
 def format_command(command: list[str]) -> str:
     return format_subprocess_command(command)
 
 
-def run_release_command(label: str, command: list[str], cwd: Path, timeout: int, allow_warn: bool = False) -> tuple[str, int, str]:
+def run_release_command(label: str, command: list[str], cwd: Path, timeout: int, allow_warn: bool = False) -> ReleaseCommandResult:
+    started_at = now_utc()
+    started = time.perf_counter()
     print(f"RUN {label}:")
     print(f"  {format_command(command)}")
+    print(f"  started_at: {started_at}")
     sys.stdout.flush()
     result = run_subprocess_command(command, cwd=cwd, timeout=timeout)
+    elapsed = time.perf_counter() - started
+    finished_at = now_utc()
     output = "\n".join(part for part in [result.stdout, result.stderr] if part)
     if result.timed_out:
-        return "FAIL", 124, f"timeout after {timeout}s\n{diagnostic_text(result)}"
+        return ReleaseCommandResult(label, "FAIL", 124, f"timeout after {timeout}s\n{diagnostic_text(result)}", started_at, finished_at, elapsed, timeout, command)
     code = int(result.returncode or 0)
     if code == 0:
-        return "PASS", 0, output
+        return ReleaseCommandResult(label, "PASS", 0, output, started_at, finished_at, elapsed, timeout, command)
     if allow_warn:
-        return "WARN", code, output
-    return "FAIL", code, output
+        return ReleaseCommandResult(label, "WARN", code, output, started_at, finished_at, elapsed, timeout, command)
+    return ReleaseCommandResult(label, "FAIL", code, output, started_at, finished_at, elapsed, timeout, command)
 
 
-def print_release_command_output(label: str, status: str, code: int, output: str) -> None:
-    print(f"{status} {label}")
-    if status != "PASS":
-        print(f"  exit: {code}")
-        tail_lines = output.splitlines()[-30:]
+def print_release_command_output(result: ReleaseCommandResult) -> None:
+    print(f"{result.status} {result.label}")
+    print(f"  finished_at: {result.finished_at}")
+    print(f"  elapsed_seconds: {result.elapsed_seconds:.2f}")
+    if result.status != "PASS":
+        print(f"  exit: {result.code}")
+        tail_lines = result.output.splitlines()[-30:]
         for line in tail_lines:
             print(f"  {line}")
 
 
-def command_release_test(args: argparse.Namespace) -> int:
-    root = Path(args.root).expanduser().resolve()
-    print("ProcessForge release-test")
+def release_test_commands(root: Path, *, clean_first: bool = True) -> list[ReleaseCommand]:
     commands: list[ReleaseCommand] = [
         ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py")], 30),
-        ReleaseCommand("clean release artifacts", [sys.executable, str(root / "tools" / "processforge.py"), "clean", "--root", str(root), "--release"], 60),
         ReleaseCommand("schema validation", [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)], 60),
         ReleaseCommand("public cleanliness", [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)], 60),
         ReleaseCommand("checksum", [sys.executable, str(root / "tools" / "validate-process-forge-checksums.py"), "--root", str(root), "--check"], 60),
@@ -4222,8 +4336,14 @@ def command_release_test(args: argparse.Namespace) -> int:
         ReleaseCommand("smoke_multiagent_orchestration_process", [sys.executable, str(root / "tools" / "smoke_multiagent_orchestration_process.py")], 180),
         ReleaseCommand("smoke_multiagent_assignment_contract", [sys.executable, str(root / "tools" / "smoke_multiagent_assignment_contract.py")], 120),
         ReleaseCommand("smoke_runtime_driver_registry", [sys.executable, str(root / "tools" / "smoke_runtime_driver_registry.py")], 120),
+        ReleaseCommand("smoke_worker_run_manual", [sys.executable, str(root / "tools" / "smoke_worker_run_manual.py")], 180),
+        ReleaseCommand("smoke_worker_run_shell", [sys.executable, str(root / "tools" / "smoke_worker_run_shell.py")], 180),
         ReleaseCommand("smoke_worker_run_lifecycle", [sys.executable, str(root / "tools" / "smoke_worker_run_lifecycle.py")], 180),
+        ReleaseCommand("smoke_process_supervisor_tick", [sys.executable, str(root / "tools" / "smoke_process_supervisor_tick.py")], 180),
+        ReleaseCommand("smoke_process_supervisor_lifecycle", [sys.executable, str(root / "tools" / "smoke_process_supervisor_lifecycle.py")], 180),
         ReleaseCommand("smoke_process_supervisor", [sys.executable, str(root / "tools" / "smoke_process_supervisor.py")], 180),
+        ReleaseCommand("smoke_shell_launched_agents_supervisor_fix", [sys.executable, str(root / "tools" / "smoke_shell_launched_agents_supervisor_fix.py")], 180),
+        ReleaseCommand("smoke_full_shell_agents_supervisor", [sys.executable, str(root / "tools" / "smoke_full_shell_agents_supervisor.py")], 240),
         ReleaseCommand("smoke_manifest_driven_platforms", [sys.executable, str(root / "tools" / "smoke_manifest_driven_platforms.py")], 180),
         ReleaseCommand("smoke_platform_inheritance", [sys.executable, str(root / "tools" / "smoke_platform_inheritance.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
@@ -4234,22 +4354,130 @@ def command_release_test(args: argparse.Namespace) -> int:
         ReleaseCommand("events-validate", [sys.executable, str(root / "tools" / "processforge.py"), "events-validate", "--project-root", str(root)], 60),
         ReleaseCommand("doctor-project", [sys.executable, str(root / "tools" / "processforge.py"), "doctor-project", "--project-root", str(root)], 60),
     ]
+    if clean_first:
+        commands.insert(1, ReleaseCommand("clean release artifacts", [sys.executable, str(root / "tools" / "processforge.py"), "clean", "--root", str(root), "--release"], 60))
+    return commands
+
+
+def write_release_test_report(root: Path, results: list[ReleaseCommandResult], public_checks: list[Check], *, public: bool, started_at: str, finished_at: str, elapsed_seconds: float) -> None:
+    report_dir = root / ".pf" / "runtime" / "release-test"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    data = {
+        "schema_version": 1,
+        "public": public,
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "elapsed_seconds": round(elapsed_seconds, 3),
+        "result": "FAIL" if any(item.status == "FAIL" for item in results) or any(item.level == "FAIL" for item in public_checks) else "PASS",
+        "checks": [
+            {
+                "label": item.label,
+                "status": item.status,
+                "exit_code": item.code,
+                "started_at": item.started_at,
+                "finished_at": item.finished_at,
+                "elapsed_seconds": round(item.elapsed_seconds, 3),
+                "timeout_seconds": item.timeout_seconds,
+                "command": item.command,
+            }
+            for item in results
+        ],
+        "public_checks": [{"level": item.level, "message": item.message} for item in public_checks],
+    }
+    (report_dir / "latest-report.json").write_text(ensure_trailing_newline(json.dumps(data, indent=2, sort_keys=True)), encoding="utf-8")
+    lines = [
+        "# Release Test Report",
+        "",
+        f"- result: `{data['result']}`",
+        f"- public: `{str(public).lower()}`",
+        f"- started_at: `{started_at}`",
+        f"- finished_at: `{finished_at}`",
+        f"- elapsed_seconds: `{elapsed_seconds:.2f}`",
+        "",
+        "## Checks",
+        "",
+        "| Check | Status | Exit | Elapsed | Timeout |",
+        "|---|---:|---:|---:|---:|",
+    ]
+    for item in results:
+        lines.append(f"| `{item.label}` | {item.status} | {item.code} | {item.elapsed_seconds:.2f}s | {item.timeout_seconds}s |")
+    if public_checks:
+        lines.extend(["", "## Public Checks", ""])
+        lines.extend(f"- {item.level}: {item.message}" for item in public_checks)
+    (report_dir / "latest-report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def command_release_test(args: argparse.Namespace) -> int:
+    root = Path(args.root).expanduser().resolve()
+    timeout_scale = float(getattr(args, "timeout_scale", 1.0) or 1.0)
+    if timeout_scale <= 0:
+        print("FAIL: --timeout-scale must be greater than 0")
+        return 1
+    clean_first = not getattr(args, "no_clean", False)
+    if getattr(args, "clean_first", False):
+        clean_first = True
+    commands = release_test_commands(root, clean_first=clean_first)
+    only = set(getattr(args, "only", []) or [])
+    skip = set(getattr(args, "skip", []) or [])
+    public_requested = bool(getattr(args, "public", False))
+    if getattr(args, "list", False):
+        for item in commands:
+            print(item.label)
+        print("public-gate")
+        print("git diff --check")
+        return 0
+    if only:
+        known = {item.label for item in commands}
+        known.update({"public-gate", "git diff --check"})
+        unknown = sorted(only - known)
+        if unknown:
+            print("FAIL: unknown --only check(s): " + ", ".join(unknown))
+            return 1
+        public_requested = public_requested or "public-gate" in only
+        commands = [item for item in commands if item.label in only]
+    if "public-gate" in skip:
+        public_requested = False
+    if skip:
+        commands = [item for item in commands if item.label not in skip]
+    print("ProcessForge release-test")
+    started_at = now_utc()
+    started = time.perf_counter()
     failed = False
     warned = False
+    results: list[ReleaseCommandResult] = []
     for item in commands:
-        status, code, output = run_release_command(item.label, item.command, root, timeout=item.timeout, allow_warn=item.allow_warn)
-        print_release_command_output(item.label, status, code, output)
-        failed = failed or status == "FAIL"
-        warned = warned or status == "WARN"
-    git_dir = root / ".git"
-    if git_dir.exists():
-        status, code, output = run_release_command("git diff --check", ["git", "diff", "--check"], root, timeout=60)
-        print_release_command_output("git diff --check", status, code, output)
-        failed = failed or status == "FAIL"
-        warned = warned or status == "WARN"
+        scaled_timeout = max(1, int(item.timeout * timeout_scale))
+        result = run_release_command(item.label, item.command, root, timeout=scaled_timeout, allow_warn=item.allow_warn)
+        print_release_command_output(result)
+        results.append(result)
+        failed = failed or result.status == "FAIL"
+        warned = warned or result.status == "WARN"
+        if failed and getattr(args, "fail_fast", False):
+            break
+    if not failed or not getattr(args, "fail_fast", False):
+        git_dir = root / ".git"
+        if git_dir.exists() and (not only or "git diff --check" in only) and "git diff --check" not in skip:
+            result = run_release_command("git diff --check", ["git", "diff", "--check"], root, timeout=max(1, int(60 * timeout_scale)))
+            print_release_command_output(result)
+            results.append(result)
+            failed = failed or result.status == "FAIL"
+            warned = warned or result.status == "WARN"
+        elif not git_dir.exists():
+            print("WARN git diff --check skipped: not a git repo")
+            warned = True
     else:
-        print("WARN git diff --check skipped: not a git repo")
-        warned = True
+        print("SKIP git diff --check: fail-fast")
+    public_checks: list[Check] = []
+    if public_requested:
+        public_checks = public_release_checks(root)
+        public_status = print_checks(public_checks)
+        failed = failed or public_status != 0
+    finished_at = now_utc()
+    elapsed = time.perf_counter() - started
+    write_release_test_report(root, results, public_checks, public=public_requested, started_at=started_at, finished_at=finished_at, elapsed_seconds=elapsed)
+    print(f"REPORT: {rel(root / '.pf' / 'runtime' / 'release-test' / 'latest-report.json', root)}")
+    print(f"REPORT: {rel(root / '.pf' / 'runtime' / 'release-test' / 'latest-report.md', root)}")
+    print(f"ELAPSED: {elapsed:.2f}s")
     if failed:
         print("RESULT: FAIL")
         return 1
@@ -4342,11 +4570,66 @@ def inspect_release_archive(archive_path: Path, manifest_path: Path | None = Non
     return checks
 
 
+def expected_release_manifest_from_root(root: Path) -> dict[str, str]:
+    patterns = release_ignore_patterns(root)
+    expected: dict[str, str] = {}
+    for archive_path, source_path in release_source_files(root):
+        if release_ignore_match(archive_path, patterns):
+            continue
+        if release_path_is_forbidden(archive_path):
+            continue
+        expected[archive_path] = sha256_file(source_path)
+    return expected
+
+
+def archive_manifest_freshness_checks(root: Path, archive_path: Path, manifest_path: Path) -> list[Check]:
+    checks: list[Check] = []
+    expected = expected_release_manifest_from_root(root)
+    if not archive_path.is_file():
+        return [check("FAIL", f"archive exists for root freshness check: {archive_path}")]
+    with zipfile.ZipFile(archive_path) as archive:
+        archive_names = sorted(name for name in archive.namelist() if not name.endswith("/"))
+        archive_hashes = {name: hashlib.sha256(archive.read(name)).hexdigest() for name in archive_names}
+    if sorted(expected) != archive_names:
+        checks.append(check("FAIL", "archive entries match current root release file set"))
+        for name in sorted(set(expected) - set(archive_names))[:20]:
+            checks.append(check("FAIL", f"current root file missing from archive: {name}"))
+        for name in sorted(set(archive_names) - set(expected))[:20]:
+            checks.append(check("FAIL", f"archive entry not present in current root release set: {name}"))
+    else:
+        checks.append(check("PASS", f"archive entries match current root release file set: {len(expected)}"))
+    stale_hashes = [name for name, sha in expected.items() if archive_hashes.get(name) != sha]
+    if stale_hashes:
+        checks.append(check("FAIL", "archive file hashes match current root"))
+        for name in stale_hashes[:20]:
+            checks.append(check("FAIL", f"stale archive entry hash: {name}"))
+    else:
+        checks.append(check("PASS", "archive file hashes match current root"))
+    if manifest_path.is_file():
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest_files = data.get("files") if isinstance(data, dict) else None
+        manifest_hashes = {str(item.get("path")): str(item.get("sha256")) for item in manifest_files if isinstance(item, dict) and item.get("path")} if isinstance(manifest_files, list) else {}
+        checks.append(check("PASS" if manifest_hashes == expected else "FAIL", "manifest hashes match current root release file set"))
+    return checks
+
+
 def command_release_archive_test(args: argparse.Namespace) -> int:
     archive_path = Path(args.archive).expanduser().resolve()
     manifest_path = Path(args.manifest).expanduser().resolve() if args.manifest else archive_manifest_path(archive_path)
     checks = inspect_release_archive(archive_path, manifest_path)
+    if getattr(args, "root", None):
+        root = Path(args.root).expanduser().resolve()
+        checks.extend(archive_manifest_freshness_checks(root, archive_path, manifest_path))
     if print_checks(checks) != 0:
+        return 1
+    extracted_test = str(getattr(args, "extracted_test", "full") or "full")
+    if extracted_test == "skip":
+        print("SKIP: extracted archive release-test")
+        print("RESULT: PASS")
+        return 0
+    timeout_scale = float(getattr(args, "timeout_scale", 1.0) or 1.0)
+    if timeout_scale <= 0:
+        print("FAIL: --timeout-scale must be greater than 0")
         return 1
     with tempfile.TemporaryDirectory(prefix="processforge-release-archive-") as temp:
         extract_root = Path(temp)
@@ -4356,14 +4639,19 @@ def command_release_archive_test(args: argparse.Namespace) -> int:
         if not cli.is_file():
             print(f"FAIL: extracted archive has no CLI: {cli}")
             return 1
-        status, code, output = run_release_command(
+        command = [sys.executable, str(cli), "release-test", "--root", str(extract_root)]
+        if extracted_test == "quick":
+            command.extend(["--only", "py_compile", "--only", "schema validation", "--only", "public cleanliness", "--only", "checksum"])
+        else:
+            command.append("--public")
+        result = run_release_command(
             "release-test extracted archive",
-            [sys.executable, str(cli), "release-test", "--root", str(extract_root)],
+            command,
             extract_root,
-            timeout=300,
+            timeout=max(1, int(300 * timeout_scale)),
         )
-        print_release_command_output("release-test extracted archive", status, code, output)
-        if status != "PASS":
+        print_release_command_output(result)
+        if result.status != "PASS":
             print("RESULT: FAIL")
             return 1
     print("RESULT: PASS")
@@ -7384,7 +7672,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     if missing_sources:
         raise SystemExit("FAIL: assignment required sources missing: " + ", ".join(missing_sources))
     overlap_check = validate_assignment_scope_overlaps(project_root, metadata, assignment_path=assignment)
-    if overlap_check["status"] == "fail":
+    if overlap_check["status"] == "fail" and not args.force:
         raise SystemExit("FAIL: assignment write scope overlaps active assignments: " + dump_yaml(overlap_check))
     contract["scope"]["non_overlap"]["overlap_check"] = overlap_check
     capsule = {
@@ -8643,7 +8931,7 @@ def render_process_parity_report(process_id: str, source_path: Path, project_roo
     else:
         lines.append("- None.")
     expected_warns = [item for item in diffs if item["level"] == "WARN" and item["area"] in {"logic_review", "unsupported_fields"}]
-    action_warns = [item for item in diffs if item["level"] == "WARN" and (item["area"] != "unsupported_fields")]
+    action_warns = [item for item in diffs if item["level"] == "WARN" and item["area"] not in {"logic_review", "unsupported_fields"}]
     lines.extend(["", "## Checked", ""])
     lines.append("- Process id, run model, roles, stages, artifacts, gates, emitted events, and resource requirements.")
     lines.append("- Candidate process logic against ProcessForge authoring rules.")
@@ -8654,7 +8942,7 @@ def render_process_parity_report(process_id: str, source_path: Path, project_roo
         lines.extend(f"- `{item['area']}`: {item['message']}" for item in expected_warns)
     else:
         lines.append("- None.")
-    lines.extend(["", "## WARN To Fix Before Public Release", ""])
+    lines.extend(["", "## Public Release WARN Actions", ""])
     if action_warns:
         lines.extend(f"- `{item['area']}`: {item['message']}" for item in action_warns)
     else:
@@ -8663,7 +8951,7 @@ def render_process_parity_report(process_id: str, source_path: Path, project_roo
     if status == "PASS":
         lines.append("Process is semantically reproducible through authoring import.")
     elif status == "WARN":
-        lines.append("Process is reproducible with documented warnings; fix action WARN items before public release.")
+        lines.append("Process is reproducible with documented warnings; public-release action items are listed explicitly when present.")
     else:
         lines.append("Process is not reproducible enough for release parity; fix FAIL items before public release.")
     return "\n".join(lines) + "\n"
@@ -8673,7 +8961,12 @@ def run_process_parity_check(project_root: Path, process_path: Path, candidate_p
     source = read_yaml_file(process_path)
     process_id = safe_id(str(source.get("id") or process_path.stem), "process")
     paths = process_backfill_paths(project_root, process_id)
-    if not paths["draft"].is_file():
+    stale_generated_candidate = (
+        not paths["draft"].is_file()
+        or not paths["source"].is_file()
+        or read_yaml_file(paths["source"]) != source
+    )
+    if candidate_path is None and stale_generated_candidate:
         args = argparse.Namespace(project_root=str(project_root), process=process_id, process_file=str(process_path), dry_run=False)
         command_process_authoring_import(args)
     candidate = read_yaml_file(candidate_path) if candidate_path else read_yaml_file(paths["draft"])
@@ -8823,7 +9116,7 @@ def resource_parity_report(project_root: Path, kind: str, resource_id: str, stat
         lines.append("- None.")
     lines.extend(["", "## Notes", ""])
     lines.extend(f"- {item}" for item in notes)
-    lines.extend(["", "## WARN To Fix Before Public Release", ""])
+    lines.extend(["", "## Deferred Parity Coverage", ""])
     if status == "WARN":
         lines.append("- Replace shallow resource parity with a full authoring round-trip check.")
     else:
@@ -9160,7 +9453,66 @@ def driver_placeholder_errors(value: Any, label: str) -> list[str]:
     return errors
 
 
-def validate_runtime_driver_document(driver: dict[str, Any]) -> list[Check]:
+def parse_runtime_driver_limits(driver: dict[str, Any]) -> tuple[dict[str, int], list[str]]:
+    raw_limits = driver.get("limits") if isinstance(driver.get("limits"), dict) else {}
+    parsed: dict[str, int] = {}
+    errors: list[str] = []
+    defaults = {"timeout_seconds": 30, "max_retries": 0}
+    minimums = {"timeout_seconds": 1, "max_retries": 0}
+    for key, default in defaults.items():
+        raw_value = raw_limits.get(key, default)
+        if isinstance(raw_value, bool):
+            errors.append(f"limits.{key}: expected integer, got boolean")
+            parsed[key] = default
+            continue
+        try:
+            value = int(raw_value)
+        except (TypeError, ValueError):
+            errors.append(f"limits.{key}: expected integer, got {raw_value!r}")
+            parsed[key] = default
+            continue
+        if value < minimums[key]:
+            errors.append(f"limits.{key}: expected >= {minimums[key]}, got {value}")
+        parsed[key] = value
+    return parsed, errors
+
+
+def minimal_platform_environment() -> dict[str, str]:
+    if os.name != "nt":
+        return {}
+    names = ["SystemRoot", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP"]
+    return {name: value for name in names if (value := os.environ.get(name))}
+
+
+def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) -> tuple[dict[str, str], bool]:
+    env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
+    inherit = bool(env_spec.get("inherit", True))
+    env = os.environ.copy() if inherit else minimal_platform_environment()
+    explicit = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
+    expanded = expand_runtime_value(explicit, variables)
+    env.update({str(key): str(value) for key, value in expanded.items()})
+    return env, inherit
+
+
+def runtime_driver_start_readiness_checks(driver: dict[str, Any], executable_override: str | None = None) -> list[Check]:
+    checks: list[Check] = []
+    kind = str(driver.get("kind") or "")
+    if kind != "shell":
+        return checks
+    command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
+    raw_executable = str(command.get("executable") or "")
+    security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
+    resolved_executable = executable_override or ("" if raw_executable == "{executable}" else raw_executable)
+    if security.get("require_explicit_executable") is True and raw_executable == "{executable}" and not executable_override:
+        checks.append(check("FAIL", "start readiness executable override required for {executable}"))
+    elif not resolved_executable:
+        checks.append(check("FAIL", "start readiness executable resolves to empty value"))
+    else:
+        checks.append(check("PASS", f"start readiness executable: {resolved_executable}"))
+    return checks
+
+
+def validate_runtime_driver_document(driver: dict[str, Any], executable_override: str | None = None, include_start_readiness: bool = False) -> list[Check]:
     checks: list[Check] = []
     driver_id = str(driver.get("id") or "")
     kind = str(driver.get("kind") or "")
@@ -9179,8 +9531,15 @@ def validate_runtime_driver_document(driver: dict[str, Any]) -> list[Check]:
     if kind == "manual":
         behavior = driver.get("behavior") if isinstance(driver.get("behavior"), dict) else {}
         checks.append(check("PASS" if behavior.get("do_not_start_process") is True else "FAIL", "manual driver does not start process"))
+    limits, limit_errors = parse_runtime_driver_limits(driver)
+    for error in limit_errors:
+        checks.append(check("FAIL", error))
+    if not limit_errors:
+        checks.append(check("PASS", f"limits valid: timeout_seconds={limits['timeout_seconds']} max_retries={limits['max_retries']}"))
     for error in driver_placeholder_errors(driver, "driver"):
         checks.append(check("FAIL", error))
+    if include_start_readiness:
+        checks.extend(runtime_driver_start_readiness_checks(driver, executable_override))
     return checks
 
 
@@ -9200,7 +9559,7 @@ def command_runtime_driver_validate(args: argparse.Namespace) -> int:
         require_flow_root(project_root)
     workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
     driver = resolve_runtime_driver(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
-    return print_checks(validate_runtime_driver_document(driver))
+    return print_checks(validate_runtime_driver_document(driver, getattr(args, "executable", None), include_start_readiness=True))
 
 
 def command_runtime_driver_describe(args: argparse.Namespace) -> int:
@@ -9255,6 +9614,9 @@ def worker_run_paths(project_root: Path, run_id: str, task_id: str) -> dict[str,
         "heartbeat": root / "heartbeat.json",
         "collection": root / "collection-report.md",
     }
+
+
+DETACHED_WORKER_PROCESSES: dict[tuple[str, str, str], subprocess.Popen[bytes]] = {}
 
 
 def expand_runtime_value(value: Any, variables: dict[str, str]) -> Any:
@@ -9316,8 +9678,7 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         stderr_path = (project_root / stderr_path).resolve()
     paths["stdout"] = stdout_path
     paths["stderr"] = stderr_path
-    env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
-    env = expand_runtime_value(env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}, variables)
+    env, inherit_env = build_worker_environment(driver, variables)
     working_directory = str(expand_runtime_value(driver.get("working_directory") or "{project_root}", variables))
     command = {
         "schema_version": 1,
@@ -9331,10 +9692,11 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
             "argv": [executable, *args] if executable else [],
             "working_directory": working_directory,
             "environment": {str(key): str(value) for key, value in env.items()},
+            "environment_inherit": inherit_env,
             "shell": False,
         },
         "paths": {key: rel(path, project_root) for key, path in paths.items() if key != "root"},
-        "limits": driver.get("limits") if isinstance(driver.get("limits"), dict) else {},
+        "limits": parse_runtime_driver_limits(driver)[0],
     }
     return command, paths
 
@@ -9343,7 +9705,9 @@ def write_agent_run_state(project_root: Path, task: dict[str, Any], driver: dict
     task_id = safe_id(str(task.get("id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     paths = paths or worker_run_paths(project_root, run_id, task_id)
-    driver_limits = driver.get("limits") if isinstance(driver.get("limits"), dict) else {}
+    driver_limits, limit_errors = parse_runtime_driver_limits(driver)
+    if limit_errors:
+        raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(limit_errors))
     state = {
         "schema_version": 1,
         "run_id": run_id,
@@ -9354,9 +9718,9 @@ def write_agent_run_state(project_root: Path, task: dict[str, Any], driver: dict
         "started_at": started_at,
         "finished_at": finished_at,
         "exit_code": exit_code,
-        "timeout_seconds": int(driver_limits.get("timeout_seconds") or 30),
+        "timeout_seconds": driver_limits["timeout_seconds"],
         "attempt": 1,
-        "max_retries": int(driver_limits.get("max_retries") or 0),
+        "max_retries": driver_limits["max_retries"],
         "capsule_path": rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
         "worker_prompt_path": rel(worker_prompt_path(project_root, run_id, task_id), project_root),
         "expected_report_path": expected_report_artifact(task),
@@ -9378,6 +9742,86 @@ def load_agent_run_state(project_root: Path, run_id: str, task_id: str) -> dict[
     return json_read(worker_run_paths(project_root, run_id, task_id)["status"])
 
 
+def worker_process_key(project_root: Path, run_id: str, task_id: str) -> tuple[str, str, str]:
+    return (str(project_root.resolve()), safe_id(run_id, "run"), safe_id(task_id, "task"))
+
+
+def parse_runtime_timestamp(value: Any) -> datetime | None:
+    if not value:
+        return None
+    try:
+        text = str(value).replace("Z", "+00:00")
+        return datetime.fromisoformat(text)
+    except ValueError:
+        return None
+
+
+def terminate_worker_pid(pid: int) -> None:
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    else:
+        try:
+            os.kill(int(pid), signal.SIGTERM)
+        except ProcessLookupError:
+            return
+
+
+def process_pid_running(pid: int) -> bool:
+    if os.name == "nt":
+        result = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, shell=False)
+        return str(pid) in (result.stdout or "")
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+
+
+def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[str, Any] | str, state: dict[str, Any]) -> dict[str, Any]:
+    task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
+    run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
+    if isinstance(driver, str):
+        driver = runtime_driver_for_task(project_root, task, driver)
+    paths = worker_run_paths(project_root, run_id, task_id)
+    status = str(state.get("status") or "")
+    if status != "running":
+        return state
+    pid = state.get("pid")
+    if not isinstance(pid, int):
+        return write_agent_run_state(project_root, task, driver, "failed", failure_reason="running state missing pid", paths=paths)
+    command = json_read(paths["command"])
+    started_at = str(state.get("started_at") or now_utc())
+    started_dt = parse_runtime_timestamp(started_at)
+    timeout_seconds = int(state.get("timeout_seconds") or ((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30))
+    timed_out = bool(started_dt and datetime.now(timezone.utc) > started_dt + timedelta(seconds=timeout_seconds))
+    proc = DETACHED_WORKER_PROCESSES.get(worker_process_key(project_root, run_id, task_id))
+    exit_code: int | None = proc.poll() if proc else None
+    if timed_out and exit_code is None:
+        if proc and proc.poll() is None:
+            proc.kill()
+        else:
+            terminate_worker_pid(pid)
+        finished_at = now_utc()
+        state = write_agent_run_state(project_root, task, driver, "timed_out", pid=pid, started_at=started_at, finished_at=finished_at, exit_code=-1, failure_reason="timeout", command=command, paths=paths)
+        json_write(paths["exit"], {"schema_version": 1, "exit_code": -1, "finished_at": finished_at, "status": "timed_out"})
+        return state
+    if exit_code is None:
+        if proc is None and not process_pid_running(pid):
+            report_path = project_root / expected_report_artifact(task)
+            exit_code = 0 if report_path.is_file() else 1
+        else:
+            return write_agent_run_state(project_root, task, driver, "running", pid=pid, started_at=started_at, command=command, paths=paths)
+    finished_at = now_utc()
+    final_status = "completed" if exit_code == 0 else "failed"
+    state = write_agent_run_state(project_root, task, driver, final_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
+    json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
+    DETACHED_WORKER_PROCESSES.pop(worker_process_key(project_root, run_id, task_id), None)
+    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+    return state
+
+
 def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None = None, executable_override: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
     task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
@@ -9390,6 +9834,13 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     if status:
         raise SystemExit(status)
     driver = runtime_driver_for_task(project_root, task, driver_arg)
+    start_failures = [
+        item.message
+        for item in validate_runtime_driver_document(driver, executable_override, include_start_readiness=True)
+        if item.level == "FAIL"
+    ]
+    if start_failures:
+        raise SystemExit("FAIL: runtime driver is not start-ready: " + "; ".join(start_failures))
     command, paths = build_worker_process_command(project_root, task, driver, executable_override)
     state_status = "manual_required" if str(driver.get("kind")) == "manual" else "ready"
     paths["root"].mkdir(parents=True, exist_ok=True)
@@ -9423,17 +9874,22 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
         print(f"FAIL: empty command argv for {task_id}")
         return 1
     timeout_seconds = int((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30)
-    env = os.environ.copy()
-    env.update(command.get("command", {}).get("environment") or {})
+    env = {str(key): str(value) for key, value in (command.get("command", {}).get("environment") or {}).items()}
     cwd = command.get("command", {}).get("working_directory") or str(project_root)
     paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
     paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
     started_at = now_utc()
+    detach = bool(getattr(args, "detach", False))
     with paths["stdout"].open("wb") as stdout, paths["stderr"].open("wb") as stderr:
         try:
             proc = subprocess.Popen([str(item) for item in argv], cwd=str(cwd), env=env, stdout=stdout, stderr=stderr, shell=False)
             write_agent_run_state(project_root, task, driver, "running", pid=proc.pid, started_at=started_at, command=command, paths=paths)
             json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
+            if detach:
+                DETACHED_WORKER_PROCESSES[worker_process_key(project_root, run_id, task_id)] = proc
+                emit_process_event(project_root, "worker.run.started", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
+                print(f"RUNNING: {task_id} pid={proc.pid}")
+                return 0
             try:
                 exit_code = proc.wait(timeout=timeout_seconds)
                 finished_at = now_utc()
@@ -9489,6 +9945,9 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
             os.kill(int(pid), signal.SIGTERM)
     driver = runtime_driver_for_task(project_root, task, str(state.get("driver_id") or task.get("runtime_driver") or "manual"))
     paths = worker_run_paths(project_root, run_id, task_id)
+    if state.get("status") in {"completed", "failed", "timed_out", "cancelled"}:
+        print(f"STATUS: already-terminal {task_id} status={state.get('status')}")
+        return 0
     write_agent_run_state(project_root, task, driver, "cancelled", pid=pid if isinstance(pid, int) else None, finished_at=now_utc(), failure_reason="stop requested", paths=paths)
     print(f"STOPPED: {task_id}")
     return 0
@@ -9503,6 +9962,9 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
     state = load_agent_run_state(project_root, run_id, task_id)
     if not state:
         print(f"FAIL: worker run is not prepared: {task_id}")
+        return 1
+    if state.get("status") not in {"completed", "manual_required"}:
+        print(f"FAIL: worker run is not collectible: {task_id} status={state.get('status', 'unknown')}")
         return 1
     missing: list[str] = []
     for output in normalize_required_outputs(task.get("required_outputs")):
@@ -9612,26 +10074,56 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
     started: list[str] = []
     collected: list[str] = []
     skipped: list[str] = []
+    failed: list[str] = []
+    running: list[str] = []
+    observed: list[str] = []
+    blocked_overlap: list[str] = []
     scheduling = profile.get("scheduling") if isinstance(profile.get("scheduling"), dict) else {}
     defaults = profile.get("defaults") if isinstance(profile.get("defaults"), dict) else {}
     max_parallel = int(scheduling.get("max_parallel_workers") or defaults.get("max_parallel_workers") or 1)
+    repo_files = iter_repo_files(project_root)
+    running_scopes: dict[str, list[str]] = {}
     for run_id in run_ids:
         run = load_run(project_root, run_id)
         plan = load_run_plan_if_present(project_root, run_id)
         runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
         workers = plan_worker_map(plan)
         default_driver = getattr(args, "driver", None) or str(runtime.get("default_driver") or scheduling.get("default_driver") or defaults.get("runtime_driver") or "manual")
-        for item in sorted([entry for entry in run.get("tasks", []) if isinstance(entry, dict)], key=lambda value: int(value.get("order", 0) or 0)):
-            if len(started) >= max_parallel:
-                break
+        tasks = sorted([entry for entry in run.get("tasks", []) if isinstance(entry, dict)], key=lambda value: int(value.get("order", 0) or 0))
+        task_rows: list[tuple[str, dict[str, Any], dict[str, Any] | None, str]] = []
+        for item in tasks:
             task_id = safe_id(str(item.get("id") or "task"), "task")
             task = load_task(project_root, task_id)
             worker = workers.get(task_id)
+            driver_id = str((worker or {}).get("runtime_driver") or task.get("runtime_driver") or default_driver)
+            task_rows.append((task_id, task, worker, driver_id))
             state = load_agent_run_state(project_root, run_id, task_id)
-            if state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:
+            if state.get("status") == "running":
+                observed_state = observe_worker_run(project_root, task, driver_id, state)
+                observed.append(task_id)
+                if observed_state.get("status") == "running":
+                    running.append(task_id)
+                    running_scopes[task_id] = assignment_write_scope(task)
+                elif observed_state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:
+                    status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
+                    if status == 0:
+                        collected.append(task_id)
+                    else:
+                        failed.append(task_id)
+                elif observed_state.get("status") in {"failed", "timed_out"}:
+                    failed.append(task_id)
+            elif state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:
                 status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
                 if status == 0:
                     collected.append(task_id)
+                else:
+                    failed.append(task_id)
+        for task_id, task, worker, driver_id in task_rows:
+            active_count = len(running) + len(started)
+            if active_count >= max_parallel:
+                break
+            state = load_agent_run_state(project_root, run_id, task_id)
+            if state.get("status") in {"running", "completed", "failed", "timed_out"}:
                 continue
             if str(task.get("status")) not in {"open", "in_progress", "blocked"}:
                 skipped.append(task_id)
@@ -9639,19 +10131,30 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
             if not task_dependencies_done(project_root, task, worker):
                 skipped.append(task_id)
                 continue
-            driver_id = str((worker or {}).get("runtime_driver") or task.get("runtime_driver") or default_driver)
             if driver_id == "manual":
                 prepare_worker_run(project_root, task_id, driver_id, None)
                 skipped.append(task_id)
                 continue
-            status = command_worker_run_start(argparse.Namespace(project_root=str(project_root), task=task_id, driver=driver_id, executable=None))
+            current_scope = assignment_write_scope(task)
+            conflict = False
+            for other_id, other_scope in running_scopes.items():
+                if assignment_scope_conflicts(task_id, current_scope, other_id, other_scope, repo_files, reason_prefix="supervisor_"):
+                    conflict = True
+                    break
+            if conflict:
+                blocked_overlap.append(task_id)
+                skipped.append(task_id)
+                continue
+            try:
+                status = command_worker_run_start(argparse.Namespace(project_root=str(project_root), task=task_id, driver=driver_id, executable=None, detach=True, wait=False))
+            except SystemExit as exc:
+                status = int(exc.code) if isinstance(exc.code, int) else 1
+                print(exc)
             if status == 0:
                 started.append(task_id)
-                collect_status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
-                if collect_status == 0:
-                    collected.append(task_id)
+                running_scopes[task_id] = current_scope
             else:
-                started.append(task_id)
+                failed.append(task_id)
     report = supervisor_root(project_root) / "last-tick-report.md"
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(
@@ -9661,17 +10164,21 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
                 "",
                 f"- checked_runs: `{len(run_ids)}`",
                 f"- started: `{', '.join(started) if started else 'none'}`",
+                f"- running: `{', '.join(running) if running else 'none'}`",
+                f"- observed: `{', '.join(observed) if observed else 'none'}`",
                 f"- collected: `{', '.join(collected) if collected else 'none'}`",
                 f"- skipped: `{', '.join(skipped) if skipped else 'none'}`",
+                f"- blocked_overlap: `{', '.join(blocked_overlap) if blocked_overlap else 'none'}`",
+                f"- failed: `{', '.join(failed) if failed else 'none'}`",
             ]
         )
         + "\n",
         encoding="utf-8",
     )
-    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload={"runs": run_ids, "started": started, "collected": collected, "report": rel(report, project_root)})
-    print(f"TICK: started={len(started)} collected={len(collected)} skipped={len(skipped)}")
+    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload={"runs": run_ids, "started": started, "running": running, "observed": observed, "collected": collected, "skipped": skipped, "blocked_overlap": blocked_overlap, "failed": failed, "report": rel(report, project_root)})
+    print(f"TICK: started={len(started)} running={len(running)} observed={len(observed)} collected={len(collected)} skipped={len(skipped)} failed={len(failed)}")
     print(f"WROTE: {rel(report, project_root)}")
-    return 0
+    return 1 if failed else 0
 
 
 def command_supervisor_run(args: argparse.Namespace) -> int:
@@ -9679,25 +10186,31 @@ def command_supervisor_run(args: argparse.Namespace) -> int:
     require_flow_root(project_root)
     profile = load_supervisor_profile(project_root, getattr(args, "profile", None))
     loop = profile.get("loop") if isinstance(profile.get("loop"), dict) else {}
-    interval = float(getattr(args, "interval", None) or loop.get("interval_seconds") or 1)
-    max_ticks = int(getattr(args, "max_ticks", None) or loop.get("max_ticks") or 1)
+    interval_arg = getattr(args, "interval", None)
+    max_ticks_arg = getattr(args, "max_ticks", None)
+    interval = float(interval_arg if interval_arg is not None else (loop.get("interval_seconds") or 1))
+    max_ticks = int(max_ticks_arg if max_ticks_arg is not None else (loop.get("max_ticks") or 1))
     stop_file = project_root / ".pf" / "runtime" / "supervisor" / "stop.request"
     state = {"schema_version": 1, "id": "default", "status": "running", "project_root": ".", "pid": os.getpid(), "started_at": now_utc(), "updated_at": now_utc(), "stopped_at": None, "tick_count": 0, "last_tick_report": ".pf/runtime/supervisor/last-tick-report.md", "stop_requested": False}
     write_supervisor_state(project_root, state)
+    failed = False
     for index in range(max_ticks):
         if stop_file.is_file():
             state["stop_requested"] = True
             break
-        command_supervisor_tick(argparse.Namespace(project_root=str(project_root), run=getattr(args, "run", None), profile=getattr(args, "profile", None), driver=getattr(args, "driver", None)))
+        tick_status = command_supervisor_tick(argparse.Namespace(project_root=str(project_root), run=getattr(args, "run", None), profile=getattr(args, "profile", None), driver=getattr(args, "driver", None)))
+        failed = failed or tick_status != 0
         state["tick_count"] = index + 1
         write_supervisor_state(project_root, state)
+        if failed:
+            break
         if index + 1 < max_ticks:
             time.sleep(interval)
     state["status"] = "stopped"
     state["stopped_at"] = now_utc()
     write_supervisor_state(project_root, state)
     print(f"SUPERVISOR: stopped ticks={state['tick_count']}")
-    return 0
+    return 1 if failed else 0
 
 
 def command_supervisor_status(args: argparse.Namespace) -> int:
@@ -13096,10 +13609,26 @@ def build_parser() -> argparse.ArgumentParser:
 
     release_test = sub.add_parser("release-test", help="Run the release validation suite.")
     release_test.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
+    release_test.add_argument("--public", action="store_true", help="Apply public-release gates in addition to development release checks.")
+    release_test.add_argument("--list", action="store_true", help="List release-test check names without running them.")
+    release_test.add_argument("--only", action="append", default=[], help="Run only a named check. Repeatable.")
+    release_test.add_argument("--skip", action="append", default=[], help="Skip a named check. Repeatable.")
+    release_test.add_argument("--fail-fast", action="store_true", help="Stop after the first failed check.")
+    release_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply per-check timeouts by this positive value.")
+    release_test.add_argument("--no-clean", action="store_true", help="Do not run the clean release artifacts check.")
+    release_test.add_argument("--clean-first", action="store_true", help="Run clean release artifacts before checks. Default unless --no-clean is set.")
     release_test.set_defaults(func=command_release_test)
 
     smoke_all = sub.add_parser("smoke-all", help="Alias for release-test.")
     smoke_all.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
+    smoke_all.add_argument("--public", action="store_true", help="Apply public-release gates in addition to development release checks.")
+    smoke_all.add_argument("--list", action="store_true", help="List release-test check names without running them.")
+    smoke_all.add_argument("--only", action="append", default=[], help="Run only a named check. Repeatable.")
+    smoke_all.add_argument("--skip", action="append", default=[], help="Skip a named check. Repeatable.")
+    smoke_all.add_argument("--fail-fast", action="store_true", help="Stop after the first failed check.")
+    smoke_all.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply per-check timeouts by this positive value.")
+    smoke_all.add_argument("--no-clean", action="store_true", help="Do not run the clean release artifacts check.")
+    smoke_all.add_argument("--clean-first", action="store_true", help="Run clean release artifacts before checks. Default unless --no-clean is set.")
     smoke_all.set_defaults(func=command_release_test)
 
     clean = sub.add_parser("clean", help="Remove safe generated ProcessForge artifacts.")
@@ -13116,6 +13645,9 @@ def build_parser() -> argparse.ArgumentParser:
     release_archive_test = sub.add_parser("release-archive-test", help="Inspect a release archive and run release-test after extraction.")
     release_archive_test.add_argument("--archive", required=True, help="Release archive ZIP path.")
     release_archive_test.add_argument("--manifest", help="Optional release manifest path. Defaults to archive path with .manifest.json suffix.")
+    release_archive_test.add_argument("--root", help="Optional source root; when set, verify archive entries and manifest hashes are current.")
+    release_archive_test.add_argument("--extracted-test", choices=["full", "quick", "skip"], default="full", help="How much release-test coverage to run inside the extracted archive. Default: full.")
+    release_archive_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply extracted release-test timeout budgets by this factor.")
     release_archive_test.set_defaults(func=command_release_archive_test)
 
     examples_check = sub.add_parser("examples-check", help="Validate release examples for portability and stale generated data.")
@@ -13457,6 +13989,7 @@ def build_parser() -> argparse.ArgumentParser:
     runtime_driver_validate.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
     runtime_driver_validate.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
     runtime_driver_validate.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
+    runtime_driver_validate.add_argument("--executable", help="Executable override used for start-readiness checks.")
     runtime_driver_validate.set_defaults(func=command_runtime_driver_validate)
     runtime_driver_describe = runtime_driver_sub.add_parser("describe", help="Describe a runtime driver by id or path.")
     runtime_driver_describe.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
@@ -13472,6 +14005,7 @@ def build_parser() -> argparse.ArgumentParser:
     runtime_driver_validate_alias.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
     runtime_driver_validate_alias.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
     runtime_driver_validate_alias.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
+    runtime_driver_validate_alias.add_argument("--executable", help="Executable override used for start-readiness checks.")
     runtime_driver_validate_alias.set_defaults(func=command_runtime_driver_validate)
     runtime_driver_describe_alias = sub.add_parser("runtime-driver-describe", help="Flat alias for runtime-driver describe.")
     runtime_driver_describe_alias.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
@@ -13492,6 +14026,8 @@ def build_parser() -> argparse.ArgumentParser:
     worker_run_start.add_argument("--task", required=True, help="Task id.")
     worker_run_start.add_argument("--driver", help="Runtime driver id or manifest path.")
     worker_run_start.add_argument("--executable", help="Executable override for generic shell drivers.")
+    worker_run_start.add_argument("--detach", action="store_true", help="Start the worker process and return immediately.")
+    worker_run_start.add_argument("--wait", action="store_true", help="Wait for completion. This is the default unless --detach is set.")
     worker_run_start.set_defaults(func=command_worker_run_start)
     worker_run_status = worker_run_sub.add_parser("status", help="Print worker runtime state.")
     worker_run_status.add_argument("--project-root", required=True, help="Project root path.")

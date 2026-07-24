@@ -1,7 +1,7 @@
 schema_version: 1
 id: session-bootstrap
 name: Session Bootstrap
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Convert a short launch request into a formal ProcessForge session mode and status report.
 required_capabilities:

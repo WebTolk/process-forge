@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 from processforge_subprocess import CommandResult, diagnostic_text, format_command, run_command as run_processforge_command
@@ -17,7 +18,11 @@ DEFAULT_TIMEOUT = 30
 
 def run_cmd(args: list[str], cwd: Path = ROOT, expect: int = 0, timeout: int = DEFAULT_TIMEOUT) -> CommandResult:
     command = [sys.executable, str(CLI), *args]
+    started = time.perf_counter()
+    print(f"  RUN CMD: {format_command(command)}", flush=True)
     result = run_processforge_command(command, cwd=cwd, timeout=timeout)
+    elapsed = time.perf_counter() - started
+    print(f"  END CMD: exit={result.returncode} elapsed={elapsed:.2f}s timeout={timeout}s", flush=True)
     if result.timed_out:
         print("TIMEOUT: command exceeded timeout")
         print(diagnostic_text(result))
@@ -253,8 +258,9 @@ def test_optional_platform_resource_warns(root: Path) -> None:
 
 
 def test_no_powershell(root: Path) -> None:
-    _root, workplace = create_workplace_with_template_and_package(root)
-    assert_no_ps1(workplace)
+    for path in [ROOT / "templates", ROOT / "examples", ROOT / "docs", ROOT / "bin", ROOT / "tools"]:
+        if path.is_dir():
+            assert_no_ps1(path)
 
 
 def main() -> int:
@@ -269,14 +275,15 @@ def main() -> int:
     failures: list[str] = []
     for test in tests:
         with tempfile.TemporaryDirectory(prefix=f"pf-{test.__name__}-") as temp:
-            print(f"RUN: {test.__name__}")
+            test_started = time.perf_counter()
+            print(f"RUN: {test.__name__} temp={temp}", flush=True)
             try:
                 test(Path(temp))
             except Exception as exc:
                 failures.append(f"{test.__name__}: {exc}")
-                print(f"FAIL: {test.__name__}: {exc}")
+                print(f"FAIL: {test.__name__}: {exc} elapsed={time.perf_counter() - test_started:.2f}s temp={temp}", flush=True)
             else:
-                print(f"PASS: {test.__name__}")
+                print(f"PASS: {test.__name__} elapsed={time.perf_counter() - test_started:.2f}s", flush=True)
     if failures:
         print("RESULT: FAIL")
         for failure in failures:

@@ -117,6 +117,8 @@ def run_command(
 ) -> CommandResult:
     cwd_text = str(Path(cwd).resolve()) if cwd is not None else None
     command = [str(item) for item in args]
+    child_env = dict(env) if env is not None else os.environ.copy()
+    child_env.setdefault("PYTHONUNBUFFERED", "1")
     if label or verbose:
         print(f"RUN {label or format_command(command)}:", flush=True)
         print(f"  {format_command(command)}", flush=True)
@@ -126,7 +128,7 @@ def run_command(
     proc = subprocess.Popen(
         command,
         cwd=cwd_text,
-        env=env,
+        env=child_env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,

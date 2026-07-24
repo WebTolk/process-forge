@@ -13,6 +13,8 @@
   platform contracts.
 - Path constants и authoritative package roots для переносимых resource records.
 - Project context snapshot refresh/check и assignment capsule generation.
+- Runtime driver registry, worker-run lifecycle commands и file-first process
+  supervisor для ограниченного shell worker execution.
 - Events/hooks/outbox MVP для file-only observational delivery.
 - Release, smoke, examples, cleanup, package и archive validation commands.
 
@@ -28,10 +30,9 @@
 
 ## Ограничения
 
-- Нет multi-agent coordination, claim или lease system.
+- Нет claim или lease system для распределенной coordination.
 - Hooks observational и outbox-only.
-- Нет daemon, runner, supervisor, GUI, marketplace, remote sync или publish
-  service.
+- Нет daemon, GUI, marketplace, remote sync или publish service.
 - Нет live command hook execution или network webhook send.
 
 См. [ограничения](../known-limitations.md).

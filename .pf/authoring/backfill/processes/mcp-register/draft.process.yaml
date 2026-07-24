@@ -3,7 +3,7 @@ id: mcp-register
 name: MCP Register
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Register an MCP capability provider through proposal, transport/config definition, registry update, and review.
 purpose: Register an MCP capability provider through proposal, transport/config definition, registry update, and review.

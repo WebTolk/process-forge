@@ -38,10 +38,10 @@ WARN
 
 - `logic_review`: source definition already has logic review findings: stage change-proposal produces known artifact change-proposal; stage resource-update produces known artifact compatibility-check; stage resource-update produces known artifact review
 
-## WARN To Fix Before Public Release
+## Public Release WARN Actions
 
-- `logic_review`: source definition already has logic review findings: stage change-proposal produces known artifact change-proposal; stage resource-update produces known artifact compatibility-check; stage resource-update produces known artifact review
+- None.
 
 ## Recommendation
 
-Process is reproducible with documented warnings; fix action WARN items before public release.
+Process is reproducible with documented warnings; public-release action items are listed explicitly when present.

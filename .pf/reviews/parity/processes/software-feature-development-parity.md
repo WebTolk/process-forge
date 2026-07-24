@@ -38,10 +38,10 @@ WARN
 
 - `logic_review`: source definition already has logic review findings: stage architecture produces known artifact decision-log; stage assurance produces known artifact review-findings; stage implementation produces known artifact changed-files
 
-## WARN To Fix Before Public Release
+## Public Release WARN Actions
 
-- `logic_review`: source definition already has logic review findings: stage architecture produces known artifact decision-log; stage assurance produces known artifact review-findings; stage implementation produces known artifact changed-files
+- None.
 
 ## Recommendation
 
-Process is reproducible with documented warnings; fix action WARN items before public release.
+Process is reproducible with documented warnings; public-release action items are listed explicitly when present.

@@ -29,6 +29,9 @@ archive names, and reports.
 - For bounded worker orchestration, use `orchestrator-plan create`,
   `orchestrator-plan validate`, `orchestrator-plan apply`,
   `orchestrator-plan status`, and `worker-launch-prompt create`.
+- Treat native subagents from the host AI environment as external executors:
+  pass only ProcessForge assignment/capsule scope and expected report paths.
+  Do not treat them as ProcessForge runtime drivers.
 
 ## Distribution Root Checks
 
@@ -38,8 +41,9 @@ python tools/validate-process-forge-schemas.py --root .
 python tools/validate-public-cleanliness.py --root .
 python tools/validate-process-forge-checksums.py --root . --check
 python bin/pf.py release-test --root .
-python bin/pf.py release-pack --root . --output dist/processforge-release.zip
-python bin/pf.py release-archive-test --archive dist/processforge-release.zip
+python bin/pf.py release-test --root . --public --fail-fast
+python bin/pf.py release-pack --root . --output dist/processforge.zip
+python bin/pf.py release-archive-test --archive dist/processforge.zip --root . --extracted-test full
 git diff --check
 ```
 

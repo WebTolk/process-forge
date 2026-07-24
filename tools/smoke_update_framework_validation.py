@@ -5,10 +5,11 @@ from __future__ import annotations
 
 import copy
 import json
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+from processforge_subprocess import diagnostic_text, run_command as run_processforge_command
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,26 +20,12 @@ PF_TIMEOUT_SECONDS = 30
 
 def run_pf(*args: str, expect_success: bool) -> str:
     command_label = "pf " + " ".join(args)
-    print(f"RUN: {command_label}")
-    try:
-        result = subprocess.run(
-            [sys.executable, str(CLI), *args],
-            cwd=str(ROOT),
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=PF_TIMEOUT_SECONDS,
-        )
-    except subprocess.TimeoutExpired as exc:
-        stdout = exc.stdout if isinstance(exc.stdout, str) else ""
-        stderr = exc.stderr if isinstance(exc.stderr, str) else ""
-        raise AssertionError(
-            f"{command_label} timed out after {PF_TIMEOUT_SECONDS}s\nstdout follows\n{stdout}\nstderr follows\n{stderr}"
-        ) from exc
+    print(f"RUN: {command_label}", flush=True)
+    result = run_processforge_command([sys.executable, str(CLI), *args], cwd=ROOT, timeout=PF_TIMEOUT_SECONDS)
+    if result.timed_out:
+        raise AssertionError(diagnostic_text(result))
     if expect_success and result.returncode != 0:
-        raise AssertionError(
-            f"pf {' '.join(args)} failed with {result.returncode}\nstdout follows\n{result.stdout}\nstderr follows\n{result.stderr}"
-        )
+        raise AssertionError(diagnostic_text(result))
     if not expect_success and result.returncode == 0:
         raise AssertionError(
             f"pf {' '.join(args)} unexpectedly passed\nstdout follows\n{result.stdout}\nstderr follows\n{result.stderr}"

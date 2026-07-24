@@ -3,7 +3,7 @@ id: context-resolution
 name: Context Resolution
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Resolve ProcessForge sources into context index, rules, conflict report, and assignment context packages.
 purpose: Resolve ProcessForge sources into context index, rules, conflict report, and assignment context packages.

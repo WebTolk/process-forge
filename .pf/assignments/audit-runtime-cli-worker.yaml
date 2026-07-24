@@ -1,0 +1,63 @@
+schema_version: 1
+id: audit-runtime-cli-worker
+title: Runtime CLI logic audit
+run_id: post-runtime-supervisor-audit
+process: testing
+status: done
+created_at: '2026-07-24T11:41:17Z'
+updated_at: '2026-07-24T11:52:49Z'
+objective: Runtime CLI logic audit
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Runtime CLI audit completed with confirmed findings.
+  artifacts:
+    - .pf/artifacts/audits/post-runtime-supervisor/runtime-cli-worker.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+allowed_read_files:
+  - tools/processforge.py
+  - tools/test_workers/**
+  - tools/smoke_runtime_driver_registry.py
+  - tools/smoke_worker_run_lifecycle.py
+  - tools/smoke_process_supervisor.py
+  - schemas/*runtime*.json
+  - schemas/*supervisor*.json
+  - schemas/worker-process-command.schema.json
+  - templates/runtime-drivers/**
+  - templates/supervisor-profile.yaml
+ownership:
+  owner_id: audit-runtime-cli-worker
+  owner_label: worker-audit-runtime-cli-worker
+  role: code-review
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: runtime-cli-audit-report
+    path: .pf/artifacts/audits/post-runtime-supervisor/runtime-cli-worker.md
+    type: markdown
+    required: true
+expected_report:
+  language: en
+  artifact: .pf/artifacts/audits/post-runtime-supervisor/runtime-cli-worker.md
+  format: concise_markdown
+  include:
+    - runtime-cli-audit-report
+worker_may_rebuild_context: false
+runtime_driver: manual

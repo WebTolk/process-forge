@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-24T10:35:37Z
-- valid_until: 2026-07-31T10:35:37Z
+- generated_at: 2026-07-24T18:42:16Z
+- valid_until: 2026-07-31T18:42:16Z
 
 ## Freshness
 
@@ -76,6 +76,8 @@ fresh
 - task-batch-execution
 - guided-workplace-setup
 - multi-agent-task-orchestration
+- runtime-driver-registry
+- process-supervisor
 
 ## Required Capabilities
 

@@ -3,7 +3,7 @@ id: platform-contract-install
 name: Platform Contract Install
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Create or update a platform contract mapping capabilities, knowledge packages, tools, MCP, and templates.
 purpose: Create or update a platform contract mapping capabilities, knowledge packages, tools, MCP, and templates.

@@ -2,7 +2,7 @@ schema_version: 1
 process:
   id: knowledge-resource-add
   name: Knowledge Resource Add
-  version: 0.1.0
+  version: 1.0.0
   status: active
   kind: process
   scope: project

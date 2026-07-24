@@ -3,7 +3,7 @@ id: tool-register
 name: Tool Register
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Register a workplace tool capability provider through proposal, healthcheck definition, registry update, and review.
 purpose: Register a workplace tool capability provider through proposal, healthcheck definition, registry update, and review.

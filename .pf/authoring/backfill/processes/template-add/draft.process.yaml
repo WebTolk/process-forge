@@ -3,7 +3,7 @@ id: template-add
 name: Template Add
 kind: process
 scope: project
-version: 0.1.0
+version: 1.0.0
 status: active
 description: Add a simple reusable template folder with README guidance and optional registry update.
 purpose: Add a simple reusable template folder with README guidance and optional registry update.
