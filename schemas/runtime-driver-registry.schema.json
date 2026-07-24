@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/runtime-driver-registry.schema.json",
+  "title": "Runtime Driver Registry",
+  "type": "object",
+  "required": ["schema_version", "runtime_drivers"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "runtime_drivers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "path"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "path": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["available", "optional", "missing", "disabled"] },
+          "builtin": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" }
+  },
+  "additionalProperties": true
+}

@@ -150,6 +150,10 @@ processes:
     path: ../processes/guided-workplace-setup.yaml
   - id: multi-agent-task-orchestration
     path: ../processes/multi-agent-task-orchestration.yaml
+  - id: runtime-driver-registry
+    path: ../processes/runtime-driver-registry.yaml
+  - id: process-supervisor
+    path: ../processes/process-supervisor.yaml
 
 knowledge_stack:
   - id: processforge.core

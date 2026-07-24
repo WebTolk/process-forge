@@ -111,6 +111,17 @@ checks, rebuild the release archive with a neutral filename, test the archive,
 and report exact pass/fail evidence before commit or push.
 ```
 
+## 10. Run A Supervised Worker Smoke
+
+```text
+Use ProcessForge runtime drivers for a bounded supervised test run.
+
+List and validate the built-in neutral runtime drivers, create or use an
+orchestrator plan with runtime.default_driver set to test-echo-worker, run the
+supervisor for a small fixed number of ticks, and report the worker-run status
+files and produced reports.
+```
+
 ## Required Order
 
 1. Install ProcessForge distribution.

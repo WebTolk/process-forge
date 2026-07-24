@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/runtime-driver.schema.json",
+  "title": "Runtime Driver",
+  "type": "object",
+  "required": ["schema_version", "id", "title", "kind"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "title": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["manual", "shell"] },
+    "command": {
+      "type": "object",
+      "properties": {
+        "executable": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "working_directory": { "type": "string" },
+    "environment": {
+      "type": "object",
+      "properties": {
+        "inherit": { "type": "boolean" },
+        "variables": { "type": "object", "additionalProperties": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "io": {
+      "type": "object",
+      "properties": {
+        "stdin": { "type": "string" },
+        "stdout": { "type": "string" },
+        "stderr": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "heartbeat": {
+      "type": "object",
+      "properties": {
+        "mode": { "type": "string" },
+        "path": { "type": "string" },
+        "optional": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "timeout_seconds": { "type": "integer", "minimum": 1 },
+        "max_retries": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "allow_shell": { "type": "boolean" },
+        "require_explicit_executable": { "type": "boolean" },
+        "allow_network": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "behavior": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" }
+  },
+  "additionalProperties": true
+}

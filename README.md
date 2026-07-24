@@ -82,6 +82,10 @@ ProcessForge currently supports file-first creation flows for:
 - multi-agent orchestration: `orchestrator-plan create`,
   `orchestrator-plan validate`, `orchestrator-plan apply`,
   `orchestrator-plan status`, and `worker-launch-prompt create`
+- runtime drivers and worker execution: `runtime-driver list`,
+  `runtime-driver validate`, `worker-run prepare`, `worker-run start`,
+  `worker-run status`, `worker-run collect`, `supervisor tick`, and
+  `supervisor run`
 
 The `--interactive` flag is accepted by first-run initialization commands for
 UX compatibility, but the current implementation is file-first and does not
@@ -163,6 +167,8 @@ and used for a run.
 - [Agent command runbook](docs/getting-started/agent-prompts.md)
 - [Workplace vs project](docs/concepts/workplace-vs-project.md)
 - [Runtime model](docs/concepts/runtime-model.md)
+- [Runtime drivers](docs/concepts/runtime-drivers.md)
+- [Process supervisor](docs/concepts/process-supervisor.md)
 - [Platform contracts](docs/concepts/platform-contracts.md)
 - [Platform inheritance](docs/concepts/platform-inheritance.md)
 - [Knowledge resource navigation](docs/concepts/knowledge-resource-navigation.md)
@@ -182,6 +188,8 @@ Runtime requirements:
   workplace, and project folders.
 - Runtime usage does not require PowerShell.
 - ProcessForge does not require a daemon or background process in file-only mode.
+- Runtime drivers are opt-in. The default `manual` driver writes launch state
+  and does not start a process.
 
 Development and release-check requirements:
 

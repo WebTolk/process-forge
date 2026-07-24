@@ -1,0 +1,165 @@
+schema_version: 1
+process:
+  id: process-supervisor
+  name: Process Supervisor
+  version: 1.0.0
+  status: active
+  kind: process
+  scope: project
+  description: File-first supervisor loop that prepares, starts, observes, stops, and collects worker-run state without requiring a daemon.
+  purpose: File-first supervisor loop that prepares, starts, observes, stops, and collects worker-run state without requiring a daemon.
+run_model:
+
+roles:
+  -
+    id: supervisor
+    title: Supervisor
+    responsibility: Schedules ready tasks, respects dependencies, starts approved runtime drivers, and collects outputs.
+  -
+    id: worker
+    title: Worker Runtime
+    responsibility: Runs one bounded assignment command and writes expected outputs.
+  -
+    id: reviewer
+    title: Supervisor Reviewer
+    responsibility: Reviews runtime state, logs, and collection reports.
+stages:
+  -
+    id: prepare
+    title: Prepare worker run
+    description: Create assignment capsule, worker launch prompt, command.json, and status.json for the selected runtime driver.
+    required_inputs:
+      - assignment
+      - runtime-driver
+    produced_artifacts:
+      - agent-run-state
+      - worker-process-command
+    required_role: supervisor
+    required_capabilities:
+      - process_coordination
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - assignment-ready
+    exit_gates:
+      - worker-run-ready
+    handoff_required: false
+  -
+    id: start
+    title: Start worker run
+    description: Start a shell runtime driver with an explicit executable and write process, stdout, stderr, heartbeat, and exit records.
+    required_inputs:
+      - worker-process-command
+    produced_artifacts:
+      - process-record
+      - worker-logs
+      - exit-record
+    required_role: supervisor
+    required_capabilities:
+      - local_process_execution
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - worker-run-ready
+    exit_gates:
+      - worker-run-finished
+    handoff_required: false
+  -
+    id: collect
+    title: Collect worker outputs
+    description: Verify required outputs and expected report, then mark the task complete.
+    required_inputs:
+      - agent-run-state
+      - worker-outputs
+    produced_artifacts:
+      - collection-report
+    required_role: supervisor
+    required_capabilities:
+      - artifact_review
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - worker-run-finished
+    exit_gates:
+      - required-outputs-present
+    handoff_required: false
+artifacts:
+  -
+    id: agent-run-state
+    title: Agent Run State
+    owner_role: supervisor
+    template: agent-run-state
+    lifecycle:
+      - draft
+      - active
+      - archived
+  -
+    id: worker-process-command
+    title: Worker Process Command
+    owner_role: supervisor
+    template: worker-process-command
+    lifecycle:
+      - draft
+      - active
+      - archived
+  -
+    id: collection-report
+    title: Collection Report
+    owner_role: supervisor
+    template: validation-report
+    lifecycle:
+      - draft
+      - approved
+gates:
+  -
+    id: assignment-ready
+    description: Assignment, run, capsule inputs, and context snapshot exist.
+    required: true
+  -
+    id: worker-run-ready
+    description: Runtime state and command file were written for the selected driver.
+    required: true
+  -
+    id: worker-run-finished
+    description: Runtime state is completed, failed, timed_out, cancelled, or manual_required.
+    required: true
+  -
+    id: required-outputs-present
+    description: Required outputs and expected report are present before collection succeeds.
+    required: true
+required_capabilities:
+  - process_coordination
+  - repository_read
+  - local_process_execution
+required_packages:
+  []
+required_templates:
+  []
+allowed_tools:
+  []
+forbidden_actions:
+  []
+hooks:
+  emit:
+    -
+      event: supervisor.tick.completed
+      required: true
+    -
+      event: worker.run.prepared
+      required: true
+    -
+      event: worker.run.finished
+      required: false
+    -
+      event: worker.run.collected
+      required: false
+  tracking:
+    include:
+      - run_id
+      - task_id
+      - driver_id
+      - status
+evolution_policy:
+  versioning: semver
+  compatibility: additive state fields are backward-compatible
+  deprecation: supervisor state paths must stay stable within the major version

@@ -24,6 +24,7 @@ workplace; каждый repository хранит только проектный 
 - [Первый собственный процесс](getting-started/create-your-first-process.md)
 - [Task batch workflow](getting-started/task-batch-workflow.md)
 - [Multi-agent orchestration](getting-started/multi-agent-orchestration.md)
+- [Runtime driver and supervisor](getting-started/runtime-driver-supervisor.md)
 
 ## Authoring
 
@@ -38,6 +39,8 @@ workplace; каждый repository хранит только проектный 
 
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Runtime model](concepts/runtime-model.md)
+- [Runtime drivers](concepts/runtime-drivers.md)
+- [Process supervisor](concepts/process-supervisor.md)
 - [Path constants](concepts/path-constants.md)
 - [Package roots](concepts/package-roots.md)
 - [Project snapshot](concepts/project-snapshot.md)

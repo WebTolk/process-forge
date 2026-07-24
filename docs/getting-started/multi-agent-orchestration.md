@@ -17,8 +17,26 @@ Flat aliases are also available:
 - `orchestrator-plan-apply`
 - `orchestrator-plan-status`
 - `worker-launch-prompt-create`
+- `runtime-driver-list`
+- `worker-run-prepare`
+- `worker-run-start`
+- `worker-run-collect`
+- `supervisor-run`
 
 The plan template is `templates/orchestrator-task-plan.yaml`.
+
+Plans may include:
+
+```yaml
+runtime:
+  default_driver: manual
+  supervisor_profile: default
+  start_policy: manual
+```
+
+Workers may set `runtime_driver` and `depends_on`. The default `manual` driver
+does not start a process; use [Runtime driver and supervisor quickstart](runtime-driver-supervisor.md)
+for the bounded supervised smoke flow.
 
 To reuse the distribution example plan, run from the ProcessForge distribution
 root and point `--project-root` at an onboarded project:

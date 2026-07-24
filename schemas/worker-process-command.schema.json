@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/worker-process-command.schema.json",
+  "title": "Worker Process Command",
+  "type": "object",
+  "required": ["schema_version", "run_id", "task_id", "driver_id", "kind", "command", "paths"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "run_id": { "$ref": "#/$defs/id" },
+    "task_id": { "$ref": "#/$defs/id" },
+    "driver_id": { "$ref": "#/$defs/id" },
+    "kind": { "enum": ["manual", "shell"] },
+    "command": {
+      "type": "object",
+      "properties": {
+        "executable": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "argv": { "type": "array", "items": { "type": "string" } },
+        "working_directory": { "type": "string" },
+        "environment": { "type": "object", "additionalProperties": { "type": "string" } },
+        "shell": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "paths": { "type": "object", "additionalProperties": { "type": "string" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" }
+  },
+  "additionalProperties": true
+}

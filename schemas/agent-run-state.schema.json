@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/agent-run-state.schema.json",
+  "title": "Agent Run State",
+  "type": "object",
+  "required": ["schema_version", "run_id", "task_id", "driver_id", "status", "attempt", "max_retries", "capsule_path", "worker_prompt_path", "expected_report_path", "stdout_path", "stderr_path"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "run_id": { "$ref": "#/$defs/id" },
+    "task_id": { "$ref": "#/$defs/id" },
+    "driver_id": { "$ref": "#/$defs/id" },
+    "status": { "enum": ["planned", "ready", "starting", "running", "completed", "failed", "timed_out", "blocked", "cancelled", "manual_required"] },
+    "pid": { "type": ["integer", "null"] },
+    "started_at": { "type": ["string", "null"] },
+    "finished_at": { "type": ["string", "null"] },
+    "exit_code": { "type": ["integer", "null"] },
+    "timeout_seconds": { "type": "integer", "minimum": 1 },
+    "attempt": { "type": "integer", "minimum": 1 },
+    "max_retries": { "type": "integer", "minimum": 0 },
+    "capsule_path": { "type": "string" },
+    "worker_prompt_path": { "type": "string" },
+    "expected_report_path": { "type": "string" },
+    "stdout_path": { "type": "string" },
+    "stderr_path": { "type": "string" },
+    "heartbeat_path": { "type": "string" },
+    "last_heartbeat_at": { "type": ["string", "null"] },
+    "failure_reason": { "type": ["string", "null"] }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" }
+  },
+  "additionalProperties": true
+}

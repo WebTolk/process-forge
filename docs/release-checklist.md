@@ -11,6 +11,9 @@ python bin/pf.py release-check --root .
 python tools/smoke_first_run.py
 python tools/smoke_resource_management.py
 python tools/smoke_resource_authoring_processes.py
+python tools/smoke_runtime_driver_registry.py
+python tools/smoke_worker_run_lifecycle.py
+python tools/smoke_process_supervisor.py
 python bin/pf.py release-test --root .
 python bin/pf.py release-pack --root . --output dist/processforge-v1.0.0.zip
 python bin/pf.py release-archive-test --archive dist/processforge-v1.0.0.zip

@@ -37,6 +37,8 @@ REQUIRED_FILES = [
     "docs/concepts/linked-workplace-model.md",
     "docs/concepts/path-constants.md",
     "docs/concepts/runtime-model.md",
+    "docs/concepts/runtime-drivers.md",
+    "docs/concepts/process-supervisor.md",
     "docs/concepts/package-roots.md",
     "docs/concepts/project-snapshot.md",
     "docs/concepts/hooks-events.md",
@@ -98,6 +100,7 @@ REQUIRED_FILES = [
     "docs/ru/getting-started/task-batch-workflow.md",
     "docs/ru/getting-started/guided-workplace-setup.md",
     "docs/ru/getting-started/multi-agent-orchestration.md",
+    "docs/ru/getting-started/runtime-driver-supervisor.md",
     "docs/ru/authoring/reusable-template-authoring.md",
     "docs/ru/authoring/knowledge-package-authoring.md",
     "docs/ru/authoring/platform-contract-authoring.md",
@@ -106,6 +109,8 @@ REQUIRED_FILES = [
     "docs/ru/authoring/backfill-existing-processes.md",
     "docs/ru/concepts/workplace-vs-project.md",
     "docs/ru/concepts/runtime-model.md",
+    "docs/ru/concepts/runtime-drivers.md",
+    "docs/ru/concepts/process-supervisor.md",
     "docs/ru/concepts/path-constants.md",
     "docs/ru/concepts/package-roots.md",
     "docs/ru/concepts/project-snapshot.md",
@@ -129,6 +134,7 @@ REQUIRED_FILES = [
     "docs/getting-started/task-batch-workflow.md",
     "docs/getting-started/guided-workplace-setup.md",
     "docs/getting-started/multi-agent-orchestration.md",
+    "docs/getting-started/runtime-driver-supervisor.md",
     "docs/getting-started/create-your-first-process.md",
     "docs/validation/doctor-workplace.md",
     "docs/validation/doctor-project.md",
@@ -169,6 +175,12 @@ REQUIRED_FILES = [
     "schemas/guided-workplace-setup-proposal.schema.json",
     "schemas/orchestrator-task-plan.schema.json",
     "schemas/worker-launch-prompt.schema.json",
+    "schemas/runtime-driver.schema.json",
+    "schemas/runtime-driver-registry.schema.json",
+    "schemas/agent-run-state.schema.json",
+    "schemas/supervisor-profile.schema.json",
+    "schemas/supervisor-state.schema.json",
+    "schemas/worker-process-command.schema.json",
     "schemas/project-init-answers.schema.json",
     "schemas/session-start.schema.json",
     "schemas/project-context-snapshot.schema.json",
@@ -229,6 +241,8 @@ REQUIRED_FILES = [
     "processes/task-batch-execution.yaml",
     "processes/guided-workplace-setup.yaml",
     "processes/multi-agent-task-orchestration.yaml",
+    "processes/runtime-driver-registry.yaml",
+    "processes/process-supervisor.yaml",
     "templates/workplace.yaml",
     "templates/terms.yaml",
     "templates/registries/distributions.yaml",
@@ -238,6 +252,11 @@ REQUIRED_FILES = [
     "templates/registries/templates.yaml",
     "templates/registries/tools.yaml",
     "templates/registries/mcp.yaml",
+    "templates/registries/runtime-drivers.yaml",
+    "templates/runtime-drivers/manual.yaml",
+    "templates/runtime-drivers/generic-shell.yaml",
+    "templates/runtime-drivers/test-echo-worker.yaml",
+    "templates/supervisor-profile.yaml",
     "templates/registries/update-sources.yaml",
     "templates/registries/installed-subjects.yaml",
     "templates/registries/update-site-overrides.yaml",
@@ -305,6 +324,8 @@ REQUIRED_FILES = [
     "examples/multi-agent-orchestration/minimal/orchestrator-task-plan.yaml",
     "examples/multi-agent-orchestration/minimal/expected-worker-docs-prompt.md",
     "examples/multi-agent-orchestration/minimal/expected-worker-test-prompt.md",
+    "examples/runtime-supervisor/minimal/README.md",
+    "examples/runtime-supervisor/minimal/orchestrator-task-plan.yaml",
     "examples/process-authoring/quality-audit/README.md",
     "examples/process-authoring/process-authoring/README.md",
     "examples/process-authoring/quality-audit/answers.yaml",
@@ -322,6 +343,9 @@ REQUIRED_FILES = [
     "tools/smoke_multiagent_assignment_contract.py",
     "tools/smoke_guided_workplace_setup.py",
     "tools/smoke_multiagent_orchestration_process.py",
+    "tools/smoke_runtime_driver_registry.py",
+    "tools/smoke_worker_run_lifecycle.py",
+    "tools/smoke_process_supervisor.py",
     "tools/smoke_process_run_task_batch.py",
     "tools/smoke_process_authoring.py",
     "tools/smoke_authoring_parity.py",
@@ -361,6 +385,7 @@ REQUIRED_FILES = [
     "templates/context-conflict-report-template.md",
     "templates/context-capsule-template.yaml",
     "tools/processforge.py",
+    "tools/test_workers/echo_worker.py",
     "updates/processforge-update-index.yaml",
     "updates/migrations/0.1.0-linked-workplace.md",
     "updates/migrations/1.0.0-stable-release.md",
@@ -564,6 +589,12 @@ def validate_yaml_schema_files(root: Path) -> None:
         mappings.append((root / "templates" / "registries" / "installed-subjects.yaml", "installed-subjects.schema.json"))
     if (root / "templates" / "registries" / "update-site-overrides.yaml").is_file():
         mappings.append((root / "templates" / "registries" / "update-site-overrides.yaml", "update-site-overrides.schema.json"))
+    if (root / "templates" / "registries" / "runtime-drivers.yaml").is_file():
+        mappings.append((root / "templates" / "registries" / "runtime-drivers.yaml", "runtime-driver-registry.schema.json"))
+    for path in sorted((root / "templates" / "runtime-drivers").glob("*.yaml")):
+        mappings.append((path, "runtime-driver.schema.json"))
+    if (root / "templates" / "supervisor-profile.yaml").is_file():
+        mappings.append((root / "templates" / "supervisor-profile.yaml", "supervisor-profile.schema.json"))
     for path in [root / "templates" / "platform-contract.yaml", root / "templates" / "platform-contract-example-parent.yaml"]:
         if path.is_file():
             mappings.append((path, "platform-contract.schema.json"))

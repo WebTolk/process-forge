@@ -1,0 +1,8 @@
+schema_version: 1
+id: manual
+title: Manual Worker Execution
+kind: manual
+behavior:
+  create_worker_prompt: true
+  create_capsule: true
+  do_not_start_process: true

@@ -1,0 +1,98 @@
+schema_version: 1
+id: task-003-docs-examples-smokes
+title: Documentation examples smokes and release integration
+run_id: runtime-driver-supervisor-mvp
+process: testing
+status: done
+created_at: '2026-07-24T10:35:56Z'
+updated_at: '2026-07-24T10:58:55Z'
+objective: Update docs/examples, add runtime/supervisor smoke tests, release-test integration, dogfooding artifacts and package validation.
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Docs, examples, smokes, validators, and PF evidence updated.
+  artifacts:
+    - .pf/artifacts/runtime-driver-registry-process-supervisor-report.md
+allowed_files:
+  - README.md
+  - README.ru.md
+  - QUICKSTART.md
+  - QUICKSTART.ru.md
+  - docs/**
+  - examples/**
+  - tools/smoke_runtime_driver_registry.py
+  - tools/smoke_worker_run_manual.py
+  - tools/smoke_worker_run_shell.py
+  - tools/smoke_process_supervisor_tick.py
+  - tools/smoke_process_supervisor_lifecycle.py
+  - .pf/artifacts/**
+  - .pf/reviews/**
+  - .pf/handoffs/**
+  - .pf/logs/task-log.md
+  - .pf/process-forge.yaml
+  - dist/processforge-v1.0.0.zip
+  - dist/processforge-v1.0.0.manifest.json
+allowed_read_files:
+  - задания/processforge_runtime_driver_registry_process_supervisor_mvp_master_prompt.md
+ownership:
+  owner_id: task-003-docs-examples-smokes
+  owner_label: worker-task-003-docs-examples-smokes
+  role: ""
+  writer: true
+  owned_files:
+    - README.md
+    - README.ru.md
+    - QUICKSTART.md
+    - QUICKSTART.ru.md
+    - docs/**
+    - examples/**
+    - tools/smoke_runtime_driver_registry.py
+    - tools/smoke_worker_run_manual.py
+    - tools/smoke_worker_run_shell.py
+    - tools/smoke_process_supervisor_tick.py
+    - tools/smoke_process_supervisor_lifecycle.py
+    - .pf/artifacts/**
+    - .pf/reviews/**
+    - .pf/handoffs/**
+    - .pf/logs/task-log.md
+    - .pf/process-forge.yaml
+    - dist/processforge-v1.0.0.zip
+    - dist/processforge-v1.0.0.manifest.json
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - README.md
+    - README.ru.md
+    - QUICKSTART.md
+    - QUICKSTART.ru.md
+    - docs/**
+    - examples/**
+    - tools/smoke_runtime_driver_registry.py
+    - tools/smoke_worker_run_manual.py
+    - tools/smoke_worker_run_shell.py
+    - tools/smoke_process_supervisor_tick.py
+    - tools/smoke_process_supervisor_lifecycle.py
+    - .pf/artifacts/**
+    - .pf/reviews/**
+    - .pf/handoffs/**
+    - .pf/logs/task-log.md
+    - .pf/process-forge.yaml
+    - dist/processforge-v1.0.0.zip
+    - dist/processforge-v1.0.0.manifest.json
+  rule: Do not edit files owned by active parallel tasks.
+expected_report:
+  artifact: .pf/artifacts/runtime-driver-registry-process-supervisor-report.md
+  format: concise_markdown
+  include:
+    []

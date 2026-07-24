@@ -1,0 +1,74 @@
+schema_version: 1
+id: task-001-runtime-driver-registry
+title: Runtime driver schemas registry and CLI
+run_id: runtime-driver-supervisor-mvp
+process: software-feature-development
+status: done
+created_at: '2026-07-24T10:35:55Z'
+updated_at: '2026-07-24T10:58:55Z'
+objective: Add neutral runtime driver manifests, registry resolution, validation and CLI describe/list/validate commands.
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Runtime driver registry schemas, templates, CLI, and validation implemented.
+  artifacts:
+    - .pf/artifacts/runtime-driver-registry-process-supervisor-report.md
+allowed_files:
+  - tools/processforge.py
+  - schemas/runtime-driver.schema.json
+  - schemas/runtime-driver-registry.schema.json
+  - schemas/worker-process-command.schema.json
+  - templates/registries/runtime-drivers.yaml
+  - templates/runtime-drivers/manual.yaml
+  - templates/runtime-drivers/generic-shell.yaml
+  - templates/runtime-drivers/test-echo-worker.yaml
+  - tools/validate-process-forge-schemas.py
+  - tools/validate-public-cleanliness.py
+allowed_read_files:
+  - задания/processforge_runtime_driver_registry_process_supervisor_mvp_master_prompt.md
+ownership:
+  owner_id: task-001-runtime-driver-registry
+  owner_label: worker-task-001-runtime-driver-registry
+  role: ""
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - schemas/runtime-driver.schema.json
+    - schemas/runtime-driver-registry.schema.json
+    - schemas/worker-process-command.schema.json
+    - templates/registries/runtime-drivers.yaml
+    - templates/runtime-drivers/manual.yaml
+    - templates/runtime-drivers/generic-shell.yaml
+    - templates/runtime-drivers/test-echo-worker.yaml
+    - tools/validate-process-forge-schemas.py
+    - tools/validate-public-cleanliness.py
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - schemas/runtime-driver.schema.json
+    - schemas/runtime-driver-registry.schema.json
+    - schemas/worker-process-command.schema.json
+    - templates/registries/runtime-drivers.yaml
+    - templates/runtime-drivers/manual.yaml
+    - templates/runtime-drivers/generic-shell.yaml
+    - templates/runtime-drivers/test-echo-worker.yaml
+    - tools/validate-process-forge-schemas.py
+    - tools/validate-public-cleanliness.py
+  rule: Do not edit files owned by active parallel tasks.
+expected_report:
+  artifact: .pf/artifacts/runtime-driver-registry-process-supervisor-report.md
+  format: concise_markdown
+  include:
+    []

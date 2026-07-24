@@ -8,7 +8,9 @@ ProcessForge currently runs as a file-first, single-agent tool.
 - There is no daemon or watch-events service.
 - Command hook execution is not implemented.
 - Multi-agent claim and lease coordination is not implemented.
-- Runner and supervisor services are not implemented.
+- A bounded file-first supervisor MVP exists. A background daemon, network API,
+  web UI, database-backed scheduler, and built-in real ecosystem drivers are
+  not implemented.
 - WTAICC integration is not implemented.
 - `--interactive` is a first-run UX marker, not a terminal wizard.
 - External documentation mirroring is a plan or stub unless resources are explicitly imported.
@@ -22,6 +24,8 @@ ProcessForge currently runs as a file-first, single-agent tool.
 - It does not start background daemons by default.
 - `release-test` and smoke commands use per-command process-tree timeouts; a hung child process should fail with command, cwd, timeout, stdout tail, and stderr tail diagnostics instead of hanging silently.
 - A long-running watcher or runner is a future optional layer, not part of the core runtime.
+- Runtime driver execution is opt-in. Built-in drivers are limited to `manual`,
+  `generic-shell`, and `test-echo-worker`.
 - Future watcher/runner work must stay bounded: streaming reads, offsets or checkpoints, bounded queues, subprocess timeouts, and no full-project in-memory cache by default.
 - Platform-specific shell scripts are not required for release validation and are not part of the release surface.
 

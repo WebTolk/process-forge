@@ -1,0 +1,10 @@
+schema_version: 1
+process_id: process-supervisor
+result: WARN
+diffs:
+  -
+    level: WARN
+    area: logic_review
+    message: 'source definition already has logic review findings: stage start produces known artifact exit-record; stage start produces known artifact process-record; stage start produces known artifact worker-logs'
+unsupported:
+  []

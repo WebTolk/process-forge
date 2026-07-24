@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-20T06:57:07Z
-- valid_until: 2026-07-27T06:57:07Z
+- generated_at: 2026-07-24T10:35:37Z
+- valid_until: 2026-07-31T10:35:37Z
 
 ## Freshness
 
@@ -74,6 +74,8 @@ fresh
 - process-authoring
 - authoring-parity-audit
 - task-batch-execution
+- guided-workplace-setup
+- multi-agent-task-orchestration
 
 ## Required Capabilities
 

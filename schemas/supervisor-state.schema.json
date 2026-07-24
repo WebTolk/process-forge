@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/supervisor-state.schema.json",
+  "title": "Supervisor State",
+  "type": "object",
+  "required": ["schema_version", "id", "status", "project_root", "started_at", "updated_at", "tick_count"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "status": { "enum": ["starting", "running", "stopping", "stopped", "failed"] },
+    "project_root": { "type": "string" },
+    "pid": { "type": ["integer", "null"] },
+    "started_at": { "type": "string" },
+    "updated_at": { "type": "string" },
+    "stopped_at": { "type": ["string", "null"] },
+    "tick_count": { "type": "integer", "minimum": 0 },
+    "last_tick_report": { "type": ["string", "null"] },
+    "stop_requested": { "type": "boolean" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" }
+  },
+  "additionalProperties": true
+}

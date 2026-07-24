@@ -1,0 +1,62 @@
+schema_version: 1
+id: task-002-worker-run-supervisor
+title: Worker-run lifecycle and supervisor MVP
+run_id: runtime-driver-supervisor-mvp
+process: software-feature-development
+status: done
+created_at: '2026-07-24T10:35:55Z'
+updated_at: '2026-07-24T10:58:55Z'
+objective: Implement worker-run prepare/start/status/stop/collect, agent-run state, supervisor tick/run/status/stop and orchestration integration.
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Worker-run lifecycle and bounded supervisor MVP implemented and smoke-tested.
+  artifacts:
+    - .pf/artifacts/runtime-driver-registry-process-supervisor-report.md
+allowed_files:
+  - tools/processforge.py
+  - schemas/agent-run-state.schema.json
+  - schemas/supervisor-profile.schema.json
+  - schemas/supervisor-state.schema.json
+  - templates/supervisor-profile.yaml
+  - tools/test_workers/echo_worker.py
+allowed_read_files:
+  - задания/processforge_runtime_driver_registry_process_supervisor_mvp_master_prompt.md
+ownership:
+  owner_id: task-002-worker-run-supervisor
+  owner_label: worker-task-002-worker-run-supervisor
+  role: ""
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - schemas/agent-run-state.schema.json
+    - schemas/supervisor-profile.schema.json
+    - schemas/supervisor-state.schema.json
+    - templates/supervisor-profile.yaml
+    - tools/test_workers/echo_worker.py
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - schemas/agent-run-state.schema.json
+    - schemas/supervisor-profile.schema.json
+    - schemas/supervisor-state.schema.json
+    - templates/supervisor-profile.yaml
+    - tools/test_workers/echo_worker.py
+  rule: Do not edit files owned by active parallel tasks.
+expected_report:
+  artifact: .pf/artifacts/runtime-driver-registry-process-supervisor-report.md
+  format: concise_markdown
+  include:
+    []

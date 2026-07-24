@@ -15,9 +15,15 @@ The file layout is the runtime contract:
 - `.pf/artifacts/`, `.pf/reviews/`, and `.pf/handoffs/` store evidence and
   delivery material.
 - `.pf/runtime/events/events.ndjson` stores event envelopes.
+- `.pf/runtime/agent-runs/` stores optional worker process state.
+- `.pf/runtime/supervisor/` stores optional supervisor loop state.
 
 The optional future watcher or runner can observe these files, but the core
 runtime does not require a daemon.
+
+Runtime drivers and the process supervisor are optional runtime helpers. See
+[Runtime drivers](runtime-drivers.md) and
+[Process supervisor](process-supervisor.md).
 
 ## Distribution Root Versus Linked Project
 

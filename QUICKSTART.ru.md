@@ -113,6 +113,16 @@ integration report перед delivery.
 
 ## Обязательный Порядок
 
+## 10. Runtime Driver And Supervisor Smoke
+
+```text
+Используй ProcessForge runtime drivers для ограниченного supervised test run.
+
+Проверь built-in neutral runtime drivers, создай или используй orchestrator
+plan с runtime.default_driver = test-echo-worker, запусти supervisor на малое
+число ticks и сообщи worker-run status files и produced reports.
+```
+
 1. Install ProcessForge distribution.
 2. Verify ProcessForge itself.
 3. Initialize workplace.

@@ -13,8 +13,11 @@ import os
 import platform
 import re
 import shutil
+import signal
+import subprocess
 import sys
 import tempfile
+import time
 import uuid
 import zipfile
 from dataclasses import dataclass
@@ -71,6 +74,9 @@ PROJECT_FLOW_DIRS = [
     "runtime/hooks/results",
     "runtime/queue",
     "runtime/sessions",
+    "runtime/agent-runs",
+    "runtime/supervisor",
+    "runtime/registries",
 ]
 
 GLOBAL_AGENT_SECTION_START = "<!-- PROCESSFORGE:START -->"
@@ -805,6 +811,101 @@ def dict_entries_from_answers(container: Any, item_label: str, scope: str) -> li
     return entries
 
 
+def default_runtime_driver_documents() -> dict[str, dict[str, Any]]:
+    return {
+        "manual": {
+            "schema_version": 1,
+            "id": "manual",
+            "title": "Manual Worker Execution",
+            "kind": "manual",
+            "behavior": {
+                "create_worker_prompt": True,
+                "create_capsule": True,
+                "do_not_start_process": True,
+            },
+        },
+        "generic-shell": {
+            "schema_version": 1,
+            "id": "generic-shell",
+            "title": "Generic Shell Runtime",
+            "kind": "shell",
+            "command": {
+                "executable": "{executable}",
+                "args": ["{worker_prompt_path}", "{capsule_path}"],
+            },
+            "working_directory": "{project_root}",
+            "environment": {"inherit": True, "variables": {}},
+            "io": {
+                "stdin": "none",
+                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
+                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
+            },
+            "heartbeat": {
+                "mode": "file",
+                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
+                "optional": True,
+            },
+            "limits": {"timeout_seconds": 3600, "max_retries": 0},
+            "security": {
+                "allow_shell": False,
+                "require_explicit_executable": True,
+                "allow_network": False,
+            },
+        },
+        "test-echo-worker": {
+            "schema_version": 1,
+            "id": "test-echo-worker",
+            "title": "Test Echo Worker",
+            "kind": "shell",
+            "command": {
+                "executable": "{python_executable}",
+                "args": [
+                    "{processforge_root}/tools/test_workers/echo_worker.py",
+                    "--capsule",
+                    "{capsule_path}",
+                    "--output",
+                    "{expected_report_path}",
+                    "--heartbeat",
+                    "{heartbeat_path}",
+                ],
+            },
+            "working_directory": "{project_root}",
+            "environment": {"inherit": True, "variables": {}},
+            "io": {
+                "stdin": "none",
+                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
+                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
+            },
+            "heartbeat": {
+                "mode": "file",
+                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
+                "optional": True,
+            },
+            "limits": {"timeout_seconds": 30, "max_retries": 0},
+            "security": {
+                "allow_shell": False,
+                "require_explicit_executable": False,
+                "allow_network": False,
+            },
+        },
+    }
+
+
+def default_runtime_driver_registry() -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "runtime_drivers": [
+            {
+                "id": driver_id,
+                "path": f"../runtime-drivers/{driver_id}.yaml",
+                "status": "available",
+                "builtin": True,
+            }
+            for driver_id in ["manual", "generic-shell", "test-echo-worker"]
+        ],
+    }
+
+
 def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str]:
     defaults = workplace_defaults(root, answers)
     paths_answers = answers.get("paths", {}) if isinstance(answers.get("paths"), dict) else {}
@@ -847,6 +948,7 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
             "templates": "registries/templates.yaml",
             "tools": "registries/tools.yaml",
             "mcp": "registries/mcp.yaml",
+            "runtime_drivers": "registries/runtime-drivers.yaml",
             "update_sources": "registries/update-sources.yaml",
             "installed_subjects": "registries/installed-subjects.yaml",
             "update_site_overrides": "registries/update-site-overrides.yaml",
@@ -950,6 +1052,7 @@ applied
 - registries/templates.yaml
 - registries/tools.yaml
 - registries/mcp.yaml
+- registries/runtime-drivers.yaml
 - registries/update-sources.yaml
 - registries/installed-subjects.yaml
 - registries/update-site-overrides.yaml
@@ -1057,6 +1160,7 @@ Run `project-onboard` for a concrete project.
         ),
         root / "registries" / "tools.yaml": dump_yaml({"schema_version": 1, "tools": []}),
         root / "registries" / "mcp.yaml": dump_yaml({"schema_version": 1, "mcp_servers": []}),
+        root / "registries" / "runtime-drivers.yaml": dump_yaml(default_runtime_driver_registry()),
         root / "registries" / "update-sources.yaml": dump_yaml(
             {
                 "schema_version": 1,
@@ -1084,6 +1188,8 @@ Run `project-onboard` for a concrete project.
         root / "reviews" / "workplace-bootstrap-review.md": bootstrap_review,
         root / "handoffs" / "workplace-ready-handoff.md": workplace_handoff,
     }
+    for driver_id, driver in default_runtime_driver_documents().items():
+        files[root / "runtime-drivers" / f"{driver_id}.yaml"] = dump_yaml(driver)
     return files
 
 
@@ -1195,7 +1301,7 @@ def command_init_workplace(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
     answers = load_answers(Path(args.answers).expanduser().resolve() if args.answers else None)
     files = build_workplace_files(root, answers)
-    planned_dirs = [root / "cache", root / "runtime", root / "runtime" / "events", root / "logs", root / "artifacts", root / "reviews", root / "handoffs", root / "packages", root / "knowledge", root / "reusable-templates", root / "platform-contracts", root / "tools", root / "mcp"]
+    planned_dirs = [root / "cache", root / "runtime", root / "runtime" / "events", root / "logs", root / "artifacts", root / "reviews", root / "handoffs", root / "packages", root / "knowledge", root / "reusable-templates", root / "platform-contracts", root / "runtime-drivers", root / "tools", root / "mcp"]
     if not args.apply:
         print_plan("workplace init dry run", list(files) + planned_dirs, root)
         return 0
@@ -4115,6 +4221,9 @@ def command_release_test(args: argparse.Namespace) -> int:
         ReleaseCommand("smoke_guided_workplace_setup", [sys.executable, str(root / "tools" / "smoke_guided_workplace_setup.py")], 180),
         ReleaseCommand("smoke_multiagent_orchestration_process", [sys.executable, str(root / "tools" / "smoke_multiagent_orchestration_process.py")], 180),
         ReleaseCommand("smoke_multiagent_assignment_contract", [sys.executable, str(root / "tools" / "smoke_multiagent_assignment_contract.py")], 120),
+        ReleaseCommand("smoke_runtime_driver_registry", [sys.executable, str(root / "tools" / "smoke_runtime_driver_registry.py")], 120),
+        ReleaseCommand("smoke_worker_run_lifecycle", [sys.executable, str(root / "tools" / "smoke_worker_run_lifecycle.py")], 180),
+        ReleaseCommand("smoke_process_supervisor", [sys.executable, str(root / "tools" / "smoke_process_supervisor.py")], 180),
         ReleaseCommand("smoke_manifest_driven_platforms", [sys.executable, str(root / "tools" / "smoke_manifest_driven_platforms.py")], 180),
         ReleaseCommand("smoke_platform_inheritance", [sys.executable, str(root / "tools" / "smoke_platform_inheritance.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
@@ -6974,9 +7083,29 @@ def normalize_required_outputs(value: Any) -> list[dict[str, Any]]:
             record.setdefault("required", True)
             outputs.append(record)
         else:
-            output_id = str(item or "").strip()
-            if output_id:
-                outputs.append({"id": output_id, "type": "unspecified", "required": True})
+            text = str(item or "").strip()
+            if not text:
+                continue
+            if "=" in text:
+                record: dict[str, Any] = {}
+                for part in text.split(","):
+                    if "=" not in part:
+                        continue
+                    key, raw_value = part.split("=", 1)
+                    key = key.strip()
+                    raw_value = raw_value.strip()
+                    if key == "required":
+                        record[key] = raw_value.lower() not in {"0", "false", "no"}
+                    else:
+                        record[key] = raw_value
+                output_id = str(record.get("id") or record.get("name") or "").strip()
+                if output_id:
+                    record["id"] = output_id
+                    record.setdefault("type", "unspecified")
+                    record.setdefault("required", True)
+                    outputs.append(record)
+                continue
+            outputs.append({"id": text, "type": "unspecified", "required": True})
     return outputs
 
 
@@ -7159,8 +7288,22 @@ def validate_assignment_scope_overlaps(
         if not other_scope:
             continue
         other_id = safe_id(str(other.get("id") or candidate.stem), "assignment")
+        current_deps = assignment_dependency_set(metadata)
+        other_deps = assignment_dependency_set(other)
+        if other_id in current_deps or current_id in other_deps:
+            continue
         conflicts.extend(assignment_scope_conflicts(current_id, current_scope, other_id, other_scope, repo_files))
     return {"status": "fail" if conflicts else "pass", "conflicts": conflicts}
+
+
+def assignment_dependency_set(metadata: dict[str, Any]) -> set[str]:
+    dependencies = metadata.get("dependencies") if isinstance(metadata.get("dependencies"), dict) else {}
+    values = [
+        *as_list(dependencies.get("blocked_by")),
+        *as_list(metadata.get("dependencies") if not isinstance(metadata.get("dependencies"), dict) else []),
+        *as_list(metadata.get("depends_on")),
+    ]
+    return {safe_id(str(item), "assignment") for item in values if item}
 
 
 def normalized_assignment_contract(project_root: Path, assignment: Path, metadata: dict[str, Any]) -> dict[str, Any]:
@@ -8822,6 +8965,11 @@ def default_orchestrator_task_plan(run_id: str, title: str) -> dict[str, Any]:
             "role": "orchestrator",
             "responsibilities": ["decompose work", "assign workers", "review outputs", "integrate final result"],
         },
+        "runtime": {
+            "default_driver": "manual",
+            "supervisor_profile": "default",
+            "start_policy": "manual",
+        },
         "workers": [
             {
                 "id": "docs-worker",
@@ -8836,6 +8984,7 @@ def default_orchestrator_task_plan(run_id: str, title: str) -> dict[str, Any]:
                 "required_sources": [".pf/contexts/project-context.snapshot.yaml"],
                 "required_outputs": [{"id": "docs-report", "path": ".pf/artifacts/docs-worker-report.md", "type": "markdown", "required": True}],
                 "expected_report_artifact": ".pf/artifacts/docs-worker-report.md",
+                "runtime_driver": "manual",
                 "worker_may_rebuild_context": False,
             },
             {
@@ -8851,6 +9000,8 @@ def default_orchestrator_task_plan(run_id: str, title: str) -> dict[str, Any]:
                 "required_sources": [".pf/contexts/project-context.snapshot.yaml"],
                 "required_outputs": [{"id": "test-report", "path": ".pf/artifacts/test-worker-report.md", "type": "markdown", "required": True}],
                 "expected_report_artifact": ".pf/artifacts/test-worker-report.md",
+                "runtime_driver": "manual",
+                "depends_on": ["docs-worker"],
                 "worker_may_rebuild_context": False,
             },
         ],
@@ -8864,6 +9015,715 @@ def orchestrator_plan_path(project_root: Path, run_id: str) -> Path:
 
 def worker_prompt_path(project_root: Path, run_id: str, task_id: str) -> Path:
     return run_root(project_root, run_id) / "worker-prompts" / f"{safe_id(task_id, 'task')}.md"
+
+
+RUNTIME_DRIVER_PLACEHOLDERS = {
+    "project_root",
+    "processforge_root",
+    "run_id",
+    "task_id",
+    "capsule_path",
+    "worker_prompt_path",
+    "expected_report_path",
+    "python_executable",
+    "executable",
+    "stdout_path",
+    "stderr_path",
+    "heartbeat_path",
+}
+
+AGENT_RUN_STATUSES = {
+    "planned",
+    "ready",
+    "starting",
+    "running",
+    "completed",
+    "failed",
+    "timed_out",
+    "blocked",
+    "cancelled",
+    "manual_required",
+}
+
+
+def project_workplace_manifest(project_root: Path) -> Path | None:
+    local_config = locate_flow_root(project_root) / "process-forge.local.yaml"
+    if not local_config.is_file():
+        return None
+    data = load_yaml_document(local_config)
+    workplace = data.get("workplace") if isinstance(data, dict) else {}
+    manifest = workplace.get("manifest") if isinstance(workplace, dict) else None
+    if not manifest:
+        return None
+    path = Path(str(manifest)).expanduser()
+    if not path.is_absolute():
+        path = (project_root / path).resolve()
+    return path
+
+
+def normalize_workplace_manifest(path: Path | None) -> Path | None:
+    if path is None:
+        return None
+    candidate = path.expanduser().resolve()
+    if candidate.is_dir():
+        candidate = candidate / "workplace.yaml"
+    return candidate
+
+
+def runtime_driver_registry_paths(workplace_manifest: Path | None = None, project_root: Path | None = None) -> list[Path]:
+    paths = [ROOT / "templates" / "registries" / "runtime-drivers.yaml"]
+    if workplace_manifest and workplace_manifest.is_file():
+        paths.append(workplace_manifest.parent / "registries" / "runtime-drivers.yaml")
+    if project_root:
+        paths.append(locate_flow_root(project_root) / "runtime" / "registries" / "runtime-drivers.local.yaml")
+    return paths
+
+
+def runtime_driver_entries(registry_path: Path) -> list[dict[str, Any]]:
+    if not registry_path.is_file():
+        return []
+    data = load_yaml_document(registry_path)
+    entries = data.get("runtime_drivers") if isinstance(data, dict) else []
+    return [item for item in entries if isinstance(item, dict)]
+
+
+def runtime_driver_entry_path(registry_path: Path, entry: dict[str, Any]) -> Path | None:
+    raw = entry.get("path")
+    if not raw:
+        return None
+    text = str(raw).replace("{processforge_root}", str(ROOT)).replace("${PF_DISTRIBUTION}", str(ROOT))
+    path = Path(text).expanduser()
+    if not path.is_absolute():
+        path = (registry_path.parent / path).resolve()
+    return path
+
+
+def load_runtime_driver_by_path(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        raise SystemExit(f"FAIL: runtime driver not found: {path}")
+    data = read_yaml_file(path)
+    data.setdefault("_source_path", str(path))
+    return data
+
+
+def resolve_runtime_driver(driver_ref: str, *, workplace_manifest: Path | None = None, project_root: Path | None = None) -> dict[str, Any]:
+    direct = Path(driver_ref).expanduser()
+    if direct.suffix in {".yaml", ".yml", ".json"} or direct.is_file():
+        if not direct.is_absolute():
+            base = project_root or ROOT
+            direct = (base / direct).resolve()
+        return load_runtime_driver_by_path(direct)
+    driver_id = safe_id(driver_ref, "manual")
+    for registry_path in runtime_driver_registry_paths(workplace_manifest, project_root):
+        for entry in runtime_driver_entries(registry_path):
+            if str(entry.get("id")) != driver_id:
+                continue
+            path = runtime_driver_entry_path(registry_path, entry)
+            if path and path.is_file():
+                return load_runtime_driver_by_path(path)
+    builtin = default_runtime_driver_documents().get(driver_id)
+    if builtin:
+        result = json.loads(json.dumps(builtin))
+        result["_source_path"] = "builtin"
+        return result
+    raise SystemExit(f"FAIL: runtime driver not found: {driver_ref}")
+
+
+def runtime_driver_id_list(*, workplace_manifest: Path | None = None, project_root: Path | None = None) -> list[tuple[str, str, str]]:
+    found: dict[str, tuple[str, str, str]] = {}
+    for registry_path in runtime_driver_registry_paths(workplace_manifest, project_root):
+        source = rel(registry_path, ROOT) if registry_path.is_relative_to(ROOT) else str(registry_path)
+        for entry in runtime_driver_entries(registry_path):
+            driver_id = str(entry.get("id") or "")
+            if not driver_id:
+                continue
+            path = runtime_driver_entry_path(registry_path, entry)
+            status = str(entry.get("status") or ("available" if path and path.is_file() else "missing"))
+            found[driver_id] = (driver_id, status, source)
+    for driver_id in default_runtime_driver_documents():
+        found.setdefault(driver_id, (driver_id, "available", "builtin"))
+    return sorted(found.values())
+
+
+def driver_placeholder_errors(value: Any, label: str) -> list[str]:
+    errors: list[str] = []
+    if isinstance(value, str):
+        for match in re.findall(r"\{([a-zA-Z0-9_]+)\}", value):
+            if match not in RUNTIME_DRIVER_PLACEHOLDERS:
+                errors.append(f"{label}: unsupported placeholder {{{match}}}")
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            errors.extend(driver_placeholder_errors(item, f"{label}[{index}]"))
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            errors.extend(driver_placeholder_errors(item, f"{label}.{key}"))
+    return errors
+
+
+def validate_runtime_driver_document(driver: dict[str, Any]) -> list[Check]:
+    checks: list[Check] = []
+    driver_id = str(driver.get("id") or "")
+    kind = str(driver.get("kind") or "")
+    checks.append(check("PASS" if driver.get("schema_version") else "FAIL", "schema_version present"))
+    checks.append(check("PASS" if driver_id else "FAIL", "id present"))
+    checks.append(check("PASS" if kind in {"manual", "shell"} else "FAIL", f"kind valid: {kind or 'missing'}"))
+    security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
+    if kind == "shell":
+        command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
+        executable = str(command.get("executable") or "")
+        args = command.get("args") if isinstance(command.get("args"), list) else []
+        checks.append(check("PASS" if executable else "FAIL", "shell command executable present"))
+        checks.append(check("PASS" if isinstance(args, list) else "FAIL", "shell command args list present"))
+        checks.append(check("WARN" if security.get("allow_shell") is True else "PASS", "allow_shell false by default"))
+        checks.append(check("FAIL" if security.get("allow_network") is True else "PASS", "allow_network false by default"))
+    if kind == "manual":
+        behavior = driver.get("behavior") if isinstance(driver.get("behavior"), dict) else {}
+        checks.append(check("PASS" if behavior.get("do_not_start_process") is True else "FAIL", "manual driver does not start process"))
+    for error in driver_placeholder_errors(driver, "driver"):
+        checks.append(check("FAIL", error))
+    return checks
+
+
+def command_runtime_driver_list(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+    if project_root:
+        require_flow_root(project_root)
+    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
+    for driver_id, status, source in runtime_driver_id_list(workplace_manifest=workplace_manifest, project_root=project_root):
+        print(f"{driver_id}\t{status}\t{source}")
+    return 0
+
+
+def command_runtime_driver_validate(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+    if project_root:
+        require_flow_root(project_root)
+    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
+    driver = resolve_runtime_driver(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
+    return print_checks(validate_runtime_driver_document(driver))
+
+
+def command_runtime_driver_describe(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+    if project_root:
+        require_flow_root(project_root)
+    workplace_manifest = normalize_workplace_manifest(Path(args.workplace)) if getattr(args, "workplace", None) else (project_workplace_manifest(project_root) if project_root else None)
+    driver = resolve_runtime_driver(args.driver, workplace_manifest=workplace_manifest, project_root=project_root)
+    driver.pop("_source_path", None)
+    print(dump_yaml(driver))
+    return 0
+
+
+def agent_run_root(project_root: Path, run_id: str, task_id: str) -> Path:
+    return locate_flow_root(project_root) / "runtime" / "agent-runs" / safe_id(run_id, "run") / safe_id(task_id, "task")
+
+
+def supervisor_root(project_root: Path) -> Path:
+    return locate_flow_root(project_root) / "runtime" / "supervisor"
+
+
+def json_write(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def json_read(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def expected_report_artifact(task: dict[str, Any]) -> str:
+    expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+    value = str(expected.get("artifact") or "")
+    if value:
+        return normalize_assignment_path(value)
+    task_id = safe_id(str(task.get("id") or "task"), "task")
+    return f".pf/artifacts/{task_id}-report.md"
+
+
+def worker_run_paths(project_root: Path, run_id: str, task_id: str) -> dict[str, Path]:
+    root = agent_run_root(project_root, run_id, task_id)
+    return {
+        "root": root,
+        "status": root / "status.json",
+        "command": root / "command.json",
+        "process": root / "process.json",
+        "exit": root / "exit.json",
+        "stdout": root / "stdout.log",
+        "stderr": root / "stderr.log",
+        "heartbeat": root / "heartbeat.json",
+        "collection": root / "collection-report.md",
+    }
+
+
+def expand_runtime_value(value: Any, variables: dict[str, str]) -> Any:
+    if isinstance(value, str):
+        def replace(match: re.Match[str]) -> str:
+            key = match.group(1)
+            if key not in variables:
+                raise SystemExit(f"FAIL: unsupported runtime placeholder: {{{key}}}")
+            return variables[key]
+
+        return re.sub(r"\{([a-zA-Z0-9_]+)\}", replace, value)
+    if isinstance(value, list):
+        return [str(expand_runtime_value(item, variables)) for item in value]
+    if isinstance(value, dict):
+        return {str(key): expand_runtime_value(item, variables) for key, item in value.items()}
+    return value
+
+
+def runtime_driver_for_task(project_root: Path, task: dict[str, Any], driver_arg: str | None = None) -> dict[str, Any]:
+    driver_id = driver_arg or str(task.get("runtime_driver") or "manual")
+    workplace_manifest = project_workplace_manifest(project_root)
+    driver = resolve_runtime_driver(driver_id, workplace_manifest=workplace_manifest, project_root=project_root)
+    failures = [item.message for item in validate_runtime_driver_document(driver) if item.level == "FAIL"]
+    if failures:
+        raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(failures))
+    return driver
+
+
+def build_worker_process_command(project_root: Path, task: dict[str, Any], driver: dict[str, Any], executable_override: str | None = None) -> tuple[dict[str, Any], dict[str, Path]]:
+    task_id = safe_id(str(task.get("id") or "task"), "task")
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    paths = worker_run_paths(project_root, run_id, task_id)
+    capsule_path = locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml"
+    prompt_path = worker_prompt_path(project_root, run_id, task_id)
+    report_path = project_root / expected_report_artifact(task)
+    variables = {
+        "project_root": str(project_root),
+        "processforge_root": str(ROOT),
+        "run_id": run_id,
+        "task_id": task_id,
+        "capsule_path": str(capsule_path),
+        "worker_prompt_path": str(prompt_path),
+        "expected_report_path": str(report_path),
+        "python_executable": sys.executable,
+        "executable": executable_override or "",
+        "stdout_path": str(paths["stdout"]),
+        "stderr_path": str(paths["stderr"]),
+        "heartbeat_path": str(paths["heartbeat"]),
+    }
+    command_spec = driver.get("command") if isinstance(driver.get("command"), dict) else {}
+    executable = executable_override or str(expand_runtime_value(command_spec.get("executable") or "", variables))
+    args = expand_runtime_value(command_spec.get("args") if isinstance(command_spec.get("args"), list) else [], variables)
+    io = driver.get("io") if isinstance(driver.get("io"), dict) else {}
+    stdout_path = Path(str(expand_runtime_value(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
+    stderr_path = Path(str(expand_runtime_value(io.get("stderr") or rel(paths["stderr"], project_root), variables)))
+    if not stdout_path.is_absolute():
+        stdout_path = (project_root / stdout_path).resolve()
+    if not stderr_path.is_absolute():
+        stderr_path = (project_root / stderr_path).resolve()
+    paths["stdout"] = stdout_path
+    paths["stderr"] = stderr_path
+    env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
+    env = expand_runtime_value(env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}, variables)
+    working_directory = str(expand_runtime_value(driver.get("working_directory") or "{project_root}", variables))
+    command = {
+        "schema_version": 1,
+        "run_id": run_id,
+        "task_id": task_id,
+        "driver_id": str(driver.get("id") or "manual"),
+        "kind": str(driver.get("kind") or "manual"),
+        "command": {
+            "executable": executable,
+            "args": args,
+            "argv": [executable, *args] if executable else [],
+            "working_directory": working_directory,
+            "environment": {str(key): str(value) for key, value in env.items()},
+            "shell": False,
+        },
+        "paths": {key: rel(path, project_root) for key, path in paths.items() if key != "root"},
+        "limits": driver.get("limits") if isinstance(driver.get("limits"), dict) else {},
+    }
+    return command, paths
+
+
+def write_agent_run_state(project_root: Path, task: dict[str, Any], driver: dict[str, Any], status: str, *, pid: int | None = None, started_at: str | None = None, finished_at: str | None = None, exit_code: int | None = None, failure_reason: str | None = None, command: dict[str, Any] | None = None, paths: dict[str, Path] | None = None) -> dict[str, Any]:
+    task_id = safe_id(str(task.get("id") or "task"), "task")
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    paths = paths or worker_run_paths(project_root, run_id, task_id)
+    driver_limits = driver.get("limits") if isinstance(driver.get("limits"), dict) else {}
+    state = {
+        "schema_version": 1,
+        "run_id": run_id,
+        "task_id": task_id,
+        "driver_id": str(driver.get("id") or "manual"),
+        "status": status,
+        "pid": pid,
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "exit_code": exit_code,
+        "timeout_seconds": int(driver_limits.get("timeout_seconds") or 30),
+        "attempt": 1,
+        "max_retries": int(driver_limits.get("max_retries") or 0),
+        "capsule_path": rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
+        "worker_prompt_path": rel(worker_prompt_path(project_root, run_id, task_id), project_root),
+        "expected_report_path": expected_report_artifact(task),
+        "stdout_path": rel(paths["stdout"], project_root),
+        "stderr_path": rel(paths["stderr"], project_root),
+        "heartbeat_path": rel(paths["heartbeat"], project_root),
+        "last_heartbeat_at": None,
+        "failure_reason": failure_reason,
+    }
+    if paths["heartbeat"].is_file():
+        state["last_heartbeat_at"] = now_utc()
+    json_write(paths["status"], state)
+    if command:
+        json_write(paths["command"], command)
+    return state
+
+
+def load_agent_run_state(project_root: Path, run_id: str, task_id: str) -> dict[str, Any]:
+    return json_read(worker_run_paths(project_root, run_id, task_id)["status"])
+
+
+def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None = None, executable_override: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
+    task = load_task(project_root, task_id)
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=True))
+    print(output, end="")
+    if status:
+        raise SystemExit(status)
+    status, output = run_command_capture(command_worker_launch_prompt_create, argparse.Namespace(project_root=str(project_root), task=task_id, output=None, apply=True, dry_run=False))
+    print(output, end="")
+    if status:
+        raise SystemExit(status)
+    driver = runtime_driver_for_task(project_root, task, driver_arg)
+    command, paths = build_worker_process_command(project_root, task, driver, executable_override)
+    state_status = "manual_required" if str(driver.get("kind")) == "manual" else "ready"
+    paths["root"].mkdir(parents=True, exist_ok=True)
+    write_agent_run_state(project_root, task, driver, state_status, command=command, paths=paths)
+    emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status}, correlation_id=f"run-{run_id}")
+    return task, driver, paths
+
+
+def command_worker_run_prepare(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    task_id = safe_id(args.task, "task")
+    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None))
+    print(f"PREPARED: {task_id} driver={driver.get('id')} status={json_read(paths['status']).get('status')}")
+    return 0
+
+
+def command_worker_run_start(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    task_id = safe_id(args.task, "task")
+    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None))
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    if str(driver.get("kind")) == "manual":
+        print(f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}")
+        return 0
+    command = json_read(paths["command"])
+    argv = command.get("command", {}).get("argv") if isinstance(command.get("command"), dict) else []
+    if not argv:
+        write_agent_run_state(project_root, task, driver, "failed", failure_reason="empty argv", command=command, paths=paths)
+        print(f"FAIL: empty command argv for {task_id}")
+        return 1
+    timeout_seconds = int((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30)
+    env = os.environ.copy()
+    env.update(command.get("command", {}).get("environment") or {})
+    cwd = command.get("command", {}).get("working_directory") or str(project_root)
+    paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
+    paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
+    started_at = now_utc()
+    with paths["stdout"].open("wb") as stdout, paths["stderr"].open("wb") as stderr:
+        try:
+            proc = subprocess.Popen([str(item) for item in argv], cwd=str(cwd), env=env, stdout=stdout, stderr=stderr, shell=False)
+            write_agent_run_state(project_root, task, driver, "running", pid=proc.pid, started_at=started_at, command=command, paths=paths)
+            json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
+            try:
+                exit_code = proc.wait(timeout=timeout_seconds)
+                finished_at = now_utc()
+                final_status = "completed" if exit_code == 0 else "failed"
+                write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
+                json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                exit_code = -1
+                final_status = "timed_out"
+                finished_at = now_utc()
+                write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason="timeout", command=command, paths=paths)
+                json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
+        except OSError as exc:
+            finished_at = now_utc()
+            write_agent_run_state(project_root, task, driver, "failed", started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=str(exc), command=command, paths=paths)
+            print(f"FAIL: start failed for {task_id}: {exc}")
+            return 1
+    emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+    print(f"{final_status.upper()}: {task_id} exit_code={exit_code}")
+    return 0 if final_status == "completed" else 1
+
+
+def command_worker_run_status(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    state = load_agent_run_state(project_root, run_id, task_id)
+    if not state:
+        print(f"STATUS: not-prepared {task_id}")
+        return 1
+    print(dump_yaml(state))
+    return 0
+
+
+def command_worker_run_stop(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    state = load_agent_run_state(project_root, run_id, task_id)
+    if not state:
+        print(f"STATUS: not-prepared {task_id}")
+        return 1
+    pid = state.get("pid")
+    if pid and state.get("status") == "running":
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            os.kill(int(pid), signal.SIGTERM)
+    driver = runtime_driver_for_task(project_root, task, str(state.get("driver_id") or task.get("runtime_driver") or "manual"))
+    paths = worker_run_paths(project_root, run_id, task_id)
+    write_agent_run_state(project_root, task, driver, "cancelled", pid=pid if isinstance(pid, int) else None, finished_at=now_utc(), failure_reason="stop requested", paths=paths)
+    print(f"STOPPED: {task_id}")
+    return 0
+
+
+def command_worker_run_collect(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    state = load_agent_run_state(project_root, run_id, task_id)
+    if not state:
+        print(f"FAIL: worker run is not prepared: {task_id}")
+        return 1
+    missing: list[str] = []
+    for output in normalize_required_outputs(task.get("required_outputs")):
+        if not bool(output.get("required", True)):
+            continue
+        raw_path = output.get("path") if isinstance(output, dict) else ""
+        out_path = project_root / normalize_assignment_path(str(raw_path))
+        if not out_path.is_file():
+            missing.append(normalize_assignment_path(str(raw_path)))
+    report_path = project_root / expected_report_artifact(task)
+    if not report_path.is_file():
+        missing.append(expected_report_artifact(task))
+    paths = worker_run_paths(project_root, run_id, task_id)
+    lines = [
+        f"# Worker Run Collection: {task_id}",
+        "",
+        f"- status: `{state.get('status', 'unknown')}`",
+        f"- expected_report: `{expected_report_artifact(task)}`",
+        f"- missing_outputs: `{len(missing)}`",
+    ]
+    for item in missing:
+        lines.append(f"- missing: `{item}`")
+    paths["collection"].write_text("\n".join(lines) + "\n", encoding="utf-8")
+    if missing:
+        driver = runtime_driver_for_task(project_root, task, str(state.get("driver_id") or task.get("runtime_driver") or "manual"))
+        write_agent_run_state(project_root, task, driver, "failed", failure_reason="missing outputs: " + ", ".join(missing), paths=paths)
+        print("FAIL: missing outputs: " + ", ".join(missing))
+        return 1
+    status, output = run_command_capture(command_task_complete, argparse.Namespace(project_root=str(project_root), task=task_id, summary=f"Collected worker run output from {state.get('driver_id')}", artifact=[expected_report_artifact(task)], dry_run=False))
+    print(output, end="")
+    emit_process_event(project_root, "worker.run.collected", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "report": expected_report_artifact(task)}, correlation_id=f"run-{run_id}")
+    return status
+
+
+def default_supervisor_profile() -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "id": "default",
+        "title": "Default Process Supervisor",
+        "loop": {"interval_seconds": 1, "max_ticks": 1},
+        "scheduling": {"max_parallel_workers": 1, "start_policy": "manual", "default_driver": "manual"},
+        "collection": {"auto_collect_completed": True},
+        "stop": {"file": ".pf/runtime/supervisor/stop.request"},
+    }
+
+
+def load_supervisor_profile(project_root: Path, profile_ref: str | None = None) -> dict[str, Any]:
+    if not profile_ref or profile_ref == "default":
+        template = ROOT / "templates" / "supervisor-profile.yaml"
+        return read_yaml_file(template) if template.is_file() else default_supervisor_profile()
+    path = Path(profile_ref).expanduser()
+    if not path.is_absolute():
+        path = (project_root / path).resolve()
+    return read_yaml_file(path)
+
+
+def plan_worker_map(plan: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
+    result: dict[str, dict[str, Any]] = {}
+    for worker in workers:
+        if isinstance(worker, dict):
+            worker_id = safe_id(str(worker.get("id") or "worker"), "worker")
+            result[worker_id] = worker
+    return result
+
+
+def task_dependency_ids(task: dict[str, Any], worker: dict[str, Any] | None = None) -> list[str]:
+    values: list[str] = []
+    dependencies = task.get("dependencies") if isinstance(task.get("dependencies"), dict) else {}
+    values.extend(str(item) for item in as_list(dependencies.get("blocked_by")))
+    if worker:
+        values.extend(str(item) for item in as_list(worker.get("dependencies")))
+        values.extend(str(item) for item in as_list(worker.get("depends_on")))
+    return sorted({safe_id(item, "task") for item in values if item})
+
+
+def task_dependencies_done(project_root: Path, task: dict[str, Any], worker: dict[str, Any] | None = None) -> bool:
+    for dep_id in task_dependency_ids(task, worker):
+        dep_path = assignment_yaml_path(project_root, dep_id)
+        if not dep_path.is_file():
+            return False
+        dep = read_yaml_file(dep_path)
+        if str(dep.get("status")) not in {"done", "completed"}:
+            return False
+    return True
+
+
+def load_run_plan_if_present(project_root: Path, run_id: str) -> dict[str, Any]:
+    path = orchestrator_plan_path(project_root, run_id)
+    return read_yaml_file(path) if path.is_file() else {}
+
+
+def supervisor_state_path(project_root: Path) -> Path:
+    return supervisor_root(project_root) / "state.json"
+
+
+def write_supervisor_state(project_root: Path, state: dict[str, Any]) -> None:
+    state["updated_at"] = now_utc()
+    json_write(supervisor_state_path(project_root), state)
+
+
+def command_supervisor_tick(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    profile = load_supervisor_profile(project_root, getattr(args, "profile", None))
+    run_ids = [safe_id(args.run, "run")] if getattr(args, "run", None) else active_run_ids(project_root)
+    started: list[str] = []
+    collected: list[str] = []
+    skipped: list[str] = []
+    scheduling = profile.get("scheduling") if isinstance(profile.get("scheduling"), dict) else {}
+    defaults = profile.get("defaults") if isinstance(profile.get("defaults"), dict) else {}
+    max_parallel = int(scheduling.get("max_parallel_workers") or defaults.get("max_parallel_workers") or 1)
+    for run_id in run_ids:
+        run = load_run(project_root, run_id)
+        plan = load_run_plan_if_present(project_root, run_id)
+        runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
+        workers = plan_worker_map(plan)
+        default_driver = getattr(args, "driver", None) or str(runtime.get("default_driver") or scheduling.get("default_driver") or defaults.get("runtime_driver") or "manual")
+        for item in sorted([entry for entry in run.get("tasks", []) if isinstance(entry, dict)], key=lambda value: int(value.get("order", 0) or 0)):
+            if len(started) >= max_parallel:
+                break
+            task_id = safe_id(str(item.get("id") or "task"), "task")
+            task = load_task(project_root, task_id)
+            worker = workers.get(task_id)
+            state = load_agent_run_state(project_root, run_id, task_id)
+            if state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:
+                status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
+                if status == 0:
+                    collected.append(task_id)
+                continue
+            if str(task.get("status")) not in {"open", "in_progress", "blocked"}:
+                skipped.append(task_id)
+                continue
+            if not task_dependencies_done(project_root, task, worker):
+                skipped.append(task_id)
+                continue
+            driver_id = str((worker or {}).get("runtime_driver") or task.get("runtime_driver") or default_driver)
+            if driver_id == "manual":
+                prepare_worker_run(project_root, task_id, driver_id, None)
+                skipped.append(task_id)
+                continue
+            status = command_worker_run_start(argparse.Namespace(project_root=str(project_root), task=task_id, driver=driver_id, executable=None))
+            if status == 0:
+                started.append(task_id)
+                collect_status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
+                if collect_status == 0:
+                    collected.append(task_id)
+            else:
+                started.append(task_id)
+    report = supervisor_root(project_root) / "last-tick-report.md"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        "\n".join(
+            [
+                "# Supervisor Tick Report",
+                "",
+                f"- checked_runs: `{len(run_ids)}`",
+                f"- started: `{', '.join(started) if started else 'none'}`",
+                f"- collected: `{', '.join(collected) if collected else 'none'}`",
+                f"- skipped: `{', '.join(skipped) if skipped else 'none'}`",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload={"runs": run_ids, "started": started, "collected": collected, "report": rel(report, project_root)})
+    print(f"TICK: started={len(started)} collected={len(collected)} skipped={len(skipped)}")
+    print(f"WROTE: {rel(report, project_root)}")
+    return 0
+
+
+def command_supervisor_run(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    profile = load_supervisor_profile(project_root, getattr(args, "profile", None))
+    loop = profile.get("loop") if isinstance(profile.get("loop"), dict) else {}
+    interval = float(getattr(args, "interval", None) or loop.get("interval_seconds") or 1)
+    max_ticks = int(getattr(args, "max_ticks", None) or loop.get("max_ticks") or 1)
+    stop_file = project_root / ".pf" / "runtime" / "supervisor" / "stop.request"
+    state = {"schema_version": 1, "id": "default", "status": "running", "project_root": ".", "pid": os.getpid(), "started_at": now_utc(), "updated_at": now_utc(), "stopped_at": None, "tick_count": 0, "last_tick_report": ".pf/runtime/supervisor/last-tick-report.md", "stop_requested": False}
+    write_supervisor_state(project_root, state)
+    for index in range(max_ticks):
+        if stop_file.is_file():
+            state["stop_requested"] = True
+            break
+        command_supervisor_tick(argparse.Namespace(project_root=str(project_root), run=getattr(args, "run", None), profile=getattr(args, "profile", None), driver=getattr(args, "driver", None)))
+        state["tick_count"] = index + 1
+        write_supervisor_state(project_root, state)
+        if index + 1 < max_ticks:
+            time.sleep(interval)
+    state["status"] = "stopped"
+    state["stopped_at"] = now_utc()
+    write_supervisor_state(project_root, state)
+    print(f"SUPERVISOR: stopped ticks={state['tick_count']}")
+    return 0
+
+
+def command_supervisor_status(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    state = json_read(supervisor_state_path(project_root))
+    if not state:
+        print("STATUS: not-started")
+        return 1
+    print(dump_yaml(state))
+    return 0
+
+
+def command_supervisor_stop(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    stop_file = supervisor_root(project_root) / "stop.request"
+    stop_file.parent.mkdir(parents=True, exist_ok=True)
+    stop_file.write_text(now_utc() + "\n", encoding="utf-8")
+    state = json_read(supervisor_state_path(project_root))
+    if state:
+        state["status"] = "stopping"
+        state["stop_requested"] = True
+        write_supervisor_state(project_root, state)
+    print(f"STOP REQUESTED: {rel(stop_file, project_root)}")
+    return 0
 
 
 def load_orchestrator_plan(project_root: Path, plan_arg: str | None = None, run_arg: str | None = None) -> dict[str, Any]:
@@ -8896,17 +9756,48 @@ def path_allowed_by_scope(path: str, scopes: list[str]) -> bool:
     return False
 
 
+def worker_dependency_set(worker: dict[str, Any]) -> set[str]:
+    result: set[str] = set()
+    for key in ["dependencies", "depends_on"]:
+        for item in as_list(worker.get(key)):
+            if item:
+                result.add(safe_id(str(item), "worker"))
+    return result
+
+
+def worker_depends_on(workers_by_id: dict[str, dict[str, Any]], worker_id: str, dependency_id: str, seen: set[str] | None = None) -> bool:
+    seen = seen or set()
+    if worker_id in seen:
+        return False
+    seen.add(worker_id)
+    worker = workers_by_id.get(worker_id, {})
+    dependencies = worker_dependency_set(worker)
+    if dependency_id in dependencies:
+        return True
+    return any(worker_depends_on(workers_by_id, dep_id, dependency_id, seen) for dep_id in dependencies)
+
+
 def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) -> list[Check]:
     checks: list[Check] = []
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
+    runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
     workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
     checks.append(check("PASS" if run.get("id") else "FAIL", "run.id present"))
     checks.append(check("PASS" if run.get("title") else "FAIL", "run.title present"))
     checks.append(check("PASS" if str(run.get("process") or "multi-agent-task-orchestration") == "multi-agent-task-orchestration" else "FAIL", "run process is multi-agent-task-orchestration"))
     checks.append(check("PASS" if workers else "FAIL", "workers present"))
+    default_driver = str(runtime.get("default_driver") or "manual")
+    start_policy = str(runtime.get("start_policy") or "manual")
+    checks.append(check("PASS" if default_driver in {item[0] for item in runtime_driver_id_list(project_root=project_root)} else "FAIL", f"runtime.default_driver registered: {default_driver}"))
+    checks.append(check("PASS" if start_policy in {"manual", "prepare", "supervisor"} else "FAIL", f"runtime.start_policy valid: {start_policy}"))
     seen: set[str] = set()
     repo_files = iter_repo_files(project_root)
     write_scopes: list[tuple[str, list[str]]] = []
+    workers_by_id = {
+        safe_id(str(worker.get("id") or "worker"), "worker"): worker
+        for worker in workers
+        if isinstance(worker, dict)
+    }
     for raw_worker in workers:
         if not isinstance(raw_worker, dict):
             checks.append(check("FAIL", "worker item must be an object"))
@@ -8919,8 +9810,12 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
         read_allowed = assignment_scope_items(raw_worker.get("allowed_read_files"))
         outputs = normalize_required_outputs(raw_worker.get("required_outputs"))
         writer = bool(raw_worker.get("writer", True))
+        driver_id = str(raw_worker.get("runtime_driver") or default_driver)
         if writer:
             checks.append(check("PASS" if allowed else "FAIL", f"{worker_id} writer has allowed_files"))
+        checks.append(check("PASS" if driver_id in {item[0] for item in runtime_driver_id_list(project_root=project_root)} else "FAIL", f"{worker_id} runtime_driver registered: {driver_id}"))
+        for dep_id in worker_dependency_set(raw_worker):
+            checks.append(check("PASS" if dep_id in workers_by_id else "FAIL", f"{worker_id} dependency exists: {dep_id}"))
         checks.append(check("PASS" if read_allowed or raw_worker.get("required_sources") else "WARN", f"{worker_id} has bounded read/context scope"))
         forbidden_conflicts = assignment_scope_conflicts(worker_id, allowed, worker_id, forbidden, repo_files, reason_prefix="forbidden_wins:")
         checks.append(check("PASS" if not forbidden_conflicts else "FAIL", f"{worker_id} forbidden_files do not overlap allowed_files"))
@@ -8936,6 +9831,8 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
     if not bool(plan.get("allow_write_scope_overlap", False)):
         for index, (left_id, left_scope) in enumerate(write_scopes):
             for right_id, right_scope in write_scopes[index + 1 :]:
+                if worker_depends_on(workers_by_id, left_id, right_id) or worker_depends_on(workers_by_id, right_id, left_id):
+                    continue
                 conflicts = assignment_scope_conflicts(left_id, left_scope, right_id, right_scope, repo_files)
                 if conflicts:
                     checks.append(check("FAIL", f"parallel write scopes overlap: {left_id} <-> {right_id}"))
@@ -9109,6 +10006,8 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
     run_id = safe_id(str(run.get("id") or "run"), "run")
     title = str(run.get("title") or run_id)
+    runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
+    default_driver = str(runtime.get("default_driver") or "manual")
     workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
     planned = [run_yaml_path(project_root, run_id), orchestrator_plan_path(project_root, run_id), run_root(project_root, run_id) / "worker-prompts"]
     if not args.apply or getattr(args, "dry_run", False):
@@ -9122,6 +10021,14 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         if status:
             print(output, end="")
             return status
+    run_doc = load_run(project_root, run_id)
+    if runtime:
+        run_doc["runtime"] = {
+            "default_driver": default_driver,
+            "supervisor_profile": str(runtime.get("supervisor_profile") or "default"),
+            "start_policy": str(runtime.get("start_policy") or "manual"),
+        }
+        save_run(project_root, run_doc)
     write_yaml_file(orchestrator_plan_path(project_root, run_id), plan)
     for order, worker in enumerate(workers, start=1):
         if not isinstance(worker, dict):
@@ -9154,7 +10061,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
                     required_output=normalize_required_outputs(worker.get("required_outputs")),
                     expected_report_language=str(worker.get("expected_report_language") or "en"),
                     expected_report_artifact=str(worker.get("expected_report_artifact") or ""),
-                    force_with_handoff=False,
+                    force_with_handoff=bool(as_list(worker.get("dependencies")) or as_list(worker.get("depends_on"))),
                     dry_run=False,
                 ),
             )
@@ -9163,6 +10070,10 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
                 return status
         task = load_task(project_root, task_id)
         task["worker_may_rebuild_context"] = bool(worker.get("worker_may_rebuild_context", False))
+        task["runtime_driver"] = str(worker.get("runtime_driver") or default_driver)
+        blocked_by = sorted({safe_id(str(item), "task") for item in [*as_list(worker.get("dependencies")), *as_list(worker.get("depends_on"))] if item})
+        if blocked_by:
+            task.setdefault("dependencies", {})["blocked_by"] = blocked_by
         save_task(project_root, task)
     command_project_context_refresh(argparse.Namespace(project_root=str(project_root)))
     for worker in workers:
@@ -9180,6 +10091,8 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         task_doctor_status = command_task_doctor(argparse.Namespace(project_root=str(project_root), task=task_id))
         if task_doctor_status:
             return task_doctor_status
+        if str(runtime.get("start_policy") or "manual") == "prepare":
+            prepare_worker_run(project_root, task_id, None, None)
     write_orchestration_summary(project_root, plan)
     doctor_status = command_run_doctor(argparse.Namespace(project_root=str(project_root), run=run_id))
     emit_process_event(project_root, "orchestrator.plan.applied", process_id="multi-agent-task-orchestration", subject=run_id, payload={"run_id": run_id, "doctor_status": doctor_status}, correlation_id=f"run-{run_id}")
@@ -12533,6 +13446,124 @@ def build_parser() -> argparse.ArgumentParser:
     process_describe.add_argument("--project-root", required=True, help="Project root path.")
     process_describe.add_argument("--process", required=True, help="Process id or YAML path.")
     process_describe.set_defaults(func=command_process_describe)
+
+    runtime_driver = sub.add_parser("runtime-driver", help="List, validate, or describe runtime driver manifests.")
+    runtime_driver_sub = runtime_driver.add_subparsers(dest="runtime_driver_command", required=True)
+    runtime_driver_list = runtime_driver_sub.add_parser("list", help="List runtime drivers.")
+    runtime_driver_list.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
+    runtime_driver_list.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
+    runtime_driver_list.set_defaults(func=command_runtime_driver_list)
+    runtime_driver_validate = runtime_driver_sub.add_parser("validate", help="Validate a runtime driver by id or path.")
+    runtime_driver_validate.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
+    runtime_driver_validate.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
+    runtime_driver_validate.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
+    runtime_driver_validate.set_defaults(func=command_runtime_driver_validate)
+    runtime_driver_describe = runtime_driver_sub.add_parser("describe", help="Describe a runtime driver by id or path.")
+    runtime_driver_describe.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
+    runtime_driver_describe.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
+    runtime_driver_describe.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
+    runtime_driver_describe.set_defaults(func=command_runtime_driver_describe)
+
+    runtime_driver_list_alias = sub.add_parser("runtime-driver-list", help="Flat alias for runtime-driver list.")
+    runtime_driver_list_alias.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
+    runtime_driver_list_alias.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
+    runtime_driver_list_alias.set_defaults(func=command_runtime_driver_list)
+    runtime_driver_validate_alias = sub.add_parser("runtime-driver-validate", help="Flat alias for runtime-driver validate.")
+    runtime_driver_validate_alias.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
+    runtime_driver_validate_alias.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
+    runtime_driver_validate_alias.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
+    runtime_driver_validate_alias.set_defaults(func=command_runtime_driver_validate)
+    runtime_driver_describe_alias = sub.add_parser("runtime-driver-describe", help="Flat alias for runtime-driver describe.")
+    runtime_driver_describe_alias.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
+    runtime_driver_describe_alias.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
+    runtime_driver_describe_alias.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
+    runtime_driver_describe_alias.set_defaults(func=command_runtime_driver_describe)
+
+    worker_run = sub.add_parser("worker-run", help="Prepare, start, inspect, stop, or collect a worker runtime execution.")
+    worker_run_sub = worker_run.add_subparsers(dest="worker_run_command", required=True)
+    worker_run_prepare = worker_run_sub.add_parser("prepare", help="Create assignment capsule, launch prompt, command, and ready state.")
+    worker_run_prepare.add_argument("--project-root", required=True, help="Project root path.")
+    worker_run_prepare.add_argument("--task", required=True, help="Task id.")
+    worker_run_prepare.add_argument("--driver", help="Runtime driver id or manifest path.")
+    worker_run_prepare.add_argument("--executable", help="Executable override for generic shell drivers.")
+    worker_run_prepare.set_defaults(func=command_worker_run_prepare)
+    worker_run_start = worker_run_sub.add_parser("start", help="Start a prepared worker command and wait for completion.")
+    worker_run_start.add_argument("--project-root", required=True, help="Project root path.")
+    worker_run_start.add_argument("--task", required=True, help="Task id.")
+    worker_run_start.add_argument("--driver", help="Runtime driver id or manifest path.")
+    worker_run_start.add_argument("--executable", help="Executable override for generic shell drivers.")
+    worker_run_start.set_defaults(func=command_worker_run_start)
+    worker_run_status = worker_run_sub.add_parser("status", help="Print worker runtime state.")
+    worker_run_status.add_argument("--project-root", required=True, help="Project root path.")
+    worker_run_status.add_argument("--task", required=True, help="Task id.")
+    worker_run_status.set_defaults(func=command_worker_run_status)
+    worker_run_stop = worker_run_sub.add_parser("stop", help="Request worker runtime stop.")
+    worker_run_stop.add_argument("--project-root", required=True, help="Project root path.")
+    worker_run_stop.add_argument("--task", required=True, help="Task id.")
+    worker_run_stop.set_defaults(func=command_worker_run_stop)
+    worker_run_collect = worker_run_sub.add_parser("collect", help="Collect worker output and complete the task when outputs exist.")
+    worker_run_collect.add_argument("--project-root", required=True, help="Project root path.")
+    worker_run_collect.add_argument("--task", required=True, help="Task id.")
+    worker_run_collect.set_defaults(func=command_worker_run_collect)
+
+    for alias_name, func, help_text in [
+        ("worker-run-prepare", command_worker_run_prepare, "Flat alias for worker-run prepare."),
+        ("worker-run-start", command_worker_run_start, "Flat alias for worker-run start."),
+        ("worker-run-status", command_worker_run_status, "Flat alias for worker-run status."),
+        ("worker-run-stop", command_worker_run_stop, "Flat alias for worker-run stop."),
+        ("worker-run-collect", command_worker_run_collect, "Flat alias for worker-run collect."),
+    ]:
+        alias = sub.add_parser(alias_name, help=help_text)
+        alias.add_argument("--project-root", required=True, help="Project root path.")
+        alias.add_argument("--task", required=True, help="Task id.")
+        if alias_name in {"worker-run-prepare", "worker-run-start"}:
+            alias.add_argument("--driver", help="Runtime driver id or manifest path.")
+            alias.add_argument("--executable", help="Executable override for generic shell drivers.")
+        alias.set_defaults(func=func)
+
+    supervisor = sub.add_parser("supervisor", help="Run a file-first process supervisor loop.")
+    supervisor_sub = supervisor.add_subparsers(dest="supervisor_command", required=True)
+    supervisor_tick = supervisor_sub.add_parser("tick", help="Run one supervisor scheduling tick.")
+    supervisor_tick.add_argument("--project-root", required=True, help="Project root path.")
+    supervisor_tick.add_argument("--run", help="Run id. Defaults to all active runs.")
+    supervisor_tick.add_argument("--profile", help="Supervisor profile path or default.")
+    supervisor_tick.add_argument("--driver", help="Runtime driver override.")
+    supervisor_tick.set_defaults(func=command_supervisor_tick)
+    supervisor_run = supervisor_sub.add_parser("run", help="Run bounded supervisor ticks.")
+    supervisor_run.add_argument("--project-root", required=True, help="Project root path.")
+    supervisor_run.add_argument("--run", help="Run id. Defaults to all active runs.")
+    supervisor_run.add_argument("--profile", help="Supervisor profile path or default.")
+    supervisor_run.add_argument("--driver", help="Runtime driver override.")
+    supervisor_run.add_argument("--interval", type=float, help="Seconds between ticks.")
+    supervisor_run.add_argument("--max-ticks", type=int, help="Maximum ticks before exit.")
+    supervisor_run.set_defaults(func=command_supervisor_run)
+    supervisor_status = supervisor_sub.add_parser("status", help="Print supervisor state.")
+    supervisor_status.add_argument("--project-root", required=True, help="Project root path.")
+    supervisor_status.set_defaults(func=command_supervisor_status)
+    supervisor_stop = supervisor_sub.add_parser("stop", help="Write a supervisor stop request file.")
+    supervisor_stop.add_argument("--project-root", required=True, help="Project root path.")
+    supervisor_stop.set_defaults(func=command_supervisor_stop)
+
+    supervisor_tick_alias = sub.add_parser("supervisor-tick", help="Flat alias for supervisor tick.")
+    supervisor_tick_alias.add_argument("--project-root", required=True, help="Project root path.")
+    supervisor_tick_alias.add_argument("--run", help="Run id. Defaults to all active runs.")
+    supervisor_tick_alias.add_argument("--profile", help="Supervisor profile path or default.")
+    supervisor_tick_alias.add_argument("--driver", help="Runtime driver override.")
+    supervisor_tick_alias.set_defaults(func=command_supervisor_tick)
+    supervisor_run_alias = sub.add_parser("supervisor-run", help="Flat alias for supervisor run.")
+    supervisor_run_alias.add_argument("--project-root", required=True, help="Project root path.")
+    supervisor_run_alias.add_argument("--run", help="Run id. Defaults to all active runs.")
+    supervisor_run_alias.add_argument("--profile", help="Supervisor profile path or default.")
+    supervisor_run_alias.add_argument("--driver", help="Runtime driver override.")
+    supervisor_run_alias.add_argument("--interval", type=float, help="Seconds between ticks.")
+    supervisor_run_alias.add_argument("--max-ticks", type=int, help="Maximum ticks before exit.")
+    supervisor_run_alias.set_defaults(func=command_supervisor_run)
+    supervisor_status_alias = sub.add_parser("supervisor-status", help="Flat alias for supervisor status.")
+    supervisor_status_alias.add_argument("--project-root", required=True, help="Project root path.")
+    supervisor_status_alias.set_defaults(func=command_supervisor_status)
+    supervisor_stop_alias = sub.add_parser("supervisor-stop", help="Flat alias for supervisor stop.")
+    supervisor_stop_alias.add_argument("--project-root", required=True, help="Project root path.")
+    supervisor_stop_alias.set_defaults(func=command_supervisor_stop)
 
     orchestrator_plan = sub.add_parser("orchestrator-plan", help="Create, validate, apply, or inspect a multi-agent orchestration plan.")
     orchestrator_plan_sub = orchestrator_plan.add_subparsers(dest="orchestrator_plan_command", required=True)

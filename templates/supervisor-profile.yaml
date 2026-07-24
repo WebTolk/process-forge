@@ -1,0 +1,23 @@
+schema_version: 1
+id: default
+title: Default ProcessForge Supervisor Profile
+loop:
+  interval_seconds: 1
+  max_ticks: 1
+scheduling:
+  default_driver: manual
+  start_policy: manual
+  max_parallel_workers: 1
+collection:
+  auto_collect_completed: true
+defaults:
+  runtime_driver: manual
+  max_parallel_workers: 1
+  tick_interval_seconds: 5
+  timeout_seconds: 3600
+  worker_may_rebuild_context: false
+policies:
+  require_non_overlapping_write_scopes: true
+  collect_outputs_before_next_wave: true
+  manual_review_on_failure: true
+  no_network_by_default: true

@@ -1,0 +1,28 @@
+schema_version: 1
+id: generic-shell
+title: Generic Shell Runtime
+kind: shell
+command:
+  executable: "{executable}"
+  args:
+    - "{worker_prompt_path}"
+    - "{capsule_path}"
+working_directory: "{project_root}"
+environment:
+  inherit: true
+  variables: {}
+io:
+  stdin: none
+  stdout: .pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log
+  stderr: .pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log
+heartbeat:
+  mode: file
+  path: .pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json
+  optional: true
+limits:
+  timeout_seconds: 3600
+  max_retries: 0
+security:
+  allow_shell: false
+  require_explicit_executable: true
+  allow_network: false

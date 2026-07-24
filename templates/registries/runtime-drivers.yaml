@@ -1,0 +1,17 @@
+schema_version: 1
+runtime_drivers:
+  -
+    id: manual
+    path: ../runtime-drivers/manual.yaml
+    status: available
+    builtin: true
+  -
+    id: generic-shell
+    path: ../runtime-drivers/generic-shell.yaml
+    status: available
+    builtin: true
+  -
+    id: test-echo-worker
+    path: ../runtime-drivers/test-echo-worker.yaml
+    status: available
+    builtin: true

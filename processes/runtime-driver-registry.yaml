@@ -1,0 +1,82 @@
+schema_version: 1
+id: runtime-driver-registry
+name: Runtime Driver Registry
+version: 1.0.0
+status: active
+description: Govern neutral runtime driver manifests, registry entries, and validation before worker process execution.
+required_capabilities:
+  - repository_read
+  - schema_validation
+  - process_coordination
+hooks:
+  emit:
+    - event: worker.run.prepared
+      required: false
+  tracking:
+    include:
+      - driver_id
+      - registry_path
+      - status
+roles:
+  - id: runtime-owner
+    title: Runtime Owner
+    responsibility: Maintains driver manifests and registry entries without binding ProcessForge to a specific agent ecosystem.
+  - id: reviewer
+    title: Runtime Reviewer
+    responsibility: Validates placeholders, security defaults, command shape, and public neutrality.
+stages:
+  - id: inventory
+    title: Inventory runtime drivers
+    description: List built-in, workplace, and project-local runtime driver registrations.
+    required_inputs: []
+    produced_artifacts:
+      - runtime-driver-registry
+    required_role: runtime-owner
+    required_capabilities:
+      - repository_read
+    allowed_tools:
+      - processforge-cli
+    entry_gates: []
+    exit_gates:
+      - runtime-drivers-listed
+    handoff_required: false
+  - id: validate
+    title: Validate runtime driver manifests
+    description: Validate driver schema, placeholder allow-list, shell-disabled defaults, and no-network policy.
+    required_inputs:
+      - runtime-driver-registry
+    produced_artifacts:
+      - runtime-driver-validation-report
+    required_role: reviewer
+    required_capabilities:
+      - schema_validation
+    allowed_tools:
+      - processforge-cli
+      - validator
+    entry_gates:
+      - runtime-drivers-listed
+    exit_gates:
+      - runtime-drivers-valid
+    handoff_required: false
+artifact_definitions:
+  - id: runtime-driver-registry
+    title: Runtime Driver Registry
+    owner_role: runtime-owner
+    template: runtime-drivers
+    lifecycle: [draft, ready_for_review, approved]
+  - id: runtime-driver-validation-report
+    title: Runtime Driver Validation Report
+    owner_role: reviewer
+    template: validation-report
+    lifecycle: [draft, approved]
+gates:
+  - id: runtime-drivers-listed
+    description: Registry lists only neutral driver ids and resolvable manifest paths.
+    required: true
+  - id: runtime-drivers-valid
+    description: Every referenced driver validates against schema and security defaults.
+    required: true
+evolution_policy:
+  versioning: semver
+  compatibility: additive changes to driver metadata are backward-compatible
+  deprecation: runtime driver ids must remain stable or be explicitly superseded

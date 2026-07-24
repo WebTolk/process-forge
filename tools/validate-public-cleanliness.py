@@ -153,6 +153,48 @@ def platform_neutrality_failures(root_path: Path) -> list[str]:
     return failures
 
 
+def runtime_driver_neutrality_failures(root_path: Path) -> list[str]:
+    failures: list[str] = []
+    checked_roots = [
+        root_path / "templates" / "runtime-drivers",
+        root_path / "examples" / "runtime-supervisor",
+        root_path / "tools" / "test_workers",
+    ]
+    checked_files = [
+        root_path / "templates" / "registries" / "runtime-drivers.yaml",
+        root_path / "docs" / "concepts" / "runtime-drivers.md",
+        root_path / "docs" / "concepts" / "process-supervisor.md",
+        root_path / "docs" / "getting-started" / "runtime-driver-supervisor.md",
+        root_path / "docs" / "ru" / "concepts" / "runtime-drivers.md",
+        root_path / "docs" / "ru" / "concepts" / "process-supervisor.md",
+        root_path / "docs" / "ru" / "getting-started" / "runtime-driver-supervisor.md",
+        root_path / "processes" / "runtime-driver-registry.yaml",
+        root_path / "processes" / "process-supervisor.yaml",
+        root_path / "tools" / "smoke_runtime_driver_registry.py",
+        root_path / "tools" / "smoke_worker_run_lifecycle.py",
+        root_path / "tools" / "smoke_process_supervisor.py",
+    ]
+    files: list[Path] = []
+    for root in checked_roots:
+        if root.is_dir():
+            files.extend(path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in TEXT_SUFFIXES)
+    files.extend(path for path in checked_files if path.is_file())
+    forbidden_terms = [
+        "cod" + "ex",
+        "cla" + "ude",
+        "open" + "ai",
+        "chat" + "gpt",
+        "anth" + "ropic",
+    ]
+    for path in sorted(set(files), key=lambda item: item.relative_to(root_path).as_posix()):
+        rel = path.relative_to(root_path).as_posix()
+        text = path.read_text(encoding="utf-8", errors="replace").lower()
+        for term in forbidden_terms:
+            if term in text:
+                failures.append(f"{rel}: runtime driver surface mentions agent ecosystem term {term!r}")
+    return failures
+
+
 def validate_releaseignore(root_path: Path) -> list[str]:
     failures: list[str] = []
     path = root_path / ".processforge-releaseignore"
@@ -198,6 +240,7 @@ def main() -> int:
             if pattern.search(text):
                 failures.append(f"{rel}: forbidden private/local path pattern {pattern.pattern!r}")
     failures.extend(platform_neutrality_failures(root_path))
+    failures.extend(runtime_driver_neutrality_failures(root_path))
     failures.extend(validate_releaseignore(root_path))
     if failures:
         for failure in failures:

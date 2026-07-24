@@ -1,0 +1,53 @@
+schema_version: 1
+run:
+  id: supervised-run
+  title: Supervised run
+  process: multi-agent-task-orchestration
+orchestrator:
+  role: orchestrator
+runtime:
+  default_driver: test-echo-worker
+  supervisor_profile: default
+  start_policy: supervisor
+workers:
+  - id: first-worker
+    title: First worker
+    role: test
+    process: testing
+    execution_mode: assurance
+    writer: true
+    allowed_files: [.pf/artifacts/**]
+    allowed_read_files: [.pf/contexts/project-context.snapshot.yaml]
+    forbidden_files: [tools/**]
+    required_sources: [.pf/contexts/project-context.snapshot.yaml]
+    required_outputs:
+      - id: first-report
+        path: .pf/artifacts/first-report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/first-report.md
+    runtime_driver: test-echo-worker
+    worker_may_rebuild_context: false
+  - id: second-worker
+    title: Second worker
+    role: test
+    process: testing
+    execution_mode: assurance
+    writer: true
+    allowed_files: [.pf/artifacts/**]
+    allowed_read_files: [.pf/contexts/project-context.snapshot.yaml]
+    forbidden_files: [tools/**]
+    required_sources: [.pf/contexts/project-context.snapshot.yaml]
+    required_outputs:
+      - id: second-report
+        path: .pf/artifacts/second-report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/second-report.md
+    runtime_driver: test-echo-worker
+    depends_on: [first-worker]
+    worker_may_rebuild_context: false
+integration:
+  required: true
+  role: orchestrator
+  expected_output: .pf/artifacts/integration-report.md

@@ -19,6 +19,7 @@ resources live in the workplace, and each repository keeps a project-local
 - [Create your first process](getting-started/create-your-first-process.md)
 - [Task batch workflow](getting-started/task-batch-workflow.md)
 - [Multi-agent orchestration](getting-started/multi-agent-orchestration.md)
+- [Runtime driver and supervisor quickstart](getting-started/runtime-driver-supervisor.md)
 - [Quick getting started path](getting-started.md)
 - [Russian documentation](ru/index.md)
 
@@ -45,6 +46,8 @@ resources live in the workplace, and each repository keeps a project-local
 - [Hooks and events](concepts/processforge-events.md)
 - [Hooks and events overview](concepts/hooks-events.md)
 - [Runtime model](concepts/runtime-model.md)
+- [Runtime drivers](concepts/runtime-drivers.md)
+- [Process supervisor](concepts/process-supervisor.md)
 - [Platform inheritance](concepts/platform-inheritance.md)
 - [Process definition, run, task, iteration](concepts/process-definition-run-task-iteration.md)
 - [Semantic parity](concepts/semantic-parity.md)

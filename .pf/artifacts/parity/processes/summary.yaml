@@ -1,8 +1,8 @@
 schema_version: 1
 result: WARN
 counts:
-  PASS: 7
-  WARN: 21
+  PASS: 8
+  WARN: 22
   SKIP: 0
   FAIL: 0
 checked:
@@ -104,6 +104,12 @@ processes:
     review: .pf/reviews/parity/processes/process-authoring-parity.md
     semantic_diff: .pf/artifacts/parity/processes/process-authoring-semantic-diff.yaml
   -
+    process_id: process-supervisor
+    result: WARN
+    source: processes/process-supervisor.yaml
+    review: .pf/reviews/parity/processes/process-supervisor-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/process-supervisor-semantic-diff.yaml
+  -
     process_id: process-template-install
     result: WARN
     source: processes/process-template-install.yaml
@@ -139,6 +145,12 @@ processes:
     source: processes/reusable-template-authoring.yaml
     review: .pf/reviews/parity/processes/reusable-template-authoring-parity.md
     semantic_diff: .pf/artifacts/parity/processes/reusable-template-authoring-semantic-diff.yaml
+  -
+    process_id: runtime-driver-registry
+    result: PASS
+    source: processes/runtime-driver-registry.yaml
+    review: .pf/reviews/parity/processes/runtime-driver-registry-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/runtime-driver-registry-semantic-diff.yaml
   -
     process_id: session-bootstrap
     result: WARN

@@ -10,6 +10,10 @@ orchestrator:
     - assign workers
     - review outputs
     - integrate final result
+runtime:
+  default_driver: manual
+  supervisor_profile: default
+  start_policy: manual
 workers:
   -
     id: example-docs-worker
@@ -35,6 +39,7 @@ workers:
         type: markdown
         required: true
     expected_report_artifact: .pf/artifacts/example-docs-worker-report.md
+    runtime_driver: manual
     dependencies: []
     worker_may_rebuild_context: false
   -
@@ -61,7 +66,9 @@ workers:
         type: markdown
         required: true
     expected_report_artifact: .pf/artifacts/example-test-worker-report.md
-    dependencies: []
+    runtime_driver: manual
+    dependencies:
+      - example-docs-worker
     worker_may_rebuild_context: false
 integration:
   required: true

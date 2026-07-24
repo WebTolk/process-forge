@@ -1,8 +1,8 @@
 schema_version: 1
 snapshot:
   id: project-context
-  generated_at: '2026-07-20T06:57:07Z'
-  valid_until: '2026-07-27T06:57:07Z'
+  generated_at: '2026-07-24T10:35:37Z'
+  valid_until: '2026-07-31T10:35:37Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -51,7 +51,7 @@ sources:
       id: project_manifest
       path: .pf/process-forge.yaml
       kind: manifest
-      checksum: 06ccd714ff995e22344573c4c0c0fa8c155500b93b7b01f3e05e5cc8cc58f608
+      checksum: b0cd17493412997700ae0986318e8c18bdd499df1a1de6494414eee9a919f922
     -
       id: process-processes-software-feature-development-yaml
       path: processes/software-feature-development.yaml
@@ -182,6 +182,16 @@ sources:
       path: processes/task-batch-execution.yaml
       kind: process
       checksum: f761bf4044fdd08bba36b02753935ff77d3dcf03694d9bdf18d7a555789e505d
+    -
+      id: process-processes-guided-workplace-setup-yaml
+      path: processes/guided-workplace-setup.yaml
+      kind: process
+      checksum: 5a76ca1224cecc0966d7f8b365ad834287b445bf08212984e3afee53faa4b00e
+    -
+      id: process-processes-multi-agent-task-orchestration-yaml
+      path: processes/multi-agent-task-orchestration.yaml
+      kind: process
+      checksum: 321b08d7cc9df34eb4ff01247f4e90475f5a37159c7f71443b454227f5edc7d8
     -
       id: package-packages-process-forge-core-yaml
       path: packages/process-forge-core.yaml
@@ -390,6 +400,12 @@ processes:
     -
       id: task-batch-execution
       path: ../processes/task-batch-execution.yaml
+    -
+      id: guided-workplace-setup
+      path: ../processes/guided-workplace-setup.yaml
+    -
+      id: multi-agent-task-orchestration
+      path: ../processes/multi-agent-task-orchestration.yaml
 packages:
   selected:
     -

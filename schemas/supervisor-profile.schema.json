@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/supervisor-profile.schema.json",
+  "title": "Supervisor Profile",
+  "type": "object",
+  "required": ["schema_version", "id", "title", "defaults", "policies"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "title": { "type": "string", "minLength": 1 },
+    "loop": {
+      "type": "object",
+      "properties": {
+        "interval_seconds": { "type": "integer", "minimum": 1 },
+        "max_ticks": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": true
+    },
+    "scheduling": {
+      "type": "object",
+      "properties": {
+        "default_driver": { "$ref": "#/$defs/id" },
+        "start_policy": { "enum": ["manual", "prepare", "supervisor"] },
+        "max_parallel_workers": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": true
+    },
+    "collection": { "type": "object", "additionalProperties": true },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "runtime_driver": { "$ref": "#/$defs/id" },
+        "max_parallel_workers": { "type": "integer", "minimum": 1 },
+        "tick_interval_seconds": { "type": "integer", "minimum": 1 },
+        "timeout_seconds": { "type": "integer", "minimum": 1 },
+        "worker_may_rebuild_context": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "policies": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" }
+  },
+  "additionalProperties": true
+}
