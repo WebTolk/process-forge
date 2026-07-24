@@ -325,6 +325,68 @@ Inspect existing CLI generation/validation paths, schemas, templates, and proces
 Handoff:
 None.
 
+## 2026-07-24 11:33 +04:00 - codex-doc-auditor
+
+Task:
+Audit documentation and prompt examples for all ProcessForge initialization types.
+Files changed:
+`docs/getting-started/first-run.md`, `docs/ru/getting-started/first-run.md`,
+`docs/getting-started/agent-prompts.md`, `docs/ru/getting-started/agent-prompts.md`,
+`docs/ru/getting-started/guided-workplace-setup.md`,
+`docs/getting-started/multi-agent-orchestration.md`,
+`docs/ru/getting-started/multi-agent-orchestration.md`,
+`examples/multi-agent-orchestration/minimal/README.md`,
+`docs/authoring/project-initialization.md`,
+`docs/getting-started/project-onboarding.md`,
+`docs/ru/getting-started/project-onboarding.md`,
+`examples/processforge-init/README.md`,
+`docs/concepts/project-init.md`,
+`docs/concepts/workplace-init.md`,
+`.pf/artifacts/initialization-docs-prompt-audit-20260724.md`.
+Artifacts changed:
+Created `.pf/artifacts/initialization-docs-prompt-audit-20260724.md`.
+Templates used:
+Existing `.pf` audit/report style.
+Tools used:
+`rg`, `Get-Content`, CLI help checks, source inspection of `tools/processforge.py`.
+Decisions:
+Fixed only documentation/prompt/example inconsistencies; left CLI behavior unchanged.
+Risks:
+Need checksum refresh and validation after documentation changes.
+Next steps:
+Refresh checksum inventory and run initialization-focused smoke/release checks.
+Handoff:
+None.
+
+## 2026-07-24 11:41 +04:00 - codex-doc-auditor
+
+Task:
+Complete validation for initialization documentation and prompt example audit.
+Files changed:
+No additional content files; refreshed `.pf/artifacts/checksum-inventory.sha256`
+and `dist/processforge-v1.0.0.zip` with its manifest after documentation
+changes.
+Artifacts changed:
+`dist/processforge-v1.0.0.zip`, `dist/processforge-v1.0.0.manifest.json`,
+`.pf/artifacts/checksum-inventory.sha256`.
+Templates used:
+None.
+Tools used:
+`validate-process-forge-schemas.py`, `validate-public-cleanliness.py`,
+`validate-process-forge-checksums.py`, `smoke_first_run.py`,
+`smoke_guided_workplace_setup.py`, `smoke_multiagent_orchestration_process.py`,
+`bin/pf.py release-test`, `bin/pf.py release-pack`, `bin/pf.py release-archive-test`,
+`git diff --check`.
+Decisions:
+Treat one failed validation command as an operator typo: `tools/smoke_first_run_flow.py`
+does not exist; reran the correct `tools/smoke_first_run.py`, which passed.
+Risks:
+Only CRLF conversion warnings remain from Git on modified text files.
+Next steps:
+User may review or request commit/push for this documentation slice.
+Handoff:
+None.
+
 ## 2026-07-24 10:12 - codex-orchestrator
 
 Task:

@@ -19,3 +19,10 @@ Flat aliases are also available:
 - `worker-launch-prompt-create`
 
 The plan template is `templates/orchestrator-task-plan.yaml`.
+
+To reuse the distribution example plan, run from the ProcessForge distribution
+root and point `--project-root` at an onboarded project:
+
+```bash
+python bin/pf.py orchestrator-plan create --project-root <project-root> --run example-run --title "Example multi-agent run" --answers examples/multi-agent-orchestration/minimal/orchestrator-task-plan.yaml --apply
+```

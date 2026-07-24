@@ -6,6 +6,9 @@ workplace, добавляет runtime launcher и формирует старт�
 
 Из distribution root:
 
+Для dry-run сначала создайте или выберите `../my-project`. Apply mode может
+создать отсутствующий greenfield project root.
+
 ```bash
 python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-workplace --type generic-software-project --apply
 python bin/pf.py agent-start-prompt --project-root ../my-project

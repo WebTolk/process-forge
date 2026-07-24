@@ -10,7 +10,7 @@
     },
     {
       "path": ".pf/artifacts/checksum-inventory.sha256",
-      "sha256": "5244d3b7e552b34bcce5e6fce6cd27ae1543bc390b93f553baf86d715472593b"
+      "sha256": "76eae552fb7dd643f3e8f1dfbeb2b1684aca4f663ca9409132caf15348a93c0c"
     },
     {
       "path": ".pf/hooks.yaml",
@@ -110,7 +110,7 @@
     },
     {
       "path": "docs/authoring/project-initialization.md",
-      "sha256": "62b4f4621fb41a4ce4435b402c299a520ad791c64960a99d4108471f8d0cdebc"
+      "sha256": "dcb51ed9615fbb05d2982b1640acdd994da40da48f431e939d81a4444c70e943"
     },
     {
       "path": "docs/authoring/reusable-template-authoring.md",
@@ -266,7 +266,7 @@
     },
     {
       "path": "docs/concepts/project-init.md",
-      "sha256": "9e5cb84a8697f2b7a93f43022a7a1e0e74d7028957f409e4458c1d90cd3638b4"
+      "sha256": "87a69230d66d18f4f972ff623c049ca67d77c86e996f5485210812ccca50b8ad"
     },
     {
       "path": "docs/concepts/project-snapshot.md",
@@ -330,7 +330,7 @@
     },
     {
       "path": "docs/concepts/workplace-init.md",
-      "sha256": "1873c9f8805dc3a74222695252ee3437abac453b9414cf25e565ba2f1ff0277f"
+      "sha256": "a30ec37970e75cd537ca11b4ebdfccd00f2bb14040911ce63ea2cb9422307b23"
     },
     {
       "path": "docs/concepts/workplace-layer.md",
@@ -362,7 +362,7 @@
     },
     {
       "path": "docs/getting-started/agent-prompts.md",
-      "sha256": "baf95b007755f7ef5e0f23dc9587c2c936c50fd81d6048c32d331dedb16ab169"
+      "sha256": "6ec6e986a11f04fd4ea2c43d53a9f3a20a12bcad9a0e47e53950fab209caaba3"
     },
     {
       "path": "docs/getting-started/create-your-first-process.md",
@@ -370,7 +370,7 @@
     },
     {
       "path": "docs/getting-started/first-run.md",
-      "sha256": "618026afdf6e73528265a3d663c1e310309f4064a9ae5b937210de3da8a05535"
+      "sha256": "6c7fff7ce9b8db55d7028481e5b4e4fca24480d0955b1b878b0d02ceee7c6570"
     },
     {
       "path": "docs/getting-started/guided-workplace-setup.md",
@@ -386,11 +386,11 @@
     },
     {
       "path": "docs/getting-started/multi-agent-orchestration.md",
-      "sha256": "7293f5acc62b9d39499c3e530e528eac716c50837c03342909b81abf38979605"
+      "sha256": "775e0642a586914d397465ad456741fa9db14ad14b883979062b157313e2046d"
     },
     {
       "path": "docs/getting-started/project-onboarding.md",
-      "sha256": "aa2822ce1c8d73855804da09146e82ccd64ebbb9bf0db65c35d703f57870062f"
+      "sha256": "e6a7191a6906aa65363a6b0de328b7ac6955fa292723292e48f6ca4c91694a4b"
     },
     {
       "path": "docs/getting-started/resource-authoring.md",
@@ -510,7 +510,7 @@
     },
     {
       "path": "docs/ru/getting-started/agent-prompts.md",
-      "sha256": "7920e8fddfcea1801d0dc441359564639d4de2b2f04b0adac13f1380283233dc"
+      "sha256": "8999dc9392eaa066ada18902f4f09da7f65885a00952dd9b62ed44c68322f283"
     },
     {
       "path": "docs/ru/getting-started/create-your-first-process.md",
@@ -518,11 +518,11 @@
     },
     {
       "path": "docs/ru/getting-started/first-run.md",
-      "sha256": "575f45d7738be1921a6762100b882d5439bcaf6a8911e4b412597556ed19cfda"
+      "sha256": "e4693ccebaec105ad50925df4ec2ccd450f0e510a160f6e33549c1b48d07bdc8"
     },
     {
       "path": "docs/ru/getting-started/guided-workplace-setup.md",
-      "sha256": "580cb947fa96899f7a95d4678119c166f11f11670c9454293302438b27ec0588"
+      "sha256": "b598d9865e8b1ac6d5cfc4f4bd7de422fe052bd5192d6e3ccb00c1f9842b40c5"
     },
     {
       "path": "docs/ru/getting-started/initialization-order.md",
@@ -534,11 +534,11 @@
     },
     {
       "path": "docs/ru/getting-started/multi-agent-orchestration.md",
-      "sha256": "4a080cb70eea16bb32cb8f0dc4c049903e0e1e2aff5f06ab7fc36fb418f96fcf"
+      "sha256": "c63b259fadfa285eee9bd47de8ff5a3804a9efff69c99fcfa7b594920ba796eb"
     },
     {
       "path": "docs/ru/getting-started/project-onboarding.md",
-      "sha256": "5d957e023a98d7f0d58ce2ae88c44922377fabf26fb9cf20463dd5e590f07d19"
+      "sha256": "6aa1e9a947419a2bece67c8bb3d1b3bdd173a866b8f48c49c25fdb5de190f5d1"
     },
     {
       "path": "docs/ru/getting-started/task-batch-workflow.md",
@@ -630,7 +630,7 @@
     },
     {
       "path": "examples/multi-agent-orchestration/minimal/README.md",
-      "sha256": "79915525ea646f0c8f3449ade5e429a745aa7160a1456c3da725d3dfc5ddfc04"
+      "sha256": "ba506f218b6c090c5ca6484453bec17337c646fe8c33cafb6fd97d37507b626c"
     },
     {
       "path": "examples/multi-agent-orchestration/minimal/expected-worker-docs-prompt.md",
@@ -694,7 +694,7 @@
     },
     {
       "path": "examples/processforge-init/README.md",
-      "sha256": "1c2e9b1f87669ad7413d51306ffe5a909041a939c36b74ca89040d6dd990b3bb"
+      "sha256": "b86c74ccbca485667398acc7d8cbb64e8247eddfad8b8c9e575df2113aac7463"
     },
     {
       "path": "examples/processforge-init/brownfield/project-init.answers.yaml",
@@ -1661,7 +1661,7 @@
       "sha256": "81b436180a2b3276df5c9b9ea95d8cba646fa908424c129ccb4faccbcd3bf00b"
     }
   ],
-  "generated_at": "2026-07-24T05:51:44Z",
+  "generated_at": "2026-07-24T07:41:39Z",
   "name": "processforge",
   "version": "1.0.0"
 }

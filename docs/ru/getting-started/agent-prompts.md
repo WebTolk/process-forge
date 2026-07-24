@@ -19,9 +19,8 @@
   собирают knowledge packages, templates, tools, MCP providers, capabilities,
   processes, coding standards, project type hints, policies и optional
   parent/child platform inheritance.
-- Для текущего релиза используйте canonical versioned release archive names:
-  `dist/processforge-v1.0.0.zip` и
-  `dist/processforge-v1.0.0.manifest.json`.
+- Имена архивов конкретного релиза держите в release checklist. В reusable
+  prompt examples используйте нейтральные имена архивов.
 - `--interactive` принимается first-run initialization commands для UX
   compatibility; текущие commands остаются file-first и не требуют terminal
   prompting.
@@ -39,8 +38,8 @@ python tools/validate-process-forge-schemas.py --root .
 python tools/validate-public-cleanliness.py --root .
 python tools/validate-process-forge-checksums.py --root . --check
 python bin/pf.py release-test --root .
-python bin/pf.py release-pack --root . --output dist/processforge-v1.0.0.zip
-python bin/pf.py release-archive-test --archive dist/processforge-v1.0.0.zip
+python bin/pf.py release-pack --root . --output dist/processforge-release.zip
+python bin/pf.py release-archive-test --archive dist/processforge-release.zip
 git diff --check
 ```
 
@@ -51,7 +50,29 @@ python <processforge-root>/bin/pf.py workplace-init --workplace <workplace-path>
 python <processforge-root>/bin/pf.py doctor-workplace --root <workplace-path>
 ```
 
+Для guided setup:
+
+```bash
+python <processforge-root>/bin/pf.py workplace-setup start --workplace <workplace-path> --session-id <session-id> --answers <answers-yaml> --apply
+python <processforge-root>/bin/pf.py workplace-setup review --workplace <workplace-path> --session-id <session-id>
+python <processforge-root>/bin/pf.py workplace-setup apply --workplace <workplace-path> --session-id <session-id> --apply
+python <processforge-root>/bin/pf.py workplace-setup status --workplace <workplace-path> --session-id <session-id>
+```
+
+## First Run Convenience
+
+Используйте `first-run` только когда нужно выполнить workplace initialization и
+project onboarding последовательно. Для dry-run на новом проекте сначала
+создайте или выберите целевой каталог проекта.
+
+```bash
+python <processforge-root>/bin/pf.py first-run --workplace <workplace-path> --project-root <project-root> --type <project-type> --apply
+```
+
 ## Подключение проекта
+
+Для dry-run `<project-root>` должен уже существовать. Apply mode может создать
+отсутствующий greenfield project root.
 
 ```bash
 python <processforge-root>/bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-path> --type <project-type> --apply

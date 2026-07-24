@@ -1,12 +1,14 @@
 # First Run
 
-First run has two separate processes:
+First run has two operational initialization processes:
 
 - `workplace-initialization`: prepares the local workplace, registries, packages, tools, and knowledge roots.
-- `guided-workplace-setup`: optionally guides the operator through answers, proposal, review, apply report, agent snippet, and next steps.
 - `project-onboarding`: creates a project-local `.pf/` and links that project to the existing workplace.
 
-The convenience `first-run` command only runs those two processes in order. It is not a third process.
+`guided-workplace-setup` is an optional preflight agent flow for collecting and
+reviewing workplace answers before apply. The convenience `first-run` command runs
+`workplace-initialization` and `project-onboarding` in order. It is not a third
+process definition.
 
 Python CLI is the canonical runtime. The root `pf` wrappers are thin convenience launchers over `bin/pf.py`.
 

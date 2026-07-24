@@ -11,6 +11,9 @@ How does this project use ProcessForge on this workplace?
 
 ## Command Model
 
+For dry-run, `<project-root>` must already exist because the command inspects
+the target directory. Apply mode can create a missing greenfield project root.
+
 ```bash
 python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --dry-run
 python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply

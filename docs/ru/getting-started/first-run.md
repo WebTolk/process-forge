@@ -7,6 +7,14 @@
 [Guided workplace setup](guided-workplace-setup.md): агент соберёт answers,
 proposal, review, apply report, agent snippet и next steps.
 
+Команда `first-run` выполняет `workplace-initialization` и
+`project-onboarding` по порядку. Это удобная команда запуска, а не отдельное
+process definition.
+
+```bash
+python bin/pf.py first-run --workplace ../pf-workplace --project-root ../my-project --type generic-software-project --apply
+```
+
 ## 1. Создать workplace
 
 ```bash

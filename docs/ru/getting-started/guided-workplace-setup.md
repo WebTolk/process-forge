@@ -21,29 +21,28 @@ python bin/pf.py workplace-setup status --workplace <workplace-root> --session-i
 
 Создаются `answers.yaml`, `proposal.yaml`, `proposal.md`, `review.md`, `apply-report.md`, `agent-instructions.md` и `next-steps.md`.
 
-## Блоки Диалога
+## Блоки диалога
 
-1. Machine layout: ProcessForge root, workplace path, local docs path, project roots.
-2. Agent environment: agent tools, instruction targets, global AGENTS policy.
-3. Privacy and safety: local paths, public `path_ref`, secrets, update trust.
-4. Resources: knowledge roots, package roots, tools, MCP servers, templates.
-5. Platform contracts: neutral by default, real platforms only when explicitly defined.
-6. First project: optional immediate project onboarding plan.
+1. Размещение на машине: ProcessForge root, путь workplace, путь локальной документации, корни проектов.
+2. Среда агентов: agent tools, instruction targets, global AGENTS policy.
+3. Приватность и безопасность: локальные пути, public `path_ref`, secrets, update trust.
+4. Ресурсы: knowledge roots, package roots, tools, MCP servers, templates.
+5. Platform contracts: нейтральные по умолчанию; реальные platforms только при явном описании.
+6. Первый проект: необязательный план немедленного `project-onboard`.
 
-## Инструкция Для Агента
+## Инструкция для агента
 
 `apply` создаёт короткий фрагмент:
 
 ```text
-ProcessForge is installed at <processforge-root>.
-Workplace is <workplace-root>.
+ProcessForge установлен в <processforge-root>.
+Workplace находится в <workplace-root>.
 
-Do not copy ProcessForge into agent config folders or projects.
+Не копируйте ProcessForge в папки конфигурации агентов или проекты.
 
-Inside onboarded projects:
-1. Read .pf/START_AGENT_HERE.md first.
-2. Use python .pf/runtime/bin/pf.py from the project root.
+Внутри подключённых проектов:
+1. Сначала прочитайте .pf/START_AGENT_HERE.md.
+2. Из корня проекта используйте python .pf/runtime/bin/pf.py.
 
-Outside projects:
-use python <processforge-root>/bin/pf.py.
+Вне проектов используйте python <processforge-root>/bin/pf.py.
 ```

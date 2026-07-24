@@ -19,9 +19,8 @@ archive names, and reports.
   knowledge packages, templates, tools, MCP providers, capabilities, processes,
   coding standards, project type hints, policies, and optional parent/child
   platform inheritance.
-- For the current release, use the canonical versioned release archive names:
-  `dist/processforge-v1.0.0.zip` and
-  `dist/processforge-v1.0.0.manifest.json`.
+- Release-specific archive names belong in release checklists. Reusable prompt
+  examples should use neutral archive filenames.
 - `--interactive` is accepted by first-run initialization commands for UX
   compatibility; current commands remain file-first and do not require terminal
   prompting.
@@ -39,8 +38,8 @@ python tools/validate-process-forge-schemas.py --root .
 python tools/validate-public-cleanliness.py --root .
 python tools/validate-process-forge-checksums.py --root . --check
 python bin/pf.py release-test --root .
-python bin/pf.py release-pack --root . --output dist/processforge-v1.0.0.zip
-python bin/pf.py release-archive-test --archive dist/processforge-v1.0.0.zip
+python bin/pf.py release-pack --root . --output dist/processforge-release.zip
+python bin/pf.py release-archive-test --archive dist/processforge-release.zip
 git diff --check
 ```
 
@@ -51,7 +50,29 @@ python <processforge-root>/bin/pf.py workplace-init --workplace <workplace-path>
 python <processforge-root>/bin/pf.py doctor-workplace --root <workplace-path>
 ```
 
+For guided setup:
+
+```bash
+python <processforge-root>/bin/pf.py workplace-setup start --workplace <workplace-path> --session-id <session-id> --answers <answers-yaml> --apply
+python <processforge-root>/bin/pf.py workplace-setup review --workplace <workplace-path> --session-id <session-id>
+python <processforge-root>/bin/pf.py workplace-setup apply --workplace <workplace-path> --session-id <session-id> --apply
+python <processforge-root>/bin/pf.py workplace-setup status --workplace <workplace-path> --session-id <session-id>
+```
+
+## First Run Convenience
+
+Use `first-run` only when workplace initialization and project onboarding should
+run in sequence. For dry-run against a new project, create or select the target
+project directory first.
+
+```bash
+python <processforge-root>/bin/pf.py first-run --workplace <workplace-path> --project-root <project-root> --type <project-type> --apply
+```
+
 ## Project Onboarding
+
+For dry-run, `<project-root>` must already exist. Apply mode can create a
+missing greenfield project root.
 
 ```bash
 python <processforge-root>/bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-path> --type <project-type> --apply

@@ -18,6 +18,9 @@ It creates the project-local `.pf/` flow root:
 
 Command:
 
+For dry-run, create or select `./my-project` first. Apply mode can create a
+missing greenfield project root.
+
 ```bash
 python bin/pf.py project-onboard --project-root ./my-project --workplace ./pf-workplace --type generic-software-project --apply
 python bin/pf.py doctor-project --project-root ./my-project

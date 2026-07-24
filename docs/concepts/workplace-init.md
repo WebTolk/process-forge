@@ -20,6 +20,10 @@ python bin/pf.py workplace-init --workplace <workplace-root> --apply
 python bin/pf.py doctor-workplace --root <workplace-root>
 ```
 
+For an agent-led machine setup, use the higher-level
+`workplace-setup start/review/apply/status` flow to collect answers and review a
+proposal before it calls the workplace initialization mechanics.
+
 `init-workplace --root <workplace-root>` is the lower-level command name.
 `workplace-init --workplace <workplace-root>` is the first-run alias used in
 public docs. `--dry-run` shows planned files. `--apply` writes files and runs

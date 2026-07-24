@@ -4,6 +4,10 @@ Use Project Init to connect a project to ProcessForge.
 
 ## Dry Run
 
+For dry-run, `<project-root>` must already exist because the command inspects the
+target directory before writing. Apply mode can create a missing greenfield
+project root.
+
 ```bash
 python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --dry-run
 ```

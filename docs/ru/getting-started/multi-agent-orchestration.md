@@ -19,3 +19,11 @@ python .pf/runtime/bin/pf.py worker-launch-prompt create --project-root . --task
 - `worker-launch-prompt-create`
 
 Template plan находится в `templates/orchestrator-task-plan.yaml`.
+
+Чтобы переиспользовать example plan из distribution, запускайте команду из
+distribution root ProcessForge и указывайте подключенный проект через
+`--project-root`:
+
+```bash
+python bin/pf.py orchestrator-plan create --project-root <project-root> --run example-run --title "Example multi-agent run" --answers examples/multi-agent-orchestration/minimal/orchestrator-task-plan.yaml --apply
+```
