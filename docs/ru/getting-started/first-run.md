@@ -3,6 +3,10 @@
 Первый запуск разделен на два шага: workplace создается один раз на машине, а
 каждый проект подключается отдельно.
 
+Если нужна диалоговая настройка новой машины, сначала используйте
+[Guided workplace setup](guided-workplace-setup.md): агент соберёт answers,
+proposal, review, apply report, agent snippet и next steps.
+
 ## 1. Создать workplace
 
 ```bash

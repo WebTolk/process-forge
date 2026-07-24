@@ -18,10 +18,12 @@ workplace; каждый repository хранит только проектный 
 - [Первый запуск](getting-started/first-run.md)
 - [Порядок инициализации](getting-started/initialization-order.md)
 - [Инициализация workplace](getting-started/workplace-initialization.md)
+- [Guided workplace setup](getting-started/guided-workplace-setup.md)
 - [Подключение проекта](getting-started/project-onboarding.md)
 - [Агентский command runbook и prompts](getting-started/agent-prompts.md)
 - [Первый собственный процесс](getting-started/create-your-first-process.md)
 - [Task batch workflow](getting-started/task-batch-workflow.md)
+- [Multi-agent orchestration](getting-started/multi-agent-orchestration.md)
 
 ## Authoring
 
@@ -41,6 +43,7 @@ workplace; каждый repository хранит только проектный 
 - [Project snapshot](concepts/project-snapshot.md)
 - [Runs, tasks и iterations](concepts/runs-tasks-iterations.md)
 - [Process definition, run, task, iteration](concepts/process-definition-run-task-iteration.md)
+- [Multi-agent orchestration](concepts/multi-agent-orchestration.md)
 - [Platform contracts](concepts/platform-contracts.md)
 - [Platform inheritance](concepts/platform-inheritance.md)
 - [Навигация knowledge resources](concepts/knowledge-resource-navigation.md)

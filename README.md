@@ -65,6 +65,8 @@ yet. Create or register the dependencies first, then compose the platform.
 ProcessForge currently supports file-first creation flows for:
 
 - workplace initialization: `workplace-init` / `init-workplace`
+- guided workplace setup: `workplace-setup start`, `workplace-setup review`,
+  `workplace-setup apply`, and `workplace-setup status`
 - project onboarding: `project-onboard` / `init-project`
 - first run bootstrap: `first-run`
 - process authoring: `process-authoring-start`, `process-authoring-review`,
@@ -77,6 +79,9 @@ ProcessForge currently supports file-first creation flows for:
 - tools and MCP providers: `tool-register`, `mcp-register`
 - runs, tasks, and iterations: `run-create`, `task-create`, `iteration-add`,
   completion, summary, and doctor commands
+- multi-agent orchestration: `orchestrator-plan create`,
+  `orchestrator-plan validate`, `orchestrator-plan apply`,
+  `orchestrator-plan status`, and `worker-launch-prompt create`
 
 The `--interactive` flag is accepted by first-run initialization commands for
 UX compatibility, but the current implementation is file-first and does not

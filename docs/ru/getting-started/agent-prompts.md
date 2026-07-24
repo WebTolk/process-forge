@@ -25,6 +25,11 @@
 - `--interactive` принимается first-run initialization commands для UX
   compatibility; текущие commands остаются file-first и не требуют terminal
   prompting.
+- Для guided machine setup используйте `workplace-setup start`,
+  `workplace-setup review`, `workplace-setup apply` и `workplace-setup status`.
+- Для bounded worker orchestration используйте `orchestrator-plan create`,
+  `orchestrator-plan validate`, `orchestrator-plan apply`,
+  `orchestrator-plan status` и `worker-launch-prompt create`.
 
 ## Проверки distribution root
 

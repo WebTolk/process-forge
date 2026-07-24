@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/guided-workplace-setup-proposal.schema.json",
+  "title": "Guided Workplace Setup Proposal",
+  "type": "object",
+  "required": ["schema_version", "session_id", "status", "workplace", "processforge", "registries", "apply_steps"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "session_id": { "$ref": "#/$defs/id" },
+    "status": { "type": "string" },
+    "workplace": { "type": "object", "required": ["path_ref"], "additionalProperties": true },
+    "processforge": { "type": "object", "required": ["root_ref"], "additionalProperties": true },
+    "local_docs": { "type": "object", "additionalProperties": true },
+    "project_roots": { "type": "array", "items": { "type": "string" } },
+    "agent_environments": { "type": "array", "items": { "type": "string" } },
+    "instruction_targets": { "type": "array", "items": { "type": "string" } },
+    "registries": { "type": "object", "additionalProperties": true },
+    "privacy": { "type": "object", "additionalProperties": true },
+    "platform_policy": { "type": "object", "additionalProperties": true },
+    "first_project": { "type": "object", "additionalProperties": true },
+    "apply_steps": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" }
+  },
+  "additionalProperties": true
+}

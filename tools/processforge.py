@@ -184,6 +184,9 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "workplace.doctor.passed",
     "workplace.doctor.failed",
     "workplace.initialization.completed",
+    "workplace.setup.started",
+    "workplace.setup.reviewed",
+    "workplace.setup.applied",
     "project.onboarding.started",
     "project.flow_root.created",
     "project.platform.detected",
@@ -220,6 +223,10 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "run.cancelled",
     "run.doctor.passed",
     "run.doctor.failed",
+    "orchestrator.plan.created",
+    "orchestrator.plan.reviewed",
+    "orchestrator.plan.applied",
+    "worker.launch_prompt.created",
     "task.created",
     "task.started",
     "task.updated",
@@ -1222,6 +1229,317 @@ def command_global_agents_section(args: argparse.Namespace) -> int:
     path = Path(args.path).expanduser().resolve()
     result = write_global_agent_section(path, dry_run=args.dry_run, force=args.force)
     print(f"{result.status.upper()}: {result.target}")
+    return 0
+
+
+def workplace_setup_session_dir(workplace: Path, session_id: str) -> Path:
+    return workplace / ".pf-workplace" / "setup-sessions" / safe_id(session_id, "setup-session")
+
+
+def default_guided_workplace_answers(workplace: Path, session_id: str) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "session": {"id": safe_id(session_id, "setup-session"), "status": "draft"},
+        "machine_layout": {
+            "processforge_root": "${PROCESSFORGE_ROOT}",
+            "workplace_path": "${PF_WORKPLACE}",
+            "local_docs_path": "${PF_WORKPLACE}/knowledge",
+            "project_roots": ["${PF_WORKPLACE}/projects"],
+        },
+        "agent_environment": {
+            "tools": ["generic"],
+            "instructions_targets": ["AGENTS.md"],
+            "global_agents_policy": "bounded_processforge_section",
+        },
+        "privacy_safety": {
+            "local_paths_private_only": True,
+            "public_manifests_use_path_ref": True,
+            "secret_handling": "store secret names only; never store secret values",
+            "update_trust_policy": {
+                "require_https": True,
+                "require_sha256_for_download": True,
+                "require_sha256_for_install": True,
+            },
+        },
+        "resources": {
+            "knowledge_roots": [{"id": "local-docs", "path_ref": "${PF_WORKPLACE}/knowledge", "status": "available"}],
+            "package_roots": [{"id": "global", "path_ref": "${PF_WORKPLACE}/packages", "default": True, "writable": True}],
+            "tools": [],
+            "mcp_servers": [],
+            "templates": [],
+        },
+        "platform_contracts": {
+            "policy": "neutral_or_explicit",
+            "create": [],
+            "notes": "Do not create real platform contracts unless the user explicitly defines them.",
+        },
+        "first_project": {"onboard_now": False, "project_root": "", "project_type": "generic-software-project", "suggested_run": "first-run"},
+    }
+
+
+def merge_guided_answers(defaults: dict[str, Any], supplied: dict[str, Any]) -> dict[str, Any]:
+    result = dict(defaults)
+    for key, value in supplied.items():
+        if isinstance(value, dict) and isinstance(result.get(key), dict):
+            nested = dict(result[key])
+            nested.update(value)
+            result[key] = nested
+        else:
+            result[key] = value
+    return result
+
+
+def load_guided_workplace_answers(session_dir: Path, answers_path: Path | None = None, *, workplace: Path | None = None, session_id: str = "default") -> dict[str, Any]:
+    defaults = default_guided_workplace_answers(workplace or session_dir, session_id)
+    existing = session_dir / "answers.yaml"
+    source = answers_path if answers_path and answers_path.is_file() else existing if existing.is_file() else None
+    supplied = load_answers(source) if source else {}
+    return merge_guided_answers(defaults, supplied)
+
+
+def guided_answers_to_workplace_init_answers(workplace: Path, answers: dict[str, Any]) -> dict[str, Any]:
+    machine = answers.get("machine_layout") if isinstance(answers.get("machine_layout"), dict) else {}
+    resources = answers.get("resources") if isinstance(answers.get("resources"), dict) else {}
+    privacy = answers.get("privacy_safety") if isinstance(answers.get("privacy_safety"), dict) else {}
+    package_roots = {}
+    for item in resources.get("package_roots", []) if isinstance(resources.get("package_roots"), list) else []:
+        if isinstance(item, dict):
+            package_roots[str(item.get("id") or "global")] = str(item.get("path_ref") or item.get("path") or "${PF_WORKPLACE}/packages")
+    knowledge_roots = {}
+    for item in resources.get("knowledge_roots", []) if isinstance(resources.get("knowledge_roots"), list) else []:
+        if isinstance(item, dict):
+            knowledge_roots[str(item.get("id") or "local-docs")] = str(item.get("path_ref") or item.get("path") or "${PF_WORKPLACE}/knowledge")
+    processforge_root = str(machine.get("processforge_root") or "${PROCESSFORGE_ROOT}")
+    return {
+        "workplace": {"id": safe_id(workplace.name or "workplace", "workplace"), "name": workplace.name or "ProcessForge Workplace"},
+        "paths": {
+            "root": str(machine.get("workplace_path") or workplace),
+            "knowledge_roots": knowledge_roots,
+            "package_roots": package_roots,
+            "template_roots": {"global": "${PF_WORKPLACE}/reusable-templates"},
+            "distributions": {"processforge": processforge_root},
+        },
+        "policies": {"shell_is_fallback": True, "local_paths_private_only": bool(privacy.get("local_paths_private_only", True))},
+    }
+
+
+def render_workplace_setup_proposal(session_id: str, answers: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    machine = answers.get("machine_layout") if isinstance(answers.get("machine_layout"), dict) else {}
+    agents = answers.get("agent_environment") if isinstance(answers.get("agent_environment"), dict) else {}
+    resources = answers.get("resources") if isinstance(answers.get("resources"), dict) else {}
+    first_project = answers.get("first_project") if isinstance(answers.get("first_project"), dict) else {}
+    proposal = {
+        "schema_version": 1,
+        "session_id": safe_id(session_id, "setup-session"),
+        "status": "ready_for_review",
+        "workplace": {"path_ref": str(machine.get("workplace_path") or "${PF_WORKPLACE}")},
+        "processforge": {"root_ref": str(machine.get("processforge_root") or "${PROCESSFORGE_ROOT}")},
+        "local_docs": {"path_ref": str(machine.get("local_docs_path") or "${PF_WORKPLACE}/knowledge")},
+        "project_roots": [str(item) for item in as_list(machine.get("project_roots"))],
+        "agent_environments": [str(item) for item in as_list(agents.get("tools") or ["generic"])],
+        "instruction_targets": [str(item) for item in as_list(agents.get("instructions_targets") or ["AGENTS.md"])],
+        "registries": {
+            "knowledge_roots": resources.get("knowledge_roots", []),
+            "package_roots": resources.get("package_roots", []),
+            "tools": resources.get("tools", []),
+            "mcp_servers": resources.get("mcp_servers", []),
+            "templates": resources.get("templates", []),
+        },
+        "privacy": answers.get("privacy_safety", {}),
+        "platform_policy": answers.get("platform_contracts", {}),
+        "first_project": first_project,
+        "apply_steps": [
+            "run workplace-init internals",
+            "write workplace registries",
+            "write agent instruction snippet",
+            "run doctor-workplace",
+            "write project-onboard next steps",
+        ],
+    }
+    md = f"""# Guided Workplace Setup Proposal
+
+## Session
+
+- id: `{safe_id(session_id, "setup-session")}`
+- status: `ready_for_review`
+
+## Layout
+
+- ProcessForge root: `{proposal["processforge"]["root_ref"]}`
+- Workplace: `{proposal["workplace"]["path_ref"]}`
+- Local docs: `{proposal["local_docs"]["path_ref"]}`
+- Project roots: {", ".join(proposal["project_roots"]) if proposal["project_roots"] else "not set"}
+
+## Agent Environments
+
+- Tools: {", ".join(proposal["agent_environments"])}
+- Instruction targets: {", ".join(proposal["instruction_targets"])}
+
+## Apply Plan
+
+1. Create or update the workplace layer through `workplace-init`.
+2. Preserve private machine paths inside workplace-local files.
+3. Generate a bounded ProcessForge agent instruction snippet.
+4. Run `doctor-workplace`.
+5. Write project onboarding next steps.
+"""
+    return proposal, md
+
+
+def workplace_setup_agent_snippet(processforge_root: str, workplace_path: str) -> str:
+    return f"""# ProcessForge Agent Instructions
+
+ProcessForge is installed at {processforge_root}.
+Workplace is {workplace_path}.
+
+Do not copy ProcessForge into agent config folders or projects.
+
+Inside onboarded projects:
+1. Read .pf/START_AGENT_HERE.md first.
+2. Use python .pf/runtime/bin/pf.py from the project root.
+
+Outside projects:
+use python {processforge_root}/bin/pf.py.
+"""
+
+
+def command_workplace_setup_start(args: argparse.Namespace) -> int:
+    workplace = Path(args.workplace).expanduser().resolve()
+    session_id = safe_id(args.session_id or "default", "setup-session")
+    session_dir = workplace_setup_session_dir(workplace, session_id)
+    answers = load_guided_workplace_answers(session_dir, Path(args.answers).expanduser().resolve() if args.answers else None, workplace=workplace, session_id=session_id)
+    planned = [session_dir / "answers.yaml", session_dir / "proposal.yaml", session_dir / "proposal.md", session_dir / "next-steps.md"]
+    if not args.apply or args.dry_run:
+        print_plan("workplace-setup start dry run", planned, workplace)
+        return 0
+    session_dir.mkdir(parents=True, exist_ok=True)
+    write_yaml_file(session_dir / "answers.yaml", answers)
+    proposal, proposal_md = render_workplace_setup_proposal(session_id, answers)
+    write_yaml_file(session_dir / "proposal.yaml", proposal)
+    (session_dir / "proposal.md").write_text(ensure_trailing_newline(proposal_md), encoding="utf-8")
+    (session_dir / "next-steps.md").write_text(
+        "# Next Steps\n\nReview `proposal.md`, adjust `answers.yaml`, then run `workplace-setup apply` with `--apply`.\n",
+        encoding="utf-8",
+    )
+    append_workplace_event(workplace, "workplace.setup.started", payload={"session_id": session_id})
+    print(f"WROTE: {rel(session_dir / 'answers.yaml', workplace)}")
+    print(f"WROTE: {rel(session_dir / 'proposal.md', workplace)}")
+    return 0
+
+
+def command_workplace_setup_review(args: argparse.Namespace) -> int:
+    workplace = Path(args.workplace).expanduser().resolve()
+    session_id = safe_id(args.session_id or "default", "setup-session")
+    session_dir = workplace_setup_session_dir(workplace, session_id)
+    answers = load_guided_workplace_answers(session_dir, Path(args.answers).expanduser().resolve() if args.answers else None, workplace=workplace, session_id=session_id)
+    proposal, proposal_md = render_workplace_setup_proposal(session_id, answers)
+    review = f"""# Guided Workplace Setup Review
+
+## Result
+
+pass_with_conditions
+
+## Checked
+
+- answers are parseable YAML
+- proposal is generated before apply
+- private paths stay in workplace-local setup artifacts
+- apply plan delegates to `workplace-init` and `doctor-workplace`
+
+## Conditions
+
+- User should inspect `proposal.md` before running apply on a real machine.
+"""
+    planned = [session_dir / "answers.yaml", session_dir / "proposal.yaml", session_dir / "proposal.md", session_dir / "review.md"]
+    if args.dry_run:
+        print_plan("workplace-setup review dry run", planned, workplace)
+        return 0
+    session_dir.mkdir(parents=True, exist_ok=True)
+    write_yaml_file(session_dir / "answers.yaml", answers)
+    write_yaml_file(session_dir / "proposal.yaml", proposal)
+    (session_dir / "proposal.md").write_text(ensure_trailing_newline(proposal_md), encoding="utf-8")
+    (session_dir / "review.md").write_text(ensure_trailing_newline(review), encoding="utf-8")
+    append_workplace_event(workplace, "workplace.setup.reviewed", payload={"session_id": session_id})
+    print(f"WROTE: {rel(session_dir / 'review.md', workplace)}")
+    return 0
+
+
+def command_workplace_setup_apply(args: argparse.Namespace) -> int:
+    workplace = Path(args.workplace).expanduser().resolve()
+    session_id = safe_id(args.session_id or "default", "setup-session")
+    session_dir = workplace_setup_session_dir(workplace, session_id)
+    answers = load_guided_workplace_answers(session_dir, Path(args.answers).expanduser().resolve() if args.answers else None, workplace=workplace, session_id=session_id)
+    proposal, proposal_md = render_workplace_setup_proposal(session_id, answers)
+    planned = [
+        workplace / "workplace.yaml",
+        workplace / "terms.yaml",
+        workplace / "registries",
+        session_dir / "apply-report.md",
+        session_dir / "agent-instructions.md",
+        session_dir / "next-steps.md",
+    ]
+    if not args.apply or args.dry_run:
+        print_plan("workplace-setup apply dry run", planned, workplace)
+        return 0
+    session_dir.mkdir(parents=True, exist_ok=True)
+    write_yaml_file(session_dir / "answers.yaml", answers)
+    write_yaml_file(session_dir / "proposal.yaml", proposal)
+    (session_dir / "proposal.md").write_text(ensure_trailing_newline(proposal_md), encoding="utf-8")
+    init_answers = guided_answers_to_workplace_init_answers(workplace, answers)
+    init_answers_path = session_dir / "workplace-init.answers.yaml"
+    write_yaml_file(init_answers_path, init_answers)
+    status, output = run_command_capture(
+        command_init_workplace,
+        argparse.Namespace(root=str(workplace), answers=str(init_answers_path), apply=True, dry_run=False, force=True, command="workplace-setup apply"),
+    )
+    machine = answers.get("machine_layout") if isinstance(answers.get("machine_layout"), dict) else {}
+    snippet = workplace_setup_agent_snippet(str(machine.get("processforge_root") or "${PROCESSFORGE_ROOT}"), str(machine.get("workplace_path") or workplace))
+    (session_dir / "agent-instructions.md").write_text(ensure_trailing_newline(snippet), encoding="utf-8")
+    report = f"""# Guided Workplace Setup Apply Report
+
+## Result
+
+{"pass" if status == 0 else "fail"}
+
+## Delegated Mechanics
+
+- workplace-init internals
+- doctor-workplace
+- registry/bootstrap artifact creation
+
+## Doctor Output
+
+```text
+{output.rstrip()}
+```
+"""
+    next_steps = f"""# Next Steps
+
+## Project Onboarding
+
+```bash
+python {machine.get("processforge_root") or "<processforge-root>"}/bin/pf.py project-onboard --project-root <project-root> --workplace {workplace} --type generic-software-project --apply
+```
+
+Inside an onboarded project, read `.pf/START_AGENT_HERE.md` and use `python .pf/runtime/bin/pf.py`.
+"""
+    (session_dir / "apply-report.md").write_text(ensure_trailing_newline(report), encoding="utf-8")
+    (session_dir / "next-steps.md").write_text(ensure_trailing_newline(next_steps), encoding="utf-8")
+    append_workplace_event(workplace, "workplace.setup.applied", payload={"session_id": session_id, "doctor_status": status})
+    print(output, end="")
+    print(f"WROTE: {rel(session_dir / 'apply-report.md', workplace)}")
+    print(f"WROTE: {rel(session_dir / 'agent-instructions.md', workplace)}")
+    return status
+
+
+def command_workplace_setup_status(args: argparse.Namespace) -> int:
+    workplace = Path(args.workplace).expanduser().resolve()
+    session_id = safe_id(args.session_id or "default", "setup-session")
+    session_dir = workplace_setup_session_dir(workplace, session_id)
+    print(f"SESSION: {session_id}")
+    print(f"WORKPLACE: {workplace}")
+    for name in ["answers.yaml", "proposal.yaml", "proposal.md", "review.md", "apply-report.md", "agent-instructions.md", "next-steps.md"]:
+        print(f"{'PRESENT' if (session_dir / name).is_file() else 'MISSING'}: {rel(session_dir / name, workplace)}")
     return 0
 
 
@@ -3794,6 +4112,9 @@ def command_release_test(args: argparse.Namespace) -> int:
         ReleaseCommand("smoke_resource_authoring", [sys.executable, str(root / "tools" / "smoke_resource_authoring_processes.py")], 180),
         ReleaseCommand("smoke_update_framework_readonly", [sys.executable, str(root / "tools" / "smoke_update_framework_readonly.py")], 180),
         ReleaseCommand("smoke_update_framework_validation", [sys.executable, str(root / "tools" / "smoke_update_framework_validation.py")], 180),
+        ReleaseCommand("smoke_guided_workplace_setup", [sys.executable, str(root / "tools" / "smoke_guided_workplace_setup.py")], 180),
+        ReleaseCommand("smoke_multiagent_orchestration_process", [sys.executable, str(root / "tools" / "smoke_multiagent_orchestration_process.py")], 180),
+        ReleaseCommand("smoke_multiagent_assignment_contract", [sys.executable, str(root / "tools" / "smoke_multiagent_assignment_contract.py")], 120),
         ReleaseCommand("smoke_manifest_driven_platforms", [sys.executable, str(root / "tools" / "smoke_manifest_driven_platforms.py")], 180),
         ReleaseCommand("smoke_platform_inheritance", [sys.executable, str(root / "tools" / "smoke_platform_inheritance.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
@@ -8492,6 +8813,394 @@ def command_authoring_parity_check_all(args: argparse.Namespace) -> int:
     return process_result
 
 
+def default_orchestrator_task_plan(run_id: str, title: str) -> dict[str, Any]:
+    run_id = safe_id(run_id, "run")
+    return {
+        "schema_version": 1,
+        "run": {"id": run_id, "title": title, "process": "multi-agent-task-orchestration"},
+        "orchestrator": {
+            "role": "orchestrator",
+            "responsibilities": ["decompose work", "assign workers", "review outputs", "integrate final result"],
+        },
+        "workers": [
+            {
+                "id": "docs-worker",
+                "title": "Documentation update",
+                "role": "documentation",
+                "process": "content-production",
+                "execution_mode": "docs_only",
+                "writer": True,
+                "allowed_files": ["docs/**", "README.md"],
+                "allowed_read_files": [".pf/contexts/project-context.snapshot.yaml"],
+                "forbidden_files": ["tools/**", "schemas/**"],
+                "required_sources": [".pf/contexts/project-context.snapshot.yaml"],
+                "required_outputs": [{"id": "docs-report", "path": ".pf/artifacts/docs-worker-report.md", "type": "markdown", "required": True}],
+                "expected_report_artifact": ".pf/artifacts/docs-worker-report.md",
+                "worker_may_rebuild_context": False,
+            },
+            {
+                "id": "test-worker",
+                "title": "Release test verification",
+                "role": "release-assurance",
+                "process": "testing",
+                "execution_mode": "assurance",
+                "writer": True,
+                "allowed_files": [".pf/artifacts/**"],
+                "allowed_read_files": ["tools/**", "schemas/**", ".pf/contexts/project-context.snapshot.yaml"],
+                "forbidden_files": ["tools/processforge.py"],
+                "required_sources": [".pf/contexts/project-context.snapshot.yaml"],
+                "required_outputs": [{"id": "test-report", "path": ".pf/artifacts/test-worker-report.md", "type": "markdown", "required": True}],
+                "expected_report_artifact": ".pf/artifacts/test-worker-report.md",
+                "worker_may_rebuild_context": False,
+            },
+        ],
+        "integration": {"required": True, "role": "orchestrator", "expected_output": ".pf/artifacts/orchestrator-integration-report.md"},
+    }
+
+
+def orchestrator_plan_path(project_root: Path, run_id: str) -> Path:
+    return run_root(project_root, run_id) / "orchestrator-plan.yaml"
+
+
+def worker_prompt_path(project_root: Path, run_id: str, task_id: str) -> Path:
+    return run_root(project_root, run_id) / "worker-prompts" / f"{safe_id(task_id, 'task')}.md"
+
+
+def load_orchestrator_plan(project_root: Path, plan_arg: str | None = None, run_arg: str | None = None) -> dict[str, Any]:
+    if plan_arg:
+        path = Path(plan_arg).expanduser()
+        if not path.is_absolute():
+            path = (project_root / path).resolve()
+    elif run_arg:
+        path = orchestrator_plan_path(project_root, run_arg)
+    else:
+        raise SystemExit("FAIL: --plan or --run is required")
+    if not path.is_file():
+        raise SystemExit(f"FAIL: orchestrator plan not found: {path}")
+    data = read_yaml_file(path)
+    if not isinstance(data, dict):
+        raise SystemExit(f"FAIL: orchestrator plan must be a YAML object: {path}")
+    return data
+
+
+def path_allowed_by_scope(path: str, scopes: list[str]) -> bool:
+    key = assignment_path_key(path)
+    for scope in scopes:
+        scope_key = assignment_path_key(scope)
+        if scope_key in {".pf/artifacts/**", ".pf/artifacts/*"} and key.startswith(".pf/artifacts/"):
+            return True
+        if assignment_has_glob(scope_key) and fnmatch.fnmatch(key, scope_key):
+            return True
+        if key == scope_key:
+            return True
+    return False
+
+
+def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) -> list[Check]:
+    checks: list[Check] = []
+    run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
+    workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
+    checks.append(check("PASS" if run.get("id") else "FAIL", "run.id present"))
+    checks.append(check("PASS" if run.get("title") else "FAIL", "run.title present"))
+    checks.append(check("PASS" if str(run.get("process") or "multi-agent-task-orchestration") == "multi-agent-task-orchestration" else "FAIL", "run process is multi-agent-task-orchestration"))
+    checks.append(check("PASS" if workers else "FAIL", "workers present"))
+    seen: set[str] = set()
+    repo_files = iter_repo_files(project_root)
+    write_scopes: list[tuple[str, list[str]]] = []
+    for raw_worker in workers:
+        if not isinstance(raw_worker, dict):
+            checks.append(check("FAIL", "worker item must be an object"))
+            continue
+        worker_id = safe_id(str(raw_worker.get("id") or ""), "worker")
+        checks.append(check("PASS" if worker_id and worker_id not in seen else "FAIL", f"worker id unique: {worker_id or 'missing'}"))
+        seen.add(worker_id)
+        allowed = assignment_scope_items(raw_worker.get("allowed_files"))
+        forbidden = assignment_scope_items(raw_worker.get("forbidden_files"))
+        read_allowed = assignment_scope_items(raw_worker.get("allowed_read_files"))
+        outputs = normalize_required_outputs(raw_worker.get("required_outputs"))
+        writer = bool(raw_worker.get("writer", True))
+        if writer:
+            checks.append(check("PASS" if allowed else "FAIL", f"{worker_id} writer has allowed_files"))
+        checks.append(check("PASS" if read_allowed or raw_worker.get("required_sources") else "WARN", f"{worker_id} has bounded read/context scope"))
+        forbidden_conflicts = assignment_scope_conflicts(worker_id, allowed, worker_id, forbidden, repo_files, reason_prefix="forbidden_wins:")
+        checks.append(check("PASS" if not forbidden_conflicts else "FAIL", f"{worker_id} forbidden_files do not overlap allowed_files"))
+        for output in outputs:
+            out_path = normalize_assignment_path(output.get("path") if isinstance(output, dict) else "")
+            checks.append(check("PASS" if out_path else "FAIL", f"{worker_id} required output has path"))
+            if out_path:
+                allowed_output = path_allowed_by_scope(out_path, allowed) or out_path.startswith(".pf/artifacts/")
+                checks.append(check("PASS" if allowed_output else "FAIL", f"{worker_id} required output inside allowed or artifact area: {out_path}"))
+        checks.append(check("PASS" if not bool(raw_worker.get("worker_may_rebuild_context", False)) else "FAIL", f"{worker_id} worker_may_rebuild_context false by default"))
+        if writer:
+            write_scopes.append((worker_id, allowed))
+    if not bool(plan.get("allow_write_scope_overlap", False)):
+        for index, (left_id, left_scope) in enumerate(write_scopes):
+            for right_id, right_scope in write_scopes[index + 1 :]:
+                conflicts = assignment_scope_conflicts(left_id, left_scope, right_id, right_scope, repo_files)
+                if conflicts:
+                    checks.append(check("FAIL", f"parallel write scopes overlap: {left_id} <-> {right_id}"))
+    integration = plan.get("integration") if isinstance(plan.get("integration"), dict) else {}
+    if integration.get("required", True):
+        checks.append(check("PASS" if integration.get("expected_output") else "FAIL", "integration expected_output present"))
+    return checks
+
+
+def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
+    task_id = safe_id(task_id, "task")
+    task = load_task(project_root, task_id)
+    run_id = str(task.get("run_id") or "")
+    capsule = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
+    allowed_files = assignment_scope_items(task.get("allowed_files"))
+    allowed_read_files = assignment_scope_items(task.get("allowed_read_files"))
+    forbidden_files = assignment_scope_items(task.get("forbidden_files"))
+    required_outputs = normalize_required_outputs(task.get("required_outputs"))
+    expected_report = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+    lines = [
+        "# Worker Launch Prompt",
+        "",
+        "You are a worker agent.",
+        "You are not the orchestrator.",
+        "Use only the assigned task and the provided assignment capsule.",
+        "Do not rebuild full project context unless explicitly allowed.",
+        "Do not edit files outside allowed_files.",
+        "Do not read files outside allowed_read_files unless explicitly allowed.",
+        "Respect forbidden_files.",
+        "Produce required_outputs.",
+        "Write expected_report.",
+        "Stop and report if scope is insufficient.",
+        "",
+        "## Assignment",
+        "",
+        f"- task_id: `{task_id}`",
+        f"- run_id: `{run_id}`",
+        f"- assignment: `{rel(assignment_yaml_path(project_root, task_id), project_root)}`",
+        f"- capsule: `{capsule}`",
+        "- worker_may_rebuild_context: `false`",
+        "",
+        "## allowed_files",
+        "",
+        *[f"- `{item}`" for item in allowed_files],
+        "",
+        "## allowed_read_files",
+        "",
+        *[f"- `{item}`" for item in allowed_read_files],
+        "",
+        "## forbidden_files",
+        "",
+        *[f"- `{item}`" for item in forbidden_files],
+        "",
+        "## required_outputs",
+        "",
+    ]
+    for output in required_outputs:
+        lines.append(f"- `{output.get('id')}` -> `{output.get('path', '')}`")
+    lines.extend(["", "## expected_report", "", f"- `{expected_report.get('artifact', '')}`"])
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def write_orchestration_summary(project_root: Path, plan: dict[str, Any]) -> None:
+    run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
+    run_id = safe_id(str(run.get("id") or "run"), "run")
+    workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
+    summary = run_root(project_root, run_id) / "orchestration-summary.md"
+    task_index = run_root(project_root, run_id) / "orchestration-task-index.md"
+    handoff = locate_flow_root(project_root) / "handoffs" / "runs" / f"{run_id}-orchestrator-handoff.md"
+    summary_lines = [f"# Orchestration Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", "- process: `multi-agent-task-orchestration`", "", "## Workers", ""]
+    index_lines = [f"# Orchestration Task Index: {run_id}", ""]
+    for worker in workers:
+        if not isinstance(worker, dict):
+            continue
+        task_id = safe_id(str(worker.get("id") or "worker"), "worker")
+        prompt_rel = rel(worker_prompt_path(project_root, run_id, task_id), project_root)
+        capsule_rel = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
+        summary_lines.append(f"- `{task_id}`: prompt `{prompt_rel}`, capsule `{capsule_rel}`")
+        index_lines.append(f"- `{task_id}` -> `.pf/assignments/{task_id}.yaml`")
+    handoff_text = f"""# Handoff: orchestrator -> integration/review
+
+Objective:
+Coordinate worker outputs for run `{run_id}`.
+
+Current status:
+Initial worker assignments, capsules, and launch prompts were generated.
+
+Input artifacts:
+- {rel(orchestrator_plan_path(project_root, run_id), project_root)}
+- {rel(summary, project_root)}
+
+Files changed:
+- .pf/runs/{run_id}/
+- .pf/assignments/
+- .pf/contexts/assignment-capsules/
+
+Files not to touch:
+- Files outside each worker `allowed_files`.
+
+Known issues:
+- Worker outputs are pending.
+
+Required checks:
+- `python .pf/runtime/bin/pf.py run-doctor --project-root . --run {run_id}`
+- `python .pf/runtime/bin/pf.py task-doctor --project-root . --task <task-id>`
+
+Next recommended action:
+Launch workers with the generated prompts, then integrate their required outputs.
+"""
+    summary.write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
+    task_index.write_text("\n".join(index_lines) + "\n", encoding="utf-8")
+    handoff.parent.mkdir(parents=True, exist_ok=True)
+    handoff.write_text(handoff_text, encoding="utf-8")
+
+
+def command_orchestrator_plan_create(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    run_id = safe_id(args.run, "run")
+    path = orchestrator_plan_path(project_root, run_id)
+    plan = load_answers(Path(args.answers).expanduser().resolve() if args.answers else None) if args.answers else default_orchestrator_task_plan(run_id, args.title)
+    if not plan.get("run"):
+        plan["run"] = {"id": run_id, "title": args.title, "process": "multi-agent-task-orchestration"}
+    if not args.apply or getattr(args, "dry_run", False):
+        print_plan("orchestrator-plan create dry run", [path], project_root)
+        return 0
+    write_yaml_file(path, plan)
+    emit_process_event(project_root, "orchestrator.plan.created", process_id="multi-agent-task-orchestration", subject=run_id, payload={"plan": rel(path, project_root)}, correlation_id=f"run-{run_id}")
+    print(f"WROTE: {rel(path, project_root)}")
+    return 0
+
+
+def command_orchestrator_plan_validate(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
+    result = print_checks(validate_orchestrator_task_plan(project_root, plan))
+    run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
+    emit_process_event(project_root, "orchestrator.plan.reviewed", process_id="multi-agent-task-orchestration", subject=str(run.get("id") or "run"), payload={"result": "fail" if result else "pass"})
+    return result
+
+
+def command_worker_launch_prompt_create(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
+    run_id = str(task.get("run_id") or "")
+    output = Path(args.output).expanduser() if getattr(args, "output", None) else worker_prompt_path(project_root, run_id, task_id)
+    if not output.is_absolute():
+        output = (project_root / output).resolve()
+    prompt = render_worker_launch_prompt(project_root, task_id)
+    if not args.apply or getattr(args, "dry_run", False):
+        print_plan("worker-launch-prompt create dry run", [output], project_root)
+        return 0
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(prompt, encoding="utf-8")
+    emit_process_event(project_root, "worker.launch_prompt.created", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"prompt": rel(output, project_root)}, correlation_id=f"run-{run_id}")
+    print(f"WROTE: {rel(output, project_root)}")
+    return 0
+
+
+def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
+    checks = validate_orchestrator_task_plan(project_root, plan)
+    if any(item.level == "FAIL" for item in checks):
+        print_checks(checks)
+        return 1
+    run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
+    run_id = safe_id(str(run.get("id") or "run"), "run")
+    title = str(run.get("title") or run_id)
+    workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
+    planned = [run_yaml_path(project_root, run_id), orchestrator_plan_path(project_root, run_id), run_root(project_root, run_id) / "worker-prompts"]
+    if not args.apply or getattr(args, "dry_run", False):
+        print_plan("orchestrator-plan apply dry run", planned, project_root)
+        return 0
+    if not run_yaml_path(project_root, run_id).is_file():
+        status, output = run_command_capture(
+            command_run_create,
+            argparse.Namespace(project_root=str(project_root), id=run_id, title=title, process="multi-agent-task-orchestration", objective=str(run.get("objective") or title), status="in_progress", dry_run=False),
+        )
+        if status:
+            print(output, end="")
+            return status
+    write_yaml_file(orchestrator_plan_path(project_root, run_id), plan)
+    for order, worker in enumerate(workers, start=1):
+        if not isinstance(worker, dict):
+            continue
+        task_id = safe_id(str(worker.get("id") or f"worker-{order}"), "worker")
+        assignment_path = assignment_yaml_path(project_root, task_id)
+        if not assignment_path.is_file():
+            status, output = run_command_capture(
+                command_task_create,
+                argparse.Namespace(
+                    project_root=str(project_root),
+                    run=run_id,
+                    id=task_id,
+                    title=str(worker.get("title") or task_id),
+                    process=str(worker.get("process") or "task-batch-execution"),
+                    objective=str(worker.get("objective") or worker.get("title") or task_id),
+                    order=order,
+                    execution_mode=str(worker.get("execution_mode") or "implementation"),
+                    allowed_file=assignment_scope_items(worker.get("allowed_files")),
+                    allowed_glob=[],
+                    allowed_read_file=assignment_scope_items(worker.get("allowed_read_files")),
+                    read_file=[],
+                    context_artifact=normalize_context_artifacts(worker.get("context_artifacts")),
+                    required_source=assignment_scope_items(worker.get("required_sources")),
+                    forbidden_file=assignment_scope_items(worker.get("forbidden_files")),
+                    forbidden_glob=[],
+                    owner=str(worker.get("owner") or task_id),
+                    role=str(worker.get("role") or "worker"),
+                    writer="true" if bool(worker.get("writer", True)) else "false",
+                    required_output=normalize_required_outputs(worker.get("required_outputs")),
+                    expected_report_language=str(worker.get("expected_report_language") or "en"),
+                    expected_report_artifact=str(worker.get("expected_report_artifact") or ""),
+                    force_with_handoff=False,
+                    dry_run=False,
+                ),
+            )
+            if status:
+                print(output, end="")
+                return status
+        task = load_task(project_root, task_id)
+        task["worker_may_rebuild_context"] = bool(worker.get("worker_may_rebuild_context", False))
+        save_task(project_root, task)
+    command_project_context_refresh(argparse.Namespace(project_root=str(project_root)))
+    for worker in workers:
+        if not isinstance(worker, dict):
+            continue
+        task_id = safe_id(str(worker.get("id") or "worker"), "worker")
+        status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=True))
+        print(output, end="")
+        if status:
+            return status
+        status, output = run_command_capture(command_worker_launch_prompt_create, argparse.Namespace(project_root=str(project_root), task=task_id, output=None, apply=True, dry_run=False))
+        print(output, end="")
+        if status:
+            return status
+        task_doctor_status = command_task_doctor(argparse.Namespace(project_root=str(project_root), task=task_id))
+        if task_doctor_status:
+            return task_doctor_status
+    write_orchestration_summary(project_root, plan)
+    doctor_status = command_run_doctor(argparse.Namespace(project_root=str(project_root), run=run_id))
+    emit_process_event(project_root, "orchestrator.plan.applied", process_id="multi-agent-task-orchestration", subject=run_id, payload={"run_id": run_id, "doctor_status": doctor_status}, correlation_id=f"run-{run_id}")
+    print(f"WROTE: {rel(run_root(project_root, run_id) / 'orchestration-summary.md', project_root)}")
+    return doctor_status
+
+
+def command_orchestrator_plan_status(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
+    run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
+    run_id = safe_id(str(run.get("id") or "run"), "run")
+    print(f"RUN: {run_id}")
+    print(f"PLAN: {rel(orchestrator_plan_path(project_root, run_id), project_root)}")
+    if run_yaml_path(project_root, run_id).is_file():
+        return command_run_status(argparse.Namespace(project_root=str(project_root), run=run_id))
+    print("STATUS: plan-created")
+    return 0
+
+
 def command_run_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
@@ -11385,6 +12094,37 @@ def build_parser() -> argparse.ArgumentParser:
     workplace_init.add_argument("--force", action="store_true", help="Overwrite existing files.")
     workplace_init.set_defaults(func=command_init_workplace)
 
+    workplace_setup = sub.add_parser("workplace-setup", help="Agent-guided workplace setup workflow.")
+    workplace_setup_sub = workplace_setup.add_subparsers(dest="workplace_setup_command", required=True)
+    workplace_setup_start = workplace_setup_sub.add_parser("start", help="Start a guided workplace setup session.")
+    workplace_setup_start.add_argument("--workplace", required=True, help="Workplace root path.")
+    workplace_setup_start.add_argument("--answers", help="Optional guided setup answers YAML.")
+    workplace_setup_start.add_argument("--session-id", default="default", help="Setup session id.")
+    workplace_setup_start.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    workplace_setup_start.add_argument("--apply", action="store_true", help="Write setup session files.")
+    workplace_setup_start.set_defaults(func=command_workplace_setup_start)
+    workplace_setup_review = workplace_setup_sub.add_parser("review", help="Review guided workplace setup answers and proposal.")
+    workplace_setup_review.add_argument("--workplace", required=True, help="Workplace root path.")
+    workplace_setup_review.add_argument("--answers", help="Optional guided setup answers YAML.")
+    workplace_setup_review.add_argument("--session-id", default="default", help="Setup session id.")
+    workplace_setup_review.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    workplace_setup_review.add_argument("--apply", action="store_true", help="Accepted for command symmetry; review writes unless --dry-run is used.")
+    workplace_setup_review.set_defaults(func=command_workplace_setup_review)
+    workplace_setup_apply = workplace_setup_sub.add_parser("apply", help="Apply a guided workplace setup proposal.")
+    workplace_setup_apply.add_argument("--workplace", required=True, help="Workplace root path.")
+    workplace_setup_apply.add_argument("--answers", help="Optional guided setup answers YAML.")
+    workplace_setup_apply.add_argument("--session-id", default="default", help="Setup session id.")
+    workplace_setup_apply.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    workplace_setup_apply.add_argument("--apply", action="store_true", help="Write workplace files.")
+    workplace_setup_apply.set_defaults(func=command_workplace_setup_apply)
+    workplace_setup_status = workplace_setup_sub.add_parser("status", help="Show guided workplace setup session status.")
+    workplace_setup_status.add_argument("--workplace", required=True, help="Workplace root path.")
+    workplace_setup_status.add_argument("--answers", help="Accepted for namespace compatibility.")
+    workplace_setup_status.add_argument("--session-id", default="default", help="Setup session id.")
+    workplace_setup_status.add_argument("--dry-run", action="store_true", help="Accepted for namespace compatibility.")
+    workplace_setup_status.add_argument("--apply", action="store_true", help="Accepted for namespace compatibility.")
+    workplace_setup_status.set_defaults(func=command_workplace_setup_status)
+
     global_agents = sub.add_parser("global-agents-section", help="Insert or update the bounded ProcessForge section in an agent instructions file.")
     global_agents.add_argument("--path", required=True, help="Path to AGENTS.md, CODEX.md, or another agent instruction file.")
     global_agents.add_argument("--dry-run", action="store_true", help="Write a .candidate file instead of changing the target.")
@@ -11794,6 +12534,81 @@ def build_parser() -> argparse.ArgumentParser:
     process_describe.add_argument("--process", required=True, help="Process id or YAML path.")
     process_describe.set_defaults(func=command_process_describe)
 
+    orchestrator_plan = sub.add_parser("orchestrator-plan", help="Create, validate, apply, or inspect a multi-agent orchestration plan.")
+    orchestrator_plan_sub = orchestrator_plan.add_subparsers(dest="orchestrator_plan_command", required=True)
+    orchestrator_plan_create = orchestrator_plan_sub.add_parser("create", help="Create an orchestrator task plan.")
+    orchestrator_plan_create.add_argument("--project-root", required=True, help="Project root path.")
+    orchestrator_plan_create.add_argument("--run", required=True, help="Run id.")
+    orchestrator_plan_create.add_argument("--title", required=True, help="Run title.")
+    orchestrator_plan_create.add_argument("--answers", help="Optional full orchestrator task plan YAML.")
+    orchestrator_plan_create.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    orchestrator_plan_create.add_argument("--apply", action="store_true", help="Write the plan.")
+    orchestrator_plan_create.set_defaults(func=command_orchestrator_plan_create)
+    orchestrator_plan_validate = orchestrator_plan_sub.add_parser("validate", help="Validate an orchestrator task plan.")
+    orchestrator_plan_validate.add_argument("--project-root", required=True, help="Project root path.")
+    orchestrator_plan_validate.add_argument("--plan", help="Plan YAML path.")
+    orchestrator_plan_validate.add_argument("--run", help="Run id when --plan is omitted.")
+    orchestrator_plan_validate.set_defaults(func=command_orchestrator_plan_validate)
+    orchestrator_plan_apply = orchestrator_plan_sub.add_parser("apply", help="Apply an orchestrator task plan.")
+    orchestrator_plan_apply.add_argument("--project-root", required=True, help="Project root path.")
+    orchestrator_plan_apply.add_argument("--plan", help="Plan YAML path.")
+    orchestrator_plan_apply.add_argument("--run", help="Run id when --plan is omitted.")
+    orchestrator_plan_apply.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    orchestrator_plan_apply.add_argument("--apply", action="store_true", help="Create run, tasks, capsules, prompts, and handoff.")
+    orchestrator_plan_apply.set_defaults(func=command_orchestrator_plan_apply)
+    orchestrator_plan_status = orchestrator_plan_sub.add_parser("status", help="Show orchestration status.")
+    orchestrator_plan_status.add_argument("--project-root", required=True, help="Project root path.")
+    orchestrator_plan_status.add_argument("--plan", help="Plan YAML path.")
+    orchestrator_plan_status.add_argument("--run", help="Run id when --plan is omitted.")
+    orchestrator_plan_status.set_defaults(func=command_orchestrator_plan_status)
+
+    worker_launch_prompt = sub.add_parser("worker-launch-prompt", help="Create a bounded launch prompt for a worker task.")
+    worker_launch_prompt_sub = worker_launch_prompt.add_subparsers(dest="worker_launch_prompt_command", required=True)
+    worker_launch_prompt_create = worker_launch_prompt_sub.add_parser("create", help="Create a worker launch prompt.")
+    worker_launch_prompt_create.add_argument("--project-root", required=True, help="Project root path.")
+    worker_launch_prompt_create.add_argument("--task", required=True, help="Task id.")
+    worker_launch_prompt_create.add_argument("--output", help="Optional output path.")
+    worker_launch_prompt_create.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    worker_launch_prompt_create.add_argument("--apply", action="store_true", help="Write the prompt.")
+    worker_launch_prompt_create.set_defaults(func=command_worker_launch_prompt_create)
+
+    orchestrator_plan_create_alias = sub.add_parser("orchestrator-plan-create", help="Flat alias for orchestrator-plan create.")
+    orchestrator_plan_create_alias.add_argument("--project-root", required=True, help="Project root path.")
+    orchestrator_plan_create_alias.add_argument("--run", required=True, help="Run id.")
+    orchestrator_plan_create_alias.add_argument("--title", required=True, help="Run title.")
+    orchestrator_plan_create_alias.add_argument("--answers", help="Optional full orchestrator task plan YAML.")
+    orchestrator_plan_create_alias.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    orchestrator_plan_create_alias.add_argument("--apply", action="store_true", help="Write the plan.")
+    orchestrator_plan_create_alias.set_defaults(func=command_orchestrator_plan_create)
+
+    orchestrator_plan_validate_alias = sub.add_parser("orchestrator-plan-validate", help="Flat alias for orchestrator-plan validate.")
+    orchestrator_plan_validate_alias.add_argument("--project-root", required=True, help="Project root path.")
+    orchestrator_plan_validate_alias.add_argument("--plan", help="Plan YAML path.")
+    orchestrator_plan_validate_alias.add_argument("--run", help="Run id when --plan is omitted.")
+    orchestrator_plan_validate_alias.set_defaults(func=command_orchestrator_plan_validate)
+
+    orchestrator_plan_apply_alias = sub.add_parser("orchestrator-plan-apply", help="Flat alias for orchestrator-plan apply.")
+    orchestrator_plan_apply_alias.add_argument("--project-root", required=True, help="Project root path.")
+    orchestrator_plan_apply_alias.add_argument("--plan", help="Plan YAML path.")
+    orchestrator_plan_apply_alias.add_argument("--run", help="Run id when --plan is omitted.")
+    orchestrator_plan_apply_alias.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    orchestrator_plan_apply_alias.add_argument("--apply", action="store_true", help="Create run, tasks, capsules, prompts, and handoff.")
+    orchestrator_plan_apply_alias.set_defaults(func=command_orchestrator_plan_apply)
+
+    orchestrator_plan_status_alias = sub.add_parser("orchestrator-plan-status", help="Flat alias for orchestrator-plan status.")
+    orchestrator_plan_status_alias.add_argument("--project-root", required=True, help="Project root path.")
+    orchestrator_plan_status_alias.add_argument("--plan", help="Plan YAML path.")
+    orchestrator_plan_status_alias.add_argument("--run", help="Run id when --plan is omitted.")
+    orchestrator_plan_status_alias.set_defaults(func=command_orchestrator_plan_status)
+
+    worker_launch_prompt_create_alias = sub.add_parser("worker-launch-prompt-create", help="Flat alias for worker-launch-prompt create.")
+    worker_launch_prompt_create_alias.add_argument("--project-root", required=True, help="Project root path.")
+    worker_launch_prompt_create_alias.add_argument("--task", required=True, help="Task id.")
+    worker_launch_prompt_create_alias.add_argument("--output", help="Optional output path.")
+    worker_launch_prompt_create_alias.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    worker_launch_prompt_create_alias.add_argument("--apply", action="store_true", help="Write the prompt.")
+    worker_launch_prompt_create_alias.set_defaults(func=command_worker_launch_prompt_create)
+
     run_create = sub.add_parser("run-create", help="Create a project run/work session.")
     run_create.add_argument("--project-root", required=True, help="Project root path.")
     run_create.add_argument("--id", required=True, help="Run id.")
@@ -11962,7 +12777,8 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    if hasattr(args, "apply") and not args.apply:
+    apply_optional = args.command == "workplace-setup" and getattr(args, "workplace_setup_command", "") in {"review", "status"}
+    if hasattr(args, "apply") and not args.apply and not apply_optional:
         args.dry_run = True
     if hasattr(args, "apply") and args.apply and getattr(args, "dry_run", False):
         parser.error("choose either --dry-run or --apply")

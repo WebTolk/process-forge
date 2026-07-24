@@ -1,0 +1,225 @@
+schema_version: 1
+process:
+  id: guided-workplace-setup
+  name: Guided Workplace Setup
+  version: 1.0.0
+  status: active
+  kind: process
+  scope: project
+  description: Agent-guided dialogue for preparing a ProcessForge workplace, reviewing a proposal, applying workplace files, and producing project-onboarding next steps.
+  purpose: Agent-guided dialogue for preparing a ProcessForge workplace, reviewing a proposal, applying workplace files, and producing project-onboarding next steps.
+run_model:
+
+roles:
+  -
+    id: setup-agent
+    title: Setup Agent
+    responsibility: Guides the operator through setup blocks and updates answers after each block.
+  -
+    id: operator
+    title: Operator
+    responsibility: Confirms machine-local paths, agent environments, privacy policy, resources, and first project intent.
+  -
+    id: reviewer
+    title: Reviewer
+    responsibility: Reviews proposal and apply report before the workplace is used for project onboarding.
+stages:
+  -
+    id: intake
+    title: Start setup session
+    description: Create setup session artifacts and seed answers.
+    required_inputs:
+      []
+    produced_artifacts:
+      - answers
+    required_role: setup-agent
+    required_capabilities:
+      - process_coordination
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      []
+    exit_gates:
+      - answers-created
+    handoff_required: false
+  -
+    id: dialogue
+    title: Guided dialogue
+    description: Ask block-scoped questions and update answers YAML after each block.
+    required_inputs:
+      - answers
+    produced_artifacts:
+      - answers
+      - proposal
+    required_role: setup-agent
+    required_capabilities:
+      - reporting
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - answers-created
+    exit_gates:
+      - proposal-created-before-apply
+    handoff_required: false
+  -
+    id: review
+    title: Review setup proposal
+    description: Check privacy, resource, and platform-neutrality policy before apply.
+    required_inputs:
+      - proposal
+    produced_artifacts:
+      - review
+    required_role: reviewer
+    required_capabilities:
+      - artifact_review
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - proposal-created-before-apply
+    exit_gates:
+      - proposal-reviewed
+    handoff_required: false
+  -
+    id: apply
+    title: Apply workplace setup
+    description: Delegate to workplace-init internals, run doctor-workplace, and write agent instruction snippets.
+    required_inputs:
+      - answers
+      - proposal
+      - review
+    produced_artifacts:
+      - apply-report
+      - agent-instructions
+      - next-steps
+    required_role: setup-agent
+    required_capabilities:
+      - process_coordination
+    allowed_tools:
+      - processforge-cli
+    entry_gates:
+      - proposal-reviewed
+    exit_gates:
+      - doctor-workplace-passed
+    handoff_required: true
+artifacts:
+  -
+    id: answers
+    title: Guided Workplace Answers
+    owner_role: setup-agent
+    template: guided-workplace-setup.answers
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: proposal
+    title: Guided Workplace Proposal
+    owner_role: setup-agent
+    template: guided-workplace-setup.proposal
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: review
+    title: Guided Workplace Review
+    owner_role: reviewer
+    template: review-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: apply-report
+    title: Guided Workplace Apply Report
+    owner_role: setup-agent
+    template: validation-report-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: agent-instructions
+    title: Agent Instruction Snippet
+    owner_role: setup-agent
+    template: global-agents-processforge-section
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+  -
+    id: next-steps
+    title: Project Onboarding Next Steps
+    owner_role: setup-agent
+    template: handoff-template
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  -
+    id: answers-created
+    description: Session answers YAML exists.
+    blocking: true
+  -
+    id: proposal-created-before-apply
+    description: Proposal YAML and Markdown exist before apply.
+    blocking: true
+  -
+    id: proposal-reviewed
+    description: Review artifact exists and records remaining conditions.
+    blocking: true
+  -
+    id: doctor-workplace-passed
+    description: doctor-workplace runs after apply.
+    blocking: true
+required_capabilities:
+  - process_coordination
+  - repository_read
+  - reporting
+required_packages:
+  - process-forge-core
+required_templates:
+  - guided-workplace-setup.answers
+  - guided-workplace-setup.proposal
+allowed_tools:
+  - processforge-cli
+  - validator
+forbidden_actions:
+  - create_terminal_only_wizard
+  - store_secret_values
+  - write_private_paths_to_public_manifests
+  - add_platform_specific_core_support_pack
+  - create_background_daemon
+hooks:
+  emit:
+    -
+      event: workplace.setup.started
+      required: true
+    -
+      event: workplace.setup.reviewed
+      required: true
+    -
+      event: workplace.setup.applied
+      required: true
+    -
+      event: workplace.doctor.passed
+      required: true
+  tracking:
+    include:
+      - session_id
+      - workplace_root
+      - artifact_refs
+      - status
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+    - proposal
+    - apply-report
+  safe_changes:
+    - add_optional_question_block
+    - add_optional_registry_section
+  blocked_changes:
+    - require_network_for_smoke
+    - require_daemon_for_setup

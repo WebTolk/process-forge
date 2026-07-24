@@ -1,0 +1,48 @@
+schema_version: 1
+session:
+  id: first-machine
+  status: draft
+machine_layout:
+  processforge_root: ${PROCESSFORGE_ROOT}
+  workplace_path: ${PF_WORKPLACE}
+  local_docs_path: ${PF_WORKPLACE}/knowledge
+  project_roots:
+    - ${PF_WORKPLACE}/projects
+agent_environment:
+  tools:
+    - generic
+  instructions_targets:
+    - AGENTS.md
+  global_agents_policy: bounded_processforge_section
+privacy_safety:
+  local_paths_private_only: true
+  public_manifests_use_path_ref: true
+  secret_handling: store secret names only; never store secret values
+  update_trust_policy:
+    require_https: true
+    require_sha256_for_download: true
+    require_sha256_for_install: true
+resources:
+  knowledge_roots:
+    -
+      id: local-docs
+      path_ref: ${PF_WORKPLACE}/knowledge
+      status: available
+  package_roots:
+    -
+      id: global
+      path_ref: ${PF_WORKPLACE}/packages
+      default: true
+      writable: true
+  tools: []
+  mcp_servers: []
+  templates: []
+platform_contracts:
+  policy: neutral_or_explicit
+  create: []
+  notes: Do not create real platform contracts unless the user explicitly defines them.
+first_project:
+  onboard_now: false
+  project_root: ""
+  project_type: generic-software-project
+  suggested_run: first-run

@@ -31,6 +31,9 @@ runbook.
 package roots, knowledge roots, tool registries и MCP registries.
 ```
 
+Для диалоговой настройки машины используйте `workplace-setup start`,
+просмотрите proposal, затем выполните `workplace-setup apply --apply`.
+
 ## 3. Создать Общие Resources
 
 ```text
@@ -92,10 +95,10 @@ providers, capabilities, processes, coding standards и project type hints по 
 ```text
 Спланируй ProcessForge-assisted multi-agent run.
 
-Тесно связанную работу оставь в main agent. Subagents используй только для
-независимых scopes, каждому дай непересекающуюся зону ответственности, требуй
-file-based evidence и сверяй их результаты в текущем run перед финальной
-доставкой.
+Используй встроенный multi-agent orchestration flow. Создай и проверь
+orchestrator task plan, примени его для создания worker assignments и capsules,
+запусти каждого worker только с его worker launch prompt и сведи outputs в
+integration report перед delivery.
 ```
 
 ## 9. Проверить Перед Delivery

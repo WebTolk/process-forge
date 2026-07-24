@@ -4,6 +4,11 @@ A context capsule is the small launch package for a worker-agent. It references
 an Execution Context Package and carries the minimum startup policy needed to
 begin a bounded assignment.
 
+In [multi-agent orchestration](multi-agent-orchestration.md), each worker launch
+prompt points to one assignment capsule. The capsule keeps the worker bounded to
+its assignment, required sources, allowed scopes, forbidden files, required
+outputs, and context rebuild policy.
+
 ## Purpose
 
 The capsule lets an orchestrator or runner start workers without handing them the

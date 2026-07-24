@@ -1,0 +1,7 @@
+schema_version: 1
+process_id: guided-workplace-setup
+result: PASS
+diffs:
+  []
+unsupported:
+  []

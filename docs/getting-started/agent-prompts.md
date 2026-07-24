@@ -25,6 +25,11 @@ archive names, and reports.
 - `--interactive` is accepted by first-run initialization commands for UX
   compatibility; current commands remain file-first and do not require terminal
   prompting.
+- For guided machine setup, use `workplace-setup start`, `workplace-setup review`,
+  `workplace-setup apply`, and `workplace-setup status`.
+- For bounded worker orchestration, use `orchestrator-plan create`,
+  `orchestrator-plan validate`, `orchestrator-plan apply`,
+  `orchestrator-plan status`, and `worker-launch-prompt create`.
 
 ## Distribution Root Checks
 

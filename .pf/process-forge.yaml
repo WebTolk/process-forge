@@ -146,6 +146,10 @@ processes:
     path: ../processes/authoring-parity-audit.yaml
   - id: task-batch-execution
     path: ../processes/task-batch-execution.yaml
+  - id: guided-workplace-setup
+    path: ../processes/guided-workplace-setup.yaml
+  - id: multi-agent-task-orchestration
+    path: ../processes/multi-agent-task-orchestration.yaml
 
 knowledge_stack:
   - id: processforge.core

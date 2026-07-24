@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/worker-launch-prompt.schema.json",
+  "title": "Worker Launch Prompt Metadata",
+  "type": "object",
+  "required": ["schema_version", "task_id", "assignment", "capsule", "allowed_files", "allowed_read_files", "forbidden_files", "required_outputs", "worker_may_rebuild_context"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "task_id": { "$ref": "#/$defs/id" },
+    "assignment": { "type": "string" },
+    "capsule": { "type": "string" },
+    "allowed_files": { "type": "array", "items": { "type": "string" } },
+    "allowed_read_files": { "type": "array", "items": { "type": "string" } },
+    "forbidden_files": { "type": "array", "items": { "type": "string" } },
+    "required_outputs": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "expected_report": { "type": "string" },
+    "worker_may_rebuild_context": { "type": "boolean" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" }
+  },
+  "additionalProperties": true
+}

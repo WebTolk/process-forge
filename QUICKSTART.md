@@ -30,6 +30,9 @@ Configure path constants, package roots, knowledge roots, tool registries, and
 MCP registries before creating knowledge packages or platform contracts.
 ```
 
+For a dialogue-led machine setup, use `workplace-setup start`, review the
+generated proposal, then run `workplace-setup apply --apply`.
+
 ## 3. Create Shared Resources
 
 ```text
@@ -92,9 +95,10 @@ process.
 ```text
 Plan a ProcessForge-assisted multi-agent run.
 
-Keep tightly coupled work in the main agent. Use subagents only for independent
-scopes, give each subagent a non-overlapping remit, require file-based evidence,
-and reconcile their outputs into the current run before final delivery.
+Use the built-in multi-agent orchestration flow. Create and validate an
+orchestrator task plan, apply it to create worker assignments and capsules,
+launch each worker with only its worker launch prompt, and reconcile outputs
+into an integration report before delivery.
 ```
 
 ## 9. Validate Before Delivery

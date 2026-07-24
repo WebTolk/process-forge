@@ -1,0 +1,45 @@
+schema_version: 1
+session_id: first-machine
+status: ready_for_review
+workplace:
+  path_ref: ${PF_WORKPLACE}
+processforge:
+  root_ref: ${PROCESSFORGE_ROOT}
+local_docs:
+  path_ref: ${PF_WORKPLACE}/knowledge
+project_roots:
+  - ${PF_WORKPLACE}/projects
+agent_environments:
+  - generic
+instruction_targets:
+  - AGENTS.md
+registries:
+  knowledge_roots:
+    -
+      id: local-docs
+      path_ref: ${PF_WORKPLACE}/knowledge
+      status: available
+  package_roots:
+    -
+      id: global
+      path_ref: ${PF_WORKPLACE}/packages
+      default: true
+      writable: true
+  tools: []
+  mcp_servers: []
+  templates: []
+privacy:
+  local_paths_private_only: true
+  public_manifests_use_path_ref: true
+platform_policy:
+  policy: neutral_or_explicit
+  create: []
+first_project:
+  onboard_now: false
+  project_type: generic-software-project
+apply_steps:
+  - run workplace-init internals
+  - write workplace registries
+  - write agent instruction snippet
+  - run doctor-workplace
+  - write project-onboard next steps

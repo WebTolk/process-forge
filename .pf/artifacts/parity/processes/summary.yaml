@@ -1,7 +1,7 @@
 schema_version: 1
 result: WARN
 counts:
-  PASS: 5
+  PASS: 7
   WARN: 21
   SKIP: 0
   FAIL: 0
@@ -44,6 +44,12 @@ processes:
     review: .pf/reviews/parity/processes/documentation-mirror-import-parity.md
     semantic_diff: .pf/artifacts/parity/processes/documentation-mirror-import-semantic-diff.yaml
   -
+    process_id: guided-workplace-setup
+    result: PASS
+    source: processes/guided-workplace-setup.yaml
+    review: .pf/reviews/parity/processes/guided-workplace-setup-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/guided-workplace-setup-semantic-diff.yaml
+  -
     process_id: knowledge-package-authoring
     result: WARN
     source: processes/knowledge-package-authoring.yaml
@@ -73,6 +79,12 @@ processes:
     source: processes/mcp-register.yaml
     review: .pf/reviews/parity/processes/mcp-register-parity.md
     semantic_diff: .pf/artifacts/parity/processes/mcp-register-semantic-diff.yaml
+  -
+    process_id: multi-agent-task-orchestration
+    result: PASS
+    source: processes/multi-agent-task-orchestration.yaml
+    review: .pf/reviews/parity/processes/multi-agent-task-orchestration-parity.md
+    semantic_diff: .pf/artifacts/parity/processes/multi-agent-task-orchestration-semantic-diff.yaml
   -
     process_id: platform-contract-authoring
     result: WARN

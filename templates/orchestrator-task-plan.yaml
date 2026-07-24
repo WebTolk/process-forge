@@ -1,0 +1,69 @@
+schema_version: 1
+run:
+  id: example-run
+  title: Example multi-agent run
+  process: multi-agent-task-orchestration
+orchestrator:
+  role: orchestrator
+  responsibilities:
+    - decompose work
+    - assign workers
+    - review outputs
+    - integrate final result
+workers:
+  -
+    id: example-docs-worker
+    title: Documentation update
+    role: documentation
+    process: content-production
+    execution_mode: docs_only
+    writer: true
+    allowed_files:
+      - docs/**
+      - README.md
+    allowed_read_files:
+      - .pf/contexts/project-context.snapshot.yaml
+    forbidden_files:
+      - tools/**
+      - schemas/**
+    required_sources:
+      - .pf/contexts/project-context.snapshot.yaml
+    required_outputs:
+      -
+        id: docs-report
+        path: .pf/artifacts/example-docs-worker-report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/example-docs-worker-report.md
+    dependencies: []
+    worker_may_rebuild_context: false
+  -
+    id: example-test-worker
+    title: Release test verification
+    role: release-assurance
+    process: testing
+    execution_mode: assurance
+    writer: true
+    allowed_files:
+      - .pf/artifacts/**
+    allowed_read_files:
+      - tools/**
+      - schemas/**
+      - .pf/contexts/project-context.snapshot.yaml
+    forbidden_files:
+      - tools/processforge.py
+    required_sources:
+      - .pf/contexts/project-context.snapshot.yaml
+    required_outputs:
+      -
+        id: test-report
+        path: .pf/artifacts/example-test-worker-report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/example-test-worker-report.md
+    dependencies: []
+    worker_may_rebuild_context: false
+integration:
+  required: true
+  role: orchestrator
+  expected_output: .pf/artifacts/example-integration-report.md

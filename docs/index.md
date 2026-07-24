@@ -13,10 +13,12 @@ resources live in the workplace, and each repository keeps a project-local
 - [Installation](getting-started/installation.md)
 - [Initialization order](getting-started/initialization-order.md)
 - [Workplace initialization](getting-started/workplace-initialization.md)
+- [Guided workplace setup](getting-started/guided-workplace-setup.md)
 - [Project onboarding](getting-started/project-onboarding.md)
 - [Agent command runbook and prompts](getting-started/agent-prompts.md)
 - [Create your first process](getting-started/create-your-first-process.md)
 - [Task batch workflow](getting-started/task-batch-workflow.md)
+- [Multi-agent orchestration](getting-started/multi-agent-orchestration.md)
 - [Quick getting started path](getting-started.md)
 - [Russian documentation](ru/index.md)
 
@@ -47,6 +49,7 @@ resources live in the workplace, and each repository keeps a project-local
 - [Process definition, run, task, iteration](concepts/process-definition-run-task-iteration.md)
 - [Semantic parity](concepts/semantic-parity.md)
 - [Runs, tasks, and iterations](concepts/runs-tasks-iterations.md)
+- [Multi-agent orchestration](concepts/multi-agent-orchestration.md)
 - [Known limitations](known-limitations.md)
 
 ## Layer Order

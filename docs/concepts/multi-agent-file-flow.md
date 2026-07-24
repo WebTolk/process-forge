@@ -2,6 +2,9 @@
 
 ProcessForge supports multi-agent work through files.
 
+For the out-of-box process and CLI commands, see
+[Multi-agent orchestration](multi-agent-orchestration.md).
+
 ## Rule
 
 ```text
@@ -17,6 +20,7 @@ An orchestrator must:
 - use reviewer-only tasks for overlapping areas
 - require handoffs when ownership changes
 - record changes in logs and artifacts
+- create worker launch prompts that include only the assigned task and capsule
 
 ## Suitable Subtasks
 

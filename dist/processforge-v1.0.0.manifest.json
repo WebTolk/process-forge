@@ -10,7 +10,7 @@
     },
     {
       "path": ".pf/artifacts/checksum-inventory.sha256",
-      "sha256": "d20e9044e873dea2acdccc86b75470c8433adc0bcfd341fb7f73beb0397bdebc"
+      "sha256": "5244d3b7e552b34bcce5e6fce6cd27ae1543bc390b93f553baf86d715472593b"
     },
     {
       "path": ".pf/hooks.yaml",
@@ -18,7 +18,7 @@
     },
     {
       "path": ".pf/process-forge.yaml",
-      "sha256": "06ccd714ff995e22344573c4c0c0fa8c155500b93b7b01f3e05e5cc8cc58f608"
+      "sha256": "b0cd17493412997700ae0986318e8c18bdd499df1a1de6494414eee9a919f922"
     },
     {
       "path": ".processforge-releaseignore",
@@ -38,19 +38,19 @@
     },
     {
       "path": "QUICKSTART.md",
-      "sha256": "583983d46e393515171ebc4bc46570b8690a753f66384ef9387c1305ba84470b"
+      "sha256": "9b1de444e4f5e214c8fc0798da863e8d5a77aa59a1f225028ee62aa954b2303e"
     },
     {
       "path": "QUICKSTART.ru.md",
-      "sha256": "8caccb7513b485f663dbeea0fbabecc071d6b739afcbcee849eaa06c726200c2"
+      "sha256": "7b454773f4c25060ff83da4072c08195ff2bab9cd5c546f6aa48f44223576816"
     },
     {
       "path": "README.md",
-      "sha256": "77dc9568e7354f44e962c42ff15ffb9958a9f8064b27646ab254391e02de44ed"
+      "sha256": "2504dedf7d6c02e540198d0c714d0eff60bf283e8de6dfa4cfb1775b79ba571a"
     },
     {
       "path": "README.ru.md",
-      "sha256": "2e54fa17af98998372ab09f356a111c2cc943bf007f4f98c8fce87acf5073b0a"
+      "sha256": "08516c634faa54594dac07d8d629f4c349c01a4f0636d491d6bff70cb33027c4"
     },
     {
       "path": "VERSION",
@@ -150,7 +150,7 @@
     },
     {
       "path": "docs/concepts/context-capsule.md",
-      "sha256": "832098d2b4e0843260c6df180286e2dc8dd66276c1d5436f83bc1b051ba47a20"
+      "sha256": "3a40aeab387084a3e05022bc7dcc6308c1f7950b9917217ee2093c45efe04a38"
     },
     {
       "path": "docs/concepts/context-freshness.md",
@@ -206,7 +206,11 @@
     },
     {
       "path": "docs/concepts/multi-agent-file-flow.md",
-      "sha256": "372be6f5ed8d474838df42b6a9c7ec51fb85db64d4315ac0a39e5179988bab7d"
+      "sha256": "ba21369fd383642ef37a70bec2c047cf18c76f010bc76083e8c138980a7ea870"
+    },
+    {
+      "path": "docs/concepts/multi-agent-orchestration.md",
+      "sha256": "2c505257ed763335796eab95bf50733a2c21d13f2370904d973c43c706dc6e46"
     },
     {
       "path": "docs/concepts/package-roots.md",
@@ -358,7 +362,7 @@
     },
     {
       "path": "docs/getting-started/agent-prompts.md",
-      "sha256": "9bba5d4002bd316018d35148b387a9e68f1188dbd3741672395925870dc234b9"
+      "sha256": "baf95b007755f7ef5e0f23dc9587c2c936c50fd81d6048c32d331dedb16ab169"
     },
     {
       "path": "docs/getting-started/create-your-first-process.md",
@@ -366,7 +370,11 @@
     },
     {
       "path": "docs/getting-started/first-run.md",
-      "sha256": "a43db3c8dfdd2a1dcd7af54fcf8eb09d450dd2c0c3d9702cbe95495d4de5cec1"
+      "sha256": "618026afdf6e73528265a3d663c1e310309f4064a9ae5b937210de3da8a05535"
+    },
+    {
+      "path": "docs/getting-started/guided-workplace-setup.md",
+      "sha256": "a536107a4ffd6b6747abba022688978d1ae184815704770218f4a52f787930e3"
     },
     {
       "path": "docs/getting-started/initialization-order.md",
@@ -375,6 +383,10 @@
     {
       "path": "docs/getting-started/installation.md",
       "sha256": "e1cd25cef2f703c6035803ec88e0d716663ae25921e6e3d2e48f722271f98455"
+    },
+    {
+      "path": "docs/getting-started/multi-agent-orchestration.md",
+      "sha256": "7293f5acc62b9d39499c3e530e528eac716c50837c03342909b81abf38979605"
     },
     {
       "path": "docs/getting-started/project-onboarding.md",
@@ -394,7 +406,7 @@
     },
     {
       "path": "docs/index.md",
-      "sha256": "dfff4a60b6ed8223c55725b16368e25746bd3368fad60dbfd7135eee12c72ceb"
+      "sha256": "b127a62f12db1cfde3ea0308ab8826c0fe07cc7ff6de2fc42dae29d30acf1dbe"
     },
     {
       "path": "docs/known-limitations.md",
@@ -437,12 +449,24 @@
       "sha256": "798ed154b5fdee79ebe17ee10344cfcd01bf8157f48f3b823bcb1018b5eb27bf"
     },
     {
+      "path": "docs/ru/concepts/context-capsule.md",
+      "sha256": "cdb4926feebbc24f972df847654c1fd91b8a0e1b5109a8720996a30408e09299"
+    },
+    {
       "path": "docs/ru/concepts/hooks-events.md",
       "sha256": "c887e3af0fd7241b595fdf2a40d2dd5fb143a5d42baa325182fb58903aa7f08e"
     },
     {
       "path": "docs/ru/concepts/knowledge-resource-navigation.md",
       "sha256": "26fea64401c28549f3d4f44d785a0229226ce279a0b1e65ab016558c3ab3b34a"
+    },
+    {
+      "path": "docs/ru/concepts/multi-agent-file-flow.md",
+      "sha256": "c2fd33aca47769fb3162324ae56f914323b367531b897c31fe30a32c8e70af10"
+    },
+    {
+      "path": "docs/ru/concepts/multi-agent-orchestration.md",
+      "sha256": "f0409b71cecbf07d228b84c8d7a3ddf41bab1fadfd7eb1771c1219349b44b846"
     },
     {
       "path": "docs/ru/concepts/package-roots.md",
@@ -486,7 +510,7 @@
     },
     {
       "path": "docs/ru/getting-started/agent-prompts.md",
-      "sha256": "198642a0cf9541cdf854b904d239e90ecf0702922f40c33a447432e7b88ff15f"
+      "sha256": "7920e8fddfcea1801d0dc441359564639d4de2b2f04b0adac13f1380283233dc"
     },
     {
       "path": "docs/ru/getting-started/create-your-first-process.md",
@@ -494,7 +518,11 @@
     },
     {
       "path": "docs/ru/getting-started/first-run.md",
-      "sha256": "2b0ef295fc5689f54e418e6f2fda3cd8f5cff608b0884efac00ecbd7bc794134"
+      "sha256": "575f45d7738be1921a6762100b882d5439bcaf6a8911e4b412597556ed19cfda"
+    },
+    {
+      "path": "docs/ru/getting-started/guided-workplace-setup.md",
+      "sha256": "580cb947fa96899f7a95d4678119c166f11f11670c9454293302438b27ec0588"
     },
     {
       "path": "docs/ru/getting-started/initialization-order.md",
@@ -503,6 +531,10 @@
     {
       "path": "docs/ru/getting-started/installation.md",
       "sha256": "4f2416cf03d814635b76e7a83dc8d7e129756cb7f1905f40777265a09bc6f6f2"
+    },
+    {
+      "path": "docs/ru/getting-started/multi-agent-orchestration.md",
+      "sha256": "4a080cb70eea16bb32cb8f0dc4c049903e0e1e2aff5f06ab7fc36fb418f96fcf"
     },
     {
       "path": "docs/ru/getting-started/project-onboarding.md",
@@ -518,7 +550,7 @@
     },
     {
       "path": "docs/ru/index.md",
-      "sha256": "ed6245f56862918222cfcd70e09a7304b43510a5450fb61c72e3cb658d90961d"
+      "sha256": "959d413c8ba488fbf10307fee0957d77288e6610ed87314587f2dfe483899334"
     },
     {
       "path": "docs/ru/known-limitations.md",
@@ -573,6 +605,18 @@
       "sha256": "6570d87ddf32b81e48e17539cd2ccdcb2fa6f63acd361bb219db084a6189e7cd"
     },
     {
+      "path": "examples/guided-workplace-setup/minimal/README.md",
+      "sha256": "0f4e6a4bfd6a61b6dfed738979c0db811cd53395e3bc70876926cc03722c82ea"
+    },
+    {
+      "path": "examples/guided-workplace-setup/minimal/answers.yaml",
+      "sha256": "419b8c6308d630c74c2ad459a1bb1208390155442ac4ae636a124a648b92994a"
+    },
+    {
+      "path": "examples/guided-workplace-setup/minimal/expected-proposal.md",
+      "sha256": "4e334a7c0cd3b590039e3982b06e108a0baafe5ad8edbffc917610a57fbb23b4"
+    },
+    {
       "path": "examples/knowledge-packages/base-technologies/README.md",
       "sha256": "30fa50883ce0bf61f3a9f26b51c97ee0e5af6023c4460d8621d74003ddfe24fe"
     },
@@ -583,6 +627,22 @@
     {
       "path": "examples/media-generation-project/process-forge.yaml",
       "sha256": "edcc95b77ff52e34b4f0e6c0f2a3c398f3897f0058def0c66536f245f94450a4"
+    },
+    {
+      "path": "examples/multi-agent-orchestration/minimal/README.md",
+      "sha256": "79915525ea646f0c8f3449ade5e429a745aa7160a1456c3da725d3dfc5ddfc04"
+    },
+    {
+      "path": "examples/multi-agent-orchestration/minimal/expected-worker-docs-prompt.md",
+      "sha256": "9c393ccaad88ffdc3c1d2fbd23b23e5844d2a756ed12fa43f2a7615c31978a5b"
+    },
+    {
+      "path": "examples/multi-agent-orchestration/minimal/expected-worker-test-prompt.md",
+      "sha256": "9c393ccaad88ffdc3c1d2fbd23b23e5844d2a756ed12fa43f2a7615c31978a5b"
+    },
+    {
+      "path": "examples/multi-agent-orchestration/minimal/orchestrator-task-plan.yaml",
+      "sha256": "bde3ff677b07b55f85e5f0c98862004c67db567e24159b38b827759fd415faf4"
     },
     {
       "path": "examples/platform-inheritance/example-child/README.md",
@@ -745,6 +805,10 @@
       "sha256": "750b3c510e85f36636572a3247ffaa8483c37c0f3a16f46ba2d520e4280cfcf0"
     },
     {
+      "path": "processes/guided-workplace-setup.yaml",
+      "sha256": "5a76ca1224cecc0966d7f8b365ad834287b445bf08212984e3afee53faa4b00e"
+    },
+    {
       "path": "processes/knowledge-package-authoring.yaml",
       "sha256": "d756645e6c14845f5041f5dc749b8b1d4766a5731b0610d3bbe1082220f2a59c"
     },
@@ -763,6 +827,10 @@
     {
       "path": "processes/mcp-register.yaml",
       "sha256": "7f483529bd49117c6549a2351218fcb54dffa9efb3123b15055dd0666ed93014"
+    },
+    {
+      "path": "processes/multi-agent-task-orchestration.yaml",
+      "sha256": "321b08d7cc9df34eb4ff01247f4e90475f5a37159c7f71443b454227f5edc7d8"
     },
     {
       "path": "processes/platform-contract-authoring.yaml",
@@ -833,8 +901,20 @@
       "sha256": "ce7e2c2a6133bc1d257d27abacf9da87f4dbd047d887a42d948ab6124320e0f9"
     },
     {
+      "path": "prompts/guided-workplace-setup-agent.md",
+      "sha256": "0d7b084dfbd3555378802f23b6fed33bcd069e022d606c26c140f502386113a7"
+    },
+    {
       "path": "prompts/knowledge-package-authoring-agent.md",
       "sha256": "d6e2ea39c2506273ecb8255e102107049f8b167b646dd52b2bbefc3375fd9eda"
+    },
+    {
+      "path": "prompts/multi-agent-task-orchestration-agent.md",
+      "sha256": "d96ce647ef7813a03ea90817de82d5129c7413e5cd43293a0cc895dd35e6ab85"
+    },
+    {
+      "path": "prompts/multi-agent-worker-agent.md",
+      "sha256": "d43d4c54af9871338aa461732fa161b0f3b95eb4600d84d3192ff27955766d31"
     },
     {
       "path": "prompts/platform-contract-authoring-agent.md",
@@ -921,6 +1001,14 @@
       "sha256": "a754c541b6b474bba03bbd27c9603a41018d1879a6e519187dfa4bb70140e885"
     },
     {
+      "path": "schemas/guided-workplace-setup-answers.schema.json",
+      "sha256": "949eb2e0ad64f1d92cad2b54b0e40ef133a167d6a6747b8dac9b45aea17d31e2"
+    },
+    {
+      "path": "schemas/guided-workplace-setup-proposal.schema.json",
+      "sha256": "2c51952e3bb4b40f5e68c76ad8adef17b5f4776bff744d6ec66bdb65d4adeb2b"
+    },
+    {
       "path": "schemas/handoff.schema.json",
       "sha256": "568bd9d80e126d1a51eff43a28f387b6f09fb007af9e64e17427a9ac732f82dc"
     },
@@ -979,6 +1067,10 @@
     {
       "path": "schemas/normalized-update-manifest.schema.json",
       "sha256": "334c52a30e7a0905b4a990a9ffc4cbe7220b5fd196cc6a4a6e51f59c9f64dc8f"
+    },
+    {
+      "path": "schemas/orchestrator-task-plan.schema.json",
+      "sha256": "28be0b739c925f39975df016e8cf04382d4ab812ca14b0ae4748ef662cfae06d"
     },
     {
       "path": "schemas/package-manifest.schema.json",
@@ -1117,6 +1209,10 @@
       "sha256": "17fa7cb6a3c6ef3c3cea028fe7a55cc5b02fdd235dfc2b669f1946b64efc1e09"
     },
     {
+      "path": "schemas/worker-launch-prompt.schema.json",
+      "sha256": "e54e0385b38c4917a831013a403dea6e549e593ed249ed4611eb4eb754078e31"
+    },
+    {
       "path": "schemas/workplace-init-answers.schema.json",
       "sha256": "28d7f8e0e5e167cf7e4e3ff101c3f566223905a075e9b0736dc455d3550eab2a"
     },
@@ -1225,6 +1321,14 @@
       "sha256": "f9f25180162cf21f202b4b29320173462260ba7c9b560d7336daf6ebea73796c"
     },
     {
+      "path": "templates/guided-workplace-setup.answers.yaml",
+      "sha256": "faecf96c1d6cd030d6b2eec4733a9211e8d48baba8c4cc2090d49723ffd16ae2"
+    },
+    {
+      "path": "templates/guided-workplace-setup.proposal.yaml",
+      "sha256": "e87253ddd58201e6be260a2533e8662a6ed22457db37d42f3b895be65dcd38f8"
+    },
+    {
       "path": "templates/handoff-template.md",
       "sha256": "fa4c2c7e9164626581e2a2fee3a11e9b18536f30d6a9a9a258111fdf0f39ee27"
     },
@@ -1255,6 +1359,10 @@
     {
       "path": "templates/mcp-definition.yaml",
       "sha256": "70764b29cc526f5e3ce0a638599d64ab145be9c639791c2727d706dea7b59748"
+    },
+    {
+      "path": "templates/orchestrator-task-plan.yaml",
+      "sha256": "bde3ff677b07b55f85e5f0c98862004c67db567e24159b38b827759fd415faf4"
     },
     {
       "path": "templates/package-manifest-template.yaml",
@@ -1453,6 +1561,10 @@
       "sha256": "2005dfb1212b07829f63bad04f6ac5283a786502348672cb0487d6d3e1f0e65a"
     },
     {
+      "path": "templates/worker-launch-prompt.md",
+      "sha256": "9c393ccaad88ffdc3c1d2fbd23b23e5844d2a756ed12fa43f2a7615c31978a5b"
+    },
+    {
       "path": "templates/workplace-init.answers.yaml",
       "sha256": "52e0691e3adf6239b2914f188f164c9828cc912b8cb78d301073c543d4ba91d2"
     },
@@ -1466,7 +1578,7 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "c468a9c97f953a0342aeeb879585017b058d9e14eb6852c503cac2af30fa2dba"
+      "sha256": "c1d942d69d603994764027664b5cdeada55b7d5acd908bd98b09c1b85b5a7387"
     },
     {
       "path": "tools/processforge_subprocess.py",
@@ -1481,12 +1593,20 @@
       "sha256": "3f6692f67f17b061ac3f2df44ee3f48211097c353199d4f834a5ba6732c881e0"
     },
     {
+      "path": "tools/smoke_guided_workplace_setup.py",
+      "sha256": "0c9b529128241ef8e75b9e5047d1a8252cfb72cc427284efc81c48f29bf803f2"
+    },
+    {
       "path": "tools/smoke_manifest_driven_platforms.py",
       "sha256": "c2fde5b6e9f71df4a31127f35461e7f48647d4a82b44c5c99a3e435c9fc129b9"
     },
     {
       "path": "tools/smoke_multiagent_assignment_contract.py",
       "sha256": "d50abfe12ff3b4c88a42a466be5dda8bd822e6a59143f297c9ea4829356d44aa"
+    },
+    {
+      "path": "tools/smoke_multiagent_orchestration_process.py",
+      "sha256": "fad52b0d3b2511bf89dd88ef098d2a97672faaea906021ac1bf3e1e2a75e10ef"
     },
     {
       "path": "tools/smoke_platform_inheritance.py",
@@ -1522,7 +1642,7 @@
     },
     {
       "path": "tools/validate-process-forge-schemas.py",
-      "sha256": "152d8f5276c214e9d8389eacedb72546d8abcdf4942f8f457942904e5291f5ef"
+      "sha256": "25dab9b7df74457f670cdae4d65c092a4b696aca15336f7d4501ec9bfd493c41"
     },
     {
       "path": "tools/validate-public-cleanliness.py",
@@ -1541,7 +1661,7 @@
       "sha256": "81b436180a2b3276df5c9b9ea95d8cba646fa908424c129ccb4faccbcd3bf00b"
     }
   ],
-  "generated_at": "2026-07-20T18:44:19Z",
+  "generated_at": "2026-07-24T05:51:44Z",
   "name": "processforge",
   "version": "1.0.0"
 }

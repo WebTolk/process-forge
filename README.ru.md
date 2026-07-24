@@ -67,6 +67,8 @@ platform.
 ProcessForge сейчас поддерживает file-first creation flows для:
 
 - workplace initialization: `workplace-init` / `init-workplace`
+- guided workplace setup: `workplace-setup start`, `workplace-setup review`,
+  `workplace-setup apply` и `workplace-setup status`
 - project onboarding: `project-onboard` / `init-project`
 - first run bootstrap: `first-run`
 - process authoring: `process-authoring-start`, `process-authoring-review`,
@@ -79,6 +81,9 @@ ProcessForge сейчас поддерживает file-first creation flows д�
 - tools и MCP providers: `tool-register`, `mcp-register`
 - runs, tasks и iterations: `run-create`, `task-create`, `iteration-add`,
   completion, summary и doctor commands
+- multi-agent orchestration: `orchestrator-plan create`,
+  `orchestrator-plan validate`, `orchestrator-plan apply`,
+  `orchestrator-plan status` и `worker-launch-prompt create`
 
 Флаг `--interactive` принимается командами first-run initialization для
 совместимости UX, но текущая реализация остаётся file-first и не требует
