@@ -101,7 +101,18 @@ launch each worker with only its worker launch prompt, and reconcile outputs
 into an integration report before delivery.
 ```
 
-## 9. Validate Before Delivery
+## 9. Use Agent Ledger And Process Handoffs
+
+```text
+Plan a ProcessForge handoff with agent attendance tracking.
+
+Register the relevant workplace agents, check in the active agent roles, create
+or validate .pf/process-routes.yaml, create a handoff package, run
+agent-director-tick to grant leases when the required role is online, and return
+only concrete expected artifacts.
+```
+
+## 10. Validate Before Delivery
 
 ```text
 Validate the repository before delivery.
@@ -111,7 +122,7 @@ checks, rebuild the release archive with a neutral filename, test the archive,
 and report exact pass/fail evidence before commit or push.
 ```
 
-## 10. Run A Supervised Worker Smoke
+## 11. Run A Supervised Worker Smoke
 
 ```text
 Use ProcessForge runtime drivers for a bounded supervised test run.

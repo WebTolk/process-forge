@@ -82,6 +82,11 @@ ProcessForge currently supports file-first creation flows for:
 - multi-agent orchestration: `orchestrator-plan create`,
   `orchestrator-plan validate`, `orchestrator-plan apply`,
   `orchestrator-plan status`, and `worker-launch-prompt create`
+- agent ledger and handoffs: `agent-register`, `agent-checkin`,
+  `agent-availability`, `agent-lease-grant`, `process-route-list`,
+  `handoff-create`, `handoff-status`, and `agent-director-tick`
+- orchestrator shell agents: `orchestrator-shell-plan-create`,
+  `orchestrator-shell-plan-validate`, and `orchestrator-shell-plan-apply`
 - runtime drivers and worker execution: `runtime-driver list`,
   `runtime-driver validate`, `worker-run prepare`, `worker-run start`,
   `worker-run status`, `worker-run collect`, `supervisor tick`, and
@@ -169,6 +174,11 @@ and used for a run.
 - [Runtime model](docs/concepts/runtime-model.md)
 - [Runtime drivers](docs/concepts/runtime-drivers.md)
 - [Process supervisor](docs/concepts/process-supervisor.md)
+- [Agent ledger](docs/concepts/agent-ledger.md)
+- [Process transitions](docs/concepts/process-transitions.md)
+- [Handoff contracts](docs/concepts/handoff-contracts.md)
+- [Agent Director](docs/concepts/agent-director.md)
+- [Shell agent subagent policy](docs/concepts/shell-agent-subagent-policy.md)
 - [Platform contracts](docs/concepts/platform-contracts.md)
 - [Platform inheritance](docs/concepts/platform-inheritance.md)
 - [Knowledge resource navigation](docs/concepts/knowledge-resource-navigation.md)

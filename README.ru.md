@@ -84,6 +84,11 @@ ProcessForge сейчас поддерживает file-first creation flows д�
 - multi-agent orchestration: `orchestrator-plan create`,
   `orchestrator-plan validate`, `orchestrator-plan apply`,
   `orchestrator-plan status` и `worker-launch-prompt create`
+- agent ledger и handoffs: `agent-register`, `agent-checkin`,
+  `agent-availability`, `agent-lease-grant`, `process-route-list`,
+  `handoff-create`, `handoff-status` и `agent-director-tick`
+- orchestrator shell agents: `orchestrator-shell-plan-create`,
+  `orchestrator-shell-plan-validate` и `orchestrator-shell-plan-apply`
 
 Флаг `--interactive` принимается командами first-run initialization для
 совместимости UX, но текущая реализация остаётся file-first и не требует

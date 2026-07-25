@@ -1,0 +1,64 @@
+schema_version: 1
+run:
+  id: orchestrated-work
+  title: Orchestrated shell-agent work
+  process: multi-agent-task-orchestration
+orchestrator:
+  agent_id: director-local
+  role: orchestrator
+runtime:
+  default_driver: test-shell-agent
+  supervisor_profile: default
+  start_policy: supervisor
+workers:
+  - id: docs-shell-agent
+    title: Documentation Shell Agent
+    role: documentation
+    process: testing
+    execution_mode: assurance
+    writer: true
+    runtime_driver: test-shell-agent
+    allow_subagents: true
+    subagent_policy:
+      allow: true
+      max_subagents: 2
+      allowed_roles: [doc-reviewer, link-checker]
+      require_reports: true
+      reports_dir: .pf/artifacts/subagents/docs-shell-agent/
+    allowed_files: [.pf/artifacts/**]
+    allowed_read_files: [.pf/contexts/project-context.snapshot.yaml]
+    forbidden_files: [tools/**, schemas/**]
+    required_outputs:
+      - id: docs-report
+        path: .pf/artifacts/docs-shell-agent-report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/docs-shell-agent-report.md
+  - id: test-shell-agent
+    title: Testing Shell Agent
+    role: testing
+    process: testing
+    execution_mode: assurance
+    writer: true
+    runtime_driver: test-shell-agent
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles: []
+      require_reports: false
+      reports_dir: ""
+    allowed_files: [.pf/artifacts/**]
+    allowed_read_files: [tools/**, schemas/**]
+    forbidden_files: [tools/processforge.py]
+    required_outputs:
+      - id: test-report
+        path: .pf/artifacts/test-shell-agent-report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/test-shell-agent-report.md
+integration:
+  required: true
+  role: orchestrator
+  expected_output: .pf/artifacts/orchestrator-shell-integration-report.md
+allow_write_scope_overlap: true

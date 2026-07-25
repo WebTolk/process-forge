@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/process-route-map.schema.json",
+  "title": "Process Route Map",
+  "type": "object",
+  "required": ["schema_version", "routes"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "from_process", "to_process", "mode"],
+        "properties": {
+          "id": { "type": "string" },
+          "from_process": { "type": "string" },
+          "to_process": { "type": "string" },
+          "mode": { "enum": ["wait_for_result", "delegate_and_continue", "consultation", "final_transfer", "fork", "return_required"] }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

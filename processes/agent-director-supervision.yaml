@@ -1,0 +1,48 @@
+schema_version: 1
+id: agent-director-supervision
+name: Agent Director Supervision
+version: 1.0.0
+status: draft
+kind: orchestration
+description: Supervises pending process handoffs, agent availability, leases, target runs, and continuation capsules.
+roles:
+  - id: agent-director
+    title: Agent Director
+    responsibility: Routes process handoffs and escalates unavailable or stale agents.
+stages:
+  - id: inspect
+    title: Inspect pending handoffs
+    required_role: agent-director
+    produced_artifacts: [director-tick-report]
+    exit_gates: [handoff-status-known]
+  - id: assign
+    title: Assign available agent
+    required_role: agent-director
+    produced_artifacts: [director-tick-report]
+    exit_gates: [handoff-status-known]
+  - id: wait-or-return
+    title: Wait or return
+    required_role: agent-director
+    produced_artifacts: [director-tick-report]
+    exit_gates: [handoff-status-known]
+artifact_definitions:
+  - id: director-tick-report
+    title: Director tick report
+    owner_role: agent-director
+    lifecycle: [draft, ready_for_review, approved]
+gates:
+  - id: handoff-status-known
+    description: Every pending handoff remains waiting, becomes ready, or needs operator.
+    blocking: true
+required_capabilities:
+  - repository_read
+  - process.routing
+  - lease.management
+required_templates:
+  - agent-director-policy
+forbidden_actions:
+  - start_network_service
+  - call_external_agent_cli
+evolution_policy:
+  versioning: additive
+  compatibility: preserve_file_contracts

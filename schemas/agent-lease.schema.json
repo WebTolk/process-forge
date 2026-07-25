@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/agent-lease.schema.json",
+  "title": "Agent Lease",
+  "type": "object",
+  "required": ["schema_version", "id", "agent_id", "session_id", "status", "scope", "access", "issued_at", "expires_at"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "agent_id": { "type": "string" },
+    "session_id": { "type": "string" },
+    "status": { "enum": ["active", "released", "revoked", "expired", "stale"] },
+    "scope": { "type": "object", "additionalProperties": true },
+    "access": {
+      "type": "object",
+      "properties": {
+        "capsule": { "type": "string" },
+        "allowed_files": { "type": "array", "items": { "type": "string" } },
+        "allowed_read_files": { "type": "array", "items": { "type": "string" } },
+        "forbidden_files": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "issued_at": { "type": "string" },
+    "expires_at": { "type": "string" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" }
+  },
+  "additionalProperties": true
+}

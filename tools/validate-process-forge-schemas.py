@@ -40,6 +40,11 @@ REQUIRED_FILES = [
     "docs/concepts/runtime-model.md",
     "docs/concepts/runtime-drivers.md",
     "docs/concepts/process-supervisor.md",
+    "docs/concepts/agent-ledger.md",
+    "docs/concepts/process-transitions.md",
+    "docs/concepts/handoff-contracts.md",
+    "docs/concepts/agent-director.md",
+    "docs/concepts/shell-agent-subagent-policy.md",
     "docs/concepts/package-roots.md",
     "docs/concepts/project-snapshot.md",
     "docs/concepts/hooks-events.md",
@@ -112,6 +117,11 @@ REQUIRED_FILES = [
     "docs/ru/concepts/runtime-model.md",
     "docs/ru/concepts/runtime-drivers.md",
     "docs/ru/concepts/process-supervisor.md",
+    "docs/ru/concepts/agent-ledger.md",
+    "docs/ru/concepts/process-transitions.md",
+    "docs/ru/concepts/handoff-contracts.md",
+    "docs/ru/concepts/agent-director.md",
+    "docs/ru/concepts/shell-agent-subagent-policy.md",
     "docs/ru/concepts/path-constants.md",
     "docs/ru/concepts/package-roots.md",
     "docs/ru/concepts/project-snapshot.md",
@@ -137,6 +147,8 @@ REQUIRED_FILES = [
     "docs/getting-started/guided-workplace-setup.md",
     "docs/getting-started/multi-agent-orchestration.md",
     "docs/getting-started/runtime-driver-supervisor.md",
+    "docs/getting-started/agent-ledger-process-transitions.md",
+    "docs/ru/getting-started/agent-ledger-process-transitions.md",
     "docs/getting-started/create-your-first-process.md",
     "docs/validation/doctor-workplace.md",
     "docs/validation/doctor-project.md",
@@ -182,6 +194,18 @@ REQUIRED_FILES = [
     "schemas/agent-run-state.schema.json",
     "schemas/supervisor-profile.schema.json",
     "schemas/supervisor-state.schema.json",
+    "schemas/agent-registry.schema.json",
+    "schemas/agent-session-event.schema.json",
+    "schemas/agent-presence.schema.json",
+    "schemas/agent-lease.schema.json",
+    "schemas/process-route-map.schema.json",
+    "schemas/process-transition.schema.json",
+    "schemas/process-handoff.schema.json",
+    "schemas/handoff-input-manifest.schema.json",
+    "schemas/handoff-return-package.schema.json",
+    "schemas/agent-director-policy.schema.json",
+    "schemas/continuation-capsule.schema.json",
+    "schemas/orchestrator-shell-agent-plan.schema.json",
     "schemas/worker-process-command.schema.json",
     "schemas/project-init-answers.schema.json",
     "schemas/session-start.schema.json",
@@ -245,6 +269,8 @@ REQUIRED_FILES = [
     "processes/multi-agent-task-orchestration.yaml",
     "processes/runtime-driver-registry.yaml",
     "processes/process-supervisor.yaml",
+    "processes/agent-director-supervision.yaml",
+    "processes/orchestrator-shell-agents-supervision.yaml",
     "templates/workplace.yaml",
     "templates/terms.yaml",
     "templates/registries/distributions.yaml",
@@ -260,6 +286,13 @@ REQUIRED_FILES = [
     "templates/runtime-drivers/test-echo-worker.yaml",
     "templates/runtime-drivers/test-shell-agent.yaml",
     "templates/supervisor-profile.yaml",
+    "templates/registries/agents.yaml",
+    "templates/agent-lease.yaml",
+    "templates/process-routes.yaml",
+    "templates/handoff-package.yaml",
+    "templates/agent-director-policy.yaml",
+    "templates/continuation-capsule.yaml",
+    "templates/orchestrator-shell-agent-plan.yaml",
     "templates/agent-run-state.yaml",
     "templates/worker-process-command.yaml",
     "templates/process-record.yaml",
@@ -304,6 +337,8 @@ REQUIRED_FILES = [
     "prompts/multi-agent-task-orchestration-agent.md",
     "prompts/multi-agent-worker-agent.md",
     "prompts/process-supervisor-agent.md",
+    "prompts/agent-director-supervision-agent.md",
+    "prompts/orchestrator-shell-agents-agent.md",
     "docs/getting-started/first-run.md",
     "docs/getting-started/initialization-order.md",
     "docs/ru/getting-started/initialization-order.md",
@@ -334,6 +369,8 @@ REQUIRED_FILES = [
     "examples/multi-agent-orchestration/minimal/expected-worker-test-prompt.md",
     "examples/runtime-supervisor/minimal/README.md",
     "examples/runtime-supervisor/minimal/orchestrator-task-plan.yaml",
+    "examples/orchestrator-shell-agents/minimal/README.md",
+    "examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml",
     "examples/process-authoring/quality-audit/README.md",
     "examples/process-authoring/process-authoring/README.md",
     "examples/process-authoring/process-supervisor/README.md",
@@ -349,6 +386,10 @@ REQUIRED_FILES = [
     "tools/smoke_runtime_driver_registry.py",
     "tools/smoke_worker_run_shell.py",
     "tools/smoke_process_supervisor_tick.py",
+    "tools/smoke_agent_ledger.py",
+    "tools/smoke_process_transition_handoff.py",
+    "tools/smoke_agent_director_tick.py",
+    "tools/smoke_orchestrator_shell_agents_with_subagent_policy.py",
     "tools/smoke_process_run_task_batch.py",
     "tools/processforge_subprocess.py",
     "templates/session-start-template.yaml",
@@ -594,10 +635,23 @@ def validate_yaml_schema_files(root: Path) -> None:
         mappings.append((root / "templates" / "registries" / "update-site-overrides.yaml", "update-site-overrides.schema.json"))
     if (root / "templates" / "registries" / "runtime-drivers.yaml").is_file():
         mappings.append((root / "templates" / "registries" / "runtime-drivers.yaml", "runtime-driver-registry.schema.json"))
+    if (root / "templates" / "registries" / "agents.yaml").is_file():
+        mappings.append((root / "templates" / "registries" / "agents.yaml", "agent-registry.schema.json"))
     for path in sorted((root / "templates" / "runtime-drivers").glob("*.yaml")):
         mappings.append((path, "runtime-driver.schema.json"))
     if (root / "templates" / "supervisor-profile.yaml").is_file():
         mappings.append((root / "templates" / "supervisor-profile.yaml", "supervisor-profile.schema.json"))
+    for path, schema_name in [
+        (root / "templates" / "agent-lease.yaml", "agent-lease.schema.json"),
+        (root / "templates" / "process-routes.yaml", "process-route-map.schema.json"),
+        (root / "templates" / "handoff-package.yaml", "process-handoff.schema.json"),
+        (root / "templates" / "agent-director-policy.yaml", "agent-director-policy.schema.json"),
+        (root / "templates" / "continuation-capsule.yaml", "continuation-capsule.schema.json"),
+        (root / "templates" / "orchestrator-shell-agent-plan.yaml", "orchestrator-shell-agent-plan.schema.json"),
+        (root / "examples" / "orchestrator-shell-agents" / "minimal" / "orchestrator-shell-agent-plan.yaml", "orchestrator-shell-agent-plan.schema.json"),
+    ]:
+        if path.is_file():
+            mappings.append((path, schema_name))
     for path in [root / "templates" / "platform-contract.yaml", root / "templates" / "platform-contract-example-parent.yaml"]:
         if path.is_file():
             mappings.append((path, "platform-contract.schema.json"))
@@ -620,6 +674,16 @@ def validate_yaml_schema_files(root: Path) -> None:
         mappings.append((root / "workplace.yaml", "workplace.schema.json"))
     if (root / ".pf" / "hooks.yaml").is_file():
         mappings.append((root / ".pf" / "hooks.yaml", "hooks.schema.json"))
+    if (root / ".pf" / "process-routes.yaml").is_file():
+        mappings.append((root / ".pf" / "process-routes.yaml", "process-route-map.schema.json"))
+    for path in sorted((root / ".pf" / "continuations").glob("*.yaml")):
+        mappings.append((path, "continuation-capsule.schema.json"))
+    for path in sorted((root / ".pf" / "handoffs").glob("*/handoff.yaml")):
+        mappings.append((path, "process-handoff.schema.json"))
+    for path in sorted((root / ".pf" / "handoffs").glob("*/input-manifest.yaml")):
+        mappings.append((path, "handoff-input-manifest.schema.json"))
+    for path in sorted((root / ".pf" / "handoffs").glob("*/return-package.yaml")):
+        mappings.append((path, "handoff-return-package.schema.json"))
 
     for path, schema_name in mappings:
         data = load_yaml(path)

@@ -36,7 +36,35 @@
     "required_packages": { "type": "array", "items": { "type": "string" } },
     "required_templates": { "type": "array", "items": { "type": "string" } },
     "allowed_tools": { "type": "array", "items": { "type": "string" } },
-    "forbidden_actions": { "type": "array", "items": { "type": "string" } }
+    "forbidden_actions": { "type": "array", "items": { "type": "string" } },
+    "process_transitions": {
+      "type": "object",
+      "properties": {
+        "can_handoff": { "type": "boolean" },
+        "routes": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "offline_agent_policy": { "type": "string" },
+        "continuation_capsule_required": { "type": "boolean" },
+        "post_handoff_run_owner": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "agent_requirements": {
+      "type": "object",
+      "properties": {
+        "required_role": { "type": "string" },
+        "required_capabilities": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "subagent_policy": {
+      "type": "object",
+      "properties": {
+        "worker_shell_agents_may_call_subagents": { "type": "boolean" },
+        "allowed_roles": { "type": "array", "items": { "type": "string" } },
+        "required_reports": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": true
 }

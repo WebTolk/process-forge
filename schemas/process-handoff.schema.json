@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/process-handoff.schema.json",
+  "title": "Process Handoff",
+  "type": "object",
+  "required": ["schema_version", "id", "status", "from", "to", "input_artifacts", "expected_results", "return_to"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "type": "string" },
+    "status": { "enum": ["waiting_for_agent", "ready", "accepted", "in_progress", "returned", "finalized", "needs_operator", "cancelled"] },
+    "route_id": { "type": "string" },
+    "from": { "type": "object", "additionalProperties": true },
+    "to": { "type": "object", "additionalProperties": true },
+    "input_artifacts": { "type": "array", "items": { "type": "string" } },
+    "expected_results": { "type": "array", "items": { "type": "string" } },
+    "return_to": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

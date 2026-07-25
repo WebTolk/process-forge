@@ -1,0 +1,54 @@
+schema_version: 1
+id: orchestrator-shell-agents-supervision
+name: Orchestrator Shell Agents Supervision
+version: 1.0.0
+status: draft
+kind: orchestration
+description: Decomposes work into shell-agent workers launched through ProcessForge runtime drivers and governed by subagent policy metadata.
+roles:
+  - id: orchestrator
+    title: Orchestrator
+    responsibility: Creates worker assignments, leases, capsules, and validates outputs.
+  - id: shell-worker
+    title: Shell Worker
+    responsibility: Executes one assignment through a runtime driver.
+stages:
+  - id: plan
+    title: Plan shell workers
+    required_role: orchestrator
+    produced_artifacts: [orchestrator-shell-agent-plan]
+    exit_gates: [required-worker-outputs-exist]
+  - id: launch
+    title: Launch shell workers
+    required_role: orchestrator
+    produced_artifacts: [worker-report]
+    exit_gates: [required-worker-outputs-exist]
+  - id: collect
+    title: Collect outputs
+    required_role: orchestrator
+    produced_artifacts: [worker-report]
+    exit_gates: [required-worker-outputs-exist]
+artifact_definitions:
+  - id: orchestrator-shell-agent-plan
+    title: Orchestrator shell-agent plan
+    owner_role: orchestrator
+    lifecycle: [draft, ready_for_review, approved]
+  - id: worker-report
+    title: Worker report
+    owner_role: shell-worker
+    lifecycle: [draft, ready_for_review, approved]
+gates:
+  - id: required-worker-outputs-exist
+    description: Required worker outputs and required subagent reports exist.
+    blocking: true
+required_capabilities:
+  - assignment.execution
+  - report.writing
+required_templates:
+  - orchestrator-shell-agent-plan
+forbidden_actions:
+  - hardcode_real_agent_ecosystem_driver
+  - skip_subagent_report_validation
+evolution_policy:
+  versioning: additive
+  compatibility: preserve_file_contracts

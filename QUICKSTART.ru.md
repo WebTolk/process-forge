@@ -101,7 +101,18 @@ orchestrator task plan, примени его для создания worker ass
 integration report перед delivery.
 ```
 
-## 9. Проверить Перед Delivery
+## 9. Agent Ledger И Process Handoffs
+
+```text
+Спланируй ProcessForge handoff с agent attendance tracking.
+
+Зарегистрируй workplace agents, отметь check-in для нужных roles, создай или
+проверь .pf/process-routes.yaml, создай handoff package, запусти
+agent-director-tick для выдачи leases, если нужная role online, и возвращай
+только конкретные expected artifacts.
+```
+
+## 10. Проверить Перед Delivery
 
 ```text
 Проверь репозиторий перед delivery.
@@ -113,7 +124,7 @@ integration report перед delivery.
 
 ## Обязательный Порядок
 
-## 10. Runtime Driver And Supervisor Smoke
+## 11. Runtime Driver And Supervisor Smoke
 
 ```text
 Используй ProcessForge runtime drivers для ограниченного supervised test run.

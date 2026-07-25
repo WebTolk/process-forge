@@ -1,0 +1,21 @@
+schema_version: 1
+agents:
+  - id: director-local
+    title: Local Director Agent
+    kind: operator_started_agent
+    roles:
+      - director
+      - orchestrator
+    capabilities:
+      - process.routing
+      - task.decomposition
+      - lease.management
+      - handoff.management
+  - id: shell-worker-generic
+    title: Generic Shell Worker
+    kind: shell_runtime_agent
+    roles:
+      - worker
+    capabilities:
+      - assignment.execution
+      - report.writing

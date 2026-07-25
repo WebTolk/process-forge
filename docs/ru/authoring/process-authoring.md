@@ -14,3 +14,13 @@ python .pf/runtime/bin/pf.py process-doctor --project-root . --process <process-
 
 После apply процесс можно использовать в `run-create`. Review должен проверить
 stages, roles, artifacts, gates, required resources и run model.
+
+## Transitions И Agents
+
+Answers могут включать `process_transitions`, `agent_requirements` и
+`subagent_policy`. Эти поля фиксируют, может ли процесс передавать работу в
+другие процессы, какие target processes и handoff modes разрешены, какие input
+artifacts и expected output artifacts переходят через границу процесса, какая
+receiving role или capability нужна, что делать при offline agent, нужна ли
+continuation capsule, кто владеет run после handoff и может ли shell worker
+вызывать subagents.

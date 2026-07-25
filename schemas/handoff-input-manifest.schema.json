@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/handoff-input-manifest.schema.json",
+  "title": "Handoff Input Manifest",
+  "type": "object",
+  "required": ["schema_version", "handoff_id", "artifacts"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "handoff_id": { "type": "string" },
+    "artifacts": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

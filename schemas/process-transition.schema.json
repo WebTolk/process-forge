@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/process-transition.schema.json",
+  "title": "Process Transition",
+  "type": "object",
+  "required": ["id", "from_process", "to_process", "mode"],
+  "properties": {
+    "id": { "type": "string" },
+    "from_process": { "type": "string" },
+    "to_process": { "type": "string" },
+    "mode": { "enum": ["wait_for_result", "delegate_and_continue", "consultation", "final_transfer", "fork", "return_required"] },
+    "requires_agent": { "type": "object", "additionalProperties": true },
+    "input_contract": { "type": "object", "additionalProperties": true },
+    "output_contract": { "type": "object", "additionalProperties": true },
+    "return": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

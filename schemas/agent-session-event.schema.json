@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/agent-session-event.schema.json",
+  "title": "Agent Session Event",
+  "type": "object",
+  "required": ["schema_version", "event", "agent_id", "session_id"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "event": {
+      "enum": [
+        "agent.checked_in",
+        "agent.heartbeat",
+        "agent.checked_out",
+        "agent.session_expired",
+        "agent.session_recovered"
+      ]
+    },
+    "agent_id": { "type": "string" },
+    "session_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "project_root_ref": { "type": "string" },
+    "process_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "task_id": { "type": "string" },
+    "roles": { "type": "array", "items": { "type": "string" } },
+    "started_at": { "type": "string" },
+    "finished_at": { "type": "string" },
+    "recorded_at": { "type": "string" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,20 @@
+schema_version: 1
+id: handoff-feature-x-to-decomposition
+status: waiting_for_agent
+from:
+  process: feature-development
+  run_id: feature-run-001
+  stage: planning
+to:
+  process: task-decomposition
+  mode: wait_for_result
+  required_role: decomposer
+input_artifacts:
+  - .pf/artifacts/feature-brief.md
+  - .pf/contexts/project-context.snapshot.yaml
+expected_results:
+  - .pf/artifacts/decomposition/decomposition-plan.yaml
+return_to:
+  process: feature-development
+  run_id: feature-run-001
+  stage: planning-review

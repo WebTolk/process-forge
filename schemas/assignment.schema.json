@@ -36,6 +36,7 @@
     "non_overlap": { "$ref": "#/$defs/non_overlap" },
     "required_outputs": { "type": "array", "items": { "$ref": "#/$defs/required_output" } },
     "expected_report": { "$ref": "#/$defs/expected_report" },
+    "subagent_policy": { "$ref": "#/$defs/subagent_policy" },
     "required_artifacts": { "type": "array", "items": { "type": "string" } },
     "required_reviews": { "type": "array", "items": { "type": "string" } },
     "allowed_templates": { "type": "array", "items": { "type": "string" } },
@@ -114,6 +115,17 @@
         "format": { "type": "string" },
         "include": { "type": "array", "items": { "type": "string" } },
         "artifact": { "type": "string", "pattern": "^(?![A-Za-z]:)(?!/)(?!.*\\.\\.).+" }
+      },
+      "additionalProperties": true
+    },
+    "subagent_policy": {
+      "type": "object",
+      "properties": {
+        "allow": { "type": "boolean" },
+        "max_subagents": { "type": "integer", "minimum": 0 },
+        "allowed_roles": { "type": "array", "items": { "type": "string" } },
+        "require_reports": { "type": "boolean" },
+        "reports_dir": { "type": "string" }
       },
       "additionalProperties": true
     },

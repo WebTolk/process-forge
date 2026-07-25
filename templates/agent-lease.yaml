@@ -1,0 +1,22 @@
+schema_version: 1
+id: lease-docs-worker
+agent_id: shell-docs-worker
+session_id: sess-docs-001
+status: active
+scope:
+  project_id: project-a
+  process_id: documentation-update
+  run_id: docs-run
+  task_id: docs-worker
+access:
+  capsule: .pf/contexts/assignment-capsules/docs-worker.capsule.yaml
+  allowed_files:
+    - docs/**
+    - README.md
+  allowed_read_files:
+    - .pf/contexts/project-context.snapshot.yaml
+  forbidden_files:
+    - tools/**
+    - schemas/**
+issued_at: "2026-07-26T10:05:00Z"
+expires_at: "2026-07-26T11:05:00Z"

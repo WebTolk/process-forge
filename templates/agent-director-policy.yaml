@@ -1,0 +1,4 @@
+schema_version: 1
+handoff_wait_ttl_seconds: 3600
+lease_ttl_seconds: 3600
+stale_lease_action: needs_operator

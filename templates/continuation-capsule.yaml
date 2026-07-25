@@ -1,0 +1,14 @@
+schema_version: 1
+id: continue-feature-development-after-decomposition
+agent_id: director-local
+previous_session_id: sess-001
+waiting_for:
+  handoff_id: handoff-feature-x-to-decomposition
+  expected_artifacts:
+    - .pf/artifacts/decomposition/decomposition-plan.yaml
+resume:
+  process: feature-development
+  run_id: feature-run-001
+  stage: planning-review
+  instruction: Continue after the handoff return package is available.
+status: waiting

@@ -1,0 +1,20 @@
+schema_version: 1
+routes:
+  - id: feature-dev-to-decomposition
+    from_process: feature-development
+    to_process: task-decomposition
+    mode: wait_for_result
+    requires_agent:
+      role: decomposer
+      status: checked_in
+    input_contract:
+      required_artifacts:
+        - .pf/artifacts/feature-brief.md
+        - .pf/contexts/project-context.snapshot.yaml
+    output_contract:
+      expected_artifacts:
+        - .pf/artifacts/decomposition/decomposition-plan.yaml
+    return:
+      to_process: feature-development
+      to_stage: planning-review
+      continue_run: true

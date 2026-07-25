@@ -16,5 +16,7 @@ Rules:
 - Keep authoring files under `.pf/authoring/processes/<process-id>/`.
 - Apply only after logic review has no blocking failures.
 - Generated public files are `processes/<process-id>.yaml`, `prompts/<process-id>-agent.md`, `docs/processes/<process-id>.md`, and `examples/process-authoring/<process-id>/`.
+- Ask whether the process may hand off to other processes, which target processes are allowed, which handoff mode applies, which input/output artifacts cross the boundary, which receiving role or capability is required, what happens when that role is offline, whether a continuation capsule is needed, who owns the run after handoff, and whether shell workers may call subagents.
+- If shell workers may call subagents, record allowed subagent roles and required subagent reports in the answers.
 - Do not put local absolute paths, secrets, or machine-only command assumptions into public files.
 - Do not implement runners, background watchers, web transports, command hook execution, UI, database storage, or marketplace behavior in this MVP.

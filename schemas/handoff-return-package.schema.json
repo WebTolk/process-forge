@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/handoff-return-package.schema.json",
+  "title": "Handoff Return Package",
+  "type": "object",
+  "required": ["schema_version", "handoff_id", "status", "artifacts"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "handoff_id": { "type": "string" },
+    "status": { "type": "string" },
+    "artifacts": { "type": "array", "items": { "type": "string" } },
+    "returned_at": { "type": "string" }
+  },
+  "additionalProperties": true
+}

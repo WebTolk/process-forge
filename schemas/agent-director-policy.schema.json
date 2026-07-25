@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/agent-director-policy.schema.json",
+  "title": "Agent Director Policy",
+  "type": "object",
+  "required": ["schema_version", "handoff_wait_ttl_seconds", "lease_ttl_seconds"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "handoff_wait_ttl_seconds": { "type": "integer", "minimum": 1 },
+    "lease_ttl_seconds": { "type": "integer", "minimum": 1 },
+    "stale_lease_action": { "enum": ["needs_operator", "revoke", "warn"] }
+  },
+  "additionalProperties": true
+}

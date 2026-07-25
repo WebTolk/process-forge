@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/agent-presence.schema.json",
+  "title": "Agent Presence",
+  "type": "object",
+  "required": ["schema_version", "agent_id", "session_id", "status", "roles", "capabilities", "last_seen_at", "heartbeat_ttl_seconds"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "agent_id": { "type": "string" },
+    "session_id": { "type": "string" },
+    "status": { "enum": ["online", "offline", "stale", "checked_out", "failed"] },
+    "roles": { "type": "array", "items": { "type": "string" } },
+    "capabilities": { "type": "array", "items": { "type": "string" } },
+    "project_id": { "type": "string" },
+    "process_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "task_id": { "type": "string" },
+    "last_seen_at": { "type": "string" },
+    "heartbeat_ttl_seconds": { "type": "integer", "minimum": 1 }
+  },
+  "additionalProperties": true
+}

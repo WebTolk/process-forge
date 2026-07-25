@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/continuation-capsule.schema.json",
+  "title": "Continuation Capsule",
+  "type": "object",
+  "required": ["schema_version", "id", "waiting_for", "resume", "status"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "type": "string" },
+    "agent_id": { "type": "string" },
+    "previous_session_id": { "type": "string" },
+    "waiting_for": { "type": "object", "additionalProperties": true },
+    "resume": { "type": "object", "additionalProperties": true },
+    "status": { "enum": ["waiting", "ready", "resumed", "cancelled"] }
+  },
+  "additionalProperties": true
+}

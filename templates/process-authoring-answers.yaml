@@ -102,3 +102,23 @@ allowed_tools:
 forbidden_actions:
   - write_private_absolute_paths_to_public_files
   - skip_blocking_review
+process_transitions:
+  can_handoff: true
+  routes:
+    - id: quality-audit-to-review
+      target_process: testing
+      mode: wait_for_result
+      input_artifacts: [audit-report]
+      expected_output_artifacts: [audit-review]
+      required_role: reviewer
+  offline_agent_policy: keep_waiting_then_needs_operator
+  continuation_capsule_required: true
+  post_handoff_run_owner: source_process
+agent_requirements:
+  required_role: reviewer
+  required_capabilities:
+    - artifact_review
+subagent_policy:
+  worker_shell_agents_may_call_subagents: false
+  allowed_roles: []
+  required_reports: []

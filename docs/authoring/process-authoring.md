@@ -46,6 +46,16 @@ values.
 
 Warnings are visible in `logic-review.md`; blocking failures stop apply.
 
+## Transitions And Agents
+
+Authoring answers may include `process_transitions`, `agent_requirements`, and
+`subagent_policy`. These fields record whether the process can hand off work,
+which target processes and handoff modes are allowed, which input artifacts and
+expected output artifacts cross the process boundary, which receiving role or
+capability is required, how offline agents are handled, whether continuation
+capsules are required, who owns the run after handoff, and whether shell workers
+may call subagents.
+
 ## Scope
 
 This MVP creates file-first process packs. It does not add a background runner,

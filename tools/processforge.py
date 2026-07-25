@@ -59,6 +59,7 @@ PROJECT_FLOW_DIRS = [
     "artifacts/runs",
     "contexts",
     "contexts/assignment-capsules",
+    "continuations",
     "registries",
     "logs",
     "handoffs",
@@ -76,6 +77,9 @@ PROJECT_FLOW_DIRS = [
     "runtime/queue",
     "runtime/sessions",
     "runtime/agent-runs",
+    "runtime/agent-ledger",
+    "runtime/agent-presence",
+    "runtime/agent-leases",
     "runtime/supervisor",
     "runtime/registries",
 ]
@@ -1215,6 +1219,7 @@ Run `project-onboard` for a concrete project.
         ),
         root / "registries" / "tools.yaml": dump_yaml({"schema_version": 1, "tools": []}),
         root / "registries" / "mcp.yaml": dump_yaml({"schema_version": 1, "mcp_servers": []}),
+        root / "registries" / "agents.yaml": dump_yaml({"schema_version": 1, "agents": []}),
         root / "registries" / "runtime-drivers.yaml": dump_yaml(default_runtime_driver_registry()),
         root / "registries" / "update-sources.yaml": dump_yaml(
             {
@@ -4365,6 +4370,10 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_worker_run_shell", [sys.executable, str(root / "tools" / "smoke_worker_run_shell.py")], 180),
         ReleaseCommand("smoke_process_supervisor_tick", [sys.executable, str(root / "tools" / "smoke_process_supervisor_tick.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
+        ReleaseCommand("smoke_agent_ledger", [sys.executable, str(root / "tools" / "smoke_agent_ledger.py")], 120),
+        ReleaseCommand("smoke_process_transition_handoff", [sys.executable, str(root / "tools" / "smoke_process_transition_handoff.py")], 120),
+        ReleaseCommand("smoke_agent_director_tick", [sys.executable, str(root / "tools" / "smoke_agent_director_tick.py")], 120),
+        ReleaseCommand("smoke_orchestrator_shell_agents_with_subagent_policy", [sys.executable, str(root / "tools" / "smoke_orchestrator_shell_agents_with_subagent_policy.py")], 180),
         ReleaseCommand("release-check", [sys.executable, str(root / "tools" / "processforge.py"), "release-check", "--root", str(root)], 60),
         ReleaseCommand("examples-check", [sys.executable, str(root / "tools" / "processforge.py"), "examples-check", "--root", str(root)], 60),
         ReleaseCommand("events-validate", [sys.executable, str(root / "tools" / "processforge.py"), "events-validate", "--project-root", str(root)], 60),
@@ -7734,6 +7743,7 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
             "required_outputs": normalize_required_outputs(metadata.get("required_outputs")),
             "expected_report": metadata.get("expected_report") if isinstance(metadata.get("expected_report"), dict) else {},
         },
+        "subagent_policy": normalize_subagent_policy(metadata.get("subagent_policy")),
     }
 
 
@@ -7806,6 +7816,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
         },
         "scope": contract["scope"],
         "outputs": contract["outputs"],
+        "subagent_policy": contract["subagent_policy"],
         "capabilities": {"required": required_records, "optional": optional_records},
         "telemetry": {"events": telemetry_rel, "event_correlation_id": f"assignment-{assn_id}"},
         "required_sources": contract["context"]["required_sources"],
@@ -9363,6 +9374,853 @@ def command_authoring_parity_check_all(args: argparse.Namespace) -> int:
     return process_result
 
 
+HANDOFF_MODES = {"wait_for_result", "delegate_and_continue", "consultation", "final_transfer", "fork", "return_required"}
+HANDOFF_STATUSES = {"waiting_for_agent", "ready", "accepted", "in_progress", "returned", "finalized", "needs_operator", "cancelled"}
+LEASE_STATUSES = {"active", "released", "revoked", "expired", "stale"}
+
+
+def resolve_workplace_root(value: str | None, *, project_root: Path | None = None) -> Path:
+    if value:
+        path = Path(value).expanduser()
+        if not path.is_absolute() and project_root is not None:
+            path = project_root / path
+        return path.resolve()
+    if project_root is not None:
+        manifest = project_workplace_manifest(project_root)
+        if manifest:
+            return manifest.parent.resolve()
+    raise SystemExit("FAIL: --workplace is required")
+
+
+def workplace_agent_registry_path(workplace_root: Path) -> Path:
+    return workplace_root / "registries" / "agents.yaml"
+
+
+def workplace_agent_ledger_path(workplace_root: Path) -> Path:
+    return workplace_root / "runtime" / "agent-ledger" / "sessions.ndjson"
+
+
+def workplace_agent_presence_dir(workplace_root: Path) -> Path:
+    return workplace_root / "runtime" / "agent-presence"
+
+
+def workplace_agent_leases_dir(workplace_root: Path) -> Path:
+    return workplace_root / "runtime" / "agent-leases"
+
+
+def ensure_agent_workplace_dirs(workplace_root: Path) -> None:
+    for path in [
+        workplace_root / "registries",
+        workplace_root / "runtime" / "agent-ledger",
+        workplace_agent_presence_dir(workplace_root),
+        workplace_agent_leases_dir(workplace_root),
+    ]:
+        path.mkdir(parents=True, exist_ok=True)
+
+
+def load_agent_registry(workplace_root: Path) -> dict[str, Any]:
+    path = workplace_agent_registry_path(workplace_root)
+    data = load_yaml_document(path)
+    if yaml_error(data) or not data:
+        return {"schema_version": 1, "agents": []}
+    data.setdefault("schema_version", 1)
+    data.setdefault("agents", [])
+    return data
+
+
+def save_agent_registry(workplace_root: Path, data: dict[str, Any]) -> None:
+    ensure_agent_workplace_dirs(workplace_root)
+    write_yaml_file(workplace_agent_registry_path(workplace_root), data)
+
+
+def append_agent_ledger_event(workplace_root: Path, payload: dict[str, Any]) -> None:
+    ensure_agent_workplace_dirs(workplace_root)
+    payload.setdefault("schema_version", 1)
+    payload.setdefault("recorded_at", now_utc())
+    path = workplace_agent_ledger_path(workplace_root)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def agent_presence_path(workplace_root: Path, agent_id: str) -> Path:
+    return workplace_agent_presence_dir(workplace_root) / f"{safe_id(agent_id, 'agent')}.json"
+
+
+def read_agent_presence(workplace_root: Path, agent_id: str) -> dict[str, Any]:
+    return json_read(agent_presence_path(workplace_root, agent_id))
+
+
+def write_agent_presence(workplace_root: Path, payload: dict[str, Any]) -> None:
+    ensure_agent_workplace_dirs(workplace_root)
+    json_write(agent_presence_path(workplace_root, str(payload.get("agent_id") or "agent")), payload)
+
+
+def agent_session_id(agent_id: str) -> str:
+    return f"sess-{safe_id(agent_id, 'agent')}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+
+
+def ttl_expired(presence: dict[str, Any], *, now: datetime | None = None) -> bool:
+    timestamp = parse_runtime_timestamp(presence.get("last_seen_at"))
+    if timestamp is None:
+        return True
+    ttl = int(presence.get("heartbeat_ttl_seconds") or 300)
+    return (now or datetime.now(timezone.utc)) > timestamp + timedelta(seconds=ttl)
+
+
+def update_stale_agent_presence(workplace_root: Path) -> None:
+    presence_dir = workplace_agent_presence_dir(workplace_root)
+    if not presence_dir.is_dir():
+        return
+    for path in sorted(presence_dir.glob("*.json")):
+        presence = json_read(path)
+        if not presence:
+            continue
+        if str(presence.get("status")) == "online" and ttl_expired(presence):
+            presence["status"] = "stale"
+            presence["updated_at"] = now_utc()
+            json_write(path, presence)
+            append_agent_ledger_event(
+                workplace_root,
+                {
+                    "event": "agent.session_expired",
+                    "agent_id": presence.get("agent_id"),
+                    "session_id": presence.get("session_id"),
+                    "project_id": presence.get("project_id"),
+                    "process_id": presence.get("process_id"),
+                    "run_id": presence.get("run_id"),
+                },
+            )
+
+
+def checked_in_agents(workplace_root: Path, *, role: str | None = None, project_id: str | None = None) -> list[dict[str, Any]]:
+    update_stale_agent_presence(workplace_root)
+    rows: list[dict[str, Any]] = []
+    presence_dir = workplace_agent_presence_dir(workplace_root)
+    if not presence_dir.is_dir():
+        return rows
+    for path in sorted(presence_dir.glob("*.json")):
+        item = json_read(path)
+        if str(item.get("status")) != "online":
+            continue
+        if role and role not in [str(value) for value in as_list(item.get("roles"))]:
+            continue
+        if project_id and str(item.get("project_id") or "") != project_id:
+            continue
+        rows.append(item)
+    return rows
+
+
+def command_agent_register(args: argparse.Namespace) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    agent_id = safe_id(args.agent, "agent")
+    registry = load_agent_registry(workplace_root)
+    agents = registry.setdefault("agents", [])
+    if not isinstance(agents, list):
+        agents = []
+        registry["agents"] = agents
+    record = {
+        "id": agent_id,
+        "title": args.title or agent_id,
+        "kind": args.kind,
+        "roles": [str(item) for item in as_list(args.role)],
+        "capabilities": [str(item) for item in as_list(args.capability)],
+    }
+    existing = next((item for item in agents if isinstance(item, dict) and item.get("id") == agent_id), None)
+    if existing:
+        existing.update(record)
+    else:
+        agents.append(record)
+    save_agent_registry(workplace_root, registry)
+    print(f"REGISTERED: {agent_id}")
+    return 0
+
+
+def command_agent_list(args: argparse.Namespace) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    registry = load_agent_registry(workplace_root)
+    agents = [item for item in registry.get("agents", []) if isinstance(item, dict)]
+    if getattr(args, "json", False):
+        print(json.dumps({"agents": agents}, ensure_ascii=False, indent=2))
+        return 0
+    for item in agents:
+        print(f"{item.get('id')}\t{','.join(str(role) for role in as_list(item.get('roles')))}\t{item.get('kind', '')}")
+    return 0
+
+
+def command_agent_checkin(args: argparse.Namespace) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    agent_id = safe_id(args.agent, "agent")
+    session_id = args.session or agent_session_id(agent_id)
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+    project_id = args.project_id or (safe_id(project_root.name, "project") if project_root else "")
+    roles = [str(item) for item in as_list(args.role)]
+    capabilities = [str(item) for item in as_list(getattr(args, "capability", []))]
+    now = now_utc()
+    presence = {
+        "schema_version": 1,
+        "agent_id": agent_id,
+        "session_id": session_id,
+        "status": "online",
+        "roles": roles,
+        "capabilities": capabilities,
+        "project_id": project_id,
+        "project_root_ref": "project-root" if project_root else "",
+        "process_id": args.process or "",
+        "run_id": args.run or "",
+        "task_id": args.task or "",
+        "last_seen_at": now,
+        "heartbeat_ttl_seconds": int(args.ttl or 300),
+        "updated_at": now,
+    }
+    write_agent_presence(workplace_root, presence)
+    append_agent_ledger_event(
+        workplace_root,
+        {
+            "event": "agent.checked_in",
+            "agent_id": agent_id,
+            "session_id": session_id,
+            "project_id": project_id,
+            "project_root_ref": "project-root" if project_root else "",
+            "process_id": args.process or "",
+            "run_id": args.run or "",
+            "task_id": args.task or "",
+            "roles": roles,
+            "started_at": now,
+        },
+    )
+    print(f"CHECKED_IN: {agent_id} session={session_id}")
+    return 0
+
+
+def command_agent_heartbeat(args: argparse.Namespace) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    agent_id = safe_id(args.agent, "agent")
+    presence = read_agent_presence(workplace_root, agent_id)
+    if not presence:
+        print(f"FAIL: agent presence not found: {agent_id}")
+        return 1
+    if getattr(args, "session", None) and str(presence.get("session_id")) != args.session:
+        print(f"FAIL: session mismatch for {agent_id}")
+        return 1
+    presence["status"] = "online"
+    presence["last_seen_at"] = now_utc()
+    if getattr(args, "task", None):
+        presence["task_id"] = args.task
+    write_agent_presence(workplace_root, presence)
+    append_agent_ledger_event(workplace_root, {"event": "agent.heartbeat", "agent_id": agent_id, "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "task_id": presence.get("task_id")})
+    print(f"HEARTBEAT: {agent_id}")
+    return 0
+
+
+def command_agent_checkout(args: argparse.Namespace) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    agent_id = safe_id(args.agent, "agent")
+    presence = read_agent_presence(workplace_root, agent_id)
+    if not presence:
+        print(f"FAIL: agent presence not found: {agent_id}")
+        return 1
+    if getattr(args, "session", None) and str(presence.get("session_id")) != args.session:
+        print(f"FAIL: session mismatch for {agent_id}")
+        return 1
+    presence["status"] = "checked_out"
+    presence["last_seen_at"] = now_utc()
+    presence["updated_at"] = now_utc()
+    write_agent_presence(workplace_root, presence)
+    append_agent_ledger_event(workplace_root, {"event": "agent.checked_out", "agent_id": agent_id, "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "finished_at": now_utc()})
+    print(f"CHECKED_OUT: {agent_id}")
+    return 0
+
+
+def command_agent_status(args: argparse.Namespace) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    update_stale_agent_presence(workplace_root)
+    if getattr(args, "agent", None):
+        payload: Any = read_agent_presence(workplace_root, safe_id(args.agent, "agent"))
+    else:
+        payload = [json_read(path) for path in sorted(workplace_agent_presence_dir(workplace_root).glob("*.json"))]
+    if getattr(args, "json", False):
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    else:
+        print(dump_yaml(payload))
+    return 0
+
+
+def command_agent_availability(args: argparse.Namespace) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    role = args.role
+    agents = checked_in_agents(workplace_root, role=role, project_id=getattr(args, "project_id", None))
+    payload = {
+        "available": bool(agents),
+        "role": role,
+        "reason": "available" if agents else "no checked-in agent with required role",
+        "agents": [{"agent_id": item.get("agent_id"), "session_id": item.get("session_id"), "roles": item.get("roles", [])} for item in agents],
+    }
+    if getattr(args, "json", False):
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    else:
+        print(("AVAILABLE" if payload["available"] else "UNAVAILABLE") + f": {role} ({payload['reason']})")
+    return 0
+
+
+def command_agent_ledger_doctor(args: argparse.Namespace) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    update_stale_agent_presence(workplace_root)
+    checks: list[Check] = []
+    registry = workplace_agent_registry_path(workplace_root)
+    ledger = workplace_agent_ledger_path(workplace_root)
+    checks.append(check("PASS" if registry.is_file() else "FAIL", "agent registry exists"))
+    checks.append(check("PASS" if ledger.is_file() else "FAIL", "agent session ledger exists"))
+    if ledger.is_file():
+        for index, line in enumerate(ledger.read_text(encoding="utf-8").splitlines(), start=1):
+            if not line.strip():
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError as exc:
+                checks.append(check("FAIL", f"ledger line {index} invalid JSON: {exc}"))
+                continue
+            checks.append(check("PASS" if event.get("event") in {"agent.checked_in", "agent.heartbeat", "agent.checked_out", "agent.session_expired", "agent.session_recovered"} else "FAIL", f"ledger line {index} event valid"))
+    return print_checks(checks)
+
+
+def lease_path(workplace_root: Path, lease_id: str) -> Path:
+    return workplace_agent_leases_dir(workplace_root) / f"{safe_id(lease_id, 'lease')}.yaml"
+
+
+def load_lease(workplace_root: Path, lease_id: str) -> dict[str, Any]:
+    return load_yaml_document(lease_path(workplace_root, lease_id))
+
+
+def save_lease(workplace_root: Path, lease: dict[str, Any]) -> None:
+    ensure_agent_workplace_dirs(workplace_root)
+    write_yaml_file(lease_path(workplace_root, str(lease.get("id") or "lease")), lease)
+
+
+def command_agent_lease_grant(args: argparse.Namespace) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    lease_id = safe_id(args.id or f"lease-{args.agent}-{args.task or args.run or 'work'}", "lease")
+    issued = datetime.now(timezone.utc).replace(microsecond=0)
+    expires = issued + timedelta(seconds=int(args.ttl or 3600))
+    lease = {
+        "schema_version": 1,
+        "id": lease_id,
+        "agent_id": safe_id(args.agent, "agent"),
+        "session_id": args.session or read_agent_presence(workplace_root, args.agent).get("session_id", ""),
+        "status": "active",
+        "scope": {
+            "project_id": args.project_id or "",
+            "process_id": args.process or "",
+            "run_id": args.run or "",
+            "task_id": args.task or "",
+        },
+        "access": {
+            "capsule": normalize_assignment_path(args.capsule or ""),
+            "allowed_files": [normalize_assignment_path(item) for item in as_list(args.allowed_file)],
+            "allowed_read_files": [normalize_assignment_path(item) for item in as_list(args.allowed_read_file)],
+            "forbidden_files": [normalize_assignment_path(item) for item in as_list(args.forbidden_file)],
+        },
+        "issued_at": issued.isoformat().replace("+00:00", "Z"),
+        "expires_at": expires.isoformat().replace("+00:00", "Z"),
+    }
+    save_lease(workplace_root, lease)
+    print(f"LEASE_GRANTED: {lease_id}")
+    return 0
+
+
+def command_agent_lease_update_status(args: argparse.Namespace, status: str) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    lease = load_lease(workplace_root, args.lease)
+    if not lease:
+        print(f"FAIL: lease not found: {args.lease}")
+        return 1
+    lease["status"] = status
+    lease["updated_at"] = now_utc()
+    save_lease(workplace_root, lease)
+    print(f"LEASE_{status.upper()}: {lease.get('id')}")
+    return 0
+
+
+def command_agent_lease_release(args: argparse.Namespace) -> int:
+    return command_agent_lease_update_status(args, "released")
+
+
+def command_agent_lease_revoke(args: argparse.Namespace) -> int:
+    return command_agent_lease_update_status(args, "revoked")
+
+
+def command_agent_lease_list(args: argparse.Namespace) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    rows = [load_yaml_document(path) for path in sorted(workplace_agent_leases_dir(workplace_root).glob("*.yaml"))]
+    if getattr(args, "json", False):
+        print(json.dumps({"leases": rows}, ensure_ascii=False, indent=2))
+    else:
+        for item in rows:
+            print(f"{item.get('id')}\t{item.get('status')}\t{item.get('agent_id')}\t{(item.get('scope') or {}).get('task_id', '')}")
+    return 0
+
+
+def command_agent_lease_doctor(args: argparse.Namespace) -> int:
+    workplace_root = resolve_workplace_root(args.workplace)
+    checks: list[Check] = []
+    for path in sorted(workplace_agent_leases_dir(workplace_root).glob("*.yaml")):
+        lease = load_yaml_document(path)
+        checks.append(check("PASS" if lease.get("id") else "FAIL", f"{path.name} id present"))
+        checks.append(check("PASS" if lease.get("agent_id") else "FAIL", f"{path.name} agent_id present"))
+        checks.append(check("PASS" if lease.get("status") in LEASE_STATUSES else "FAIL", f"{path.name} status valid"))
+        if str(lease.get("status")) == "active":
+            expires = parse_runtime_timestamp(lease.get("expires_at"))
+            checks.append(check("PASS" if expires and expires > datetime.now(timezone.utc) else "WARN", f"{path.name} active lease not expired"))
+    if not checks:
+        checks.append(check("PASS", "no leases present"))
+    return print_checks(checks)
+
+
+def mark_expired_agent_leases(workplace_root: Path) -> int:
+    changed = 0
+    now = datetime.now(timezone.utc)
+    for path in sorted(workplace_agent_leases_dir(workplace_root).glob("*.yaml")):
+        lease = load_yaml_document(path)
+        if str(lease.get("status")) != "active":
+            continue
+        expires = parse_runtime_timestamp(lease.get("expires_at"))
+        if expires and expires <= now:
+            lease["status"] = "stale"
+            lease["updated_at"] = now_utc()
+            write_yaml_file(path, lease)
+            changed += 1
+    return changed
+
+
+def process_routes_path(project_root: Path) -> Path:
+    return locate_flow_root(project_root) / "process-routes.yaml"
+
+
+def load_process_route_map(project_root: Path) -> dict[str, Any]:
+    data = load_yaml_document(process_routes_path(project_root))
+    if yaml_error(data) or not data:
+        return {"schema_version": 1, "routes": []}
+    data.setdefault("schema_version", 1)
+    data.setdefault("routes", [])
+    return data
+
+
+def route_by_id(project_root: Path, route_id: str) -> dict[str, Any]:
+    route_id = safe_id(route_id, "route")
+    routes = load_process_route_map(project_root).get("routes", [])
+    for route in routes if isinstance(routes, list) else []:
+        if isinstance(route, dict) and str(route.get("id")) == route_id:
+            return route
+    raise SystemExit(f"FAIL: process route not found: {route_id}")
+
+
+def command_process_route_list(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    routes = [item for item in load_process_route_map(project_root).get("routes", []) if isinstance(item, dict)]
+    if getattr(args, "json", False):
+        print(json.dumps({"routes": routes}, ensure_ascii=False, indent=2))
+    else:
+        for item in routes:
+            print(f"{item.get('id')}\t{item.get('from_process')}\t{item.get('to_process')}\t{item.get('mode')}")
+    return 0
+
+
+def validate_process_route_map(project_root: Path) -> list[Check]:
+    data = load_process_route_map(project_root)
+    routes = data.get("routes") if isinstance(data.get("routes"), list) else []
+    checks = [check("PASS" if data.get("schema_version") else "FAIL", "process route map schema_version present")]
+    seen: set[str] = set()
+    for route in routes:
+        if not isinstance(route, dict):
+            checks.append(check("FAIL", "route item must be object"))
+            continue
+        route_id = safe_id(str(route.get("id") or ""), "route")
+        checks.append(check("PASS" if route_id and route_id not in seen else "FAIL", f"route id unique: {route_id or 'missing'}"))
+        seen.add(route_id)
+        checks.append(check("PASS" if route.get("from_process") else "FAIL", f"{route_id} from_process present"))
+        checks.append(check("PASS" if route.get("to_process") else "FAIL", f"{route_id} to_process present"))
+        checks.append(check("PASS" if str(route.get("mode") or "") in HANDOFF_MODES else "FAIL", f"{route_id} mode valid"))
+    return checks
+
+
+def command_process_route_validate(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    return print_checks(validate_process_route_map(project_root))
+
+
+def command_process_route_doctor(args: argparse.Namespace) -> int:
+    return command_process_route_validate(args)
+
+
+def handoff_dir(project_root: Path, handoff_id: str) -> Path:
+    return locate_flow_root(project_root) / "handoffs" / safe_id(handoff_id, "handoff")
+
+
+def handoff_yaml_path(project_root: Path, handoff_id: str) -> Path:
+    return handoff_dir(project_root, handoff_id) / "handoff.yaml"
+
+
+def load_handoff(project_root: Path, handoff_id: str) -> dict[str, Any]:
+    data = load_yaml_document(handoff_yaml_path(project_root, handoff_id))
+    if not data:
+        raise SystemExit(f"FAIL: handoff not found: {safe_id(handoff_id, 'handoff')}")
+    return data
+
+
+def save_handoff(project_root: Path, handoff: dict[str, Any]) -> None:
+    handoff["updated_at"] = now_utc()
+    write_yaml_file(handoff_yaml_path(project_root, str(handoff.get("id") or "handoff")), handoff)
+
+
+def required_role_from_route(route: dict[str, Any]) -> str:
+    requires = route.get("requires_agent") if isinstance(route.get("requires_agent"), dict) else {}
+    return str(requires.get("role") or "")
+
+
+def command_handoff_create(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    route = route_by_id(project_root, args.route)
+    handoff_id = safe_id(args.id or f"handoff-{route.get('id')}", "handoff")
+    root = handoff_dir(project_root, handoff_id)
+    handoff = {
+        "schema_version": 1,
+        "id": handoff_id,
+        "status": "waiting_for_agent",
+        "route_id": str(route.get("id")),
+        "from": {"process": str(route.get("from_process") or ""), "run_id": args.from_run, "stage": args.from_stage or ""},
+        "to": {"process": str(route.get("to_process") or ""), "mode": str(route.get("mode") or "wait_for_result"), "required_role": required_role_from_route(route)},
+        "input_artifacts": as_list((route.get("input_contract") if isinstance(route.get("input_contract"), dict) else {}).get("required_artifacts")),
+        "expected_results": as_list((route.get("output_contract") if isinstance(route.get("output_contract"), dict) else {}).get("expected_artifacts")),
+        "return_to": route.get("return") if isinstance(route.get("return"), dict) else {"process": str(route.get("from_process") or ""), "run_id": args.from_run},
+        "created_at": now_utc(),
+    }
+    planned = [root / "handoff.yaml", root / "handoff.md", root / "input-manifest.yaml", root / "expected-output.yaml", root / "return-package.yaml"]
+    if not getattr(args, "apply", False):
+        print_plan("handoff-create dry run", planned, project_root)
+        return 0
+    root.mkdir(parents=True, exist_ok=True)
+    save_handoff(project_root, handoff)
+    write_yaml_file(root / "input-manifest.yaml", {"schema_version": 1, "handoff_id": handoff_id, "artifacts": handoff["input_artifacts"]})
+    write_yaml_file(root / "expected-output.yaml", {"schema_version": 1, "handoff_id": handoff_id, "expected_results": handoff["expected_results"]})
+    write_yaml_file(root / "return-package.yaml", {"schema_version": 1, "handoff_id": handoff_id, "status": "pending", "artifacts": []})
+    (root / "handoff.md").write_text(f"# Handoff: {handoff_id}\n\nStatus: waiting_for_agent\n\nRoute: `{route.get('id')}`\n", encoding="utf-8")
+    print(f"WROTE: {rel(root / 'handoff.yaml', project_root)}")
+    return 0
+
+
+def handoff_available_agents(args: argparse.Namespace, handoff: dict[str, Any], project_root: Path) -> list[dict[str, Any]]:
+    workplace = getattr(args, "workplace", None)
+    if not workplace:
+        return []
+    role = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_role") or "")
+    project_id = getattr(args, "project_id", None)
+    return checked_in_agents(resolve_workplace_root(workplace, project_root=project_root), role=role or None, project_id=project_id)
+
+
+def command_handoff_status(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    handoff = load_handoff(project_root, args.handoff)
+    agents = handoff_available_agents(args, handoff, project_root)
+    payload = {
+        "handoff": handoff.get("id"),
+        "status": handoff.get("status"),
+        "required_role": (handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_role", ""),
+        "available_agents": [{"agent_id": item.get("agent_id"), "session_id": item.get("session_id")} for item in agents],
+    }
+    if payload["status"] == "waiting_for_agent" and agents:
+        payload["status"] = "ready"
+    if getattr(args, "json", False):
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    else:
+        print(dump_yaml(payload))
+    return 0
+
+
+def command_handoff_accept(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    handoff = load_handoff(project_root, args.handoff)
+    handoff["status"] = "accepted"
+    handoff["accepted_by"] = {"agent_id": safe_id(args.agent, "agent"), "session_id": args.session or "", "accepted_at": now_utc()}
+    save_handoff(project_root, handoff)
+    print(f"ACCEPTED: {handoff.get('id')}")
+    return 0
+
+
+def command_handoff_start_target_run(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    handoff = load_handoff(project_root, args.handoff)
+    run_id = safe_id(args.run or f"{handoff.get('id')}-target", "run")
+    process_id = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("process") or "task-batch-execution")
+    if not run_yaml_path(project_root, run_id).is_file():
+        status = command_run_create(argparse.Namespace(project_root=str(project_root), id=run_id, title=f"Target run for {handoff.get('id')}", process=process_id, objective=f"Handoff target for {handoff.get('id')}", status="in_progress", dry_run=False))
+        if status:
+            return status
+    handoff["status"] = "in_progress"
+    handoff.setdefault("target", {})["run_id"] = run_id
+    save_handoff(project_root, handoff)
+    print(f"TARGET_RUN: {run_id}")
+    return 0
+
+
+def command_handoff_return(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    handoff = load_handoff(project_root, args.handoff)
+    artifacts = [normalize_assignment_path(item) for item in as_list(args.artifact)]
+    missing = [item for item in artifacts if not (project_root / item).is_file()]
+    if missing:
+        print("FAIL: return artifacts missing: " + ", ".join(missing))
+        return 1
+    handoff["status"] = "returned"
+    handoff["returned_at"] = now_utc()
+    handoff["return_artifacts"] = artifacts
+    save_handoff(project_root, handoff)
+    write_yaml_file(handoff_dir(project_root, str(handoff.get("id"))) / "return-package.yaml", {"schema_version": 1, "handoff_id": handoff.get("id"), "status": "returned", "artifacts": artifacts, "returned_at": handoff["returned_at"]})
+    print(f"RETURNED: {handoff.get('id')}")
+    return 0
+
+
+def command_handoff_finalize(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    handoff = load_handoff(project_root, args.handoff)
+    if str(handoff.get("status")) not in {"returned", "accepted", "in_progress"}:
+        print(f"FAIL: handoff is not finalizable: {handoff.get('status')}")
+        return 1
+    handoff["status"] = "finalized"
+    handoff["finalized_at"] = now_utc()
+    save_handoff(project_root, handoff)
+    print(f"FINALIZED: {handoff.get('id')}")
+    return 0
+
+
+def command_handoff_doctor(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    checks: list[Check] = []
+    for root in sorted((locate_flow_root(project_root) / "handoffs").glob("*")):
+        if not root.is_dir() or root.name == "runs":
+            continue
+        handoff = load_yaml_document(root / "handoff.yaml")
+        checks.append(check("PASS" if handoff.get("id") else "FAIL", f"{root.name} handoff id present"))
+        checks.append(check("PASS" if handoff.get("status") in HANDOFF_STATUSES else "FAIL", f"{root.name} handoff status valid"))
+        for name in ["input-manifest.yaml", "expected-output.yaml", "return-package.yaml"]:
+            checks.append(check("PASS" if (root / name).is_file() else "FAIL", f"{root.name} {name} exists"))
+    if not checks:
+        checks.append(check("PASS", "no handoff packages present"))
+    return print_checks(checks)
+
+
+def command_handoff_offer(args: argparse.Namespace) -> int:
+    return command_handoff_status(args)
+
+
+def command_agent_director_tick(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
+    changed = mark_expired_agent_leases(workplace_root)
+    for root in sorted((locate_flow_root(project_root) / "handoffs").glob("*")):
+        if not root.is_dir() or not (root / "handoff.yaml").is_file():
+            continue
+        handoff = load_yaml_document(root / "handoff.yaml")
+        if handoff.get("status") != "waiting_for_agent":
+            continue
+        role = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_role") or "")
+        agents = checked_in_agents(workplace_root, role=role or None, project_id=getattr(args, "project_id", None))
+        if not agents:
+            created = parse_runtime_timestamp(handoff.get("created_at"))
+            if created and datetime.now(timezone.utc) > created + timedelta(seconds=int(args.wait_ttl or 3600)):
+                handoff["status"] = "needs_operator"
+                handoff["director_reason"] = "required agent unavailable past wait ttl"
+                save_handoff(project_root, handoff)
+                changed += 1
+            continue
+        agent = agents[0]
+        handoff_id = str(handoff.get("id") or root.name)
+        lease_id = f"lease-{handoff_id}-{agent.get('agent_id')}"
+        command_agent_lease_grant(
+            argparse.Namespace(
+                workplace=str(workplace_root),
+                id=lease_id,
+                agent=str(agent.get("agent_id")),
+                session=str(agent.get("session_id") or ""),
+                project_id=getattr(args, "project_id", "") or str(agent.get("project_id") or ""),
+                process=str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("process") or ""),
+                run=str((handoff.get("target") if isinstance(handoff.get("target"), dict) else {}).get("run_id") or ""),
+                task="",
+                capsule="",
+                allowed_file=[],
+                allowed_read_file=[],
+                forbidden_file=[],
+                ttl=int(args.lease_ttl or 3600),
+            )
+        )
+        handoff["status"] = "ready"
+        handoff["assigned_agent"] = {"agent_id": agent.get("agent_id"), "session_id": agent.get("session_id"), "lease_id": lease_id}
+        save_handoff(project_root, handoff)
+        changed += 1
+    print(f"DIRECTOR_TICK: changed={changed}")
+    return 0
+
+
+def command_agent_director_run(args: argparse.Namespace) -> int:
+    ticks = max(1, int(args.max_ticks or 1))
+    result = 0
+    for _index in range(ticks):
+        result = command_agent_director_tick(args)
+        if result:
+            return result
+        if float(args.interval or 0) > 0:
+            time.sleep(float(args.interval))
+    return result
+
+
+def command_agent_director_status(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    rows: list[dict[str, Any]] = []
+    for path in sorted((locate_flow_root(project_root) / "handoffs").glob("*/handoff.yaml")):
+        handoff = load_yaml_document(path)
+        rows.append({"id": handoff.get("id"), "status": handoff.get("status"), "required_role": (handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_role", "")})
+    if getattr(args, "json", False):
+        print(json.dumps({"handoffs": rows}, ensure_ascii=False, indent=2))
+    else:
+        print(dump_yaml({"handoffs": rows}))
+    return 0
+
+
+def continuation_path(project_root: Path, continuation_id: str) -> Path:
+    return locate_flow_root(project_root) / "continuations" / f"{safe_id(continuation_id, 'continuation')}.yaml"
+
+
+def command_continuation_create(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    continuation_id = safe_id(args.id, "continuation")
+    payload = {
+        "schema_version": 1,
+        "id": continuation_id,
+        "agent_id": args.agent or "",
+        "previous_session_id": args.session or "",
+        "waiting_for": {"handoff_id": args.handoff or "", "expected_artifacts": [normalize_assignment_path(item) for item in as_list(args.expected_artifact)]},
+        "resume": {"process": args.process or "", "run_id": args.run or "", "stage": args.stage or "", "instruction": args.instruction or ""},
+        "status": "waiting",
+        "created_at": now_utc(),
+    }
+    path = continuation_path(project_root, continuation_id)
+    if not getattr(args, "apply", False):
+        print_plan("continuation-create dry run", [path], project_root)
+        return 0
+    write_yaml_file(path, payload)
+    print(f"WROTE: {rel(path, project_root)}")
+    return 0
+
+
+def command_continuation_status(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    payload = load_yaml_document(continuation_path(project_root, args.continuation))
+    if not payload:
+        print(f"FAIL: continuation not found: {args.continuation}")
+        return 1
+    expected = (payload.get("waiting_for") if isinstance(payload.get("waiting_for"), dict) else {}).get("expected_artifacts", [])
+    missing = [normalize_assignment_path(item) for item in as_list(expected) if not (project_root / normalize_assignment_path(item)).is_file()]
+    status = "ready" if not missing else str(payload.get("status") or "waiting")
+    result = {"continuation": payload.get("id"), "status": status, "missing_expected_artifacts": missing}
+    if getattr(args, "json", False):
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        print(dump_yaml(result))
+    return 0
+
+
+def command_continuation_resume(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    path = continuation_path(project_root, args.continuation)
+    payload = load_yaml_document(path)
+    if not payload:
+        print(f"FAIL: continuation not found: {args.continuation}")
+        return 1
+    status_args = argparse.Namespace(project_root=str(project_root), continuation=args.continuation, json=True)
+    capture_status, output = run_command_capture(command_continuation_status, status_args)
+    if capture_status:
+        print(output, end="")
+        return capture_status
+    state = json.loads(output)
+    if state.get("status") != "ready":
+        print(f"WAITING: {payload.get('id')}")
+        return 1
+    payload["status"] = "resumed"
+    payload["resumed_at"] = now_utc()
+    write_yaml_file(path, payload)
+    print(f"RESUMED: {payload.get('id')}")
+    return 0
+
+
+def command_continuation_doctor(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    checks: list[Check] = []
+    for path in sorted((locate_flow_root(project_root) / "continuations").glob("*.yaml")):
+        payload = load_yaml_document(path)
+        checks.append(check("PASS" if payload.get("id") else "FAIL", f"{path.name} id present"))
+        checks.append(check("PASS" if isinstance(payload.get("waiting_for"), dict) else "FAIL", f"{path.name} waiting_for present"))
+        checks.append(check("PASS" if isinstance(payload.get("resume"), dict) else "FAIL", f"{path.name} resume present"))
+    if not checks:
+        checks.append(check("PASS", "no continuation capsules present"))
+    return print_checks(checks)
+
+
+def normalize_subagent_policy(raw: Any) -> dict[str, Any]:
+    source = raw if isinstance(raw, dict) else {}
+    allow = bool(source.get("allow", source.get("allow_subagents", False)))
+    max_subagents = int(source.get("max_subagents") or (1 if allow else 0))
+    reports_dir = normalize_assignment_path(str(source.get("reports_dir") or ""))
+    return {
+        "allow": allow,
+        "max_subagents": max_subagents,
+        "allowed_roles": [str(item) for item in as_list(source.get("allowed_roles"))],
+        "require_reports": bool(source.get("require_reports", source.get("require_subagent_reports", allow))),
+        "reports_dir": reports_dir,
+    }
+
+
+def worker_subagent_policy(worker: dict[str, Any]) -> dict[str, Any]:
+    raw = worker.get("subagent_policy") if isinstance(worker.get("subagent_policy"), dict) else {}
+    policy = normalize_subagent_policy(raw)
+    if "allow_subagents" in worker:
+        policy["allow"] = bool(worker.get("allow_subagents"))
+    return policy
+
+
+def validate_subagent_policy_outputs(project_root: Path, task: dict[str, Any]) -> list[str]:
+    policy = normalize_subagent_policy(task.get("subagent_policy"))
+    if not policy.get("allow"):
+        return []
+    if not policy.get("require_reports"):
+        return []
+    reports_dir = normalize_assignment_path(str(policy.get("reports_dir") or ""))
+    if not reports_dir.startswith(".pf/artifacts/subagents/"):
+        return [f"subagent reports_dir outside allowed artifacts dir: {reports_dir or 'missing'}"]
+    report_root = project_root / reports_dir
+    if not report_root.is_dir():
+        return [f"subagent reports dir missing: {reports_dir}"]
+    reports = sorted([path for path in report_root.rglob("*") if path.is_file()])
+    if not reports:
+        return [f"subagent reports missing in: {reports_dir}"]
+    max_subagents = int(policy.get("max_subagents") or 0)
+    if max_subagents > 0 and len(reports) > max_subagents:
+        return [f"subagent reports exceed max_subagents: {len(reports)} > {max_subagents}"]
+    return []
+
+
 def default_orchestrator_task_plan(run_id: str, title: str) -> dict[str, Any]:
     run_id = safe_id(run_id, "run")
     return {
@@ -10177,11 +11035,20 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
     ]
     for item in missing:
         lines.append(f"- missing: `{item}`")
+    subagent_failures = validate_subagent_policy_outputs(project_root, task)
+    lines.append(f"- subagent_policy_failures: `{len(subagent_failures)}`")
+    for item in subagent_failures:
+        lines.append(f"- subagent_policy_failure: `{item}`")
     paths["collection"].write_text("\n".join(lines) + "\n", encoding="utf-8")
-    if missing:
+    if missing or subagent_failures:
         driver = runtime_driver_for_task(project_root, task, str(state.get("driver_id") or task.get("runtime_driver") or "manual"))
-        write_agent_run_state(project_root, task, driver, "failed", failure_reason="missing outputs: " + ", ".join(missing), paths=paths)
-        print("FAIL: missing outputs: " + ", ".join(missing))
+        reasons = []
+        if missing:
+            reasons.append("missing outputs: " + ", ".join(missing))
+        if subagent_failures:
+            reasons.append("subagent policy failures: " + "; ".join(subagent_failures))
+        write_agent_run_state(project_root, task, driver, "failed", failure_reason="; ".join(reasons), paths=paths)
+        print("FAIL: " + "; ".join(reasons))
         return 1
     status, output = run_command_capture(command_task_complete, argparse.Namespace(project_root=str(project_root), task=task_id, summary=f"Collected worker run output from {state.get('driver_id')}", artifact=[expected_report_artifact(task)], dry_run=False))
     print(output, end="")
@@ -10605,6 +11472,12 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
         checks.append(check("PASS" if read_allowed or raw_worker.get("required_sources") else "WARN", f"{worker_id} has bounded read/context scope"))
         forbidden_conflicts = assignment_scope_conflicts(worker_id, allowed, worker_id, forbidden, repo_files, reason_prefix="forbidden_wins:")
         checks.append(check("PASS" if not forbidden_conflicts else "FAIL", f"{worker_id} forbidden_files do not overlap allowed_files"))
+        subagent_policy = worker_subagent_policy(raw_worker)
+        reports_dir = str(subagent_policy.get("reports_dir") or "")
+        checks.append(check("PASS" if isinstance(subagent_policy.get("allow"), bool) else "FAIL", f"{worker_id} subagent allow flag valid"))
+        if subagent_policy.get("allow") and subagent_policy.get("require_reports"):
+            checks.append(check("PASS" if reports_dir.startswith(".pf/artifacts/subagents/") else "FAIL", f"{worker_id} subagent reports_dir inside .pf/artifacts/subagents"))
+            checks.append(check("PASS" if int(subagent_policy.get("max_subagents") or 0) > 0 else "FAIL", f"{worker_id} subagent max_subagents positive"))
         for output in outputs:
             out_path = normalize_assignment_path(output.get("path") if isinstance(output, dict) else "")
             checks.append(check("PASS" if out_path else "FAIL", f"{worker_id} required output has path"))
@@ -10638,6 +11511,7 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
     forbidden_files = assignment_scope_items(task.get("forbidden_files"))
     required_outputs = normalize_required_outputs(task.get("required_outputs"))
     expected_report = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+    subagent_policy = normalize_subagent_policy(task.get("subagent_policy"))
     lines = [
         "# Worker Launch Prompt",
         "",
@@ -10651,6 +11525,8 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
         "Produce required_outputs.",
         "Write expected_report.",
         "Stop and report if scope is insufficient.",
+        "Invoke subagents only when subagent_policy.allow is true.",
+        "When subagent reports are required, write them only under subagent_policy.reports_dir.",
         "",
         "## Assignment",
         "",
@@ -10678,6 +11554,17 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
     for output in required_outputs:
         lines.append(f"- `{output.get('id')}` -> `{output.get('path', '')}`")
     lines.extend(["", "## expected_report", "", f"- `{expected_report.get('artifact', '')}`"])
+    lines.extend(
+        [
+            "",
+            "## subagent_policy",
+            "",
+            f"- allow: `{str(subagent_policy.get('allow')).lower()}`",
+            f"- max_subagents: `{subagent_policy.get('max_subagents')}`",
+            f"- require_reports: `{str(subagent_policy.get('require_reports')).lower()}`",
+            f"- reports_dir: `{subagent_policy.get('reports_dir')}`",
+        ]
+    )
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -10847,7 +11734,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
                     required_output=normalize_required_outputs(worker.get("required_outputs")),
                     expected_report_language=str(worker.get("expected_report_language") or "en"),
                     expected_report_artifact=str(worker.get("expected_report_artifact") or ""),
-                    force_with_handoff=bool(as_list(worker.get("dependencies")) or as_list(worker.get("depends_on"))),
+                    force_with_handoff=bool(plan.get("allow_write_scope_overlap", False) or as_list(worker.get("dependencies")) or as_list(worker.get("depends_on"))),
                     dry_run=False,
                 ),
             )
@@ -10857,6 +11744,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         task = load_task(project_root, task_id)
         task["worker_may_rebuild_context"] = bool(worker.get("worker_may_rebuild_context", False))
         task["runtime_driver"] = str(worker.get("runtime_driver") or default_driver)
+        task["subagent_policy"] = worker_subagent_policy(worker)
         blocked_by = sorted({safe_id(str(item), "task") for item in [*as_list(worker.get("dependencies")), *as_list(worker.get("depends_on"))] if item})
         if blocked_by:
             task.setdefault("dependencies", {})["blocked_by"] = blocked_by
@@ -10874,7 +11762,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
             print(f"FAIL: assignment capsule is stale for {task_id}: {capsule_rel}; create a new capsule intentionally before launch")
             return 1
         else:
-            status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=False))
+            status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=bool(plan.get("allow_write_scope_overlap", False))))
             print(output, end="")
             if status:
                 return status
@@ -10887,7 +11775,39 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
             return task_doctor_status
         if str(runtime.get("start_policy") or "manual") == "prepare":
             prepare_worker_run(project_root, task_id, None, None)
+        if getattr(args, "workplace", None):
+            command_agent_lease_grant(
+                argparse.Namespace(
+                    workplace=args.workplace,
+                    id=f"lease-{run_id}-{task_id}",
+                    agent=task_id,
+                    session="",
+                    project_id=safe_id(project_root.name, "project"),
+                    process=str(worker.get("process") or "task-batch-execution"),
+                    run=run_id,
+                    task=task_id,
+                    capsule=rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
+                    allowed_file=assignment_scope_items(worker.get("allowed_files")),
+                    allowed_read_file=assignment_scope_items(worker.get("allowed_read_files")),
+                    forbidden_file=assignment_scope_items(worker.get("forbidden_files")),
+                    ttl=3600,
+                )
+            )
     write_orchestration_summary(project_root, plan)
+    if str(runtime.get("start_policy") or "manual") == "supervisor" and bool(getattr(args, "shell_plan", False)):
+        supervisor_status = command_supervisor_run(
+            argparse.Namespace(
+                project_root=str(project_root),
+                run=run_id,
+                profile=str(runtime.get("supervisor_profile") or "default"),
+                driver=None,
+                interval=0,
+                max_ticks=5,
+                final_drain_timeout=5,
+            )
+        )
+        if supervisor_status:
+            return supervisor_status
     doctor_status = command_run_doctor(argparse.Namespace(project_root=str(project_root), run=run_id))
     emit_process_event(project_root, "orchestrator.plan.applied", process_id="multi-agent-task-orchestration", subject=run_id, payload={"run_id": run_id, "doctor_status": doctor_status}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(run_root(project_root, run_id) / 'orchestration-summary.md', project_root)}")
@@ -14447,9 +15367,10 @@ def build_parser() -> argparse.ArgumentParser:
     orchestrator_plan_apply.add_argument("--project-root", required=True, help="Project root path.")
     orchestrator_plan_apply.add_argument("--plan", help="Plan YAML path.")
     orchestrator_plan_apply.add_argument("--run", help="Run id when --plan is omitted.")
+    orchestrator_plan_apply.add_argument("--workplace", help="Workplace root path for lease grants.")
     orchestrator_plan_apply.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     orchestrator_plan_apply.add_argument("--apply", action="store_true", help="Create run, tasks, capsules, prompts, and handoff.")
-    orchestrator_plan_apply.set_defaults(func=command_orchestrator_plan_apply)
+    orchestrator_plan_apply.set_defaults(func=command_orchestrator_plan_apply, shell_plan=False)
     orchestrator_plan_status = orchestrator_plan_sub.add_parser("status", help="Show orchestration status.")
     orchestrator_plan_status.add_argument("--project-root", required=True, help="Project root path.")
     orchestrator_plan_status.add_argument("--plan", help="Plan YAML path.")
@@ -14485,9 +15406,10 @@ def build_parser() -> argparse.ArgumentParser:
     orchestrator_plan_apply_alias.add_argument("--project-root", required=True, help="Project root path.")
     orchestrator_plan_apply_alias.add_argument("--plan", help="Plan YAML path.")
     orchestrator_plan_apply_alias.add_argument("--run", help="Run id when --plan is omitted.")
+    orchestrator_plan_apply_alias.add_argument("--workplace", help="Workplace root path for lease grants.")
     orchestrator_plan_apply_alias.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     orchestrator_plan_apply_alias.add_argument("--apply", action="store_true", help="Create run, tasks, capsules, prompts, and handoff.")
-    orchestrator_plan_apply_alias.set_defaults(func=command_orchestrator_plan_apply)
+    orchestrator_plan_apply_alias.set_defaults(func=command_orchestrator_plan_apply, shell_plan=False)
 
     orchestrator_plan_status_alias = sub.add_parser("orchestrator-plan-status", help="Flat alias for orchestrator-plan status.")
     orchestrator_plan_status_alias.add_argument("--project-root", required=True, help="Project root path.")
@@ -14502,6 +15424,232 @@ def build_parser() -> argparse.ArgumentParser:
     worker_launch_prompt_create_alias.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     worker_launch_prompt_create_alias.add_argument("--apply", action="store_true", help="Write the prompt.")
     worker_launch_prompt_create_alias.set_defaults(func=command_worker_launch_prompt_create)
+
+    agent_register = sub.add_parser("agent-register", help="Register an agent in the workplace agent registry.")
+    agent_register.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_register.add_argument("--agent", required=True, help="Agent id.")
+    agent_register.add_argument("--title", help="Agent title.")
+    agent_register.add_argument("--kind", default="operator_started_agent", help="Agent kind.")
+    agent_register.add_argument("--role", action="append", default=[], help="Agent role. Repeatable.")
+    agent_register.add_argument("--capability", action="append", default=[], help="Agent capability. Repeatable.")
+    agent_register.set_defaults(func=command_agent_register)
+
+    agent_list = sub.add_parser("agent-list", help="List registered workplace agents.")
+    agent_list.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_list.add_argument("--json", action="store_true", help="Print JSON.")
+    agent_list.set_defaults(func=command_agent_list)
+
+    agent_checkin = sub.add_parser("agent-checkin", help="Record an agent check-in and current presence.")
+    agent_checkin.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_checkin.add_argument("--agent", required=True, help="Agent id.")
+    agent_checkin.add_argument("--session", help="Session id. Defaults to generated id.")
+    agent_checkin.add_argument("--project-root", help="Project root path.")
+    agent_checkin.add_argument("--project-id", help="Project id override.")
+    agent_checkin.add_argument("--process", help="Process id.")
+    agent_checkin.add_argument("--run", help="Run id.")
+    agent_checkin.add_argument("--task", help="Task id.")
+    agent_checkin.add_argument("--role", action="append", default=[], help="Checked-in role. Repeatable.")
+    agent_checkin.add_argument("--capability", action="append", default=[], help="Runtime capability. Repeatable.")
+    agent_checkin.add_argument("--ttl", type=int, default=300, help="Heartbeat TTL seconds.")
+    agent_checkin.set_defaults(func=command_agent_checkin)
+
+    agent_heartbeat = sub.add_parser("agent-heartbeat", help="Refresh an agent presence record.")
+    agent_heartbeat.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_heartbeat.add_argument("--agent", required=True, help="Agent id.")
+    agent_heartbeat.add_argument("--session", help="Expected session id.")
+    agent_heartbeat.add_argument("--task", help="Current task id.")
+    agent_heartbeat.set_defaults(func=command_agent_heartbeat)
+
+    agent_checkout = sub.add_parser("agent-checkout", help="Record an agent checkout.")
+    agent_checkout.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_checkout.add_argument("--agent", required=True, help="Agent id.")
+    agent_checkout.add_argument("--session", help="Expected session id.")
+    agent_checkout.set_defaults(func=command_agent_checkout)
+
+    agent_status = sub.add_parser("agent-status", help="Show current agent presence.")
+    agent_status.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_status.add_argument("--agent", help="Agent id.")
+    agent_status.add_argument("--json", action="store_true", help="Print JSON.")
+    agent_status.set_defaults(func=command_agent_status)
+
+    agent_availability = sub.add_parser("agent-availability", help="Answer whether a checked-in agent with a role is available.")
+    agent_availability.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_availability.add_argument("--role", required=True, help="Required role.")
+    agent_availability.add_argument("--project-id", help="Optional project id filter.")
+    agent_availability.add_argument("--json", action="store_true", help="Print JSON.")
+    agent_availability.set_defaults(func=command_agent_availability)
+
+    agent_ledger_doctor = sub.add_parser("agent-ledger-doctor", help="Validate workplace agent registry, ledger, and presence.")
+    agent_ledger_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_ledger_doctor.set_defaults(func=command_agent_ledger_doctor)
+
+    agent_lease_grant = sub.add_parser("agent-lease-grant", help="Grant an agent lease/key.")
+    agent_lease_grant.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_lease_grant.add_argument("--id", help="Lease id.")
+    agent_lease_grant.add_argument("--agent", required=True, help="Agent id.")
+    agent_lease_grant.add_argument("--session", help="Session id.")
+    agent_lease_grant.add_argument("--project-id", help="Project id.")
+    agent_lease_grant.add_argument("--process", help="Process id.")
+    agent_lease_grant.add_argument("--run", help="Run id.")
+    agent_lease_grant.add_argument("--task", help="Task id.")
+    agent_lease_grant.add_argument("--capsule", help="Assignment capsule path.")
+    agent_lease_grant.add_argument("--allowed-file", action="append", default=[], help="Allowed file/glob. Repeatable.")
+    agent_lease_grant.add_argument("--allowed-read-file", action="append", default=[], help="Allowed read file/glob. Repeatable.")
+    agent_lease_grant.add_argument("--forbidden-file", action="append", default=[], help="Forbidden file/glob. Repeatable.")
+    agent_lease_grant.add_argument("--ttl", type=int, default=3600, help="Lease TTL seconds.")
+    agent_lease_grant.set_defaults(func=command_agent_lease_grant)
+
+    for name, func, help_text in [
+        ("agent-lease-release", command_agent_lease_release, "Release an active agent lease."),
+        ("agent-lease-revoke", command_agent_lease_revoke, "Revoke an agent lease."),
+    ]:
+        lease_status = sub.add_parser(name, help=help_text)
+        lease_status.add_argument("--workplace", required=True, help="Workplace root path.")
+        lease_status.add_argument("--lease", required=True, help="Lease id.")
+        lease_status.set_defaults(func=func)
+
+    agent_lease_list = sub.add_parser("agent-lease-list", help="List agent leases.")
+    agent_lease_list.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_lease_list.add_argument("--json", action="store_true", help="Print JSON.")
+    agent_lease_list.set_defaults(func=command_agent_lease_list)
+
+    agent_lease_doctor = sub.add_parser("agent-lease-doctor", help="Validate agent leases.")
+    agent_lease_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_lease_doctor.set_defaults(func=command_agent_lease_doctor)
+
+    process_route_list = sub.add_parser("process-route-list", help="List process route map entries.")
+    process_route_list.add_argument("--project-root", required=True, help="Project root path.")
+    process_route_list.add_argument("--json", action="store_true", help="Print JSON.")
+    process_route_list.set_defaults(func=command_process_route_list)
+    process_route_validate = sub.add_parser("process-route-validate", help="Validate process routes.")
+    process_route_validate.add_argument("--project-root", required=True, help="Project root path.")
+    process_route_validate.set_defaults(func=command_process_route_validate)
+    process_route_doctor = sub.add_parser("process-route-doctor", help="Doctor process routes.")
+    process_route_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    process_route_doctor.set_defaults(func=command_process_route_doctor)
+
+    handoff_create = sub.add_parser("handoff-create", help="Create a formal process handoff package from a route.")
+    handoff_create.add_argument("--project-root", required=True, help="Project root path.")
+    handoff_create.add_argument("--route", required=True, help="Route id.")
+    handoff_create.add_argument("--from-run", required=True, help="Source run id.")
+    handoff_create.add_argument("--from-stage", help="Source stage id.")
+    handoff_create.add_argument("--id", help="Handoff id.")
+    handoff_create.add_argument("--apply", action="store_true", help="Write the handoff package.")
+    handoff_create.set_defaults(func=command_handoff_create)
+
+    for name, func, help_text in [
+        ("handoff-offer", command_handoff_offer, "Offer/show a handoff to available agents."),
+        ("handoff-status", command_handoff_status, "Show handoff status."),
+    ]:
+        handoff_status = sub.add_parser(name, help=help_text)
+        handoff_status.add_argument("--project-root", required=True, help="Project root path.")
+        handoff_status.add_argument("--handoff", required=True, help="Handoff id.")
+        handoff_status.add_argument("--workplace", help="Workplace root path for availability lookup.")
+        handoff_status.add_argument("--project-id", help="Optional project id filter.")
+        handoff_status.add_argument("--json", action="store_true", help="Print JSON.")
+        handoff_status.set_defaults(func=func)
+
+    handoff_accept = sub.add_parser("handoff-accept", help="Accept a handoff.")
+    handoff_accept.add_argument("--project-root", required=True, help="Project root path.")
+    handoff_accept.add_argument("--handoff", required=True, help="Handoff id.")
+    handoff_accept.add_argument("--agent", required=True, help="Agent id.")
+    handoff_accept.add_argument("--session", help="Session id.")
+    handoff_accept.set_defaults(func=command_handoff_accept)
+
+    handoff_start = sub.add_parser("handoff-start-target-run", help="Start or attach a target run for a handoff.")
+    handoff_start.add_argument("--project-root", required=True, help="Project root path.")
+    handoff_start.add_argument("--handoff", required=True, help="Handoff id.")
+    handoff_start.add_argument("--run", help="Target run id.")
+    handoff_start.set_defaults(func=command_handoff_start_target_run)
+
+    handoff_return = sub.add_parser("handoff-return", help="Return handoff results to the source process.")
+    handoff_return.add_argument("--project-root", required=True, help="Project root path.")
+    handoff_return.add_argument("--handoff", required=True, help="Handoff id.")
+    handoff_return.add_argument("--artifact", action="append", default=[], help="Returned artifact path. Repeatable.")
+    handoff_return.set_defaults(func=command_handoff_return)
+
+    handoff_finalize = sub.add_parser("handoff-finalize", help="Finalize a handoff.")
+    handoff_finalize.add_argument("--project-root", required=True, help="Project root path.")
+    handoff_finalize.add_argument("--handoff", required=True, help="Handoff id.")
+    handoff_finalize.set_defaults(func=command_handoff_finalize)
+
+    handoff_doctor = sub.add_parser("handoff-doctor", help="Validate handoff packages.")
+    handoff_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    handoff_doctor.set_defaults(func=command_handoff_doctor)
+
+    agent_director_tick = sub.add_parser("agent-director-tick", help="Run one Agent Director scheduling tick.")
+    agent_director_tick.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_director_tick.add_argument("--project-root", required=True, help="Project root path.")
+    agent_director_tick.add_argument("--project-id", help="Optional project id filter.")
+    agent_director_tick.add_argument("--wait-ttl", type=int, default=3600, help="Seconds before waiting handoff needs operator.")
+    agent_director_tick.add_argument("--lease-ttl", type=int, default=3600, help="Lease TTL seconds.")
+    agent_director_tick.set_defaults(func=command_agent_director_tick)
+
+    agent_director_run = sub.add_parser("agent-director-run", help="Run bounded Agent Director ticks.")
+    agent_director_run.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_director_run.add_argument("--project-root", required=True, help="Project root path.")
+    agent_director_run.add_argument("--project-id", help="Optional project id filter.")
+    agent_director_run.add_argument("--wait-ttl", type=int, default=3600, help="Seconds before waiting handoff needs operator.")
+    agent_director_run.add_argument("--lease-ttl", type=int, default=3600, help="Lease TTL seconds.")
+    agent_director_run.add_argument("--max-ticks", type=int, default=1, help="Maximum ticks.")
+    agent_director_run.add_argument("--interval", type=float, default=0, help="Seconds between ticks.")
+    agent_director_run.set_defaults(func=command_agent_director_run)
+
+    agent_director_status = sub.add_parser("agent-director-status", help="Show Agent Director handoff queue status.")
+    agent_director_status.add_argument("--project-root", required=True, help="Project root path.")
+    agent_director_status.add_argument("--json", action="store_true", help="Print JSON.")
+    agent_director_status.set_defaults(func=command_agent_director_status)
+
+    continuation_create = sub.add_parser("continuation-create", help="Create a continuation capsule.")
+    continuation_create.add_argument("--project-root", required=True, help="Project root path.")
+    continuation_create.add_argument("--id", required=True, help="Continuation id.")
+    continuation_create.add_argument("--agent", help="Agent id.")
+    continuation_create.add_argument("--session", help="Previous session id.")
+    continuation_create.add_argument("--handoff", help="Handoff id.")
+    continuation_create.add_argument("--expected-artifact", action="append", default=[], help="Expected artifact path. Repeatable.")
+    continuation_create.add_argument("--process", help="Resume process id.")
+    continuation_create.add_argument("--run", help="Resume run id.")
+    continuation_create.add_argument("--stage", help="Resume stage id.")
+    continuation_create.add_argument("--instruction", help="Resume instruction.")
+    continuation_create.add_argument("--apply", action="store_true", help="Write the continuation capsule.")
+    continuation_create.set_defaults(func=command_continuation_create)
+
+    continuation_status = sub.add_parser("continuation-status", help="Show continuation status.")
+    continuation_status.add_argument("--project-root", required=True, help="Project root path.")
+    continuation_status.add_argument("--continuation", required=True, help="Continuation id.")
+    continuation_status.add_argument("--json", action="store_true", help="Print JSON.")
+    continuation_status.set_defaults(func=command_continuation_status)
+
+    continuation_resume = sub.add_parser("continuation-resume", help="Mark a ready continuation resumed.")
+    continuation_resume.add_argument("--project-root", required=True, help="Project root path.")
+    continuation_resume.add_argument("--continuation", required=True, help="Continuation id.")
+    continuation_resume.set_defaults(func=command_continuation_resume)
+
+    continuation_doctor = sub.add_parser("continuation-doctor", help="Validate continuation capsules.")
+    continuation_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    continuation_doctor.set_defaults(func=command_continuation_doctor)
+
+    for alias_name, func, help_text in [
+        ("orchestrator-shell-plan-create", command_orchestrator_plan_create, "Flat alias for orchestrator-plan create with shell-agent policy support."),
+        ("orchestrator-shell-plan-validate", command_orchestrator_plan_validate, "Flat alias for orchestrator-plan validate with shell-agent policy support."),
+        ("orchestrator-shell-plan-apply", command_orchestrator_plan_apply, "Flat alias for orchestrator-plan apply with shell-agent policy support."),
+    ]:
+        shell_plan = sub.add_parser(alias_name, help=help_text)
+        shell_plan.add_argument("--project-root", required=True, help="Project root path.")
+        if alias_name.endswith("create"):
+            shell_plan.add_argument("--run", required=True, help="Run id.")
+            shell_plan.add_argument("--title", required=True, help="Run title.")
+            shell_plan.add_argument("--answers", help="Optional full orchestrator shell-agent plan YAML.")
+            shell_plan.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+            shell_plan.add_argument("--apply", action="store_true", help="Write the plan.")
+        else:
+            shell_plan.add_argument("--plan", help="Plan YAML path.")
+            shell_plan.add_argument("--run", help="Run id when --plan is omitted.")
+            if alias_name.endswith("apply"):
+                shell_plan.add_argument("--workplace", help="Workplace root path for lease grants.")
+                shell_plan.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+                shell_plan.add_argument("--apply", action="store_true", help="Create run, tasks, capsules, prompts, leases, and supervisor runs.")
+        shell_plan.set_defaults(func=func, shell_plan=alias_name.endswith("apply"))
 
     run_create = sub.add_parser("run-create", help="Create a project run/work session.")
     run_create.add_argument("--project-root", required=True, help="Project root path.")
