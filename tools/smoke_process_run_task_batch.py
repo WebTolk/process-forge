@@ -138,11 +138,50 @@ def negative_workflow(root: Path) -> None:
     pf("run-doctor", "--project-root", str(project), "--run", "negative-run", expect=1)
 
 
+def required_output_workflow(root: Path) -> None:
+    project = make_project(root, "required-output")
+    run_id = "required-output-run"
+    report_rel = ".pf/artifacts/required-output-report.md"
+    pf("run-create", "--project-root", str(project), "--id", run_id, "--title", "Required output run", "--process", "task-batch-execution", "--apply")
+    pf(
+        "task-create",
+        "--project-root",
+        str(project),
+        "--run",
+        run_id,
+        "--id",
+        "required-output-task",
+        "--title",
+        "Required output task",
+        "--process",
+        "testing",
+        "--required-output",
+        f"id=report,path={report_rel},type=markdown,required=true",
+        "--expected-report-artifact",
+        report_rel,
+        "--apply",
+    )
+    pf("task-complete", "--project-root", str(project), "--task", "required-output-task", "--summary", "Should fail without output.", "--apply", expect=1)
+    (project / report_rel).parent.mkdir(parents=True, exist_ok=True)
+    (project / report_rel).write_text("# Required Output Report\n\nPASS\n", encoding="utf-8")
+    pf("task-complete", "--project-root", str(project), "--task", "required-output-task", "--summary", "Required output present.", "--artifact", report_rel, "--apply")
+    pf("task-doctor", "--project-root", str(project), "--task", "required-output-task")
+    pf("run-complete", "--project-root", str(project), "--run", run_id, "--apply")
+    pf("run-doctor", "--project-root", str(project), "--run", run_id)
+    assert_file(project / ".pf" / "runs" / run_id / "summary.md")
+    assert_file(project / ".pf" / "handoffs" / "runs" / f"{run_id}-handoff.md")
+    if (project / ".pf" / "runs" / run_id / "artifacts").exists():
+        raise AssertionError("run-create created deprecated run-local artifacts directory")
+    if (project / ".pf" / "runs" / run_id / "reviews").exists():
+        raise AssertionError("run-create created deprecated run-local reviews directory")
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-run-task-smoke-") as temp:
         root = Path(temp)
         positive_workflow(root)
         negative_workflow(root)
+        required_output_workflow(root)
     print("PASS: smoke_process_run_task_batch")
     return 0
 

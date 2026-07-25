@@ -16,9 +16,11 @@ python tools/smoke_worker_run_manual.py
 python tools/smoke_worker_run_shell.py
 python tools/smoke_worker_run_lifecycle.py
 python tools/smoke_process_supervisor_tick.py
+python tools/smoke_supervisor_final_drain.py
 python tools/smoke_process_supervisor_lifecycle.py
 python tools/smoke_process_supervisor.py
 python tools/smoke_shell_launched_agents_supervisor_fix.py
+python tools/smoke_shell_agent_heartbeat_contract.py
 python tools/smoke_full_shell_agents_supervisor.py
 python bin/pf.py release-test --root .
 python bin/pf.py release-test --root . --public --fail-fast

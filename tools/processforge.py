@@ -59,6 +59,7 @@ PROJECT_FLOW_DIRS = [
     "artifacts/runs",
     "contexts",
     "contexts/assignment-capsules",
+    "registries",
     "logs",
     "handoffs",
     "handoffs/runs",
@@ -78,6 +79,17 @@ PROJECT_FLOW_DIRS = [
     "runtime/supervisor",
     "runtime/registries",
 ]
+
+RESERVED_WORKER_ENV_KEYS = {
+    "PF_RUN_ID",
+    "PF_TASK_ID",
+    "PF_AGENT_RUN_DIR",
+    "PF_AGENT_EXIT_PATH",
+    "PF_PROJECT_ROOT",
+    "PF_RUNTIME_DRIVER_ID",
+    "PF_WORKER_RUN_ID",
+    "PF_WORKER_TASK_ID",
+}
 
 GLOBAL_AGENT_SECTION_START = "<!-- PROCESSFORGE:START -->"
 GLOBAL_AGENT_SECTION_END = "<!-- PROCESSFORGE:END -->"
@@ -910,7 +922,10 @@ def default_runtime_driver_documents() -> dict[str, dict[str, Any]]:
                 ],
             },
             "working_directory": "{project_root}",
-            "environment": {"inherit": False, "variables": {"PF_WORKER_RUN_ID": "{run_id}", "PF_WORKER_TASK_ID": "{task_id}"}},
+            "environment": {
+                "inherit": False,
+                "variables": {},
+            },
             "io": {
                 "stdin": "none",
                 "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
@@ -4340,9 +4355,11 @@ def release_test_commands(root: Path, *, clean_first: bool = True) -> list[Relea
         ReleaseCommand("smoke_worker_run_shell", [sys.executable, str(root / "tools" / "smoke_worker_run_shell.py")], 180),
         ReleaseCommand("smoke_worker_run_lifecycle", [sys.executable, str(root / "tools" / "smoke_worker_run_lifecycle.py")], 180),
         ReleaseCommand("smoke_process_supervisor_tick", [sys.executable, str(root / "tools" / "smoke_process_supervisor_tick.py")], 180),
+        ReleaseCommand("smoke_supervisor_final_drain", [sys.executable, str(root / "tools" / "smoke_supervisor_final_drain.py")], 180),
         ReleaseCommand("smoke_process_supervisor_lifecycle", [sys.executable, str(root / "tools" / "smoke_process_supervisor_lifecycle.py")], 180),
         ReleaseCommand("smoke_process_supervisor", [sys.executable, str(root / "tools" / "smoke_process_supervisor.py")], 180),
         ReleaseCommand("smoke_shell_launched_agents_supervisor_fix", [sys.executable, str(root / "tools" / "smoke_shell_launched_agents_supervisor_fix.py")], 180),
+        ReleaseCommand("smoke_shell_agent_heartbeat_contract", [sys.executable, str(root / "tools" / "smoke_shell_agent_heartbeat_contract.py")], 180),
         ReleaseCommand("smoke_full_shell_agents_supervisor", [sys.executable, str(root / "tools" / "smoke_full_shell_agents_supervisor.py")], 240),
         ReleaseCommand("smoke_manifest_driven_platforms", [sys.executable, str(root / "tools" / "smoke_manifest_driven_platforms.py")], 180),
         ReleaseCommand("smoke_platform_inheritance", [sys.executable, str(root / "tools" / "smoke_platform_inheritance.py")], 180),
@@ -7397,6 +7414,64 @@ def normalize_required_outputs(value: Any) -> list[dict[str, Any]]:
     return outputs
 
 
+def parse_required_output_waivers(value: Any) -> dict[str, str]:
+    waivers: dict[str, str] = {}
+    for item in as_list(value):
+        text = str(item or "").strip()
+        if not text:
+            continue
+        output_id, sep, reason = text.partition(":")
+        output_id = safe_id(output_id, "output")
+        reason = reason.strip() if sep else ""
+        if not reason:
+            raise SystemExit(f"FAIL: required output waiver needs '<id>:<reason>': {text}")
+        waivers[output_id] = reason
+    return waivers
+
+
+def task_output_path(project_root: Path, output: dict[str, Any]) -> Path | None:
+    raw_path = str(output.get("path") or "").strip()
+    if not raw_path:
+        return None
+    return project_root / normalize_assignment_path(raw_path)
+
+
+def required_output_checks(project_root: Path, task: dict[str, Any], waivers: dict[str, str] | None = None, enforce_missing: bool = True) -> list[Check]:
+    waiver_map = waivers or {}
+    checks: list[Check] = []
+    for output in normalize_required_outputs(task.get("required_outputs")):
+        output_id = safe_id(str(output.get("id") or "output"), "output")
+        if not bool(output.get("required", True)):
+            checks.append(check("PASS", f"required output optional: {output_id}"))
+            continue
+        out_path = task_output_path(project_root, output)
+        if out_path is None:
+            checks.append(check("FAIL", f"required output has no path: {output_id}"))
+            continue
+        output_rel = normalize_assignment_path(str(output.get("path") or ""))
+        if out_path.is_file():
+            checks.append(check("PASS", f"required output exists: {output_rel}"))
+        elif output_id in waiver_map:
+            checks.append(check("WARN", f"required output waived: {output_id} ({waiver_map[output_id]})"))
+        elif not enforce_missing:
+            checks.append(check("WARN", f"required output pending: {output_rel}"))
+        else:
+            checks.append(check("FAIL", f"required output missing: {output_rel}"))
+    expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+    expected_artifact = normalize_assignment_path(str(expected.get("artifact") or ""))
+    if expected_artifact:
+        expected_path = project_root / expected_artifact
+        if expected_path.is_file():
+            checks.append(check("PASS", f"expected report exists: {expected_artifact}"))
+        elif "expected_report" in waiver_map:
+            checks.append(check("WARN", f"expected report waived: {expected_artifact} ({waiver_map['expected_report']})"))
+        elif not enforce_missing:
+            checks.append(check("WARN", f"expected report pending: {expected_artifact}"))
+        else:
+            checks.append(check("FAIL", f"expected report missing: {expected_artifact}"))
+    return checks
+
+
 def normalize_execution_mode(value: Any) -> dict[str, Any]:
     if isinstance(value, dict):
         mode = dict(value)
@@ -7682,8 +7757,10 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
             "generated_at": now_utc(),
             "assignment_id": assn_id,
             "assignment_path": rel(assignment, project_root),
+            "assignment_checksum": sha256_file(assignment),
             "snapshot": rel(snapshot_yaml, project_root),
             "snapshot_checksum": sha256_file(snapshot_yaml),
+            "immutable": True,
             "worker_may_rebuild_context": False,
         },
         "assignment": contract["assignment"],
@@ -7865,7 +7942,7 @@ def public_yaml_has_private_path(data: dict[str, Any]) -> bool:
     return not is_public_path_safe(json.dumps(data, ensure_ascii=False))
 
 
-def validate_run_consistency(project_root: Path, run_id: str) -> list[Check]:
+def validate_run_consistency(project_root: Path, run_id: str, include_runtime_events: bool = False) -> list[Check]:
     flow_root = require_flow_root(project_root)
     checks: list[Check] = []
     path = run_yaml_path(project_root, run_id)
@@ -7909,9 +7986,10 @@ def validate_run_consistency(project_root: Path, run_id: str) -> list[Check]:
         handoff = flow_root / "handoffs" / "runs" / f"{safe_id(str(run.get('id', run_id)), 'run')}-handoff.md"
         checks.append(check("PASS" if summary.is_file() else "FAIL", f"{rel(summary, project_root)} exists"))
         checks.append(check("PASS" if handoff.is_file() else "FAIL", f"{rel(handoff, project_root)} exists"))
-    events_path, _outbox = event_runtime_paths(project_root)
-    event_text = events_path.read_text(encoding="utf-8", errors="replace") if events_path.is_file() else ""
-    checks.append(check("PASS" if str(run.get("id", run_id)) in event_text else "WARN", "run events exist"))
+    if include_runtime_events:
+        events_path, _outbox = event_runtime_paths(project_root)
+        event_text = events_path.read_text(encoding="utf-8", errors="replace") if events_path.is_file() else ""
+        checks.append(check("PASS" if str(run.get("id", run_id)) in event_text else "WARN", "runtime run events exist"))
     return checks
 
 
@@ -7952,6 +8030,8 @@ def validate_task_consistency(project_root: Path, task_id: str) -> list[Check]:
         result_summary = str(result.get("summary", "")).strip()
         result_artifacts = result.get("artifacts") if isinstance(result.get("artifacts"), list) else []
         checks.append(check("PASS" if result_summary or result_artifacts else "FAIL", "completed task has result summary or artifact"))
+    result_waivers = result.get("waivers") if isinstance(result.get("waivers"), dict) else {}
+    checks.extend(required_output_checks(project_root, task, {str(key): str(value) for key, value in result_waivers.items()}, enforce_missing=status == "done"))
     return checks
 
 
@@ -9315,6 +9395,8 @@ RUNTIME_DRIVER_PLACEHOLDERS = {
     "processforge_root",
     "run_id",
     "task_id",
+    "agent_run_dir",
+    "driver_id",
     "capsule_path",
     "worker_prompt_path",
     "expected_report_path",
@@ -9323,6 +9405,7 @@ RUNTIME_DRIVER_PLACEHOLDERS = {
     "stdout_path",
     "stderr_path",
     "heartbeat_path",
+    "exit_path",
 }
 
 AGENT_RUN_STATUSES = {
@@ -9333,10 +9416,15 @@ AGENT_RUN_STATUSES = {
     "completed",
     "failed",
     "timed_out",
+    "unknown_exit",
+    "lost",
     "blocked",
     "cancelled",
     "manual_required",
 }
+
+AGENT_RUN_FAILURE_TERMINAL_STATUSES = {"failed", "timed_out", "unknown_exit", "lost"}
+AGENT_RUN_START_SKIP_STATUSES = {"running", "completed", "failed", "timed_out", "unknown_exit", "lost", "cancelled"}
 
 
 def project_workplace_manifest(project_root: Path) -> Path | None:
@@ -9488,7 +9576,22 @@ def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) 
     env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
     inherit = bool(env_spec.get("inherit", True))
     env = os.environ.copy() if inherit else minimal_platform_environment()
+    env.update(
+        {
+            "PF_RUN_ID": variables["run_id"],
+            "PF_TASK_ID": variables["task_id"],
+            "PF_AGENT_RUN_DIR": variables["agent_run_dir"],
+            "PF_AGENT_EXIT_PATH": variables["exit_path"],
+            "PF_PROJECT_ROOT": variables["project_root"],
+            "PF_RUNTIME_DRIVER_ID": variables["driver_id"],
+            "PF_WORKER_RUN_ID": variables["run_id"],
+            "PF_WORKER_TASK_ID": variables["task_id"],
+        }
+    )
     explicit = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
+    reserved = sorted(str(key) for key in explicit if str(key) in RESERVED_WORKER_ENV_KEYS)
+    if reserved:
+        raise SystemExit("FAIL: runtime driver cannot override reserved ProcessForge environment variables: " + ", ".join(reserved))
     expanded = expand_runtime_value(explicit, variables)
     env.update({str(key): str(value) for key, value in expanded.items()})
     return env, inherit
@@ -9520,6 +9623,10 @@ def validate_runtime_driver_document(driver: dict[str, Any], executable_override
     checks.append(check("PASS" if driver_id else "FAIL", "id present"))
     checks.append(check("PASS" if kind in {"manual", "shell"} else "FAIL", f"kind valid: {kind or 'missing'}"))
     security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
+    env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
+    explicit_env = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
+    reserved_env = sorted(str(key) for key in explicit_env if str(key) in RESERVED_WORKER_ENV_KEYS)
+    checks.append(check("FAIL" if reserved_env else "PASS", "reserved ProcessForge env vars not overridden" + (f": {', '.join(reserved_env)}" if reserved_env else "")))
     if kind == "shell":
         command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
         executable = str(command.get("executable") or "")
@@ -9657,6 +9764,8 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "processforge_root": str(ROOT),
         "run_id": run_id,
         "task_id": task_id,
+        "agent_run_dir": str(paths["root"]),
+        "driver_id": str(driver.get("id") or "manual"),
         "capsule_path": str(capsule_path),
         "worker_prompt_path": str(prompt_path),
         "expected_report_path": str(report_path),
@@ -9665,10 +9774,8 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "stdout_path": str(paths["stdout"]),
         "stderr_path": str(paths["stderr"]),
         "heartbeat_path": str(paths["heartbeat"]),
+        "exit_path": str(paths["exit"]),
     }
-    command_spec = driver.get("command") if isinstance(driver.get("command"), dict) else {}
-    executable = executable_override or str(expand_runtime_value(command_spec.get("executable") or "", variables))
-    args = expand_runtime_value(command_spec.get("args") if isinstance(command_spec.get("args"), list) else [], variables)
     io = driver.get("io") if isinstance(driver.get("io"), dict) else {}
     stdout_path = Path(str(expand_runtime_value(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
     stderr_path = Path(str(expand_runtime_value(io.get("stderr") or rel(paths["stderr"], project_root), variables)))
@@ -9678,6 +9785,22 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         stderr_path = (project_root / stderr_path).resolve()
     paths["stdout"] = stdout_path
     paths["stderr"] = stderr_path
+    heartbeat = driver.get("heartbeat") if isinstance(driver.get("heartbeat"), dict) else {}
+    heartbeat_path = Path(str(expand_runtime_value(heartbeat.get("path") or rel(paths["heartbeat"], project_root), variables)))
+    if not heartbeat_path.is_absolute():
+        heartbeat_path = (project_root / heartbeat_path).resolve()
+    paths["heartbeat"] = heartbeat_path
+    variables.update(
+        {
+            "stdout_path": str(paths["stdout"]),
+            "stderr_path": str(paths["stderr"]),
+            "heartbeat_path": str(paths["heartbeat"]),
+            "exit_path": str(paths["exit"]),
+        }
+    )
+    command_spec = driver.get("command") if isinstance(driver.get("command"), dict) else {}
+    executable = executable_override or str(expand_runtime_value(command_spec.get("executable") or "", variables))
+    args = expand_runtime_value(command_spec.get("args") if isinstance(command_spec.get("args"), list) else [], variables)
     env, inherit_env = build_worker_environment(driver, variables)
     working_directory = str(expand_runtime_value(driver.get("working_directory") or "{project_root}", variables))
     command = {
@@ -9793,6 +9916,19 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
         return write_agent_run_state(project_root, task, driver, "failed", failure_reason="running state missing pid", paths=paths)
     command = json_read(paths["command"])
     started_at = str(state.get("started_at") or now_utc())
+    exit_marker = json_read(paths["exit"])
+    if exit_marker:
+        marker_status = str(exit_marker.get("status") or "")
+        marker_exit_code = exit_marker.get("exit_code")
+        exit_code = marker_exit_code if isinstance(marker_exit_code, int) else None
+        if marker_status not in AGENT_RUN_STATUSES or marker_status in {"planned", "ready", "starting", "running", "blocked", "manual_required"}:
+            marker_status = "completed" if exit_code == 0 else "failed"
+        finished_at = str(exit_marker.get("finished_at") or now_utc())
+        failure_reason = str(exit_marker.get("failure_reason") or "") or None
+        state = write_agent_run_state(project_root, task, driver, marker_status, pid=pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason=failure_reason, command=command, paths=paths)
+        DETACHED_WORKER_PROCESSES.pop(worker_process_key(project_root, run_id, task_id), None)
+        emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": marker_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
+        return state
     started_dt = parse_runtime_timestamp(started_at)
     timeout_seconds = int(state.get("timeout_seconds") or ((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30))
     timed_out = bool(started_dt and datetime.now(timezone.utc) > started_dt + timedelta(seconds=timeout_seconds))
@@ -9809,8 +9945,21 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
         return state
     if exit_code is None:
         if proc is None and not process_pid_running(pid):
-            report_path = project_root / expected_report_artifact(task)
-            exit_code = 0 if report_path.is_file() else 1
+            lost_observed_at = parse_runtime_timestamp(state.get("lost_observed_at"))
+            if lost_observed_at is None:
+                observed_at = now_utc()
+                state = write_agent_run_state(project_root, task, driver, "running", pid=pid, started_at=started_at, failure_reason="pid not alive; waiting for durable exit contract", command=command, paths=paths)
+                state["lost_observed_at"] = observed_at
+                json_write(paths["status"], state)
+                return state
+            if datetime.now(timezone.utc) < lost_observed_at + timedelta(seconds=0.25):
+                return state
+            finished_at = now_utc()
+            failure_reason = "process exited without durable exit contract"
+            state = write_agent_run_state(project_root, task, driver, "unknown_exit", pid=pid, started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=failure_reason, command=command, paths=paths)
+            json_write(paths["exit"], {"schema_version": 1, "exit_code": None, "finished_at": finished_at, "status": "unknown_exit", "failure_reason": failure_reason})
+            emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "unknown_exit", "exit_code": None, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
+            return state
         else:
             return write_agent_run_state(project_root, task, driver, "running", pid=pid, started_at=started_at, command=command, paths=paths)
     finished_at = now_utc()
@@ -9825,10 +9974,17 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
 def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None = None, executable_override: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
     task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=True))
-    print(output, end="")
-    if status:
-        raise SystemExit(status)
+    capsule_status, capsule_rel = existing_capsule_status(project_root, task_id)
+    if capsule_status in {"fresh", "legacy"}:
+        suffix = " (legacy capsule without assignment checksum)" if capsule_status == "legacy" else ""
+        print(f"PRESENT: {capsule_rel}{suffix}")
+    elif capsule_status == "stale":
+        raise SystemExit(f"FAIL: assignment capsule is stale for {task_id}: {capsule_rel}; create a new capsule intentionally before launch")
+    else:
+        status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=False))
+        print(output, end="")
+        if status:
+            raise SystemExit(status)
     status, output = run_command_capture(command_worker_launch_prompt_create, argparse.Namespace(project_root=str(project_root), task=task_id, output=None, apply=True, dry_run=False))
     print(output, end="")
     if status:
@@ -9945,7 +10101,7 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
             os.kill(int(pid), signal.SIGTERM)
     driver = runtime_driver_for_task(project_root, task, str(state.get("driver_id") or task.get("runtime_driver") or "manual"))
     paths = worker_run_paths(project_root, run_id, task_id)
-    if state.get("status") in {"completed", "failed", "timed_out", "cancelled"}:
+    if state.get("status") in {"completed", "failed", "timed_out", "unknown_exit", "lost", "cancelled"}:
         print(f"STATUS: already-terminal {task_id} status={state.get('status')}")
         return 0
     write_agent_run_state(project_root, task, driver, "cancelled", pid=pid if isinstance(pid, int) else None, finished_at=now_utc(), failure_reason="stop requested", paths=paths)
@@ -9997,6 +10153,24 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
     print(output, end="")
     emit_process_event(project_root, "worker.run.collected", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "report": expected_report_artifact(task)}, correlation_id=f"run-{run_id}")
     return status
+
+
+def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state: dict[str, Any]) -> None:
+    task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
+    run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
+    if str(task.get("status")) in {"done", "completed", "failed", "cancelled"}:
+        return
+    runtime_status = str(state.get("status") or "failed")
+    failure_reason = str(state.get("failure_reason") or runtime_status)
+    task["status"] = "failed"
+    task["result"] = {
+        "status": runtime_status,
+        "summary": f"Worker runtime ended with {runtime_status}: {failure_reason}",
+        "artifacts": [],
+    }
+    save_task(project_root, task)
+    update_run_task_status(project_root, run_id, task_id, "failed")
+    emit_process_event(project_root, "task.failed", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "task_id": task_id, "runtime_status": runtime_status, "failure_reason": failure_reason}, correlation_id=f"run-{run_id}")
 
 
 def default_supervisor_profile() -> dict[str, Any]:
@@ -10066,6 +10240,40 @@ def write_supervisor_state(project_root: Path, state: dict[str, Any]) -> None:
     json_write(supervisor_state_path(project_root), state)
 
 
+def supervisor_pending_drain_task_ids(project_root: Path, run_ids: list[str]) -> list[str]:
+    pending: list[str] = []
+    for run_id in run_ids:
+        run = load_run(project_root, run_id)
+        for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
+            if not isinstance(item, dict):
+                continue
+            task_id = safe_id(str(item.get("id") or "task"), "task")
+            state = load_agent_run_state(project_root, run_id, task_id)
+            status = str(state.get("status") or "")
+            task_status = str(item.get("status") or "")
+            if status == "running" or (status == "completed" and task_status not in {"done", "completed"}):
+                pending.append(task_id)
+    return sorted(set(pending))
+
+
+def supervisor_final_drain_timeout(project_root: Path, run_ids: list[str], explicit_timeout: float | None = None) -> float:
+    if explicit_timeout is not None:
+        return max(0.0, float(explicit_timeout))
+    worker_timeouts: list[int] = []
+    for run_id in run_ids:
+        run = load_run(project_root, run_id)
+        for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
+            if not isinstance(item, dict):
+                continue
+            task_id = safe_id(str(item.get("id") or "task"), "task")
+            state = load_agent_run_state(project_root, run_id, task_id)
+            if str(state.get("status") or "") == "running":
+                timeout_seconds = state.get("timeout_seconds")
+                if isinstance(timeout_seconds, int) and timeout_seconds > 0:
+                    worker_timeouts.append(timeout_seconds)
+    return max(1.0, min(float(min(worker_timeouts) if worker_timeouts else 5), 5.0))
+
+
 def command_supervisor_tick(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
@@ -10081,6 +10289,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
     scheduling = profile.get("scheduling") if isinstance(profile.get("scheduling"), dict) else {}
     defaults = profile.get("defaults") if isinstance(profile.get("defaults"), dict) else {}
     max_parallel = int(scheduling.get("max_parallel_workers") or defaults.get("max_parallel_workers") or 1)
+    start_allowed = bool(getattr(args, "start_allowed", True))
     repo_files = iter_repo_files(project_root)
     running_scopes: dict[str, list[str]] = {}
     for run_id in run_ids:
@@ -10110,7 +10319,8 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
                         collected.append(task_id)
                     else:
                         failed.append(task_id)
-                elif observed_state.get("status") in {"failed", "timed_out"}:
+                elif observed_state.get("status") in AGENT_RUN_FAILURE_TERMINAL_STATUSES:
+                    sync_failed_worker_lifecycle(project_root, task, observed_state)
                     failed.append(task_id)
             elif state.get("status") == "completed" and str(task.get("status")) not in {"done", "completed"}:
                 status = command_worker_run_collect(argparse.Namespace(project_root=str(project_root), task=task_id))
@@ -10118,12 +10328,17 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
                     collected.append(task_id)
                 else:
                     failed.append(task_id)
+            elif state.get("status") in AGENT_RUN_FAILURE_TERMINAL_STATUSES:
+                sync_failed_worker_lifecycle(project_root, task, state)
+                failed.append(task_id)
+        if not start_allowed:
+            continue
         for task_id, task, worker, driver_id in task_rows:
             active_count = len(running) + len(started)
             if active_count >= max_parallel:
                 break
             state = load_agent_run_state(project_root, run_id, task_id)
-            if state.get("status") in {"running", "completed", "failed", "timed_out"}:
+            if state.get("status") in AGENT_RUN_START_SKIP_STATUSES:
                 continue
             if str(task.get("status")) not in {"open", "in_progress", "blocked"}:
                 skipped.append(task_id)
@@ -10163,6 +10378,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
                 "# Supervisor Tick Report",
                 "",
                 f"- checked_runs: `{len(run_ids)}`",
+                f"- start_allowed: `{str(start_allowed).lower()}`",
                 f"- started: `{', '.join(started) if started else 'none'}`",
                 f"- running: `{', '.join(running) if running else 'none'}`",
                 f"- observed: `{', '.join(observed) if observed else 'none'}`",
@@ -10175,7 +10391,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
         + "\n",
         encoding="utf-8",
     )
-    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload={"runs": run_ids, "started": started, "running": running, "observed": observed, "collected": collected, "skipped": skipped, "blocked_overlap": blocked_overlap, "failed": failed, "report": rel(report, project_root)})
+    emit_process_event(project_root, "supervisor.tick.completed", process_id="process-supervisor", subject="supervisor", payload={"runs": run_ids, "start_allowed": start_allowed, "started": started, "running": running, "observed": observed, "collected": collected, "skipped": skipped, "blocked_overlap": blocked_overlap, "failed": failed, "report": rel(report, project_root)})
     print(f"TICK: started={len(started)} running={len(running)} observed={len(observed)} collected={len(collected)} skipped={len(skipped)} failed={len(failed)}")
     print(f"WROTE: {rel(report, project_root)}")
     return 1 if failed else 0
@@ -10190,8 +10406,11 @@ def command_supervisor_run(args: argparse.Namespace) -> int:
     max_ticks_arg = getattr(args, "max_ticks", None)
     interval = float(interval_arg if interval_arg is not None else (loop.get("interval_seconds") or 1))
     max_ticks = int(max_ticks_arg if max_ticks_arg is not None else (loop.get("max_ticks") or 1))
+    run_ids = [safe_id(args.run, "run")] if getattr(args, "run", None) else active_run_ids(project_root)
+    final_drain_timeout = supervisor_final_drain_timeout(project_root, run_ids, getattr(args, "final_drain_timeout", None))
+    drain_interval = min(max(interval if interval > 0 else 0.05, 0.05), 0.25)
     stop_file = project_root / ".pf" / "runtime" / "supervisor" / "stop.request"
-    state = {"schema_version": 1, "id": "default", "status": "running", "project_root": ".", "pid": os.getpid(), "started_at": now_utc(), "updated_at": now_utc(), "stopped_at": None, "tick_count": 0, "last_tick_report": ".pf/runtime/supervisor/last-tick-report.md", "stop_requested": False}
+    state = {"schema_version": 1, "id": "default", "status": "running", "project_root": ".", "pid": os.getpid(), "started_at": now_utc(), "updated_at": now_utc(), "stopped_at": None, "tick_count": 0, "drain_tick_count": 0, "final_drain_timeout_seconds": final_drain_timeout, "last_tick_report": ".pf/runtime/supervisor/last-tick-report.md", "stop_requested": False}
     write_supervisor_state(project_root, state)
     failed = False
     for index in range(max_ticks):
@@ -10206,10 +10425,30 @@ def command_supervisor_run(args: argparse.Namespace) -> int:
             break
         if index + 1 < max_ticks:
             time.sleep(interval)
+    drain_started_at = time.perf_counter()
+    drain_ticks = 0
+    pending = supervisor_pending_drain_task_ids(project_root, run_ids)
+    while pending and final_drain_timeout > 0 and time.perf_counter() - drain_started_at <= final_drain_timeout:
+        tick_status = command_supervisor_tick(argparse.Namespace(project_root=str(project_root), run=getattr(args, "run", None), profile=getattr(args, "profile", None), driver=getattr(args, "driver", None), start_allowed=False))
+        failed = failed or tick_status != 0
+        drain_ticks += 1
+        state["drain_tick_count"] = drain_ticks
+        write_supervisor_state(project_root, state)
+        if failed:
+            break
+        pending = supervisor_pending_drain_task_ids(project_root, run_ids)
+        if pending and time.perf_counter() - drain_started_at < final_drain_timeout:
+            time.sleep(drain_interval)
+    pending = supervisor_pending_drain_task_ids(project_root, run_ids)
+    if pending:
+        print(f"FINAL-DRAIN: pending={', '.join(pending)} timeout={final_drain_timeout:.2f}s")
+    elif drain_ticks:
+        print(f"FINAL-DRAIN: completed ticks={drain_ticks}")
     state["status"] = "stopped"
     state["stopped_at"] = now_utc()
+    state["drain_tick_count"] = drain_ticks
     write_supervisor_state(project_root, state)
-    print(f"SUPERVISOR: stopped ticks={state['tick_count']}")
+    print(f"SUPERVISOR: stopped ticks={state['tick_count']} drain_ticks={state['drain_tick_count']}")
     return 1 if failed else 0
 
 
@@ -10593,10 +10832,18 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         if not isinstance(worker, dict):
             continue
         task_id = safe_id(str(worker.get("id") or "worker"), "worker")
-        status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=True))
-        print(output, end="")
-        if status:
-            return status
+        capsule_status, capsule_rel = existing_capsule_status(project_root, task_id)
+        if capsule_status in {"fresh", "legacy"}:
+            suffix = " (legacy capsule without assignment checksum)" if capsule_status == "legacy" else ""
+            print(f"PRESENT: {capsule_rel}{suffix}")
+        elif capsule_status == "stale":
+            print(f"FAIL: assignment capsule is stale for {task_id}: {capsule_rel}; create a new capsule intentionally before launch")
+            return 1
+        else:
+            status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=False))
+            print(output, end="")
+            if status:
+                return status
         status, output = run_command_capture(command_worker_launch_prompt_create, argparse.Namespace(project_root=str(project_root), task=task_id, output=None, apply=True, dry_run=False))
         print(output, end="")
         if status:
@@ -10654,8 +10901,7 @@ def command_run_create(args: argparse.Namespace) -> int:
         print_plan("run-create dry run", planned, project_root)
         return 0
     root = run_root(project_root, run_id)
-    (root / "artifacts").mkdir(parents=True, exist_ok=True)
-    (root / "reviews").mkdir(parents=True, exist_ok=True)
+    root.mkdir(parents=True, exist_ok=True)
     write_yaml_file(path, run)
     (root / "plan.md").write_text(f"# Run Plan: {args.title}\n\nObjective: {args.objective or 'TBD'}\n", encoding="utf-8")
     write_task_index(project_root, run)
@@ -10703,7 +10949,7 @@ def command_run_status(args: argparse.Namespace) -> int:
 
 def command_run_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    checks = validate_run_consistency(project_root, args.run)
+    checks = validate_run_consistency(project_root, args.run, include_runtime_events=bool(getattr(args, "runtime_events", False)))
     result = print_checks(checks)
     run_id = safe_id(args.run, "run")
     emit_process_event(project_root, "run.doctor.failed" if result else "run.doctor.passed", severity="error" if result else "info", subject=run_id, payload={"run_id": run_id, "result": "fail" if result else "pass"}, correlation_id=f"run-{run_id}")
@@ -10760,6 +11006,7 @@ def command_run_complete(args: argparse.Namespace) -> int:
         emitted.append("run.completed")
     save_run(project_root, run)
     emit_process_event(project_root, "run.completed", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id}, correlation_id=f"run-{run_id}")
+    command_run_summary(argparse.Namespace(project_root=str(project_root), run=run_id, dry_run=False))
     print(f"COMPLETED: {run_id}")
     return 0
 
@@ -10892,9 +11139,15 @@ def command_task_complete(args: argparse.Namespace) -> int:
     if getattr(args, "dry_run", False):
         print(f"DRY-RUN: would complete task {task_id}")
         return 0
+    waivers = parse_required_output_waivers(getattr(args, "waive_required_output", []))
+    output_failures = [item.message for item in required_output_checks(project_root, task, waivers) if item.level == "FAIL"]
+    if output_failures:
+        raise SystemExit("FAIL: task required outputs are not complete: " + "; ".join(output_failures))
     artifacts = [item for item in (args.artifact or [])]
     task["status"] = "done"
     task["result"] = {"status": "done", "summary": args.summary, "artifacts": artifacts}
+    if waivers:
+        task["result"]["waivers"] = waivers
     save_task(project_root, task)
     update_run_task_status(project_root, str(task.get("run_id", "")), task_id, "done")
     for event_type in ["task.completed", "assignment.completed"]:
@@ -11145,6 +11398,26 @@ def command_context_compile(args: argparse.Namespace) -> int:
     if capsule_path:
         print(f"WROTE: {rel(capsule_path, project_root)}")
     return 0
+
+
+def assignment_capsule_path(project_root: Path, task_id: str) -> Path:
+    return locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{safe_id(task_id, 'task')}.capsule.yaml"
+
+
+def existing_capsule_status(project_root: Path, task_id: str) -> tuple[str, str]:
+    capsule_path = assignment_capsule_path(project_root, task_id)
+    if not capsule_path.is_file():
+        return "missing", rel(capsule_path, project_root)
+    capsule = load_yaml_document(capsule_path)
+    capsule_meta = capsule.get("capsule") if isinstance(capsule, dict) else {}
+    recorded_checksum = str(capsule_meta.get("assignment_checksum") or "") if isinstance(capsule_meta, dict) else ""
+    if not recorded_checksum:
+        return "legacy", rel(capsule_path, project_root)
+    assignment_path = assignment_yaml_path(project_root, task_id)
+    current_checksum = sha256_file(assignment_path) if assignment_path.is_file() else ""
+    if recorded_checksum == current_checksum:
+        return "fresh", rel(capsule_path, project_root)
+    return "stale", rel(capsule_path, project_root)
 
 
 def command_doctor_context(args: argparse.Namespace) -> int:
@@ -14072,6 +14345,7 @@ def build_parser() -> argparse.ArgumentParser:
     supervisor_run.add_argument("--driver", help="Runtime driver override.")
     supervisor_run.add_argument("--interval", type=float, help="Seconds between ticks.")
     supervisor_run.add_argument("--max-ticks", type=int, help="Maximum ticks before exit.")
+    supervisor_run.add_argument("--final-drain-timeout", type=float, help="Maximum seconds for final observe/collect drain after the main tick loop.")
     supervisor_run.set_defaults(func=command_supervisor_run)
     supervisor_status = supervisor_sub.add_parser("status", help="Print supervisor state.")
     supervisor_status.add_argument("--project-root", required=True, help="Project root path.")
@@ -14093,6 +14367,7 @@ def build_parser() -> argparse.ArgumentParser:
     supervisor_run_alias.add_argument("--driver", help="Runtime driver override.")
     supervisor_run_alias.add_argument("--interval", type=float, help="Seconds between ticks.")
     supervisor_run_alias.add_argument("--max-ticks", type=int, help="Maximum ticks before exit.")
+    supervisor_run_alias.add_argument("--final-drain-timeout", type=float, help="Maximum seconds for final observe/collect drain after the main tick loop.")
     supervisor_run_alias.set_defaults(func=command_supervisor_run)
     supervisor_status_alias = sub.add_parser("supervisor-status", help="Flat alias for supervisor status.")
     supervisor_status_alias.add_argument("--project-root", required=True, help="Project root path.")
@@ -14198,6 +14473,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_doctor = sub.add_parser("run-doctor", help="Validate run consistency.")
     run_doctor.add_argument("--project-root", required=True, help="Project root path.")
     run_doctor.add_argument("--run", required=True, help="Run id.")
+    run_doctor.add_argument("--runtime-events", action="store_true", help="Also check private runtime event logs for this run.")
     run_doctor.set_defaults(func=command_run_doctor)
 
     run_summary = sub.add_parser("run-summary", help="Create or refresh run summary and handoff.")
@@ -14254,6 +14530,7 @@ def build_parser() -> argparse.ArgumentParser:
     task_complete.add_argument("--task", required=True, help="Task id.")
     task_complete.add_argument("--summary", required=True, help="Task result summary.")
     task_complete.add_argument("--artifact", action="append", help="Result artifact path. May be repeated.")
+    task_complete.add_argument("--waive-required-output", action="append", default=[], help="Waive a missing required output as '<id>:<reason>'. Repeatable.")
     task_complete.add_argument("--apply", action="store_true", help="Mark the task done.")
     task_complete.set_defaults(func=command_task_complete)
 

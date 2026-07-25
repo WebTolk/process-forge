@@ -1,0 +1,55 @@
+schema_version: 1
+id: runtime-hooks-agent
+title: Audit runtime doctor hooks and env protections
+run_id: file-flow-contract-fix-20260725
+process: task-batch-execution
+status: done
+created_at: '2026-07-25T11:24:43Z'
+updated_at: '2026-07-25T11:25:25Z'
+objective: Review private runtime doctor dependency, hooks subscriptions semantics, and reserved PF env protection before implementation.
+order: 4
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from test-shell-agent
+  artifacts:
+    - .pf/artifacts/file-flow-agents/runtime-hooks-agent-report.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/artifacts/file-flow-audit-report.md
+  - .pf/artifacts/file-flow-fix-plan.md
+  - tools/processforge.py
+  - processes/task-batch-execution.yaml
+  - docs/known-limitations.md
+  - schemas/runtime-driver.schema.json
+ownership:
+  owner_id: runtime-hooks-agent
+  owner_label: worker-runtime-hooks-agent
+  role: ""
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: report
+    path: .pf/artifacts/file-flow-agents/runtime-hooks-agent-report.md
+    type: markdown
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/file-flow-agents/runtime-hooks-agent-report.md
+  format: concise_markdown
+  include:
+    - report

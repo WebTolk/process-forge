@@ -1,0 +1,52 @@
+schema_version: 1
+id: cli-lifecycle-agent
+title: Audit and support CLI lifecycle fixes
+run_id: file-flow-contract-fix-20260725
+process: task-batch-execution
+status: done
+created_at: '2026-07-25T11:24:31Z'
+updated_at: '2026-07-25T11:25:17Z'
+objective: Review run-complete/task-complete doctor-safety from .pf artifacts and produce an independent shell-agent report before implementation.
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from test-shell-agent
+  artifacts:
+    - .pf/artifacts/file-flow-agents/cli-lifecycle-agent-report.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/artifacts/file-flow-audit-report.md
+  - .pf/artifacts/file-flow-fix-plan.md
+  - tools/processforge.py
+ownership:
+  owner_id: cli-lifecycle-agent
+  owner_label: worker-cli-lifecycle-agent
+  role: ""
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: report
+    path: .pf/artifacts/file-flow-agents/cli-lifecycle-agent-report.md
+    type: markdown
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/file-flow-agents/cli-lifecycle-agent-report.md
+  format: concise_markdown
+  include:
+    - report

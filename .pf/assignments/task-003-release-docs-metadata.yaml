@@ -112,7 +112,7 @@ required_outputs:
     required: true
   -
     id: handoff
-    path: .pf/handoffs/runtime-supervisor-audit-fix-handoff.md
+    path: .pf/handoffs/runs/runtime-supervisor-audit-fix-shell-agents-handoff.md
     type: markdown
     required: true
 expected_report:

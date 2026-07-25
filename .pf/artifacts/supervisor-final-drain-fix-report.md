@@ -1,0 +1,44 @@
+# Supervisor Final Drain Fix Report
+
+- reproduced: prompt-provided failure evidence; local pre-fix baseline was not rerun before patching this dirty stabilization branch
+- exact failing command from prompt: `python tools/processforge.py supervisor run --project-root <project> --run shell-supervisor-run --max-ticks 6 --interval 0`
+- root cause: `supervisor run` stopped after the bounded main tick loop without a final observe/collect drain, leaving detached worker terminal artifacts in `exit.json`/`heartbeat.json` while `status.json` and run/task lifecycle stayed `running`/`open`
+- changed files: `tools/processforge.py`, `tools/smoke_supervisor_final_drain.py`, `tools/smoke_full_shell_agents_supervisor.py`, `tools/validate-process-forge-schemas.py`, `tools/validate-public-cleanliness.py`, `docs/concepts/process-supervisor.md`, `docs/getting-started/runtime-driver-supervisor.md`, `docs/release-checklist.md`
+- before supervisor output: prompt showed one worker started, repeated `running=1 observed=1`, then `SUPERVISOR: stopped ticks=6`
+- after supervisor output: `tools/smoke_supervisor_final_drain.py` asserts `FINAL-DRAIN:` is printed and `run-status` shows `TASKS: done=1` without an extra manual tick
+- before status.json: prompt showed `status=running`, `finished_at=null`, `exit_code=null`
+- after status.json: final drain smoke asserts `status=completed`, `exit_code=0`
+- before exit.json: prompt showed `status=completed`, `exit_code=0` already present but not synchronized
+- after exit.json: final drain smoke asserts `status=completed`, `exit_code=0` remains the durable terminal source
+- before run-status: prompt showed `TASKS: open=1`
+- after run-status: final drain smoke asserts successful one-worker run reaches `TASKS: done=1`
+- bounded drain: `supervisor run` uses `--final-drain-timeout` or derives `max(1.0, min(running_worker_timeout, 5.0))`, with a poll interval capped to `0.05..0.25s`
+- no-new-task-start enforcement: final drain calls `supervisor tick` internally with `start_allowed=False`; the new smoke verifies a dependent task remains `open` after the first task is drained
+- non-zero exit preservation: the new smoke runs `fail-shell-agent`, expects supervisor run exit code `1`, verifies `status.json.status=failed`, `exit.json.exit_code=7`, and verifies a later tick does not convert it to `completed`
+- report artifact safety: `observe_worker_run()` trusts `exit.json`, then process handle/PID state, and records `unknown_exit` if a lost detached process has no `exit.json`; report existence is not used as success proof
+- lost confirmation: a first PID-not-alive observation without `exit.json` stays `running` with `lost_observed_at`; a later observe either picks up `exit.json` or records `unknown_exit`, avoiding a one-tick PID visibility race without inferring success
+- validation passed: `python -m py_compile tools/processforge.py tools/smoke_supervisor_final_drain.py tools/smoke_full_shell_agents_supervisor.py`
+- validation passed: `python -u tools/smoke_supervisor_final_drain.py`
+- validation passed: `python tools/smoke_process_supervisor_lifecycle.py`
+- validation passed: `python tools/smoke_full_shell_agents_supervisor.py`
+- validation passed: `python tools/smoke_shell_agent_heartbeat_contract.py`
+- validation passed: `python tools/smoke_shell_launched_agents_supervisor_fix.py`
+- validation passed: `python tools/smoke_runtime_driver_registry.py`
+- validation passed: `python tools/smoke_worker_run_shell.py`
+- validation passed: `python tools/smoke_worker_run_lifecycle.py`
+- validation passed: `python tools/smoke_process_supervisor.py`
+- validation passed: `python tools/smoke_process_supervisor_tick.py`
+- validation passed: `python -u tools/smoke_resource_authoring_processes.py`
+- validation passed: `python -u tools/smoke_update_framework_readonly.py`
+- validation passed: `python -u tools/smoke_update_framework_validation.py`
+- validation passed: `python tools/smoke_process_run_task_batch.py`
+- validation passed: `python tools/validate-process-forge-schemas.py --root .`
+- validation passed: `python tools/validate-public-cleanliness.py --root .`
+- validation passed: `python bin/pf.py release-test --root . --only smoke_supervisor_final_drain --public --fail-fast --timeout-scale 1` in 11.87s
+- validation passed: `python bin/pf.py release-test --root . --public --fail-fast --timeout-scale 1` in 227.19s
+- validation passed: `python bin/pf.py release-test --root . --public --timeout-scale 1` in 223.87s
+- validation passed: `python bin/pf.py release-pack --root . --output dist/processforge.zip` with 458 files
+- validation passed: `python bin/pf.py release-archive-test --archive dist/processforge.zip --root . --extracted-test full --timeout-scale 1`; extracted archive release-test passed in 225.99s
+- elapsed time: targeted smoke `smoke_supervisor_final_drain` took 11.86s through `release-test --only`
+- follow-up correction: after an extracted archive run exposed a one-tick overlap race, lost-detached detection was changed to require a second observation before `unknown_exit`; `py_compile`, `smoke_supervisor_final_drain`, `smoke_full_shell_agents_supervisor.py`, `smoke_process_supervisor_lifecycle.py`, and both full public release-test modes passed again
+- remaining limitations: local pre-fix baseline was not preserved as a separate temp project because the fix was applied immediately from the provided exact failure evidence

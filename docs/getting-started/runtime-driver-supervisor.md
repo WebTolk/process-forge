@@ -32,3 +32,18 @@ demos. Real worker execution remains explicit and opt-in through driver
 manifests. Supervisor ticks start shell workers detached, observe their
 process state on later ticks, and collect required reports only after the
 worker exits successfully.
+
+`supervisor run` is a bounded loop of ticks plus a final observe/collect drain.
+The drain is also bounded and does not start new tasks; it only synchronizes
+already running detached workers before the command returns. `exit.json` is the
+durable terminal result, `heartbeat.json` is live progress proof, `status.json`
+is the supervisor-observed state, and the report artifact is output rather than
+proof of `exit_code=0`.
+
+Shell-launched proof workers create `status.json`, `command.json`,
+`process.json`, `stdout.log`, `stderr.log`, `heartbeat.json`, `exit.json`, and
+the configured report artifact. `heartbeat.json` lives at
+`.pf/runtime/agent-runs/<run-id>/<task-id>/heartbeat.json` and contains at
+least `schema_version`, `run_id`, `task_id`, `status`, `pid`, `timestamp`, and
+`sequence`. It is separate from `exit.json`: heartbeat is the current process
+proof, while exit records the final result.

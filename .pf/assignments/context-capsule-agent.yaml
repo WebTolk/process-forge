@@ -1,0 +1,55 @@
+schema_version: 1
+id: context-capsule-agent
+title: Audit and support immutable capsule model
+run_id: file-flow-contract-fix-20260725
+process: task-batch-execution
+status: done
+created_at: '2026-07-25T11:24:37Z'
+updated_at: '2026-07-25T11:25:20Z'
+objective: Review ECP/capsule immutability mismatch and produce an independent shell-agent report before implementation.
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from test-shell-agent
+  artifacts:
+    - .pf/artifacts/file-flow-agents/context-capsule-agent-report.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/artifacts/file-flow-audit-report.md
+  - .pf/artifacts/file-flow-fix-plan.md
+  - docs/concepts/context-capsule.md
+  - docs/concepts/execution-context-package.md
+  - schemas/context-capsule.schema.json
+  - tools/processforge.py
+ownership:
+  owner_id: context-capsule-agent
+  owner_label: worker-context-capsule-agent
+  role: ""
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: report
+    path: .pf/artifacts/file-flow-agents/context-capsule-agent-report.md
+    type: markdown
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/file-flow-agents/context-capsule-agent-report.md
+  format: concise_markdown
+  include:
+    - report

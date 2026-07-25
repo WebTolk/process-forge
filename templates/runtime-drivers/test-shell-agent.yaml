@@ -19,9 +19,7 @@ command:
 working_directory: "{project_root}"
 environment:
   inherit: false
-  variables:
-    PF_WORKER_RUN_ID: "{run_id}"
-    PF_WORKER_TASK_ID: "{task_id}"
+  variables: {}
 io:
   stdin: none
   stdout: .pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log

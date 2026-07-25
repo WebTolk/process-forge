@@ -1,6 +1,8 @@
 # Execution Context Package
 
 An Execution Context Package is an immutable snapshot for one assignment.
+It is currently a compatibility artifact for the deprecated `context-compile`
+command.
 
 It records the process, stage, role, task input, selected packages, selected templates, selected tools, selected MCP capabilities, allowed actions, forbidden actions, required outputs, quality gates, and checksums.
 
@@ -14,4 +16,8 @@ An Execution Context Package is stale when any required source changes and the c
 
 ## Use
 
-Agents and humans should read the package before work and treat it as the active task boundary.
+Agents and humans using legacy `context-compile` flows should read the package
+before work and treat it as the active task boundary.
+
+In the active `worker-run` flow, the assignment capsule is the canonical launch
+descriptor. New capsules carry assignment and snapshot checksums directly.

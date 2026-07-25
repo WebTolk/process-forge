@@ -6,7 +6,7 @@ process: workplace-initialization
 status: done
 created_at: '2026-07-20T06:03:44Z'
 updated_at: '2026-07-20T06:33:28Z'
-objective: 'Update D:\\.agents workplace installation to current ProcessForge and verify workplace and project onboarding flows.'
+objective: 'Update the shared workplace installation to current ProcessForge and verify workplace and project onboarding flows.'
 order: 2
 dependencies:
   blocked_by:
@@ -19,7 +19,7 @@ iterations:
     kind: work
     status: completed
     started_at: '2026-07-20T06:33:27Z'
-    summary: 'Updated D:\\.agents\\process-forge from validated archive, normalized distribution registry metadata, and preserved installed backups.'
+    summary: 'Updated the shared ProcessForge installation from validated archive, normalized distribution registry metadata, and preserved installed backups.'
     artifacts:
       - .pf/artifacts/runs/docs-workplace-audit-20260720/task-002-workplace-refresh/work-log.md
     completed_at: '2026-07-20T06:33:27Z'

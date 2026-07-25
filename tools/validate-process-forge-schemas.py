@@ -357,9 +357,11 @@ REQUIRED_FILES = [
     "tools/smoke_worker_run_shell.py",
     "tools/smoke_worker_run_lifecycle.py",
     "tools/smoke_process_supervisor_tick.py",
+    "tools/smoke_supervisor_final_drain.py",
     "tools/smoke_process_supervisor_lifecycle.py",
     "tools/smoke_process_supervisor.py",
     "tools/smoke_shell_launched_agents_supervisor_fix.py",
+    "tools/smoke_shell_agent_heartbeat_contract.py",
     "tools/smoke_full_shell_agents_supervisor.py",
     "tools/smoke_process_run_task_batch.py",
     "tools/smoke_process_authoring.py",
@@ -594,6 +596,7 @@ def validate_yaml_schema_files(root: Path) -> None:
     ]
     mappings.extend((path, "process-definition.schema.json") for path in sorted((root / "processes").glob("*.yaml")))
     mappings.extend((path, "package-manifest.schema.json") for path in sorted((root / "packages").glob("*.yaml")))
+    mappings.extend((path, "run.schema.json") for path in sorted((root / ".pf" / "runs").glob("*/run.yaml")))
     mappings.extend((path, "assignment.schema.json") for path in sorted((root / ".pf" / "assignments").glob("*.yaml")))
     if (root / "updates" / "processforge-update-index.yaml").is_file():
         mappings.append((root / "updates" / "processforge-update-index.yaml", "processforge-update-index.schema.json"))

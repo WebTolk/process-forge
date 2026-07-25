@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
@@ -77,6 +78,61 @@ integration:
     )
 
 
+def tail(path: Path, limit: int = 1200) -> str:
+    if not path.is_file():
+        return "<missing>"
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return text[-limit:]
+
+
+def runtime_diagnostics(run_root: Path, expected: Path) -> str:
+    existing = []
+    if run_root.is_dir():
+        existing = sorted(str(path.relative_to(run_root)) for path in run_root.rglob("*") if path.is_file())
+    return "\n".join(
+        [
+            "FAIL: missing heartbeat.json",
+            "",
+            "Expected:",
+            f"  {expected}",
+            "",
+            "Existing files:",
+            "  " + ("\n  ".join(existing) if existing else "<none>"),
+            "",
+            "stdout tail:",
+            tail(run_root / "stdout.log"),
+            "",
+            "stderr tail:",
+            tail(run_root / "stderr.log"),
+            "",
+            "process.json:",
+            tail(run_root / "process.json"),
+            "",
+            "command.json:",
+            tail(run_root / "command.json"),
+            "",
+            "exit.json:",
+            tail(run_root / "exit.json"),
+        ]
+    )
+
+
+def wait_for_json(path: Path, run_root: Path, timeout_seconds: float = 5.0) -> dict[str, object]:
+    deadline = time.perf_counter() + timeout_seconds
+    last_error: Exception | None = None
+    while time.perf_counter() < deadline:
+        if path.is_file():
+            try:
+                return json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError as exc:
+                last_error = exc
+        time.sleep(0.1)
+    diagnostics = runtime_diagnostics(run_root, path)
+    if last_error:
+        diagnostics += f"\n\nLast JSON error: {last_error}"
+    raise AssertionError(diagnostics)
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-shell-supervisor-fix-") as temp:
         root = Path(temp)
@@ -87,9 +143,9 @@ def main() -> int:
         pf("orchestrator-plan", "apply", "--project-root", str(project), "--plan", str(success_plan), "--apply")
         pf("supervisor", "run", "--project-root", str(project), "--run", "agent-proof-run", "--max-ticks", "3", "--interval", "0")
         run_root = project / ".pf/runtime/agent-runs/agent-proof-run/proof-agent"
-        process = json.loads((run_root / "process.json").read_text(encoding="utf-8"))
-        command = json.loads((run_root / "command.json").read_text(encoding="utf-8"))
-        heartbeat = json.loads((run_root / "heartbeat.json").read_text(encoding="utf-8"))
+        process = wait_for_json(run_root / "process.json", run_root)
+        command = wait_for_json(run_root / "command.json", run_root)
+        heartbeat = wait_for_json(run_root / "heartbeat.json", run_root)
         stdout = (run_root / "stdout.log").read_text(encoding="utf-8")
         report = (project / ".pf/artifacts/proof-agent-report.md").read_text(encoding="utf-8")
         if not isinstance(process.get("pid"), int) or process["pid"] <= 0:
@@ -98,6 +154,10 @@ def main() -> int:
             raise AssertionError("stdout proof missing shell-agent lifecycle events")
         if heartbeat.get("pid") != process.get("pid"):
             raise AssertionError("heartbeat pid does not match process proof")
+        if heartbeat.get("run_id") != "agent-proof-run" or heartbeat.get("task_id") != "proof-agent":
+            raise AssertionError("heartbeat run/task identity does not match proof run")
+        if heartbeat.get("status") not in {"running", "completed"}:
+            raise AssertionError("heartbeat status is not a live/completed proof status")
         if "PF_LEAK_TEST_SECRET" in command["command"]["environment"] or "- leak_keys: `0`" not in report:
             raise AssertionError("environment isolation proof failed")
 

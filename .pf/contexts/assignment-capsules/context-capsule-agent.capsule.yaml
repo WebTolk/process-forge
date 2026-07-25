@@ -1,0 +1,99 @@
+schema_version: 1
+capsule:
+  id: context-capsule-agent-capsule
+  generated_at: '2026-07-25T11:25:07Z'
+  assignment_id: context-capsule-agent
+  assignment_path: .pf/assignments/context-capsule-agent.yaml
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: dfdaf96a08685e58eb26939b08718084495d3f5982371f77fe4316191abd0993
+  worker_may_rebuild_context: false
+assignment:
+  id: context-capsule-agent
+  path: .pf/assignments/context-capsule-agent.yaml
+  status: open
+  objective: Review ECP/capsule immutability mismatch and produce an independent shell-agent report before implementation.
+  execution_mode:
+    kind: read_only
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: project-context
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/context-capsule-agent.yaml
+  context_artifacts:
+    []
+scope:
+  allowed_files:
+    []
+  allowed_read_files:
+    - .pf/artifacts/file-flow-audit-report.md
+    - .pf/artifacts/file-flow-fix-plan.md
+    - docs/concepts/context-capsule.md
+    - docs/concepts/execution-context-package.md
+    - schemas/context-capsule.schema.json
+    - tools/processforge.py
+  forbidden_files:
+    []
+  ownership:
+    owner_id: context-capsule-agent
+    owner_label: worker-context-capsule-agent
+    role: ""
+    writer: false
+    owned_files:
+      []
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      []
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: report
+      path: .pf/artifacts/file-flow-agents/context-capsule-agent-report.md
+      type: markdown
+      required: true
+  expected_report:
+    language: ru
+    artifact: .pf/artifacts/file-flow-agents/context-capsule-agent-report.md
+    format: concise_markdown
+    include:
+      - report
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/context-capsule-agent.ndjson
+  event_correlation_id: assignment-context-capsule-agent
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/context-capsule-agent.yaml
+allowed_files:
+  []
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: report
+    path: .pf/artifacts/file-flow-agents/context-capsule-agent-report.md
+    type: markdown
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-context-capsule-agent

@@ -57,10 +57,12 @@ non_overlap:
 required_outputs:
   -
     id: changed_files
+    path: .pf/artifacts/multiagent-subagent-smoke-20260720.md
     type: unspecified
     required: true
   -
     id: smoke_result
+    path: .pf/artifacts/multiagent-subagent-smoke-20260720.md
     type: unspecified
     required: true
 expected_report:

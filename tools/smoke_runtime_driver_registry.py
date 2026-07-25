@@ -59,6 +59,32 @@ security:
         output = pf("runtime-driver", "validate", "--project-root", str(ROOT), "--driver", str(invalid), expect=1).stdout
         if "limits.timeout_seconds" not in output or "limits.max_retries" not in output:
             raise AssertionError("invalid limits validation did not report both bad fields")
+        reserved_env = Path(temp) / "reserved-env.yaml"
+        reserved_env.write_text(
+            """schema_version: 1
+id: reserved-env
+title: Reserved Env
+kind: shell
+command:
+  executable: "{python_executable}"
+  args: []
+environment:
+  inherit: false
+  variables:
+    PF_RUN_ID: wrong
+limits:
+  timeout_seconds: 5
+  max_retries: 0
+security:
+  allow_shell: false
+  require_explicit_executable: false
+  allow_network: false
+""",
+            encoding="utf-8",
+        )
+        output = pf("runtime-driver", "validate", "--project-root", str(ROOT), "--driver", str(reserved_env), expect=1).stdout
+        if "reserved ProcessForge env vars not overridden" not in output or "PF_RUN_ID" not in output:
+            raise AssertionError("reserved env validation did not reject PF_RUN_ID override")
     print("PASS: runtime driver registry smoke")
     return 0
 

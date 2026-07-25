@@ -10,6 +10,7 @@ Runtime layout:
 - `.pf/runtime/agent-runs/<run-id>/<task-id>/status.json`
 - `.pf/runtime/agent-runs/<run-id>/<task-id>/command.json`
 - `.pf/runtime/agent-runs/<run-id>/<task-id>/process.json`
+- `.pf/runtime/agent-runs/<run-id>/<task-id>/heartbeat.json`
 - `.pf/runtime/agent-runs/<run-id>/<task-id>/exit.json`
 - `.pf/runtime/agent-runs/<run-id>/<task-id>/stdout.log`
 - `.pf/runtime/agent-runs/<run-id>/<task-id>/stderr.log`
@@ -32,5 +33,16 @@ python .pf/runtime/bin/pf.py supervisor run --project-root . --run example-run -
 задачи могут иметь общий artifact scope, если одна задача зависит от другой;
 несвязанные активные writer-ы по-прежнему блокируются non-overlap guard.
 
+Для shell-launched proof worker файл `heartbeat.json` обязателен и лежит в
+`.pf/runtime/agent-runs/<run-id>/<task-id>/heartbeat.json`. Даже быстрый worker
+оставляет heartbeat proof artifact. Минимальные machine-readable поля:
+`schema_version`, `run_id`, `task_id`, `status`, `pid`, `timestamp`,
+`sequence`. `heartbeat.json` описывает текущий/live process proof, а
+`exit.json` хранит финальный результат процесса.
+
 Supervisor не является обязательным демоном. `supervisor run` ограничен
 `--max-ticks` или профилем и завершается после этих tick-ов.
+
+Native subagents, которые запускает внешняя AI-среда, не являются PF runtime
+drivers. Они могут использовать assignment и capsule файлы ProcessForge, но их
+process lifecycle находится вне этого supervisor contract.

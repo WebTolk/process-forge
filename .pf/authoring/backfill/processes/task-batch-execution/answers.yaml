@@ -269,7 +269,7 @@ hooks:
     -
       event: run.completed
       required: true
-  subscriptions:
+  future_subscriptions:
     -
       event: task.completed
       actions:

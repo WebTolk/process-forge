@@ -67,11 +67,31 @@ non_overlap:
     []
   rule: Do not edit update-framework-specific schema/template/smoke files listed in forbidden_files.
 required_outputs:
-  - changed_files
-  - checks_run
-  - checks_not_run
-  - implementation_summary
-  - residual_risks
+  -
+    id: changed_files
+    path: .pf/artifacts/multiagent-assignment-implementation-report-20260720.md
+    type: unspecified
+    required: true
+  -
+    id: checks_run
+    path: .pf/artifacts/multiagent-assignment-implementation-report-20260720.md
+    type: unspecified
+    required: true
+  -
+    id: checks_not_run
+    path: .pf/artifacts/multiagent-assignment-implementation-report-20260720.md
+    type: unspecified
+    required: true
+  -
+    id: implementation_summary
+    path: .pf/artifacts/multiagent-assignment-implementation-report-20260720.md
+    type: unspecified
+    required: true
+  -
+    id: residual_risks
+    path: .pf/artifacts/multiagent-assignment-implementation-report-20260720.md
+    type: unspecified
+    required: true
 expected_report:
   language: ru
   format: concise_markdown

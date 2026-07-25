@@ -1,0 +1,54 @@
+schema_version: 1
+id: schema-contract-agent
+title: Audit and support schema contract alignment
+run_id: file-flow-contract-fix-20260725
+process: task-batch-execution
+status: done
+created_at: '2026-07-25T11:24:25Z'
+updated_at: '2026-07-25T11:25:14Z'
+objective: Review schema/doctor mismatch from .pf/artifacts/file-flow-audit-report.md and produce an independent shell-agent report before implementation.
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from test-shell-agent
+  artifacts:
+    - .pf/artifacts/file-flow-agents/schema-contract-agent-report.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/artifacts/file-flow-audit-report.md
+  - .pf/artifacts/file-flow-fix-plan.md
+  - schemas/assignment.schema.json
+  - schemas/run.schema.json
+  - tools/validate-process-forge-schemas.py
+ownership:
+  owner_id: schema-contract-agent
+  owner_label: worker-schema-contract-agent
+  role: ""
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: report
+    path: .pf/artifacts/file-flow-agents/schema-contract-agent-report.md
+    type: markdown
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/file-flow-agents/schema-contract-agent-report.md
+  format: concise_markdown
+  include:
+    - report

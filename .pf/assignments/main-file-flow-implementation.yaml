@@ -1,0 +1,108 @@
+schema_version: 1
+id: main-file-flow-implementation
+title: Implement file-flow contract fixes
+run_id: file-flow-contract-fix-20260725
+process: bug-fix
+status: done
+created_at: '2026-07-25T11:42:11Z'
+updated_at: '2026-07-25T11:50:27Z'
+objective: Implement schema, lifecycle, capsule, runtime env, and documentation fixes from .pf/artifacts/file-flow-fix-plan.md.
+order: 5
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Implemented file-flow contract fixes with schema/lifecycle/capsule/runtime/docs updates and passing targeted smokes.
+  artifacts:
+    - .pf/artifacts/file-flow-contract-fix-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - tools/validate-process-forge-schemas.py
+  - schemas/assignment.schema.json
+  - schemas/context-capsule.schema.json
+  - schemas/runtime-driver.schema.json
+  - templates/runtime-drivers/test-shell-agent.yaml
+  - tools/smoke_process_run_task_batch.py
+  - tools/smoke_runtime_driver_registry.py
+  - tools/smoke_worker_run_shell.py
+  - tools/smoke_full_shell_agents_supervisor.py
+  - tools/smoke_shell_agent_heartbeat_contract.py
+  - docs/concepts/context-capsule.md
+  - docs/concepts/execution-context-package.md
+  - docs/known-limitations.md
+  - processes/task-batch-execution.yaml
+  - .pf/adr/file-flow-canonical-contract.md
+  - .pf/artifacts/file-flow-contract-fix-report.md
+  - .pf/logs/file-flow-contract-fix.md
+ownership:
+  owner_id: main-file-flow-implementation
+  owner_label: worker-main-file-flow-implementation
+  role: ""
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/validate-process-forge-schemas.py
+    - schemas/assignment.schema.json
+    - schemas/context-capsule.schema.json
+    - schemas/runtime-driver.schema.json
+    - templates/runtime-drivers/test-shell-agent.yaml
+    - tools/smoke_process_run_task_batch.py
+    - tools/smoke_runtime_driver_registry.py
+    - tools/smoke_worker_run_shell.py
+    - tools/smoke_full_shell_agents_supervisor.py
+    - tools/smoke_shell_agent_heartbeat_contract.py
+    - docs/concepts/context-capsule.md
+    - docs/concepts/execution-context-package.md
+    - docs/known-limitations.md
+    - processes/task-batch-execution.yaml
+    - .pf/adr/file-flow-canonical-contract.md
+    - .pf/artifacts/file-flow-contract-fix-report.md
+    - .pf/logs/file-flow-contract-fix.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/validate-process-forge-schemas.py
+    - schemas/assignment.schema.json
+    - schemas/context-capsule.schema.json
+    - schemas/runtime-driver.schema.json
+    - templates/runtime-drivers/test-shell-agent.yaml
+    - tools/smoke_process_run_task_batch.py
+    - tools/smoke_runtime_driver_registry.py
+    - tools/smoke_worker_run_shell.py
+    - tools/smoke_full_shell_agents_supervisor.py
+    - tools/smoke_shell_agent_heartbeat_contract.py
+    - docs/concepts/context-capsule.md
+    - docs/concepts/execution-context-package.md
+    - docs/known-limitations.md
+    - processes/task-batch-execution.yaml
+    - .pf/adr/file-flow-canonical-contract.md
+    - .pf/artifacts/file-flow-contract-fix-report.md
+    - .pf/logs/file-flow-contract-fix.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: implementation-report
+    path: .pf/artifacts/file-flow-contract-fix-report.md
+    type: markdown
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/file-flow-contract-fix-report.md
+  format: concise_markdown
+  include:
+    - implementation-report

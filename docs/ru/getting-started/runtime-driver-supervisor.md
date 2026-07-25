@@ -27,5 +27,16 @@ python .pf/runtime/bin/pf.py supervisor run --project-root . --run supervised-ru
 python .pf/runtime/bin/pf.py run-status --project-root . --run supervised-run
 ```
 
-`test-echo-worker` предназначен для smoke tests и демонстраций. Реальный запуск
-worker-а остаётся явным opt-in через runtime driver manifest.
+`test-echo-worker` и `test-shell-agent` предназначены для smoke tests и
+демонстраций. Реальный запуск worker-а остаётся явным opt-in через runtime
+driver manifest. Supervisor ticks запускают shell workers detached, на
+следующих tick-ах наблюдают process state и собирают required reports только
+после успешного завершения worker-а.
+
+Shell-launched proof worker создаёт `status.json`, `command.json`,
+`process.json`, `stdout.log`, `stderr.log`, `heartbeat.json`, `exit.json` и
+настроенный report artifact. `heartbeat.json` лежит в
+`.pf/runtime/agent-runs/<run-id>/<task-id>/heartbeat.json` и содержит минимум
+`schema_version`, `run_id`, `task_id`, `status`, `pid`, `timestamp`,
+`sequence`. Это отдельный файл: heartbeat показывает текущий process proof, а
+`exit.json` фиксирует финальный результат.

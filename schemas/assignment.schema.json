@@ -3,8 +3,9 @@
   "$id": "https://processforge.local/schemas/assignment.schema.json",
   "title": "Assignment",
   "type": "object",
-  "required": ["id", "title", "process", "status"],
+  "required": ["schema_version", "id", "title", "run_id", "process", "status", "iterations", "result"],
   "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
     "id": { "$ref": "#/$defs/id" },
     "title": { "type": "string" },
     "role": { "type": "string" },
@@ -43,7 +44,7 @@
     "completion_criteria": { "type": "array", "items": { "type": "string" } },
     "log_file": { "type": "string" },
     "handoff_requirements": { "type": "array", "items": { "type": "string" } },
-    "status": { "enum": ["draft", "ready", "open", "pending", "in_progress", "blocked", "debugging", "review", "ready_for_review", "completed", "done", "cancelled", "failed", "superseded"] }
+    "status": { "enum": ["open", "in_progress", "blocked", "debugging", "review", "done", "cancelled", "failed"] }
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$|^[0-9]{4}-[0-9]{2}-[0-9]{2}[a-z0-9-]*$" },
@@ -97,8 +98,10 @@
     },
     "required_output": {
       "type": ["object", "string"],
+      "required": ["id", "path"],
       "properties": {
         "id": { "type": "string" },
+        "path": { "type": "string", "minLength": 1 },
         "type": { "type": "string" },
         "required": { "type": "boolean" }
       },
@@ -110,7 +113,7 @@
         "language": { "type": "string" },
         "format": { "type": "string" },
         "include": { "type": "array", "items": { "type": "string" } },
-        "artifact": { "type": "string" }
+        "artifact": { "type": "string", "pattern": "^(?![A-Za-z]:)(?!/)(?!.*\\.\\.).+" }
       },
       "additionalProperties": true
     },
@@ -133,7 +136,8 @@
       "properties": {
         "status": { "enum": ["pending", "done", "failed", "cancelled"] },
         "summary": { "type": "string" },
-        "artifacts": { "type": "array", "items": { "type": "string" } }
+        "artifacts": { "type": "array", "items": { "type": "string" } },
+        "waivers": { "type": "object", "additionalProperties": { "type": "string" } }
       },
       "additionalProperties": true
     }

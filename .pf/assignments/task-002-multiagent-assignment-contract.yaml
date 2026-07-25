@@ -32,11 +32,31 @@ non_overlap:
     - tools/validate-process-forge-schemas.py
   rule: Do not edit files owned by the active parallel task. Produce a planning artifact only.
 required_outputs:
-  - changed_files
-  - proposed_assignment_schema_fields
-  - capsule_generation_requirements
-  - non_overlap_rules
-  - implementation_followup_tasks
+  -
+    id: changed_files
+    path: .pf/artifacts/multiagent-assignment-contract-20260720.md
+    type: unspecified
+    required: true
+  -
+    id: proposed_assignment_schema_fields
+    path: .pf/artifacts/multiagent-assignment-contract-20260720.md
+    type: unspecified
+    required: true
+  -
+    id: capsule_generation_requirements
+    path: .pf/artifacts/multiagent-assignment-contract-20260720.md
+    type: unspecified
+    required: true
+  -
+    id: non_overlap_rules
+    path: .pf/artifacts/multiagent-assignment-contract-20260720.md
+    type: unspecified
+    required: true
+  -
+    id: implementation_followup_tasks
+    path: .pf/artifacts/multiagent-assignment-contract-20260720.md
+    type: unspecified
+    required: true
 dependencies:
   blocked_by:
     []

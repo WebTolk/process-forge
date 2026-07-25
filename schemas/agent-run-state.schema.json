@@ -9,7 +9,7 @@
     "run_id": { "$ref": "#/$defs/id" },
     "task_id": { "$ref": "#/$defs/id" },
     "driver_id": { "$ref": "#/$defs/id" },
-    "status": { "enum": ["planned", "ready", "starting", "running", "completed", "failed", "timed_out", "blocked", "cancelled", "manual_required"] },
+    "status": { "enum": ["planned", "ready", "starting", "running", "completed", "failed", "timed_out", "unknown_exit", "lost", "blocked", "cancelled", "manual_required"] },
     "pid": { "type": ["integer", "null"] },
     "started_at": { "type": ["string", "null"] },
     "finished_at": { "type": ["string", "null"] },

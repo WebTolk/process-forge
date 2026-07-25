@@ -67,6 +67,7 @@ non_overlap:
 required_outputs:
   -
     id: update-framework-audit-report
+    path: .pf/artifacts/update-framework-audit-20260720.md
     type: unspecified
     required: true
 expected_report:

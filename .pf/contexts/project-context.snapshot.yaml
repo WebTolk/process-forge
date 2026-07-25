@@ -1,8 +1,8 @@
 schema_version: 1
 snapshot:
   id: project-context
-  generated_at: '2026-07-24T18:42:16Z'
-  valid_until: '2026-07-31T18:42:16Z'
+  generated_at: '2026-07-25T11:48:11Z'
+  valid_until: '2026-08-01T11:48:11Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -181,7 +181,7 @@ sources:
       id: process-processes-task-batch-execution-yaml
       path: processes/task-batch-execution.yaml
       kind: process
-      checksum: f761bf4044fdd08bba36b02753935ff77d3dcf03694d9bdf18d7a555789e505d
+      checksum: 5e7795311532f0e3a3d00c85736cdfd62d8079ef0ae9a5f7edf3aad3d958a061
     -
       id: process-processes-guided-workplace-setup-yaml
       path: processes/guided-workplace-setup.yaml
@@ -227,6 +227,11 @@ sources:
       path: packages/process-forge-knowledge-governance.yaml
       kind: package
       checksum: 5595ac155a35b71d9e0382c07d9aebaa37a25f82532c35326e3291df950e0d3a
+    -
+      id: registry-registries-tools-yaml
+      path: .pf/registries/tools.yaml
+      kind: registry
+      checksum: 9f56a8ed9385340f7024210fe2ced6a4d9be8b50a407fe9cc481732a1afe4b60
 knowledge_stack:
   -
     id: processforge.core

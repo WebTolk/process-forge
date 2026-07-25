@@ -26,20 +26,45 @@ rules:
 allowed_actions:
   - read_required_sources
 forbidden_actions:
+  - add_platform_specific_core_support_pack
+  - add_template_without_readme
+  - allow_parallel_write_overlap_without_explicit_policy
   - change_rules_without_review
+  - claim_task_without_assignment_record
   - claim_unexecuted_tests_as_passed
+  - copy_global_packages_into_project
+  - create_background_daemon
+  - create_background_runner
+  - create_runner_dependency
+  - create_terminal_only_wizard
   - edit_forbidden_files
   - edit_outside_assignment_scope
+  - edit_source_process_without_apply_to_source
+  - execute_command_hooks
+  - give_worker_full_context_by_default
+  - hide_warn_findings
+  - ignore_forbidden_files
   - invent_root_path
+  - load_heavy_resource_content_into_prompt
+  - mix_required_and_recommended_contract_items
   - overwrite_brownfield_files_without_force
   - publish_without_review
   - rebuild_context_without_approval
+  - recreate_workplace
+  - require_byte_identical_yaml
   - scan_outside_project_root
+  - send_network_webhooks
+  - silently_download_large_sites
+  - skip_blocking_logic_review
+  - skip_required_outputs
   - skip_required_review
   - store_secret_values
   - upgrade_active_run_without_assessment
   - widen_scope_without_handoff
   - write_absolute_paths_to_public_manifest
+  - write_private_absolute_paths_to_public_files
+  - write_private_absolute_paths_to_public_project_files
+  - write_private_paths_to_public_manifests
 merge:
   order:
     - core
@@ -57,21 +82,41 @@ merge:
   conflict_policy: block_on_locked_policy_conflict
 source_fingerprints:
   .pf/AGENTS.md: 90e94833267519531c3df9f5271d2b32f4bf3ba08b21446967d22b20e18e333f
-  .pf/process-forge.yaml: 24bb1ac2c838091939df8be1296a43f6f15c9a687d0c6137bc487725143acfe6
+  .pf/process-forge.yaml: 2e01675a42a40652d8f62e6ddce1b0789242d6edf51463a4d3584e7e5de21b66
   .pf/process-forge.local.yaml: missing
-  tools/processforge.py: b31f719e1030c975c6744bd7383458b007a3c6c9ee1835ddb3d10d75a1beea3b
-  processes/software-feature-development.yaml: 40b87049ae6bcf120b13b5de2bc88db9934721d9713d36f52dd2a87e699995e6
-  processes/bug-fix.yaml: b5f00bbfc37aab65f0a1fde69baaa8decb87e7ab004f700ac5dd1761d3359502
-  processes/testing.yaml: 94346c40b1b49169b4e37b7c11b4ee7b2c2dacfebe0e0578f8af788946b20d3e
-  processes/content-production.yaml: c01a0e09293733b12f0336f864dbf4cee9846df8c24117aacb0e262577257bf3
-  processes/knowledge-package-improvement.yaml: 536ebb95a759ac542e49784953bea0f713e5f118aed2cc4006770270dfc4d05d
-  processes/process-version-upgrade.yaml: d220d1e1515e9c58941ca277f7c819d0c7c600af818a8c97d7de9495aabad89d
-  processes/workplace-initialization.yaml: 8925770fc0bb1fb905dd27375457df15f24eaef79a7ace0c8605ba052d915479
-  processes/project-initialization.yaml: 6ff5bd3a1d341daefc0b8f26983c9fafb56b53b8f983f64c4cb915d3117cb6af
-  processes/session-bootstrap.yaml: 929bcaaaa75a04dfb862051da2e2289020b0ab6573437551a29a466f1e561945
-  processes/context-resolution.yaml: d59e0de574f70a77494ad56f16994ed468e9f7ea1ece57ab1fa485e5c0625753
-  packages/process-forge-core.yaml: 170d1f7abf77f9e470ca177c1dba2fd140423de29aed2a07c4774ddfbb7c0791
-  packages/process-forge-software-development.yaml: c3c812d40436f9fb3958d44904baaa19575437c895d1edc0161f4c23f1542a7e
-  packages/process-forge-content.yaml: 359b014bca2e2e6288c4d0a10f27b84dab7a7c76e714d086d4adc50bf3e4ef4e
-  packages/process-forge-testing.yaml: 1446954bc23d0868e2adffe1f24dfbdded8585be710daa6b488ed6c98a321af8
-  packages/process-forge-knowledge-governance.yaml: d1d46b126a1e314bf9e908eebd5a1abe0ef762f3e7a83df3ae505e7d446b0bbf
+  tools/processforge.py: d4cd91a97ffbbc4b5c4ef7cda3161a731048140ed91a1f20a2e489a5133ca776
+  processes/software-feature-development.yaml: ab1c4f57fe5dc179a0b0881f2ae54dbfddfba4fdb9e2ddfa7ba3024c625d0daf
+  processes/bug-fix.yaml: a0e69c1d47638b7d3baf187f5d355b8582c9df6e3e595266e85cc61b576f65f4
+  processes/testing.yaml: 4dc6061fa13152c71e28bc27e4c309ba5f91500cacfeab29111e94d01c9222dd
+  processes/content-production.yaml: f49443a19ae019597bdc8b95675729cc439aa53bb4a20230f0d50198807d1c51
+  processes/knowledge-package-improvement.yaml: 506decc3d564b8ca90063be38f9798a3e300d0022d13def19a862c8c9f1b4ed7
+  processes/process-version-upgrade.yaml: 93bb09946805e04ab8b8952b62e91ff5bc8fda88af55e80e2f8dbcd118319011
+  processes/workplace-initialization.yaml: 545d47896897c43468d3fe441f1c9a06a4dd276c5650f439be0ad4f2de3fc450
+  processes/project-onboarding.yaml: 114eb5bb60eb3e43473a097989b9c162b7a7497d8ae39a14df38df2a27eb5d36
+  processes/project-initialization.yaml: d5a06505b144263a0379a157523fea105810b2b6d514f60fcd266d66a5ebd053
+  processes/session-bootstrap.yaml: 2fb9b75897b381e096c52ece25f4c4eea682b427b569aa76c58f861b571cf0b8
+  processes/context-resolution.yaml: 8564f327f40929f6332b4c41fa3251ecbd79b39a52074e058ad7549c888299d4
+  processes/processforge-update-check.yaml: aa7475228a69ce9b1b2441cadf8ee43534bad90d13e1f864c2f3f5d37f2d4ecd
+  processes/knowledge-resource-add.yaml: 905afc71a408b84d875771411f2a781ac3915769c9171789603bb753c8d49dac
+  processes/documentation-mirror-import.yaml: 750b3c510e85f36636572a3247ffaa8483c37c0f3a16f46ba2d520e4280cfcf0
+  processes/knowledge-package-update.yaml: 2bf01fe856ddf8660db68db3384a340a9242d2a1ebc5836f4b16a2a598ec792b
+  processes/template-add.yaml: 3f88e45d5c4553551471c00b04cb9f22aa8b634d82f3d595bf6579ad1ec53c15
+  processes/tool-register.yaml: bdffcce2cddcaf2c8c0fa3e1ac63cdf66667c2e46667c0296a8de5b85a738ba6
+  processes/mcp-register.yaml: 7f483529bd49117c6549a2351218fcb54dffa9efb3123b15055dd0666ed93014
+  processes/platform-contract-install.yaml: 90a4a96f7b3c17322b0a4543684e7885607b8ebd670fd499ef0679a1167c492b
+  processes/process-template-install.yaml: 7437ae56449420648b5e59ca2d32f46cf1df21e61af111dfa5cf1101a8159326
+  processes/reusable-template-authoring.yaml: d979c588a25191dbfdf3217d17c3320803f9a9ea1c646a74406cd133c1c4f363
+  processes/knowledge-package-authoring.yaml: d756645e6c14845f5041f5dc749b8b1d4766a5731b0610d3bbe1082220f2a59c
+  processes/platform-contract-authoring.yaml: 2b08b9e8ced47021dddad7ebaf603f3c7d07afa392e64f637496f4c3fcc963b5
+  processes/process-authoring.yaml: 66f1e4acde5664a176cd917dc82a63984a465b866b8d41e0cb68a9851b02932b
+  processes/authoring-parity-audit.yaml: 79b011c6c267cb599f5cc5751443624788c72faa0f31186a578fa81ff7ce03f1
+  processes/task-batch-execution.yaml: 5e7795311532f0e3a3d00c85736cdfd62d8079ef0ae9a5f7edf3aad3d958a061
+  processes/guided-workplace-setup.yaml: 5a76ca1224cecc0966d7f8b365ad834287b445bf08212984e3afee53faa4b00e
+  processes/multi-agent-task-orchestration.yaml: 321b08d7cc9df34eb4ff01247f4e90475f5a37159c7f71443b454227f5edc7d8
+  processes/runtime-driver-registry.yaml: 183b5fa4d6312c6ebcb4c06e7cd07e9cd600a1709fddd2a24f03c29acd1a703f
+  processes/process-supervisor.yaml: e9fe5d44e7b09f851e5ec33ab537cfd31eb5111307e5efb37b3fad5ef1229807
+  packages/process-forge-core.yaml: ce0c1ff08465b9475526f614c5f66432334cb38e571562f0599bb213a5b2cb96
+  packages/process-forge-software-development.yaml: ee811d3c2e0bc1d9fc7558109305e081132ca0ce37c6f74a4afd4e9e1ccbf4de
+  packages/process-forge-content.yaml: d7b648c47e9c0ea245fbcd5beb12b3f8d6619e11d9d89b5af2e9900f18c168ec
+  packages/process-forge-testing.yaml: 8d26693f376495f490e3416f4cb0688b4d87baf445cfaf417dfa892893b724dd
+  packages/process-forge-knowledge-governance.yaml: 5595ac155a35b71d9e0382c07d9aebaa37a25f82532c35326e3291df950e0d3a

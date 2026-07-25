@@ -15,8 +15,10 @@
         "generated_at": { "type": "string" },
         "assignment_id": { "type": "string" },
         "assignment_path": { "type": "string" },
+        "assignment_checksum": { "type": "string" },
         "snapshot": { "type": "string" },
         "snapshot_checksum": { "type": "string" },
+        "immutable": { "type": "boolean" },
         "worker_may_rebuild_context": { "type": "boolean" }
       },
       "additionalProperties": true

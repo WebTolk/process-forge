@@ -176,9 +176,11 @@ def runtime_driver_neutrality_failures(root_path: Path) -> list[str]:
         root_path / "tools" / "smoke_worker_run_shell.py",
         root_path / "tools" / "smoke_worker_run_lifecycle.py",
         root_path / "tools" / "smoke_process_supervisor_tick.py",
+        root_path / "tools" / "smoke_supervisor_final_drain.py",
         root_path / "tools" / "smoke_process_supervisor_lifecycle.py",
         root_path / "tools" / "smoke_process_supervisor.py",
         root_path / "tools" / "smoke_shell_launched_agents_supervisor_fix.py",
+        root_path / "tools" / "smoke_shell_agent_heartbeat_contract.py",
         root_path / "tools" / "smoke_full_shell_agents_supervisor.py",
     ]
     files: list[Path] = []

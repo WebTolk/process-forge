@@ -1,0 +1,98 @@
+schema_version: 1
+capsule:
+  id: schema-contract-agent-capsule
+  generated_at: '2026-07-25T11:25:07Z'
+  assignment_id: schema-contract-agent
+  assignment_path: .pf/assignments/schema-contract-agent.yaml
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: dfdaf96a08685e58eb26939b08718084495d3f5982371f77fe4316191abd0993
+  worker_may_rebuild_context: false
+assignment:
+  id: schema-contract-agent
+  path: .pf/assignments/schema-contract-agent.yaml
+  status: open
+  objective: Review schema/doctor mismatch from .pf/artifacts/file-flow-audit-report.md and produce an independent shell-agent report before implementation.
+  execution_mode:
+    kind: read_only
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: project-context
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/schema-contract-agent.yaml
+  context_artifacts:
+    []
+scope:
+  allowed_files:
+    []
+  allowed_read_files:
+    - .pf/artifacts/file-flow-audit-report.md
+    - .pf/artifacts/file-flow-fix-plan.md
+    - schemas/assignment.schema.json
+    - schemas/run.schema.json
+    - tools/validate-process-forge-schemas.py
+  forbidden_files:
+    []
+  ownership:
+    owner_id: schema-contract-agent
+    owner_label: worker-schema-contract-agent
+    role: ""
+    writer: false
+    owned_files:
+      []
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      []
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: report
+      path: .pf/artifacts/file-flow-agents/schema-contract-agent-report.md
+      type: markdown
+      required: true
+  expected_report:
+    language: ru
+    artifact: .pf/artifacts/file-flow-agents/schema-contract-agent-report.md
+    format: concise_markdown
+    include:
+      - report
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/schema-contract-agent.ndjson
+  event_correlation_id: assignment-schema-contract-agent
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/schema-contract-agent.yaml
+allowed_files:
+  []
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: report
+    path: .pf/artifacts/file-flow-agents/schema-contract-agent-report.md
+    type: markdown
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-schema-contract-agent

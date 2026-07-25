@@ -1,0 +1,52 @@
+schema_version: 1
+id: file-flow-contract-fix-20260725
+title: File flow contract remediation
+process: task-batch-execution
+status: completed
+created_at: '2026-07-25T11:24:12Z'
+updated_at: '2026-07-25T11:50:33Z'
+objective: Implement the file-flow fix plan from .pf/artifacts/file-flow-fix-plan.md with shell-agent evidence and durable artifacts.
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: schema-contract-agent
+    assignment: .pf/assignments/schema-contract-agent.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: cli-lifecycle-agent
+    assignment: .pf/assignments/cli-lifecycle-agent.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: context-capsule-agent
+    assignment: .pf/assignments/context-capsule-agent.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: runtime-hooks-agent
+    assignment: .pf/assignments/runtime-hooks-agent.yaml
+    status: done
+    order: 4
+    blocking: true
+  -
+    id: main-file-flow-implementation
+    assignment: .pf/assignments/main-file-flow-implementation.yaml
+    status: done
+    order: 5
+    blocking: true
+final_artifacts:
+  - .pf/runs/file-flow-contract-fix-20260725/summary.md
+  - .pf/handoffs/runs/file-flow-contract-fix-20260725-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

@@ -26,7 +26,7 @@ hooks:
       required: true
     - event: run.completed
       required: true
-  subscriptions:
+  future_subscriptions:
     - event: task.completed
       actions:
         - type: refresh_task_index

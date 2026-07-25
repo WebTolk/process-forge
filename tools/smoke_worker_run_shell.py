@@ -72,6 +72,11 @@ def main() -> int:
             raise AssertionError("shell worker reported leaked PF_LEAK_TEST variables")
         if not (project / ".pf/runtime/agent-runs/shell-run/shell-task/process.json").is_file():
             raise AssertionError("shell worker did not write process proof")
+        assignment = project / ".pf/assignments/shell-task.yaml"
+        assignment.write_text(assignment.read_text(encoding="utf-8") + "\nimmutability_probe: changed-after-capsule\n", encoding="utf-8")
+        stale = pf("worker-run", "prepare", "--project-root", str(project), "--task", "shell-task", "--driver", "test-shell-agent", expect=1)
+        if "assignment capsule is stale" not in (stale.stdout + stale.stderr):
+            raise AssertionError("worker-run prepare did not reject stale assignment capsule")
     print("PASS: worker-run shell smoke")
     return 0
 

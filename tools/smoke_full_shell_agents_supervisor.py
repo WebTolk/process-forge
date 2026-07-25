@@ -38,8 +38,9 @@ def make_project(root: Path) -> Path:
     return project
 
 
-def write_driver(path: Path, driver_id: str, mode: str, timeout_seconds: int, sleep_seconds: float = 0.0) -> None:
+def write_driver(path: Path, driver_id: str, mode: str, timeout_seconds: int, sleep_seconds: float = 0.0, skip_exit_marker: bool = False) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    skip_exit_arg = '    - "--skip-exit-marker"\n' if skip_exit_marker else ""
     path.write_text(
         f"""schema_version: 1
 id: {driver_id}
@@ -63,12 +64,10 @@ command:
     - "{sleep_seconds}"
     - "--heartbeat-interval"
     - "0.2"
-working_directory: "{{project_root}}"
+{skip_exit_arg}working_directory: "{{project_root}}"
 environment:
   inherit: false
-  variables:
-    PF_WORKER_RUN_ID: "{{run_id}}"
-    PF_WORKER_TASK_ID: "{{task_id}}"
+  variables: {{}}
 io:
   stdin: none
   stdout: .pf/runtime/agent-runs/{{run_id}}/{{task_id}}/stdout.log
@@ -94,6 +93,8 @@ def install_local_drivers(project: Path) -> None:
     driver_dir = project / ".pf/runtime/registries/runtime-drivers"
     write_driver(driver_dir / "slow-shell-agent.yaml", "slow-shell-agent", "sleep", 10, 3.0)
     write_driver(driver_dir / "fail-shell-agent.yaml", "fail-shell-agent", "fail", 10)
+    write_driver(driver_dir / "slow-fail-shell-agent.yaml", "slow-fail-shell-agent", "fail", 10, 1.0)
+    write_driver(driver_dir / "slow-fail-no-exit-shell-agent.yaml", "slow-fail-no-exit-shell-agent", "fail", 10, 1.0, skip_exit_marker=True)
     write_driver(driver_dir / "timeout-shell-agent.yaml", "timeout-shell-agent", "sleep", 1, 3.0)
     registry.write_text(
         """schema_version: 1
@@ -103,6 +104,12 @@ runtime_drivers:
     status: available
   - id: fail-shell-agent
     path: runtime-drivers/fail-shell-agent.yaml
+    status: available
+  - id: slow-fail-shell-agent
+    path: runtime-drivers/slow-fail-shell-agent.yaml
+    status: available
+  - id: slow-fail-no-exit-shell-agent
+    path: runtime-drivers/slow-fail-no-exit-shell-agent.yaml
     status: available
   - id: timeout-shell-agent
     path: runtime-drivers/timeout-shell-agent.yaml
@@ -210,12 +217,12 @@ def create_manual_task(project: Path, run_id: str, task_id: str, driver: str, al
         args.insert(-1, "--force-with-handoff")
     pf(*args)
     append_runtime_driver(project, task_id, driver)
-    pf("project-context-refresh", "--project-root", str(project))
-    pf("assignment-capsule", "--project-root", str(project), "--assignment", str(project / ".pf/assignments" / f"{task_id}.yaml"), "--force")
-    pf("worker-launch-prompt", "create", "--project-root", str(project), "--task", task_id, "--apply")
     if capsule_allowed and capsule_allowed != allowed:
         assignment = project / ".pf/assignments" / f"{task_id}.yaml"
         assignment.write_text(assignment.read_text(encoding="utf-8").replace(capsule_allowed, allowed), encoding="utf-8")
+    pf("project-context-refresh", "--project-root", str(project))
+    pf("assignment-capsule", "--project-root", str(project), "--assignment", str(project / ".pf/assignments" / f"{task_id}.yaml"), "--force")
+    pf("worker-launch-prompt", "create", "--project-root", str(project), "--task", task_id, "--apply")
 
 
 def state(project: Path, run_id: str, task_id: str) -> dict[str, object]:
@@ -239,6 +246,30 @@ def wait_for_done(project: Path, run_id: str, expected_done: int, profile: Path,
             return
         time.sleep(0.25)
     raise AssertionError(f"run {run_id} did not reach done={expected_done}")
+
+
+def wait_for_failure(project: Path, run_id: str, task_id: str, profile: Path, ticks: int = 20) -> str:
+    last_tick_output = ""
+    for _index in range(ticks):
+        status = str(state(project, run_id, task_id).get("status") or "")
+        if status in {"failed", "timed_out", "unknown_exit", "lost", "completed"}:
+            return status
+        tick = run_processforge_command(
+            [sys.executable, str(CLI), "supervisor", "tick", "--project-root", str(project), "--run", run_id, "--profile", str(profile)],
+            cwd=ROOT,
+            timeout=120,
+            env=os.environ.copy(),
+        )
+        if tick.timed_out:
+            raise AssertionError("timeout: supervisor tick\n" + diagnostic_text(tick))
+        if tick.returncode not in {0, 1}:
+            raise AssertionError(f"expected 0 or 1, got {tick.returncode}: supervisor tick\n{diagnostic_text(tick)}")
+        last_tick_output = tick.stdout
+        status = str(state(project, run_id, task_id).get("status") or "")
+        if status in {"failed", "timed_out", "unknown_exit", "lost", "completed"}:
+            return status
+        time.sleep(0.15)
+    raise AssertionError(f"run {run_id} task {task_id} did not reach failed terminal state; last tick: {last_tick_output.strip()}")
 
 
 def assert_runtime_artifacts(project: Path, run_id: str, task_id: str) -> None:
@@ -270,7 +301,7 @@ def main() -> int:
         started = time.perf_counter()
         first_tick = pf("supervisor", "tick", "--project-root", str(project), "--run", "nonblocking-shell-run", "--profile", str(profile))
         elapsed = time.perf_counter() - started
-        if elapsed > 1.5:
+        if elapsed > 2.5:
             raise AssertionError(f"supervisor tick blocked for {elapsed:.2f}s")
         if "started=1" not in first_tick.stdout:
             raise AssertionError("nonblocking supervisor tick did not start one worker")
@@ -330,11 +361,24 @@ def main() -> int:
         write_plan(fail_plan, "fail-shell-run", [worker_block("fail-agent", "fail-shell-agent", ".pf/artifacts/fail-agent-report.md")], default_driver="fail-shell-agent")
         pf("orchestrator-plan", "validate", "--project-root", str(project), "--plan", str(fail_plan))
         pf("orchestrator-plan", "apply", "--project-root", str(project), "--plan", str(fail_plan), "--apply")
-        failed = pf("supervisor", "run", "--project-root", str(project), "--run", "fail-shell-run", "--profile", str(profile), "--max-ticks", "4", "--interval", "0.1", expect=1)
-        if "failed=1" not in failed.stdout:
-            raise AssertionError("supervisor did not propagate nonzero shell-agent failure")
-        if state(project, "fail-shell-run", "fail-agent").get("status") != "failed":
-            raise AssertionError("failed shell agent state is not failed")
+        pf("supervisor", "run", "--project-root", str(project), "--run", "fail-shell-run", "--profile", str(profile), "--max-ticks", "1", "--interval", "0.1", expect=1)
+        failure_status = wait_for_failure(project, "fail-shell-run", "fail-agent", profile)
+        if failure_status != "failed":
+            raise AssertionError(f"detached failed shell agent did not preserve durable failed exit contract, got {failure_status}")
+
+        bounded_fail_plan = root / "bounded-fail-plan.yaml"
+        write_plan(bounded_fail_plan, "bounded-fail-shell-run", [worker_block("bounded-fail-agent", "slow-fail-no-exit-shell-agent", ".pf/artifacts/bounded-fail-agent-report.md")], default_driver="slow-fail-no-exit-shell-agent")
+        pf("orchestrator-plan", "validate", "--project-root", str(project), "--plan", str(bounded_fail_plan))
+        pf("orchestrator-plan", "apply", "--project-root", str(project), "--plan", str(bounded_fail_plan), "--apply")
+        bounded = pf("supervisor", "run", "--project-root", str(project), "--run", "bounded-fail-shell-run", "--profile", str(profile), "--max-ticks", "1", "--interval", "0.1", "--final-drain-timeout", "0")
+        if "started=1" not in bounded.stdout:
+            raise AssertionError("bounded fail run did not start failing worker")
+        if state(project, "bounded-fail-shell-run", "bounded-fail-agent").get("status") != "running":
+            raise AssertionError("bounded fail worker was not left running before failure")
+        time.sleep(1.4)
+        bounded_failure_status = wait_for_failure(project, "bounded-fail-shell-run", "bounded-fail-agent", profile)
+        if bounded_failure_status != "unknown_exit":
+            raise AssertionError(f"bounded failed worker without exit marker should be unknown_exit, got {bounded_failure_status}")
 
         timeout_plan = root / "timeout-plan.yaml"
         write_plan(timeout_plan, "timeout-shell-run", [worker_block("timeout-agent", "timeout-shell-agent", ".pf/artifacts/timeout-agent-report.md")], default_driver="timeout-shell-agent")

@@ -22,7 +22,23 @@
       "type": "object",
       "properties": {
         "inherit": { "type": "boolean" },
-        "variables": { "type": "object", "additionalProperties": { "type": "string" } }
+        "variables": {
+          "type": "object",
+          "propertyNames": {
+            "not": {
+              "enum": [
+                "PF_RUN_ID",
+                "PF_TASK_ID",
+                "PF_AGENT_RUN_DIR",
+                "PF_PROJECT_ROOT",
+                "PF_RUNTIME_DRIVER_ID",
+                "PF_WORKER_RUN_ID",
+                "PF_WORKER_TASK_ID"
+              ]
+            }
+          },
+          "additionalProperties": { "type": "string" }
+        }
       },
       "additionalProperties": true
     },

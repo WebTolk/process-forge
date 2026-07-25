@@ -1,8 +1,9 @@
 # Context Capsule
 
-A context capsule is the small launch package for a worker-agent. It references
-an Execution Context Package and carries the minimum startup policy needed to
-begin a bounded assignment.
+A context capsule is the small launch package for a worker-agent. In the active
+`worker-run` path it is the canonical launch descriptor for a bounded assignment.
+It records the assignment path, assignment checksum, project snapshot checksum,
+scope, outputs, capability records, and context rebuild policy.
 
 In [multi-agent orchestration](multi-agent-orchestration.md), each worker launch
 prompt points to one assignment capsule. The capsule keeps the worker bounded to
@@ -20,8 +21,8 @@ forbidden actions, and context rebuild policy.
 A capsule includes:
 
 - capsule id
-- referenced Execution Context Package
 - assignment path
+- assignment checksum
 - required sources
 - allowed files
 - forbidden files
@@ -38,6 +39,12 @@ must preserve forbidden actions even when an allowed action appears more local.
 
 ## Orchestrator Contract
 
-The orchestrator resolves context once, compiles one ECP per assignment, and
-passes capsules to workers when multi-agent work would otherwise duplicate
-repository discovery.
+The orchestrator resolves context once and passes capsules to workers when
+multi-agent work would otherwise duplicate repository discovery. Automated worker
+launches must not overwrite an existing capsule. If the assignment changed after
+capsule creation, the worker launch must stop and require an intentional new
+capsule.
+
+Execution Context Packages are still supported by the deprecated
+`context-compile` compatibility command, but they are not required by the active
+`assignment-capsule` and `worker-run` path.

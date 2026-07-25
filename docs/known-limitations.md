@@ -8,6 +8,9 @@ artifacts.
 - Hooks are observational and outbox-only.
 - There is no daemon or watch-events service.
 - Command hook execution is not implemented.
+- Process `hooks.subscriptions` entries are declarative/future semantics unless
+  a command explicitly implements the action; they do not create handoffs or
+  refresh indexes automatically.
 - Manual multi-agent assignment/capsule flows and optional shell worker
   execution are supported. Multi-agent claim and lease coordination is not
   implemented.
@@ -29,6 +32,9 @@ artifacts.
 - A long-running watcher or runner is a future optional layer, not part of the core runtime.
 - Runtime driver execution is opt-in. Built-in neutral drivers are limited to
   `manual`, `generic-shell`, `test-echo-worker`, and `test-shell-agent`.
+- Shell-launched proof workers write `heartbeat.json` as a required live
+  process artifact under `.pf/runtime/agent-runs/<run-id>/<task-id>/`; this
+  does not make ProcessForge a background daemon.
 - Native subagent dogfooding is external to ProcessForge runtime drivers: a
   host AI environment may launch its own subagents with ProcessForge
   assignment/capsule scope, but ProcessForge does not install or impersonate
