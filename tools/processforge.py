@@ -3788,9 +3788,9 @@ def command_first_run(args: argparse.Namespace) -> int:
     return command_init_project(project_args)
 
 
-RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates"]
+RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates", "checksums"]
 RELEASE_ROOT_FILES = ["README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md", "CHANGELOG.md", "LICENSE", "VERSION", "requirements.txt", ".gitignore", ".processforge-releaseignore"]
-RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml", ".pf/artifacts/checksum-inventory.sha256"]
+RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 RELEASE_REQUIRED_PATHS = [
     "README.md",
     "README.ru.md",
@@ -3805,7 +3805,7 @@ RELEASE_REQUIRED_PATHS = [
     ".pf/AGENTS.md",
     ".pf/process-forge.yaml",
     ".pf/hooks.yaml",
-    ".pf/artifacts/checksum-inventory.sha256",
+    "checksums/processforge.sha256",
     "bin/pf.py",
     "bin/pf",
     "bin/pf.bat",
@@ -3831,6 +3831,16 @@ RELEASE_FORBIDDEN_DIR_PARTS = {
     ".ruff_cache",
     "private-notes",
 }
+RELEASE_FORBIDDEN_PF_PREFIXES = (
+    ".pf/runtime/",
+    ".pf/artifacts/",
+    ".pf/reviews/",
+    ".pf/handoffs/",
+    ".pf/runs/",
+    ".pf/contexts/",
+    ".pf/assignments/",
+    ".pf/dogfooding/",
+)
 RELEASE_FORBIDDEN_SUFFIXES = {".pyc", ".pyo", ".ps1", ".zip"}
 RELEASE_GENERATED_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 RELEASE_GENERATED_SUFFIXES = {".pyc", ".pyo"}
@@ -3891,6 +3901,10 @@ def release_source_files(root: Path) -> list[tuple[str, Path]]:
 
 
 def release_path_is_forbidden(rel_path: str) -> str | None:
+    normalized = rel_path.replace("\\", "/")
+    for prefix in RELEASE_FORBIDDEN_PF_PREFIXES:
+        if normalized == prefix.rstrip("/") or normalized.startswith(prefix):
+            return f"forbidden .pf release prefix {prefix.rstrip('/')}"
     parts = Path(rel_path).parts
     suffix = Path(rel_path).suffix.lower()
     for part in parts:
@@ -4285,6 +4299,8 @@ class ReleaseCommand:
     command: list[str]
     timeout: int
     allow_warn: bool = False
+    layer: str = "public"
+    public_gate: bool = True
 
 
 @dataclass
@@ -4298,13 +4314,15 @@ class ReleaseCommandResult:
     elapsed_seconds: float
     timeout_seconds: int
     command: list[str]
+    layer: str = "public"
+    public_gate: bool = True
 
 
 def format_command(command: list[str]) -> str:
     return format_subprocess_command(command)
 
 
-def run_release_command(label: str, command: list[str], cwd: Path, timeout: int, allow_warn: bool = False) -> ReleaseCommandResult:
+def run_release_command(label: str, command: list[str], cwd: Path, timeout: int, allow_warn: bool = False, *, layer: str = "public", public_gate: bool = True) -> ReleaseCommandResult:
     started_at = now_utc()
     started = time.perf_counter()
     print(f"RUN {label}:")
@@ -4316,13 +4334,13 @@ def run_release_command(label: str, command: list[str], cwd: Path, timeout: int,
     finished_at = now_utc()
     output = "\n".join(part for part in [result.stdout, result.stderr] if part)
     if result.timed_out:
-        return ReleaseCommandResult(label, "FAIL", 124, f"timeout after {timeout}s\n{diagnostic_text(result)}", started_at, finished_at, elapsed, timeout, command)
+        return ReleaseCommandResult(label, "FAIL", 124, f"timeout after {timeout}s\n{diagnostic_text(result)}", started_at, finished_at, elapsed, timeout, command, layer, public_gate)
     code = int(result.returncode or 0)
     if code == 0:
-        return ReleaseCommandResult(label, "PASS", 0, output, started_at, finished_at, elapsed, timeout, command)
+        return ReleaseCommandResult(label, "PASS", 0, output, started_at, finished_at, elapsed, timeout, command, layer, public_gate)
     if allow_warn:
-        return ReleaseCommandResult(label, "WARN", code, output, started_at, finished_at, elapsed, timeout, command)
-    return ReleaseCommandResult(label, "FAIL", code, output, started_at, finished_at, elapsed, timeout, command)
+        return ReleaseCommandResult(label, "WARN", code, output, started_at, finished_at, elapsed, timeout, command, layer, public_gate)
+    return ReleaseCommandResult(label, "FAIL", code, output, started_at, finished_at, elapsed, timeout, command, layer, public_gate)
 
 
 def print_release_command_output(result: ReleaseCommandResult) -> None:
@@ -4336,36 +4354,17 @@ def print_release_command_output(result: ReleaseCommandResult) -> None:
             print(f"  {line}")
 
 
-def release_test_commands(root: Path, *, clean_first: bool = True) -> list[ReleaseCommand]:
+def release_test_commands(root: Path, *, clean_first: bool = True, public: bool = False) -> list[ReleaseCommand]:
     commands: list[ReleaseCommand] = [
         ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py")], 30),
         ReleaseCommand("schema validation", [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)], 60),
         ReleaseCommand("public cleanliness", [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)], 60),
         ReleaseCommand("checksum", [sys.executable, str(root / "tools" / "validate-process-forge-checksums.py"), "--root", str(root), "--check"], 60),
         ReleaseCommand("smoke_first_run", [sys.executable, str(root / "tools" / "smoke_first_run.py")], 120),
-        ReleaseCommand("smoke_resource_management", [sys.executable, str(root / "tools" / "smoke_resource_management.py")], 180),
-        ReleaseCommand("smoke_resource_authoring", [sys.executable, str(root / "tools" / "smoke_resource_authoring_processes.py")], 180),
-        ReleaseCommand("smoke_update_framework_readonly", [sys.executable, str(root / "tools" / "smoke_update_framework_readonly.py")], 180),
-        ReleaseCommand("smoke_update_framework_validation", [sys.executable, str(root / "tools" / "smoke_update_framework_validation.py")], 180),
-        ReleaseCommand("smoke_guided_workplace_setup", [sys.executable, str(root / "tools" / "smoke_guided_workplace_setup.py")], 180),
-        ReleaseCommand("smoke_multiagent_orchestration_process", [sys.executable, str(root / "tools" / "smoke_multiagent_orchestration_process.py")], 180),
-        ReleaseCommand("smoke_multiagent_assignment_contract", [sys.executable, str(root / "tools" / "smoke_multiagent_assignment_contract.py")], 120),
         ReleaseCommand("smoke_runtime_driver_registry", [sys.executable, str(root / "tools" / "smoke_runtime_driver_registry.py")], 120),
-        ReleaseCommand("smoke_worker_run_manual", [sys.executable, str(root / "tools" / "smoke_worker_run_manual.py")], 180),
         ReleaseCommand("smoke_worker_run_shell", [sys.executable, str(root / "tools" / "smoke_worker_run_shell.py")], 180),
-        ReleaseCommand("smoke_worker_run_lifecycle", [sys.executable, str(root / "tools" / "smoke_worker_run_lifecycle.py")], 180),
         ReleaseCommand("smoke_process_supervisor_tick", [sys.executable, str(root / "tools" / "smoke_process_supervisor_tick.py")], 180),
-        ReleaseCommand("smoke_supervisor_final_drain", [sys.executable, str(root / "tools" / "smoke_supervisor_final_drain.py")], 180),
-        ReleaseCommand("smoke_process_supervisor_lifecycle", [sys.executable, str(root / "tools" / "smoke_process_supervisor_lifecycle.py")], 180),
-        ReleaseCommand("smoke_process_supervisor", [sys.executable, str(root / "tools" / "smoke_process_supervisor.py")], 180),
-        ReleaseCommand("smoke_shell_launched_agents_supervisor_fix", [sys.executable, str(root / "tools" / "smoke_shell_launched_agents_supervisor_fix.py")], 180),
-        ReleaseCommand("smoke_shell_agent_heartbeat_contract", [sys.executable, str(root / "tools" / "smoke_shell_agent_heartbeat_contract.py")], 180),
-        ReleaseCommand("smoke_full_shell_agents_supervisor", [sys.executable, str(root / "tools" / "smoke_full_shell_agents_supervisor.py")], 240),
-        ReleaseCommand("smoke_manifest_driven_platforms", [sys.executable, str(root / "tools" / "smoke_manifest_driven_platforms.py")], 180),
-        ReleaseCommand("smoke_platform_inheritance", [sys.executable, str(root / "tools" / "smoke_platform_inheritance.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
-        ReleaseCommand("smoke_process_authoring", [sys.executable, str(root / "tools" / "smoke_process_authoring.py")], 180),
-        ReleaseCommand("smoke_authoring_parity", [sys.executable, str(root / "tools" / "smoke_authoring_parity.py")], 180),
         ReleaseCommand("release-check", [sys.executable, str(root / "tools" / "processforge.py"), "release-check", "--root", str(root)], 60),
         ReleaseCommand("examples-check", [sys.executable, str(root / "tools" / "processforge.py"), "examples-check", "--root", str(root)], 60),
         ReleaseCommand("events-validate", [sys.executable, str(root / "tools" / "processforge.py"), "events-validate", "--project-root", str(root)], 60),
@@ -4373,6 +4372,8 @@ def release_test_commands(root: Path, *, clean_first: bool = True) -> list[Relea
     ]
     if clean_first:
         commands.insert(1, ReleaseCommand("clean release artifacts", [sys.executable, str(root / "tools" / "processforge.py"), "clean", "--root", str(root), "--release"], 60))
+    if public:
+        commands = [item for item in commands if item.public_gate]
     return commands
 
 
@@ -4396,6 +4397,8 @@ def write_release_test_report(root: Path, results: list[ReleaseCommandResult], p
                 "elapsed_seconds": round(item.elapsed_seconds, 3),
                 "timeout_seconds": item.timeout_seconds,
                 "command": item.command,
+                "layer": item.layer,
+                "public_gate": item.public_gate,
             }
             for item in results
         ],
@@ -4413,11 +4416,11 @@ def write_release_test_report(root: Path, results: list[ReleaseCommandResult], p
         "",
         "## Checks",
         "",
-        "| Check | Status | Exit | Elapsed | Timeout |",
-        "|---|---:|---:|---:|---:|",
+        "| Check | Layer | Public Gate | Status | Exit | Elapsed | Timeout |",
+        "|---|---|---:|---:|---:|---:|---:|",
     ]
     for item in results:
-        lines.append(f"| `{item.label}` | {item.status} | {item.code} | {item.elapsed_seconds:.2f}s | {item.timeout_seconds}s |")
+        lines.append(f"| `{item.label}` | `{item.layer}` | {str(item.public_gate).lower()} | {item.status} | {item.code} | {item.elapsed_seconds:.2f}s | {item.timeout_seconds}s |")
     if public_checks:
         lines.extend(["", "## Public Checks", ""])
         lines.extend(f"- {item.level}: {item.message}" for item in public_checks)
@@ -4433,13 +4436,13 @@ def command_release_test(args: argparse.Namespace) -> int:
     clean_first = not getattr(args, "no_clean", False)
     if getattr(args, "clean_first", False):
         clean_first = True
-    commands = release_test_commands(root, clean_first=clean_first)
+    public_requested = bool(getattr(args, "public", False))
+    commands = release_test_commands(root, clean_first=clean_first, public=public_requested)
     only = set(getattr(args, "only", []) or [])
     skip = set(getattr(args, "skip", []) or [])
-    public_requested = bool(getattr(args, "public", False))
     if getattr(args, "list", False):
         for item in commands:
-            print(item.label)
+            print(f"{item.label}\tlayer={item.layer}\tpublic_gate={str(item.public_gate).lower()}")
         print("public-gate")
         print("git diff --check")
         return 0
@@ -4464,7 +4467,7 @@ def command_release_test(args: argparse.Namespace) -> int:
     results: list[ReleaseCommandResult] = []
     for item in commands:
         scaled_timeout = max(1, int(item.timeout * timeout_scale))
-        result = run_release_command(item.label, item.command, root, timeout=scaled_timeout, allow_warn=item.allow_warn)
+        result = run_release_command(item.label, item.command, root, timeout=scaled_timeout, allow_warn=item.allow_warn, layer=item.layer, public_gate=item.public_gate)
         print_release_command_output(result)
         results.append(result)
         failed = failed or result.status == "FAIL"
@@ -4500,6 +4503,37 @@ def command_release_test(args: argparse.Namespace) -> int:
         return 1
     print("RESULT: PASS with warnings" if warned else "RESULT: PASS")
     return 0
+
+
+def command_dev_test(args: argparse.Namespace) -> int:
+    root = Path(args.root).expanduser().resolve()
+    runner = root / ".pf" / "dogfooding" / "run_dogfooding_tests.py"
+    if not runner.is_file():
+        print(f"FAIL: dogfooding runner missing: {rel(runner, root)}")
+        return 1
+    command = [sys.executable, str(runner)]
+    if getattr(args, "list", False):
+        command.append("--list")
+    for suite in getattr(args, "suite", []) or []:
+        command.extend(["--suite", suite])
+    for test in getattr(args, "test", []) or []:
+        command.extend(["--test", test])
+    if getattr(args, "fail_fast", False):
+        command.append("--fail-fast")
+    timeout_scale = float(getattr(args, "timeout_scale", 1.0) or 1.0)
+    if timeout_scale <= 0:
+        print("FAIL: --timeout-scale must be greater than 0")
+        return 1
+    command.extend(["--timeout-scale", str(timeout_scale)])
+    result = run_subprocess_command(command, cwd=root, timeout=max(1, int(1200 * timeout_scale)))
+    output = "\n".join(part for part in [result.stdout, result.stderr] if part)
+    if output:
+        print(output, end="" if output.endswith("\n") else "\n")
+    if result.timed_out:
+        print("RESULT: FAIL")
+        print(diagnostic_text(result))
+        return 1
+    return int(result.returncode or 0)
 
 
 def command_version(args: argparse.Namespace) -> int:
@@ -4566,7 +4600,7 @@ def inspect_release_archive(archive_path: Path, manifest_path: Path | None = Non
     checks.append(check("PASS" if manifest.is_file() else "FAIL", f"manifest exists: {manifest}"))
     with zipfile.ZipFile(archive_path) as archive:
         names = sorted(name for name in archive.namelist() if not name.endswith("/"))
-        forbidden = [name for name in names if release_path_is_forbidden(name) or name.startswith(".pf/runtime/") or name.startswith(".serena/") or name.startswith(".idea/") or name.startswith(".vscode/")]
+        forbidden = [name for name in names if release_path_is_forbidden(name) or name.startswith(".serena/") or name.startswith(".idea/") or name.startswith(".vscode/")]
         checks.append(check("PASS" if not forbidden else "FAIL", f"archive forbidden entries: {len(forbidden)}"))
         for name in forbidden[:20]:
             checks.append(check("FAIL", f"forbidden archive entry: {name}"))
@@ -13903,6 +13937,24 @@ def build_parser() -> argparse.ArgumentParser:
     smoke_all.add_argument("--no-clean", action="store_true", help="Do not run the clean release artifacts check.")
     smoke_all.add_argument("--clean-first", action="store_true", help="Run clean release artifacts before checks. Default unless --no-clean is set.")
     smoke_all.set_defaults(func=command_release_test)
+
+    dev_test = sub.add_parser("dev-test", help="Run project-local dogfooding tests from .pf/dogfooding.")
+    dev_test.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
+    dev_test.add_argument("--list", action="store_true", help="List dogfooding suites and tests.")
+    dev_test.add_argument("--suite", action="append", default=[], help="Dogfooding suite id to run. Repeatable.")
+    dev_test.add_argument("--test", action="append", default=[], help="Dogfooding test id to run. Repeatable.")
+    dev_test.add_argument("--fail-fast", action="store_true", help="Stop after the first failed dogfooding test.")
+    dev_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply dogfooding test timeouts by this positive value.")
+    dev_test.set_defaults(func=command_dev_test)
+
+    dogfood_test = sub.add_parser("dogfood-test", help="Alias for dev-test.")
+    dogfood_test.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
+    dogfood_test.add_argument("--list", action="store_true", help="List dogfooding suites and tests.")
+    dogfood_test.add_argument("--suite", action="append", default=[], help="Dogfooding suite id to run. Repeatable.")
+    dogfood_test.add_argument("--test", action="append", default=[], help="Dogfooding test id to run. Repeatable.")
+    dogfood_test.add_argument("--fail-fast", action="store_true", help="Stop after the first failed dogfooding test.")
+    dogfood_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply dogfooding test timeouts by this positive value.")
+    dogfood_test.set_defaults(func=command_dev_test)
 
     clean = sub.add_parser("clean", help="Remove safe generated ProcessForge artifacts.")
     clean.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")

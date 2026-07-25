@@ -5,14 +5,18 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
 
+ROOT = Path(os.environ.get("PF_REPO_ROOT", Path(__file__).resolve().parents[4])).resolve()
+TOOLS_DIR = ROOT / "tools"
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
 from processforge_subprocess import diagnostic_text, run_command as run_processforge_command
 
-
-ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "bin" / "pf.py"
 VALID_SHA256 = "0" * 64
 PF_TIMEOUT_SECONDS = 30

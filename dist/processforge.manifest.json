@@ -9,10 +9,6 @@
       "sha256": "90e94833267519531c3df9f5271d2b32f4bf3ba08b21446967d22b20e18e333f"
     },
     {
-      "path": ".pf/artifacts/checksum-inventory.sha256",
-      "sha256": "fb227baebeb31d11b194510f26065ca1e16e06c226634938f9ae1be368e73c8a"
-    },
-    {
       "path": ".pf/hooks.yaml",
       "sha256": "ccb7462e3c07d4b4bfd6d064689da039b06401e09e5790cb22f39d889931efba"
     },
@@ -22,7 +18,7 @@
     },
     {
       "path": ".processforge-releaseignore",
-      "sha256": "1366ed9d7d0c018ec4274885cfc4cc79e5161c2cdb50a8fa9b428085efb90f87"
+      "sha256": "68e075ae3f034de6d74dbdc7604902677d6ee9a384ae3fac76dda42dd3b73e78"
     },
     {
       "path": "AGENTS.md",
@@ -67,6 +63,10 @@
     {
       "path": "bin/pf.py",
       "sha256": "e4383fd01256f64e636fc8ca09790afd370965f4d4db09f31f6ad7a10abaf38c"
+    },
+    {
+      "path": "checksums/processforge.sha256",
+      "sha256": "d04c7116ab07ea76678bfa9fed07a623ad4dd6b0e641043598b86b77084fd3b2"
     },
     {
       "path": "docs/assets/processforge-architecture.svg",
@@ -246,7 +246,7 @@
     },
     {
       "path": "docs/concepts/process-supervisor.md",
-      "sha256": "c1c2d01cf7f58c95509eac4cd6e4e1f9098c44fa50690cc2e5ad2a48621e0160"
+      "sha256": "dda27725ee8103e57eef2afb8cd0c165c50d7cc81da5bd0c10e9ca6d3ac873ab"
     },
     {
       "path": "docs/concepts/processforge-events.md",
@@ -434,7 +434,7 @@
     },
     {
       "path": "docs/release-checklist.md",
-      "sha256": "c51646eb3776fa84a0f150074ddb410dcc59411d2c72e17cd4cdb18dc08b6ec1"
+      "sha256": "0a0a1dab8a0fa3f37f55e1945775f5121a22fc7a18218344603b9e0fe67f5da4"
     },
     {
       "path": "docs/releases/initial-release.md",
@@ -1698,103 +1698,27 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "dcb10294d7f2951a7567b394760e9c3091b9742fb53e2a7f6a9246602abde712"
+      "sha256": "f9373edf26e0b21aca24316b2c793a47fcce1c9d889a2fb7b7c89bcf9f6b0c20"
     },
     {
       "path": "tools/processforge_subprocess.py",
       "sha256": "26f3b9bf8502afeb69ce5245df40aa80ed4cd1a19cab0abc6fb5ddc5d39f424f"
     },
     {
-      "path": "tools/smoke_authoring_parity.py",
-      "sha256": "f87f97fd274c68209c65209ad3998ae2139c2549a4bac2f3a2fbb0257ecf099b"
-    },
-    {
       "path": "tools/smoke_first_run.py",
       "sha256": "3f6692f67f17b061ac3f2df44ee3f48211097c353199d4f834a5ba6732c881e0"
-    },
-    {
-      "path": "tools/smoke_full_shell_agents_supervisor.py",
-      "sha256": "619f873d4ccb637148c8eff95af4e08f236a97d1ba4900627d51128dd31b18f5"
-    },
-    {
-      "path": "tools/smoke_guided_workplace_setup.py",
-      "sha256": "0c9b529128241ef8e75b9e5047d1a8252cfb72cc427284efc81c48f29bf803f2"
-    },
-    {
-      "path": "tools/smoke_manifest_driven_platforms.py",
-      "sha256": "c2fde5b6e9f71df4a31127f35461e7f48647d4a82b44c5c99a3e435c9fc129b9"
-    },
-    {
-      "path": "tools/smoke_multiagent_assignment_contract.py",
-      "sha256": "d50abfe12ff3b4c88a42a466be5dda8bd822e6a59143f297c9ea4829356d44aa"
-    },
-    {
-      "path": "tools/smoke_multiagent_orchestration_process.py",
-      "sha256": "fad52b0d3b2511bf89dd88ef098d2a97672faaea906021ac1bf3e1e2a75e10ef"
-    },
-    {
-      "path": "tools/smoke_platform_inheritance.py",
-      "sha256": "f2997d9ff14d1b1a3423d0a4ea15eb9034a91dc779a4176354a236ad08c0694a"
-    },
-    {
-      "path": "tools/smoke_process_authoring.py",
-      "sha256": "9ba3e47ba45afbd895b038848dfa2f518ccef6c63ae63a86ba425b52b65f26d9"
     },
     {
       "path": "tools/smoke_process_run_task_batch.py",
       "sha256": "57dc7fc9b4a53aa4f9ca976b39eda2dc0616dbfeb2e127f72bfc39e93a0a4355"
     },
     {
-      "path": "tools/smoke_process_supervisor.py",
-      "sha256": "6378201f940c76d3219b8cca430d174cb653e63ceaa9f516070fc77aa978b729"
-    },
-    {
-      "path": "tools/smoke_process_supervisor_lifecycle.py",
-      "sha256": "dd13824af2e04757416573e46104c8951c31d3cd65031ff1979dbe07794f7de5"
-    },
-    {
       "path": "tools/smoke_process_supervisor_tick.py",
       "sha256": "d69752ef397db6c15ea3942bb00d53254a343cf956f4d84fffed35c65b0bd95a"
     },
     {
-      "path": "tools/smoke_resource_authoring_processes.py",
-      "sha256": "d61bec386a049e7cc3c9ce2d171b793a8f356764f94c123cfe9c78f760a621ac"
-    },
-    {
-      "path": "tools/smoke_resource_management.py",
-      "sha256": "3c9f3e9e1f5e03e74e1fcbd9ce17edb26dde6327644c554162a3b1c5866337bb"
-    },
-    {
       "path": "tools/smoke_runtime_driver_registry.py",
       "sha256": "39a83969d708ba850347c8809e61b6975391d32f5103dad522e1d5eb34a25e84"
-    },
-    {
-      "path": "tools/smoke_shell_agent_heartbeat_contract.py",
-      "sha256": "f2561ef5f069ef38676743db2960b73148ff766facdee1d5b8b997a5750e75eb"
-    },
-    {
-      "path": "tools/smoke_shell_launched_agents_supervisor_fix.py",
-      "sha256": "05db1a6013b59a89699984c713b2b4392cb3a94712a7cadba55712225c22a4f1"
-    },
-    {
-      "path": "tools/smoke_supervisor_final_drain.py",
-      "sha256": "171c555df6a7a4f0ab5287811b348df3f07d18d25fb80157d6bb50bab55dcf43"
-    },
-    {
-      "path": "tools/smoke_update_framework_readonly.py",
-      "sha256": "948247e2815fd8d1e42beb2f0a4a41261da4e58135828053ca6d8c5fbc834588"
-    },
-    {
-      "path": "tools/smoke_update_framework_validation.py",
-      "sha256": "cf66e81b285e3a132eb314574f0f4f207136d234641e72821268870d06e90761"
-    },
-    {
-      "path": "tools/smoke_worker_run_lifecycle.py",
-      "sha256": "d9dfb2f4d3a47117559116330bf53b51853264dbdf2cfe5f9301d8cb76e7f1c7"
-    },
-    {
-      "path": "tools/smoke_worker_run_manual.py",
-      "sha256": "e9c4226009436e059a6bc1a966c163e3332f83ed401963c3aee96028af8393e7"
     },
     {
       "path": "tools/smoke_worker_run_shell.py",
@@ -1810,15 +1734,15 @@
     },
     {
       "path": "tools/validate-process-forge-checksums.py",
-      "sha256": "0d8c361beb8057f87731fcbf0e3806e5d1a84f60c37be571e4ad614d860aff34"
+      "sha256": "d347ef4a055c1a579bbd8e95f8f4ef45b75909176d98f6f3cbe6d15661cd2036"
     },
     {
       "path": "tools/validate-process-forge-schemas.py",
-      "sha256": "9f43a5f62974c493b3b12075f80be3635b9fbdd7f6d2ea9023b47bc81e006cd6"
+      "sha256": "5e980404e70f3e6dd2f727da28121b8dced6d1b8ee72ae78b784e2b3e74ee877"
     },
     {
       "path": "tools/validate-public-cleanliness.py",
-      "sha256": "b4518c0044b7affa16634aa721c1d41a5be378681ae79eaf353e898e1af80652"
+      "sha256": "0b084aec66a9c71a3b7780855c2fe8c22aaee175af51bae55b00abfcbc9d5ea4"
     },
     {
       "path": "updates/migrations/0.1.0-linked-workplace.md",
@@ -1833,7 +1757,7 @@
       "sha256": "81b436180a2b3276df5c9b9ea95d8cba646fa908424c129ccb4faccbcd3bf00b"
     }
   ],
-  "generated_at": "2026-07-25T13:56:43Z",
+  "generated_at": "2026-07-25T15:10:46Z",
   "name": "processforge",
   "version": "1.0.0"
 }

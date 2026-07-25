@@ -38,3 +38,18 @@
 - verification: `python bin/pf.py release-pack --root . --output dist/processforge.zip` wrote 458 files
 - verification: `python bin/pf.py release-archive-test --archive dist/processforge.zip --root . --extracted-test full --timeout-scale 1` passed; extracted archive release-test took 225.99s
 - follow-up items: none
+
+## 2026-07-25 - smoke process supervisor semantics follow-up
+
+- agent/role: main Codex agent
+- task: stabilize `tools/smoke_process_supervisor.py` and remove timing assumptions from the public release-test path
+- files changed or analyzed: `tools/smoke_process_supervisor.py`, `docs/concepts/process-supervisor.md`, `.pf/artifacts/checksum-inventory.sha256`
+- status: implemented
+- contract clarification: first supervisor run with `--max-ticks 1 --interval 0` now checks only final-drain observe/collect and no-new-start semantics; dependent-chain completion is checked by a bounded run-to-stable helper that allows later scheduling passes
+- verification: `python -m py_compile tools/smoke_process_supervisor.py tools/processforge.py` passed
+- verification: `python tools/smoke_process_supervisor.py` passed
+- verification: `python tools/smoke_supervisor_final_drain.py` passed
+- verification: `python bin/pf.py release-test --root . --only smoke_process_supervisor --public --fail-fast --timeout-scale 1` passed
+- verification: `python tools/validate-process-forge-checksums.py --root . --check` passed
+- verification: `python bin/pf.py release-test --root . --public --fail-fast --timeout-scale 1` passed in 296.66s
+- follow-up items: rebuild `dist/processforge.zip` and validate archive freshness

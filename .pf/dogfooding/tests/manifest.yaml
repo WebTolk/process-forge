@@ -1,0 +1,105 @@
+schema_version: 1
+root_env: PF_REPO_ROOT
+suites:
+  supervisor-stress:
+    description: Detached shell workers, heartbeat, final drain, and lost-process regressions.
+    tests:
+      - smoke_supervisor_final_drain
+      - smoke_process_supervisor_lifecycle
+      - smoke_process_supervisor
+      - smoke_shell_launched_agents_supervisor_fix
+      - smoke_shell_agent_heartbeat_contract
+      - smoke_full_shell_agents_supervisor
+  dev-contract:
+    description: Internal authoring, resource, update, platform, and lifecycle contract smokes.
+    tests:
+      - smoke_resource_management
+      - smoke_resource_authoring_processes
+      - smoke_update_framework_readonly
+      - smoke_update_framework_validation
+      - smoke_guided_workplace_setup
+      - smoke_multiagent_orchestration_process
+      - smoke_multiagent_assignment_contract
+      - smoke_worker_run_manual
+      - smoke_worker_run_lifecycle
+      - smoke_manifest_driven_platforms
+      - smoke_platform_inheritance
+      - smoke_process_authoring
+      - smoke_authoring_parity
+tests:
+  smoke_supervisor_final_drain:
+    script: scripts/smoke_supervisor_final_drain.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_process_supervisor_lifecycle:
+    script: scripts/smoke_process_supervisor_lifecycle.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_process_supervisor:
+    script: scripts/smoke_process_supervisor.py
+    layer: dogfooding
+    timeout_seconds: 240
+  smoke_shell_launched_agents_supervisor_fix:
+    script: scripts/smoke_shell_launched_agents_supervisor_fix.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_shell_agent_heartbeat_contract:
+    script: scripts/smoke_shell_agent_heartbeat_contract.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_full_shell_agents_supervisor:
+    script: scripts/smoke_full_shell_agents_supervisor.py
+    layer: dogfooding
+    timeout_seconds: 300
+  smoke_resource_management:
+    script: scripts/smoke_resource_management.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_resource_authoring_processes:
+    script: scripts/smoke_resource_authoring_processes.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_update_framework_readonly:
+    script: scripts/smoke_update_framework_readonly.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_update_framework_validation:
+    script: scripts/smoke_update_framework_validation.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_guided_workplace_setup:
+    script: scripts/smoke_guided_workplace_setup.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_multiagent_orchestration_process:
+    script: scripts/smoke_multiagent_orchestration_process.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_multiagent_assignment_contract:
+    script: scripts/smoke_multiagent_assignment_contract.py
+    layer: dogfooding
+    timeout_seconds: 120
+  smoke_worker_run_manual:
+    script: scripts/smoke_worker_run_manual.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_worker_run_lifecycle:
+    script: scripts/smoke_worker_run_lifecycle.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_manifest_driven_platforms:
+    script: scripts/smoke_manifest_driven_platforms.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_platform_inheritance:
+    script: scripts/smoke_platform_inheritance.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_process_authoring:
+    script: scripts/smoke_process_authoring.py
+    layer: dogfooding
+    timeout_seconds: 180
+  smoke_authoring_parity:
+    script: scripts/smoke_authoring_parity.py
+    layer: dogfooding
+    timeout_seconds: 180

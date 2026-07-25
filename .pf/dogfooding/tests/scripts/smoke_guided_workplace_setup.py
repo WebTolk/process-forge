@@ -9,10 +9,13 @@ import sys
 import tempfile
 from pathlib import Path
 
+ROOT = Path(os.environ.get("PF_REPO_ROOT", Path(__file__).resolve().parents[4])).resolve()
+TOOLS_DIR = ROOT / "tools"
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
 
-
-ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "processforge.py"
 DEFAULT_TIMEOUT = 60
 PRIVATE_PATH_RE = re.compile(r"[A-Za-z]:[\\/]|/[Uu]sers/|/[Hh]ome/")

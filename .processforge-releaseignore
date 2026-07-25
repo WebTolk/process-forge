@@ -5,6 +5,13 @@ processforge_context_hardening_assignment.md
 
 .pf/process-forge.local.yaml
 .pf/runtime/
+.pf/artifacts/
+.pf/reviews/
+.pf/handoffs/
+.pf/runs/
+.pf/contexts/
+.pf/assignments/
+.pf/dogfooding/
 .pf/private-notes/
 .pf/cache/
 .secrets/

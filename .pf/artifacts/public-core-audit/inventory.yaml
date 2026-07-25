@@ -1,0 +1,82 @@
+schema_version: 1
+audit_id: public-core-diet-2026-07-25
+scope:
+  public_dirs:
+    - bin
+    - checksums
+    - docs
+    - examples
+    - packages
+    - policies
+    - processes
+    - prompts
+    - schemas
+    - seeds
+    - templates
+    - tools
+    - updates
+  local_only_dirs:
+    - .pf/artifacts
+    - .pf/reviews
+    - .pf/handoffs
+    - .pf/runs
+    - .pf/contexts
+    - .pf/assignments
+    - .pf/dogfooding
+public_gate:
+  release_test_public:
+    - py_compile
+    - clean release artifacts
+    - schema validation
+    - public cleanliness
+    - checksum
+    - smoke_first_run
+    - smoke_runtime_driver_registry
+    - smoke_worker_run_shell
+    - smoke_process_supervisor_tick
+    - smoke_process_run_task_batch
+    - release-check
+    - examples-check
+    - events-validate
+    - doctor-project
+    - public-gate
+    - git diff --check
+dogfooding_suites:
+  supervisor-stress:
+    - smoke_supervisor_final_drain
+    - smoke_process_supervisor_lifecycle
+    - smoke_process_supervisor
+    - smoke_shell_launched_agents_supervisor_fix
+    - smoke_shell_agent_heartbeat_contract
+    - smoke_full_shell_agents_supervisor
+  dev-contract:
+    - smoke_resource_management
+    - smoke_resource_authoring_processes
+    - smoke_update_framework_readonly
+    - smoke_update_framework_validation
+    - smoke_guided_workplace_setup
+    - smoke_multiagent_orchestration_process
+    - smoke_multiagent_assignment_contract
+    - smoke_worker_run_manual
+    - smoke_worker_run_lifecycle
+    - smoke_manifest_driven_platforms
+    - smoke_platform_inheritance
+    - smoke_process_authoring
+    - smoke_authoring_parity
+archive_contract:
+  include_checksum_inventory: checksums/processforge.sha256
+  exclude_prefixes:
+    - .pf/runtime/
+    - .pf/artifacts/
+    - .pf/reviews/
+    - .pf/handoffs/
+    - .pf/runs/
+    - .pf/contexts/
+    - .pf/assignments/
+    - .pf/dogfooding/
+    - __pycache__/
+  exclude_suffixes:
+    - .pyc
+    - .pyo
+    - .ps1
+    - .zip

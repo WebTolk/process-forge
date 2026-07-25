@@ -3,14 +3,18 @@
 
 from __future__ import annotations
 
+import os
 import sys
 import tempfile
 from pathlib import Path
 
+ROOT = Path(os.environ.get("PF_REPO_ROOT", Path(__file__).resolve().parents[4])).resolve()
+TOOLS_DIR = ROOT / "tools"
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
 
-
-ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "processforge.py"
 DEFAULT_TIMEOUT = 90
 CRITICAL = {
@@ -229,10 +233,14 @@ evolution_policy: {active_run_upgrade: {default: manual_only}}
         raise AssertionError("byte-order-only candidate did not pass")
 
 
-def release_test_contains_parity() -> None:
-    text = (ROOT / "tools" / "processforge.py").read_text(encoding="utf-8", errors="replace")
-    if "smoke_authoring_parity.py" not in text:
-        raise AssertionError("release-test does not include smoke_authoring_parity.py")
+def dogfooding_manifest_contains_parity() -> None:
+    manifest = ROOT / ".pf" / "dogfooding" / "tests" / "manifest.yaml"
+    text = manifest.read_text(encoding="utf-8", errors="replace")
+    if "smoke_authoring_parity" not in text:
+        raise AssertionError("dogfooding manifest does not include smoke_authoring_parity")
+    result = pf("release-test", "--root", str(ROOT), "--public", "--list")
+    if "smoke_authoring_parity" in result.stdout:
+        raise AssertionError("public release-test includes dogfooding smoke_authoring_parity")
 
 
 def main() -> int:
@@ -241,7 +249,7 @@ def main() -> int:
         root = Path(temp)
         temp_process_checks(root)
         negative_checks(root)
-    release_test_contains_parity()
+    dogfooding_manifest_contains_parity()
     print("PASS: smoke_authoring_parity")
     return 0
 

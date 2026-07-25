@@ -55,7 +55,10 @@ detached workers. That drain does not start new tasks; it only observes
 existing runtime state, reads `exit.json` / `heartbeat.json`, synchronizes
 `status.json`, and collects successful completed reports. A report artifact is
 task output, not success proof; a lost process without `exit.json` is recorded
-as `unknown_exit`/failed rather than inferred as completed.
+as `unknown_exit`/failed rather than inferred as completed. Dependent chains
+that become ready because of final-drain collection require a later scheduling
+pass, a larger tick budget, or a separate run-to-stable loop; final drain itself
+does not start those newly ready tasks.
 
 Native subagents launched by a host AI environment are not PF runtime drivers.
 They may consume ProcessForge assignment and capsule files, but their process

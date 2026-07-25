@@ -3,14 +3,18 @@
 
 from __future__ import annotations
 
+import os
 import sys
 import tempfile
 from pathlib import Path
 
+ROOT = Path(os.environ.get("PF_REPO_ROOT", Path(__file__).resolve().parents[4])).resolve()
+TOOLS_DIR = ROOT / "tools"
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
 
-
-ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "processforge.py"
 
 
@@ -93,6 +97,20 @@ integration:
     )
 
 
+def run_status(project: Path) -> str:
+    return pf("run-status", "--project-root", str(project), "--run", "supervised-run").stdout
+
+
+def wait_for_done(project: Path, expected_done: int, attempts: int = 8) -> str:
+    last_status = ""
+    for _index in range(attempts):
+        pf("supervisor", "run", "--project-root", str(project), "--run", "supervised-run", "--max-ticks", "2", "--interval", "0.05")
+        last_status = run_status(project)
+        if f"done={expected_done}" in last_status:
+            return last_status
+    raise AssertionError(f"supervisor did not reach done={expected_done}\n{last_status}")
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-supervisor-") as temp:
         root = Path(temp)
@@ -101,8 +119,14 @@ def main() -> int:
         write_plan(plan)
         pf("orchestrator-plan", "validate", "--project-root", str(project), "--plan", str(plan))
         pf("orchestrator-plan", "apply", "--project-root", str(project), "--plan", str(plan), "--apply")
-        pf("supervisor", "run", "--project-root", str(project), "--run", "supervised-run", "--max-ticks", "5", "--interval", "0")
-        status = pf("run-status", "--project-root", str(project), "--run", "supervised-run").stdout
+        pf("supervisor", "run", "--project-root", str(project), "--run", "supervised-run", "--max-ticks", "1", "--interval", "0", "--final-drain-timeout", "3")
+        first_status = run_status(project)
+        if "done=1" not in first_status or "open=1" not in first_status:
+            raise AssertionError("final drain should collect the first task without starting the dependent task\n" + first_status)
+        second_runtime = project / ".pf/runtime/agent-runs/supervised-run/second-worker/status.json"
+        if second_runtime.is_file():
+            raise AssertionError("final drain started dependent second-worker")
+        status = wait_for_done(project, 2)
         if "TASKS: done=2" not in status:
             raise AssertionError("supervisor did not complete both tasks")
         for rel_path in [

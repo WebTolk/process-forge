@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "bin", "tools", "updates"]
+PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "bin", "tools", "updates", "checksums"]
 PUBLIC_ROOT_FILES = ["README.md", "QUICKSTART.md", "LICENSE", "CHANGELOG.md", "VERSION", "requirements.txt", ".processforge-releaseignore"]
 PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 PF_PUBLIC_DIRS: list[str] = []
@@ -172,16 +172,8 @@ def runtime_driver_neutrality_failures(root_path: Path) -> list[str]:
         root_path / "processes" / "runtime-driver-registry.yaml",
         root_path / "processes" / "process-supervisor.yaml",
         root_path / "tools" / "smoke_runtime_driver_registry.py",
-        root_path / "tools" / "smoke_worker_run_manual.py",
         root_path / "tools" / "smoke_worker_run_shell.py",
-        root_path / "tools" / "smoke_worker_run_lifecycle.py",
         root_path / "tools" / "smoke_process_supervisor_tick.py",
-        root_path / "tools" / "smoke_supervisor_final_drain.py",
-        root_path / "tools" / "smoke_process_supervisor_lifecycle.py",
-        root_path / "tools" / "smoke_process_supervisor.py",
-        root_path / "tools" / "smoke_shell_launched_agents_supervisor_fix.py",
-        root_path / "tools" / "smoke_shell_agent_heartbeat_contract.py",
-        root_path / "tools" / "smoke_full_shell_agents_supervisor.py",
     ]
     files: list[Path] = []
     for root in checked_roots:
@@ -233,6 +225,13 @@ def validate_releaseignore(root_path: Path) -> list[str]:
         ".serena/",
         ".pf/process-forge.local.yaml",
         ".pf/runtime/",
+        ".pf/artifacts/",
+        ".pf/reviews/",
+        ".pf/handoffs/",
+        ".pf/runs/",
+        ".pf/contexts/",
+        ".pf/assignments/",
+        ".pf/dogfooding/",
         ".pf/private-notes/",
         ".pf/cache/",
         "/задания",
