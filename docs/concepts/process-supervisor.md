@@ -1,9 +1,22 @@
 # Process Supervisor
 
-The process supervisor is a bounded file-first loop for worker task execution.
+The process supervisor is the historical technical name for the Process
+Execution Inspector. It is a bounded file-first loop for inspecting worker task
+execution, not a director or agent manager.
 It observes `.pf/runs/`, `.pf/assignments/`, and `.pf/runtime/agent-runs/`.
 It can prepare worker state, start neutral shell drivers, observe detached
 workers, collect required outputs, and write supervisor state.
+
+The execution inspector must not grant leases, write workplace agent ledger
+events, route processes, accept or finalize handoffs, select agents, or decide
+project/run ownership. See
+[Director, Ledger, Inspector, And Worker Boundary](director-ledger-inspector-boundary.md).
+
+It is also not required for the default single-agent flow. In `single_agent`
+mode the primary agent uses CLI checks, gates, and self-checks as the inspector.
+This runtime inspector loop is needed when external runtime workers are
+launched and ProcessForge must observe process state, heartbeat, exit, and
+outputs.
 
 Runtime state layout:
 
@@ -27,6 +40,8 @@ python .pf/runtime/bin/pf.py worker-run status --project-root . --task test-work
 python .pf/runtime/bin/pf.py worker-run collect --project-root . --task test-worker
 python .pf/runtime/bin/pf.py supervisor tick --project-root . --run example-run
 python .pf/runtime/bin/pf.py supervisor run --project-root . --run example-run --max-ticks 5
+python .pf/runtime/bin/pf.py execution-inspector-tick --project-root . --run example-run
+python .pf/runtime/bin/pf.py execution-inspector-run --project-root . --run example-run --max-ticks 5
 ```
 
 `worker-run start` waits by default. `--detach` starts the OS process, records

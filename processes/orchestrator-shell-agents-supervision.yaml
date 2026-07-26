@@ -4,11 +4,12 @@ name: Orchestrator Shell Agents Supervision
 version: 1.0.0
 status: draft
 kind: orchestration
-description: Decomposes work into shell-agent workers launched through ProcessForge runtime drivers and governed by subagent policy metadata.
+description: Decomposes work into external shell-agent worker sessions launched through ProcessForge runtime drivers and governed by subagent policy metadata.
+execution_mode: orchestrated_agents
 roles:
   - id: orchestrator
     title: Orchestrator
-    responsibility: Creates worker assignments, leases, capsules, and validates outputs.
+    responsibility: Creates worker assignments, leases, capsules, and delegates runtime checking to the execution inspector when shell workers run.
   - id: shell-worker
     title: Shell Worker
     responsibility: Executes one assignment through a runtime driver.

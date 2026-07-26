@@ -12,6 +12,37 @@ run_model:
   default_task_loop:
     enabled: true
     iteration_kinds: [work, debug, review, handoff]
+execution_mode: single_agent
+execution_mode_questions:
+  single_agent:
+    cli_checks:
+      - process-doctor
+      - run-doctor
+      - task-doctor
+    required_gates:
+      - audit-review-passed
+      - audit-handoff-created
+    primary_agent_artifacts:
+      - audit-report
+      - audit-review
+      - audit-handoff
+    agent_ledger_checkin_checkout: true
+    operator_approval_required: true
+  single_agent_with_subagents:
+    subagents_allowed: false
+    allowed_roles: []
+    require_subagent_reports: true
+    reports_dir: .pf/artifacts/subagents/<task-id>/
+  orchestrated_agents:
+    worker_roles: []
+    director_role: agent-director
+    leases_required: true
+    supervisor_required_for_runtime_workers: false
+  process_factory:
+    routes: []
+    handoff_modes: []
+    required_agent_roles: []
+    continuations_required: true
 roles:
   - id: auditor
     title: Auditor
@@ -118,6 +149,29 @@ agent_requirements:
   required_role: reviewer
   required_capabilities:
     - artifact_review
+responsibility_boundaries:
+  coordinator_role: agent-director
+  execution_inspector_role: execution-inspector
+  worker_role: worker
+  needs_agent_director: true
+  needs_execution_inspector: true
+  director_decisions:
+    - route_handoff
+    - grant_lease
+    - create_continuation
+  inspector_checks:
+    - task_runtime_status
+    - heartbeat_exit_state
+    - required_outputs
+    - expected_report_artifact
+  worker_actions:
+    - perform_assigned_capsule_task
+    - write_required_outputs
+  automatic_cli_checks:
+    - agent-availability --role <role> --json
+    - agent-director-tick
+    - execution-inspector-status
+    - execution-inspector-run
 subagent_policy:
   worker_shell_agents_may_call_subagents: false
   allowed_roles: []

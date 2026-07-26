@@ -2,6 +2,12 @@
 
 Shell agents are OS processes launched through ProcessForge runtime drivers and supervised by the bounded file-first supervisor.
 
+This policy is for external runtime workers. It is not required for the default
+single-agent session flow, where the primary agent owns execution and uses CLI
+checks/gates as inspection. In `single_agent_with_subagents`, native subagents
+remain helpers inside the primary session unless they explicitly register and
+check in as separate workplace agents.
+
 Each worker receives only its task assignment, assignment capsule, allowed write scope, allowed read scope, forbidden scope, required outputs, and `subagent_policy`. A shell worker may invoke native subagents only when the capsule policy allows it.
 
 Shell-agent config fields are behavioral, not suggestions. `allow_subagents` and `subagent_policy` are copied into the generated assignment capsule. `worker-run collect` enforces required worker outputs, the expected report artifact, and subagent reports only when `subagent_policy.allow=true` and `subagent_policy.require_reports=true`.

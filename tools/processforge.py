@@ -4369,8 +4369,12 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_runtime_driver_registry", [sys.executable, str(root / "tools" / "smoke_runtime_driver_registry.py")], 120),
         ReleaseCommand("smoke_worker_run_shell", [sys.executable, str(root / "tools" / "smoke_worker_run_shell.py")], 180),
         ReleaseCommand("smoke_process_supervisor_tick", [sys.executable, str(root / "tools" / "smoke_process_supervisor_tick.py")], 180),
+        ReleaseCommand("smoke_director_inspector_boundary", [sys.executable, str(root / "tools" / "smoke_director_inspector_boundary.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
         ReleaseCommand("smoke_agent_ledger", [sys.executable, str(root / "tools" / "smoke_agent_ledger.py")], 120),
+        ReleaseCommand("smoke_single_agent_session_flow", [sys.executable, str(root / "tools" / "smoke_single_agent_session_flow.py")], 180),
+        ReleaseCommand("smoke_multi_project_agent_sessions", [sys.executable, str(root / "tools" / "smoke_multi_project_agent_sessions.py")], 180),
+        ReleaseCommand("smoke_multi_agent_as_composed_sessions", [sys.executable, str(root / "tools" / "smoke_multi_agent_as_composed_sessions.py")], 180),
         ReleaseCommand("smoke_process_transition_handoff", [sys.executable, str(root / "tools" / "smoke_process_transition_handoff.py")], 120),
         ReleaseCommand("smoke_agent_director_tick", [sys.executable, str(root / "tools" / "smoke_agent_director_tick.py")], 120),
         ReleaseCommand("smoke_config_behavior_contracts", [sys.executable, str(root / "tools" / "smoke_config_behavior_contracts.py")], 180),
@@ -7168,6 +7172,12 @@ def render_session_status(project_root: Path, mode: str) -> str:
 
 
 def command_session_start(args: argparse.Namespace) -> int:
+    if getattr(args, "agent", None):
+        return command_agent_checkin(args)
+    if not getattr(args, "mode", None):
+        raise SystemExit("FAIL: session-start requires --mode for telemetry bootstrap or --agent for agent session check-in")
+    if not getattr(args, "project_root", None):
+        raise SystemExit("FAIL: --project-root is required for session-start telemetry bootstrap")
     project_root = Path(args.project_root).expanduser().resolve()
     if not project_root.is_dir():
         raise SystemExit(f"FAIL: project root not found: {project_root}")
@@ -8348,6 +8358,8 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         "status": str(process.get("status") or "draft"),
         "description": str(process.get("description") or ""),
         "purpose": str(process.get("purpose") or process.get("description") or ""),
+        "execution_mode": str(answers.get("execution_mode") or process.get("execution_mode") or "single_agent"),
+        "execution_mode_questions": answers.get("execution_mode_questions") if isinstance(answers.get("execution_mode_questions"), dict) else {},
         "run_model": run_model,
         "required_capabilities": string_list(answers.get("required_capabilities")),
         "hooks": answers.get("hooks") if isinstance(answers.get("hooks"), dict) else {
@@ -8393,6 +8405,8 @@ def render_authoring_questions(answers: dict[str, Any]) -> str:
             "- Which artifacts prove that a stage is complete?",
             "- Which blocking gates can stop apply or completion?",
             "- Does the process need multiple assignment-backed tasks or one linear flow?",
+            "- Which execution mode applies: single_agent, single_agent_with_subagents, orchestrated_agents, or process_factory?",
+            "- For single_agent mode, which CLI checks and gates replace separate Inspector/Supervisor work?",
             "- Which examples should prove the generated process is usable?",
             "",
             "Answers are stored in `answers.yaml`; the generated candidate is `draft.process.yaml`.",
@@ -8424,6 +8438,8 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
     checks.append(check("PASS" if not contains_secret_value(text) else "FAIL", "authoring data contains no secret-like values"))
     for key in ["schema_version", "id", "name", "version", "status", "description", "stages", "roles", "artifact_definitions", "gates", "evolution_policy"]:
         checks.append(check("PASS" if key in process else "FAIL", f"process.{key} present"))
+    execution_mode = str(process.get("execution_mode") or "single_agent")
+    checks.append(check("PASS" if execution_mode in {"single_agent", "single_agent_with_subagents", "orchestrated_agents", "process_factory"} else "FAIL", f"process.execution_mode valid: {execution_mode}"))
     roles = [item for item in as_list(process.get("roles")) if isinstance(item, dict)]
     stages = [item for item in as_list(process.get("stages")) if isinstance(item, dict)]
     artifacts = [item for item in as_list(process.get("artifact_definitions")) if isinstance(item, dict)]
@@ -8543,6 +8559,7 @@ def render_process_agent_prompt(process: dict[str, Any]) -> str:
         "Rules:",
         "",
         "- Read the process definition before starting work.",
+        f"- Execution mode: `{process.get('execution_mode', 'single_agent')}`.",
         "- Record durable artifacts for every blocking gate.",
         "- Run review before handoff when the process defines a review stage.",
         "- Keep public files portable and free of secrets.",
@@ -8567,6 +8584,7 @@ def render_process_doc(process: dict[str, Any]) -> str:
         f"- version: `{process.get('version', '')}`",
         f"- status: `{process.get('status', '')}`",
         f"- scope: `{process.get('scope', 'project')}`",
+        f"- execution_mode: `{process.get('execution_mode', 'single_agent')}`",
         "",
         "## Stages",
         "",
@@ -8800,6 +8818,8 @@ PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
     "status",
     "description",
     "purpose",
+    "execution_mode",
+    "execution_mode_questions",
     "run_model",
     "required_capabilities",
     "hooks",
@@ -8847,6 +8867,8 @@ def process_to_authoring_answers(process: dict[str, Any]) -> dict[str, Any]:
             "description": str(process.get("description") or ""),
             "purpose": str(process.get("purpose") or process.get("description") or ""),
         },
+        "execution_mode": str(process.get("execution_mode") or "single_agent"),
+        "execution_mode_questions": process.get("execution_mode_questions") if isinstance(process.get("execution_mode_questions"), dict) else {},
         "run_model": process.get("run_model") if isinstance(process.get("run_model"), dict) else {},
         "roles": as_list(process.get("roles")),
         "stages": as_list(process.get("stages")),
@@ -9460,21 +9482,95 @@ def append_agent_ledger_event(workplace_root: Path, payload: dict[str, Any]) -> 
         handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
 
 
-def agent_presence_path(workplace_root: Path, agent_id: str) -> Path:
+def legacy_agent_presence_path(workplace_root: Path, agent_id: str) -> Path:
     return workplace_agent_presence_dir(workplace_root) / f"{safe_id(agent_id, 'agent')}.json"
 
 
+def agent_presence_path(workplace_root: Path, agent_id: str, session_id: str) -> Path:
+    return workplace_agent_presence_dir(workplace_root) / safe_id(agent_id, "agent") / f"{safe_id(session_id, 'session')}.json"
+
+
+def project_current_session_path(project_root: Path) -> Path:
+    return locate_flow_root(project_root) / "runtime" / "current-session.json"
+
+
+def workplace_current_session_path(workplace_root: Path, project_id: str) -> Path:
+    return workplace_root / "runtime" / "current-sessions" / f"{safe_id(project_id, 'project')}.json"
+
+
+def iter_agent_presence_paths(workplace_root: Path) -> list[Path]:
+    presence_dir = workplace_agent_presence_dir(workplace_root)
+    if not presence_dir.is_dir():
+        return []
+    return sorted([*presence_dir.glob("*.json"), *presence_dir.glob("*/*.json")])
+
+
+def iter_agent_presence(workplace_root: Path) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for path in iter_agent_presence_paths(workplace_root):
+        item = json_read(path)
+        if isinstance(item, dict) and item:
+            rows.append(item)
+    return rows
+
+
+def read_current_project_session(project_root: Path) -> dict[str, Any]:
+    return json_read(project_current_session_path(project_root))
+
+
+def write_current_session_refs(workplace_root: Path, project_root: Path | None, presence: dict[str, Any]) -> None:
+    if project_root is None:
+        return
+    current = {
+        "schema_version": 1,
+        "agent_id": presence.get("agent_id"),
+        "session_id": presence.get("session_id"),
+        "project_id": presence.get("project_id"),
+        "process_id": presence.get("process_id"),
+        "run_id": presence.get("run_id"),
+        "status": presence.get("status"),
+        "started_at": presence.get("started_at"),
+        "last_seen_at": presence.get("last_seen_at"),
+        "updated_at": now_utc(),
+    }
+    json_write(project_current_session_path(project_root), current)
+    project_id = str(presence.get("project_id") or "")
+    if project_id:
+        json_write(workplace_current_session_path(workplace_root, project_id), current)
+
+
+def find_agent_presence(workplace_root: Path, *, agent_id: str | None = None, session_id: str | None = None, project_id: str | None = None) -> dict[str, Any]:
+    agent_id = safe_id(agent_id, "agent") if agent_id else None
+    session_id = safe_id(session_id, "session") if session_id else None
+    matches: list[dict[str, Any]] = []
+    for item in iter_agent_presence(workplace_root):
+        if agent_id and str(item.get("agent_id") or "") != agent_id:
+            continue
+        if session_id and str(item.get("session_id") or "") != session_id:
+            continue
+        if project_id and str(item.get("project_id") or "") != project_id:
+            continue
+        matches.append(item)
+    if len(matches) == 1:
+        return matches[0]
+    if not matches and agent_id and not session_id:
+        return json_read(legacy_agent_presence_path(workplace_root, agent_id))
+    return {}
+
+
 def read_agent_presence(workplace_root: Path, agent_id: str) -> dict[str, Any]:
-    return json_read(agent_presence_path(workplace_root, agent_id))
+    return find_agent_presence(workplace_root, agent_id=agent_id)
 
 
 def write_agent_presence(workplace_root: Path, payload: dict[str, Any]) -> None:
     ensure_agent_workplace_dirs(workplace_root)
-    json_write(agent_presence_path(workplace_root, str(payload.get("agent_id") or "agent")), payload)
+    agent_id = str(payload.get("agent_id") or "agent")
+    session_id = str(payload.get("session_id") or agent_session_id(agent_id))
+    json_write(agent_presence_path(workplace_root, agent_id, session_id), payload)
 
 
 def agent_session_id(agent_id: str) -> str:
-    return f"sess-{safe_id(agent_id, 'agent')}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    return f"sess-{safe_id(agent_id, 'agent')}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:8]}"
 
 
 def ttl_expired(presence: dict[str, Any], *, now: datetime | None = None) -> bool:
@@ -9486,10 +9582,7 @@ def ttl_expired(presence: dict[str, Any], *, now: datetime | None = None) -> boo
 
 
 def update_stale_agent_presence(workplace_root: Path) -> None:
-    presence_dir = workplace_agent_presence_dir(workplace_root)
-    if not presence_dir.is_dir():
-        return
-    for path in sorted(presence_dir.glob("*.json")):
+    for path in iter_agent_presence_paths(workplace_root):
         presence = json_read(path)
         if not presence:
             continue
@@ -9513,11 +9606,7 @@ def update_stale_agent_presence(workplace_root: Path) -> None:
 def checked_in_agents(workplace_root: Path, *, role: str | None = None, project_id: str | None = None) -> list[dict[str, Any]]:
     update_stale_agent_presence(workplace_root)
     rows: list[dict[str, Any]] = []
-    presence_dir = workplace_agent_presence_dir(workplace_root)
-    if not presence_dir.is_dir():
-        return rows
-    for path in sorted(presence_dir.glob("*.json")):
-        item = json_read(path)
+    for item in iter_agent_presence(workplace_root):
         if str(item.get("status")) != "online":
             continue
         if role and role not in [str(value) for value in as_list(item.get("roles"))]:
@@ -9566,10 +9655,10 @@ def command_agent_list(args: argparse.Namespace) -> int:
 
 
 def command_agent_checkin(args: argparse.Namespace) -> int:
-    workplace_root = resolve_workplace_root(args.workplace)
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
     agent_id = safe_id(args.agent, "agent")
     session_id = args.session or agent_session_id(agent_id)
-    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
     project_id = args.project_id or (safe_id(project_root.name, "project") if project_root else "")
     roles = [str(item) for item in as_list(args.role)]
     capabilities = [str(item) for item in as_list(getattr(args, "capability", []))]
@@ -9586,6 +9675,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
         "process_id": args.process or "",
         "run_id": args.run or "",
         "task_id": args.task or "",
+        "started_at": now,
         "last_seen_at": now,
         "heartbeat_ttl_seconds": int(args.ttl or 300),
         "updated_at": now,
@@ -9606,56 +9696,77 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
             "started_at": now,
         },
     )
-    print(f"CHECKED_IN: {agent_id} session={session_id}")
+    write_current_session_refs(workplace_root, project_root, presence)
+    if getattr(args, "json", False):
+        print(json.dumps(presence, ensure_ascii=False, indent=2))
+    else:
+        print(f"CHECKED_IN: {agent_id} session={session_id}")
     return 0
 
 
 def command_agent_heartbeat(args: argparse.Namespace) -> int:
-    workplace_root = resolve_workplace_root(args.workplace)
-    agent_id = safe_id(args.agent, "agent")
-    presence = read_agent_presence(workplace_root, agent_id)
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
+    current = read_current_project_session(project_root) if project_root else {}
+    raw_agent = getattr(args, "agent", None) or str(current.get("agent_id") or "")
+    raw_session = getattr(args, "session", None) or str(current.get("session_id") or "")
+    presence = find_agent_presence(workplace_root, agent_id=raw_agent or None, session_id=raw_session or None)
     if not presence:
-        print(f"FAIL: agent presence not found: {agent_id}")
+        print(f"FAIL: agent presence not found: agent={raw_agent or '<unspecified>'} session={raw_session or '<unspecified>'}")
         return 1
-    if getattr(args, "session", None) and str(presence.get("session_id")) != args.session:
-        print(f"FAIL: session mismatch for {agent_id}")
+    if raw_session and str(presence.get("session_id")) != safe_id(raw_session, "session"):
+        print(f"FAIL: session mismatch for {presence.get('agent_id')}")
         return 1
     presence["status"] = "online"
     presence["last_seen_at"] = now_utc()
     if getattr(args, "task", None):
         presence["task_id"] = args.task
     write_agent_presence(workplace_root, presence)
-    append_agent_ledger_event(workplace_root, {"event": "agent.heartbeat", "agent_id": agent_id, "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "task_id": presence.get("task_id")})
-    print(f"HEARTBEAT: {agent_id}")
+    write_current_session_refs(workplace_root, project_root, presence)
+    append_agent_ledger_event(workplace_root, {"event": "agent.heartbeat", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "task_id": presence.get("task_id")})
+    print(f"HEARTBEAT: {presence.get('agent_id')} session={presence.get('session_id')}")
     return 0
 
 
 def command_agent_checkout(args: argparse.Namespace) -> int:
-    workplace_root = resolve_workplace_root(args.workplace)
-    agent_id = safe_id(args.agent, "agent")
-    presence = read_agent_presence(workplace_root, agent_id)
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
+    current = read_current_project_session(project_root) if project_root else {}
+    raw_agent = getattr(args, "agent", None) or str(current.get("agent_id") or "")
+    raw_session = getattr(args, "session", None) or str(current.get("session_id") or "")
+    presence = find_agent_presence(workplace_root, agent_id=raw_agent or None, session_id=raw_session or None)
     if not presence:
-        print(f"FAIL: agent presence not found: {agent_id}")
+        print(f"FAIL: agent presence not found: agent={raw_agent or '<unspecified>'} session={raw_session or '<unspecified>'}")
         return 1
-    if getattr(args, "session", None) and str(presence.get("session_id")) != args.session:
-        print(f"FAIL: session mismatch for {agent_id}")
+    if raw_session and str(presence.get("session_id")) != safe_id(raw_session, "session"):
+        print(f"FAIL: session mismatch for {presence.get('agent_id')}")
         return 1
     presence["status"] = "checked_out"
     presence["last_seen_at"] = now_utc()
     presence["updated_at"] = now_utc()
+    presence["finished_at"] = presence["updated_at"]
     write_agent_presence(workplace_root, presence)
-    append_agent_ledger_event(workplace_root, {"event": "agent.checked_out", "agent_id": agent_id, "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "finished_at": now_utc()})
-    print(f"CHECKED_OUT: {agent_id}")
+    write_current_session_refs(workplace_root, project_root, presence)
+    append_agent_ledger_event(workplace_root, {"event": "agent.checked_out", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "finished_at": now_utc()})
+    print(f"CHECKED_OUT: {presence.get('agent_id')} session={presence.get('session_id')}")
     return 0
 
 
 def command_agent_status(args: argparse.Namespace) -> int:
-    workplace_root = resolve_workplace_root(args.workplace)
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
     update_stale_agent_presence(workplace_root)
-    if getattr(args, "agent", None):
-        payload: Any = read_agent_presence(workplace_root, safe_id(args.agent, "agent"))
-    else:
-        payload = [json_read(path) for path in sorted(workplace_agent_presence_dir(workplace_root).glob("*.json"))]
+    project_id = getattr(args, "project_id", None) or (safe_id(project_root.name, "project") if project_root else None)
+    rows = []
+    for item in iter_agent_presence(workplace_root):
+        if getattr(args, "agent", None) and str(item.get("agent_id") or "") != safe_id(args.agent, "agent"):
+            continue
+        if getattr(args, "session", None) and str(item.get("session_id") or "") != safe_id(args.session, "session"):
+            continue
+        if project_id and str(item.get("project_id") or "") != project_id:
+            continue
+        rows.append(item)
+    payload: Any = rows[0] if getattr(args, "session", None) and len(rows) == 1 else rows
     if getattr(args, "json", False):
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
@@ -9664,9 +9775,11 @@ def command_agent_status(args: argparse.Namespace) -> int:
 
 
 def command_agent_availability(args: argparse.Namespace) -> int:
-    workplace_root = resolve_workplace_root(args.workplace)
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
     role = args.role
-    agents = checked_in_agents(workplace_root, role=role, project_id=getattr(args, "project_id", None))
+    project_id = getattr(args, "project_id", None) or (safe_id(project_root.name, "project") if project_root else None)
+    agents = checked_in_agents(workplace_root, role=role, project_id=project_id)
     payload = {
         "available": bool(agents),
         "role": role,
@@ -15350,13 +15463,24 @@ def build_parser() -> argparse.ArgumentParser:
     project_upgrade.add_argument("--channel", default="stable", help="Update channel.")
     project_upgrade.set_defaults(func=command_project_upgrade_check)
 
-    session_start = sub.add_parser("session-start", help="Start or inspect a ProcessForge session.")
-    session_start.add_argument("--mode", required=True, choices=["resume", "project_init", "assignment_execute", "context_resolve", "context_compile", "doctor_context"], help="Session mode.")
-    session_start.add_argument("--project-root", required=True, help="Project root path.")
+    session_start = sub.add_parser("session-start", help="Start or inspect a ProcessForge session; with --agent, records an agent check-in.")
+    session_start.add_argument("--mode", choices=["resume", "project_init", "assignment_execute", "context_resolve", "context_compile", "doctor_context"], help="Session bootstrap mode.")
+    session_start.add_argument("--project-root", help="Project root path.")
     session_start.add_argument("--assignment", help="Optional assignment path loaded for telemetry.")
     session_start.add_argument("--allow-write", action="store_true", help="Write artifacts/session-status-report.md.")
     session_start.add_argument("--report-only", action="store_true", help="Do not write public artifacts. Private telemetry is still written.")
     session_start.add_argument("--rebuild-context-if-stale", action="store_true", help="Run context resolution when context is missing or stale.")
+    session_start.add_argument("--workplace", help="Workplace root path for agent session check-in. Defaults from --project-root when the project is onboarded.")
+    session_start.add_argument("--agent", help="Agent id for agent session check-in.")
+    session_start.add_argument("--session", help="Session id. Defaults to generated id.")
+    session_start.add_argument("--project-id", help="Project id override.")
+    session_start.add_argument("--process", help="Process id.")
+    session_start.add_argument("--run", help="Run id.")
+    session_start.add_argument("--task", help="Task id.")
+    session_start.add_argument("--role", action="append", default=[], help="Checked-in role. Repeatable.")
+    session_start.add_argument("--capability", action="append", default=[], help="Runtime capability. Repeatable.")
+    session_start.add_argument("--ttl", type=int, default=300, help="Heartbeat TTL seconds.")
+    session_start.add_argument("--json", action="store_true", help="Print JSON for agent session check-in.")
     session_start.set_defaults(func=command_session_start)
 
     project_context_refresh = sub.add_parser("project-context-refresh", help="Refresh the project context snapshot.")
@@ -15540,15 +15664,15 @@ def build_parser() -> argparse.ArgumentParser:
             alias.add_argument("--executable", help="Executable override for generic shell drivers.")
         alias.set_defaults(func=func)
 
-    supervisor = sub.add_parser("supervisor", help="Run a file-first process supervisor loop.")
+    supervisor = sub.add_parser("supervisor", help="Historical technical command for the Process Execution Inspector loop.")
     supervisor_sub = supervisor.add_subparsers(dest="supervisor_command", required=True)
-    supervisor_tick = supervisor_sub.add_parser("tick", help="Run one supervisor scheduling tick.")
+    supervisor_tick = supervisor_sub.add_parser("tick", help="Run one execution-inspection pass for task runtime state.")
     supervisor_tick.add_argument("--project-root", required=True, help="Project root path.")
     supervisor_tick.add_argument("--run", help="Run id. Defaults to all active runs.")
     supervisor_tick.add_argument("--profile", help="Supervisor profile path or default.")
     supervisor_tick.add_argument("--driver", help="Runtime driver override.")
     supervisor_tick.set_defaults(func=command_supervisor_tick)
-    supervisor_run = supervisor_sub.add_parser("run", help="Run bounded supervisor ticks.")
+    supervisor_run = supervisor_sub.add_parser("run", help="Run a bounded execution-inspection loop.")
     supervisor_run.add_argument("--project-root", required=True, help="Project root path.")
     supervisor_run.add_argument("--run", help="Run id. Defaults to all active runs.")
     supervisor_run.add_argument("--profile", help="Supervisor profile path or default.")
@@ -15557,20 +15681,20 @@ def build_parser() -> argparse.ArgumentParser:
     supervisor_run.add_argument("--max-ticks", type=int, help="Maximum ticks before exit.")
     supervisor_run.add_argument("--final-drain-timeout", type=float, help="Maximum seconds for final observe/collect drain after the main tick loop.")
     supervisor_run.set_defaults(func=command_supervisor_run)
-    supervisor_status = supervisor_sub.add_parser("status", help="Print supervisor state.")
+    supervisor_status = supervisor_sub.add_parser("status", help="Print runtime execution-inspector state.")
     supervisor_status.add_argument("--project-root", required=True, help="Project root path.")
     supervisor_status.set_defaults(func=command_supervisor_status)
-    supervisor_stop = supervisor_sub.add_parser("stop", help="Write a supervisor stop request file.")
+    supervisor_stop = supervisor_sub.add_parser("stop", help="Write an execution-inspector stop request file.")
     supervisor_stop.add_argument("--project-root", required=True, help="Project root path.")
     supervisor_stop.set_defaults(func=command_supervisor_stop)
 
-    supervisor_tick_alias = sub.add_parser("supervisor-tick", help="Flat alias for supervisor tick.")
+    supervisor_tick_alias = sub.add_parser("supervisor-tick", help="Compatibility alias for one execution-inspection pass.")
     supervisor_tick_alias.add_argument("--project-root", required=True, help="Project root path.")
     supervisor_tick_alias.add_argument("--run", help="Run id. Defaults to all active runs.")
     supervisor_tick_alias.add_argument("--profile", help="Supervisor profile path or default.")
     supervisor_tick_alias.add_argument("--driver", help="Runtime driver override.")
     supervisor_tick_alias.set_defaults(func=command_supervisor_tick)
-    supervisor_run_alias = sub.add_parser("supervisor-run", help="Flat alias for supervisor run.")
+    supervisor_run_alias = sub.add_parser("supervisor-run", help="Compatibility alias for a bounded execution-inspection loop.")
     supervisor_run_alias.add_argument("--project-root", required=True, help="Project root path.")
     supervisor_run_alias.add_argument("--run", help="Run id. Defaults to all active runs.")
     supervisor_run_alias.add_argument("--profile", help="Supervisor profile path or default.")
@@ -15579,12 +15703,34 @@ def build_parser() -> argparse.ArgumentParser:
     supervisor_run_alias.add_argument("--max-ticks", type=int, help="Maximum ticks before exit.")
     supervisor_run_alias.add_argument("--final-drain-timeout", type=float, help="Maximum seconds for final observe/collect drain after the main tick loop.")
     supervisor_run_alias.set_defaults(func=command_supervisor_run)
-    supervisor_status_alias = sub.add_parser("supervisor-status", help="Flat alias for supervisor status.")
+    supervisor_status_alias = sub.add_parser("supervisor-status", help="Compatibility alias for runtime execution-inspector status.")
     supervisor_status_alias.add_argument("--project-root", required=True, help="Project root path.")
     supervisor_status_alias.set_defaults(func=command_supervisor_status)
-    supervisor_stop_alias = sub.add_parser("supervisor-stop", help="Flat alias for supervisor stop.")
+    supervisor_stop_alias = sub.add_parser("supervisor-stop", help="Compatibility alias for stopping the execution-inspector loop.")
     supervisor_stop_alias.add_argument("--project-root", required=True, help="Project root path.")
     supervisor_stop_alias.set_defaults(func=command_supervisor_stop)
+
+    execution_inspector_tick_alias = sub.add_parser("execution-inspector-tick", help="Thin alias for supervisor tick: one execution-inspection pass.")
+    execution_inspector_tick_alias.add_argument("--project-root", required=True, help="Project root path.")
+    execution_inspector_tick_alias.add_argument("--run", help="Run id. Defaults to all active runs.")
+    execution_inspector_tick_alias.add_argument("--profile", help="Execution inspector profile path or default supervisor-compatible profile.")
+    execution_inspector_tick_alias.add_argument("--driver", help="Runtime driver override.")
+    execution_inspector_tick_alias.set_defaults(func=command_supervisor_tick)
+    execution_inspector_run_alias = sub.add_parser("execution-inspector-run", help="Thin alias for supervisor run: bounded execution-inspection loop.")
+    execution_inspector_run_alias.add_argument("--project-root", required=True, help="Project root path.")
+    execution_inspector_run_alias.add_argument("--run", help="Run id. Defaults to all active runs.")
+    execution_inspector_run_alias.add_argument("--profile", help="Execution inspector profile path or default supervisor-compatible profile.")
+    execution_inspector_run_alias.add_argument("--driver", help="Runtime driver override.")
+    execution_inspector_run_alias.add_argument("--interval", type=float, help="Seconds between inspection ticks.")
+    execution_inspector_run_alias.add_argument("--max-ticks", type=int, help="Maximum ticks before exit.")
+    execution_inspector_run_alias.add_argument("--final-drain-timeout", type=float, help="Maximum seconds for final observe/collect drain after the main tick loop.")
+    execution_inspector_run_alias.set_defaults(func=command_supervisor_run)
+    execution_inspector_status_alias = sub.add_parser("execution-inspector-status", help="Thin alias for supervisor status: runtime execution-inspector state.")
+    execution_inspector_status_alias.add_argument("--project-root", required=True, help="Project root path.")
+    execution_inspector_status_alias.set_defaults(func=command_supervisor_status)
+    execution_inspector_stop_alias = sub.add_parser("execution-inspector-stop", help="Thin alias for supervisor stop: request loop shutdown.")
+    execution_inspector_stop_alias.add_argument("--project-root", required=True, help="Project root path.")
+    execution_inspector_stop_alias.set_defaults(func=command_supervisor_stop)
 
     orchestrator_plan = sub.add_parser("orchestrator-plan", help="Create, validate, apply, or inspect a multi-agent orchestration plan.")
     orchestrator_plan_sub = orchestrator_plan.add_subparsers(dest="orchestrator_plan_command", required=True)
@@ -15679,8 +15825,8 @@ def build_parser() -> argparse.ArgumentParser:
     agent_list.add_argument("--json", action="store_true", help="Print JSON.")
     agent_list.set_defaults(func=command_agent_list)
 
-    agent_checkin = sub.add_parser("agent-checkin", help="Record an agent check-in and current presence.")
-    agent_checkin.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_checkin = sub.add_parser("agent-checkin", help="Record an agent session check-in and current presence.")
+    agent_checkin.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
     agent_checkin.add_argument("--agent", required=True, help="Agent id.")
     agent_checkin.add_argument("--session", help="Session id. Defaults to generated id.")
     agent_checkin.add_argument("--project-root", help="Project root path.")
@@ -15691,30 +15837,61 @@ def build_parser() -> argparse.ArgumentParser:
     agent_checkin.add_argument("--role", action="append", default=[], help="Checked-in role. Repeatable.")
     agent_checkin.add_argument("--capability", action="append", default=[], help="Runtime capability. Repeatable.")
     agent_checkin.add_argument("--ttl", type=int, default=300, help="Heartbeat TTL seconds.")
+    agent_checkin.add_argument("--json", action="store_true", help="Print JSON.")
     agent_checkin.set_defaults(func=command_agent_checkin)
 
-    agent_heartbeat = sub.add_parser("agent-heartbeat", help="Refresh an agent presence record.")
-    agent_heartbeat.add_argument("--workplace", required=True, help="Workplace root path.")
-    agent_heartbeat.add_argument("--agent", required=True, help="Agent id.")
-    agent_heartbeat.add_argument("--session", help="Expected session id.")
+    agent_heartbeat = sub.add_parser("agent-heartbeat", help="Refresh an agent session presence record.")
+    agent_heartbeat.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
+    agent_heartbeat.add_argument("--agent", help="Agent id. Optional when --session or --project-root current session is supplied.")
+    agent_heartbeat.add_argument("--session", help="Session id.")
+    agent_heartbeat.add_argument("--project-root", help="Project root path for current-session lookup.")
     agent_heartbeat.add_argument("--task", help="Current task id.")
     agent_heartbeat.set_defaults(func=command_agent_heartbeat)
 
-    agent_checkout = sub.add_parser("agent-checkout", help="Record an agent checkout.")
-    agent_checkout.add_argument("--workplace", required=True, help="Workplace root path.")
-    agent_checkout.add_argument("--agent", required=True, help="Agent id.")
-    agent_checkout.add_argument("--session", help="Expected session id.")
+    agent_checkout = sub.add_parser("agent-checkout", help="Record an agent session checkout.")
+    agent_checkout.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
+    agent_checkout.add_argument("--agent", help="Agent id. Optional when --session or --project-root current session is supplied.")
+    agent_checkout.add_argument("--session", help="Session id.")
+    agent_checkout.add_argument("--project-root", help="Project root path for current-session lookup.")
     agent_checkout.set_defaults(func=command_agent_checkout)
 
-    agent_status = sub.add_parser("agent-status", help="Show current agent presence.")
-    agent_status.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_status = sub.add_parser("agent-status", help="Show current agent session presence.")
+    agent_status.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
     agent_status.add_argument("--agent", help="Agent id.")
+    agent_status.add_argument("--session", help="Session id.")
+    agent_status.add_argument("--project-root", help="Project root path filter.")
+    agent_status.add_argument("--project-id", help="Project id filter.")
     agent_status.add_argument("--json", action="store_true", help="Print JSON.")
     agent_status.set_defaults(func=command_agent_status)
 
+    session_heartbeat = sub.add_parser("session-heartbeat", help="Thin alias for agent-heartbeat.")
+    session_heartbeat.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
+    session_heartbeat.add_argument("--agent", help="Agent id.")
+    session_heartbeat.add_argument("--session", help="Session id.")
+    session_heartbeat.add_argument("--project-root", help="Project root path for current-session lookup.")
+    session_heartbeat.add_argument("--task", help="Current task id.")
+    session_heartbeat.set_defaults(func=command_agent_heartbeat)
+
+    session_end = sub.add_parser("session-end", help="Thin alias for agent-checkout.")
+    session_end.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
+    session_end.add_argument("--agent", help="Agent id.")
+    session_end.add_argument("--session", help="Session id.")
+    session_end.add_argument("--project-root", help="Project root path for current-session lookup.")
+    session_end.set_defaults(func=command_agent_checkout)
+
+    session_status = sub.add_parser("session-status", help="Thin alias for agent-status.")
+    session_status.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
+    session_status.add_argument("--agent", help="Agent id.")
+    session_status.add_argument("--session", help="Session id.")
+    session_status.add_argument("--project-root", help="Project root path filter.")
+    session_status.add_argument("--project-id", help="Project id filter.")
+    session_status.add_argument("--json", action="store_true", help="Print JSON.")
+    session_status.set_defaults(func=command_agent_status)
+
     agent_availability = sub.add_parser("agent-availability", help="Answer whether a checked-in agent with a role is available.")
-    agent_availability.add_argument("--workplace", required=True, help="Workplace root path.")
+    agent_availability.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
     agent_availability.add_argument("--role", required=True, help="Required role.")
+    agent_availability.add_argument("--project-root", help="Project root path for workplace and project-id filter.")
     agent_availability.add_argument("--project-id", help="Optional project id filter.")
     agent_availability.add_argument("--json", action="store_true", help="Print JSON.")
     agent_availability.set_defaults(func=command_agent_availability)

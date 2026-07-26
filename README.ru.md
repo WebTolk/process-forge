@@ -28,6 +28,16 @@ contracts, roots, registries, cache, runtime events и logs.
 context, выбранные глобальные ресурсы, assignments, runs, tasks, iterations,
 artifacts, reviews, handoffs, hooks и private runtime files.
 
+Атомарная единица выполнения - `1-1-1-1`: один человек-оператор, одна основная
+агентская сессия, один проект и один активный process/run. В стандартном
+single-agent flow primary agent сам выполняет работу, запускает CLI checks,
+пишет artifacts и делает checkout; Worker и Inspector являются фазой
+выполнения и проверками той же сессии, а не отдельными участниками. Agent
+Ledger - это CLI/files, не отдельный агент. Director и Supervisor / Execution
+Inspector нужны только для multi-agent, process-transition или external
+runtime-worker сценариев. См.
+[docs/ru/concepts/agent-session-model.md](docs/ru/concepts/agent-session-model.md).
+
 Process definitions описывают механику процесса. Это YAML-конструкторы с
 произвольным количеством stages, roles, artifacts, gates, capabilities, allowed
 tools и hooks. Им не нужно называть конкретную implementation platform.
@@ -87,8 +97,20 @@ ProcessForge сейчас поддерживает file-first creation flows д�
 - agent ledger и handoffs: `agent-register`, `agent-checkin`,
   `agent-availability`, `agent-lease-grant`, `process-route-list`,
   `handoff-create`, `handoff-status` и `agent-director-tick`
+- primary agent sessions: `session-start`, `session-heartbeat`,
+  `session-status` и `session-end`
 - orchestrator shell agents: `orchestrator-shell-plan-create`,
   `orchestrator-shell-plan-validate` и `orchestrator-shell-plan-apply`
+- runtime drivers и worker execution: `runtime-driver list`,
+  `runtime-driver validate`, `worker-run prepare`, `worker-run start`,
+  `worker-run status`, `worker-run collect`, `supervisor tick`,
+  `supervisor run`, а также semantic aliases `execution-inspector-tick` и
+  `execution-inspector-run`
+
+`supervisor` - историческое техническое имя команды для Process Execution
+Inspector. Он проверяет assigned worker runtime state; это не Agent Director.
+Граница ответственности описана в
+[docs/ru/concepts/director-ledger-inspector-boundary.md](docs/ru/concepts/director-ledger-inspector-boundary.md).
 
 Флаг `--interactive` принимается командами first-run initialization для
 совместимости UX, но текущая реализация остаётся file-first и не требует
@@ -170,6 +192,7 @@ semantic parity, применяй process только после review и до
 - [Агентский command runbook](docs/ru/getting-started/agent-prompts.md)
 - [Workplace vs project](docs/ru/concepts/workplace-vs-project.md)
 - [Runtime model](docs/ru/concepts/runtime-model.md)
+- [Модель агентской сессии](docs/ru/concepts/agent-session-model.md)
 - [Platform contracts](docs/ru/concepts/platform-contracts.md)
 - [Platform inheritance](docs/ru/concepts/platform-inheritance.md)
 - [Навигация knowledge resources](docs/ru/concepts/knowledge-resource-navigation.md)

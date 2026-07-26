@@ -28,6 +28,19 @@
       },
       "additionalProperties": true
     },
+    "execution_mode": {
+      "enum": ["single_agent", "single_agent_with_subagents", "orchestrated_agents", "process_factory"]
+    },
+    "execution_mode_questions": {
+      "type": "object",
+      "properties": {
+        "single_agent": { "type": "object", "additionalProperties": true },
+        "single_agent_with_subagents": { "type": "object", "additionalProperties": true },
+        "orchestrated_agents": { "type": "object", "additionalProperties": true },
+        "process_factory": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
     "roles": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "stages": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "artifacts": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
@@ -53,6 +66,21 @@
       "properties": {
         "required_role": { "type": "string" },
         "required_capabilities": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "responsibility_boundaries": {
+      "type": "object",
+      "properties": {
+        "coordinator_role": { "type": "string" },
+        "execution_inspector_role": { "type": "string" },
+        "worker_role": { "type": "string" },
+        "needs_agent_director": { "type": "boolean" },
+        "needs_execution_inspector": { "type": "boolean" },
+        "director_decisions": { "type": "array", "items": { "type": "string" } },
+        "inspector_checks": { "type": "array", "items": { "type": "string" } },
+        "worker_actions": { "type": "array", "items": { "type": "string" } },
+        "automatic_cli_checks": { "type": "array", "items": { "type": "string" } }
       },
       "additionalProperties": true
     },

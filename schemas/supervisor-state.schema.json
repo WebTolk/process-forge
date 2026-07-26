@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://processforge.local/schemas/supervisor-state.schema.json",
-  "title": "Supervisor State",
+  "title": "Process Execution Inspector State",
   "type": "object",
   "required": ["schema_version", "id", "status", "project_root", "started_at", "updated_at", "tick_count"],
   "properties": {

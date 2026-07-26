@@ -12,6 +12,11 @@ python tools/smoke_first_run.py
 python tools/smoke_runtime_driver_registry.py
 python tools/smoke_worker_run_shell.py
 python tools/smoke_process_supervisor_tick.py
+python tools/smoke_director_inspector_boundary.py
+python tools/smoke_agent_ledger.py
+python tools/smoke_single_agent_session_flow.py
+python tools/smoke_multi_project_agent_sessions.py
+python tools/smoke_multi_agent_as_composed_sessions.py
 python tools/smoke_process_run_task_batch.py
 python bin/pf.py release-test --root . --public --fail-fast
 python bin/pf.py dev-test --root . --suite supervisor-stress

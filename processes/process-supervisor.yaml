@@ -1,11 +1,12 @@
 schema_version: 1
 id: process-supervisor
-name: Process Supervisor
+name: Process Execution Inspector
 version: 1.0.0
 status: active
-description: File-first supervisor loop that prepares, starts, observes, stops, and collects worker-run state without requiring a daemon.
+description: File-first execution inspector for external runtime workers; prepares, starts, observes, verifies, and collects assigned worker-run state without assigning agents, granting leases, routing work, or accepting handoffs. Ordinary single-agent sessions use CLI checks/gates instead.
+execution_mode: orchestrated_agents
 required_capabilities:
-  - process_coordination
+  - execution_inspection
   - repository_read
   - local_process_execution
 hooks:
@@ -25,15 +26,15 @@ hooks:
       - driver_id
       - status
 roles:
-  - id: supervisor
-    title: Supervisor
-    responsibility: Schedules ready tasks, respects dependencies, starts approved runtime drivers, and collects outputs.
-  - id: worker
+  - id: execution-inspector
+    title: Execution Inspector
+    responsibility: Inspects assigned task runtime state, observes worker processes, verifies heartbeat/exit/output/report proof, and marks tasks done, failed, timed_out, or manual_required.
+  - id: worker-runtime
     title: Worker Runtime
     responsibility: Runs one bounded assignment command and writes expected outputs.
-  - id: reviewer
-    title: Supervisor Reviewer
-    responsibility: Reviews runtime state, logs, and collection reports.
+  - id: runtime-observer
+    title: Runtime Observer
+    responsibility: Reviews runtime state, logs, process records, heartbeat records, exit records, and collection reports.
 stages:
   - id: prepare
     title: Prepare worker run
@@ -44,9 +45,9 @@ stages:
     produced_artifacts:
       - agent-run-state
       - worker-process-command
-    required_role: supervisor
+    required_role: execution-inspector
     required_capabilities:
-      - process_coordination
+      - execution_inspection
     allowed_tools:
       - processforge-cli
     entry_gates:
@@ -63,7 +64,7 @@ stages:
       - process-record
       - worker-logs
       - exit-record
-    required_role: supervisor
+    required_role: execution-inspector
     required_capabilities:
       - local_process_execution
     allowed_tools:
@@ -81,7 +82,7 @@ stages:
       - worker-outputs
     produced_artifacts:
       - collection-report
-    required_role: supervisor
+    required_role: execution-inspector
     required_capabilities:
       - artifact_review
     allowed_tools:
@@ -94,32 +95,32 @@ stages:
 artifact_definitions:
   - id: agent-run-state
     title: Agent Run State
-    owner_role: supervisor
+    owner_role: execution-inspector
     template: agent-run-state
     lifecycle: [draft, active, archived]
   - id: worker-process-command
     title: Worker Process Command
-    owner_role: supervisor
+    owner_role: execution-inspector
     template: worker-process-command
     lifecycle: [draft, active, archived]
   - id: process-record
     title: Process Record
-    owner_role: supervisor
+    owner_role: execution-inspector
     template: process-record
     lifecycle: [draft, active, archived]
   - id: worker-logs
     title: Worker Logs
-    owner_role: supervisor
+    owner_role: execution-inspector
     template: worker-logs
     lifecycle: [draft, active, archived]
   - id: exit-record
     title: Exit Record
-    owner_role: supervisor
+    owner_role: execution-inspector
     template: exit-record
     lifecycle: [draft, active, archived]
   - id: collection-report
     title: Collection Report
-    owner_role: supervisor
+    owner_role: execution-inspector
     template: validation-report
     lifecycle: [draft, approved]
 gates:
@@ -139,3 +140,9 @@ evolution_policy:
   versioning: semver
   compatibility: additive state fields are backward-compatible
   deprecation: supervisor state paths must stay stable within the major version
+forbidden_actions:
+  - assign_agents
+  - grant_or_revoke_agent_leases
+  - decide_process_routes
+  - accept_or_finalize_handoffs
+  - decide_project_or_run_ownership

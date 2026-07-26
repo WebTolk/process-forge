@@ -3,7 +3,8 @@ id: multi-agent-task-orchestration
 name: Multi-Agent Task Orchestration
 version: 1.0.0
 status: active
-description: Orchestrator-led task planning where workers receive bounded assignments, capsules, allowed scopes, required outputs, and minimal launch prompts.
+description: Orchestrator-led composition of multiple agent sessions where workers receive bounded assignments, capsules, allowed scopes, required outputs, and minimal launch prompts.
+execution_mode: orchestrated_agents
 required_capabilities:
   - process_coordination
   - repository_read
@@ -34,10 +35,10 @@ hooks:
 roles:
   - id: orchestrator
     title: Orchestrator Agent
-    responsibility: Decomposes work, validates scopes, launches workers, reviews outputs, and integrates final results.
+    responsibility: Decomposes work, validates scopes, coordinates separate worker sessions, reviews outputs, and integrates final results.
   - id: worker
     title: Worker Agent
-    responsibility: Executes only the assigned task with the provided capsule and bounded scope.
+    responsibility: Executes only the assigned task inside its own agent session with the provided capsule and bounded scope.
   - id: reviewer
     title: Reviewer
     responsibility: Checks non-overlap, required outputs, capsules, and handoff readiness.

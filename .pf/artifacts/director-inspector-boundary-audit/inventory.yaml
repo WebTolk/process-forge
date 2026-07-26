@@ -1,0 +1,153 @@
+schema_version: 1
+audit_id: director-inspector-boundary
+created_at: "2026-07-26"
+terms_checked:
+  - supervisor
+  - director
+  - agent-director
+  - agent-ledger
+  - lease
+  - handoff
+  - worker-run
+  - process-supervisor
+compatibility_decision:
+  keep_historical_supervisor_commands: true
+  add_execution_inspector_aliases: true
+  rationale: supervisor is retained as a stable technical CLI/file contract while Execution Inspector is the semantic role name.
+zones:
+  - path: tools/processforge.py
+    issue: supervisor command help used manager-like wording and no execution-inspector aliases existed.
+    action: rewrote CLI help as execution-inspection wording and added thin execution-inspector-* aliases to existing supervisor handlers.
+    public_surface: true
+  - path: tools/smoke_director_inspector_boundary.py
+    issue: no single public smoke proved Director/Ledger/Inspector/Worker state ownership boundaries.
+    action: added deterministic smoke covering handoff wait/ready, director lease grant, no director worker runtime files, inspector worker runtime proof, and unchanged workplace ledger/leases after inspection.
+    public_surface: true
+  - path: processes/process-supervisor.yaml
+    issue: process title/roles made supervisor look like a coordinator rather than runtime execution inspector.
+    action: renamed display name to Process Execution Inspector and made forbidden director/ledger responsibilities explicit.
+    public_surface: true
+  - path: processes/agent-director-supervision.yaml
+    issue: director description did not say execution checking is delegated to inspector.
+    action: described director as coordinator for availability, leases, routes, handoffs, and continuations, with a boundary rule for inspector CLI usage.
+    public_surface: true
+  - path: prompts/process-supervisor-agent.md
+    issue: prompt allowed a broad supervisor reading without explicit director/ledger prohibitions.
+    action: rewrote as Process Execution Inspector prompt and forbade assigning agents, leases, route decisions, and handoff state changes.
+    public_surface: true
+  - path: prompts/agent-director-supervision-agent.md
+    issue: prompt lacked instruction to ask inspector for runtime task state.
+    action: added rule to call execution-inspector/supervisor CLI and not infer task success from worker artifacts.
+    public_surface: true
+  - path: README.md
+    issue: runtime driver list exposed supervisor without semantic boundary.
+    action: documented supervisor as historical technical command and added execution-inspector aliases.
+    public_surface: true
+  - path: README.ru.md
+    issue: runtime driver commands did not include the inspector boundary.
+    action: added runtime driver command group, inspector aliases, and Russian boundary note.
+    public_surface: true
+  - path: QUICKSTART.md
+    issue: supervised smoke prompt named supervisor without clarifying inspector semantics.
+    action: changed prompt to Process Execution Inspector with compatible supervisor commands and aliases.
+    public_surface: true
+  - path: QUICKSTART.ru.md
+    issue: Russian quickstart used Supervisor wording without inspector semantics.
+    action: changed prompt to Runtime Driver and Execution Inspector smoke with alias notes.
+    public_surface: true
+  - path: docs/concepts/director-ledger-inspector-boundary.md
+    issue: no central responsibility table existed.
+    action: added EN concept page with Ledger/Director/Inspector/Worker responsibility table and boundary rules.
+    public_surface: true
+  - path: docs/ru/concepts/director-ledger-inspector-boundary.md
+    issue: no Russian central responsibility table existed.
+    action: added RU concept page with same responsibility table and boundary rules.
+    public_surface: true
+  - path: docs/concepts/process-supervisor.md
+    issue: supervisor described as execution loop but not explicitly not-director.
+    action: added historical-command note, aliases, and forbidden director/ledger actions.
+    public_surface: true
+  - path: docs/ru/concepts/process-supervisor.md
+    issue: Russian supervisor doc lacked explicit inspector boundary.
+    action: added Process Execution Inspector wording, aliases, and forbidden responsibilities.
+    public_surface: true
+  - path: docs/concepts/agent-director.md
+    issue: director doc did not forbid direct worker runtime writes.
+    action: added rule to ask inspector CLI and not write worker runtime process/heartbeat/exit state.
+    public_surface: true
+  - path: docs/ru/concepts/agent-director.md
+    issue: Russian director doc lacked runtime inspector delegation rule.
+    action: added inspector CLI delegation and forbidden runtime writes.
+    public_surface: true
+  - path: docs/concepts/agent-ledger.md
+    issue: ledger doc did not explicitly exclude routing/runtime validation.
+    action: added attendance/key registry boundary and inspector/director split.
+    public_surface: true
+  - path: docs/ru/concepts/agent-ledger.md
+    issue: Russian ledger doc did not explicitly exclude routing/runtime validation.
+    action: added same boundary in Russian.
+    public_surface: true
+  - path: docs/concepts/process-transitions.md
+    issue: transition docs did not state Director owns route decisions and Inspector does not.
+    action: added route/handoff/lease ownership boundary.
+    public_surface: true
+  - path: docs/ru/concepts/process-transitions.md
+    issue: Russian transition docs lacked role boundary.
+    action: added Director/Inspector/Worker split.
+    public_surface: true
+  - path: docs/concepts/handoff-contracts.md
+    issue: handoff doc lacked explicit statement that Inspector cannot accept/return/finalize.
+    action: added handoff state ownership boundary.
+    public_surface: true
+  - path: docs/ru/concepts/handoff-contracts.md
+    issue: Russian handoff doc lacked explicit state ownership boundary.
+    action: added Director-owned handoff state and Inspector-only runtime proof note.
+    public_surface: true
+  - path: docs/getting-started/runtime-driver-supervisor.md
+    issue: getting-started page framed supervisor without semantic alias.
+    action: renamed heading wording, added execution-inspector-run alias, and explained command compatibility.
+    public_surface: true
+  - path: docs/ru/getting-started/runtime-driver-supervisor.md
+    issue: Russian getting-started page framed supervisor without semantic alias.
+    action: mirrored heading, alias, and boundary explanation in Russian.
+    public_surface: true
+  - path: docs/getting-started/agent-ledger-process-transitions.md
+    issue: ledger/handoff quickstart lacked full four-role boundary.
+    action: added Ledger/Director/Inspector/Worker boundary note.
+    public_surface: true
+  - path: docs/ru/getting-started/agent-ledger-process-transitions.md
+    issue: Russian quickstart lacked full four-role boundary.
+    action: added same boundary note in Russian.
+    public_surface: true
+  - path: schemas/process-authoring-answers.schema.json
+    issue: process authoring did not ask who coordinates, who verifies runtime, and who executes.
+    action: added responsibility_boundaries schema object.
+    public_surface: true
+  - path: templates/process-authoring-answers.yaml
+    issue: process authoring template did not wire Director/Inspector/Worker responsibility answers.
+    action: added responsibility_boundaries example.
+    public_surface: true
+  - path: prompts/process-authoring-agent.md
+    issue: authoring prompt did not require boundary questions or CLI checks.
+    action: added questions for coordinator, execution inspector, worker, and automatic CLI checks.
+    public_surface: true
+  - path: docs/authoring/process-authoring.md
+    issue: authoring docs did not document responsibility_boundaries.
+    action: documented field and its Director/Inspector/Worker split.
+    public_surface: true
+  - path: docs/ru/authoring/process-authoring.md
+    issue: Russian authoring docs did not document responsibility_boundaries.
+    action: documented field and its Director/Inspector/Worker split in Russian.
+    public_surface: true
+  - path: templates/supervisor-profile.yaml
+    issue: template title used Supervisor Profile without inspector semantics.
+    action: updated title to Execution Inspector Profile while keeping file/id compatibility.
+    public_surface: true
+  - path: schemas/supervisor-profile.schema.json
+    issue: schema display title used Supervisor Profile.
+    action: updated display title to Process Execution Inspector Profile.
+    public_surface: true
+  - path: schemas/supervisor-state.schema.json
+    issue: schema display title used Supervisor State.
+    action: updated display title to Process Execution Inspector State.
+    public_surface: true

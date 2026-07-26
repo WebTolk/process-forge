@@ -2,6 +2,12 @@
 
 Multi-agent orchestration is the out-of-box ProcessForge process for splitting a run into bounded worker assignments.
 
+It composes multiple Primary Agent Sessions. Each worker is not a sub-persona
+inside the orchestrator; it is its own `1-1-1-1` session with a `session_id`,
+assignment, capsule, scope, and output contract. Agent Director/Orchestrator
+coordinates those sessions. The default single-agent flow does not require this
+process.
+
 The orchestrator creates an `orchestrator-task-plan.yaml`, validates scope rules, applies the plan, and receives worker outputs for integration.
 
 Workers receive only:

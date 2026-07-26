@@ -4,11 +4,12 @@ name: Agent Director Supervision
 version: 1.0.0
 status: draft
 kind: orchestration
-description: Supervises pending process handoffs, agent availability, leases, target runs, and continuation capsules.
+description: Coordinates multiple agent sessions and process runs through pending handoffs, agent availability, leases, target runs, and continuation capsules; delegates task execution checks to the Process Execution Inspector.
+execution_mode: process_factory
 roles:
   - id: agent-director
     title: Agent Director
-    responsibility: Routes process handoffs and escalates unavailable or stale agents.
+    responsibility: Routes process handoffs, grants/revokes bounded leases, tracks unavailable or stale agents, and asks the execution inspector for runtime task state when needed.
 stages:
   - id: inspect
     title: Inspect pending handoffs
@@ -43,6 +44,12 @@ required_templates:
 forbidden_actions:
   - start_network_service
   - call_external_agent_cli
+  - start_shell_worker_process_directly
+  - write_worker_process_runtime_state
+  - infer_task_success_from_report_artifact
+runtime_execution_boundary:
+  inspector_process: process-supervisor
+  rule: Director may request supervisor/execution-inspector CLI status, ticks, or reports, but must not infer task success from worker artifacts and must not write process.json, heartbeat.json, exit.json, or agent-run status files.
 evolution_policy:
   versioning: additive
   compatibility: preserve_file_contracts

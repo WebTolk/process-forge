@@ -3,7 +3,8 @@ id: session-bootstrap
 name: Session Bootstrap
 version: 1.0.0
 status: active
-description: Convert a short launch request into a formal ProcessForge session mode and status report.
+description: Start or inspect a primary agent session by resolving session mode, current project context, and status report inputs.
+execution_mode: single_agent
 required_capabilities:
   - filesystem.read
   - context.status
@@ -43,8 +44,8 @@ hooks:
       - status
 roles:
   - id: orchestrator
-    title: Orchestrator
-    responsibility: Resolves session mode, flow location, and context freshness.
+    title: Primary Agent
+    responsibility: Resolves session mode, flow location, context freshness, and check-in context for the current agent session.
   - id: reviewer
     title: Reviewer
     responsibility: Reviews session status and blocked items.

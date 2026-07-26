@@ -26,6 +26,15 @@
   prompting.
 - Для guided machine setup используйте `workplace-setup start`,
   `workplace-setup review`, `workplace-setup apply` и `workplace-setup status`.
+- Для обычной проектной работы начинайте с single-agent `1-1-1-1` model: один
+  operator, одна primary agent session, один project и один active process/run.
+  Сделайте check-in через `session-start` или `agent-checkin`, выполняйте
+  процесс последовательно, используйте CLI checks и gates как inspection, затем
+  сделайте checkout через `session-end` или `agent-checkout`.
+- Не предполагайте Agent Director, explicit leases или Supervisor / Execution
+  Inspector для простой работы. Используйте их только когда выбранный process
+  требует multi-agent coordination, process handoffs или external runtime
+  workers.
 - Для bounded worker orchestration используйте `orchestrator-plan create`,
   `orchestrator-plan validate`, `orchestrator-plan apply`,
   `orchestrator-plan status` и `worker-launch-prompt create`.
@@ -103,6 +112,7 @@ python .pf/runtime/bin/pf.py process-describe --project-root . --process <proces
 ## Task batch run
 
 ```bash
+python .pf/runtime/bin/pf.py session-start --project-root . --agent primary-agent --process task-batch-execution
 python .pf/runtime/bin/pf.py run-create --project-root . --id <run-id> --title "<title>" --process task-batch-execution --apply
 python .pf/runtime/bin/pf.py task-create --project-root . --run <run-id> --id <task-id> --title "<task title>" --process <process-id> --apply
 python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --kind work --summary "..." --apply
@@ -112,6 +122,7 @@ python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --k
 python .pf/runtime/bin/pf.py task-complete --project-root . --task <task-id> --summary "..." --apply
 python .pf/runtime/bin/pf.py run-summary --project-root . --run <run-id> --apply
 python .pf/runtime/bin/pf.py run-doctor --project-root . --run <run-id>
+python .pf/runtime/bin/pf.py session-end --project-root .
 ```
 
 ## Authoring ресурсов workplace

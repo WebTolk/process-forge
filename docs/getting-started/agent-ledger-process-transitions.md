@@ -1,5 +1,16 @@
 # Agent Ledger and Process Transitions
 
+Agent Ledger is CLI-managed attendance/session state, not a separate agent.
+For the default single-agent `1-1-1-1` flow, use session aliases and do not
+grant an explicit lease to yourself:
+
+```bash
+python bin/pf.py session-start --workplace <workplace> --project-root . --agent primary-agent --process task-batch-execution
+python bin/pf.py session-heartbeat --project-root .
+python bin/pf.py session-status --project-root . --json
+python bin/pf.py session-end --project-root .
+```
+
 Create a workplace, register agents, and check availability:
 
 ```bash
@@ -28,3 +39,11 @@ python bin/pf.py orchestrator-shell-plan-apply --project-root . --run orchestrat
 Shell-agent plan fields are behavioral. `allow_write_scope_overlap: true` changes generated assignment and capsule overlap policy and supervisor scheduling for that plan. Subagent policy is copied into the capsule and enforced by `worker-run collect`.
 
 After apply, inspect `.pf/runs/<run-id>/config-resolution-report.yaml` to see the resolved driver, overlap, start, output, and subagent-report behavior.
+
+Boundary rule: Agent Ledger records check-in/check-out, presence, and leases;
+Agent Director uses those records to coordinate routes, handoffs, leases, and
+continuations; the Process Execution Inspector (`execution-inspector-*` or
+compatible `supervisor-*`) checks assigned worker runtime state and required
+outputs; Worker Agent performs the capsule task. `agent-director-tick` must not
+create `.pf/runtime/agent-runs/` process state, and inspector ticks must not
+write workplace ledger or lease files.

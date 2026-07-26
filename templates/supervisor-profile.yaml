@@ -1,6 +1,6 @@
 schema_version: 1
 id: default
-title: Default ProcessForge Supervisor Profile
+title: Default ProcessForge Execution Inspector Profile
 loop:
   interval_seconds: 1
   max_ticks: 1

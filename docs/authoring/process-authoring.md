@@ -48,13 +48,34 @@ Warnings are visible in `logic-review.md`; blocking failures stop apply.
 
 ## Transitions And Agents
 
-Authoring answers may include `process_transitions`, `agent_requirements`, and
-`subagent_policy`. These fields record whether the process can hand off work,
-which target processes and handoff modes are allowed, which input artifacts and
-expected output artifacts cross the process boundary, which receiving role or
-capability is required, how offline agents are handled, whether continuation
-capsules are required, who owns the run after handoff, and whether shell workers
-may call subagents.
+Authoring answers should choose `execution_mode` before asking advanced role
+questions:
+
+- `single_agent`
+- `single_agent_with_subagents`
+- `orchestrated_agents`
+- `process_factory`
+
+For `single_agent`, ask only about primary-agent artifacts, mandatory gates,
+CLI checks, ledger check-in/check-out, and operator approval. Do not ask
+Director, Supervisor, route, lease, or external worker questions unless the user
+chooses a mode that needs those mechanics.
+
+Authoring answers may include `process_transitions`, `agent_requirements`,
+`responsibility_boundaries`, `execution_mode_questions`, and `subagent_policy`.
+These fields record whether
+the process can hand off work, which target processes and handoff modes are
+allowed, which input artifacts and expected output artifacts cross the process
+boundary, which receiving role or capability is required, how offline agents
+are handled, whether continuation capsules are required, who owns the run after
+handoff, and whether shell workers may call subagents.
+
+`responsibility_boundaries` records who coordinates, who verifies runtime
+execution, who performs the assigned work, and which CLI checks replace
+token-heavy reasoning. Use it to keep Director/Ledger/Inspector/Worker duties
+explicit: Director coordinates routes, leases, handoffs, and continuations;
+Execution Inspector checks task runtime status, heartbeat, exit, required
+outputs, and expected reports; Worker performs the capsule task.
 
 ## Scope
 

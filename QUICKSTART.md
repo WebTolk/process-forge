@@ -74,6 +74,13 @@ platform doctor and then refresh the project context snapshot.
 ```text
 Create a ProcessForge run for my current request.
 
+Use the default single-agent session model: one operator, one primary agent
+session, one project, and one active process/run. Start the session with
+session-start or agent-checkin, execute the process sequentially, use CLI
+checks and gates for inspection, and check out before ending. Do not assume an
+Agent Director or Supervisor is present unless the process explicitly uses
+multi-agent, handoff, or external runtime-worker mechanics.
+
 Use task-batch execution. Split the work into tasks, record iterations as work
 progresses, write artifacts/reviews/handoffs when the process calls for them,
 and close with run-summary and run-doctor.
@@ -129,8 +136,10 @@ Use ProcessForge runtime drivers for a bounded supervised test run.
 
 List and validate the built-in neutral runtime drivers, create or use an
 orchestrator plan with runtime.default_driver set to test-echo-worker, run the
-supervisor for a small fixed number of ticks, and report the worker-run status
-files and produced reports.
+Process Execution Inspector for a small fixed number of ticks, and report the
+worker-run status files and produced reports. The compatible technical commands
+are `supervisor tick` and `supervisor run`; the clearer aliases are
+`execution-inspector-tick` and `execution-inspector-run`.
 ```
 
 ## Required Order

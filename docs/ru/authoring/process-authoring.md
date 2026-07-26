@@ -17,10 +17,32 @@ stages, roles, artifacts, gates, required resources и run model.
 
 ## Transitions И Agents
 
-Answers могут включать `process_transitions`, `agent_requirements` и
-`subagent_policy`. Эти поля фиксируют, может ли процесс передавать работу в
+Answers должны сначала выбрать `execution_mode`, а уже потом задавать advanced
+role questions:
+
+- `single_agent`
+- `single_agent_with_subagents`
+- `orchestrated_agents`
+- `process_factory`
+
+Для `single_agent` спрашивайте только primary-agent artifacts, mandatory gates,
+CLI checks, ledger check-in/check-out и operator approval. Не задавайте вопросы
+про Director, Supervisor, routes, leases или external workers, если пользователь
+не выбрал режим, где эти механики нужны.
+
+Answers могут включать `process_transitions`, `agent_requirements`,
+`responsibility_boundaries`, `execution_mode_questions` и `subagent_policy`.
+Эти поля фиксируют, может ли process передавать работу в
 другие процессы, какие target processes и handoff modes разрешены, какие input
 artifacts и expected output artifacts переходят через границу процесса, какая
 receiving role или capability нужна, что делать при offline agent, нужна ли
 continuation capsule, кто владеет run после handoff и может ли shell worker
 вызывать subagents.
+
+`responsibility_boundaries` фиксирует, кто координирует процесс, кто проверяет
+runtime execution, кто выполняет assigned work и какие CLI checks заменяют
+дорогое рассуждение в контексте агента. Используйте это поле, чтобы явно
+развести обязанности Director/Ledger/Inspector/Worker: Director координирует
+routes, leases, handoffs и continuations; Execution Inspector проверяет task
+runtime status, heartbeat, exit, required outputs и expected reports; Worker
+выполняет capsule task.

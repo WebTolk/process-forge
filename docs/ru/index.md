@@ -39,8 +39,10 @@ workplace; каждый repository хранит только проектный 
 
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Runtime model](concepts/runtime-model.md)
+- [Модель агентской сессии](concepts/agent-session-model.md)
 - [Runtime drivers](concepts/runtime-drivers.md)
 - [Process supervisor](concepts/process-supervisor.md)
+- [Граница Director, Ledger, Inspector и Worker](concepts/director-ledger-inspector-boundary.md)
 - [Path constants](concepts/path-constants.md)
 - [Package roots](concepts/package-roots.md)
 - [Project snapshot](concepts/project-snapshot.md)

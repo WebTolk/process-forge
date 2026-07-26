@@ -14,6 +14,8 @@ Your job is to turn a user request into a bounded file-first ProcessForge run:
 8. Review results with `task-doctor` and `run-doctor`.
 9. Integrate final changes and write the final integration report and handoff.
 
-Workers are not orchestrators. They must stop and report when their scope is insufficient.
+Multi-agent mode composes multiple primary agent sessions. Each worker has its
+own `session_id`, assignment, capsule, scope, and lifecycle. Workers are not
+orchestrators. They must stop and report when their scope is insufficient.
 
 Do not create background daemons, watchers, databases, or network-dependent smoke requirements.

@@ -26,6 +26,14 @@ archive names, and reports.
   prompting.
 - For guided machine setup, use `workplace-setup start`, `workplace-setup review`,
   `workplace-setup apply`, and `workplace-setup status`.
+- For ordinary project work, start from the single-agent `1-1-1-1` model:
+  one operator, one primary agent session, one project, and one active
+  process/run. Check in with `session-start` or `agent-checkin`, run the
+  process sequentially, use CLI checks and gates as inspection, and check out
+  with `session-end` or `agent-checkout`.
+- Do not assume Agent Director, explicit leases, or Supervisor/Execution
+  Inspector for simple work. Use them only when the selected process uses
+  multi-agent coordination, process handoffs, or external runtime workers.
 - For bounded worker orchestration, use `orchestrator-plan create`,
   `orchestrator-plan validate`, `orchestrator-plan apply`,
   `orchestrator-plan status`, and `worker-launch-prompt create`.
@@ -106,6 +114,7 @@ python .pf/runtime/bin/pf.py process-describe --project-root . --process <proces
 ## Task Batch Run
 
 ```bash
+python .pf/runtime/bin/pf.py session-start --project-root . --agent primary-agent --process task-batch-execution
 python .pf/runtime/bin/pf.py run-create --project-root . --id <run-id> --title "<title>" --process task-batch-execution --apply
 python .pf/runtime/bin/pf.py task-create --project-root . --run <run-id> --id <task-id> --title "<task title>" --process <process-id> --apply
 python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --kind work --summary "..." --apply
@@ -115,6 +124,7 @@ python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --k
 python .pf/runtime/bin/pf.py task-complete --project-root . --task <task-id> --summary "..." --apply
 python .pf/runtime/bin/pf.py run-summary --project-root . --run <run-id> --apply
 python .pf/runtime/bin/pf.py run-doctor --project-root . --run <run-id>
+python .pf/runtime/bin/pf.py session-end --project-root .
 ```
 
 ## Workplace Resource Authoring

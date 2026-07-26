@@ -3,7 +3,8 @@ id: task-batch-execution
 name: Task Batch Execution
 version: 1.0.0
 status: active
-description: Execute a group of tasks inside one run/work session with repeated work, debug, fix, review, and handoff iterations.
+description: Default single-agent process for one primary agent session to execute tasks sequentially inside one project/run with repeated work, debug, fix, review, and handoff iterations.
+execution_mode: single_agent
 required_capabilities:
   - process_coordination
   - repository_read

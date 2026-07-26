@@ -75,6 +75,13 @@ providers, capabilities, processes, coding standards и project type hints по 
 ```text
 Создай ProcessForge run для моего текущего запроса.
 
+Используй стандартную single-agent session model: один operator, одна primary
+agent session, один project и один active process/run. Начни сессию через
+session-start или agent-checkin, выполняй процесс последовательно, используй
+CLI checks и gates как проверку, и сделай checkout перед завершением. Не
+предполагай Agent Director или Supervisor, если process явно не использует
+multi-agent, handoff или external runtime-worker mechanics.
+
 Используй task-batch execution. Разбей работу на tasks, фиксируй iterations по
 ходу работы, записывай artifacts/reviews/handoffs там, где этого требует
 процесс, и заверши run-summary и run-doctor.
@@ -124,14 +131,16 @@ agent-director-tick для выдачи leases, если нужная role onlin
 
 ## Обязательный Порядок
 
-## 11. Runtime Driver And Supervisor Smoke
+## 11. Runtime Driver And Execution Inspector Smoke
 
 ```text
-Используй ProcessForge runtime drivers для ограниченного supervised test run.
+Используй ProcessForge runtime drivers для ограниченного execution-inspected test run.
 
 Проверь built-in neutral runtime drivers, создай или используй orchestrator
-plan с runtime.default_driver = test-echo-worker, запусти supervisor на малое
-число ticks и сообщи worker-run status files и produced reports.
+plan с runtime.default_driver = test-echo-worker, запусти Process Execution
+Inspector на малое число ticks и сообщи worker-run status files и produced
+reports. Совместимые технические команды: `supervisor tick` и `supervisor run`;
+более ясные aliases: `execution-inspector-tick` и `execution-inspector-run`.
 ```
 
 1. Install ProcessForge distribution.

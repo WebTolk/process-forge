@@ -1,6 +1,11 @@
-# Runtime Driver And Supervisor Quickstart
+# Runtime Driver And Execution Inspector Quickstart
 
 Используйте после `workplace-init` и `project-onboard`.
+
+`supervisor` - историческое техническое имя команды. В семантике ProcessForge
+этот цикл является Process Execution Inspector: он проверяет assigned task
+runtime state и не управляет agent attendance, не выдает leases, не
+маршрутизирует процессы и не финализирует handoffs.
 
 Проверьте встроенные нейтральные driver-ы:
 
@@ -24,12 +29,13 @@ python .pf/runtime/bin/pf.py worker-run status --project-root . --task docs-work
 python .pf/runtime/bin/pf.py orchestrator-plan create --project-root . --run supervised-run --title "Supervised run" --answers examples/runtime-supervisor/minimal/orchestrator-task-plan.yaml --apply
 python .pf/runtime/bin/pf.py orchestrator-plan apply --project-root . --run supervised-run --apply
 python .pf/runtime/bin/pf.py supervisor run --project-root . --run supervised-run --max-ticks 5 --interval 0
+python .pf/runtime/bin/pf.py execution-inspector-run --project-root . --run supervised-run --max-ticks 5 --interval 0
 python .pf/runtime/bin/pf.py run-status --project-root . --run supervised-run
 ```
 
 `test-echo-worker` и `test-shell-agent` предназначены для smoke tests и
 демонстраций. Реальный запуск worker-а остаётся явным opt-in через runtime
-driver manifest. Supervisor ticks запускают shell workers detached, на
+driver manifest. Execution-inspector ticks запускают shell workers detached, на
 следующих tick-ах наблюдают process state и собирают required reports только
 после успешного завершения worker-а.
 

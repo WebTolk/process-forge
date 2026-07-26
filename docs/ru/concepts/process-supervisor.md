@@ -1,9 +1,21 @@
 # Process Supervisor
 
-Process supervisor - это ограниченный file-first цикл для worker task execution.
+Process supervisor - историческое техническое имя Process Execution Inspector.
+Это ограниченный file-first цикл для проверки worker task execution, а не
+director или agent manager.
 Он читает `.pf/runs/`, `.pf/assignments/`, `.pf/runtime/agent-runs/`,
 подготавливает worker state, запускает нейтральные shell driver-ы, собирает
 required outputs и пишет supervisor state.
+
+Execution Inspector не выдает leases, не пишет workplace agent ledger events,
+не выбирает process routes, не принимает и не финализирует handoffs, не
+назначает agents и не решает ownership project/run. См.
+[Граница Director, Ledger, Inspector и Worker](director-ledger-inspector-boundary.md).
+
+Он также не нужен для стандартного single-agent flow. В `single_agent` mode
+primary agent использует CLI checks, gates и self-check как inspector. Этот
+runtime inspector loop нужен, когда запускаются external runtime workers и
+ProcessForge должен наблюдать process state, heartbeat, exit и outputs.
 
 Runtime layout:
 
@@ -27,6 +39,8 @@ python .pf/runtime/bin/pf.py worker-run status --project-root . --task test-work
 python .pf/runtime/bin/pf.py worker-run collect --project-root . --task test-worker
 python .pf/runtime/bin/pf.py supervisor tick --project-root . --run example-run
 python .pf/runtime/bin/pf.py supervisor run --project-root . --run example-run --max-ticks 5
+python .pf/runtime/bin/pf.py execution-inspector-tick --project-root . --run example-run
+python .pf/runtime/bin/pf.py execution-inspector-run --project-root . --run example-run --max-ticks 5
 ```
 
 `supervisor tick` учитывает `depends_on` и `dependencies`. Последовательные

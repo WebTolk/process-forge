@@ -28,6 +28,15 @@ Each project keeps its own `.pf/` layer. The project layer stores project
 context, selected global resources, assignments, runs, tasks, iterations,
 artifacts, reviews, handoffs, hooks, and private runtime files.
 
+The atomic execution unit is `1-1-1-1`: one human operator, one primary agent
+session, one project, and one active process/run. In the default single-agent
+flow the primary agent performs the work, runs CLI checks, writes artifacts,
+and checks out; Worker and Inspector are phases/checks of the same session, not
+separate participants. Agent Ledger is CLI/files, not a separate agent. Director
+and Supervisor/Execution Inspector are only needed for multi-agent,
+process-transition, or external runtime-worker scenarios. See
+[docs/concepts/agent-session-model.md](docs/concepts/agent-session-model.md).
+
 Process definitions describe process mechanics. They are configurable YAML
 constructors with any number of stages, roles, artifacts, gates, capabilities,
 allowed tools, and hooks. They do not need to name an implementation platform.
@@ -85,12 +94,20 @@ ProcessForge currently supports file-first creation flows for:
 - agent ledger and handoffs: `agent-register`, `agent-checkin`,
   `agent-availability`, `agent-lease-grant`, `process-route-list`,
   `handoff-create`, `handoff-status`, and `agent-director-tick`
+- primary agent sessions: `session-start`, `session-heartbeat`,
+  `session-status`, and `session-end`
 - orchestrator shell agents: `orchestrator-shell-plan-create`,
   `orchestrator-shell-plan-validate`, and `orchestrator-shell-plan-apply`
 - runtime drivers and worker execution: `runtime-driver list`,
   `runtime-driver validate`, `worker-run prepare`, `worker-run start`,
-  `worker-run status`, `worker-run collect`, `supervisor tick`, and
-  `supervisor run`
+  `worker-run status`, `worker-run collect`, `supervisor tick`,
+  `supervisor run`, and the semantic aliases `execution-inspector-tick` and
+  `execution-inspector-run`
+
+`supervisor` is the historical technical command name for the Process
+Execution Inspector. It checks assigned worker runtime state; it is not the
+Agent Director. The responsibility boundary is documented in
+[docs/concepts/director-ledger-inspector-boundary.md](docs/concepts/director-ledger-inspector-boundary.md).
 
 The `--interactive` flag is accepted by first-run initialization commands for
 UX compatibility, but the current implementation is file-first and does not
@@ -173,6 +190,7 @@ and used for a run.
 - [Workplace vs project](docs/concepts/workplace-vs-project.md)
 - [Runtime model](docs/concepts/runtime-model.md)
 - [Runtime drivers](docs/concepts/runtime-drivers.md)
+- [Agent session model](docs/concepts/agent-session-model.md)
 - [Process supervisor](docs/concepts/process-supervisor.md)
 - [Agent ledger](docs/concepts/agent-ledger.md)
 - [Process transitions](docs/concepts/process-transitions.md)

@@ -16,7 +16,14 @@ Rules:
 - Keep authoring files under `.pf/authoring/processes/<process-id>/`.
 - Apply only after logic review has no blocking failures.
 - Generated public files are `processes/<process-id>.yaml`, `prompts/<process-id>-agent.md`, `docs/processes/<process-id>.md`, and `examples/process-authoring/<process-id>/`.
-- Ask whether the process may hand off to other processes, which target processes are allowed, which handoff mode applies, which input/output artifacts cross the boundary, which receiving role or capability is required, what happens when that role is offline, whether a continuation capsule is needed, who owns the run after handoff, and whether shell workers may call subagents.
+- Ask for the process `execution_mode` first: `single_agent`, `single_agent_with_subagents`, `orchestrated_agents`, or `process_factory`.
+- For `single_agent`, ask which CLI checks replace token-heavy reasoning, which gates are mandatory, which artifacts the primary agent creates, whether ledger check-in/check-out is needed, and whether operator approval is required. Do not ask Director, Supervisor, route, lease, or worker-runtime questions for pure `single_agent` unless the user adds those mechanics.
+- For `single_agent_with_subagents`, ask whether subagents are allowed, which roles are allowed, whether reports are required, and where reports are stored. Primary process ownership remains with the primary agent.
+- For `orchestrated_agents`, ask for worker roles, assignments/capsules, Director/Orchestrator ownership, leases, and whether Supervisor/Execution Inspector is needed for shell/runtime workers.
+- For `process_factory`, ask for process routes, handoff modes, required agent roles, and continuations.
+- For modes that can hand off, ask whether the process may hand off to other processes, which target processes are allowed, which handoff mode applies, which input/output artifacts cross the boundary, which receiving role or capability is required, what happens when that role is offline, whether a continuation capsule is needed, who owns the run after handoff, and whether shell workers may call subagents.
+- Ask who coordinates the process, who verifies runtime execution, who performs assigned work, and which CLI checks replace token-heavy reasoning. Record these answers in `responsibility_boundaries`, especially `coordinator_role`, `execution_inspector_role`, `worker_role`, `director_decisions`, `inspector_checks`, `worker_actions`, and `automatic_cli_checks`.
+- Keep Director/Ledger/Inspector/Worker responsibilities separate: the coordinator may route handoffs and leases, the execution inspector may verify task runtime state and outputs, and the worker performs the capsule task.
 - If shell workers may call subagents, record allowed subagent roles and required subagent reports in the answers.
 - Do not put local absolute paths, secrets, or machine-only command assumptions into public files.
 - Do not implement runners, background watchers, web transports, command hook execution, UI, database storage, or marketplace behavior in this MVP.
