@@ -1,0 +1,267 @@
+schema_version: 1
+generated_at: "2026-07-26T12:05:35+04:00"
+scope:
+  - schemas/orchestrator-shell-agent-plan.schema.json
+  - templates/orchestrator-shell-agent-plan.yaml
+  - examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml
+  - schemas/orchestrator-task-plan.schema.json
+  - schemas/assignment.schema.json
+  - schemas/context-capsule.schema.json
+  - schemas/agent-lease.schema.json
+  - schemas/process-handoff.schema.json
+  - schemas/process-route-map.schema.json
+  - schemas/continuation-capsule.schema.json
+  - tools/processforge.py
+fields:
+  - field: allow_write_scope_overlap
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - templates/orchestrator-shell-agent-plan.yaml
+      - examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml
+      - schemas/orchestrator-task-plan.schema.json
+    current_behavior: "validated as boolean, materialized into assignment/capsule overlap policy, and respected by supervisor scheduling"
+    expected_behavior: "plan-level true allows write-scope overlap among workers in that plan; absent or false keeps conflict validation/blocking"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_config_behavior_contracts.py::test_allow_overlap_completes
+      - tools/smoke_config_behavior_contracts.py::test_deny_overlap_fails_validation
+      - tools/smoke_orchestrator_shell_agents_with_subagent_policy.py
+  - field: workers[].allow_subagents
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - templates/orchestrator-shell-agent-plan.yaml
+      - examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml
+    current_behavior: "validated as boolean and copied into assignment/capsule subagent_policy.allow"
+    expected_behavior: "controls whether subagent reports are allowed or denied for the worker"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_config_behavior_contracts.py::test_missing_subagent_reports_fail_collect
+      - tools/smoke_orchestrator_shell_agents_with_subagent_policy.py
+  - field: workers[].subagent_policy.require_reports
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - templates/orchestrator-shell-agent-plan.yaml
+      - examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml
+      - schemas/assignment.schema.json
+      - schemas/context-capsule.schema.json
+    current_behavior: "copied into capsule and enforced by worker-run collect only when allow=true"
+    expected_behavior: "missing subagent reports fail collection when require_reports=true"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_config_behavior_contracts.py::test_missing_subagent_reports_fail_collect
+  - field: workers[].subagent_policy.reports_dir
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/assignment.schema.json
+      - schemas/context-capsule.schema.json
+    current_behavior: "validated under .pf/artifacts/subagents/ when required, used by the test shell-agent fixture, and checked by collect"
+    expected_behavior: "defines the required subagent report directory"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_orchestrator_shell_agents_with_subagent_policy.py
+  - field: workers[].subagent_policy.max_subagents
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/assignment.schema.json
+      - schemas/context-capsule.schema.json
+    current_behavior: "validated as a non-negative integer; fixture writes up to max_subagents and collect rejects excess reports"
+    expected_behavior: "bounds simulated/declared subagent reports"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_config_behavior_contracts.py
+  - field: workers[].subagent_policy.allowed_roles
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/assignment.schema.json
+      - schemas/context-capsule.schema.json
+    current_behavior: "copied into capsule and used by the neutral shell-agent fixture to name simulated reports"
+    expected_behavior: "declares allowed subagent roles"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_orchestrator_shell_agents_with_subagent_policy.py
+  - field: workers[].runtime_driver
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/orchestrator-task-plan.schema.json
+    current_behavior: "validated against the runtime-driver registry before apply/supervisor"
+    expected_behavior: "selects worker runtime driver; unknown driver fails validation"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_config_behavior_contracts.py::test_unknown_runtime_driver_fails_validation
+  - field: runtime.default_driver
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/orchestrator-task-plan.schema.json
+    current_behavior: "validated against registry and used when worker runtime_driver is absent"
+    expected_behavior: "sets default worker runtime driver"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_runtime_driver_registry.py
+      - tools/smoke_config_behavior_contracts.py
+  - field: runtime.supervisor_profile
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/orchestrator-task-plan.schema.json
+    current_behavior: "used by supervisor run/tick profile loading"
+    expected_behavior: "selects supervisor profile"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_process_supervisor_tick.py
+  - field: runtime.start_policy
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/orchestrator-task-plan.schema.json
+    current_behavior: "manual writes assignments/capsules/prompts without runtime start; prepare creates ready worker runs; supervisor starts workers"
+    expected_behavior: "controls whether apply starts, prepares, or only materializes work"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_config_behavior_contracts.py::test_manual_start_policy_does_not_autostart
+  - field: runtime.max_parallel_workers
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - templates/orchestrator-shell-agent-plan.yaml
+      - examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml
+    current_behavior: "overrides supervisor profile max_parallel_workers for the plan"
+    expected_behavior: "controls how many ready workers the supervisor can start in one scheduling layer"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_config_behavior_contracts.py::test_allow_overlap_completes
+  - field: workers[].allowed_files
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/assignment.schema.json
+      - schemas/context-capsule.schema.json
+    current_behavior: "materialized into assignment/capsule write scope and overlap checks"
+    expected_behavior: "bounds worker write scope"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_config_behavior_contracts.py
+  - field: workers[].allowed_read_files
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/assignment.schema.json
+      - schemas/context-capsule.schema.json
+    current_behavior: "materialized into assignment/capsule read scope"
+    expected_behavior: "bounds worker read scope"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_orchestrator_shell_agents_with_subagent_policy.py
+  - field: workers[].forbidden_files
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/assignment.schema.json
+      - schemas/context-capsule.schema.json
+    current_behavior: "validated against allowed_files and materialized into assignment/capsule"
+    expected_behavior: "overrides allowed_files"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_config_behavior_contracts.py
+  - field: workers[].required_outputs
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/assignment.schema.json
+      - schemas/context-capsule.schema.json
+    current_behavior: "materialized into assignment/capsule and enforced by worker-run collect"
+    expected_behavior: "missing required outputs fail collection"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_orchestrator_shell_agents_with_subagent_policy.py
+  - field: workers[].expected_report_artifact
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/assignment.schema.json
+      - schemas/context-capsule.schema.json
+    current_behavior: "materialized as expected_report.artifact and enforced by worker-run collect"
+    expected_behavior: "missing expected report fails collection"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_worker_run_shell.py
+  - field: workers[].depends_on
+    declared_in:
+      - schemas/orchestrator-shell-agent-plan.schema.json
+      - schemas/orchestrator-task-plan.schema.json
+    current_behavior: "materialized into task dependencies and respected by supervisor readiness"
+    expected_behavior: "blocks worker start until dependencies are done"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_process_supervisor_tick.py
+  - field: handoff.to.mode
+    declared_in:
+      - schemas/process-handoff.schema.json
+    current_behavior: "used by handoff status/accept/return lifecycle"
+    expected_behavior: "describes handoff target mode"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_process_transition_handoff.py
+  - field: handoff.to.required_role
+    declared_in:
+      - schemas/process-handoff.schema.json
+    current_behavior: "used by handoff availability/status and agent-director tick"
+    expected_behavior: "selects required receiving role"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_agent_director_tick.py
+  - field: route.requires_agent.role
+    declared_in:
+      - schemas/process-route-map.schema.json
+    current_behavior: "used when creating handoff packages and checking availability"
+    expected_behavior: "selects route target role"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_process_transition_handoff.py
+  - field: route.requires_agent.status
+    declared_in:
+      - schemas/process-route-map.schema.json
+    current_behavior: "validated as part of route/handoff doctor surface"
+    expected_behavior: "declares required agent availability state"
+    status: partial
+    action: document_metadata
+    tests:
+      - tools/smoke_process_transition_handoff.py
+  - field: agent lease expires_at/status
+    declared_in:
+      - schemas/agent-lease.schema.json
+    current_behavior: "agent lease doctor/list/status validate active and expired lease state"
+    expected_behavior: "controls usable lease state"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_agent_ledger.py
+  - field: agent presence heartbeat_ttl_seconds
+    declared_in:
+      - schemas/agent-presence.schema.json
+    current_behavior: "availability checks use heartbeat freshness"
+    expected_behavior: "controls whether an agent is considered available"
+    status: implemented
+    action: keep_and_enforce
+    tests:
+      - tools/smoke_agent_ledger.py
+  - field: continuation waiting_for.expected_artifacts
+    declared_in:
+      - schemas/continuation-capsule.schema.json
+    current_behavior: "continuation doctor/status exposes expected artifacts"
+    expected_behavior: "records resume prerequisites"
+    status: partial
+    action: document_metadata
+    tests:
+      - python tools/validate-process-forge-schemas.py --root .

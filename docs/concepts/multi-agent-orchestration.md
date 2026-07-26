@@ -17,7 +17,10 @@ Workers do not receive full project context by default. Assignment capsules set 
 
 ## Scope Rules
 
-- Parallel workers must not have overlapping write scopes unless the plan explicitly allows overlap.
+- Public config fields are behavioral. If a field is accepted in schemas, templates, docs, or examples, it must affect behavior, be documented as metadata-only, or fail validation when unsupported.
+- Unsupported public fields fail validation unless they are placed in the explicit `metadata` or `x_` extension namespace.
+- Parallel workers must not have overlapping write scopes unless the plan explicitly sets `allow_write_scope_overlap: true`.
+- When `allow_write_scope_overlap: true` is resolved, generated assignments and capsules record an allow policy, and the supervisor does not block workers solely because their write scopes overlap inside that plan.
 - `forbidden_files` override `allowed_files`.
 - Required outputs must be inside the worker allowed files or under the project artifact area.
 - Core files are writable only when explicitly allowed.
@@ -34,3 +37,4 @@ Workers do not receive full project context by default. Assignment capsules set 
 - task index
 - orchestration summary
 - initial orchestrator handoff
+- `config-resolution-report.yaml` with the config values that were applied to assignments, capsules, supervisor scheduling, and output collection

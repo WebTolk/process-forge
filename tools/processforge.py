@@ -4373,6 +4373,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_agent_ledger", [sys.executable, str(root / "tools" / "smoke_agent_ledger.py")], 120),
         ReleaseCommand("smoke_process_transition_handoff", [sys.executable, str(root / "tools" / "smoke_process_transition_handoff.py")], 120),
         ReleaseCommand("smoke_agent_director_tick", [sys.executable, str(root / "tools" / "smoke_agent_director_tick.py")], 120),
+        ReleaseCommand("smoke_config_behavior_contracts", [sys.executable, str(root / "tools" / "smoke_config_behavior_contracts.py")], 180),
         ReleaseCommand("smoke_orchestrator_shell_agents_with_subagent_policy", [sys.executable, str(root / "tools" / "smoke_orchestrator_shell_agents_with_subagent_policy.py")], 180),
         ReleaseCommand("release-check", [sys.executable, str(root / "tools" / "processforge.py"), "release-check", "--root", str(root)], 60),
         ReleaseCommand("examples-check", [sys.executable, str(root / "tools" / "processforge.py"), "examples-check", "--root", str(root)], 60),
@@ -7702,6 +7703,21 @@ def validate_assignment_scope_overlaps(
     return {"status": "fail" if conflicts else "pass", "conflicts": conflicts}
 
 
+def overlap_allowed_check(overlap_check: dict[str, Any], source: str) -> dict[str, Any]:
+    resolved = dict(overlap_check)
+    resolved["policy"] = "allow"
+    resolved["source"] = source
+    if resolved.get("status") == "fail":
+        resolved["status"] = "allowed"
+        resolved["behavior"] = "write scope overlap allowed by resolved plan policy"
+    return resolved
+
+
+def assignment_allows_write_scope_overlap(metadata: dict[str, Any]) -> bool:
+    non_overlap = metadata.get("non_overlap") if isinstance(metadata.get("non_overlap"), dict) else {}
+    return str(non_overlap.get("policy") or "") == "allow_write_scope_overlap"
+
+
 def assignment_dependency_set(metadata: dict[str, Any]) -> set[str]:
     dependencies = metadata.get("dependencies") if isinstance(metadata.get("dependencies"), dict) else {}
     values = [
@@ -7791,6 +7807,8 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     if missing_sources:
         raise SystemExit("FAIL: assignment required sources missing: " + ", ".join(missing_sources))
     overlap_check = validate_assignment_scope_overlaps(project_root, metadata, assignment_path=assignment)
+    if assignment_allows_write_scope_overlap(metadata):
+        overlap_check = overlap_allowed_check(overlap_check, "plan.allow_write_scope_overlap")
     if overlap_check["status"] == "fail" and not args.force:
         raise SystemExit("FAIL: assignment write scope overlaps active assignments: " + dump_yaml(overlap_check))
     contract["scope"]["non_overlap"]["overlap_check"] = overlap_check
@@ -10873,7 +10891,14 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     elif capsule_status == "stale":
         raise SystemExit(f"FAIL: assignment capsule is stale for {task_id}: {capsule_rel}; create a new capsule intentionally before launch")
     else:
-        status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=False))
+        status, output = run_command_capture(
+            command_assignment_capsule,
+            argparse.Namespace(
+                project_root=str(project_root),
+                assignment=str(assignment_yaml_path(project_root, task_id)),
+                force=assignment_allows_write_scope_overlap(task),
+            ),
+        )
         print(output, end="")
         if status:
             raise SystemExit(status)
@@ -11198,6 +11223,8 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
         plan = load_run_plan_if_present(project_root, run_id)
         runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
         workers = plan_worker_map(plan)
+        run_max_parallel = int(runtime.get("max_parallel_workers") or max_parallel)
+        allow_write_scope_overlap = plan_allows_write_scope_overlap(plan)
         default_driver = getattr(args, "driver", None) or str(runtime.get("default_driver") or scheduling.get("default_driver") or defaults.get("runtime_driver") or "manual")
         tasks = sorted([entry for entry in run.get("tasks", []) if isinstance(entry, dict)], key=lambda value: int(value.get("order", 0) or 0))
         task_rows: list[tuple[str, dict[str, Any], dict[str, Any] | None, str]] = []
@@ -11236,7 +11263,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
             continue
         for task_id, task, worker, driver_id in task_rows:
             active_count = len(running) + len(started)
-            if active_count >= max_parallel:
+            if active_count >= run_max_parallel:
                 break
             state = load_agent_run_state(project_root, run_id, task_id)
             if state.get("status") in AGENT_RUN_START_SKIP_STATUSES:
@@ -11253,10 +11280,11 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
                 continue
             current_scope = assignment_write_scope(task)
             conflict = False
-            for other_id, other_scope in running_scopes.items():
-                if assignment_scope_conflicts(task_id, current_scope, other_id, other_scope, repo_files, reason_prefix="supervisor_"):
-                    conflict = True
-                    break
+            if not allow_write_scope_overlap:
+                for other_id, other_scope in running_scopes.items():
+                    if assignment_scope_conflicts(task_id, current_scope, other_id, other_scope, repo_files, reason_prefix="supervisor_"):
+                        conflict = True
+                        break
             if conflict:
                 blocked_overlap.append(task_id)
                 skipped.append(task_id)
@@ -11430,11 +11458,72 @@ def worker_depends_on(workers_by_id: dict[str, dict[str, Any]], worker_id: str, 
     return any(worker_depends_on(workers_by_id, dep_id, dependency_id, seen) for dep_id in dependencies)
 
 
+ORCHESTRATOR_PLAN_TOP_LEVEL_KEYS = {
+    "schema_version",
+    "run",
+    "orchestrator",
+    "runtime",
+    "workers",
+    "integration",
+    "allow_write_scope_overlap",
+    "metadata",
+}
+ORCHESTRATOR_PLAN_RUNTIME_KEYS = {"default_driver", "supervisor_profile", "start_policy", "max_parallel_workers", "metadata"}
+ORCHESTRATOR_PLAN_WORKER_KEYS = {
+    "id",
+    "title",
+    "role",
+    "process",
+    "objective",
+    "execution_mode",
+    "writer",
+    "owner",
+    "runtime_driver",
+    "allow_subagents",
+    "subagent_policy",
+    "allowed_files",
+    "allowed_read_files",
+    "forbidden_files",
+    "required_sources",
+    "context_artifacts",
+    "required_outputs",
+    "expected_report_artifact",
+    "expected_report_language",
+    "dependencies",
+    "depends_on",
+    "worker_may_rebuild_context",
+    "metadata",
+}
+ORCHESTRATOR_PLAN_SUBAGENT_KEYS = {"allow", "max_subagents", "allowed_roles", "require_reports", "reports_dir", "metadata"}
+
+
+def config_extension_key(key: str) -> bool:
+    return key == "metadata" or key.startswith("x_") or key.startswith("x-")
+
+
+def unsupported_config_keys(data: dict[str, Any], allowed: set[str]) -> list[str]:
+    return sorted(str(key) for key in data if str(key) not in allowed and not config_extension_key(str(key)))
+
+
+def plan_allows_write_scope_overlap(plan: dict[str, Any]) -> bool:
+    return plan.get("allow_write_scope_overlap") is True
+
+
 def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) -> list[Check]:
     checks: list[Check] = []
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
     workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
+    for key in unsupported_config_keys(plan, ORCHESTRATOR_PLAN_TOP_LEVEL_KEYS):
+        checks.append(check("FAIL", f"unsupported top-level config field: {key}"))
+    if "allow_write_scope_overlap" in plan:
+        checks.append(check("PASS" if isinstance(plan.get("allow_write_scope_overlap"), bool) else "FAIL", "allow_write_scope_overlap boolean"))
+    if runtime:
+        for key in unsupported_config_keys(runtime, ORCHESTRATOR_PLAN_RUNTIME_KEYS):
+            checks.append(check("FAIL", f"unsupported runtime config field: {key}"))
+        if "max_parallel_workers" in runtime:
+            max_parallel = runtime.get("max_parallel_workers")
+            checks.append(check("PASS" if type(max_parallel) is int and max_parallel >= 1 else "FAIL", "runtime.max_parallel_workers positive integer"))
     checks.append(check("PASS" if run.get("id") else "FAIL", "run.id present"))
     checks.append(check("PASS" if run.get("title") else "FAIL", "run.title present"))
     checks.append(check("PASS" if str(run.get("process") or "multi-agent-task-orchestration") == "multi-agent-task-orchestration" else "FAIL", "run process is multi-agent-task-orchestration"))
@@ -11455,6 +11544,11 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
         if not isinstance(raw_worker, dict):
             checks.append(check("FAIL", "worker item must be an object"))
             continue
+        for key in unsupported_config_keys(raw_worker, ORCHESTRATOR_PLAN_WORKER_KEYS):
+            checks.append(check("FAIL", f"unsupported worker config field: {key}"))
+        raw_subagent_policy = raw_worker.get("subagent_policy") if isinstance(raw_worker.get("subagent_policy"), dict) else {}
+        for key in unsupported_config_keys(raw_subagent_policy, ORCHESTRATOR_PLAN_SUBAGENT_KEYS):
+            checks.append(check("FAIL", f"unsupported subagent_policy config field: {key}"))
         worker_id = safe_id(str(raw_worker.get("id") or ""), "worker")
         checks.append(check("PASS" if worker_id and worker_id not in seen else "FAIL", f"worker id unique: {worker_id or 'missing'}"))
         seen.add(worker_id)
@@ -11474,6 +11568,15 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
         checks.append(check("PASS" if not forbidden_conflicts else "FAIL", f"{worker_id} forbidden_files do not overlap allowed_files"))
         subagent_policy = worker_subagent_policy(raw_worker)
         reports_dir = str(subagent_policy.get("reports_dir") or "")
+        if "allow_subagents" in raw_worker:
+            checks.append(check("PASS" if isinstance(raw_worker.get("allow_subagents"), bool) else "FAIL", f"{worker_id} allow_subagents boolean"))
+        if "allow" in raw_subagent_policy:
+            checks.append(check("PASS" if isinstance(raw_subagent_policy.get("allow"), bool) else "FAIL", f"{worker_id} subagent_policy.allow boolean"))
+        if "require_reports" in raw_subagent_policy:
+            checks.append(check("PASS" if isinstance(raw_subagent_policy.get("require_reports"), bool) else "FAIL", f"{worker_id} subagent_policy.require_reports boolean"))
+        if "max_subagents" in raw_subagent_policy:
+            max_subagents_raw = raw_subagent_policy.get("max_subagents")
+            checks.append(check("PASS" if type(max_subagents_raw) is int and max_subagents_raw >= 0 else "FAIL", f"{worker_id} subagent_policy.max_subagents non-negative integer"))
         checks.append(check("PASS" if isinstance(subagent_policy.get("allow"), bool) else "FAIL", f"{worker_id} subagent allow flag valid"))
         if subagent_policy.get("allow") and subagent_policy.get("require_reports"):
             checks.append(check("PASS" if reports_dir.startswith(".pf/artifacts/subagents/") else "FAIL", f"{worker_id} subagent reports_dir inside .pf/artifacts/subagents"))
@@ -11621,6 +11724,130 @@ Launch workers with the generated prompts, then integrate their required outputs
     handoff.write_text(handoff_text, encoding="utf-8")
 
 
+def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> dict[str, Any]:
+    run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
+    runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
+    default_driver = str(runtime.get("default_driver") or "manual")
+    normalized_workers: list[dict[str, Any]] = []
+    for order, worker in enumerate(plan.get("workers", []) if isinstance(plan.get("workers"), list) else [], start=1):
+        if not isinstance(worker, dict):
+            continue
+        worker_id = safe_id(str(worker.get("id") or f"worker-{order}"), "worker")
+        normalized_workers.append(
+            {
+                "id": worker_id,
+                "order": order,
+                "runtime_driver": str(worker.get("runtime_driver") or default_driver),
+                "allow_subagents": bool(worker.get("allow_subagents", False)),
+                "subagent_policy": worker_subagent_policy(worker),
+                "allowed_files": assignment_scope_items(worker.get("allowed_files")),
+                "allowed_read_files": assignment_scope_items(worker.get("allowed_read_files")),
+                "forbidden_files": assignment_scope_items(worker.get("forbidden_files")),
+                "required_outputs": normalize_required_outputs(worker.get("required_outputs")),
+                "expected_report_artifact": str(worker.get("expected_report_artifact") or default_expected_report_artifact(worker_id)),
+                "depends_on": sorted(worker_dependency_set(worker)),
+            }
+        )
+    return {
+        "schema_version": 1,
+        "run": {
+            "id": safe_id(str(run.get("id") or "run"), "run"),
+            "title": str(run.get("title") or run.get("id") or "run"),
+            "process": str(run.get("process") or "multi-agent-task-orchestration"),
+        },
+        "runtime": {
+            "default_driver": default_driver,
+            "supervisor_profile": str(runtime.get("supervisor_profile") or "default"),
+            "start_policy": str(runtime.get("start_policy") or "manual"),
+            "max_parallel_workers": int(runtime.get("max_parallel_workers") or 1),
+        },
+        "allow_write_scope_overlap": plan_allows_write_scope_overlap(plan),
+        "workers": normalized_workers,
+    }
+
+
+def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) -> dict[str, Any]:
+    normalized = normalized_orchestrator_plan(project_root, plan)
+    run_id = str(normalized["run"]["id"])
+    workers: list[dict[str, Any]] = []
+    for worker in normalized["workers"]:
+        policy = worker["subagent_policy"] if isinstance(worker.get("subagent_policy"), dict) else {}
+        workers.append(
+            {
+                "id": worker["id"],
+                "runtime_driver": {
+                    "value": worker["runtime_driver"],
+                    "source": f"workers[{worker['id']}].runtime_driver",
+                    "behavior": ["worker-run.runtime_driver"],
+                },
+                "subagent_policy": {
+                    "allow": bool(policy.get("allow")),
+                    "max_subagents": int(policy.get("max_subagents") or 0),
+                    "allowed_roles": policy.get("allowed_roles") if isinstance(policy.get("allowed_roles"), list) else [],
+                    "require_reports": bool(policy.get("require_reports")),
+                    "reports_dir": str(policy.get("reports_dir") or ""),
+                    "behavior": ["assignment.subagent_policy", "capsule.subagent_policy", "worker-run.collect.subagent_reports"],
+                },
+                "required_outputs": worker["required_outputs"],
+                "expected_report_artifact": worker["expected_report_artifact"],
+            }
+        )
+    return {
+        "schema_version": 1,
+        "plan": rel(orchestrator_plan_path(project_root, run_id), project_root),
+        "resolved": {
+            "allow_write_scope_overlap": {
+                "value": bool(normalized["allow_write_scope_overlap"]),
+                "source": "plan.allow_write_scope_overlap" if "allow_write_scope_overlap" in plan else "default.deny",
+                "behavior": [
+                    "assignment.overlap_policy=allow" if normalized["allow_write_scope_overlap"] else "assignment.overlap_policy=deny",
+                    "supervisor.write_scope_overlap=allow_for_plan" if normalized["allow_write_scope_overlap"] else "supervisor.write_scope_overlap=block_conflicts",
+                ],
+            },
+            "runtime": normalized["runtime"],
+            "workers": workers,
+        },
+        "warnings": [],
+        "unsupported_fields": [],
+    }
+
+
+def write_orchestrator_config_resolution_artifacts(project_root: Path, plan: dict[str, Any]) -> None:
+    normalized = normalized_orchestrator_plan(project_root, plan)
+    run_id = str(normalized["run"]["id"])
+    root = run_root(project_root, run_id)
+    root.mkdir(parents=True, exist_ok=True)
+    write_yaml_file(root / "orchestrator-shell-plan.normalized.yaml", normalized)
+    write_yaml_file(root / "config-resolution-report.yaml", build_config_resolution_report(project_root, plan))
+
+
+def materialize_plan_overlap_policy(project_root: Path, plan: dict[str, Any]) -> None:
+    if not plan_allows_write_scope_overlap(plan):
+        return
+    for worker in plan.get("workers", []) if isinstance(plan.get("workers"), list) else []:
+        if not isinstance(worker, dict):
+            continue
+        task_id = safe_id(str(worker.get("id") or "worker"), "worker")
+        path = assignment_yaml_path(project_root, task_id)
+        if not path.is_file():
+            continue
+        task = load_task(project_root, task_id)
+        overlap_check = overlap_allowed_check(validate_assignment_scope_overlaps(project_root, task, assignment_path=path), "plan.allow_write_scope_overlap")
+        non_overlap = task.get("non_overlap") if isinstance(task.get("non_overlap"), dict) else {}
+        non_overlap.update(
+            {
+                "policy": "allow_write_scope_overlap",
+                "overlap_policy": "allow",
+                "overlap_policy_source": "plan.allow_write_scope_overlap",
+                "current_write_scope": assignment_write_scope(task),
+                "rule": "Write scope overlap is allowed for workers in this resolved plan.",
+                "overlap_check": overlap_check,
+            }
+        )
+        task["non_overlap"] = non_overlap
+        save_task(project_root, task)
+
+
 def command_orchestrator_plan_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
@@ -11643,6 +11870,13 @@ def command_orchestrator_plan_validate(args: argparse.Namespace) -> int:
     require_flow_root(project_root)
     plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
     result = print_checks(validate_orchestrator_task_plan(project_root, plan))
+    if getattr(args, "write_normalized", None):
+        output = Path(args.write_normalized).expanduser()
+        if not output.is_absolute():
+            output = (project_root / output).resolve()
+        output.parent.mkdir(parents=True, exist_ok=True)
+        write_yaml_file(output, normalized_orchestrator_plan(project_root, plan))
+        print(f"WROTE: {rel(output, project_root)}")
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
     emit_process_event(project_root, "orchestrator.plan.reviewed", process_id="multi-agent-task-orchestration", subject=str(run.get("id") or "run"), payload={"result": "fail" if result else "pass"})
     return result
@@ -11682,7 +11916,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
     default_driver = str(runtime.get("default_driver") or "manual")
     workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
-    planned = [run_yaml_path(project_root, run_id), orchestrator_plan_path(project_root, run_id), run_root(project_root, run_id) / "worker-prompts"]
+    planned = [run_yaml_path(project_root, run_id), orchestrator_plan_path(project_root, run_id), run_root(project_root, run_id) / "worker-prompts", run_root(project_root, run_id) / "config-resolution-report.yaml"]
     if not args.apply or getattr(args, "dry_run", False):
         print_plan("orchestrator-plan apply dry run", planned, project_root)
         return 0
@@ -11701,6 +11935,8 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
             "supervisor_profile": str(runtime.get("supervisor_profile") or "default"),
             "start_policy": str(runtime.get("start_policy") or "manual"),
         }
+        if "max_parallel_workers" in runtime:
+            run_doc["runtime"]["max_parallel_workers"] = int(runtime.get("max_parallel_workers") or 1)
         save_run(project_root, run_doc)
     write_yaml_file(orchestrator_plan_path(project_root, run_id), plan)
     for order, worker in enumerate(workers, start=1):
@@ -11749,6 +11985,8 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         if blocked_by:
             task.setdefault("dependencies", {})["blocked_by"] = blocked_by
         save_task(project_root, task)
+    materialize_plan_overlap_policy(project_root, plan)
+    write_orchestrator_config_resolution_artifacts(project_root, plan)
     command_project_context_refresh(argparse.Namespace(project_root=str(project_root)))
     for worker in workers:
         if not isinstance(worker, dict):
@@ -15362,6 +15600,7 @@ def build_parser() -> argparse.ArgumentParser:
     orchestrator_plan_validate.add_argument("--project-root", required=True, help="Project root path.")
     orchestrator_plan_validate.add_argument("--plan", help="Plan YAML path.")
     orchestrator_plan_validate.add_argument("--run", help="Run id when --plan is omitted.")
+    orchestrator_plan_validate.add_argument("--write-normalized", help="Optional normalized plan YAML output path.")
     orchestrator_plan_validate.set_defaults(func=command_orchestrator_plan_validate)
     orchestrator_plan_apply = orchestrator_plan_sub.add_parser("apply", help="Apply an orchestrator task plan.")
     orchestrator_plan_apply.add_argument("--project-root", required=True, help="Project root path.")
@@ -15400,6 +15639,7 @@ def build_parser() -> argparse.ArgumentParser:
     orchestrator_plan_validate_alias.add_argument("--project-root", required=True, help="Project root path.")
     orchestrator_plan_validate_alias.add_argument("--plan", help="Plan YAML path.")
     orchestrator_plan_validate_alias.add_argument("--run", help="Run id when --plan is omitted.")
+    orchestrator_plan_validate_alias.add_argument("--write-normalized", help="Optional normalized plan YAML output path.")
     orchestrator_plan_validate_alias.set_defaults(func=command_orchestrator_plan_validate)
 
     orchestrator_plan_apply_alias = sub.add_parser("orchestrator-plan-apply", help="Flat alias for orchestrator-plan apply.")
@@ -15649,6 +15889,8 @@ def build_parser() -> argparse.ArgumentParser:
                 shell_plan.add_argument("--workplace", help="Workplace root path for lease grants.")
                 shell_plan.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
                 shell_plan.add_argument("--apply", action="store_true", help="Create run, tasks, capsules, prompts, leases, and supervisor runs.")
+            else:
+                shell_plan.add_argument("--write-normalized", help="Optional normalized plan YAML output path.")
         shell_plan.set_defaults(func=func, shell_plan=alias_name.endswith("apply"))
 
     run_create = sub.add_parser("run-create", help="Create a project run/work session.")

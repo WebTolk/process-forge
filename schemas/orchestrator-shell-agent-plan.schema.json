@@ -6,14 +6,47 @@
   "required": ["schema_version", "run", "orchestrator", "workers"],
   "properties": {
     "schema_version": { "type": "integer", "minimum": 1 },
-    "run": { "type": "object", "additionalProperties": true },
+    "run": {
+      "type": "object",
+      "required": ["id", "title", "process"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 },
+        "process": { "const": "multi-agent-task-orchestration" },
+        "objective": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
     "orchestrator": { "type": "object", "additionalProperties": true },
-    "runtime": { "type": "object", "additionalProperties": true },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "default_driver": { "$ref": "#/$defs/id" },
+        "supervisor_profile": { "type": "string" },
+        "start_policy": { "enum": ["manual", "prepare", "supervisor"] },
+        "max_parallel_workers": { "type": "integer", "minimum": 1 },
+        "metadata": { "type": "object", "additionalProperties": true }
+      },
+      "patternProperties": {
+        "^x[_-]": true
+      },
+      "additionalProperties": false
+    },
     "workers": {
       "type": "array",
       "items": {
         "type": "object",
+        "required": ["id", "title", "role", "execution_mode", "writer", "allowed_files", "allowed_read_files", "forbidden_files", "required_outputs", "expected_report_artifact"],
         "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "title": { "type": "string", "minLength": 1 },
+          "role": { "type": "string" },
+          "process": { "type": "string" },
+          "objective": { "type": "string" },
+          "execution_mode": { "type": "string" },
+          "writer": { "type": "boolean" },
+          "owner": { "type": "string" },
+          "runtime_driver": { "$ref": "#/$defs/id" },
           "allow_subagents": { "type": "boolean" },
           "subagent_policy": {
             "type": "object",
@@ -22,13 +55,53 @@
               "max_subagents": { "type": "integer", "minimum": 0 },
               "allowed_roles": { "type": "array", "items": { "type": "string" } },
               "require_reports": { "type": "boolean" },
-              "reports_dir": { "type": "string" }
+              "reports_dir": { "type": "string" },
+              "metadata": { "type": "object", "additionalProperties": true }
             },
-            "additionalProperties": true
-          }
+            "patternProperties": {
+              "^x[_-]": true
+            },
+            "additionalProperties": false
+          },
+          "allowed_files": { "type": "array", "items": { "type": "string" } },
+          "allowed_read_files": { "type": "array", "items": { "type": "string" } },
+          "forbidden_files": { "type": "array", "items": { "type": "string" } },
+          "required_sources": { "type": "array", "items": { "type": "string" } },
+          "context_artifacts": { "type": "array", "items": { "type": ["string", "object"] } },
+          "required_outputs": { "type": "array", "items": { "$ref": "#/$defs/required_output" } },
+          "expected_report_artifact": { "type": "string" },
+          "expected_report_language": { "type": "string" },
+          "dependencies": { "type": "array", "items": { "type": "string" } },
+          "depends_on": { "type": "array", "items": { "type": "string" } },
+          "worker_may_rebuild_context": { "type": "boolean" },
+          "metadata": { "type": "object", "additionalProperties": true }
         },
-        "additionalProperties": true
+        "patternProperties": {
+          "^x[_-]": true
+        },
+        "additionalProperties": false
       }
+    },
+    "integration": { "type": "object", "required": ["required", "role", "expected_output"], "additionalProperties": true },
+    "allow_write_scope_overlap": { "type": "boolean" },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" },
+    "required_output": {
+      "type": "object",
+      "required": ["id", "path", "type", "required"],
+      "properties": {
+        "id": { "type": "string" },
+        "path": { "type": "string" },
+        "type": { "type": "string" },
+        "required": { "type": "boolean" }
+      },
+      "additionalProperties": true
     }
-  }
+  },
+  "patternProperties": {
+    "^x[_-]": true
+  },
+  "additionalProperties": false
 }

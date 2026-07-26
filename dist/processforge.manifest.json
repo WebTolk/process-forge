@@ -66,7 +66,7 @@
     },
     {
       "path": "checksums/processforge.sha256",
-      "sha256": "54146b16a057b6f06b736873dadffff841d0c551be7ca08c1d29675a5c321fbb"
+      "sha256": "1673e45c7031ef2c0ec6723ae767c9d8685c941fc85451b3a1e09fde514e77f3"
     },
     {
       "path": "docs/assets/processforge-architecture.svg",
@@ -222,7 +222,7 @@
     },
     {
       "path": "docs/concepts/multi-agent-orchestration.md",
-      "sha256": "2c505257ed763335796eab95bf50733a2c21d13f2370904d973c43c706dc6e46"
+      "sha256": "779a5f02a1cda1eb099d4c88f412afa8a6d7725a503ed9deb27cfebad00b06ae"
     },
     {
       "path": "docs/concepts/package-roots.md",
@@ -338,7 +338,7 @@
     },
     {
       "path": "docs/concepts/shell-agent-subagent-policy.md",
-      "sha256": "34e5a0c2f489a149d21280fcda1688ad154a3844998b4c17f0e8a557d43aaf70"
+      "sha256": "45163494b66e74c479403a08fbc559576a244eec9bda5479bf97f20ce68599fe"
     },
     {
       "path": "docs/concepts/status-model.md",
@@ -390,7 +390,7 @@
     },
     {
       "path": "docs/getting-started/agent-ledger-process-transitions.md",
-      "sha256": "3d11d33dc848f7d396b637f862169bb17be4bd60764c64cb16eca8622fd7e3d7"
+      "sha256": "5746a476951b51dd345b198aaf4dc592b0de607314d30d47a49d06e43b603083"
     },
     {
       "path": "docs/getting-started/agent-prompts.md",
@@ -518,7 +518,7 @@
     },
     {
       "path": "docs/ru/concepts/multi-agent-orchestration.md",
-      "sha256": "f0409b71cecbf07d228b84c8d7a3ddf41bab1fadfd7eb1771c1219349b44b846"
+      "sha256": "8485176bf661d2f1b13ecb04a056c3f805722c5f268c72b5374df03abbbf2eff"
     },
     {
       "path": "docs/ru/concepts/package-roots.md",
@@ -570,7 +570,7 @@
     },
     {
       "path": "docs/ru/concepts/shell-agent-subagent-policy.md",
-      "sha256": "e982000c6d5bec89d0150b66f8213c83e2e5379f0002eaa6c32acaed6e8200c3"
+      "sha256": "3aed7dece80cec5b82d7e6a1b7eab0046e027ddc3a155b4605d9cbbeb7a2bd40"
     },
     {
       "path": "docs/ru/concepts/workplace-vs-project.md",
@@ -578,7 +578,7 @@
     },
     {
       "path": "docs/ru/getting-started/agent-ledger-process-transitions.md",
-      "sha256": "e83a251b9ca8b33cd15f4011055e23a4de5c0a9046ce195fd9867b0ba0272f18"
+      "sha256": "2cc6a79068beafd2242a0518e1e10cf034457c97924504c2c7dccf8fd5145226"
     },
     {
       "path": "docs/ru/getting-started/agent-prompts.md",
@@ -726,7 +726,7 @@
     },
     {
       "path": "examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml",
-      "sha256": "68c2078697f05d09bd3743d0fd4b1a497c24f582f5680381e1b536ffce6d598d"
+      "sha256": "6ee3d9794b7a40296224be1a971a82296b60d0ce89bc33e672c51e748ba815d3"
     },
     {
       "path": "examples/platform-inheritance/example-child/README.md",
@@ -1230,7 +1230,7 @@
     },
     {
       "path": "schemas/orchestrator-shell-agent-plan.schema.json",
-      "sha256": "481c044a7fe65ad36f56cb5d9a7d6a97a6e2600b903e07564abdd7c9c2cddca7"
+      "sha256": "7439cb10526bf665d399eef5b6fa359aa33ee130aff0d1e54c697b4baed44ae4"
     },
     {
       "path": "schemas/orchestrator-task-plan.schema.json",
@@ -1582,7 +1582,7 @@
     },
     {
       "path": "templates/orchestrator-shell-agent-plan.yaml",
-      "sha256": "6c3f2b94b4d0a182c51b8798663889e34a71ae8ef564f3156a356346b57c2928"
+      "sha256": "40daabec2315ab077bf885027aa6d9204766a7470fd0e3de1f495de75dd9b217"
     },
     {
       "path": "templates/orchestrator-task-plan.yaml",
@@ -1846,7 +1846,7 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "82fdd77c33b4a218f54d880171d573e540f24615333caa03663b80f7c83c4a2e"
+      "sha256": "3e942c5daa742fa5e1cd6b3e0e65adbd5bbf44a7c0f36d5e2710b96ab730572c"
     },
     {
       "path": "tools/processforge_subprocess.py",
@@ -1861,12 +1861,16 @@
       "sha256": "5619a7a9894a9bbdba7eb70ab092fbe6176ae8400c1933c350f075db60419021"
     },
     {
+      "path": "tools/smoke_config_behavior_contracts.py",
+      "sha256": "0e8c2aae6481128ca1b2f3fd1f8db663e2774354a49a2ef5c49eb2113c87944f"
+    },
+    {
       "path": "tools/smoke_first_run.py",
       "sha256": "3f6692f67f17b061ac3f2df44ee3f48211097c353199d4f834a5ba6732c881e0"
     },
     {
       "path": "tools/smoke_orchestrator_shell_agents_with_subagent_policy.py",
-      "sha256": "7672f8487fd9d6b7cb846d1321fa97e3380a257e372ed75f4347753f18b56c48"
+      "sha256": "a9fbc03ab50004cc1225976f76ba7517bb8e22c751d2bac8fb3c536af57bb0f0"
     },
     {
       "path": "tools/smoke_process_run_task_batch.py",
@@ -1921,7 +1925,7 @@
       "sha256": "81b436180a2b3276df5c9b9ea95d8cba646fa908424c129ccb4faccbcd3bf00b"
     }
   ],
-  "generated_at": "2026-07-25T21:47:40Z",
+  "generated_at": "2026-07-26T08:13:36Z",
   "name": "processforge",
   "version": "1.0.0"
 }

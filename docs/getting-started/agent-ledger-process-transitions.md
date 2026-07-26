@@ -24,3 +24,7 @@ For shell workers:
 python bin/pf.py orchestrator-shell-plan-create --project-root . --run orchestrated-work --title "Orchestrated work" --answers examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml --apply
 python bin/pf.py orchestrator-shell-plan-apply --project-root . --run orchestrated-work --workplace <workplace> --apply
 ```
+
+Shell-agent plan fields are behavioral. `allow_write_scope_overlap: true` changes generated assignment and capsule overlap policy and supervisor scheduling for that plan. Subagent policy is copied into the capsule and enforced by `worker-run collect`.
+
+After apply, inspect `.pf/runs/<run-id>/config-resolution-report.yaml` to see the resolved driver, overlap, start, output, and subagent-report behavior.

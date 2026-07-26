@@ -10,6 +10,7 @@ runtime:
   default_driver: test-shell-agent
   supervisor_profile: default
   start_policy: supervisor
+  max_parallel_workers: 2
 workers:
   - id: docs-shell-agent
     title: Documentation Shell Agent
