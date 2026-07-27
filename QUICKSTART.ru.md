@@ -82,6 +82,14 @@ CLI checks и gates как проверку, и сделай checkout перед
 предполагай Agent Director или Supervisor, если process явно не использует
 multi-agent, handoff или external runtime-worker mechanics.
 
+Если workplace поддерживает Director, сначала проверь effective mode проекта:
+
+```bash
+python bin/pf.py project-mode status --project-root <project-root> --workplace <workplace-root>
+python bin/pf.py project-mode set --project-root <project-root> --mode simple
+python bin/pf.py project-mode set --project-root <project-root> --mode organized --init-office
+```
+
 Используй task-batch execution. Разбей работу на tasks, фиксируй iterations по
 ходу работы, записывай artifacts/reviews/handoffs там, где этого требует
 процесс, и заверши run-summary и run-doctor.

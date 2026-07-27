@@ -43,6 +43,18 @@ execution_mode_questions:
     handoff_modes: []
     required_agent_roles: []
     continuations_required: true
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: true
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
 roles:
   - id: auditor
     title: Auditor

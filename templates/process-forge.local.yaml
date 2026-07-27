@@ -10,6 +10,7 @@ overrides:
   package_roots: []
   template_roots: []
   tool_preferences: {}
+  coordination: {}
 
 runtime:
   mode: manual

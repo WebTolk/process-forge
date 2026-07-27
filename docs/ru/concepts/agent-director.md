@@ -8,6 +8,12 @@ flow состоит из одного operator, одной primary agent session
 несколько agent sessions или несколько process runs через routes, handoffs,
 leases и continuations.
 
+Director process имеет workplace scope. Director-capable workplace может
+одновременно содержать проекты, где только часть имеет effective `organized`
+mode; явные `simple` projects по умолчанию не получают Director cases и inbox
+obligations. Перед маршрутизацией проекта к Director используйте
+`project-mode status`.
+
 `agent-director-tick` выполняет один детерминированный проход: смотрит pending handoffs, проверяет agent availability, выдаёт leases, переводит handoff в `ready`, оставляет `waiting_for_agent`, если нужной роли нет, и помечает просроченные leases как `stale`.
 
 Director использует workplace ledger и presence-файлы. Он не запускает worker

@@ -62,7 +62,8 @@ Director, Supervisor, route, lease, or external worker questions unless the user
 chooses a mode that needs those mechanics.
 
 Authoring answers may include `process_transitions`, `agent_requirements`,
-`responsibility_boundaries`, `execution_mode_questions`, and `subagent_policy`.
+`responsibility_boundaries`, `execution_mode_questions`,
+`coordination_requirements`, `error_handling`, and `subagent_policy`.
 These fields record whether
 the process can hand off work, which target processes and handoff modes are
 allowed, which input artifacts and expected output artifacts cross the process
@@ -76,6 +77,29 @@ token-heavy reasoning. Use it to keep Director/Ledger/Inspector/Worker duties
 explicit: Director coordinates routes, leases, handoffs, and continuations;
 Execution Inspector checks task runtime status, heartbeat, exit, required
 outputs, and expected reports; Worker performs the capsule task.
+
+## Coordination Requirements
+
+Process authoring must record how the process behaves in simple and organized
+projects:
+
+```yaml
+coordination_requirements:
+  mode: simple_allowed # simple_allowed | organized_required | organized_optional
+  director_inbox:
+    required: false
+    optional: true
+  error_workflow:
+    mode: none
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+```
+
+`organized_required` fails `process-doctor` in an effective simple project
+unless the operator uses an explicit override. `simple_allowed` must not require
+Director inbox. `organized_optional` adapts to the project's effective mode.
 
 ## Scope
 

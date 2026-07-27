@@ -26,6 +26,19 @@ python bin/pf.py project-onboard --project-root ./my-project --workplace ./pf-wo
 python bin/pf.py doctor-project --project-root ./my-project
 ```
 
+Project coordination mode is independent from workplace capability:
+
+```bash
+python bin/pf.py project-onboard --project-root ./my-project --workplace ./pf-workplace --type generic-software-project --coordination-mode inherit --apply
+python bin/pf.py project-mode status --project-root ./my-project --workplace ./pf-workplace --json
+python bin/pf.py project-mode set --project-root ./my-project --mode simple
+python bin/pf.py project-mode set --project-root ./my-project --mode organized --init-office
+```
+
+Use `simple` for the default 1-1-1-1 flow. Use `organized` only when the
+project should submit to the workplace Director Office or participate in
+Director-managed cases, leases, handoffs, or error routes.
+
 This process does not recreate the workplace and does not copy global packages into the project.
 
 The project-local launcher reads private `.pf/process-forge.local.yaml` or `PROCESSFORGE_HOME` to find the ProcessForge distribution. Public files such as `.pf/START_AGENT_HERE.md` do not reveal the resolved distribution path.

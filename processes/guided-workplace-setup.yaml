@@ -4,6 +4,17 @@ name: Guided Workplace Setup
 version: 1.0.0
 status: active
 description: Agent-guided dialogue for preparing a ProcessForge workplace, reviewing a proposal, applying workplace files, and producing project-onboarding next steps.
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: needs_operator
+error_handling:
+  enabled: true
+  mode: needs_operator
+  fallback_if_no_director: needs_operator
 required_capabilities:
   - process_coordination
   - repository_read
@@ -52,7 +63,7 @@ stages:
     handoff_required: false
   - id: dialogue
     title: Guided dialogue
-    description: Ask block-scoped questions and update answers YAML after each block.
+    description: Ask block-scoped questions including Director capability, default project mode, Director Office initialization, and update answers YAML after each block.
     required_inputs:
       - answers
     produced_artifacts:

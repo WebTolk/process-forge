@@ -37,6 +37,11 @@ and Supervisor/Execution Inspector are only needed for multi-agent,
 process-transition, or external runtime-worker scenarios. See
 [docs/concepts/agent-session-model.md](docs/concepts/agent-session-model.md).
 
+A workplace can be Director-capable while individual projects remain simple.
+Project coordination mode resolves as `simple`, `organized`, or `inherit` from
+the workplace default. Use `organized` only for projects that should use the
+workplace Director Office; simple projects keep the normal 1-1-1-1 flow.
+
 Process definitions describe process mechanics. They are configurable YAML
 constructors with any number of stages, roles, artifacts, gates, capabilities,
 allowed tools, and hooks. They do not need to name an implementation platform.
@@ -77,6 +82,9 @@ ProcessForge currently supports file-first creation flows for:
 - guided workplace setup: `workplace-setup start`, `workplace-setup review`,
   `workplace-setup apply`, and `workplace-setup status`
 - project onboarding: `project-onboard` / `init-project`
+- coordination modes: `workplace-mode status`, `workplace-mode set`,
+  `project-mode status`, `project-mode set`, `director-inbox-submit`,
+  `director-case-refresh`, and `error-route`
 - first run bootstrap: `first-run`
 - process authoring: `process-authoring-start`, `process-authoring-review`,
   `process-authoring-apply`, and one-command `process-create`
@@ -191,6 +199,7 @@ and used for a run.
 - [Runtime model](docs/concepts/runtime-model.md)
 - [Runtime drivers](docs/concepts/runtime-drivers.md)
 - [Agent session model](docs/concepts/agent-session-model.md)
+- [Project coordination modes](docs/concepts/project-coordination-modes.md)
 - [Process supervisor](docs/concepts/process-supervisor.md)
 - [Agent ledger](docs/concepts/agent-ledger.md)
 - [Process transitions](docs/concepts/process-transitions.md)

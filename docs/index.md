@@ -47,6 +47,7 @@ resources live in the workplace, and each repository keeps a project-local
 - [Hooks and events overview](concepts/hooks-events.md)
 - [Runtime model](concepts/runtime-model.md)
 - [Agent session model](concepts/agent-session-model.md)
+- [Project coordination modes](concepts/project-coordination-modes.md)
 - [Runtime drivers](concepts/runtime-drivers.md)
 - [Process supervisor](concepts/process-supervisor.md)
 - [Director, ledger, inspector, and worker boundary](concepts/director-ledger-inspector-boundary.md)

@@ -72,6 +72,20 @@
     "templates": { "type": "object", "additionalProperties": true },
     "processes": { "type": "object", "additionalProperties": true },
     "packages": { "type": "object", "additionalProperties": true },
+    "workplace_coordination": {
+      "type": "object",
+      "properties": {
+        "project_mode": { "enum": ["inherit", "simple", "organized"] },
+        "workplace_default_project_mode": { "enum": ["simple", "organized"] },
+        "effective_mode": { "enum": ["simple", "organized"] },
+        "director_enabled": { "type": "boolean" },
+        "director_available_at_workplace": { "type": "boolean" },
+        "director_required": { "type": "boolean" },
+        "director_process": { "type": ["string", "null"] },
+        "director_inbox": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    },
     "session": { "type": "object", "additionalProperties": true }
   },
   "additionalProperties": true

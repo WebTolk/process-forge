@@ -30,6 +30,15 @@
     "privacy_safety": { "type": "object", "additionalProperties": true },
     "resources": { "type": "object", "additionalProperties": true },
     "platform_contracts": { "type": "object", "additionalProperties": true },
+    "coordination": {
+      "type": "object",
+      "properties": {
+        "director_capability": { "type": "boolean" },
+        "default_project_mode": { "enum": ["simple", "organized"] },
+        "initialize_director_office": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
     "first_project": { "type": "object", "additionalProperties": true }
   },
   "$defs": {

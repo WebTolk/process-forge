@@ -28,7 +28,8 @@ python bin/pf.py workplace-setup status --workplace <workplace-root> --session-i
 3. Приватность и безопасность: локальные пути, public `path_ref`, secrets, update trust.
 4. Ресурсы: knowledge roots, package roots, tools, MCP servers, templates.
 5. Platform contracts: нейтральные по умолчанию; реальные platforms только при явном описании.
-6. Первый проект: необязательный план немедленного `project-onboard`.
+6. Coordination: Director capability, default project mode и нужно ли сразу создать Director Office.
+7. Первый проект: необязательный план немедленного `project-onboard`, включая project coordination mode.
 
 ## Инструкция для агента
 

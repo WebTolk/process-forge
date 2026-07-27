@@ -38,7 +38,8 @@ Ask one block at a time:
 3. Privacy and safety: local paths, public `path_ref`, secrets, update trust.
 4. Resources: knowledge roots, package roots, tools, MCP servers, templates.
 5. Platform contracts: neutral by default, real platforms only when explicitly defined.
-6. First project: optional immediate project onboarding plan.
+6. Coordination: Director capability, default project mode, and whether to initialize Director Office now.
+7. First project: optional immediate project onboarding plan, including project coordination mode.
 
 ## Agent Snippet
 

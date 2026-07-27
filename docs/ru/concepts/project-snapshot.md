@@ -17,3 +17,8 @@ python .pf/runtime/bin/pf.py project-context-check --project-root .
 
 Snapshot нужен для handoff, старта агента, release checks и принятия решения,
 нужно ли обновлять контекст перед новой задачей.
+
+Snapshot также содержит `workplace_coordination`. Worker должен использовать
+этот блок, чтобы отличать effective `simple` project, где Director не нужен,
+от effective `organized` project, где может применяться Director inbox
+metadata.

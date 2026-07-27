@@ -7,6 +7,17 @@ version: 1.0.0
 status: active
 description: Create, review, apply, and validate a new ProcessForge process definition with explicit execution mode, companion prompt, documentation, and examples.
 purpose: Turn guided process answers into a usable process pack without requiring manual YAML authoring by hand.
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: true
+  error_workflow:
+    mode: needs_operator
+error_handling:
+  enabled: true
+  mode: needs_operator
+  fallback_if_no_director: needs_operator
 required_capabilities:
   - process_coordination
   - artifact_review

@@ -42,6 +42,8 @@ The YAML snapshot records:
 - resolved hard policies and preferences
 - required and optional capabilities
 - selected processes, packages, templates, tools, and MCP entries
+- `workplace_coordination` with project mode, workplace default mode, effective
+  mode, Director availability, and Director-required/inbox metadata
 - session startup read order
 
 The runtime workplace snapshot may contain local tool or MCP availability state.

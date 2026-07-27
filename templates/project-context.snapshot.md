@@ -15,6 +15,14 @@ unknown
 
 `.pf/`
 
+## Coordination Mode
+
+- project_mode: inherit
+- workplace_default_project_mode: simple
+- effective_mode: simple
+- director_available_at_workplace: false
+- director_required: false
+
 ## Connected Knowledge Packages
 
 - None.

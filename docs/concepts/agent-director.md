@@ -8,6 +8,11 @@ process/run. Director appears when ProcessForge composes multiple agent
 sessions or multiple process runs through routes, handoffs, leases, and
 continuations.
 
+Director process scope is the workplace. A Director-capable workplace may run
+multiple projects where only some are effective `organized`; explicit
+`simple` projects remain outside Director cases and inbox obligations by
+default. Use `project-mode status` before routing a project to Director.
+
 `agent-director-tick` performs one deterministic scheduling pass: inspect pending handoffs, check agent availability, grant leases, mark a handoff ready, keep it waiting when no role is online, and mark expired leases stale. Bounded `agent-director-run` repeats the same tick.
 
 The Director uses the workplace ledger and presence files. It does not start

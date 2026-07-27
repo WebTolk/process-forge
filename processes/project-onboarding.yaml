@@ -6,6 +6,17 @@ scope: project
 version: 1.0.0
 status: active
 description: Attach a project to an existing ProcessForge workplace without recreating the workplace.
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: true
+  error_workflow:
+    mode: needs_operator
+error_handling:
+  enabled: true
+  mode: needs_operator
+  fallback_if_no_director: needs_operator
 required_capabilities:
   - filesystem.write
   - repository.scan
@@ -59,7 +70,7 @@ roles:
 stages:
   - id: intake
     title: Intake
-    description: Capture project root, workplace root, project type, and optional answers.
+    description: Capture project root, workplace root, project type, project coordination mode, and optional answers.
     required_inputs: []
     produced_artifacts:
       - project-onboarding-inputs
@@ -109,7 +120,7 @@ stages:
     handoff_required: false
   - id: snapshot
     title: Snapshot
-    description: Refresh the project context snapshot after `.pf/` is created.
+    description: Refresh the project context snapshot after `.pf/` is created, including effective coordination mode.
     required_inputs:
       - project-flow-root
     produced_artifacts:

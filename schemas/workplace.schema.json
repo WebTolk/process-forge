@@ -41,6 +41,30 @@
     "tools": { "type": "array", "items": { "$ref": "#/$defs/capabilityProvider" } },
     "mcp_servers": { "type": "array", "items": { "$ref": "#/$defs/capabilityProvider" } },
     "policies": { "type": "object" },
+    "coordination": {
+      "type": "object",
+      "properties": {
+        "director_enabled": { "type": "boolean" },
+        "director_office_enabled": { "type": "boolean" },
+        "default_project_mode": { "enum": ["simple", "organized"] },
+        "error_workflow_support": { "type": "boolean" },
+        "director": {
+          "type": "object",
+          "properties": {
+            "process_id": { "type": "string", "minLength": 1 },
+            "scope": { "enum": ["workplace", "workspace"] },
+            "office_path": { "type": "string", "minLength": 1 },
+            "inbox_path": { "type": "string", "minLength": 1 },
+            "outbox_path": { "type": "string", "minLength": 1 },
+            "cases_path": { "type": "string", "minLength": 1 },
+            "history_path": { "type": "string", "minLength": 1 },
+            "runtime_path": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "locked_policies": { "type": "array", "items": { "type": "string" } }
   },
   "$defs": {

@@ -17,6 +17,10 @@ python tools/smoke_agent_ledger.py
 python tools/smoke_single_agent_session_flow.py
 python tools/smoke_multi_project_agent_sessions.py
 python tools/smoke_multi_agent_as_composed_sessions.py
+python tools/smoke_project_coordination_modes.py
+python tools/smoke_mixed_workplace_projects.py
+python tools/smoke_worker_awareness_of_director.py
+python tools/smoke_error_workflow.py
 python tools/smoke_process_run_task_batch.py
 python bin/pf.py release-test --root . --public --fail-fast
 python bin/pf.py dev-test --root . --suite supervisor-stress

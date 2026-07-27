@@ -46,3 +46,26 @@ runtime execution, кто выполняет assigned work и какие CLI che
 routes, leases, handoffs и continuations; Execution Inspector проверяет task
 runtime status, heartbeat, exit, required outputs и expected reports; Worker
 выполняет capsule task.
+
+## Coordination Requirements
+
+Process authoring должен фиксировать, как процесс ведёт себя в simple и
+organized project mode:
+
+```yaml
+coordination_requirements:
+  mode: simple_allowed # simple_allowed | organized_required | organized_optional
+  director_inbox:
+    required: false
+    optional: true
+  error_workflow:
+    mode: none
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+```
+
+`organized_required` не проходит `process-doctor` в effective simple project
+без явного override. `simple_allowed` не должен требовать Director inbox.
+`organized_optional` адаптируется к effective mode проекта.

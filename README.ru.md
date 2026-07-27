@@ -38,6 +38,12 @@ Inspector нужны только для multi-agent, process-transition или 
 runtime-worker сценариев. См.
 [docs/ru/concepts/agent-session-model.md](docs/ru/concepts/agent-session-model.md).
 
+Workplace может быть Director-capable, а отдельные проекты при этом остаются
+simple. Project coordination mode вычисляется как `simple`, `organized` или
+`inherit` от workplace default. `organized` нужен только проектам, которые
+должны использовать workplace Director Office; simple projects сохраняют
+обычный 1-1-1-1 flow.
+
 Process definitions описывают механику процесса. Это YAML-конструкторы с
 произвольным количеством stages, roles, artifacts, gates, capabilities, allowed
 tools и hooks. Им не нужно называть конкретную implementation platform.
@@ -97,6 +103,9 @@ ProcessForge сейчас поддерживает file-first creation flows д�
 - agent ledger и handoffs: `agent-register`, `agent-checkin`,
   `agent-availability`, `agent-lease-grant`, `process-route-list`,
   `handoff-create`, `handoff-status` и `agent-director-tick`
+- coordination modes: `workplace-mode status`, `workplace-mode set`,
+  `project-mode status`, `project-mode set`, `director-inbox-submit`,
+  `director-case-refresh` и `error-route`
 - primary agent sessions: `session-start`, `session-heartbeat`,
   `session-status` и `session-end`
 - orchestrator shell agents: `orchestrator-shell-plan-create`,
@@ -193,6 +202,7 @@ semantic parity, применяй process только после review и до
 - [Workplace vs project](docs/ru/concepts/workplace-vs-project.md)
 - [Runtime model](docs/ru/concepts/runtime-model.md)
 - [Модель агентской сессии](docs/ru/concepts/agent-session-model.md)
+- [Режимы координации проекта](docs/ru/concepts/project-coordination-modes.md)
 - [Platform contracts](docs/ru/concepts/platform-contracts.md)
 - [Platform inheritance](docs/ru/concepts/platform-inheritance.md)
 - [Навигация knowledge resources](docs/ru/concepts/knowledge-resource-navigation.md)

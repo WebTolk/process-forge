@@ -19,7 +19,17 @@
     },
     "paths": { "type": "object" },
     "enabled_registries": { "type": "object" },
-    "policies": { "type": "object" }
+    "policies": { "type": "object" },
+    "coordination": {
+      "type": "object",
+      "properties": {
+        "director_enabled": { "type": "boolean" },
+        "director_office_enabled": { "type": "boolean" },
+        "default_project_mode": { "enum": ["simple", "organized"] },
+        "director": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": true
 }

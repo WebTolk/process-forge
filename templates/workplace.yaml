@@ -53,6 +53,24 @@ policies:
   do_not_store_secret_values: true
   require_public_cleanliness_check: true
 
+coordination:
+  director_enabled: false
+  director_office_enabled: false
+  default_project_mode: simple
+  error_workflow_support: true
+  director:
+    process_id: agent-director-supervision
+    scope: workplace
+    office_path: ".pf/director"
+    inbox_path: ".pf/director/inbox"
+    outbox_path: ".pf/director/outbox"
+    cases_path: ".pf/director/cases"
+    runs_path: ".pf/director/runs"
+    artifacts_path: ".pf/director/artifacts"
+    history_path: ".pf/director/history"
+    continuations_path: ".pf/director/continuations"
+    runtime_path: ".pf/director/runtime"
+
 capability_resolution:
   missing_required_capability: block
   missing_optional_capability: warn

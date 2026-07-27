@@ -6,6 +6,17 @@ scope: workplace
 version: 1.0.0
 status: active
 description: Initialize or update the machine-local ProcessForge workplace layer.
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: needs_operator
+error_handling:
+  enabled: true
+  mode: needs_operator
+  fallback_if_no_director: needs_operator
 required_capabilities:
   - filesystem.write
   - markdown.editing
@@ -68,7 +79,7 @@ roles:
 stages:
   - id: intake
     title: Intake
-    description: Capture root path and answers.
+    description: Capture root path, answers, Director capability, default project mode, and Director Office initialization choice.
     required_inputs: []
     produced_artifacts:
       - workplace-init-answers

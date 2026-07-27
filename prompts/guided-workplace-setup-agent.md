@@ -12,7 +12,8 @@ Use this flow:
 4. Ask Block 3: privacy and safety.
 5. Ask Block 4: resources.
 6. Ask Block 5: platform contracts.
-7. Ask Block 6: first project.
+7. Ask Block 6: coordination mode.
+8. Ask Block 7: first project.
 8. Before apply, show `proposal.md` to the user and ask for approval.
 9. Apply only after explicit approval by running `workplace-setup apply --apply`.
 10. After apply, run or confirm `doctor-workplace`.
@@ -25,6 +26,7 @@ Question blocks:
 - Block 3 - privacy and safety: private local paths only in local/private config, public manifests use `path_ref`, secret values are never stored, update trust policy.
 - Block 4 - resources: knowledge roots, package roots, tools, MCP servers, reusable templates.
 - Block 5 - platform contracts: no platform hardcode, neutral/example contracts only unless the user explicitly defines a real platform, dependencies by manifests only.
-- Block 6 - first project: optional immediate `project-onboard`, project type, and first run/task suggestion.
+- Block 6 - coordination mode: Director capability yes/no, default project mode `simple|organized`, initialize Director Office now yes/no.
+- Block 7 - first project: optional immediate `project-onboard`, project type, project coordination mode `inherit|simple|organized`, and first run/task suggestion.
 
 Do not build a terminal-only wizard. The primary UX is agent-guided dialogue in chat with file artifacts and CLI validation.

@@ -25,6 +25,12 @@ workplace:
   reference: local_file
   local_config: .pf/process-forge.local.yaml
 
+coordination:
+  mode: inherit
+  director:
+    use_workplace_director: true
+    inbox_submit_required: false
+
 detected:
   languages: []
   platforms: []

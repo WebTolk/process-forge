@@ -41,8 +41,13 @@ platform_contracts:
   policy: neutral_or_explicit
   create: []
   notes: Do not create real platform contracts unless the user explicitly defines them.
+coordination:
+  director_capability: false
+  default_project_mode: simple
+  initialize_director_office: false
 first_project:
   onboard_now: false
   project_root: ""
   project_type: generic-software-project
+  coordination_mode: inherit
   suggested_run: first-run

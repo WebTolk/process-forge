@@ -4,8 +4,19 @@ name: Agent Director Supervision
 version: 1.0.0
 status: draft
 kind: orchestration
-description: Coordinates multiple agent sessions and process runs through pending handoffs, agent availability, leases, target runs, and continuation capsules; delegates task execution checks to the Process Execution Inspector.
+description: Coordinates organized projects, multiple agent sessions, and process runs through pending handoffs, agent availability, leases, target runs, and continuation capsules; delegates task execution checks to the Process Execution Inspector.
 execution_mode: process_factory
+coordination_requirements:
+  mode: organized_required
+  director_inbox:
+    required: false
+    optional: true
+  error_workflow:
+    mode: director_inbox
+error_handling:
+  enabled: true
+  mode: director_inbox
+  fallback_if_no_director: fail_validation
 roles:
   - id: agent-director
     title: Agent Director
@@ -32,6 +43,21 @@ artifact_definitions:
     owner_role: agent-director
     lifecycle: [draft, ready_for_review, approved]
 gates:
+  - id: project-effective-mode-known
+    description: Each routed project has known effective coordination mode.
+    blocking: true
+  - id: organized-project-case-ready
+    description: Organized project case is available before Director scheduling.
+    blocking: true
+  - id: simple-project-not-routed-to-director
+    description: Simple projects are not routed to Director unless explicitly included.
+    blocking: true
+  - id: director-inbox-accepted
+    description: Director inbox accepted required project messages.
+    blocking: true
+  - id: error-routed
+    description: Error workflow resolved through Director inbox, process route, or operator escalation.
+    blocking: true
   - id: handoff-status-known
     description: Every pending handoff remains waiting, becomes ready, or needs operator.
     blocking: true

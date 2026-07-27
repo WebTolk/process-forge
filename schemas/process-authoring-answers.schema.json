@@ -41,6 +41,38 @@
       },
       "additionalProperties": true
     },
+    "coordination_requirements": {
+      "type": "object",
+      "properties": {
+        "mode": { "enum": ["simple_allowed", "organized_required", "organized_optional"] },
+        "director_inbox": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" },
+            "optional": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        },
+        "error_workflow": {
+          "type": "object",
+          "properties": {
+            "mode": { "enum": ["none", "director_inbox", "route_to_process", "needs_operator"] }
+          },
+          "additionalProperties": true
+        },
+        "simple_mode_behavior": { "enum": ["disable_director_features", "optional", "fail_validation"] }
+      },
+      "additionalProperties": true
+    },
+    "error_handling": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "mode": { "enum": ["none", "director_inbox", "route_to_process", "needs_operator"] },
+        "fallback_if_no_director": { "enum": ["needs_operator", "fail_validation"] }
+      },
+      "additionalProperties": true
+    },
     "roles": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "stages": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "artifacts": { "type": "array", "items": { "type": "object", "additionalProperties": true } },

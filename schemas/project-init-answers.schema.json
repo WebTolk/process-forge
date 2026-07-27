@@ -20,6 +20,21 @@
       "additionalProperties": true
     },
     "intake": { "type": "object", "additionalProperties": true },
+    "coordination": {
+      "type": "object",
+      "properties": {
+        "mode": { "enum": ["inherit", "simple", "organized"] },
+        "director": {
+          "type": "object",
+          "properties": {
+            "use_workplace_director": { "type": "boolean" },
+            "inbox_submit_required": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "required_capabilities": { "type": "array", "items": { "type": "string" } },
     "optional_capabilities": { "type": "array", "items": { "type": "string" } }
   },

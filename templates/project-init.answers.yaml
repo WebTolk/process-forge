@@ -6,6 +6,12 @@ project:
   type: auto
   mode: auto
 
+coordination:
+  mode: inherit
+  director:
+    use_workplace_director: true
+    inbox_submit_required: false
+
 required_capabilities:
   - repository.read
   - markdown.editing

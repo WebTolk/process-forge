@@ -14,8 +14,9 @@ project does not contain ProcessForge core or `tools/processforge.py`.
 2. Find the existing workplace root or `workplace.yaml`.
 3. Verify that the workplace exists.
 4. Determine or accept the project type.
-5. Create `.pf/`.
-6. Create `.pf/process-forge.yaml`.
+5. Determine project coordination mode: `inherit`, `simple`, or `organized`.
+6. Create `.pf/`.
+7. Create `.pf/process-forge.yaml`.
 7. Create `.pf/process-forge.local.yaml`.
 8. Create `.pf/AGENTS.md`.
 9. Create `.pf/hooks.yaml`.
@@ -24,9 +25,10 @@ project does not contain ProcessForge core or `tools/processforge.py`.
 12. Create `.pf/assignments/first-assignment.yaml`.
 13. Generate `.pf/START_AGENT_HERE.md`.
 14. Create `.pf/runtime/bin/pf.py`.
-15. Run `doctor-project` through `pf` or `.pf/runtime/bin/pf.py`.
-16. Fix safe local issues.
-17. Create onboarding report, review, and handoff.
+15. Check `project-mode status`.
+16. Run `doctor-project` through `pf` or `.pf/runtime/bin/pf.py`.
+17. Fix safe local issues.
+18. Create onboarding report, review, and handoff.
 
 ## Do Not
 
@@ -34,11 +36,14 @@ project does not contain ProcessForge core or `tools/processforge.py`.
 - Do not write absolute local paths into public project files.
 - Do not copy global packages into the project.
 - Do not overwrite brownfield files without explicit force.
+- Do not require Director Office for a project with effective `simple` mode.
+- Do not set `organized` unless workplace Director capability exists or the operator explicitly enables it.
 
 ## CLI
 
 ```bash
-python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type <project-type> --apply
+python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type <project-type> --coordination-mode inherit --apply
+python bin/pf.py project-mode status --project-root <project-root> --workplace <workplace-root>
 python bin/pf.py agent-start-prompt --project-root <project-root>
 ```
 

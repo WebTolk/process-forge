@@ -84,6 +84,25 @@ PROJECT_FLOW_DIRS = [
     "runtime/registries",
 ]
 
+COORDINATION_PROJECT_MODES = {"inherit", "simple", "organized"}
+WORKPLACE_DEFAULT_PROJECT_MODES = {"simple", "organized"}
+PROCESS_COORDINATION_MODES = {"simple_allowed", "organized_required", "organized_optional"}
+ERROR_WORKFLOW_MODES = {"none", "director_inbox", "route_to_process", "needs_operator"}
+ERROR_WORKFLOW_FALLBACKS = {"needs_operator", "fail_validation"}
+DIRECTOR_OFFICE_DEFAULTS = {
+    "process_id": "agent-director-supervision",
+    "scope": "workplace",
+    "office_path": ".pf/director",
+    "inbox_path": ".pf/director/inbox",
+    "outbox_path": ".pf/director/outbox",
+    "cases_path": ".pf/director/cases",
+    "runs_path": ".pf/director/runs",
+    "artifacts_path": ".pf/director/artifacts",
+    "history_path": ".pf/director/history",
+    "continuations_path": ".pf/director/continuations",
+    "runtime_path": ".pf/director/runtime",
+}
+
 RESERVED_WORKER_ENV_KEYS = {
     "PF_RUN_ID",
     "PF_TASK_ID",
@@ -969,6 +988,13 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
     defaults = workplace_defaults(root, answers)
     paths_answers = answers.get("paths", {}) if isinstance(answers.get("paths"), dict) else {}
     policies_answers = answers.get("policies", {}) if isinstance(answers.get("policies"), dict) else {}
+    coordination_answers = answers.get("coordination", {}) if isinstance(answers.get("coordination"), dict) else {}
+    director_answers = coordination_answers.get("director", {}) if isinstance(coordination_answers.get("director"), dict) else {}
+    workplace_coordination = default_workplace_coordination()
+    workplace_coordination["director_enabled"] = bool(coordination_answers.get("director_enabled", False))
+    workplace_coordination["director_office_enabled"] = bool(coordination_answers.get("director_office_enabled", False))
+    workplace_coordination["default_project_mode"] = normalize_workplace_default_project_mode(coordination_answers.get("default_project_mode", "simple"))
+    workplace_coordination["director"].update({key: value for key, value in director_answers.items() if value not in (None, "")})
     path_constants = dict(DEFAULT_PATH_CONSTANTS)
     answer_constants = paths_answers.get("path_constants")
     if isinstance(answer_constants, dict):
@@ -1019,6 +1045,7 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
             "do_not_store_secret_values": True,
             "require_public_cleanliness_check": True,
         },
+        "coordination": workplace_coordination,
         "capability_resolution": {
             "missing_required_capability": "block",
             "missing_optional_capability": "warn",
@@ -1374,6 +1401,9 @@ def command_init_workplace(args: argparse.Namespace) -> int:
             results.append(write_global_agent_section(path, force=args.force))
         else:
             results.append(write_file(path, content, force=args.force))
+    workplace_coordination = workplace_coordination_config(root / "workplace.yaml")
+    if workplace_coordination.get("director_office_enabled"):
+        initialize_director_office(root, workplace_coordination)
     append_workplace_event(root, "workplace.structure.created", payload={"directories": [rel(path, root) for path in planned_dirs]})
     append_workplace_event(root, "workplace.path_constants.created", payload={"manifest": "workplace.yaml"})
     append_workplace_event(root, "workplace.registry.created", payload={"registries": "registries/"})
@@ -1439,7 +1469,8 @@ def default_guided_workplace_answers(workplace: Path, session_id: str) -> dict[s
             "create": [],
             "notes": "Do not create real platform contracts unless the user explicitly defines them.",
         },
-        "first_project": {"onboard_now": False, "project_root": "", "project_type": "generic-software-project", "suggested_run": "first-run"},
+        "coordination": {"director_capability": False, "default_project_mode": "simple", "initialize_director_office": False},
+        "first_project": {"onboard_now": False, "project_root": "", "project_type": "generic-software-project", "coordination_mode": "inherit", "suggested_run": "first-run"},
     }
 
 
@@ -1467,6 +1498,7 @@ def guided_answers_to_workplace_init_answers(workplace: Path, answers: dict[str,
     machine = answers.get("machine_layout") if isinstance(answers.get("machine_layout"), dict) else {}
     resources = answers.get("resources") if isinstance(answers.get("resources"), dict) else {}
     privacy = answers.get("privacy_safety") if isinstance(answers.get("privacy_safety"), dict) else {}
+    coordination = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
     package_roots = {}
     for item in resources.get("package_roots", []) if isinstance(resources.get("package_roots"), list) else []:
         if isinstance(item, dict):
@@ -1486,6 +1518,11 @@ def guided_answers_to_workplace_init_answers(workplace: Path, answers: dict[str,
             "distributions": {"processforge": processforge_root},
         },
         "policies": {"shell_is_fallback": True, "local_paths_private_only": bool(privacy.get("local_paths_private_only", True))},
+        "coordination": {
+            "director_enabled": bool(coordination.get("director_capability", False)),
+            "director_office_enabled": bool(coordination.get("initialize_director_office", False)),
+            "default_project_mode": normalize_workplace_default_project_mode(coordination.get("default_project_mode", "simple")),
+        },
     }
 
 
@@ -1494,6 +1531,7 @@ def render_workplace_setup_proposal(session_id: str, answers: dict[str, Any]) ->
     agents = answers.get("agent_environment") if isinstance(answers.get("agent_environment"), dict) else {}
     resources = answers.get("resources") if isinstance(answers.get("resources"), dict) else {}
     first_project = answers.get("first_project") if isinstance(answers.get("first_project"), dict) else {}
+    coordination = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
     proposal = {
         "schema_version": 1,
         "session_id": safe_id(session_id, "setup-session"),
@@ -1513,6 +1551,11 @@ def render_workplace_setup_proposal(session_id: str, answers: dict[str, Any]) ->
         },
         "privacy": answers.get("privacy_safety", {}),
         "platform_policy": answers.get("platform_contracts", {}),
+        "coordination": {
+            "director_capability": bool(coordination.get("director_capability", False)),
+            "default_project_mode": normalize_workplace_default_project_mode(coordination.get("default_project_mode", "simple")),
+            "initialize_director_office": bool(coordination.get("initialize_director_office", False)),
+        },
         "first_project": first_project,
         "apply_steps": [
             "run workplace-init internals",
@@ -1535,6 +1578,9 @@ def render_workplace_setup_proposal(session_id: str, answers: dict[str, Any]) ->
 - Workplace: `{proposal["workplace"]["path_ref"]}`
 - Local docs: `{proposal["local_docs"]["path_ref"]}`
 - Project roots: {", ".join(proposal["project_roots"]) if proposal["project_roots"] else "not set"}
+- Director capability: {str(proposal["coordination"]["director_capability"]).lower()}
+- Default project mode: {proposal["coordination"]["default_project_mode"]}
+- Initialize Director Office: {str(proposal["coordination"]["initialize_director_office"]).lower()}
 
 ## Agent Environments
 
@@ -1900,6 +1946,11 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
             checks.append(check("FAIL", "workplace.yaml appears to contain a secret value"))
         else:
             checks.append(check("PASS", "workplace.yaml contains no obvious secret values"))
+        cfg = workplace_coordination_config(manifest)
+        checks.append(check("PASS", f"default_project_mode is {cfg['default_project_mode']}"))
+        checks.append(check("PASS", f"director_enabled is {str(bool(cfg.get('director_enabled'))).lower()}"))
+        if cfg.get("director_office_enabled"):
+            checks.append(check("PASS" if director_office_exists(root, cfg) else "WARN", "Director Office exists"))
         checks.extend(path_constant_checks(root, manifest))
         checks.extend(registry_path_resolution_checks(root, manifest))
         checks.extend(package_root_registry_checks(root))
@@ -2009,6 +2060,333 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
         if "mcp_servers:" in mcp_text and not has_mcp_entry:
             checks.append(check("WARN", "optional MCP providers are not configured"))
     return print_checks(checks)
+
+
+def command_workplace_mode_status(args: argparse.Namespace) -> int:
+    workplace_root = normalize_workplace_path(Path(args.workplace))
+    manifest = workplace_root / "workplace.yaml"
+    cfg = workplace_coordination_config(manifest)
+    office_exists = director_office_exists(workplace_root, cfg)
+    payload = {
+        "workplace_root": normalize_path_string(str(workplace_root)),
+        "director_enabled": bool(cfg.get("director_enabled")),
+        "director_office_enabled": bool(cfg.get("director_office_enabled")),
+        "director_office_exists": office_exists,
+        "default_project_mode": cfg.get("default_project_mode", "simple"),
+        "director": cfg.get("director", {}),
+    }
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(f"WORKPLACE: {payload['workplace_root']}")
+        print(f"DIRECTOR_ENABLED: {str(payload['director_enabled']).lower()}")
+        print(f"DIRECTOR_OFFICE_ENABLED: {str(payload['director_office_enabled']).lower()}")
+        print(f"DIRECTOR_OFFICE_EXISTS: {str(payload['director_office_exists']).lower()}")
+        print(f"DEFAULT_PROJECT_MODE: {payload['default_project_mode']}")
+    return 0
+
+
+def active_organized_project_sessions(workplace_root: Path) -> list[dict[str, Any]]:
+    active: list[dict[str, Any]] = []
+    for presence_path in (workplace_root / "runtime" / "agent-presence").glob("*/*.json"):
+        data = load_json(presence_path)
+        if data.get("status") != "online":
+            continue
+        project_root_value = data.get("project_root")
+        if not project_root_value:
+            continue
+        project_root = Path(str(project_root_value)).expanduser()
+        if not project_root.is_dir():
+            continue
+        try:
+            status = effective_project_coordination(project_root, str(workplace_root))
+        except SystemExit:
+            continue
+        if status.get("effective_mode") == "organized":
+            active.append({"agent_id": data.get("agent_id"), "session_id": data.get("session_id"), "project_root": normalize_path_string(str(project_root.resolve()))})
+    return active
+
+
+def update_workplace_coordination(workplace_root: Path, updater: Any) -> dict[str, Any]:
+    manifest = workplace_root / "workplace.yaml"
+    if not manifest.is_file():
+        raise SystemExit(f"FAIL: workplace.yaml missing: {manifest}")
+    data = read_yaml_file(manifest)
+    cfg = workplace_coordination_config(manifest)
+    updater(cfg)
+    data["coordination"] = cfg
+    write_yaml_file(manifest, data)
+    return cfg
+
+
+def command_workplace_mode_set(args: argparse.Namespace) -> int:
+    workplace_root = normalize_workplace_path(Path(args.workplace))
+    if args.director_enabled is None and args.director_office_enabled is None:
+        raise SystemExit("FAIL: workplace-mode set requires --director-enabled and/or --director-office-enabled")
+    if args.director_enabled is not None and not parse_cli_bool(args.director_enabled, name="--director-enabled") and not args.force:
+        active = active_organized_project_sessions(workplace_root)
+        if active:
+            raise SystemExit("FAIL: cannot disable workplace Director while organized project sessions are active; use --force after migration")
+
+    def updater(cfg: dict[str, Any]) -> None:
+        if args.director_enabled is not None:
+            cfg["director_enabled"] = parse_cli_bool(args.director_enabled, name="--director-enabled")
+        if args.director_office_enabled is not None:
+            cfg["director_office_enabled"] = parse_cli_bool(args.director_office_enabled, name="--director-office-enabled")
+
+    cfg = update_workplace_coordination(workplace_root, updater)
+    if cfg.get("director_office_enabled"):
+        initialize_director_office(workplace_root, cfg)
+    print(f"UPDATED: {rel(workplace_root / 'workplace.yaml', workplace_root)}")
+    return command_workplace_mode_status(argparse.Namespace(workplace=str(workplace_root), json=args.json))
+
+
+def command_workplace_mode_set_default_project_mode(args: argparse.Namespace) -> int:
+    workplace_root = normalize_workplace_path(Path(args.workplace))
+    mode = normalize_workplace_default_project_mode(args.mode)
+
+    def updater(cfg: dict[str, Any]) -> None:
+        cfg["default_project_mode"] = mode
+
+    update_workplace_coordination(workplace_root, updater)
+    print(f"UPDATED: {rel(workplace_root / 'workplace.yaml', workplace_root)}")
+    return command_workplace_mode_status(argparse.Namespace(workplace=str(workplace_root), json=args.json))
+
+
+def command_workplace_mode_doctor(args: argparse.Namespace) -> int:
+    workplace_root = normalize_workplace_path(Path(args.workplace))
+    checks = []
+    manifest = workplace_root / "workplace.yaml"
+    checks.append(check("PASS" if manifest.is_file() else "FAIL", "workplace.yaml found"))
+    if manifest.is_file():
+        cfg = workplace_coordination_config(manifest)
+        checks.append(check("PASS", f"default_project_mode is {cfg['default_project_mode']}"))
+        checks.append(check("PASS", f"director_enabled is {str(bool(cfg.get('director_enabled'))).lower()}"))
+        if cfg.get("director_office_enabled") or cfg.get("director_enabled"):
+            checks.append(check("PASS" if director_office_exists(workplace_root, cfg) else "WARN", "Director Office exists"))
+    return print_checks(checks)
+
+
+def command_project_mode_status(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    payload = effective_project_coordination(project_root, getattr(args, "workplace", None))
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(f"PROJECT: {payload['project_id']}")
+        print(f"PROJECT_MODE: {payload['project_mode']}")
+        print(f"WORKPLACE_DEFAULT_PROJECT_MODE: {payload['workplace_default_project_mode']}")
+        print(f"EFFECTIVE_MODE: {payload['effective_mode']}")
+        print(f"DIRECTOR_AVAILABLE: {str(bool(payload['director_available'])).lower()}")
+        print(f"DIRECTOR_REQUIRED: {str(bool(payload['director_required'])).lower()}")
+    return 0
+
+
+def command_project_mode_set(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    flow_root = require_flow_root(project_root)
+    mode = normalize_project_coordination_mode(args.mode)
+    if mode == "organized":
+        status = effective_project_coordination(project_root, getattr(args, "workplace", None))
+        if not status["workplace_director_enabled"]:
+            raise SystemExit("FAIL: organized project mode requires workplace director_enabled=true")
+        workplace_root = Path(str(status["workplace_root"])) if status.get("workplace_root") else None
+        if workplace_root and (args.init_office or status.get("workplace_director_office_enabled")):
+            initialize_director_office(workplace_root)
+        elif not status.get("director_office_exists"):
+            raise SystemExit("FAIL: organized project mode requires an initialized Director Office; rerun with --init-office or enable workplace Director Office")
+    manifest = flow_root / "process-forge.yaml"
+    data = read_yaml_file(manifest)
+    coordination = data.get("coordination") if isinstance(data.get("coordination"), dict) else default_project_coordination()
+    director = coordination.get("director") if isinstance(coordination.get("director"), dict) else {}
+    coordination["mode"] = mode
+    director.setdefault("use_workplace_director", True)
+    director.setdefault("inbox_submit_required", False)
+    coordination["director"] = director
+    data["coordination"] = coordination
+    write_yaml_file(manifest, data)
+    write_project_context_snapshot_outputs(project_root)
+    print(f"UPDATED: {rel(manifest, project_root)}")
+    return command_project_mode_status(argparse.Namespace(project_root=str(project_root), workplace=getattr(args, "workplace", None), json=args.json))
+
+
+def command_project_mode_doctor(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    checks = coordination_doctor_checks(project_root, getattr(args, "workplace", None))
+    return print_checks(checks)
+
+
+def director_message_payload(workplace_root: Path, project_root: Path | None, message_type: str, content: str, coordination: dict[str, Any]) -> dict[str, Any]:
+    project_payload = None
+    if project_root:
+        project_payload = {
+            "id": project_id(project_root),
+            "root": normalize_path_string(str(project_root)),
+            "effective_mode": coordination.get("effective_mode"),
+        }
+    return {
+        "schema_version": 1,
+        "id": f"msg-{uuid.uuid4().hex[:16]}",
+        "created_at": now_utc(),
+        "message_type": message_type,
+        "status": "open",
+        "scope": "project" if project_root else "workspace",
+        "project": project_payload,
+        "content": content,
+    }
+
+
+def command_director_inbox_submit(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve() if args.project_root else None
+    workplace_root = normalize_workplace_path(Path(args.workplace)) if args.workplace else None
+    if project_root:
+        require_flow_root(project_root)
+        status = effective_project_coordination(project_root, str(workplace_root) if workplace_root else None)
+        workplace_root = Path(str(status["workplace_root"])) if status.get("workplace_root") else workplace_root
+        if status["effective_mode"] == "simple" and not args.allow_simple_submit and args.message_type != "operator_note":
+            message = "\n".join(
+                [
+                    "FAIL: project is in simple coordination mode.",
+                    "Director inbox is available at the workplace, but this project is not organized.",
+                    "Run:",
+                    "  pf project-mode set --project-root <project> --mode organized",
+                    "or submit as workspace-level/operator note if appropriate.",
+                ]
+            )
+            if args.json:
+                print(json.dumps({"status": "fail", "error": message, "effective_mode": "simple"}, indent=2, sort_keys=True))
+                return 1
+            raise SystemExit(message)
+        if status["effective_mode"] == "organized" and not status["workplace_director_enabled"]:
+            raise SystemExit("FAIL: workplace Director is not enabled")
+        coordination = status
+    else:
+        if not workplace_root:
+            raise SystemExit("FAIL: director-inbox-submit requires --project-root or --workplace")
+        cfg = workplace_coordination_config(workplace_root / "workplace.yaml")
+        if not cfg.get("director_enabled"):
+            raise SystemExit("FAIL: workplace Director is not enabled")
+        coordination = {"effective_mode": "workspace", "workplace_root": normalize_path_string(str(workplace_root))}
+    if not workplace_root:
+        raise SystemExit("FAIL: workplace root could not be resolved")
+    paths = initialize_director_office(workplace_root)
+    payload = director_message_payload(workplace_root, project_root, args.message_type, args.content or "", coordination)
+    message_path = paths["inbox_path"] / f"{payload['id']}.yaml"
+    write_yaml_file(message_path, payload)
+    if args.json:
+        print(json.dumps({"status": "pass", "message": rel(message_path, workplace_root), "payload": payload}, indent=2, sort_keys=True))
+    else:
+        print(f"WROTE: {rel(message_path, workplace_root)}")
+    return 0
+
+
+def director_inbox_project_ids(workplace_root: Path) -> set[str]:
+    ids: set[str] = set()
+    inbox = director_office_paths(workplace_root).get("inbox_path")
+    if not inbox or not inbox.is_dir():
+        return ids
+    for path in inbox.glob("*.yaml"):
+        data = load_yaml_document(path)
+        project_data = data.get("project") if isinstance(data, dict) else None
+        if isinstance(project_data, dict) and project_data.get("id"):
+            ids.add(str(project_data["id"]))
+    return ids
+
+
+def command_director_case_refresh(args: argparse.Namespace) -> int:
+    workplace_root = normalize_workplace_path(Path(args.workplace))
+    paths = initialize_director_office(workplace_root)
+    include_simple = bool(args.include_simple)
+    inbox_project_ids = director_inbox_project_ids(workplace_root)
+    refreshed: list[str] = []
+    for snapshot_path in sorted(workplace_root.glob("projects/*/.pf/runtime/cache/workplace-context.snapshot.yaml")):
+        snapshot = load_yaml_document(snapshot_path)
+        project_data = snapshot.get("project") if isinstance(snapshot, dict) else {}
+        project_id_value = str(project_data.get("id") or snapshot_path.parents[3].name) if isinstance(project_data, dict) else snapshot_path.parents[3].name
+        coordination = snapshot.get("workplace_coordination") if isinstance(snapshot.get("workplace_coordination"), dict) else {}
+        effective_mode = str(coordination.get("effective_mode") or "simple")
+        if effective_mode != "organized" and project_id_value not in inbox_project_ids and not include_simple:
+            continue
+        case_path = paths["cases_path"] / f"{safe_id(project_id_value, 'project')}.yaml"
+        write_yaml_file(
+            case_path,
+            {
+                "schema_version": 1,
+                "project_id": project_id_value,
+                "status": "open",
+                "effective_mode": effective_mode,
+                "refreshed_at": now_utc(),
+                "source": normalize_path_string(str(snapshot_path)),
+                "reason": "organized" if effective_mode == "organized" else "open_inbox_or_include_simple",
+            },
+        )
+        refreshed.append(rel(case_path, workplace_root))
+    if args.json:
+        print(json.dumps({"status": "pass", "cases": refreshed}, indent=2, sort_keys=True))
+    else:
+        for item in refreshed:
+            print(f"WROTE: {item}")
+        if not refreshed:
+            print("PASS: no director cases required")
+    return 0
+
+
+def command_error_route(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    mode = str(args.mode or "none")
+    if mode not in ERROR_WORKFLOW_MODES:
+        raise SystemExit("FAIL: error workflow mode must be none, director_inbox, route_to_process, or needs_operator")
+    fallback = str(args.fallback_if_no_director or "fail_validation")
+    if fallback not in ERROR_WORKFLOW_FALLBACKS:
+        raise SystemExit("FAIL: fallback_if_no_director must be needs_operator or fail_validation")
+    coordination = effective_project_coordination(project_root, getattr(args, "workplace", None))
+    result: dict[str, Any] = {
+        "schema_version": 1,
+        "created_at": now_utc(),
+        "project_id": project_id(project_root),
+        "effective_mode": coordination["effective_mode"],
+        "requested_mode": mode,
+        "result_mode": mode,
+        "status": "recorded",
+        "summary": args.summary or "",
+    }
+    if mode == "director_inbox" and coordination["effective_mode"] == "organized":
+        code = command_director_inbox_submit(
+            argparse.Namespace(
+                project_root=str(project_root),
+                workplace=getattr(args, "workplace", None),
+                message_type="error_report",
+                content=args.summary or "",
+                allow_simple_submit=False,
+                json=False,
+            )
+        )
+        if code:
+            return code
+        result["result_mode"] = "director_inbox"
+    elif mode == "director_inbox":
+        if fallback == "fail_validation":
+            raise SystemExit("FAIL: director_inbox error workflow requires effective organized project mode")
+        result["result_mode"] = "needs_operator"
+        result["status"] = "needs_operator"
+    elif mode == "route_to_process":
+        routes = locate_flow_root(project_root) / "process-routes.yaml"
+        if not routes.is_file():
+            raise SystemExit("FAIL: route_to_process requires .pf/process-routes.yaml")
+        result["route"] = rel(routes, project_root)
+    elif mode == "needs_operator":
+        result["status"] = "needs_operator"
+    output = locate_flow_root(project_root) / "artifacts" / "error-workflow" / f"error-{uuid.uuid4().hex[:12]}.yaml"
+    write_yaml_file(output, result)
+    if args.json:
+        print(json.dumps({"status": "pass", "path": rel(output, project_root), "result": result}, indent=2, sort_keys=True))
+    else:
+        print(f"WROTE: {rel(output, project_root)}")
+        print(f"RESULT_MODE: {result['result_mode']}")
+    return 0
 
 
 def list_project_files(project_root: Path) -> list[Path]:
@@ -2845,6 +3223,10 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
     defaults = project_defaults(project_root, answers, detected)
     detected["platforms"] = selected_project_platforms(detected, answers, defaults["type"], workplace_manifest, project_root)
     mode = project_mode(project_root, answers)
+    coordination_answers = answers.get("coordination", {}) if isinstance(answers.get("coordination"), dict) else {}
+    project_coordination = default_project_coordination(coordination_answers.get("mode", "inherit"))
+    if isinstance(coordination_answers.get("director"), dict):
+        project_coordination["director"].update(coordination_answers["director"])
     required = answers.get("required_capabilities") if isinstance(answers.get("required_capabilities"), list) else []
     optional = answers.get("optional_capabilities") if isinstance(answers.get("optional_capabilities"), list) else []
     required = required or ["repository.read", "markdown.editing"]
@@ -2892,6 +3274,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
             "local_config": f"{PROJECT_FLOW_ROOT}/process-forge.local.yaml",
         },
         "workplace": {"reference": "local_file", "local_config": f"{PROJECT_FLOW_ROOT}/process-forge.local.yaml"},
+        "coordination": project_coordination,
         "detected": {
             "languages": detected["languages"],
             "platforms": detected["platforms"],
@@ -3608,6 +3991,11 @@ def command_init_project(args: argparse.Namespace) -> int:
         project_answers = answers.get("project") if isinstance(answers.get("project"), dict) else {}
         project_answers["type"] = project_type
         answers["project"] = project_answers
+    coordination_mode = getattr(args, "coordination_mode", None)
+    if coordination_mode:
+        coordination_answers = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
+        coordination_answers["mode"] = coordination_mode
+        answers["coordination"] = coordination_answers
     if args.apply and not workplace.is_file() and not args.allow_missing_workplace:
         raise SystemExit(
             f"""FAIL: workplace manifest is required before project onboarding.
@@ -4375,6 +4763,10 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_single_agent_session_flow", [sys.executable, str(root / "tools" / "smoke_single_agent_session_flow.py")], 180),
         ReleaseCommand("smoke_multi_project_agent_sessions", [sys.executable, str(root / "tools" / "smoke_multi_project_agent_sessions.py")], 180),
         ReleaseCommand("smoke_multi_agent_as_composed_sessions", [sys.executable, str(root / "tools" / "smoke_multi_agent_as_composed_sessions.py")], 180),
+        ReleaseCommand("smoke_project_coordination_modes", [sys.executable, str(root / "tools" / "smoke_project_coordination_modes.py")], 180),
+        ReleaseCommand("smoke_mixed_workplace_projects", [sys.executable, str(root / "tools" / "smoke_mixed_workplace_projects.py")], 180),
+        ReleaseCommand("smoke_worker_awareness_of_director", [sys.executable, str(root / "tools" / "smoke_worker_awareness_of_director.py")], 180),
+        ReleaseCommand("smoke_error_workflow", [sys.executable, str(root / "tools" / "smoke_error_workflow.py")], 180),
         ReleaseCommand("smoke_process_transition_handoff", [sys.executable, str(root / "tools" / "smoke_process_transition_handoff.py")], 120),
         ReleaseCommand("smoke_agent_director_tick", [sys.executable, str(root / "tools" / "smoke_agent_director_tick.py")], 120),
         ReleaseCommand("smoke_config_behavior_contracts", [sys.executable, str(root / "tools" / "smoke_config_behavior_contracts.py")], 180),
@@ -5876,7 +6268,11 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7)
         sorted(set(package_ids)),
         required_package_ids,
     )
-    health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] or platform_resolution["circular_platforms"] or required_resource_missing else ("warn" if any(item["severity"] == "warn" for item in optional_records) or recommended_resource_missing else "pass")
+    coordination_status = effective_project_coordination(project_root)
+    coordination_blocked = coordination_status["effective_mode"] == "organized" and (
+        not coordination_status["workplace_director_enabled"] or not coordination_status["director_office_exists"]
+    )
+    health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] or platform_resolution["circular_platforms"] or required_resource_missing or coordination_blocked else ("warn" if any(item["severity"] == "warn" for item in optional_records) or recommended_resource_missing else "pass")
     return {
         "schema_version": 1,
         "snapshot": {
@@ -5956,6 +6352,17 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7)
         },
         "processes": {"enabled": enabled_processes},
         "packages": {"selected": selected_packages},
+        "workplace_coordination": {
+            "project_mode": coordination_status["project_mode"],
+            "workplace_default_project_mode": coordination_status["workplace_default_project_mode"],
+            "effective_mode": coordination_status["effective_mode"],
+            "director_enabled": bool(coordination_status["workplace_director_enabled"] and coordination_status["effective_mode"] == "organized"),
+            "director_available_at_workplace": bool(coordination_status["workplace_director_enabled"]),
+            "director_office_exists": bool(coordination_status["director_office_exists"]),
+            "director_required": bool(coordination_status["director_required"]),
+            "director_process": coordination_status["director_process"] if coordination_status["effective_mode"] == "organized" else None,
+            "director_inbox": coordination_status["director_inbox"] if coordination_status["effective_mode"] == "organized" else {"enabled": False},
+        },
         "session": {
             "startup_read_order": [
                 rel(flow_root / "AGENTS.md", project_root),
@@ -5990,6 +6397,7 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
     template_groups = snapshot.get("templates", {}) if isinstance(snapshot.get("templates"), dict) else {}
     processes = snapshot.get("processes", {}).get("enabled", []) if isinstance(snapshot.get("processes"), dict) else []
     project_templates = template_groups.get("project", []) if isinstance(template_groups.get("project"), list) else []
+    workplace_coordination = snapshot.get("workplace_coordination", {}) if isinstance(snapshot.get("workplace_coordination"), dict) else {}
 
     def md_items(items: list[Any], empty: str = "None.") -> str:
         if not items:
@@ -6035,6 +6443,14 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
             f"- constraint: {process_forge.get('version_constraint', 'unknown')}",
             f"- install_mode: {process_forge.get('install_mode', 'linked')}",
             f"- distribution: {distribution.get('id', 'processforge')} ({distribution.get('status', 'unknown')})",
+            "",
+            "## Coordination Mode",
+            "",
+            f"- project_mode: {workplace_coordination.get('project_mode', 'inherit')}",
+            f"- workplace_default_project_mode: {workplace_coordination.get('workplace_default_project_mode', 'simple')}",
+            f"- effective_mode: {workplace_coordination.get('effective_mode', 'simple')}",
+            f"- director_available_at_workplace: {str(bool(workplace_coordination.get('director_available_at_workplace', False))).lower()}",
+            f"- director_required: {str(bool(workplace_coordination.get('director_required', False))).lower()}",
             "",
             "## Connected Knowledge Packages",
             "",
@@ -6673,6 +7089,7 @@ def write_workplace_context_snapshot(project_root: Path, snapshot: dict[str, Any
             "local_config_exists": local_config.is_file(),
         },
         "capabilities": snapshot.get("capabilities", {}),
+        "workplace_coordination": snapshot.get("workplace_coordination", {}),
         "tools": snapshot.get("tools", {}),
         "mcp": snapshot.get("mcp", {}),
         "notes": ["Private runtime snapshot may include local availability state."],
@@ -7789,6 +8206,33 @@ def validate_assignment_required_sources(project_root: Path, contract: dict[str,
     return sorted(set(missing))
 
 
+def capsule_coordination_block(snapshot: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any]:
+    coordination = snapshot.get("workplace_coordination") if isinstance(snapshot.get("workplace_coordination"), dict) else {}
+    effective_mode = str(coordination.get("effective_mode") or "simple")
+    raw_requirements = metadata.get("coordination_requirements") if isinstance(metadata.get("coordination_requirements"), dict) else {}
+    inbox_requirements = raw_requirements.get("director_inbox") if isinstance(raw_requirements.get("director_inbox"), dict) else {}
+    submit_required = bool(inbox_requirements.get("required", False) or metadata.get("director_inbox_submit_required", False))
+    if effective_mode != "organized":
+        if submit_required:
+            raise SystemExit("FAIL: assignment requires Director inbox but project effective coordination mode is simple")
+        return {
+            "effective_mode": "simple",
+            "director_required": False,
+            "director_available_at_workplace": bool(coordination.get("director_available_at_workplace", False)),
+        }
+    director_inbox = coordination.get("director_inbox") if isinstance(coordination.get("director_inbox"), dict) else {}
+    return {
+        "effective_mode": "organized",
+        "director_required": bool(coordination.get("director_required", True)),
+        "director_process": coordination.get("director_process") or "agent-director-supervision",
+        "director_inbox": {
+            "enabled": bool(director_inbox.get("enabled", True)),
+            "submit_required": submit_required or bool(director_inbox.get("submit_required", False)),
+            "allowed_message_types": director_inbox.get("allowed_message_types", ["worker_report", "error_report", "decision_request"]),
+        },
+    }
+
+
 def command_assignment_capsule(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
@@ -7845,6 +8289,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
         "scope": contract["scope"],
         "outputs": contract["outputs"],
         "subagent_policy": contract["subagent_policy"],
+        "workplace_coordination": capsule_coordination_block(snapshot, metadata),
         "capabilities": {"required": required_records, "optional": optional_records},
         "telemetry": {"events": telemetry_rel, "event_correlation_id": f"assignment-{assn_id}"},
         "required_sources": contract["context"]["required_sources"],
@@ -7908,6 +8353,258 @@ def read_yaml_file(path: Path) -> dict[str, Any]:
 def write_yaml_file(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(ensure_trailing_newline(dump_yaml(data)), encoding="utf-8")
+
+
+def parse_cli_bool(value: Any, *, name: str = "value") -> bool:
+    if isinstance(value, bool):
+        return value
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "y", "on"}:
+        return True
+    if text in {"0", "false", "no", "n", "off"}:
+        return False
+    raise SystemExit(f"FAIL: {name} must be true or false")
+
+
+def normalize_project_coordination_mode(value: Any) -> str:
+    mode = str(value or "inherit").strip().lower()
+    if mode not in COORDINATION_PROJECT_MODES:
+        raise SystemExit("FAIL: project coordination mode must be inherit, simple, or organized")
+    return mode
+
+
+def normalize_workplace_default_project_mode(value: Any) -> str:
+    mode = str(value or "simple").strip().lower()
+    if mode not in WORKPLACE_DEFAULT_PROJECT_MODES:
+        raise SystemExit("FAIL: workplace default_project_mode must be simple or organized")
+    return mode
+
+
+def normalize_workplace_path(path: Path) -> Path:
+    resolved = path.expanduser().resolve()
+    if resolved.name == "workplace.yaml":
+        return resolved.parent
+    return resolved
+
+
+def workplace_manifest_path_from_root(workplace: Path) -> Path:
+    root = normalize_workplace_path(workplace)
+    return root if root.name == "workplace.yaml" else root / "workplace.yaml"
+
+
+def default_workplace_coordination() -> dict[str, Any]:
+    return {
+        "director_enabled": False,
+        "director_office_enabled": False,
+        "default_project_mode": "simple",
+        "director": dict(DIRECTOR_OFFICE_DEFAULTS),
+        "error_workflow_support": True,
+    }
+
+
+def default_project_coordination(mode: str = "inherit") -> dict[str, Any]:
+    return {
+        "mode": normalize_project_coordination_mode(mode),
+        "director": {
+            "use_workplace_director": True,
+            "inbox_submit_required": False,
+        },
+    }
+
+
+def workplace_coordination_config(workplace_manifest: Path | None) -> dict[str, Any]:
+    config = default_workplace_coordination()
+    if workplace_manifest and workplace_manifest.is_file():
+        data = load_yaml_document(workplace_manifest)
+        raw = data.get("coordination") if isinstance(data, dict) else None
+        if isinstance(raw, dict):
+            config.update({key: value for key, value in raw.items() if key != "director"})
+            if isinstance(raw.get("director"), dict):
+                director = dict(DIRECTOR_OFFICE_DEFAULTS)
+                director.update(raw["director"])
+                config["director"] = director
+    config["director_enabled"] = bool(config.get("director_enabled", False))
+    config["director_office_enabled"] = bool(config.get("director_office_enabled", False))
+    config["default_project_mode"] = normalize_workplace_default_project_mode(config.get("default_project_mode"))
+    if not isinstance(config.get("director"), dict):
+        config["director"] = dict(DIRECTOR_OFFICE_DEFAULTS)
+    return config
+
+
+def project_coordination_config(project_root: Path) -> dict[str, Any]:
+    flow_root = locate_flow_root(project_root)
+    manifest = flow_root / "process-forge.yaml"
+    data = load_yaml_document(manifest) if manifest.is_file() else {}
+    raw = data.get("coordination") if isinstance(data, dict) else None
+    config = default_project_coordination()
+    if isinstance(raw, dict):
+        config.update({key: value for key, value in raw.items() if key != "director"})
+        director = config.get("director") if isinstance(config.get("director"), dict) else {}
+        if isinstance(raw.get("director"), dict):
+            director = dict(director)
+            director.update(raw["director"])
+        config["director"] = director
+    config["mode"] = normalize_project_coordination_mode(config.get("mode"))
+    if not isinstance(config.get("director"), dict):
+        config["director"] = default_project_coordination()["director"]
+    config["director"].setdefault("use_workplace_director", True)
+    config["director"].setdefault("inbox_submit_required", False)
+    return config
+
+
+def resolve_project_workplace_manifest(project_root: Path, explicit_workplace: str | None = None) -> Path | None:
+    if explicit_workplace:
+        candidate = workplace_manifest_path_from_root(Path(explicit_workplace))
+        return candidate if candidate.is_file() else candidate
+    flow_root = locate_flow_root(project_root)
+    local_config = flow_root / "process-forge.local.yaml"
+    if local_config.is_file():
+        return resolve_workplace_manifest(local_config)
+    manifest = flow_root / "process-forge.yaml"
+    if manifest.is_file():
+        data = load_yaml_document(manifest)
+        workplace_data = data.get("workplace") if isinstance(data, dict) else None
+        if isinstance(workplace_data, dict) and workplace_data.get("reference") == "auto":
+            return project_root / "workplace.yaml" if (project_root / "workplace.yaml").is_file() else None
+    return None
+
+
+def director_office_paths(workplace_root: Path, coordination: dict[str, Any] | None = None) -> dict[str, Path]:
+    cfg = coordination or workplace_coordination_config(workplace_root / "workplace.yaml")
+    director = cfg.get("director") if isinstance(cfg.get("director"), dict) else {}
+    paths: dict[str, Path] = {}
+    for key, default in DIRECTOR_OFFICE_DEFAULTS.items():
+        if not key.endswith("_path"):
+            continue
+        raw = str(director.get(key) or default)
+        path = Path(raw)
+        paths[key] = path if path.is_absolute() else workplace_root / path
+    return paths
+
+
+def director_office_exists(workplace_root: Path, coordination: dict[str, Any] | None = None) -> bool:
+    paths = director_office_paths(workplace_root, coordination)
+    required = ["office_path", "inbox_path", "outbox_path", "cases_path", "history_path"]
+    return all(paths[key].is_dir() for key in required)
+
+
+def initialize_director_office(workplace_root: Path, coordination: dict[str, Any] | None = None) -> dict[str, Path]:
+    paths = director_office_paths(workplace_root, coordination)
+    for path in paths.values():
+        path.mkdir(parents=True, exist_ok=True)
+    agents = paths["office_path"] / "AGENTS.md"
+    if not agents.exists():
+        agents.write_text(
+            ensure_trailing_newline(
+                "# Director Office\n\n"
+                "This is the workplace-level ProcessForge Director Office.\n\n"
+                "- It coordinates organized projects only.\n"
+                "- It does not take over simple projects by default.\n"
+                "- Generated inbox, case, history, and runtime data stay outside public release archives.\n"
+            ),
+            encoding="utf-8",
+        )
+    manifest = paths["office_path"] / "process-forge.yaml"
+    if not manifest.exists():
+        write_yaml_file(
+            manifest,
+            {
+                "schema_version": 1,
+                "process_forge": {
+                    "version": "1.0.0",
+                    "mode": "file_only",
+                    "runner_required": False,
+                    "backend_required": False,
+                },
+                "project": {"id": "director-office", "name": "Director Office", "type": "workplace_process"},
+                "coordination": {"mode": "organized"},
+                "paths": {"inbox": "inbox", "outbox": "outbox", "cases": "cases", "history": "history", "runtime": "runtime"},
+                "policies": {"workspace_scope": True, "simple_projects_opt_in_only": True},
+            },
+        )
+    return paths
+
+
+def effective_project_coordination(project_root: Path, explicit_workplace: str | None = None) -> dict[str, Any]:
+    project_cfg = project_coordination_config(project_root)
+    workplace_manifest = resolve_project_workplace_manifest(project_root, explicit_workplace)
+    workplace_root = workplace_manifest.parent if workplace_manifest else None
+    workplace_cfg = workplace_coordination_config(workplace_manifest)
+    project_mode = normalize_project_coordination_mode(project_cfg.get("mode"))
+    default_mode = normalize_workplace_default_project_mode(workplace_cfg.get("default_project_mode"))
+    effective_mode = default_mode if project_mode == "inherit" else project_mode
+    director_available = bool(workplace_cfg.get("director_enabled"))
+    office_exists = bool(workplace_root and director_office_exists(workplace_root, workplace_cfg))
+    director_required = effective_mode == "organized"
+    result = {
+        "project_root": normalize_path_string(str(project_root)),
+        "project_id": project_id(project_root) if (locate_flow_root(project_root) / "process-forge.yaml").is_file() else safe_id(project_root.name, "project"),
+        "project_mode": project_mode,
+        "workplace_root": normalize_path_string(str(workplace_root)) if workplace_root else None,
+        "workplace_manifest": normalize_path_string(str(workplace_manifest)) if workplace_manifest else None,
+        "workplace_default_project_mode": default_mode,
+        "workplace_director_enabled": director_available,
+        "workplace_director_office_enabled": bool(workplace_cfg.get("director_office_enabled")),
+        "director_office_exists": office_exists,
+        "effective_mode": effective_mode,
+        "director_available": director_available,
+        "director_required": director_required,
+        "director_process": str((workplace_cfg.get("director") or {}).get("process_id") or "agent-director-supervision"),
+        "director_inbox": {
+            "enabled": bool(director_available and effective_mode == "organized"),
+            "submit_required": bool((project_cfg.get("director") or {}).get("inbox_submit_required", False)) if effective_mode == "organized" else False,
+            "allowed_message_types": ["worker_report", "error_report", "decision_request"] if effective_mode == "organized" else ["operator_note"],
+        },
+    }
+    if workplace_root:
+        paths = director_office_paths(workplace_root, workplace_cfg)
+        result["director_office"] = {key: normalize_path_string(str(value)) for key, value in paths.items()}
+    return result
+
+
+def coordination_doctor_checks(project_root: Path, explicit_workplace: str | None = None) -> list[Check]:
+    status = effective_project_coordination(project_root, explicit_workplace)
+    checks = [
+        check("PASS", f"project coordination mode is {status['project_mode']}"),
+        check("PASS", f"effective coordination mode is {status['effective_mode']}"),
+    ]
+    if status["effective_mode"] == "organized":
+        checks.append(check("PASS" if status["workplace_director_enabled"] else "FAIL", "organized project has workplace director capability"))
+        checks.append(check("PASS" if status["director_office_exists"] else "FAIL", "organized project has Director Office available"))
+    else:
+        checks.append(check("PASS", "simple project does not require Director Office"))
+    return checks
+
+
+def process_coordination_requirements(process_data: dict[str, Any]) -> dict[str, Any]:
+    raw = process_data.get("coordination_requirements") if isinstance(process_data.get("coordination_requirements"), dict) else {}
+    mode = str(raw.get("mode") or "simple_allowed")
+    if mode not in PROCESS_COORDINATION_MODES:
+        mode = "simple_allowed"
+    return {
+        "mode": mode,
+        "director_inbox": raw.get("director_inbox") if isinstance(raw.get("director_inbox"), dict) else {"required": False, "optional": False},
+        "error_workflow": raw.get("error_workflow") if isinstance(raw.get("error_workflow"), dict) else {"mode": "none"},
+    }
+
+
+def validate_process_against_project_mode(process_data: dict[str, Any], project_root: Path, *, force: bool = False) -> list[Check]:
+    requirements = process_coordination_requirements(process_data)
+    coordination = effective_project_coordination(project_root)
+    effective_mode = str(coordination.get("effective_mode"))
+    mode = str(requirements.get("mode"))
+    if mode == "organized_required" and effective_mode != "organized":
+        return [
+            check(
+                "WARN" if force else "FAIL",
+                "organized_required process cannot run in effective simple project mode without --force or project migration",
+            )
+        ]
+    if mode == "simple_allowed":
+        inbox = requirements.get("director_inbox") if isinstance(requirements.get("director_inbox"), dict) else {}
+        if bool(inbox.get("required")):
+            return [check("FAIL", "simple_allowed process must not require Director inbox")]
+    return [check("PASS", f"process coordination requirements match effective {effective_mode} mode")]
 
 
 def process_definition_exists(project_root: Path, process_id: str) -> bool:
@@ -8168,6 +8865,19 @@ def default_process_authoring_answers(process_id: str, title: str, description: 
                 "iteration_kinds": ["work", "debug", "fix", "review", "handoff"],
             },
         },
+        "execution_mode": "single_agent",
+        "execution_mode_questions": {},
+        "coordination_requirements": {
+            "mode": "simple_allowed",
+            "director_inbox": {"required": False, "optional": False},
+            "error_workflow": {"mode": "none"},
+            "simple_mode_behavior": "disable_director_features",
+        },
+        "error_handling": {
+            "enabled": False,
+            "mode": "none",
+            "fallback_if_no_director": "needs_operator",
+        },
         "roles": [
             {"id": "author", "title": "Author", "responsibility": "Creates the main work artifacts."},
             {"id": "reviewer", "title": "Reviewer", "responsibility": "Checks quality gates before handoff."},
@@ -8255,7 +8965,7 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
             "description": str(process.get("description") or raw.get("description") or base["process"]["description"]),
         }
     )
-    for key in ["run_model", "roles", "stages", "artifacts", "artifact_definitions", "gates", "hooks", "evolution_policy", "expected_artifacts"]:
+    for key in ["run_model", "execution_mode", "execution_mode_questions", "coordination_requirements", "error_handling", "roles", "stages", "artifacts", "artifact_definitions", "gates", "hooks", "evolution_policy", "expected_artifacts"]:
         if key in raw:
             base[key] = raw[key]
     if "artifact_definitions" in raw and "artifacts" not in raw:
@@ -8360,6 +9070,8 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         "purpose": str(process.get("purpose") or process.get("description") or ""),
         "execution_mode": str(answers.get("execution_mode") or process.get("execution_mode") or "single_agent"),
         "execution_mode_questions": answers.get("execution_mode_questions") if isinstance(answers.get("execution_mode_questions"), dict) else {},
+        "coordination_requirements": answers.get("coordination_requirements") if isinstance(answers.get("coordination_requirements"), dict) else default_process_authoring_answers(process_id, "").get("coordination_requirements", {}),
+        "error_handling": answers.get("error_handling") if isinstance(answers.get("error_handling"), dict) else default_process_authoring_answers(process_id, "").get("error_handling", {}),
         "run_model": run_model,
         "required_capabilities": string_list(answers.get("required_capabilities")),
         "hooks": answers.get("hooks") if isinstance(answers.get("hooks"), dict) else {
@@ -8407,6 +9119,11 @@ def render_authoring_questions(answers: dict[str, Any]) -> str:
             "- Does the process need multiple assignment-backed tasks or one linear flow?",
             "- Which execution mode applies: single_agent, single_agent_with_subagents, orchestrated_agents, or process_factory?",
             "- For single_agent mode, which CLI checks and gates replace separate Inspector/Supervisor work?",
+            "- Can this process run in simple project mode?",
+            "- Does this process require organized project mode or only optionally use Director when available?",
+            "- Should worker agents submit reports to Director inbox?",
+            "- Should errors go to Director inbox, a process route, or the operator?",
+            "- If the project is simple, should Director-related features be disabled, optional, or fail validation?",
             "- Which examples should prove the generated process is usable?",
             "",
             "Answers are stored in `answers.yaml`; the generated candidate is `draft.process.yaml`.",
@@ -8440,6 +9157,21 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
         checks.append(check("PASS" if key in process else "FAIL", f"process.{key} present"))
     execution_mode = str(process.get("execution_mode") or "single_agent")
     checks.append(check("PASS" if execution_mode in {"single_agent", "single_agent_with_subagents", "orchestrated_agents", "process_factory"} else "FAIL", f"process.execution_mode valid: {execution_mode}"))
+    coordination_requirements = process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {}
+    coordination_mode = str(coordination_requirements.get("mode") or "simple_allowed")
+    checks.append(check("PASS" if coordination_mode in PROCESS_COORDINATION_MODES else "FAIL", f"process.coordination_requirements.mode valid: {coordination_mode}"))
+    director_inbox = coordination_requirements.get("director_inbox") if isinstance(coordination_requirements.get("director_inbox"), dict) else {}
+    if coordination_mode == "simple_allowed" and bool(director_inbox.get("required", False)):
+        checks.append(check("FAIL", "simple_allowed process must not require Director inbox"))
+    error_workflow = coordination_requirements.get("error_workflow") if isinstance(coordination_requirements.get("error_workflow"), dict) else {}
+    error_workflow_mode = str(error_workflow.get("mode") or "none")
+    checks.append(check("PASS" if error_workflow_mode in ERROR_WORKFLOW_MODES else "FAIL", f"process.coordination_requirements.error_workflow.mode valid: {error_workflow_mode}"))
+    error_handling = process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {}
+    if error_handling:
+        handling_mode = str(error_handling.get("mode") or "none")
+        fallback = str(error_handling.get("fallback_if_no_director") or "needs_operator")
+        checks.append(check("PASS" if handling_mode in ERROR_WORKFLOW_MODES else "FAIL", f"process.error_handling.mode valid: {handling_mode}"))
+        checks.append(check("PASS" if fallback in ERROR_WORKFLOW_FALLBACKS else "FAIL", f"process.error_handling.fallback_if_no_director valid: {fallback}"))
     roles = [item for item in as_list(process.get("roles")) if isinstance(item, dict)]
     stages = [item for item in as_list(process.get("stages")) if isinstance(item, dict)]
     artifacts = [item for item in as_list(process.get("artifact_definitions")) if isinstance(item, dict)]
@@ -8544,6 +9276,7 @@ def command_process_authoring_review(args: argparse.Namespace) -> int:
 def render_process_agent_prompt(process: dict[str, Any]) -> str:
     process_id = str(process.get("id", "process"))
     stages = [item for item in as_list(process.get("stages")) if isinstance(item, dict)]
+    coordination = process_coordination_requirements(process)
     lines = [
         f"# {process.get('name', title_from_id(process_id))} Agent",
         "",
@@ -8560,6 +9293,7 @@ def render_process_agent_prompt(process: dict[str, Any]) -> str:
         "",
         "- Read the process definition before starting work.",
         f"- Execution mode: `{process.get('execution_mode', 'single_agent')}`.",
+        f"- Coordination requirement: `{coordination.get('mode', 'simple_allowed')}`.",
         "- Record durable artifacts for every blocking gate.",
         "- Run review before handoff when the process defines a review stage.",
         "- Keep public files portable and free of secrets.",
@@ -8575,6 +9309,8 @@ def render_process_agent_prompt(process: dict[str, Any]) -> str:
 
 def render_process_doc(process: dict[str, Any]) -> str:
     process_id = str(process.get("id", "process"))
+    coordination = process_coordination_requirements(process)
+    error_handling = process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {}
     lines = [
         f"# {process.get('name', title_from_id(process_id))}",
         "",
@@ -8585,6 +9321,8 @@ def render_process_doc(process: dict[str, Any]) -> str:
         f"- status: `{process.get('status', '')}`",
         f"- scope: `{process.get('scope', 'project')}`",
         f"- execution_mode: `{process.get('execution_mode', 'single_agent')}`",
+        f"- coordination_requirement: `{coordination.get('mode', 'simple_allowed')}`",
+        f"- error_handling: `{error_handling.get('mode', coordination.get('error_workflow', {}).get('mode', 'none'))}`",
         "",
         "## Stages",
         "",
@@ -8743,6 +9481,7 @@ def command_process_doctor(args: argparse.Namespace) -> int:
     path = process_definition_path(project_root, args.process)
     process = read_yaml_file(path)
     checks = validate_process_definition_files(project_root, process, path)
+    checks.extend(validate_process_against_project_mode(process, project_root, force=getattr(args, "force", False)))
     result = print_checks(checks)
     process_id = str(process.get("id") or path.stem)
     emit_process_event(project_root, "process.doctor.failed" if result else "process.doctor.passed", process_id=process_id, severity="error" if result else "info", subject=process_id, payload={"path": rel(path, project_root), "result": "fail" if result else "pass"}, correlation_id=f"process-{process_id}")
@@ -8820,6 +9559,8 @@ PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
     "purpose",
     "execution_mode",
     "execution_mode_questions",
+    "coordination_requirements",
+    "error_handling",
     "run_model",
     "required_capabilities",
     "hooks",
@@ -8869,6 +9610,8 @@ def process_to_authoring_answers(process: dict[str, Any]) -> dict[str, Any]:
         },
         "execution_mode": str(process.get("execution_mode") or "single_agent"),
         "execution_mode_questions": process.get("execution_mode_questions") if isinstance(process.get("execution_mode_questions"), dict) else {},
+        "coordination_requirements": process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {},
+        "error_handling": process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {},
         "run_model": process.get("run_model") if isinstance(process.get("run_model"), dict) else {},
         "roles": as_list(process.get("roles")),
         "stages": as_list(process.get("stages")),
@@ -12880,6 +13623,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
 
     checks.extend(distribution_checks(distribution_root))
     checks.extend(validate_hooks_config(project_root))
+    checks.extend(coordination_doctor_checks(project_root))
 
     if gitignore.is_file():
         ignore_text = gitignore.read_text(encoding="utf-8", errors="replace")
@@ -15139,10 +15883,33 @@ def build_parser() -> argparse.ArgumentParser:
     doctor_workplace.add_argument("--root", required=True, help="Workplace root path.")
     doctor_workplace.set_defaults(func=command_doctor_workplace)
 
+    workplace_mode = sub.add_parser("workplace-mode", help="Inspect or change workplace coordination mode.")
+    workplace_mode_sub = workplace_mode.add_subparsers(dest="workplace_mode_command", required=True)
+    workplace_mode_status = workplace_mode_sub.add_parser("status", help="Show workplace coordination mode.")
+    workplace_mode_status.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    workplace_mode_status.add_argument("--json", action="store_true", help="Print JSON.")
+    workplace_mode_status.set_defaults(func=command_workplace_mode_status)
+    workplace_mode_set = workplace_mode_sub.add_parser("set", help="Set workplace Director capability flags.")
+    workplace_mode_set.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    workplace_mode_set.add_argument("--director-enabled", choices=["true", "false"], help="Enable or disable Director capability.")
+    workplace_mode_set.add_argument("--director-office-enabled", choices=["true", "false"], help="Enable or disable Director Office initialization.")
+    workplace_mode_set.add_argument("--force", action="store_true", help="Allow disabling Director despite active organized sessions.")
+    workplace_mode_set.add_argument("--json", action="store_true", help="Print JSON status after update.")
+    workplace_mode_set.set_defaults(func=command_workplace_mode_set)
+    workplace_mode_default = workplace_mode_sub.add_parser("set-default-project-mode", help="Set workplace default mode for inherit projects.")
+    workplace_mode_default.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    workplace_mode_default.add_argument("--mode", required=True, choices=["simple", "organized"], help="Default mode for projects with coordination.mode=inherit.")
+    workplace_mode_default.add_argument("--json", action="store_true", help="Print JSON status after update.")
+    workplace_mode_default.set_defaults(func=command_workplace_mode_set_default_project_mode)
+    workplace_mode_doctor = workplace_mode_sub.add_parser("doctor", help="Check workplace coordination mode.")
+    workplace_mode_doctor.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    workplace_mode_doctor.set_defaults(func=command_workplace_mode_doctor)
+
     init_project = sub.add_parser("init-project", help="Initialize a ProcessForge project layer.")
     init_project.add_argument("--project-root", required=True, help="Project root path.")
     init_project.add_argument("--workplace", required=True, help="Path to workplace.yaml.")
     init_project.add_argument("--type", dest="project_type", help="Project type override.")
+    init_project.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
     init_project.add_argument("--answers", help="Optional project answers YAML.")
     init_project.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     init_project.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
@@ -15155,6 +15922,7 @@ def build_parser() -> argparse.ArgumentParser:
     project_onboard.add_argument("--project-root", required=True, help="Project root path.")
     project_onboard.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
     project_onboard.add_argument("--type", dest="project_type", required=True, help="Project type, for example generic-software-project or example-component.")
+    project_onboard.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
     project_onboard.add_argument("--answers", help="Optional project answers YAML.")
     project_onboard.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     project_onboard.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
@@ -15166,6 +15934,49 @@ def build_parser() -> argparse.ArgumentParser:
     doctor_project = sub.add_parser("doctor-project", help="Validate a ProcessForge project layer.")
     doctor_project.add_argument("--project-root", required=True, help="Project root path.")
     doctor_project.set_defaults(func=command_doctor_project)
+
+    project_mode_cmd = sub.add_parser("project-mode", help="Inspect or change project effective coordination mode.")
+    project_mode_sub = project_mode_cmd.add_subparsers(dest="project_mode_command", required=True)
+    project_mode_status = project_mode_sub.add_parser("status", help="Show effective project coordination mode.")
+    project_mode_status.add_argument("--project-root", required=True, help="Project root path.")
+    project_mode_status.add_argument("--workplace", help="Workplace root path or workplace.yaml override.")
+    project_mode_status.add_argument("--json", action="store_true", help="Print JSON.")
+    project_mode_status.set_defaults(func=command_project_mode_status)
+    project_mode_set = project_mode_sub.add_parser("set", help="Set project coordination mode.")
+    project_mode_set.add_argument("--project-root", required=True, help="Project root path.")
+    project_mode_set.add_argument("--workplace", help="Workplace root path or workplace.yaml override.")
+    project_mode_set.add_argument("--mode", required=True, choices=["inherit", "simple", "organized"], help="Project coordination mode.")
+    project_mode_set.add_argument("--init-office", action="store_true", help="Initialize workplace Director Office when setting organized mode.")
+    project_mode_set.add_argument("--json", action="store_true", help="Print JSON status after update.")
+    project_mode_set.set_defaults(func=command_project_mode_set)
+    project_mode_doctor = project_mode_sub.add_parser("doctor", help="Check project coordination mode.")
+    project_mode_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    project_mode_doctor.add_argument("--workplace", help="Workplace root path or workplace.yaml override.")
+    project_mode_doctor.set_defaults(func=command_project_mode_doctor)
+
+    director_inbox_submit = sub.add_parser("director-inbox-submit", help="Submit a file-only message to the workplace Director inbox.")
+    director_inbox_submit.add_argument("--project-root", help="Project root for project-scoped messages.")
+    director_inbox_submit.add_argument("--workplace", help="Workplace root or workplace.yaml for workspace messages or override.")
+    director_inbox_submit.add_argument("--message-type", default="worker_report", choices=["worker_report", "error_report", "decision_request", "operator_note"], help="Director inbox message type.")
+    director_inbox_submit.add_argument("--content", default="", help="Short message content.")
+    director_inbox_submit.add_argument("--allow-simple-submit", action="store_true", help="Allow project-scoped submit from simple mode.")
+    director_inbox_submit.add_argument("--json", action="store_true", help="Print JSON.")
+    director_inbox_submit.set_defaults(func=command_director_inbox_submit)
+
+    director_case_refresh = sub.add_parser("director-case-refresh", help="Refresh workplace Director cases from snapshots and inbox messages.")
+    director_case_refresh.add_argument("--workplace", required=True, help="Workplace root or workplace.yaml.")
+    director_case_refresh.add_argument("--include-simple", action="store_true", help="Include simple projects in cases.")
+    director_case_refresh.add_argument("--json", action="store_true", help="Print JSON.")
+    director_case_refresh.set_defaults(func=command_director_case_refresh)
+
+    error_route = sub.add_parser("error-route", help="Record a project error workflow decision respecting effective coordination mode.")
+    error_route.add_argument("--project-root", required=True, help="Project root path.")
+    error_route.add_argument("--workplace", help="Workplace root or workplace.yaml override.")
+    error_route.add_argument("--mode", default="none", choices=["none", "director_inbox", "route_to_process", "needs_operator"], help="Error workflow mode.")
+    error_route.add_argument("--fallback-if-no-director", default="fail_validation", choices=["needs_operator", "fail_validation"], help="Fallback for director_inbox when project is not organized.")
+    error_route.add_argument("--summary", default="", help="Error summary.")
+    error_route.add_argument("--json", action="store_true", help="Print JSON.")
+    error_route.set_defaults(func=command_error_route)
 
     agent_start_prompt = sub.add_parser("agent-start-prompt", help="Print and ensure the project START_AGENT_HERE prompt.")
     agent_start_prompt.add_argument("--project-root", required=True, help="Project root path.")
@@ -15575,6 +16386,7 @@ def build_parser() -> argparse.ArgumentParser:
     process_doctor = sub.add_parser("process-doctor", help="Validate a process definition and its generated companion files.")
     process_doctor.add_argument("--project-root", required=True, help="Project root path.")
     process_doctor.add_argument("--process", required=True, help="Process id or YAML path.")
+    process_doctor.add_argument("--force", action="store_true", help="Downgrade project-mode mismatch to WARN for explicit migration/override flows.")
     process_doctor.set_defaults(func=command_process_doctor)
 
     process_list = sub.add_parser("process-list", help="List available process definitions.")

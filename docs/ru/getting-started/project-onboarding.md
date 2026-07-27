@@ -24,3 +24,18 @@ python .pf/runtime/bin/pf.py project-context-refresh --project-root .
 
 Агент должен начинать с `.pf/START_AGENT_HERE.md`. Этот файл объясняет, какие
 локальные правила и snapshot нужно читать перед работой.
+
+## Coordination Mode
+
+Project mode задаётся отдельно от workplace capability:
+
+```bash
+python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-workplace --type generic-software-project --coordination-mode inherit --apply
+python bin/pf.py project-mode status --project-root ../my-project --workplace ../pf-workplace --json
+python bin/pf.py project-mode set --project-root ../my-project --mode simple
+python bin/pf.py project-mode set --project-root ../my-project --mode organized --init-office
+```
+
+`simple` сохраняет обычный 1-1-1-1 flow. `organized` нужен только проектам,
+которые должны использовать workplace Director Office, Director inbox, cases,
+leases, handoffs или error routes.

@@ -36,3 +36,11 @@ policies:
   prefer_symbolic_analysis: true
   require_template_usage_log: true
   do_not_store_secret_values: true
+
+coordination:
+  director_enabled: false
+  director_office_enabled: false
+  default_project_mode: simple
+  director:
+    process_id: agent-director-supervision
+    scope: workplace

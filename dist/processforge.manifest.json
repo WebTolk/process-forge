@@ -34,19 +34,19 @@
     },
     {
       "path": "QUICKSTART.md",
-      "sha256": "9c1ea04e6f7e4f95260dddcaa2eac4d0a679b890431025ce07901464c244973e"
+      "sha256": "43bd879a66bd7ceda523d34e591efe636faa8c7282a1822d2eba81bf924cd78e"
     },
     {
       "path": "QUICKSTART.ru.md",
-      "sha256": "fd694c4cc0304901381a824cfd55a9e99f37f9e523ef40803c4a7038bc20bb1f"
+      "sha256": "ff8dbd914bafc136f2f798e8e07b341463fc8422aac063d9041edc5b9a43acd5"
     },
     {
       "path": "README.md",
-      "sha256": "ae5a894a3ceccf858e71f700c8c525b4acbd986d979bc15a61c13a0503f320e9"
+      "sha256": "dba73fc3fb53eb5515f7ab9ee65530d79b64640232555aaa92aa8184186dcc58"
     },
     {
       "path": "README.ru.md",
-      "sha256": "7efb577ef768ab296972bf8154fe65d4a667ff47f8f549670ff65440847d8ab1"
+      "sha256": "e5608a4112c9dc10eb45e656a48fba462bb979b4a3f3127e1456919b7d1ce97c"
     },
     {
       "path": "VERSION",
@@ -66,7 +66,7 @@
     },
     {
       "path": "checksums/processforge.sha256",
-      "sha256": "23c723f6e4f98b71cb85dc8aa15e2b54ee82aee04d2b88e3f2536f3d3edd4001"
+      "sha256": "03bab0a196d468260d3b01eb84caf4eed0f3eee38ec733e5603f66ffb81b9cc9"
     },
     {
       "path": "docs/assets/processforge-architecture.svg",
@@ -106,7 +106,7 @@
     },
     {
       "path": "docs/authoring/process-authoring.md",
-      "sha256": "df232f7c1ec6c0b6fc2601a51fb36d3816a02c98525cc2455aa3ed4fefbfcb5f"
+      "sha256": "74cd59a6f04e8b821f2945a58d8a1663ae7063c756594f2362106adcf451a7c2"
     },
     {
       "path": "docs/authoring/project-initialization.md",
@@ -130,7 +130,7 @@
     },
     {
       "path": "docs/concepts/agent-director.md",
-      "sha256": "07a66131112f6cfece7b1c82a0d4dc209ccda4812ac6a019d4f155f0794ed511"
+      "sha256": "19a864062c5f2ade1ed9f6cbcd743696023f75002bc635bf412421c67735bcad"
     },
     {
       "path": "docs/concepts/agent-ledger.md",
@@ -282,7 +282,11 @@
     },
     {
       "path": "docs/concepts/project-context-snapshot.md",
-      "sha256": "c204892ca9653cb562768edb7186a68edf6783879993893957d4b94f665f7c79"
+      "sha256": "62c685a1c114d630262161ee1e381a11dcd49893d49f1dcedcf2b9ca767d557b"
+    },
+    {
+      "path": "docs/concepts/project-coordination-modes.md",
+      "sha256": "72e753f683faff7d61b2c7ba93fa35beb22dea82231bf0ba1bf799a3a52221a2"
     },
     {
       "path": "docs/concepts/project-flow-layer.md",
@@ -298,7 +302,7 @@
     },
     {
       "path": "docs/concepts/project-snapshot.md",
-      "sha256": "1193f8c7e6f08aa5ad5d4fe5fcbe5a747c0fe3cc51350498e49ae37b82cc17c7"
+      "sha256": "c7fde92d43cbaf38cf49c228962f1d9ca1d5570fc279b11cf959999fc77f9d40"
     },
     {
       "path": "docs/concepts/public-private-config.md",
@@ -414,7 +418,7 @@
     },
     {
       "path": "docs/getting-started/guided-workplace-setup.md",
-      "sha256": "a536107a4ffd6b6747abba022688978d1ae184815704770218f4a52f787930e3"
+      "sha256": "6263a031a6ee1e7c9342a69035bd090df054ada5009229847853ea4b55fcf5e8"
     },
     {
       "path": "docs/getting-started/initialization-order.md",
@@ -430,7 +434,7 @@
     },
     {
       "path": "docs/getting-started/project-onboarding.md",
-      "sha256": "e6a7191a6906aa65363a6b0de328b7ac6955fa292723292e48f6ca4c91694a4b"
+      "sha256": "c30a1551aca5e8a332211e03965eab68cd476f69ef7d27d36ef6c13858c10ea1"
     },
     {
       "path": "docs/getting-started/resource-authoring.md",
@@ -446,11 +450,11 @@
     },
     {
       "path": "docs/getting-started/workplace-initialization.md",
-      "sha256": "00c4551eb295641912aa88db69ad735d2f1b9289f4277c66f80a19752097037f"
+      "sha256": "c2a7eb0575514da95818534e3663736348612f34d840a7ad32a9b523c0866e14"
     },
     {
       "path": "docs/index.md",
-      "sha256": "00a3770ec00451a7d90897421e5c0b6bd9d516dd5eb075ea3878fc1f06cab055"
+      "sha256": "3c3d06814ba5b2e5c8bca06ea36a58a494add37aa14dd75805740bedfd37e0ca"
     },
     {
       "path": "docs/known-limitations.md",
@@ -466,7 +470,7 @@
     },
     {
       "path": "docs/release-checklist.md",
-      "sha256": "9525c27b60acfca9669f7706f8cfc86e0a2297db9eb42fb0bda70306f6d0034c"
+      "sha256": "d98e11484d0c25ac7f783718ca887cc8754e4a6e2b0651a561138b87a8f25f7e"
     },
     {
       "path": "docs/releases/initial-release.md",
@@ -490,7 +494,7 @@
     },
     {
       "path": "docs/ru/authoring/process-authoring.md",
-      "sha256": "e4b1033192c4d6f763b9042e76de43bf85947867dc80f17b01af3769698d1f4e"
+      "sha256": "f9333cdb255ce5642a162039e9d8170d990af9dc971dc94fea52672a866375e2"
     },
     {
       "path": "docs/ru/authoring/reusable-template-authoring.md",
@@ -498,7 +502,7 @@
     },
     {
       "path": "docs/ru/concepts/agent-director.md",
-      "sha256": "af8106c6992c72ba87e4cded29032309e2fc0df8d80f9acb01ca66736aebc468"
+      "sha256": "9b79a26ae86c341b4216b7a944a9325b58d2033d4c920329079976f39c04e7ba"
     },
     {
       "path": "docs/ru/concepts/agent-ledger.md",
@@ -565,8 +569,12 @@
       "sha256": "356166798463e663fb6f7d7c379e34660add1e771d02ba63717491d2c02b5728"
     },
     {
+      "path": "docs/ru/concepts/project-coordination-modes.md",
+      "sha256": "b434a1e70076a504980e4c66174d5bd7c417f798727280e5fa3c8d23e8a45d28"
+    },
+    {
       "path": "docs/ru/concepts/project-snapshot.md",
-      "sha256": "a1f12ae2b0dba0fbcc45f5911729b0905429a045bd4fbc0e89ff8a7c6846cf52"
+      "sha256": "d0446267ca1536dc1bd4734ce84f7ca567fa57dc271d0ba7505545e89dbc5792"
     },
     {
       "path": "docs/ru/concepts/runs-tasks-iterations.md",
@@ -610,7 +618,7 @@
     },
     {
       "path": "docs/ru/getting-started/guided-workplace-setup.md",
-      "sha256": "b598d9865e8b1ac6d5cfc4f4bd7de422fe052bd5192d6e3ccb00c1f9842b40c5"
+      "sha256": "3a25f7c727cfcb4a8a8ccafcbfc63bc1c42033a8e843df5655b4dafb30bfe513"
     },
     {
       "path": "docs/ru/getting-started/initialization-order.md",
@@ -626,7 +634,7 @@
     },
     {
       "path": "docs/ru/getting-started/project-onboarding.md",
-      "sha256": "6aa1e9a947419a2bece67c8bb3d1b3bdd173a866b8f48c49c25fdb5de190f5d1"
+      "sha256": "12f49051721aa8199d6c6ecf7898f9e66d5cf93a934c011ea8421fcb6fd2743e"
     },
     {
       "path": "docs/ru/getting-started/runtime-driver-supervisor.md",
@@ -638,11 +646,11 @@
     },
     {
       "path": "docs/ru/getting-started/workplace-initialization.md",
-      "sha256": "2624b85c2f6e198b104ef6ca9587a1a40f613bf508189ee51f2db43f3aaae928"
+      "sha256": "9dd8b819f59d973a63f1d0b82bf1c80a39f5cd8f36d11032c8e6e3c829ef5be7"
     },
     {
       "path": "docs/ru/index.md",
-      "sha256": "6293f7b557cb0d1bcebae9a8c4148f60541c96f6e3ba33ee4aae8caf9e7835c8"
+      "sha256": "eefe63f9cf9092c0447085d908a206d12e5dc4d52da1ece99293f6897c2bd871"
     },
     {
       "path": "docs/ru/known-limitations.md",
@@ -898,7 +906,7 @@
     },
     {
       "path": "processes/agent-director-supervision.yaml",
-      "sha256": "9a3765bb72748aa117ba6e60d2c8de4f796b8087a7554fcc071cc1a21c1ab5f1"
+      "sha256": "a22f855db344f3de1854947fe8afa4e92a0ee3aeb4ea48127ca63b5b4026c600"
     },
     {
       "path": "processes/authoring-parity-audit.yaml",
@@ -922,7 +930,7 @@
     },
     {
       "path": "processes/guided-workplace-setup.yaml",
-      "sha256": "5a76ca1224cecc0966d7f8b365ad834287b445bf08212984e3afee53faa4b00e"
+      "sha256": "9a1662b947cc212157753c2e3fbeb38cdbc35069e8b361c8223b631570e35528"
     },
     {
       "path": "processes/knowledge-package-authoring.yaml",
@@ -962,7 +970,7 @@
     },
     {
       "path": "processes/process-authoring.yaml",
-      "sha256": "7c50bbc5bc994791b5e121ed73b3b65cdd648521a2714dee6e8a410e1346c523"
+      "sha256": "1da91059248c3cce34805e201e8156f2260775756488b55abb72cbdc36a5f5a8"
     },
     {
       "path": "processes/process-supervisor.yaml",
@@ -986,7 +994,7 @@
     },
     {
       "path": "processes/project-onboarding.yaml",
-      "sha256": "114eb5bb60eb3e43473a097989b9c162b7a7497d8ae39a14df38df2a27eb5d36"
+      "sha256": "68191bfab77b7a43354f4216200cbadb0a3c5ca080f218d59e4f9eb5948dec91"
     },
     {
       "path": "processes/reusable-template-authoring.yaml",
@@ -1022,11 +1030,11 @@
     },
     {
       "path": "processes/workplace-initialization.yaml",
-      "sha256": "545d47896897c43468d3fe441f1c9a06a4dd276c5650f439be0ad4f2de3fc450"
+      "sha256": "81392cb1de846750675c7619a2c6b0e6b6ceefe237b52cb8ea27633532284756"
     },
     {
       "path": "prompts/agent-director-supervision-agent.md",
-      "sha256": "abb9360e3a6d1af1e84f957abe961dda242ac168a53c21d577d4127456c7558c"
+      "sha256": "efd433f6e716728d714a42e959541c0553a7b7fce844d0f55094dca18ed85f13"
     },
     {
       "path": "prompts/authoring-parity-audit-agent.md",
@@ -1034,7 +1042,7 @@
     },
     {
       "path": "prompts/guided-workplace-setup-agent.md",
-      "sha256": "0d7b084dfbd3555378802f23b6fed33bcd069e022d606c26c140f502386113a7"
+      "sha256": "49bde56b5dcd8730ac186c7e1f752b3f79e302e163923c507bf02c5355e2bf7b"
     },
     {
       "path": "prompts/knowledge-package-authoring-agent.md",
@@ -1058,7 +1066,7 @@
     },
     {
       "path": "prompts/process-authoring-agent.md",
-      "sha256": "3fdfab4c9aebad80bbf8426dded2611fbe524f9149b257076798fffba2df3835"
+      "sha256": "96cd64ea065429d96c8d5e606a4953ac413284118f4cfec24e174fe53ba104cd"
     },
     {
       "path": "prompts/process-supervisor-agent.md",
@@ -1066,7 +1074,7 @@
     },
     {
       "path": "prompts/project-onboarding-agent.md",
-      "sha256": "149c00d84a1d607b357d93bce51a542dbc726ede0135319f3b3c198635ddf590"
+      "sha256": "0118d242f19c4571377d1fdc650481e9e1d174e958107c5997170c16aca86f84"
     },
     {
       "path": "prompts/reusable-template-authoring-agent.md",
@@ -1078,7 +1086,7 @@
     },
     {
       "path": "prompts/workplace-initialization-agent.md",
-      "sha256": "0caba3dff22ed907155b64a78530dfc65bd24a9962f97c264ada2e5fc304355e"
+      "sha256": "0bc08c02f7885f67a8c50ac95b3c9db6faae36cac65df1981cece7912d9f7f09"
     },
     {
       "path": "requirements.txt",
@@ -1170,7 +1178,7 @@
     },
     {
       "path": "schemas/guided-workplace-setup-answers.schema.json",
-      "sha256": "949eb2e0ad64f1d92cad2b54b0e40ef133a167d6a6747b8dac9b45aea17d31e2"
+      "sha256": "5ce008eee223a6791f68b6079a3dc15d8f1568093ce68f9f8e1e73fd2bb301b2"
     },
     {
       "path": "schemas/guided-workplace-setup-proposal.schema.json",
@@ -1278,7 +1286,7 @@
     },
     {
       "path": "schemas/process-authoring-answers.schema.json",
-      "sha256": "76403116e7e7f3fc75892ef3cb7a37ab1cd8483d26c7e1d0ccb292d553c6ace3"
+      "sha256": "31df43143c7aaa02396da4cf2c8fd30f69bcb55518b374e45ae4e4f840770c31"
     },
     {
       "path": "schemas/process-authoring-session.schema.json",
@@ -1294,7 +1302,7 @@
     },
     {
       "path": "schemas/process-forge-manifest.schema.json",
-      "sha256": "4496788ce4ef5f9d0ff2b6a11f6f5fd80894d37994824b6beec4f3c9a8b61488"
+      "sha256": "1b57028bc31a549dc6b7b59e3ea21e134c1056102e452ace627e6fe2464c799f"
     },
     {
       "path": "schemas/process-handoff.schema.json",
@@ -1326,11 +1334,11 @@
     },
     {
       "path": "schemas/project-context-snapshot.schema.json",
-      "sha256": "0cc4edcfe758cf81803b00c1e4f3b4350e1b936a9252a23713034ce584357f0f"
+      "sha256": "5605adbec2fa44d17ba1ac90e687170a4e4ca9b34432732fcaea5d6a19422b2f"
     },
     {
       "path": "schemas/project-init-answers.schema.json",
-      "sha256": "1d126e713b7a98b3bc590cff2acaf5d767aa3e647e6b3990bf8211575ce86de6"
+      "sha256": "e5031c8fbc65ddfcafe40afbf85b7aeda70c77881cb4eea03833b6b58743fd48"
     },
     {
       "path": "schemas/resolved-rules.schema.json",
@@ -1426,11 +1434,11 @@
     },
     {
       "path": "schemas/workplace-init-answers.schema.json",
-      "sha256": "28d7f8e0e5e167cf7e4e3ff101c3f566223905a075e9b0736dc455d3550eab2a"
+      "sha256": "161d87eb902c5137d7b08dca48151a33102d247613ed838f2c04f67fcf835a37"
     },
     {
       "path": "schemas/workplace.schema.json",
-      "sha256": "7665647dcf67a91bb6183133f3d6091a879bce99ddf50a761f3a447e2e8f4f04"
+      "sha256": "3e1e2312c662778ba80fae9c87494dfc6c9696bba1d2eba600dfd38302f6dcb3"
     },
     {
       "path": "schemas/wtaicc-outbox-payload.schema.json",
@@ -1554,7 +1562,7 @@
     },
     {
       "path": "templates/guided-workplace-setup.answers.yaml",
-      "sha256": "faecf96c1d6cd030d6b2eec4733a9211e8d48baba8c4cc2090d49723ffd16ae2"
+      "sha256": "8282ea39fbb53851c92b4b47ac658eca4639ad60b2270c7f3b865307a86c6cbc"
     },
     {
       "path": "templates/guided-workplace-setup.proposal.yaml",
@@ -1630,7 +1638,7 @@
     },
     {
       "path": "templates/process-authoring-answers.yaml",
-      "sha256": "0f9ae042271562c557e625566dff40e021d8f51586102e6be00896e4404518c1"
+      "sha256": "ba71686891d2d3900b4bfd1d3d213eb182d6f953e76a44a015568cb515f18655"
     },
     {
       "path": "templates/process-definition-template.yaml",
@@ -1642,11 +1650,11 @@
     },
     {
       "path": "templates/process-forge.local.yaml",
-      "sha256": "3536ea5a6c53429af52aa5c9f3f042a10f4c3c8435c3099d6fe0ebec545ad098"
+      "sha256": "5fd645b24b83e01835c41462f192baee14b3a3d39f5268c74c9ef4169f50b7e0"
     },
     {
       "path": "templates/process-forge.yaml",
-      "sha256": "7fd6de944f95c6bd341ea2fe9e6101cafe7b204d990031f36dd368ffd5685a7b"
+      "sha256": "9e461169ee3a9bb5c11f70a1df5f38c7796398189145688f5de4d4f7e9508096"
     },
     {
       "path": "templates/process-record.yaml",
@@ -1678,11 +1686,11 @@
     },
     {
       "path": "templates/project-context.snapshot.md",
-      "sha256": "1cd4e14b3771ce59422f9a014106f3f820e7c2cde54d1fbd62937bb4e5916717"
+      "sha256": "8a98d3303c516f987b0b6dd5c35710c274da5e7e36afdfec0fa4c836f1af3135"
     },
     {
       "path": "templates/project-context.snapshot.yaml",
-      "sha256": "cc53da44b53f473ade7831bad696177b1fcce1e476d601439b279116a626bdd8"
+      "sha256": "5521ad206b5b2c74dd411d09d1fd983aa64ec7f7eb916cd40e138706a3397685"
     },
     {
       "path": "templates/project-conventions-template.md",
@@ -1698,7 +1706,7 @@
     },
     {
       "path": "templates/project-init.answers.yaml",
-      "sha256": "edbe849a582b7e4dcf17f11a005a702d4463acdb7e48e0e0b8fd37d91eeaac55"
+      "sha256": "8a1200183d67428adbf01a2c62ab9f415c3d2c7c09047060c5a0940a344d88c8"
     },
     {
       "path": "templates/project-profile-template.md",
@@ -1850,11 +1858,11 @@
     },
     {
       "path": "templates/workplace-init.answers.yaml",
-      "sha256": "52e0691e3adf6239b2914f188f164c9828cc912b8cb78d301073c543d4ba91d2"
+      "sha256": "e22864ad02425f47df0bd4333f9b8078ea3e26e7e6e6bf54d0cbaf65ba41d962"
     },
     {
       "path": "templates/workplace.yaml",
-      "sha256": "4eaf2da0d540f8fbd38e9ff4fd68e2452586f5e30667e7ca7406ad912e92fe49"
+      "sha256": "ed19677d30025789c908b595955b8afe84a2797dc6c5817d83d71e835075b3a0"
     },
     {
       "path": "tools/README.md",
@@ -1862,7 +1870,7 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "4232723b6df56b7d6cb6c5f0d0d8a382e3910eb5954667f6b97773a30b9ae5fa"
+      "sha256": "6fbc43a5398f8e3a3b0090addac3509c95b8e556fe9f8889afcace50276a1a1b"
     },
     {
       "path": "tools/processforge_subprocess.py",
@@ -1885,8 +1893,16 @@
       "sha256": "7b9a373c46deb9a778c1d4f272dcdd8c57f5629cb03aa459e57e084bb30eb88a"
     },
     {
+      "path": "tools/smoke_error_workflow.py",
+      "sha256": "97e0bdfafd5402589d551ba4f75dacb90cb6d4a390fde484b075f36a6ba45b54"
+    },
+    {
       "path": "tools/smoke_first_run.py",
       "sha256": "3f6692f67f17b061ac3f2df44ee3f48211097c353199d4f834a5ba6732c881e0"
+    },
+    {
+      "path": "tools/smoke_mixed_workplace_projects.py",
+      "sha256": "7912c1f911d83d9b451b0e30754b266464a1853ece6e1a54ce5afdc580f14545"
     },
     {
       "path": "tools/smoke_multi_agent_as_composed_sessions.py",
@@ -1913,12 +1929,20 @@
       "sha256": "d2ae7c02d2404566fc0a1478d6f87d1eb1e2b75037e925ac59dd09020c5ebe9f"
     },
     {
+      "path": "tools/smoke_project_coordination_modes.py",
+      "sha256": "ab9721ac14e4c48ba3ee4268b3d8015eaa0b9a249311dffec31cb6236b4e61cf"
+    },
+    {
       "path": "tools/smoke_runtime_driver_registry.py",
       "sha256": "39a83969d708ba850347c8809e61b6975391d32f5103dad522e1d5eb34a25e84"
     },
     {
       "path": "tools/smoke_single_agent_session_flow.py",
       "sha256": "839f7b450ce42167e427cd0237ef666382ffd0c0235c7f6c844f1d751f0e6554"
+    },
+    {
+      "path": "tools/smoke_worker_awareness_of_director.py",
+      "sha256": "3fe8267fe028d2864f95d013cd742bbdf42d3f3bb6f4ecffac149181033cb389"
     },
     {
       "path": "tools/smoke_worker_run_shell.py",
@@ -1938,7 +1962,7 @@
     },
     {
       "path": "tools/validate-process-forge-schemas.py",
-      "sha256": "17cfaf0dd0553ad294322678ebe25172d86a20e5a42e059ed9006cf193030b8e"
+      "sha256": "a73095eb27071e743aa3855e75e032661d05e794897f257dab1c8d172facb6ba"
     },
     {
       "path": "tools/validate-public-cleanliness.py",
@@ -1957,7 +1981,7 @@
       "sha256": "81b436180a2b3276df5c9b9ea95d8cba646fa908424c129ccb4faccbcd3bf00b"
     }
   ],
-  "generated_at": "2026-07-26T17:17:53Z",
+  "generated_at": "2026-07-27T05:59:52Z",
   "name": "processforge",
   "version": "1.0.0"
 }

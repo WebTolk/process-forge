@@ -46,6 +46,16 @@ templates:
   global: []
 processes:
   enabled: []
+workplace_coordination:
+  project_mode: inherit
+  workplace_default_project_mode: simple
+  effective_mode: simple
+  director_enabled: false
+  director_available_at_workplace: false
+  director_required: false
+  director_process: null
+  director_inbox:
+    enabled: false
 session:
   startup_read_order:
     - ".pf/AGENTS.md"

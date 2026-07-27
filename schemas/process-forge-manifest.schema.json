@@ -31,6 +31,21 @@
       "additionalProperties": true
     },
     "paths": { "type": "object", "additionalProperties": { "type": "string" } },
+    "coordination": {
+      "type": "object",
+      "properties": {
+        "mode": { "enum": ["inherit", "simple", "organized"] },
+        "director": {
+          "type": "object",
+          "properties": {
+            "use_workplace_director": { "type": "boolean" },
+            "inbox_submit_required": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "merge": { "type": "object" },
     "policies": { "type": "object" },
     "processes": {
