@@ -8,119 +8,311 @@ status: active
 description: Create a workplace knowledge package through authoritative package roots.
 purpose: Create package.yaml, resource index, and handoff artifacts for a knowledge package.
 required_capabilities:
-  - filesystem.write
-  - validation
+- filesystem.write
+- validation
 hooks:
   emit:
-    - event: knowledge_package.authoring.started
-      required: true
-    - event: knowledge_package.created
-      required: true
-    - event: knowledge_package.resource_index.created
-      required: true
-    - event: knowledge_package.doctor.passed
-      required: true
-    - event: knowledge_package.doctor.failed
-      required: true
-    - event: knowledge_package.authoring.completed
-      required: true
+  - event: knowledge_package.authoring.started
+    required: true
+  - event: knowledge_package.created
+    required: true
+  - event: knowledge_package.resource_index.created
+    required: true
+  - event: knowledge_package.doctor.passed
+    required: true
+  - event: knowledge_package.doctor.failed
+    required: true
+  - event: knowledge_package.authoring.completed
+    required: true
 roles:
-  - id: author
-    title: Knowledge Author
-    responsibility: Creates the package manifest and resource index.
-  - id: reviewer
-    title: Reviewer
-    responsibility: Reviews package readiness.
+- id: author
+  title: Knowledge Author
+  responsibility: Creates the package manifest and resource index.
+  kind: primary_agent
+  responsibilities:
+  - Creates the package manifest and resource index.
+- id: reviewer
+  title: Reviewer
+  responsibility: Reviews package readiness.
+  kind: primary_agent
+  responsibilities:
+  - Reviews package readiness.
 stages:
-  - id: intake
-    title: Intake
-    required_role: author
-    produced_artifacts: [knowledge-package-inputs]
-    exit_gates: [inputs-provided]
-  - id: select-package-root
-    title: Select Package Root
-    required_role: author
-    produced_artifacts: [package-root-selection]
-    exit_gates: [package-root-resolved]
-  - id: create-package-structure
-    title: Create Package Structure
-    required_role: author
-    produced_artifacts: [package-structure]
-    exit_gates: [package-structure-created]
-  - id: write-package-manifest
-    title: Write Package Manifest
-    required_role: author
-    produced_artifacts: [package-manifest]
-    exit_gates: [manifest-written]
-  - id: create-resource-index
-    title: Create Resource Index
-    required_role: author
-    produced_artifacts: [resource-index]
-    exit_gates: [resource-index-created]
-  - id: add-initial-resources
-    title: Add Initial Resources
-    required_role: author
-    produced_artifacts: [initial-resources]
-    exit_gates: [resources-recorded]
-  - id: run-package-doctor
-    title: Run Package Doctor
-    required_role: author
-    produced_artifacts: [package-doctor-report]
-    exit_gates: [package-doctor-complete]
-  - id: handoff
-    title: Handoff
-    required_role: author
-    produced_artifacts: [knowledge-package-ready-handoff]
-    exit_gates: [handoff-created]
+- id: intake
+  title: Intake
+  required_role: author
+  produced_artifacts:
+  - knowledge-package-inputs
+  exit_gates:
+  - inputs-provided
+  goal: Intake
+  actor: primary_agent
+  gates:
+  - inputs-provided
+- id: select-package-root
+  title: Select Package Root
+  required_role: author
+  produced_artifacts:
+  - package-root-selection
+  exit_gates:
+  - package-root-resolved
+  goal: Select Package Root
+  actor: primary_agent
+  gates:
+  - package-root-resolved
+- id: create-package-structure
+  title: Create Package Structure
+  required_role: author
+  produced_artifacts:
+  - package-structure
+  exit_gates:
+  - package-structure-created
+  goal: Create Package Structure
+  actor: primary_agent
+  gates:
+  - package-structure-created
+- id: write-package-manifest
+  title: Write Package Manifest
+  required_role: author
+  produced_artifacts:
+  - package-manifest
+  exit_gates:
+  - manifest-written
+  goal: Write Package Manifest
+  actor: primary_agent
+  gates:
+  - manifest-written
+- id: create-resource-index
+  title: Create Resource Index
+  required_role: author
+  produced_artifacts:
+  - resource-index
+  exit_gates:
+  - resource-index-created
+  goal: Create Resource Index
+  actor: primary_agent
+  gates:
+  - resource-index-created
+- id: add-initial-resources
+  title: Add Initial Resources
+  required_role: author
+  produced_artifacts:
+  - initial-resources
+  exit_gates:
+  - resources-recorded
+  goal: Add Initial Resources
+  actor: primary_agent
+  gates:
+  - resources-recorded
+- id: run-package-doctor
+  title: Run Package Doctor
+  required_role: author
+  produced_artifacts:
+  - package-doctor-report
+  exit_gates:
+  - package-doctor-complete
+  goal: Run Package Doctor
+  actor: primary_agent
+  gates:
+  - package-doctor-complete
+- id: handoff
+  title: Handoff
+  required_role: author
+  produced_artifacts:
+  - knowledge-package-ready-handoff
+  exit_gates:
+  - handoff-created
+  goal: Handoff
+  actor: primary_agent
+  gates:
+  - handoff-created
 artifact_definitions:
-  - id: package-manifest
-    title: Package Manifest
-    owner_role: author
-    lifecycle: [draft, ready_for_review, approved]
-  - id: resource-index
-    title: Resource Index
-    owner_role: author
-    lifecycle: [draft, ready_for_review, approved]
-  - id: knowledge-package-ready-handoff
-    title: Knowledge Package Ready Handoff
-    owner_role: author
-    lifecycle: [draft, ready_for_review, approved]
+- id: package-manifest
+  title: Package Manifest
+  owner_role: author
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/package-manifest.md
+- id: resource-index
+  title: Resource Index
+  owner_role: author
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/resource-index.md
+- id: knowledge-package-ready-handoff
+  title: Knowledge Package Ready Handoff
+  owner_role: author
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/knowledge-package-ready-handoff.md
+- id: knowledge-package-inputs
+  title: Knowledge Package Inputs
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/knowledge-package-inputs.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: package-root-selection
+  title: Package Root Selection
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/package-root-selection.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: package-structure
+  title: Package Structure
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/package-structure.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: initial-resources
+  title: Initial Resources
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/initial-resources.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: package-doctor-report
+  title: Package Doctor Report
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/package-doctor-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
 gates:
-  - id: inputs-provided
-    description: Package id, title, and package root are available.
-    blocking: true
-  - id: package-root-resolved
-    description: Package root resolved through authoritative package_roots.
-    blocking: true
-  - id: package-structure-created
-    description: Package folders were created.
-    blocking: true
-  - id: manifest-written
-    description: package.yaml was written.
-    blocking: true
-  - id: resource-index-created
-    description: indexes/resource-index.yaml was written.
-    blocking: true
-  - id: resources-recorded
-    description: Initial resources were recorded or explicitly empty.
-    blocking: false
-  - id: package-doctor-complete
-    description: Knowledge package doctor passed or produced fix hints.
-    blocking: true
-  - id: handoff-created
-    description: Knowledge package ready handoff exists.
-    blocking: true
+- id: inputs-provided
+  description: Package id, title, and package root are available.
+  blocking: true
+  type: checklist
+  required: true
+- id: package-root-resolved
+  description: Package root resolved through authoritative package_roots.
+  blocking: true
+  type: checklist
+  required: true
+- id: package-structure-created
+  description: Package folders were created.
+  blocking: true
+  type: checklist
+  required: true
+- id: manifest-written
+  description: package.yaml was written.
+  blocking: true
+  type: checklist
+  required: true
+- id: resource-index-created
+  description: indexes/resource-index.yaml was written.
+  blocking: true
+  type: checklist
+  required: true
+- id: resources-recorded
+  description: Initial resources were recorded or explicitly empty.
+  blocking: false
+  type: checklist
+  required: false
+- id: package-doctor-complete
+  description: Knowledge package doctor passed or produced fix hints.
+  blocking: true
+  type: checklist
+  required: true
+- id: handoff-created
+  description: Knowledge package ready handoff exists.
+  blocking: true
+  type: checklist
+  required: true
 expected_artifacts:
-  - package.yaml
-  - indexes/resource-index.yaml
-  - artifacts/knowledge-package-authoring-report.md
-  - reviews/knowledge-package-authoring-review.md
-  - handoffs/knowledge-package-ready-handoff.md
+- package.yaml
+- indexes/resource-index.yaml
+- artifacts/knowledge-package-authoring-report.md
+- reviews/knowledge-package-authoring-review.md
+- handoffs/knowledge-package-ready-handoff.md
 allowed_tools:
-  - processforge-cli
+- processforge-cli
 evolution_policy:
   active_run_upgrade:
     default: manual_only
   blocked_changes:
-    - bypass_package_roots
-    - write_private_absolute_paths_to_public_package_manifest
+  - bypass_package_roots
+  - write_private_absolute_paths_to_public_package_manifest
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: false
+run_completion:
+  summary_required: true
+  handoff_artifact_required: false
+required_packages:
+- process-forge-knowledge-governance
+- process-forge-core
+process_pack:
+  package: process-forge-knowledge-governance
+  example_required: true
+agent_prompt:
+  required: true

@@ -5,79 +5,178 @@ version: 1.0.0
 status: active
 description: Create or update a platform contract mapping capabilities, knowledge packages, tools, MCP, and templates.
 required_capabilities:
-  - repository_write
-  - schema_validation
+- repository_write
+- schema_validation
 hooks:
   emit:
-    - event: platform.contract.updated
-      required: true
+  - event: platform.contract.updated
+    required: true
 roles:
-  - id: maintainer
-    title: Maintainer
-    responsibility: Defines platform requirements, maps resources, writes contract, and validates.
+- id: maintainer
+  title: Maintainer
+  responsibility: Defines platform requirements, maps resources, writes contract, and validates.
+  kind: primary_agent
+  responsibilities:
+  - Defines platform requirements, maps resources, writes contract, and validates.
 stages:
-  - id: platform-definition
-    title: Platform Definition
-    description: Capture platform id, project types, capabilities, and resource mapping.
-    required_inputs: []
-    produced_artifacts:
-      - platform-contract-proposal
-    required_role: maintainer
-    required_capabilities:
-      - markdown_editing
-    allowed_tools: []
-    entry_gates: []
-    exit_gates:
-      - proposal-complete
-    handoff_required: false
-  - id: contract-creation
-    title: Contract Creation
-    description: Write platform contract and registry entry, then run platform doctor.
-    required_inputs:
-      - platform-contract-proposal
-    produced_artifacts:
-      - platform-contract
-      - validation-report
-      - review
-    required_role: maintainer
-    required_capabilities:
-      - repository_write
-    allowed_tools:
-      - processforge-cli
-      - validator
-    entry_gates:
-      - proposal-complete
-    exit_gates:
-      - contract-reviewed
-    handoff_required: true
-artifact_definitions:
-  - id: platform-contract
-    title: Platform Contract
-    owner_role: maintainer
-    template: platform-contract
-    lifecycle: [draft, ready_for_review, approved]
-gates:
-  - id: proposal-complete
-    description: Required vs recommended resources are clearly separated.
-    blocking: true
-  - id: contract-reviewed
-    description: Contract validates and missing required resources fail doctor checks.
-    blocking: true
-required_packages:
-  - process-forge-core
-required_templates:
-  - platform-contract.yaml
-allowed_tools:
+- id: platform-definition
+  title: Platform Definition
+  description: Capture platform id, project types, capabilities, and resource mapping.
+  required_inputs: []
+  produced_artifacts:
+  - platform-contract-proposal
+  required_role: maintainer
+  required_capabilities:
+  - markdown_editing
+  allowed_tools: []
+  entry_gates: []
+  exit_gates:
+  - proposal-complete
+  goal: Capture platform id, project types, capabilities, and resource mapping.
+  actor: primary_agent
+  gates:
+  - proposal-complete
+- id: contract-creation
+  title: Contract Creation
+  description: Write platform contract and registry entry, then run platform doctor.
+  required_inputs:
+  - platform-contract-proposal
+  produced_artifacts:
+  - platform-contract
+  - validation-report
+  - review
+  required_role: maintainer
+  required_capabilities:
+  - repository_write
+  allowed_tools:
   - processforge-cli
   - validator
+  entry_gates:
+  - proposal-complete
+  exit_gates:
+  - contract-reviewed
+  goal: Write platform contract and registry entry, then run platform doctor.
+  actor: primary_agent
+  gates:
+  - contract-reviewed
+artifact_definitions:
+- id: platform-contract
+  title: Platform Contract
+  owner_role: maintainer
+  template: platform-contract
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/platform-contract.md
+- id: platform-contract-proposal
+  title: Platform Contract Proposal
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/platform-contract-proposal.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: validation-report
+  title: Validation Report
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/validation-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: review
+  title: Review
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/review.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+gates:
+- id: proposal-complete
+  description: Required vs recommended resources are clearly separated.
+  blocking: true
+  type: checklist
+  required: true
+- id: contract-reviewed
+  description: Contract validates and missing required resources fail doctor checks.
+  blocking: true
+  type: checklist
+  required: true
+required_packages:
+- process-forge-knowledge-governance
+- process-forge-core
+required_templates:
+- platform-contract.yaml
+allowed_tools:
+- processforge-cli
+- validator
 forbidden_actions:
-  - mix_required_and_recommended_contract_items
+- mix_required_and_recommended_contract_items
 evolution_policy:
   active_run_upgrade:
     default: manual_only
   protected_artifacts:
-    - review
+  - review
   safe_changes:
-    - add_recommended_resource
+  - add_recommended_resource
   blocked_changes:
-    - weaken_required_contract_without_review
+  - weaken_required_contract_without_review
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
+process_pack:
+  package: process-forge-knowledge-governance
+  example_required: true
+agent_prompt:
+  required: true

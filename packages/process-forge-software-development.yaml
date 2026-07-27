@@ -6,18 +6,30 @@ kind: direction
 scope: software-work
 description: Optional software development package for feature and defect workflows.
 dependencies:
-  - process-forge-core
+- process-forge-core
 rules:
-  - id: verify-behavior
-    text: Software changes require behavior evidence appropriate to risk.
+- id: verify-behavior
+  text: Software changes require behavior evidence appropriate to risk.
 templates:
-  - validation-report-template
+- validation-report-template
 tools:
-  - id: test-runner
-    capability: test_running
-  - id: repository-symbol-analysis
-    capability: repository_symbol_analysis
+- id: test-runner
+  capability: test_running
+- id: repository-symbol-analysis
+  capability: repository_symbol_analysis
 mcp_servers: []
 validation:
-  - id: changed-files-recorded
-    capability: change_tracking
+- id: changed-files-recorded
+  capability: change_tracking
+processes:
+- bug-fix
+- multi-agent-task-orchestration
+- runtime-driver-registry
+- software-feature-development
+stable_processes:
+- bug-fix
+- multi-agent-task-orchestration
+- runtime-driver-registry
+- software-feature-development
+experimental_processes: []
+internal_processes: []

@@ -1,0 +1,92 @@
+schema_version: 1
+id: orchestrated-agents
+name: Orchestrated Agents
+version: 1.0.0
+status: draft
+description: Example Orchestrated Agents process.
+execution_mode: orchestrated_agents
+coordination_requirements:
+  mode: organized_optional
+  director_inbox:
+    required: false
+    optional: true
+  error_workflow:
+    mode: needs_operator
+  simple_mode_behavior: optional
+error_handling:
+  enabled: true
+  mode: needs_operator
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Approves scope.
+  primary_agent:
+  - Writes artifacts.
+  director:
+  - Coordinates when organized.
+  inspector:
+  - Checks runtime proof.
+  worker:
+  - Writes assigned outputs.
+  cli_tools:
+  - Run checks.
+process_transitions: []
+agent_requirements:
+  required_role: primary-agent
+  required_capabilities:
+  - process_authoring
+subagent_policy:
+  allowed: true
+  require_reports: true
+  allowed_roles:
+  - worker_agent
+roles:
+- id: primary-agent
+  title: Primary Agent
+  kind: primary_agent
+  responsibility: Owns the example flow.
+  responsibilities:
+  - Owns the example flow.
+stages:
+- id: work
+  title: Work
+  goal: Produce the example artifact.
+  description: Produce the example artifact.
+  required_role: primary-agent
+  actor: primary_agent
+  produced_artifacts:
+  - example-report
+  exit_gates:
+  - example-report-ready
+  gates:
+  - example-report-ready
+gates:
+- id: example-report-ready
+  description: Example report exists.
+  type: artifact_exists
+  blocking: true
+  required: true
+  required_artifact: example-report
+required_packages:
+- process-forge-core
+required_templates:
+- artifact-template
+allowed_tools:
+- processforge-cli
+forbidden_actions:
+- write_private_absolute_paths_to_public_files
+artifact_definitions:
+- id: example-report
+  title: Example Report
+  owner_role: primary-agent
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/example-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only

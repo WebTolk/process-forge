@@ -1,0 +1,744 @@
+schema_version: 1
+summary:
+  fail: 0
+  internal: 1
+  pass: 32
+  processes: 32
+  public_experimental: 1
+  public_stable: 30
+  warn: 0
+processes:
+- id: agent-director-supervision
+  path: processes/agent-director-supervision.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-core
+  execution_mode: process_factory
+  coordination_mode: organized_required
+  error_handling: director_inbox
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: not_applicable
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: authoring-parity-audit
+  path: processes/authoring-parity-audit.yaml
+  status: internal
+  classification: INTERNAL_MAINTENANCE
+  public_surface: false
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: false
+  has_authoring_example: false
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: move_internal
+  notes: []
+- id: bug-fix
+  path: processes/bug-fix.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-software-development
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: content-production
+  path: processes/content-production.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-content
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: context-resolution
+  path: processes/context-resolution.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-core
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: documentation-mirror-import
+  path: processes/documentation-mirror-import.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-content
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: guided-workplace-setup
+  path: processes/guided-workplace-setup.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-core
+  execution_mode: single_agent
+  coordination_mode: organized_optional
+  error_handling: needs_operator
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: knowledge-package-authoring
+  path: processes/knowledge-package-authoring.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: knowledge-package-improvement
+  path: processes/knowledge-package-improvement.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: knowledge-package-update
+  path: processes/knowledge-package-update.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: knowledge-resource-add
+  path: processes/knowledge-resource-add.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: mcp-register
+  path: processes/mcp-register.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: multi-agent-task-orchestration
+  path: processes/multi-agent-task-orchestration.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-software-development
+  execution_mode: orchestrated_agents
+  coordination_mode: organized_optional
+  error_handling: needs_operator
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: orchestrator-shell-agents-supervision
+  path: processes/orchestrator-shell-agents-supervision.yaml
+  status: experimental
+  classification: PUBLIC_EXPERIMENTAL
+  public_surface: true
+  package: process-forge-testing
+  execution_mode: orchestrated_agents
+  coordination_mode: organized_required
+  error_handling: director_inbox
+  has_prompt: false
+  has_process_doc: false
+  has_authoring_example: false
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: pass
+    simple: not_applicable
+  action: mark_experimental
+  notes: []
+- id: platform-contract-authoring
+  path: processes/platform-contract-authoring.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: platform-contract-install
+  path: processes/platform-contract-install.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: process-authoring
+  path: processes/process-authoring.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: process_factory
+  coordination_mode: organized_optional
+  error_handling: needs_operator
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: process-supervisor
+  path: processes/process-supervisor.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-testing
+  execution_mode: orchestrated_agents
+  coordination_mode: organized_optional
+  error_handling: needs_operator
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: pass
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: process-template-install
+  path: processes/process-template-install.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: process-version-upgrade
+  path: processes/process-version-upgrade.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: processforge-update-check
+  path: processes/processforge-update-check.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-core
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: project-initialization
+  path: processes/project-initialization.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-core
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: project-onboarding
+  path: processes/project-onboarding.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-core
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: reusable-template-authoring
+  path: processes/reusable-template-authoring.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: runtime-driver-registry
+  path: processes/runtime-driver-registry.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-software-development
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: session-bootstrap
+  path: processes/session-bootstrap.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-core
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: software-feature-development
+  path: processes/software-feature-development.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-software-development
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: task-batch-execution
+  path: processes/task-batch-execution.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-core
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: template-add
+  path: processes/template-add.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: testing
+  path: processes/testing.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-testing
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: tool-register
+  path: processes/tool-register.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-knowledge-governance
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed
+- id: workplace-initialization
+  path: processes/workplace-initialization.yaml
+  status: active
+  classification: PUBLIC_STABLE
+  public_surface: true
+  package: process-forge-core
+  execution_mode: single_agent
+  coordination_mode: simple_allowed
+  error_handling: none
+  has_prompt: true
+  has_process_doc: true
+  has_authoring_example: true
+  artifact_definitions_complete: true
+  stage_artifacts_declared: true
+  gates_valid: true
+  handoff_semantics: run_summary
+  doctor_contexts:
+    organized: pass
+    runtime: not_applicable
+    simple: pass
+  action: keep_public
+  notes:
+  - strict catalog checks passed

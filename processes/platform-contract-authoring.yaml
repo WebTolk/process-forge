@@ -8,134 +8,364 @@ status: active
 description: Create a platform contract that links project type hints to packages, templates, tools, MCP, and processes.
 purpose: Author platform contracts without copying package or template payloads.
 required_capabilities:
-  - filesystem.write
-  - validation
+- filesystem.write
+- validation
 hooks:
   emit:
-    - event: platform.authoring.started
-      required: true
-    - event: platform.contract.created
-      required: true
-    - event: platform.contract.linked
-      required: true
-    - event: platform.contract.doctor.passed
-      required: true
-    - event: platform.contract.doctor.failed
-      required: true
-    - event: platform.authoring.completed
-      required: true
+  - event: platform.authoring.started
+    required: true
+  - event: platform.contract.created
+    required: true
+  - event: platform.contract.linked
+    required: true
+  - event: platform.contract.doctor.passed
+    required: true
+  - event: platform.contract.doctor.failed
+    required: true
+  - event: platform.authoring.completed
+    required: true
 roles:
-  - id: author
-    title: Platform Author
-    responsibility: Creates the platform contract and links resource ids.
-  - id: reviewer
-    title: Reviewer
-    responsibility: Reviews platform contract safety.
+- id: author
+  title: Platform Author
+  responsibility: Creates the platform contract and links resource ids.
+  kind: primary_agent
+  responsibilities:
+  - Creates the platform contract and links resource ids.
+- id: reviewer
+  title: Reviewer
+  responsibility: Reviews platform contract safety.
+  kind: primary_agent
+  responsibilities:
+  - Reviews platform contract safety.
 stages:
-  - id: intake
-    title: Intake
-    required_role: author
-    produced_artifacts: [platform-contract-inputs]
-    exit_gates: [inputs-provided]
-  - id: select-platform-root
-    title: Select Platform Root
-    required_role: author
-    produced_artifacts: [platform-root-selection]
-    exit_gates: [platform-root-resolved]
-  - id: create-platform-structure
-    title: Create Platform Structure
-    required_role: author
-    produced_artifacts: [platform-structure]
-    exit_gates: [platform-structure-created]
-  - id: write-platform-contract
-    title: Write Platform Contract
-    required_role: author
-    produced_artifacts: [platform-contract]
-    exit_gates: [platform-contract-written]
-  - id: link-capabilities
-    title: Link Capabilities
-    required_role: author
-    produced_artifacts: [capability-links]
-    exit_gates: [capabilities-linked]
-  - id: link-knowledge-packages
-    title: Link Knowledge Packages
-    required_role: author
-    produced_artifacts: [knowledge-links]
-    exit_gates: [knowledge-linked]
-  - id: link-templates
-    title: Link Templates
-    required_role: author
-    produced_artifacts: [template-links]
-    exit_gates: [templates-linked]
-  - id: link-tools-mcp
-    title: Link Tools MCP
-    required_role: author
-    produced_artifacts: [tool-mcp-links]
-    exit_gates: [tools-mcp-linked]
-  - id: run-platform-doctor
-    title: Run Platform Doctor
-    required_role: author
-    produced_artifacts: [platform-doctor-report]
-    exit_gates: [platform-doctor-complete]
-  - id: handoff
-    title: Handoff
-    required_role: author
-    produced_artifacts: [platform-contract-ready-handoff]
-    exit_gates: [handoff-created]
+- id: intake
+  title: Intake
+  required_role: author
+  produced_artifacts:
+  - platform-contract-inputs
+  exit_gates:
+  - inputs-provided
+  goal: Intake
+  actor: primary_agent
+  gates:
+  - inputs-provided
+- id: select-platform-root
+  title: Select Platform Root
+  required_role: author
+  produced_artifacts:
+  - platform-root-selection
+  exit_gates:
+  - platform-root-resolved
+  goal: Select Platform Root
+  actor: primary_agent
+  gates:
+  - platform-root-resolved
+- id: create-platform-structure
+  title: Create Platform Structure
+  required_role: author
+  produced_artifacts:
+  - platform-structure
+  exit_gates:
+  - platform-structure-created
+  goal: Create Platform Structure
+  actor: primary_agent
+  gates:
+  - platform-structure-created
+- id: write-platform-contract
+  title: Write Platform Contract
+  required_role: author
+  produced_artifacts:
+  - platform-contract
+  exit_gates:
+  - platform-contract-written
+  goal: Write Platform Contract
+  actor: primary_agent
+  gates:
+  - platform-contract-written
+- id: link-capabilities
+  title: Link Capabilities
+  required_role: author
+  produced_artifacts:
+  - capability-links
+  exit_gates:
+  - capabilities-linked
+  goal: Link Capabilities
+  actor: primary_agent
+  gates:
+  - capabilities-linked
+- id: link-knowledge-packages
+  title: Link Knowledge Packages
+  required_role: author
+  produced_artifacts:
+  - knowledge-links
+  exit_gates:
+  - knowledge-linked
+  goal: Link Knowledge Packages
+  actor: primary_agent
+  gates:
+  - knowledge-linked
+- id: link-templates
+  title: Link Templates
+  required_role: author
+  produced_artifacts:
+  - template-links
+  exit_gates:
+  - templates-linked
+  goal: Link Templates
+  actor: primary_agent
+  gates:
+  - templates-linked
+- id: link-tools-mcp
+  title: Link Tools MCP
+  required_role: author
+  produced_artifacts:
+  - tool-mcp-links
+  exit_gates:
+  - tools-mcp-linked
+  goal: Link Tools MCP
+  actor: primary_agent
+  gates:
+  - tools-mcp-linked
+- id: run-platform-doctor
+  title: Run Platform Doctor
+  required_role: author
+  produced_artifacts:
+  - platform-doctor-report
+  exit_gates:
+  - platform-doctor-complete
+  goal: Run Platform Doctor
+  actor: primary_agent
+  gates:
+  - platform-doctor-complete
+- id: handoff
+  title: Handoff
+  required_role: author
+  produced_artifacts:
+  - platform-contract-ready-handoff
+  exit_gates:
+  - handoff-created
+  goal: Handoff
+  actor: primary_agent
+  gates:
+  - handoff-created
 artifact_definitions:
-  - id: platform-contract
-    title: Platform Contract
-    owner_role: author
-    lifecycle: [draft, ready_for_review, approved]
-  - id: platform-doctor-report
-    title: Platform Doctor Report
-    owner_role: author
-    lifecycle: [draft, ready_for_review, approved]
-  - id: platform-contract-ready-handoff
-    title: Platform Contract Ready Handoff
-    owner_role: author
-    lifecycle: [draft, ready_for_review, approved]
+- id: platform-contract
+  title: Platform Contract
+  owner_role: author
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/platform-contract.md
+- id: platform-doctor-report
+  title: Platform Doctor Report
+  owner_role: author
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/platform-doctor-report.md
+- id: platform-contract-ready-handoff
+  title: Platform Contract Ready Handoff
+  owner_role: author
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/platform-contract-ready-handoff.md
+- id: platform-contract-inputs
+  title: Platform Contract Inputs
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/platform-contract-inputs.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: platform-root-selection
+  title: Platform Root Selection
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/platform-root-selection.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: platform-structure
+  title: Platform Structure
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/platform-structure.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: capability-links
+  title: Capability Links
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/capability-links.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: knowledge-links
+  title: Knowledge Links
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/knowledge-links.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: template-links
+  title: Template Links
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/template-links.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: tool-mcp-links
+  title: Tool Mcp Links
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/tool-mcp-links.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
 gates:
-  - id: inputs-provided
-    description: Platform id and title are available.
-    blocking: true
-  - id: platform-root-resolved
-    description: Platform root resolved through registry/path constants.
-    blocking: true
-  - id: platform-structure-created
-    description: Platform folders were created.
-    blocking: true
-  - id: platform-contract-written
-    description: platform-contract.yaml was written.
-    blocking: true
-  - id: capabilities-linked
-    description: Capability ids were recorded.
-    blocking: true
-  - id: knowledge-linked
-    description: Knowledge package ids were referenced without copying content.
-    blocking: false
-  - id: templates-linked
-    description: Template ids were referenced without copying content.
-    blocking: false
-  - id: tools-mcp-linked
-    description: Tool and MCP ids were recorded.
-    blocking: false
-  - id: platform-doctor-complete
-    description: Platform contract doctor passed or produced fix hints.
-    blocking: true
-  - id: handoff-created
-    description: Platform ready handoff exists.
-    blocking: true
+- id: inputs-provided
+  description: Platform id and title are available.
+  blocking: true
+  type: checklist
+  required: true
+- id: platform-root-resolved
+  description: Platform root resolved through registry/path constants.
+  blocking: true
+  type: checklist
+  required: true
+- id: platform-structure-created
+  description: Platform folders were created.
+  blocking: true
+  type: checklist
+  required: true
+- id: platform-contract-written
+  description: platform-contract.yaml was written.
+  blocking: true
+  type: checklist
+  required: true
+- id: capabilities-linked
+  description: Capability ids were recorded.
+  blocking: true
+  type: checklist
+  required: true
+- id: knowledge-linked
+  description: Knowledge package ids were referenced without copying content.
+  blocking: false
+  type: checklist
+  required: false
+- id: templates-linked
+  description: Template ids were referenced without copying content.
+  blocking: false
+  type: checklist
+  required: false
+- id: tools-mcp-linked
+  description: Tool and MCP ids were recorded.
+  blocking: false
+  type: checklist
+  required: false
+- id: platform-doctor-complete
+  description: Platform contract doctor passed or produced fix hints.
+  blocking: true
+  type: checklist
+  required: true
+- id: handoff-created
+  description: Platform ready handoff exists.
+  blocking: true
+  type: checklist
+  required: true
 expected_artifacts:
-  - platform-contract.yaml
-  - artifacts/platform-contract-authoring-report.md
-  - reviews/platform-contract-authoring-review.md
-  - handoffs/platform-contract-ready-handoff.md
+- platform-contract.yaml
+- artifacts/platform-contract-authoring-report.md
+- reviews/platform-contract-authoring-review.md
+- handoffs/platform-contract-ready-handoff.md
 allowed_tools:
-  - processforge-cli
+- processforge-cli
 evolution_policy:
   active_run_upgrade:
     default: manual_only
   blocked_changes:
-    - copy_package_payloads_into_platform_contract
-    - copy_template_payloads_into_platform_contract
+  - copy_package_payloads_into_platform_contract
+  - copy_template_payloads_into_platform_contract
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: false
+run_completion:
+  summary_required: true
+  handoff_artifact_required: false
+required_packages:
+- process-forge-knowledge-governance
+- process-forge-core
+process_pack:
+  package: process-forge-knowledge-governance
+  example_required: true
+agent_prompt:
+  required: true

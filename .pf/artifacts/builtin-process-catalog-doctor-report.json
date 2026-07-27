@@ -1,0 +1,4572 @@
+{
+  "checks": [
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision role agent-director kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision role agent-director responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision.inspect actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision.inspect goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision.inspect gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision.assign actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision.assign goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision.assign gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision.wait-or-return actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision.wait-or-return goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision.wait-or-return gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/agent-director-supervision-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/agent-director-supervision.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/agent-director-supervision/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "agent-director-supervision required template exists: agent-director-policy"
+    },
+    {
+      "level": "PASS",
+      "message": "authoring-parity-audit internal maintenance process skipped by public catalog doctor"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix role triager kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix role triager responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix role developer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix role developer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix.reproduce actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix.reproduce goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix.reproduce gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix.fix actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix.fix goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix.fix gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix.verify actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix.verify goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix.verify gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/bug-fix-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/bug-fix.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/bug-fix/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix required template exists: artifact-template"
+    },
+    {
+      "level": "PASS",
+      "message": "bug-fix required template exists: validation-report-template"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production role editor kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production role editor responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production role writer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production role writer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production.brief actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production.brief goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production.brief gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production.draft actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production.draft goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production.draft gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production.editorial-review actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production.editorial-review goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production.editorial-review gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/content-production-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/content-production.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/content-production/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production required template exists: artifact-template"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production required template exists: review-template"
+    },
+    {
+      "level": "PASS",
+      "message": "content-production required template exists: handoff-template"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution role orchestrator kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution role orchestrator responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution role worker kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution role worker responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.source-discovery actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.source-discovery goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.source-discovery gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.rule-classification actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.rule-classification goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.rule-classification gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.cascade-merge actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.cascade-merge goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.cascade-merge gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.conflict-detection actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.conflict-detection goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.conflict-detection gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.context-index-generation actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.context-index-generation goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.context-index-generation gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.resolved-rules-generation actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.resolved-rules-generation goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.resolved-rules-generation gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.fingerprint-recording actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.fingerprint-recording goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.fingerprint-recording gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.ecp-capsule-generation actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.ecp-capsule-generation goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "context-resolution.ecp-capsule-generation gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/context-resolution-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/context-resolution.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/context-resolution/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import role planner kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import role planner responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import.mirror-plan actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import.mirror-plan goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import.mirror-plan gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/documentation-mirror-import-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/documentation-mirror-import.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/documentation-mirror-import/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "documentation-mirror-import required template exists: documentation-import-plan.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup role setup-agent kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup role setup-agent responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup role operator kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup role operator responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.dialogue actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.dialogue goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.dialogue gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.review actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.review goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.review gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.apply actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.apply goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup.apply gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/guided-workplace-setup-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/guided-workplace-setup.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/guided-workplace-setup/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup required template exists: guided-workplace-setup.answers"
+    },
+    {
+      "level": "PASS",
+      "message": "guided-workplace-setup required template exists: guided-workplace-setup.proposal"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring role author kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring role author responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.select-package-root actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.select-package-root goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.select-package-root gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.create-package-structure actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.create-package-structure goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.create-package-structure gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.write-package-manifest actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.write-package-manifest goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.write-package-manifest gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.create-resource-index actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.create-resource-index goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.create-resource-index gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.add-initial-resources actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.add-initial-resources goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.add-initial-resources gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.run-package-doctor actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.run-package-doctor goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.run-package-doctor gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.handoff actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.handoff goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-authoring.handoff gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/knowledge-package-authoring-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/knowledge-package-authoring.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/knowledge-package-authoring/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement role proposer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement role proposer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement role maintainer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement role maintainer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement.propose actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement.propose goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement.propose gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement.assess actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement.assess goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement.assess gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement.integrate actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement.integrate goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement.integrate gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/knowledge-package-improvement-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/knowledge-package-improvement.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/knowledge-package-improvement/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement required template exists: artifact-template"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-improvement required template exists: review-template"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update role maintainer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update role maintainer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update.current-package-inspection actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update.current-package-inspection goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update.current-package-inspection gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update.change-proposal actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update.change-proposal goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update.change-proposal gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update.resource-update actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update.resource-update goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update.resource-update gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/knowledge-package-update-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/knowledge-package-update.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/knowledge-package-update/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-package-update required template exists: knowledge-resource-index.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add role requester kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add role requester responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add role maintainer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add role maintainer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.target-resolution actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.target-resolution goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.target-resolution gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.package-index-update actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.package-index-update goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.package-index-update gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.validation actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.validation goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add.validation gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/knowledge-resource-add-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/knowledge-resource-add.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/knowledge-resource-add/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add required template exists: knowledge-resource.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "knowledge-resource-add required template exists: knowledge-resource-index.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register role maintainer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register role maintainer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register.registry-update actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register.registry-update goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register.registry-update gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/mcp-register-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/mcp-register.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/mcp-register/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "mcp-register required template exists: mcp-definition.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration subagent_policy declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration runtime requirements declared where needed"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration role orchestrator kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration role orchestrator responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration role worker kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration role worker responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.plan actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.plan goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.plan gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.assign actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.assign goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.assign gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.worker-execution actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.worker-execution goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.worker-execution gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.integration-review actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.integration-review goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration.integration-review gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/multi-agent-task-orchestration-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/multi-agent-task-orchestration.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/multi-agent-task-orchestration/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration required template exists: orchestrator-task-plan"
+    },
+    {
+      "level": "PASS",
+      "message": "multi-agent-task-orchestration required template exists: worker-launch-prompt"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision subagent_policy declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision runtime requirements declared where needed"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision role orchestrator kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision role orchestrator responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision role shell-worker kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision role shell-worker responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision.plan actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision.plan goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision.plan gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision.launch actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision.launch goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision.launch gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision.collect actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision.collect goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision.collect gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision companion completeness not strict for PUBLIC_EXPERIMENTAL"
+    },
+    {
+      "level": "PASS",
+      "message": "orchestrator-shell-agents-supervision required template exists: orchestrator-shell-agent-plan"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring role author kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring role author responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.select-platform-root actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.select-platform-root goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.select-platform-root gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.create-platform-structure actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.create-platform-structure goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.create-platform-structure gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.write-platform-contract actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.write-platform-contract goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.write-platform-contract gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-capabilities actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-capabilities goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-capabilities gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-knowledge-packages actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-knowledge-packages goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-knowledge-packages gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-templates actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-templates goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-templates gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-tools-mcp actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-tools-mcp goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.link-tools-mcp gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.run-platform-doctor actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.run-platform-doctor goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.run-platform-doctor gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.handoff actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.handoff goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-authoring.handoff gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/platform-contract-authoring-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/platform-contract-authoring.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/platform-contract-authoring/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install role maintainer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install role maintainer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install.platform-definition actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install.platform-definition goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install.platform-definition gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install.contract-creation actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install.contract-creation goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install.contract-creation gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/platform-contract-install-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/platform-contract-install.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/platform-contract-install/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "platform-contract-install required template exists: platform-contract.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring role process-author kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring role process-author responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring role process-reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring role process-reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring role documentation-author kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring role documentation-author responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.draft-process actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.draft-process goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.draft-process gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.logic-review actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.logic-review goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.logic-review gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.apply-process actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.apply-process goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.apply-process gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.process-doctor actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.process-doctor goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.process-doctor gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.handoff actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.handoff goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring.handoff gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/process-authoring-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/process-authoring.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/process-authoring/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring required template exists: process-authoring-answers"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring required template exists: process-definition-template"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring required template exists: process-agent-prompt"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring required template exists: process-doc"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring required template exists: review-template"
+    },
+    {
+      "level": "PASS",
+      "message": "process-authoring required template exists: handoff-template"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor subagent_policy declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor runtime requirements declared where needed"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor role execution-inspector kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor role execution-inspector responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor role worker-runtime kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor role worker-runtime responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor role runtime-observer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor role runtime-observer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor.prepare actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor.prepare goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor.prepare gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor.start actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor.start goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor.start gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor.collect actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor.collect goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-supervisor.collect gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/process-supervisor-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/process-supervisor.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/process-supervisor/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install role maintainer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install role maintainer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install.process-definition-creation actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install.process-definition-creation goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install.process-definition-creation gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/process-template-install-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/process-template-install.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/process-template-install/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "process-template-install required template exists: process-definition-template"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade role assessor kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade role assessor responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade role approver kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade role approver responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade.compare actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade.compare goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade.compare gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade.decide actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade.decide goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade.decide gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/process-version-upgrade-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/process-version-upgrade.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/process-version-upgrade/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade required template exists: process-upgrade-assessment-template"
+    },
+    {
+      "level": "PASS",
+      "message": "process-version-upgrade required template exists: artifact-template"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check role update-assessor kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check role update-assessor responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check.discover actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check.discover goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check.discover gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check.assess actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check.assess goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "processforge-update-check.assess gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/processforge-update-check-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/processforge-update-check.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/processforge-update-check/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization role orchestrator kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization role orchestrator responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.workplace-resolution actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.workplace-resolution goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.workplace-resolution gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.repository-scan actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.repository-scan goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.repository-scan gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.project-classification actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.project-classification goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.project-classification gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.global-resource-matching actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.global-resource-matching goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.global-resource-matching gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.project-specificity-extraction actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.project-specificity-extraction goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.project-specificity-extraction gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.proposal actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.proposal goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.proposal gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.review actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.review goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.review gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.apply actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.apply goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.apply gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.doctor actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.doctor goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization.doctor gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/project-initialization-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/project-initialization.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/project-initialization/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization required template exists: process-forge.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization required template exists: process-forge.local.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "project-initialization required template exists: project-agents-template"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding role orchestrator kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding role orchestrator responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.create-project-flow actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.create-project-flow goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.create-project-flow gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.detect-project actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.detect-project goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.detect-project gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.snapshot actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.snapshot goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.snapshot gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.first-assignment actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.first-assignment goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.first-assignment gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.validate actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.validate goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.validate gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.handoff actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.handoff goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding.handoff gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/project-onboarding-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/project-onboarding.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/project-onboarding/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding required template exists: process-forge.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding required template exists: process-forge.local.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "project-onboarding required template exists: project-agents-template"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring role author kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring role author responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.select-template-root actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.select-template-root goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.select-template-root gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.create-template-structure actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.create-template-structure goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.create-template-structure gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.write-manifest actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.write-manifest goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.write-manifest gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.write-example-files actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.write-example-files goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.write-example-files gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.register-template actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.register-template goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.register-template gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.run-template-doctor actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.run-template-doctor goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.run-template-doctor gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.handoff actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.handoff goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "reusable-template-authoring.handoff gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/reusable-template-authoring-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/reusable-template-authoring.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/reusable-template-authoring/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry role runtime-owner kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry role runtime-owner responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry.inventory actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry.inventory goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry.inventory gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry.validate actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry.validate goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "runtime-driver-registry.validate gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/runtime-driver-registry-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/runtime-driver-registry.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/runtime-driver-registry/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap role orchestrator kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap role orchestrator responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.mode-detection actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.mode-detection goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.mode-detection gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.flow-location actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.flow-location goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.flow-location gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.workplace-resolution actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.workplace-resolution goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.workplace-resolution gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.context-freshness-check actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.context-freshness-check goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.context-freshness-check gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.status-scan actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.status-scan goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.status-scan gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.session-report actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.session-report goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "session-bootstrap.session-report gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/session-bootstrap-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/session-bootstrap.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/session-bootstrap/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development role orchestrator kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development role orchestrator responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development role developer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development role developer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.architecture actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.architecture goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.architecture gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.implementation actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.implementation goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.implementation gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.assurance actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.assurance goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development.assurance gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/software-feature-development-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/software-feature-development.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/software-feature-development/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development required template exists: assignment-template"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development required template exists: artifact-template"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development required template exists: review-template"
+    },
+    {
+      "level": "PASS",
+      "message": "software-feature-development required template exists: handoff-template"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution role run-coordinator kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution role run-coordinator responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution role task-worker kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution role task-worker responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.run-intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.run-intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.run-intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.task-planning actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.task-planning goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.task-planning gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.task-execution-loop actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.task-execution-loop goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.task-execution-loop gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.task-result-fixation actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.task-result-fixation goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.task-result-fixation gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.run-review actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.run-review goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.run-review gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.run-summary actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.run-summary goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution.run-summary gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/task-batch-execution-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/task-batch-execution.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/task-batch-execution/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution required template exists: run"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution required template exists: assignment-task"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution required template exists: iteration"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution required template exists: review-template"
+    },
+    {
+      "level": "PASS",
+      "message": "task-batch-execution required template exists: handoff-template"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add role maintainer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add role maintainer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add.template-folder-creation actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add.template-folder-creation goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add.template-folder-creation gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/template-add-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/template-add.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/template-add/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "template-add required template exists: template-readme-template.md"
+    },
+    {
+      "level": "PASS",
+      "message": "testing catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "testing execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing role test-lead kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing role test-lead responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing role tester kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing role tester responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "testing.plan actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing.plan goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing.plan gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "testing.execute actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing.execute goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing.execute gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "testing.report actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing.report goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "testing.report gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/testing-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/testing.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/testing/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "testing required template exists: artifact-template"
+    },
+    {
+      "level": "PASS",
+      "message": "testing required template exists: validation-report-template"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register role maintainer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register role maintainer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register.registry-update actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register.registry-update goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register.registry-update gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/tool-register-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/tool-register.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/tool-register/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "tool-register required template exists: tool-definition.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization catalog classification valid"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization execution_mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization coordination_requirements.mode declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization error_handling declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization responsibility_boundaries declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization role orchestrator kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization role orchestrator responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization role reviewer kind declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization role reviewer responsibilities declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization produced artifacts declared: all"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.intake actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.intake goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.intake gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.terms-setup actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.terms-setup goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.terms-setup gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.registry-setup actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.registry-setup goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.registry-setup gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.tool-discovery actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.tool-discovery goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.tool-discovery gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.mcp-discovery actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.mcp-discovery goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.mcp-discovery gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.proposal actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.proposal goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.proposal gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.review actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.review goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.review gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.apply actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.apply goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.apply gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.doctor actor declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.doctor goal declared"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization.doctor gates valid: all"
+    },
+    {
+      "level": "PASS",
+      "message": "prompts/workplace-initialization-agent.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "docs/processes/workplace-initialization.md exists"
+    },
+    {
+      "level": "PASS",
+      "message": "examples/process-authoring/workplace-initialization/README.md exists or is explicitly exempt"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization required template exists: workplace.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization required template exists: terms.yaml"
+    },
+    {
+      "level": "PASS",
+      "message": "workplace-initialization required template exists: workplace-init.answers"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-content process id exists: content-production"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-content process id exists: documentation-mirror-import"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-content stable process is public stable: content-production"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-content stable process is public stable: documentation-mirror-import"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core process id exists: agent-director-supervision"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core process id exists: context-resolution"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core process id exists: guided-workplace-setup"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core process id exists: processforge-update-check"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core process id exists: project-initialization"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core process id exists: project-onboarding"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core process id exists: session-bootstrap"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core process id exists: task-batch-execution"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core process id exists: workplace-initialization"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core stable process is public stable: guided-workplace-setup"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core stable process is public stable: task-batch-execution"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core stable process is public stable: workplace-initialization"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core stable process is public stable: project-initialization"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core stable process is public stable: session-bootstrap"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core stable process is public stable: processforge-update-check"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core stable process is public stable: context-resolution"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core stable process is public stable: agent-director-supervision"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-core stable process is public stable: project-onboarding"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: authoring-parity-audit"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: knowledge-package-authoring"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: knowledge-package-improvement"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: knowledge-package-update"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: knowledge-resource-add"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: mcp-register"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: platform-contract-authoring"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: platform-contract-install"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: process-authoring"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: process-template-install"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: process-version-upgrade"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: reusable-template-authoring"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: template-add"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance process id exists: tool-register"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: mcp-register"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: knowledge-package-improvement"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: process-version-upgrade"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: reusable-template-authoring"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: template-add"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: process-template-install"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: platform-contract-install"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: knowledge-package-authoring"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: process-authoring"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: knowledge-package-update"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: knowledge-resource-add"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: platform-contract-authoring"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-knowledge-governance stable process is public stable: tool-register"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-software-development process id exists: bug-fix"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-software-development process id exists: multi-agent-task-orchestration"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-software-development process id exists: runtime-driver-registry"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-software-development process id exists: software-feature-development"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-software-development stable process is public stable: runtime-driver-registry"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-software-development stable process is public stable: multi-agent-task-orchestration"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-software-development stable process is public stable: bug-fix"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-software-development stable process is public stable: software-feature-development"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-testing process id exists: orchestrator-shell-agents-supervision"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-testing process id exists: process-supervisor"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-testing process id exists: testing"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-testing stable process is public stable: testing"
+    },
+    {
+      "level": "PASS",
+      "message": "package process-forge-testing stable process is public stable: process-supervisor"
+    }
+  ],
+  "processes": [
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "organized_required",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "not_applicable"
+      },
+      "error_handling": "director_inbox",
+      "execution_mode": "process_factory",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "agent-director-supervision",
+      "package": "process-forge-core",
+      "path": "processes/agent-director-supervision.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "INTERNAL_MAINTENANCE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": false,
+      "has_process_doc": false,
+      "has_prompt": true,
+      "id": "authoring-parity-audit",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/authoring-parity-audit.yaml",
+      "public_surface": false,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "internal",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "bug-fix",
+      "package": "process-forge-software-development",
+      "path": "processes/bug-fix.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "content-production",
+      "package": "process-forge-content",
+      "path": "processes/content-production.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "context-resolution",
+      "package": "process-forge-core",
+      "path": "processes/context-resolution.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "documentation-mirror-import",
+      "package": "process-forge-content",
+      "path": "processes/documentation-mirror-import.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "organized_optional",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "needs_operator",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "guided-workplace-setup",
+      "package": "process-forge-core",
+      "path": "processes/guided-workplace-setup.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "knowledge-package-authoring",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/knowledge-package-authoring.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "knowledge-package-improvement",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/knowledge-package-improvement.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "knowledge-package-update",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/knowledge-package-update.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "knowledge-resource-add",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/knowledge-resource-add.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "mcp-register",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/mcp-register.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "organized_optional",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "needs_operator",
+      "execution_mode": "orchestrated_agents",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "multi-agent-task-orchestration",
+      "package": "process-forge-software-development",
+      "path": "processes/multi-agent-task-orchestration.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_EXPERIMENTAL",
+      "coordination_mode": "organized_required",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "pass",
+        "simple": "not_applicable"
+      },
+      "error_handling": "director_inbox",
+      "execution_mode": "orchestrated_agents",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": false,
+      "has_process_doc": false,
+      "has_prompt": false,
+      "id": "orchestrator-shell-agents-supervision",
+      "package": "process-forge-testing",
+      "path": "processes/orchestrator-shell-agents-supervision.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "experimental",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "platform-contract-authoring",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/platform-contract-authoring.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "platform-contract-install",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/platform-contract-install.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "organized_optional",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "needs_operator",
+      "execution_mode": "process_factory",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "process-authoring",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/process-authoring.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "organized_optional",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "pass",
+        "simple": "pass"
+      },
+      "error_handling": "needs_operator",
+      "execution_mode": "orchestrated_agents",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "process-supervisor",
+      "package": "process-forge-testing",
+      "path": "processes/process-supervisor.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "process-template-install",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/process-template-install.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "process-version-upgrade",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/process-version-upgrade.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "processforge-update-check",
+      "package": "process-forge-core",
+      "path": "processes/processforge-update-check.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "project-initialization",
+      "package": "process-forge-core",
+      "path": "processes/project-initialization.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "project-onboarding",
+      "package": "process-forge-core",
+      "path": "processes/project-onboarding.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "reusable-template-authoring",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/reusable-template-authoring.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "runtime-driver-registry",
+      "package": "process-forge-software-development",
+      "path": "processes/runtime-driver-registry.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "session-bootstrap",
+      "package": "process-forge-core",
+      "path": "processes/session-bootstrap.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "software-feature-development",
+      "package": "process-forge-software-development",
+      "path": "processes/software-feature-development.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "task-batch-execution",
+      "package": "process-forge-core",
+      "path": "processes/task-batch-execution.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "template-add",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/template-add.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "testing",
+      "package": "process-forge-testing",
+      "path": "processes/testing.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "tool-register",
+      "package": "process-forge-knowledge-governance",
+      "path": "processes/tool-register.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    },
+    {
+      "artifact_definitions_complete": true,
+      "classification": "PUBLIC_STABLE",
+      "coordination_mode": "simple_allowed",
+      "doctor_contexts": {
+        "organized": "pass",
+        "runtime": "not_applicable",
+        "simple": "pass"
+      },
+      "error_handling": "none",
+      "execution_mode": "single_agent",
+      "failures": [],
+      "gates_valid": true,
+      "handoff_semantics": "run_summary",
+      "has_authoring_example": true,
+      "has_process_doc": true,
+      "has_prompt": true,
+      "id": "workplace-initialization",
+      "package": "process-forge-core",
+      "path": "processes/workplace-initialization.yaml",
+      "public_surface": true,
+      "result": "pass",
+      "stage_artifacts_declared": true,
+      "status": "active",
+      "warnings": []
+    }
+  ],
+  "schema_version": 1,
+  "summary": {
+    "fail": 0,
+    "internal": 1,
+    "pass": 32,
+    "processes": 32,
+    "public_experimental": 1,
+    "public_stable": 30,
+    "warn": 0
+  }
+}

@@ -3,202 +3,358 @@ id: session-bootstrap
 name: Session Bootstrap
 version: 1.0.0
 status: active
-description: Start or inspect a primary agent session by resolving session mode, current project context, and status report inputs.
+description: Start or inspect a primary agent session by resolving session mode, current project context, and status report
+  inputs.
 execution_mode: single_agent
 required_capabilities:
-  - filesystem.read
-  - context.status
+- filesystem.read
+- context.status
 hooks:
   emit:
-    - event: process.started
-      required: true
-    - event: stage.started
-      required: true
-    - event: stage.completed
-      required: true
-    - event: assignment.created
-      required: true
-    - event: artifact.created
-      required: true
-    - event: gate.failed
-      required: true
-    - event: chat.message.recorded
-      required: false
+  - event: process.started
+    required: true
+  - event: stage.started
+    required: true
+  - event: stage.completed
+    required: true
+  - event: assignment.created
+    required: true
+  - event: artifact.created
+    required: true
+  - event: gate.failed
+    required: true
+  - event: chat.message.recorded
+    required: false
   subscriptions:
-    - event: assignment.completed
-      actions:
-        - type: create_review_request
-    - event: gate.failed
-      actions:
-        - type: block_stage
-        - type: notify_orchestrator
+  - event: assignment.completed
+    actions:
+    - type: create_review_request
+  - event: gate.failed
+    actions:
+    - type: block_stage
+    - type: notify_orchestrator
   tracking:
     include:
-      - process_id
-      - process_version
-      - stage_id
-      - assignment_id
-      - artifact_refs
-      - actor
-      - session_id
-      - status
+    - process_id
+    - process_version
+    - stage_id
+    - assignment_id
+    - artifact_refs
+    - actor
+    - session_id
+    - status
 roles:
-  - id: orchestrator
-    title: Primary Agent
-    responsibility: Resolves session mode, flow location, context freshness, and check-in context for the current agent session.
-  - id: reviewer
-    title: Reviewer
-    responsibility: Reviews session status and blocked items.
+- id: orchestrator
+  title: Primary Agent
+  responsibility: Resolves session mode, flow location, context freshness, and check-in context for the current agent session.
+  kind: primary_agent
+  responsibilities:
+  - Resolves session mode, flow location, context freshness, and check-in context for the current agent session.
+- id: reviewer
+  title: Reviewer
+  responsibility: Reviews session status and blocked items.
+  kind: primary_agent
+  responsibilities:
+  - Reviews session status and blocked items.
 stages:
-  - id: intake
-    title: Intake
-    description: Capture the Session Start Request or derive it from a short prompt.
-    required_inputs: []
-    produced_artifacts:
-      - session-start-request
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.read
-    allowed_tools:
-      - processforge-session
-    entry_gates: []
-    exit_gates:
-      - request-captured
-    handoff_required: false
-  - id: mode-detection
-    title: Mode Detection
-    description: Classify the session as resume, project_init, assignment_execute, context_resolve, context_compile, or doctor_context.
-    required_inputs:
-      - session-start-request
-    produced_artifacts:
-      - session-mode-decision
-    required_role: orchestrator
-    required_capabilities:
-      - context.status
-    allowed_tools:
-      - processforge-session
-    entry_gates:
-      - request-captured
-    exit_gates:
-      - mode-detected
-    handoff_required: false
-  - id: flow-location
-    title: Flow Location
-    description: Locate project AGENTS.md, process-forge.yaml, and optional local config.
-    required_inputs:
-      - session-mode-decision
-    produced_artifacts:
-      - flow-location-report
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.read
-    allowed_tools:
-      - processforge-session
-    entry_gates:
-      - mode-detected
-    exit_gates:
-      - flow-located
-    handoff_required: false
-  - id: workplace-resolution
-    title: Workplace Resolution
-    description: Resolve workplace references and available registries.
-    required_inputs:
-      - flow-location-report
-    produced_artifacts:
-      - workplace-resolution-report
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.read
-    allowed_tools:
-      - processforge-session
-    entry_gates:
-      - flow-located
-    exit_gates:
-      - workplace-resolved
-    handoff_required: false
-  - id: context-freshness-check
-    title: Context Freshness Check
-    description: Check context index, cache, and execution context fingerprints.
-    required_inputs:
-      - flow-location-report
-    produced_artifacts:
-      - context-freshness-report
-    required_role: orchestrator
-    required_capabilities:
-      - context.status
-    allowed_tools:
-      - processforge-session
-    entry_gates:
-      - flow-located
-    exit_gates:
-      - context-freshness-known
-    handoff_required: false
-  - id: status-scan
-    title: Status Scan
-    description: Read assignments, artifacts, reviews, handoffs, ADRs, logs, and validation reports relevant to the session.
-    required_inputs:
-      - context-freshness-report
-    produced_artifacts:
-      - session-status-inputs
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.read
-    allowed_tools:
-      - processforge-session
-    entry_gates:
-      - context-freshness-known
-    exit_gates:
-      - status-inputs-collected
-    handoff_required: false
-  - id: session-report
-    title: Session Report
-    description: Produce the session status report or hand off to the next mode.
-    required_inputs:
-      - session-status-inputs
-    produced_artifacts:
-      - session-status-report
-    required_role: orchestrator
-    required_capabilities:
-      - context.status
-    allowed_tools:
-      - processforge-session
-    entry_gates:
-      - status-inputs-collected
-    exit_gates:
-      - session-status-produced
-    handoff_required: true
+- id: intake
+  title: Intake
+  description: Capture the Session Start Request or derive it from a short prompt.
+  required_inputs: []
+  produced_artifacts:
+  - session-start-request
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.read
+  allowed_tools:
+  - processforge-session
+  entry_gates: []
+  exit_gates:
+  - request-captured
+  goal: Capture the Session Start Request or derive it from a short prompt.
+  actor: primary_agent
+  gates:
+  - request-captured
+- id: mode-detection
+  title: Mode Detection
+  description: Classify the session as resume, project_init, assignment_execute, context_resolve, context_compile, or doctor_context.
+  required_inputs:
+  - session-start-request
+  produced_artifacts:
+  - session-mode-decision
+  required_role: orchestrator
+  required_capabilities:
+  - context.status
+  allowed_tools:
+  - processforge-session
+  entry_gates:
+  - request-captured
+  exit_gates:
+  - mode-detected
+  goal: Classify the session as resume, project_init, assignment_execute, context_resolve, context_compile, or doctor_context.
+  actor: primary_agent
+  gates:
+  - mode-detected
+- id: flow-location
+  title: Flow Location
+  description: Locate project AGENTS.md, process-forge.yaml, and optional local config.
+  required_inputs:
+  - session-mode-decision
+  produced_artifacts:
+  - flow-location-report
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.read
+  allowed_tools:
+  - processforge-session
+  entry_gates:
+  - mode-detected
+  exit_gates:
+  - flow-located
+  goal: Locate project AGENTS.md, process-forge.yaml, and optional local config.
+  actor: primary_agent
+  gates:
+  - flow-located
+- id: workplace-resolution
+  title: Workplace Resolution
+  description: Resolve workplace references and available registries.
+  required_inputs:
+  - flow-location-report
+  produced_artifacts:
+  - workplace-resolution-report
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.read
+  allowed_tools:
+  - processforge-session
+  entry_gates:
+  - flow-located
+  exit_gates:
+  - workplace-resolved
+  goal: Resolve workplace references and available registries.
+  actor: primary_agent
+  gates:
+  - workplace-resolved
+- id: context-freshness-check
+  title: Context Freshness Check
+  description: Check context index, cache, and execution context fingerprints.
+  required_inputs:
+  - flow-location-report
+  produced_artifacts:
+  - context-freshness-report
+  required_role: orchestrator
+  required_capabilities:
+  - context.status
+  allowed_tools:
+  - processforge-session
+  entry_gates:
+  - flow-located
+  exit_gates:
+  - context-freshness-known
+  goal: Check context index, cache, and execution context fingerprints.
+  actor: primary_agent
+  gates:
+  - context-freshness-known
+- id: status-scan
+  title: Status Scan
+  description: Read assignments, artifacts, reviews, handoffs, ADRs, logs, and validation reports relevant to the session.
+  required_inputs:
+  - context-freshness-report
+  produced_artifacts:
+  - session-status-inputs
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.read
+  allowed_tools:
+  - processforge-session
+  entry_gates:
+  - context-freshness-known
+  exit_gates:
+  - status-inputs-collected
+  goal: Read assignments, artifacts, reviews, handoffs, ADRs, logs, and validation reports relevant to the session.
+  actor: primary_agent
+  gates:
+  - status-inputs-collected
+- id: session-report
+  title: Session Report
+  description: Produce the session status report or hand off to the next mode.
+  required_inputs:
+  - session-status-inputs
+  produced_artifacts:
+  - session-status-report
+  required_role: orchestrator
+  required_capabilities:
+  - context.status
+  allowed_tools:
+  - processforge-session
+  entry_gates:
+  - status-inputs-collected
+  exit_gates:
+  - session-status-produced
+  goal: Produce the session status report or hand off to the next mode.
+  actor: primary_agent
+  gates:
+  - session-status-produced
 artifact_definitions:
-  - id: session-start-request
-    title: Session Start Request
-    owner_role: orchestrator
-    template: session-start-template
-    path: templates/session-start-template.yaml
-    lifecycle: [draft, ready_for_review, approved]
-  - id: session-status-report
-    title: Session Status Report
-    owner_role: orchestrator
-    template: session-status-report-template
-    path: artifacts/session-status-report.md
-    lifecycle: [draft, ready_for_review, approved]
+- id: session-start-request
+  title: Session Start Request
+  owner_role: orchestrator
+  template: session-start-template
+  path: templates/session-start-template.yaml
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/session-start-request.md
+- id: session-status-report
+  title: Session Status Report
+  owner_role: orchestrator
+  template: session-status-report-template
+  path: artifacts/session-status-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/session-status-report.md
+- id: session-mode-decision
+  title: Session Mode Decision
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/session-mode-decision.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: flow-location-report
+  title: Flow Location Report
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/flow-location-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: workplace-resolution-report
+  title: Workplace Resolution Report
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/workplace-resolution-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: context-freshness-report
+  title: Context Freshness Report
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/context-freshness-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: session-status-inputs
+  title: Session Status Inputs
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/session-status-inputs.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
 gates:
-  - id: request-captured
-    description: Session request exists or has been derived from prompt.
-  - id: mode-detected
-    description: Session mode is explicit.
-  - id: flow-located
-    description: Project flow files were located.
-  - id: workplace-resolved
-    description: Workplace layer was resolved or reported missing.
-  - id: context-freshness-known
-    description: Context freshness is fresh, stale, or missing.
-  - id: status-inputs-collected
-    description: Relevant status artifacts were scanned.
-  - id: session-status-produced
-    description: Session status report was printed or written.
+- id: request-captured
+  description: Session request exists or has been derived from prompt.
+  type: checklist
+  required: true
+- id: mode-detected
+  description: Session mode is explicit.
+  type: checklist
+  required: true
+- id: flow-located
+  description: Project flow files were located.
+  type: checklist
+  required: true
+- id: workplace-resolved
+  description: Workplace layer was resolved or reported missing.
+  type: checklist
+  required: true
+- id: context-freshness-known
+  description: Context freshness is fresh, stale, or missing.
+  type: checklist
+  required: true
+- id: status-inputs-collected
+  description: Relevant status artifacts were scanned.
+  type: checklist
+  required: true
+- id: session-status-produced
+  description: Session status report was printed or written.
+  type: checklist
+  required: true
 evolution_policy:
   versioning: immutable_after_approval
   changes_require_review: true
   compatible_extensions:
-    - add_session_mode
-    - add_status_section
-    - add_freshness_check
+  - add_session_mode
+  - add_status_section
+  - add_freshness_check
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
+required_packages:
+- process-forge-core
+process_pack:
+  package: process-forge-core
+  example_required: true
+agent_prompt:
+  required: true

@@ -1,74 +1,133 @@
 schema_version: 1
 id: processforge-update-check
 name: ProcessForge Update Check
-version: "1.0.0"
+version: 1.0.0
 status: active
 description: Check a linked ProcessForge distribution update index and produce a project assessment without automatic migration.
-
 required_capabilities:
-  - repository.read
-  - markdown.editing
-  - schema_validation
-
+- repository.read
+- markdown.editing
+- schema_validation
 hooks:
   emit:
-    - event: process.started
-      required: true
-    - event: artifact.created
-      required: true
-    - event: review.requested
-      required: false
-    - event: gate.passed
-      required: true
-    - event: gate.failed
-      required: true
-
+  - event: process.started
+    required: true
+  - event: artifact.created
+    required: true
+  - event: review.requested
+    required: false
+  - event: gate.passed
+    required: true
+  - event: gate.failed
+    required: true
 roles:
-  - id: update-assessor
-    title: Update assessor
-    responsibility: Read update metadata, compare versions, and write the assessment.
-
+- id: update-assessor
+  title: Update assessor
+  responsibility: Read update metadata, compare versions, and write the assessment.
+  kind: primary_agent
+  responsibilities:
+  - Read update metadata, compare versions, and write the assessment.
 stages:
-  - id: discover
-    title: Discover Current State
-    description: Resolve the project manifest, local config, workplace registry, and distribution update index.
-    required_role: update-assessor
-    required_inputs:
-      - .pf/process-forge.yaml
-      - .pf/process-forge.local.yaml or explicit no-local mode
-      - updates/processforge-update-index.yaml
-    produced_artifacts:
-      - update-assessment
-    exit_gates:
-      - update-index-readable
-
-  - id: assess
-    title: Assess Project Impact
-    description: Compare the current version with the selected channel and record migration impact.
-    required_role: update-assessor
-    produced_artifacts:
-      - update-assessment
-    exit_gates:
-      - assessment-written
-
+- id: discover
+  title: Discover Current State
+  description: Resolve the project manifest, local config, workplace registry, and distribution update index.
+  required_role: update-assessor
+  required_inputs:
+  - .pf/process-forge.yaml
+  - .pf/process-forge.local.yaml or explicit no-local mode
+  - updates/processforge-update-index.yaml
+  produced_artifacts:
+  - update-assessment
+  exit_gates:
+  - update-index-readable
+  goal: Resolve the project manifest, local config, workplace registry, and distribution update index.
+  actor: primary_agent
+  gates:
+  - update-index-readable
+- id: assess
+  title: Assess Project Impact
+  description: Compare the current version with the selected channel and record migration impact.
+  required_role: update-assessor
+  produced_artifacts:
+  - update-assessment
+  exit_gates:
+  - assessment-written
+  goal: Compare the current version with the selected channel and record migration impact.
+  actor: primary_agent
+  gates:
+  - assessment-written
 artifact_definitions:
-  - id: update-assessment
-    title: ProcessForge update assessment
-    owner_role: update-assessor
-    template: processforge-update-assessment-template
-    lifecycle:
-      - draft
-      - ready_for_review
-      - approved
-
+- id: update-assessment
+  title: ProcessForge update assessment
+  owner_role: update-assessor
+  template: processforge-update-assessment-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/update-assessment.md
 gates:
-  - id: update-index-readable
-    description: The update index is present and parseable.
-    blocking: true
-  - id: assessment-written
-    description: The assessment records current version, available version, migration guide, affected files, manual review, recommended steps, and rollback notes.
-    blocking: true
-
+- id: update-index-readable
+  description: The update index is present and parseable.
+  blocking: true
+  type: checklist
+  required: true
+- id: assessment-written
+  description: The assessment records current version, available version, migration guide, affected files, manual review,
+    recommended steps, and rollback notes.
+  blocking: true
+  type: checklist
+  required: true
 evolution_policy:
   versioned: true
   breaking_changes_require_new_version: true
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: false
+run_completion:
+  summary_required: true
+  handoff_artifact_required: false
+required_packages:
+- process-forge-core
+process_pack:
+  package: process-forge-core
+  example_required: true
+agent_prompt:
+  required: true

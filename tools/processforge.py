@@ -4771,6 +4771,10 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_agent_director_tick", [sys.executable, str(root / "tools" / "smoke_agent_director_tick.py")], 120),
         ReleaseCommand("smoke_config_behavior_contracts", [sys.executable, str(root / "tools" / "smoke_config_behavior_contracts.py")], 180),
         ReleaseCommand("smoke_orchestrator_shell_agents_with_subagent_policy", [sys.executable, str(root / "tools" / "smoke_orchestrator_shell_agents_with_subagent_policy.py")], 180),
+        ReleaseCommand("smoke_builtin_process_catalog", [sys.executable, str(root / "tools" / "smoke_builtin_process_catalog.py")], 120),
+        ReleaseCommand("smoke_process_authoring_materialization_parity", [sys.executable, str(root / "tools" / "smoke_process_authoring_materialization_parity.py")], 180),
+        ReleaseCommand("smoke_process_definition_schema_contract", [sys.executable, str(root / "tools" / "smoke_process_definition_schema_contract.py")], 180),
+        ReleaseCommand("smoke_builtin_process_pack_completeness", [sys.executable, str(root / "tools" / "smoke_builtin_process_pack_completeness.py")], 120),
         ReleaseCommand("release-check", [sys.executable, str(root / "tools" / "processforge.py"), "release-check", "--root", str(root)], 60),
         ReleaseCommand("examples-check", [sys.executable, str(root / "tools" / "processforge.py"), "examples-check", "--root", str(root)], 60),
         ReleaseCommand("events-validate", [sys.executable, str(root / "tools" / "processforge.py"), "events-validate", "--project-root", str(root)], 60),
@@ -8965,7 +8969,29 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
             "description": str(process.get("description") or raw.get("description") or base["process"]["description"]),
         }
     )
-    for key in ["run_model", "execution_mode", "execution_mode_questions", "coordination_requirements", "error_handling", "roles", "stages", "artifacts", "artifact_definitions", "gates", "hooks", "evolution_policy", "expected_artifacts"]:
+    for key in [
+        "run_model",
+        "execution_mode",
+        "execution_mode_questions",
+        "coordination_requirements",
+        "error_handling",
+        "roles",
+        "stages",
+        "artifacts",
+        "artifact_definitions",
+        "gates",
+        "hooks",
+        "evolution_policy",
+        "expected_artifacts",
+        "process_transitions",
+        "agent_requirements",
+        "responsibility_boundaries",
+        "subagent_policy",
+        "runtime_requirements",
+        "stage_completion",
+        "run_completion",
+        "metadata",
+    ]:
         if key in raw:
             base[key] = raw[key]
     if "artifact_definitions" in raw and "artifacts" not in raw:
@@ -8983,7 +9009,16 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
     for item in as_list(answers.get("roles")):
         if isinstance(item, dict):
             role_id = safe_id(str(item.get("id") or item.get("title") or "role"), "role")
-            roles.append({"id": role_id, "title": str(item.get("title") or title_from_id(role_id)), "responsibility": str(item.get("responsibility") or "")})
+            responsibility = str(item.get("responsibility") or "")
+            roles.append(
+                {
+                    "id": role_id,
+                    "title": str(item.get("title") or title_from_id(role_id)),
+                    "kind": str(item.get("kind") or "primary_agent"),
+                    "responsibility": responsibility,
+                    "responsibilities": string_list(item.get("responsibilities")) or ([responsibility] if responsibility else [f"Owns {title_from_id(role_id)} responsibilities."]),
+                }
+            )
     if not roles:
         roles = [{"id": "author", "title": "Author", "responsibility": "Creates process artifacts."}]
     role_ids = {item["id"] for item in roles}
@@ -9000,7 +9035,10 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
                     "id": artifact_id,
                     "title": str(item.get("title") or title_from_id(artifact_id)),
                     "owner_role": owner_role,
+                    "type": str(item.get("type") or "markdown"),
+                    "required": bool(item.get("required", True)),
                     "template": str(item.get("template") or "artifact-template"),
+                    "path_hint": str(item.get("path_hint") or f".pf/artifacts/{artifact_id}.md"),
                     "lifecycle": string_list(item.get("lifecycle")) or ["draft", "ready_for_review", "approved"],
                 }
             )
@@ -9013,7 +9051,9 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
             gate: dict[str, Any] = {
                 "id": gate_id,
                 "description": str(item.get("description") or title_from_id(gate_id)),
+                "type": str(item.get("type") or ("artifact_exists" if item.get("required_artifact") else "checklist")),
                 "blocking": bool(item.get("blocking", True)),
+                "required": bool(item.get("required", item.get("blocking", True))),
             }
             if item.get("required_artifact"):
                 gate["required_artifact"] = safe_id(str(item.get("required_artifact")), "artifact")
@@ -9021,6 +9061,7 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
     gate_ids = {item["id"] for item in gates}
 
     stages: list[dict[str, Any]] = []
+    handoff_note_required = False
     for item in as_list(answers.get("stages")):
         if isinstance(item, dict):
             stage_id = safe_id(str(item.get("id") or item.get("title") or "stage"), "stage")
@@ -9033,11 +9074,15 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
             role_id = safe_id(str(item.get("required_role") or roles[0]["id"]), roles[0]["id"])
             if role_id not in role_ids:
                 role_id = roles[0]["id"]
+            if bool(item.get("handoff_required", False)):
+                handoff_note_required = True
             stages.append(
                 {
                     "id": stage_id,
                     "title": str(item.get("title") or title_from_id(stage_id)),
+                    "goal": str(item.get("goal") or item.get("description") or item.get("title") or title_from_id(stage_id)),
                     "description": str(item.get("description") or ""),
+                    "actor": str(item.get("actor") or "primary_agent"),
                     "required_inputs": [safe_id(value, "artifact") for value in string_list(item.get("required_inputs"))],
                     "produced_artifacts": produced,
                     "required_role": role_id,
@@ -9045,17 +9090,29 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
                     "allowed_tools": string_list(item.get("allowed_tools")),
                     "entry_gates": [safe_id(value, "gate") for value in string_list(item.get("entry_gates"))],
                     "exit_gates": exits,
-                    "handoff_required": bool(item.get("handoff_required", False)),
+                    "gates": [safe_id(value, "gate") for value in string_list(item.get("gates"))] or exits,
                 }
             )
     if not artifacts:
-        artifacts = [{"id": "brief", "title": "Brief", "owner_role": roles[0]["id"], "template": "artifact-template", "lifecycle": ["draft", "ready_for_review", "approved"]}]
+        artifacts = [
+            {
+                "id": "brief",
+                "title": "Brief",
+                "owner_role": roles[0]["id"],
+                "type": "markdown",
+                "required": True,
+                "template": "artifact-template",
+                "path_hint": ".pf/artifacts/brief.md",
+                "lifecycle": ["draft", "ready_for_review", "approved"],
+            }
+        ]
         artifact_ids = {"brief"}
     if not gates:
         gates = [{"id": "brief-approved", "description": "Brief is approved.", "blocking": True, "required_artifact": "brief"}]
         gate_ids = {"brief-approved"}
     if not stages:
-        stages = [{"id": "intake", "title": "Intake", "description": "Capture scope.", "required_inputs": [], "produced_artifacts": list(artifact_ids), "required_role": roles[0]["id"], "exit_gates": list(gate_ids), "handoff_required": True}]
+        stages = [{"id": "intake", "title": "Intake", "goal": "Capture scope.", "description": "Capture scope.", "actor": "primary_agent", "required_inputs": [], "produced_artifacts": list(artifact_ids), "required_role": roles[0]["id"], "exit_gates": list(gate_ids), "gates": list(gate_ids)}]
+        handoff_note_required = True
 
     run_model = answers.get("run_model") if isinstance(answers.get("run_model"), dict) else {}
     output = {
@@ -9094,6 +9151,8 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         "required_templates": string_list(answers.get("required_templates")) or ["artifact-template"],
         "allowed_tools": string_list(answers.get("allowed_tools")) or ["processforge-cli"],
         "forbidden_actions": string_list(answers.get("forbidden_actions")) or ["write_private_absolute_paths_to_public_files"],
+        "stage_completion": answers.get("stage_completion") if isinstance(answers.get("stage_completion"), dict) else {"handoff_note_required": handoff_note_required},
+        "run_completion": answers.get("run_completion") if isinstance(answers.get("run_completion"), dict) else {"summary_required": True, "handoff_artifact_required": handoff_note_required},
         "evolution_policy": answers.get("evolution_policy") if isinstance(answers.get("evolution_policy"), dict) else {
             "active_run_upgrade": {"default": "manual_only"},
             "safe_changes": ["add_optional_stage", "add_non_blocking_gate"],
@@ -9101,8 +9160,17 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
             "requires_approval": ["change_stage_order", "change_required_artifact_lifecycle"],
         },
     }
-    if "expected_artifacts" in answers:
-        output["expected_artifacts"] = answers["expected_artifacts"]
+    for key in [
+        "expected_artifacts",
+        "process_transitions",
+        "agent_requirements",
+        "responsibility_boundaries",
+        "subagent_policy",
+        "runtime_requirements",
+        "metadata",
+    ]:
+        if key in answers:
+            output[key] = answers[key]
     return output
 
 
@@ -9475,12 +9543,289 @@ def validate_process_definition_files(project_root: Path, process: dict[str, Any
     return checks
 
 
+PROCESS_CATALOG_CLASSIFICATIONS = {
+    "PUBLIC_STABLE",
+    "PUBLIC_EXPERIMENTAL",
+    "INTERNAL_MAINTENANCE",
+    "EXAMPLE_ONLY",
+    "DEPRECATED",
+}
+
+
+def process_catalog_metadata(process: dict[str, Any]) -> dict[str, Any]:
+    catalog = process.get("catalog") if isinstance(process.get("catalog"), dict) else {}
+    status = str(process.get("status") or "draft")
+    classification = str(catalog.get("classification") or "").upper()
+    if classification not in PROCESS_CATALOG_CLASSIFICATIONS:
+        if status == "active":
+            classification = "PUBLIC_STABLE"
+        elif status == "experimental":
+            classification = "PUBLIC_EXPERIMENTAL"
+        elif status == "internal":
+            classification = "INTERNAL_MAINTENANCE"
+        elif status == "deprecated":
+            classification = "DEPRECATED"
+        else:
+            classification = "PUBLIC_EXPERIMENTAL"
+    public_surface = catalog.get("public_surface", process.get("public_surface", classification != "INTERNAL_MAINTENANCE"))
+    return {"classification": classification, "public_surface": bool(public_surface), "status": status}
+
+
+def process_is_public_stable(process: dict[str, Any]) -> bool:
+    meta = process_catalog_metadata(process)
+    return meta["classification"] == "PUBLIC_STABLE" and meta["public_surface"] and meta["status"] == "active"
+
+
+def artifact_definition_ids(process: dict[str, Any]) -> set[str]:
+    definitions = process.get("artifact_definitions")
+    if isinstance(definitions, dict):
+        return {str(key) for key in definitions.keys()}
+    return {str(item.get("id")) for item in as_list(definitions) if isinstance(item, dict) and item.get("id")}
+
+
+def declared_process_artifact_ids(process: dict[str, Any]) -> set[str]:
+    ids = artifact_definition_ids(process)
+    for key in ["input_definitions", "external_artifacts", "virtual_artifacts", "generated_files"]:
+        value = process.get(key)
+        if isinstance(value, dict):
+            ids.update(str(item) for item in value.keys())
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict) and item.get("id"):
+                    ids.add(str(item["id"]))
+    return ids
+
+
+def produced_process_artifact_ids(process: dict[str, Any]) -> set[str]:
+    produced: set[str] = set()
+    for stage in as_list(process.get("stages")):
+        if isinstance(stage, dict):
+            produced.update(str(item) for item in string_list(stage.get("produced_artifacts")))
+    return produced
+
+
+def process_companion_paths(root: Path, process_id: str) -> dict[str, Path]:
+    return {
+        "process": root / "processes" / f"{process_id}.yaml",
+        "prompt": root / "prompts" / f"{process_id}-agent.md",
+        "doc": root / "docs" / "processes" / f"{process_id}.md",
+        "example": root / "examples" / "process-authoring" / process_id / "README.md",
+    }
+
+
+def validate_process_contract(
+    project_root: Path,
+    process: dict[str, Any],
+    process_path: Path,
+    *,
+    strict: bool = False,
+) -> list[Check]:
+    process_id = str(process.get("id") or process_path.stem)
+    meta = process_catalog_metadata(process)
+    stable = process_is_public_stable(process)
+    hard = strict or stable
+    checks: list[Check] = []
+    checks.append(check("PASS" if meta["classification"] in PROCESS_CATALOG_CLASSIFICATIONS else "FAIL", f"{process_id} catalog classification valid"))
+    checks.append(check("PASS" if process.get("execution_mode") in {"single_agent", "single_agent_with_subagents", "orchestrated_agents", "process_factory"} else ("FAIL" if hard else "WARN"), f"{process_id} execution_mode declared"))
+    coordination = process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {}
+    checks.append(check("PASS" if coordination.get("mode") in PROCESS_COORDINATION_MODES else ("FAIL" if hard else "WARN"), f"{process_id} coordination_requirements.mode declared"))
+    error_handling = process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {}
+    checks.append(check("PASS" if error_handling.get("mode") in ERROR_WORKFLOW_MODES and "enabled" in error_handling else ("FAIL" if hard else "WARN"), f"{process_id} error_handling declared"))
+    checks.append(check("PASS" if isinstance(process.get("responsibility_boundaries"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} responsibility_boundaries declared"))
+    if process.get("execution_mode") in {"single_agent_with_subagents", "orchestrated_agents"}:
+        checks.append(check("PASS" if isinstance(process.get("subagent_policy"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} subagent_policy declared"))
+    if process.get("execution_mode") == "orchestrated_agents":
+        runtime_requirements = process.get("runtime_requirements") if isinstance(process.get("runtime_requirements"), dict) else {}
+        checks.append(check("PASS" if "supervisor_required" in runtime_requirements or coordination.get("mode") != "organized_required" else ("FAIL" if hard else "WARN"), f"{process_id} runtime requirements declared where needed"))
+
+    for role in as_list(process.get("roles")):
+        if not isinstance(role, dict):
+            checks.append(check("FAIL" if hard else "WARN", f"{process_id} role entry is not an object"))
+            continue
+        label = f"{process_id} role {role.get('id', '<missing>')}"
+        checks.append(check("PASS" if role.get("kind") else ("FAIL" if hard else "WARN"), f"{label} kind declared"))
+        responsibilities = role.get("responsibilities")
+        if responsibilities is None and role.get("responsibility"):
+            responsibilities = [role.get("responsibility")]
+        checks.append(check("PASS" if string_list(responsibilities) else ("FAIL" if hard else "WARN"), f"{label} responsibilities declared"))
+
+    defined_artifacts = declared_process_artifact_ids(process)
+    produced = produced_process_artifact_ids(process)
+    missing = sorted(produced - defined_artifacts)
+    checks.append(check("PASS" if not missing else ("FAIL" if hard else "WARN"), f"{process_id} produced artifacts declared: {', '.join(missing) if missing else 'all'}"))
+    gate_ids = {str(item.get("id")) for item in as_list(process.get("gates")) if isinstance(item, dict) and item.get("id")}
+    for stage in as_list(process.get("stages")):
+        if not isinstance(stage, dict):
+            continue
+        stage_id = str(stage.get("id") or "stage")
+        checks.append(check("PASS" if stage.get("actor") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} actor declared"))
+        checks.append(check("PASS" if stage.get("goal") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} goal declared"))
+        unknown_gates = sorted(set(string_list(stage.get("gates")) + string_list(stage.get("exit_gates"))) - gate_ids)
+        checks.append(check("PASS" if not unknown_gates else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} gates valid: {', '.join(unknown_gates) if unknown_gates else 'all'}"))
+        if "handoff_required" in stage:
+            checks.append(check("FAIL" if hard else "WARN", f"{process_id}.{stage_id} deprecated handoff_required used without explicit semantics"))
+    if "handoff_required" in process:
+        checks.append(check("FAIL" if hard else "WARN", f"{process_id} deprecated handoff_required used without explicit semantics"))
+
+    companions = process_companion_paths(project_root, process_id)
+    pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
+    agent_prompt = process.get("agent_prompt") if isinstance(process.get("agent_prompt"), dict) else {}
+    prompt_required = bool(agent_prompt.get("required", True))
+    if stable:
+        checks.append(check("PASS" if companions["prompt"].is_file() or not prompt_required else "FAIL", f"{rel(companions['prompt'], project_root)} exists or is explicitly exempt"))
+        checks.append(check("PASS" if companions["doc"].is_file() else "FAIL", f"{rel(companions['doc'], project_root)} exists"))
+        example_required = bool(pack.get("example_required", True))
+        checks.append(check("PASS" if companions["example"].is_file() or not example_required else "FAIL", f"{rel(companions['example'], project_root)} exists or is explicitly exempt"))
+    else:
+        checks.append(check("PASS", f"{process_id} companion completeness not strict for {meta['classification']}"))
+
+    for template_id in string_list(process.get("required_templates")):
+        template_ref = Path(template_id)
+        candidates = [
+            project_root / "templates" / template_ref,
+            project_root / "templates" / f"{template_id}.yaml",
+            project_root / "templates" / f"{template_id}.md",
+            ROOT / "templates" / template_ref,
+            ROOT / "templates" / f"{template_id}.yaml",
+            ROOT / "templates" / f"{template_id}.md",
+        ]
+        checks.append(check("PASS" if any(candidate.is_file() for candidate in candidates) else ("FAIL" if hard else "WARN"), f"{process_id} required template exists: {template_id}"))
+    return checks
+
+
+def process_catalog_contexts(process: dict[str, Any]) -> dict[str, str]:
+    coordination = process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {}
+    mode = str(coordination.get("mode") or "")
+    runtime_requirements = process.get("runtime_requirements") if isinstance(process.get("runtime_requirements"), dict) else {}
+    return {
+        "simple": "not_applicable" if mode == "organized_required" else "pass",
+        "organized": "pass",
+        "runtime": "pass" if runtime_requirements.get("supervisor_required") or runtime_requirements.get("runtime_driver_required") else "not_applicable",
+    }
+
+
+def package_process_index(root: Path) -> dict[str, dict[str, Any]]:
+    index: dict[str, dict[str, Any]] = {}
+    for path in sorted((root / "packages").glob("*.yaml")):
+        data = load_yaml_document(path)
+        if yaml_error(data) or not isinstance(data, dict):
+            continue
+        package_id = str(data.get("id") or path.stem)
+        index[package_id] = {"path": path, "data": data, "processes": string_list(data.get("processes"))}
+    return index
+
+
+def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[str, Any]:
+    process_items = iter_process_definitions(root)
+    process_ids = {process_id for process_id, _path, _process in process_items}
+    packages = package_process_index(root)
+    rows: list[dict[str, Any]] = []
+    summary: dict[str, int] = {
+        "processes": 0,
+        "public_stable": 0,
+        "public_experimental": 0,
+        "internal": 0,
+        "fail": 0,
+        "warn": 0,
+        "pass": 0,
+    }
+    checks: list[Check] = []
+    for process_id, path, process in process_items:
+        meta = process_catalog_metadata(process)
+        if public and meta["classification"] == "INTERNAL_MAINTENANCE":
+            strict_checks = [check("PASS", f"{process_id} internal maintenance process skipped by public catalog doctor")]
+        else:
+            strict_checks = validate_process_contract(root, process, path, strict=process_is_public_stable(process))
+        failures = [item.message for item in strict_checks if item.level == "FAIL"]
+        warnings = [item.message for item in strict_checks if item.level == "WARN"]
+        checks.extend(strict_checks)
+        if meta["classification"] == "PUBLIC_STABLE":
+            summary["public_stable"] += 1
+        elif meta["classification"] == "PUBLIC_EXPERIMENTAL":
+            summary["public_experimental"] += 1
+        elif meta["classification"] == "INTERNAL_MAINTENANCE":
+            summary["internal"] += 1
+        summary["processes"] += 1
+        summary["fail"] += len(failures)
+        summary["warn"] += len(warnings)
+        if not failures:
+            summary["pass"] += 1
+        process_pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
+        package_id = str(process_pack.get("package") or (string_list(process.get("required_packages"))[0] if string_list(process.get("required_packages")) else ""))
+        companions = process_companion_paths(root, process_id)
+        rows.append(
+            {
+                "id": process_id,
+                "path": rel(path, root),
+                "status": process.get("status"),
+                "classification": meta["classification"],
+                "public_surface": meta["public_surface"],
+                "package": package_id,
+                "execution_mode": process.get("execution_mode"),
+                "coordination_mode": (process.get("coordination_requirements") or {}).get("mode") if isinstance(process.get("coordination_requirements"), dict) else None,
+                "error_handling": (process.get("error_handling") or {}).get("mode") if isinstance(process.get("error_handling"), dict) else None,
+                "has_prompt": companions["prompt"].is_file(),
+                "has_process_doc": companions["doc"].is_file(),
+                "has_authoring_example": companions["example"].is_file(),
+                "artifact_definitions_complete": not (produced_process_artifact_ids(process) - declared_process_artifact_ids(process)),
+                "stage_artifacts_declared": not (produced_process_artifact_ids(process) - declared_process_artifact_ids(process)),
+                "gates_valid": not any("gates valid:" in item.message and item.level == "FAIL" for item in strict_checks),
+                "handoff_semantics": "process_transition" if process.get("process_transitions") else ("run_summary" if process.get("run_completion") else ("stage_note" if process.get("stage_completion") else "none")),
+                "doctor_contexts": process_catalog_contexts(process),
+                "result": "fail" if failures else ("warn" if warnings else "pass"),
+                "failures": failures,
+                "warnings": warnings,
+            }
+        )
+
+    for package_id, item in packages.items():
+        package_data = item["data"]
+        for process_id in item["processes"]:
+            checks.append(check("PASS" if process_id in process_ids else "FAIL", f"package {package_id} process id exists: {process_id}"))
+        stable_exposed = set(string_list(package_data.get("stable_processes")))
+        for process_id in stable_exposed:
+            process = next((candidate for candidate_id, _path, candidate in process_items if candidate_id == process_id), {})
+            checks.append(check("PASS" if process_is_public_stable(process) else "FAIL", f"package {package_id} stable process is public stable: {process_id}"))
+
+    package_failures = [item.message for item in checks if item.level == "FAIL" and item.message.startswith("package ")]
+    summary["fail"] += len(package_failures)
+    return {"schema_version": 1, "summary": summary, "processes": rows, "checks": [{"level": item.level, "message": item.message} for item in checks]}
+
+
+def command_builtin_process_catalog_doctor(args: argparse.Namespace) -> int:
+    root_arg = getattr(args, "root", None) or getattr(args, "project_root", None) or "."
+    root = Path(root_arg).expanduser().resolve()
+    require_flow_root(root)
+    report = builtin_process_catalog_report(root, public=bool(getattr(args, "public", False)))
+    failed = [item for item in report["checks"] if item["level"] == "FAIL"]
+    if getattr(args, "write_report", None):
+        target = Path(args.write_report).expanduser()
+        if not target.is_absolute():
+            target = root / target
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if getattr(args, "json", False):
+        print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(f"PROCESS CATALOG: {'FAIL' if failed else 'PASS'}")
+        summary = report["summary"]
+        print(f"public_stable: {summary['public_stable']} pass, {len(failed)} fail")
+        print(f"experimental: {summary['public_experimental']} warn")
+        print(f"internal: {summary['internal']} skipped")
+        print(f"warnings: {summary['warn']}")
+        for item in report["checks"]:
+            if item["level"] != "PASS":
+                print(f"{item['level']}: {item['message']}")
+    return 1 if failed else 0
+
+
 def command_process_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     path = process_definition_path(project_root, args.process)
     process = read_yaml_file(path)
     checks = validate_process_definition_files(project_root, process, path)
+    checks.extend(validate_process_contract(project_root, process, path, strict=getattr(args, "contract_only", False)))
     checks.extend(validate_process_against_project_mode(process, project_root, force=getattr(args, "force", False)))
     result = print_checks(checks)
     process_id = str(process.get("id") or path.stem)
@@ -9574,6 +9919,22 @@ PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
     "forbidden_actions",
     "evolution_policy",
     "expected_artifacts",
+    "process_transitions",
+    "agent_requirements",
+    "responsibility_boundaries",
+    "subagent_policy",
+    "runtime_requirements",
+    "stage_completion",
+    "run_completion",
+    "metadata",
+    "catalog",
+    "process_pack",
+    "public_surface",
+    "agent_prompt",
+    "input_definitions",
+    "external_artifacts",
+    "virtual_artifacts",
+    "generated_files",
 }
 
 
@@ -9624,6 +9985,18 @@ def process_to_authoring_answers(process: dict[str, Any]) -> dict[str, Any]:
         "forbidden_actions": string_list(process.get("forbidden_actions")),
     }
     for key in ["hooks", "evolution_policy", "expected_artifacts"]:
+        if key in process:
+            answers[key] = process[key]
+    for key in [
+        "process_transitions",
+        "agent_requirements",
+        "responsibility_boundaries",
+        "subagent_policy",
+        "runtime_requirements",
+        "stage_completion",
+        "run_completion",
+        "metadata",
+    ]:
         if key in process:
             answers[key] = process[key]
     return answers
@@ -16387,7 +16760,16 @@ def build_parser() -> argparse.ArgumentParser:
     process_doctor.add_argument("--project-root", required=True, help="Project root path.")
     process_doctor.add_argument("--process", required=True, help="Process id or YAML path.")
     process_doctor.add_argument("--force", action="store_true", help="Downgrade project-mode mismatch to WARN for explicit migration/override flows.")
+    process_doctor.add_argument("--contract-only", action="store_true", help="Run strict process definition contract checks in addition to project-context checks.")
     process_doctor.set_defaults(func=command_process_doctor)
+
+    builtin_process_catalog_doctor = sub.add_parser("builtin-process-catalog-doctor", help="Validate the built-in ProcessForge process catalog contract.")
+    builtin_process_catalog_doctor.add_argument("--root", default=".", help="Repository/project root path.")
+    builtin_process_catalog_doctor.add_argument("--project-root", help="Compatibility alias for --root.")
+    builtin_process_catalog_doctor.add_argument("--public", action="store_true", help="Validate the public catalog surface and skip internal maintenance processes.")
+    builtin_process_catalog_doctor.add_argument("--json", action="store_true", help="Print machine-readable JSON report.")
+    builtin_process_catalog_doctor.add_argument("--write-report", help="Write the JSON report to this path.")
+    builtin_process_catalog_doctor.set_defaults(func=command_builtin_process_catalog_doctor)
 
     process_list = sub.add_parser("process-list", help="List available process definitions.")
     process_list.add_argument("--project-root", required=True, help="Project root path.")

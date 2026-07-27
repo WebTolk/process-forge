@@ -5,142 +5,288 @@ version: 1.0.0
 status: active
 description: Add a knowledge resource through proposal, classification, package update, index refresh, validation, and review.
 required_capabilities:
-  - repository_read
-  - markdown_editing
-  - schema_validation
+- repository_read
+- markdown_editing
+- schema_validation
 hooks:
   emit:
-    - event: knowledge.resource.add.requested
-      required: true
-    - event: knowledge.resource.added
-      required: true
-    - event: knowledge.package.updated
-      required: true
-    - event: snapshot.stale
-      required: false
+  - event: knowledge.resource.add.requested
+    required: true
+  - event: knowledge.resource.added
+    required: true
+  - event: knowledge.package.updated
+    required: true
+  - event: snapshot.stale
+    required: false
 roles:
-  - id: requester
-    title: Requester
-    responsibility: Provides URL, local source, or resource metadata.
-  - id: maintainer
-    title: Maintainer
-    responsibility: Resolves target package, normalizes path_ref, updates indexes, and validates output.
+- id: requester
+  title: Requester
+  responsibility: Provides URL, local source, or resource metadata.
+  kind: primary_agent
+  responsibilities:
+  - Provides URL, local source, or resource metadata.
+- id: maintainer
+  title: Maintainer
+  responsibility: Resolves target package, normalizes path_ref, updates indexes, and validates output.
+  kind: primary_agent
+  responsibilities:
+  - Resolves target package, normalizes path_ref, updates indexes, and validates output.
 stages:
-  - id: intake
-    title: Intake
-    description: Capture the resource request and target package.
-    required_inputs: []
-    produced_artifacts:
-      - knowledge-resource-add-request
-    required_role: requester
-    required_capabilities:
-      - markdown_editing
-    allowed_tools: []
-    entry_gates: []
-    exit_gates:
-      - request-complete
-    handoff_required: false
-  - id: target-resolution
-    title: Target Resolution
-    description: Resolve package, resource kind, path_ref, source, license, and load_policy.
-    required_inputs:
-      - knowledge-resource-add-request
-    produced_artifacts:
-      - target-resolution-report
-      - source-note
-      - license-note
-    required_role: maintainer
-    required_capabilities:
-      - repository_read
-    allowed_tools:
-      - processforge-cli
-    entry_gates:
-      - request-complete
-    exit_gates:
-      - target-resolved
-    handoff_required: false
-  - id: package-index-update
-    title: Package Index Update
-    description: Update package manifest and resource index without loading heavy content.
-    required_inputs:
-      - target-resolution-report
-    produced_artifacts:
-      - resource-record
-      - package-index-update
-    required_role: maintainer
-    required_capabilities:
-      - repository_write
-    allowed_tools:
-      - processforge-cli
-    entry_gates:
-      - target-resolved
-    exit_gates:
-      - index-updated
-    handoff_required: false
-  - id: validation
-    title: Validation
-    description: Run package doctor and public cleanliness checks.
-    required_inputs:
-      - package-index-update
-    produced_artifacts:
-      - validation-report
-      - review
-    required_role: maintainer
-    required_capabilities:
-      - schema_validation
-    allowed_tools:
-      - validator
-    entry_gates:
-      - index-updated
-    exit_gates:
-      - resource-reviewed
-    handoff_required: true
-artifact_definitions:
-  - id: knowledge-resource-add-request
-    title: Knowledge Resource Add Request
-    owner_role: requester
-    template: knowledge-resource-add-request
-    lifecycle: [draft, ready_for_review, approved]
-  - id: resource-record
-    title: Resource Record
-    owner_role: maintainer
-    template: knowledge-resource
-    lifecycle: [draft, ready_for_review, approved]
-  - id: package-index-update
-    title: Package Index Update
-    owner_role: maintainer
-    template: knowledge-resource-index
-    lifecycle: [draft, ready_for_review, approved]
-gates:
-  - id: request-complete
-    description: Request identifies source, target package, and intended resource kind.
-    blocking: true
-  - id: target-resolved
-    description: Resource uses path_ref, license/source notes, and load_policy.
-    blocking: true
-  - id: index-updated
-    description: Package manifest and index are updated without heavy content loading.
-    blocking: true
-  - id: resource-reviewed
-    description: Validation report and review record are complete.
-    blocking: true
-required_packages:
-  - process-forge-knowledge-governance
-required_templates:
-  - knowledge-resource.yaml
-  - knowledge-resource-index.yaml
-allowed_tools:
+- id: intake
+  title: Intake
+  description: Capture the resource request and target package.
+  required_inputs: []
+  produced_artifacts:
+  - knowledge-resource-add-request
+  required_role: requester
+  required_capabilities:
+  - markdown_editing
+  allowed_tools: []
+  entry_gates: []
+  exit_gates:
+  - request-complete
+  goal: Capture the resource request and target package.
+  actor: primary_agent
+  gates:
+  - request-complete
+- id: target-resolution
+  title: Target Resolution
+  description: Resolve package, resource kind, path_ref, source, license, and load_policy.
+  required_inputs:
+  - knowledge-resource-add-request
+  produced_artifacts:
+  - target-resolution-report
+  - source-note
+  - license-note
+  required_role: maintainer
+  required_capabilities:
+  - repository_read
+  allowed_tools:
   - processforge-cli
+  entry_gates:
+  - request-complete
+  exit_gates:
+  - target-resolved
+  goal: Resolve package, resource kind, path_ref, source, license, and load_policy.
+  actor: primary_agent
+  gates:
+  - target-resolved
+- id: package-index-update
+  title: Package Index Update
+  description: Update package manifest and resource index without loading heavy content.
+  required_inputs:
+  - target-resolution-report
+  produced_artifacts:
+  - resource-record
+  - package-index-update
+  required_role: maintainer
+  required_capabilities:
+  - repository_write
+  allowed_tools:
+  - processforge-cli
+  entry_gates:
+  - target-resolved
+  exit_gates:
+  - index-updated
+  goal: Update package manifest and resource index without loading heavy content.
+  actor: primary_agent
+  gates:
+  - index-updated
+- id: validation
+  title: Validation
+  description: Run package doctor and public cleanliness checks.
+  required_inputs:
+  - package-index-update
+  produced_artifacts:
+  - validation-report
+  - review
+  required_role: maintainer
+  required_capabilities:
+  - schema_validation
+  allowed_tools:
   - validator
+  entry_gates:
+  - index-updated
+  exit_gates:
+  - resource-reviewed
+  goal: Run package doctor and public cleanliness checks.
+  actor: primary_agent
+  gates:
+  - resource-reviewed
+artifact_definitions:
+- id: knowledge-resource-add-request
+  title: Knowledge Resource Add Request
+  owner_role: requester
+  template: knowledge-resource-add-request
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/knowledge-resource-add-request.md
+- id: resource-record
+  title: Resource Record
+  owner_role: maintainer
+  template: knowledge-resource
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/resource-record.md
+- id: package-index-update
+  title: Package Index Update
+  owner_role: maintainer
+  template: knowledge-resource-index
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/package-index-update.md
+- id: target-resolution-report
+  title: Target Resolution Report
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/target-resolution-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: source-note
+  title: Source Note
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/source-note.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: license-note
+  title: License Note
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/license-note.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: validation-report
+  title: Validation Report
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/validation-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: review
+  title: Review
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/review.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+gates:
+- id: request-complete
+  description: Request identifies source, target package, and intended resource kind.
+  blocking: true
+  type: checklist
+  required: true
+- id: target-resolved
+  description: Resource uses path_ref, license/source notes, and load_policy.
+  blocking: true
+  type: checklist
+  required: true
+- id: index-updated
+  description: Package manifest and index are updated without heavy content loading.
+  blocking: true
+  type: checklist
+  required: true
+- id: resource-reviewed
+  description: Validation report and review record are complete.
+  blocking: true
+  type: checklist
+  required: true
+required_packages:
+- process-forge-knowledge-governance
+- process-forge-core
+required_templates:
+- knowledge-resource.yaml
+- knowledge-resource-index.yaml
+allowed_tools:
+- processforge-cli
+- validator
 forbidden_actions:
-  - store_secret_values
-  - write_private_absolute_paths_to_public_project_files
+- store_secret_values
+- write_private_absolute_paths_to_public_project_files
 evolution_policy:
   active_run_upgrade:
     default: manual_only
   protected_artifacts:
-    - review
+  - review
   safe_changes:
-    - add_optional_resource_metadata
+  - add_optional_resource_metadata
   blocked_changes:
-    - remove_path_ref_privacy
+  - remove_path_ref_privacy
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
+process_pack:
+  package: process-forge-knowledge-governance
+  example_required: true
+agent_prompt:
+  required: true

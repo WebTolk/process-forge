@@ -3,189 +3,313 @@ id: multi-agent-task-orchestration
 name: Multi-Agent Task Orchestration
 version: 1.0.0
 status: active
-description: Orchestrator-led composition of multiple agent sessions where workers receive bounded assignments, capsules, allowed scopes, required outputs, and minimal launch prompts.
+description: Orchestrator-led composition of multiple agent sessions where workers receive bounded assignments, capsules,
+  allowed scopes, required outputs, and minimal launch prompts.
 execution_mode: orchestrated_agents
 required_capabilities:
-  - process_coordination
-  - repository_read
-  - reporting
+- process_coordination
+- repository_read
+- reporting
 hooks:
   emit:
-    - event: orchestrator.plan.created
-      required: true
-    - event: orchestrator.plan.reviewed
-      required: true
-    - event: run.created
-      required: true
-    - event: task.created
-      required: true
-    - event: assignment.created
-      required: true
-    - event: worker.launch_prompt.created
-      required: true
-    - event: orchestrator.plan.applied
-      required: true
+  - event: orchestrator.plan.created
+    required: true
+  - event: orchestrator.plan.reviewed
+    required: true
+  - event: run.created
+    required: true
+  - event: task.created
+    required: true
+  - event: assignment.created
+    required: true
+  - event: worker.launch_prompt.created
+    required: true
+  - event: orchestrator.plan.applied
+    required: true
   tracking:
     include:
-      - run_id
-      - task_id
-      - assignment_id
-      - artifact_refs
-      - status
+    - run_id
+    - task_id
+    - assignment_id
+    - artifact_refs
+    - status
 roles:
-  - id: orchestrator
-    title: Orchestrator Agent
-    responsibility: Decomposes work, validates scopes, coordinates separate worker sessions, reviews outputs, and integrates final results.
-  - id: worker
-    title: Worker Agent
-    responsibility: Executes only the assigned task inside its own agent session with the provided capsule and bounded scope.
-  - id: reviewer
-    title: Reviewer
-    responsibility: Checks non-overlap, required outputs, capsules, and handoff readiness.
+- id: orchestrator
+  title: Orchestrator Agent
+  responsibility: Decomposes work, validates scopes, coordinates separate worker sessions, reviews outputs, and integrates
+    final results.
+  kind: primary_agent
+  responsibilities:
+  - Decomposes work, validates scopes, coordinates separate worker sessions, reviews outputs, and integrates final results.
+- id: worker
+  title: Worker Agent
+  responsibility: Executes only the assigned task inside its own agent session with the provided capsule and bounded scope.
+  kind: worker_agent
+  responsibilities:
+  - Executes only the assigned task inside its own agent session with the provided capsule and bounded scope.
+- id: reviewer
+  title: Reviewer
+  responsibility: Checks non-overlap, required outputs, capsules, and handoff readiness.
+  kind: primary_agent
+  responsibilities:
+  - Checks non-overlap, required outputs, capsules, and handoff readiness.
 stages:
-  - id: plan
-    title: Create orchestrator plan
-    description: Record run metadata, worker tasks, execution modes, dependencies, scope, outputs, and integration expectations.
-    required_inputs: []
-    produced_artifacts:
-      - orchestrator-task-plan
-    required_role: orchestrator
-    required_capabilities:
-      - process_coordination
-    allowed_tools:
-      - processforge-cli
-    entry_gates: []
-    exit_gates:
-      - plan-valid
-    handoff_required: false
-  - id: assign
-    title: Apply plan to run and assignments
-    description: Create run, assignment-backed tasks, assignment capsules, task index, orchestration summary, and initial handoff.
-    required_inputs:
-      - orchestrator-task-plan
-    produced_artifacts:
-      - worker-launch-prompts
-      - task-index
-      - orchestration-summary
-      - orchestrator-handoff
-    required_role: orchestrator
-    required_capabilities:
-      - process_coordination
-    allowed_tools:
-      - processforge-cli
-    entry_gates:
-      - plan-valid
-    exit_gates:
-      - worker-prompts-created
-    handoff_required: true
-  - id: worker-execution
-    title: Worker execution
-    description: Each worker acts from its task and capsule without rebuilding full project context by default.
-    required_inputs:
-      - worker-launch-prompts
-    produced_artifacts:
-      - worker-reports
-    required_role: worker
-    required_capabilities:
-      - repository_read
-    allowed_tools:
-      - processforge-cli
-    entry_gates:
-      - worker-prompts-created
-    exit_gates:
-      - required-outputs-present
-    handoff_required: false
-  - id: integration-review
-    title: Integrate and review
-    description: Orchestrator reviews worker outputs, resolves residual risks, and writes final integration report.
-    required_inputs:
-      - worker-reports
-    produced_artifacts:
-      - integration-report
-    required_role: orchestrator
-    required_capabilities:
-      - artifact_review
-    allowed_tools:
-      - processforge-cli
-      - validator
-    entry_gates:
-      - required-outputs-present
-    exit_gates:
-      - run-doctor-passed
-    handoff_required: true
-artifact_definitions:
-  - id: orchestrator-task-plan
-    title: Orchestrator Task Plan
-    owner_role: orchestrator
-    template: orchestrator-task-plan
-    lifecycle: [draft, ready_for_review, approved]
-  - id: worker-launch-prompts
-    title: Worker Launch Prompts
-    owner_role: orchestrator
-    template: worker-launch-prompt
-    lifecycle: [draft, ready_for_review, approved]
-  - id: task-index
-    title: Task Index
-    owner_role: orchestrator
-    template: artifact-template
-    lifecycle: [draft, ready_for_review, approved]
-  - id: orchestration-summary
-    title: Orchestration Summary
-    owner_role: orchestrator
-    template: validation-report-template
-    lifecycle: [draft, ready_for_review, approved]
-  - id: orchestrator-handoff
-    title: Orchestrator Handoff
-    owner_role: orchestrator
-    template: handoff-template
-    lifecycle: [draft, ready_for_review, approved]
-  - id: worker-reports
-    title: Worker Reports
-    owner_role: worker
-    template: artifact-template
-    lifecycle: [draft, ready_for_review, approved]
-  - id: integration-report
-    title: Integration Report
-    owner_role: orchestrator
-    template: validation-report-template
-    lifecycle: [draft, ready_for_review, approved]
-gates:
-  - id: plan-valid
-    description: Plan has run metadata, unique workers, bounded scopes, no write-scope overlap, required outputs, and integration output.
-    blocking: true
-  - id: worker-prompts-created
-    description: Each worker has an assignment, capsule, and launch prompt.
-    blocking: true
-  - id: required-outputs-present
-    description: Required worker outputs exist or are explicitly blocked with a handoff.
-    blocking: true
-  - id: run-doctor-passed
-    description: run-doctor and task-doctor pass before final integration closeout.
-    blocking: true
-required_packages:
-  - process-forge-core
-required_templates:
+- id: plan
+  title: Create orchestrator plan
+  description: Record run metadata, worker tasks, execution modes, dependencies, scope, outputs, and integration expectations.
+  required_inputs: []
+  produced_artifacts:
   - orchestrator-task-plan
-  - worker-launch-prompt
-allowed_tools:
+  required_role: orchestrator
+  required_capabilities:
+  - process_coordination
+  allowed_tools:
+  - processforge-cli
+  entry_gates: []
+  exit_gates:
+  - plan-valid
+  goal: Record run metadata, worker tasks, execution modes, dependencies, scope, outputs, and integration expectations.
+  actor: primary_agent
+  gates:
+  - plan-valid
+- id: assign
+  title: Apply plan to run and assignments
+  description: Create run, assignment-backed tasks, assignment capsules, task index, orchestration summary, and initial handoff.
+  required_inputs:
+  - orchestrator-task-plan
+  produced_artifacts:
+  - worker-launch-prompts
+  - task-index
+  - orchestration-summary
+  - orchestrator-handoff
+  required_role: orchestrator
+  required_capabilities:
+  - process_coordination
+  allowed_tools:
+  - processforge-cli
+  entry_gates:
+  - plan-valid
+  exit_gates:
+  - worker-prompts-created
+  goal: Create run, assignment-backed tasks, assignment capsules, task index, orchestration summary, and initial handoff.
+  actor: primary_agent
+  gates:
+  - worker-prompts-created
+- id: worker-execution
+  title: Worker execution
+  description: Each worker acts from its task and capsule without rebuilding full project context by default.
+  required_inputs:
+  - worker-launch-prompts
+  produced_artifacts:
+  - worker-reports
+  required_role: worker
+  required_capabilities:
+  - repository_read
+  allowed_tools:
+  - processforge-cli
+  entry_gates:
+  - worker-prompts-created
+  exit_gates:
+  - required-outputs-present
+  goal: Each worker acts from its task and capsule without rebuilding full project context by default.
+  actor: worker_agent
+  gates:
+  - required-outputs-present
+- id: integration-review
+  title: Integrate and review
+  description: Orchestrator reviews worker outputs, resolves residual risks, and writes final integration report.
+  required_inputs:
+  - worker-reports
+  produced_artifacts:
+  - integration-report
+  required_role: orchestrator
+  required_capabilities:
+  - artifact_review
+  allowed_tools:
   - processforge-cli
   - validator
+  entry_gates:
+  - required-outputs-present
+  exit_gates:
+  - run-doctor-passed
+  goal: Orchestrator reviews worker outputs, resolves residual risks, and writes final integration report.
+  actor: primary_agent
+  gates:
+  - run-doctor-passed
+artifact_definitions:
+- id: orchestrator-task-plan
+  title: Orchestrator Task Plan
+  owner_role: orchestrator
+  template: orchestrator-task-plan
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/orchestrator-task-plan.md
+- id: worker-launch-prompts
+  title: Worker Launch Prompts
+  owner_role: orchestrator
+  template: worker-launch-prompt
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/worker-launch-prompts.md
+- id: task-index
+  title: Task Index
+  owner_role: orchestrator
+  template: artifact-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/task-index.md
+- id: orchestration-summary
+  title: Orchestration Summary
+  owner_role: orchestrator
+  template: validation-report-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/orchestration-summary.md
+- id: orchestrator-handoff
+  title: Orchestrator Handoff
+  owner_role: orchestrator
+  template: handoff-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/orchestrator-handoff.md
+- id: worker-reports
+  title: Worker Reports
+  owner_role: worker
+  template: artifact-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/worker-reports.md
+- id: integration-report
+  title: Integration Report
+  owner_role: orchestrator
+  template: validation-report-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/integration-report.md
+gates:
+- id: plan-valid
+  description: Plan has run metadata, unique workers, bounded scopes, no write-scope overlap, required outputs, and integration
+    output.
+  blocking: true
+  type: checklist
+  required: true
+- id: worker-prompts-created
+  description: Each worker has an assignment, capsule, and launch prompt.
+  blocking: true
+  type: checklist
+  required: true
+- id: required-outputs-present
+  description: Required worker outputs exist or are explicitly blocked with a handoff.
+  blocking: true
+  type: checklist
+  required: true
+- id: run-doctor-passed
+  description: run-doctor and task-doctor pass before final integration closeout.
+  blocking: true
+  type: checklist
+  required: true
+required_packages:
+- process-forge-software-development
+- process-forge-core
+required_templates:
+- orchestrator-task-plan
+- worker-launch-prompt
+allowed_tools:
+- processforge-cli
+- validator
 forbidden_actions:
-  - give_worker_full_context_by_default
-  - allow_parallel_write_overlap_without_explicit_policy
-  - ignore_forbidden_files
-  - skip_required_outputs
-  - create_background_daemon
+- give_worker_full_context_by_default
+- allow_parallel_write_overlap_without_explicit_policy
+- ignore_forbidden_files
+- skip_required_outputs
+- create_background_daemon
 evolution_policy:
   active_run_upgrade:
     default: manual_only
   protected_artifacts:
-    - orchestrator-task-plan
-    - worker-launch-prompts
-    - integration-report
+  - orchestrator-task-plan
+  - worker-launch-prompts
+  - integration-report
   safe_changes:
-    - add_optional_worker_metadata
-    - add_non_blocking_review_gate
+  - add_optional_worker_metadata
+  - add_non_blocking_review_gate
   blocked_changes:
-    - require_network_for_smoke
-    - introduce_database_or_watcher
+  - require_network_for_smoke
+  - introduce_database_or_watcher
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+coordination_requirements:
+  mode: organized_optional
+  director_inbox:
+    required: false
+    optional: true
+  error_workflow:
+    mode: needs_operator
+  simple_mode_behavior: optional
+error_handling:
+  enabled: true
+  mode: needs_operator
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: true
+  require_reports: true
+  allowed_roles:
+  - worker_agent
+runtime_requirements:
+  supervisor_required: false
+  runtime_driver_required: false
+process_transitions: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
+process_pack:
+  package: process-forge-software-development
+  example_required: true
+agent_prompt:
+  required: true

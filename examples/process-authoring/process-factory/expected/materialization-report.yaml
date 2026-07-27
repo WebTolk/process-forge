@@ -1,0 +1,9 @@
+schema_version: 1
+preserved_behavioral_fields:
+- execution_mode
+- coordination_requirements
+- error_handling
+- responsibility_boundaries
+- process_transitions
+- agent_requirements
+- subagent_policy

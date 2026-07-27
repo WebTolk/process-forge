@@ -5,245 +5,408 @@ version: 1.0.0
 status: active
 description: Resolve ProcessForge sources into context index, rules, conflict report, and assignment context packages.
 required_capabilities:
-  - filesystem.read
-  - filesystem.write
-  - context.resolve
+- filesystem.read
+- filesystem.write
+- context.resolve
 hooks:
   emit:
-    - event: process.started
-      required: true
-    - event: stage.started
-      required: true
-    - event: stage.completed
-      required: true
-    - event: assignment.created
-      required: true
-    - event: artifact.created
-      required: true
-    - event: gate.failed
-      required: true
-    - event: chat.message.recorded
-      required: false
+  - event: process.started
+    required: true
+  - event: stage.started
+    required: true
+  - event: stage.completed
+    required: true
+  - event: assignment.created
+    required: true
+  - event: artifact.created
+    required: true
+  - event: gate.failed
+    required: true
+  - event: chat.message.recorded
+    required: false
   subscriptions:
-    - event: assignment.completed
-      actions:
-        - type: create_review_request
-    - event: gate.failed
-      actions:
-        - type: block_stage
-        - type: notify_orchestrator
+  - event: assignment.completed
+    actions:
+    - type: create_review_request
+  - event: gate.failed
+    actions:
+    - type: block_stage
+    - type: notify_orchestrator
   tracking:
     include:
-      - process_id
-      - process_version
-      - stage_id
-      - assignment_id
-      - artifact_refs
-      - actor
-      - session_id
-      - status
+    - process_id
+    - process_version
+    - stage_id
+    - assignment_id
+    - artifact_refs
+    - actor
+    - session_id
+    - status
 roles:
-  - id: orchestrator
-    title: Orchestrator
-    responsibility: Resolves context once and distributes bounded context to workers.
-  - id: worker
-    title: Worker
-    responsibility: Uses the assigned context package without rebuilding whole-project context.
-  - id: reviewer
-    title: Reviewer
-    responsibility: Reviews conflicts, freshness, and source scope.
+- id: orchestrator
+  title: Orchestrator
+  responsibility: Resolves context once and distributes bounded context to workers.
+  kind: primary_agent
+  responsibilities:
+  - Resolves context once and distributes bounded context to workers.
+- id: worker
+  title: Worker
+  responsibility: Uses the assigned context package without rebuilding whole-project context.
+  kind: worker_agent
+  responsibilities:
+  - Uses the assigned context package without rebuilding whole-project context.
+- id: reviewer
+  title: Reviewer
+  responsibility: Reviews conflicts, freshness, and source scope.
+  kind: primary_agent
+  responsibilities:
+  - Reviews conflicts, freshness, and source scope.
 stages:
-  - id: source-discovery
-    title: Source Discovery
-    description: Discover required workplace, project, process, package, template, and assignment sources.
-    required_inputs: []
-    produced_artifacts:
-      - source-inventory
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.read
-    allowed_tools:
-      - processforge-context
-    entry_gates: []
-    exit_gates:
-      - sources-discovered
-    handoff_required: false
-  - id: rule-classification
-    title: Rule Classification
-    description: Classify rules as hard, locked, preference, gate, tool, or template.
-    required_inputs:
-      - source-inventory
-    produced_artifacts:
-      - classified-rules
-    required_role: orchestrator
-    required_capabilities:
-      - context.resolve
-    allowed_tools:
-      - processforge-context
-    entry_gates:
-      - sources-discovered
-    exit_gates:
-      - rules-classified
-    handoff_required: false
-  - id: cascade-merge
-    title: Cascade Merge
-    description: Merge rules in the configured cascade order without weakening locked hard policies.
-    required_inputs:
-      - classified-rules
-    produced_artifacts:
-      - resolved-rules
-    required_role: orchestrator
-    required_capabilities:
-      - context.resolve
-    allowed_tools:
-      - processforge-context
-    entry_gates:
-      - rules-classified
-    exit_gates:
-      - rules-resolved
-    handoff_required: false
-  - id: conflict-detection
-    title: Conflict Detection
-    description: Detect blocked, warn, requires_approval, and resolved outcomes.
-    required_inputs:
-      - resolved-rules
-    produced_artifacts:
-      - context-conflict-report
-    required_role: orchestrator
-    required_capabilities:
-      - context.resolve
-    allowed_tools:
-      - processforge-context
-    entry_gates:
-      - rules-resolved
-    exit_gates:
-      - conflicts-reported
-    handoff_required: false
-  - id: context-index-generation
-    title: Context Index Generation
-    description: Write source list, checksums, selected packages, templates, tools, and capabilities.
-    required_inputs:
-      - source-inventory
-      - context-conflict-report
-    produced_artifacts:
-      - context-index
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.write
-    allowed_tools:
-      - processforge-context
-    entry_gates:
-      - conflicts-reported
-    exit_gates:
-      - context-index-written
-    handoff_required: false
-  - id: resolved-rules-generation
-    title: Resolved Rules Generation
-    description: Write resolved rules grouped by classification.
-    required_inputs:
-      - resolved-rules
-    produced_artifacts:
-      - resolved-rules
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.write
-    allowed_tools:
-      - processforge-context
-    entry_gates:
-      - rules-resolved
-    exit_gates:
-      - resolved-rules-written
-    handoff_required: false
-  - id: fingerprint-recording
-    title: Fingerprint Recording
-    description: Record source fingerprints for cache and freshness checks.
-    required_inputs:
-      - context-index
-    produced_artifacts:
-      - context-cache
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.write
-    allowed_tools:
-      - processforge-context
-    entry_gates:
-      - context-index-written
-    exit_gates:
-      - fingerprints-recorded
-    handoff_required: false
-  - id: ecp-capsule-generation
-    title: ECP And Capsule Generation
-    description: Compile assignment-specific ECP and optional context capsule.
-    required_inputs:
-      - context-index
-      - resolved-rules
-      - context-conflict-report
-      - assignment
-    produced_artifacts:
-      - execution-context-package
-      - context-capsule
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.write
-    allowed_tools:
-      - processforge-context
-    entry_gates:
-      - fingerprints-recorded
-    exit_gates:
-      - ecp-ready
-    handoff_required: true
+- id: source-discovery
+  title: Source Discovery
+  description: Discover required workplace, project, process, package, template, and assignment sources.
+  required_inputs: []
+  produced_artifacts:
+  - source-inventory
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.read
+  allowed_tools:
+  - processforge-context
+  entry_gates: []
+  exit_gates:
+  - sources-discovered
+  goal: Discover required workplace, project, process, package, template, and assignment sources.
+  actor: primary_agent
+  gates:
+  - sources-discovered
+- id: rule-classification
+  title: Rule Classification
+  description: Classify rules as hard, locked, preference, gate, tool, or template.
+  required_inputs:
+  - source-inventory
+  produced_artifacts:
+  - classified-rules
+  required_role: orchestrator
+  required_capabilities:
+  - context.resolve
+  allowed_tools:
+  - processforge-context
+  entry_gates:
+  - sources-discovered
+  exit_gates:
+  - rules-classified
+  goal: Classify rules as hard, locked, preference, gate, tool, or template.
+  actor: primary_agent
+  gates:
+  - rules-classified
+- id: cascade-merge
+  title: Cascade Merge
+  description: Merge rules in the configured cascade order without weakening locked hard policies.
+  required_inputs:
+  - classified-rules
+  produced_artifacts:
+  - resolved-rules
+  required_role: orchestrator
+  required_capabilities:
+  - context.resolve
+  allowed_tools:
+  - processforge-context
+  entry_gates:
+  - rules-classified
+  exit_gates:
+  - rules-resolved
+  goal: Merge rules in the configured cascade order without weakening locked hard policies.
+  actor: primary_agent
+  gates:
+  - rules-resolved
+- id: conflict-detection
+  title: Conflict Detection
+  description: Detect blocked, warn, requires_approval, and resolved outcomes.
+  required_inputs:
+  - resolved-rules
+  produced_artifacts:
+  - context-conflict-report
+  required_role: orchestrator
+  required_capabilities:
+  - context.resolve
+  allowed_tools:
+  - processforge-context
+  entry_gates:
+  - rules-resolved
+  exit_gates:
+  - conflicts-reported
+  goal: Detect blocked, warn, requires_approval, and resolved outcomes.
+  actor: primary_agent
+  gates:
+  - conflicts-reported
+- id: context-index-generation
+  title: Context Index Generation
+  description: Write source list, checksums, selected packages, templates, tools, and capabilities.
+  required_inputs:
+  - source-inventory
+  - context-conflict-report
+  produced_artifacts:
+  - context-index
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.write
+  allowed_tools:
+  - processforge-context
+  entry_gates:
+  - conflicts-reported
+  exit_gates:
+  - context-index-written
+  goal: Write source list, checksums, selected packages, templates, tools, and capabilities.
+  actor: primary_agent
+  gates:
+  - context-index-written
+- id: resolved-rules-generation
+  title: Resolved Rules Generation
+  description: Write resolved rules grouped by classification.
+  required_inputs:
+  - resolved-rules
+  produced_artifacts:
+  - resolved-rules
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.write
+  allowed_tools:
+  - processforge-context
+  entry_gates:
+  - rules-resolved
+  exit_gates:
+  - resolved-rules-written
+  goal: Write resolved rules grouped by classification.
+  actor: primary_agent
+  gates:
+  - resolved-rules-written
+- id: fingerprint-recording
+  title: Fingerprint Recording
+  description: Record source fingerprints for cache and freshness checks.
+  required_inputs:
+  - context-index
+  produced_artifacts:
+  - context-cache
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.write
+  allowed_tools:
+  - processforge-context
+  entry_gates:
+  - context-index-written
+  exit_gates:
+  - fingerprints-recorded
+  goal: Record source fingerprints for cache and freshness checks.
+  actor: primary_agent
+  gates:
+  - fingerprints-recorded
+- id: ecp-capsule-generation
+  title: ECP And Capsule Generation
+  description: Compile assignment-specific ECP and optional context capsule.
+  required_inputs:
+  - context-index
+  - resolved-rules
+  - context-conflict-report
+  - assignment
+  produced_artifacts:
+  - execution-context-package
+  - context-capsule
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.write
+  allowed_tools:
+  - processforge-context
+  entry_gates:
+  - fingerprints-recorded
+  exit_gates:
+  - ecp-ready
+  goal: Compile assignment-specific ECP and optional context capsule.
+  actor: primary_agent
+  gates:
+  - ecp-ready
 artifact_definitions:
-  - id: context-index
-    title: Context Index
-    owner_role: orchestrator
-    template: context-index-template
-    path: contexts/context-index.yaml
-    lifecycle: [draft, ready_for_review, approved, stale]
-  - id: resolved-rules
-    title: Resolved Rules
-    owner_role: orchestrator
-    template: resolved-rules-template
-    path: contexts/resolved-rules.yaml
-    lifecycle: [draft, ready_for_review, approved, stale]
-  - id: context-conflict-report
-    title: Context Conflict Report
-    owner_role: orchestrator
-    template: context-conflict-report-template
-    path: contexts/context-conflict-report.md
-    lifecycle: [draft, ready_for_review, approved, stale]
-  - id: context-cache
-    title: Context Cache
-    owner_role: orchestrator
-    template: context-cache
-    path: runtime/cache/context-cache.yaml
-    lifecycle: [draft, stale]
-  - id: context-capsule
-    title: Context Capsule
-    owner_role: orchestrator
-    template: context-capsule-template
-    path: contexts/context-capsule.yaml
-    lifecycle: [draft, ready_for_review, approved, stale]
+- id: context-index
+  title: Context Index
+  owner_role: orchestrator
+  template: context-index-template
+  path: contexts/context-index.yaml
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  - stale
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/context-index.md
+- id: resolved-rules
+  title: Resolved Rules
+  owner_role: orchestrator
+  template: resolved-rules-template
+  path: contexts/resolved-rules.yaml
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  - stale
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/resolved-rules.md
+- id: context-conflict-report
+  title: Context Conflict Report
+  owner_role: orchestrator
+  template: context-conflict-report-template
+  path: contexts/context-conflict-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  - stale
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/context-conflict-report.md
+- id: context-cache
+  title: Context Cache
+  owner_role: orchestrator
+  template: context-cache
+  path: runtime/cache/context-cache.yaml
+  lifecycle:
+  - draft
+  - stale
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/context-cache.md
+- id: context-capsule
+  title: Context Capsule
+  owner_role: orchestrator
+  template: context-capsule-template
+  path: contexts/context-capsule.yaml
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  - stale
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/context-capsule.md
+- id: source-inventory
+  title: Source Inventory
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/source-inventory.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: classified-rules
+  title: Classified Rules
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/classified-rules.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: execution-context-package
+  title: Execution Context Package
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/execution-context-package.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
 gates:
-  - id: sources-discovered
-    description: Required source list exists.
-  - id: rules-classified
-    description: Instructions are classified before merge.
-  - id: rules-resolved
-    description: Merge completed without weakening locked hard policies.
-  - id: conflicts-reported
-    description: Conflict report exists.
-  - id: context-index-written
-    description: Context index exists.
-  - id: resolved-rules-written
-    description: Resolved rules exist.
-  - id: fingerprints-recorded
-    description: Fingerprints were written.
-  - id: ecp-ready
-    description: Assignment ECP is ready or blocked with a conflict report.
+- id: sources-discovered
+  description: Required source list exists.
+  type: checklist
+  required: true
+- id: rules-classified
+  description: Instructions are classified before merge.
+  type: checklist
+  required: true
+- id: rules-resolved
+  description: Merge completed without weakening locked hard policies.
+  type: checklist
+  required: true
+- id: conflicts-reported
+  description: Conflict report exists.
+  type: checklist
+  required: true
+- id: context-index-written
+  description: Context index exists.
+  type: checklist
+  required: true
+- id: resolved-rules-written
+  description: Resolved rules exist.
+  type: checklist
+  required: true
+- id: fingerprints-recorded
+  description: Fingerprints were written.
+  type: checklist
+  required: true
+- id: ecp-ready
+  description: Assignment ECP is ready or blocked with a conflict report.
+  type: checklist
+  required: true
 evolution_policy:
   versioning: immutable_after_approval
   changes_require_review: true
   compatible_extensions:
-    - add_rule_class
-    - add_context_source_kind
-    - add_conflict_status
+  - add_rule_class
+  - add_context_source_kind
+  - add_conflict_status
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
+required_packages:
+- process-forge-core
+process_pack:
+  package: process-forge-core
+  example_required: true
+agent_prompt:
+  required: true

@@ -3,82 +3,182 @@ id: tool-register
 name: Tool Register
 version: 1.0.0
 status: active
-description: Register a workplace tool capability provider through proposal, healthcheck definition, registry update, and review.
+description: Register a workplace tool capability provider through proposal, healthcheck definition, registry update, and
+  review.
 required_capabilities:
-  - repository_write
+- repository_write
 hooks:
   emit:
-    - event: tool.registered
-      required: true
-    - event: tool.healthcheck.passed
-      required: false
-    - event: tool.healthcheck.failed
-      required: false
+  - event: tool.registered
+    required: true
+  - event: tool.healthcheck.passed
+    required: false
+  - event: tool.healthcheck.failed
+    required: false
 roles:
-  - id: maintainer
-    title: Maintainer
-    responsibility: Resolves capability, command, healthcheck, and registry entry.
+- id: maintainer
+  title: Maintainer
+  responsibility: Resolves capability, command, healthcheck, and registry entry.
+  kind: primary_agent
+  responsibilities:
+  - Resolves capability, command, healthcheck, and registry entry.
 stages:
-  - id: intake
-    title: Intake
-    description: Capture tool id, capability, command, status, and healthcheck.
-    required_inputs: []
-    produced_artifacts:
-      - tool-registration-request
-    required_role: maintainer
-    required_capabilities:
-      - markdown_editing
-    allowed_tools: []
-    entry_gates: []
-    exit_gates:
-      - request-complete
-    handoff_required: false
-  - id: registry-update
-    title: Registry Update
-    description: Update registries/tools.yaml without storing secrets.
-    required_inputs:
-      - tool-registration-request
-    produced_artifacts:
-      - tool-definition
-      - validation-report
-      - review
-    required_role: maintainer
-    required_capabilities:
-      - repository_write
-    allowed_tools:
-      - processforge-cli
-    entry_gates:
-      - request-complete
-    exit_gates:
-      - tool-reviewed
-    handoff_required: true
-artifact_definitions:
-  - id: tool-definition
-    title: Tool Definition
-    owner_role: maintainer
-    template: tool-definition
-    lifecycle: [draft, ready_for_review, approved]
-gates:
-  - id: request-complete
-    description: Tool id, capability, command, and status are explicit.
-    blocking: true
-  - id: tool-reviewed
-    description: Registry entry contains no secrets and healthcheck is documented.
-    blocking: true
-required_packages:
-  - process-forge-core
-required_templates:
-  - tool-definition.yaml
-allowed_tools:
+- id: intake
+  title: Intake
+  description: Capture tool id, capability, command, status, and healthcheck.
+  required_inputs: []
+  produced_artifacts:
+  - tool-registration-request
+  required_role: maintainer
+  required_capabilities:
+  - markdown_editing
+  allowed_tools: []
+  entry_gates: []
+  exit_gates:
+  - request-complete
+  goal: Capture tool id, capability, command, status, and healthcheck.
+  actor: primary_agent
+  gates:
+  - request-complete
+- id: registry-update
+  title: Registry Update
+  description: Update registries/tools.yaml without storing secrets.
+  required_inputs:
+  - tool-registration-request
+  produced_artifacts:
+  - tool-definition
+  - validation-report
+  - review
+  required_role: maintainer
+  required_capabilities:
+  - repository_write
+  allowed_tools:
   - processforge-cli
+  entry_gates:
+  - request-complete
+  exit_gates:
+  - tool-reviewed
+  goal: Update registries/tools.yaml without storing secrets.
+  actor: primary_agent
+  gates:
+  - tool-reviewed
+artifact_definitions:
+- id: tool-definition
+  title: Tool Definition
+  owner_role: maintainer
+  template: tool-definition
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/tool-definition.md
+- id: tool-registration-request
+  title: Tool Registration Request
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/tool-registration-request.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: validation-report
+  title: Validation Report
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/validation-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: review
+  title: Review
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/review.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+gates:
+- id: request-complete
+  description: Tool id, capability, command, and status are explicit.
+  blocking: true
+  type: checklist
+  required: true
+- id: tool-reviewed
+  description: Registry entry contains no secrets and healthcheck is documented.
+  blocking: true
+  type: checklist
+  required: true
+required_packages:
+- process-forge-knowledge-governance
+- process-forge-core
+required_templates:
+- tool-definition.yaml
+allowed_tools:
+- processforge-cli
 forbidden_actions:
-  - store_secret_values
+- store_secret_values
 evolution_policy:
   active_run_upgrade:
     default: manual_only
   protected_artifacts:
-    - review
+  - review
   safe_changes:
-    - add_optional_tool
+  - add_optional_tool
   blocked_changes:
-    - store_secret_in_command
+  - store_secret_in_command
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
+process_pack:
+  package: process-forge-knowledge-governance
+  example_required: true
+agent_prompt:
+  required: true

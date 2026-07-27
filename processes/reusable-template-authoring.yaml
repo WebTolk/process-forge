@@ -8,117 +8,309 @@ status: active
 description: Create, register, validate, and hand off a reusable ProcessForge workplace template.
 purpose: Create a reusable template in a workplace template root without touching project onboarding.
 required_capabilities:
-  - filesystem.write
-  - validation
+- filesystem.write
+- validation
 hooks:
   emit:
-    - event: template.authoring.started
-      required: true
-    - event: template.created
-      required: true
-    - event: template.registered
-      required: true
-    - event: template.doctor.passed
-      required: true
-    - event: template.doctor.failed
-      required: true
-    - event: template.authoring.completed
-      required: true
+  - event: template.authoring.started
+    required: true
+  - event: template.created
+    required: true
+  - event: template.registered
+    required: true
+  - event: template.doctor.passed
+    required: true
+  - event: template.doctor.failed
+    required: true
+  - event: template.authoring.completed
+    required: true
 roles:
-  - id: author
-    title: Template Author
-    responsibility: Creates the reusable template and its manifest.
-  - id: reviewer
-    title: Reviewer
-    responsibility: Reviews the template before consumption.
+- id: author
+  title: Template Author
+  responsibility: Creates the reusable template and its manifest.
+  kind: primary_agent
+  responsibilities:
+  - Creates the reusable template and its manifest.
+- id: reviewer
+  title: Reviewer
+  responsibility: Reviews the template before consumption.
+  kind: primary_agent
+  responsibilities:
+  - Reviews the template before consumption.
 stages:
-  - id: intake
-    title: Intake
-    required_role: author
-    produced_artifacts: [template-authoring-inputs]
-    exit_gates: [inputs-provided]
-  - id: select-template-root
-    title: Select Template Root
-    required_role: author
-    produced_artifacts: [template-root-selection]
-    exit_gates: [template-root-resolved]
-  - id: create-template-structure
-    title: Create Template Structure
-    required_role: author
-    produced_artifacts: [template-structure]
-    exit_gates: [template-structure-created]
-  - id: write-manifest
-    title: Write Manifest
-    required_role: author
-    produced_artifacts: [template-manifest]
-    exit_gates: [manifest-written]
-  - id: write-example-files
-    title: Write Example Files
-    required_role: author
-    produced_artifacts: [template-examples]
-    exit_gates: [examples-written]
-  - id: register-template
-    title: Register Template
-    required_role: author
-    produced_artifacts: [template-registry-entry]
-    exit_gates: [template-registered]
-  - id: run-template-doctor
-    title: Run Template Doctor
-    required_role: author
-    produced_artifacts: [template-doctor-report]
-    exit_gates: [template-doctor-complete]
-  - id: handoff
-    title: Handoff
-    required_role: author
-    produced_artifacts: [template-ready-handoff]
-    exit_gates: [handoff-created]
+- id: intake
+  title: Intake
+  required_role: author
+  produced_artifacts:
+  - template-authoring-inputs
+  exit_gates:
+  - inputs-provided
+  goal: Intake
+  actor: primary_agent
+  gates:
+  - inputs-provided
+- id: select-template-root
+  title: Select Template Root
+  required_role: author
+  produced_artifacts:
+  - template-root-selection
+  exit_gates:
+  - template-root-resolved
+  goal: Select Template Root
+  actor: primary_agent
+  gates:
+  - template-root-resolved
+- id: create-template-structure
+  title: Create Template Structure
+  required_role: author
+  produced_artifacts:
+  - template-structure
+  exit_gates:
+  - template-structure-created
+  goal: Create Template Structure
+  actor: primary_agent
+  gates:
+  - template-structure-created
+- id: write-manifest
+  title: Write Manifest
+  required_role: author
+  produced_artifacts:
+  - template-manifest
+  exit_gates:
+  - manifest-written
+  goal: Write Manifest
+  actor: primary_agent
+  gates:
+  - manifest-written
+- id: write-example-files
+  title: Write Example Files
+  required_role: author
+  produced_artifacts:
+  - template-examples
+  exit_gates:
+  - examples-written
+  goal: Write Example Files
+  actor: primary_agent
+  gates:
+  - examples-written
+- id: register-template
+  title: Register Template
+  required_role: author
+  produced_artifacts:
+  - template-registry-entry
+  exit_gates:
+  - template-registered
+  goal: Register Template
+  actor: primary_agent
+  gates:
+  - template-registered
+- id: run-template-doctor
+  title: Run Template Doctor
+  required_role: author
+  produced_artifacts:
+  - template-doctor-report
+  exit_gates:
+  - template-doctor-complete
+  goal: Run Template Doctor
+  actor: primary_agent
+  gates:
+  - template-doctor-complete
+- id: handoff
+  title: Handoff
+  required_role: author
+  produced_artifacts:
+  - template-ready-handoff
+  exit_gates:
+  - handoff-created
+  goal: Handoff
+  actor: primary_agent
+  gates:
+  - handoff-created
 artifact_definitions:
-  - id: template-authoring-inputs
-    title: Template Authoring Inputs
-    owner_role: author
-    lifecycle: [draft, ready_for_review, approved]
-  - id: template-manifest
-    title: Template Manifest
-    owner_role: author
-    lifecycle: [draft, ready_for_review, approved]
-  - id: template-ready-handoff
-    title: Template Ready Handoff
-    owner_role: author
-    lifecycle: [draft, ready_for_review, approved]
+- id: template-authoring-inputs
+  title: Template Authoring Inputs
+  owner_role: author
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/template-authoring-inputs.md
+- id: template-manifest
+  title: Template Manifest
+  owner_role: author
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/template-manifest.md
+- id: template-ready-handoff
+  title: Template Ready Handoff
+  owner_role: author
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/template-ready-handoff.md
+- id: template-root-selection
+  title: Template Root Selection
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/template-root-selection.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: template-structure
+  title: Template Structure
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/template-structure.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: template-examples
+  title: Template Examples
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/template-examples.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: template-registry-entry
+  title: Template Registry Entry
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/template-registry-entry.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: template-doctor-report
+  title: Template Doctor Report
+  owner_role: author
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/template-doctor-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
 gates:
-  - id: inputs-provided
-    description: Template id and title are available.
-    blocking: true
-  - id: template-root-resolved
-    description: Template root resolved through workplace registries and path constants.
-    blocking: true
-  - id: template-structure-created
-    description: Template folders were created.
-    blocking: true
-  - id: manifest-written
-    description: template.yaml was written.
-    blocking: true
-  - id: examples-written
-    description: Example payload files were written.
-    blocking: false
-  - id: template-registered
-    description: Template registry entry exists.
-    blocking: true
-  - id: template-doctor-complete
-    description: Template doctor passed or produced fix hints.
-    blocking: true
-  - id: handoff-created
-    description: Template ready handoff exists.
-    blocking: true
+- id: inputs-provided
+  description: Template id and title are available.
+  blocking: true
+  type: checklist
+  required: true
+- id: template-root-resolved
+  description: Template root resolved through workplace registries and path constants.
+  blocking: true
+  type: checklist
+  required: true
+- id: template-structure-created
+  description: Template folders were created.
+  blocking: true
+  type: checklist
+  required: true
+- id: manifest-written
+  description: template.yaml was written.
+  blocking: true
+  type: checklist
+  required: true
+- id: examples-written
+  description: Example payload files were written.
+  blocking: false
+  type: checklist
+  required: false
+- id: template-registered
+  description: Template registry entry exists.
+  blocking: true
+  type: checklist
+  required: true
+- id: template-doctor-complete
+  description: Template doctor passed or produced fix hints.
+  blocking: true
+  type: checklist
+  required: true
+- id: handoff-created
+  description: Template ready handoff exists.
+  blocking: true
+  type: checklist
+  required: true
 expected_artifacts:
-  - template.yaml
-  - artifacts/template-authoring-report.md
-  - reviews/template-authoring-review.md
-  - handoffs/template-ready-handoff.md
+- template.yaml
+- artifacts/template-authoring-report.md
+- reviews/template-authoring-review.md
+- handoffs/template-ready-handoff.md
 allowed_tools:
-  - processforge-cli
+- processforge-cli
 evolution_policy:
   active_run_upgrade:
     default: manual_only
   blocked_changes:
-    - write_private_absolute_paths_to_public_template_manifest
+  - write_private_absolute_paths_to_public_template_manifest
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: false
+run_completion:
+  summary_required: true
+  handoff_artifact_required: false
+required_packages:
+- process-forge-knowledge-governance
+- process-forge-core
+process_pack:
+  package: process-forge-knowledge-governance
+  example_required: true
+agent_prompt:
+  required: true

@@ -3,146 +3,260 @@ id: process-supervisor
 name: Process Execution Inspector
 version: 1.0.0
 status: active
-description: File-first execution inspector for external runtime workers; prepares, starts, observes, verifies, and collects assigned worker-run state without assigning agents, granting leases, routing work, or accepting handoffs. Ordinary single-agent sessions use CLI checks/gates instead.
+description: File-first execution inspector for external runtime workers; prepares, starts, observes, verifies, and collects
+  assigned worker-run state without assigning agents, granting leases, routing work, or accepting handoffs. Ordinary single-agent
+  sessions use CLI checks/gates instead.
 execution_mode: orchestrated_agents
 required_capabilities:
-  - execution_inspection
-  - repository_read
-  - local_process_execution
+- execution_inspection
+- repository_read
+- local_process_execution
 hooks:
   emit:
-    - event: supervisor.tick.completed
-      required: true
-    - event: worker.run.prepared
-      required: true
-    - event: worker.run.finished
-      required: false
-    - event: worker.run.collected
-      required: false
+  - event: supervisor.tick.completed
+    required: true
+  - event: worker.run.prepared
+    required: true
+  - event: worker.run.finished
+    required: false
+  - event: worker.run.collected
+    required: false
   tracking:
     include:
-      - run_id
-      - task_id
-      - driver_id
-      - status
+    - run_id
+    - task_id
+    - driver_id
+    - status
 roles:
-  - id: execution-inspector
-    title: Execution Inspector
-    responsibility: Inspects assigned task runtime state, observes worker processes, verifies heartbeat/exit/output/report proof, and marks tasks done, failed, timed_out, or manual_required.
-  - id: worker-runtime
-    title: Worker Runtime
-    responsibility: Runs one bounded assignment command and writes expected outputs.
-  - id: runtime-observer
-    title: Runtime Observer
-    responsibility: Reviews runtime state, logs, process records, heartbeat records, exit records, and collection reports.
+- id: execution-inspector
+  title: Execution Inspector
+  responsibility: Inspects assigned task runtime state, observes worker processes, verifies heartbeat/exit/output/report proof,
+    and marks tasks done, failed, timed_out, or manual_required.
+  kind: inspector
+  responsibilities:
+  - Inspects assigned task runtime state, observes worker processes, verifies heartbeat/exit/output/report proof, and marks
+    tasks done, failed, timed_out, or manual_required.
+- id: worker-runtime
+  title: Worker Runtime
+  responsibility: Runs one bounded assignment command and writes expected outputs.
+  kind: worker_agent
+  responsibilities:
+  - Runs one bounded assignment command and writes expected outputs.
+- id: runtime-observer
+  title: Runtime Observer
+  responsibility: Reviews runtime state, logs, process records, heartbeat records, exit records, and collection reports.
+  kind: primary_agent
+  responsibilities:
+  - Reviews runtime state, logs, process records, heartbeat records, exit records, and collection reports.
 stages:
-  - id: prepare
-    title: Prepare worker run
-    description: Create assignment capsule, worker launch prompt, command.json, and status.json for the selected runtime driver.
-    required_inputs:
-      - assignment
-      - runtime-driver
-    produced_artifacts:
-      - agent-run-state
-      - worker-process-command
-    required_role: execution-inspector
-    required_capabilities:
-      - execution_inspection
-    allowed_tools:
-      - processforge-cli
-    entry_gates:
-      - assignment-ready
-    exit_gates:
-      - worker-run-ready
-    handoff_required: false
-  - id: start
-    title: Start worker run
-    description: Start a shell runtime driver with an explicit executable and write process, stdout, stderr, heartbeat, and exit records.
-    required_inputs:
-      - worker-process-command
-    produced_artifacts:
-      - process-record
-      - worker-logs
-      - exit-record
-    required_role: execution-inspector
-    required_capabilities:
-      - local_process_execution
-    allowed_tools:
-      - processforge-cli
-    entry_gates:
-      - worker-run-ready
-    exit_gates:
-      - worker-run-finished
-    handoff_required: false
-  - id: collect
-    title: Collect worker outputs
-    description: Verify required outputs and expected report, then mark the task complete.
-    required_inputs:
-      - agent-run-state
-      - worker-outputs
-    produced_artifacts:
-      - collection-report
-    required_role: execution-inspector
-    required_capabilities:
-      - artifact_review
-    allowed_tools:
-      - processforge-cli
-    entry_gates:
-      - worker-run-finished
-    exit_gates:
-      - required-outputs-present
-    handoff_required: false
+- id: prepare
+  title: Prepare worker run
+  description: Create assignment capsule, worker launch prompt, command.json, and status.json for the selected runtime driver.
+  required_inputs:
+  - assignment
+  - runtime-driver
+  produced_artifacts:
+  - agent-run-state
+  - worker-process-command
+  required_role: execution-inspector
+  required_capabilities:
+  - execution_inspection
+  allowed_tools:
+  - processforge-cli
+  entry_gates:
+  - assignment-ready
+  exit_gates:
+  - worker-run-ready
+  goal: Create assignment capsule, worker launch prompt, command.json, and status.json for the selected runtime driver.
+  actor: cli_tool
+  gates:
+  - worker-run-ready
+- id: start
+  title: Start worker run
+  description: Start a shell runtime driver with an explicit executable and write process, stdout, stderr, heartbeat, and
+    exit records.
+  required_inputs:
+  - worker-process-command
+  produced_artifacts:
+  - process-record
+  - worker-logs
+  - exit-record
+  required_role: execution-inspector
+  required_capabilities:
+  - local_process_execution
+  allowed_tools:
+  - processforge-cli
+  entry_gates:
+  - worker-run-ready
+  exit_gates:
+  - worker-run-finished
+  goal: Start a shell runtime driver with an explicit executable and write process, stdout, stderr, heartbeat, and exit records.
+  actor: cli_tool
+  gates:
+  - worker-run-finished
+- id: collect
+  title: Collect worker outputs
+  description: Verify required outputs and expected report, then mark the task complete.
+  required_inputs:
+  - agent-run-state
+  - worker-outputs
+  produced_artifacts:
+  - collection-report
+  required_role: execution-inspector
+  required_capabilities:
+  - artifact_review
+  allowed_tools:
+  - processforge-cli
+  entry_gates:
+  - worker-run-finished
+  exit_gates:
+  - required-outputs-present
+  goal: Verify required outputs and expected report, then mark the task complete.
+  actor: cli_tool
+  gates:
+  - required-outputs-present
 artifact_definitions:
-  - id: agent-run-state
-    title: Agent Run State
-    owner_role: execution-inspector
-    template: agent-run-state
-    lifecycle: [draft, active, archived]
-  - id: worker-process-command
-    title: Worker Process Command
-    owner_role: execution-inspector
-    template: worker-process-command
-    lifecycle: [draft, active, archived]
-  - id: process-record
-    title: Process Record
-    owner_role: execution-inspector
-    template: process-record
-    lifecycle: [draft, active, archived]
-  - id: worker-logs
-    title: Worker Logs
-    owner_role: execution-inspector
-    template: worker-logs
-    lifecycle: [draft, active, archived]
-  - id: exit-record
-    title: Exit Record
-    owner_role: execution-inspector
-    template: exit-record
-    lifecycle: [draft, active, archived]
-  - id: collection-report
-    title: Collection Report
-    owner_role: execution-inspector
-    template: validation-report
-    lifecycle: [draft, approved]
+- id: agent-run-state
+  title: Agent Run State
+  owner_role: execution-inspector
+  template: agent-run-state
+  lifecycle:
+  - draft
+  - active
+  - archived
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/agent-run-state.md
+- id: worker-process-command
+  title: Worker Process Command
+  owner_role: execution-inspector
+  template: worker-process-command
+  lifecycle:
+  - draft
+  - active
+  - archived
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/worker-process-command.md
+- id: process-record
+  title: Process Record
+  owner_role: execution-inspector
+  template: process-record
+  lifecycle:
+  - draft
+  - active
+  - archived
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/process-record.md
+- id: worker-logs
+  title: Worker Logs
+  owner_role: execution-inspector
+  template: worker-logs
+  lifecycle:
+  - draft
+  - active
+  - archived
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/worker-logs.md
+- id: exit-record
+  title: Exit Record
+  owner_role: execution-inspector
+  template: exit-record
+  lifecycle:
+  - draft
+  - active
+  - archived
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/exit-record.md
+- id: collection-report
+  title: Collection Report
+  owner_role: execution-inspector
+  template: validation-report
+  lifecycle:
+  - draft
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/collection-report.md
 gates:
-  - id: assignment-ready
-    description: Assignment, run, capsule inputs, and context snapshot exist.
-    required: true
-  - id: worker-run-ready
-    description: Runtime state and command file were written for the selected driver.
-    required: true
-  - id: worker-run-finished
-    description: Runtime state is completed, failed, timed_out, cancelled, or manual_required.
-    required: true
-  - id: required-outputs-present
-    description: Required outputs and expected report are present before collection succeeds.
-    required: true
+- id: assignment-ready
+  description: Assignment, run, capsule inputs, and context snapshot exist.
+  required: true
+  type: checklist
+- id: worker-run-ready
+  description: Runtime state and command file were written for the selected driver.
+  required: true
+  type: checklist
+- id: worker-run-finished
+  description: Runtime state is completed, failed, timed_out, cancelled, or manual_required.
+  required: true
+  type: checklist
+- id: required-outputs-present
+  description: Required outputs and expected report are present before collection succeeds.
+  required: true
+  type: checklist
 evolution_policy:
   versioning: semver
   compatibility: additive state fields are backward-compatible
   deprecation: supervisor state paths must stay stable within the major version
 forbidden_actions:
-  - assign_agents
-  - grant_or_revoke_agent_leases
-  - decide_process_routes
-  - accept_or_finalize_handoffs
-  - decide_project_or_run_ownership
+- assign_agents
+- grant_or_revoke_agent_leases
+- decide_process_routes
+- accept_or_finalize_handoffs
+- decide_project_or_run_ownership
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+coordination_requirements:
+  mode: organized_optional
+  director_inbox:
+    required: false
+    optional: true
+  error_workflow:
+    mode: needs_operator
+  simple_mode_behavior: optional
+error_handling:
+  enabled: true
+  mode: needs_operator
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: true
+  require_reports: true
+  allowed_roles:
+  - worker_agent
+runtime_requirements:
+  supervisor_required: true
+  runtime_driver_required: true
+process_transitions: []
+stage_completion:
+  handoff_note_required: false
+run_completion:
+  summary_required: true
+  handoff_artifact_required: false
+required_packages:
+- process-forge-testing
+- process-forge-core
+process_pack:
+  package: process-forge-testing
+  example_required: true
+agent_prompt:
+  required: true

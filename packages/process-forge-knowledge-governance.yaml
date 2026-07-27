@@ -6,17 +6,49 @@ kind: direction
 scope: process-and-package-improvement
 description: Optional package for evolving reusable process knowledge safely.
 dependencies:
-  - process-forge-core
+- process-forge-core
 rules:
-  - id: proposal-before-rule-change
-    text: Reusable rules require proposal, compatibility review, and approval.
+- id: proposal-before-rule-change
+  text: Reusable rules require proposal, compatibility review, and approval.
 templates:
-  - process-upgrade-assessment-template
-  - review-template
+- process-upgrade-assessment-template
+- review-template
 tools:
-  - id: validator
-    capability: validation
+- id: validator
+  capability: validation
 mcp_servers: []
 validation:
-  - id: compatibility-review
-    capability: process_governance
+- id: compatibility-review
+  capability: process_governance
+processes:
+- authoring-parity-audit
+- knowledge-package-authoring
+- knowledge-package-improvement
+- knowledge-package-update
+- knowledge-resource-add
+- mcp-register
+- platform-contract-authoring
+- platform-contract-install
+- process-authoring
+- process-template-install
+- process-version-upgrade
+- reusable-template-authoring
+- template-add
+- tool-register
+stable_processes:
+- knowledge-package-authoring
+- knowledge-package-improvement
+- knowledge-package-update
+- knowledge-resource-add
+- mcp-register
+- platform-contract-authoring
+- platform-contract-install
+- process-authoring
+- process-template-install
+- process-version-upgrade
+- reusable-template-authoring
+- template-add
+- tool-register
+experimental_processes: []
+internal_processes:
+- authoring-parity-audit

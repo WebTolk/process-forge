@@ -5,78 +5,152 @@ version: 1.0.0
 status: active
 description: Govern neutral runtime driver manifests, registry entries, and validation before worker process execution.
 required_capabilities:
-  - repository_read
-  - schema_validation
-  - process_coordination
+- repository_read
+- schema_validation
+- process_coordination
 hooks:
   emit:
-    - event: worker.run.prepared
-      required: false
+  - event: worker.run.prepared
+    required: false
   tracking:
     include:
-      - driver_id
-      - registry_path
-      - status
+    - driver_id
+    - registry_path
+    - status
 roles:
-  - id: runtime-owner
-    title: Runtime Owner
-    responsibility: Maintains driver manifests and registry entries without binding ProcessForge to a specific agent ecosystem.
-  - id: reviewer
-    title: Runtime Reviewer
-    responsibility: Validates placeholders, security defaults, command shape, and public neutrality.
+- id: runtime-owner
+  title: Runtime Owner
+  responsibility: Maintains driver manifests and registry entries without binding ProcessForge to a specific agent ecosystem.
+  kind: human
+  responsibilities:
+  - Maintains driver manifests and registry entries without binding ProcessForge to a specific agent ecosystem.
+- id: reviewer
+  title: Runtime Reviewer
+  responsibility: Validates placeholders, security defaults, command shape, and public neutrality.
+  kind: primary_agent
+  responsibilities:
+  - Validates placeholders, security defaults, command shape, and public neutrality.
 stages:
-  - id: inventory
-    title: Inventory runtime drivers
-    description: List built-in, workplace, and project-local runtime driver registrations.
-    required_inputs: []
-    produced_artifacts:
-      - runtime-driver-registry
-    required_role: runtime-owner
-    required_capabilities:
-      - repository_read
-    allowed_tools:
-      - processforge-cli
-    entry_gates: []
-    exit_gates:
-      - runtime-drivers-listed
-    handoff_required: false
-  - id: validate
-    title: Validate runtime driver manifests
-    description: Validate driver schema, placeholder allow-list, shell-disabled defaults, and no-network policy.
-    required_inputs:
-      - runtime-driver-registry
-    produced_artifacts:
-      - runtime-driver-validation-report
-    required_role: reviewer
-    required_capabilities:
-      - schema_validation
-    allowed_tools:
-      - processforge-cli
-      - validator
-    entry_gates:
-      - runtime-drivers-listed
-    exit_gates:
-      - runtime-drivers-valid
-    handoff_required: false
+- id: inventory
+  title: Inventory runtime drivers
+  description: List built-in, workplace, and project-local runtime driver registrations.
+  required_inputs: []
+  produced_artifacts:
+  - runtime-driver-registry
+  required_role: runtime-owner
+  required_capabilities:
+  - repository_read
+  allowed_tools:
+  - processforge-cli
+  entry_gates: []
+  exit_gates:
+  - runtime-drivers-listed
+  goal: List built-in, workplace, and project-local runtime driver registrations.
+  actor: operator
+  gates:
+  - runtime-drivers-listed
+- id: validate
+  title: Validate runtime driver manifests
+  description: Validate driver schema, placeholder allow-list, shell-disabled defaults, and no-network policy.
+  required_inputs:
+  - runtime-driver-registry
+  produced_artifacts:
+  - runtime-driver-validation-report
+  required_role: reviewer
+  required_capabilities:
+  - schema_validation
+  allowed_tools:
+  - processforge-cli
+  - validator
+  entry_gates:
+  - runtime-drivers-listed
+  exit_gates:
+  - runtime-drivers-valid
+  goal: Validate driver schema, placeholder allow-list, shell-disabled defaults, and no-network policy.
+  actor: primary_agent
+  gates:
+  - runtime-drivers-valid
 artifact_definitions:
-  - id: runtime-driver-registry
-    title: Runtime Driver Registry
-    owner_role: runtime-owner
-    template: runtime-drivers
-    lifecycle: [draft, ready_for_review, approved]
-  - id: runtime-driver-validation-report
-    title: Runtime Driver Validation Report
-    owner_role: reviewer
-    template: validation-report
-    lifecycle: [draft, approved]
+- id: runtime-driver-registry
+  title: Runtime Driver Registry
+  owner_role: runtime-owner
+  template: runtime-drivers
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/runtime-driver-registry.md
+- id: runtime-driver-validation-report
+  title: Runtime Driver Validation Report
+  owner_role: reviewer
+  template: validation-report
+  lifecycle:
+  - draft
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/runtime-driver-validation-report.md
 gates:
-  - id: runtime-drivers-listed
-    description: Registry lists only neutral driver ids and resolvable manifest paths.
-    required: true
-  - id: runtime-drivers-valid
-    description: Every referenced driver validates against schema and security defaults.
-    required: true
+- id: runtime-drivers-listed
+  description: Registry lists only neutral driver ids and resolvable manifest paths.
+  required: true
+  type: checklist
+- id: runtime-drivers-valid
+  description: Every referenced driver validates against schema and security defaults.
+  required: true
+  type: checklist
 evolution_policy:
   versioning: semver
   compatibility: additive changes to driver metadata are backward-compatible
   deprecation: runtime driver ids must remain stable or be explicitly superseded
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: false
+run_completion:
+  summary_required: true
+  handoff_artifact_required: false
+required_packages:
+- process-forge-software-development
+- process-forge-core
+process_pack:
+  package: process-forge-software-development
+  example_required: true
+agent_prompt:
+  required: true

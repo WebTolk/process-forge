@@ -21,7 +21,85 @@
     "id": { "$ref": "#/$defs/id" },
     "name": { "type": "string", "minLength": 1 },
     "version": { "type": "string", "minLength": 1 },
-    "status": { "enum": ["draft", "active", "deprecated", "archived"] },
+    "status": { "enum": ["draft", "active", "experimental", "internal", "deprecated", "archived"] },
+    "kind": { "type": "string" },
+    "scope": { "type": "string" },
+    "purpose": { "type": "string" },
+    "public_surface": { "type": "boolean" },
+    "catalog": {
+      "type": "object",
+      "properties": {
+        "classification": { "enum": ["PUBLIC_STABLE", "PUBLIC_EXPERIMENTAL", "INTERNAL_MAINTENANCE", "EXAMPLE_ONLY", "DEPRECATED"] },
+        "public_surface": { "type": "boolean" },
+        "strict_contract": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "process_pack": {
+      "type": "object",
+      "properties": {
+        "package": { "type": "string" },
+        "example_required": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "agent_prompt": {
+      "type": "object",
+      "properties": {
+        "required": { "type": "boolean" },
+        "reason": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "execution_mode": { "enum": ["single_agent", "single_agent_with_subagents", "orchestrated_agents", "process_factory"] },
+    "execution_mode_questions": { "type": "object", "additionalProperties": true },
+    "coordination_requirements": {
+      "type": "object",
+      "properties": {
+        "mode": { "enum": ["simple_allowed", "organized_required", "organized_optional"] },
+        "director_inbox": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" },
+            "optional": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        },
+        "error_workflow": {
+          "type": "object",
+          "properties": {
+            "mode": { "enum": ["none", "director_inbox", "route_to_process", "needs_operator"] }
+          },
+          "additionalProperties": true
+        },
+        "simple_mode_behavior": { "enum": ["disable_director_features", "optional", "fail_validation", "allow_no_director"] }
+      },
+      "additionalProperties": true
+    },
+    "error_handling": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "mode": { "enum": ["none", "director_inbox", "route_to_process", "needs_operator"] },
+        "fallback_if_no_director": { "enum": ["needs_operator", "fail_validation"] }
+      },
+      "additionalProperties": true
+    },
+    "responsibility_boundaries": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+    "run_model": { "type": "object", "additionalProperties": true },
+    "expected_artifacts": { "type": "array", "items": { "anyOf": [{ "type": "string" }, { "type": "object", "additionalProperties": true }] } },
+    "process_transitions": { "type": ["array", "object"], "additionalProperties": true },
+    "agent_requirements": { "type": "object", "additionalProperties": true },
+    "subagent_policy": { "type": "object", "additionalProperties": true },
+    "runtime_requirements": { "type": "object", "additionalProperties": true },
+    "runtime_execution_boundary": { "type": "object", "additionalProperties": true },
+    "stage_completion": { "type": "object", "additionalProperties": true },
+    "run_completion": { "type": "object", "additionalProperties": true },
+    "metadata": { "type": "object", "additionalProperties": true },
+    "input_definitions": { "type": "object", "additionalProperties": true },
+    "external_artifacts": { "type": "object", "additionalProperties": true },
+    "virtual_artifacts": { "type": "object", "additionalProperties": true },
+    "generated_files": { "type": "object", "additionalProperties": true },
     "description": { "type": "string" },
     "required_capabilities": { "type": "array", "items": { "type": "string" } },
     "hooks": { "$ref": "#/$defs/processHooks" },
@@ -29,11 +107,13 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "title"],
-        "properties": {
-          "id": { "$ref": "#/$defs/id" },
-          "title": { "type": "string" },
-          "responsibility": { "type": "string" }
+          "required": ["id", "title"],
+          "properties": {
+            "id": { "$ref": "#/$defs/id" },
+            "title": { "type": "string" },
+            "kind": { "enum": ["human", "primary_agent", "worker_agent", "director_agent", "inspector", "cli_check"] },
+            "responsibility": { "type": "string" },
+            "responsibilities": { "type": "array", "items": { "type": "string" } }
         },
         "additionalProperties": true
       }
@@ -102,7 +182,9 @@
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "title": { "type": "string" },
+        "goal": { "type": "string" },
         "description": { "type": "string" },
+        "actor": { "enum": ["primary_agent", "director_agent", "worker_agent", "cli_tool", "operator"] },
         "required_inputs": { "type": "array", "items": { "type": "string" } },
         "produced_artifacts": { "type": "array", "items": { "type": "string" } },
         "required_role": { "$ref": "#/$defs/id" },
@@ -111,7 +193,8 @@
         "entry_gates": { "type": "array", "items": { "type": "string" } },
         "exit_gates": { "type": "array", "items": { "type": "string" } },
         "hooks": { "$ref": "#/$defs/stageHooks" },
-        "handoff_required": { "type": "boolean" }
+        "gates": { "type": "array", "items": { "type": "string" } },
+        "handoff_required": { "type": "boolean", "deprecated": true }
       },
       "additionalProperties": true
     },
@@ -122,7 +205,10 @@
         "id": { "$ref": "#/$defs/id" },
         "title": { "type": "string" },
         "owner_role": { "$ref": "#/$defs/id" },
+        "type": { "type": "string" },
+        "required": { "type": "boolean" },
         "template": { "type": "string" },
+        "path_hint": { "type": "string" },
         "lifecycle": { "type": "array", "items": { "type": "string" } }
       },
       "additionalProperties": true
@@ -199,5 +285,8 @@
       "additionalProperties": true
     }
   },
-  "additionalProperties": true
+  "patternProperties": {
+    "^x_": true
+  },
+  "additionalProperties": false
 }

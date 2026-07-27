@@ -4,6 +4,37 @@ name: Example Process
 version: 1.0.0
 status: draft
 description: Replace with a concise process description.
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+    - Provides scope and approval.
+  primary_agent:
+    - Executes the process and writes artifacts.
+  director:
+    - Not required for simple mode.
+  inspector:
+    - Runs CLI checks when applicable.
+  worker:
+    - Not used by default.
+  cli_tools:
+    - Run deterministic checks.
+process_transitions: []
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
 required_capabilities: []
 hooks:
   emit:
@@ -42,11 +73,16 @@ hooks:
 roles:
   - id: orchestrator
     title: Orchestrator
+    kind: primary_agent
     responsibility: Coordinates the process.
+    responsibilities:
+      - Coordinates the process.
 stages:
   - id: intake
     title: Intake
+    goal: Capture goal and scope.
     description: Capture goal and scope.
+    actor: primary_agent
     required_inputs: []
     produced_artifacts:
       - brief
@@ -66,20 +102,29 @@ stages:
     entry_gates: []
     exit_gates:
       - scope-recorded
-    handoff_required: true
 artifact_definitions:
   - id: brief
     title: Brief
     owner_role: orchestrator
+    type: markdown
+    required: true
     template: artifact-template
+    path_hint: .pf/artifacts/brief.md
     lifecycle:
       - draft
       - ready_for_review
       - approved
 gates:
   - id: scope-recorded
+    type: checklist
     description: Scope and exclusions are explicit.
     blocking: true
+    required: true
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
 required_packages: []
 required_templates:
   - artifact-template

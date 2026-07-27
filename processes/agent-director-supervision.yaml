@@ -2,80 +2,159 @@ schema_version: 1
 id: agent-director-supervision
 name: Agent Director Supervision
 version: 1.0.0
-status: draft
+status: active
 kind: orchestration
-description: Coordinates organized projects, multiple agent sessions, and process runs through pending handoffs, agent availability, leases, target runs, and continuation capsules; delegates task execution checks to the Process Execution Inspector.
+description: Coordinates organized projects, multiple agent sessions, and process runs through pending handoffs, agent availability,
+  leases, target runs, and continuation capsules; delegates task execution checks to the Process Execution Inspector.
 execution_mode: process_factory
 coordination_requirements:
   mode: organized_required
   director_inbox:
-    required: false
-    optional: true
+    required: true
+    optional: false
   error_workflow:
     mode: director_inbox
+  simple_mode_behavior: fail_validation
 error_handling:
   enabled: true
   mode: director_inbox
   fallback_if_no_director: fail_validation
 roles:
-  - id: agent-director
-    title: Agent Director
-    responsibility: Routes process handoffs, grants/revokes bounded leases, tracks unavailable or stale agents, and asks the execution inspector for runtime task state when needed.
+- id: agent-director
+  title: Agent Director
+  responsibility: Routes process handoffs, grants/revokes bounded leases, tracks unavailable or stale agents, and asks the
+    execution inspector for runtime task state when needed.
+  kind: director_agent
+  responsibilities:
+  - Routes process handoffs, grants/revokes bounded leases, tracks unavailable or stale agents, and asks the execution inspector
+    for runtime task state when needed.
 stages:
-  - id: inspect
-    title: Inspect pending handoffs
-    required_role: agent-director
-    produced_artifacts: [director-tick-report]
-    exit_gates: [handoff-status-known]
-  - id: assign
-    title: Assign available agent
-    required_role: agent-director
-    produced_artifacts: [director-tick-report]
-    exit_gates: [handoff-status-known]
-  - id: wait-or-return
-    title: Wait or return
-    required_role: agent-director
-    produced_artifacts: [director-tick-report]
-    exit_gates: [handoff-status-known]
+- id: inspect
+  title: Inspect pending handoffs
+  required_role: agent-director
+  produced_artifacts:
+  - director-tick-report
+  exit_gates:
+  - handoff-status-known
+  goal: Inspect pending handoffs
+  actor: director_agent
+  gates:
+  - handoff-status-known
+- id: assign
+  title: Assign available agent
+  required_role: agent-director
+  produced_artifacts:
+  - director-tick-report
+  exit_gates:
+  - handoff-status-known
+  goal: Assign available agent
+  actor: director_agent
+  gates:
+  - handoff-status-known
+- id: wait-or-return
+  title: Wait or return
+  required_role: agent-director
+  produced_artifacts:
+  - director-tick-report
+  exit_gates:
+  - handoff-status-known
+  goal: Wait or return
+  actor: director_agent
+  gates:
+  - handoff-status-known
 artifact_definitions:
-  - id: director-tick-report
-    title: Director tick report
-    owner_role: agent-director
-    lifecycle: [draft, ready_for_review, approved]
+- id: director-tick-report
+  title: Director tick report
+  owner_role: agent-director
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/director-tick-report.md
 gates:
-  - id: project-effective-mode-known
-    description: Each routed project has known effective coordination mode.
-    blocking: true
-  - id: organized-project-case-ready
-    description: Organized project case is available before Director scheduling.
-    blocking: true
-  - id: simple-project-not-routed-to-director
-    description: Simple projects are not routed to Director unless explicitly included.
-    blocking: true
-  - id: director-inbox-accepted
-    description: Director inbox accepted required project messages.
-    blocking: true
-  - id: error-routed
-    description: Error workflow resolved through Director inbox, process route, or operator escalation.
-    blocking: true
-  - id: handoff-status-known
-    description: Every pending handoff remains waiting, becomes ready, or needs operator.
-    blocking: true
+- id: project-effective-mode-known
+  description: Each routed project has known effective coordination mode.
+  blocking: true
+  type: checklist
+  required: true
+- id: organized-project-case-ready
+  description: Organized project case is available before Director scheduling.
+  blocking: true
+  type: checklist
+  required: true
+- id: simple-project-not-routed-to-director
+  description: Simple projects are not routed to Director unless explicitly included.
+  blocking: true
+  type: checklist
+  required: true
+- id: director-inbox-accepted
+  description: Director inbox accepted required project messages.
+  blocking: true
+  type: checklist
+  required: true
+- id: error-routed
+  description: Error workflow resolved through Director inbox, process route, or operator escalation.
+  blocking: true
+  type: checklist
+  required: true
+- id: handoff-status-known
+  description: Every pending handoff remains waiting, becomes ready, or needs operator.
+  blocking: true
+  type: checklist
+  required: true
 required_capabilities:
-  - repository_read
-  - process.routing
-  - lease.management
+- repository_read
+- process.routing
+- lease.management
 required_templates:
-  - agent-director-policy
+- agent-director-policy
 forbidden_actions:
-  - start_network_service
-  - call_external_agent_cli
-  - start_shell_worker_process_directly
-  - write_worker_process_runtime_state
-  - infer_task_success_from_report_artifact
+- start_network_service
+- call_external_agent_cli
+- start_shell_worker_process_directly
+- write_worker_process_runtime_state
+- infer_task_success_from_report_artifact
 runtime_execution_boundary:
   inspector_process: process-supervisor
-  rule: Director may request supervisor/execution-inspector CLI status, ticks, or reports, but must not infer task success from worker artifacts and must not write process.json, heartbeat.json, exit.json, or agent-run status files.
+  rule: Director may request supervisor/execution-inspector CLI status, ticks, or reports, but must not infer task success
+    from worker artifacts and must not write process.json, heartbeat.json, exit.json, or agent-run status files.
 evolution_policy:
   versioning: additive
   compatibility: preserve_file_contracts
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: false
+run_completion:
+  summary_required: true
+  handoff_artifact_required: false
+required_packages:
+- process-forge-core
+process_pack:
+  package: process-forge-core
+  example_required: true
+agent_prompt:
+  required: true

@@ -5,312 +5,533 @@ version: 1.0.0
 status: active
 description: Connect a project to ProcessForge and a configured workplace layer.
 required_capabilities:
-  - filesystem.write
-  - repository.scan
-  - validation
+- filesystem.write
+- repository.scan
+- validation
 hooks:
   emit:
-    - event: process.started
-      required: true
-    - event: stage.started
-      required: true
-    - event: stage.completed
-      required: true
-    - event: assignment.created
-      required: true
-    - event: artifact.created
-      required: true
-    - event: gate.failed
-      required: true
-    - event: chat.message.recorded
-      required: false
+  - event: process.started
+    required: true
+  - event: stage.started
+    required: true
+  - event: stage.completed
+    required: true
+  - event: assignment.created
+    required: true
+  - event: artifact.created
+    required: true
+  - event: gate.failed
+    required: true
+  - event: chat.message.recorded
+    required: false
   subscriptions:
-    - event: assignment.completed
-      actions:
-        - type: create_review_request
-    - event: gate.failed
-      actions:
-        - type: block_stage
-        - type: notify_orchestrator
+  - event: assignment.completed
+    actions:
+    - type: create_review_request
+  - event: gate.failed
+    actions:
+    - type: block_stage
+    - type: notify_orchestrator
   tracking:
     include:
-      - process_id
-      - process_version
-      - stage_id
-      - assignment_id
-      - artifact_refs
-      - actor
-      - session_id
-      - status
+    - process_id
+    - process_version
+    - stage_id
+    - assignment_id
+    - artifact_refs
+    - actor
+    - session_id
+    - status
 roles:
-  - id: orchestrator
-    title: Orchestrator
-    responsibility: Coordinates project init and proposal-first safety.
-  - id: reviewer
-    title: Reviewer
-    responsibility: Reviews the proposal and observed project facts.
+- id: orchestrator
+  title: Orchestrator
+  responsibility: Coordinates project init and proposal-first safety.
+  kind: primary_agent
+  responsibilities:
+  - Coordinates project init and proposal-first safety.
+- id: reviewer
+  title: Reviewer
+  responsibility: Reviews the proposal and observed project facts.
+  kind: primary_agent
+  responsibilities:
+  - Reviews the proposal and observed project facts.
 stages:
-  - id: intake
-    title: Intake
-    description: Capture project root, workplace manifest, and answers.
-    required_inputs: []
-    produced_artifacts:
-      - project-init-answers
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.read
-    allowed_tools:
-      - processforge-init
-    entry_gates: []
-    exit_gates:
-      - inputs-provided
-    handoff_required: true
-  - id: workplace-resolution
-    title: Workplace Resolution
-    description: Read workplace manifest and registries.
-    required_inputs:
-      - project-init-answers
-    produced_artifacts:
-      - mcp-capability-report
-      - toolchain-detection-report
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.read
-    allowed_tools:
-      - processforge-init
-    entry_gates:
-      - inputs-provided
-    exit_gates:
-      - workplace-resolved
-    handoff_required: false
-  - id: repository-scan
-    title: Repository Scan
-    description: Scan only the supplied project root.
-    required_inputs:
-      - project-init-answers
-    produced_artifacts:
-      - repository-map
-    required_role: orchestrator
-    required_capabilities:
-      - repository.scan
-    allowed_tools:
-      - processforge-init
-    entry_gates:
-      - inputs-provided
-    exit_gates:
-      - repository-mapped
-    handoff_required: false
-  - id: project-classification
-    title: Project Classification
-    description: Classify languages, platforms, frameworks, and project type.
-    required_inputs:
-      - repository-map
-    produced_artifacts:
-      - project-classification-report
-      - project-profile
-    required_role: orchestrator
-    required_capabilities:
-      - repository.scan
-    allowed_tools:
-      - processforge-init
-    entry_gates:
-      - repository-mapped
-    exit_gates:
-      - classification-recorded
-    handoff_required: false
-  - id: global-resource-matching
-    title: Global Resource Matching
-    description: Match detected project needs against workplace registries.
-    required_inputs:
-      - project-classification-report
-    produced_artifacts:
-      - global-resource-matching-report
-      - template-matching-report
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.read
-    allowed_tools:
-      - processforge-init
-    entry_gates:
-      - classification-recorded
-    exit_gates:
-      - resources-matched
-    handoff_required: false
-  - id: project-specificity-extraction
-    title: Project Specificity Extraction
-    description: Create observed project conventions and project package draft.
-    required_inputs:
-      - project-classification-report
-    produced_artifacts:
-      - project-conventions
-      - project-package-draft
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.write
-    allowed_tools:
-      - processforge-init
-    entry_gates:
-      - classification-recorded
-    exit_gates:
-      - project-specificity-recorded
-    handoff_required: false
-  - id: proposal
-    title: Proposal
-    description: Produce project init proposal before applying changes.
-    required_inputs:
-      - global-resource-matching-report
-      - project-package-draft
-    produced_artifacts:
-      - project-init-proposal
-    required_role: orchestrator
-    required_capabilities:
-      - reporting
-    allowed_tools:
-      - processforge-init
-    entry_gates:
-      - resources-matched
-    exit_gates:
-      - proposal-created
-    handoff_required: true
-  - id: review
-    title: Review
-    description: Review proposed project init changes.
-    required_inputs:
-      - project-init-proposal
-    produced_artifacts:
-      - project-init-review
-    required_role: reviewer
-    required_capabilities:
-      - review
-    allowed_tools: []
-    entry_gates:
-      - proposal-created
-    exit_gates:
-      - review-recorded
-    handoff_required: true
-  - id: apply
-    title: Apply
-    description: Write project files without unsafe overwrite.
-    required_inputs:
-      - project-init-review
-    produced_artifacts:
-      - project-files
-    required_role: orchestrator
-    required_capabilities:
-      - filesystem.write
-    allowed_tools:
-      - processforge-init
-    entry_gates:
-      - review-recorded
-    exit_gates:
-      - project-files-written
-    handoff_required: true
-  - id: doctor
-    title: Doctor
-    description: Validate project init output.
-    required_inputs:
-      - project-files
-    produced_artifacts:
-      - project-doctor-report
-    required_role: orchestrator
-    required_capabilities:
-      - validation
-    allowed_tools:
-      - processforge-doctor
-    entry_gates:
-      - project-files-written
-    exit_gates:
-      - doctor-complete
-    handoff_required: true
-artifact_definitions:
-  - id: project-init-answers
-    title: Project Init Answers
-    owner_role: orchestrator
-    template: project-init.answers
-    lifecycle: [draft, ready_for_review, approved]
-  - id: project-classification-report
-    title: Project Classification Report
-    owner_role: orchestrator
-    template: artifact-template
-    lifecycle: [draft, ready_for_review, approved]
-  - id: repository-map
-    title: Repository Map
-    owner_role: orchestrator
-    template: repository-map-template
-    lifecycle: [draft, ready_for_review, approved]
-  - id: project-conventions
-    title: Project Conventions
-    owner_role: orchestrator
-    template: project-conventions-template
-    lifecycle: [draft, ready_for_review, approved]
-  - id: global-resource-matching-report
-    title: Global Resource Matching Report
-    owner_role: orchestrator
-    template: global-resource-matching-report-template
-    lifecycle: [draft, ready_for_review, approved]
-  - id: project-init-proposal
-    title: Project Init Proposal
-    owner_role: orchestrator
-    template: project-init-proposal-template
-    lifecycle: [draft, ready_for_review, approved]
-  - id: project-init-review
-    title: Project Init Review
-    owner_role: reviewer
-    template: project-init-review-template
-    lifecycle: [draft, ready_for_review, approved]
-gates:
-  - id: inputs-provided
-    description: Project root and workplace manifest were provided.
-    blocking: true
-  - id: workplace-resolved
-    description: Workplace manifest was read or missing state was reported.
-    blocking: true
-  - id: repository-mapped
-    description: Repository map was produced from the supplied root only.
-    blocking: true
-  - id: classification-recorded
-    description: Detection evidence was recorded as observed.
-    blocking: true
-  - id: resources-matched
-    description: Global resources were matched or missing capabilities were reported.
-    blocking: true
-  - id: project-specificity-recorded
-    description: Project conventions and package draft were produced.
-    blocking: true
-  - id: proposal-created
-    description: Proposal-first output exists.
-    blocking: true
-  - id: review-recorded
-    description: Review or explicit approval exists.
-    blocking: true
-  - id: project-files-written
-    description: Files were written in apply mode.
-    blocking: true
-  - id: doctor-complete
-    description: Doctor result is recorded.
-    blocking: true
-required_packages:
-  - process-forge-core
-required_templates:
-  - process-forge.yaml
-  - process-forge.local.yaml
-  - project-agents-template
-allowed_tools:
+- id: intake
+  title: Intake
+  description: Capture project root, workplace manifest, and answers.
+  required_inputs: []
+  produced_artifacts:
+  - project-init-answers
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.read
+  allowed_tools:
   - processforge-init
+  entry_gates: []
+  exit_gates:
+  - inputs-provided
+  goal: Capture project root, workplace manifest, and answers.
+  actor: primary_agent
+  gates:
+  - inputs-provided
+- id: workplace-resolution
+  title: Workplace Resolution
+  description: Read workplace manifest and registries.
+  required_inputs:
+  - project-init-answers
+  produced_artifacts:
+  - mcp-capability-report
+  - toolchain-detection-report
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.read
+  allowed_tools:
+  - processforge-init
+  entry_gates:
+  - inputs-provided
+  exit_gates:
+  - workplace-resolved
+  goal: Read workplace manifest and registries.
+  actor: primary_agent
+  gates:
+  - workplace-resolved
+- id: repository-scan
+  title: Repository Scan
+  description: Scan only the supplied project root.
+  required_inputs:
+  - project-init-answers
+  produced_artifacts:
+  - repository-map
+  required_role: orchestrator
+  required_capabilities:
+  - repository.scan
+  allowed_tools:
+  - processforge-init
+  entry_gates:
+  - inputs-provided
+  exit_gates:
+  - repository-mapped
+  goal: Scan only the supplied project root.
+  actor: primary_agent
+  gates:
+  - repository-mapped
+- id: project-classification
+  title: Project Classification
+  description: Classify languages, platforms, frameworks, and project type.
+  required_inputs:
+  - repository-map
+  produced_artifacts:
+  - project-classification-report
+  - project-profile
+  required_role: orchestrator
+  required_capabilities:
+  - repository.scan
+  allowed_tools:
+  - processforge-init
+  entry_gates:
+  - repository-mapped
+  exit_gates:
+  - classification-recorded
+  goal: Classify languages, platforms, frameworks, and project type.
+  actor: primary_agent
+  gates:
+  - classification-recorded
+- id: global-resource-matching
+  title: Global Resource Matching
+  description: Match detected project needs against workplace registries.
+  required_inputs:
+  - project-classification-report
+  produced_artifacts:
+  - global-resource-matching-report
+  - template-matching-report
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.read
+  allowed_tools:
+  - processforge-init
+  entry_gates:
+  - classification-recorded
+  exit_gates:
+  - resources-matched
+  goal: Match detected project needs against workplace registries.
+  actor: primary_agent
+  gates:
+  - resources-matched
+- id: project-specificity-extraction
+  title: Project Specificity Extraction
+  description: Create observed project conventions and project package draft.
+  required_inputs:
+  - project-classification-report
+  produced_artifacts:
+  - project-conventions
+  - project-package-draft
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.write
+  allowed_tools:
+  - processforge-init
+  entry_gates:
+  - classification-recorded
+  exit_gates:
+  - project-specificity-recorded
+  goal: Create observed project conventions and project package draft.
+  actor: primary_agent
+  gates:
+  - project-specificity-recorded
+- id: proposal
+  title: Proposal
+  description: Produce project init proposal before applying changes.
+  required_inputs:
+  - global-resource-matching-report
+  - project-package-draft
+  produced_artifacts:
+  - project-init-proposal
+  required_role: orchestrator
+  required_capabilities:
+  - reporting
+  allowed_tools:
+  - processforge-init
+  entry_gates:
+  - resources-matched
+  exit_gates:
+  - proposal-created
+  goal: Produce project init proposal before applying changes.
+  actor: primary_agent
+  gates:
+  - proposal-created
+- id: review
+  title: Review
+  description: Review proposed project init changes.
+  required_inputs:
+  - project-init-proposal
+  produced_artifacts:
+  - project-init-review
+  required_role: reviewer
+  required_capabilities:
+  - review
+  allowed_tools: []
+  entry_gates:
+  - proposal-created
+  exit_gates:
+  - review-recorded
+  goal: Review proposed project init changes.
+  actor: primary_agent
+  gates:
+  - review-recorded
+- id: apply
+  title: Apply
+  description: Write project files without unsafe overwrite.
+  required_inputs:
+  - project-init-review
+  produced_artifacts:
+  - project-files
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.write
+  allowed_tools:
+  - processforge-init
+  entry_gates:
+  - review-recorded
+  exit_gates:
+  - project-files-written
+  goal: Write project files without unsafe overwrite.
+  actor: primary_agent
+  gates:
+  - project-files-written
+- id: doctor
+  title: Doctor
+  description: Validate project init output.
+  required_inputs:
+  - project-files
+  produced_artifacts:
+  - project-doctor-report
+  required_role: orchestrator
+  required_capabilities:
+  - validation
+  allowed_tools:
   - processforge-doctor
+  entry_gates:
+  - project-files-written
+  exit_gates:
+  - doctor-complete
+  goal: Validate project init output.
+  actor: primary_agent
+  gates:
+  - doctor-complete
+artifact_definitions:
+- id: project-init-answers
+  title: Project Init Answers
+  owner_role: orchestrator
+  template: project-init.answers
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/project-init-answers.md
+- id: project-classification-report
+  title: Project Classification Report
+  owner_role: orchestrator
+  template: artifact-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/project-classification-report.md
+- id: repository-map
+  title: Repository Map
+  owner_role: orchestrator
+  template: repository-map-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/repository-map.md
+- id: project-conventions
+  title: Project Conventions
+  owner_role: orchestrator
+  template: project-conventions-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/project-conventions.md
+- id: global-resource-matching-report
+  title: Global Resource Matching Report
+  owner_role: orchestrator
+  template: global-resource-matching-report-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/global-resource-matching-report.md
+- id: project-init-proposal
+  title: Project Init Proposal
+  owner_role: orchestrator
+  template: project-init-proposal-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/project-init-proposal.md
+- id: project-init-review
+  title: Project Init Review
+  owner_role: reviewer
+  template: project-init-review-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/project-init-review.md
+- id: mcp-capability-report
+  title: Mcp Capability Report
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/mcp-capability-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: toolchain-detection-report
+  title: Toolchain Detection Report
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/toolchain-detection-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: project-profile
+  title: Project Profile
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/project-profile.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: template-matching-report
+  title: Template Matching Report
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/template-matching-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: project-package-draft
+  title: Project Package Draft
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/project-package-draft.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: project-files
+  title: Project Files
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/project-files.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: project-doctor-report
+  title: Project Doctor Report
+  owner_role: orchestrator
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/project-doctor-report.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+gates:
+- id: inputs-provided
+  description: Project root and workplace manifest were provided.
+  blocking: true
+  type: checklist
+  required: true
+- id: workplace-resolved
+  description: Workplace manifest was read or missing state was reported.
+  blocking: true
+  type: checklist
+  required: true
+- id: repository-mapped
+  description: Repository map was produced from the supplied root only.
+  blocking: true
+  type: checklist
+  required: true
+- id: classification-recorded
+  description: Detection evidence was recorded as observed.
+  blocking: true
+  type: checklist
+  required: true
+- id: resources-matched
+  description: Global resources were matched or missing capabilities were reported.
+  blocking: true
+  type: checklist
+  required: true
+- id: project-specificity-recorded
+  description: Project conventions and package draft were produced.
+  blocking: true
+  type: checklist
+  required: true
+- id: proposal-created
+  description: Proposal-first output exists.
+  blocking: true
+  type: checklist
+  required: true
+- id: review-recorded
+  description: Review or explicit approval exists.
+  blocking: true
+  type: checklist
+  required: true
+- id: project-files-written
+  description: Files were written in apply mode.
+  blocking: true
+  type: checklist
+  required: true
+- id: doctor-complete
+  description: Doctor result is recorded.
+  blocking: true
+  type: checklist
+  required: true
+required_packages:
+- process-forge-core
+required_templates:
+- process-forge.yaml
+- process-forge.local.yaml
+- project-agents-template
+allowed_tools:
+- processforge-init
+- processforge-doctor
 forbidden_actions:
-  - scan_outside_project_root
-  - overwrite_brownfield_files_without_force
-  - write_absolute_paths_to_public_manifest
+- scan_outside_project_root
+- overwrite_brownfield_files_without_force
+- write_absolute_paths_to_public_manifest
 evolution_policy:
   active_run_upgrade:
     default: manual_only
   protected_artifacts:
-    - project-init-proposal
-    - project-init-review
+  - project-init-proposal
+  - project-init-review
   safe_changes:
-    - add_optional_report
+  - add_optional_report
   blocked_changes:
-    - remove_public_private_separation
+  - remove_public_private_separation
   requires_approval:
-    - change_overwrite_policy
+  - change_overwrite_policy
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
+process_pack:
+  package: process-forge-core
+  example_required: true
+agent_prompt:
+  required: true

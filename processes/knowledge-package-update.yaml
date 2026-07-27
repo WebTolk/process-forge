@@ -3,109 +3,220 @@ id: knowledge-package-update
 name: Knowledge Package Update
 version: 1.0.0
 status: active
-description: Update a knowledge package through current inspection, change proposal, resource/index update, compatibility check, and review.
+description: Update a knowledge package through current inspection, change proposal, resource/index update, compatibility
+  check, and review.
 required_capabilities:
-  - repository_read
-  - repository_write
-  - schema_validation
+- repository_read
+- repository_write
+- schema_validation
 hooks:
   emit:
-    - event: knowledge.package.updated
-      required: true
-    - event: snapshot.stale
-      required: false
+  - event: knowledge.package.updated
+    required: true
+  - event: snapshot.stale
+    required: false
 roles:
-  - id: maintainer
-    title: Maintainer
-    responsibility: Inspects package state, applies accepted updates, and validates indexes.
+- id: maintainer
+  title: Maintainer
+  responsibility: Inspects package state, applies accepted updates, and validates indexes.
+  kind: primary_agent
+  responsibilities:
+  - Inspects package state, applies accepted updates, and validates indexes.
 stages:
-  - id: current-package-inspection
-    title: Current Package Inspection
-    description: Read package manifest and resource index metadata.
-    required_inputs: []
-    produced_artifacts:
-      - package-inspection-report
-    required_role: maintainer
-    required_capabilities:
-      - repository_read
-    allowed_tools:
-      - processforge-cli
-    entry_gates: []
-    exit_gates:
-      - package-inspected
-    handoff_required: false
-  - id: change-proposal
-    title: Change Proposal
-    description: Record resource, template, tool, or MCP changes before apply.
-    required_inputs:
-      - package-inspection-report
-    produced_artifacts:
-      - change-proposal
-    required_role: maintainer
-    required_capabilities:
-      - markdown_editing
-    allowed_tools: []
-    entry_gates:
-      - package-inspected
-    exit_gates:
-      - proposal-approved
-    handoff_required: true
-  - id: resource-update
-    title: Resource Update
-    description: Apply accepted changes and refresh index.
-    required_inputs:
-      - change-proposal
-    produced_artifacts:
-      - resource-index
-      - compatibility-check
-      - review
-    required_role: maintainer
-    required_capabilities:
-      - repository_write
-    allowed_tools:
-      - processforge-cli
-      - validator
-    entry_gates:
-      - proposal-approved
-    exit_gates:
-      - package-updated
-    handoff_required: true
-artifact_definitions:
-  - id: package-inspection-report
-    title: Package Inspection Report
-    owner_role: maintainer
-    template: validation-report-template
-    lifecycle: [draft, ready_for_review, approved]
-  - id: resource-index
-    title: Resource Index
-    owner_role: maintainer
-    template: knowledge-resource-index
-    lifecycle: [draft, ready_for_review, approved]
-gates:
-  - id: package-inspected
-    description: Package manifest and current index were inspected.
-    blocking: true
-  - id: proposal-approved
-    description: Proposed package changes are explicit.
-    blocking: true
-  - id: package-updated
-    description: Manifest, index, and validation are complete.
-    blocking: true
-required_packages:
-  - process-forge-knowledge-governance
-required_templates:
-  - knowledge-resource-index.yaml
-allowed_tools:
+- id: current-package-inspection
+  title: Current Package Inspection
+  description: Read package manifest and resource index metadata.
+  required_inputs: []
+  produced_artifacts:
+  - package-inspection-report
+  required_role: maintainer
+  required_capabilities:
+  - repository_read
+  allowed_tools:
+  - processforge-cli
+  entry_gates: []
+  exit_gates:
+  - package-inspected
+  goal: Read package manifest and resource index metadata.
+  actor: primary_agent
+  gates:
+  - package-inspected
+- id: change-proposal
+  title: Change Proposal
+  description: Record resource, template, tool, or MCP changes before apply.
+  required_inputs:
+  - package-inspection-report
+  produced_artifacts:
+  - change-proposal
+  required_role: maintainer
+  required_capabilities:
+  - markdown_editing
+  allowed_tools: []
+  entry_gates:
+  - package-inspected
+  exit_gates:
+  - proposal-approved
+  goal: Record resource, template, tool, or MCP changes before apply.
+  actor: primary_agent
+  gates:
+  - proposal-approved
+- id: resource-update
+  title: Resource Update
+  description: Apply accepted changes and refresh index.
+  required_inputs:
+  - change-proposal
+  produced_artifacts:
+  - resource-index
+  - compatibility-check
+  - review
+  required_role: maintainer
+  required_capabilities:
+  - repository_write
+  allowed_tools:
   - processforge-cli
   - validator
+  entry_gates:
+  - proposal-approved
+  exit_gates:
+  - package-updated
+  goal: Apply accepted changes and refresh index.
+  actor: primary_agent
+  gates:
+  - package-updated
+artifact_definitions:
+- id: package-inspection-report
+  title: Package Inspection Report
+  owner_role: maintainer
+  template: validation-report-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/package-inspection-report.md
+- id: resource-index
+  title: Resource Index
+  owner_role: maintainer
+  template: knowledge-resource-index
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/resource-index.md
+- id: change-proposal
+  title: Change Proposal
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/change-proposal.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: compatibility-check
+  title: Compatibility Check
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/compatibility-check.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: review
+  title: Review
+  owner_role: maintainer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/review.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+gates:
+- id: package-inspected
+  description: Package manifest and current index were inspected.
+  blocking: true
+  type: checklist
+  required: true
+- id: proposal-approved
+  description: Proposed package changes are explicit.
+  blocking: true
+  type: checklist
+  required: true
+- id: package-updated
+  description: Manifest, index, and validation are complete.
+  blocking: true
+  type: checklist
+  required: true
+required_packages:
+- process-forge-knowledge-governance
+- process-forge-core
+required_templates:
+- knowledge-resource-index.yaml
+allowed_tools:
+- processforge-cli
+- validator
 forbidden_actions:
-  - load_heavy_resource_content_into_prompt
+- load_heavy_resource_content_into_prompt
 evolution_policy:
   active_run_upgrade:
     default: manual_only
   protected_artifacts:
-    - compatibility-check
+  - compatibility-check
   safe_changes:
-    - add_optional_resource
+  - add_optional_resource
   blocked_changes:
-    - remove_required_resource_without_review
+  - remove_required_resource_without_review
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
+process_pack:
+  package: process-forge-knowledge-governance
+  example_required: true
+agent_prompt:
+  required: true

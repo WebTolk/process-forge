@@ -83,7 +83,7 @@
     "allowed_tools": { "type": "array", "items": { "type": "string" } },
     "forbidden_actions": { "type": "array", "items": { "type": "string" } },
     "process_transitions": {
-      "type": "object",
+      "type": ["object", "array"],
       "properties": {
         "can_handoff": { "type": "boolean" },
         "routes": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
@@ -91,6 +91,7 @@
         "continuation_capsule_required": { "type": "boolean" },
         "post_handoff_run_owner": { "type": "string" }
       },
+      "items": { "type": "object", "additionalProperties": true },
       "additionalProperties": true
     },
     "agent_requirements": {
@@ -119,12 +120,18 @@
     "subagent_policy": {
       "type": "object",
       "properties": {
+        "allowed": { "type": "boolean" },
+        "require_reports": { "type": "boolean" },
         "worker_shell_agents_may_call_subagents": { "type": "boolean" },
         "allowed_roles": { "type": "array", "items": { "type": "string" } },
         "required_reports": { "type": "array", "items": { "type": "string" } }
       },
       "additionalProperties": true
-    }
+    },
+    "runtime_requirements": { "type": "object", "additionalProperties": true },
+    "stage_completion": { "type": "object", "additionalProperties": true },
+    "run_completion": { "type": "object", "additionalProperties": true },
+    "metadata": { "type": "object", "additionalProperties": true }
   },
   "additionalProperties": true
 }

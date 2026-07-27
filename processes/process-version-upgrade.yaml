@@ -5,118 +5,192 @@ version: 1.0.0
 status: active
 description: Assess and perform safe upgrades between process versions.
 required_capabilities:
-  - process_governance
-  - artifact_review
+- process_governance
+- artifact_review
 hooks:
   emit:
-    - event: process.started
-      required: true
-    - event: stage.started
-      required: true
-    - event: stage.completed
-      required: true
-    - event: assignment.created
-      required: true
-    - event: artifact.created
-      required: true
-    - event: gate.failed
-      required: true
-    - event: chat.message.recorded
-      required: false
+  - event: process.started
+    required: true
+  - event: stage.started
+    required: true
+  - event: stage.completed
+    required: true
+  - event: assignment.created
+    required: true
+  - event: artifact.created
+    required: true
+  - event: gate.failed
+    required: true
+  - event: chat.message.recorded
+    required: false
   subscriptions:
-    - event: assignment.completed
-      actions:
-        - type: create_review_request
-    - event: gate.failed
-      actions:
-        - type: block_stage
-        - type: notify_orchestrator
+  - event: assignment.completed
+    actions:
+    - type: create_review_request
+  - event: gate.failed
+    actions:
+    - type: block_stage
+    - type: notify_orchestrator
   tracking:
     include:
-      - process_id
-      - process_version
-      - stage_id
-      - assignment_id
-      - artifact_refs
-      - actor
-      - session_id
-      - status
+    - process_id
+    - process_version
+    - stage_id
+    - assignment_id
+    - artifact_refs
+    - actor
+    - session_id
+    - status
 roles:
-  - id: assessor
-    title: Assessor
-    responsibility: Compares versions and existing artifacts.
-  - id: approver
-    title: Approver
-    responsibility: Decides whether upgrade may proceed.
+- id: assessor
+  title: Assessor
+  responsibility: Compares versions and existing artifacts.
+  kind: primary_agent
+  responsibilities:
+  - Compares versions and existing artifacts.
+- id: approver
+  title: Approver
+  responsibility: Decides whether upgrade may proceed.
+  kind: primary_agent
+  responsibilities:
+  - Decides whether upgrade may proceed.
 stages:
-  - id: compare
-    title: Compare Versions
-    description: Identify changed stages, gates, and artifacts.
-    required_inputs: []
-    produced_artifacts:
-      - upgrade-assessment
-    required_role: assessor
-    required_capabilities:
-      - process_governance
-    allowed_tools:
-      - validator
-    entry_gates: []
-    exit_gates:
-      - assessment-complete
-    handoff_required: true
-  - id: decide
-    title: Decide
-    description: Approve, migrate, or block the upgrade.
-    required_inputs:
-      - upgrade-assessment
-    produced_artifacts:
-      - upgrade-decision
-    required_role: approver
-    required_capabilities:
-      - artifact_review
-    allowed_tools: []
-    entry_gates:
-      - assessment-complete
-    exit_gates:
-      - decision-recorded
-    handoff_required: true
-artifact_definitions:
-  - id: upgrade-assessment
-    title: Upgrade Assessment
-    owner_role: assessor
-    template: process-upgrade-assessment-template
-    lifecycle: [draft, ready_for_review, approved]
-  - id: upgrade-decision
-    title: Upgrade Decision
-    owner_role: approver
-    template: artifact-template
-    lifecycle: [draft, ready_for_review, approved]
-gates:
-  - id: assessment-complete
-    description: Affected artifacts and gates are known.
-    blocking: true
-  - id: decision-recorded
-    description: Recommendation and approval state are recorded.
-    blocking: true
-required_packages:
-  - process-forge-core
-  - process-forge-knowledge-governance
-required_templates:
-  - process-upgrade-assessment-template
-  - artifact-template
-allowed_tools:
+- id: compare
+  title: Compare Versions
+  description: Identify changed stages, gates, and artifacts.
+  required_inputs: []
+  produced_artifacts:
+  - upgrade-assessment
+  required_role: assessor
+  required_capabilities:
+  - process_governance
+  allowed_tools:
   - validator
+  entry_gates: []
+  exit_gates:
+  - assessment-complete
+  goal: Identify changed stages, gates, and artifacts.
+  actor: primary_agent
+  gates:
+  - assessment-complete
+- id: decide
+  title: Decide
+  description: Approve, migrate, or block the upgrade.
+  required_inputs:
+  - upgrade-assessment
+  produced_artifacts:
+  - upgrade-decision
+  required_role: approver
+  required_capabilities:
+  - artifact_review
+  allowed_tools: []
+  entry_gates:
+  - assessment-complete
+  exit_gates:
+  - decision-recorded
+  goal: Approve, migrate, or block the upgrade.
+  actor: primary_agent
+  gates:
+  - decision-recorded
+artifact_definitions:
+- id: upgrade-assessment
+  title: Upgrade Assessment
+  owner_role: assessor
+  template: process-upgrade-assessment-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/upgrade-assessment.md
+- id: upgrade-decision
+  title: Upgrade Decision
+  owner_role: approver
+  template: artifact-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/upgrade-decision.md
+gates:
+- id: assessment-complete
+  description: Affected artifacts and gates are known.
+  blocking: true
+  type: checklist
+  required: true
+- id: decision-recorded
+  description: Recommendation and approval state are recorded.
+  blocking: true
+  type: checklist
+  required: true
+required_packages:
+- process-forge-core
+- process-forge-knowledge-governance
+required_templates:
+- process-upgrade-assessment-template
+- artifact-template
+allowed_tools:
+- validator
 forbidden_actions:
-  - upgrade_active_run_without_assessment
+- upgrade_active_run_without_assessment
 evolution_policy:
   active_run_upgrade:
     default: manual_only
   protected_artifacts:
-    - upgrade-assessment
-    - upgrade-decision
+  - upgrade-assessment
+  - upgrade-decision
   safe_changes:
-    - add_optional_assessment_field
+  - add_optional_assessment_field
   blocked_changes:
-    - remove_blocking_condition_field
+  - remove_blocking_condition_field
   requires_approval:
-    - change_recommendation_statuses
+  - change_recommendation_statuses
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
+process_pack:
+  package: process-forge-knowledge-governance
+  example_required: true
+agent_prompt:
+  required: true

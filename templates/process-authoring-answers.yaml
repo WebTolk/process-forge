@@ -58,20 +58,30 @@ error_handling:
 roles:
   - id: auditor
     title: Auditor
+    kind: primary_agent
     responsibility: Reviews inputs and creates findings.
+    responsibilities:
+      - Reviews inputs and creates findings.
   - id: reviewer
     title: Reviewer
+    kind: primary_agent
     responsibility: Validates evidence and recommendations.
+    responsibilities:
+      - Validates evidence and recommendations.
 stages:
   - id: intake
     title: Intake
+    goal: Capture site, goals, constraints, and source files.
     description: Capture site, goals, constraints, and source files.
+    actor: primary_agent
     required_role: auditor
     produced_artifacts: [audit-brief]
     exit_gates: [audit-brief-approved]
   - id: audit-work
     title: Audit Work
+    goal: Collect evidence and draft findings.
     description: Collect evidence and draft findings.
+    actor: primary_agent
     required_role: auditor
     required_inputs: [audit-brief]
     produced_artifacts: [audit-report]
@@ -79,7 +89,9 @@ stages:
     exit_gates: [audit-report-ready]
   - id: review
     title: Review
+    goal: Check evidence, priority, and portability.
     description: Check evidence, priority, and portability.
+    actor: primary_agent
     required_role: reviewer
     required_inputs: [audit-report]
     produced_artifacts: [audit-review]
@@ -87,46 +99,67 @@ stages:
     exit_gates: [audit-review-passed]
   - id: handoff
     title: Handoff
+    goal: Summarize delivered findings and remaining risks.
     description: Summarize delivered findings and remaining risks.
+    actor: primary_agent
     required_role: auditor
     required_inputs: [audit-review]
     produced_artifacts: [audit-handoff]
     entry_gates: [audit-review-passed]
     exit_gates: [audit-handoff-created]
-    handoff_required: true
 artifacts:
   - id: audit-brief
     title: Audit Brief
     owner_role: auditor
+    type: markdown
+    required: true
     template: artifact-template
+    path_hint: .pf/artifacts/audit-brief.md
   - id: audit-report
     title: Audit Report
     owner_role: auditor
+    type: markdown
+    required: true
     template: validation-report-template
+    path_hint: .pf/artifacts/audit-report.md
   - id: audit-review
     title: Audit Review
     owner_role: reviewer
+    type: markdown
+    required: true
     template: review-template
+    path_hint: .pf/reviews/audit-review.md
   - id: audit-handoff
     title: Audit Handoff
     owner_role: auditor
+    type: markdown
+    required: true
     template: handoff-template
+    path_hint: .pf/handoffs/audit-handoff.md
 gates:
   - id: audit-brief-approved
+    type: artifact_exists
     description: Audit brief names goals, scope, and evidence sources.
     blocking: true
+    required: true
     required_artifact: audit-brief
   - id: audit-report-ready
+    type: artifact_exists
     description: Audit report contains findings and priorities.
     blocking: true
+    required: true
     required_artifact: audit-report
   - id: audit-review-passed
+    type: artifact_exists
     description: Review has no blocking failures.
     blocking: true
+    required: true
     required_artifact: audit-review
   - id: audit-handoff-created
+    type: artifact_exists
     description: Handoff records results and residual risks.
     blocking: true
+    required: true
     required_artifact: audit-handoff
 required_capabilities:
   - repository_read
@@ -185,6 +218,13 @@ responsibility_boundaries:
     - execution-inspector-status
     - execution-inspector-run
 subagent_policy:
+  allowed: false
+  require_reports: false
   worker_shell_agents_may_call_subagents: false
   allowed_roles: []
   required_reports: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
