@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/update-rollback-record.schema.json",
+  "title": "ProcessForge Update Rollback Record",
+  "type": "object",
+  "required": ["schema_version", "candidate_id", "rolled_back_at", "status", "restore_path"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "candidate_id": { "type": "string", "minLength": 1 },
+    "rolled_back_at": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["rolled_back", "failed", "manual_required"] },
+    "restore_path": { "type": "string", "minLength": 1 },
+    "doctor": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

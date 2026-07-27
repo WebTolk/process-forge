@@ -4,6 +4,27 @@ product:
   id: processforge
   current_version: "1.0.0"
 
+update_sites:
+  - id: processforge-official
+    enabled: true
+    provider: processforge_json
+    manifest_url: "https://example.com/processforge/update.json"
+    changelog_url: "https://example.com/processforge/changelog.md"
+    channel: stable
+    priority: 10
+    trust:
+      require_https: true
+      require_sha256: true
+      allow_unsigned: true
+      signature_required: false
+    policy:
+      check_interval_hours: 24
+      auto_check: true
+      auto_stage: false
+      auto_apply: false
+      notify_operator: true
+      notify_director_inbox: true
+
 channels:
   stable:
     latest: "1.0.0"

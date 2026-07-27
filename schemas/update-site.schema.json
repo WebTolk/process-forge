@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/update-site.schema.json",
+  "title": "ProcessForge Unified Update Site",
+  "type": "object",
+  "required": ["id", "enabled", "provider", "manifest_url", "channel", "trust", "policy"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "enabled": { "type": "boolean" },
+    "provider": { "$ref": "#/$defs/provider" },
+    "type": { "$ref": "#/$defs/provider" },
+    "manifest_url": { "type": "string", "minLength": 1 },
+    "url": { "type": "string", "minLength": 1 },
+    "changelog_url": { "type": "string", "minLength": 1 },
+    "channel": { "type": "string", "minLength": 1 },
+    "channels": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "priority": { "type": "integer" },
+    "trust": { "$ref": "#/$defs/trust" },
+    "policy": { "$ref": "#/$defs/policy" },
+    "provider_capabilities": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+    "provider": {
+      "enum": [
+        "processforge_json",
+        "processforge_json_file",
+        "github_releases",
+        "gitverse_releases",
+        "gitlab_releases",
+        "generic_http_directory",
+        "tuf_repository"
+      ]
+    },
+    "trust": {
+      "type": "object",
+      "required": ["require_https", "require_sha256", "allow_unsigned", "signature_required"],
+      "properties": {
+        "require_https": { "type": "boolean" },
+        "require_sha256": { "type": "boolean" },
+        "allow_unsigned": { "type": "boolean" },
+        "signature_required": { "type": "boolean" },
+        "require_sha256_for_install": { "type": "boolean" },
+        "require_signature_for_install": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "policy": {
+      "type": "object",
+      "required": ["check_interval_hours", "auto_check", "auto_stage", "auto_apply", "notify_operator"],
+      "properties": {
+        "check_interval_hours": { "type": "integer", "minimum": 0 },
+        "auto_check": { "type": "boolean" },
+        "auto_stage": { "type": "boolean" },
+        "auto_apply": { "type": "boolean" },
+        "notify_operator": { "type": "boolean" },
+        "notify_director_inbox": { "type": "boolean" },
+        "allow_stage": { "type": "boolean" },
+        "allow_apply": { "type": "boolean" },
+        "backup_before_apply": { "type": "boolean" },
+        "mode": {
+          "enum": [
+            "manual",
+            "download_only",
+            "replace_file",
+            "external_package_manager",
+            "git_pull",
+            "custom_command_requires_confirmation"
+          ]
+        },
+        "install_path": { "type": "string" },
+        "executable_paths": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "post_update_doctor": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

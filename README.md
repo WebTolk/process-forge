@@ -28,6 +28,13 @@ Each project keeps its own `.pf/` layer. The project layer stores project
 context, selected global resources, assignments, runs, tasks, iterations,
 artifacts, reviews, handoffs, hooks, and private runtime files.
 
+Project context has a lock-file model. `.pf/process-forge.yaml` declares
+`context_requirements`; `project-context-refresh` resolves them into
+`.pf/contexts/project-context.snapshot.yaml` plus immutable generations under
+`.pf/contexts/project-context.snapshots/`. `project-context-check` reports
+`fresh`, `fresh_with_updates`, `stale`, or `broken`; assignment capsules pin a
+snapshot id/checksum and are not rewritten by later refreshes.
+
 The atomic execution unit is `1-1-1-1`: one human operator, one primary agent
 session, one project, and one active process/run. In the default single-agent
 flow the primary agent performs the work, runs CLI checks, writes artifacts,
@@ -209,6 +216,9 @@ and used for a run.
 - [Platform contracts](docs/concepts/platform-contracts.md)
 - [Platform inheritance](docs/concepts/platform-inheritance.md)
 - [Knowledge resource navigation](docs/concepts/knowledge-resource-navigation.md)
+- [Update sites](docs/concepts/update-sites.md)
+- [Update lifecycle](docs/concepts/update-lifecycle.md)
+- [Update system quick start](docs/getting-started/update-system.md)
 - [Runs, tasks, and iterations](docs/concepts/runs-tasks-iterations.md)
 - [Authoring parity](docs/authoring/authoring-parity.md)
 - [Known limitations](docs/known-limitations.md)
@@ -235,6 +245,8 @@ Development and release-check requirements:
 - Git for source installation and release checks such as `git diff --check`.
 - Ability to run subprocesses and create temporary directories.
 - ZIP support from the Python standard library.
+- Update tests are deterministic and use local file-provider fixtures; public
+  release checks do not require real network access.
 
 Optional integrations include MCP servers, external tools, browser checks, and
 version-control workflows. Runtime usage from a release archive does not require

@@ -206,6 +206,9 @@ semantic parity, применяй process только после review и до
 - [Platform contracts](docs/ru/concepts/platform-contracts.md)
 - [Platform inheritance](docs/ru/concepts/platform-inheritance.md)
 - [Навигация knowledge resources](docs/ru/concepts/knowledge-resource-navigation.md)
+- [Update sites](docs/ru/concepts/update-sites.md)
+- [Update lifecycle](docs/ru/concepts/update-lifecycle.md)
+- [Система обновлений](docs/ru/getting-started/update-system.md)
 - [Runs, tasks и iterations](docs/ru/concepts/runs-tasks-iterations.md)
 - [Authoring parity](docs/ru/authoring/authoring-parity.md)
 - [Ограничения](docs/ru/known-limitations.md)
@@ -230,6 +233,8 @@ Development and release-check requirements:
 - Git для source installation и release checks, например `git diff --check`.
 - Возможность запускать subprocesses и создавать temporary directories.
 - ZIP support из стандартной библиотеки Python.
+- Update tests deterministic: public release checks используют локальные
+  file-provider fixtures и не требуют реальной сети.
 
 Optional integrations: MCP servers, external tools, browser checks и
 version-control workflows. Runtime usage from a release archive не требует Git,
@@ -247,3 +252,11 @@ version-control workflows. Runtime usage from a release archive не требу�
 ## Лицензия
 
 См. [LICENSE](LICENSE).
+# Project Context Lock
+
+`.pf/process-forge.yaml` объявляет `context_requirements`, а
+`project-context-refresh` записывает resolved lock в
+`.pf/contexts/project-context.snapshot.yaml` и поколения в
+`.pf/contexts/project-context.snapshots/`. `project-context-check` возвращает
+`fresh`, `fresh_with_updates`, `stale` или `broken`. Assignment capsules
+закрепляют snapshot id/checksum и не перепривязываются при последующих refresh.

@@ -1,5 +1,14 @@
 # Knowledge Resources
 
+Project manifests declare desired knowledge through `context_requirements`.
+`project-context-refresh` resolves those declarations into locked resource
+instances in `.pf/contexts/project-context.snapshot.yaml`.
+
+Resources can declare `versioning.mode` as `multi_version`, `single_current`,
+`rolling_index`, or `external_live`. Multi-version resources are reproducible
+when the pinned instance remains available; rolling and live resources may make
+the project snapshot stale when their generation or fingerprint changes.
+
 Knowledge packages can either own their resources or reference external
 resources through registries.
 
@@ -40,6 +49,13 @@ Knowledge packages should publish `indexes/resource-index.yaml` for agent consum
 Large resources such as source trees, full documentation mirrors, and article collections must default to `load_policy: on_demand`. Project snapshots select index records and do not load full resource content.
 
 External and local private resources use `path_ref`; public snapshot records must not contain absolute local paths.
+
+## Updates
+
+Knowledge packages and individual knowledge resources can declare `update_sites`.
+Updates may change manifests, indexes, navigation, rules, public references, and
+lightweight docs. They must not copy heavy private documentation mirrors or
+write private absolute paths into public package metadata.
 
 When a package resource is stored inside a package root, generated records use:
 

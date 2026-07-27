@@ -137,7 +137,7 @@ stages:
   - workplace-resolved
 - id: context-freshness-check
   title: Context Freshness Check
-  description: Check context index, cache, and execution context fingerprints.
+  description: Run `project-context-check --session-start` and evaluate fresh, fresh_with_updates, stale, or broken according to context_policy.
   required_inputs:
   - flow-location-report
   produced_artifacts:
@@ -151,7 +151,7 @@ stages:
   - flow-located
   exit_gates:
   - context-freshness-known
-  goal: Check context index, cache, and execution context fingerprints.
+  goal: Surface project context snapshot freshness before reading assignment state; refresh only when policy and operator workflow allow it.
   actor: primary_agent
   gates:
   - context-freshness-known

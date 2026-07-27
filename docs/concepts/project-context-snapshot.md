@@ -9,6 +9,7 @@ Default paths:
 ```text
 .pf/contexts/project-context.snapshot.yaml
 .pf/contexts/project-context.snapshot.md
+.pf/contexts/project-context.snapshots/<snapshot-id>.yaml
 .pf/runtime/cache/workplace-context.snapshot.yaml
 ```
 
@@ -34,7 +35,11 @@ a conflict note or telemetry event.
 
 The YAML snapshot records:
 
+- generated `id`
 - `generated_at` and `valid_until`
+- `context_requirements` copied from the project manifest
+- `resolved.knowledge_resources` with instance ids, versions, generations, and fingerprints
+- `freshness` and `reproducibility`
 - refresh policy
 - project identity
 - flow root and manifest paths
@@ -53,5 +58,8 @@ Use:
 
 ```bash
 python bin/pf.py project-context-refresh --project-root <project-root>
-python bin/pf.py project-context-check --project-root <project-root>
+python bin/pf.py project-context-check --project-root <project-root> --session-start --json
 ```
+
+See [Project Context Lock Model](project-context-lock-model.md) for resource
+versioning modes and capsule pinning rules.

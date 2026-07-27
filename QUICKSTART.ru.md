@@ -163,6 +163,8 @@ reports. Совместимые технические команды: `supervis
 10. Onboard project.
 11. Create run/task workflow.
 12. Create custom processes as needed.
+13. Configure update sites, если packages, tools или workplace resources должны
+    получать operator-controlled updates.
 
 Capabilities описывают нужные действия, knowledge packages - где читать
 правила, а platform contracts собирают application/domain stacks для проектов.
@@ -172,7 +174,19 @@ contracts.
 Ядро ProcessForge domain-agnostic. Platforms, inheritance, package dependencies
 и detection rules приходят из manifests и policy data.
 
+Для проверки обновлений начните с `python bin/pf.py update candidates refresh
+--workplace <workplace>`, затем используйте `stage`, `verify`, `apply
+--confirm` или `rollback` по сценарию из
+`docs/ru/getting-started/update-system.md`.
+
 Не копируйте весь репозиторий ProcessForge в `.codex`, `.claude`, `.agents` или
 похожие папки конфигурации агентов. Установите ProcessForge один раз как
 инструмент и укажите агенту, где он установлен; проектные инструкции находятся
 в `.pf/START_AGENT_HERE.md`.
+# Project Context Lock
+
+При onboarding агент должен выполнить `project-context-check --session-start
+--json` после refresh snapshot. Работу можно продолжать при `fresh`, новые
+версии ресурсов дают `fresh_with_updates`, rolling/current изменения дают
+`stale`, а исчезнувшие pinned resources дают `broken`. Capsules закрепляют
+snapshot id/checksum и не используют `latest`.

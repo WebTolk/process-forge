@@ -39,3 +39,9 @@ python bin/pf.py project-mode set --project-root ../my-project --mode organized 
 `simple` сохраняет обычный 1-1-1-1 flow. `organized` нужен только проектам,
 которые должны использовать workplace Director Office, Director inbox, cases,
 leases, handoffs или error routes.
+# Project Context Lock
+
+Onboarding записывает `context_requirements` и `context_policy` в публичный
+`.pf/process-forge.yaml`, затем `project-context-refresh` создаёт resolved lock
+snapshot. Существующие capsules остаются закреплены за прежним snapshot
+id/checksum; новые capsules используют текущий snapshot generation.

@@ -10,6 +10,7 @@
     "version": { "type": "string", "minLength": 1 },
     "payload": { "type": "array", "items": { "type": "string" } },
     "compatible_platforms": { "type": "array", "items": { "type": "string" } },
+    "update_sites": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "metadata_optional": { "type": "boolean" }
   },
   "additionalProperties": true

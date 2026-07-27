@@ -1,6 +1,8 @@
 schema_version: 1
+id: ctx-19700101-000000-example
+generated_at: "1970-01-01T00:00:00Z"
 snapshot:
-  id: project-context
+  id: ctx-19700101-000000-example
   generated_at: "2026-01-01T00:00:00Z"
   valid_until: "2026-01-08T00:00:00Z"
   refresh_policy:
@@ -24,6 +26,44 @@ sources:
     - id: project_manifest
       path: ".pf/process-forge.yaml"
       checksum: "<sha256>"
+requirements_fingerprint:
+  process_forge_yaml: "sha256:<sha256>"
+  process_forge_local_yaml: "missing"
+context_requirements:
+  knowledge_packages: []
+  knowledge_resources: []
+  template_packages: []
+  tools: []
+  platform_contracts: []
+context_policy:
+  on_session_start:
+    check_freshness: true
+    if_stale: ask_operator
+    if_broken: block
+resolved:
+  knowledge_packages: []
+  knowledge_resources: []
+  template_packages: []
+  templates: []
+  tools: []
+  platform_contracts: []
+  process_packages: []
+freshness:
+  status: fresh
+  checked_at: "1970-01-01T00:00:00Z"
+  stale_reasons: []
+  update_available: []
+  broken_refs: []
+reproducibility:
+  level: exact
+  reasons: []
+source_fingerprints:
+  workplace_manifest: missing
+  package_roots_registry: missing
+  knowledge_roots_registry: missing
+  template_registry: missing
+  tool_registry: missing
+  installed_subjects: missing
 resolved_policies:
   hard:
     - id: public.no_local_absolute_paths

@@ -246,3 +246,16 @@ Tasks:
 - цитируй files и lines для findings;
 - отделяй blocking findings от non-blocking follow-up.
 ```
+# Project Context Lock
+
+На старте сессии агент должен показать результат
+`project-context-check --session-start --json`. `fresh` продолжает работу,
+`fresh_with_updates` требует уведомления, `stale` обрабатывается по
+`context_policy`, `broken` блокирует выполнение. Capsules закрепляют snapshot
+id/checksum и не используют `latest`.
+
+Для `software-feature-development` агент проходит полный lifecycle:
+orchestration, intake, investigation, domain, architecture, implementation,
+assurance, release-delivery и evolve. Release/evolve можно отметить
+`not_applicable`, но только с причиной и evidence. Package/build/install - это
+`execution_profile.delivery_profile`, а не отдельный process id.

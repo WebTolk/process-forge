@@ -3,21 +3,18 @@
 Project context freshness answers whether the current snapshot still represents
 the project flow inputs.
 
-A snapshot is stale when:
+The status is one of:
 
-- `valid_until` has expired
-- a source fingerprint changed
-- a source was added or removed
-- workplace or local config fingerprints changed
-- selected package or process sources changed
-- a required capability provider is missing
+- `fresh`: the current snapshot still matches its declared requirements and resolved resources
+- `fresh_with_updates`: pinned multi-version resources still exist, but newer compatible versions are available
+- `stale`: rolling/current resources changed, a source fingerprint changed, or an update marked the snapshot stale
+- `broken`: a required source or pinned resource instance is missing
 
-The check output separates freshness from health:
+The check output also includes the policy action:
 
 ```text
-STATUS: fresh | stale | missing
-HEALTH: pass | warn | blocked
-RESULT: pass | fail
+STATUS: fresh | fresh_with_updates | stale | broken
+POLICY_ACTION: continue | notify | ask_operator | notify_director | block
 ```
 
 `generated_at` alone is not part of source freshness. Regenerating a snapshot
@@ -26,7 +23,7 @@ without source changes must not make the previous snapshot stale by itself.
 Use:
 
 ```bash
-python bin/pf.py project-context-check --project-root <project-root>
+python bin/pf.py project-context-check --project-root <project-root> --session-start --json
 ```
 
 Refresh with:

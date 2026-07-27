@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/update-stage-record.schema.json",
+  "title": "ProcessForge Update Stage Record",
+  "type": "object",
+  "required": ["schema_version", "candidate_id", "staged_at", "status", "candidate", "artifact", "verification"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "candidate_id": { "type": "string", "minLength": 1 },
+    "staged_at": { "type": "string", "minLength": 1 },
+    "verified_at": { "type": ["string", "null"] },
+    "status": { "enum": ["staged", "verified", "failed"] },
+    "candidate": { "type": "object", "additionalProperties": true },
+    "artifact": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "expected_sha256": { "type": ["string", "null"], "pattern": "^[A-Fa-f0-9]{64}$" }
+      },
+      "additionalProperties": true
+    },
+    "verification": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

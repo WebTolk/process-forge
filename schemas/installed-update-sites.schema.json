@@ -27,11 +27,15 @@
     },
     "source": {
       "type": "object",
-      "required": ["id", "type"],
+      "required": ["id"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
+        "provider": { "type": "string", "minLength": 1 },
         "type": { "type": "string", "minLength": 1 },
         "priority": { "type": "integer" },
+        "manifest_url": { "type": "string" },
+        "changelog_url": { "type": "string" },
+        "channel": { "type": "string" },
         "url": { "type": "string" },
         "path": { "type": "string" },
         "owner": { "type": "string" },
@@ -40,7 +44,8 @@
         "channels": { "type": "array", "items": { "type": "string" } },
         "include_prereleases": { "type": "boolean" },
         "asset_patterns": { "type": "object", "additionalProperties": true },
-        "trust": { "type": "object", "additionalProperties": true }
+        "trust": { "type": "object", "additionalProperties": true },
+        "policy": { "type": "object", "additionalProperties": true }
       },
       "additionalProperties": true
     },

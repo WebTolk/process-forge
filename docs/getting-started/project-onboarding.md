@@ -12,6 +12,7 @@ It creates the project-local `.pf/` flow root:
 - `.pf/assignments/first-assignment.yaml`
 - `.pf/runtime/bin/pf.py`
 - `.pf/contexts/project-context.snapshot.yaml`
+- `.pf/contexts/project-context.snapshots/<snapshot-id>.yaml`
 - `.pf/artifacts/project-onboarding-report.md`
 - `.pf/reviews/project-onboarding-review.md`
 - `.pf/handoffs/project-ready-handoff.md`
@@ -23,8 +24,14 @@ missing greenfield project root.
 
 ```bash
 python bin/pf.py project-onboard --project-root ./my-project --workplace ./pf-workplace --type generic-software-project --apply
+python bin/pf.py project-context-check --project-root ./my-project --session-start --json
 python bin/pf.py doctor-project --project-root ./my-project
 ```
+
+The public manifest declares `context_requirements` and `context_policy`.
+`project-context-refresh` resolves them into a generated snapshot lock. Existing
+assignment capsules stay pinned to the snapshot id and checksum they were
+created with.
 
 Project coordination mode is independent from workplace capability:
 

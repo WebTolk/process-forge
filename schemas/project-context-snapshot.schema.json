@@ -6,6 +6,8 @@
   "required": ["schema_version", "snapshot", "project", "flow", "sources", "resolved_policies", "capabilities", "session"],
   "properties": {
     "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "type": "string" },
+    "generated_at": { "type": "string" },
     "snapshot": {
       "type": "object",
       "required": ["id", "generated_at", "valid_until", "refresh_policy"],
@@ -62,6 +64,35 @@
       },
       "additionalProperties": true
     },
+    "requirements_fingerprint": { "type": "object", "additionalProperties": { "type": "string" } },
+    "context_requirements": { "type": "object", "additionalProperties": true },
+    "context_policy": { "type": "object", "additionalProperties": true },
+    "resolved": {
+      "type": "object",
+      "properties": {
+        "knowledge_packages": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "knowledge_resources": { "type": "array", "items": { "$ref": "#/$defs/resolvedResource" } },
+        "template_packages": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "templates": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "tools": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "platform_contracts": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "process_packages": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      },
+      "additionalProperties": true
+    },
+    "freshness": {
+      "type": "object",
+      "properties": {
+        "status": { "enum": ["fresh", "fresh_with_updates", "stale", "broken"] },
+        "checked_at": { "type": "string" },
+        "stale_reasons": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "update_available": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "broken_refs": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      },
+      "additionalProperties": true
+    },
+    "reproducibility": { "type": "object", "additionalProperties": true },
+    "source_fingerprints": { "type": "object", "additionalProperties": { "type": "string" } },
     "knowledge_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "platform_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "knowledge_resources": { "type": "object", "additionalProperties": true },
@@ -87,6 +118,28 @@
       "additionalProperties": true
     },
     "session": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "resolvedResource": {
+      "type": "object",
+      "required": ["id", "kind", "versioning_mode", "retention_policy", "instance_id", "fingerprint", "reproducibility"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "package_id": { "type": "string" },
+        "versioning_mode": { "enum": ["multi_version", "single_current", "rolling_index", "external_live"] },
+        "retention_policy": { "enum": ["keep_versions", "keep_last_n", "replace_in_place", "external_only"] },
+        "resolved_version": { "type": "string" },
+        "resolved_generation": { "type": "string" },
+        "instance_id": { "type": "string", "minLength": 1 },
+        "path_ref": { "type": ["object", "string", "null"], "additionalProperties": true },
+        "current_marker_path_ref": { "type": ["object", "string", "null"], "additionalProperties": true },
+        "fingerprint": { "type": "object", "required": ["type", "value"], "additionalProperties": true },
+        "reproducibility": { "type": "object", "required": ["level"], "additionalProperties": true },
+        "snapshot_behavior": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": true
 }

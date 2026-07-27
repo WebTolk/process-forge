@@ -77,7 +77,7 @@ roles:
 stages:
 - id: intake
   title: Intake
-  description: Capture project root, workplace root, project type, project coordination mode, and optional answers.
+  description: Capture project root, workplace root, project type, project coordination mode, context requirements, context policy, and optional answers.
   required_inputs: []
   produced_artifacts:
   - project-onboarding-inputs
@@ -89,13 +89,13 @@ stages:
   entry_gates: []
   exit_gates:
   - inputs-provided
-  goal: Capture project root, workplace root, project type, project coordination mode, and optional answers.
+  goal: Capture project root, workplace root, project type, project coordination mode, context requirements, context policy, and optional answers.
   actor: primary_agent
   gates:
   - inputs-provided
 - id: create-project-flow
   title: Create Project Flow
-  description: Create `.pf/`, public manifest, private local config, hooks config, and flow folders.
+  description: Create `.pf/`, public manifest with context_requirements/context_policy, private local config, hooks config, and flow folders.
   required_inputs:
   - project-onboarding-inputs
   produced_artifacts:
@@ -109,7 +109,7 @@ stages:
   - linked-workplace-available
   exit_gates:
   - flow-root-created
-  goal: Create `.pf/`, public manifest, private local config, hooks config, and flow folders.
+  goal: Create `.pf/`, public manifest with context_requirements/context_policy, private local config, hooks config, and flow folders.
   actor: primary_agent
   gates:
   - flow-root-created
@@ -136,7 +136,7 @@ stages:
   - platform-contracts-resolved
 - id: snapshot
   title: Snapshot
-  description: Refresh the project context snapshot after `.pf/` is created, including effective coordination mode.
+  description: Resolve declared context_requirements and write a locked project context snapshot generation after `.pf/` is created, including effective coordination mode.
   required_inputs:
   - project-flow-root
   produced_artifacts:
@@ -150,13 +150,13 @@ stages:
   - flow-root-created
   exit_gates:
   - snapshot-valid
-  goal: Refresh the project context snapshot after `.pf/` is created, including effective coordination mode.
+  goal: Refresh the project context snapshot as a generated lock file, record resolved resource instances, and keep existing capsules pinned.
   actor: primary_agent
   gates:
   - snapshot-valid
 - id: first-assignment
   title: First Assignment
-  description: Create the initial verification assignment for the newly onboarded project.
+  description: Create the initial verification assignment for the newly onboarded project; its capsule must pin the current context snapshot id and checksum.
   required_inputs:
   - project-context-snapshot
   produced_artifacts:
@@ -171,7 +171,7 @@ stages:
   - snapshot-valid
   exit_gates:
   - first-assignment-created
-  goal: Create the initial verification assignment for the newly onboarded project.
+  goal: Create the initial verification assignment and a capsule that pins the current context snapshot generation.
   actor: primary_agent
   gates:
   - first-assignment-created

@@ -8,9 +8,15 @@ assignment:
   id: example-assignment
   path: .pf/assignments/example-assignment.md
 context:
-  snapshot_id: project-context
+  snapshot_id: ctx-19700101-000000-example
   freshness: fresh
   conflict_status: resolved
+context_snapshot:
+  id: ctx-19700101-000000-example
+  sha256: "sha256:<sha256>"
+  generated_at: "1970-01-01T00:00:00Z"
+  freshness_at_creation: fresh
+resolved_resources: []
 required_sources:
   - .pf/contexts/project-context.snapshot.yaml
   - .pf/assignments/example-assignment.md

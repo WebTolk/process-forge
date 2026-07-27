@@ -47,13 +47,17 @@
     },
     "updateSite": {
       "type": "object",
-      "required": ["id", "enabled", "type"],
+      "required": ["id", "enabled"],
       "properties": {
         "id": { "$ref": "#/$defs/sourceId" },
         "name": { "type": "string" },
         "enabled": { "type": "boolean" },
+        "provider": { "$ref": "#/$defs/provider" },
         "type": { "$ref": "#/$defs/provider" },
         "priority": { "type": "integer" },
+        "manifest_url": { "type": "string", "minLength": 1 },
+        "changelog_url": { "type": "string", "minLength": 1 },
+        "channel": { "type": "string", "minLength": 1 },
         "url": { "$ref": "#/$defs/remoteUrl" },
         "path": { "type": "string" },
         "owner": { "type": "string" },
@@ -67,7 +71,8 @@
         "headers_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
         "query_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
         "custom_headers_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
-        "trust": { "$ref": "#/$defs/trust" }
+        "trust": { "$ref": "#/$defs/trust" },
+        "policy": { "type": "object", "additionalProperties": true }
       },
       "additionalProperties": true
     }

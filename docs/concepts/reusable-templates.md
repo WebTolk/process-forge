@@ -31,3 +31,9 @@ Whenever a template is used, record:
 - validation result
 - actor
 - timestamp
+
+## Updates
+
+Reusable template packages can declare `update_sites` with `manifest_url` and
+`changelog_url`. Template updates can modify package manifests, template files,
+examples, and docs. Public cleanliness remains required before release.

@@ -15,3 +15,15 @@ source:
   url: null
 update_policy:
   mode: manual
+versioning:
+  mode: multi_version
+  version_field: version
+  instance_id_template: "{id}@{version}"
+retention:
+  policy: keep_versions
+  keep_last_n: null
+snapshot_behavior:
+  on_new_version: notify_only
+  on_current_generation_changed: notify_only
+  on_instance_missing: broken
+  reproducibility: exact

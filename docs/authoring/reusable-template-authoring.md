@@ -23,3 +23,7 @@ reusable-templates/<template-id>/
 ```
 
 The doctor checks the manifest, local absolute path safety, referenced payload files, and referenced prompts.
+
+Template packages can declare `update_sites`. Use `manifest_url` and
+`changelog_url`; run public cleanliness after template update authoring because
+template examples and docs are release-visible.

@@ -31,6 +31,17 @@ archive names, and reports.
   process/run. Check in with `session-start` or `agent-checkin`, run the
   process sequentially, use CLI checks and gates as inspection, and check out
   with `session-end` or `agent-checkout`.
+- At session start, surface `project-context-check --session-start --json`.
+  Continue on `fresh`, notify on `fresh_with_updates`, follow project policy on
+  `stale`, and block on `broken`.
+- Create assignment capsules from the current project context snapshot. Capsules
+  pin snapshot id/checksum and must not use `latest` resource references.
+- For `software-feature-development`, treat the process as a full software
+  lifecycle: orchestration, intake, investigation, domain, architecture,
+  implementation, assurance, release delivery, and evolve. Release/evolve may be
+  `not_applicable`, but the decision must include reason and evidence.
+- Do not treat package/build/install as a separate process. Use
+  `execution_profile.delivery_profile` inside `software-feature-development`.
 - Do not assume Agent Director, explicit leases, or Supervisor/Execution
   Inspector for simple work. Use them only when the selected process uses
   multi-agent coordination, process handoffs, or external runtime workers.

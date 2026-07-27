@@ -34,3 +34,10 @@ schema-required for every package:
 
 Resource entries inside `resources` have their own required fields:
 `id`, `kind`, `title`, and `load_policy`.
+
+## Update Sites
+
+Packages that should receive updates can declare `update_sites` with
+`manifest_url`, `changelog_url`, trust policy, and operator notification policy.
+See `docs/authoring/update-sites-for-packages.md` for the unified package
+contract and tool-specific policy rules.

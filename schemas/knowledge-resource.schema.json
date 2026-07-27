@@ -34,7 +34,41 @@
     "description": { "type": "string" },
     "license": { "type": "object", "additionalProperties": true },
     "source": { "type": "object", "additionalProperties": true },
-    "update_policy": { "type": "object", "additionalProperties": true }
+    "update_policy": { "type": "object", "additionalProperties": true },
+    "versioning": { "$ref": "#/$defs/versioning" },
+    "retention": { "$ref": "#/$defs/retention" },
+    "snapshot_behavior": { "$ref": "#/$defs/snapshotBehavior" },
+    "generation": { "type": "string" },
+    "fingerprint": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "versioning": {
+      "type": "object",
+      "properties": {
+        "mode": { "enum": ["multi_version", "single_current", "rolling_index", "external_live"] },
+        "version_field": { "type": "string" },
+        "instance_id_template": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "retention": {
+      "type": "object",
+      "properties": {
+        "policy": { "enum": ["keep_versions", "keep_last_n", "replace_in_place", "external_only"] },
+        "keep_last_n": { "type": ["integer", "null"], "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "snapshotBehavior": {
+      "type": "object",
+      "properties": {
+        "on_new_version": { "enum": ["notify_only", "mark_stale", "auto_refresh_allowed"] },
+        "on_current_generation_changed": { "enum": ["mark_stale", "notify_only"] },
+        "on_instance_missing": { "enum": ["broken"] },
+        "reproducibility": { "enum": ["exact", "best_effort", "non_reproducible"] }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": true
 }

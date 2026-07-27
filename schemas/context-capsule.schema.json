@@ -24,6 +24,18 @@
       "additionalProperties": true
     },
     "assignment": { "type": "object", "additionalProperties": true },
+    "context_snapshot": {
+      "type": "object",
+      "required": ["id", "sha256", "freshness_at_creation"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "minLength": 1 },
+        "generated_at": { "type": ["string", "null"] },
+        "freshness_at_creation": { "enum": ["fresh", "fresh_with_updates", "stale", "broken"] }
+      },
+      "additionalProperties": true
+    },
+    "resolved_resources": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "context": {
       "type": "object",
       "properties": {

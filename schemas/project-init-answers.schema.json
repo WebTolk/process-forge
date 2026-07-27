@@ -36,7 +36,30 @@
       "additionalProperties": true
     },
     "required_capabilities": { "type": "array", "items": { "type": "string" } },
-    "optional_capabilities": { "type": "array", "items": { "type": "string" } }
+    "optional_capabilities": { "type": "array", "items": { "type": "string" } },
+    "context_requirements": {
+      "type": "object",
+      "description": "Declared context dependencies, similar to package requirements.",
+      "properties": {
+        "knowledge_packages": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "knowledge_resources": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "template_packages": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "templates": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "tools": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "platform_contracts": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      },
+      "additionalProperties": true
+    },
+    "context_policy": {
+      "type": "object",
+      "description": "Freshness policy for session start and capsule creation.",
+      "properties": {
+        "on_session_start": { "type": "object", "additionalProperties": true },
+        "active_run_behavior": { "type": "object", "additionalProperties": true },
+        "update_candidate_checks": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": true
 }

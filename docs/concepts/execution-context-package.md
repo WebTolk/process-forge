@@ -1,5 +1,10 @@
 # Execution Context Package
 
+When an assignment uses a delivery/build profile, the profile is part of the
+execution context for the run. It is not a replacement for `process_id`.
+Use `process_id: software-feature-development` plus
+`execution_profile.delivery_profile` for release/package/install operations.
+
 An Execution Context Package is an immutable snapshot for one assignment.
 It is currently a compatibility artifact for the deprecated `context-compile`
 command.

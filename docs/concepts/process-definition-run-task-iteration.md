@@ -1,5 +1,10 @@
 # Process Definition, Run, Task, Iteration
 
+Process definitions describe lifecycle mechanics, not platform-specific build
+or delivery commands. For example, `software-feature-development` includes
+conditional `release-delivery` and `evolve` stages, while a package/build/install
+step belongs to an `execution_profile.delivery_profile` operation.
+
 ProcessForge separates process design from execution records.
 
 - A process definition in `processes/<id>.yaml` declares roles, stages,

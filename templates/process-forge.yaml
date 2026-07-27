@@ -59,6 +59,33 @@ knowledge_stack:
     source: distribution
     distribution: processforge
 
+context_requirements:
+  knowledge_packages: []
+  knowledge_resources: []
+  template_packages: []
+  tools: []
+  platform_contracts: []
+
+context_policy:
+  on_session_start:
+    check_freshness: true
+    check_update_candidates: if_due
+    if_fresh: continue
+    if_fresh_with_updates: notify
+    if_stale: ask_operator
+    if_broken: block
+  auto_refresh:
+    enabled: false
+    allow_patch: true
+    allow_minor: false
+    allow_major: false
+    allow_rolling_resources: false
+  active_run_behavior:
+    existing_capsules: pin_existing
+    new_capsules: require_fresh_snapshot
+  organized_mode:
+    stale_snapshot_action: notify_director
+
 required_capabilities:
   - repository.read
   - markdown.editing

@@ -22,7 +22,10 @@
         "path": { "type": "string" },
         "scope": { "type": "string" },
         "visibility": { "enum": ["public", "private"] },
-        "indexing_policy": { "enum": ["allowed", "blocked", "manual"] }
+        "indexing_policy": { "enum": ["allowed", "blocked", "manual"] },
+        "versioning": { "type": "object", "additionalProperties": true },
+        "retention": { "type": "object", "additionalProperties": true },
+        "snapshot_behavior": { "type": "object", "additionalProperties": true }
       },
       "additionalProperties": true
     }

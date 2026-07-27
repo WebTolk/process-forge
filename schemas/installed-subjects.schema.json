@@ -25,6 +25,9 @@
         "installed_at": { "type": "string" },
         "artifact": { "type": "object", "additionalProperties": true },
         "install_path": { "type": "string" },
+        "source": { "type": "object", "additionalProperties": true },
+        "update_sites": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "update_policy": { "type": "object", "additionalProperties": true },
         "verification": { "type": "object", "additionalProperties": true }
       },
       "additionalProperties": true

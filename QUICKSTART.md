@@ -54,7 +54,8 @@ Onboard this repository into ProcessForge.
 Inspect the repository first, choose a conservative project type, connect it to
 the existing workplace, read the generated .pf/START_AGENT_HERE.md, run
 doctor-project, refresh the project context, and summarize what ProcessForge now
-knows about the project.
+knows about the project. Run project-context-check and confirm whether the
+snapshot is fresh, fresh_with_updates, stale, or broken.
 ```
 
 ## 5. Compose A Platform Stack
@@ -165,6 +166,8 @@ are `supervisor tick` and `supervisor run`; the clearer aliases are
 10. Onboard project.
 11. Create run/task workflow.
 12. Create custom processes as needed.
+13. Configure update sites when packages, tools, or workplace resources should
+    receive operator-controlled updates.
 
 Capabilities say what work may be needed, knowledge packages say where to read
 the rules, and platform contracts compose application or domain stacks for
@@ -173,6 +176,11 @@ platform contracts.
 
 ProcessForge core is domain-agnostic. Platforms, inheritance, package
 dependencies, and detection rules come from manifests and policy data.
+
+For update checks, start with `python bin/pf.py update candidates refresh
+--workplace <workplace>` and continue through `stage`, `verify`, `apply
+--confirm`, or `rollback` as documented in
+`docs/getting-started/update-system.md`.
 
 Do not copy the whole ProcessForge repository into `.codex`, `.claude`,
 `.agents`, or similar agent configuration folders. Install ProcessForge once as

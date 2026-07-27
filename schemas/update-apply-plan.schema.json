@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/update-apply-plan.schema.json",
+  "title": "ProcessForge Update Apply Plan",
+  "type": "object",
+  "required": ["schema_version", "candidate_id", "created_at", "subject", "actions", "requires_confirm"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "candidate_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "minLength": 1 },
+    "subject": { "type": "object", "required": ["type", "id"], "additionalProperties": true },
+    "actions": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "requires_confirm": { "type": "boolean" },
+    "backup_before_apply": { "type": "boolean" },
+    "post_update_doctor": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

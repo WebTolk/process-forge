@@ -11,6 +11,8 @@ overrides:
   template_roots: []
   tool_preferences: {}
   coordination: {}
+  context_requirements: {}
+  context_policy: {}
 
 runtime:
   mode: manual

@@ -15,26 +15,31 @@ project does not contain ProcessForge core or `tools/processforge.py`.
 3. Verify that the workplace exists.
 4. Determine or accept the project type.
 5. Determine project coordination mode: `inherit`, `simple`, or `organized`.
-6. Create `.pf/`.
-7. Create `.pf/process-forge.yaml`.
-7. Create `.pf/process-forge.local.yaml`.
-8. Create `.pf/AGENTS.md`.
-9. Create `.pf/hooks.yaml`.
-10. Resolve platform contracts.
-11. Refresh project context snapshot.
-12. Create `.pf/assignments/first-assignment.yaml`.
-13. Generate `.pf/START_AGENT_HERE.md`.
-14. Create `.pf/runtime/bin/pf.py`.
-15. Check `project-mode status`.
-16. Run `doctor-project` through `pf` or `.pf/runtime/bin/pf.py`.
-17. Fix safe local issues.
-18. Create onboarding report, review, and handoff.
+6. Capture `context_requirements` and `context_policy` in `.pf/process-forge.yaml`.
+7. Create `.pf/`.
+8. Create `.pf/process-forge.yaml`.
+9. Create `.pf/process-forge.local.yaml`.
+10. Create `.pf/AGENTS.md`.
+11. Create `.pf/hooks.yaml`.
+12. Resolve platform contracts.
+13. Refresh project context snapshot; this writes `.pf/contexts/project-context.snapshot.yaml` and a generation under `.pf/contexts/project-context.snapshots/`.
+14. Run `project-context-check --session-start --json` and record the status.
+15. Create `.pf/assignments/first-assignment.yaml`.
+16. Create an assignment capsule; it must pin the current snapshot id/checksum and must not use `latest`.
+17. Generate `.pf/START_AGENT_HERE.md`.
+18. Create `.pf/runtime/bin/pf.py`.
+19. Check `project-mode status`.
+20. Run `doctor-project` through `pf` or `.pf/runtime/bin/pf.py`.
+21. Fix safe local issues.
+22. Create onboarding report, review, and handoff.
 
 ## Do Not
 
 - Do not recreate the workplace.
 - Do not write absolute local paths into public project files.
 - Do not copy global packages into the project.
+- Do not rewrite existing capsules when refreshing project context.
+- Do not put `latest` resource references into capsules.
 - Do not overwrite brownfield files without explicit force.
 - Do not require Director Office for a project with effective `simple` mode.
 - Do not set `organized` unless workplace Director capability exists or the operator explicitly enables it.
@@ -43,6 +48,7 @@ project does not contain ProcessForge core or `tools/processforge.py`.
 
 ```bash
 python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type <project-type> --coordination-mode inherit --apply
+python bin/pf.py project-context-check --project-root <project-root> --workplace <workplace-root> --session-start --json
 python bin/pf.py project-mode status --project-root <project-root> --workplace <workplace-root>
 python bin/pf.py agent-start-prompt --project-root <project-root>
 ```
@@ -51,5 +57,6 @@ Inside the onboarded project:
 
 ```bash
 pf doctor-project --project-root .
+pf project-context-check --project-root . --session-start --json
 python .pf/runtime/bin/pf.py doctor-project --project-root .
 ```

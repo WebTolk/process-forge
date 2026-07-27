@@ -10,6 +10,9 @@
     "requested_by": { "type": "string" },
     "intent": { "type": "string" },
     "resource": { "type": "object", "additionalProperties": true },
+    "versioning": { "type": "object", "additionalProperties": true },
+    "retention": { "type": "object", "additionalProperties": true },
+    "snapshot_behavior": { "type": "object", "additionalProperties": true },
     "dry_run": { "type": "boolean" },
     "apply": { "type": "boolean" }
   },

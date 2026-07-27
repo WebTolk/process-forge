@@ -25,6 +25,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+from urllib.request import url2pathname, urlopen
 
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
@@ -3255,6 +3256,23 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
             }
         )
     knowledge_stack.append({"id": f"project.{defaults['id']}", "version": "1.0.0", "source": "project"})
+    answered_requirements = answers.get("context_requirements") if isinstance(answers.get("context_requirements"), dict) else {}
+    context_requirements = answered_requirements or {
+        "knowledge_packages": [
+            {"id": "processforge.core", "constraint": "^1.0", "required": True},
+            *[
+                {"id": package_id, "constraint": "*", "required": package_id in platform_resolution["required_knowledge_packages"]}
+                for package_id in sorted(set(platform_resolution["knowledge_packages"]))
+            ],
+            {"id": f"project.{defaults['id']}", "constraint": "1.0.0", "required": True},
+        ],
+        "knowledge_resources": [],
+        "template_packages": [],
+        "templates": [{"id": item, "required": item in platform_resolution["required_templates"]} for item in sorted(set(platform_resolution["required_templates"] + platform_resolution["recommended_templates"]))],
+        "tools": [{"id": item, "required": item in platform_resolution["required_tools"]} for item in sorted(set(platform_resolution["required_tools"] + platform_resolution["recommended_tools"]))],
+        "platform_contracts": [{"id": item, "required": True} for item in sorted(set(detected["platforms"]))],
+    }
+    context_policy = answers.get("context_policy") if isinstance(answers.get("context_policy"), dict) else default_context_policy({})
 
     public_manifest = {
         "schema_version": 1,
@@ -3298,6 +3316,8 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
             "hooks": "hooks.yaml",
         },
         "knowledge_stack": knowledge_stack,
+        "context_requirements": context_requirements,
+        "context_policy": context_policy,
         "required_capabilities": required,
         "optional_capabilities": optional,
         "selected_resources": {
@@ -3327,7 +3347,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
         "workplace": {"manifest": str(workplace_manifest.resolve())},
         "process_forge": {"distribution_override": str(ROOT.resolve())},
         "local": {"project_root": str(project_root.resolve())},
-        "overrides": {"package_roots": [], "template_roots": [], "tool_preferences": {}},
+        "overrides": {"package_roots": [], "template_roots": [], "tool_preferences": {}, "context_requirements": {}, "context_policy": {}},
         "runtime": {
             "mode": "manual",
             "queue": "runtime/queue",
@@ -4772,9 +4792,27 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_config_behavior_contracts", [sys.executable, str(root / "tools" / "smoke_config_behavior_contracts.py")], 180),
         ReleaseCommand("smoke_orchestrator_shell_agents_with_subagent_policy", [sys.executable, str(root / "tools" / "smoke_orchestrator_shell_agents_with_subagent_policy.py")], 180),
         ReleaseCommand("smoke_builtin_process_catalog", [sys.executable, str(root / "tools" / "smoke_builtin_process_catalog.py")], 120),
+        ReleaseCommand("smoke_update_sites_schema", [sys.executable, str(root / "tools" / "smoke_update_sites_schema.py")], 120),
+        ReleaseCommand("smoke_update_candidate_discovery", [sys.executable, str(root / "tools" / "smoke_update_candidate_discovery.py")], 120),
+        ReleaseCommand("smoke_update_notifications", [sys.executable, str(root / "tools" / "smoke_update_notifications.py")], 120),
+        ReleaseCommand("smoke_update_stage_verify_apply_file_provider", [sys.executable, str(root / "tools" / "smoke_update_stage_verify_apply_file_provider.py")], 120),
+        ReleaseCommand("smoke_project_pf_upgrade_assessment_boundary", [sys.executable, str(root / "tools" / "smoke_project_pf_upgrade_assessment_boundary.py")], 120),
+        ReleaseCommand("smoke_tool_update_policy", [sys.executable, str(root / "tools" / "smoke_tool_update_policy.py")], 120),
+        ReleaseCommand("smoke_resource_versioning_modes", [sys.executable, str(root / "tools" / "smoke_resource_versioning_modes.py")], 120),
+        ReleaseCommand("smoke_project_context_snapshot_lock_model", [sys.executable, str(root / "tools" / "smoke_project_context_snapshot_lock_model.py")], 120),
+        ReleaseCommand("smoke_project_context_freshness_policies", [sys.executable, str(root / "tools" / "smoke_project_context_freshness_policies.py")], 120),
+        ReleaseCommand("smoke_session_start_context_check", [sys.executable, str(root / "tools" / "smoke_session_start_context_check.py")], 120),
+        ReleaseCommand("smoke_update_apply_marks_context_stale", [sys.executable, str(root / "tools" / "smoke_update_apply_marks_context_stale.py")], 120),
+        ReleaseCommand("smoke_capsule_pins_context_snapshot", [sys.executable, str(root / "tools" / "smoke_capsule_pins_context_snapshot.py")], 120),
         ReleaseCommand("smoke_process_authoring_materialization_parity", [sys.executable, str(root / "tools" / "smoke_process_authoring_materialization_parity.py")], 180),
         ReleaseCommand("smoke_process_definition_schema_contract", [sys.executable, str(root / "tools" / "smoke_process_definition_schema_contract.py")], 180),
         ReleaseCommand("smoke_builtin_process_pack_completeness", [sys.executable, str(root / "tools" / "smoke_builtin_process_pack_completeness.py")], 120),
+        ReleaseCommand("smoke_software_lifecycle_process_contract", [sys.executable, str(root / "tools" / "smoke_software_lifecycle_process_contract.py")], 120),
+        ReleaseCommand("smoke_software_lifecycle_artifacts", [sys.executable, str(root / "tools" / "smoke_software_lifecycle_artifacts.py")], 120),
+        ReleaseCommand("smoke_software_lifecycle_description_alignment", [sys.executable, str(root / "tools" / "smoke_software_lifecycle_description_alignment.py")], 120),
+        ReleaseCommand("smoke_software_lifecycle_prompt_alignment", [sys.executable, str(root / "tools" / "smoke_software_lifecycle_prompt_alignment.py")], 120),
+        ReleaseCommand("smoke_delivery_profile_not_process", [sys.executable, str(root / "tools" / "smoke_delivery_profile_not_process.py")], 120),
+        ReleaseCommand("smoke_software_lifecycle_compact_mode", [sys.executable, str(root / "tools" / "smoke_software_lifecycle_compact_mode.py")], 120),
         ReleaseCommand("release-check", [sys.executable, str(root / "tools" / "processforge.py"), "release-check", "--root", str(root)], 60),
         ReleaseCommand("examples-check", [sys.executable, str(root / "tools" / "processforge.py"), "examples-check", "--root", str(root)], 60),
         ReleaseCommand("events-validate", [sys.executable, str(root / "tools" / "processforge.py"), "events-validate", "--project-root", str(root)], 60),
@@ -5680,7 +5718,7 @@ def resource_record_from_package(package_id: str, resource: dict[str, Any], requ
                 record["path_ref"] = {"registry": "package_roots", "id": package_root_id, "relative_path": f"{package_id}/{raw_path}"}
             else:
                 record["path_ref"] = {"package": package_id, "relative_path": raw_path}
-    for key in ["version", "description"]:
+    for key in ["version", "description", "versioning", "retention", "snapshot_behavior", "generation", "fingerprint", "instance_id", "current_marker_path_ref"]:
         if key in resource:
             record[key] = resource[key]
     return record
@@ -5708,6 +5746,252 @@ def resolve_package_resources(
             if isinstance(resource, dict):
                 resources.append(resource_record_from_package(package_id, resource, requirement, manifest.get("__package_root_id")))
     return resources
+
+
+RESOURCE_VERSIONING_MODES = {"multi_version", "single_current", "rolling_index", "external_live"}
+RESOURCE_RETENTION_POLICIES = {"keep_versions", "keep_last_n", "replace_in_place", "external_only"}
+SNAPSHOT_FRESHNESS_STATUSES = {"fresh", "fresh_with_updates", "stale", "broken"}
+
+
+def deep_merge_dicts(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    result = dict(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(result.get(key), dict):
+            result[key] = deep_merge_dicts(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+def default_context_policy(manifest_data: dict[str, Any]) -> dict[str, Any]:
+    coordination = manifest_data.get("coordination") if isinstance(manifest_data.get("coordination"), dict) else {}
+    organized = str(coordination.get("mode") or "inherit") == "organized"
+    policy = {
+        "on_session_start": {
+            "check_freshness": True,
+            "check_update_candidates": "if_due",
+            "if_fresh": "continue",
+            "if_fresh_with_updates": "notify",
+            "if_stale": "notify_director" if organized else "ask_operator",
+            "if_broken": "block",
+        },
+        "auto_refresh": {
+            "enabled": False,
+            "allow_patch": True,
+            "allow_minor": False,
+            "allow_major": False,
+            "allow_rolling_resources": False,
+        },
+        "active_run_behavior": {
+            "existing_capsules": "pin_existing",
+            "new_capsules": "require_fresh_snapshot",
+        },
+        "organized_mode": {
+            "stale_snapshot_action": "notify_director" if organized else "needs_operator",
+        },
+    }
+    project_policy = manifest_data.get("context_policy") if isinstance(manifest_data.get("context_policy"), dict) else {}
+    return deep_merge_dicts(policy, project_policy)
+
+
+def requirements_fingerprints(flow_root: Path, project_root: Path) -> dict[str, str]:
+    result: dict[str, str] = {}
+    for key, path in {
+        "process_forge_yaml": flow_root / "process-forge.yaml",
+        "process_forge_local_yaml": flow_root / "process-forge.local.yaml",
+    }.items():
+        result[key] = "sha256:" + sha256_file(path) if path.is_file() else "missing"
+    return result
+
+
+def resource_versioning_policy(resource: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    versioning = resource.get("versioning") if isinstance(resource.get("versioning"), dict) else {}
+    mode = str(versioning.get("mode") or ("multi_version" if resource.get("version") else "rolling_index"))
+    if mode not in RESOURCE_VERSIONING_MODES:
+        mode = "rolling_index"
+    versioning = {
+        "mode": mode,
+        "version_field": str(versioning.get("version_field") or "version"),
+        "instance_id_template": str(versioning.get("instance_id_template") or "{id}@{version}"),
+    }
+    retention = resource.get("retention") if isinstance(resource.get("retention"), dict) else {}
+    default_retention = "keep_versions" if mode == "multi_version" else ("external_only" if mode == "external_live" else "replace_in_place")
+    policy = str(retention.get("policy") or default_retention)
+    if policy not in RESOURCE_RETENTION_POLICIES:
+        policy = default_retention
+    retention = {"policy": policy, "keep_last_n": retention.get("keep_last_n")}
+    behavior = resource.get("snapshot_behavior") if isinstance(resource.get("snapshot_behavior"), dict) else {}
+    reproducibility = "exact" if mode == "multi_version" and policy == "keep_versions" else ("non_reproducible" if mode == "external_live" else "best_effort")
+    snapshot_behavior = {
+        "on_new_version": str(behavior.get("on_new_version") or ("notify_only" if mode == "multi_version" else "mark_stale")),
+        "on_current_generation_changed": str(behavior.get("on_current_generation_changed") or ("notify_only" if mode == "multi_version" else "mark_stale")),
+        "on_instance_missing": str(behavior.get("on_instance_missing") or "broken"),
+        "reproducibility": str(behavior.get("reproducibility") or reproducibility),
+    }
+    return versioning, retention, snapshot_behavior
+
+
+def resource_declared_version(resource: dict[str, Any], versioning: dict[str, Any]) -> str:
+    field = str(versioning.get("version_field") or "version")
+    value = resource.get(field)
+    if value is None:
+        value = resource.get("version") or resource.get("resolved_version")
+    return str(value or "")
+
+
+def resource_generation(resource: dict[str, Any]) -> str:
+    for key in ["generation", "resolved_generation", "updated_at", "generated_at"]:
+        if resource.get(key) is not None:
+            return str(resource.get(key))
+    fingerprint = resource.get("fingerprint") if isinstance(resource.get("fingerprint"), dict) else {}
+    if fingerprint.get("value"):
+        return str(fingerprint.get("value"))
+    return ""
+
+
+def resource_fingerprint(resource: dict[str, Any], versioning: dict[str, Any], generation: str) -> dict[str, str]:
+    fingerprint = resource.get("fingerprint") if isinstance(resource.get("fingerprint"), dict) else {}
+    if fingerprint.get("value"):
+        value = str(fingerprint.get("value"))
+        return {"type": str(fingerprint.get("type") or "declared"), "value": value if value.startswith("sha256:") else "sha256:" + value}
+    stable = {
+        "id": resource.get("id"),
+        "kind": resource.get("kind"),
+        "version": resource_declared_version(resource, versioning),
+        "generation": generation,
+        "path_ref": resource.get("path_ref"),
+    }
+    return {"type": "resource_record_sha256", "value": "sha256:" + hashlib.sha256(json.dumps(stable, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()}
+
+
+def resource_instance_id(resource: dict[str, Any], versioning: dict[str, Any], version: str, generation: str) -> str:
+    explicit = resource.get("instance_id")
+    if isinstance(explicit, str) and explicit.strip():
+        return explicit
+    template = str(versioning.get("instance_id_template") or "{id}@{version}")
+    token_value = version or generation or "current"
+    try:
+        return template.format(id=resource.get("id"), version=token_value, generation=generation or token_value)
+    except (KeyError, ValueError):
+        return f"{resource.get('id')}@{token_value}"
+
+
+def resolved_resource_instance(resource: dict[str, Any]) -> dict[str, Any]:
+    versioning, retention, behavior = resource_versioning_policy(resource)
+    public_id = str(resource.get("id") or resource.get("resource_id") or "")
+    version = resource_declared_version(resource, versioning)
+    generation = resource_generation(resource)
+    fingerprint = resource_fingerprint(resource, versioning, generation)
+    reproducibility = str(behavior.get("reproducibility") or "best_effort")
+    result: dict[str, Any] = {
+        "id": public_id,
+        "kind": str(resource.get("kind") or "reference"),
+        "package_id": str(resource.get("package") or resource.get("package_id") or ""),
+        "requirement": str(resource.get("requirement") or "recommended"),
+        "versioning_mode": versioning["mode"],
+        "retention_policy": retention["policy"],
+        "instance_id": resource_instance_id({**resource, "id": public_id}, versioning, version, generation),
+        "path_ref": resource.get("path_ref"),
+        "fingerprint": fingerprint,
+        "reproducibility": {"level": reproducibility},
+        "snapshot_behavior": behavior,
+    }
+    if version:
+        result["resolved_version"] = version
+    if generation:
+        result["resolved_generation"] = generation
+        result["current_marker_path_ref"] = resource.get("current_marker_path_ref") or resource.get("path_ref")
+    if reproducibility != "exact":
+        result["reproducibility"]["reason"] = f"resource retention policy is {retention['policy']}"
+    return result
+
+
+def context_requirements_from_manifest(manifest_data: dict[str, Any]) -> dict[str, Any]:
+    requirements = manifest_data.get("context_requirements") if isinstance(manifest_data.get("context_requirements"), dict) else {}
+    return {
+        "knowledge_packages": requirements.get("knowledge_packages", []) if isinstance(requirements.get("knowledge_packages"), list) else [],
+        "knowledge_resources": requirements.get("knowledge_resources", []) if isinstance(requirements.get("knowledge_resources"), list) else [],
+        "template_packages": requirements.get("template_packages", []) if isinstance(requirements.get("template_packages"), list) else [],
+        "tools": requirements.get("tools", []) if isinstance(requirements.get("tools"), list) else [],
+        "platform_contracts": requirements.get("platform_contracts", []) if isinstance(requirements.get("platform_contracts"), list) else [],
+    }
+
+
+def version_satisfies_simple_constraint(version: str, constraint: str) -> bool:
+    text = (constraint or "").strip()
+    if not text or text in {"*", "latest"}:
+        return True
+    version_key = semantic_version_key(version)
+    if version_key[0] != 0:
+        return version == text
+    version_tuple = version_key[1]
+    assert isinstance(version_tuple, tuple)
+    for part in text.split():
+        if part.startswith(">="):
+            other = semantic_version_key(part[2:])[1]
+            if isinstance(other, tuple) and version_tuple < other:
+                return False
+        elif part.startswith(">"):
+            other = semantic_version_key(part[1:])[1]
+            if isinstance(other, tuple) and version_tuple <= other:
+                return False
+        elif part.startswith("<="):
+            other = semantic_version_key(part[2:])[1]
+            if isinstance(other, tuple) and version_tuple > other:
+                return False
+        elif part.startswith("<"):
+            other = semantic_version_key(part[1:])[1]
+            if isinstance(other, tuple) and version_tuple >= other:
+                return False
+        elif part.startswith("^"):
+            base = semantic_version_key(part[1:])[1]
+            if isinstance(base, tuple) and (version_tuple < base or version_tuple[0] != base[0]):
+                return False
+        elif part == "||":
+            continue
+        elif version != part:
+            return False
+    return True
+
+
+def select_resolved_knowledge_resources(package_resources: list[dict[str, Any]], requirements: dict[str, Any]) -> list[dict[str, Any]]:
+    resource_requirements = [item for item in requirements.get("knowledge_resources", []) if isinstance(item, dict)]
+    if not resource_requirements:
+        return [resolved_resource_instance(resource) for resource in package_resources]
+    resolved: list[dict[str, Any]] = []
+    used_keys: set[tuple[str, str]] = set()
+    for requirement in resource_requirements:
+        resource_id = str(requirement.get("id") or "")
+        candidates = [resource for resource in package_resources if str(resource.get("resource_id") or resource.get("id") or "") == resource_id]
+        preferred = str(requirement.get("preferred_version") or "")
+        constraint = str(requirement.get("constraint") or "")
+        if preferred:
+            candidates = [resource for resource in candidates if str(resource.get("version") or "") == preferred] or candidates
+        if constraint:
+            candidates = [resource for resource in candidates if version_satisfies_simple_constraint(str(resource.get("version") or ""), constraint)] or candidates
+        candidates.sort(key=lambda resource: semantic_version_key(str(resource.get("version") or resource_generation(resource) or "")))
+        if candidates:
+            selected = candidates[-1]
+            selected = dict(selected)
+            selected["requirement"] = "required" if bool(requirement.get("required", True)) else "recommended"
+            instance = resolved_resource_instance(selected)
+            resolved.append(instance)
+            used_keys.add((instance["id"], instance["instance_id"]))
+    return resolved
+
+
+def aggregate_reproducibility(resources: list[dict[str, Any]]) -> dict[str, Any]:
+    levels = [str(item.get("reproducibility", {}).get("level", "best_effort")) for item in resources if isinstance(item, dict)]
+    reasons = sorted({str(item.get("reproducibility", {}).get("reason")) for item in resources if isinstance(item, dict) and item.get("reproducibility", {}).get("reason")})
+    if not levels or all(level == "exact" for level in levels):
+        level = "exact"
+    elif any(level == "non_reproducible" for level in levels):
+        level = "non_reproducible"
+    elif any(level == "best_effort" for level in levels):
+        level = "best_effort"
+    else:
+        level = "mixed"
+    return {"level": level, "reasons": reasons}
 
 
 HEAVY_RESOURCE_KINDS = {
@@ -5880,6 +6164,10 @@ def normalize_resource_record(resource: dict[str, Any], package_id: str, workpla
         record["source"] = {"type": "url", "url": source_url}
     if "update_policy" not in record:
         record["update_policy"] = {"mode": "manual"}
+    versioning, retention, snapshot_behavior = resource_versioning_policy(record)
+    record.setdefault("versioning", versioning)
+    record.setdefault("retention", retention)
+    record.setdefault("snapshot_behavior", snapshot_behavior)
     if "package" not in record:
         record["package"] = package_id
     return record
@@ -6208,7 +6496,170 @@ def project_context_snapshot_paths(project_root: Path) -> tuple[Path, Path]:
     return contexts / "project-context.snapshot.yaml", contexts / "project-context.snapshot.md"
 
 
-def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7) -> dict[str, Any]:
+def project_context_snapshot_generations_dir(project_root: Path) -> Path:
+    return locate_flow_root(project_root) / "contexts" / "project-context.snapshots"
+
+
+def project_context_stale_marker_path(project_root: Path) -> Path:
+    return locate_flow_root(project_root) / "runtime" / "context" / "project-context.stale.json"
+
+
+def project_context_report_path(project_root: Path) -> Path:
+    return locate_flow_root(project_root) / "artifacts" / "project-context-refresh-report.md"
+
+
+def project_context_policy_action(status: str, policy: dict[str, Any]) -> str:
+    session_policy = policy.get("on_session_start") if isinstance(policy.get("on_session_start"), dict) else {}
+    if status == "fresh":
+        return str(session_policy.get("if_fresh") or "continue")
+    if status == "fresh_with_updates":
+        return str(session_policy.get("if_fresh_with_updates") or "notify")
+    if status == "stale":
+        return str(session_policy.get("if_stale") or "ask_operator")
+    if status == "broken":
+        return str(session_policy.get("if_broken") or "block")
+    return "block"
+
+
+def resolved_resource_key(resource: dict[str, Any]) -> tuple[str, str, str]:
+    return (str(resource.get("package_id") or ""), str(resource.get("id") or ""), str(resource.get("instance_id") or ""))
+
+
+def current_resolved_resource_indexes(current_snapshot: dict[str, Any]) -> tuple[dict[tuple[str, str, str], dict[str, Any]], dict[tuple[str, str], list[dict[str, Any]]]]:
+    resolved = current_snapshot.get("resolved") if isinstance(current_snapshot.get("resolved"), dict) else {}
+    resources = resolved.get("available_knowledge_resources") if isinstance(resolved.get("available_knowledge_resources"), list) else []
+    if not resources:
+        resources = resolved.get("knowledge_resources") if isinstance(resolved.get("knowledge_resources"), list) else []
+    by_instance: dict[tuple[str, str, str], dict[str, Any]] = {}
+    by_subject: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for item in resources:
+        if not isinstance(item, dict):
+            continue
+        by_instance[resolved_resource_key(item)] = item
+        by_subject.setdefault((str(item.get("package_id") or ""), str(item.get("id") or "")), []).append(item)
+    return by_instance, by_subject
+
+
+def project_context_check_result(project_root: Path, *, explicit_workplace: str | None = None) -> dict[str, Any]:
+    snapshot_yaml, _snapshot_md = project_context_snapshot_paths(project_root)
+    if not snapshot_yaml.is_file():
+        return {
+            "snapshot_id": None,
+            "status": "broken",
+            "fresh": False,
+            "stale": False,
+            "broken": True,
+            "updates_available": [],
+            "stale_resources": [],
+            "broken_refs": [{"reason": "project context snapshot missing"}],
+            "recommended_action": "project-context-refresh",
+            "policy_action": "block",
+        }
+    snapshot = load_yaml_document(snapshot_yaml)
+    reasons: list[str] = []
+    stale_resources: list[dict[str, Any]] = []
+    updates_available: list[dict[str, Any]] = []
+    broken_refs: list[dict[str, Any]] = []
+    for key in ["schema_version", "snapshot", "project", "flow", "sources", "capabilities", "session"]:
+        if key not in snapshot:
+            broken_refs.append({"reason": f"snapshot schema invalid: missing {key}"})
+    meta = snapshot.get("snapshot", {}) if isinstance(snapshot.get("snapshot"), dict) else {}
+    snapshot_id = str(meta.get("id") or snapshot.get("id") or "project-context")
+    valid_until = parse_snapshot_timestamp(meta.get("valid_until"))
+    if valid_until is None:
+        reasons.append("valid_until missing or invalid")
+    elif valid_until < datetime.now(timezone.utc):
+        reasons.append("valid_until expired")
+    marker_path = project_context_stale_marker_path(project_root)
+    if marker_path.is_file():
+        try:
+            marker = json.loads(marker_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            marker = {"reason": "stale marker invalid"}
+        stale_resources.append({"id": marker.get("subject") or "project-context", "reason": marker.get("reason") or "snapshot stale marker exists"})
+    recorded_sources = {}
+    sources = snapshot.get("sources", {}) if isinstance(snapshot.get("sources"), dict) else {}
+    fingerprints = sources.get("fingerprints", []) if isinstance(sources, dict) else []
+    if isinstance(fingerprints, list):
+        for item in fingerprints:
+            if isinstance(item, dict) and "id" in item:
+                recorded_sources[str(item["id"])] = str(item.get("checksum", "missing"))
+    current_sources = collect_project_snapshot_sources(project_root)
+    current_by_id = {str(item["id"]): str(item.get("checksum", "missing")) for item in current_sources}
+    for source_id, checksum in current_by_id.items():
+        if source_id.startswith("package-"):
+            continue
+        if source_id not in recorded_sources:
+            reasons.append(f"source added: {source_id}")
+        elif recorded_sources[source_id] != checksum:
+            reasons.append(f"source changed: {source_id}")
+    for source_id in sorted(set(recorded_sources) - set(current_by_id)):
+        if source_id.startswith("package-"):
+            continue
+        reasons.append(f"source removed: {source_id}")
+
+    current = build_project_context_snapshot(project_root, explicit_workplace=explicit_workplace)
+    old_resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
+    old_resources = old_resolved.get("knowledge_resources") if isinstance(old_resolved.get("knowledge_resources"), list) else []
+    current_by_instance, current_by_subject = current_resolved_resource_indexes(current)
+    for old in old_resources:
+        if not isinstance(old, dict):
+            continue
+        mode = str(old.get("versioning_mode") or "rolling_index")
+        key = resolved_resource_key(old)
+        subject_key = (key[0], key[1])
+        current_same_subject = current_by_subject.get(subject_key, [])
+        current_instance = current_by_instance.get(key)
+        if mode == "multi_version":
+            if current_instance is None:
+                broken_refs.append({"id": old.get("id"), "instance_id": old.get("instance_id"), "reason": "pinned multi_version resource instance missing"})
+                continue
+            old_version = str(old.get("resolved_version") or "")
+            for current_resource in current_same_subject:
+                current_version = str(current_resource.get("resolved_version") or "")
+                is_newer, _warning = version_is_newer(current_version, old_version)
+                if is_newer:
+                    updates_available.append({"id": old.get("id"), "type": "knowledge_resource", "snapshot_version": old_version, "available_version": current_version, "snapshot_stale": False, "reason": "multi_version resource has newer version but pinned instance still exists"})
+        else:
+            current_resource = current_same_subject[-1] if current_same_subject else None
+            if current_resource is None:
+                broken_refs.append({"id": old.get("id"), "instance_id": old.get("instance_id"), "reason": "current resource missing"})
+                continue
+            old_generation = str(old.get("resolved_generation") or old.get("fingerprint", {}).get("value") or "")
+            current_generation = str(current_resource.get("resolved_generation") or current_resource.get("fingerprint", {}).get("value") or "")
+            old_fingerprint = str(old.get("fingerprint", {}).get("value") or "")
+            current_fingerprint = str(current_resource.get("fingerprint", {}).get("value") or "")
+            if old_generation != current_generation or old_fingerprint != current_fingerprint:
+                stale_resources.append({"id": old.get("id"), "snapshot_generation": old_generation, "current_generation": current_generation, "reason": f"{mode} resource generation changed"})
+    required = current.get("capabilities", {}).get("required", []) if isinstance(current.get("capabilities"), dict) else []
+    for item in required:
+        if isinstance(item, dict) and item.get("status") == "missing":
+            broken_refs.append({"id": item.get("id"), "reason": "required capability missing"})
+    if broken_refs:
+        status = "broken"
+    elif stale_resources or reasons:
+        status = "stale"
+    elif updates_available:
+        status = "fresh_with_updates"
+    else:
+        status = "fresh"
+    policy = snapshot.get("context_policy") if isinstance(snapshot.get("context_policy"), dict) else default_context_policy({})
+    return {
+        "snapshot_id": snapshot_id,
+        "snapshot_sha256": "sha256:" + sha256_file(snapshot_yaml),
+        "status": status,
+        "fresh": status in {"fresh", "fresh_with_updates"},
+        "stale": status == "stale",
+        "broken": status == "broken",
+        "updates_available": updates_available,
+        "stale_resources": stale_resources + [{"reason": reason} for reason in reasons],
+        "broken_refs": broken_refs,
+        "recommended_action": "project-context-refresh" if status in {"stale", "broken"} else "continue",
+        "policy_action": project_context_policy_action(status, policy),
+    }
+
+
+def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7, explicit_workplace: str | None = None) -> dict[str, Any]:
     flow_root = locate_flow_root(project_root)
     manifest = flow_root / "process-forge.yaml"
     if not manifest.is_file():
@@ -6228,7 +6679,11 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7)
     workplace_manifest_path: Path | None = None
     distribution_root: Path | None = None
     local_config = flow_root / "process-forge.local.yaml"
-    if local_config.is_file():
+    if explicit_workplace:
+        workplace_manifest_path = workplace_manifest_path_from_root(Path(explicit_workplace).expanduser())
+        if workplace_manifest_path.is_file():
+            distribution_root = resolve_distribution_path(workplace_manifest_path, "processforge")
+    elif local_config.is_file():
         workplace_manifest_path = resolve_workplace_manifest(local_config)
         if workplace_manifest_path and workplace_manifest_path.is_file():
             distribution_root = resolve_distribution_path(workplace_manifest_path, "processforge")
@@ -6272,15 +6727,32 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7)
         sorted(set(package_ids)),
         required_package_ids,
     )
-    coordination_status = effective_project_coordination(project_root)
+    context_requirements = context_requirements_from_manifest(manifest_data)
+    context_policy = default_context_policy(manifest_data)
+    resolved_knowledge_resources = select_resolved_knowledge_resources(package_resources, context_requirements)
+    available_knowledge_resources = [resolved_resource_instance(resource) for resource in package_resources]
+    reproducibility = aggregate_reproducibility(resolved_knowledge_resources)
+    coordination_status = effective_project_coordination(project_root, explicit_workplace)
     coordination_blocked = coordination_status["effective_mode"] == "organized" and (
         not coordination_status["workplace_director_enabled"] or not coordination_status["director_office_exists"]
     )
     health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] or platform_resolution["circular_platforms"] or required_resource_missing or coordination_blocked else ("warn" if any(item["severity"] == "warn" for item in optional_records) or recommended_resource_missing else "pass")
+    snapshot_id = f"ctx-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
+    requirements = requirements_fingerprints(flow_root, project_root)
+    source_fingerprints = {
+        "workplace_manifest": next((item.get("checksum") for item in sources if item.get("id") == "workplace_manifest"), "missing"),
+        "package_roots_registry": "sha256:" + sha256_file(workplace_manifest_path.parent / "registries" / "package-roots.yaml") if workplace_manifest_path and (workplace_manifest_path.parent / "registries" / "package-roots.yaml").is_file() else "missing",
+        "knowledge_roots_registry": "sha256:" + sha256_file(workplace_manifest_path.parent / "registries" / "knowledge-roots.yaml") if workplace_manifest_path and (workplace_manifest_path.parent / "registries" / "knowledge-roots.yaml").is_file() else "missing",
+        "template_registry": "sha256:" + sha256_file(workplace_manifest_path.parent / "registries" / "templates.yaml") if workplace_manifest_path and (workplace_manifest_path.parent / "registries" / "templates.yaml").is_file() else "missing",
+        "tool_registry": "sha256:" + sha256_file(workplace_manifest_path.parent / "registries" / "tools.yaml") if workplace_manifest_path and (workplace_manifest_path.parent / "registries" / "tools.yaml").is_file() else "missing",
+        "installed_subjects": "sha256:" + sha256_file(workplace_manifest_path.parent / "registries" / "installed-subjects.yaml") if workplace_manifest_path and (workplace_manifest_path.parent / "registries" / "installed-subjects.yaml").is_file() else "missing",
+    }
     return {
         "schema_version": 1,
+        "id": snapshot_id,
+        "generated_at": generated_at,
         "snapshot": {
-            "id": "project-context",
+            "id": snapshot_id,
             "generated_at": generated_at,
             "valid_until": valid_until,
             "refresh_policy": {
@@ -6324,6 +6796,28 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7)
         },
         "platform_stack": platform_resolution["platform_stack"],
         "sources": {"fingerprints": sources},
+        "requirements_fingerprint": requirements,
+        "context_requirements": context_requirements,
+        "context_policy": context_policy,
+        "resolved": {
+            "knowledge_packages": [{"id": item, "constraint": "declared"} for item in sorted(set(package_ids))],
+            "knowledge_resources": resolved_knowledge_resources,
+            "available_knowledge_resources": available_knowledge_resources,
+            "template_packages": context_requirements.get("template_packages", []),
+            "templates": [],
+            "tools": context_requirements.get("tools", []),
+            "platform_contracts": context_requirements.get("platform_contracts", []),
+            "process_packages": selected_packages,
+        },
+        "freshness": {
+            "status": "fresh",
+            "checked_at": generated_at,
+            "stale_reasons": [],
+            "update_available": [],
+            "broken_refs": [],
+        },
+        "reproducibility": reproducibility,
+        "source_fingerprints": source_fingerprints,
         "knowledge_stack": manifest_data.get("knowledge_stack", [{"id": "processforge.core", "version": "1.0.0", "source": "distribution"}]),
         "resolved_policies": {
             "hard": [
@@ -6559,58 +7053,54 @@ def parse_snapshot_timestamp(value: Any) -> datetime | None:
         return None
 
 
-def project_context_freshness(project_root: Path) -> tuple[str, list[str], dict[str, Any]]:
+def project_context_freshness(project_root: Path, *, explicit_workplace: str | None = None) -> tuple[str, list[str], dict[str, Any]]:
     snapshot_yaml, _snapshot_md = project_context_snapshot_paths(project_root)
     if not snapshot_yaml.is_file():
         return "missing", [], {}
     snapshot = load_yaml_document(snapshot_yaml)
-    reasons: list[str] = []
-    for key in ["schema_version", "snapshot", "project", "flow", "sources", "capabilities", "session"]:
-        if key not in snapshot:
-            reasons.append(f"snapshot schema invalid: missing {key}")
-    meta = snapshot.get("snapshot", {}) if isinstance(snapshot.get("snapshot"), dict) else {}
-    valid_until = parse_snapshot_timestamp(meta.get("valid_until"))
-    if valid_until is None:
-        reasons.append("valid_until missing or invalid")
-    elif valid_until < datetime.now(timezone.utc):
-        reasons.append("valid_until expired")
-
-    recorded_sources = {}
-    sources = snapshot.get("sources", {}) if isinstance(snapshot.get("sources"), dict) else {}
-    fingerprints = sources.get("fingerprints", []) if isinstance(sources, dict) else []
-    if isinstance(fingerprints, list):
-        for item in fingerprints:
-            if isinstance(item, dict) and "id" in item:
-                recorded_sources[str(item["id"])] = str(item.get("checksum", "missing"))
-    current_sources = collect_project_snapshot_sources(project_root)
-    current_by_id = {str(item["id"]): str(item.get("checksum", "missing")) for item in current_sources}
-    for source_id, checksum in current_by_id.items():
-        if source_id not in recorded_sources:
-            reasons.append(f"source added: {source_id}")
-        elif recorded_sources[source_id] != checksum:
-            reasons.append(f"source changed: {source_id}")
-    for source_id in sorted(set(recorded_sources) - set(current_by_id)):
-        reasons.append(f"source removed: {source_id}")
-
-    current = build_project_context_snapshot(project_root)
-    required = current.get("capabilities", {}).get("required", []) if isinstance(current.get("capabilities"), dict) else []
-    for item in required:
-        if isinstance(item, dict) and item.get("status") == "missing":
-            reasons.append(f"required capability missing: {item.get('id')}")
-    return ("fresh" if not reasons else "stale"), reasons, snapshot
+    result = project_context_check_result(project_root, explicit_workplace=explicit_workplace)
+    reasons = [str(item.get("reason") or item) for item in result.get("stale_resources", []) if isinstance(item, dict)]
+    reasons.extend(str(item.get("reason") or item) for item in result.get("broken_refs", []) if isinstance(item, dict))
+    return str(result.get("status") or "stale"), reasons, snapshot
 
 
-def write_project_context_snapshot_outputs(project_root: Path) -> tuple[str, dict[str, Path], dict[str, Any], list[str]]:
-    snapshot = build_project_context_snapshot(project_root)
-    status, reasons, _previous = project_context_freshness(project_root)
+def write_project_context_snapshot_outputs(project_root: Path, *, explicit_workplace: str | None = None) -> tuple[str, dict[str, Path], dict[str, Any], list[str]]:
+    snapshot = build_project_context_snapshot(project_root, explicit_workplace=explicit_workplace)
+    status, reasons, _previous = project_context_freshness(project_root, explicit_workplace=explicit_workplace)
     if status == "missing":
         reasons = []
     snapshot_yaml, snapshot_md = project_context_snapshot_paths(project_root)
     snapshot_yaml.parent.mkdir(parents=True, exist_ok=True)
+    generations = project_context_snapshot_generations_dir(project_root)
+    generations.mkdir(parents=True, exist_ok=True)
+    generation_path = generations / f"{snapshot['snapshot']['id']}.yaml"
+    generation_path.write_text(ensure_trailing_newline(dump_yaml(snapshot)), encoding="utf-8")
     snapshot_yaml.write_text(ensure_trailing_newline(dump_yaml(snapshot)), encoding="utf-8")
     snapshot_md.write_text(render_project_context_snapshot_md(snapshot, "fresh", []), encoding="utf-8")
+    marker = project_context_stale_marker_path(project_root)
+    if marker.is_file():
+        marker.unlink()
     workplace_snapshot = write_workplace_context_snapshot(project_root, snapshot)
-    return "fresh", {"snapshot_yaml": snapshot_yaml, "snapshot_md": snapshot_md, "workplace_snapshot": workplace_snapshot}, snapshot, reasons
+    report = project_context_report_path(project_root)
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(
+        "\n".join(
+            [
+                "# Project Context Refresh Report",
+                "",
+                f"- snapshot_id: {snapshot['snapshot']['id']}",
+                f"- status: fresh",
+                f"- previous_status: {status}",
+                f"- generation: {rel(generation_path, project_root)}",
+                f"- current: {rel(snapshot_yaml, project_root)}",
+                "",
+                "Existing assignment capsules are immutable and remain pinned to their original snapshot id and checksum.",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return "fresh", {"snapshot_yaml": snapshot_yaml, "snapshot_md": snapshot_md, "snapshot_generation": generation_path, "refresh_report": report, "workplace_snapshot": workplace_snapshot}, snapshot, reasons
 
 
 def telemetry_session_id(prefix: str = "session") -> str:
@@ -7607,12 +8097,17 @@ def command_session_start(args: argparse.Namespace) -> int:
     session_path, telemetry_path = session_runtime_paths(project_root, session_id)
     freshness, stale_reasons, snapshot = project_context_freshness(project_root)
     if args.rebuild_context_if_stale and freshness in {"missing", "stale"}:
-        status, paths, snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root)
+        status, paths, snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root, explicit_workplace=getattr(args, "workplace", None))
         freshness = status
         stale_reasons = []
         print(f"PROJECT_CONTEXT: {status}")
         for path in paths.values():
             print(f"WROTE: {rel(path, project_root)}")
+    check_result = project_context_check_result(project_root, explicit_workplace=getattr(args, "workplace", None)) if project_context_snapshot_paths(project_root)[0].is_file() else {"status": freshness, "policy_action": "project-context-refresh", "recommended_action": "project-context-refresh"}
+    print(f"PROJECT_CONTEXT_CHECK: {check_result.get('status')} policy_action={check_result.get('policy_action')}")
+    if check_result.get("status") == "broken" and check_result.get("policy_action") == "block":
+        print("PROJECT_CONTEXT_BLOCKED: broken snapshot")
+        return 1
     write_session_metadata(project_root, session_id, args.mode, freshness, telemetry_path)
     emit_process_event(
         project_root,
@@ -7626,7 +8121,8 @@ def command_session_start(args: argparse.Namespace) -> int:
         telemetry_path,
         "snapshot_check",
         path=rel(project_context_snapshot_paths(project_root)[0], project_root),
-        status=freshness,
+        status=check_result.get("status", freshness),
+        policy_action=check_result.get("policy_action"),
         reasons=stale_reasons,
     )
     if freshness == "stale":
@@ -7708,10 +8204,35 @@ def command_project_context_refresh(args: argparse.Namespace) -> int:
     if not project_root.is_dir():
         raise SystemExit(f"FAIL: project root not found: {project_root}")
     require_flow_root(project_root)
+    if getattr(args, "dry_run", False):
+        snapshot = build_project_context_snapshot(project_root, explicit_workplace=getattr(args, "workplace", None))
+        current = project_context_check_result(project_root, explicit_workplace=getattr(args, "workplace", None))
+        proposal = {
+            "schema_version": 1,
+            "created_at": now_utc(),
+            "reason": getattr(args, "reason", None) or "manual",
+            "before": {"snapshot_id": current.get("snapshot_id"), "status": current.get("status")},
+            "after": {"snapshot_id": snapshot.get("snapshot", {}).get("id"), "status": "fresh"},
+            "impact": {
+                "new_capsules": "use_new_snapshot_generation",
+                "existing_capsules": "remain_pinned",
+            },
+            "resolved_resources": snapshot.get("resolved", {}).get("knowledge_resources", []),
+        }
+        if getattr(args, "write_proposal", None):
+            proposal_path = Path(args.write_proposal).expanduser()
+            if not proposal_path.is_absolute():
+                proposal_path = project_root / proposal_path
+            proposal_path.parent.mkdir(parents=True, exist_ok=True)
+            proposal_path.write_text(ensure_trailing_newline(dump_yaml(proposal)), encoding="utf-8")
+            print(f"WROTE: {rel(proposal_path, project_root)}")
+        else:
+            print(dump_yaml(proposal), end="")
+        return 0
     session_id = telemetry_session_id("project-context-refresh")
     _session_path, telemetry_path = session_runtime_paths(project_root, session_id)
-    emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"command": "project-context-refresh"}, correlation_id=session_id)
-    status, paths, snapshot, old_reasons = write_project_context_snapshot_outputs(project_root)
+    emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"command": "project-context-refresh", "reason": getattr(args, "reason", None)}, correlation_id=session_id)
+    status, paths, snapshot, old_reasons = write_project_context_snapshot_outputs(project_root, explicit_workplace=getattr(args, "workplace", None))
     append_telemetry_event(telemetry_path, "session_start", mode="project_context_refresh", actor="agent")
     append_telemetry_event(telemetry_path, "snapshot_check", status="previous_" + ("stale" if old_reasons else "fresh"), reasons=old_reasons)
     for source in snapshot.get("sources", {}).get("fingerprints", []):
@@ -7758,17 +8279,87 @@ def command_project_context_check(args: argparse.Namespace) -> int:
     if not project_root.is_dir():
         raise SystemExit(f"FAIL: project root not found: {project_root}")
     require_flow_root(project_root)
-    status, reasons, snapshot = project_context_freshness(project_root)
-    health = "missing"
-    if snapshot:
-        health = snapshot.get("snapshot", {}).get("health", {}).get("status", "pass") if isinstance(snapshot.get("snapshot"), dict) else "pass"
-    print(f"STATUS: {status}")
-    print(f"HEALTH: {health}")
-    result = "pass" if status == "fresh" and health in {"pass", "warn"} else "fail"
-    print(f"RESULT: {result}")
-    for reason in reasons:
-        print(f"STALE: {reason}")
-    return 0 if result == "pass" else 1
+    result = project_context_check_result(project_root, explicit_workplace=getattr(args, "workplace", None))
+    result["session_start"] = bool(getattr(args, "session_start", False))
+    result["check_update_candidates"] = getattr(args, "check_update_candidates", "if_due")
+    if getattr(args, "write_report", None):
+        report_path = Path(args.write_report).expanduser()
+        if not report_path.is_absolute():
+            report_path = project_root / report_path
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        lines = [
+            "# Project Context Check Report",
+            "",
+            f"- snapshot_id: {result.get('snapshot_id')}",
+            f"- status: {result.get('status')}",
+            f"- policy_action: {result.get('policy_action')}",
+            f"- recommended_action: {result.get('recommended_action')}",
+            "",
+            "## Updates Available",
+            "",
+            dump_yaml(result.get("updates_available", [])),
+            "",
+            "## Stale Resources",
+            "",
+            dump_yaml(result.get("stale_resources", [])),
+            "",
+            "## Broken References",
+            "",
+            dump_yaml(result.get("broken_refs", [])),
+        ]
+        report_path.write_text("\n".join(lines), encoding="utf-8")
+        result["report"] = rel(report_path, project_root)
+    if getattr(args, "json", False):
+        print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(f"SNAPSHOT_ID: {result.get('snapshot_id')}")
+        print(f"STATUS: {result.get('status')}")
+        print(f"POLICY_ACTION: {result.get('policy_action')}")
+        print(f"RECOMMENDED_ACTION: {result.get('recommended_action')}")
+        for item in result.get("updates_available", []):
+            print(f"UPDATE_AVAILABLE: {item.get('id')} {item.get('snapshot_version')} -> {item.get('available_version')}")
+        for item in result.get("stale_resources", []):
+            print(f"STALE: {item.get('id', 'project-context')}: {item.get('reason')}")
+        for item in result.get("broken_refs", []):
+            print(f"BROKEN: {item.get('id', 'project-context')}: {item.get('reason')}")
+    if result.get("status") == "broken":
+        return 1
+    if getattr(args, "strict", False) and result.get("status") != "fresh":
+        return 1
+    return 0
+
+
+def mark_project_context_stale(project_root: Path, *, subject: str, reason: str, source: str = "manual") -> Path:
+    marker_path = project_context_stale_marker_path(project_root)
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker = {
+        "schema_version": 1,
+        "marked_at": now_utc(),
+        "subject": subject,
+        "reason": reason,
+        "source": source,
+        "status": "stale",
+        "recommended_action": "project-context-check",
+    }
+    marker_path.write_text(json.dumps(marker, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    coordination = effective_project_coordination(project_root)
+    if coordination.get("effective_mode") == "organized":
+        flow_root = locate_flow_root(project_root)
+        inbox_path = flow_root / "runtime" / "director" / "inbox" / f"context-stale-{safe_id(subject, 'subject')}.json"
+        inbox_path.parent.mkdir(parents=True, exist_ok=True)
+        inbox_path.write_text(json.dumps({"type": "context_snapshot_stale", **marker}, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    emit_process_event(project_root, "context.snapshot.stale", severity="warn", payload={"subject": subject, "reason": reason, "source": source})
+    return marker_path
+
+
+def command_project_context_mark_stale(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    if not project_root.is_dir():
+        raise SystemExit(f"FAIL: project root not found: {project_root}")
+    require_flow_root(project_root)
+    marker = mark_project_context_stale(project_root, subject=args.subject, reason=args.reason, source="project-context-mark-stale")
+    print(f"MARKED_STALE: {rel(marker, project_root)}")
+    return 0
 
 
 def extract_assignment_front_matter(path: Path) -> dict[str, Any]:
@@ -8245,7 +8836,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     if not metadata:
         raise SystemExit("FAIL: assignment has no YAML front matter; it is human-readable only and cannot produce an automated capsule")
     status, reasons, snapshot = project_context_freshness(project_root)
-    if status != "fresh":
+    if status not in {"fresh", "fresh_with_updates"}:
         raise SystemExit("FAIL: project context snapshot is not fresh: " + (", ".join(reasons) if reasons else status))
     assn_id = safe_id(str(metadata.get("id", assignment.stem)), "assignment")
     required = [str(item) for item in metadata.get("required_capabilities", [])] if isinstance(metadata.get("required_capabilities"), list) else []
@@ -8260,6 +8851,8 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     flow_root = locate_flow_root(project_root)
     telemetry_rel = rel(flow_root / "runtime" / "telemetry" / f"{assn_id}.ndjson", project_root)
     snapshot_yaml, _snapshot_md = project_context_snapshot_paths(project_root)
+    snapshot_sha = "sha256:" + sha256_file(snapshot_yaml)
+    snapshot_meta = snapshot.get("snapshot", {}) if isinstance(snapshot.get("snapshot"), dict) else {}
     contract = normalized_assignment_contract(project_root, assignment, metadata)
     missing_sources = validate_assignment_required_sources(project_root, contract)
     if missing_sources:
@@ -8283,9 +8876,16 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
             "immutable": True,
             "worker_may_rebuild_context": False,
         },
+        "context_snapshot": {
+            "id": snapshot_meta.get("id", "project-context"),
+            "sha256": snapshot_sha,
+            "generated_at": snapshot_meta.get("generated_at"),
+            "freshness_at_creation": status,
+        },
+        "resolved_resources": snapshot.get("resolved", {}).get("knowledge_resources", []) if isinstance(snapshot.get("resolved"), dict) else [],
         "assignment": contract["assignment"],
         "context": {
-            "snapshot_id": snapshot.get("snapshot", {}).get("id", "project-context"),
+            "snapshot_id": snapshot_meta.get("id", "project-context"),
             "freshness": status,
             "required_sources": contract["context"]["required_sources"],
             "context_artifacts": contract["context"]["context_artifacts"],
@@ -8322,6 +8922,39 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
                 emit_process_event(project_root, "capability.missing", severity="warn", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"capability": capability}, correlation_id=f"assignment-{assn_id}")
             print("WARN: optional capabilities missing: " + ", ".join(missing_optional))
     return 0
+
+
+def command_capsule_doctor(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    capsule_path = Path(args.capsule).expanduser()
+    if not capsule_path.is_absolute():
+        capsule_path = project_root / capsule_path
+    capsule = load_yaml_document(capsule_path)
+    checks: list[Check] = []
+    if not capsule:
+        return print_checks([check("FAIL", f"capsule missing or invalid: {capsule_path}")])
+    context_snapshot = capsule.get("context_snapshot") if isinstance(capsule.get("context_snapshot"), dict) else {}
+    context = capsule.get("context") if isinstance(capsule.get("context"), dict) else {}
+    snapshot_id = str(context_snapshot.get("id") or context.get("snapshot_id") or "")
+    snapshot_sha = str(context_snapshot.get("sha256") or "")
+    snapshot_file = project_context_snapshot_generations_dir(project_root) / f"{snapshot_id}.yaml"
+    current_snapshot, _current_md = project_context_snapshot_paths(project_root)
+    pinned_exists = snapshot_file.is_file() or current_snapshot.is_file()
+    checks.append(check("PASS" if snapshot_id else "FAIL", "capsule pins context snapshot id"))
+    checks.append(check("PASS" if snapshot_sha.startswith("sha256:") or capsule.get("capsule", {}).get("snapshot_checksum") else "FAIL", "capsule pins context snapshot checksum"))
+    checks.append(check("PASS" if pinned_exists else "FAIL", f"pinned snapshot exists: {snapshot_id or 'missing'}"))
+    if snapshot_file.is_file() and snapshot_sha.startswith("sha256:"):
+        checks.append(check("PASS" if "sha256:" + sha256_file(snapshot_file) == snapshot_sha else "WARN", "pinned snapshot generation checksum matches"))
+    resources = capsule.get("resolved_resources") if isinstance(capsule.get("resolved_resources"), list) else []
+    for item in resources:
+        if not isinstance(item, dict):
+            continue
+        uses_latest = any(str(item.get(key) or "").lower() == "latest" for key in ["instance_id", "resolved_version", "resolved_generation"])
+        reproducibility = item.get("reproducibility") if isinstance(item.get("reproducibility"), dict) else {}
+        allowed_live = bool(item.get("non_reproducible_live_resource")) or reproducibility.get("level") == "non_reproducible"
+        checks.append(check("FAIL" if uses_latest and not allowed_live else "PASS", f"resource {item.get('id', 'resource')} avoids unpinned latest"))
+    return print_checks(checks)
 
 
 RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review", "completed", "cancelled", "failed"}
@@ -14094,21 +14727,34 @@ UPDATE_PROVIDER_TYPES = {
 UPDATE_SUBJECT_TYPES = {
     "*",
     "processforge_distribution",
+    "workplace",
+    "process_package",
     "knowledge_package",
+    "template_package",
+    "tool_package",
+    "tool_definition",
+    "mcp_definition",
     "knowledge_resource",
     "process_definition",
+    "reusable_template",
+    "platform_contract",
+    "project_pf",
+    # Legacy aliases kept for existing registries and smokes.
     "template",
     "tool",
     "mcp_server",
-    "platform_contract",
     "package",
 }
 
 UPDATE_SOURCE_PUBLIC_KEYS = [
     "id",
     "type",
+    "provider",
     "priority",
     "url",
+    "manifest_url",
+    "changelog_url",
+    "channel",
     "path",
     "owner",
     "repo",
@@ -14117,6 +14763,8 @@ UPDATE_SOURCE_PUBLIC_KEYS = [
     "include_prereleases",
     "asset_patterns",
     "trust",
+    "policy",
+    "provider_capabilities",
 ]
 
 UPDATE_SOURCE_LOCAL_KEYS = [
@@ -14177,11 +14825,11 @@ def load_update_yaml(path: Path) -> dict[str, Any]:
 
 
 def update_location(source: dict[str, Any], provider_key: str) -> str:
-    provider = str(source.get(provider_key) or "")
+    provider = str(source.get(provider_key) or source.get("provider") or source.get("type") or "")
     if provider in {"processforge_json", "generic_http_directory", "tuf_repository"}:
-        return str(source.get("url") or "")
+        return str(source.get("manifest_url") or source.get("url") or "")
     if provider == "processforge_json_file":
-        return str(source.get("path") or "")
+        return str(source.get("manifest_url") or source.get("path") or source.get("url") or "")
     if provider in {"github_releases", "gitverse_releases", "gitlab_releases"}:
         owner = str(source.get("owner") or "")
         repo = str(source.get("repo") or "")
@@ -14366,6 +15014,8 @@ def append_update_source_checks(
         checks.append(check("FAIL", f"{label} missing boolean enabled"))
 
     provider = source.get(provider_key)
+    if not provider:
+        provider = source.get("provider" if provider_key == "type" else "type")
     if not isinstance(provider, str) or not provider.strip():
         checks.append(check("FAIL", f"{label} missing {provider_key}"))
     elif provider not in UPDATE_PROVIDER_TYPES:
@@ -14402,16 +15052,21 @@ def append_update_source_checks(
 
     provider_text = str(provider or "")
     if provider_text in UPDATE_REMOTE_PROVIDERS:
-        url = source.get("url")
+        url = source.get("manifest_url") or source.get("url")
         if not isinstance(url, str) or not url.strip():
-            checks.append(check("FAIL", f"{label} provider {provider_text} requires url"))
+            checks.append(check("FAIL", f"{label} provider {provider_text} requires manifest_url"))
         else:
             valid, reason = valid_remote_url_shape(url, require_https=source_requires_https(source, defaults))
             if not valid:
-                checks.append(check("FAIL", f"{label} url {reason}"))
+                checks.append(check("FAIL", f"{label} manifest_url {reason}"))
+            if "manifest_url" not in source and "url" in source:
+                checks.append(check("WARN", f"{label} uses legacy url; migrate to manifest_url"))
     elif provider_text == "processforge_json_file":
-        if not isinstance(source.get("path"), str) or not str(source.get("path")).strip():
-            checks.append(check("FAIL", f"{label} provider processforge_json_file requires path"))
+        local_location = source.get("manifest_url") or source.get("path") or source.get("url")
+        if not isinstance(local_location, str) or not str(local_location).strip():
+            checks.append(check("FAIL", f"{label} provider processforge_json_file requires manifest_url or path"))
+        if "manifest_url" not in source and ("path" in source or "url" in source):
+            checks.append(check("WARN", f"{label} uses legacy local location; migrate to manifest_url"))
     elif provider_text in UPDATE_RELEASE_PROVIDERS:
         for key in ("owner", "repo"):
             if not isinstance(source.get(key), str) or not str(source.get(key)).strip():
@@ -14558,9 +15213,12 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
             data = load_update_yaml(path)
             if not data.get("id"):
                 continue
+            subject_type = str(data.get("type") or "knowledge_package")
+            if subject_type not in UPDATE_SUBJECT_TYPES:
+                subject_type = "knowledge_package"
             records.append(
                 {
-                    "type": "knowledge_package",
+                    "type": subject_type,
                     "id": str(data.get("id")),
                     "scope": str(data.get("scope") or "global"),
                     "version": str(data.get("version") or ""),
@@ -14573,9 +15231,12 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
     for path in update_manifest_candidates_under(process_root, ["*.yaml", "*.yml"]):
         data = load_update_yaml(path)
         if data.get("id"):
+            subject_type = str(data.get("type") or "process_definition")
+            if subject_type not in UPDATE_SUBJECT_TYPES:
+                subject_type = "process_definition"
             records.append(
                 {
-                    "type": "process_definition",
+                    "type": subject_type,
                     "id": str(data.get("id")),
                     "scope": "global",
                     "version": str(data.get("version") or ""),
@@ -14591,9 +15252,12 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
         for path in update_manifest_candidates_under(root, ["*.yaml", "*.yml", "*/template.yaml", "*/template.yml"]):
             data = load_update_yaml(path)
             if data.get("id"):
+                subject_type = str(data.get("type") or "reusable_template")
+                if subject_type not in UPDATE_SUBJECT_TYPES:
+                    subject_type = "reusable_template"
                 records.append(
                     {
-                        "type": "template",
+                        "type": subject_type,
                         "id": str(data.get("id")),
                         "scope": str(data.get("scope") or "global"),
                         "version": str(data.get("version") or ""),
@@ -14627,9 +15291,12 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
     tools_data = load_update_yaml(tools_path)
     for entry in tools_data.get("tools", []) if isinstance(tools_data.get("tools"), list) else []:
         if isinstance(entry, dict) and entry.get("id"):
+            subject_type = str(entry.get("type") or "tool_definition")
+            if subject_type not in UPDATE_SUBJECT_TYPES:
+                subject_type = "tool_definition"
             records.append(
                 {
-                    "type": "tool",
+                    "type": subject_type,
                     "id": str(entry.get("id")),
                     "scope": str(entry.get("scope") or "global"),
                     "version": str(entry.get("version") or ""),
@@ -14644,7 +15311,7 @@ def update_entity_manifest_records(workplace_root: Path) -> list[dict[str, Any]]
         if isinstance(entry, dict) and entry.get("id"):
             records.append(
                 {
-                    "type": "mcp_server",
+                    "type": "mcp_definition",
                     "id": str(entry.get("id")),
                     "scope": str(entry.get("scope") or "global"),
                     "version": str(entry.get("version") or ""),
@@ -14672,6 +15339,10 @@ def update_site_overrides(workplace_root: Path) -> dict[str, dict[str, Any]]:
         update_site_id = item.get("update_site_id") or item.get("source_id")
         if not key and isinstance(update_site_id, str) and subject.get("type") and subject.get("id"):
             key = update_site_stable_key(str(subject.get("type")), str(subject.get("id")), update_site_id)
+        if not key and isinstance(item.get("subject_id"), str):
+            key = str(item.get("subject_id"))
+        if not key and isinstance(item.get("subject"), dict) and subject.get("type") and subject.get("id"):
+            key = f"{subject.get('type')}:{subject.get('id')}"
         if key:
             result[key] = item
     return result
@@ -14693,14 +15364,17 @@ def validate_update_site_overrides_data(data: dict[str, Any], path: Path) -> lis
             checks.append(check("FAIL", f"{label} must be an object"))
             continue
         site_id = item.get("site_id")
+        subject_id = item.get("subject_id")
         if isinstance(site_id, str) and site_id.strip():
             if site_id in seen:
                 checks.append(check("FAIL", f"{label} duplicate site_id {site_id}"))
             seen.add(site_id)
-        else:
-            checks.append(check("FAIL", f"{label} missing site_id"))
+        elif not (isinstance(subject_id, str) and subject_id.strip()) and not isinstance(item.get("subject"), dict):
+            checks.append(check("FAIL", f"{label} missing site_id, subject_id, or subject"))
         if "enabled" in item and not isinstance(item.get("enabled"), bool):
             checks.append(check("FAIL", f"{label}.enabled must be boolean"))
+        if "disabled" in item and not isinstance(item.get("disabled"), bool):
+            checks.append(check("FAIL", f"{label}.disabled must be boolean"))
         if "channels" in item and (
             not isinstance(item.get("channels"), list) or not all(isinstance(channel, str) and channel.strip() for channel in item.get("channels", []))
         ):
@@ -14744,15 +15418,38 @@ def derived_update_site_record(
     site_id = update_site_stable_key(subject_type, subject_id, source_id)
     source = {key: site[key] for key in UPDATE_SOURCE_PUBLIC_KEYS if key in site}
     source["id"] = source_id
-    source["type"] = str(site.get("type"))
+    provider = str(site.get("provider") or site.get("type") or "processforge_json")
+    source["provider"] = provider
+    source["type"] = provider
+    if "manifest_url" not in source and isinstance(site.get("url"), str):
+        source["manifest_url"] = site["url"]
+    if "manifest_url" not in source and isinstance(site.get("path"), str):
+        source["manifest_url"] = site["path"]
+    if "channel" not in source:
+        channels = site.get("channels")
+        if isinstance(channels, list) and channels:
+            source["channel"] = str(channels[0])
     enabled = bool(site.get("enabled", True))
     preserved = {key: site[key] for key in UPDATE_SOURCE_LOCAL_KEYS if key in site}
-    override = overrides.get(site_id, {})
+    override = overrides.get(site_id, {}) or overrides.get(subject_id, {}) or overrides.get(f"{subject_type}:{subject_id}", {})
     if isinstance(override, dict):
-        if "enabled" in override:
-            enabled = bool(override.get("enabled"))
+        if "enabled" in override or "disabled" in override:
+            enabled = bool(override.get("enabled", not bool(override.get("disabled"))))
         if isinstance(override.get("channels"), list):
             source["channels"] = override.get("channels")
+        if isinstance(override.get("channel"), str):
+            source["channel"] = override.get("channel")
+            source["channels"] = [override.get("channel")]
+        if isinstance(override.get("manifest_url"), str):
+            source["manifest_url"] = override.get("manifest_url")
+        if not isinstance(source.get("policy"), dict):
+            source["policy"] = {}
+        if isinstance(override.get("pin_version"), str):
+            source["policy"]["pin_version"] = override.get("pin_version")
+        if "allow_major" in override:
+            source["policy"]["allow_major"] = bool(override.get("allow_major"))
+        if "auto_apply" in override:
+            source["policy"]["auto_apply"] = bool(override.get("auto_apply"))
         preserved_override = override.get("preserved_local") if isinstance(override.get("preserved_local"), dict) else {}
         for key in UPDATE_SOURCE_LOCAL_KEYS:
             if key in override:
@@ -15135,6 +15832,841 @@ def command_project_upgrade_check(args: argparse.Namespace) -> int:
     target.write_text(ensure_trailing_newline(report), encoding="utf-8")
     print(f"WROTE: {rel(target, project_root)}")
     return 0
+
+
+def update_runtime_root(workplace_root: Path) -> Path:
+    return workplace_root / "runtime" / "update"
+
+
+def update_candidates_path(workplace_root: Path) -> Path:
+    return update_runtime_root(workplace_root) / "candidates.json"
+
+
+def update_notifications_path(workplace_root: Path) -> Path:
+    return update_runtime_root(workplace_root) / "notifications.json"
+
+
+def file_url_to_path(value: str, base: Path | None = None) -> Path:
+    text = value.strip()
+    if text.startswith("file://"):
+        parsed = urlparse(text)
+        raw = url2pathname(parsed.path or "")
+        if os.name == "nt" and re.match(r"^/[A-Za-z]:/", raw):
+            raw = raw[1:]
+        return Path(raw).expanduser().resolve()
+    path = Path(text).expanduser()
+    if not path.is_absolute() and base is not None:
+        path = base / path
+    return path.resolve()
+
+
+def load_yaml_or_json_document(path: Path) -> dict[str, Any]:
+    if path.suffix.lower() == ".json":
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+        return data if isinstance(data, dict) else {}
+    return load_update_yaml(path)
+
+
+def load_yaml_or_json_text(text: str) -> dict[str, Any]:
+    try:
+        data = json.loads(text)
+        return data if isinstance(data, dict) else {}
+    except json.JSONDecodeError:
+        pass
+    try:
+        import yaml  # type: ignore
+
+        data = yaml.safe_load(text)
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple[dict[str, Any], list[str]]:
+    warnings: list[str] = []
+    provider = str(source.get("provider") or source.get("type") or "")
+    location = update_location(source, "provider")
+    if not location:
+        return {}, ["missing manifest_url"]
+    if provider == "processforge_json_file" or location.startswith("file://"):
+        path = file_url_to_path(location, workplace_root)
+        data = load_yaml_or_json_document(path)
+        if not data:
+            return {}, [f"manifest not found or invalid: {path}"]
+        return data, warnings
+    if provider == "processforge_json":
+        try:
+            with urlopen(location, timeout=15) as response:
+                text = response.read().decode("utf-8")
+        except Exception as exc:
+            return {}, [f"manifest fetch failed: {exc}"]
+        data = load_yaml_or_json_text(text)
+        if not data:
+            return {}, [f"manifest response invalid: {location}"]
+        return data, warnings
+    return {}, [f"provider {provider} is planned or unsupported for fetch"]
+
+
+def semantic_version_key(value: str) -> tuple[int, tuple[int, ...] | str]:
+    text = value.strip()
+    match = re.fullmatch(r"v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:[-+][A-Za-z0-9.-]+)?", text)
+    if not match:
+        return (1, text)
+    parts = tuple(int(part) for part in match.groups(default="0"))
+    return (0, parts)
+
+
+def version_is_newer(available: str, installed: str | None) -> tuple[bool, str | None]:
+    if not installed:
+        return True, None
+    available_key = semantic_version_key(available)
+    installed_key = semantic_version_key(installed)
+    warning = None
+    if available_key[0] or installed_key[0]:
+        warning = "non-semver version compared lexically"
+        return str(available) > str(installed), warning
+    return available_key[1] > installed_key[1], warning
+
+
+def normalize_manifest_versions(raw: dict[str, Any], site: dict[str, Any], channel: str) -> list[dict[str, Any]]:
+    subject = site.get("subject") if isinstance(site.get("subject"), dict) else {}
+    manifest_subject = raw.get("subject") if isinstance(raw.get("subject"), dict) else {}
+    subject_type = str(manifest_subject.get("type") or subject.get("type") or "")
+    subject_id = str(manifest_subject.get("id") or subject.get("id") or "")
+    source = site.get("source") if isinstance(site.get("source"), dict) else site
+    source_id = str(source.get("id") or site.get("site_id") or "update-site")
+    manifest_url = update_location(source, "provider")
+    site_changelog = str(source.get("changelog_url") or "")
+    versions: list[dict[str, Any]] = []
+
+    channels = raw.get("channels") if isinstance(raw.get("channels"), dict) else {}
+    channel_data = channels.get(channel)
+    if isinstance(channel_data, dict):
+        for item in channel_data.get("versions", []) if isinstance(channel_data.get("versions"), list) else []:
+            if not isinstance(item, dict):
+                continue
+            versions.append(
+                {
+                    "subject": {"type": subject_type, "id": subject_id, "scope": str(subject.get("scope") or "global")},
+                    "version": str(item.get("version") or ""),
+                    "source_id": source_id,
+                    "manifest_url": manifest_url,
+                    "changelog_url": str(item.get("changelog_url") or site_changelog),
+                    "download_url": str(item.get("download_url") or item.get("url") or ""),
+                    "sha256": str(item.get("sha256") or ""),
+                    "size_bytes": item.get("size_bytes") or item.get("size"),
+                    "breaking": bool(item.get("breaking", False)),
+                    "migration_required": bool(item.get("migration_required", False)),
+                    "notes": item.get("notes"),
+                    "post_update_doctor": item.get("post_update_doctor") if isinstance(item.get("post_update_doctor"), list) else [],
+                    "update_policy": item.get("update_policy") if isinstance(item.get("update_policy"), dict) else {},
+                }
+            )
+
+    for manifest_subject_item in raw.get("subjects", []) if isinstance(raw.get("subjects"), list) else []:
+        if not isinstance(manifest_subject_item, dict):
+            continue
+        normalized_subject = {
+            "type": str(manifest_subject_item.get("type") or subject_type),
+            "id": str(manifest_subject_item.get("id") or subject_id),
+            "scope": str(subject.get("scope") or manifest_subject_item.get("scope") or "global"),
+        }
+        if normalized_subject["id"] and subject_id and normalized_subject["id"] != subject_id:
+            continue
+        for item in manifest_subject_item.get("versions", []) if isinstance(manifest_subject_item.get("versions"), list) else []:
+            if not isinstance(item, dict):
+                continue
+            item_channels = item.get("channels")
+            if isinstance(item_channels, list) and channel not in item_channels:
+                continue
+            artifacts = item.get("artifacts") if isinstance(item.get("artifacts"), list) else []
+            artifact = next((entry for entry in artifacts if isinstance(entry, dict)), {})
+            migration = item.get("migration") if isinstance(item.get("migration"), dict) else {}
+            release = item.get("release") if isinstance(item.get("release"), dict) else {}
+            versions.append(
+                {
+                    "subject": normalized_subject,
+                    "version": str(item.get("version") or ""),
+                    "source_id": source_id,
+                    "manifest_url": manifest_url,
+                    "changelog_url": str(item.get("changelog_url") or release.get("changelog_url") or site_changelog),
+                    "download_url": str(artifact.get("url") or ""),
+                    "sha256": str(artifact.get("sha256") or ""),
+                    "size_bytes": artifact.get("size") or artifact.get("size_bytes"),
+                    "breaking": any(bool(change.get("breaking")) for change in item.get("changes", []) if isinstance(change, dict)),
+                    "migration_required": bool(migration.get("required", False)),
+                    "notes": item.get("notes"),
+                    "post_update_doctor": item.get("post_update_doctor") if isinstance(item.get("post_update_doctor"), list) else [],
+                    "update_policy": item.get("update_policy") if isinstance(item.get("update_policy"), dict) else {},
+                }
+            )
+    return [item for item in versions if item.get("version")]
+
+
+def selected_update_version(versions: list[dict[str, Any]], installed: str | None) -> tuple[dict[str, Any] | None, list[str]]:
+    warnings: list[str] = []
+    newer: list[dict[str, Any]] = []
+    for item in versions:
+        is_newer, warning = version_is_newer(str(item.get("version") or ""), installed)
+        if warning:
+            warnings.append(warning)
+        if is_newer:
+            newer.append(item)
+    if not newer:
+        return None, warnings
+    newer.sort(key=lambda item: semantic_version_key(str(item.get("version") or "")))
+    return newer[-1], sorted(set(warnings))
+
+
+def update_candidate_id(subject_type: str, subject_id: str, available_version: str, source_id: str) -> str:
+    raw = f"{subject_type}:{subject_id}:{available_version}:{source_id}"
+    digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
+    return f"candidate-{safe_id(subject_type)}-{safe_id(subject_id)}-{safe_id(available_version)}-{digest}"
+
+
+def update_site_policy(source: dict[str, Any], installed_subject: dict[str, Any] | None = None) -> dict[str, Any]:
+    policy: dict[str, Any] = {}
+    if isinstance(source.get("policy"), dict):
+        policy.update(source["policy"])
+    if installed_subject and isinstance(installed_subject.get("update_policy"), dict):
+        policy.update(installed_subject["update_policy"])
+    return policy
+
+
+def installed_subjects_by_key(workplace_root: Path) -> dict[tuple[str, str], dict[str, Any]]:
+    data = load_update_yaml(installed_subjects_registry_path(workplace_root))
+    result: dict[tuple[str, str], dict[str, Any]] = {}
+    for subject in data.get("subjects", []) if isinstance(data.get("subjects"), list) else []:
+        if isinstance(subject, dict) and isinstance(subject.get("type"), str) and isinstance(subject.get("id"), str):
+            result[(str(subject["type"]), str(subject["id"]))] = subject
+    return result
+
+
+def read_update_candidates(workplace_root: Path) -> dict[str, Any]:
+    path = update_candidates_path(workplace_root)
+    if not path.is_file():
+        return {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
+    return data if isinstance(data, dict) else {"schema_version": 1, "generated_at": now_utc(), "channel": "stable", "candidates": [], "conflicts": []}
+
+
+def find_update_candidate(workplace_root: Path, candidate_id: str) -> dict[str, Any] | None:
+    data = read_update_candidates(workplace_root)
+    for item in data.get("candidates", []) if isinstance(data.get("candidates"), list) else []:
+        if isinstance(item, dict) and item.get("id") == candidate_id:
+            return item
+    return None
+
+
+def command_update_candidates_refresh(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    channel = args.channel
+    derived, checks = build_installed_update_sites(workplace_root)
+    failures = [item for item in checks if item.level == "FAIL"]
+    if failures:
+        print_checks(checks)
+        return 1
+    if not args.dry_run:
+        target_sites = derived_installed_update_sites_path(workplace_root)
+        target_sites.parent.mkdir(parents=True, exist_ok=True)
+        target_sites.write_text(json.dumps(derived, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    installed = installed_subjects_by_key(workplace_root)
+    candidates: list[dict[str, Any]] = []
+    conflicts: list[dict[str, Any]] = []
+    for site in derived.get("sites", []) if isinstance(derived.get("sites"), list) else []:
+        if not isinstance(site, dict) or not bool(site.get("enabled", False)):
+            continue
+        subject = site.get("subject") if isinstance(site.get("subject"), dict) else {}
+        if subject.get("type") == "project_pf":
+            continue
+        source = site.get("source") if isinstance(site.get("source"), dict) else {}
+        effective_channel = str(source.get("channel") or channel)
+        raw_manifest, warnings = fetch_update_manifest(source, workplace_root)
+        if not raw_manifest:
+            conflicts.append({"site_id": site.get("site_id"), "reason": "; ".join(warnings) or "manifest fetch failed"})
+            continue
+        versions = normalize_manifest_versions(raw_manifest, site, effective_channel)
+        installed_subject = installed.get((str(subject.get("type")), str(subject.get("id"))), {})
+        installed_version = str(subject.get("installed_version") or installed_subject.get("version") or "")
+        selected, compare_warnings = selected_update_version(versions, installed_version or None)
+        warnings.extend(compare_warnings)
+        if not selected:
+            continue
+        source_policy = update_site_policy(source, installed_subject)
+        pinned = source_policy.get("pin_version")
+        if isinstance(pinned, str) and pinned.strip() and str(selected.get("version")) != pinned:
+            conflicts.append({"site_id": site.get("site_id"), "reason": f"candidate {selected.get('version')} blocked by pin_version {pinned}"})
+            continue
+        if source_policy.get("allow_major") is False and installed_version:
+            installed_major = semantic_version_key(installed_version)[1]
+            selected_major = semantic_version_key(str(selected.get("version")))[1]
+            if isinstance(installed_major, tuple) and isinstance(selected_major, tuple) and installed_major[0] != selected_major[0]:
+                conflicts.append({"site_id": site.get("site_id"), "reason": f"candidate {selected.get('version')} blocked by allow_major=false"})
+                continue
+        trust = source.get("trust") if isinstance(source.get("trust"), dict) else {}
+        require_sha = bool(trust.get("require_sha256", trust.get("require_sha256_for_install", source_policy.get("require_sha256", True))))
+        sha256 = str(selected.get("sha256") or "")
+        installable = bool(selected.get("download_url")) and (not require_sha or bool(sha256))
+        status = "available" if installable else "missing_required_hash"
+        candidate = {
+            "id": update_candidate_id(str(subject.get("type")), str(subject.get("id")), str(selected.get("version")), str(selected.get("source_id"))),
+            "subject": selected.get("subject") or subject,
+            "installed_version": installed_version or None,
+            "current_version": installed_version or None,
+            "available_version": str(selected.get("version")),
+            "channel": effective_channel,
+            "source_id": str(selected.get("source_id")),
+            "site_id": site.get("site_id"),
+            "manifest_url": selected.get("manifest_url"),
+            "changelog_url": selected.get("changelog_url"),
+            "download_url": selected.get("download_url"),
+            "sha256": sha256 or None,
+            "artifact_sha256": sha256 or None,
+            "breaking": bool(selected.get("breaking", False)),
+            "migration_required": bool(selected.get("migration_required", False)),
+            "status": status,
+            "installable": installable,
+            "reason": None if installable else "sha256 required before stage/apply",
+            "warnings": sorted(set(warnings)),
+            "update_policy": selected.get("update_policy") or source_policy,
+            "post_update_doctor": selected.get("post_update_doctor") or source_policy.get("post_update_doctor", []),
+        }
+        candidates.append(candidate)
+    cache = {"schema_version": 1, "generated_at": now_utc(), "channel": channel, "candidates": candidates, "conflicts": conflicts}
+    if args.dry_run:
+        print(json.dumps(cache, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    path = update_candidates_path(workplace_root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(cache, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    create_update_notifications_from_candidates(workplace_root, candidates)
+    print(f"CANDIDATES: {len(candidates)}")
+    print(f"TARGET: {rel(path, workplace_root)}")
+    print(f"NOTIFICATIONS: {rel(update_notifications_path(workplace_root), workplace_root)}")
+    return 0
+
+
+def command_update_candidates_list(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    data = read_update_candidates(workplace_root)
+    candidates = data.get("candidates") if isinstance(data.get("candidates"), list) else []
+    if args.json:
+        print(json.dumps({"schema_version": 1, "candidates": candidates}, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    print("ID\tSTATUS\tSUBJECT_TYPE\tSUBJECT_ID\tCURRENT\tAVAILABLE\tCHANGELOG")
+    for item in candidates:
+        if not isinstance(item, dict):
+            continue
+        subject = item.get("subject") if isinstance(item.get("subject"), dict) else {}
+        print("\t".join([str(item.get("id", "")), str(item.get("status", "")), str(subject.get("type", "")), str(subject.get("id", "")), str(item.get("installed_version") or item.get("current_version") or ""), str(item.get("available_version", "")), str(item.get("changelog_url") or "")]))
+    return 0
+
+
+def command_update_candidates_show(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    candidate = find_update_candidate(workplace_root, args.candidate)
+    if not candidate:
+        print(f"FAIL: candidate not found: {args.candidate}")
+        return 1
+    print(json.dumps(candidate, ensure_ascii=False, indent=2, sort_keys=True))
+    return 0
+
+
+def command_update_candidates_clear(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    for path in [update_candidates_path(workplace_root), update_notifications_path(workplace_root)]:
+        if path.is_file() and not args.dry_run:
+            path.unlink()
+    print("CLEARED: update candidates and notifications" if not args.dry_run else "DRY_RUN: would clear update candidates and notifications")
+    return 0
+
+
+def create_update_notifications_from_candidates(workplace_root: Path, candidates: list[dict[str, Any]]) -> dict[str, Any]:
+    path = update_notifications_path(workplace_root)
+    existing = {}
+    if path.is_file():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            for item in data.get("notifications", []) if isinstance(data, dict) and isinstance(data.get("notifications"), list) else []:
+                if isinstance(item, dict) and item.get("id"):
+                    existing[str(item["id"])] = item
+        except json.JSONDecodeError:
+            existing = {}
+    now = now_utc()
+    for candidate in candidates:
+        if candidate.get("status") != "available":
+            continue
+        subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+        notification_id = f"notification-{candidate.get('id')}"
+        previous = existing.get(notification_id, {})
+        if previous.get("status") == "acknowledged":
+            continue
+        existing[notification_id] = {
+            "id": notification_id,
+            "type": "update_available",
+            "candidate_id": candidate.get("id"),
+            "subject": subject,
+            "channel": candidate.get("channel") or "stable",
+            "version": candidate.get("available_version"),
+            "current_version": candidate.get("installed_version") or candidate.get("current_version"),
+            "available_version": candidate.get("available_version"),
+            "source_id": candidate.get("source_id"),
+            "changelog_url": candidate.get("changelog_url"),
+            "message": f"Update available: {subject.get('id')} {candidate.get('installed_version') or 'unknown'} -> {candidate.get('available_version')}",
+            "first_seen_at": previous.get("first_seen_at") or now,
+            "last_notified_at": now,
+            "status": "notified",
+            "acknowledged_at": None,
+            "snoozed_until": None,
+        }
+    result = {"schema_version": 1, "updated_at": now, "notifications": sorted(existing.values(), key=lambda item: str(item.get("id")))}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    mirror_update_notifications_to_director(workplace_root, result)
+    return result
+
+
+def mirror_update_notifications_to_director(workplace_root: Path, notifications: dict[str, Any]) -> None:
+    office = workplace_root / "director" / "inbox"
+    if not office.is_dir():
+        return
+    for item in notifications.get("notifications", []) if isinstance(notifications.get("notifications"), list) else []:
+        if not isinstance(item, dict) or item.get("status") == "acknowledged":
+            continue
+        target = office / f"{safe_id(str(item.get('id')))}.json"
+        if target.exists():
+            continue
+        target.write_text(json.dumps(item, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def command_update_notifications_create(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    data = read_update_candidates(workplace_root)
+    candidates = data.get("candidates") if isinstance(data.get("candidates"), list) else []
+    notifications = create_update_notifications_from_candidates(workplace_root, [item for item in candidates if isinstance(item, dict)])
+    print(f"NOTIFICATIONS: {len(notifications.get('notifications', []))}")
+    return 0
+
+
+def command_update_notifications_list(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    path = update_notifications_path(workplace_root)
+    data = {}
+    if path.is_file():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            data = {}
+    notifications = data.get("notifications") if isinstance(data.get("notifications"), list) else []
+    if args.json:
+        print(json.dumps({"schema_version": 1, "notifications": notifications}, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    print("ID\tSTATUS\tSUBJECT_ID\tCURRENT\tAVAILABLE\tCHANGELOG")
+    for item in notifications:
+        if not isinstance(item, dict):
+            continue
+        subject = item.get("subject") if isinstance(item.get("subject"), dict) else {}
+        print("\t".join([str(item.get("id", "")), str(item.get("status", "")), str(subject.get("id", "")), str(item.get("current_version") or ""), str(item.get("available_version") or item.get("version") or ""), str(item.get("changelog_url") or "")]))
+    return 0
+
+
+def command_update_notifications_acknowledge(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    path = update_notifications_path(workplace_root)
+    if not path.is_file():
+        print(f"FAIL: notifications cache not found: {path}")
+        return 1
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        print(f"FAIL: notifications cache invalid JSON: {exc}")
+        return 1
+    changed = False
+    for item in data.get("notifications", []) if isinstance(data.get("notifications"), list) else []:
+        if isinstance(item, dict) and item.get("id") == args.notification:
+            item["status"] = "acknowledged"
+            item["acknowledged_at"] = now_utc()
+            changed = True
+    if not changed:
+        print(f"FAIL: notification not found: {args.notification}")
+        return 1
+    data["updated_at"] = now_utc()
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(f"ACKNOWLEDGED: {args.notification}")
+    return 0
+
+
+def command_update_changelog_show(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    candidate = find_update_candidate(workplace_root, args.candidate)
+    if not candidate:
+        print(f"FAIL: candidate not found: {args.candidate}")
+        return 1
+    changelog_url = str(candidate.get("changelog_url") or "")
+    print(f"CHANGELOG_URL: {changelog_url or 'none'}")
+    if changelog_url.startswith("file://") or (changelog_url and "://" not in changelog_url):
+        path = file_url_to_path(changelog_url, workplace_root)
+        if path.is_file():
+            print(path.read_text(encoding="utf-8")[:4000])
+    return 0
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def copy_or_download_update_artifact(candidate: dict[str, Any], target: Path, workplace_root: Path) -> Path:
+    url = str(candidate.get("download_url") or "")
+    if not url:
+        raise ValueError("candidate has no download_url")
+    parsed = urlparse(url)
+    if parsed.scheme in {"", "file"}:
+        source = file_url_to_path(url, workplace_root)
+        if not source.is_file():
+            raise FileNotFoundError(source)
+        target_name = source.name
+        destination = target / target_name
+        shutil.copy2(source, destination)
+        return destination
+    if parsed.scheme in {"http", "https"}:
+        destination = target / Path(parsed.path).name
+        with urlopen(url, timeout=30) as response, destination.open("wb") as output:
+            shutil.copyfileobj(response, output)
+        return destination
+    raise ValueError(f"unsupported artifact URL scheme: {parsed.scheme}")
+
+
+def safe_extract_zip(archive_path: Path, destination: Path) -> None:
+    destination_resolved = destination.resolve()
+    with zipfile.ZipFile(archive_path) as archive:
+        for info in archive.infolist():
+            target = (destination / info.filename).resolve()
+            if destination_resolved != target and destination_resolved not in target.parents:
+                raise ValueError(f"unsafe archive member: {info.filename}")
+        archive.extractall(destination)
+
+
+def artifact_manifest_from_zip(archive_path: Path) -> dict[str, Any]:
+    with zipfile.ZipFile(archive_path) as archive:
+        names = [name for name in archive.namelist() if name.endswith((".yaml", ".yml", ".json"))]
+        preferred = [name for name in names if Path(name).name in {"package.yaml", "package.yml", "template.yaml", "template.yml", "tool.yaml", "tool.yml", "process.yaml", "process.yml"}]
+        for name in preferred + names:
+            try:
+                text = archive.read(name).decode("utf-8")
+            except Exception:
+                continue
+            data = load_yaml_or_json_text(text)
+            if data.get("id"):
+                return data
+    return {}
+
+
+def staged_update_record_path(workplace_root: Path, candidate_id: str) -> Path:
+    return update_runtime_root(workplace_root) / "staged" / candidate_id / "stage-record.yaml"
+
+
+def read_staged_update_record(workplace_root: Path, candidate_id: str) -> dict[str, Any]:
+    return load_update_yaml(staged_update_record_path(workplace_root, candidate_id))
+
+
+def command_update_stage(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    candidate = find_update_candidate(workplace_root, args.candidate)
+    if not candidate:
+        print(f"FAIL: candidate not found: {args.candidate}")
+        return 1
+    if candidate.get("status") != "available" or not candidate.get("installable"):
+        print(f"FAIL: candidate is not installable: {candidate.get('status')}")
+        return 1
+    stage_dir = update_runtime_root(workplace_root) / "staged" / str(candidate["id"])
+    if args.dry_run:
+        print(f"DRY_RUN: would stage {candidate['id']} into {rel(stage_dir, workplace_root)}")
+        return 0
+    if stage_dir.exists():
+        shutil.rmtree(stage_dir)
+    stage_dir.mkdir(parents=True, exist_ok=True)
+    artifact_path = copy_or_download_update_artifact(candidate, stage_dir, workplace_root)
+    actual_sha = sha256_file(artifact_path)
+    expected_sha = str(candidate.get("sha256") or candidate.get("artifact_sha256") or "")
+    verified = not expected_sha or actual_sha.lower() == expected_sha.lower()
+    record = {
+        "schema_version": 1,
+        "candidate_id": candidate["id"],
+        "staged_at": now_utc(),
+        "status": "verified" if verified else "failed",
+        "workplace": rel(workplace_root, workplace_root.parent),
+        "candidate": candidate,
+        "artifact": {"path": rel(artifact_path, workplace_root), "sha256": actual_sha, "expected_sha256": expected_sha or None},
+        "verification": {"sha256": "pass" if verified else "fail"},
+    }
+    staged_update_record_path(workplace_root, str(candidate["id"])).write_text(dump_yaml(record), encoding="utf-8")
+    print(f"STAGED: {rel(artifact_path, workplace_root)}")
+    print(f"SHA256: {'pass' if verified else 'fail'}")
+    return 0 if verified else 1
+
+
+def command_update_verify(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    candidate = find_update_candidate(workplace_root, args.candidate)
+    record = read_staged_update_record(workplace_root, args.candidate)
+    if not candidate or not record:
+        print(f"FAIL: staged candidate not found: {args.candidate}")
+        return 1
+    artifact_info = record.get("artifact") if isinstance(record.get("artifact"), dict) else {}
+    artifact_path = path_resolution_to_path(workplace_path_resolution(workplace_root, str(artifact_info.get("path") or "")))
+    if not artifact_path.is_file():
+        print(f"FAIL: staged artifact missing: {artifact_path}")
+        return 1
+    actual_sha = sha256_file(artifact_path)
+    expected_sha = str(candidate.get("sha256") or candidate.get("artifact_sha256") or "")
+    if expected_sha and actual_sha.lower() != expected_sha.lower():
+        print("FAIL: sha256 mismatch")
+        return 1
+    subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+    manifest = artifact_manifest_from_zip(artifact_path) if artifact_path.suffix.lower() == ".zip" else {}
+    if manifest:
+        if str(manifest.get("id") or "") != str(subject.get("id") or ""):
+            print("FAIL: artifact subject id mismatch")
+            return 1
+        if str(manifest.get("type") or subject.get("type") or "") != str(subject.get("type") or ""):
+            print("FAIL: artifact subject type mismatch")
+            return 1
+        if str(manifest.get("version") or "") != str(candidate.get("available_version") or ""):
+            print("FAIL: artifact version mismatch")
+            return 1
+    record["status"] = "verified"
+    record["verified_at"] = now_utc()
+    record["verification"] = {"sha256": "pass", "subject_identity": "pass" if manifest else "not_applicable"}
+    staged_update_record_path(workplace_root, args.candidate).write_text(dump_yaml(record), encoding="utf-8")
+    print(f"VERIFIED: {args.candidate}")
+    return 0
+
+
+def update_install_path(workplace_root: Path, candidate: dict[str, Any]) -> Path:
+    policy = candidate.get("update_policy") if isinstance(candidate.get("update_policy"), dict) else {}
+    install_path = policy.get("install_path")
+    if isinstance(install_path, str) and install_path.strip():
+        return path_resolution_to_path(workplace_path_resolution(workplace_root, install_path))
+    installed = installed_subjects_by_key(workplace_root)
+    subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+    installed_subject = installed.get((str(subject.get("type")), str(subject.get("id"))), {})
+    if isinstance(installed_subject.get("install_path"), str) and str(installed_subject["install_path"]).strip():
+        return path_resolution_to_path(workplace_path_resolution(workplace_root, str(installed_subject["install_path"])))
+    return workplace_root / "packages" / safe_id(str(subject.get("id") or "package"))
+
+
+def update_installed_subject_version(workplace_root: Path, candidate: dict[str, Any], install_path: Path | None = None) -> None:
+    path = installed_subjects_registry_path(workplace_root)
+    data = load_update_yaml(path)
+    if not data:
+        data = {"schema_version": 1, "subjects": []}
+    subjects = data.get("subjects")
+    if not isinstance(subjects, list):
+        subjects = []
+        data["subjects"] = subjects
+    candidate_subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+    found = False
+    for subject in subjects:
+        if not isinstance(subject, dict):
+            continue
+        if subject.get("type") == candidate_subject.get("type") and subject.get("id") == candidate_subject.get("id"):
+            subject["version"] = candidate.get("available_version")
+            subject["updated_at"] = now_utc()
+            if install_path:
+                subject["install_path"] = rel(install_path, workplace_root)
+            found = True
+    if not found:
+        subjects.append({"type": candidate_subject.get("type"), "id": candidate_subject.get("id"), "scope": candidate_subject.get("scope") or "global", "version": candidate.get("available_version"), "installed_at": now_utc(), "install_path": rel(install_path, workplace_root) if install_path else None})
+    data["updated_at"] = now_utc()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(dump_yaml(data), encoding="utf-8")
+
+
+SNAPSHOT_IMPACTING_UPDATE_SUBJECT_TYPES = {
+    "knowledge_package",
+    "knowledge_resource",
+    "template_package",
+    "reusable_template",
+    "tool_definition",
+    "tool_package",
+    "platform_contract",
+    "process_package",
+}
+
+
+def project_roots_under_workplace(workplace_root: Path) -> list[Path]:
+    candidates = []
+    if (workplace_root / ".pf" / "process-forge.yaml").is_file():
+        candidates.append(workplace_root)
+    projects_root = workplace_root / "projects"
+    if projects_root.is_dir():
+        for path in sorted(projects_root.iterdir()):
+            if path.is_dir() and (path / ".pf" / "process-forge.yaml").is_file():
+                candidates.append(path)
+    return candidates
+
+
+def mark_impacted_project_contexts_after_update(workplace_root: Path, candidate: dict[str, Any], *, reason: str) -> list[Path]:
+    subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+    subject_type = str(subject.get("type") or "")
+    subject_id = str(subject.get("id") or "")
+    if subject_type not in SNAPSHOT_IMPACTING_UPDATE_SUBJECT_TYPES:
+        return []
+    marked: list[Path] = []
+    for project_root in project_roots_under_workplace(workplace_root):
+        snapshot_path, _snapshot_md = project_context_snapshot_paths(project_root)
+        if not snapshot_path.is_file():
+            continue
+        snapshot = load_yaml_document(snapshot_path)
+        resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
+        resources = resolved.get("knowledge_resources") if isinstance(resolved.get("knowledge_resources"), list) else []
+        impacted = subject_type != "knowledge_resource"
+        for resource in resources:
+            if not isinstance(resource, dict):
+                continue
+            if resource.get("id") == subject_id or resource.get("package_id") == subject_id:
+                impacted = True
+        if impacted:
+            marked.append(mark_project_context_stale(project_root, subject=subject_id or subject_type, reason=reason, source="update-apply"))
+    return marked
+
+
+def command_update_apply(args: argparse.Namespace) -> int:
+    if not args.confirm:
+        print("FAIL: update apply requires --confirm")
+        return 1
+    workplace_root = update_workplace_root(args.workplace)
+    candidate = find_update_candidate(workplace_root, args.candidate)
+    record = read_staged_update_record(workplace_root, args.candidate)
+    if not candidate or not record:
+        print(f"FAIL: staged candidate not found: {args.candidate}")
+        return 1
+    verify_status = command_update_verify(argparse.Namespace(workplace=args.workplace, candidate=args.candidate))
+    if verify_status != 0:
+        return verify_status
+    subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+    subject_type = str(subject.get("type") or "")
+    policy = candidate.get("update_policy") if isinstance(candidate.get("update_policy"), dict) else {}
+    if policy.get("mode") == "custom_command_requires_confirmation" and not args.allow_custom_command:
+        print("FAIL: custom command update policy requires explicit --allow-custom-command and is not executed by default")
+        return 1
+    artifact_info = record.get("artifact") if isinstance(record.get("artifact"), dict) else {}
+    artifact_path = path_resolution_to_path(workplace_path_resolution(workplace_root, str(artifact_info.get("path") or "")))
+    backup_dir = update_runtime_root(workplace_root) / "backups" / args.candidate
+    apply_dir = update_runtime_root(workplace_root) / "applied" / args.candidate
+    if args.dry_run:
+        print(f"DRY_RUN: would apply {args.candidate}")
+        return 0
+    if backup_dir.exists():
+        shutil.rmtree(backup_dir)
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    if policy.get("mode") == "replace_file" or subject_type in {"tool_definition", "tool_package", "tool"}:
+        paths = policy.get("executable_paths") if isinstance(policy.get("executable_paths"), list) else []
+        if not paths:
+            print("FAIL: tool update requires update_policy.executable_paths")
+            return 1
+        destination = path_resolution_to_path(workplace_path_resolution(workplace_root, str(paths[0])))
+        if destination.exists():
+            backup_target = backup_dir / "previous-file"
+            backup_target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(destination, backup_target)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(artifact_path, destination)
+        install_path = destination
+    else:
+        install_path = update_install_path(workplace_root, candidate)
+        if install_path.exists():
+            backup_target = backup_dir / "previous"
+            shutil.copytree(install_path, backup_target)
+            shutil.rmtree(install_path)
+        install_path.parent.mkdir(parents=True, exist_ok=True)
+        if artifact_path.suffix.lower() == ".zip":
+            safe_extract_zip(artifact_path, install_path)
+        else:
+            install_path.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(artifact_path, install_path / artifact_path.name)
+    update_installed_subject_version(workplace_root, candidate, install_path)
+    apply_dir.mkdir(parents=True, exist_ok=True)
+    apply_record = {"schema_version": 1, "candidate_id": args.candidate, "applied_at": now_utc(), "status": "applied", "subject": subject, "installed_version": candidate.get("available_version"), "install_path": rel(install_path, workplace_root), "backup_path": rel(backup_dir, workplace_root), "post_update_doctor": candidate.get("post_update_doctor", [])}
+    (apply_dir / "apply-record.yaml").write_text(dump_yaml(apply_record), encoding="utf-8")
+    marked = mark_impacted_project_contexts_after_update(workplace_root, candidate, reason="update-applied")
+    print(f"APPLIED: {args.candidate}")
+    print(f"INSTALL_PATH: {rel(install_path, workplace_root)}")
+    print(f"BACKUP: {rel(backup_dir, workplace_root)}")
+    if marked:
+        print("SNAPSHOTS_MARKED_STALE: " + ", ".join(rel(path, workplace_root) for path in marked))
+    return 0
+
+
+def command_update_rollback(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    candidate = find_update_candidate(workplace_root, args.candidate)
+    if not candidate:
+        print(f"FAIL: candidate not found: {args.candidate}")
+        return 1
+    subject = candidate.get("subject") if isinstance(candidate.get("subject"), dict) else {}
+    policy = candidate.get("update_policy") if isinstance(candidate.get("update_policy"), dict) else {}
+    backup_dir = update_runtime_root(workplace_root) / "backups" / args.candidate
+    if policy.get("mode") == "replace_file" or subject.get("type") in {"tool_definition", "tool_package", "tool"}:
+        paths = policy.get("executable_paths") if isinstance(policy.get("executable_paths"), list) else []
+        if not paths:
+            print("FAIL: tool rollback requires update_policy.executable_paths")
+            return 1
+        destination = path_resolution_to_path(workplace_path_resolution(workplace_root, str(paths[0])))
+        backup_file = backup_dir / "previous-file"
+        if not backup_file.is_file():
+            print(f"FAIL: backup not found: {backup_file}")
+            return 1
+        shutil.copy2(backup_file, destination)
+        restore_path = destination
+    else:
+        install_path = update_install_path(workplace_root, candidate)
+        backup_tree = backup_dir / "previous"
+        if not backup_tree.is_dir():
+            print(f"FAIL: backup not found: {backup_tree}")
+            return 1
+        if install_path.exists():
+            shutil.rmtree(install_path)
+        shutil.copytree(backup_tree, install_path)
+        restore_path = install_path
+    record = {"schema_version": 1, "candidate_id": args.candidate, "rolled_back_at": now_utc(), "status": "rolled_back", "restore_path": rel(restore_path, workplace_root)}
+    rollback_dir = update_runtime_root(workplace_root) / "rollbacks" / args.candidate
+    rollback_dir.mkdir(parents=True, exist_ok=True)
+    (rollback_dir / "rollback-record.yaml").write_text(dump_yaml(record), encoding="utf-8")
+    marked = mark_impacted_project_contexts_after_update(workplace_root, candidate, reason="update-rollback")
+    print(f"ROLLED_BACK: {args.candidate}")
+    print(f"RESTORE_PATH: {rel(restore_path, workplace_root)}")
+    if marked:
+        print("SNAPSHOTS_MARKED_STALE: " + ", ".join(rel(path, workplace_root) for path in marked))
+    return 0
+
+
+def command_update_doctor(args: argparse.Namespace) -> int:
+    workplace_root = update_workplace_root(args.workplace)
+    checks: list[Check] = []
+    candidates = read_update_candidates(workplace_root)
+    append_json_schema_checks(checks, candidates, "update-candidates.schema.json", str(update_candidates_path(workplace_root)))
+    notifications = {}
+    if update_notifications_path(workplace_root).is_file():
+        try:
+            notifications = json.loads(update_notifications_path(workplace_root).read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            notifications = {}
+    if notifications:
+        append_json_schema_checks(checks, notifications, "update-notifications.schema.json", str(update_notifications_path(workplace_root)))
+    staged_root = update_runtime_root(workplace_root) / "staged"
+    checks.append(check("PASS" if staged_root.exists() or candidates.get("candidates") is not None else "WARN", "update runtime state readable"))
+    return print_checks(checks)
 
 
 def command_path_resolve(args: argparse.Namespace) -> int:
@@ -16629,6 +18161,71 @@ def build_parser() -> argparse.ArgumentParser:
     entity_sources_list.add_argument("--json", action="store_true", help="Print JSON.")
     entity_sources_list.set_defaults(func=command_update_entity_sources_list)
 
+    update_candidates = update_sub.add_parser("candidates", help="Manage update candidate cache.")
+    update_candidates_sub = update_candidates.add_subparsers(dest="update_candidates_command", required=True)
+    update_candidates_refresh = update_candidates_sub.add_parser("refresh", help="Fetch update manifests and refresh candidates.")
+    update_candidates_refresh.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_candidates_refresh.add_argument("--channel", default="stable", help="Update channel.")
+    update_candidates_refresh.add_argument("--dry-run", action="store_true", help="Print candidates without writing runtime state.")
+    update_candidates_refresh.set_defaults(func=command_update_candidates_refresh)
+    update_candidates_list = update_candidates_sub.add_parser("list", help="List cached update candidates.")
+    update_candidates_list.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_candidates_list.add_argument("--json", action="store_true", help="Print JSON.")
+    update_candidates_list.set_defaults(func=command_update_candidates_list)
+    update_candidates_show = update_candidates_sub.add_parser("show", help="Show one cached update candidate as JSON.")
+    update_candidates_show.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_candidates_show.add_argument("--candidate", required=True, help="Candidate id.")
+    update_candidates_show.set_defaults(func=command_update_candidates_show)
+    update_candidates_clear = update_candidates_sub.add_parser("clear", help="Clear candidate and notification caches.")
+    update_candidates_clear.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_candidates_clear.add_argument("--dry-run", action="store_true", help="Report what would be cleared.")
+    update_candidates_clear.set_defaults(func=command_update_candidates_clear)
+
+    update_changelog = update_sub.add_parser("changelog", help="Show candidate changelog pointers or local content.")
+    update_changelog_sub = update_changelog.add_subparsers(dest="update_changelog_command", required=True)
+    update_changelog_show = update_changelog_sub.add_parser("show", help="Show candidate changelog.")
+    update_changelog_show.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_changelog_show.add_argument("--candidate", required=True, help="Candidate id.")
+    update_changelog_show.set_defaults(func=command_update_changelog_show)
+
+    update_notifications = update_sub.add_parser("notifications", help="Manage update notifications.")
+    update_notifications_sub = update_notifications.add_subparsers(dest="update_notifications_command", required=True)
+    update_notifications_create = update_notifications_sub.add_parser("create", help="Create notifications from cached candidates.")
+    update_notifications_create.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_notifications_create.set_defaults(func=command_update_notifications_create)
+    update_notifications_list = update_notifications_sub.add_parser("list", help="List update notifications.")
+    update_notifications_list.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_notifications_list.add_argument("--json", action="store_true", help="Print JSON.")
+    update_notifications_list.set_defaults(func=command_update_notifications_list)
+    update_notifications_ack = update_notifications_sub.add_parser("acknowledge", help="Acknowledge one update notification.")
+    update_notifications_ack.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_notifications_ack.add_argument("--notification", required=True, help="Notification id.")
+    update_notifications_ack.set_defaults(func=command_update_notifications_acknowledge)
+
+    update_stage = update_sub.add_parser("stage", help="Stage an installable update candidate.")
+    update_stage.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_stage.add_argument("--candidate", required=True, help="Candidate id.")
+    update_stage.add_argument("--dry-run", action="store_true", help="Report staging target without copying.")
+    update_stage.set_defaults(func=command_update_stage)
+    update_verify = update_sub.add_parser("verify", help="Verify a staged update candidate.")
+    update_verify.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_verify.add_argument("--candidate", required=True, help="Candidate id.")
+    update_verify.set_defaults(func=command_update_verify)
+    update_apply = update_sub.add_parser("apply", help="Apply a staged update candidate.")
+    update_apply.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_apply.add_argument("--candidate", required=True, help="Candidate id.")
+    update_apply.add_argument("--confirm", action="store_true", help="Required confirmation for apply.")
+    update_apply.add_argument("--dry-run", action="store_true", help="Report apply target without writing.")
+    update_apply.add_argument("--allow-custom-command", action="store_true", help="Acknowledge custom command policy; commands are not executed by default.")
+    update_apply.set_defaults(func=command_update_apply)
+    update_rollback = update_sub.add_parser("rollback", help="Rollback an applied update candidate from backup.")
+    update_rollback.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_rollback.add_argument("--candidate", required=True, help="Candidate id.")
+    update_rollback.set_defaults(func=command_update_rollback)
+    update_doctor = update_sub.add_parser("doctor", help="Validate update runtime caches.")
+    update_doctor.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    update_doctor.set_defaults(func=command_update_doctor)
+
     update_manifest = update_sub.add_parser("manifest", help="Validate normalized update manifest fixtures.")
     update_manifest_sub = update_manifest.add_subparsers(dest="update_manifest_command", required=True)
     update_manifest_validate = update_manifest_sub.add_parser("validate", help="Validate a normalized update manifest fixture.")
@@ -16669,17 +18266,41 @@ def build_parser() -> argparse.ArgumentParser:
 
     project_context_refresh = sub.add_parser("project-context-refresh", help="Refresh the project context snapshot.")
     project_context_refresh.add_argument("--project-root", required=True, help="Project root path.")
+    project_context_refresh.add_argument("--workplace", help="Workplace root path; accepted for explicit lock-model workflows.")
+    project_context_refresh.add_argument("--reason", default="manual", help="Refresh reason recorded in proposal/telemetry.")
+    project_context_refresh.add_argument("--dry-run", action="store_true", help="Print or write a refresh proposal without updating the current snapshot.")
+    project_context_refresh.add_argument("--write-proposal", help="Write dry-run proposal to this path.")
+    project_context_refresh.add_argument("--apply", action="store_true", help="Accepted for command symmetry; refresh writes by default unless --dry-run is set.")
+    project_context_refresh.add_argument("--force", action="store_true", help="Reserved for explicit operator override.")
+    project_context_refresh.add_argument("--allow-stale", action="store_true", help="Reserved for workflows that intentionally refresh from stale context.")
     project_context_refresh.set_defaults(func=command_project_context_refresh)
 
     project_context_check = sub.add_parser("project-context-check", help="Check project context snapshot freshness.")
     project_context_check.add_argument("--project-root", required=True, help="Project root path.")
+    project_context_check.add_argument("--workplace", help="Workplace root path; accepted for explicit lock-model workflows.")
+    project_context_check.add_argument("--json", action="store_true", help="Print machine-readable check result.")
+    project_context_check.add_argument("--session-start", action="store_true", help="Evaluate policy as a session-start freshness check.")
+    project_context_check.add_argument("--check-update-candidates", choices=["never", "if_due", "always"], default="if_due", help="Update-candidate check policy marker.")
+    project_context_check.add_argument("--strict", action="store_true", help="Return failure unless status is fresh.")
+    project_context_check.add_argument("--write-report", help="Write a Markdown context check report.")
     project_context_check.set_defaults(func=command_project_context_check)
+
+    project_context_mark_stale = sub.add_parser("project-context-mark-stale", help="Mark the current project context snapshot stale without refreshing it.")
+    project_context_mark_stale.add_argument("--project-root", required=True, help="Project root path.")
+    project_context_mark_stale.add_argument("--subject", required=True, help="Impacted subject or resource id.")
+    project_context_mark_stale.add_argument("--reason", required=True, help="Stale reason.")
+    project_context_mark_stale.set_defaults(func=command_project_context_mark_stale)
 
     assignment_capsule = sub.add_parser("assignment-capsule", help="Create an assignment capsule from snapshot plus assignment front matter.")
     assignment_capsule.add_argument("--project-root", required=True, help="Project root path.")
     assignment_capsule.add_argument("--assignment", required=True, help="Assignment Markdown with YAML front matter or assignment YAML.")
     assignment_capsule.add_argument("--force", action="store_true", help="Overwrite an existing capsule.")
     assignment_capsule.set_defaults(func=command_assignment_capsule)
+
+    capsule_doctor = sub.add_parser("capsule-doctor", help="Validate that an assignment capsule pins a context snapshot.")
+    capsule_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    capsule_doctor.add_argument("--capsule", required=True, help="Capsule YAML path.")
+    capsule_doctor.set_defaults(func=command_capsule_doctor)
 
     process_authoring_start = sub.add_parser("process-authoring-start", help="Start a guided process authoring session.")
     process_authoring_start.add_argument("--project-root", required=True, help="Project root path.")
@@ -17434,7 +19055,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    apply_optional = args.command == "workplace-setup" and getattr(args, "workplace_setup_command", "") in {"review", "status"}
+    apply_optional = (
+        (args.command == "workplace-setup" and getattr(args, "workplace_setup_command", "") in {"review", "status"})
+        or args.command == "project-context-refresh"
+    )
     if hasattr(args, "apply") and not args.apply and not apply_optional:
         args.dry_run = True
     if hasattr(args, "apply") and args.apply and getattr(args, "dry_run", False):

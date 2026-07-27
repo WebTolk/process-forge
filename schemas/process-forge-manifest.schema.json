@@ -60,6 +60,8 @@
     "platform_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "platform_contracts": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "selected_resources": { "type": "object", "additionalProperties": true },
+    "context_requirements": { "type": "object", "additionalProperties": true },
+    "context_policy": { "type": "object", "additionalProperties": true },
     "validation": { "type": "object" }
   },
   "$defs": {

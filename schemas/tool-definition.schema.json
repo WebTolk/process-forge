@@ -12,6 +12,7 @@
     "scope": { "type": "string" },
     "status": { "enum": ["configured", "optional", "missing", "disabled"] },
     "update_sites": { "type": "array", "items": { "$ref": "#/$defs/updateSite" } },
+    "update_policy": { "type": "object", "additionalProperties": true },
     "healthcheck": { "type": "object", "additionalProperties": true }
   },
   "$defs": {
@@ -19,12 +20,16 @@
     "remoteUrl": { "type": "string", "pattern": "^https?://[^\\s/?#]+[^\\s]*$" },
     "updateSite": {
       "type": "object",
-      "required": ["id", "enabled", "type"],
+      "required": ["id", "enabled"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "enabled": { "type": "boolean" },
+        "provider": { "type": "string", "minLength": 1 },
         "type": { "type": "string", "minLength": 1 },
         "priority": { "type": "integer" },
+        "manifest_url": { "type": "string", "minLength": 1 },
+        "changelog_url": { "type": "string", "minLength": 1 },
+        "channel": { "type": "string", "minLength": 1 },
         "url": { "$ref": "#/$defs/remoteUrl" },
         "path": { "type": "string" },
         "owner": { "type": "string" },
@@ -37,7 +42,8 @@
         "headers_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
         "query_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
         "custom_headers_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
-        "trust": { "type": "object", "additionalProperties": true }
+        "trust": { "type": "object", "additionalProperties": true },
+        "policy": { "type": "object", "additionalProperties": true }
       },
       "additionalProperties": true
     }

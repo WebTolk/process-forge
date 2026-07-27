@@ -21,6 +21,19 @@ optional_capabilities:
   - official_documentation
   - test_running
 
+context_requirements:
+  knowledge_packages: []
+  knowledge_resources: []
+  template_packages: []
+  tools: []
+  platform_contracts: []
+
+context_policy:
+  on_session_start:
+    check_freshness: true
+    if_stale: ask_operator
+    if_broken: block
+
 policies:
   one_writer_per_file_scope: true
   approved_artifacts_are_protected: true

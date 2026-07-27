@@ -73,3 +73,6 @@ path_ref:
 - Private local documentation and source trees use workplace knowledge roots.
 - API packages use provider-specific ids such as `docs.api.example-provider`;
   do not create one generic `docs.api` package.
+- Update-able knowledge packages and resources declare `update_sites`; updates
+  must keep private absolute paths and heavy local mirrors out of public package
+  metadata.

@@ -14,6 +14,16 @@ paths:
 processes:
   - id: software-feature-development
     path: processes/software-feature-development.yaml
+execution_profiles:
+  delivery_profiles:
+    project.default_delivery:
+      type: delivery_profile
+      steps:
+        - package
+        - smoke
+      commands:
+        package: "<project-local package command>"
+        smoke: "<project-local smoke command>"
 packages:
   - id: process-forge-core
     path: packages/process-forge-core.yaml
