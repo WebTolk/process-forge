@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/knowledge-candidate.schema.json",
+  "title": "Knowledge Candidate",
+  "type": "object",
+  "required": ["schema_version", "kind", "id", "source_context", "target", "applicability", "generalization", "category", "summary", "sensitivity", "status"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "kind": { "const": "processforge.knowledge_candidate" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "source_context": {
+      "type": "object",
+      "properties": {
+        "platform_stack": { "type": "array", "items": { "type": "string" } },
+        "knowledge_stack": { "type": "array", "items": { "type": "string" } },
+        "project_type": { "type": "string" },
+        "extension_type": { "type": "string" },
+        "extension_group": { "type": "string" },
+        "package_context": {
+          "type": "object",
+          "properties": {
+            "package_id": { "type": "string" },
+            "package_type": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "process_id": { "type": "string" },
+        "run_id": { "type": "string" },
+        "task_id": { "type": "string" },
+        "context_snapshot_id": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "target": { "$ref": "#/$defs/candidateDestination" },
+    "target_package": { "type": "string" },
+    "target_type": { "type": "string" },
+    "applicability": {
+      "type": "object",
+      "required": ["scope"],
+      "properties": {
+        "scope": { "enum": ["project", "workplace", "package", "platform", "parent_platform", "platform_family", "process", "core"] },
+        "applies_to": { "$ref": "#/$defs/applicabilityFacet" },
+        "not_applies_to": { "$ref": "#/$defs/applicabilityFacet" },
+        "conditions": { "type": "array", "items": { "type": "string" } },
+        "inheritance": {
+          "type": "object",
+          "properties": {
+            "observed_on": { "type": "array", "items": { "type": "string" } },
+            "parent_platforms": { "type": "array", "items": { "type": "string" } },
+            "child_platforms": { "type": "array", "items": { "type": "string" } },
+            "inherited_from_parent": { "type": "boolean" },
+            "safe_for_parent": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "generalization": {
+      "type": "object",
+      "required": ["level"],
+      "properties": {
+        "level": { "enum": ["narrow_observation", "project_rule", "package_rule", "platform_rule", "parent_platform_candidate", "parent_platform_rule", "universal_rule"] },
+        "can_be_promoted_to": { "type": "array", "items": { "type": "string" } },
+        "promotion_requires": { "type": "array", "items": { "type": "string" } },
+        "confidence_for_promotion": { "enum": ["low", "medium", "high"] }
+      },
+      "additionalProperties": true
+    },
+    "routing": {
+      "type": "object",
+      "properties": {
+        "recommended_destination": { "$ref": "#/$defs/candidateDestination" },
+        "alternative_destinations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/candidateDestination" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "applicability_confidence": {
+      "type": "object",
+      "properties": {
+        "applies_to_confidence": { "enum": ["observed", "inferred", "hypothesis"] },
+        "not_applies_to_confidence": { "enum": ["observed", "inferred", "hypothesis"] },
+        "evidence_count": { "type": "integer", "minimum": 0 },
+        "evidence_diversity": {
+          "type": "object",
+          "properties": {
+            "projects": { "type": "integer", "minimum": 0 },
+            "platforms": { "type": "integer", "minimum": 0 },
+            "versions": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "promotion": {
+      "type": "object",
+      "properties": {
+        "status": { "enum": ["not_requested", "proposed", "needs_more_evidence", "approved", "rejected"] },
+        "target": {
+          "anyOf": [
+            { "$ref": "#/$defs/candidateDestination" },
+            { "type": "null" }
+          ]
+        },
+        "blockers": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "category": { "enum": ["domain", "architecture", "implementation", "assurance", "delivery", "tooling", "process", "docs", "content", "seo", "media", "generic"] },
+    "summary": { "type": "string", "minLength": 1 },
+    "rationale": { "type": "string" },
+    "statement": { "type": "object", "additionalProperties": true },
+    "suggested_change": { "type": "object", "additionalProperties": true },
+    "payload": { "type": "object", "additionalProperties": true },
+    "evidence": {
+      "anyOf": [
+        { "type": "array", "items": { "type": "string" } },
+        { "type": "object", "additionalProperties": true }
+      ]
+    },
+    "sensitivity": { "enum": ["public", "internal", "private"] },
+    "privacy": { "type": "object", "additionalProperties": true },
+    "status": {
+      "type": "object",
+      "properties": {
+        "local": { "enum": ["proposed", "queued", "exported", "imported", "applied", "rejected", "superseded"] },
+        "hub": { "type": ["string", "null"] },
+        "curation": { "enum": ["unreviewed", "reviewed", "approved", "rejected"] },
+        "release": { "enum": ["not_included", "staged", "included"] }
+      },
+      "additionalProperties": true
+    },
+    "review": { "type": "object", "additionalProperties": true },
+    "curation": { "type": "object", "additionalProperties": true },
+    "release": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "candidateDestination": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["knowledge_package", "template_package", "process_definition", "delivery_profile", "project_rule", "workplace_rule", "platform_contract", "core_docs", "core_schema", "regression_check"] },
+        "id": { "type": "string", "minLength": 1 },
+        "target_path": { "type": ["string", "null"] },
+        "target_section": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "applicabilityFacet": {
+      "type": "object",
+      "properties": {
+        "platforms": { "type": "array", "items": { "type": "string" } },
+        "platform_families": { "type": "array", "items": { "type": "string" } },
+        "knowledge_packages": { "type": "array", "items": { "type": "string" } },
+        "project_types": { "type": "array", "items": { "type": "string" } },
+        "extension_types": { "type": "array", "items": { "type": "string" } },
+        "extension_groups": { "type": "array", "items": { "type": "string" } },
+        "versions": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

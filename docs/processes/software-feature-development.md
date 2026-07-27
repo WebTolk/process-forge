@@ -31,6 +31,17 @@ and evidence. Optional stages must not be silently skipped.
 - `release-delivery`: prepare package/patch/release evidence or record not_applicable.
 - `evolve`: capture lessons learned and proposals for rules, instructions, knowledge, checks, or delivery profiles.
 
+The lifecycle `evolve` stage uses the same top-level common `evolve` contract as
+non-software processes. It writes local candidates and an `evolution-report`; it
+does not auto-train models or mutate global packages.
+
+Its evolve targeting allows `knowledge_package`, `delivery_profile`,
+`process_definition`, `project_rule`, and `platform_contract`. Build and release
+commands are delivery-profile candidates, process-flow findings are
+process-definition candidates, project-only constraints remain project rules,
+and platform constraints require explicit applicability. Child-platform findings
+are not promoted to parent-platform rules without reviewed evidence.
+
 ## Delivery Boundary
 
 Delivery/build/package/install is an operation profile, not a separate
@@ -61,7 +72,7 @@ project-local configuration.
 | assurance | `code-assurance` |
 | release | `release-delivery` |
 | evolve | `evolve` |
-| `updated-cursor` | `instruction-update-proposal` |
+| instruction update | `instruction-update-proposal` |
 | delivery/build runner | delivery/build profile, not process |
 
 ## CLI Checks

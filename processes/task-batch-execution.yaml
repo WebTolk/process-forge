@@ -310,6 +310,42 @@ forbidden_actions:
 - create_background_runner
 - claim_task_without_assignment_record
 - write_private_absolute_paths_to_public_files
+evolve:
+  enabled: true
+  mode: optional
+  timing: end_of_run
+  default_scope: project
+  candidate_targets:
+  - knowledge_package
+  - template_package
+  - process_definition
+  - delivery_profile
+  - project_rule
+  - workplace_rule
+  - platform_contract
+  extraction_hints:
+  - Split candidates when an observation contains project-specific and platform-general parts.
+  - Default to the narrowest safe scope and require evidence before parent-platform promotion.
+  - reusable rule
+  - missing knowledge
+  - template improvement
+  - regression check
+  - process improvement
+  candidate_targeting:
+    default_scope: project
+    require_applicability: true
+    require_target: true
+    default_to_narrowest_scope: true
+  required_outputs:
+  - evolution-report
+  privacy:
+    default_sensitivity: internal
+    export_requires_sanitization: true
+    allow_private_paths: false
+  apply_policy:
+    auto_apply_global: false
+    create_candidates_only: true
+
 evolution_policy:
   active_run_upgrade:
     default: manual_only

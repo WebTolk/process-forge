@@ -58,7 +58,6 @@ metadata:
     assurance: code-assurance
     release: release-delivery
     evolve: evolve
-    updated-cursor: instruction-update-proposal
     delivery-build-runner: delivery-build-profile
   delivery_profile_boundary:
     rule: Delivery/build/package/install is an operation profile used inside assurance or release-delivery, not a separate process id.
@@ -601,7 +600,7 @@ artifact_definitions:
   not_applicable_requires:
   - reason
   - evidence
-  path_hint: .pf/artifacts/evolution-report.md
+  path_hint: .pf/artifacts/evolve/evolution-report.md
 - id: updated-rules-or-extensions
   title: Updated Rules Or Extensions
   owner_role: orchestrator
@@ -622,7 +621,6 @@ artifact_definitions:
   type: markdown
   required: false
   required_when: The run discovers agent instruction changes.
-  replaces_legacy_artifact: updated-cursor
   not_applicable_requires:
   - reason
   - evidence
@@ -720,6 +718,42 @@ forbidden_actions:
 - skip_required_review
 - use_delivery_profile_as_process_id
 - create_platform_specific_delivery_process_in_public_core
+evolve:
+  enabled: true
+  mode: optional
+  timing: end_of_run
+  default_scope: project
+  candidate_targets:
+  - knowledge_package
+  - delivery_profile
+  - process_definition
+  - project_rule
+  - platform_contract
+  extraction_hints:
+  - Split candidates when an observation contains project-specific and platform-general parts.
+  - Default to the narrowest safe scope and require evidence before parent-platform promotion.
+  - reusable rule
+  - missing knowledge
+  - Split build-command or release-operation findings into delivery_profile candidates.
+  - Split process-flow findings into process_definition candidates.
+  - Split project-only constraints into project_rule candidates.
+  - Route platform constraints to platform_contract only with explicit applicability.
+  - Do not promote child-platform observations to a parent platform without reviewed evidence.
+  candidate_targeting:
+    default_scope: project
+    require_applicability: true
+    require_target: true
+    default_to_narrowest_scope: true
+  required_outputs:
+  - evolution-report
+  privacy:
+    default_sensitivity: internal
+    export_requires_sanitization: true
+    allow_private_paths: false
+  apply_policy:
+    auto_apply_global: false
+    create_candidates_only: true
+
 evolution_policy:
   active_run_upgrade:
     default: manual_only

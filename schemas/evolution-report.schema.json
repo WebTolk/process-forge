@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/evolution-report.schema.json",
+  "title": "Evolution Report",
+  "type": "object",
+  "required": ["schema_version", "kind", "id", "process_id", "run_id", "generated_at", "status", "evolve", "candidates"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "kind": { "const": "processforge.evolution_report" },
+    "id": { "type": "string", "minLength": 1 },
+    "process_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string" },
+    "generated_at": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["created", "completed", "skipped"] },
+    "evolve": { "type": "object", "additionalProperties": true },
+    "candidates": { "type": "array", "items": { "type": "string" } },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

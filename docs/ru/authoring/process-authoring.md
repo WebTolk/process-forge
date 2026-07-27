@@ -69,3 +69,41 @@ error_handling:
 `organized_required` не проходит `process-doctor` в effective simple project
 без явного override. `simple_allowed` не должен требовать Director inbox.
 `organized_optional` адаптируется к effective mode проекта.
+
+## Evolve Decision
+
+Process authoring ? standard flow ?????? ???????? ????? top-level `evolve` decision. ???? `evolve.enabled=true`, answers ????????? `mode`, `timing`, `default_scope`, `candidate_targets`, `extraction_hints`, `privacy`, `apply_policy` ? `required_outputs`. ???? `evolve.enabled=false`, ????? ??????? ? `evolve.reason` ??? `evolve.decision.reason`.
+
+Materializer ????????? `evolve` ?? answers ? `processes/<process-id>.yaml`. `evolve` ?? ?????? ???? ?????? ? `metadata`, ?? ???????? software-only ???????, ?? ??????? LLM ? ?? ?????? global packages ?????????????.
+
+## Candidate Targeting
+
+Если `evolve.enabled=true`, process authoring должен спросить не только
+`candidate_targets`, но и candidate targeting:
+
+```yaml
+evolve:
+  candidate_targeting:
+    ask_target_layer: true
+    ask_applicability: true
+    ask_not_applicable: true
+    ask_generalization_level: true
+    default_to_narrowest_scope: true
+```
+
+Materializer сохраняет в process definition:
+
+```yaml
+evolve:
+  extraction_hints:
+    - Split candidates when an observation contains project-specific and platform-general parts.
+  candidate_targeting:
+    default_scope: project
+    require_applicability: true
+    require_target: true
+    default_to_narrowest_scope: true
+```
+
+Observation по умолчанию остаётся в самом узком безопасном scope. Если вывод
+смешивает project-specific часть, platform knowledge, delivery profile и
+process improvement, он должен быть split на несколько candidates.

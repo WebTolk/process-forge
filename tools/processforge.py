@@ -352,6 +352,47 @@ SECRET_VALUE_PATTERNS = [
     re.compile(r"-----BEGIN [A-Z ]+PRIVATE KEY-----"),
 ]
 
+EVOLVE_MODES = {"disabled", "optional", "required"}
+EVOLVE_TIMINGS = {"end_of_stage", "end_of_task", "end_of_run"}
+EVOLVE_SCOPES = {"project", "workplace", "package", "platform", "core"}
+EVOLVE_CANDIDATE_TARGETS = {
+    "knowledge_package",
+    "template_package",
+    "process_definition",
+    "delivery_profile",
+    "project_rule",
+    "workplace_rule",
+    "platform_contract",
+    "core_docs",
+    "core_schema",
+    "regression_check",
+}
+EVOLVE_APPLICABILITY_SCOPES = {"project", "workplace", "package", "platform", "parent_platform", "platform_family", "process", "core"}
+EVOLVE_GENERALIZATION_LEVELS = {
+    "narrow_observation",
+    "project_rule",
+    "package_rule",
+    "platform_rule",
+    "parent_platform_candidate",
+    "parent_platform_rule",
+    "universal_rule",
+}
+EVOLVE_PROMOTION_STATUSES = {"not_requested", "proposed", "needs_more_evidence", "approved", "rejected"}
+EVOLVE_CANDIDATE_CATEGORIES = {
+    "domain",
+    "architecture",
+    "implementation",
+    "assurance",
+    "delivery",
+    "tooling",
+    "process",
+    "docs",
+    "content",
+    "seo",
+    "media",
+    "generic",
+}
+
 DEFAULT_PATH_CONSTANTS = {
     "PF_WORKPLACE": ".",
     "PF_DISTRIBUTION": "distributions/processforge",
@@ -4807,6 +4848,27 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_process_authoring_materialization_parity", [sys.executable, str(root / "tools" / "smoke_process_authoring_materialization_parity.py")], 180),
         ReleaseCommand("smoke_process_definition_schema_contract", [sys.executable, str(root / "tools" / "smoke_process_definition_schema_contract.py")], 180),
         ReleaseCommand("smoke_builtin_process_pack_completeness", [sys.executable, str(root / "tools" / "smoke_builtin_process_pack_completeness.py")], 120),
+        ReleaseCommand("smoke_evolve_process_agnostic_contract", [sys.executable, str(root / "tools" / "smoke_evolve_process_agnostic_contract.py")], 120),
+        ReleaseCommand("smoke_process_authoring_evolve_questions", [sys.executable, str(root / "tools" / "smoke_process_authoring_evolve_questions.py")], 120),
+        ReleaseCommand("smoke_process_authoring_materializes_evolve", [sys.executable, str(root / "tools" / "smoke_process_authoring_materializes_evolve.py")], 180),
+        ReleaseCommand("smoke_generated_processes_include_evolve", [sys.executable, str(root / "tools" / "smoke_generated_processes_include_evolve.py")], 120),
+        ReleaseCommand("smoke_builtin_processes_explicit_evolve", [sys.executable, str(root / "tools" / "smoke_builtin_processes_explicit_evolve.py")], 120),
+        ReleaseCommand("smoke_evolve_candidate_schema", [sys.executable, str(root / "tools" / "smoke_evolve_candidate_schema.py")], 120),
+        ReleaseCommand("smoke_evolve_candidate_targeting_schema", [sys.executable, str(root / "tools" / "smoke_evolve_candidate_targeting_schema.py")], 180),
+        ReleaseCommand("smoke_evolve_candidate_narrowest_scope", [sys.executable, str(root / "tools" / "smoke_evolve_candidate_narrowest_scope.py")], 180),
+        ReleaseCommand("smoke_evolve_candidate_split_guidance", [sys.executable, str(root / "tools" / "smoke_evolve_candidate_split_guidance.py")], 120),
+        ReleaseCommand("smoke_workplace_learning_queue", [sys.executable, str(root / "tools" / "smoke_workplace_learning_queue.py")], 180),
+        ReleaseCommand("smoke_evolve_candidate_export", [sys.executable, str(root / "tools" / "smoke_evolve_candidate_export.py")], 180),
+        ReleaseCommand("smoke_evolve_privacy_sanitizer", [sys.executable, str(root / "tools" / "smoke_evolve_privacy_sanitizer.py")], 180),
+        ReleaseCommand("smoke_evolve_targeting_privacy_sanitizer", [sys.executable, str(root / "tools" / "smoke_evolve_targeting_privacy_sanitizer.py")], 180),
+        ReleaseCommand("smoke_knowledge_hub_import", [sys.executable, str(root / "tools" / "smoke_knowledge_hub_import.py")], 180),
+        ReleaseCommand("smoke_knowledge_hub_routes_by_target", [sys.executable, str(root / "tools" / "smoke_knowledge_hub_routes_by_target.py")], 180),
+        ReleaseCommand("smoke_child_platform_not_promoted_to_parent", [sys.executable, str(root / "tools" / "smoke_child_platform_not_promoted_to_parent.py")], 180),
+        ReleaseCommand("smoke_knowledge_package_build_from_candidates", [sys.executable, str(root / "tools" / "smoke_knowledge_package_build_from_candidates.py")], 180),
+        ReleaseCommand("smoke_knowledge_package_release_update_manifest", [sys.executable, str(root / "tools" / "smoke_knowledge_package_release_update_manifest.py")], 180),
+        ReleaseCommand("smoke_evolve_learning_loop_end_to_end", [sys.executable, str(root / "tools" / "smoke_evolve_learning_loop_end_to_end.py")], 240),
+        ReleaseCommand("smoke_process_authoring_evolve_targeting", [sys.executable, str(root / "tools" / "smoke_process_authoring_evolve_targeting.py")], 180),
+        ReleaseCommand("smoke_software_process_uses_common_evolve", [sys.executable, str(root / "tools" / "smoke_software_process_uses_common_evolve.py")], 120),
         ReleaseCommand("smoke_software_lifecycle_process_contract", [sys.executable, str(root / "tools" / "smoke_software_lifecycle_process_contract.py")], 120),
         ReleaseCommand("smoke_software_lifecycle_artifacts", [sys.executable, str(root / "tools" / "smoke_software_lifecycle_artifacts.py")], 120),
         ReleaseCommand("smoke_software_lifecycle_description_alignment", [sys.executable, str(root / "tools" / "smoke_software_lifecycle_description_alignment.py")], 120),
@@ -9477,6 +9539,146 @@ def string_list(value: Any) -> list[str]:
     return []
 
 
+def default_evolve_block(*, answers: bool = False) -> dict[str, Any]:
+    block: dict[str, Any] = {
+        "enabled": True,
+        "mode": "optional",
+        "timing": "end_of_run",
+        "default_scope": "project",
+        "candidate_targets": [
+            "knowledge_package",
+            "template_package",
+            "process_definition",
+        ],
+        "extraction_hints": [
+            "reusable rule",
+            "missing knowledge",
+            "template improvement",
+            "regression check",
+            "process improvement",
+            "Split candidates when an observation contains project-specific and platform-general parts.",
+            "Default to the narrowest safe scope and require evidence before parent-platform promotion.",
+        ],
+        "candidate_targeting": {
+            "default_scope": "project",
+            "require_applicability": True,
+            "require_target": True,
+            "ask_target_layer": True,
+            "ask_applicability": True,
+            "ask_not_applicable": True,
+            "ask_generalization_level": True,
+            "default_to_narrowest_scope": True,
+        },
+        "required_outputs": ["evolution-report"],
+        "privacy": {
+            "default_sensitivity": "internal",
+            "export_requires_sanitization": True,
+            "allow_private_paths": False,
+        },
+        "apply_policy": {
+            "auto_apply_global": False,
+            "create_candidates_only": True,
+        },
+    }
+    if answers:
+        block["decision"] = {
+            "value": "enabled",
+            "reason": "This process may produce reusable knowledge.",
+        }
+        block["prompts"] = [
+            "What reusable knowledge may appear during this process?",
+            "Which outputs are candidates for shared packages?",
+            "What must remain project-private?",
+        ]
+    return block
+
+
+def normalize_evolve_block(raw: Any, *, answers: bool = False) -> dict[str, Any]:
+    block = default_evolve_block(answers=answers)
+    if isinstance(raw, dict):
+        block.update({key: value for key, value in raw.items() if value not in (None, "")})
+        privacy = default_evolve_block(answers=answers)["privacy"]
+        if isinstance(raw.get("privacy"), dict):
+            privacy.update(raw["privacy"])
+        block["privacy"] = privacy
+        apply_policy = default_evolve_block(answers=answers)["apply_policy"]
+        if isinstance(raw.get("apply_policy"), dict):
+            apply_policy.update(raw["apply_policy"])
+        block["apply_policy"] = apply_policy
+        targeting = default_evolve_block(answers=answers)["candidate_targeting"]
+        if isinstance(raw.get("candidate_targeting"), dict):
+            targeting.update(raw["candidate_targeting"])
+        block["candidate_targeting"] = targeting
+        if answers:
+            decision = default_evolve_block(answers=True)["decision"]
+            if isinstance(raw.get("decision"), dict):
+                decision.update(raw["decision"])
+            block["decision"] = decision
+    enabled = bool(block.get("enabled", True))
+    block["enabled"] = enabled
+    if not enabled:
+        block["mode"] = "disabled"
+        if answers:
+            decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
+            decision["value"] = "disabled"
+            block["decision"] = decision
+        for optional_key in ["timing", "default_scope", "candidate_targets", "candidate_targeting", "extraction_hints", "required_outputs", "privacy", "apply_policy", "prompts"]:
+            if optional_key in block and optional_key not in {"privacy", "apply_policy"}:
+                block.pop(optional_key, None)
+    else:
+        block["mode"] = str(block.get("mode") or "optional")
+        block["timing"] = str(block.get("timing") or "end_of_run")
+        block["default_scope"] = str(block.get("default_scope") or "project")
+        block["candidate_targets"] = string_list(block.get("candidate_targets")) or default_evolve_block()["candidate_targets"]
+        block["extraction_hints"] = string_list(block.get("extraction_hints")) or default_evolve_block()["extraction_hints"]
+        if not isinstance(block.get("candidate_targeting"), dict):
+            block["candidate_targeting"] = default_evolve_block()["candidate_targeting"]
+        block["required_outputs"] = string_list(block.get("required_outputs")) or ["evolution-report"]
+        if answers:
+            block["prompts"] = string_list(block.get("prompts")) or default_evolve_block(answers=True)["prompts"]
+            decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
+            decision["value"] = "enabled"
+            decision.setdefault("reason", "This process may produce reusable knowledge.")
+            block["decision"] = decision
+    return block
+
+
+def validate_evolve_block(process_id: str, block: Any, *, hard: bool) -> list[Check]:
+    checks: list[Check] = []
+    level = "FAIL" if hard else "WARN"
+    if not isinstance(block, dict):
+        checks.append(check(level, f"{process_id} evolve declared"))
+        return checks
+    enabled = block.get("enabled")
+    checks.append(check("PASS" if isinstance(enabled, bool) else level, f"{process_id} evolve.enabled explicit"))
+    mode = str(block.get("mode") or "")
+    checks.append(check("PASS" if mode in EVOLVE_MODES else level, f"{process_id} evolve.mode valid"))
+    if enabled is False:
+        decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
+        reason = str(block.get("reason") or decision.get("reason") or "")
+        checks.append(check("PASS" if mode == "disabled" else level, f"{process_id} disabled evolve uses disabled mode"))
+        checks.append(check("PASS" if reason.strip() else "FAIL", f"{process_id} disabled evolve has reason"))
+        return checks
+    checks.append(check("PASS" if str(block.get("timing") or "") in EVOLVE_TIMINGS else level, f"{process_id} evolve.timing valid"))
+    checks.append(check("PASS" if str(block.get("default_scope") or "") in EVOLVE_SCOPES else level, f"{process_id} evolve.default_scope valid"))
+    targets = string_list(block.get("candidate_targets"))
+    bad_targets = sorted(set(targets) - EVOLVE_CANDIDATE_TARGETS)
+    checks.append(check("PASS" if targets and not bad_targets else level, f"{process_id} evolve.candidate_targets valid"))
+    checks.append(check("PASS" if string_list(block.get("required_outputs")) else level, f"{process_id} evolve.required_outputs declared"))
+    targeting = block.get("candidate_targeting") if isinstance(block.get("candidate_targeting"), dict) else {}
+    checks.append(check("PASS" if targeting.get("require_target") is True and targeting.get("require_applicability") is True else level, f"{process_id} evolve candidate targeting requires target/applicability"))
+    checks.append(check("PASS" if targeting.get("default_to_narrowest_scope") is True else level, f"{process_id} evolve defaults to narrowest safe scope"))
+    privacy = block.get("privacy") if isinstance(block.get("privacy"), dict) else {}
+    apply_policy = block.get("apply_policy") if isinstance(block.get("apply_policy"), dict) else {}
+    checks.append(check("PASS" if privacy.get("export_requires_sanitization") is True and privacy.get("allow_private_paths") is False else level, f"{process_id} evolve privacy boundary declared"))
+    checks.append(check("PASS" if apply_policy.get("auto_apply_global") is False and apply_policy.get("create_candidates_only") is True else level, f"{process_id} evolve apply policy creates candidates only"))
+    return checks
+
+
+def candidate_id_from_data(data: dict[str, Any], fallback: str = "candidate") -> str:
+    return safe_id(str(data.get("id") or data.get("candidate_id") or fallback), "candidate")
+
+
 def title_from_id(value: str) -> str:
     return " ".join(part.capitalize() for part in safe_id(value, "item").split("-"))
 
@@ -9515,6 +9717,7 @@ def default_process_authoring_answers(process_id: str, title: str, description: 
             "mode": "none",
             "fallback_if_no_director": "needs_operator",
         },
+        "evolve": default_evolve_block(answers=True),
         "roles": [
             {"id": "author", "title": "Author", "responsibility": "Creates the main work artifacts."},
             {"id": "reviewer", "title": "Reviewer", "responsibility": "Checks quality gates before handoff."},
@@ -9614,6 +9817,7 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
         "artifact_definitions",
         "gates",
         "hooks",
+        "evolve",
         "evolution_policy",
         "expected_artifacts",
         "process_transitions",
@@ -9629,6 +9833,7 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
             base[key] = raw[key]
     if "artifact_definitions" in raw and "artifacts" not in raw:
         base["artifacts"] = raw["artifact_definitions"]
+    base["evolve"] = normalize_evolve_block(base.get("evolve"), answers=True)
     for key in ["required_capabilities", "required_packages", "required_templates", "allowed_tools", "forbidden_actions"]:
         if key in raw:
             base[key] = string_list(raw[key])
@@ -9784,6 +9989,7 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         "required_templates": string_list(answers.get("required_templates")) or ["artifact-template"],
         "allowed_tools": string_list(answers.get("allowed_tools")) or ["processforge-cli"],
         "forbidden_actions": string_list(answers.get("forbidden_actions")) or ["write_private_absolute_paths_to_public_files"],
+        "evolve": normalize_evolve_block(answers.get("evolve")),
         "stage_completion": answers.get("stage_completion") if isinstance(answers.get("stage_completion"), dict) else {"handoff_note_required": handoff_note_required},
         "run_completion": answers.get("run_completion") if isinstance(answers.get("run_completion"), dict) else {"summary_required": True, "handoff_artifact_required": handoff_note_required},
         "evolution_policy": answers.get("evolution_policy") if isinstance(answers.get("evolution_policy"), dict) else {
@@ -9825,6 +10031,14 @@ def render_authoring_questions(answers: dict[str, Any]) -> str:
             "- Should worker agents submit reports to Director inbox?",
             "- Should errors go to Director inbox, a process route, or the operator?",
             "- If the project is simple, should Director-related features be disabled, optional, or fail validation?",
+            "- Is common process evolve enabled or disabled for this process?",
+            "- If evolve is disabled, what reason should be recorded in `evolve.reason`?",
+            "- If evolve is enabled, which mode, timing, default scope, candidate targets, candidate targeting, extraction hints, privacy boundary, apply policy, and required outputs apply?",
+            "- Which target layer should receive each knowledge candidate?",
+            "- Where does each candidate apply, where does it not apply, and which source context proves that boundary?",
+            "- Should a mixed observation be split into multiple candidates before any generalization or promotion?",
+            "- What reusable knowledge may appear during this process?",
+            "- Which outputs are candidates for shared packages, and what must remain project-private?",
             "- Which examples should prove the generated process is usable?",
             "",
             "Answers are stored in `answers.yaml`; the generated candidate is `draft.process.yaml`.",
@@ -9856,6 +10070,9 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
     checks.append(check("PASS" if not contains_secret_value(text) else "FAIL", "authoring data contains no secret-like values"))
     for key in ["schema_version", "id", "name", "version", "status", "description", "stages", "roles", "artifact_definitions", "gates", "evolution_policy"]:
         checks.append(check("PASS" if key in process else "FAIL", f"process.{key} present"))
+    checks.extend(validate_evolve_block(str(process.get("id") or "process"), process.get("evolve"), hard=bool(answers and "evolve" in answers)))
+    if answers is not None and answers and "evolve" not in answers:
+        checks.append(check("FAIL", "authoring answers include explicit evolve decision"))
     execution_mode = str(process.get("execution_mode") or "single_agent")
     checks.append(check("PASS" if execution_mode in {"single_agent", "single_agent_with_subagents", "orchestrated_agents", "process_factory"} else "FAIL", f"process.execution_mode valid: {execution_mode}"))
     coordination_requirements = process.get("coordination_requirements") if isinstance(process.get("coordination_requirements"), dict) else {}
@@ -9929,6 +10146,8 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     raw_answers = load_answers(Path(args.answers).expanduser().resolve()) if args.answers else {}
+    if args.answers and "evolve" not in raw_answers:
+        raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
     fallback_id = args.id or str((raw_answers.get("process") or {}).get("id") if isinstance(raw_answers.get("process"), dict) else raw_answers.get("id") or "new-process")
     answers = normalize_process_authoring_answers(raw_answers, fallback_id, args.title or "")
     if args.description:
@@ -10133,6 +10352,8 @@ def command_process_authoring_apply(args: argparse.Namespace) -> int:
 def command_process_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     raw_answers = load_answers(Path(args.answers).expanduser().resolve()) if args.answers else {}
+    if args.answers and "evolve" not in raw_answers:
+        raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
     fallback_id = args.id or str((raw_answers.get("process") or {}).get("id") if isinstance(raw_answers.get("process"), dict) else raw_answers.get("id") or "new-process")
     answers = normalize_process_authoring_answers(raw_answers, fallback_id, args.title or "")
     process_id = safe_id(str(answers["process"]["id"]), "new-process")
@@ -10264,6 +10485,7 @@ def validate_process_contract(
     checks.append(check("PASS" if coordination.get("mode") in PROCESS_COORDINATION_MODES else ("FAIL" if hard else "WARN"), f"{process_id} coordination_requirements.mode declared"))
     error_handling = process.get("error_handling") if isinstance(process.get("error_handling"), dict) else {}
     checks.append(check("PASS" if error_handling.get("mode") in ERROR_WORKFLOW_MODES and "enabled" in error_handling else ("FAIL" if hard else "WARN"), f"{process_id} error_handling declared"))
+    checks.extend(validate_evolve_block(process_id, process.get("evolve"), hard=hard))
     checks.append(check("PASS" if isinstance(process.get("responsibility_boundaries"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} responsibility_boundaries declared"))
     if process.get("execution_mode") in {"single_agent_with_subagents", "orchestrated_agents"}:
         checks.append(check("PASS" if isinstance(process.get("subagent_policy"), dict) else ("FAIL" if hard else "WARN"), f"{process_id} subagent_policy declared"))
@@ -10525,6 +10747,533 @@ def command_process_describe(args: argparse.Namespace) -> int:
     return 0
 
 
+def evolve_artifact_root(project_root: Path) -> Path:
+    return locate_flow_root(project_root) / "artifacts" / "evolve"
+
+
+def learning_root(workplace: Path) -> Path:
+    return normalize_workplace_path(workplace) / "learning"
+
+
+def ensure_learning_layout(workplace: Path) -> Path:
+    root = learning_root(workplace)
+    for subdir in ["inbox", "bundles"]:
+        (root / subdir).mkdir(parents=True, exist_ok=True)
+    index = root / "index.yaml"
+    if not index.is_file():
+        write_yaml_file(index, {"schema_version": 1, "kind": "processforge.learning_queue", "candidates": []})
+    exports = root / "exports.ndjson"
+    exports.parent.mkdir(parents=True, exist_ok=True)
+    if not exports.is_file():
+        exports.write_text("", encoding="utf-8")
+    return root
+
+
+def evolve_sanitizer_findings(text: str) -> list[str]:
+    findings: list[str] = []
+    if not is_public_path_safe(text):
+        findings.append("private_absolute_path")
+    if contains_secret_value(text):
+        findings.append("secret_like_value")
+    if re.search(r"(?im)^\s*[A-Za-z_][A-Za-z0-9_]*\s*=\s*[^\s#]+", text) and ".env" in text.lower():
+        findings.append("env_value")
+    if re.search(r"https?://[^\s/@]+:[^\s/@]+@", text):
+        findings.append("credentialed_repo_url")
+    if len(text) > 20000:
+        findings.append("large_source_dump")
+    return sorted(set(findings))
+
+
+def evolve_sanitize_text(text: str) -> str:
+    sanitized = text
+    sanitized = re.sub(r"(?<![A-Za-z])[A-Za-z]:" + re.escape(BACKSLASH) + r"[^\n\r\t ]+", "<redacted-path>", sanitized)
+    sanitized = re.sub(r"(?<![A-Za-z])[A-Za-z]:/[^\n\r\t ]+", "<redacted-path>", sanitized)
+    sanitized = re.sub(r"/(?:home|Users|srv)/[^\n\r\t ]+", "<redacted-path>", sanitized)
+    sanitized = re.sub(r"(?i)(api[_-]?key|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{8,}", r"\1: <redacted-secret>", sanitized)
+    sanitized = re.sub(r"https?://([^\s/@]+):([^\s/@]+)@", "https://<redacted-credentials>@", sanitized)
+    sanitized = re.sub(r"-----BEGIN [A-Z ]+PRIVATE KEY-----.*?-----END [A-Z ]+PRIVATE KEY-----", "<redacted-private-key>", sanitized, flags=re.DOTALL)
+    return sanitized
+
+
+def evolve_sanitize_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {key: evolve_sanitize_value(child) for key, child in value.items()}
+    if isinstance(value, list):
+        return [evolve_sanitize_value(item) for item in value]
+    if isinstance(value, str):
+        return evolve_sanitize_text(value)
+    return value
+
+
+def candidate_target(data: dict[str, Any]) -> dict[str, Any]:
+    target = data.get("target")
+    if isinstance(target, dict):
+        return target
+    legacy_type = str(data.get("target_type") or target or "")
+    legacy_id = str(data.get("target_package") or data.get("package") or data.get("target_id") or "")
+    if legacy_type:
+        return {"type": legacy_type, "id": legacy_id}
+    return {}
+
+
+def candidate_target_type(data: dict[str, Any]) -> str:
+    return str(candidate_target(data).get("type") or "")
+
+
+def candidate_target_id(data: dict[str, Any]) -> str:
+    return str(candidate_target(data).get("id") or "")
+
+
+def candidate_routing_destination(data: dict[str, Any]) -> dict[str, Any]:
+    routing = data.get("routing") if isinstance(data.get("routing"), dict) else {}
+    destination = routing.get("recommended_destination")
+    return destination if isinstance(destination, dict) else {}
+
+
+def candidate_destination_matches(data: dict[str, Any], package_id: str) -> bool:
+    destination = candidate_routing_destination(data)
+    if str(destination.get("id") or "") == package_id:
+        return True
+    return candidate_target_id(data) == package_id
+
+
+def candidate_promotion_status(data: dict[str, Any]) -> str:
+    promotion = data.get("promotion") if isinstance(data.get("promotion"), dict) else {}
+    return str(promotion.get("status") or "not_requested")
+
+
+def candidate_generalization_level(data: dict[str, Any]) -> str:
+    generalization = data.get("generalization") if isinstance(data.get("generalization"), dict) else {}
+    return str(generalization.get("level") or "")
+
+
+def candidate_is_parent_promotion_candidate(data: dict[str, Any]) -> bool:
+    level = candidate_generalization_level(data)
+    applicability = data.get("applicability") if isinstance(data.get("applicability"), dict) else {}
+    return level in {"parent_platform_candidate", "parent_platform_rule", "universal_rule"} or str(applicability.get("scope") or "") in {"parent_platform", "platform_family", "core"}
+
+
+def candidate_ready_for_curated_package(data: dict[str, Any]) -> bool:
+    if not candidate_is_parent_promotion_candidate(data):
+        return True
+    return candidate_promotion_status(data) == "approved" or candidate_generalization_level(data) in {"parent_platform_rule", "universal_rule"}
+
+
+def validate_candidate_targeting(data: dict[str, Any], *, strict: bool = True) -> list[Check]:
+    checks: list[Check] = []
+    level = "FAIL" if strict else "WARN"
+    target = candidate_target(data)
+    target_type = str(target.get("type") or "")
+    target_id = str(target.get("id") or "")
+    checks.append(check("PASS" if target_type in EVOLVE_CANDIDATE_TARGETS else "FAIL", f"candidate target.type valid: {target_type}"))
+    checks.append(check("PASS" if target_id.strip() else "FAIL", "candidate target.id declared"))
+    applicability = data.get("applicability") if isinstance(data.get("applicability"), dict) else {}
+    checks.append(check("PASS" if applicability else level, "candidate applicability declared"))
+    scope = str(applicability.get("scope") or "")
+    checks.append(check("PASS" if scope in EVOLVE_APPLICABILITY_SCOPES else level, f"candidate applicability.scope valid: {scope}"))
+    source_context = data.get("source_context") if isinstance(data.get("source_context"), dict) else {}
+    checks.append(check("PASS" if isinstance(source_context, dict) and source_context else "WARN", "candidate source_context declared"))
+    generalization = data.get("generalization") if isinstance(data.get("generalization"), dict) else {}
+    level_value = str(generalization.get("level") or "")
+    if level_value:
+        checks.append(check("PASS" if level_value in EVOLVE_GENERALIZATION_LEVELS else "FAIL", f"candidate generalization.level valid: {level_value}"))
+    promotion = data.get("promotion") if isinstance(data.get("promotion"), dict) else {}
+    promotion_status = str(promotion.get("status") or "not_requested")
+    checks.append(check("PASS" if promotion_status in EVOLVE_PROMOTION_STATUSES else "FAIL", f"candidate promotion.status valid: {promotion_status}"))
+    if target_type in {"knowledge_package", "platform_contract"} and scope in {"parent_platform", "platform_family", "core"}:
+        checks.append(check("PASS" if level_value in {"parent_platform_candidate", "parent_platform_rule", "universal_rule"} else level, "parent/platform-wide candidate has explicit generalization metadata"))
+    inheritance = applicability.get("inheritance") if isinstance(applicability.get("inheritance"), dict) else {}
+    observed = string_list(inheritance.get("observed_on"))
+    parents = string_list(inheritance.get("parent_platforms"))
+    if parents and observed and target_id in parents and not bool(inheritance.get("safe_for_parent", False)):
+        checks.append(check(level, "child platform observation targets parent without safe_for_parent evidence"))
+    confidence = data.get("applicability_confidence") if isinstance(data.get("applicability_confidence"), dict) else {}
+    evidence_count = confidence.get("evidence_count")
+    if scope in {"parent_platform", "platform_family", "core"}:
+        checks.append(check("PASS" if isinstance(evidence_count, int) and evidence_count > 1 else "WARN", "broad applicability has multi-evidence support or remains unreviewed"))
+    return checks
+
+
+def validate_knowledge_candidate(data: dict[str, Any]) -> list[Check]:
+    checks: list[Check] = []
+    checks.append(check("PASS" if data.get("kind") == "processforge.knowledge_candidate" else "FAIL", "candidate kind is processforge.knowledge_candidate"))
+    candidate_id = candidate_id_from_data(data)
+    checks.append(check("PASS" if candidate_id == str(data.get("id") or data.get("candidate_id")) else "FAIL", "candidate id is portable"))
+    category = str(data.get("category") or "generic")
+    checks.extend(validate_candidate_targeting(data, strict=True))
+    checks.append(check("PASS" if category in EVOLVE_CANDIDATE_CATEGORIES else "FAIL", f"candidate category valid: {category}"))
+    checks.append(check("PASS" if str(data.get("summary") or "").strip() else "FAIL", "candidate summary declared"))
+    findings = evolve_sanitizer_findings(json.dumps(data, ensure_ascii=False))
+    checks.append(check("PASS" if not findings else "FAIL", "candidate has no unsanitized private paths or secrets" + (f": {', '.join(findings)}" if findings else "")))
+    return checks
+
+
+def queue_candidate(workplace: Path, source: Path, *, status: str = "queued") -> Path:
+    root = ensure_learning_layout(workplace)
+    data = read_yaml_file(source)
+    failures = [item.message for item in validate_knowledge_candidate(data) if item.level == "FAIL"]
+    if failures:
+        raise SystemExit("FAIL: invalid knowledge candidate: " + "; ".join(failures))
+    candidate_id = candidate_id_from_data(data, source.stem)
+    data["id"] = candidate_id
+    state = data.get("status") if isinstance(data.get("status"), dict) else {}
+    state["local"] = status
+    data["status"] = state
+    target = root / "inbox" / f"{candidate_id}.yaml"
+    write_yaml_file(target, data)
+    index_path = root / "index.yaml"
+    index = read_yaml_file(index_path) if index_path.is_file() else {"schema_version": 1, "kind": "processforge.learning_queue", "candidates": []}
+    candidates = [item for item in as_list(index.get("candidates")) if isinstance(item, dict) and item.get("id") != candidate_id]
+    candidates.append(
+        {
+            "id": candidate_id,
+            "target": candidate_target(data),
+            "target_id": candidate_target_id(data),
+            "target_type": candidate_target_type(data),
+            "routing": data.get("routing") if isinstance(data.get("routing"), dict) else {},
+            "applicability_scope": str((data.get("applicability") or {}).get("scope") or "") if isinstance(data.get("applicability"), dict) else "",
+            "category": data.get("category", "generic"),
+            "sensitivity": (data.get("privacy") or {}).get("sensitivity", data.get("sensitivity", "internal")) if isinstance(data.get("privacy"), dict) else data.get("sensitivity", "internal"),
+            "status": status,
+            "path": f"inbox/{candidate_id}.yaml",
+            "queued_at": now_utc(),
+        }
+    )
+    index["candidates"] = sorted(candidates, key=lambda item: str(item.get("id")))
+    write_yaml_file(index_path, index)
+    return target
+
+
+def command_evolve_candidate_sanitize(args: argparse.Namespace) -> int:
+    path = Path(args.file).expanduser().resolve()
+    if not path.is_file():
+        raise SystemExit(f"FAIL: candidate file not found: {path}")
+    data = read_yaml_file(path)
+    sanitized_data = evolve_sanitize_value(data)
+    if not isinstance(sanitized_data, dict):
+        sanitized_data = data
+    privacy = sanitized_data.get("privacy") if isinstance(sanitized_data.get("privacy"), dict) else {}
+    privacy["sanitized"] = True
+    privacy["sanitized_at"] = now_utc()
+    sanitized_data["privacy"] = privacy
+    target = path.with_name(path.stem + ".sanitized" + path.suffix)
+    write_yaml_file(target, sanitized_data)
+    print(f"WROTE: {target}")
+    return 0
+
+
+def load_yaml_document_from_text(text: str) -> dict[str, Any]:
+    try:
+        import yaml  # type: ignore
+
+        data = yaml.safe_load(text)
+        return data if isinstance(data, dict) else {}
+    except ModuleNotFoundError:
+        return parse_simple_yaml(text)
+
+
+def command_evolve_candidate_create(args: argparse.Namespace) -> int:
+    workplace = Path(args.workplace).expanduser().resolve()
+    source = Path(args.from_file).expanduser()
+    if not source.is_absolute():
+        source = Path(args.project_root).expanduser().resolve() / source
+    target = queue_candidate(workplace, source)
+    print(f"QUEUED: {rel(target, normalize_workplace_path(workplace))}")
+    return 0
+
+
+def command_evolve_candidate_list(args: argparse.Namespace) -> int:
+    root = ensure_learning_layout(Path(args.workplace).expanduser().resolve())
+    index = read_yaml_file(root / "index.yaml")
+    for item in as_list(index.get("candidates")):
+        if isinstance(item, dict):
+            print(f"{item.get('id')}\\t{item.get('target')}\\t{item.get('category')}\\t{item.get('status')}")
+    return 0
+
+
+def command_evolve_candidate_export(args: argparse.Namespace) -> int:
+    workplace = Path(args.workplace).expanduser().resolve()
+    root = ensure_learning_layout(workplace)
+    target_package = str(args.target)
+    selected: list[tuple[Path, dict[str, Any]]] = []
+    for path in sorted((root / "inbox").glob("*.yaml")):
+        data = read_yaml_file(path)
+        if not candidate_destination_matches(data, target_package):
+            continue
+        findings = evolve_sanitizer_findings(dump_yaml(data))
+        if findings:
+            raise SystemExit("FAIL: candidate export blocked by sanitizer findings in " + path.name + ": " + ", ".join(findings))
+        selected.append((path, data))
+    if not selected:
+        raise SystemExit("FAIL: no exportable candidates for target " + target_package)
+    output = Path(args.output).expanduser()
+    if not output.is_absolute():
+        output = root / "bundles" / output
+    output.parent.mkdir(parents=True, exist_ok=True)
+    bundle_id = safe_id(output.stem or f"learning-export-{int(time.time())}", "learning-export")
+    manifest = {
+        "schema_version": 1,
+        "kind": "processforge.learning_export",
+        "bundle_id": bundle_id,
+        "target": target_package,
+        "exported_at": now_utc(),
+        "candidate_count": len(selected),
+        "candidates": [candidate_id_from_data(data, path.stem) for path, data in selected],
+    }
+    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("manifest.yaml", ensure_trailing_newline(dump_yaml(manifest)))
+        archive.writestr("evidence/evidence-digest.md", "# Evidence Digest\n\n- Sanitized candidate summaries only.\n")
+        for path, data in selected:
+            data = dict(data)
+            state = data.get("status") if isinstance(data.get("status"), dict) else {}
+            state["local"] = "exported"
+            state.setdefault("hub", None)
+            data["status"] = state
+            archive.writestr(f"candidates/{candidate_id_from_data(data, path.stem)}.yaml", ensure_trailing_newline(dump_yaml(data)))
+    bundle_copy = root / "bundles" / output.name
+    if output.resolve() != bundle_copy.resolve():
+        shutil.copyfile(output, bundle_copy)
+    with (root / "exports.ndjson").open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps({"bundle": output.name, "target": target_package, "exported_at": now_utc(), "count": len(selected)}, sort_keys=True) + "\n")
+    print(f"EXPORTED: {output}")
+    return 0
+
+
+def command_evolve_run(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    process_id = str(getattr(args, "process", None) or "software-feature-development")
+    process = read_yaml_file(process_definition_path(project_root, process_id))
+    evolve = process.get("evolve") if isinstance(process.get("evolve"), dict) else {}
+    checks = validate_evolve_block(process_id, evolve, hard=True)
+    failures = [item.message for item in checks if item.level == "FAIL"]
+    if failures:
+        raise SystemExit("FAIL: process evolve declaration invalid: " + "; ".join(failures))
+    root = evolve_artifact_root(project_root)
+    (root / "knowledge-candidates").mkdir(parents=True, exist_ok=True)
+    (root / "instruction-update-proposals").mkdir(parents=True, exist_ok=True)
+    (root / "process-improvement-proposals").mkdir(parents=True, exist_ok=True)
+    report = {
+        "schema_version": 1,
+        "kind": "processforge.evolution_report",
+        "id": safe_id(f"evolution-{getattr(args, 'run', '') or 'run'}", "evolution-report"),
+        "process_id": process_id,
+        "run_id": str(getattr(args, "run", "") or ""),
+        "generated_at": now_utc(),
+        "status": "created",
+        "evolve": evolve,
+        "candidates": [],
+    }
+    for candidate in getattr(args, "candidate_file", []) or []:
+        source = Path(candidate).expanduser()
+        if not source.is_absolute():
+            source = project_root / source
+        report["candidates"].append(candidate_id_from_data(read_yaml_file(source), source.stem))
+        if getattr(args, "workplace", None):
+            queue_candidate(Path(args.workplace).expanduser().resolve(), source)
+    write_yaml_file(root / "evolution-report.yaml", report)
+    (root / "evolution-report.md").write_text(
+        "\n".join(
+            [
+                f"# Evolution Report: {process_id}",
+                "",
+                f"- run_id: `{report['run_id']}`",
+                f"- mode: `{evolve.get('mode')}`",
+                f"- timing: `{evolve.get('timing')}`",
+                f"- candidates: `{len(report['candidates'])}`",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    print(f"WROTE: {rel(root / 'evolution-report.md', project_root)}")
+    print(f"WROTE: {rel(root / 'evolution-report.yaml', project_root)}")
+    return 0
+
+
+def ensure_hub_layout(hub: Path) -> Path:
+    for subdir in ["inbox/imports", "candidates", "packages", "updates"]:
+        (hub / subdir).mkdir(parents=True, exist_ok=True)
+    if not (hub / "hub.yaml").is_file():
+        write_yaml_file(hub / "hub.yaml", {"schema_version": 1, "kind": "processforge.knowledge_hub", "created_at": now_utc()})
+    if not (hub / "candidates" / "index.yaml").is_file():
+        write_yaml_file(hub / "candidates" / "index.yaml", {"schema_version": 1, "kind": "processforge.hub_candidate_index", "candidates": []})
+    return hub
+
+
+def command_knowledge_hub_init(args: argparse.Namespace) -> int:
+    hub = Path(args.hub).expanduser().resolve()
+    if not getattr(args, "apply", False):
+        print_plan("knowledge-hub-init dry run", [hub / "hub.yaml", hub / "candidates" / "index.yaml"], hub.parent)
+        return 0
+    ensure_hub_layout(hub)
+    print(f"WROTE: {hub / 'hub.yaml'}")
+    return 0
+
+
+def command_knowledge_hub_import(args: argparse.Namespace) -> int:
+    hub = ensure_hub_layout(Path(args.hub).expanduser().resolve())
+    bundle = Path(args.bundle).expanduser().resolve()
+    if not bundle.is_file():
+        raise SystemExit(f"FAIL: bundle not found: {bundle}")
+    if not getattr(args, "apply", False):
+        print(f"WOULD IMPORT: {bundle}")
+        return 0
+    bundle_id = safe_id(bundle.stem, "learning-export")
+    import_root = hub / "inbox" / "imports" / bundle_id
+    if import_root.exists():
+        shutil.rmtree(import_root)
+    import_root.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(bundle) as archive:
+        archive.extractall(import_root)
+    index_path = hub / "candidates" / "index.yaml"
+    index = read_yaml_file(index_path)
+    rows = [item for item in as_list(index.get("candidates")) if isinstance(item, dict)]
+    for candidate in sorted((import_root / "candidates").glob("*.yaml")):
+        data = read_yaml_file(candidate)
+        failures = [item.message for item in validate_knowledge_candidate(data) if item.level == "FAIL"]
+        if failures:
+            raise SystemExit("FAIL: imported candidate invalid: " + "; ".join(failures))
+        candidate_id = candidate_id_from_data(data, candidate.stem)
+        shutil.copyfile(candidate, hub / "candidates" / f"{candidate_id}.yaml")
+        rows = [item for item in rows if item.get("id") != candidate_id]
+        rows.append(
+            {
+                "id": candidate_id,
+                "target": candidate_target(data),
+                "target_id": candidate_target_id(data),
+                "target_type": candidate_target_type(data),
+                "routing": data.get("routing") if isinstance(data.get("routing"), dict) else {},
+                "applicability_scope": str((data.get("applicability") or {}).get("scope") or "") if isinstance(data.get("applicability"), dict) else "",
+                "generalization": data.get("generalization") if isinstance(data.get("generalization"), dict) else {},
+                "category": data.get("category", "generic"),
+                "status": "imported",
+                "path": f"candidates/{candidate_id}.yaml",
+            }
+        )
+    index["candidates"] = sorted(rows, key=lambda item: str(item.get("id")))
+    write_yaml_file(index_path, index)
+    print(f"IMPORTED: {bundle_id}")
+    return 0
+
+
+def command_knowledge_package_build_from_candidates(args: argparse.Namespace) -> int:
+    hub = ensure_hub_layout(Path(args.hub).expanduser().resolve())
+    package_id = str(args.package)
+    version = str(args.version)
+    package_root = hub / "packages" / package_id
+    candidates = [read_yaml_file(path) for path in sorted((hub / "candidates").glob("*.yaml"))]
+    candidates = [item for item in candidates if candidate_destination_matches(item, package_id)]
+    if not candidates:
+        raise SystemExit("FAIL: no candidates available for package " + package_id)
+    if not getattr(args, "apply", False):
+        print_plan(
+            "knowledge-package-build-from-candidates dry run",
+            [package_root / "resources" / "candidate-notes.md", package_root / "resources" / "incoming-learnings.md", package_root / "changelog.md"],
+            hub,
+        )
+        return 0
+    (package_root / "resources").mkdir(parents=True, exist_ok=True)
+    curated_candidates = [item for item in candidates if candidate_ready_for_curated_package(item)]
+    incoming_candidates = [item for item in candidates if not candidate_ready_for_curated_package(item)]
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for item in curated_candidates:
+        grouped.setdefault(str(item.get("category") or "generic"), []).append(item)
+    notes = ["# Candidate Notes", "", "Reviewed candidates staged for package curation.", ""]
+    if grouped:
+        for category in sorted(grouped):
+            notes.extend([f"## {category}", ""])
+            for item in grouped[category]:
+                notes.append(f"- `{candidate_id_from_data(item)}`: {item.get('summary', '')}")
+            notes.append("")
+    else:
+        notes.extend(["No curated candidates were approved for this package build.", ""])
+    resources = [{"id": "candidate-notes", "path": "resources/candidate-notes.md", "type": "markdown"}]
+    if incoming_candidates:
+        incoming = ["# Incoming Learnings", "", "## Unreviewed parent-platform candidates", ""]
+        for item in incoming_candidates:
+            promotion = item.get("promotion") if isinstance(item.get("promotion"), dict) else {}
+            incoming.append(f"- `{candidate_id_from_data(item)}`: {item.get('summary', '')} (promotion: {promotion.get('status', 'not_requested')})")
+        notes.append("")
+        (package_root / "resources" / "incoming-learnings.md").write_text("\n".join(incoming), encoding="utf-8")
+        resources.append({"id": "incoming-learnings", "path": "resources/incoming-learnings.md", "type": "markdown"})
+    (package_root / "resources" / "candidate-notes.md").write_text("\n".join(notes), encoding="utf-8")
+    write_yaml_file(package_root / "resources" / "index.yaml", {"schema_version": 1, "resources": resources})
+    write_yaml_file(package_root / "package.yaml", {"schema_version": 1, "id": package_id, "name": package_id, "version": version, "kind": "knowledge_package", "scope": "workplace"})
+    changelog_items = ["- Added reviewed learning candidates to `resources/candidate-notes.md`."]
+    if incoming_candidates:
+        changelog_items.append("- Staged unreviewed parent-platform candidates in `resources/incoming-learnings.md`.")
+    (package_root / "changelog.md").write_text(f"# Changelog\n\n## {version}\n\n" + "\n".join(changelog_items) + "\n", encoding="utf-8")
+    (package_root / f"release-plan-{version}.md").write_text(f"# Release Plan {version}\n\n- Build package from imported candidates.\n- Publish through file-provider update manifest.\n", encoding="utf-8")
+    print(f"BUILT: {package_root}")
+    return 0
+
+
+def command_knowledge_package_release(args: argparse.Namespace) -> int:
+    hub = ensure_hub_layout(Path(args.hub).expanduser().resolve())
+    package_id = str(args.package)
+    version = str(args.version)
+    package_root = hub / "packages" / package_id
+    if not package_root.is_dir():
+        raise SystemExit("FAIL: package not built: " + package_id)
+    output = Path(args.output).expanduser()
+    if not output.is_absolute():
+        output = hub / output
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for path in sorted(package_root.rglob("*")):
+            if path.is_file() and "releases" not in path.relative_to(package_root).parts:
+                archive.write(path, path.relative_to(package_root).as_posix())
+    digest = sha256_file(output)
+    manifest = {
+        "schema_version": 1,
+        "kind": "processforge.update_manifest",
+        "subject": {"id": package_id, "type": "knowledge_package", "name": package_id},
+        "channels": {
+            "stable": {
+                "latest": version,
+                "versions": [
+                    {
+                        "version": version,
+                        "released_at": now_utc(),
+                        "download_url": "file:///" + output.as_posix(),
+                        "sha256": digest,
+                        "changelog_url": "file:///" + (package_root / "changelog.md").as_posix(),
+                        "breaking": False,
+                        "migration_required": False,
+                        "update_policy": {"install_path": f"packages/{package_id}"},
+                    }
+                ],
+            }
+        },
+    }
+    update_manifest = hub / "updates" / f"{package_id}.update.json"
+    update_manifest.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    write_yaml_file(
+        hub / "updates" / "processforge-update-index.yaml",
+        {"schema_version": 1, "updates": [{"id": package_id, "manifest": rel(update_manifest, hub), "version": version, "artifact": rel(output, hub)}]},
+    )
+    package = read_yaml_file(package_root / "package.yaml")
+    package["version"] = version
+    package["update_sites"] = [
+        {
+            "id": f"{safe_id(package_id)}-local",
+            "enabled": True,
+            "provider": "processforge_json_file",
+            "manifest_url": "file:///" + update_manifest.as_posix(),
+            "changelog_url": "file:///" + (package_root / "changelog.md").as_posix(),
+            "channel": "stable",
+            "priority": 10,
+            "trust": {"require_https": False, "require_sha256": True, "allow_unsigned": True, "signature_required": False},
+            "policy": {"allow_stage": True, "allow_apply": True, "backup_before_apply": True, "install_path": f"packages/{package_id}"},
+        }
+    ]
+    write_yaml_file(package_root / "package.yaml", package)
+    print(f"RELEASED: {output}")
+    print(f"MANIFEST: {update_manifest}")
+    return 0
+
+
 PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
     "schema_version",
     "id",
@@ -10542,6 +11291,7 @@ PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
     "run_model",
     "required_capabilities",
     "hooks",
+    "evolve",
     "roles",
     "stages",
     "artifact_definitions",
@@ -10617,7 +11367,7 @@ def process_to_authoring_answers(process: dict[str, Any]) -> dict[str, Any]:
         "allowed_tools": string_list(process.get("allowed_tools")),
         "forbidden_actions": string_list(process.get("forbidden_actions")),
     }
-    for key in ["hooks", "evolution_policy", "expected_artifacts"]:
+    for key in ["hooks", "evolve", "evolution_policy", "expected_artifacts"]:
         if key in process:
             answers[key] = process[key]
     for key in [
@@ -10656,6 +11406,7 @@ def process_semantic_map(process: dict[str, Any], process_path: Path, project_ro
             "gates": "gates",
             "artifacts": "artifact_definitions",
             "events": "hooks.emit",
+            "evolve": "evolve",
             "run_model": "run_model",
             "requirements": "required_packages|required_templates|allowed_tools|required_capabilities",
         },
@@ -18400,6 +19151,59 @@ def build_parser() -> argparse.ArgumentParser:
     process_describe.add_argument("--project-root", required=True, help="Project root path.")
     process_describe.add_argument("--process", required=True, help="Process id or YAML path.")
     process_describe.set_defaults(func=command_process_describe)
+
+    evolve_run = sub.add_parser("evolve-run", help="Create a run evolution report and optionally queue candidate files.")
+    evolve_run.add_argument("--project-root", required=True, help="Project root path.")
+    evolve_run.add_argument("--workplace", help="Workplace root path for durable learning queue.")
+    evolve_run.add_argument("--process", default="software-feature-development", help="Process id or YAML path.")
+    evolve_run.add_argument("--run", required=True, help="Run id.")
+    evolve_run.add_argument("--candidate-file", action="append", default=[], help="Candidate YAML file to queue. Repeatable.")
+    evolve_run.set_defaults(func=command_evolve_run)
+
+    evolve_candidate_create = sub.add_parser("evolve-candidate-create", help="Queue a sanitized evolve candidate in a workplace learning queue.")
+    evolve_candidate_create.add_argument("--project-root", required=True, help="Project root path for relative candidate paths.")
+    evolve_candidate_create.add_argument("--workplace", required=True, help="Workplace root path.")
+    evolve_candidate_create.add_argument("--from-file", required=True, help="Knowledge candidate YAML file.")
+    evolve_candidate_create.set_defaults(func=command_evolve_candidate_create)
+
+    evolve_candidate_list = sub.add_parser("evolve-candidate-list", help="List workplace learning queue candidates.")
+    evolve_candidate_list.add_argument("--workplace", required=True, help="Workplace root path.")
+    evolve_candidate_list.set_defaults(func=command_evolve_candidate_list)
+
+    evolve_candidate_export = sub.add_parser("evolve-candidate-export", help="Export sanitized queued candidates to a learning bundle.")
+    evolve_candidate_export.add_argument("--workplace", required=True, help="Workplace root path.")
+    evolve_candidate_export.add_argument("--target", required=True, help="Target package id, for example docs.example.")
+    evolve_candidate_export.add_argument("--output", required=True, help="Output bundle zip path.")
+    evolve_candidate_export.set_defaults(func=command_evolve_candidate_export)
+
+    evolve_candidate_sanitize = sub.add_parser("evolve-candidate-sanitize", help="Write a sanitized copy of a knowledge candidate.")
+    evolve_candidate_sanitize.add_argument("--file", required=True, help="Candidate YAML file.")
+    evolve_candidate_sanitize.set_defaults(func=command_evolve_candidate_sanitize)
+
+    knowledge_hub_init = sub.add_parser("knowledge-hub-init", help="Initialize a file-first knowledge hub.")
+    knowledge_hub_init.add_argument("--hub", required=True, help="Hub root path.")
+    knowledge_hub_init.add_argument("--apply", action="store_true", help="Write hub files.")
+    knowledge_hub_init.set_defaults(func=command_knowledge_hub_init)
+
+    knowledge_hub_import = sub.add_parser("knowledge-hub-import", help="Import a learning export bundle into a knowledge hub.")
+    knowledge_hub_import.add_argument("--hub", required=True, help="Hub root path.")
+    knowledge_hub_import.add_argument("--bundle", required=True, help="Learning export zip path.")
+    knowledge_hub_import.add_argument("--apply", action="store_true", help="Import bundle files.")
+    knowledge_hub_import.set_defaults(func=command_knowledge_hub_import)
+
+    knowledge_package_build_from_candidates = sub.add_parser("knowledge-package-build-from-candidates", help="Build package candidate notes from imported learning candidates.")
+    knowledge_package_build_from_candidates.add_argument("--hub", required=True, help="Hub root path.")
+    knowledge_package_build_from_candidates.add_argument("--package", required=True, help="Package id, for example docs.example.")
+    knowledge_package_build_from_candidates.add_argument("--version", required=True, help="Package version.")
+    knowledge_package_build_from_candidates.add_argument("--apply", action="store_true", help="Write package files.")
+    knowledge_package_build_from_candidates.set_defaults(func=command_knowledge_package_build_from_candidates)
+
+    knowledge_package_release = sub.add_parser("knowledge-package-release", help="Create a package release artifact and file-provider update manifest.")
+    knowledge_package_release.add_argument("--hub", required=True, help="Hub root path.")
+    knowledge_package_release.add_argument("--package", required=True, help="Package id, for example docs.example.")
+    knowledge_package_release.add_argument("--version", required=True, help="Package version.")
+    knowledge_package_release.add_argument("--output", required=True, help="Release zip output path.")
+    knowledge_package_release.set_defaults(func=command_knowledge_package_release)
 
     runtime_driver = sub.add_parser("runtime-driver", help="List, validate, or describe runtime driver manifests.")
     runtime_driver_sub = runtime_driver.add_subparsers(dest="runtime_driver_command", required=True)

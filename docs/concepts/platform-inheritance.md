@@ -60,3 +60,21 @@ Any internal or external platform can use the same `extends`,
 changes. For example, documentation can describe a real stack such as
 Joomla -> JoomShopping, but that example must stay in docs/examples rather than
 core seeds, templates, tests, or flow artifacts.
+
+## Evolve Candidates
+
+Evolve candidates do not inherit upward by default. A learning observed on a
+child platform is recorded with `source_context.platform_stack` and
+`applicability.inheritance.observed_on`; that evidence does not make the
+candidate a parent-platform rule.
+
+To affect a parent platform, the candidate must target the parent package or
+contract explicitly, use `generalization.level: parent_platform_candidate` or a
+reviewed parent rule level, and include a `promotion` block. Until promotion is
+approved, package builds stage parent candidates in incoming learnings rather
+than curated package notes.
+
+Use `applicability.not_applies_to` and `conditions` when a child override makes
+the rule unsafe for siblings. If the same run discovers both a child-specific
+constraint and a broader parent-platform possibility, split them into separate
+candidates.

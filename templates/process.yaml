@@ -1,0 +1,95 @@
+schema_version: 1
+id: example-process
+name: Example Process
+version: 1.0.0
+status: draft
+description: Replace with a concise process description.
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+roles:
+  - id: author
+    title: Author
+    kind: primary_agent
+    responsibility: Creates the process artifacts.
+    responsibilities:
+      - Creates the process artifacts.
+stages:
+  - id: work
+    title: Work
+    goal: Create the requested output.
+    description: Create the requested output.
+    actor: primary_agent
+    required_inputs: []
+    produced_artifacts:
+      - work-output
+    required_role: author
+    exit_gates:
+      - work-output-ready
+    gates:
+      - work-output-ready
+artifact_definitions:
+  - id: work-output
+    title: Work Output
+    owner_role: author
+    type: markdown
+    required: true
+    template: artifact-template
+    path_hint: .pf/artifacts/work-output.md
+    lifecycle:
+      - draft
+      - ready_for_review
+      - approved
+gates:
+  - id: work-output-ready
+    description: Work output exists.
+    blocking: true
+    required: true
+    required_artifact: work-output
+evolve:
+  enabled: true
+  mode: optional
+  timing: end_of_run
+  default_scope: project
+  candidate_targets:
+    - knowledge_package
+    - template_package
+    - process_definition
+    - delivery_profile
+    - project_rule
+    - platform_contract
+  extraction_hints:
+    - Split candidates when an observation contains project-specific and platform-general parts.
+    - Default to the narrowest safe scope and require evidence before parent-platform promotion.
+    - reusable rule
+    - missing knowledge
+    - template improvement
+    - regression check
+    - process improvement
+  candidate_targeting:
+    default_scope: project
+    require_applicability: true
+    require_target: true
+    default_to_narrowest_scope: true
+  required_outputs:
+    - evolution-report
+  privacy:
+    default_sensitivity: internal
+    export_requires_sanitization: true
+    allow_private_paths: false
+  apply_policy:
+    auto_apply_global: false
+    create_candidates_only: true
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  safe_changes:
+    - add_optional_stage
+  blocked_changes:
+    - remove_existing_required_artifact
+  requires_approval:
+    - change_stage_order

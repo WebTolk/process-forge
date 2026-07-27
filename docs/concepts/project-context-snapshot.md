@@ -63,3 +63,11 @@ python bin/pf.py project-context-check --project-root <project-root> --session-s
 
 See [Project Context Lock Model](project-context-lock-model.md) for resource
 versioning modes and capsule pinning rules.
+
+## Evolve And Updates
+
+When a reviewed knowledge package release from the evolve loop is applied
+through the update system, impacted project context snapshots follow the normal
+freshness policy. ProcessForge does not refresh snapshots silently; session
+start and `project-context-check` report whether the snapshot is fresh,
+fresh_with_updates, stale, or broken.

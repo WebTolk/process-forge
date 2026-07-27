@@ -46,6 +46,54 @@ values.
 
 Warnings are visible in `logic-review.md`; blocking failures stop apply.
 
+## Evolve Decision
+
+Every standard process-authoring flow must record an explicit top-level
+`evolve` decision. Enabled evolve captures reusable learning candidates; disabled
+evolve must include a concrete reason.
+
+```yaml
+evolve:
+  enabled: true
+  decision:
+    value: enabled
+    reason: This process may produce reusable knowledge.
+  mode: optional
+  timing: end_of_run
+  default_scope: project
+  candidate_targets:
+    - knowledge_package
+    - template_package
+    - process_definition
+  candidate_targeting:
+    ask_target_layer: true
+    ask_applicability: true
+    ask_not_applicable: true
+    ask_generalization_level: true
+    default_to_narrowest_scope: true
+```
+
+The materializer preserves evolve from answers into `processes/<process-id>.yaml`.
+Do not place evolve only in `metadata`, and do not treat it as software-only,
+model training, or automatic global package mutation.
+
+When evolve is enabled, authoring questions must capture candidate targeting.
+Ask which target layer receives each candidate, where the observation applies,
+where it does not apply, and whether the observation should remain narrow,
+split into multiple candidates, or become a promotion proposal. The generated
+process keeps:
+
+```yaml
+evolve:
+  extraction_hints:
+    - Split candidates when an observation contains project-specific and platform-general parts.
+  candidate_targeting:
+    default_scope: project
+    require_applicability: true
+    require_target: true
+    default_to_narrowest_scope: true
+```
+
 ## Transitions And Agents
 
 Authoring answers should choose `execution_mode` before asking advanced role

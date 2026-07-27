@@ -38,8 +38,8 @@ still needs an explicit decision. If `release-delivery`, `browser-verification`,
 or `evolve` is not applicable, write `status: not_applicable`, a concrete
 reason, and evidence paths. Do not silently skip optional artifacts or gates.
 
-Use `instruction-update-proposal` for agent-instruction changes. Do not use the
-legacy artifact name `updated-cursor` in public ProcessForge output.
+Use `instruction-update-proposal` for agent-instruction changes in public
+ProcessForge output.
 
 ## Delivery Boundary
 

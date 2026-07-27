@@ -44,3 +44,13 @@ MVP provider support:
 Only implemented providers are claimed by smoke tests. Public smokes use local `file:///` manifests and artifacts.
 
 Supported installed subject types include `processforge_distribution`, `workplace`, `process_package`, `knowledge_package`, `template_package`, `tool_package`, `tool_definition`, `platform_contract`, `mcp_definition`, `process_definition`, `reusable_template`, and `knowledge_resource`. `project_pf` is assessment-only and is excluded from normal downloadable update candidates.
+
+## Evolve Package Releases
+
+The common evolve learning loop does not bypass update sites. A knowledge hub
+release writes a local file-provider update manifest for a reviewed package
+version. Workplaces then use the normal `update candidates refresh`, `update
+stage`, `update verify`, and `update apply` commands.
+
+Unreviewed candidates and generated learning bundles are not public archive
+content. Only reviewed package releases and update manifests are distributed.

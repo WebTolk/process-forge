@@ -55,6 +55,51 @@ error_handling:
   enabled: false
   mode: none
   fallback_if_no_director: needs_operator
+evolve:
+  enabled: true
+  decision:
+    value: enabled
+    reason: This process may produce reusable knowledge.
+  mode: optional
+  timing: end_of_run
+  default_scope: project
+  candidate_targets:
+    - knowledge_package
+    - template_package
+    - process_definition
+    - delivery_profile
+    - project_rule
+    - platform_contract
+  extraction_hints:
+    - Split candidates when an observation contains project-specific and platform-general parts.
+    - Default to the narrowest safe scope and require evidence before parent-platform promotion.
+    - reusable rule
+    - missing knowledge
+    - template improvement
+    - regression check
+    - process improvement
+  candidate_targeting:
+    ask_target_layer: true
+    ask_applicability: true
+    ask_not_applicable: true
+    ask_generalization_level: true
+    default_to_narrowest_scope: true
+  prompts:
+    - What reusable knowledge may appear during this process?
+    - Which outputs are candidates for shared packages?
+    - What must remain project-private?
+    - Which target layer should receive each candidate?
+    - Where does the observation apply, where does it not apply, and what evidence supports that scope?
+    - Should the observation stay narrow, split into multiple candidates, or be proposed for promotion?
+  required_outputs:
+    - evolution-report
+  privacy:
+    default_sensitivity: internal
+    export_requires_sanitization: true
+    allow_private_paths: false
+  apply_policy:
+    auto_apply_global: false
+    create_candidates_only: true
 roles:
   - id: auditor
     title: Auditor

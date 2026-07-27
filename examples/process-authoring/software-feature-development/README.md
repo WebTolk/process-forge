@@ -24,7 +24,7 @@ stage_decisions:
   evolve:
     status: completed
     artifacts:
-      - .pf/artifacts/evolution-report.md
+      - .pf/artifacts/evolve/evolution-report.md
 ```
 
 ## Release-Ready Lifecycle

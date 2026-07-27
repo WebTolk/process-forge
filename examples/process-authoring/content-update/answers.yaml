@@ -12,6 +12,38 @@ run_model:
   default_task_loop:
     enabled: false
     iteration_kinds: [work, review, handoff]
+evolve:
+  enabled: true
+  decision:
+    value: enabled
+    reason: This process may produce reusable knowledge.
+  mode: optional
+  timing: end_of_run
+  default_scope: project
+  candidate_targets:
+  - knowledge_package
+  - template_package
+  - process_definition
+  extraction_hints:
+  - reusable rule
+  - missing knowledge
+  - template improvement
+  - regression check
+  - process improvement
+  prompts:
+  - What reusable knowledge may appear during this process?
+  - Which outputs are candidates for shared packages?
+  - What must remain project-private?
+  required_outputs:
+  - evolution-report
+  privacy:
+    default_sensitivity: internal
+    export_requires_sanitization: true
+    allow_private_paths: false
+  apply_policy:
+    auto_apply_global: false
+    create_candidates_only: true
+
 roles:
   - id: writer
     title: Writer

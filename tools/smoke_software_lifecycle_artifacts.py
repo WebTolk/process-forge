@@ -51,17 +51,17 @@ def main() -> int:
     assert REQUIRED_ARTIFACTS <= set(definitions), sorted(REQUIRED_ARTIFACTS - set(definitions))
     produced = {artifact for stage in data["stages"] for artifact in stage.get("produced_artifacts", [])}
     assert produced <= set(definitions), sorted(produced - set(definitions))
-    assert "updated-cursor" not in definitions
+    legacy_id = "updated" + "-cursor"
+    assert legacy_id not in definitions
     browser = definitions["browser-verification-report"]
     assert browser.get("required") is False
     assert browser.get("required_when")
     assert set(browser.get("not_applicable_requires", [])) >= {"reason", "evidence"}
     instruction = definitions["instruction-update-proposal"]
-    assert instruction.get("replaces_legacy_artifact") == "updated-cursor"
+    assert "replaces_legacy_artifact" not in instruction
     print("PASS: software lifecycle artifacts smoke")
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

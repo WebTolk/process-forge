@@ -1,0 +1,5 @@
+# Common Evolve Authoring Integration Log
+
+- 2026-07-27T00:00:00Z | agent: codex-main | scope: common evolve mechanism, process authoring, CLI, smokes, docs | files analyzed: assignment prompt, `tools/processforge.py`, process schemas, authoring templates, built-in processes | status: implementation in progress | follow-up: run full release gates after checksum refresh.
+- 2026-07-27T00:00:00Z | agent: codex-main | scope: implementation | files changed: `tools/processforge.py`, `schemas/process-definition.schema.json`, `schemas/process-authoring-answers.schema.json`, `schemas/evolution-report.schema.json`, `schemas/knowledge-candidate.schema.json`, process YAMLs, examples, docs, smokes | status: targeted new smokes passed | follow-up: run existing smokes and release archive validation.
+- 2026-07-27T00:00:00Z | agent: codex-main | scope: validation | files analyzed: public archive, release manifest, release-test reports | status: public release-test and archive-test passed | follow-up: final diff/status check.

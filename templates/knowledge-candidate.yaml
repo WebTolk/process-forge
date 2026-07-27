@@ -1,0 +1,99 @@
+schema_version: 1
+kind: processforge.knowledge_candidate
+id: kc-example-observation
+source_context:
+  platform_stack:
+    - platform.example-child
+  knowledge_stack:
+    - docs.example-child
+  project_type: example-software-project
+  extension_type: example-extension
+  extension_group: example-group
+  package_context:
+    package_id: docs.example-child
+    package_type: knowledge_package
+  process_id: software-feature-development
+  run_id: run-example
+  task_id: task-example
+  context_snapshot_id: snapshot-example
+target:
+  type: knowledge_package
+  id: docs.example-child
+  target_path: null
+  target_section: null
+applicability:
+  scope: platform
+  applies_to:
+    platforms:
+      - platform.example-child
+    platform_families:
+      - platform.example-family
+    knowledge_packages:
+      - docs.example-child
+    project_types:
+      - example-software-project
+    extension_types:
+      - example-extension
+    extension_groups:
+      - example-group
+    versions:
+      platform.example-child: ">=1.0.0"
+  not_applies_to:
+    platforms:
+      - platform.example-other
+    project_types: []
+    extension_types: []
+  conditions:
+    - Applies only when the same public example context is present.
+  inheritance:
+    observed_on:
+      - platform.example-child
+    parent_platforms:
+      - platform.example-parent
+    child_platforms: []
+    inherited_from_parent: false
+    safe_for_parent: false
+generalization:
+  level: narrow_observation
+  can_be_promoted_to:
+    - platform_rule
+  promotion_requires:
+    - Evidence from an additional project or package context.
+  confidence_for_promotion: low
+routing:
+  recommended_destination:
+    type: knowledge_package
+    id: docs.example-child
+  alternative_destinations: []
+applicability_confidence:
+  applies_to_confidence: observed
+  not_applies_to_confidence: hypothesis
+  evidence_count: 1
+  evidence_diversity:
+    projects: 1
+    platforms: 1
+    versions: 1
+category: docs
+summary: Capture a reusable but narrowly scoped process observation.
+rationale: Child-platform observations stay narrow until promotion evidence is reviewed.
+statement:
+  details: Keep the candidate tied to its observed context.
+suggested_change:
+  proposed_text: Add a reviewed note only to the matching example package.
+payload:
+  recommendation: Prefer the narrowest safe scope.
+evidence:
+  files:
+    - docs/example-observation.md
+sensitivity: internal
+privacy:
+  sanitized: true
+status:
+  local: proposed
+  hub: null
+  curation: unreviewed
+  release: not_included
+promotion:
+  status: not_requested
+  target: null
+  blockers: []

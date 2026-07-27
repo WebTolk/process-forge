@@ -3,7 +3,7 @@
   "$id": "https://processforge.local/schemas/process-authoring-answers.schema.json",
   "title": "Process Authoring Answers",
   "type": "object",
-  "required": ["schema_version", "process", "roles", "stages", "artifacts", "gates"],
+  "required": ["schema_version", "process", "evolve", "roles", "stages", "artifacts", "gates"],
   "properties": {
     "schema_version": { "type": "integer", "minimum": 1 },
     "process": {
@@ -70,6 +70,49 @@
         "enabled": { "type": "boolean" },
         "mode": { "enum": ["none", "director_inbox", "route_to_process", "needs_operator"] },
         "fallback_if_no_director": { "enum": ["needs_operator", "fail_validation"] }
+      },
+      "additionalProperties": true
+    },
+    "evolve": {
+      "type": "object",
+      "required": ["enabled", "decision"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "decision": {
+          "type": "object",
+          "required": ["value", "reason"],
+          "properties": {
+            "value": { "enum": ["enabled", "disabled"] },
+            "reason": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": true
+        },
+        "mode": { "enum": ["disabled", "optional", "required"] },
+        "timing": { "enum": ["end_of_stage", "end_of_task", "end_of_run"] },
+        "default_scope": { "enum": ["project", "workplace", "package", "platform", "core"] },
+        "candidate_targets": {
+          "type": "array",
+          "items": { "enum": ["knowledge_package", "template_package", "process_definition", "delivery_profile", "project_rule", "workplace_rule", "platform_contract", "core_docs", "core_schema", "regression_check"] }
+        },
+        "candidate_targeting": {
+          "type": "object",
+          "properties": {
+            "ask_target_layer": { "type": "boolean" },
+            "ask_applicability": { "type": "boolean" },
+            "ask_not_applicable": { "type": "boolean" },
+            "ask_generalization_level": { "type": "boolean" },
+            "default_to_narrowest_scope": { "type": "boolean" },
+            "default_scope": { "enum": ["project", "workplace", "package", "platform", "parent_platform", "platform_family", "process", "core"] },
+            "require_applicability": { "type": "boolean" },
+            "require_target": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        },
+        "extraction_hints": { "type": "array", "items": { "type": "string" } },
+        "prompts": { "type": "array", "items": { "type": "string" } },
+        "required_outputs": { "type": "array", "items": { "type": "string" } },
+        "privacy": { "type": "object", "additionalProperties": true },
+        "apply_policy": { "type": "object", "additionalProperties": true }
       },
       "additionalProperties": true
     },

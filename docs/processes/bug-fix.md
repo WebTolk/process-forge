@@ -42,6 +42,13 @@ Run `python bin/pf.py process-doctor --project-root . --process bug-fix --contra
 
 `none`
 
+## Evolve
+
+`bug-fix` uses the common process-agnostic `evolve` block. At the end of a run,
+it may produce `evolution-report` and knowledge candidates for reusable
+regression checks, missing diagnostics, or process improvements. Candidates stay
+local until sanitized export.
+
 ## Handoff / transition behavior
 
 See `stage_completion`, `run_completion`, and `process_transitions` in the process YAML.

@@ -69,3 +69,21 @@ inherited knowledge packages в `knowledge_stack`.
 документация может описывать реальный stack Joomla -> JoomShopping, но этот
 пример должен оставаться в docs/examples, а не в core seeds, templates, tests
 или flow artifacts.
+
+## Evolve Candidates
+
+Evolve candidates не наследуются вверх автоматически. Наблюдение на child
+platform фиксируется через `source_context.platform_stack` и
+`applicability.inheritance.observed_on`, но это не делает его parent-platform
+rule.
+
+Чтобы изменить parent platform, candidate должен явно target-ить parent package
+или contract, иметь `generalization.level: parent_platform_candidate` либо
+reviewed parent rule level, а также `promotion` block. Пока promotion не
+approved, package build помещает candidate в incoming learnings, а не в curated
+notes.
+
+Если child override делает правило небезопасным для sibling platforms,
+заполняйте `applicability.not_applies_to` и `conditions`. Если один run нашёл и
+child-specific constraint, и возможную parent-platform rule, разделите их на
+два candidates.

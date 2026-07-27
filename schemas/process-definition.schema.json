@@ -145,6 +145,7 @@
     "allowed_tools": { "type": "array", "items": { "type": "string" } },
     "forbidden_actions": { "type": "array", "items": { "type": "string" } },
     "update_sites": { "type": "array", "items": { "$ref": "#/$defs/updateSite" } },
+    "evolve": { "$ref": "#/$defs/evolve" },
     "evolution_policy": { "type": "object" }
   },
   "$defs": {
@@ -174,6 +175,61 @@
         "custom_headers_env": { "type": "object", "additionalProperties": { "$ref": "#/$defs/envRef" } },
         "trust": { "type": "object", "additionalProperties": true }
       },
+      "additionalProperties": true
+    },
+    "evolve": {
+      "type": "object",
+      "required": ["enabled", "mode"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "mode": { "enum": ["disabled", "optional", "required"] },
+        "reason": { "type": "string" },
+        "timing": { "enum": ["end_of_stage", "end_of_task", "end_of_run"] },
+        "default_scope": { "enum": ["project", "workplace", "package", "platform", "core"] },
+        "candidate_targets": {
+          "type": "array",
+          "items": { "enum": ["knowledge_package", "template_package", "process_definition", "delivery_profile", "project_rule", "workplace_rule", "platform_contract", "core_docs", "core_schema", "regression_check"] }
+        },
+        "candidate_targeting": {
+          "type": "object",
+          "properties": {
+            "default_scope": { "enum": ["project", "workplace", "package", "platform", "parent_platform", "platform_family", "process", "core"] },
+            "require_applicability": { "type": "boolean" },
+            "require_target": { "type": "boolean" },
+            "ask_target_layer": { "type": "boolean" },
+            "ask_applicability": { "type": "boolean" },
+            "ask_not_applicable": { "type": "boolean" },
+            "ask_generalization_level": { "type": "boolean" },
+            "default_to_narrowest_scope": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        },
+        "extraction_hints": { "type": "array", "items": { "type": "string" } },
+        "required_outputs": { "type": "array", "items": { "type": "string" } },
+        "privacy": {
+          "type": "object",
+          "properties": {
+            "default_sensitivity": { "enum": ["public", "internal", "private"] },
+            "export_requires_sanitization": { "type": "boolean" },
+            "allow_private_paths": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        },
+        "apply_policy": {
+          "type": "object",
+          "properties": {
+            "auto_apply_global": { "type": "boolean" },
+            "create_candidates_only": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "enabled": { "const": false } }, "required": ["enabled"] },
+          "then": { "required": ["reason"] }
+        }
+      ],
       "additionalProperties": true
     },
     "stage": {

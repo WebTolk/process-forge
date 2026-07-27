@@ -41,6 +41,17 @@ Run `python bin/pf.py process-doctor --project-root . --process testing --contra
 
 `none`
 
+## Evolve
+
+`testing` uses the common process-agnostic `evolve` block. It can capture
+reusable test heuristics, missing fixtures, regression checks, and reporting
+template improvements as local knowledge candidates. It does not auto-apply
+those candidates to shared packages.
+
+Candidate targets are `regression_check`, `knowledge_package`, and
+`process_definition`. Reusable test gaps become regression-check candidates;
+test-process sequencing changes stay in process-definition candidates.
+
 ## Handoff / transition behavior
 
 See `stage_completion`, `run_completion`, and `process_transitions` in the process YAML.

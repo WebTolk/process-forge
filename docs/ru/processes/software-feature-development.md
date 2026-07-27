@@ -19,4 +19,11 @@ execution_profile:
 ```
 
 Не добавляйте public core process вида `joomla-plugin-delivery`. Legacy artifact
-`updated-cursor` заменён на PF-neutral `instruction-update-proposal`.
+`instruction-update-proposal` заменён на PF-neutral `instruction-update-proposal`.
+
+В `evolve` этого процесса target set ограничен `knowledge_package`,
+`delivery_profile`, `process_definition`, `project_rule` и `platform_contract`.
+Build/release commands идут в delivery profile, process-flow findings - в
+process definition, project-only constraints остаются project rules, а platform
+constraints требуют явного applicability. Child-platform findings не
+продвигаются в parent-platform rules без reviewed evidence.

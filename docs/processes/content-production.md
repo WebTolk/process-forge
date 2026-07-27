@@ -41,6 +41,17 @@ Run `python bin/pf.py process-doctor --project-root . --process content-producti
 
 `none`
 
+## Evolve
+
+`content-production` uses the common process-agnostic `evolve` block. It can
+capture reusable editorial rules, content templates, terminology gaps, and
+publication checks as local knowledge candidates. Sanitized export is required
+before candidates leave the workplace queue.
+
+Candidate targets are limited to `knowledge_package`, `template_package`, and
+`project_rule`. Project voice and campaign-specific instructions stay narrow;
+global style guidance needs explicit applicability before it can be promoted.
+
 ## Handoff / transition behavior
 
 See `stage_completion`, `run_completion`, and `process_transitions` in the process YAML.
