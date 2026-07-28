@@ -1,6 +1,6 @@
 # Platform contracts
 
-Platform contract - это composition package, а не просто метка проекта.
+Platform contract - это композиционный пакет, а не просто метка проекта.
 
 Контракт может включать:
 
@@ -9,7 +9,7 @@ Platform contract - это composition package, а не просто метка 
 - language и toolchain packages
 - official documentation references
 - source code references
-- snippets и examples
+- фрагменты и examples
 - templates
 - tools
 - MCP providers
@@ -17,16 +17,16 @@ Platform contract - это composition package, а не просто метка 
 
 Project initialization может выбрать platform contract из явного выбора
 оператора, `project_type_hints` или generic detection rules, объявленных в
-platform manifests. Ядро ProcessForge ничего не знает о конкретных
-implementation, documentation, content, operations или business domains.
-Platforms являются data-driven contracts, загружаемыми из manifests.
+platform manifests. Ядро ProcessForge ничего не знает о конкретной реализации,
+документации, содержании, операционных практиках или бизнес-доменах. Platforms
+являются data-driven contracts, загружаемыми из manifests.
 
 ## Capability, knowledge package, platform
 
 - Capability описывает, что агенту или процессу может понадобиться делать.
 - Knowledge package описывает, где агент читает правила, документацию, примеры
   и стандарты.
-- Platform contract собирает application или domain stack поверх packages,
+- Platform contract собирает прикладной или доменный stack поверх packages,
   templates, tools, MCP providers, capabilities и processes.
 
 Base languages и web technologies относятся к capabilities и knowledge
@@ -38,8 +38,8 @@ workplace platform contract root. `project_type_hints` связывает contra
 `project-onboard`: matching hints добавляют platform в project snapshot вместе
 с linked knowledge packages и templates.
 
-Missing required platform capabilities блокируют strict automation. Missing
-optional capabilities дают warnings.
+Отсутствующие required platform capabilities блокируют strict automation.
+Отсутствующие optional capabilities дают warnings.
 
 ## Resource management contract use
 

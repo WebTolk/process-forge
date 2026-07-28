@@ -8,28 +8,31 @@ ProcessForge сейчас работает как файловый инстру�
 - нет marketplace;
 - нет remote sync;
 - нет database-backed control plane;
-- long-running watcher/runner не обязателен и не входит в основной runtime;
+- long-running watcher/runner не обязателен и не входит в основную среду выполнения;
 - resource parity для templates, knowledge packages и platform contracts пока
   поверхностный и сообщает WARN;
-- agent prompts помогают стартовать работу, но не заменяют project-specific
-  review и `doctor-project`.
+- агентские промпты помогают стартовать работу, но не заменяют проектную
+  проверку и `doctor-project`.
 
-Для обычного linked-проекта используйте:
+Для обычного подключённого проекта используйте:
 
 ```bash
 python .pf/runtime/bin/pf.py doctor-project --project-root .
 ```
 
-Для distribution root используйте:
+Для корня дистрибутива используйте:
 
 ```bash
 python bin/pf.py release-test --root .
 ```
 
-## Requirements boundary
+## Граница требований
 
-- Для runtime рекомендуется Python 3.11+.
+- Для среды выполнения рекомендуется Python 3.11+.
 - Python 3.10+ допустим только когда текущие тесты подтверждают совместимость.
-- PowerShell для runtime не нужен.
-- Runtime usage из release archive не требует Git, если не нужна version-control integration.
-- Development и release checks требуют Python 3.11+, Git, subprocess execution, temporary directories и ZIP support из стандартной библиотеки Python.
+- PowerShell для обычного использования не нужен.
+- Использование из релизного архива не требует Git, если не нужна интеграция с
+  системой контроля версий.
+- Проверки разработки и релиза требуют Python 3.11+, Git, запуска дочерних
+  процессов, временных каталогов и поддержки ZIP из стандартной библиотеки
+  Python.

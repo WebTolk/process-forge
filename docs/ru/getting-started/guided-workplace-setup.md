@@ -1,16 +1,18 @@
-# Guided workplace setup
+# Пошаговая настройка workplace
 
-Guided workplace setup - это путь по умолчанию для human-led настройки новой
-рабочей машины. Агент задаёт вопросы блоками, обновляет `answers.yaml`, до
-применения создаёт proposal, применяет workplace через существующую механику
-initialization, запускает `doctor-workplace` и записывает следующие шаги для
-resource authoring и `project-onboard`.
+Пошаговая настройка workplace (guided workplace setup) - это путь по умолчанию
+для настройки новой рабочей машины с участием человека. Агент задаёт вопросы
+блоками, обновляет `answers.yaml`, до применения создаёт `proposal.md`,
+применяет workplace через существующую механику инициализации, запускает
+`doctor-workplace` и записывает следующие шаги для создания ресурсов и
+`project-onboard`.
 
-CLI поддерживает файловый workflow, но не является terminal-only wizard.
+CLI поддерживает файловый сценарий, но не является мастером, который работает
+только в терминале.
 
-Порядок остаётся строгим: сначала workplace, затем workplace resources
-(knowledge, templates, tools, MCP, package roots, platform contracts), затем
-project onboarding.
+Порядок остаётся строгим: сначала workplace, затем ресурсы workplace (знания,
+шаблоны, инструменты, MCP, корни пакетов, platform contracts), затем подключение
+проекта.
 
 ## Команды
 
@@ -21,7 +23,7 @@ python bin/pf.py workplace-setup apply --workplace <workplace-root> --session-id
 python bin/pf.py workplace-setup status --workplace <workplace-root> --session-id first-machine
 ```
 
-Артефакты session хранятся здесь:
+Артефакты сессии хранятся здесь:
 
 ```text
 <workplace-root>/.pf-workplace/setup-sessions/<session-id>/
@@ -32,11 +34,11 @@ python bin/pf.py workplace-setup status --workplace <workplace-root> --session-i
 ## Блоки диалога
 
 1. Размещение на машине: ProcessForge root, путь workplace, путь локальной документации, корни проектов.
-2. Среда агентов: agent tools, instruction targets, global AGENTS policy.
-3. Приватность и безопасность: локальные пути, public `path_ref`, secrets, update trust.
-4. Ресурсы: knowledge roots, package roots, tools, MCP servers, templates.
+2. Среда агентов: инструменты агентов, целевые файлы инструкций, глобальная политика AGENTS.
+3. Приватность и безопасность: локальные пути, public `path_ref`, secrets, доверие к обновлениям.
+4. Ресурсы: knowledge roots, package roots, инструменты, MCP servers, шаблоны.
 5. Platform contracts: нейтральные по умолчанию; реальные platforms только при явном описании.
-6. Coordination: Director capability, default project mode и нужно ли сразу создать Director Office.
+6. Координация: Director capability, default project mode и нужно ли сразу создать Director Office.
 7. Первый проект: необязательный план немедленного `project-onboard`, включая project coordination mode.
 
 ## Инструкция для агента

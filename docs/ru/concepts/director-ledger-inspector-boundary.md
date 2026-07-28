@@ -1,13 +1,13 @@
 # Граница Director, Ledger, Inspector и worker
 
-ProcessForge разделяет координацию агентов и проверку runtime-исполнения.
+ProcessForge разделяет координацию агентов и проверку выполнения.
 `supervisor` остается историческим техническим именем CLI, но по смыслу эта
 роль называется Process Execution Inspector.
 
-Эти роли не являются обязательными участниками стандартного single-agent flow.
-Атомарная единица - один operator, одна primary agent session, один project и
-один process/run. В этом режиме Worker - тот же primary agent в фазе
-выполнения, а Inspector - CLI checks, gates и self-check. См.
+Эти роли не являются обязательными участниками стандартного single-agent режима.
+В режиме гаража с инструментами работают один оператор, одна primary agent
+session, один project и один process/run. Worker в этом режиме - тот же primary
+agent в фазе выполнения, а Inspector - CLI checks, gates и self-check. См.
 [Модель агентской сессии](agent-session-model.md).
 
 | Responsibility | Ledger | Director | Inspector | Worker |
@@ -24,21 +24,21 @@ ProcessForge разделяет координацию агентов и про�
 
 ## Роли
 
-Agent Ledger - это workplace-журнал явки и ключей. Он записывает check-in,
-check-out, текущий presence, stale/offline status и lifecycle leases.
+Agent Ledger - это журнал вахтёра для workplace. Он записывает check-in,
+check-out, текущую явку, stale/offline status и lifecycle leases.
 
 Agent Director - координатор. Он читает ledger presence, выбирает process
 routes, выдает или отзывает leases, переводит handoffs между состояниями и
 готовит continuation work. Director может спросить Execution Inspector о
-runtime-состоянии, но не должен запускать shell worker processes или считать
+состоянии выполнения, но не должен запускать shell worker processes или считать
 задачу успешной только по наличию report artifact.
 
-Process Execution Inspector - runtime-проверяющий. Совместимые CLI-имена:
+Process Execution Inspector - проверяющий выполнение. Совместимые CLI-имена:
 `supervisor`, `supervisor-tick`, `supervisor-run`, `supervisor-status` и
 `supervisor-stop`; более ясные aliases: `execution-inspector-tick`,
 `execution-inspector-run`, `execution-inspector-status` и
 `execution-inspector-stop`. Эта роль смотрит assigned task state, запускает
-разрешенные runtime drivers, если это настроено, проверяет process, heartbeat,
+разрешённые runtime drivers, если это настроено, проверяет process, heartbeat,
 exit proof, required outputs и expected reports, затем помечает tasks как done
 или failed.
 
@@ -53,5 +53,5 @@ agent ledger events, принимать или финализировать hand
 
 Director не должен напрямую запускать worker runtime processes, писать
 `.pf/runtime/agent-runs/**/process.json`, `heartbeat.json`, `exit.json` или
-выводить успех task из одного report artifact. Когда важно execution state, он
+выводить успех task из одного report artifact. Когда важно состояние выполнения, он
 должен обращаться к CLI инспектора.

@@ -1,7 +1,7 @@
 # Установка
 
 Установите ProcessForge один раз как инструмент: склонируйте репозиторий или
-распакуйте release archive.
+распакуйте релизный архив.
 
 ```bash
 git clone <processforge-repo> process-forge
@@ -12,9 +12,9 @@ python bin/pf.py version
 python bin/pf.py release-test --root .
 ```
 
-Из distribution root используйте `python bin/pf.py`.
+Из корня дистрибутива используйте `python bin/pf.py`.
 
-Внутри подключенного проекта используйте runtime launcher проекта:
+Внутри подключенного проекта используйте project-local launcher:
 
 ```bash
 python .pf/runtime/bin/pf.py doctor-project --project-root .
@@ -35,22 +35,25 @@ python bin/pf.py release-test --root .
 
 ## Требования
 
-Runtime requirements:
+Требования к среде выполнения:
 
 - Рекомендуется Python 3.11+.
 - Python 3.10+ допустим только если текущие тесты подтверждают совместимость.
-- Python package dependencies из `requirements.txt`, сейчас `PyYAML`.
+- Зависимости Python-пакетов описаны в `requirements.txt`, сейчас это `PyYAML`.
 - Нужна файловая система с UTF-8.
-- Нужен read/write access к ProcessForge distribution, workplace и папкам проекта.
-- PowerShell для runtime не требуется.
-- ProcessForge v0.1 не требует daemon или фонового процесса.
+- Нужен доступ на чтение и запись к дистрибутиву ProcessForge, workplace и
+  папкам проекта.
+- PowerShell для обычного использования не требуется.
+- ProcessForge не требует демона или фонового процесса.
 
-Development / release-check requirements:
+Требования к разработке и проверкам релиза:
 
 - Python 3.11+.
-- Python package dependencies из `requirements.txt`.
-- Git для установки из исходников и release checks, например `git diff --check`.
-- Возможность запускать subprocesses и создавать temporary directories.
-- ZIP support из стандартной библиотеки Python.
+- Зависимости Python-пакетов из `requirements.txt`.
+- Git для установки из исходников и проверок релиза, например `git diff --check`.
+- Возможность запускать дочерние процессы и создавать временные каталоги.
+- Поддержка ZIP из стандартной библиотеки Python.
 
-Git recommended для установки из source и required для development/release checks. Обычное runtime usage из release archive не требует Git, если пользователь не включает version-control integration.
+Git рекомендуется для установки из исходников и нужен для проверок разработки и
+релиза. Обычное использование из релизного архива не требует Git, если
+пользователь не включает интеграцию с системой контроля версий.

@@ -1,9 +1,9 @@
-# Knowledge package authoring
+# Создание пакета знаний
 
-Knowledge package собирает документацию, заметки, links, snippets и resource
-index, которые агент может использовать при работе над проектами.
+Knowledge package собирает документацию, заметки, ссылки, фрагменты и индекс
+ресурсов, которые агент может использовать при работе над проектами.
 
-Пакет состоит из versioned manifest и optional local folders:
+Пакет состоит из версионируемого манифеста и необязательных локальных папок:
 
 ```text
 <package-root>/
@@ -19,14 +19,14 @@ index, которые агент может использовать при ра
 `-- handoffs/
 ```
 
-Resources могут жить вне package. Ссылайтесь на них через `path_ref` и
-workplace registries.
+Ресурсы могут жить вне package. Ссылайтесь на них через `path_ref` и реестры
+workplace.
 
-`registries/package-roots.yaml` определяет read/write location для packages.
-Resource Management commands пишут в выбранный package root, а не в hardcoded
-`<workplace-root>/packages` directory. Используйте `--package-root <id>`, если
-у workplace больше одного writable package root или если package существует в
-нескольких roots.
+`registries/package-roots.yaml` определяет место чтения и записи для packages.
+Команды Resource Management пишут в выбранный package root, а не в жёстко
+заданный каталог `<workplace-root>/packages`. Используйте `--package-root <id>`,
+если у workplace больше одного writable package root или если package
+существует в нескольких roots.
 
 ## CLI
 
@@ -35,18 +35,18 @@ python bin/pf.py knowledge-package-create --workplace ./workplace --id docs.exam
 python bin/pf.py knowledge-package-doctor --workplace ./workplace --package docs.example-domain --package-root global
 ```
 
-## Rules
+## Правила
 
 - Используйте `path_ref`, а не public private paths.
 - Записывайте selected package root как `package_root`.
-- Heavy resources используют `load_policy: on_demand`.
+- Тяжёлые ресурсы используют `load_policy: on_demand`.
 - На каждом resource фиксируйте license, source и update policy.
 - После manifest changes обновляйте `indexes/resource-index.yaml`.
 - Перед использованием package из project snapshot запускайте
   `knowledge-package-doctor`. Missing selected package roots fail; optional
   missing resources warn.
 
-## Paths
+## Пути
 
 Если resource хранится под workplace root, ссылайтесь через `path_ref`:
 
@@ -61,8 +61,8 @@ path_ref:
 known root или зарегистрировать в private workplace registry до записи public
 package/snapshot records.
 
-Package-owned local resources должны использовать package-root `path_ref` в
-generated indexes:
+Локальные ресурсы, принадлежащие package, должны использовать package-root
+`path_ref` в generated indexes:
 
 ```yaml
 path_ref:
@@ -71,12 +71,12 @@ path_ref:
   relative_path: docs.example-domain/resources/rules.md
 ```
 
-## Package rules
+## Правила package
 
 - Knowledge package ids должны ясно обозначать subject matter или provider.
 - Base technology knowledge представляется как knowledge packages плюс
   capabilities, а не как platform contracts.
-- Private local documentation и source trees используют workplace knowledge
-  roots.
+- Private local documentation и деревья исходного кода используют workplace
+  knowledge roots.
 - API packages используют provider-specific ids вроде
   `docs.api.example-provider`; не создавайте один generic `docs.api` package.

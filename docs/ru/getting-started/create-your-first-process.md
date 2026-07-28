@@ -1,8 +1,8 @@
 # Первый собственный процесс
 
-Создавайте process definition через authoring workflow, а не ручным написанием
-YAML с нуля. Так ProcessForge сохраняет answers, draft, review и итоговый
-process pack.
+Создавайте process definition через process authoring workflow, а не ручным
+написанием YAML с нуля. Так ProcessForge сохраняет ответы, черновик, проверку и
+итоговый process pack.
 
 Внутри подключенного проекта:
 

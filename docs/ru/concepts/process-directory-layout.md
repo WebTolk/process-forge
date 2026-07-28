@@ -12,7 +12,10 @@ ProcessForge использует три process roots:
 
 Resolver ищет user/custom roots перед core, сохраняет `process_id` при переносе файла и показывает `origin`, `root`, `path` и catalog role в `process-list`. Старые плоские файлы `processes/*.yaml` поддерживаются только как миграционный fallback и дают warning.
 
-Публичный release archive включает `processes/core/**` и только placeholder-файлы в `processes/user/` и `processes/custom/`. Реальные user/custom process definitions являются приватным состоянием рабочего места или проекта и не попадают в публичный дистрибутив.
+Публичный релизный архив включает `processes/core/**` и только placeholder-файлы
+в `processes/user/` и `processes/custom/`. Реальные user/custom process
+definitions являются приватным состоянием рабочего места или проекта и не
+попадают в публичный дистрибутив.
 
 Эта раскладка поддерживает три основных сценария:
 

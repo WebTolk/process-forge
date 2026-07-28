@@ -1,10 +1,10 @@
 # Инициализация workplace
 
 Workplace — машинный слой ProcessForge. Он хранит общие ресурсы, которые могут
-использовать разные проекты: templates, knowledge packages, platform contracts
-и registries.
+использовать разные проекты: шаблоны, пакеты знаний, platform contracts и
+реестры.
 
-Создайте workplace из distribution root:
+Создайте workplace из корня дистрибутива:
 
 ```bash
 python bin/pf.py workplace-init --workplace ../pf-workplace --apply

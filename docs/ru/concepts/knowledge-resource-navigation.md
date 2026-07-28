@@ -1,8 +1,8 @@
-# Навигация knowledge resources
+# Навигация по ресурсам знаний
 
-Knowledge packages описывают, как агентам находить reusable documentation,
-snippets, local mirrors, API snapshots, examples и standards без копирования
-тяжёлых source trees в public package manifests.
+Knowledge packages описывают, как агентам находить повторно используемую
+документацию, фрагменты, локальные зеркала, API snapshots, examples и standards
+без копирования тяжёлых деревьев исходного кода в public package manifests.
 
 Private local documentation и source snapshots должны ссылаться через workplace
 knowledge roots.

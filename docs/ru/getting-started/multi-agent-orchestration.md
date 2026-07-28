@@ -1,6 +1,8 @@
-# Multi-agent orchestration quickstart
+# Быстрый старт multi-agent orchestration
 
-Используйте этот flow внутри уже подключённого проекта.
+Используйте этот сценарий внутри уже подключённого проекта. Его можно понимать
+как режим кузницы или фабрики: несколько агентов получают изолированные задачи,
+а основной процесс собирает их результаты обратно.
 
 ```bash
 python .pf/runtime/bin/pf.py orchestrator-plan create --project-root . --run example-run --title "Example multi-agent run" --apply
@@ -18,10 +20,10 @@ python .pf/runtime/bin/pf.py worker-launch-prompt create --project-root . --task
 - `orchestrator-plan-status`
 - `worker-launch-prompt-create`
 
-Template plan находится в `templates/orchestrator-task-plan.yaml`.
+Шаблон plan находится в `templates/orchestrator-task-plan.yaml`.
 
-Чтобы переиспользовать example plan из distribution, запускайте команду из
-distribution root ProcessForge и указывайте подключенный проект через
+Чтобы переиспользовать example plan из дистрибутива, запускайте команду из
+корня дистрибутива ProcessForge и указывайте подключенный проект через
 `--project-root`:
 
 ```bash

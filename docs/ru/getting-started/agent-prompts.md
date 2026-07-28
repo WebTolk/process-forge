@@ -1,4 +1,4 @@
-# Агентский command runbook и prompts
+# Командный справочник агента и промпты
 
 Эта страница написана для ИИ-агентов. Документация для человека должна ссылаться
 сюда, а не дублировать длинные списки команд. Не вшивайте номера релизов в текст,
@@ -8,33 +8,35 @@
 
 - Рассматривайте ProcessForge как установленный инструмент, а не как содержимое
   для копирования в `.codex`, `.claude`, `.agents` или похожие папки.
-- Из distribution root ProcessForge используйте `python bin/pf.py`.
+- Из корня дистрибутива ProcessForge используйте `python bin/pf.py`.
 - Внутри подключенного проекта используйте `python .pf/runtime/bin/pf.py`.
 - Перед проектной работой читайте `.pf/START_AGENT_HERE.md`.
-- Для новой human-led настройки машины по умолчанию используйте guided
-  workplace setup: `workplace-setup start`, `workplace-setup review`,
-  `workplace-setup apply` и `workplace-setup status`.
+- Для новой настройки машины с участием человека по умолчанию используйте
+  пошаговую настройку workplace: `workplace-setup start`,
+  `workplace-setup review`, `workplace-setup apply` и
+  `workplace-setup status`.
 - Полностью автоматический путь используйте только когда оператор явно просит
   автоматизацию и дал нужные пути и решения.
-- Держите строгий порядок инициализации: сначала workplace, затем workplace
-  resources, затем project onboarding.
-- Общие ресурсы держите на уровне workplace, а execution records проекта — в
+- Держите строгий порядок инициализации: сначала workplace, затем ресурсы
+  workplace, затем подключение проекта.
+- Общие ресурсы держите на уровне workplace, а записи выполнения проекта — в
   проектной `.pf/` папке.
-- Process definitions держите platform-agnostic. Process описывает механику:
-  stages, roles, gates, artifacts, capabilities, tools, hooks и task loops.
-- Platform contracts рассматривайте как workplace composition manifests. Они
-  собирают knowledge packages, templates, tools, MCP providers, capabilities,
-  processes, coding standards, project type hints, policies и optional
-  parent/child platform inheritance.
-- Имена архивов конкретного релиза держите в release checklist. В reusable
-  prompt examples используйте нейтральные имена архивов.
-- `--interactive` принимается first-run initialization commands для UX
-  compatibility; текущие commands остаются file-first и не требуют terminal
-  prompting.
+- Process definitions держите независимыми от платформы. Process описывает
+  механику: стадии, роли, gates, артефакты, capabilities, инструменты, hooks и
+  task loops.
+- Platform contracts рассматривайте как композиционные манифесты workplace.
+  Они собирают пакеты знаний, шаблоны, инструменты, MCP providers,
+  capabilities, процессы, стандарты кода, project type hints, политики и
+  необязательное наследование parent/child platform.
+- Имена архивов конкретного релиза держите в release checklist. В повторно
+  используемых примерах промптов применяйте нейтральные имена архивов.
+- `--interactive` принимается first-run initialization commands ради
+  совместимости пользовательского опыта; текущие команды остаются файловыми и
+  не требуют вопросов в терминале.
 - Для обычной проектной работы начинайте с single-agent `1-1-1-1` model: один
-  operator, одна primary agent session, один project и один active process/run.
+  оператор, одна primary agent session, один проект и один active process/run.
   Сделайте check-in через `session-start` или `agent-checkin`, выполняйте
-  процесс последовательно, используйте CLI checks и gates как inspection, затем
+  процесс последовательно, используйте CLI checks и gates как проверку, затем
   сделайте checkout через `session-end` или `agent-checkout`.
 - Не предполагайте Agent Director, explicit leases или Supervisor / Execution
   Inspector для простой работы. Используйте их только когда выбранный process
@@ -44,7 +46,7 @@
   `orchestrator-plan validate`, `orchestrator-plan apply`,
   `orchestrator-plan status` и `worker-launch-prompt create`.
 
-## Проверки distribution root
+## Проверки корня дистрибутива
 
 ```bash
 python bin/pf.py version
@@ -71,9 +73,9 @@ python <processforge-root>/bin/pf.py workplace-setup status --workplace <workpla
 python <processforge-root>/bin/pf.py doctor-workplace --root <workplace-path>
 ```
 
-Во время guided setup задавайте вопросы блоками, обновляйте `answers.yaml`,
-перегенерируйте proposal, показывайте `proposal.md` перед apply и не
-подключайте проект, пока resource choices не согласованы.
+Во время пошаговой настройки задавайте вопросы блоками, обновляйте
+`answers.yaml`, пересоздавайте предложение, показывайте `proposal.md` перед
+apply и не подключайте проект, пока выбор ресурсов не согласован.
 
 ## Полностью автоматическая настройка workplace
 
@@ -84,14 +86,14 @@ python <processforge-root>/bin/pf.py workplace-init --workplace <workplace-path>
 python <processforge-root>/bin/pf.py doctor-workplace --root <workplace-path>
 ```
 
-## First run convenience
+## Удобная команда first-run
 
 Используйте `first-run` только когда нужно выполнить workplace initialization и
-project onboarding последовательно без guided dialogue. Это не путь по
-умолчанию для human-led настройки. Используйте его, когда оператор передал
-`workplace`, `project-root` и `type`, а authoring shared resources уже завершён
-или явно не входит в scope. Для dry-run на новом проекте сначала создайте или
-выберите целевой каталог проекта.
+project onboarding последовательно, без пошагового диалога. Это не путь по
+умолчанию для настройки с участием человека. Используйте его, когда оператор
+передал `workplace`, `project-root` и `type`, а подготовка общих ресурсов уже
+завершена или явно не входит в область работ. Для dry-run на новом проекте
+сначала создайте или выберите целевой каталог проекта.
 
 ```bash
 python <processforge-root>/bin/pf.py first-run --workplace <workplace-path> --project-root <project-root> --type <project-type> --apply
@@ -100,9 +102,9 @@ python <processforge-root>/bin/pf.py first-run --workplace <workplace-path> --pr
 ## Подключение проекта
 
 Project onboarding допустим только после того, как workplace существует, а
-нужные shared resources уже есть, проверены или явно не входят в scope.
+нужные общие ресурсы уже есть, проверены или явно не входят в область работ.
 
-Для dry-run `<project-root>` должен уже существовать. Apply mode может создать
+Для dry-run `<project-root>` должен уже существовать. Режим apply может создать
 отсутствующий greenfield project root.
 
 ```bash
@@ -146,23 +148,23 @@ python .pf/runtime/bin/pf.py run-doctor --project-root . --run <run-id>
 python .pf/runtime/bin/pf.py session-end --project-root .
 ```
 
-## Authoring ресурсов workplace
+## Создание ресурсов workplace
 
-Register tools и MCP providers:
+Регистрация инструментов и MCP providers:
 
 ```bash
 python <processforge-root>/bin/pf.py tool-register --workplace <workplace-path> --id <tool-id> --capability <capability> --command "<command without secrets>" --apply
 python <processforge-root>/bin/pf.py mcp-register --workplace <workplace-path> --id <mcp-id> --capability <capability> --command "<command without secrets>" --apply
 ```
 
-Reusable template:
+Повторно используемый шаблон:
 
 ```bash
 python <processforge-root>/bin/pf.py template-create --workplace <workplace-path> --id <template-id> --title "<title>" --apply
 python <processforge-root>/bin/pf.py template-doctor --workplace <workplace-path> --template <template-id>
 ```
 
-Knowledge package:
+Пакет знаний:
 
 ```bash
 python <processforge-root>/bin/pf.py knowledge-package-create --workplace <workplace-path> --id <package-id> --title "<title>" --package-root global --apply
@@ -177,7 +179,7 @@ python <processforge-root>/bin/pf.py platform-contract-install --workplace <work
 python <processforge-root>/bin/pf.py platform-contract-doctor --workplace <workplace-path> --platform <platform-id>
 ```
 
-Knowledge resources:
+Ресурсы знаний:
 
 ```bash
 python <processforge-root>/bin/pf.py knowledge-add-url --workplace <workplace-path> --package <package-id> --url <url> --apply
@@ -192,30 +194,30 @@ tools, MCP providers, processes, coding standards и capabilities уже
 ## Prompt для человека: настройка
 
 ```text
-Настрой ProcessForge на этой машине в guided setup mode. Используй агентский
-command runbook в документации репозитория, задавай вопросы блоками, создай или
-проверь workplace, настрой workplace resources перед project onboarding, запусти
-doctor-проверки и сообщи точные пути и следующий шаг подключения проекта.
+Настрой ProcessForge на этой машине в режиме пошаговой настройки. Используй
+командный справочник агента в документации репозитория, задавай вопросы блоками,
+создай или проверь workplace, настрой ресурсы workplace перед подключением
+проекта, запусти doctor-проверки и сообщи точные пути и следующий шаг.
 ```
 
 ## Prompt для человека: полностью автоматическая настройка
 
 ```text
 Настрой ProcessForge автоматически. Используй явно переданные мной пути и
-решения, пропусти guided dialogue, если не отсутствует обязательный ответ,
-инициализируй или проверь workplace, настрой или зарегистрируй shared
-resources, создай platform contracts после их зависимостей, затем подключи
-проект только если передан project path. Запусти doctor checks и сообщи
-assumptions и skipped areas.
+решения, пропусти пошаговый диалог, если не отсутствует обязательный ответ,
+инициализируй или проверь workplace, настрой или зарегистрируй общие ресурсы,
+создай platform contracts после их зависимостей, затем подключи проект только
+если передан project path. Запусти doctor checks и сообщи допущения и
+пропущенные области.
 ```
 
 ## Prompt для человека: работа над проектом
 
 ```text
-Используй ProcessForge для этой задачи. Сначала прочитай .pf/START_AGENT_HERE.md,
-создай или переиспользуй run, разбей запрос на tasks, фиксируй iterations,
-сохраняй artifacts в .pf, запусти нужные проверки и заверши кратким handoff с
-фактическими evidence.
+Используй ProcessForge для этой задачи. Сначала прочитай
+.pf/START_AGENT_HERE.md, создай или переиспользуй run, разбей запрос на задачи,
+фиксируй итерации, сохраняй артефакты в .pf, запусти нужные проверки и заверши
+кратким handoff с фактическими свидетельствами.
 ```
 
 ## Subagent prompt: documentation specialist
@@ -223,16 +225,16 @@ assumptions и skipped areas.
 ```text
 Ты ProcessForge documentation subagent.
 
-Scope: только документация. Не меняй source code, package manifests, release
+Scope: только документация. Не меняй исходный код, package manifests, release
 artifacts или generated checksums, если main agent явно не назначил это тебе.
 
 Tasks:
-- прочитай релевантные docs и assignment;
-- обновляй только назначенные documentation files;
+- прочитай релевантные документы и assignment;
+- обновляй только назначенные файлы документации;
 - держи human docs в формате prompt-only, где это требуется;
 - держи agent docs command-complete;
 - не вшивай номера релизов в prose или archive examples;
-- верни file list, summary и residual risks.
+- верни список файлов, краткое содержание и остаточные риски.
 ```
 
 ## Subagent prompt: implementation specialist
@@ -241,7 +243,7 @@ Tasks:
 Ты ProcessForge implementation subagent.
 
 Scope: только code или schema files, явно назначенные main agent. Не пиши в
-documentation files, закреплённые за другим subagent.
+файлы документации, закреплённые за другим subagent.
 
 Tasks:
 - изучи существующие command и schema patterns перед правками;
@@ -259,8 +261,8 @@ Scope: только validation, если тебя явно не попросил
 
 Tasks:
 - запусти назначенные validation commands;
-- rebuild release archives делай с нейтральными filenames для documentation-facing
-  evidence;
+- пересобирай релизные архивы с нейтральными filenames для свидетельств,
+  предназначенных для документации;
 - проверь archive после упаковки;
 - сообщи pass/fail status с command names и первой actionable failure.
 ```
@@ -279,7 +281,7 @@ Tasks:
 - цитируй files и lines для findings;
 - отделяй blocking findings от non-blocking follow-up.
 ```
-# Project context lock
+# Lock-модель project context
 
 На старте сессии агент должен показать результат
 `project-context-check --session-start --json`. `fresh` продолжает работу,
@@ -290,5 +292,5 @@ id/checksum и не используют `latest`.
 Для `software-feature-development` агент проходит полный lifecycle:
 orchestration, intake, investigation, domain, architecture, implementation,
 assurance, release-delivery и evolve. Release/evolve можно отметить
-`not_applicable`, но только с причиной и evidence. Package/build/install - это
+`not_applicable`, но только с причиной и свидетельствами. Package/build/install - это
 `execution_profile.delivery_profile`, а не отдельный process id.

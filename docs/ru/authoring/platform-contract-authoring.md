@@ -1,20 +1,20 @@
-# Platform contract authoring
+# Создание platform contract
 
-Platform contracts композируют required и recommended capabilities, packages,
+Platform contracts собирают required и recommended capabilities, packages,
 tools, MCP и templates.
 
-ProcessForge core domain-agnostic. Он не знает о конкретных implementation,
-documentation, content, operations или business domains. Platform behavior
-приходит из manifests и policy data.
+Ядро ProcessForge не зависит от предметной области. Оно не знает о конкретной
+реализации, документации, содержании, операционных практиках или бизнес-доменах.
+Поведение platform приходит из manifests и policy data.
 
-Используйте platform contracts для domain или application stacks, а не для base
-language или web-technology knowledge. Base technologies сначала оформляются
-как knowledge packages и capabilities, затем включаются в platform contract,
-которому они нужны.
+Используйте platform contracts для доменных или прикладных стеков, а не для
+base language или web-technology knowledge. Base technologies сначала
+оформляются как knowledge packages и capabilities, затем включаются в platform
+contract, которому они нужны.
 
 Не создавайте platform contracts для base technology knowledge. Создавайте
-knowledge packages и capabilities first, затем включайте их из нужного platform
-contract.
+сначала knowledge packages и capabilities, затем включайте их из нужного
+platform contract.
 
 Создание и проверка через Python launcher:
 
@@ -34,7 +34,7 @@ providers. Missing recommended entries должны warn.
 показывать, а doctor output мог сопоставлять missing entries с FAIL или WARN.
 
 `project_type_hints` связывает contract с `project-onboard`. Когда project
-onboarded с matching type, project context snapshot записывает platform и linked
+подключён с matching type, project context snapshot записывает platform и linked
 resources by id.
 
 Создайте или зарегистрируйте dependencies до создания platform contract:

@@ -2,19 +2,20 @@
 
 Используйте этот порядок для новой установки ProcessForge, workplace и проекта:
 
-1. Install ProcessForge distribution.
-2. Verify ProcessForge itself.
-3. Для human-led настройки по умолчанию запустить guided workplace setup; direct
-   workplace-init использовать только для явно автоматического пути.
-4. Configure path constants and roots.
-5. Configure knowledge roots, especially local documentation roots.
-6. Register tools and MCP servers.
-7. Create/import knowledge packages.
-8. Create reusable templates.
-9. Create platform contracts.
-10. Onboard project.
-11. Create run/task workflow.
-12. Create custom processes as needed.
+1. Установить дистрибутив ProcessForge.
+2. Проверить сам ProcessForge.
+3. Для настройки с участием человека по умолчанию запустить пошаговую настройку
+   workplace; direct workplace-init использовать только для явно автоматического
+   пути.
+4. Настроить константы путей и корневые каталоги.
+5. Настроить корни знаний, особенно корни локальной документации.
+6. Зарегистрировать инструменты и MCP servers.
+7. Создать или импортировать пакеты знаний.
+8. Создать повторно используемые шаблоны.
+9. Создать platform contracts.
+10. Подключить проект.
+11. Создать рабочий сценарий run/task.
+12. Создать собственные процессы, если они нужны.
 
 ## Почему platform contracts создаются позже
 
@@ -30,9 +31,9 @@ Base languages и web technologies относятся к этим dependencies. 
 как knowledge packages и capabilities, затем подключайте из platform contracts,
 которым они нужны.
 
-Тяжёлые локальные документации и исходники не записываются в public package
-manifests. Ссылайтесь на них через workplace knowledge roots и package
-resources с `path_ref`.
+Тяжёлая локальная документация и исходники не записываются в public package
+manifests. Ссылайтесь на них через workplace knowledge roots и package resources
+с `path_ref`.
 
 ## Agent environments
 

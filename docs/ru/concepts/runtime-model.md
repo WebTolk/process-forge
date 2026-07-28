@@ -1,12 +1,12 @@
-# Runtime model
+# Модель среды выполнения
 
 ![Lifecycle run/task/iteration](../../assets/processforge-run-lifecycle.svg)
 
 ProcessForge работает через короткие CLI-команды. Команда читает файлы workplace
-и project, записывает нужный artifact или runtime record, emits events и
-завершается.
+и project, записывает нужный артефакт или запись среды выполнения, отправляет
+события и завершается.
 
-Основные runtime files:
+Основные файлы среды выполнения:
 
 - `.pf/process-forge.yaml`;
 - `.pf/contexts/`;
@@ -17,11 +17,17 @@ ProcessForge работает через короткие CLI-команды. К
 - `.pf/handoffs/`;
 - `.pf/runtime/events/events.ndjson`.
 
-Долгоживущий watcher или runner может появиться отдельным слоем позже, но core
-runtime не требует daemon.
+Долгоживущий watcher или runner может появиться отдельным слоем позже, но ядро
+среды выполнения не требует демона.
 
-## Runtime requirements
+## Требования к среде выполнения
 
-Для runtime рекомендуется Python 3.11+. Python 3.10+ допустим только когда текущие тесты подтверждают совместимость. Также нужны Python package dependencies из `requirements.txt`, включая `PyYAML`, UTF-8 файловая система и read/write access к ProcessForge distribution, workplace и папкам проекта.
+Для среды выполнения рекомендуется Python 3.11+. Python 3.10+ допустим только
+когда текущие тесты подтверждают совместимость. Также нужны зависимости
+Python-пакетов из `requirements.txt`, включая `PyYAML`, файловая система с
+UTF-8 и доступ на чтение и запись к дистрибутиву ProcessForge, workplace и
+папкам проекта.
 
-Runtime usage не требует PowerShell, Git, daemon или фонового процесса. Git нужен только для version-control integration или для development/release checks.
+Обычное использование не требует PowerShell, Git, демона или фонового процесса.
+Git нужен только для интеграции с системой контроля версий или для проверок
+разработки и релиза.

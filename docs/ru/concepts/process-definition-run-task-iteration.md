@@ -1,7 +1,7 @@
 # Process definition, run, task, iteration
 
-Process definition описывает правила работы: stages, roles, artifacts, gates,
-events, tools и evolution policy.
+Process definition описывает правила работы: стадии, роли, артефакты, gates,
+events, инструменты и evolution policy.
 
 Run применяет процесс к конкретной рабочей сессии. Task разбивает run на
 управляемые части. Iteration фиксирует фактические попытки выполнения.
@@ -9,7 +9,8 @@ Run применяет процесс к конкретной рабочей с�
 Эта модель делает работу агента проверяемой: можно увидеть, какой процесс был
 выбран, какие задачи созданы, какие artifacts появились и какие reviews или
 handoffs закрывают работу.
-# Software lifecycle boundary
+
+# Граница software lifecycle
 
 Process definition описывает lifecycle, а не платформенную команду сборки или
 доставки. Например, `software-feature-development` содержит условные stages

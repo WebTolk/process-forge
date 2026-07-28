@@ -3,7 +3,7 @@
 Reusable template — это общий шаблон, который можно использовать в разных
 проектах через workplace.
 
-Создайте шаблон из distribution root:
+Создайте шаблон из корня дистрибутива:
 
 ```bash
 python bin/pf.py template-create --workplace <workplace-path> --id <template-id> --title "<title>" --apply

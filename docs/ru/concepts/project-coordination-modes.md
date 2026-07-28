@@ -69,9 +69,10 @@ python bin/pf.py project-mode doctor --project-root <project>
 projects. Simple project по умолчанию получает ясный отказ: Director может быть
 доступен в workplace, но сам проект намеренно остаётся simple.
 
-`director-case-refresh` читает project context snapshots, а не весь source tree.
-Он создаёт cases для organized projects и проектов с открытыми Director inbox
-items. Simple projects игнорируются, если не указан `--include-simple`.
+`director-case-refresh` читает project context snapshots, а не всё дерево
+исходного кода. Он создаёт cases для organized projects и проектов с открытыми
+Director inbox items. Simple projects игнорируются, если не указан
+`--include-simple`.
 
 ## Осведомлённость Worker
 
@@ -87,8 +88,8 @@ workplace_coordination:
 ```
 
 Для organized projects snapshots и capsules содержат Director inbox metadata,
-когда это нужно. Simple capsules не требуют Director inbox submission или
-worker reports to Director.
+когда это нужно. Simple capsules не требуют Director inbox submission или worker
+reports to Director.
 
 ## Error workflow
 

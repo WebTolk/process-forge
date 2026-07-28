@@ -1,7 +1,7 @@
-# Project snapshot
+# Снимок проекта
 
 Project snapshot — машинно-читаемое описание текущего состояния проекта:
-manifest, linked workplace, найденные процессы, resources и freshness.
+manifest, подключённый workplace, найденные процессы, ресурсы и freshness.
 
 Обновить snapshot:
 
@@ -22,7 +22,7 @@ Snapshot также содержит `workplace_coordination`. Worker долже
 этот блок, чтобы отличать effective `simple` project, где Director не нужен,
 от effective `organized` project, где может применяться Director inbox
 metadata.
-# Project context lock
+# Lock-модель project context
 
 Текущий project context snapshot является lock-файлом: он хранит snapshot id,
 resolved resources, generations, fingerprints и checksum. Подробнее:
