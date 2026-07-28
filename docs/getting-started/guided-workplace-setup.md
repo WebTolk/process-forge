@@ -12,6 +12,11 @@ The order stays strict: workplace first, workplace resources second (knowledge,
 templates, tools, MCP, package roots, platform contracts), and project
 onboarding third.
 
+Read-only device discovery is optional in guided mode. The agent may offer to
+inspect accessible `AGENTS.md`, setup skills, local docs, platforms, toolchains,
+tools, MCP configuration, and project roots when that would help turn existing
+machine-local work into ProcessForge resources.
+
 ## Commands
 
 ```bash
@@ -43,11 +48,12 @@ Ask one block at a time:
 
 1. Machine layout: ProcessForge root, workplace path, local docs path, project roots.
 2. Agent environment: agent tools, instruction targets, global AGENTS policy.
-3. Privacy and safety: local paths, public `path_ref`, secrets, update trust.
-4. Resources: knowledge roots, package roots, tools, MCP servers, templates.
-5. Platform contracts: neutral by default, real platforms only when explicitly defined.
-6. Coordination: Director capability, default project mode, and whether to initialize Director Office now.
-7. First project: optional immediate project onboarding plan, including project coordination mode.
+3. Optional device discovery: whether to inspect existing `AGENTS.md`, skills, docs, platforms, toolchains, tools, MCP configuration, and project roots.
+4. Privacy and safety: local paths, public `path_ref`, secrets, update trust.
+5. Resources: knowledge roots, package roots, tools, MCP servers, templates.
+6. Platform contracts: neutral by default, real platforms only when explicitly defined.
+7. Coordination: Director capability, default project mode, and whether to initialize Director Office now.
+8. First project: optional immediate project onboarding plan, including project coordination mode.
 
 ## Agent Snippet
 

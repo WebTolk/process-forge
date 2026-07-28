@@ -14,8 +14,9 @@ archive names, and reports.
 - For new human-led machine setup, use guided workplace setup by default:
   `workplace-setup start`, `workplace-setup review`,
   `workplace-setup apply`, and `workplace-setup status`.
-- Use the fully automatic path only when the operator explicitly asks for it
-  and provides the required paths and setup choices.
+- Use the fully automatic path only when the operator explicitly asks for it.
+  Start with read-only device discovery, explain the discovered layout and
+  proposed ProcessForge entities, then apply only after approval.
 - Keep initialization order strict: workplace first, workplace resources
   second, project onboarding third.
 - Keep workplace resources at the workplace level and project execution records
@@ -90,7 +91,22 @@ until resource choices are settled.
 
 ## Fully Automatic Workplace Setup
 
-Use this path only when required paths and choices are already known.
+Use this path only when the operator explicitly asks for automatic setup. The
+automatic path is still proposal-first: discover, explain, propose, get
+approval, then apply.
+
+Start with the read-only `device-discovery` stage from
+`workplace-initialization`. Inspect accessible `AGENTS.md`, skills, local docs,
+platforms, toolchains, tools, MCP configuration, and project roots. If broad
+disk access is unavailable, use the fallback scope from the process. Produce a
+device-discovery report, resource candidates, and an automatic setup proposal.
+Map findings into ProcessForge entities before apply: agent instructions become
+workplace rules, skills become processes or reusable templates, local docs
+become knowledge packages/resources, platforms become platform contracts,
+toolchains/tools become registries or contracts, MCP configuration becomes MCP
+registry entries, and project roots become project-onboarding candidates.
+
+Apply only after the operator approves the automatic setup proposal.
 
 ```bash
 python <processforge-root>/bin/pf.py workplace-init --workplace <workplace-path> --apply
@@ -204,20 +220,14 @@ tools, MCP providers, processes, coding standards, and capabilities exist.
 ## Human Prompt: Setup
 
 ```text
-Set up ProcessForge for this machine in guided setup mode. Use the agent command
-runbook in the repository documentation, ask setup questions in blocks, create
-or verify the workplace, configure workplace resources before project onboarding,
-run doctor checks, and report the exact paths and next onboarding step.
+Set up ProcessForge on this device step by step.
 ```
 
 ## Human Prompt: Fully Automatic Setup
 
 ```text
-Set up ProcessForge automatically. Use the explicit paths and choices I provide,
-skip guided dialogue unless a required answer is missing, initialize or verify
-the workplace, configure/register shared resources, create platform contracts
-after their dependencies, then onboard the project only if a project path is
-provided. Run doctor checks and report assumptions and skipped areas.
+Set up ProcessForge on this device in fully automatic mode. First inspect the
+current AGENTS.md and setup skills.
 ```
 
 ## Human Prompt: Project Work

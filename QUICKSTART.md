@@ -20,21 +20,7 @@ use as <processforge-root>.
 ## 2. Set Up A Workplace By Guided Dialogue
 
 ```text
-Set up a ProcessForge workplace by guided dialogue.
-
-Use the ProcessForge command runbook for agents and make `workplace-setup` the
-default path. Ask setup questions in small blocks, write or update
-`answers.yaml`, generate `proposal.md`, show the proposal before apply, then run
-`workplace-setup apply --apply` only after approval.
-
-Create the workplace at the path I provide or propose a clear local path. Run
-doctor-workplace, fix structural problems you can safely fix, and report the
-result.
-
-Keep this order: workplace first, then resources, then project. Configure path
-constants, package roots, knowledge roots, tool registries, and MCP registries
-before creating knowledge packages, templates, or platform contracts. Do not
-onboard a project until the workplace resources are ready.
+Set up ProcessForge on this device step by step.
 ```
 
 The guided setup command family is `workplace-setup start`,
@@ -44,17 +30,12 @@ The guided setup command family is `workplace-setup start`,
 ## 3. Fully Automatic Setup
 
 ```text
-Set up ProcessForge automatically.
-
-Use the explicit paths and answers I provide. Do not run the guided dialogue
-unless a required answer is missing. Verify the tool root, initialize or verify
-the workplace, configure roots, create/register shared resources, create
-platform contracts after their dependencies, and only then onboard the project
-if I provided a project path.
-
-Make conservative assumptions, write them into the report, run doctor checks,
-and tell me which setup areas were skipped or need manual decisions.
+Set up ProcessForge on this device in fully automatic mode. First inspect the
+current AGENTS.md and setup skills.
 ```
+
+In automatic mode, the agent first explains what is where and what role it has,
+proposes a setup scenario, gets approval, and only then applies changes.
 
 ## 4. Create Shared Resources
 

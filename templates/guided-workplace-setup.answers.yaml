@@ -14,6 +14,20 @@ agent_environment:
   instructions_targets:
     - AGENTS.md
   global_agents_policy: bounded_processforge_section
+device_discovery:
+  enabled: ask
+  read_only: true
+  broad_disk_scan: only_when_allowed
+  fallback_scope:
+    - global AGENTS.md
+    - configured skills root
+    - configured docs root
+    - configured platforms root
+    - configured toolchains root
+  outputs:
+    - device-discovery-report.md
+    - resource-candidates.yaml
+    - auto-setup-proposal.md
 privacy_safety:
   local_paths_private_only: true
   public_manifests_use_path_ref: true

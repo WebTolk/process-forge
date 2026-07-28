@@ -174,51 +174,20 @@ require terminal prompting.
 ### Prepare A Workplace By Guided Setup
 
 ```text
-Prepare ProcessForge on this machine in guided setup mode.
-
-Find the installed ProcessForge tool root or unpacked distribution, read the
-human README, then use docs/getting-started/agent-prompts.md for exact
-commands.
-
-Use the workplace setup wizard as the default path. Ask me setup questions in
-small blocks, write the session answers and proposal, show me the proposal
-before applying it, then run the workplace doctor checks.
-
-Do the work in this order:
-1. Verify the ProcessForge tool root.
-2. Create or verify the workplace.
-3. Configure roots, knowledge roots, package roots, tools, MCP providers, and
-   reusable templates.
-4. Create platform contracts only after their dependencies exist.
-5. Do not onboard a project until the workplace resources are ready.
-
-Report:
-- ProcessForge tool root;
-- workplace path;
-- whether the workplace is ready;
-- which shared resources are configured;
-- which project onboarding prompt I should use next.
-
-Keep ProcessForge as an installed tool. Do not copy the full repository into
-agent configuration folders or into project repositories.
+Set up ProcessForge on this device step by step.
 ```
 
 ### Fully Automatic Setup
 
 ```text
-Set up ProcessForge automatically with no guided dialogue unless a required
-answer is missing.
-
-Use the explicit paths and choices I provide. Verify the ProcessForge tool root,
-create or verify the workplace, configure roots and workplace resources, create
-platform contracts after their dependencies, then onboard the project if a
-project path is provided.
-
-Use direct CLI commands such as workplace-init, resource create/register
-commands, platform-contract-install, first-run, and project-onboard where they
-fit. Do not ask preference questions; make conservative choices, record all
-assumptions, run doctor checks, and report any skipped setup area.
+Set up ProcessForge on this device in fully automatic mode. First inspect the
+current AGENTS.md and setup skills.
 ```
+
+In automatic mode, the agent first reports what it found on the device, maps
+existing instructions, skills, docs, tools, platforms, and project roots to
+ProcessForge entities, asks for approval of the setup scenario, and only then
+applies changes.
 
 ### Connect A Project
 

@@ -27,6 +27,17 @@
       "additionalProperties": true
     },
     "agent_environment": { "type": "object", "additionalProperties": true },
+    "device_discovery": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "string" },
+        "read_only": { "type": "boolean" },
+        "broad_disk_scan": { "type": "string" },
+        "fallback_scope": { "type": "array", "items": { "type": "string" } },
+        "outputs": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
     "privacy_safety": { "type": "object", "additionalProperties": true },
     "resources": { "type": "object", "additionalProperties": true },
     "platform_contracts": { "type": "object", "additionalProperties": true },

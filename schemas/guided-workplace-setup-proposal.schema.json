@@ -14,6 +14,15 @@
     "project_roots": { "type": "array", "items": { "type": "string" } },
     "agent_environments": { "type": "array", "items": { "type": "string" } },
     "instruction_targets": { "type": "array", "items": { "type": "string" } },
+    "device_discovery": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "string" },
+        "read_only": { "type": "boolean" },
+        "outputs": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
     "registries": { "type": "object", "additionalProperties": true },
     "privacy": { "type": "object", "additionalProperties": true },
     "platform_policy": { "type": "object", "additionalProperties": true },

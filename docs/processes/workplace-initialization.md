@@ -22,7 +22,8 @@ Roles are declared in `processes/core/workplace-initialization.yaml`; responsibi
 
 ## Stages
 
-- `intake`: Capture root path, answers, Director capability, default project mode, and Director Office initialization choice.
+- `intake`: Capture root path, setup mode, answers, Director capability, default project mode, and Director Office initialization choice.
+- `device-discovery`: Optionally inspect the accessible agent configuration, skills, local documentation, platform contracts, toolchains, and project roots before proposing automatic setup.
 - `terms-setup`: Create or update terms aliases.
 - `registry-setup`: Create platform, knowledge, package, template, tool, and MCP registries.
 - `tool-discovery`: Record configured tool providers from answers.
@@ -35,6 +36,9 @@ Roles are declared in `processes/core/workplace-initialization.yaml`; responsibi
 ## Artifacts
 
 - `workplace-init-answers`: Workplace Init Answers
+- `device-discovery-report`: Device Discovery Report
+- `resource-candidates`: Resource Candidates
+- `auto-setup-proposal`: Automatic Setup Proposal
 - `workplace-init-proposal`: Workplace Init Proposal
 - `workplace-doctor-report`: Workplace Doctor Report
 - `workplace-bootstrap-report`: Workplace Bootstrap Report

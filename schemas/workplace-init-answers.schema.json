@@ -18,6 +18,17 @@
       "additionalProperties": true
     },
     "paths": { "type": "object" },
+    "setup_mode": { "enum": ["guided", "automatic", "manual", "unknown"] },
+    "device_discovery": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "read_only": { "type": "boolean" },
+        "fallback_scope": { "type": "array", "items": { "type": "string" } },
+        "approved_before_apply": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
     "enabled_registries": { "type": "object" },
     "policies": { "type": "object" },
     "coordination": {

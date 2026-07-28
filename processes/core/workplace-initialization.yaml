@@ -26,6 +26,14 @@ hooks:
   emit:
   - event: workplace.initialization.started
     required: true
+  - event: workplace.device_discovery.started
+    required: false
+  - event: workplace.device_discovery.completed
+    required: false
+  - event: workplace.auto_setup_proposal.created
+    required: false
+  - event: workplace.auto_setup_proposal.approved
+    required: false
   - event: workplace.structure.created
     required: true
   - event: workplace.path_constants.created
@@ -86,7 +94,7 @@ roles:
 stages:
 - id: intake
   title: Intake
-  description: Capture root path, answers, Director capability, default project mode, and Director Office initialization choice.
+  description: Capture root path, setup mode, answers, Director capability, default project mode, and Director Office initialization choice.
   required_inputs: []
   produced_artifacts:
   - workplace-init-answers
@@ -98,10 +106,61 @@ stages:
   entry_gates: []
   exit_gates:
   - root-provided
-  goal: Capture root path, answers, Director capability, default project mode, and Director Office initialization choice.
+  goal: Capture root path, setup mode, answers, Director capability, default project mode, and Director Office initialization choice.
   actor: primary_agent
   gates:
   - root-provided
+- id: device-discovery
+  title: Device Discovery
+  description: Optionally inspect the accessible agent configuration, skills, local documentation, platform contracts, toolchains, and project roots before proposing automatic setup.
+  optional: true
+  default_for:
+  - automatic_setup
+  required_inputs:
+  - workplace-init-answers
+  produced_artifacts:
+  - device-discovery-report
+  - resource-candidates
+  - auto-setup-proposal
+  required_role: orchestrator
+  required_capabilities:
+  - filesystem.read
+  - reporting
+  allowed_tools:
+  - filesystem-inspection
+  - processforge-init
+  entry_gates:
+  - root-provided
+  exit_gates:
+  - device-discovery-reviewed
+  goal: Explain what was found on the device and propose which ProcessForge entities should be created or registered before any apply action.
+  actor: primary_agent
+  read_policy:
+    mode: read_only
+    broad_disk_scan: only_when_allowed_by_operator_or_runtime_permissions
+    fallback_scope:
+    - global AGENTS.md
+    - configured skills root
+    - configured docs root
+    - configured platforms root
+    - configured toolchains root
+    - configured tools root
+    - configured project roots
+    forbidden:
+    - secret_values
+    - private_credentials
+    - destructive_changes
+  candidate_mapping:
+    agent_instructions: workplace_rule
+    skills: process_definition_or_reusable_template
+    local_docs: knowledge_package_or_knowledge_resource
+    platforms: platform_contract
+    toolchains: toolchain_contract_or_tool_registry_entry
+    tools: tool_registry_entry
+    mcp_servers: mcp_registry_entry
+    project_roots: project_onboarding_candidate
+  gates:
+  - device-discovery-reviewed
 - id: terms-setup
   title: Terms Setup
   description: Create or update terms aliases.
@@ -184,7 +243,7 @@ stages:
   - mcp-recorded
 - id: proposal
   title: Proposal
-  description: Present the planned workplace changes.
+  description: Present the planned workplace changes, including the device-discovery findings and automatic setup scenario when discovery was used.
   required_inputs:
   - workplace-init-answers
   produced_artifacts:
@@ -198,7 +257,7 @@ stages:
   - root-provided
   exit_gates:
   - proposal-created
-  goal: Present the planned workplace changes.
+  goal: Present the planned workplace changes, including the device-discovery findings and automatic setup scenario when discovery was used.
   actor: primary_agent
   gates:
   - proposal-created
@@ -207,6 +266,7 @@ stages:
   description: Review the proposed changes.
   required_inputs:
   - workplace-init-proposal
+  - auto-setup-proposal
   produced_artifacts:
   - workplace-init-review
   required_role: reviewer
@@ -217,10 +277,12 @@ stages:
   - proposal-created
   exit_gates:
   - review-recorded
+  - auto-setup-proposal-approved-before-apply
   goal: Review the proposed changes.
   actor: primary_agent
   gates:
   - review-recorded
+  - auto-setup-proposal-approved-before-apply
 - id: apply
   title: Apply
   description: Write workplace files.
@@ -235,6 +297,7 @@ stages:
   - processforge-init
   entry_gates:
   - review-recorded
+  - auto-setup-proposal-approved-before-apply
   exit_gates:
   - workplace-files-written
   goal: Write workplace files.
@@ -273,6 +336,39 @@ artifact_definitions:
   type: markdown
   required: true
   path_hint: .pf/artifacts/workplace-init-answers.md
+- id: device-discovery-report
+  title: Device Discovery Report
+  owner_role: orchestrator
+  template: artifact-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: false
+  path_hint: .pf/artifacts/device-discovery-report.md
+- id: resource-candidates
+  title: Resource Candidates
+  owner_role: orchestrator
+  template: artifact-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: yaml
+  required: false
+  path_hint: .pf/artifacts/resource-candidates.yaml
+- id: auto-setup-proposal
+  title: Automatic Setup Proposal
+  owner_role: orchestrator
+  template: artifact-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: false
+  path_hint: .pf/artifacts/auto-setup-proposal.md
 - id: workplace-init-proposal
   title: Workplace Init Proposal
   owner_role: orchestrator
@@ -414,8 +510,18 @@ gates:
   blocking: true
   type: checklist
   required: true
+- id: device-discovery-reviewed
+  description: When device discovery is used, the read-only findings and ProcessForge resource candidates are reviewed before proposal/apply.
+  blocking: true
+  type: checklist
+  required: false
 - id: review-recorded
   description: Review or explicit approval exists.
+  blocking: true
+  type: checklist
+  required: true
+- id: auto-setup-proposal-approved-before-apply
+  description: Review records approval of the automatic setup scenario, or explicitly records that device discovery was not selected.
   blocking: true
   type: checklist
   required: true
@@ -441,6 +547,15 @@ allowed_tools:
 forbidden_actions:
 - invent_root_path
 - store_secret_values
+- run_destructive_device_discovery
+- apply_automatic_setup_without_proposal_approval
+metadata:
+  setup_modes:
+    guided:
+      device_discovery: optional
+    automatic:
+      device_discovery: default
+      apply_policy: require_operator_approval_after_auto_setup_proposal
 evolve:
   enabled: true
   mode: optional

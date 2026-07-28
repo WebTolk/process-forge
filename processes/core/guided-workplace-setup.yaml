@@ -25,6 +25,8 @@ hooks:
   emit:
   - event: workplace.setup.started
     required: true
+  - event: workplace.device_discovery.completed
+    required: false
   - event: workplace.setup.reviewed
     required: true
   - event: workplace.setup.applied
@@ -77,12 +79,14 @@ stages:
   - answers-created
 - id: dialogue
   title: Guided dialogue
-  description: Ask block-scoped questions including Director capability, default project mode, Director Office initialization,
-    and update answers YAML after each block.
+  description: Ask block-scoped questions, optionally include read-only device discovery when the operator asks for it, and
+    update answers YAML after each block.
   required_inputs:
   - answers
   produced_artifacts:
   - answers
+  - device-discovery-report
+  - resource-candidates
   - proposal
   required_role: setup-agent
   required_capabilities:
@@ -93,9 +97,18 @@ stages:
   - answers-created
   exit_gates:
   - proposal-created-before-apply
-  goal: Ask block-scoped questions including Director capability, default project mode, Director Office initialization, and
-    update answers YAML after each block.
+  goal: Ask block-scoped questions, optionally include read-only device discovery when the operator asks for it, and update
+    answers YAML after each block.
   actor: primary_agent
+  discovery_policy:
+    default: ask_operator
+    read_only: true
+    fallback_scope:
+    - global AGENTS.md
+    - configured skills root
+    - configured docs root
+    - configured platforms root
+    - configured toolchains root
   gates:
   - proposal-created-before-apply
 - id: review
@@ -154,6 +167,28 @@ artifact_definitions:
   type: markdown
   required: true
   path_hint: .pf/artifacts/answers.md
+- id: device-discovery-report
+  title: Device Discovery Report
+  owner_role: setup-agent
+  template: artifact-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: false
+  path_hint: .pf/artifacts/device-discovery-report.md
+- id: resource-candidates
+  title: Resource Candidates
+  owner_role: setup-agent
+  template: artifact-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: yaml
+  required: false
+  path_hint: .pf/artifacts/resource-candidates.yaml
 - id: proposal
   title: Guided Workplace Proposal
   owner_role: setup-agent
@@ -244,6 +279,11 @@ forbidden_actions:
 - write_private_paths_to_public_manifests
 - add_platform_specific_core_support_pack
 - create_background_daemon
+- run_destructive_device_discovery
+metadata:
+  setup_modes:
+    guided:
+      device_discovery: optional_operator_choice
 evolve:
   enabled: true
   mode: optional

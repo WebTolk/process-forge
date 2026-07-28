@@ -4,6 +4,10 @@ Workplace initialization is run once per machine, device, server, or runner host
 For human-led setup of a new machine, prefer
 [Guided workplace setup](guided-workplace-setup.md); use this direct command
 path for fully automatic setup or when the setup answers are already known.
+Fully automatic setup starts with an optional read-only device-discovery stage:
+the agent inspects accessible `AGENTS.md`, skills, local docs, platforms,
+toolchains, tools, MCP configuration, and project roots, then proposes which
+ProcessForge entities to create or register before apply.
 
 It creates:
 
@@ -44,6 +48,11 @@ python bin/pf.py workplace-mode doctor --workplace ./pf-workplace
 ```
 
 This process does not create `.pf/` in a project and does not select a project type.
+
+For automatic setup, apply starts only after the operator approves the automatic
+setup proposal produced from device discovery. If broad disk access is not
+available, the agent uses the configured fallback scope rather than scanning the
+whole device.
 
 Heavy local documentation should be registered as `knowledge_roots.local-docs`.
 The root may live near the workplace on disk, but project source scans treat it

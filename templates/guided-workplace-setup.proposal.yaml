@@ -13,6 +13,13 @@ agent_environments:
   - generic
 instruction_targets:
   - AGENTS.md
+device_discovery:
+  enabled: ask
+  read_only: true
+  outputs:
+    - device-discovery-report.md
+    - resource-candidates.yaml
+    - auto-setup-proposal.md
 registries:
   knowledge_roots:
     -
@@ -38,6 +45,7 @@ first_project:
   onboard_now: false
   project_type: generic-software-project
 apply_steps:
+  - review optional device-discovery findings and resource candidates
   - run workplace-init internals
   - write workplace registries
   - write agent instruction snippet

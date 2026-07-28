@@ -1558,6 +1558,23 @@ def default_guided_workplace_answers(workplace: Path, session_id: str) -> dict[s
             "instructions_targets": ["AGENTS.md"],
             "global_agents_policy": "bounded_processforge_section",
         },
+        "device_discovery": {
+            "enabled": "ask",
+            "read_only": True,
+            "broad_disk_scan": "only_when_allowed",
+            "fallback_scope": [
+                "global AGENTS.md",
+                "configured skills root",
+                "configured docs root",
+                "configured platforms root",
+                "configured toolchains root",
+            ],
+            "outputs": [
+                "device-discovery-report.md",
+                "resource-candidates.yaml",
+                "auto-setup-proposal.md",
+            ],
+        },
         "privacy_safety": {
             "local_paths_private_only": True,
             "public_manifests_use_path_ref": True,
@@ -1607,6 +1624,7 @@ def load_guided_workplace_answers(session_dir: Path, answers_path: Path | None =
 
 def guided_answers_to_workplace_init_answers(workplace: Path, answers: dict[str, Any]) -> dict[str, Any]:
     machine = answers.get("machine_layout") if isinstance(answers.get("machine_layout"), dict) else {}
+    discovery = answers.get("device_discovery") if isinstance(answers.get("device_discovery"), dict) else {}
     resources = answers.get("resources") if isinstance(answers.get("resources"), dict) else {}
     privacy = answers.get("privacy_safety") if isinstance(answers.get("privacy_safety"), dict) else {}
     coordination = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
@@ -1619,7 +1637,16 @@ def guided_answers_to_workplace_init_answers(workplace: Path, answers: dict[str,
         if isinstance(item, dict):
             knowledge_roots[str(item.get("id") or "local-docs")] = str(item.get("path_ref") or item.get("path") or "${PF_WORKPLACE}/knowledge")
     processforge_root = str(machine.get("processforge_root") or "${PROCESSFORGE_ROOT}")
+    discovery_enabled = str(discovery.get("enabled") or "ask").lower() in {"true", "yes", "enabled", "on"}
     return {
+        "schema_version": 1,
+        "setup_mode": "guided",
+        "device_discovery": {
+            "enabled": discovery_enabled,
+            "read_only": bool(discovery.get("read_only", True)),
+            "fallback_scope": [str(item) for item in as_list(discovery.get("fallback_scope"))],
+            "approved_before_apply": False,
+        },
         "workplace": {"id": safe_id(workplace.name or "workplace", "workplace"), "name": workplace.name or "ProcessForge Workplace"},
         "paths": {
             "root": str(machine.get("workplace_path") or workplace),
@@ -1640,6 +1667,7 @@ def guided_answers_to_workplace_init_answers(workplace: Path, answers: dict[str,
 def render_workplace_setup_proposal(session_id: str, answers: dict[str, Any]) -> tuple[dict[str, Any], str]:
     machine = answers.get("machine_layout") if isinstance(answers.get("machine_layout"), dict) else {}
     agents = answers.get("agent_environment") if isinstance(answers.get("agent_environment"), dict) else {}
+    discovery = answers.get("device_discovery") if isinstance(answers.get("device_discovery"), dict) else {}
     resources = answers.get("resources") if isinstance(answers.get("resources"), dict) else {}
     first_project = answers.get("first_project") if isinstance(answers.get("first_project"), dict) else {}
     coordination = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
@@ -1653,6 +1681,17 @@ def render_workplace_setup_proposal(session_id: str, answers: dict[str, Any]) ->
         "project_roots": [str(item) for item in as_list(machine.get("project_roots"))],
         "agent_environments": [str(item) for item in as_list(agents.get("tools") or ["generic"])],
         "instruction_targets": [str(item) for item in as_list(agents.get("instructions_targets") or ["AGENTS.md"])],
+        "device_discovery": {
+            "enabled": str(discovery.get("enabled") or "ask"),
+            "read_only": bool(discovery.get("read_only", True)),
+            "outputs": [
+                str(item)
+                for item in as_list(
+                    discovery.get("outputs")
+                    or ["device-discovery-report.md", "resource-candidates.yaml", "auto-setup-proposal.md"]
+                )
+            ],
+        },
         "registries": {
             "knowledge_roots": resources.get("knowledge_roots", []),
             "package_roots": resources.get("package_roots", []),
@@ -1669,6 +1708,7 @@ def render_workplace_setup_proposal(session_id: str, answers: dict[str, Any]) ->
         },
         "first_project": first_project,
         "apply_steps": [
+            "review optional device-discovery findings and resource candidates",
             "run workplace-init internals",
             "write workplace registries",
             "write agent instruction snippet",
@@ -1698,13 +1738,20 @@ def render_workplace_setup_proposal(session_id: str, answers: dict[str, Any]) ->
 - Tools: {", ".join(proposal["agent_environments"])}
 - Instruction targets: {", ".join(proposal["instruction_targets"])}
 
+## Device Discovery
+
+- Enabled: {proposal["device_discovery"]["enabled"]}
+- Read only: {str(proposal["device_discovery"]["read_only"]).lower()}
+- Outputs: {", ".join(proposal["device_discovery"]["outputs"])}
+
 ## Apply Plan
 
-1. Create or update the workplace layer through `workplace-init`.
-2. Preserve private machine paths inside workplace-local files.
-3. Generate a bounded ProcessForge agent instruction snippet.
-4. Run `doctor-workplace`.
-5. Write project onboarding next steps.
+1. Review optional device-discovery findings and resource candidates.
+2. Create or update the workplace layer through `workplace-init`.
+3. Preserve private machine paths inside workplace-local files.
+4. Generate a bounded ProcessForge agent instruction snippet.
+5. Run `doctor-workplace`.
+6. Write project onboarding next steps.
 """
     return proposal, md
 
