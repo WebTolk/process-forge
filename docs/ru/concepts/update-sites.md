@@ -1,4 +1,4 @@
-# Update Sites
+# Update sites
 
 Update site - это контракт ProcessForge для поиска новых версий установленных сущностей. Он остаётся file-first: без демона, базы данных, web UI и обязательной сети.
 

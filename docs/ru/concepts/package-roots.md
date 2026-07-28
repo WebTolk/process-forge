@@ -1,4 +1,4 @@
-# Package Roots
+# Package roots
 
 Package roots определяют, где ProcessForge ищет и записывает knowledge
 packages. Обычно есть общий workplace root и при необходимости project-local

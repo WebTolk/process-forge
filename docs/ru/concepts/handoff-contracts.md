@@ -1,4 +1,4 @@
-# Handoff Contracts
+# Handoff contracts
 
 Handoff package хранится в `.pf/handoffs/<handoff-id>/`.
 

@@ -1,6 +1,8 @@
 # Project Onboarding
 
-Project onboarding is run once per project after a workplace exists.
+Project onboarding is run once per project after a workplace exists and after
+required workplace resources are created, registered, validated, or explicitly
+out of scope.
 
 It creates the project-local `.pf/` flow root:
 
@@ -46,7 +48,9 @@ Use `simple` for the default 1-1-1-1 flow. Use `organized` only when the
 project should submit to the workplace Director Office or participate in
 Director-managed cases, leases, handoffs, or error routes.
 
-This process does not recreate the workplace and does not copy global packages into the project.
+This process does not recreate the workplace, does not create missing shared
+resources as a substitute for workplace setup, and does not copy global packages
+into the project.
 
 The project-local launcher reads private `.pf/process-forge.local.yaml` or `PROCESSFORGE_HOME` to find the ProcessForge distribution. Public files such as `.pf/START_AGENT_HERE.md` do not reveal the resolved distribution path.
 

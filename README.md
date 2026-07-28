@@ -14,11 +14,13 @@ which is limited to commands and mechanics implemented in the current codebase.
 
 ![ProcessForge workplace layout](docs/assets/processforge-architecture.svg)
 
-## Mental Model
+## What ProcessForge Is
 
 A workplace is a physical or virtual machine where humans and AI agents work:
 a desktop, laptop, server, or runner host. ProcessForge is installed once as a
 tool for that workplace.
+
+## Core Entities
 
 The workplace stores global machine-level resources: process definitions,
 knowledge packages, reusable templates, tool registrations, MCP registrations,
@@ -60,13 +62,29 @@ providers, capabilities, processes, coding standards, project type hints, and
 policy data. ProcessForge core resolves these contracts from manifests; it does
 not hardcode any real product, CMS, framework, marketplace, or business domain.
 
+## How The Layers Relate
+
+Use ProcessForge from the outside in:
+
+1. ProcessForge tool root: the installed CLI, built-in processes, schemas,
+   checks, docs, and prompt templates.
+2. Workplace: machine-level state and reusable resources shared by projects.
+3. Workplace resources: knowledge roots/packages, reusable templates, tools,
+   MCP providers, package roots, process definitions, and platform contracts.
+4. Project `.pf/`: project context, selected resources, assignments, runs,
+   tasks, iterations, artifacts, reviews, handoffs, and hooks.
+
+The project layer depends on the workplace layer. It should not contain copied
+ProcessForge source code, heavy documentation mirrors, shared toolchains, or
+global resource payloads.
+
 ## Initialization Order
 
 Use this order for a new workplace:
 
 1. Install the ProcessForge distribution.
 2. Verify the ProcessForge distribution.
-3. Initialize the workplace.
+3. Run guided workplace setup by default for a human-led first setup.
 4. Configure path constants and roots.
 5. Configure knowledge roots, especially local documentation roots.
 6. Register tools and MCP servers.
@@ -80,6 +98,29 @@ Use this order for a new workplace:
 Do not start with a platform contract if its required packages, templates,
 tools, MCP servers, processes, coding standards, or capabilities do not exist
 yet. Create or register the dependencies first, then compose the platform.
+
+Use `workplace-setup` as the default setup path when an AI agent configures a
+new machine for a human. The agent should ask questions in blocks, write
+`answers.yaml`, produce `proposal.md`, ask for approval, apply the workplace,
+run `doctor-workplace`, and only then move to resource authoring or project
+onboarding.
+
+Use `first-run`, `workplace-init`, and direct create/register commands as the
+fully automatic path only when the operator explicitly requests automation and
+provides the required paths and answers.
+
+## Quick Start
+
+1. Read this README to understand the model and boundaries.
+2. Open [Quickstart prompts](QUICKSTART.md) and copy the setup prompt into your
+   AI agent.
+3. Let the agent run guided workplace setup.
+4. Create or register workplace resources: knowledge, templates, tools, MCP
+   providers, package roots, and platform contracts.
+5. Onboard the first project only after the workplace and its shared resources
+   are ready.
+6. Inside the project, start every ProcessForge-backed session from
+   `.pf/START_AGENT_HERE.md`.
 
 ## Supported Wizards And Creation Commands
 
@@ -130,23 +171,53 @@ require terminal prompting.
 
 ## Operator Prompts
 
-### Prepare A Workplace
+### Prepare A Workplace By Guided Setup
 
 ```text
-Prepare ProcessForge on this machine.
+Prepare ProcessForge on this machine in guided setup mode.
 
 Find the installed ProcessForge tool root or unpacked distribution, read the
 human README, then use docs/getting-started/agent-prompts.md for exact
 commands.
 
-Create or verify a workplace, run the relevant doctor checks, and report:
+Use the workplace setup wizard as the default path. Ask me setup questions in
+small blocks, write the session answers and proposal, show me the proposal
+before applying it, then run the workplace doctor checks.
+
+Do the work in this order:
+1. Verify the ProcessForge tool root.
+2. Create or verify the workplace.
+3. Configure roots, knowledge roots, package roots, tools, MCP providers, and
+   reusable templates.
+4. Create platform contracts only after their dependencies exist.
+5. Do not onboard a project until the workplace resources are ready.
+
+Report:
 - ProcessForge tool root;
 - workplace path;
 - whether the workplace is ready;
+- which shared resources are configured;
 - which project onboarding prompt I should use next.
 
 Keep ProcessForge as an installed tool. Do not copy the full repository into
 agent configuration folders or into project repositories.
+```
+
+### Fully Automatic Setup
+
+```text
+Set up ProcessForge automatically with no guided dialogue unless a required
+answer is missing.
+
+Use the explicit paths and choices I provide. Verify the ProcessForge tool root,
+create or verify the workplace, configure roots and workplace resources, create
+platform contracts after their dependencies, then onboard the project if a
+project path is provided.
+
+Use direct CLI commands such as workplace-init, resource create/register
+commands, platform-contract-install, first-run, and project-onboard where they
+fit. Do not ask preference questions; make conservative choices, record all
+assumptions, run doctor checks, and report any skipped setup area.
 ```
 
 ### Connect A Project
@@ -197,7 +268,26 @@ and used for a run.
 
 ## Documentation Map
 
+For humans:
+
 - [Quickstart prompts](QUICKSTART.md)
+- [Installation and requirements](docs/getting-started/installation.md)
+- [Guided workplace setup](docs/getting-started/guided-workplace-setup.md)
+- [Initialization order](docs/getting-started/initialization-order.md)
+- [Workplace vs project](docs/concepts/workplace-vs-project.md)
+- [Resource authoring](docs/getting-started/resource-authoring.md)
+- [Project onboarding](docs/getting-started/project-onboarding.md)
+
+For AI agents:
+
+- [Agent command runbook](docs/getting-started/agent-prompts.md)
+- [Workplace initialization agent prompt](prompts/workplace-initialization-agent.md)
+- [Guided workplace setup agent prompt](prompts/guided-workplace-setup-agent.md)
+- [Project onboarding agent prompt](prompts/project-onboarding-agent.md)
+- [Release checklist](docs/release-checklist.md)
+
+Detailed index:
+
 - [Documentation index](docs/index.md)
 - [Installation and requirements](docs/getting-started/installation.md)
 - [Initialization order](docs/getting-started/initialization-order.md)

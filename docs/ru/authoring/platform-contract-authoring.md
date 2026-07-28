@@ -1,4 +1,4 @@
-# Platform Contract Authoring
+# Platform contract authoring
 
 Platform contracts композируют required и recommended capabilities, packages,
 tools, MCP и templates.

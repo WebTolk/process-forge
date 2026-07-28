@@ -4,6 +4,11 @@ Project onboarding создает в проекте папку `.pf/`, связ�
 workplace, добавляет runtime launcher и формирует стартовые инструкции для
 агента.
 
+Запускайте project onboarding только после того, как workplace существует и
+нужные shared resources уже созданы, зарегистрированы или явно признаны
+необязательными для текущего scope. Проектный `.pf/` выбирает ресурсы из
+workplace, а не создаёт их вместо workplace setup.
+
 Из distribution root:
 
 Для dry-run сначала создайте или выберите `../my-project`. Apply mode может
@@ -25,7 +30,7 @@ python .pf/runtime/bin/pf.py project-context-refresh --project-root .
 Агент должен начинать с `.pf/START_AGENT_HERE.md`. Этот файл объясняет, какие
 локальные правила и snapshot нужно читать перед работой.
 
-## Coordination Mode
+## Coordination mode
 
 Project mode задаётся отдельно от workplace capability:
 
@@ -39,7 +44,7 @@ python bin/pf.py project-mode set --project-root ../my-project --mode organized 
 `simple` сохраняет обычный 1-1-1-1 flow. `organized` нужен только проектам,
 которые должны использовать workplace Director Office, Director inbox, cases,
 leases, handoffs или error routes.
-# Project Context Lock
+# Project context lock
 
 Onboarding записывает `context_requirements` и `context_policy` в публичный
 `.pf/process-forge.yaml`, затем `project-context-refresh` создаёт resolved lock

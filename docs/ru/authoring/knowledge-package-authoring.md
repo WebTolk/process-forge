@@ -1,4 +1,4 @@
-# Knowledge Package Authoring
+# Knowledge package authoring
 
 Knowledge package собирает документацию, заметки, links, snippets и resource
 index, которые агент может использовать при работе над проектами.
@@ -71,7 +71,7 @@ path_ref:
   relative_path: docs.example-domain/resources/rules.md
 ```
 
-## Package Rules
+## Package rules
 
 - Knowledge package ids должны ясно обозначать subject matter или provider.
 - Base technology knowledge представляется как knowledge packages плюс

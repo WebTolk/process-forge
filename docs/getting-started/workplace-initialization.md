@@ -1,6 +1,9 @@
 # Workplace Initialization
 
 Workplace initialization is run once per machine, device, server, or runner host.
+For human-led setup of a new machine, prefer
+[Guided workplace setup](guided-workplace-setup.md); use this direct command
+path for fully automatic setup or when the setup answers are already known.
 
 It creates:
 

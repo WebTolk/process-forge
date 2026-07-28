@@ -1,4 +1,4 @@
-# Context Capsule
+# Context capsule
 
 Context capsule - это небольшой launch package для worker-agent. Он ссылается
 на Execution Context Package и несёт минимальную policy, нужную для bounded
@@ -22,7 +22,7 @@ Capsule включает:
 - `worker_may_rebuild_context`
 - freshness status
 
-## Worker Contract
+## Worker contract
 
 Worker читает только required sources, если assignment явно не расширяет scope.
 Если `worker_may_rebuild_context` равен `false`, worker не перестраивает полный

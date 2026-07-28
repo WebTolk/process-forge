@@ -11,6 +11,13 @@ proposal, review, apply report, agent snippet и next steps.
 `project-onboarding` по порядку. Это удобная команда запуска, а не отдельное
 process definition.
 
+Для обычной настройки новой машины с человеком не начинайте с `first-run`.
+Сначала проведите guided workplace setup, затем создайте или зарегистрируйте
+resources workplace, и только после этого подключайте проект. Используйте
+`first-run` как полностью автоматический shortcut, когда уже известны
+workplace path, project root и project type, а ресурсная часть либо готова,
+либо явно не входит в scope.
+
 ```bash
 python bin/pf.py first-run --workplace ../pf-workplace --project-root ../my-project --type generic-software-project --apply
 ```

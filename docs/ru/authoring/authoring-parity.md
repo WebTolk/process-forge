@@ -1,4 +1,4 @@
-# Authoring Parity
+# Authoring parity
 
 ![Authoring parity](../../assets/processforge-authoring-parity.svg)
 

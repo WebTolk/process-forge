@@ -19,7 +19,7 @@ MVP импортирует bundles, индексирует candidates, стро�
 Hub не переписывает curated docs молча. Candidate notes проходят review, а
 released packages распространяются через существующую update system.
 
-## Routing By Target
+## Routing by target
 
 Hub сохраняет `target`, `applicability`, `generalization`, `routing` и
 `promotion` при import. Package build выбирает candidates только когда

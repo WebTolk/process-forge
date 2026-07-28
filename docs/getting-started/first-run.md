@@ -5,10 +5,15 @@ First run has two operational initialization processes:
 - `workplace-initialization`: prepares the local workplace, registries, packages, tools, and knowledge roots.
 - `project-onboarding`: creates a project-local `.pf/` and links that project to the existing workplace.
 
-`guided-workplace-setup` is an optional preflight agent flow for collecting and
-reviewing workplace answers before apply. The convenience `first-run` command runs
-`workplace-initialization` and `project-onboarding` in order. It is not a third
-process definition.
+`guided-workplace-setup` is the default agent flow for collecting and reviewing
+workplace answers before apply when a human operator is involved. The
+convenience `first-run` command runs `workplace-initialization` and
+`project-onboarding` in order. It is not a third process definition.
+
+Do not use `first-run` as the default path for a new human-led machine setup.
+Use it as the fully automatic shortcut when `workplace`, `project-root`, and
+`type` are known and shared resource authoring is already complete or explicitly
+out of scope.
 
 Python CLI is the canonical runtime. The root `pf` wrappers are thin convenience launchers over `bin/pf.py`.
 

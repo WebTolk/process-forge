@@ -1,4 +1,4 @@
-# Workplace vs Project
+# Workplace vs project
 
 Workplace и project — разные слои ProcessForge.
 

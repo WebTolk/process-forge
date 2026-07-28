@@ -24,7 +24,7 @@ MVP создаёт только candidates. Он не обучает LLM, не �
 Отсутствующий `evolve` даёт WARN для draft/experimental процессов и FAIL для
 PUBLIC_STABLE catalog validation.
 
-## Targeting Candidates
+## Targeting candidates
 
 Извлечение candidates учитывает назначение изменения. Каждый candidate должен
 содержать `source_context`, `target`, `applicability`, `generalization`,

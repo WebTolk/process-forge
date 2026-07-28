@@ -1,8 +1,16 @@
-# Guided Workplace Setup
+# Guided workplace setup
 
-Guided workplace setup - это агентский сценарий настройки новой рабочей машины. Агент задаёт вопросы блоками, обновляет `answers.yaml`, до применения создаёт proposal, применяет workplace через существующую механику initialization, запускает `doctor-workplace` и записывает следующие шаги для `project-onboard`.
+Guided workplace setup - это путь по умолчанию для human-led настройки новой
+рабочей машины. Агент задаёт вопросы блоками, обновляет `answers.yaml`, до
+применения создаёт proposal, применяет workplace через существующую механику
+initialization, запускает `doctor-workplace` и записывает следующие шаги для
+resource authoring и `project-onboard`.
 
 CLI поддерживает файловый workflow, но не является terminal-only wizard.
+
+Порядок остаётся строгим: сначала workplace, затем workplace resources
+(knowledge, templates, tools, MCP, package roots, platform contracts), затем
+project onboarding.
 
 ## Команды
 

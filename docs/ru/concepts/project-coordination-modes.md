@@ -1,4 +1,4 @@
-# Режимы Координации Проекта
+# Режимы координации проекта
 
 ProcessForge разделяет capability уровня workplace и режим координации
 конкретного проекта.
@@ -11,7 +11,7 @@ Workplace может поддерживать Director infrastructure, но эт
   cases, leases, handoffs и связанную координацию.
 - `inherit`: проект наследует `workplace.coordination.default_project_mode`.
 
-## Capability Workplace
+## Capability workplace
 
 `workplace.yaml` хранит machine-level capability:
 
@@ -35,7 +35,7 @@ Director Office остаётся единым для workplace:
 runtime directories. ProcessForge не создаёт отдельный Director Office для
 каждого проекта по умолчанию.
 
-## Режим Проекта
+## Режим проекта
 
 Project manifest использует:
 
@@ -63,7 +63,7 @@ python bin/pf.py project-mode set --project-root <project> --mode organized --in
 python bin/pf.py project-mode doctor --project-root <project>
 ```
 
-## Director Inbox И Cases
+## Director inbox и cases
 
 `director-inbox-submit` принимает project-scoped worker reports для organized
 projects. Simple project по умолчанию получает ясный отказ: Director может быть
@@ -90,7 +90,7 @@ workplace_coordination:
 когда это нужно. Simple capsules не требуют Director inbox submission или
 worker reports to Director.
 
-## Error Workflow
+## Error workflow
 
 Error handling учитывает effective project mode:
 

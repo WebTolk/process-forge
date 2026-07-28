@@ -1,4 +1,4 @@
-# Agent Ledger
+# Agent ledger
 
 ProcessForge не является harness. Он фиксирует процессную обвязку вокруг harness, агентов и инструментов.
 

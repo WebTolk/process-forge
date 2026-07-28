@@ -16,7 +16,7 @@ python bin/pf.py knowledge-package-release --hub <hub> --package docs.example --
 apply. Project context snapshots не обновляются молча; существующая freshness
 policy показывает fresh, fresh_with_updates, stale или broken.
 
-## Candidate Shape
+## Candidate shape
 
 Перед `evolve-candidate-create` оформите candidate с явными полями:
 

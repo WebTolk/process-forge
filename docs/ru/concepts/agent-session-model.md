@@ -1,4 +1,4 @@
-# Модель Агентской Сессии
+# Модель агентской сессии
 
 Атомарная единица выполнения ProcessForge - `1-1-1-1`:
 
@@ -16,7 +16,7 @@ Presence record сессии включает `agent_id`, `session_id`, `project
 reference, optional `project_id`, `process_id`, optional `run_id`, `roles`,
 `started_at`, `last_seen_at`, optional `finished_at` и `status`.
 
-## Execution Modes
+## Execution modes
 
 `single_agent`: один primary agent последовательно выполняет процесс в одном
 проекте. Это стандартный `.pf` flow, близкий к старому локальному single-agent flow: один
@@ -35,7 +35,7 @@ assignment, capsule, scope, `session_id` и lifecycle.
 continuations. Director координирует передачи между процессами; каждый
 исполнитель все равно работает внутри agent session.
 
-## Роли В Single-Agent Mode
+## Роли в single-agent mode
 
 Operator ставит задачу и принимает результат.
 
@@ -58,7 +58,7 @@ Inspector не нужен, пока процесс не запускает вн�
 Простые single-agent sessions в MVP не требуют явной ручной lease. Explicit
 leases используются для multi-agent, handoff и runtime-worker сценариев.
 
-## Agent Id И Session Id
+## Agent id и session id
 
 `agent_id` отвечает на вопрос, кто это. `session_id` отвечает на вопрос, какой
 конкретный приход/запуск/окно/проект сейчас активен.
@@ -78,7 +78,7 @@ Project-local ссылка на текущую сессию хранится з�
 
 Эти runtime files приватные и не входят в public release archive.
 
-## Session Commands
+## Session commands
 
 Можно использовать ledger command names или простые aliases:
 

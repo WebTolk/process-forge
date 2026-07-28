@@ -11,6 +11,13 @@ archive names, and reports.
 - From the ProcessForge distribution root, use `python bin/pf.py`.
 - Inside an onboarded project, use `python .pf/runtime/bin/pf.py`.
 - Read `.pf/START_AGENT_HERE.md` before project work.
+- For new human-led machine setup, use guided workplace setup by default:
+  `workplace-setup start`, `workplace-setup review`,
+  `workplace-setup apply`, and `workplace-setup status`.
+- Use the fully automatic path only when the operator explicitly asks for it
+  and provides the required paths and setup choices.
+- Keep initialization order strict: workplace first, workplace resources
+  second, project onboarding third.
 - Keep workplace resources at the workplace level and project execution records
   under the project-local `.pf/` folder.
 - Keep process definitions platform-agnostic. A process describes mechanics:
@@ -24,8 +31,6 @@ archive names, and reports.
 - `--interactive` is accepted by first-run initialization commands for UX
   compatibility; current commands remain file-first and do not require terminal
   prompting.
-- For guided machine setup, use `workplace-setup start`, `workplace-setup review`,
-  `workplace-setup apply`, and `workplace-setup status`.
 - For ordinary project work, start from the single-agent `1-1-1-1` model:
   one operator, one primary agent session, one project, and one active
   process/run. Check in with `session-start` or `agent-checkin`, run the
@@ -66,33 +71,49 @@ python bin/pf.py release-archive-test --archive dist/processforge.zip --root . -
 git diff --check
 ```
 
-## Workplace Setup
+## Default Guided Workplace Setup
 
-```bash
-python <processforge-root>/bin/pf.py workplace-init --workplace <workplace-path> --apply
-python <processforge-root>/bin/pf.py doctor-workplace --root <workplace-path>
-```
-
-For guided setup:
+Use this path for a new machine unless the operator explicitly asks for fully
+automatic setup.
 
 ```bash
 python <processforge-root>/bin/pf.py workplace-setup start --workplace <workplace-path> --session-id <session-id> --answers <answers-yaml> --apply
 python <processforge-root>/bin/pf.py workplace-setup review --workplace <workplace-path> --session-id <session-id>
 python <processforge-root>/bin/pf.py workplace-setup apply --workplace <workplace-path> --session-id <session-id> --apply
 python <processforge-root>/bin/pf.py workplace-setup status --workplace <workplace-path> --session-id <session-id>
+python <processforge-root>/bin/pf.py doctor-workplace --root <workplace-path>
+```
+
+During guided setup, ask questions in blocks, update `answers.yaml`, regenerate
+the proposal, show `proposal.md` before apply, and do not onboard a project
+until resource choices are settled.
+
+## Fully Automatic Workplace Setup
+
+Use this path only when required paths and choices are already known.
+
+```bash
+python <processforge-root>/bin/pf.py workplace-init --workplace <workplace-path> --apply
+python <processforge-root>/bin/pf.py doctor-workplace --root <workplace-path>
 ```
 
 ## First Run Convenience
 
 Use `first-run` only when workplace initialization and project onboarding should
-run in sequence. For dry-run against a new project, create or select the target
-project directory first.
+run in sequence without guided dialogue. This is not the default human-led setup
+path. Use it when the operator has provided `workplace`, `project-root`, and
+`type`, and when shared resource authoring is already complete or explicitly out
+of scope. For dry-run against a new project, create or select the target project
+directory first.
 
 ```bash
 python <processforge-root>/bin/pf.py first-run --workplace <workplace-path> --project-root <project-root> --type <project-type> --apply
 ```
 
 ## Project Onboarding
+
+Project onboarding is allowed only after the workplace exists and required
+shared resources are present, validated, or explicitly out of scope.
 
 For dry-run, `<project-root>` must already exist. Apply mode can create a
 missing greenfield project root.
@@ -183,9 +204,20 @@ tools, MCP providers, processes, coding standards, and capabilities exist.
 ## Human Prompt: Setup
 
 ```text
-Set up ProcessForge for this machine. Use the agent command runbook in the
-repository documentation, create or verify the workplace, run doctor checks, and
-report the exact paths and next onboarding step.
+Set up ProcessForge for this machine in guided setup mode. Use the agent command
+runbook in the repository documentation, ask setup questions in blocks, create
+or verify the workplace, configure workplace resources before project onboarding,
+run doctor checks, and report the exact paths and next onboarding step.
+```
+
+## Human Prompt: Fully Automatic Setup
+
+```text
+Set up ProcessForge automatically. Use the explicit paths and choices I provide,
+skip guided dialogue unless a required answer is missing, initialize or verify
+the workplace, configure/register shared resources, create platform contracts
+after their dependencies, then onboard the project only if a project path is
+provided. Run doctor checks and report assumptions and skipped areas.
 ```
 
 ## Human Prompt: Project Work

@@ -1,4 +1,4 @@
-# Agent Director
+# Agent director
 
 Agent Director - это процесс и CLI-слой ProcessForge. Это не WT AICC и не web UI.
 

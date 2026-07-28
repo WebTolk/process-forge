@@ -1,4 +1,4 @@
-# Process Transitions
+# Process transitions
 
 Process transitions - это явные маршруты между авторскими процессами. В проекте они хранятся в `.pf/process-routes.yaml`.
 

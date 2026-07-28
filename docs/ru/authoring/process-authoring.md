@@ -1,4 +1,4 @@
-﻿# Process Authoring
+# Process authoring
 
 Process authoring помогает создать process definition через answers и draft,
 а не через ручное написание YAML первым шагом.
@@ -15,7 +15,7 @@ python .pf/runtime/bin/pf.py process-doctor --project-root . --process <process-
 После apply процесс можно использовать в `run-create`. Review должен проверить
 stages, roles, artifacts, gates, required resources и run model.
 
-## Transitions И Agents
+## Transitions и agents
 
 Answers должны сначала выбрать `execution_mode`, а уже потом задавать advanced
 role questions:
@@ -47,7 +47,7 @@ routes, leases, handoffs и continuations; Execution Inspector проверяе�
 runtime status, heartbeat, exit, required outputs и expected reports; Worker
 выполняет capsule task.
 
-## Coordination Requirements
+## Coordination requirements
 
 Process authoring должен фиксировать, как процесс ведёт себя в simple и
 organized project mode:
@@ -70,13 +70,13 @@ error_handling:
 без явного override. `simple_allowed` не должен требовать Director inbox.
 `organized_optional` адаптируется к effective mode проекта.
 
-## Evolve Decision
+## Evolve decision
 
 Process authoring ? standard flow ?????? ???????? ????? top-level `evolve` decision. ???? `evolve.enabled=true`, answers ????????? `mode`, `timing`, `default_scope`, `candidate_targets`, `extraction_hints`, `privacy`, `apply_policy` ? `required_outputs`. ???? `evolve.enabled=false`, ????? ??????? ? `evolve.reason` ??? `evolve.decision.reason`.
 
 Materializer ????????? `evolve` ?? answers ? `processes/user/<process-id>.yaml`. `evolve` ?? ?????? ???? ?????? ? `metadata`, ?? ???????? software-only ???????, ?? ??????? LLM ? ?? ?????? global packages ?????????????.
 
-## Candidate Targeting
+## Candidate targeting
 
 Если `evolve.enabled=true`, process authoring должен спросить не только
 `candidate_targets`, но и candidate targeting:

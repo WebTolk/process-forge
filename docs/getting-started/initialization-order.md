@@ -4,7 +4,8 @@ Use this order for a new ProcessForge installation, workplace, and project:
 
 1. Install ProcessForge distribution.
 2. Verify ProcessForge itself.
-3. Initialize workplace.
+3. Run guided workplace setup by default for human-led setup, or direct
+   `workplace-init` only for explicit automatic setup.
 4. Configure path constants and roots.
 5. Configure knowledge roots, especially local documentation roots.
 6. Register tools and MCP servers.
@@ -20,6 +21,9 @@ Use this order for a new ProcessForge installation, workplace, and project:
 Platform contract is not a primary resource. It is a composition over existing packages, templates, tools, MCP servers, processes, coding standards, and capabilities.
 
 Do not start by creating a platform contract if its required packages, templates, or tools do not exist yet. Create or register the dependencies first, then create the platform contract.
+
+Do not onboard a project until the workplace exists and the required workplace
+resources are created, registered, validated, or explicitly out of scope.
 
 Base languages and web technologies are part of those dependencies. Model them
 as knowledge packages and capabilities, then include them from the platform

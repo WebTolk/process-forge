@@ -1,4 +1,4 @@
-# Process Supervisor
+# Process supervisor
 
 Process supervisor - историческое техническое имя Process Execution Inspector.
 Это ограниченный file-first цикл для проверки worker task execution, а не

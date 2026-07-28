@@ -1,4 +1,4 @@
-# Навигация Knowledge Resources
+# Навигация knowledge resources
 
 Knowledge packages описывают, как агентам находить reusable documentation,
 snippets, local mirrors, API snapshots, examples и standards без копирования
@@ -14,7 +14,7 @@ path_ref:
   relative_path: "official/example"
 ```
 
-## Base Technology Packages
+## Base technology packages
 
 Base languages и web technologies - это reusable knowledge packages и
 capabilities, а не platform contracts. Project platform contract может включать
@@ -24,7 +24,7 @@ Dependencies knowledge packages тоже управляются manifests. Packa
 объявить `dependencies` или `requires.knowledge_packages`, а doctors читают эти
 dependencies generic для любого package id.
 
-## Application Or Domain Packages
+## Application or domain packages
 
 Application и domain knowledge живёт в явных packages, выбранных workplace.
 Package должен ясно описывать navigation contract:
@@ -38,7 +38,7 @@ Package должен ясно описывать navigation contract:
 Если package запланирован, но resources ещё недоступны, фиксируйте documented
 placeholder status, а не silent pass.
 
-## Platform Composition Example
+## Platform composition example
 
 Example only: документация может описывать реальный platform stack вроде
 Joomla -> JoomShopping. В таком примере child package и child platform зависят
@@ -46,7 +46,7 @@ Joomla -> JoomShopping. В таком примере child package и child plat
 workplace-defined parent/child platform stack; ProcessForge core не
 special-case эти names.
 
-## API Packages
+## API packages
 
 API knowledge packages именуются по provider:
 

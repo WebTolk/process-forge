@@ -18,7 +18,7 @@ Candidates остаются локальными, пока оператор не
 санитизирует, не экспортирует, не импортирует и не отберёт их для пакета.
 Export блокирует неснятые private paths и secret-like values.
 
-## Targeting И Applicability
+## Targeting и applicability
 
 Новый кандидат явно разделяет три вопроса:
 

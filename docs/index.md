@@ -2,10 +2,34 @@
 
 ![ProcessForge workplace layout](assets/processforge-architecture.svg)
 
-Start from the top-level operating model: a workplace is the machine where
-humans and AI agents run work, ProcessForge is installed once as a tool, global
-resources live in the workplace, and each repository keeps a project-local
-`.pf/` layer.
+Start from the top-level operating model: ProcessForge is installed once as a
+tool, a workplace is the machine-level home for reusable resources, and each
+repository keeps only a project-local `.pf/` layer.
+
+The required initialization order is workplace first, workplace resources
+second, and project onboarding third. Use guided workplace setup by default for
+human-led machine setup. Use the fully automatic path only when the operator
+provides explicit paths and choices.
+
+## For Humans
+
+- [Top-level README](../README.md)
+- [Quickstart prompts](../QUICKSTART.md)
+- [Installation](getting-started/installation.md)
+- [Guided workplace setup](getting-started/guided-workplace-setup.md)
+- [Initialization order](getting-started/initialization-order.md)
+- [Workplace vs project](concepts/workplace-vs-project.md)
+- [Resource authoring](getting-started/resource-authoring.md)
+- [Project onboarding](getting-started/project-onboarding.md)
+
+## For AI Agents
+
+- [Agent command runbook and prompts](getting-started/agent-prompts.md)
+- [Guided workplace setup agent prompt](../prompts/guided-workplace-setup-agent.md)
+- [Automatic workplace initialization agent prompt](../prompts/workplace-initialization-agent.md)
+- [Project onboarding agent prompt](../prompts/project-onboarding-agent.md)
+- [Release checklist](release-checklist.md)
+- [Validation](validation/validation.md)
 
 ## Getting Started
 

@@ -1,4 +1,4 @@
-# Multi-Agent Orchestration Quickstart
+# Multi-agent orchestration quickstart
 
 Используйте этот flow внутри уже подключённого проекта.
 

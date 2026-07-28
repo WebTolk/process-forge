@@ -1,4 +1,4 @@
-# Update Lifecycle
+# Update lifecycle
 
 Цикл обновления явный и управляется оператором:
 

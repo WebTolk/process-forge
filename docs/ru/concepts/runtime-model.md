@@ -1,4 +1,4 @@
-# Runtime Model
+# Runtime model
 
 ![Lifecycle run/task/iteration](../../assets/processforge-run-lifecycle.svg)
 

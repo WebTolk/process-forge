@@ -1,4 +1,4 @@
-# Software Feature Development
+# Software feature development
 
 `software-feature-development` - нейтральный lifecycle-процесс для разработки
 ПО. Он ведёт задачу через `orchestration`, `intake-scope`, `investigation`,

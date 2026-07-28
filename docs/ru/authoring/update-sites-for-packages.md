@@ -1,4 +1,4 @@
-# Update Sites Для Пакетов
+# Update sites для пакетов
 
 Process, knowledge, template, tool, platform, process definition и MCP manifests могут объявлять `update_sites`. Для публичного обновления, меняющего поведение, указывайте `manifest_url` и `changelog_url`.
 

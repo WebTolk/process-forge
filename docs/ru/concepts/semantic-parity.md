@@ -1,4 +1,4 @@
-# Semantic Parity
+# Semantic parity
 
 Semantic parity сравнивает смысл process definitions, а не байтовое совпадение
 YAML.

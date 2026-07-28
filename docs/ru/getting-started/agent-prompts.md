@@ -11,6 +11,13 @@
 - Из distribution root ProcessForge используйте `python bin/pf.py`.
 - Внутри подключенного проекта используйте `python .pf/runtime/bin/pf.py`.
 - Перед проектной работой читайте `.pf/START_AGENT_HERE.md`.
+- Для новой human-led настройки машины по умолчанию используйте guided
+  workplace setup: `workplace-setup start`, `workplace-setup review`,
+  `workplace-setup apply` и `workplace-setup status`.
+- Полностью автоматический путь используйте только когда оператор явно просит
+  автоматизацию и дал нужные пути и решения.
+- Держите строгий порядок инициализации: сначала workplace, затем workplace
+  resources, затем project onboarding.
 - Общие ресурсы держите на уровне workplace, а execution records проекта — в
   проектной `.pf/` папке.
 - Process definitions держите platform-agnostic. Process описывает механику:
@@ -24,8 +31,6 @@
 - `--interactive` принимается first-run initialization commands для UX
   compatibility; текущие commands остаются file-first и не требуют terminal
   prompting.
-- Для guided machine setup используйте `workplace-setup start`,
-  `workplace-setup review`, `workplace-setup apply` и `workplace-setup status`.
 - Для обычной проектной работы начинайте с single-agent `1-1-1-1` model: один
   operator, одна primary agent session, один project и один active process/run.
   Сделайте check-in через `session-start` или `agent-checkin`, выполняйте
@@ -53,33 +58,49 @@ python bin/pf.py release-archive-test --archive dist/processforge.zip --root . -
 git diff --check
 ```
 
-## Настройка workplace
+## Настройка workplace по умолчанию
 
-```bash
-python <processforge-root>/bin/pf.py workplace-init --workplace <workplace-path> --apply
-python <processforge-root>/bin/pf.py doctor-workplace --root <workplace-path>
-```
-
-Для guided setup:
+Используйте этот путь для новой машины, если оператор явно не попросил
+полностью автоматическую настройку.
 
 ```bash
 python <processforge-root>/bin/pf.py workplace-setup start --workplace <workplace-path> --session-id <session-id> --answers <answers-yaml> --apply
 python <processforge-root>/bin/pf.py workplace-setup review --workplace <workplace-path> --session-id <session-id>
 python <processforge-root>/bin/pf.py workplace-setup apply --workplace <workplace-path> --session-id <session-id> --apply
 python <processforge-root>/bin/pf.py workplace-setup status --workplace <workplace-path> --session-id <session-id>
+python <processforge-root>/bin/pf.py doctor-workplace --root <workplace-path>
 ```
 
-## First Run Convenience
+Во время guided setup задавайте вопросы блоками, обновляйте `answers.yaml`,
+перегенерируйте proposal, показывайте `proposal.md` перед apply и не
+подключайте проект, пока resource choices не согласованы.
+
+## Полностью автоматическая настройка workplace
+
+Используйте этот путь только когда нужные пути и решения уже известны.
+
+```bash
+python <processforge-root>/bin/pf.py workplace-init --workplace <workplace-path> --apply
+python <processforge-root>/bin/pf.py doctor-workplace --root <workplace-path>
+```
+
+## First run convenience
 
 Используйте `first-run` только когда нужно выполнить workplace initialization и
-project onboarding последовательно. Для dry-run на новом проекте сначала
-создайте или выберите целевой каталог проекта.
+project onboarding последовательно без guided dialogue. Это не путь по
+умолчанию для human-led настройки. Используйте его, когда оператор передал
+`workplace`, `project-root` и `type`, а authoring shared resources уже завершён
+или явно не входит в scope. Для dry-run на новом проекте сначала создайте или
+выберите целевой каталог проекта.
 
 ```bash
 python <processforge-root>/bin/pf.py first-run --workplace <workplace-path> --project-root <project-root> --type <project-type> --apply
 ```
 
 ## Подключение проекта
+
+Project onboarding допустим только после того, как workplace существует, а
+нужные shared resources уже есть, проверены или явно не входят в scope.
 
 Для dry-run `<project-root>` должен уже существовать. Apply mode может создать
 отсутствующий greenfield project root.
@@ -171,9 +192,21 @@ tools, MCP providers, processes, coding standards и capabilities уже
 ## Prompt для человека: настройка
 
 ```text
-Настрой ProcessForge на этой машине. Используй агентский command runbook в
-документации репозитория, создай или проверь workplace, запусти doctor-проверки
-и сообщи точные пути и следующий шаг подключения проекта.
+Настрой ProcessForge на этой машине в guided setup mode. Используй агентский
+command runbook в документации репозитория, задавай вопросы блоками, создай или
+проверь workplace, настрой workplace resources перед project onboarding, запусти
+doctor-проверки и сообщи точные пути и следующий шаг подключения проекта.
+```
+
+## Prompt для человека: полностью автоматическая настройка
+
+```text
+Настрой ProcessForge автоматически. Используй явно переданные мной пути и
+решения, пропусти guided dialogue, если не отсутствует обязательный ответ,
+инициализируй или проверь workplace, настрой или зарегистрируй shared
+resources, создай platform contracts после их зависимостей, затем подключи
+проект только если передан project path. Запусти doctor checks и сообщи
+assumptions и skipped areas.
 ```
 
 ## Prompt для человека: работа над проектом
@@ -246,7 +279,7 @@ Tasks:
 - цитируй files и lines для findings;
 - отделяй blocking findings от non-blocking follow-up.
 ```
-# Project Context Lock
+# Project context lock
 
 На старте сессии агент должен показать результат
 `project-context-check --session-start --json`. `fresh` продолжает работу,

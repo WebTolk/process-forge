@@ -1,4 +1,4 @@
-# Agent Ledger и Process Transitions
+# Agent ledger и process transitions
 
 Agent Ledger - это CLI-managed attendance/session state, а не отдельный агент.
 Для стандартного single-agent `1-1-1-1` flow используйте session aliases и не

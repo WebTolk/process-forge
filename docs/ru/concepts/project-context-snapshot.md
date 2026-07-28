@@ -1,4 +1,4 @@
-# Project Context Snapshot
+# Project context snapshot
 
 Project context snapshot - вычисленная операционная карта проекта ProcessForge.
 Она создаётся при project init или project refresh и читается в начале сессии.

@@ -12,6 +12,31 @@ ProcessForge — файловый framework для управляемой раб
 ProcessForge установлен один раз как инструмент; глобальные resources живут в
 workplace; каждый repository хранит только проектный слой `.pf/`.
 
+Обязательный порядок инициализации: сначала workplace, затем workplace
+resources, затем project onboarding. Для human-led настройки новой машины по
+умолчанию используйте guided workplace setup. Полностью автоматический путь
+используйте только когда оператор дал явные пути и решения.
+
+## Для человека
+
+- [Корневой README](../../README.ru.md)
+- [Prompts быстрого старта](../../QUICKSTART.ru.md)
+- [Установка](getting-started/installation.md)
+- [Guided workplace setup](getting-started/guided-workplace-setup.md)
+- [Порядок инициализации](getting-started/initialization-order.md)
+- [Workplace vs project](concepts/workplace-vs-project.md)
+- [Resource authoring](../getting-started/resource-authoring.md)
+- [Подключение проекта](getting-started/project-onboarding.md)
+
+## Для ИИ-агентов
+
+- [Агентский command runbook и prompts](getting-started/agent-prompts.md)
+- [Guided workplace setup agent prompt](../../prompts/guided-workplace-setup-agent.md)
+- [Automatic workplace initialization agent prompt](../../prompts/workplace-initialization-agent.md)
+- [Project onboarding agent prompt](../../prompts/project-onboarding-agent.md)
+- [Release checklist](../release-checklist.md)
+- [Validation](../validation/validation.md)
+
 ## Начало работы
 
 - [Установка](getting-started/installation.md)
@@ -26,7 +51,7 @@ workplace; каждый repository хранит только проектный 
 - [Multi-agent orchestration](getting-started/multi-agent-orchestration.md)
 - [Runtime driver and supervisor](getting-started/runtime-driver-supervisor.md)
 
-## Authoring
+## Авторинг
 
 - [Reusable templates](authoring/reusable-template-authoring.md)
 - [Knowledge packages](authoring/knowledge-package-authoring.md)
@@ -35,7 +60,7 @@ workplace; каждый repository хранит только проектный 
 - [Authoring parity](authoring/authoring-parity.md)
 - [Backfill existing processes](authoring/backfill-existing-processes.md)
 
-## Concepts
+## Концепции
 
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Runtime model](concepts/runtime-model.md)
@@ -56,7 +81,7 @@ workplace; каждый repository хранит только проектный 
 - [Hooks и events](concepts/hooks-events.md)
 - [Semantic parity](concepts/semantic-parity.md)
 
-## Порядок Слоёв
+## Порядок слоёв
 
 1. Workplace device: computer, laptop, server или runner host.
 2. ProcessForge tool root: CLI, schemas, processes, docs, templates, checks.

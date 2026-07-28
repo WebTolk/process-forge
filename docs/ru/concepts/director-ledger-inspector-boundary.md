@@ -1,4 +1,4 @@
-# Граница Director, Ledger, Inspector И Worker
+# Граница Director, Ledger, Inspector и worker
 
 ProcessForge разделяет координацию агентов и проверку runtime-исполнения.
 `supervisor` остается историческим техническим именем CLI, но по смыслу эта
@@ -45,7 +45,7 @@ exit proof, required outputs и expected reports, затем помечает ta
 Worker Agent выполняет одну назначенную capsule task и пишет ожидаемые outputs
 и runtime proof, которые требует driver.
 
-## Правила Границы
+## Правила границы
 
 Supervisor / Execution Inspector не должен выдавать leases, писать workplace
 agent ledger events, принимать или финализировать handoffs, выбирать routes,

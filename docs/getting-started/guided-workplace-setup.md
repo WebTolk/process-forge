@@ -1,8 +1,16 @@
 # Guided Workplace Setup
 
-Guided workplace setup is the agent-first setup flow for a new machine. The agent asks questions in blocks, updates `answers.yaml`, creates a proposal before apply, applies the workplace through existing initialization mechanics, runs `doctor-workplace`, and writes project onboarding next steps.
+Guided workplace setup is the default agent-first setup flow for a new machine
+when a human operator is involved. The agent asks questions in blocks, updates
+`answers.yaml`, creates a proposal before apply, applies the workplace through
+existing initialization mechanics, runs `doctor-workplace`, and writes resource
+authoring plus project onboarding next steps.
 
 The CLI supports the dialogue artifacts; it is not a terminal-only wizard.
+
+The order stays strict: workplace first, workplace resources second (knowledge,
+templates, tools, MCP, package roots, platform contracts), and project
+onboarding third.
 
 ## Commands
 

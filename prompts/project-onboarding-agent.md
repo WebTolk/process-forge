@@ -8,34 +8,41 @@ Use `python bin/pf.py` from the ProcessForge distribution root, or `pf` /
 `python .pf/runtime/bin/pf.py` inside an onboarded project. A normal linked
 project does not contain ProcessForge core or `tools/processforge.py`.
 
+Project onboarding is the third layer. It must happen after the workplace exists
+and after required workplace resources are created, registered, validated, or
+explicitly out of scope.
+
 ## Do
 
 1. Find the project root.
 2. Find the existing workplace root or `workplace.yaml`.
 3. Verify that the workplace exists.
-4. Determine or accept the project type.
-5. Determine project coordination mode: `inherit`, `simple`, or `organized`.
-6. Capture `context_requirements` and `context_policy` in `.pf/process-forge.yaml`.
-7. Create `.pf/`.
-8. Create `.pf/process-forge.yaml`.
-9. Create `.pf/process-forge.local.yaml`.
-10. Create `.pf/AGENTS.md`.
-11. Create `.pf/hooks.yaml`.
-12. Resolve platform contracts.
-13. Refresh project context snapshot; this writes `.pf/contexts/project-context.snapshot.yaml` and a generation under `.pf/contexts/project-context.snapshots/`.
-14. Run `project-context-check --session-start --json` and record the status.
-15. Create `.pf/assignments/first-assignment.yaml`.
-16. Create an assignment capsule; it must pin the current snapshot id/checksum and must not use `latest`.
-17. Generate `.pf/START_AGENT_HERE.md`.
-18. Create `.pf/runtime/bin/pf.py`.
-19. Check `project-mode status`.
-20. Run `doctor-project` through `pf` or `.pf/runtime/bin/pf.py`.
-21. Fix safe local issues.
-22. Create onboarding report, review, and handoff.
+4. Verify that required workplace resources are present, validated, or explicitly out of scope.
+5. Determine or accept the project type.
+6. Determine project coordination mode: `inherit`, `simple`, or `organized`.
+7. Capture `context_requirements` and `context_policy` in `.pf/process-forge.yaml`.
+8. Create `.pf/`.
+9. Create `.pf/process-forge.yaml`.
+10. Create `.pf/process-forge.local.yaml`.
+11. Create `.pf/AGENTS.md`.
+12. Create `.pf/hooks.yaml`.
+13. Resolve platform contracts.
+14. Refresh project context snapshot; this writes `.pf/contexts/project-context.snapshot.yaml` and a generation under `.pf/contexts/project-context.snapshots/`.
+15. Run `project-context-check --session-start --json` and record the status.
+16. Create `.pf/assignments/first-assignment.yaml`.
+17. Create an assignment capsule; it must pin the current snapshot id/checksum and must not use `latest`.
+18. Generate `.pf/START_AGENT_HERE.md`.
+19. Create `.pf/runtime/bin/pf.py`.
+20. Check `project-mode status`.
+21. Run `doctor-project` through `pf` or `.pf/runtime/bin/pf.py`.
+22. Fix safe local issues.
+23. Create onboarding report, review, and handoff.
 
 ## Do Not
 
 - Do not recreate the workplace.
+- Do not create missing shared resources inside project onboarding unless the
+  operator explicitly expands scope to workplace resource authoring first.
 - Do not write absolute local paths into public project files.
 - Do not copy global packages into the project.
 - Do not rewrite existing capsules when refreshing project context.

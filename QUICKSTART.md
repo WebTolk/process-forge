@@ -17,23 +17,46 @@ Verify that the distribution root is usable and tell me the exact path I should
 use as <processforge-root>.
 ```
 
-## 2. Initialize A Workplace
+## 2. Set Up A Workplace By Guided Dialogue
 
 ```text
-Initialize a ProcessForge workplace.
+Set up a ProcessForge workplace by guided dialogue.
 
-Use the ProcessForge command runbook for agents. Create the workplace at the path
-I provide or propose a clear local path. Run doctor-workplace, fix any structural
-problems you can safely fix, and report the result.
+Use the ProcessForge command runbook for agents and make `workplace-setup` the
+default path. Ask setup questions in small blocks, write or update
+`answers.yaml`, generate `proposal.md`, show the proposal before apply, then run
+`workplace-setup apply --apply` only after approval.
 
-Configure path constants, package roots, knowledge roots, tool registries, and
-MCP registries before creating knowledge packages or platform contracts.
+Create the workplace at the path I provide or propose a clear local path. Run
+doctor-workplace, fix structural problems you can safely fix, and report the
+result.
+
+Keep this order: workplace first, then resources, then project. Configure path
+constants, package roots, knowledge roots, tool registries, and MCP registries
+before creating knowledge packages, templates, or platform contracts. Do not
+onboard a project until the workplace resources are ready.
 ```
 
-For a dialogue-led machine setup, use `workplace-setup start`, review the
-generated proposal, then run `workplace-setup apply --apply`.
+The guided setup command family is `workplace-setup start`,
+`workplace-setup review`, `workplace-setup apply`, and
+`workplace-setup status`.
 
-## 3. Create Shared Resources
+## 3. Fully Automatic Setup
+
+```text
+Set up ProcessForge automatically.
+
+Use the explicit paths and answers I provide. Do not run the guided dialogue
+unless a required answer is missing. Verify the tool root, initialize or verify
+the workplace, configure roots, create/register shared resources, create
+platform contracts after their dependencies, and only then onboard the project
+if I provided a project path.
+
+Make conservative assumptions, write them into the report, run doctor checks,
+and tell me which setup areas were skipped or need manual decisions.
+```
+
+## 4. Create Shared Resources
 
 ```text
 Create shared ProcessForge resources for this workplace.
@@ -46,19 +69,22 @@ knowledge packages, create reusable templates, then create platform contracts
 that compose those resources for a concrete project context.
 ```
 
-## 4. Onboard A Project
+## 5. Onboard A Project
 
 ```text
 Onboard this repository into ProcessForge.
 
 Inspect the repository first, choose a conservative project type, connect it to
-the existing workplace, read the generated .pf/START_AGENT_HERE.md, run
-doctor-project, refresh the project context, and summarize what ProcessForge now
-knows about the project. Run project-context-check and confirm whether the
+the existing workplace, and first verify that required workplace resources are
+already present or explicitly out of scope.
+
+Create the project-local .pf layer, read the generated .pf/START_AGENT_HERE.md,
+run doctor-project, refresh the project context, and summarize what ProcessForge
+now knows about the project. Run project-context-check and confirm whether the
 snapshot is fresh, fresh_with_updates, stale, or broken.
 ```
 
-## 5. Compose A Platform Stack
+## 6. Compose A Platform Stack
 
 ```text
 Compose a project platform stack in ProcessForge.
@@ -70,7 +96,7 @@ capabilities, processes, coding standards, and project type hints by id. Run the
 platform doctor and then refresh the project context snapshot.
 ```
 
-## 6. Start A Run
+## 7. Start A Run
 
 ```text
 Create a ProcessForge run for my current request.
@@ -96,7 +122,7 @@ progresses, write artifacts/reviews/handoffs when the process calls for them,
 and close with run-summary and run-doctor.
 ```
 
-## 7. Create A Custom Process
+## 8. Create A Custom Process
 
 ```text
 Author a new ProcessForge process.
@@ -107,7 +133,7 @@ and expected task loop. Review the draft, apply it, and verify the resulting
 process.
 ```
 
-## 8. Use Subagents
+## 9. Use Subagents
 
 ```text
 Plan a ProcessForge-assisted multi-agent run.
@@ -118,7 +144,7 @@ launch each worker with only its worker launch prompt, and reconcile outputs
 into an integration report before delivery.
 ```
 
-## 9. Use Agent Ledger And Process Handoffs
+## 10. Use Agent Ledger And Process Handoffs
 
 ```text
 Plan a ProcessForge handoff with agent attendance tracking.
@@ -129,7 +155,7 @@ agent-director-tick to grant leases when the required role is online, and return
 only concrete expected artifacts.
 ```
 
-## 10. Validate Before Delivery
+## 11. Validate Before Delivery
 
 ```text
 Validate the repository before delivery.
@@ -139,7 +165,7 @@ checks, rebuild the release archive with a neutral filename, test the archive,
 and report exact pass/fail evidence before commit or push.
 ```
 
-## 11. Run A Supervised Worker Smoke
+## 12. Run A Supervised Worker Smoke
 
 ```text
 Use ProcessForge runtime drivers for a bounded supervised test run.
@@ -156,7 +182,8 @@ are `supervisor tick` and `supervisor run`; the clearer aliases are
 
 1. Install ProcessForge distribution.
 2. Verify ProcessForge itself.
-3. Initialize workplace.
+3. Run guided workplace setup by default for human-led setup, or direct
+   workplace-init only for explicit automatic setup.
 4. Configure path constants and roots.
 5. Configure knowledge roots.
 6. Register tools and MCP servers.

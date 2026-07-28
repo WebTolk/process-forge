@@ -1,4 +1,4 @@
-# Task Batch Workflow
+# Task batch workflow
 
 `task-batch-execution` подходит для рабочей сессии, где нужно разбить работу на
 несколько задач и зафиксировать попытки выполнения.

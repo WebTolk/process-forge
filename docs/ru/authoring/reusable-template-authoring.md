@@ -1,4 +1,4 @@
-# Reusable Template Authoring
+# Reusable template authoring
 
 Reusable template — это общий шаблон, который можно использовать в разных
 проектах через workplace.

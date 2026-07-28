@@ -1,4 +1,4 @@
-# Hooks And Events
+# Hooks and events
 
 ProcessForge записывает события в проектные runtime files. Hooks сопоставляют
 события с правилами доставки и могут создавать outbox payloads.

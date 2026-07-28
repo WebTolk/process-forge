@@ -14,11 +14,13 @@ MCP registrations и platform contracts в версионируемых файл
 
 ![Схема рабочего места ProcessForge](docs/assets/processforge-architecture.svg)
 
-## Рабочая Модель
+## Что такое ProcessForge
 
 Рабочее место - это физическая или виртуальная машина, где работают человек и
 ИИ-агенты: компьютер, ноутбук, сервер или runner host. ProcessForge
 устанавливается один раз как инструмент этого рабочего места.
+
+## Основные сущности
 
 Workplace хранит глобальные машинные ресурсы: definitions процессов, knowledge
 packages, reusable templates, tool registrations, MCP registrations, platform
@@ -56,13 +58,29 @@ hints и policy data. Ядро ProcessForge разрешает эти контр
 коде ядра нет hardcode конкретных продуктов, CMS, frameworks, marketplaces или
 business domains.
 
-## Порядок Инициализации
+## Как связаны слои
+
+Используйте ProcessForge снаружи внутрь:
+
+1. ProcessForge tool root: установленный CLI, встроенные processes, schemas,
+   checks, docs и prompt templates.
+2. Workplace: машинное состояние и reusable resources, общие для проектов.
+3. Workplace resources: knowledge roots/packages, reusable templates, tools,
+   MCP providers, package roots, process definitions и platform contracts.
+4. Project `.pf/`: project context, selected resources, assignments, runs,
+   tasks, iterations, artifacts, reviews, handoffs и hooks.
+
+Проектный слой зависит от workplace. В проект не нужно копировать исходники
+ProcessForge, тяжёлые mirrors документации, shared toolchains или payloads
+глобальных ресурсов.
+
+## Порядок инициализации
 
 Для нового рабочего места используйте такой порядок:
 
 1. Установить ProcessForge distribution.
 2. Проверить ProcessForge distribution.
-3. Инициализировать workplace.
+3. По умолчанию запустить guided workplace setup для настройки с человеком.
 4. Настроить path constants и roots.
 5. Настроить knowledge roots, особенно локальные documentation roots.
 6. Зарегистрировать tools и MCP servers.
@@ -78,7 +96,30 @@ tools, MCP servers, processes, coding standards или capabilities ещё не
 существуют. Сначала создайте или зарегистрируйте зависимости, затем собирайте
 platform.
 
-## Поддерживаемые Мастера И Команды Создания
+Используйте `workplace-setup` как путь по умолчанию, когда ИИ-агент настраивает
+новую машину вместе с человеком. Агент задаёт вопросы блоками, пишет
+`answers.yaml`, готовит `proposal.md`, просит подтверждение, применяет
+workplace, запускает `doctor-workplace` и только потом переходит к authoring
+resources или project onboarding.
+
+Используйте `first-run`, `workplace-init` и прямые create/register команды как
+полностью автоматический путь только когда оператор явно просит автоматизацию и
+даёт нужные пути и ответы.
+
+## Быстрый старт
+
+1. Прочитайте этот README, чтобы понять модель и границы.
+2. Откройте [prompts быстрого старта](QUICKSTART.ru.md) и скопируйте setup
+   prompt в ИИ-агента.
+3. Дайте агенту провести guided workplace setup.
+4. Создайте или зарегистрируйте workplace resources: knowledge, templates,
+   tools, MCP providers, package roots и platform contracts.
+5. Подключайте первый проект только после готовности workplace и shared
+   resources.
+6. Внутри проекта начинайте каждую ProcessForge-сессию с
+   `.pf/START_AGENT_HERE.md`.
+
+## Поддерживаемые мастера и команды создания
 
 ProcessForge сейчас поддерживает file-first creation flows для:
 
@@ -125,28 +166,59 @@ Inspector. Он проверяет assigned worker runtime state; это не Ag
 совместимости UX, но текущая реализация остаётся file-first и не требует
 terminal prompting.
 
-## Prompts Для Оператора
+## Prompts для оператора
 
-### Подготовить Workplace
+### Подготовить workplace через guided setup
 
 ```text
-Подготовь ProcessForge на этой машине.
+Подготовь ProcessForge на этой машине в guided setup mode.
 
 Найди установленный ProcessForge tool root или распакованный distribution,
 прочитай human README, затем используй docs/ru/getting-started/agent-prompts.md
 для точных команд.
 
-Создай или проверь workplace, запусти нужные doctor checks и сообщи:
+Используй workplace setup wizard как путь по умолчанию. Задавай вопросы
+небольшими блоками, записывай session answers и proposal, покажи proposal перед
+применением, затем запусти workplace doctor checks.
+
+Иди в таком порядке:
+1. Проверь ProcessForge tool root.
+2. Создай или проверь workplace.
+3. Настрой roots, knowledge roots, package roots, tools, MCP providers и
+   reusable templates.
+4. Создавай platform contracts только после готовности их зависимостей.
+5. Не подключай проект, пока workplace resources не готовы.
+
+Сообщи:
 - ProcessForge tool root;
 - путь workplace;
 - готов ли workplace;
+- какие shared resources настроены;
 - какой prompt использовать дальше для подключения проекта.
 
 Держи ProcessForge установленным инструментом. Не копируй весь репозиторий в
 agent configuration folders или в project repositories.
 ```
 
-### Подключить Проект
+### Полностью автоматическая настройка
+
+```text
+Настрой ProcessForge автоматически, без guided dialogue, если не отсутствует
+обязательный ответ.
+
+Используй явно переданные мной пути и решения. Проверь ProcessForge tool root,
+создай или проверь workplace, настрой roots и workplace resources, создай
+platform contracts после их зависимостей, затем подключи проект, если задан
+project path.
+
+Используй прямые CLI commands: workplace-init, resource create/register
+commands, platform-contract-install, first-run и project-onboard там, где они
+подходят. Не задавай вопросы о предпочтениях; выбирай консервативно,
+фиксируй assumptions, запускай doctor checks и сообщай о пропущенных областях
+настройки.
+```
+
+### Подключить проект
 
 ```text
 Подключи этот проект к существующему ProcessForge workplace.
@@ -159,7 +231,7 @@ agent configuration folders или в project repositories.
 mirrors, toolchains или репозиторий ProcessForge внутрь проекта.
 ```
 
-### Собрать Platform Stack
+### Собрать platform stack
 
 ```text
 Создай ProcessForge resources, которые нужны platform этого проекта.
@@ -171,7 +243,7 @@ knowledge packages, создай reusable templates, затем создай pla
 project snapshot.
 ```
 
-### Начать Рабочую Сессию
+### Начать рабочую сессию
 
 ```text
 Начни ProcessForge run для этой работы.
@@ -181,7 +253,7 @@ tasks, фиксируй work/debug/fix/review iterations, сохраняй artif
 в проектной .pf папке, а в конце сделай run summary и doctor check.
 ```
 
-### Создать Процесс
+### Создать процесс
 
 ```text
 Создай новый ProcessForge process для этого проекта.
@@ -192,7 +264,27 @@ semantic parity, применяй process только после review и до
 вывести в списке, описать и использовать для run.
 ```
 
-## Карта Документации
+## Карта документации
+
+Для человека:
+
+- [Quickstart prompts](QUICKSTART.ru.md)
+- [Установка и требования](docs/ru/getting-started/installation.md)
+- [Guided workplace setup](docs/ru/getting-started/guided-workplace-setup.md)
+- [Порядок инициализации](docs/ru/getting-started/initialization-order.md)
+- [Workplace vs project](docs/ru/concepts/workplace-vs-project.md)
+- [Resource authoring](docs/getting-started/resource-authoring.md)
+- [Подключение проекта](docs/ru/getting-started/project-onboarding.md)
+
+Для ИИ-агентов:
+
+- [Агентский command runbook](docs/ru/getting-started/agent-prompts.md)
+- [Guided workplace setup agent prompt](prompts/guided-workplace-setup-agent.md)
+- [Automatic workplace initialization agent prompt](prompts/workplace-initialization-agent.md)
+- [Project onboarding agent prompt](prompts/project-onboarding-agent.md)
+- [Release checklist](docs/release-checklist.md)
+
+Подробный индекс:
 
 - [Quickstart prompts](QUICKSTART.ru.md)
 - [Индекс документации](docs/ru/index.md)
@@ -240,7 +332,7 @@ Optional integrations: MCP servers, external tools, browser checks и
 version-control workflows. Runtime usage from a release archive не требует Git,
 если пользователю не нужна version-control integration.
 
-## ProcessForge И Agent Environments
+## ProcessForge и agent environments
 
 Не копируйте весь репозиторий ProcessForge в `.codex`, `.claude`, `.agents` или
 похожие папки конфигурации агентов.
@@ -252,7 +344,7 @@ version-control workflows. Runtime usage from a release archive не требу�
 ## Лицензия
 
 См. [LICENSE](LICENSE).
-# Project Context Lock
+# Project context lock
 
 `.pf/process-forge.yaml` объявляет `context_requirements`, а
 `project-context-refresh` записывает resolved lock в

@@ -1,4 +1,4 @@
-# Shell Agent Subagent Policy
+# Shell agent subagent policy
 
 Shell agents - это OS processes, запущенные через ProcessForge runtime drivers и bounded supervisor.
 

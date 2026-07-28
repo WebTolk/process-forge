@@ -1,4 +1,4 @@
-# Runtime Driver And Execution Inspector Quickstart
+# Runtime driver and execution inspector quickstart
 
 Используйте после `workplace-init` и `project-onboard`.
 

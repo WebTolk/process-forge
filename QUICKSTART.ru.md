@@ -1,10 +1,10 @@
-# Prompts Быстрого Старта ProcessForge
+# Prompts быстрого старта ProcessForge
 
 Этот quickstart написан для человека. Скопируйте нужный prompt в ИИ-агента.
 Полный набор команд агент должен брать из
 [docs/ru/getting-started/agent-prompts.md](docs/ru/getting-started/agent-prompts.md).
 
-## 1. Подготовить Инструмент
+## 1. Подготовить инструмент
 
 ```text
 Подготовь ProcessForge на этой машине.
@@ -17,24 +17,46 @@ runbook.
 мне нужно использовать как <processforge-root>.
 ```
 
-## 2. Инициализировать Workplace
+## 2. Настроить workplace через диалог
 
 ```text
-Инициализируй ProcessForge workplace.
+Настрой ProcessForge workplace через guided dialogue.
 
-Используй агентский command runbook ProcessForge. Создай workplace по указанному
-мной пути или предложи понятный локальный путь. Запусти doctor-workplace,
-исправь структурные проблемы, которые можно безопасно исправить, и сообщи
-результат.
+Используй агентский command runbook ProcessForge и считай `workplace-setup`
+путём по умолчанию. Задавай вопросы небольшими блоками, записывай или обновляй
+`answers.yaml`, генерируй `proposal.md`, показывай proposal перед apply и
+запускай `workplace-setup apply --apply` только после подтверждения.
 
-До создания knowledge packages или platform contracts настрой path constants,
-package roots, knowledge roots, tool registries и MCP registries.
+Создай workplace по указанному мной пути или предложи понятный локальный путь.
+Запусти doctor-workplace, исправь структурные проблемы, которые можно безопасно
+исправить, и сообщи результат.
+
+Держи порядок: сначала workplace, затем resources, затем project. До создания
+knowledge packages, templates или platform contracts настрой path constants,
+package roots, knowledge roots, tool registries и MCP registries. Не подключай
+проект, пока workplace resources не готовы.
 ```
 
-Для диалоговой настройки машины используйте `workplace-setup start`,
-просмотрите proposal, затем выполните `workplace-setup apply --apply`.
+Семейство команд guided setup: `workplace-setup start`,
+`workplace-setup review`, `workplace-setup apply` и
+`workplace-setup status`.
 
-## 3. Создать Общие Resources
+## 3. Полностью автоматическая настройка
+
+```text
+Настрой ProcessForge автоматически.
+
+Используй явно переданные мной пути и ответы. Не запускай guided dialogue, если
+не отсутствует обязательный ответ. Проверь tool root, инициализируй или проверь
+workplace, настрой roots, создай или зарегистрируй shared resources, создай
+platform contracts после их зависимостей и только потом подключи проект, если я
+передал project path.
+
+Выбирай консервативно, записывай assumptions в отчёт, запускай doctor checks и
+сообщай, какие области настройки были пропущены или требуют ручных решений.
+```
+
+## 4. Создать общие resources
 
 ```text
 Создай shared ProcessForge resources для этого workplace.
@@ -47,18 +69,21 @@ knowledge packages, создай reusable templates, затем создай pla
 которые композируют эти resources для конкретного project context.
 ```
 
-## 4. Подключить Проект
+## 5. Подключить проект
 
 ```text
 Подключи этот репозиторий к ProcessForge.
 
 Сначала изучи структуру репозитория, выбери консервативный project type,
-подключи его к существующему workplace, прочитай созданный
-.pf/START_AGENT_HERE.md, запусти doctor-project, refresh project context и
-кратко опиши, что ProcessForge теперь знает о проекте.
+подключи его к существующему workplace и сначала проверь, что нужные workplace
+resources уже есть или явно не входят в scope.
+
+Создай project-local .pf layer, прочитай созданный .pf/START_AGENT_HERE.md,
+запусти doctor-project, refresh project context и кратко опиши, что
+ProcessForge теперь знает о проекте.
 ```
 
-## 5. Собрать Platform Stack
+## 6. Собрать platform stack
 
 ```text
 Собери project platform stack в ProcessForge.
@@ -70,7 +95,7 @@ providers, capabilities, processes, coding standards и project type hints по 
 Запусти platform doctor и затем refresh project context snapshot.
 ```
 
-## 6. Начать Run
+## 7. Начать run
 
 ```text
 Создай ProcessForge run для моего текущего запроса.
@@ -95,7 +120,7 @@ python bin/pf.py project-mode set --project-root <project-root> --mode organized
 процесс, и заверши run-summary и run-doctor.
 ```
 
-## 7. Создать Собственный Process
+## 8. Создать собственный process
 
 ```text
 Создай новый ProcessForge process.
@@ -105,7 +130,7 @@ python bin/pf.py project-mode set --project-root <project-root> --mode organized
 ожидаемый task loop. Проверь draft, примени его и проверь итоговый process.
 ```
 
-## 8. Использовать Subagents
+## 9. Использовать subagents
 
 ```text
 Спланируй ProcessForge-assisted multi-agent run.
@@ -116,7 +141,7 @@ orchestrator task plan, примени его для создания worker ass
 integration report перед delivery.
 ```
 
-## 9. Agent Ledger И Process Handoffs
+## 10. Agent ledger и process handoffs
 
 ```text
 Спланируй ProcessForge handoff с agent attendance tracking.
@@ -127,7 +152,7 @@ agent-director-tick для выдачи leases, если нужная role onlin
 только конкретные expected artifacts.
 ```
 
-## 10. Проверить Перед Delivery
+## 11. Проверить перед delivery
 
 ```text
 Проверь репозиторий перед delivery.
@@ -137,9 +162,7 @@ agent-director-tick для выдачи leases, если нужная role onlin
 сообщи точные pass/fail evidence перед commit или push.
 ```
 
-## Обязательный Порядок
-
-## 11. Runtime Driver And Execution Inspector Smoke
+## 12. Runtime driver and execution inspector smoke
 
 ```text
 Используй ProcessForge runtime drivers для ограниченного execution-inspected test run.
@@ -151,9 +174,12 @@ reports. Совместимые технические команды: `supervis
 более ясные aliases: `execution-inspector-tick` и `execution-inspector-run`.
 ```
 
+## Обязательный порядок
+
 1. Install ProcessForge distribution.
 2. Verify ProcessForge itself.
-3. Initialize workplace.
+3. Для human-led setup по умолчанию запустить guided workplace setup; direct
+   workplace-init использовать только для явно автоматического пути.
 4. Configure path constants and roots.
 5. Configure knowledge roots.
 6. Register tools and MCP servers.
@@ -183,7 +209,7 @@ contracts.
 похожие папки конфигурации агентов. Установите ProcessForge один раз как
 инструмент и укажите агенту, где он установлен; проектные инструкции находятся
 в `.pf/START_AGENT_HERE.md`.
-# Project Context Lock
+# Project context lock
 
 При onboarding агент должен выполнить `project-context-check --session-start
 --json` после refresh snapshot. Работу можно продолжать при `fresh`, новые

@@ -1,4 +1,4 @@
-# Multi-Agent Orchestration
+# Multi-agent orchestration
 
 Multi-agent orchestration - встроенный процесс ProcessForge для разбиения run на ограниченные worker assignments.
 
@@ -21,7 +21,7 @@ Worker получает только:
 
 Worker не получает полный project context по умолчанию. Assignment capsule содержит `worker_may_rebuild_context: false`.
 
-## Scope Rules
+## Scope rules
 
 - Public config fields задают поведение. Если поле принято в schemas, templates, docs или examples, оно должно влиять на поведение, быть явно описано как metadata-only или падать на validation как unsupported.
 - Unsupported public fields падают на validation, если они не помещены в явный `metadata` или `x_` extension namespace.
@@ -32,7 +32,7 @@ Worker не получает полный project context по умолчани�
 - Core files можно менять только при явном разрешении.
 - Worker останавливается и сообщает, если выданного scope недостаточно.
 
-## Apply Output
+## Apply output
 
 `orchestrator-plan apply --apply` создает:
 

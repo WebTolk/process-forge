@@ -1,10 +1,11 @@
-# Порядок Инициализации
+# Порядок инициализации
 
 Используйте этот порядок для новой установки ProcessForge, workplace и проекта:
 
 1. Install ProcessForge distribution.
 2. Verify ProcessForge itself.
-3. Initialize workplace.
+3. Для human-led настройки по умолчанию запустить guided workplace setup; direct
+   workplace-init использовать только для явно автоматического пути.
 4. Configure path constants and roots.
 5. Configure knowledge roots, especially local documentation roots.
 6. Register tools and MCP servers.
@@ -15,7 +16,7 @@
 11. Create run/task workflow.
 12. Create custom processes as needed.
 
-## Почему Platform Contracts Создаются Позже
+## Почему platform contracts создаются позже
 
 Platform contract не является первичным ресурсом. Это композиция поверх уже
 существующих packages, templates, tools, MCP servers, processes, coding
@@ -33,7 +34,7 @@ Base languages и web technologies относятся к этим dependencies. 
 manifests. Ссылайтесь на них через workplace knowledge roots и package
 resources с `path_ref`.
 
-## Agent Environments
+## Agent environments
 
 Не копируйте весь репозиторий ProcessForge в `.codex`, `.claude`, `.agents` или
 похожие папки конфигурации агентов.

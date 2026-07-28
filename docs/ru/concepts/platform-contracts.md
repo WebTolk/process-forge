@@ -1,4 +1,4 @@
-# Platform Contracts
+# Platform contracts
 
 Platform contract - это composition package, а не просто метка проекта.
 
@@ -21,7 +21,7 @@ platform manifests. Ядро ProcessForge ничего не знает о кон
 implementation, documentation, content, operations или business domains.
 Platforms являются data-driven contracts, загружаемыми из manifests.
 
-## Capability, Knowledge Package, Platform
+## Capability, knowledge package, platform
 
 - Capability описывает, что агенту или процессу может понадобиться делать.
 - Knowledge package описывает, где агент читает правила, документацию, примеры
@@ -41,7 +41,7 @@ workplace platform contract root. `project_type_hints` связывает contra
 Missing required platform capabilities блокируют strict automation. Missing
 optional capabilities дают warnings.
 
-## Resource Management Contract Use
+## Resource management contract use
 
 Platform contracts могут ссылаться на knowledge packages, knowledge resources,
 tools, MCP providers и templates через отдельные required и recommended groups.

@@ -1,4 +1,4 @@
-# Lock-модель Project Context
+# Lock-модель project context
 
 `context_requirements` в `.pf/process-forge.yaml` - это декларация зависимостей проекта. В ней проект описывает нужные knowledge packages, resources, templates, tools и platform contracts.
 

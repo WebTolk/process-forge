@@ -1,4 +1,4 @@
-# Platform Inheritance
+# Platform inheritance
 
 Platform contracts могут наследоваться от других platforms через `extends` и
 требовать другие platforms через `requires.platforms`.
@@ -43,7 +43,7 @@ Base languages и web technologies не должны становиться pare
 включать такие packages напрямую, а child platform наследует их только если
 parent platform manifest их добавляет.
 
-## Merge Rules
+## Merge rules
 
 ProcessForge сначала разрешает parent platforms, объединяет parent resources,
 затем применяет child platform.
@@ -70,7 +70,7 @@ inherited knowledge packages в `knowledge_stack`.
 пример должен оставаться в docs/examples, а не в core seeds, templates, tests
 или flow artifacts.
 
-## Evolve Candidates
+## Evolve candidates
 
 Evolve candidates не наследуются вверх автоматически. Наблюдение на child
 platform фиксируется через `source_context.platform_stack` и

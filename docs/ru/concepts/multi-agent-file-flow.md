@@ -1,4 +1,4 @@
-# Multi-Agent File Flow
+# Multi-agent file flow
 
 ProcessForge поддерживает multi-agent работу через файлы.
 
@@ -22,7 +22,7 @@ Orchestrator должен:
 - записывать изменения в logs и artifacts
 - создавать worker launch prompts, где есть только assigned task и capsule
 
-## Suitable Subtasks
+## Suitable subtasks
 
 Самые безопасные subtasks: read-only research, review, consistency checks,
 schema checks, documentation checks и impact analysis.

@@ -1,4 +1,4 @@
-# Runs, Tasks And Iterations
+# Runs, tasks and iterations
 
 ![Lifecycle run/task/iteration](../../assets/processforge-run-lifecycle.svg)
 
