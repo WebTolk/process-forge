@@ -47,12 +47,25 @@ The YAML snapshot records:
 - resolved hard policies and preferences
 - required and optional capabilities
 - selected processes, packages, templates, tools, and MCP entries
+- `available_platform_contracts`, `selected_platform_contracts`,
+  `platform_stack`, and `platform_selection`
 - `workplace_coordination` with project mode, workplace default mode, effective
   mode, Director availability, and Director-required/inbox metadata
 - session startup read order
 
 The runtime workplace snapshot may contain local tool or MCP availability state.
 It lives under `.pf/runtime/cache/` and is private.
+
+## Platform Selection
+
+Meta-project types such as `agent-workspace`, `brownfield-workspace`, and
+`meta-workspace` can expose available platform contracts without selecting one
+platform stack. In that case `selected_platform_contracts` and `platform_stack`
+are empty, and `platform_selection.status` is `not_applicable`.
+
+Normal project types, such as `joomla-extension` or `software-project`, record
+selected contracts in both `selected_platform_contracts` and `platform_stack`
+when a platform is declared or detected.
 
 Use:
 

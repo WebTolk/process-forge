@@ -41,3 +41,7 @@ python bin/pf.py workplace-mode doctor --workplace ./pf-workplace
 ```
 
 This process does not create `.pf/` in a project and does not select a project type.
+
+Heavy local documentation should be registered as `knowledge_roots.local-docs`.
+The root may live near the workplace on disk, but project source scans treat it
+as external knowledge rather than project source.

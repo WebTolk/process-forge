@@ -18,6 +18,16 @@ The project process is `project-onboarding`.
 
 Project onboarding may reference workplace registries through local config, but it must not recreate the workplace or copy global packages into the project. Public project files must not contain local absolute paths.
 
+The ProcessForge distribution and the workplace may live inside a broad
+meta-project folder on disk. Project scans still exclude those subtrees by role:
+`distribution_root`, `workplace_root`, `knowledge_root`, `runtime_root`, and
+`package_cache`.
+
+To develop ProcessForge itself, onboard the repository with project type
+`processforge-development` or `processforge-core-development`. Without that
+explicit type, `doctor-project` treats a PF-looking root as a likely boundary
+mistake.
+
 ## Launchers
 
 ProcessForge is Python-first. The canonical public distribution entrypoint is `bin/pf.py`. Thin optional wrappers may call the same CLI, but public docs should teach the Python launcher first.

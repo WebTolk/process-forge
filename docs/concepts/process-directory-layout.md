@@ -14,6 +14,10 @@ The resolver searches user/custom roots before core, keeps `process_id` stable a
 
 Public release archives include `processes/core/**` and only placeholder files under `processes/user/` and `processes/custom/`. Real user/custom process definitions are private workspace or project state and are excluded from the public distribution.
 
+Active manifests, docs, templates, examples, and package manifests should refer
+to process files under `processes/core/`, `processes/user/`, or
+`processes/custom/`. Flat process paths are migration-only.
+
 This layout supports three primary scenarios:
 
 - Greenfield first workspace: a new user starts from PF built-ins and authors new processes into `processes/user/`.

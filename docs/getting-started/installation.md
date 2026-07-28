@@ -32,7 +32,11 @@ agent to read `.pf/START_AGENT_HERE.md` inside the project.
 python tools/validate-public-cleanliness.py --root .
 python tools/validate-process-forge-checksums.py --root . --check
 python bin/pf.py release-test --root .
+python bin/pf.py release-test --root . --trace-smokes
 ```
+
+`--trace-smokes` writes `.pf/runtime/release-test/latest-trace.ndjson` with the
+current smoke name, elapsed time, timeout budget, and timeout reason.
 
 ## Requirements
 
@@ -45,6 +49,20 @@ Runtime requirements:
 - Read/write access is required for the ProcessForge distribution, workplace, and project folders.
 - PowerShell is not required for runtime usage.
 - ProcessForge v0.1 does not require a daemon or background process.
+
+## Windows PowerShell UTF-8
+
+PowerShell may render UTF-8 Russian text incorrectly if the console encoding is
+not UTF-8. The files remain UTF-8; this is a console rendering issue.
+
+```powershell
+chcp 65001
+$OutputEncoding = [System.Text.UTF8Encoding]::new()
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new()
+```
+
+Identifiers and YAML remain ASCII-safe; docs are UTF-8.
 
 Development and release-check requirements:
 

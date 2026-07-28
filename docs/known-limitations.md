@@ -29,6 +29,8 @@ artifacts.
 - ProcessForge core is a short-lived Python CLI.
 - It does not start background daemons by default.
 - `release-test` and smoke commands use per-command process-tree timeouts; a hung child process should fail with command, cwd, timeout, stdout tail, and stderr tail diagnostics instead of hanging silently.
+- `release-test --trace-smokes` writes per-smoke elapsed and timeout diagnostics
+  under `.pf/runtime/release-test/`.
 - A long-running watcher or runner is a future optional layer, not part of the core runtime.
 - Runtime driver execution is opt-in. Built-in neutral drivers are limited to
   `manual`, `generic-shell`, `test-echo-worker`, and `test-shell-agent`.

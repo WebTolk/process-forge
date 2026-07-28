@@ -8,6 +8,14 @@ Doctor Workplace validates a workplace root.
 python bin/pf.py doctor-workplace --root <workplace-root>
 ```
 
+`knowledge_roots.local-docs` is reported as `PASS` when configured. If it is
+missing or empty, the doctor reports:
+
+```text
+WARN: knowledge_roots.local-docs missing or empty
+Fix: add local-docs pointing to your documentation root
+```
+
 ## Checks
 
 - `workplace.yaml` exists.

@@ -21,6 +21,12 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 - `.gitignore` excludes private local config and runtime paths.
 - Public manifest does not contain local absolute paths.
 - Workplace manifest referenced by local config exists when configured.
+- ProcessForge distribution roots are used as projects only with explicit
+  `processforge-development` or `processforge-core-development` type.
+- Distribution, workplace, and knowledge roots inside a broad project root are
+  reported and protected by role-aware scan guards.
+- Project-local package resources do not produce a false resource-index warning
+  when the index is optional.
 - Project package draft exists.
 - Init artifacts exist.
 - Init review exists.

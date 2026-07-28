@@ -37,6 +37,25 @@ PROCESSFORGE_SPEC_VERSION = "1.0"
 PROCESSFORGE_SCHEMA_BUNDLE_VERSION = "1.0"
 RELEASE_NAME = "processforge"
 RELEASE_ARCHIVE_VERSION = "1.0.0"
+PROCESSFORGE_CORE_PROJECT_TYPES = {"processforge-development", "processforge-core-development"}
+META_PROJECT_TYPES = {"agent-workspace", "brownfield-workspace", "meta-workspace"}
+DEFAULT_SCAN_POLICY = {
+    "enabled": True,
+    "exclude_roles": ["distribution_root", "workplace_root", "knowledge_root", "runtime_root", "package_cache"],
+    "default_excludes": [
+        "**/.git/**",
+        "**/.pf/runtime/**",
+        "**/runtime/**",
+        "**/node_modules/**",
+        "**/vendor/**",
+        "**/dist/**",
+        "**/build/**",
+    ],
+    "allow_processforge_core_as_project": {
+        "enabled": False,
+        "requires_project_type": sorted(PROCESSFORGE_CORE_PROJECT_TYPES),
+    },
+}
 
 PROJECT_PRIVATE_GITIGNORE = [
     ".pf/process-forge.local.yaml",
@@ -454,6 +473,45 @@ def rel(path: Path, root: Path) -> str:
         return path.relative_to(root).as_posix()
     except ValueError:
         return path.as_posix()
+
+
+def path_is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.resolve().relative_to(root.resolve())
+        return True
+    except ValueError:
+        return False
+
+
+def project_types_from_manifest(manifest_data: dict[str, Any]) -> list[str]:
+    project = manifest_data.get("project") if isinstance(manifest_data.get("project"), dict) else {}
+    raw_type = project.get("type") or project.get("types") or project.get("project_type")
+    if isinstance(raw_type, str):
+        return [safe_id(raw_type)]
+    if isinstance(raw_type, list):
+        return [safe_id(str(item)) for item in raw_type if item]
+    return []
+
+
+def project_type_allows_processforge_core(manifest_data: dict[str, Any]) -> bool:
+    return bool(set(project_types_from_manifest(manifest_data)).intersection(PROCESSFORGE_CORE_PROJECT_TYPES))
+
+
+def project_type_is_meta_workspace(manifest_data: dict[str, Any]) -> bool:
+    return bool(set(project_types_from_manifest(manifest_data)).intersection(META_PROJECT_TYPES))
+
+
+def looks_like_processforge_distribution(path: Path) -> bool:
+    root = path.resolve()
+    return all(
+        item.exists()
+        for item in [
+            root / "bin" / "pf.py",
+            root / "tools" / "processforge.py",
+            root / "schemas" / "process-definition.schema.json",
+            root / "processes" / "core",
+        ]
+    )
 
 
 def path_string_is_absolute(value: str) -> bool:
@@ -2052,19 +2110,19 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
             checks.append(
                 check_with_hint(
                     "WARN",
-                    "knowledge_roots.local-docs configured",
+                    "knowledge_roots.local-docs missing or empty",
                     "Local heavy documentation and source snapshots must be referenced through knowledge_roots.local-docs instead of private package paths.",
-                    "add an entry with id: local-docs to registries/knowledge-roots.yaml, pointing at the machine-local documentation root",
+                    "add local-docs pointing to your documentation root",
                 )
             )
         else:
             local_docs_path = resolve_registry_relative_path(root, str(local_docs.get("path", "")), manifest)
             checks.append(
-                check("PASS", "knowledge_roots.local-docs path exists")
+                check("PASS", "knowledge_roots.local-docs configured")
                 if local_docs_path.is_dir()
                 else check_with_hint(
                     "WARN",
-                    "knowledge_roots.local-docs path exists",
+                    "knowledge_roots.local-docs configured but path missing",
                     "The local-docs root is registered but the target directory is not available on this machine.",
                     "create the directory or update registries/knowledge-roots.yaml to the correct local documentation root",
                 )
@@ -3027,6 +3085,18 @@ def contract_includes(contract: dict[str, Any], key: str) -> list[str]:
     return sorted(set(output))
 
 
+def contract_recommended_items(contract: dict[str, Any], key: str) -> list[str]:
+    recommends = contract.get("recommends") if isinstance(contract.get("recommends"), dict) else {}
+    values = list_value(recommends.get(key))
+    values.extend(contract_includes(contract, key))
+    return sorted(set(values))
+
+
+def contract_optional_items(contract: dict[str, Any], key: str) -> list[str]:
+    optional = contract.get("optional") if isinstance(contract.get("optional"), dict) else {}
+    return sorted(set(list_value(optional.get(key))))
+
+
 def package_dependency_ids(manifest: dict[str, Any]) -> list[str]:
     dependencies = set(list_value(manifest.get("dependencies")))
     requires = manifest.get("requires") if isinstance(manifest.get("requires"), dict) else {}
@@ -3103,13 +3173,13 @@ def resolve_platform_contracts(workplace_manifest: Path | None, platform_ids: li
             required_capabilities.update(contract_required_capabilities(contract))
             owner = contract_id
             merge_id_list(required_knowledge_packages, contract_required_items(contract, "knowledge_packages"), owner, resource_conflicts)
-            merge_id_list(recommended_knowledge_packages, contract_includes(contract, "knowledge_packages"), owner, resource_conflicts)
+            merge_id_list(recommended_knowledge_packages, contract_recommended_items(contract, "knowledge_packages"), owner, resource_conflicts)
             merge_id_list(required_tools, contract_required_items(contract, "tools"), owner, resource_conflicts)
-            merge_id_list(recommended_tools, contract_includes(contract, "tools"), owner, resource_conflicts)
+            merge_id_list(recommended_tools, contract_recommended_items(contract, "tools"), owner, resource_conflicts)
             merge_id_list(required_mcp, contract_required_items(contract, "mcp"), owner, resource_conflicts)
-            merge_id_list(recommended_mcp, contract_includes(contract, "mcp"), owner, resource_conflicts)
+            merge_id_list(recommended_mcp, contract_recommended_items(contract, "mcp"), owner, resource_conflicts)
             merge_id_list(required_templates, contract_required_items(contract, "templates"), owner, resource_conflicts)
-            merge_id_list(recommended_templates, contract_includes(contract, "templates"), owner, resource_conflicts)
+            merge_id_list(recommended_templates, contract_recommended_items(contract, "templates"), owner, resource_conflicts)
         contracts_by_id[contract_id] = {
             "id": contract_id,
             "platform": contract_id.removeprefix("platform."),
@@ -3129,10 +3199,16 @@ def resolve_platform_contracts(workplace_manifest: Path | None, platform_ids: li
                 "templates": sorted(contract_required_items(contract, "templates")),
             },
             "recommended": {
-                "knowledge_packages": sorted(contract_includes(contract, "knowledge_packages")),
-                "tools": sorted(contract_includes(contract, "tools")),
-                "mcp": sorted(contract_includes(contract, "mcp")),
-                "templates": sorted(contract_includes(contract, "templates")),
+                "knowledge_packages": sorted(contract_recommended_items(contract, "knowledge_packages")),
+                "tools": sorted(contract_recommended_items(contract, "tools")),
+                "mcp": sorted(contract_recommended_items(contract, "mcp")),
+                "templates": sorted(contract_recommended_items(contract, "templates")),
+            },
+            "optional": {
+                "knowledge_packages": sorted(contract_optional_items(contract, "knowledge_packages")),
+                "tools": sorted(contract_optional_items(contract, "tools")),
+                "mcp": sorted(contract_optional_items(contract, "mcp")),
+                "templates": sorted(contract_optional_items(contract, "templates")),
             },
         }
         resolving.pop()
@@ -4403,6 +4479,9 @@ def forbidden_powershell_reference(text: str) -> bool:
             "does not require powershell" in line
             or "powershell is not required" in line
             or "powershell not required" in line
+            or line.strip() == "```powershell"
+            or ("powershell" in line and "utf-8" in line)
+            or ("powershell" in line and "console encoding" in line)
             or "не требует powershell" in line
             or ("powershell" in line and "не требуется" in line)
             or ("powershell" in line and "не нужен" in line)
@@ -4856,6 +4935,17 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_release_pack_excludes_user_processes", [sys.executable, str(root / "tools" / "smoke_release_pack_excludes_user_processes.py")], 120),
         ReleaseCommand("smoke_process_id_stable_after_move", [sys.executable, str(root / "tools" / "smoke_process_id_stable_after_move.py")], 120),
         ReleaseCommand("smoke_process_root_collision_policy", [sys.executable, str(root / "tools" / "smoke_process_root_collision_policy.py")], 120),
+        ReleaseCommand("smoke_project_scan_excludes_distribution_root", [sys.executable, str(root / "tools" / "smoke_project_scan_excludes_distribution_root.py")], 120),
+        ReleaseCommand("smoke_project_scan_excludes_workplace_root", [sys.executable, str(root / "tools" / "smoke_project_scan_excludes_workplace_root.py")], 120),
+        ReleaseCommand("smoke_project_scan_excludes_knowledge_roots", [sys.executable, str(root / "tools" / "smoke_project_scan_excludes_knowledge_roots.py")], 120),
+        ReleaseCommand("smoke_processforge_core_project_requires_explicit_type", [sys.executable, str(root / "tools" / "smoke_processforge_core_project_requires_explicit_type.py")], 120),
+        ReleaseCommand("smoke_project_local_package_index_detection", [sys.executable, str(root / "tools" / "smoke_project_local_package_index_detection.py")], 120),
+        ReleaseCommand("smoke_agent_workspace_platform_availability_snapshot", [sys.executable, str(root / "tools" / "smoke_agent_workspace_platform_availability_snapshot.py")], 120),
+        ReleaseCommand("smoke_platform_create_include_levels", [sys.executable, str(root / "tools" / "smoke_platform_create_include_levels.py")], 120),
+        ReleaseCommand("smoke_release_test_trace_timeout_reporting", [sys.executable, str(root / "tools" / "smoke_release_test_trace_timeout_reporting.py")], 120),
+        ReleaseCommand("smoke_windows_utf8_docs", [sys.executable, str(root / "tools" / "smoke_windows_utf8_docs.py")], 120),
+        ReleaseCommand("smoke_pf_project_process_refs_follow_layout", [sys.executable, str(root / "tools" / "smoke_pf_project_process_refs_follow_layout.py")], 120),
+        ReleaseCommand("smoke_no_removed_process_refs", [sys.executable, str(root / "tools" / "smoke_no_removed_process_refs.py")], 120),
         ReleaseCommand("smoke_update_sites_schema", [sys.executable, str(root / "tools" / "smoke_update_sites_schema.py")], 120),
         ReleaseCommand("smoke_update_candidate_discovery", [sys.executable, str(root / "tools" / "smoke_update_candidate_discovery.py")], 120),
         ReleaseCommand("smoke_update_notifications", [sys.executable, str(root / "tools" / "smoke_update_notifications.py")], 120),
@@ -4910,7 +5000,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
     return commands
 
 
-def write_release_test_report(root: Path, results: list[ReleaseCommandResult], public_checks: list[Check], *, public: bool, started_at: str, finished_at: str, elapsed_seconds: float) -> None:
+def write_release_test_report(root: Path, results: list[ReleaseCommandResult], public_checks: list[Check], *, public: bool, started_at: str, finished_at: str, elapsed_seconds: float, trace_smokes: bool = False) -> None:
     report_dir = root / ".pf" / "runtime" / "release-test"
     report_dir.mkdir(parents=True, exist_ok=True)
     data = {
@@ -4929,6 +5019,7 @@ def write_release_test_report(root: Path, results: list[ReleaseCommandResult], p
                 "finished_at": item.finished_at,
                 "elapsed_seconds": round(item.elapsed_seconds, 3),
                 "timeout_seconds": item.timeout_seconds,
+                "timeout_reason": "timeout" if item.code == 124 else None,
                 "command": item.command,
                 "layer": item.layer,
                 "public_gate": item.public_gate,
@@ -4958,6 +5049,23 @@ def write_release_test_report(root: Path, results: list[ReleaseCommandResult], p
         lines.extend(["", "## Public Checks", ""])
         lines.extend(f"- {item.level}: {item.message}" for item in public_checks)
     (report_dir / "latest-report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    if trace_smokes:
+        trace_lines = []
+        for item in results:
+            trace_lines.append(
+                json.dumps(
+                    {
+                        "label": item.label,
+                        "status": item.status,
+                        "elapsed_seconds": round(item.elapsed_seconds, 3),
+                        "timeout_seconds": item.timeout_seconds,
+                        "timeout_reason": "timeout" if item.code == 124 else None,
+                        "command": item.command,
+                    },
+                    sort_keys=True,
+                )
+            )
+        (report_dir / "latest-trace.ndjson").write_text(ensure_trailing_newline("\n".join(trace_lines)), encoding="utf-8")
 
 
 def command_release_test(args: argparse.Namespace) -> int:
@@ -5027,9 +5135,11 @@ def command_release_test(args: argparse.Namespace) -> int:
         failed = failed or public_status != 0
     finished_at = now_utc()
     elapsed = time.perf_counter() - started
-    write_release_test_report(root, results, public_checks, public=public_requested, started_at=started_at, finished_at=finished_at, elapsed_seconds=elapsed)
+    write_release_test_report(root, results, public_checks, public=public_requested, started_at=started_at, finished_at=finished_at, elapsed_seconds=elapsed, trace_smokes=bool(getattr(args, "trace_smokes", False)))
     print(f"REPORT: {rel(root / '.pf' / 'runtime' / 'release-test' / 'latest-report.json', root)}")
     print(f"REPORT: {rel(root / '.pf' / 'runtime' / 'release-test' / 'latest-report.md', root)}")
+    if getattr(args, "trace_smokes", False):
+        print(f"TRACE: {rel(root / '.pf' / 'runtime' / 'release-test' / 'latest-trace.ndjson', root)}")
     print(f"ELAPSED: {elapsed:.2f}s")
     if failed:
         print("RESULT: FAIL")
@@ -5633,6 +5743,158 @@ def collect_project_snapshot_sources(project_root: Path) -> list[dict[str, Any]]
                 source_id = safe_id(f"{kind}-{rel(path, flow_root)}", f"{kind}-source")
                 sources.append(fingerprint_record(path, project_root, source_id, kind))
     return sources
+
+
+def scan_policy_from_manifest(manifest_data: dict[str, Any]) -> dict[str, Any]:
+    policy = dict(DEFAULT_SCAN_POLICY)
+    configured = manifest_data.get("scan_policy") if isinstance(manifest_data.get("scan_policy"), dict) else {}
+    if "enabled" in configured:
+        policy["enabled"] = bool(configured.get("enabled"))
+    if isinstance(configured.get("exclude_roles"), list):
+        policy["exclude_roles"] = [str(item) for item in configured["exclude_roles"] if item]
+    if isinstance(configured.get("default_excludes"), list):
+        policy["default_excludes"] = [str(item) for item in configured["default_excludes"] if item]
+    allow_core = configured.get("allow_processforge_core_as_project") if isinstance(configured.get("allow_processforge_core_as_project"), dict) else {}
+    merged_allow_core = dict(DEFAULT_SCAN_POLICY["allow_processforge_core_as_project"])
+    merged_allow_core.update(allow_core)
+    policy["allow_processforge_core_as_project"] = merged_allow_core
+    return policy
+
+
+def path_role_record(role: str, path: Path, project_root: Path, *, source: str, status: str = "available", path_id: str | None = None) -> dict[str, Any]:
+    return {
+        "role": role,
+        "id": path_id or role,
+        "path": rel(path.resolve(), project_root),
+        "source": source,
+        "status": status,
+    }
+
+
+def project_path_roles(project_root: Path, distribution_root: Path | None, workplace_manifest: Path | None, manifest_data: dict[str, Any]) -> list[dict[str, Any]]:
+    flow_root = locate_flow_root(project_root)
+    roles: list[dict[str, Any]] = [
+        path_role_record("project_root", project_root, project_root, source="project"),
+        path_role_record("project_pf_root", flow_root, project_root, source="project"),
+        path_role_record("runtime_root", flow_root / "runtime", project_root, source="project", status="available" if (flow_root / "runtime").exists() else "missing"),
+    ]
+    if distribution_root:
+        roles.append(path_role_record("distribution_root", distribution_root, project_root, source="workplace" if workplace_manifest else "project", status="available" if distribution_root.exists() else "missing"))
+    elif looks_like_processforge_distribution(project_root):
+        roles.append(path_role_record("distribution_root", project_root, project_root, source="project", status="available"))
+    if workplace_manifest:
+        workplace_root = workplace_manifest.parent
+        roles.append(path_role_record("workplace_root", workplace_root, project_root, source="local-config", status="available" if workplace_root.exists() else "missing"))
+        roles.append(path_role_record("package_cache", workplace_root / "cache", project_root, source="workplace", status="available" if (workplace_root / "cache").exists() else "missing"))
+        knowledge_roots = load_workplace_registry(workplace_manifest, "knowledge_roots", "knowledge-roots.yaml")
+        knowledge_entries = knowledge_roots.get("knowledge_roots") if isinstance(knowledge_roots, dict) else []
+        if isinstance(knowledge_entries, list):
+            for item in knowledge_entries:
+                if not isinstance(item, dict):
+                    continue
+                raw_path = str(item.get("path") or item.get("path_ref") or "")
+                if not raw_path:
+                    continue
+                knowledge_path = resolve_registry_relative_path(workplace_root, raw_path, workplace_manifest)
+                roles.append(
+                    path_role_record(
+                        "knowledge_root",
+                        knowledge_path,
+                        project_root,
+                        source="workplace-registry",
+                        status="available" if knowledge_path.exists() else "missing",
+                        path_id=str(item.get("id") or "knowledge-root"),
+                    )
+                )
+    for configured in manifest_data.get("knowledge_roots", []) if isinstance(manifest_data.get("knowledge_roots"), list) else []:
+        if not isinstance(configured, dict):
+            continue
+        raw_path = str(configured.get("path") or "")
+        if raw_path:
+            path = Path(raw_path).expanduser()
+            if not path.is_absolute():
+                path = (project_root / path).resolve()
+            roles.append(path_role_record("knowledge_root", path, project_root, source="project-manifest", status="available" if path.exists() else "missing", path_id=str(configured.get("id") or "knowledge-root")))
+    unique: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for item in roles:
+        key = (str(item["role"]), str(item["id"]), str(item["path"]))
+        if key not in seen:
+            seen.add(key)
+            unique.append(item)
+    return unique
+
+
+def project_source_inventory_exclusion(path: Path, project_root: Path, roles: list[dict[str, Any]], policy: dict[str, Any], manifest_data: dict[str, Any]) -> dict[str, Any] | None:
+    rel_path = rel(path, project_root)
+    for pattern in policy.get("default_excludes", []):
+        if fnmatch.fnmatch(rel_path, str(pattern)) or fnmatch.fnmatch("/" + rel_path, str(pattern).removeprefix("**")):
+            return {"reason": "default_exclude", "pattern": str(pattern)}
+    exclude_roles = set(policy.get("exclude_roles", []))
+    allow_pf_core = project_type_allows_processforge_core(manifest_data)
+    for role in roles:
+        role_name = str(role.get("role"))
+        if role_name not in exclude_roles:
+            continue
+        role_path_text = str(role.get("path") or "")
+        role_path = Path(role_path_text)
+        if not role_path.is_absolute():
+            role_path = (project_root / role_path).resolve()
+        if not path_is_relative_to(path, role_path):
+            continue
+        if role_name == "distribution_root" and role_path.resolve() == project_root.resolve() and allow_pf_core:
+            continue
+        return {"reason": "excluded_role", "role": role_name, "role_id": role.get("id"), "role_path": rel(role_path, project_root)}
+    return None
+
+
+def collect_project_source_inventory(project_root: Path, distribution_root: Path | None = None, workplace_manifest: Path | None = None, manifest_data: dict[str, Any] | None = None) -> dict[str, Any]:
+    flow_root = locate_flow_root(project_root)
+    if manifest_data is None:
+        manifest_data = load_yaml_document(flow_root / "process-forge.yaml")
+    policy = scan_policy_from_manifest(manifest_data)
+    roles = project_path_roles(project_root, distribution_root, workplace_manifest, manifest_data)
+    included: list[dict[str, Any]] = []
+    excluded: list[dict[str, Any]] = []
+    for path in sorted(item for item in project_root.rglob("*") if item.is_file()):
+        exclusion = None if policy.get("enabled", True) else None
+        if policy.get("enabled", True):
+            exclusion = project_source_inventory_exclusion(path, project_root, roles, policy, manifest_data)
+        record = {"path": rel(path, project_root)}
+        if exclusion:
+            excluded.append({**record, **exclusion})
+        else:
+            included.append(record)
+    return {"scan_policy": policy, "path_roles": roles, "included": included, "excluded": excluded}
+
+
+def available_platform_contract_records(workplace_manifest: Path | None, project_root: Path | None = None) -> list[dict[str, Any]]:
+    if not workplace_manifest or not workplace_manifest.is_file():
+        return []
+    registry = load_workplace_registry(workplace_manifest, "platforms", "platforms.yaml")
+    entries = registry.get("platforms") if isinstance(registry, dict) else []
+    records: list[dict[str, Any]] = []
+    if not isinstance(entries, list):
+        return records
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        if str(entry.get("status", "available")) in {"missing", "disabled"}:
+            continue
+        raw_id = str(entry.get("package_id") or entry.get("id") or "")
+        if not raw_id:
+            continue
+        platform_id, contract_id = normalize_platform_id(raw_id)
+        records.append(
+            {
+                "id": contract_id,
+                "platform": platform_id,
+                "registry_entry": str(entry.get("id") or platform_id),
+                "source": str(entry.get("path") or ""),
+                "status": "available",
+            }
+        )
+    return sorted(records, key=lambda item: item["id"])
 
 
 def package_root_entries(workplace_root: Path) -> list[dict[str, Any]]:
@@ -6525,6 +6787,7 @@ def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, packa
 def project_knowledge_resource_index_checks(project_root: Path, distribution_root: Path | None, workplace_manifest: Path | None) -> list[Check]:
     checks: list[Check] = []
     checked = 0
+    flow_root = locate_flow_root(project_root)
     for manifest_path in package_manifest_candidates(project_root, distribution_root, workplace_manifest):
         manifest = load_yaml_document(manifest_path)
         if not manifest or yaml_error(manifest):
@@ -6542,7 +6805,20 @@ def project_knowledge_resource_index_checks(project_root: Path, distribution_roo
             except ValueError:
                 pass
         index_path = resource_index_path_for_package(manifest_path, root_for_index, package_id)
-        checks.append(check("PASS" if index_path.is_file() else "WARN", f"knowledge resource index for {package_id} {'found' if index_path.is_file() else 'missing'}"))
+        project_local_package = path_is_relative_to(manifest_path, flow_root / "packages")
+        if index_path.is_file():
+            checks.append(check("PASS", f"knowledge resource index for {package_id} found"))
+        elif project_local_package:
+            checks.append(check("PASS", f"knowledge resource index for {package_id} optional for project-local package resources"))
+        else:
+            checks.append(
+                check_with_hint(
+                    "WARN",
+                    f"knowledge resource index for {package_id} missing",
+                    f"Expected resource index: {rel(index_path, project_root)}",
+                    f"python bin/pf.py knowledge-resource-index-build --project-root . --package {package_id} --apply",
+                )
+            )
         for resource in resources:
             if not isinstance(resource, dict):
                 checks.append(check("FAIL", f"{package_id} contains non-object resource"))
@@ -6780,9 +7056,20 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         for item in manifest_platform_contracts
         if isinstance(item, dict) and (item.get("platform") or item.get("id"))
     ]
-    if not manifest_platform_ids:
+    meta_project_without_selection = project_type_is_meta_workspace(manifest_data) and not manifest_platform_ids
+    if not manifest_platform_ids and not meta_project_without_selection:
         manifest_platform_ids = [str(item) for item in detected_data.get("platforms", []) if isinstance(item, str)]
     platform_resolution = resolve_platform_contracts(workplace_manifest_path, manifest_platform_ids, project_root=project_root)
+    available_platform_contracts = available_platform_contract_records(workplace_manifest_path, project_root)
+    if meta_project_without_selection:
+        platform_selection = {
+            "status": "not_applicable",
+            "reason": f"Project type {project_types_from_manifest(manifest_data)[0]} does not select one platform stack by default.",
+        }
+    elif manifest_platform_ids:
+        platform_selection = {"status": "selected", "reason": "Project manifest or detection selected platform contracts."}
+    else:
+        platform_selection = {"status": "not_selected", "reason": "No platform contracts were selected for this project."}
     package_index_ids = set(package_manifest_index(project_root, distribution_root, workplace_manifest_path))
     required_resource_missing, recommended_resource_missing = platform_resource_findings(workplace_manifest_path, platform_resolution, package_index_ids)
     package_ids = [
@@ -6872,6 +7159,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             },
         },
         "platform_contracts": {
+            "available": available_platform_contracts,
             "selected": platform_resolution["contracts"],
             "stack": platform_resolution["platform_stack"],
             "missing_required": platform_resolution["missing_required_contracts"],
@@ -6879,6 +7167,9 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "missing_required_resources": required_resource_missing,
             "missing_recommended_resources": recommended_resource_missing,
         },
+        "available_platform_contracts": available_platform_contracts,
+        "selected_platform_contracts": platform_resolution["contracts"],
+        "platform_selection": platform_selection,
         "platform_stack": platform_resolution["platform_stack"],
         "sources": {"fingerprints": sources},
         "requirements_fingerprint": requirements,
@@ -15617,6 +15908,61 @@ def command_doctor_project(args: argparse.Namespace) -> int:
             )
 
     checks.extend(distribution_checks(distribution_root))
+    scan_policy = scan_policy_from_manifest(manifest_data)
+    if looks_like_processforge_distribution(project_root) and not project_type_allows_processforge_core(manifest_data):
+        checks.append(
+            check_with_hint(
+                "FAIL",
+                "project root looks like ProcessForge distribution",
+                "This root contains ProcessForge core files and should not be treated as a generic project source tree.",
+                "set project.type to processforge-development or processforge-core-development, or choose a normal project root",
+            )
+        )
+    path_roles = project_path_roles(project_root, distribution_root, workplace_manifest_path, manifest_data)
+    guarded_roles = {"distribution_root", "workplace_root", "knowledge_root"}
+    for role in path_roles:
+        role_name = str(role.get("role"))
+        if role_name not in guarded_roles:
+            continue
+        role_path_text = str(role.get("path") or "")
+        role_path = Path(role_path_text)
+        if not role_path.is_absolute():
+            role_path = (project_root / role_path).resolve()
+        if not path_is_relative_to(role_path, project_root):
+            continue
+        same_as_project = role_path.resolve() == project_root.resolve()
+        if same_as_project and role_name == "distribution_root" and project_type_allows_processforge_core(manifest_data):
+            checks.append(check("PASS", "ProcessForge distribution root allowed by explicit project type"))
+            continue
+        if same_as_project:
+            continue
+        if not scan_policy.get("enabled", True):
+            checks.append(
+                check_with_hint(
+                    "FAIL",
+                    f"project root contains {role_name} and scan guards are disabled",
+                    "Distribution, workplace, and knowledge roots must not be scanned as normal project source.",
+                    "enable scan_policy guards or move the supporting root outside the project source root",
+                )
+            )
+        elif role_name == "knowledge_root":
+            checks.append(
+                check_with_hint(
+                    "WARN",
+                    "knowledge root is inside project root",
+                    "It will be treated as external knowledge, not as project source, unless explicitly included.",
+                    "keep scan_policy.exclude_roles including knowledge_root",
+                )
+            )
+        else:
+            checks.append(
+                check_with_hint(
+                    "WARN",
+                    "project root contains ProcessForge distribution/workplace subtree",
+                    "This subtree will be excluded from project source scan by role-aware scan guards.",
+                    "keep scan_policy.exclude_roles including distribution_root and workplace_root",
+                )
+            )
     checks.extend(validate_hooks_config(project_root))
     checks.extend(coordination_doctor_checks(project_root))
 
@@ -18049,8 +18395,23 @@ def command_platform_create(args: argparse.Namespace) -> int:
     root_id, platform_root = resolve_platform_root(workplace_root, getattr(args, "platform_root", None), mode="write" if args.apply else "read")
     target = platform_root / contract_id
     contract_path = target / "platform-contract.yaml"
-    knowledge_packages = [item for item in getattr(args, "knowledge_package", []) if item]
-    templates = [item for item in getattr(args, "template", []) if item]
+    required_packages = [item for item in getattr(args, "requires_package", []) if item]
+    recommended_packages = [item for item in getattr(args, "recommends_package", []) if item]
+    optional_packages = [item for item in getattr(args, "optional_package", []) if item]
+    optional_packages.extend(item for item in getattr(args, "package", []) if item)
+    optional_packages.extend(item for item in getattr(args, "knowledge_package", []) if item)
+    required_templates = [item for item in getattr(args, "requires_template", []) if item]
+    recommended_templates = [item for item in getattr(args, "recommends_template", []) if item]
+    optional_templates = [item for item in getattr(args, "optional_template", []) if item]
+    optional_templates.extend(item for item in getattr(args, "template", []) if item)
+    required_tools = [item for item in getattr(args, "requires_tool", []) if item]
+    recommended_tools = [item for item in getattr(args, "recommends_tool", []) if item]
+    optional_tools = [item for item in getattr(args, "optional_tool", []) if item]
+    optional_tools.extend(item for item in getattr(args, "tool", []) if item)
+    required_mcp = [item for item in getattr(args, "requires_mcp", []) if item]
+    recommended_mcp = [item for item in getattr(args, "recommends_mcp", []) if item]
+    optional_mcp = [item for item in getattr(args, "optional_mcp", []) if item]
+    optional_mcp.extend(item for item in getattr(args, "mcp", []) if item)
     project_types = [item for item in getattr(args, "project_type", []) if item] or [platform_id]
     slug, proposal_path = write_resource_proposal(workplace_root, "platform-create", contract_id, {"platform": contract_id, "platform_root": root_id, "target": rel(contract_path, workplace_root)})
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-create", event_type="platform.authoring.started", target={"platform": contract_id}, status="dry_run" if args.dry_run else "started", message="platform authoring started"))
@@ -18070,12 +18431,14 @@ def command_platform_create(args: argparse.Namespace) -> int:
         "status": "draft",
         "project_type_hints": project_types,
         "applies_to": {"platforms": [platform_id], "project_type_hints": project_types},
-        "requires": {"capabilities": ["filesystem.read", "filesystem.write"], "knowledge_packages": [], "tools": [], "mcp": [], "templates": []},
+        "requires": {"capabilities": ["filesystem.read", "filesystem.write"], "knowledge_packages": required_packages, "tools": required_tools, "mcp": required_mcp, "templates": required_templates},
+        "recommends": {"knowledge_packages": recommended_packages, "templates": recommended_templates, "tools": recommended_tools, "mcp": recommended_mcp},
+        "optional": {"knowledge_packages": optional_packages, "templates": optional_templates, "tools": optional_tools, "mcp": optional_mcp},
         "includes": {
-            "knowledge_packages": knowledge_packages,
-            "templates": templates,
-            "tools": [item for item in getattr(args, "tool", []) if item],
-            "mcp": [item for item in getattr(args, "mcp", []) if item],
+            "knowledge_packages": optional_packages,
+            "templates": optional_templates,
+            "tools": optional_tools,
+            "mcp": optional_mcp,
             "processes": [item for item in getattr(args, "process", []) if item] or ["software-feature-development"],
         },
         "policies": {"missing_required_capability": "block", "missing_optional_resource": "warn"},
@@ -18084,10 +18447,10 @@ def command_platform_create(args: argparse.Namespace) -> int:
     write_authoring_text(target / "README.md", f"# {args.title}\n\nPlatform contract `{contract_id}`.")
     write_authoring_text(target / "project-types.yaml", dump_yaml({"schema_version": 1, "project_type_hints": project_types}))
     write_authoring_text(target / "capabilities.yaml", dump_yaml({"schema_version": 1, "capabilities": contract["requires"]["capabilities"]}))
-    write_authoring_text(target / "knowledge.yaml", dump_yaml({"schema_version": 1, "knowledge_packages": knowledge_packages}))
-    write_authoring_text(target / "templates.yaml", dump_yaml({"schema_version": 1, "templates": templates}))
-    write_authoring_text(target / "tools.yaml", dump_yaml({"schema_version": 1, "tools": contract["includes"]["tools"]}))
-    write_authoring_text(target / "mcp.yaml", dump_yaml({"schema_version": 1, "mcp": contract["includes"]["mcp"]}))
+    write_authoring_text(target / "knowledge.yaml", dump_yaml({"schema_version": 1, "requires": required_packages, "recommends": recommended_packages, "optional": optional_packages}))
+    write_authoring_text(target / "templates.yaml", dump_yaml({"schema_version": 1, "requires": required_templates, "recommends": recommended_templates, "optional": optional_templates}))
+    write_authoring_text(target / "tools.yaml", dump_yaml({"schema_version": 1, "requires": required_tools, "recommends": recommended_tools, "optional": optional_tools}))
+    write_authoring_text(target / "mcp.yaml", dump_yaml({"schema_version": 1, "requires": required_mcp, "recommends": recommended_mcp, "optional": optional_mcp}))
     write_authoring_text(target / "processes.yaml", dump_yaml({"schema_version": 1, "processes": contract["includes"]["processes"]}))
     write_authoring_text(target / "artifacts" / "platform-contract-authoring-report.md", f"# Platform Contract Authoring Report\n\n- platform: {contract_id}\n- platform_root: {root_id}")
     write_authoring_text(target / "reviews" / "platform-contract-authoring-review.md", "# Platform Contract Authoring Review\n\nResult: pass_with_conditions")
@@ -18898,6 +19261,7 @@ def build_parser() -> argparse.ArgumentParser:
     release_test.add_argument("--skip", action="append", default=[], help="Skip a named check. Repeatable.")
     release_test.add_argument("--fail-fast", action="store_true", help="Stop after the first failed check.")
     release_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply per-check timeouts by this positive value.")
+    release_test.add_argument("--trace-smokes", action="store_true", help="Write a per-smoke trace report with elapsed and timeout diagnostics.")
     release_test.add_argument("--no-clean", action="store_true", help="Do not run the clean release artifacts check.")
     release_test.add_argument("--clean-first", action="store_true", help="Run clean release artifacts before checks. Default unless --no-clean is set.")
     release_test.set_defaults(func=command_release_test)
@@ -18910,6 +19274,7 @@ def build_parser() -> argparse.ArgumentParser:
     smoke_all.add_argument("--skip", action="append", default=[], help="Skip a named check. Repeatable.")
     smoke_all.add_argument("--fail-fast", action="store_true", help="Stop after the first failed check.")
     smoke_all.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply per-check timeouts by this positive value.")
+    smoke_all.add_argument("--trace-smokes", action="store_true", help="Write a per-smoke trace report with elapsed and timeout diagnostics.")
     smoke_all.add_argument("--no-clean", action="store_true", help="Do not run the clean release artifacts check.")
     smoke_all.add_argument("--clean-first", action="store_true", help="Run clean release artifacts before checks. Default unless --no-clean is set.")
     smoke_all.set_defaults(func=command_release_test)
@@ -19097,10 +19462,23 @@ def build_parser() -> argparse.ArgumentParser:
     platform_create.add_argument("--title", required=True, help="Platform title.")
     platform_create.add_argument("--platform-root", dest="platform_root", help="Platform contract root id.")
     platform_create.add_argument("--project-type", action="append", default=[], help="Project type hint. May be repeated.")
-    platform_create.add_argument("--knowledge-package", action="append", default=[], help="Referenced knowledge package id. May be repeated.")
-    platform_create.add_argument("--template", action="append", default=[], help="Referenced template id. May be repeated.")
-    platform_create.add_argument("--tool", action="append", default=[], help="Referenced tool id. May be repeated.")
-    platform_create.add_argument("--mcp", action="append", default=[], help="Referenced MCP id. May be repeated.")
+    platform_create.add_argument("--requires-package", action="append", default=[], help="Required knowledge package id. May be repeated.")
+    platform_create.add_argument("--recommends-package", action="append", default=[], help="Recommended knowledge package id. May be repeated.")
+    platform_create.add_argument("--optional-package", action="append", default=[], help="Optional knowledge package id. May be repeated.")
+    platform_create.add_argument("--requires-template", action="append", default=[], help="Required template id. May be repeated.")
+    platform_create.add_argument("--recommends-template", action="append", default=[], help="Recommended template id. May be repeated.")
+    platform_create.add_argument("--optional-template", action="append", default=[], help="Optional template id. May be repeated.")
+    platform_create.add_argument("--requires-tool", action="append", default=[], help="Required tool id. May be repeated.")
+    platform_create.add_argument("--recommends-tool", action="append", default=[], help="Recommended tool id. May be repeated.")
+    platform_create.add_argument("--optional-tool", action="append", default=[], help="Optional tool id. May be repeated.")
+    platform_create.add_argument("--requires-mcp", action="append", default=[], help="Required MCP id. May be repeated.")
+    platform_create.add_argument("--recommends-mcp", action="append", default=[], help="Recommended MCP id. May be repeated.")
+    platform_create.add_argument("--optional-mcp", action="append", default=[], help="Optional MCP id. May be repeated.")
+    platform_create.add_argument("--package", action="append", default=[], help="Deprecated/ambiguous. Use --requires-package, --recommends-package or --optional-package.")
+    platform_create.add_argument("--knowledge-package", action="append", default=[], help="Deprecated/ambiguous. Use --requires-package, --recommends-package or --optional-package.")
+    platform_create.add_argument("--template", action="append", default=[], help="Deprecated/ambiguous. Use --requires-template, --recommends-template or --optional-template.")
+    platform_create.add_argument("--tool", action="append", default=[], help="Deprecated/ambiguous. Use --requires-tool, --recommends-tool or --optional-tool.")
+    platform_create.add_argument("--mcp", action="append", default=[], help="Deprecated/ambiguous. Use --requires-mcp, --recommends-mcp or --optional-mcp.")
     platform_create.add_argument("--process", action="append", default=[], help="Referenced process id. May be repeated.")
     platform_create.add_argument("--dry-run", action="store_true", help="Write proposal only.")
     platform_create.add_argument("--apply", action="store_true", help="Write platform contract files.")
