@@ -220,14 +220,15 @@ tools, MCP providers, processes, coding standards, and capabilities exist.
 ## Human Prompt: Setup
 
 ```text
-Set up ProcessForge on this device step by step.
+Initialize ProcessForge in step-by-step mode. It is located at
+<processforge-root>.
 ```
 
 ## Human Prompt: Fully Automatic Setup
 
 ```text
-Set up ProcessForge on this device in fully automatic mode. First inspect the
-current AGENTS.md and setup skills.
+Initialize ProcessForge in fully automatic mode. It is located at
+<processforge-root>. First inspect the current AGENTS.md and setup skills.
 ```
 
 ## Human Prompt: Project Work

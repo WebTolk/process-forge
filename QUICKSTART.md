@@ -7,11 +7,10 @@ should use the complete command runbook in
 ## 1. Prepare The Tool
 
 ```text
-Prepare ProcessForge on this machine.
+Prepare ProcessForge on this machine. It is located at <processforge-root>.
 
-Find the ProcessForge checkout or unpacked distribution, inspect the README,
-and use docs/getting-started/agent-prompts.md as the operational command
-runbook.
+Inspect the README and use docs/getting-started/agent-prompts.md as the
+operational command runbook.
 
 Verify that the distribution root is usable and tell me the exact path I should
 use as <processforge-root>.
@@ -20,7 +19,8 @@ use as <processforge-root>.
 ## 2. Set Up A Workplace By Guided Dialogue
 
 ```text
-Set up ProcessForge on this device step by step.
+Initialize ProcessForge in step-by-step mode. It is located at
+<processforge-root>.
 ```
 
 The guided setup command family is `workplace-setup start`,
@@ -30,8 +30,8 @@ The guided setup command family is `workplace-setup start`,
 ## 3. Fully Automatic Setup
 
 ```text
-Set up ProcessForge on this device in fully automatic mode. First inspect the
-current AGENTS.md and setup skills.
+Initialize ProcessForge in fully automatic mode. It is located at
+<processforge-root>. First inspect the current AGENTS.md and setup skills.
 ```
 
 In automatic mode, the agent first explains what is where and what role it has,

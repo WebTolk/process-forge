@@ -7,7 +7,8 @@ stages, artifacts, gates, and commands. The human-facing trigger can be as short
 as:
 
 ```text
-Set up ProcessForge on this device step by step.
+Initialize ProcessForge in step-by-step mode. It is located at
+<processforge-root>.
 ```
 
 Run the setup as a chat-guided dialogue. Ask one small block of questions at a

@@ -7,8 +7,8 @@ stages, artifacts, gates, and commands. The human-facing trigger can be as short
 as:
 
 ```text
-Set up ProcessForge on this device in fully automatic mode. First inspect the
-current AGENTS.md and setup skills.
+Initialize ProcessForge in fully automatic mode. It is located at
+<processforge-root>. First inspect the current AGENTS.md and setup skills.
 ```
 
 For automatic setup, run the process in two phases.

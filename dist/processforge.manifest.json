@@ -34,19 +34,19 @@
     },
     {
       "path": "QUICKSTART.md",
-      "sha256": "d3e5cf3e69516372f1c28f27ad3b71b25340c773a9c2aa9619fc3bc45d0675a0"
+      "sha256": "4ae4a8e6ca26a5ec344fd9c4e7b10fb01cd909817e06235ef77ce9c007a9ece5"
     },
     {
       "path": "QUICKSTART.ru.md",
-      "sha256": "34af78dc1f3714faa42b70721226d4e863f49ba50ff3008906f79185c149cd5d"
+      "sha256": "61b593cdb6be4fe9bd1e8a83ab3d409d90b5133e3bec393cda60db0fe877931e"
     },
     {
       "path": "README.md",
-      "sha256": "2b0e8e420401db348c5535d1acde7e44819c713a115dbd60eb4ae2e20b0b4a0f"
+      "sha256": "aec924a9527663c9cbc33c3a516a821e2acfe9c9d04bfc5e3f0db41da4a229fc"
     },
     {
       "path": "README.ru.md",
-      "sha256": "4c377475e229cfb82db8d1df352704197cd8ca9fd3b90059a6eda113c088b32d"
+      "sha256": "1ca4de6ca38c3398067c13b04aadeeaa8d4d67c4960a00a3b7b9bf5ca592457d"
     },
     {
       "path": "VERSION",
@@ -66,7 +66,7 @@
     },
     {
       "path": "checksums/processforge.sha256",
-      "sha256": "c626939a6fe252aab7ca497b98a46c94d7c08c9f0bf52eeee8f3de66f8126f0a"
+      "sha256": "ca6ea51abb5b8d1eeb67ed34c050ec075cb711c9e767cd0c20c540ffb2a7ce19"
     },
     {
       "path": "docs/assets/processforge-architecture.svg",
@@ -446,7 +446,7 @@
     },
     {
       "path": "docs/getting-started/agent-prompts.md",
-      "sha256": "8515a2db9dd123feaaff3d74b5fb54256f9674d003b9c04d22cef7f0541d073d"
+      "sha256": "d57655305516a515b99def3e388283ea1d5a619ff2f49e78671550ec8d7f4bcc"
     },
     {
       "path": "docs/getting-started/create-your-first-process.md",
@@ -458,15 +458,15 @@
     },
     {
       "path": "docs/getting-started/first-run.md",
-      "sha256": "6c7fff7ce9b8db55d7028481e5b4e4fca24480d0955b1b878b0d02ceee7c6570"
+      "sha256": "6049dc18debacd04bdf1b5b85654bb09186867baff7e1df89f75dba693b21a68"
     },
     {
       "path": "docs/getting-started/guided-workplace-setup.md",
-      "sha256": "6263a031a6ee1e7c9342a69035bd090df054ada5009229847853ea4b55fcf5e8"
+      "sha256": "d5e52d1ab43d4d7b69ba83e76502d66a7bb332036d8344c71bb86c91eacb44fe"
     },
     {
       "path": "docs/getting-started/initialization-order.md",
-      "sha256": "1532162d70a5b486fed8fb147478d731b11fe5ecd660ef817b1009b80b271c5f"
+      "sha256": "48339f0f9b8379f72d990a2a01b11f79e6077ad9b6648d8a63db558941692b6b"
     },
     {
       "path": "docs/getting-started/installation.md",
@@ -478,7 +478,7 @@
     },
     {
       "path": "docs/getting-started/project-onboarding.md",
-      "sha256": "84a5ec072a017162c2e5aeb84a574c46bec76116075cb2eb6d4c3bb30d3e3df5"
+      "sha256": "e71b4e8ef282017f4f7f03809cb6bf13fa48eabe6cc9416075a2533ee022fa1e"
     },
     {
       "path": "docs/getting-started/resource-authoring.md",
@@ -498,11 +498,11 @@
     },
     {
       "path": "docs/getting-started/workplace-initialization.md",
-      "sha256": "54557bac278354b0e64e8bcb151ed73d97612b1c074ac0cfcfcbe529a2e69613"
+      "sha256": "6614aa1040a301f0ffeca8790d9b606f18fd5706b991420355f436654e6c5d3d"
     },
     {
       "path": "docs/index.md",
-      "sha256": "3c3d06814ba5b2e5c8bca06ea36a58a494add37aa14dd75805740bedfd37e0ca"
+      "sha256": "45c19482b4dad1f8eee0f9ac888393e4a5e32611dd4c9384ab6e249d6e9bf2a6"
     },
     {
       "path": "docs/known-limitations.md",
@@ -530,7 +530,7 @@
     },
     {
       "path": "docs/processes/guided-workplace-setup.md",
-      "sha256": "85df8190f3805975250dea8c52a2db2b771ae8c9217ef29d2ed656beed906504"
+      "sha256": "f93912b1ffc6a4c7dc1d166bc702fbbeb63ddedc2d394d8fb1aec63f6ef3e42f"
     },
     {
       "path": "docs/processes/knowledge-package-authoring.md",
@@ -622,7 +622,7 @@
     },
     {
       "path": "docs/processes/workplace-initialization.md",
-      "sha256": "d0ff33d52931a8dc01e95c8d644b9cd026d73e1978e26bb3b98bdc378d4aa722"
+      "sha256": "daa89a6aec30ccf086da89ffe19945a2d1bd2da429b8b642f77c3c2f819ac7d9"
     },
     {
       "path": "docs/release-checklist.md",
@@ -634,127 +634,127 @@
     },
     {
       "path": "docs/ru/authoring/authoring-parity.md",
-      "sha256": "17fc3aff57105d05024950760e1d1f273226f890b1302b3261444667fb35e33a"
+      "sha256": "12d0cb1b36193964ebb8999d55b36d7553d95c2bd6761c87b7e3abb76075c2f9"
     },
     {
       "path": "docs/ru/authoring/backfill-existing-processes.md",
-      "sha256": "b7b0b22158e17dec74aa47a19e636c0b4d1cba3111ddedfe5fc31ddcfd4b10eb"
+      "sha256": "9a3c8a0c0aa33618691cc443034b08e134045e6821837933370d08ab4cb8ed68"
     },
     {
       "path": "docs/ru/authoring/knowledge-package-authoring.md",
-      "sha256": "d505577c04aabc6194129e7b4fd7fc37475f369cab8446f978d38d3a6332e4ae"
+      "sha256": "c3750eabcbcc6eb2947abfc30334dda2df5d9810d0dce80f2f10278ae432d52d"
     },
     {
       "path": "docs/ru/authoring/platform-contract-authoring.md",
-      "sha256": "ad89ff45fe326fb4abae7b80ca2f8516617244ad493e63327a900ac23a6356ca"
+      "sha256": "4de9ff7106ed55c96bac4129b47aee9899202019820e29d0e8ee6763a97ae391"
     },
     {
       "path": "docs/ru/authoring/process-authoring.md",
-      "sha256": "7301fef56feaf291b9e7d96b278a27f800a8e6bb5afba31524ac990997cc085a"
+      "sha256": "f0e5a7fa7106265bef98f440226fbcd962cfcfd1706938bf819738247fd3abc7"
     },
     {
       "path": "docs/ru/authoring/reusable-template-authoring.md",
-      "sha256": "798ed154b5fdee79ebe17ee10344cfcd01bf8157f48f3b823bcb1018b5eb27bf"
+      "sha256": "2c7bf7e6801fd1577be641da57bd31914673309a644e2e25bc64c19f783e2ac9"
     },
     {
       "path": "docs/ru/authoring/update-sites-for-packages.md",
-      "sha256": "f8a5ce64f72f00671f4d81283a0bf56465eb3d38079f26cb5ac891bac38ac8c0"
+      "sha256": "b7342da66f7e1bdb592d6b1a0d70654a00d0af5426251dc5954af8bf5a108a1d"
     },
     {
       "path": "docs/ru/concepts/agent-director.md",
-      "sha256": "9b79a26ae86c341b4216b7a944a9325b58d2033d4c920329079976f39c04e7ba"
+      "sha256": "4c40ab83a864005105d5575c0d16aa7806dc1b93bcf2d2e12f6c44d6cc6b9011"
     },
     {
       "path": "docs/ru/concepts/agent-ledger.md",
-      "sha256": "a1253459212ff3afe1c1ee613e31938a7231b8d3360d246eb8314302703dd7d7"
+      "sha256": "0fae16c4c65ddbbc6a9b55f82f11aed1cff1c59b287a0c8b5a7e6fb91f5dfed4"
     },
     {
       "path": "docs/ru/concepts/agent-session-model.md",
-      "sha256": "4ad87a8b87f6fae27115e46fbc777553c9003d267d996ef6f75fb955b0c26527"
+      "sha256": "8bd4be0b3b29e51c8a7f49cc85ad44cc60dfddb74e3782d7fdb486e33a0cf55b"
     },
     {
       "path": "docs/ru/concepts/context-capsule.md",
-      "sha256": "cdb4926feebbc24f972df847654c1fd91b8a0e1b5109a8720996a30408e09299"
+      "sha256": "68fe450823d9baa7d473e3e1c4771cbc2812074a4db7169f555a75b6b7a17c3b"
     },
     {
       "path": "docs/ru/concepts/director-ledger-inspector-boundary.md",
-      "sha256": "7569be427c4920950bd7d95abedbf061be0028d87548c065ff4460fd9262b6af"
+      "sha256": "73401d7743d9f5d686f6b725bad42ecff0f01bff07156893ba4a79a4d2913076"
     },
     {
       "path": "docs/ru/concepts/evolve-mechanism.md",
-      "sha256": "dd41ad02d08d97ad502f58dab29aa5836ce76e69dc39cdfe5b0b1e5391962780"
+      "sha256": "8087e23c2e830300dbde0e051c7ef399b321370b8fee15a6bc6ea52440b2677f"
     },
     {
       "path": "docs/ru/concepts/handoff-contracts.md",
-      "sha256": "d176032411c0927d4348276a9f1778fea746be7ed154f9a7857f60ce3e42b832"
+      "sha256": "13943f88ca0dc33854762327f60fa22139054ca4e8c755169199539378ad64b2"
     },
     {
       "path": "docs/ru/concepts/hooks-events.md",
-      "sha256": "c887e3af0fd7241b595fdf2a40d2dd5fb143a5d42baa325182fb58903aa7f08e"
+      "sha256": "b807a4ccbec5153c02e00037f3dccc0775b6370a8e82b5e8610e2135d009333e"
     },
     {
       "path": "docs/ru/concepts/knowledge-candidates.md",
-      "sha256": "56590d8f9bc34469ec43955c4b975cd9ba34e923d56c5923e6d4849d5482b1ef"
+      "sha256": "376d41342fc3e370d8ff2dc9050f02d2fc564336cbb20c73436fda5212d2ac52"
     },
     {
       "path": "docs/ru/concepts/knowledge-hub.md",
-      "sha256": "41d78ae6eb254381937f9c2b42e741756e36ead2d384a84dbb30111bd28dde05"
+      "sha256": "d221db5729b7308ba16d76855d102876352f5454a7bb5af2730f0dff68785237"
     },
     {
       "path": "docs/ru/concepts/knowledge-resource-navigation.md",
-      "sha256": "26fea64401c28549f3d4f44d785a0229226ce279a0b1e65ab016558c3ab3b34a"
+      "sha256": "49e6374ee26c3b9b905a5272873582574bd2c7e008d708d9d50f10c18f042a43"
     },
     {
       "path": "docs/ru/concepts/multi-agent-file-flow.md",
-      "sha256": "c2fd33aca47769fb3162324ae56f914323b367531b897c31fe30a32c8e70af10"
+      "sha256": "e65ea5316c3f1a740752dbd1fe53579eebe6c5e163b521f02d896609b43986a3"
     },
     {
       "path": "docs/ru/concepts/multi-agent-orchestration.md",
-      "sha256": "eb8447ab69d9d977e9258b2754b862448827100576c2792ea15e28e4683477c8"
+      "sha256": "013e59ef7deaed24898ffc349392f933cf64fb563849c5ea606b4d66496e1617"
     },
     {
       "path": "docs/ru/concepts/package-roots.md",
-      "sha256": "883ca081724bb9218e6f41760d428154a15119d7048996f3ec7b2dfc59eba006"
+      "sha256": "7f6ff27cccbb5ae60b440d88fca7516a75e6deec327656a0f7d23add46309748"
     },
     {
       "path": "docs/ru/concepts/path-constants.md",
-      "sha256": "a02291e2262b6fe81dd6740e3c0b7871d6e5f880c0727162b748e666f83f8f65"
+      "sha256": "dd67cf4a565f635422fc1412b857f024a95f2e79ee99d7ebc4d20facfe3fcdb0"
     },
     {
       "path": "docs/ru/concepts/platform-contracts.md",
-      "sha256": "c65fc754289e23b3f044e7c3c7e91564644664be11bb580ff12342f909ed51e8"
+      "sha256": "1953aa576c08d1838ebbb2b1c6b708cfe7d602dfd54facb159659f67800503d3"
     },
     {
       "path": "docs/ru/concepts/platform-inheritance.md",
-      "sha256": "5713e1afc7d23dd4ae9329c4e8aa4cedb9e6103380acf247ece668beeefba609"
+      "sha256": "caa082f82c17151233d7d4f875a556158ff4018c1f5ae968dca1101d766e8d0d"
     },
     {
       "path": "docs/ru/concepts/process-definition-run-task-iteration.md",
-      "sha256": "e5d51ff4c890be7ba096acee1180d956e0b43c96b80e08abdf5e9d3b9c797382"
+      "sha256": "a81a7adfe0b5bbacc13382c2d36acab94613f245cfe9cd653af8f53112c39f00"
     },
     {
       "path": "docs/ru/concepts/process-directory-layout.md",
-      "sha256": "bf0f68f37137972c2d241e69d414ca8a4205b155bafd621fc58abb5d73e87268"
+      "sha256": "3192e0a657f932c58aaaec3dac335485ea401fe2eb1ba1e547b27f3d53e70d53"
     },
     {
       "path": "docs/ru/concepts/process-supervisor.md",
-      "sha256": "723c081ace9d31c34cd9d33727d0e4670087eafb0f77f382443f8a512182839d"
+      "sha256": "4b8a35899cb9c6ec4d5ccf8ae58b6c494d51eddd11957522ebce17474c4cb2c4"
     },
     {
       "path": "docs/ru/concepts/process-transitions.md",
-      "sha256": "356166798463e663fb6f7d7c379e34660add1e771d02ba63717491d2c02b5728"
+      "sha256": "ecdf28db53d5eafe95c34f96d09c58a37b8789135a5e8f8b27f0cbdda7abbe6d"
     },
     {
       "path": "docs/ru/concepts/project-context-lock-model.md",
-      "sha256": "12a124f3b210cc6b0b8797ea52b89b009f7825b4eadcbd281ae648cae525c88c"
+      "sha256": "9514a2b12a9eae5ba9cb3a504a018a2a69f69a5f2f80fb4e1a97105e0929caad"
     },
     {
       "path": "docs/ru/concepts/project-context-snapshot.md",
-      "sha256": "2e9e05bcb223fa90cec26fd78247a5169ff49bd2b403417fb6cf28466a94fa3e"
+      "sha256": "69cfde83244877cf6cbba3d722ecd5bb224244d3c3e6306fee6d20c5a3c5aeab"
     },
     {
       "path": "docs/ru/concepts/project-coordination-modes.md",
-      "sha256": "b434a1e70076a504980e4c66174d5bd7c417f798727280e5fa3c8d23e8a45d28"
+      "sha256": "e231eb1f7f131b64c3abf2177e631e5f7ce160b54d10c81526507f3424321f33"
     },
     {
       "path": "docs/ru/concepts/project-scan-boundaries.md",
@@ -762,35 +762,35 @@
     },
     {
       "path": "docs/ru/concepts/project-snapshot.md",
-      "sha256": "10d40758d06f6b6f19140784b023ad41f7d88b596d5e6e2b4ffbaf40e671a2fb"
+      "sha256": "eb07858881eddc3b4aa4fabc8c58c93d556fbb1e027181d39ce114ad4d1295c9"
     },
     {
       "path": "docs/ru/concepts/runs-tasks-iterations.md",
-      "sha256": "22da86f2b5ef8c6d65d287eb43475903cc527d90660040cddaef83230eb4aa7a"
+      "sha256": "04ad7d61a7c878464266e4656fd97d7c13566f9642ced8ebf9d4b2e4fdf674bd"
     },
     {
       "path": "docs/ru/concepts/runtime-drivers.md",
-      "sha256": "53e1bc3fc15d83667b86a282b15a02694e483c26cc7039aa4fee44d982ff171a"
+      "sha256": "9184714def5197a9baac63aefb6a1adf34aef57094126a848c1ccf6300788f38"
     },
     {
       "path": "docs/ru/concepts/runtime-model.md",
-      "sha256": "1921b0f53c8f1a6aea7c5cbc6dc95db195564e6f3acc37a7a20b64d7d29f7a72"
+      "sha256": "f196b526fd6f5fa6e01c7420ea066d36f6802366b7737184423aac9a785a8b48"
     },
     {
       "path": "docs/ru/concepts/semantic-parity.md",
-      "sha256": "df69e181080d6cc1e68a0fd0970cdd5fbd46dd59de9354c62d2bc08cf1022648"
+      "sha256": "deb5f449257e79328fec0e744e174323f525029c4d5fcb0ddae35c7d2d893a73"
     },
     {
       "path": "docs/ru/concepts/shell-agent-subagent-policy.md",
-      "sha256": "5224cd79c82372bb9d303219850d1595393c845b503ac98be24b6608aed34be0"
+      "sha256": "832ecad7ddb2ebd023fc1e7b983dc33932833e8ac270505c2f11e293a69255cc"
     },
     {
       "path": "docs/ru/concepts/update-lifecycle.md",
-      "sha256": "25cad2e07079bc6359df7b33c087202933b0f1e9055ad20d11eed78f8e45d25b"
+      "sha256": "da9122212e995d18ae2022178bce024e06b452498704fdc33b63c6d72b922d2b"
     },
     {
       "path": "docs/ru/concepts/update-sites.md",
-      "sha256": "e344554ba7eb0771c4fe2e30efdc9bdd5deaf65e998b712c56cbc74b6c3876f8"
+      "sha256": "809c07aa221219d23269fdbef847568f41d20c90fa6915b696353f36496b5ba0"
     },
     {
       "path": "docs/ru/concepts/workplace-learning-queue.md",
@@ -798,55 +798,55 @@
     },
     {
       "path": "docs/ru/concepts/workplace-vs-project.md",
-      "sha256": "564b3c4eb97535b821f0dcba1d591f17bd5a290a1fc218e7da5c4b254184e7c0"
+      "sha256": "e9a64d376c289f12a060cf4065cb88b9956730ad79d229822d33d2ab7a4d6175"
     },
     {
       "path": "docs/ru/getting-started/agent-ledger-process-transitions.md",
-      "sha256": "41de5d1be0c0649fe9fcabf6f6727f0aa5136403539b75fd25c86a1de84bfcbf"
+      "sha256": "145eed33283c3b8b708ad3bf3e83f21047c30990a757fa804752e47e7656503a"
     },
     {
       "path": "docs/ru/getting-started/agent-prompts.md",
-      "sha256": "5221c4672a867cdd56ffe1a70f5b801a2a88b102148dba7800a69a4eba4f9988"
+      "sha256": "2f776164487bee6168ceb35237beb02000dd0f1bd890d202b9d36fdaeb6dc3ba"
     },
     {
       "path": "docs/ru/getting-started/create-your-first-process.md",
-      "sha256": "9f28287338c8f8fa852898105f302e3ecd767c2ebe9e4a8a5e0114057a3f95a5"
+      "sha256": "c22f86fc7dd08b484d4f016eb61d91da1dc817e054ee675997b93e84cbddade5"
     },
     {
       "path": "docs/ru/getting-started/evolve-learning-loop.md",
-      "sha256": "1be85a27a05ccf2e9543c86122e9dabffc31e13fcc71f094e7b0a2afe474cdad"
+      "sha256": "0fdd365d3e5484a852babc538d1ea20494657c3266d123720f09795f95a9d76a"
     },
     {
       "path": "docs/ru/getting-started/first-run.md",
-      "sha256": "e4693ccebaec105ad50925df4ec2ccd450f0e510a160f6e33549c1b48d07bdc8"
+      "sha256": "8e5b3e39246f8fe75b979d95a42b20238c23e7ab7badd4343055fc6c54627fce"
     },
     {
       "path": "docs/ru/getting-started/guided-workplace-setup.md",
-      "sha256": "3a25f7c727cfcb4a8a8ccafcbfc63bc1c42033a8e843df5655b4dafb30bfe513"
+      "sha256": "ddb7abb87e89a5625463fa44e5067de0fda4f8f703dfe315434d59bcb576cb35"
     },
     {
       "path": "docs/ru/getting-started/initialization-order.md",
-      "sha256": "7010a773adf0622230f2ecba827a91c0adc2c509108f751708a41259073eacda"
+      "sha256": "709f3e03d250e3e1211198fc5a2720adc8ca990fd1420e15317ed30953b089ee"
     },
     {
       "path": "docs/ru/getting-started/installation.md",
-      "sha256": "4f2416cf03d814635b76e7a83dc8d7e129756cb7f1905f40777265a09bc6f6f2"
+      "sha256": "69e1716fde7d6913ab67b88a1d3ab4147fcd2e25e9785553042837dce40b6daf"
     },
     {
       "path": "docs/ru/getting-started/multi-agent-orchestration.md",
-      "sha256": "c63b259fadfa285eee9bd47de8ff5a3804a9efff69c99fcfa7b594920ba796eb"
+      "sha256": "b0ce1ae12d4e68dedb84673f0a36d91e283a71ab166b85a16f11929da69a5cc5"
     },
     {
       "path": "docs/ru/getting-started/project-onboarding.md",
-      "sha256": "56ac08b55a369a370fd5cdf25b8ef9acb6fc0a7b5fbcca5a5b23bfd6825318cd"
+      "sha256": "c8b56819f573c31ad3d355602e4e50f0b09b2569e164502ff31f94aacbb4a183"
     },
     {
       "path": "docs/ru/getting-started/runtime-driver-supervisor.md",
-      "sha256": "d35d220d1851a9ec8617d1353767d5d1f15d7cdd988715c22e81840812a348ed"
+      "sha256": "c75c09543f392f2c53a7de6a6b02658035b521e9c8d228214d4467e8eb058002"
     },
     {
       "path": "docs/ru/getting-started/task-batch-workflow.md",
-      "sha256": "29c207ad293ba1b4b3feeed4c1eaeb55d12dde05bc9d982deb25570aecb089c1"
+      "sha256": "1b173cbceba829bfa02813822b59ffa7cc16cf9e51ee5d5ae0a3a803189ea941"
     },
     {
       "path": "docs/ru/getting-started/update-system.md",
@@ -854,23 +854,23 @@
     },
     {
       "path": "docs/ru/getting-started/workplace-initialization.md",
-      "sha256": "9dd8b819f59d973a63f1d0b82bf1c80a39f5cd8f36d11032c8e6e3c829ef5be7"
+      "sha256": "0d67992e89037bf43d6eaf03931fc109bf22a49347574f11c183c0c74025985c"
     },
     {
       "path": "docs/ru/index.md",
-      "sha256": "eefe63f9cf9092c0447085d908a206d12e5dc4d52da1ece99293f6897c2bd871"
+      "sha256": "0346ca6bfbc5020d12b2aab1dfc1579ec67ce543b80e34520e40cf84ad62032f"
     },
     {
       "path": "docs/ru/known-limitations.md",
-      "sha256": "36be83a35fef5d5c9af5775d010250d38f6c16a88d7ee369be378f4a01202a1a"
+      "sha256": "95634666749f4f9b8adedbf2fba7cacf6bf823bc3fc0f7aebe1ae9d6809e8512"
     },
     {
       "path": "docs/ru/processes/software-feature-development.md",
-      "sha256": "88188f8f87a3724f3b74ff9e47e549fa8c247ee7f6a18ef52e910bb47fe69cf5"
+      "sha256": "768c92a88bf35e62cb849263b29bbb264c0d8aa5224871bf659402540a52c3c8"
     },
     {
       "path": "docs/ru/releases/initial-release.md",
-      "sha256": "9a0ab88edcc5f5cb695524224716af943b53163c1c2ad3cd1666f591cf8a449b"
+      "sha256": "95961df0da24fa6f15bf365a743d8ae78900c41a78c11da691b579a373898ba5"
     },
     {
       "path": "docs/runner-protocol-draft.md",
@@ -930,7 +930,7 @@
     },
     {
       "path": "examples/guided-workplace-setup/minimal/README.md",
-      "sha256": "0f4e6a4bfd6a61b6dfed738979c0db811cd53395e3bc70876926cc03722c82ea"
+      "sha256": "9f9b4a1e624f635d954e4719de151f0a87c12f226863d3affe54fcc7e210acb6"
     },
     {
       "path": "examples/guided-workplace-setup/minimal/answers.yaml",
@@ -1342,7 +1342,7 @@
     },
     {
       "path": "processes/core/guided-workplace-setup.yaml",
-      "sha256": "9567e7ce874f1d3278d1ed580986426b719718a9e715ff99b997db06f5f67ce9"
+      "sha256": "b2f73b00a5c9129f8a1d9aa953c54dd79580c0215c9cfb5f25c8dd3fc6500b46"
     },
     {
       "path": "processes/core/knowledge-package-authoring.yaml",
@@ -1438,7 +1438,7 @@
     },
     {
       "path": "processes/core/workplace-initialization.yaml",
-      "sha256": "25278c9802dc662b83f6a783e0f54a3bcebe6471810d527907d57df809391de3"
+      "sha256": "246d016350ee4c5bd7cf91594686a3a5addd2cd5a86c1a57a3802991fbe7206d"
     },
     {
       "path": "processes/custom/.gitkeep",
@@ -1474,7 +1474,7 @@
     },
     {
       "path": "prompts/guided-workplace-setup-agent.md",
-      "sha256": "49bde56b5dcd8730ac186c7e1f752b3f79e302e163923c507bf02c5355e2bf7b"
+      "sha256": "a3b754d4bd2272ca018e99cc61ef3e042718379296c3402f7006ac9af8a6f4fb"
     },
     {
       "path": "prompts/knowledge-package-authoring-agent.md",
@@ -1538,7 +1538,7 @@
     },
     {
       "path": "prompts/project-onboarding-agent.md",
-      "sha256": "b8c6a7470e0ece425a04fb659b60b53b33c2ffd66583fe3f1b6b27b433dae7eb"
+      "sha256": "7f0535008d14223960d7286b9f43a7d370422b0732f10db80f8f56cac928cc09"
     },
     {
       "path": "prompts/reusable-template-authoring-agent.md",
@@ -1574,7 +1574,7 @@
     },
     {
       "path": "prompts/workplace-initialization-agent.md",
-      "sha256": "0bc08c02f7885f67a8c50ac95b3c9db6faae36cac65df1981cece7912d9f7f09"
+      "sha256": "96c5583762414e2bca2f9474a958cab043382eda932ecee3b257f9db45d883d9"
     },
     {
       "path": "requirements.txt",
@@ -1670,11 +1670,11 @@
     },
     {
       "path": "schemas/guided-workplace-setup-answers.schema.json",
-      "sha256": "5ce008eee223a6791f68b6079a3dc15d8f1568093ce68f9f8e1e73fd2bb301b2"
+      "sha256": "18c3d9ceaf146352308f47a3ec7f516e819cebc06f671b9743765c494e61e7bd"
     },
     {
       "path": "schemas/guided-workplace-setup-proposal.schema.json",
-      "sha256": "2c51952e3bb4b40f5e68c76ad8adef17b5f4776bff744d6ec66bdb65d4adeb2b"
+      "sha256": "c51735e58ca336d866af2c6b87aee91808c90d99b776b19c487a1b059768b959"
     },
     {
       "path": "schemas/handoff-input-manifest.schema.json",
@@ -1946,7 +1946,7 @@
     },
     {
       "path": "schemas/workplace-init-answers.schema.json",
-      "sha256": "161d87eb902c5137d7b08dca48151a33102d247613ed838f2c04f67fcf835a37"
+      "sha256": "36a0888ca58bb8d6deea7221d34a6788cc4894a2db6f9eac537ab96396805951"
     },
     {
       "path": "schemas/workplace.schema.json",
@@ -2078,11 +2078,11 @@
     },
     {
       "path": "templates/guided-workplace-setup.answers.yaml",
-      "sha256": "8282ea39fbb53851c92b4b47ac658eca4639ad60b2270c7f3b865307a86c6cbc"
+      "sha256": "4f10f964511705c5554dd7b3ade1b0cb8a6ee33e15104cf281ce30758a05cd87"
     },
     {
       "path": "templates/guided-workplace-setup.proposal.yaml",
-      "sha256": "e87253ddd58201e6be260a2533e8662a6ed22457db37d42f3b895be65dcd38f8"
+      "sha256": "603c7633585123fa8137d8e47ff4d174e33de9e90de7657d3d2f5a6321e63bd8"
     },
     {
       "path": "templates/handoff-package.yaml",
@@ -2406,7 +2406,7 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "44f8d322c7ec503b5b131dabb06433c19a2a5606337c083a4decd340551213e2"
+      "sha256": "188c028f7e6ebaa5cb044b11c6fc737301710cff6421653f0e036890733fcb35"
     },
     {
       "path": "tools/processforge_subprocess.py",
@@ -2769,7 +2769,7 @@
       "sha256": "be282886d13551135a4abafa9dbf146fd1c86cf98cec4e2a97a8cb68f5ac7b75"
     }
   ],
-  "generated_at": "2026-07-28T08:58:20Z",
+  "generated_at": "2026-07-28T13:14:23Z",
   "name": "processforge",
   "version": "1.0.0"
 }
