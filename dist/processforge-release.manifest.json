@@ -66,7 +66,7 @@
     },
     {
       "path": "checksums/processforge.sha256",
-      "sha256": "2beb2b136a554b92ad0dc0ab4d557a2a220ca460a731850f8ddcb95b41c84a0d"
+      "sha256": "05b25ceb832c05ffb468f1099e3ebca6a3a9afbd08dc0c54915f822ce86f2d1d"
     },
     {
       "path": "docs/assets/processforge-architecture.svg",
@@ -462,7 +462,7 @@
     },
     {
       "path": "docs/getting-started/guided-workplace-setup.md",
-      "sha256": "8107b85f0f58ebb402f5210910561bc1b4745752df537c7c84e50abf438812e3"
+      "sha256": "d5e52d1ab43d4d7b69ba83e76502d66a7bb332036d8344c71bb86c91eacb44fe"
     },
     {
       "path": "docs/getting-started/initialization-order.md",
@@ -822,7 +822,7 @@
     },
     {
       "path": "docs/ru/getting-started/guided-workplace-setup.md",
-      "sha256": "c745e9d154d1b42636ac3eeb595c798eb861c5d7b16cc52ab5cf1fe84f3acc34"
+      "sha256": "ddb7abb87e89a5625463fa44e5067de0fda4f8f703dfe315434d59bcb576cb35"
     },
     {
       "path": "docs/ru/getting-started/initialization-order.md",
@@ -930,7 +930,7 @@
     },
     {
       "path": "examples/guided-workplace-setup/minimal/README.md",
-      "sha256": "0f4e6a4bfd6a61b6dfed738979c0db811cd53395e3bc70876926cc03722c82ea"
+      "sha256": "9f9b4a1e624f635d954e4719de151f0a87c12f226863d3affe54fcc7e210acb6"
     },
     {
       "path": "examples/guided-workplace-setup/minimal/answers.yaml",
@@ -2406,7 +2406,7 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "2cbaa5aff638cfdbc6ec66fe920702e6ad991178052d8c9139572b3ffa5e20ea"
+      "sha256": "188c028f7e6ebaa5cb044b11c6fc737301710cff6421653f0e036890733fcb35"
     },
     {
       "path": "tools/processforge_subprocess.py",
@@ -2769,7 +2769,7 @@
       "sha256": "be282886d13551135a4abafa9dbf146fd1c86cf98cec4e2a97a8cb68f5ac7b75"
     }
   ],
-  "generated_at": "2026-07-28T11:22:53Z",
+  "generated_at": "2026-07-28T12:01:17Z",
   "name": "processforge",
   "version": "1.0.0"
 }

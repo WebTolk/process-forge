@@ -11,4 +11,4 @@ python bin/pf.py workplace-setup apply --workplace <workplace-root> --session-id
 python bin/pf.py workplace-setup status --workplace <workplace-root> --session-id first-machine
 ```
 
-The setup session is stored under `<workplace-root>/.pf-workplace/setup-sessions/first-machine/`.
+The setup session is stored under `<workplace-root>/setup-sessions/first-machine/`.

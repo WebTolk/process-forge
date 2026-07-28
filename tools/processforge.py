@@ -1540,7 +1540,7 @@ def command_global_agents_section(args: argparse.Namespace) -> int:
 
 
 def workplace_setup_session_dir(workplace: Path, session_id: str) -> Path:
-    return workplace / ".pf-workplace" / "setup-sessions" / safe_id(session_id, "setup-session")
+    return workplace / "setup-sessions" / safe_id(session_id, "setup-session")
 
 
 def default_guided_workplace_answers(workplace: Path, session_id: str) -> dict[str, Any]:

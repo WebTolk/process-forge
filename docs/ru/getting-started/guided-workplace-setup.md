@@ -31,7 +31,7 @@ python bin/pf.py workplace-setup status --workplace <workplace-root> --session-i
 Артефакты сессии хранятся здесь:
 
 ```text
-<workplace-root>/.pf-workplace/setup-sessions/<session-id>/
+<workplace-root>/setup-sessions/<session-id>/
 ```
 
 Создаются `answers.yaml`, `proposal.yaml`, `proposal.md`, `review.md`, `apply-report.md`, `agent-instructions.md` и `next-steps.md`.

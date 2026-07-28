@@ -29,7 +29,7 @@ python bin/pf.py workplace-setup status --workplace <workplace-root> --session-i
 Session files are written under:
 
 ```text
-<workplace-root>/.pf-workplace/setup-sessions/<session-id>/
+<workplace-root>/setup-sessions/<session-id>/
 ```
 
 Expected artifacts:
