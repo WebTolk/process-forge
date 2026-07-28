@@ -46,7 +46,7 @@ def main() -> int:
         shutil.copyfile(ANSWERS, answers)
         pf("process-create", "--project-root", str(project), "--answers", str(answers), "--apply")
         process_id = load_yaml(answers)["process"]["id"]
-        process = load_yaml(project / "processes" / f"{process_id}.yaml")
+        process = load_yaml(project / "processes" / "user" / f"{process_id}.yaml")
         for key in [
             "execution_mode",
             "coordination_requirements",
@@ -59,7 +59,7 @@ def main() -> int:
             if key not in process:
                 raise AssertionError(f"process-authoring dropped behavioral field: {key}")
         report = (project / ".pf" / "authoring" / "processes" / process_id / "apply-report.md").read_text(encoding="utf-8")
-        if "processes/" not in report or "prompts/" not in report or "docs/processes/" not in report:
+        if "processes/user/" not in report or "prompts/" not in report or "docs/processes/" not in report:
             raise AssertionError("apply report does not list materialized process pack files")
         pf("process-doctor", "--project-root", str(project), "--process", process_id, "--contract-only", "--force")
     print("PASS: process-authoring materialization parity smoke")

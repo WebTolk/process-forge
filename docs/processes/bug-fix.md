@@ -1,4 +1,4 @@
-# Bug Fix
+﻿# Bug Fix
 
 ## Purpose
 
@@ -18,7 +18,7 @@ Use this built-in process when its stated purpose matches the assignment.
 
 ## Roles and responsibilities
 
-Roles are declared in `processes/bug-fix.yaml`; responsibility boundaries separate operator, primary agent, Director, Inspector, worker, and CLI tool duties.
+Roles are declared in `processes/core/bug-fix.yaml`; responsibility boundaries separate operator, primary agent, Director, Inspector, worker, and CLI tool duties.
 
 ## Stages
 

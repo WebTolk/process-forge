@@ -1,8 +1,8 @@
-# Knowledge Package Improvement Process Authoring Example
+﻿# Knowledge Package Improvement Process Authoring Example
 
 This example points to the public stable built-in `knowledge-package-improvement` as a reference process pack.
 
-- Process: `processes/knowledge-package-improvement.yaml`
+- Process: `processes/core/knowledge-package-improvement.yaml`
 - Prompt: `prompts/knowledge-package-improvement-agent.md`
 - Documentation: `docs/processes/knowledge-package-improvement.md`
 

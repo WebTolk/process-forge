@@ -1,8 +1,8 @@
-# Task Batch Execution Process Authoring Example
+﻿# Task Batch Execution Process Authoring Example
 
 This example points to the public stable built-in `task-batch-execution` as a reference process pack.
 
-- Process: `processes/task-batch-execution.yaml`
+- Process: `processes/core/task-batch-execution.yaml`
 - Prompt: `prompts/task-batch-execution-agent.md`
 - Documentation: `docs/processes/task-batch-execution.md`
 

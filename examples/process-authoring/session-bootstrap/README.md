@@ -1,8 +1,8 @@
-# Session Bootstrap Process Authoring Example
+﻿# Session Bootstrap Process Authoring Example
 
 This example points to the public stable built-in `session-bootstrap` as a reference process pack.
 
-- Process: `processes/session-bootstrap.yaml`
+- Process: `processes/core/session-bootstrap.yaml`
 - Prompt: `prompts/session-bootstrap-agent.md`
 - Documentation: `docs/processes/session-bootstrap.md`
 

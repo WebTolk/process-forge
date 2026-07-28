@@ -1,8 +1,8 @@
-# Project Initialization Process Authoring Example
+﻿# Project Initialization Process Authoring Example
 
 This example points to the public stable built-in `project-initialization` as a reference process pack.
 
-- Process: `processes/project-initialization.yaml`
+- Process: `processes/core/project-initialization.yaml`
 - Prompt: `prompts/project-initialization-agent.md`
 - Documentation: `docs/processes/project-initialization.md`
 

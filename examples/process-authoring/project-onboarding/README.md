@@ -1,8 +1,8 @@
-# Project Onboarding Process Authoring Example
+﻿# Project Onboarding Process Authoring Example
 
 This example points to the public stable built-in `project-onboarding` as a reference process pack.
 
-- Process: `processes/project-onboarding.yaml`
+- Process: `processes/core/project-onboarding.yaml`
 - Prompt: `prompts/project-onboarding-agent.md`
 - Documentation: `docs/processes/project-onboarding.md`
 

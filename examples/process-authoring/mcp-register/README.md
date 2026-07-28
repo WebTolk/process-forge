@@ -1,8 +1,8 @@
-# MCP Register Process Authoring Example
+﻿# MCP Register Process Authoring Example
 
 This example points to the public stable built-in `mcp-register` as a reference process pack.
 
-- Process: `processes/mcp-register.yaml`
+- Process: `processes/core/mcp-register.yaml`
 - Prompt: `prompts/mcp-register-agent.md`
 - Documentation: `docs/processes/mcp-register.md`
 

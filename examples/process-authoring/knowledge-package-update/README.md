@@ -1,8 +1,8 @@
-# Knowledge Package Update Process Authoring Example
+﻿# Knowledge Package Update Process Authoring Example
 
 This example points to the public stable built-in `knowledge-package-update` as a reference process pack.
 
-- Process: `processes/knowledge-package-update.yaml`
+- Process: `processes/core/knowledge-package-update.yaml`
 - Prompt: `prompts/knowledge-package-update-agent.md`
 - Documentation: `docs/processes/knowledge-package-update.md`
 

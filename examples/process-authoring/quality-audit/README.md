@@ -1,4 +1,4 @@
-# Quality Audit Process Authoring Example
+﻿# Quality Audit Process Authoring Example
 
 Create the example process from prepared answers:
 
@@ -9,7 +9,7 @@ python bin/pf.py process-doctor --project-root <project-root> --process quality-
 
 Expected public outputs:
 
-- `processes/quality-audit.yaml`
+- `processes/user/quality-audit.yaml`
 - `prompts/quality-audit-agent.md`
 - `docs/processes/quality-audit.md`
 - `examples/process-authoring/quality-audit/`

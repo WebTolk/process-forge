@@ -1,8 +1,8 @@
-# Tool Register Process Authoring Example
+﻿# Tool Register Process Authoring Example
 
 This example points to the public stable built-in `tool-register` as a reference process pack.
 
-- Process: `processes/tool-register.yaml`
+- Process: `processes/core/tool-register.yaml`
 - Prompt: `prompts/tool-register-agent.md`
 - Documentation: `docs/processes/tool-register.md`
 

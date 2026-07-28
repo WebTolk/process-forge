@@ -7,6 +7,9 @@ process:
   kind: audit
   scope: project
   description: Audit project inputs and produce a prioritized quality report.
+output:
+  process_root: user
+  path: processes/user/quality-audit.yaml
 run_model:
   supports_multiple_tasks: true
   default_task_loop:

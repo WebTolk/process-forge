@@ -30,7 +30,6 @@ processes:
 - platform-contract-authoring
 - platform-contract-install
 - process-authoring
-- process-template-install
 - process-version-upgrade
 - reusable-template-authoring
 - template-add
@@ -44,7 +43,6 @@ stable_processes:
 - platform-contract-authoring
 - platform-contract-install
 - process-authoring
-- process-template-install
 - process-version-upgrade
 - reusable-template-authoring
 - template-add

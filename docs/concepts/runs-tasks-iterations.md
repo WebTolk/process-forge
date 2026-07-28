@@ -1,4 +1,4 @@
-# Runs, Tasks, And Iterations
+﻿# Runs, Tasks, And Iterations
 
 ![Run lifecycle](../assets/processforge-run-lifecycle.svg)
 
@@ -13,7 +13,7 @@ Iteration = repeated work/debug/fix/review attempt inside a task
 
 ## Process Definition
 
-A process definition lives in `processes/<process-id>.yaml`. It describes how a class of work should be governed: stages, roles, artifacts, gates, events, and evolution policy.
+A process definition lives in `processes/user/<process-id>.yaml`. It describes how a class of work should be governed: stages, roles, artifacts, gates, events, and evolution policy.
 
 ## Run
 

@@ -1,4 +1,4 @@
-# Knowledge Package Authoring
+﻿# Knowledge Package Authoring
 
 ## Purpose
 
@@ -18,7 +18,7 @@ Use this built-in process when its stated purpose matches the assignment.
 
 ## Roles and responsibilities
 
-Roles are declared in `processes/knowledge-package-authoring.yaml`; responsibility boundaries separate operator, primary agent, Director, Inspector, worker, and CLI tool duties.
+Roles are declared in `processes/core/knowledge-package-authoring.yaml`; responsibility boundaries separate operator, primary agent, Director, Inspector, worker, and CLI tool duties.
 
 ## Stages
 

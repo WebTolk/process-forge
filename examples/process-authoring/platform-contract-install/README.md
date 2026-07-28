@@ -1,8 +1,8 @@
-# Platform Contract Install Process Authoring Example
+﻿# Platform Contract Install Process Authoring Example
 
 This example points to the public stable built-in `platform-contract-install` as a reference process pack.
 
-- Process: `processes/platform-contract-install.yaml`
+- Process: `processes/core/platform-contract-install.yaml`
 - Prompt: `prompts/platform-contract-install-agent.md`
 - Documentation: `docs/processes/platform-contract-install.md`
 

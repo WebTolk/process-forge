@@ -35,7 +35,7 @@ def main() -> int:
         shutil.copyfile(ROOT / "templates" / "process-authoring-answers.yaml", answers)
         run_pf("process-create", "--project-root", str(project), "--answers", str(answers), "--apply")
         process_id = load_yaml(answers)["process"]["id"]
-        process = load_yaml(project / "processes" / f"{process_id}.yaml")
+        process = load_yaml(project / "processes" / "user" / f"{process_id}.yaml")
         targeting = process["evolve"]["candidate_targeting"]
         if targeting.get("require_target") is not True or targeting.get("require_applicability") is not True:
             raise AssertionError(targeting)

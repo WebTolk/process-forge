@@ -1,4 +1,4 @@
-# Process Authoring
+﻿# Process Authoring
 
 Process id: `process-authoring`
 
@@ -17,7 +17,7 @@ the result with `process-doctor`.
 
 ## Public Outputs
 
-- `processes/<process-id>.yaml`
+- `processes/user/<process-id>.yaml`
 - `prompts/<process-id>-agent.md`
 - `docs/processes/<process-id>.md`
 - `examples/process-authoring/<process-id>/`

@@ -19,12 +19,12 @@ FORBIDDEN_PROCESS_IDS = {
 
 def main() -> int:
     process_ids: set[str] = set()
-    for path in (ROOT / "processes").glob("*.yaml"):
+    for path in (ROOT / "processes" / "core").glob("*.yaml"):
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
         if isinstance(data, dict) and data.get("id"):
             process_ids.add(str(data["id"]))
     assert not (FORBIDDEN_PROCESS_IDS & process_ids), sorted(FORBIDDEN_PROCESS_IDS & process_ids)
-    software_process = (ROOT / "processes" / "software-feature-development.yaml").read_text(encoding="utf-8")
+    software_process = (ROOT / "processes" / "core" / "software-feature-development.yaml").read_text(encoding="utf-8")
     assert "Joomla" not in software_process
     assert "joomla" not in software_process
     assert "delivery_profile" in software_process
@@ -37,4 +37,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

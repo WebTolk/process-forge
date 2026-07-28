@@ -1,8 +1,8 @@
-# Testing Process Authoring Example
+﻿# Testing Process Authoring Example
 
 This example points to the public stable built-in `testing` as a reference process pack.
 
-- Process: `processes/testing.yaml`
+- Process: `processes/core/testing.yaml`
 - Prompt: `prompts/testing-agent.md`
 - Documentation: `docs/processes/testing.md`
 

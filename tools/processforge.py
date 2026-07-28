@@ -433,6 +433,17 @@ class PackageRootResolution:
     entry: dict[str, Any] | None = None
 
 
+@dataclass
+class ProcessDefinitionRef:
+    process_id: str
+    path: Path
+    process: dict[str, Any]
+    origin: str
+    root: Path
+    catalog_role: str
+    warnings: list[str]
+
+
 def safe_id(value: str, default: str = "project") -> str:
     cleaned = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
     return cleaned or default
@@ -4266,7 +4277,9 @@ RELEASE_REQUIRED_PATHS = [
     "tools",
     "schemas",
     "templates",
-    "processes",
+    "processes/core",
+    "processes/user",
+    "processes/custom",
     "prompts",
     "docs",
     "examples",
@@ -4356,6 +4369,8 @@ def release_source_files(root: Path) -> list[tuple[str, Path]]:
 
 def release_path_is_forbidden(rel_path: str) -> str | None:
     normalized = rel_path.replace("\\", "/")
+    if normalized.startswith(("processes/user/", "processes/custom/")) and Path(normalized).name != ".gitkeep":
+        return "private user/custom process definition"
     for prefix in RELEASE_FORBIDDEN_PF_PREFIXES:
         if normalized == prefix.rstrip("/") or normalized.startswith(prefix):
             return f"forbidden .pf release prefix {prefix.rstrip('/')}"
@@ -4833,6 +4848,14 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_config_behavior_contracts", [sys.executable, str(root / "tools" / "smoke_config_behavior_contracts.py")], 180),
         ReleaseCommand("smoke_orchestrator_shell_agents_with_subagent_policy", [sys.executable, str(root / "tools" / "smoke_orchestrator_shell_agents_with_subagent_policy.py")], 180),
         ReleaseCommand("smoke_builtin_process_catalog", [sys.executable, str(root / "tools" / "smoke_builtin_process_catalog.py")], 120),
+        ReleaseCommand("smoke_process_directory_layout", [sys.executable, str(root / "tools" / "smoke_process_directory_layout.py")], 120),
+        ReleaseCommand("smoke_process_resolver_multiple_roots", [sys.executable, str(root / "tools" / "smoke_process_resolver_multiple_roots.py")], 120),
+        ReleaseCommand("smoke_process_list_origin_filters", [sys.executable, str(root / "tools" / "smoke_process_list_origin_filters.py")], 120),
+        ReleaseCommand("smoke_process_authoring_writes_user_root", [sys.executable, str(root / "tools" / "smoke_process_authoring_writes_user_root.py")], 120),
+        ReleaseCommand("smoke_legacy_flat_process_layout_warning", [sys.executable, str(root / "tools" / "smoke_legacy_flat_process_layout_warning.py")], 120),
+        ReleaseCommand("smoke_release_pack_excludes_user_processes", [sys.executable, str(root / "tools" / "smoke_release_pack_excludes_user_processes.py")], 120),
+        ReleaseCommand("smoke_process_id_stable_after_move", [sys.executable, str(root / "tools" / "smoke_process_id_stable_after_move.py")], 120),
+        ReleaseCommand("smoke_process_root_collision_policy", [sys.executable, str(root / "tools" / "smoke_process_root_collision_policy.py")], 120),
         ReleaseCommand("smoke_update_sites_schema", [sys.executable, str(root / "tools" / "smoke_update_sites_schema.py")], 120),
         ReleaseCommand("smoke_update_candidate_discovery", [sys.executable, str(root / "tools" / "smoke_update_candidate_discovery.py")], 120),
         ReleaseCommand("smoke_update_notifications", [sys.executable, str(root / "tools" / "smoke_update_notifications.py")], 120),
@@ -5209,7 +5232,7 @@ def command_release_archive_test(args: argparse.Namespace) -> int:
             "release-test extracted archive",
             command,
             extract_root,
-            timeout=max(1, int(300 * timeout_scale)),
+            timeout=max(1, int(1200 * timeout_scale)),
         )
         print_release_command_output(result)
         if result.status != "PASS":
@@ -9306,14 +9329,131 @@ def validate_process_against_project_mode(process_data: dict[str, Any], project_
     return [check("PASS", f"process coordination requirements match effective {effective_mode} mode")]
 
 
-def process_definition_exists(project_root: Path, process_id: str) -> bool:
-    process_file = f"{safe_id(process_id, 'process')}.yaml"
+def process_catalog_role(process: dict[str, Any]) -> str:
+    catalog = process.get("catalog") if isinstance(process.get("catalog"), dict) else {}
+    role = str(catalog.get("role") or "").strip()
+    if role:
+        return safe_id(role, "canonical")
+    meta = process_catalog_metadata(process)
+    if meta["classification"] == "INTERNAL_MAINTENANCE":
+        return "internal"
+    if meta["classification"] == "DEPRECATED":
+        return "legacy_alias"
+    return "canonical"
+
+
+def process_override_declared(process: dict[str, Any], overridden_process_id: str) -> bool:
+    override = process.get("process_override") if isinstance(process.get("process_override"), dict) else {}
+    return str(override.get("overrides") or "") == overridden_process_id and bool(str(override.get("reason") or "").strip())
+
+
+def process_root_candidates(project_root: Path) -> list[tuple[Path, str, bool]]:
     flow_root = locate_flow_root(project_root)
-    return (
-        (project_root / "processes" / process_file).is_file()
-        or (flow_root / "processes" / process_file).is_file()
-        or (ROOT / "processes" / process_file).is_file()
-    )
+    candidates = [
+        (flow_root / "processes" / "user", "user", False),
+        (flow_root / "processes" / "custom", "custom", False),
+        (project_root / "processes" / "user", "user", False),
+        (project_root / "processes" / "custom", "custom", False),
+        (ROOT / "processes" / "user", "user", False),
+        (ROOT / "processes" / "custom", "custom", False),
+        (project_root / "processes" / "core", "core", False),
+        (ROOT / "processes" / "core", "core", False),
+        (flow_root / "processes", "legacy_flat", True),
+        (project_root / "processes", "legacy_flat", True),
+        (ROOT / "processes", "legacy_flat", True),
+    ]
+    seen: set[Path] = set()
+    unique: list[tuple[Path, str, bool]] = []
+    for path, origin, legacy in candidates:
+        resolved = path.resolve()
+        key = resolved
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append((path, origin, legacy))
+    return unique
+
+
+def process_root_yaml_files(root: Path, *, legacy_flat: bool) -> list[Path]:
+    if not root.is_dir():
+        return []
+    if legacy_flat:
+        return sorted([*root.glob("*.yaml"), *root.glob("*.yml")])
+    return sorted([path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in {".yaml", ".yml"}])
+
+
+def process_catalog_entries(project_root: Path, *, strict: bool = False) -> list[ProcessDefinitionRef]:
+    selected: dict[str, ProcessDefinitionRef] = {}
+    order: list[str] = []
+    duplicate_messages: dict[str, list[str]] = {}
+    for root, origin, legacy_flat in process_root_candidates(project_root):
+        for path in process_root_yaml_files(root, legacy_flat=legacy_flat):
+            data = load_yaml_document(path)
+            if yaml_error(data) or not isinstance(data, dict):
+                continue
+            process_id = str(data.get("id") or path.stem)
+            warnings: list[str] = []
+            if legacy_flat:
+                warnings.append(
+                    f"Legacy flat process path detected: {rel(path, project_root)}. Move built-ins to processes/core/ and user processes to processes/user/."
+                )
+            entry = ProcessDefinitionRef(
+                process_id=process_id,
+                path=path,
+                process=data,
+                origin=origin,
+                root=root,
+                catalog_role=process_catalog_role(data),
+                warnings=warnings,
+            )
+            if process_id not in selected:
+                selected[process_id] = entry
+                order.append(process_id)
+                continue
+            current = selected[process_id]
+            message = f"duplicate process_id {process_id}: {rel(current.path, project_root)} wins over {rel(path, project_root)}"
+            if current.origin in {"user", "custom"} and origin == "core" and not process_override_declared(current.process, process_id):
+                message += "; user/custom override of core process requires process_override.reason"
+            duplicate_messages.setdefault(process_id, []).append(message)
+            if strict:
+                current.warnings.append("STRICT: " + message)
+    for process_id, messages in duplicate_messages.items():
+        selected[process_id].warnings.extend(messages)
+    return [selected[process_id] for process_id in order]
+
+
+def resolve_process_definition(project_root: Path, process_or_path: str) -> ProcessDefinitionRef:
+    candidate = Path(process_or_path)
+    if candidate.suffix in {".yaml", ".yml"}:
+        path = candidate if candidate.is_absolute() else project_root / candidate
+        if path.is_file():
+            data = read_yaml_file(path)
+            process_id = str(data.get("id") or path.stem) if isinstance(data, dict) else path.stem
+            origin = "legacy_flat"
+            root = path.parent
+            parts = path.parts
+            if "processes" in parts:
+                try:
+                    index = parts.index("processes")
+                    if len(parts) > index + 1 and parts[index + 1] in {"core", "user", "custom"}:
+                        origin = parts[index + 1]
+                        root = Path(*parts[: index + 2])
+                except ValueError:
+                    pass
+            return ProcessDefinitionRef(process_id, path, data, origin, root, process_catalog_role(data) if isinstance(data, dict) else "canonical", [])
+    process_id = safe_id(process_or_path, "process")
+    for entry in process_catalog_entries(project_root):
+        if entry.process_id == process_id:
+            return entry
+    raise SystemExit(f"FAIL: process not found: {process_id}")
+
+
+def process_definition_exists(project_root: Path, process_id: str) -> bool:
+    try:
+        resolve_process_definition(project_root, process_id)
+        return True
+    except SystemExit:
+        return False
 
 
 def active_run_ids(project_root: Path) -> list[str]:
@@ -10316,9 +10456,22 @@ def command_process_authoring_apply(args: argparse.Namespace) -> int:
     if failures:
         emit_process_event(project_root, "process_authoring.failed", process_id=process_id, subject=process_id, severity="error", payload={"failures": [item.message for item in failures]}, correlation_id=f"process-authoring-{process_id}")
         return print_checks(checks)
-    target_process = project_root / "processes" / f"{process_id}.yaml"
+    output = answers.get("output") if isinstance(answers.get("output"), dict) else {}
+    output_root = safe_id(str(getattr(args, "output_root", "") or output.get("process_root") or "user"), "user")
+    if output_root not in {"user", "custom", "core"}:
+        raise SystemExit("FAIL: output process root must be user, custom, or core")
+    if output_root == "core" and not bool(getattr(args, "core", False)):
+        raise SystemExit("FAIL: writing process-authoring output to processes/core requires --core")
+    target_process = project_root / "processes" / output_root / f"{process_id}.yaml"
     target_prompt = project_root / "prompts" / f"{process_id}-agent.md"
     target_doc = project_root / "docs" / "processes" / f"{process_id}.md"
+    draft.setdefault("catalog", {})
+    if isinstance(draft["catalog"], dict):
+        draft["catalog"].setdefault("role", "canonical")
+    answers.setdefault("output", {})
+    if isinstance(answers["output"], dict):
+        answers["output"]["process_root"] = output_root
+        answers["output"]["path"] = rel(target_process, project_root)
     write_yaml_file(target_process, draft)
     target_prompt.parent.mkdir(parents=True, exist_ok=True)
     target_prompt.write_text(render_process_agent_prompt(draft), encoding="utf-8")
@@ -10357,6 +10510,11 @@ def command_process_create(args: argparse.Namespace) -> int:
     fallback_id = args.id or str((raw_answers.get("process") or {}).get("id") if isinstance(raw_answers.get("process"), dict) else raw_answers.get("id") or "new-process")
     answers = normalize_process_authoring_answers(raw_answers, fallback_id, args.title or "")
     process_id = safe_id(str(answers["process"]["id"]), "new-process")
+    output = answers.get("output") if isinstance(answers.get("output"), dict) else {}
+    output_root = safe_id(str(getattr(args, "output_root", "") or output.get("process_root") or "user"), "user")
+    answers.setdefault("output", {})
+    if isinstance(answers["output"], dict):
+        answers["output"]["process_root"] = output_root
     start_args = argparse.Namespace(project_root=str(project_root), answers=None, id=process_id, title=str(answers["process"]["name"]), description=str(answers["process"]["description"]), dry_run=getattr(args, "dry_run", False))
     if getattr(args, "dry_run", False):
         return command_process_authoring_start(start_args)
@@ -10368,20 +10526,11 @@ def command_process_create(args: argparse.Namespace) -> int:
     emit_process_event(project_root, "process_authoring.started", process_id=process_id, subject=process_id, payload={"process_id": process_id, "session": rel(paths["root"], project_root)}, correlation_id=f"process-authoring-{process_id}")
     emit_process_event(project_root, "process_authoring.answers.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["answers"], project_root)}, correlation_id=f"process-authoring-{process_id}")
     emit_process_event(project_root, "process_authoring.draft.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["draft"], project_root)}, correlation_id=f"process-authoring-{process_id}")
-    return command_process_authoring_apply(argparse.Namespace(project_root=str(project_root), process=process_id))
+    return command_process_authoring_apply(argparse.Namespace(project_root=str(project_root), process=process_id, output_root=output_root, core=getattr(args, "core", False)))
 
 
 def process_definition_path(project_root: Path, process_or_path: str) -> Path:
-    candidate = Path(process_or_path)
-    if candidate.suffix in {".yaml", ".yml"}:
-        path = candidate if candidate.is_absolute() else project_root / candidate
-        if path.is_file():
-            return path
-    process_id = safe_id(process_or_path, "process")
-    for path in [project_root / "processes" / f"{process_id}.yaml", locate_flow_root(project_root) / "processes" / f"{process_id}.yaml", ROOT / "processes" / f"{process_id}.yaml"]:
-        if path.is_file():
-            return path
-    raise SystemExit(f"FAIL: process not found: {process_id}")
+    return resolve_process_definition(project_root, process_or_path).path
 
 
 def validate_process_definition_files(project_root: Path, process: dict[str, Any], process_path: Path) -> list[Check]:
@@ -10571,8 +10720,8 @@ def package_process_index(root: Path) -> dict[str, dict[str, Any]]:
 
 
 def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[str, Any]:
-    process_items = iter_process_definitions(root)
-    process_ids = {process_id for process_id, _path, _process in process_items}
+    process_items = process_catalog_entries(root, strict=True)
+    process_ids = {entry.process_id for entry in process_items}
     packages = package_process_index(root)
     rows: list[dict[str, Any]] = []
     summary: dict[str, int] = {
@@ -10585,7 +10734,10 @@ def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[
         "pass": 0,
     }
     checks: list[Check] = []
-    for process_id, path, process in process_items:
+    for entry in process_items:
+        process_id = entry.process_id
+        path = entry.path
+        process = entry.process
         meta = process_catalog_metadata(process)
         if public and meta["classification"] == "INTERNAL_MAINTENANCE":
             strict_checks = [check("PASS", f"{process_id} internal maintenance process skipped by public catalog doctor")]
@@ -10612,6 +10764,9 @@ def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[
             {
                 "id": process_id,
                 "path": rel(path, root),
+                "origin": entry.origin,
+                "root": rel(entry.root, root),
+                "catalog_role": entry.catalog_role,
                 "status": process.get("status"),
                 "classification": meta["classification"],
                 "public_surface": meta["public_surface"],
@@ -10629,7 +10784,7 @@ def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[
                 "doctor_contexts": process_catalog_contexts(process),
                 "result": "fail" if failures else ("warn" if warnings else "pass"),
                 "failures": failures,
-                "warnings": warnings,
+                "warnings": warnings + entry.warnings,
             }
         )
 
@@ -10639,7 +10794,7 @@ def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[
             checks.append(check("PASS" if process_id in process_ids else "FAIL", f"package {package_id} process id exists: {process_id}"))
         stable_exposed = set(string_list(package_data.get("stable_processes")))
         for process_id in stable_exposed:
-            process = next((candidate for candidate_id, _path, candidate in process_items if candidate_id == process_id), {})
+            process = next((entry.process for entry in process_items if entry.process_id == process_id), {})
             checks.append(check("PASS" if process_is_public_stable(process) else "FAIL", f"package {package_id} stable process is public stable: {process_id}"))
 
     package_failures = [item.message for item in checks if item.level == "FAIL" and item.message.startswith("package ")]
@@ -10677,11 +10832,13 @@ def command_builtin_process_catalog_doctor(args: argparse.Namespace) -> int:
 def command_process_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    path = process_definition_path(project_root, args.process)
-    process = read_yaml_file(path)
+    resolved = resolve_process_definition(project_root, args.process)
+    path = resolved.path
+    process = resolved.process
     checks = validate_process_definition_files(project_root, process, path)
     checks.extend(validate_process_contract(project_root, process, path, strict=getattr(args, "contract_only", False)))
     checks.extend(validate_process_against_project_mode(process, project_root, force=getattr(args, "force", False)))
+    checks.extend(check("WARN", warning) for warning in resolved.warnings)
     result = print_checks(checks)
     process_id = str(process.get("id") or path.stem)
     emit_process_event(project_root, "process.doctor.failed" if result else "process.doctor.passed", process_id=process_id, severity="error" if result else "info", subject=process_id, payload={"path": rel(path, project_root), "result": "fail" if result else "pass"}, correlation_id=f"process-{process_id}")
@@ -10689,44 +10846,56 @@ def command_process_doctor(args: argparse.Namespace) -> int:
 
 
 def iter_process_definitions(project_root: Path) -> list[tuple[str, Path, dict[str, Any]]]:
-    seen: set[str] = set()
-    items: list[tuple[str, Path, dict[str, Any]]] = []
-    for root in [project_root / "processes", locate_flow_root(project_root) / "processes", ROOT / "processes"]:
-        if not root.is_dir():
-            continue
-        for path in sorted(root.glob("*.yaml")):
-            data = load_yaml_document(path)
-            if yaml_error(data):
-                continue
-            process_id = str(data.get("id") or path.stem)
-            if process_id in seen:
-                continue
-            seen.add(process_id)
-            items.append((process_id, path, data))
-    return items
+    return [(entry.process_id, entry.path, entry.process) for entry in process_catalog_entries(project_root)]
 
 
 def command_process_list(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    items = iter_process_definitions(project_root)
-    if not items:
+    entries = process_catalog_entries(project_root)
+    origin_filter = str(getattr(args, "origin", "") or "")
+    role_filter = str(getattr(args, "role", "") or "")
+    status_filter = str(getattr(args, "status", "") or "")
+    show_all = bool(getattr(args, "all", False))
+    if origin_filter:
+        entries = [entry for entry in entries if entry.origin == origin_filter]
+    if role_filter:
+        entries = [entry for entry in entries if entry.catalog_role == role_filter]
+    if status_filter:
+        entries = [entry for entry in entries if str(entry.process.get("status", "")) == status_filter]
+    if not show_all:
+        entries = [
+            entry
+            for entry in entries
+            if entry.origin != "legacy_flat"
+            and entry.catalog_role not in {"internal", "helper", "legacy_alias"}
+            and str(entry.process.get("status", "")) not in {"internal", "archived", "deprecated"}
+        ]
+    if not entries:
         print("No processes found.")
         return 0
-    for process_id, path, data in items:
-        print(f"{process_id}\t{data.get('status', 'unknown')}\t{data.get('version', '')}\t{data.get('name', '')}\t{rel(path, project_root)}")
+    print("id\tstatus\torigin\trole\tversion\tname\troot\tpath")
+    for entry in entries:
+        data = entry.process
+        print(f"{entry.process_id}\t{data.get('status', 'unknown')}\t{entry.origin}\t{entry.catalog_role}\t{data.get('version', '')}\t{data.get('name', '')}\t{rel(entry.root, project_root)}\t{rel(entry.path, project_root)}")
+        for warning in entry.warnings:
+            print(f"WARN: {warning}", file=sys.stderr)
     return 0
 
 
 def command_process_describe(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    path = process_definition_path(project_root, args.process)
-    data = read_yaml_file(path)
+    resolved = resolve_process_definition(project_root, args.process)
+    path = resolved.path
+    data = resolved.process
     print(f"PROCESS: {data.get('id', path.stem)}")
     print(f"NAME: {data.get('name', '')}")
     print(f"STATUS: {data.get('status', '')}")
     print(f"VERSION: {data.get('version', '')}")
+    print(f"ORIGIN: {resolved.origin}")
+    print(f"ROLE: {resolved.catalog_role}")
+    print(f"ROOT: {rel(resolved.root, project_root)}")
     print(f"PATH: {rel(path, project_root)}")
     print("STAGES:")
     for stage in as_list(data.get("stages")):
@@ -10744,6 +10913,75 @@ def command_process_describe(args: argparse.Namespace) -> int:
     for gate_item in as_list(data.get("gates")):
         if isinstance(gate_item, dict):
             print(f"- {gate_item.get('id')}: {gate_item.get('description', '')}")
+    return 0
+
+
+def process_layout_checks(root: Path) -> list[Check]:
+    checks: list[Check] = []
+    process_root = root / "processes"
+    core_root = process_root / "core"
+    user_root = process_root / "user"
+    custom_root = process_root / "custom"
+    checks.append(check("PASS" if core_root.is_dir() else "FAIL", "processes/core exists"))
+    checks.append(check("PASS" if user_root.is_dir() else "FAIL", "processes/user exists"))
+    checks.append(check("PASS" if custom_root.is_dir() else "FAIL", "processes/custom exists"))
+    flat_files = sorted([*process_root.glob("*.yaml"), *process_root.glob("*.yml")]) if process_root.is_dir() else []
+    checks.append(check("PASS" if not flat_files else "WARN", f"legacy flat process files: {len(flat_files)}"))
+    for path in flat_files[:20]:
+        checks.append(check("WARN", f"legacy flat process path detected: {rel(path, root)}"))
+    entries = process_catalog_entries(root, strict=True)
+    core_entries = [entry for entry in entries if entry.origin == "core"]
+    checks.append(check("PASS" if core_entries else "FAIL", "core processes resolvable"))
+    seen_paths = {entry.path.resolve() for entry in entries}
+    for path in process_root_yaml_files(core_root, legacy_flat=False):
+        checks.append(check("PASS" if path.resolve() in seen_paths else "FAIL", f"core process resolves: {rel(path, root)}"))
+    for entry in entries:
+        for warning in entry.warnings:
+            level = "FAIL" if warning.startswith("STRICT: duplicate") else "WARN"
+            checks.append(check(level, warning.removeprefix("STRICT: ")))
+    private_user = [path for subdir in [user_root, custom_root] if subdir.is_dir() for path in subdir.rglob("*.y*ml") if path.is_file()]
+    checks.append(check("PASS" if not private_user else "WARN", f"user/custom process definitions in distribution root: {len(private_user)}"))
+    return checks
+
+
+def command_process_layout_doctor(args: argparse.Namespace) -> int:
+    root = Path(args.root).expanduser().resolve()
+    require_flow_root(root)
+    result = print_checks(process_layout_checks(root))
+    return result
+
+
+def command_process_layout_migrate(args: argparse.Namespace) -> int:
+    root = Path(args.root).expanduser().resolve()
+    require_flow_root(root)
+    process_root = root / "processes"
+    target_root = process_root / ("custom" if getattr(args, "custom", False) else "user")
+    built_in_target = process_root / "core"
+    flat_files = sorted([*process_root.glob("*.yaml"), *process_root.glob("*.yml")]) if process_root.is_dir() else []
+    planned: list[tuple[Path, Path]] = []
+    package_ids: set[str] = set()
+    for package in package_process_index(root).values():
+        package_ids.update(package["processes"])
+    for path in flat_files:
+        data = load_yaml_document(path)
+        process_id = str(data.get("id") or path.stem) if isinstance(data, dict) else path.stem
+        destination_root = built_in_target if process_id in package_ids else target_root
+        planned.append((path, destination_root / path.name))
+    if not planned:
+        print("PASS: no legacy flat process files found")
+        return 0
+    failures = [target for _source, target in planned if target.exists()]
+    if failures:
+        for target in failures:
+            print(f"FAIL: target exists: {rel(target, root)}")
+        return 1
+    for source, target in planned:
+        print(f"{'MOVE' if getattr(args, 'apply', False) else 'DRY-RUN'}: {rel(source, root)} -> {rel(target, root)}")
+    if not getattr(args, "apply", False):
+        return 0
+    for source, target in planned:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(source), str(target))
     return 0
 
 
@@ -19075,6 +19313,8 @@ def build_parser() -> argparse.ArgumentParser:
     process_authoring_apply.add_argument("--project-root", required=True, help="Project root path.")
     process_authoring_apply.add_argument("--process", help="Process id.")
     process_authoring_apply.add_argument("--id", help="Compatibility alias for --process.")
+    process_authoring_apply.add_argument("--output-root", choices=["user", "custom", "core"], help="Process root for generated process YAML. Defaults to user.")
+    process_authoring_apply.add_argument("--core", action="store_true", help="Allow writing generated process YAML to processes/core.")
     process_authoring_apply.add_argument("--apply", action="store_true", help="Accepted for command symmetry; apply is the default action.")
     process_authoring_apply.set_defaults(func=command_process_authoring_apply)
 
@@ -19124,6 +19364,8 @@ def build_parser() -> argparse.ArgumentParser:
     process_create.add_argument("--id", help="Process id when no answers file supplies one.")
     process_create.add_argument("--title", help="Process title when no answers file supplies one.")
     process_create.add_argument("--answers", help="Optional process authoring answers YAML.")
+    process_create.add_argument("--output-root", choices=["user", "custom", "core"], help="Process root for generated process YAML. Defaults to user.")
+    process_create.add_argument("--core", action="store_true", help="Allow writing generated process YAML to processes/core.")
     process_create.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     process_create.add_argument("--apply", action="store_true", help="Write the process, prompt, docs, and example.")
     process_create.set_defaults(func=command_process_create)
@@ -19145,12 +19387,26 @@ def build_parser() -> argparse.ArgumentParser:
 
     process_list = sub.add_parser("process-list", help="List available process definitions.")
     process_list.add_argument("--project-root", required=True, help="Project root path.")
+    process_list.add_argument("--origin", choices=["core", "user", "custom", "legacy_flat"], help="Filter by process origin/root kind.")
+    process_list.add_argument("--role", help="Filter by catalog role.")
+    process_list.add_argument("--status", help="Filter by process status.")
+    process_list.add_argument("--all", action="store_true", help="Include internal, hidden, and legacy-flat processes.")
     process_list.set_defaults(func=command_process_list)
 
     process_describe = sub.add_parser("process-describe", help="Describe a process definition.")
     process_describe.add_argument("--project-root", required=True, help="Project root path.")
     process_describe.add_argument("--process", required=True, help="Process id or YAML path.")
     process_describe.set_defaults(func=command_process_describe)
+
+    process_layout_doctor = sub.add_parser("process-layout-doctor", help="Validate process directory layout roots and collision policy.")
+    process_layout_doctor.add_argument("--root", default=".", help="Repository/project root path.")
+    process_layout_doctor.set_defaults(func=command_process_layout_doctor)
+
+    process_layout_migrate = sub.add_parser("process-layout-migrate", help="Move legacy flat process YAML files into root-aware process directories.")
+    process_layout_migrate.add_argument("--root", default=".", help="Repository/project root path.")
+    process_layout_migrate.add_argument("--custom", action="store_true", help="Move unknown legacy-flat files to processes/custom instead of processes/user.")
+    process_layout_migrate.add_argument("--apply", action="store_true", help="Apply file moves. Default is dry-run.")
+    process_layout_migrate.set_defaults(func=command_process_layout_migrate)
 
     evolve_run = sub.add_parser("evolve-run", help="Create a run evolution report and optionally queue candidate files.")
     evolve_run.add_argument("--project-root", required=True, help="Project root path.")

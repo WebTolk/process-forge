@@ -1,4 +1,4 @@
-schema_version: 1
+﻿schema_version: 1
 process_forge:
   version: 1.0.0
   mode: file_only
@@ -13,7 +13,7 @@ paths:
   logs: logs
 processes:
   - id: software-feature-development
-    path: processes/software-feature-development.yaml
+    path: processes/core/software-feature-development.yaml
 execution_profiles:
   delivery_profiles:
     project.default_delivery:

@@ -1,8 +1,8 @@
-# ProcessForge Update Check Process Authoring Example
+﻿# ProcessForge Update Check Process Authoring Example
 
 This example points to the public stable built-in `processforge-update-check` as a reference process pack.
 
-- Process: `processes/processforge-update-check.yaml`
+- Process: `processes/core/processforge-update-check.yaml`
 - Prompt: `prompts/processforge-update-check-agent.md`
 - Documentation: `docs/processes/processforge-update-check.md`
 

@@ -1,4 +1,4 @@
-schema_version: 1
+﻿schema_version: 1
 process_forge:
   version: 1.0.0
   mode: file_only
@@ -13,7 +13,7 @@ paths:
   logs: logs
 processes:
   - id: content-production
-    path: processes/content-production.yaml
+    path: processes/core/content-production.yaml
 packages:
   - id: process-forge-core
     path: packages/process-forge-core.yaml

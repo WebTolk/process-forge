@@ -1,8 +1,8 @@
-# Workplace Initialization Process Authoring Example
+﻿# Workplace Initialization Process Authoring Example
 
 This example points to the public stable built-in `workplace-initialization` as a reference process pack.
 
-- Process: `processes/workplace-initialization.yaml`
+- Process: `processes/core/workplace-initialization.yaml`
 - Prompt: `prompts/workplace-initialization-agent.md`
 - Documentation: `docs/processes/workplace-initialization.md`
 

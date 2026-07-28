@@ -31,6 +31,9 @@ paths:
   docs: ../docs
   schemas: ../schemas
   processes: ../processes
+  processes_core: ../processes/core
+  processes_user: ../processes/user
+  processes_custom: ../processes/custom
   packages: ../packages
   templates: ../templates
   examples: ../examples
@@ -95,65 +98,67 @@ status_model:
 
 processes:
   - id: software-feature-development
-    path: ../processes/software-feature-development.yaml
+    path: ../processes/core/software-feature-development.yaml
   - id: bug-fix
-    path: ../processes/bug-fix.yaml
+    path: ../processes/core/bug-fix.yaml
   - id: testing
-    path: ../processes/testing.yaml
+    path: ../processes/core/testing.yaml
   - id: content-production
-    path: ../processes/content-production.yaml
+    path: ../processes/core/content-production.yaml
   - id: knowledge-package-improvement
-    path: ../processes/knowledge-package-improvement.yaml
+    path: ../processes/core/knowledge-package-improvement.yaml
   - id: process-version-upgrade
-    path: ../processes/process-version-upgrade.yaml
+    path: ../processes/core/process-version-upgrade.yaml
   - id: workplace-initialization
-    path: ../processes/workplace-initialization.yaml
+    path: ../processes/core/workplace-initialization.yaml
   - id: project-onboarding
-    path: ../processes/project-onboarding.yaml
+    path: ../processes/core/project-onboarding.yaml
   - id: project-initialization
-    path: ../processes/project-initialization.yaml
+    path: ../processes/core/project-initialization.yaml
   - id: session-bootstrap
-    path: ../processes/session-bootstrap.yaml
+    path: ../processes/core/session-bootstrap.yaml
   - id: context-resolution
-    path: ../processes/context-resolution.yaml
+    path: ../processes/core/context-resolution.yaml
   - id: processforge-update-check
-    path: ../processes/processforge-update-check.yaml
+    path: ../processes/core/processforge-update-check.yaml
   - id: knowledge-resource-add
-    path: ../processes/knowledge-resource-add.yaml
+    path: ../processes/core/knowledge-resource-add.yaml
   - id: documentation-mirror-import
-    path: ../processes/documentation-mirror-import.yaml
+    path: ../processes/core/documentation-mirror-import.yaml
   - id: knowledge-package-update
-    path: ../processes/knowledge-package-update.yaml
+    path: ../processes/core/knowledge-package-update.yaml
   - id: template-add
-    path: ../processes/template-add.yaml
+    path: ../processes/core/template-add.yaml
   - id: tool-register
-    path: ../processes/tool-register.yaml
+    path: ../processes/core/tool-register.yaml
   - id: mcp-register
-    path: ../processes/mcp-register.yaml
+    path: ../processes/core/mcp-register.yaml
   - id: platform-contract-install
-    path: ../processes/platform-contract-install.yaml
-  - id: process-template-install
-    path: ../processes/process-template-install.yaml
+    path: ../processes/core/platform-contract-install.yaml
   - id: reusable-template-authoring
-    path: ../processes/reusable-template-authoring.yaml
+    path: ../processes/core/reusable-template-authoring.yaml
   - id: knowledge-package-authoring
-    path: ../processes/knowledge-package-authoring.yaml
+    path: ../processes/core/knowledge-package-authoring.yaml
   - id: platform-contract-authoring
-    path: ../processes/platform-contract-authoring.yaml
+    path: ../processes/core/platform-contract-authoring.yaml
   - id: process-authoring
-    path: ../processes/process-authoring.yaml
+    path: ../processes/core/process-authoring.yaml
   - id: authoring-parity-audit
-    path: ../processes/authoring-parity-audit.yaml
+    path: ../processes/core/authoring-parity-audit.yaml
   - id: task-batch-execution
-    path: ../processes/task-batch-execution.yaml
+    path: ../processes/core/task-batch-execution.yaml
   - id: guided-workplace-setup
-    path: ../processes/guided-workplace-setup.yaml
+    path: ../processes/core/guided-workplace-setup.yaml
   - id: multi-agent-task-orchestration
-    path: ../processes/multi-agent-task-orchestration.yaml
+    path: ../processes/core/multi-agent-task-orchestration.yaml
   - id: runtime-driver-registry
-    path: ../processes/runtime-driver-registry.yaml
+    path: ../processes/core/runtime-driver-registry.yaml
   - id: process-supervisor
-    path: ../processes/process-supervisor.yaml
+    path: ../processes/core/process-supervisor.yaml
+  - id: agent-director-supervision
+    path: ../processes/core/agent-director-supervision.yaml
+  - id: orchestrator-shell-agents-supervision
+    path: ../processes/core/orchestrator-shell-agents-supervision.yaml
 
 knowledge_stack:
   - id: processforge.core

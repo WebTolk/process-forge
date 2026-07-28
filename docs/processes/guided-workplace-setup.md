@@ -1,4 +1,4 @@
-# Guided Workplace Setup
+﻿# Guided Workplace Setup
 
 ## Purpose
 
@@ -18,7 +18,7 @@ Use this built-in process when its stated purpose matches the assignment.
 
 ## Roles and responsibilities
 
-Roles are declared in `processes/guided-workplace-setup.yaml`; responsibility boundaries separate operator, primary agent, Director, Inspector, worker, and CLI tool duties.
+Roles are declared in `processes/core/guided-workplace-setup.yaml`; responsibility boundaries separate operator, primary agent, Director, Inspector, worker, and CLI tool duties.
 
 ## Stages
 

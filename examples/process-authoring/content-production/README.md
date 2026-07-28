@@ -1,8 +1,8 @@
-# Content Production Process Authoring Example
+﻿# Content Production Process Authoring Example
 
 This example points to the public stable built-in `content-production` as a reference process pack.
 
-- Process: `processes/content-production.yaml`
+- Process: `processes/core/content-production.yaml`
 - Prompt: `prompts/content-production-agent.md`
 - Documentation: `docs/processes/content-production.md`
 

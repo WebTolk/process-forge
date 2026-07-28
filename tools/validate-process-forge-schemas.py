@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Validate ProcessForge structure and YAML/JSON files against JSON Schemas."""
 
 from __future__ import annotations
@@ -78,6 +78,8 @@ REQUIRED_FILES = [
     "docs/concepts/project-context-lock-model.md",
     "docs/concepts/session-telemetry.md",
     "docs/concepts/process-events.md",
+    "docs/concepts/process-directory-layout.md",
+    "docs/ru/concepts/process-directory-layout.md",
     "docs/concepts/semantic-parity.md",
     "docs/concepts/runs-tasks-iterations.md",
     "docs/concepts/process-definition-run-task-iteration.md",
@@ -303,38 +305,37 @@ REQUIRED_FILES = [
     "schemas/artifact.schema.json",
     "schemas/review.schema.json",
     "schemas/handoff.schema.json",
-    "processes/software-feature-development.yaml",
-    "processes/bug-fix.yaml",
-    "processes/testing.yaml",
-    "processes/content-production.yaml",
-    "processes/knowledge-package-improvement.yaml",
-    "processes/process-version-upgrade.yaml",
-    "processes/workplace-initialization.yaml",
-    "processes/project-onboarding.yaml",
-    "processes/project-initialization.yaml",
-    "processes/session-bootstrap.yaml",
-    "processes/context-resolution.yaml",
-    "processes/processforge-update-check.yaml",
-    "processes/knowledge-resource-add.yaml",
-    "processes/documentation-mirror-import.yaml",
-    "processes/knowledge-package-update.yaml",
-    "processes/template-add.yaml",
-    "processes/tool-register.yaml",
-    "processes/mcp-register.yaml",
-    "processes/platform-contract-install.yaml",
-    "processes/process-template-install.yaml",
-    "processes/reusable-template-authoring.yaml",
-    "processes/knowledge-package-authoring.yaml",
-    "processes/platform-contract-authoring.yaml",
-    "processes/process-authoring.yaml",
-    "processes/authoring-parity-audit.yaml",
-    "processes/task-batch-execution.yaml",
-    "processes/guided-workplace-setup.yaml",
-    "processes/multi-agent-task-orchestration.yaml",
-    "processes/runtime-driver-registry.yaml",
-    "processes/process-supervisor.yaml",
-    "processes/agent-director-supervision.yaml",
-    "processes/orchestrator-shell-agents-supervision.yaml",
+    "processes/core/software-feature-development.yaml",
+    "processes/core/bug-fix.yaml",
+    "processes/core/testing.yaml",
+    "processes/core/content-production.yaml",
+    "processes/core/knowledge-package-improvement.yaml",
+    "processes/core/process-version-upgrade.yaml",
+    "processes/core/workplace-initialization.yaml",
+    "processes/core/project-onboarding.yaml",
+    "processes/core/project-initialization.yaml",
+    "processes/core/session-bootstrap.yaml",
+    "processes/core/context-resolution.yaml",
+    "processes/core/processforge-update-check.yaml",
+    "processes/core/knowledge-resource-add.yaml",
+    "processes/core/documentation-mirror-import.yaml",
+    "processes/core/knowledge-package-update.yaml",
+    "processes/core/template-add.yaml",
+    "processes/core/tool-register.yaml",
+    "processes/core/mcp-register.yaml",
+    "processes/core/platform-contract-install.yaml",
+    "processes/core/reusable-template-authoring.yaml",
+    "processes/core/knowledge-package-authoring.yaml",
+    "processes/core/platform-contract-authoring.yaml",
+    "processes/core/process-authoring.yaml",
+    "processes/core/authoring-parity-audit.yaml",
+    "processes/core/task-batch-execution.yaml",
+    "processes/core/guided-workplace-setup.yaml",
+    "processes/core/multi-agent-task-orchestration.yaml",
+    "processes/core/runtime-driver-registry.yaml",
+    "processes/core/process-supervisor.yaml",
+    "processes/core/agent-director-supervision.yaml",
+    "processes/core/orchestrator-shell-agents-supervision.yaml",
     "templates/workplace.yaml",
     "templates/terms.yaml",
     "templates/registries/distributions.yaml",
@@ -649,6 +650,18 @@ def validate_required_files(root: Path) -> None:
         fail("missing required files: " + ", ".join(missing))
 
 
+def process_definition_files(root: Path) -> list[Path]:
+    process_root = root / "processes"
+    files: list[Path] = []
+    for subdir in ["core", "user", "custom"]:
+        base = process_root / subdir
+        if base.is_dir():
+            files.extend(path for path in base.rglob("*") if path.is_file() and path.suffix.lower() in {".yaml", ".yml"})
+    files.extend(path for path in process_root.glob("*.yaml") if path.is_file())
+    files.extend(path for path in process_root.glob("*.yml") if path.is_file())
+    return sorted(files)
+
+
 def validate_json_schemas(root: Path) -> None:
     for path in sorted((root / "schemas").glob("*.json")):
         try:
@@ -668,7 +681,7 @@ def validate_yaml_like_files(root: Path) -> None:
 
     process_count = 0
     non_development = False
-    for path in sorted((root / "processes").glob("*.yaml")):
+    for path in process_definition_files(root):
         process_count += 1
         text = read_text(path)
         for key in PROCESS_REQUIRED_KEYS:
@@ -696,7 +709,7 @@ def validate_yaml_schema_files(root: Path) -> None:
         mappings.append((root / "templates" / "process.yaml", "process-definition.schema.json"))
     if (root / "templates" / "knowledge-candidate.yaml").is_file():
         mappings.append((root / "templates" / "knowledge-candidate.yaml", "knowledge-candidate.schema.json"))
-    mappings.extend((path, "process-definition.schema.json") for path in sorted((root / "processes").glob("*.yaml")))
+    mappings.extend((path, "process-definition.schema.json") for path in process_definition_files(root))
     mappings.extend((path, "package-manifest.schema.json") for path in sorted((root / "packages").glob("*.yaml")))
     mappings.extend((path, "run.schema.json") for path in sorted((root / ".pf" / "runs").glob("*/run.yaml")))
     mappings.extend((path, "assignment.schema.json") for path in sorted((root / ".pf" / "assignments").glob("*.yaml")))

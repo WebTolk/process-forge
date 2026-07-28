@@ -1,8 +1,8 @@
-# Knowledge Resource Add Process Authoring Example
+﻿# Knowledge Resource Add Process Authoring Example
 
 This example points to the public stable built-in `knowledge-resource-add` as a reference process pack.
 
-- Process: `processes/knowledge-resource-add.yaml`
+- Process: `processes/core/knowledge-resource-add.yaml`
 - Prompt: `prompts/knowledge-resource-add-agent.md`
 - Documentation: `docs/processes/knowledge-resource-add.md`
 

@@ -35,7 +35,7 @@ def main() -> int:
     for package in (ROOT / "packages").glob("*.yaml"):
         text = package.read_text(encoding="utf-8")
         for process_id in process_ids:
-            if f"- {process_id}\n" in text and not (ROOT / "processes" / f"{process_id}.yaml").is_file():
+            if f"- {process_id}\n" in text and not (ROOT / "processes" / "core" / f"{process_id}.yaml").is_file():
                 raise AssertionError(f"{package} references missing process {process_id}")
     print("PASS: built-in process pack completeness smoke")
     return 0

@@ -1,8 +1,8 @@
-# Context Resolution Process Authoring Example
+﻿# Context Resolution Process Authoring Example
 
 This example points to the public stable built-in `context-resolution` as a reference process pack.
 
-- Process: `processes/context-resolution.yaml`
+- Process: `processes/core/context-resolution.yaml`
 - Prompt: `prompts/context-resolution-agent.md`
 - Documentation: `docs/processes/context-resolution.md`
 

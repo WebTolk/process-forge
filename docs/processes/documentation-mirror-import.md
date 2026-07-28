@@ -1,4 +1,4 @@
-# Documentation Mirror Import
+﻿# Documentation Mirror Import
 
 ## Purpose
 
@@ -18,7 +18,7 @@ Use this built-in process when its stated purpose matches the assignment.
 
 ## Roles and responsibilities
 
-Roles are declared in `processes/documentation-mirror-import.yaml`; responsibility boundaries separate operator, primary agent, Director, Inspector, worker, and CLI tool duties.
+Roles are declared in `processes/core/documentation-mirror-import.yaml`; responsibility boundaries separate operator, primary agent, Director, Inspector, worker, and CLI tool duties.
 
 ## Stages
 

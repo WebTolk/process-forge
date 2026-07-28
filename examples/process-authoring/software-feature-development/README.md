@@ -1,9 +1,9 @@
-# Software Feature Development Process Authoring Example
+﻿# Software Feature Development Process Authoring Example
 
 This example points to the public stable built-in
 `software-feature-development` as a reference lifecycle process pack.
 
-- Process: `processes/software-feature-development.yaml`
+- Process: `processes/core/software-feature-development.yaml`
 - Prompt: `prompts/software-feature-development-agent.md`
 - Documentation: `docs/processes/software-feature-development.md`
 

@@ -18,7 +18,7 @@ def main() -> int:
             raise AssertionError(f"evolve schema is not generic: {forbidden}")
     non_software = []
     for process_id in ["testing", "content-production", "process-authoring", "knowledge-package-authoring"]:
-        data = load_yaml(ROOT / "processes" / f"{process_id}.yaml")
+        data = load_yaml(ROOT / "processes" / "core" / f"{process_id}.yaml")
         if data.get("evolve", {}).get("enabled") is True:
             non_software.append(process_id)
     if len(non_software) < 2:

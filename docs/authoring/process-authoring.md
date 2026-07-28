@@ -1,4 +1,4 @@
-# Process Authoring
+﻿# Process Authoring
 
 Process authoring creates a usable ProcessForge process pack from guided answers.
 It writes a private authoring session first, reviews the generated draft, then
@@ -32,7 +32,7 @@ The session lives under `.pf/authoring/processes/<process-id>/`:
 
 Apply writes public files:
 
-- `processes/<process-id>.yaml`
+- `processes/user/<process-id>.yaml`
 - `prompts/<process-id>-agent.md`
 - `docs/processes/<process-id>.md`
 - `examples/process-authoring/<process-id>/`
@@ -73,7 +73,7 @@ evolve:
     default_to_narrowest_scope: true
 ```
 
-The materializer preserves evolve from answers into `processes/<process-id>.yaml`.
+The materializer preserves evolve from answers into `processes/user/<process-id>.yaml`.
 Do not place evolve only in `metadata`, and do not treat it as software-only,
 model training, or automatic global package mutation.
 

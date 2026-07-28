@@ -48,12 +48,12 @@ def bootstrap(root: Path) -> Path:
 
 
 def main() -> int:
-    source = load_yaml(ROOT / "processes" / "bug-fix.yaml")
+    source = load_yaml(ROOT / "processes" / "core" / "bug-fix.yaml")
     with tempfile.TemporaryDirectory(prefix="pf-process-schema-contract-") as temp:
         project = bootstrap(Path(temp))
         valid = copy.deepcopy(source)
         valid["id"] = "valid-contract-process"
-        write_yaml(project / "processes" / "valid-contract-process.yaml", valid)
+        write_yaml(project / "processes" / "user" / "valid-contract-process.yaml", valid)
         (project / "prompts").mkdir(parents=True, exist_ok=True)
         (project / "docs" / "processes").mkdir(parents=True, exist_ok=True)
         (project / "examples" / "process-authoring" / "valid-contract-process").mkdir(parents=True, exist_ok=True)
@@ -65,7 +65,7 @@ def main() -> int:
         missing_artifact = copy.deepcopy(valid)
         missing_artifact["id"] = "missing-artifact-process"
         missing_artifact["stages"][0]["produced_artifacts"].append("not-declared")
-        write_yaml(project / "processes" / "missing-artifact-process.yaml", missing_artifact)
+        write_yaml(project / "processes" / "user" / "missing-artifact-process.yaml", missing_artifact)
         result = pf("process-doctor", "--project-root", str(project), "--process", "missing-artifact-process", "--contract-only", expect=1)
         if "produced artifacts declared" not in result.stdout:
             raise AssertionError("missing artifact definition did not fail strict contract")
@@ -73,7 +73,7 @@ def main() -> int:
         deprecated = copy.deepcopy(valid)
         deprecated["id"] = "deprecated-handoff-process"
         deprecated["stages"][0]["handoff_required"] = True
-        write_yaml(project / "processes" / "deprecated-handoff-process.yaml", deprecated)
+        write_yaml(project / "processes" / "user" / "deprecated-handoff-process.yaml", deprecated)
         result = pf("process-doctor", "--project-root", str(project), "--process", "deprecated-handoff-process", "--contract-only", expect=1)
         if "deprecated handoff_required" not in result.stdout:
             raise AssertionError("deprecated handoff_required did not fail strict contract")

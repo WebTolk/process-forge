@@ -18,7 +18,7 @@ def public_stable(data: dict) -> bool:
 
 def main() -> int:
     missing: list[str] = []
-    for path in sorted((ROOT / "processes").glob("*.yaml")):
+    for path in sorted((ROOT / "processes" / "core").glob("*.yaml")):
         data = load_yaml(path)
         if not public_stable(data):
             continue
@@ -34,9 +34,9 @@ def main() -> int:
         root = Path(raw)
         (root / ".pf").mkdir(parents=True)
         (root / ".pf" / "process-forge.yaml").write_text("schema_version: 1\nprocess_forge: {}\nproject: {}\npaths: {}\npolicies: {}\n", encoding="utf-8")
-        process = load_yaml(ROOT / "processes" / "bug-fix.yaml")
+        process = load_yaml(ROOT / "processes" / "core" / "bug-fix.yaml")
         process.pop("evolve", None)
-        write_yaml(root / "processes" / "bug-fix.yaml", process)
+        write_yaml(root / "processes" / "core" / "bug-fix.yaml", process)
         (root / "prompts").mkdir()
         (root / "prompts" / "bug-fix-agent.md").write_text("# Bug Fix Agent\n", encoding="utf-8")
         (root / "docs" / "processes").mkdir(parents=True)

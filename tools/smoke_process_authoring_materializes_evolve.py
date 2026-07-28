@@ -20,7 +20,7 @@ def main() -> int:
         shutil.copyfile(ROOT / "examples" / "process-authoring" / "single-agent-simple" / "answers.yaml", answers)
         run_pf("process-create", "--project-root", str(project), "--answers", str(answers), "--apply")
         process_id = load_yaml(answers)["process"]["id"]
-        process = load_yaml(project / "processes" / f"{process_id}.yaml")
+        process = load_yaml(project / "processes" / "user" / f"{process_id}.yaml")
         evolve = process.get("evolve", {})
         assert evolve["enabled"] is True
         assert evolve["mode"] == "optional"
@@ -39,7 +39,7 @@ def main() -> int:
         disabled_answers = project / "disabled.answers.yaml"
         write_yaml(disabled_answers, disabled)
         run_pf("process-create", "--project-root", str(project), "--answers", str(disabled_answers), "--apply")
-        disabled_process = load_yaml(project / "processes" / "disabled-evolve-process.yaml")
+        disabled_process = load_yaml(project / "processes" / "user" / "disabled-evolve-process.yaml")
         assert disabled_process["evolve"]["enabled"] is False
         assert disabled_process["evolve"]["mode"] == "disabled"
         assert disabled_process["evolve"]["decision"]["reason"]

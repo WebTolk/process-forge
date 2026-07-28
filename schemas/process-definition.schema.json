@@ -31,7 +31,8 @@
       "properties": {
         "classification": { "enum": ["PUBLIC_STABLE", "PUBLIC_EXPERIMENTAL", "INTERNAL_MAINTENANCE", "EXAMPLE_ONLY", "DEPRECATED"] },
         "public_surface": { "type": "boolean" },
-        "strict_contract": { "type": "boolean" }
+        "strict_contract": { "type": "boolean" },
+        "role": { "enum": ["canonical", "wizard", "installer", "quick_add", "migration", "helper", "internal", "experimental", "legacy_alias"] }
       },
       "additionalProperties": true
     },

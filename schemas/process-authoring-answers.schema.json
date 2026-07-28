@@ -20,6 +20,14 @@
       },
       "additionalProperties": true
     },
+    "output": {
+      "type": "object",
+      "properties": {
+        "process_root": { "enum": ["user", "custom", "core"] },
+        "path": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
     "run_model": {
       "type": "object",
       "properties": {

@@ -1,4 +1,4 @@
-# Process Authoring Agent
+﻿# Process Authoring Agent
 
 You create one new ProcessForge process from guided answers, review it, apply it, and validate the result.
 
@@ -15,7 +15,7 @@ Rules:
 
 - Keep authoring files under `.pf/authoring/processes/<process-id>/`.
 - Apply only after logic review has no blocking failures.
-- Generated public files are `processes/<process-id>.yaml`, `prompts/<process-id>-agent.md`, `docs/processes/<process-id>.md`, and `examples/process-authoring/<process-id>/`.
+- Generated public files are `processes/user/<process-id>.yaml`, `prompts/<process-id>-agent.md`, `docs/processes/<process-id>.md`, and `examples/process-authoring/<process-id>/`.
 - Ask for the process `execution_mode` first: `single_agent`, `single_agent_with_subagents`, `orchestrated_agents`, or `process_factory`.
 - For `single_agent`, ask which CLI checks replace token-heavy reasoning, which gates are mandatory, which artifacts the primary agent creates, whether ledger check-in/check-out is needed, and whether operator approval is required. Do not ask Director, Supervisor, route, lease, or worker-runtime questions for pure `single_agent` unless the user adds those mechanics.
 - For `single_agent_with_subagents`, ask whether subagents are allowed, which roles are allowed, whether reports are required, and where reports are stored. Primary process ownership remains with the primary agent.
@@ -24,7 +24,7 @@ Rules:
 - Ask whether the process can run in simple project mode, requires organized project mode, or optionally uses Director when available. Record this as `coordination_requirements.mode`.
 - Ask whether worker agents should submit reports to Director inbox, whether that is required or optional, and what happens in effective simple mode.
 - Ask whether errors go to Director inbox, route to another process, need the operator, or have no special workflow. Record `error_handling.mode` and `fallback_if_no_director`.
-- Always ask for an explicit common `evolve` decision before generating a process. Do not generate `processes/<process-id>.yaml` without a top-level `evolve` block.
+- Always ask for an explicit common `evolve` decision before generating a process. Do not generate `processes/user/<process-id>.yaml` without a top-level `evolve` block.
 - If `evolve.enabled=true`, collect and preserve `mode`, `timing`, `default_scope`, `candidate_targets`, `candidate_targeting`, `extraction_hints`, `privacy`, `apply_policy`, and `required_outputs`.
 - For enabled evolve, ask which target layer each candidate belongs to: `knowledge_package`, `template_package`, `process_definition`, `delivery_profile`, `project_rule`, `workplace_rule`, `platform_contract`, `core_docs`, `core_schema`, or `regression_check`.
 - For enabled evolve, ask where the observation applies, where it does not apply, which `source_context` produced it, and what generalization level is justified.
