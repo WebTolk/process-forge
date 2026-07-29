@@ -17,6 +17,9 @@
         "version": { "type": "string" }
       }
     },
+    "platform": { "type": "string" },
+    "selected_specializations": { "type": "array", "items": { "type": "string" } },
+    "required_specializations": { "type": "array", "items": { "type": "string" } },
     "run_id": { "$ref": "#/$defs/id" },
     "stage": { "$ref": "#/$defs/id" },
     "goal": { "type": "string" },

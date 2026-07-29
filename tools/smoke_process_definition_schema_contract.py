@@ -43,12 +43,12 @@ def bootstrap(root: Path) -> Path:
     project.mkdir(parents=True)
     (project / "README.md").write_text("# Schema contract smoke\n", encoding="utf-8")
     pf("workplace-init", "--workplace", str(workplace), "--apply")
-    pf("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic-software-project", "--apply")
+    pf("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
     return project
 
 
 def main() -> int:
-    source = load_yaml(ROOT / "processes" / "core" / "bug-fix.yaml")
+    source = load_yaml(ROOT / "processes" / "core" / "process-authoring.yaml")
     with tempfile.TemporaryDirectory(prefix="pf-process-schema-contract-") as temp:
         project = bootstrap(Path(temp))
         valid = copy.deepcopy(source)

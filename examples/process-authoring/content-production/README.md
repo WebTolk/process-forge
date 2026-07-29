@@ -1,10 +1,10 @@
 ﻿# Content Production Process Authoring Example
 
-This example points to the public stable built-in `content-production` as a reference process pack.
+This example points to the optional `content-workflow` domain pack.
 
-- Process: `processes/core/content-production.yaml`
-- Prompt: `prompts/content-production-agent.md`
-- Documentation: `docs/processes/content-production.md`
+- Process: `examples/domain-packs/content-workflow/processes/content-production.yaml`
+- Prompt: `examples/domain-packs/content-workflow/prompts/content-production-agent.md`
+- Documentation: `examples/domain-packs/content-workflow/docs/processes/content-production.md`
 
 Validate with:
 

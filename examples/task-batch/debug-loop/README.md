@@ -6,7 +6,7 @@ onboarded project.
 
 ```bash
 python <processforge-root>/bin/pf.py run-create --project-root <project-root> --id debug-loop --title "Debug loop" --process task-batch-execution --apply
-python <processforge-root>/bin/pf.py task-create --project-root <project-root> --run debug-loop --id task-001-fix-regression --title "Fix regression" --process bug-fix --apply
+python <processforge-root>/bin/pf.py task-create --project-root <project-root> --run debug-loop --id task-001-fix-regression --title "Resolve failed check" --process task-batch-execution --apply
 python <processforge-root>/bin/pf.py iteration-add --project-root <project-root> --task task-001-fix-regression --kind work --summary "Implemented initial fix." --apply
 python <processforge-root>/bin/pf.py iteration-add --project-root <project-root> --task task-001-fix-regression --kind debug --status failed --summary "Regression still fails." --apply
 python <processforge-root>/bin/pf.py iteration-add --project-root <project-root> --task task-001-fix-regression --kind fix --summary "Adjusted edge case handling." --apply

@@ -6,7 +6,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVE_ROOTS = [".pf/process-forge.yaml", "docs", "examples", "packages", "templates", "schemas", "processes", "prompts"]
-PROCESS_REF = re.compile(r"(?:\.\./)?processes/[a-z0-9][a-z0-9_-]*\.yaml")
+PROCESS_REF = re.compile(
+    r"(?:\.\./)?(?:examples/domain-packs/[a-z0-9][a-z0-9_-]*/)?processes/[a-z0-9][a-z0-9_-]*\.yaml"
+)
 
 
 def iter_files() -> list[Path]:
@@ -28,6 +30,8 @@ def main() -> int:
             value = match.group(0)
             normalized = value.removeprefix("../")
             if normalized.startswith(("processes/core/", "processes/user/", "processes/custom/")):
+                continue
+            if normalized.startswith("examples/domain-packs/"):
                 continue
             offenders.append(f"{path.relative_to(ROOT).as_posix()}: {value}")
     assert not offenders, "\n".join(offenders[:40])

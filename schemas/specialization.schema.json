@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/specialization.schema.json",
+  "title": "ProcessForge Specialization",
+  "type": "object",
+  "required": ["schema_version", "kind", "id", "name", "status", "scope", "resources"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "kind": { "const": "processforge.specialization" },
+    "id": { "$ref": "#/$defs/resourceId" },
+    "name": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["draft", "active", "deprecated", "archived"] },
+    "description": { "type": "string" },
+    "scope": {
+      "type": "object",
+      "required": ["owner", "visibility"],
+      "properties": {
+        "owner": { "enum": ["workspace", "project", "package"] },
+        "visibility": { "enum": ["local", "package", "public_example"] }
+      },
+      "additionalProperties": false
+    },
+    "applies_to": {
+      "type": "object",
+      "properties": {
+        "project_types": { "type": "array", "items": { "type": "string" } },
+        "roles": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "resources": { "$ref": "#/$defs/resourceBuckets" },
+    "provides_capabilities": { "type": "array", "items": { "type": "string" } },
+    "platform_bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "platforms": { "type": "array", "items": { "$ref": "#/$defs/resourceId" } },
+          "platform_stack_includes": { "type": "array", "items": { "$ref": "#/$defs/resourceId" } },
+          "applies_to_project_types": { "type": "array", "items": { "type": "string" } },
+          "applies_to_processes": { "type": "array", "items": { "type": "string" } },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "resources": { "$ref": "#/$defs/resourceBuckets" },
+          "provides_capabilities": { "type": "array", "items": { "type": "string" } }
+        },
+        "allOf": [{ "$ref": "#/$defs/noWorkflowFields" }],
+        "additionalProperties": false
+      }
+    },
+    "tool_policy": {
+      "type": "object",
+      "properties": {
+        "allowed_tools": { "type": "array", "items": { "type": "string" } },
+        "disallowed_tools": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "allOf": [{ "$ref": "#/$defs/noWorkflowFields" }],
+  "$defs": {
+    "resourceId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" },
+    "resourceBuckets": {
+      "type": "object",
+      "properties": {
+        "requires": { "$ref": "#/$defs/resourceGroups" },
+        "recommends": { "$ref": "#/$defs/resourceGroups" },
+        "optional": { "$ref": "#/$defs/resourceGroups" },
+        "excludes": { "$ref": "#/$defs/resourceGroups" }
+      },
+      "allOf": [{ "$ref": "#/$defs/noWorkflowFields" }],
+      "additionalProperties": false
+    },
+    "resourceGroups": {
+      "type": "object",
+      "properties": {
+        "knowledge_packages": { "type": "array", "items": { "type": "string" } },
+        "tools": { "type": "array", "items": { "type": "string" } },
+        "mcp": { "type": "array", "items": { "type": "string" } },
+        "templates": { "type": "array", "items": { "type": "string" } }
+      },
+      "allOf": [{ "$ref": "#/$defs/noWorkflowFields" }],
+      "additionalProperties": false
+    },
+    "noWorkflowFields": {
+      "not": {
+        "anyOf": [
+          { "required": ["stages"] },
+          { "required": ["workflow"] },
+          { "required": ["acceptance"] },
+          { "required": ["acceptance_criteria"] },
+          { "required": ["gates"] },
+          { "required": ["required_evidence"] },
+          { "required": ["required_artifacts"] },
+          { "required": ["artifact_definitions"] },
+          { "required": ["execution_order"] }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

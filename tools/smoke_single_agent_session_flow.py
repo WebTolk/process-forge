@@ -68,7 +68,7 @@ def main() -> int:
 
         run_id = "single-agent-run"
         pf("run-create", "--project-root", str(project), "--id", run_id, "--title", "Single agent run", "--process", "task-batch-execution", "--apply")
-        pf("task-create", "--project-root", str(project), "--run", run_id, "--id", "single-task", "--title", "Single task", "--process", "testing", "--owner", "primary-agent", "--role", "primary-agent", "--apply")
+        pf("task-create", "--project-root", str(project), "--run", run_id, "--id", "single-task", "--title", "Single task", "--process", "task-batch-execution", "--owner", "primary-agent", "--role", "primary-agent", "--apply")
         pf("iteration-add", "--project-root", str(project), "--task", "single-task", "--kind", "work", "--summary", "Primary agent performed the work.", "--apply")
         pf("task-complete", "--project-root", str(project), "--task", "single-task", "--summary", "Primary agent completed the task.", "--apply")
         pf("run-summary", "--project-root", str(project), "--run", run_id, "--apply")

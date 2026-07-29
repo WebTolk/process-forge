@@ -93,7 +93,7 @@ workers:
   - id: inspected-worker
     title: Inspected worker
     role: worker
-    process: testing
+    process: task-batch-execution
     execution_mode: assurance
     writer: true
     allowed_files: [.pf/artifacts/**]

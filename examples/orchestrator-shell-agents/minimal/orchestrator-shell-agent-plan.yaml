@@ -15,7 +15,7 @@ workers:
   - id: docs-shell-agent
     title: Documentation Shell Agent
     role: documentation
-    process: testing
+    process: task-batch-execution
     execution_mode: assurance
     writer: true
     runtime_driver: test-shell-agent
@@ -37,8 +37,8 @@ workers:
     expected_report_artifact: .pf/artifacts/docs-shell-agent-report.md
   - id: test-shell-agent
     title: Testing Shell Agent
-    role: testing
-    process: testing
+    role: fixture-worker-b
+    process: task-batch-execution
     execution_mode: assurance
     writer: true
     runtime_driver: test-shell-agent

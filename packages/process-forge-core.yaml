@@ -30,9 +30,13 @@ processes:
 - agent-director-supervision
 - context-resolution
 - guided-workplace-setup
+- multi-agent-task-orchestration
+- orchestrator-shell-agents-supervision
+- process-supervisor
 - processforge-update-check
 - project-initialization
 - project-onboarding
+- runtime-driver-registry
 - session-bootstrap
 - task-batch-execution
 - workplace-initialization
@@ -40,11 +44,15 @@ stable_processes:
 - agent-director-supervision
 - context-resolution
 - guided-workplace-setup
+- multi-agent-task-orchestration
+- process-supervisor
 - processforge-update-check
 - project-initialization
 - project-onboarding
+- runtime-driver-registry
 - session-bootstrap
 - task-batch-execution
 - workplace-initialization
-experimental_processes: []
+experimental_processes:
+- orchestrator-shell-agents-supervision
 internal_processes: []

@@ -1,0 +1,6 @@
+schema_version: 1
+
+project_classifiers:
+  - id: example.classifier.software-web
+    path: project-classifiers/example.classifier.software-web.yaml
+    status: active

@@ -3,7 +3,7 @@ schema_version: 1
 mcp_servers:
   - id: example-mcp
     name: "Example MCP"
-    capability: official_documentation
+    capability: example.capability.documentation
     transport: stdio
     command: "${PF_MCP}/example/example-mcp"
     auth_ref: null

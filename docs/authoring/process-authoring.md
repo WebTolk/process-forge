@@ -154,3 +154,9 @@ Director inbox. `organized_optional` adapts to the project's effective mode.
 This MVP creates file-first process packs. It does not add a background runner,
 daemon, web transport, command hook execution, GUI, marketplace, database, or
 package publishing flow.
+## Specialization Policy
+
+If a process supports specializations, keep `specialization_policy` as optional
+routing metadata. Workflow stages should declare abstract
+`requires_capabilities`; concrete resource bindings belong to specialization
+resources and their `platform_bindings`.

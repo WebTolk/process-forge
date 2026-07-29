@@ -98,14 +98,6 @@ status_model:
     - blocked
 
 processes:
-  - id: software-feature-development
-    path: ../processes/core/software-feature-development.yaml
-  - id: bug-fix
-    path: ../processes/core/bug-fix.yaml
-  - id: testing
-    path: ../processes/core/testing.yaml
-  - id: content-production
-    path: ../processes/core/content-production.yaml
   - id: knowledge-package-improvement
     path: ../processes/core/knowledge-package-improvement.yaml
   - id: process-version-upgrade
@@ -124,8 +116,6 @@ processes:
     path: ../processes/core/processforge-update-check.yaml
   - id: knowledge-resource-add
     path: ../processes/core/knowledge-resource-add.yaml
-  - id: documentation-mirror-import
-    path: ../processes/core/documentation-mirror-import.yaml
   - id: knowledge-package-update
     path: ../processes/core/knowledge-package-update.yaml
   - id: template-add
@@ -173,12 +163,6 @@ knowledge_stack:
 packages:
   - id: process-forge-core
     path: ../packages/process-forge-core.yaml
-  - id: process-forge-software-development
-    path: ../packages/process-forge-software-development.yaml
-  - id: process-forge-content
-    path: ../packages/process-forge-content.yaml
-  - id: process-forge-testing
-    path: ../packages/process-forge-testing.yaml
   - id: process-forge-knowledge-governance
     path: ../packages/process-forge-knowledge-governance.yaml
 

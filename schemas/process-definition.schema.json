@@ -53,6 +53,24 @@
       "additionalProperties": true
     },
     "execution_mode": { "enum": ["single_agent", "single_agent_with_subagents", "orchestrated_agents", "process_factory"] },
+    "specialization_policy": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "default": { "type": "array", "items": { "type": "string" } },
+        "allowed": { "type": "array", "items": { "type": "string" } },
+        "recommended_by_mode": { "type": "object", "additionalProperties": true },
+        "forbidden": { "type": "array", "items": { "type": "string" } },
+        "routing_hints": {
+          "type": "object",
+          "properties": {
+            "suggested_specialization_tags": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "execution_mode_questions": { "type": "object", "additionalProperties": true },
     "coordination_requirements": {
       "type": "object",
@@ -103,6 +121,16 @@
     "generated_files": { "type": "object", "additionalProperties": true },
     "description": { "type": "string" },
     "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "required_artifacts": { "type": "array", "items": { "type": "string" } },
+    "required_evidence": { "type": "array", "items": { "type": "string" } },
+    "acceptance": {
+      "type": "object",
+      "properties": {
+        "requires": { "type": "array", "items": { "type": "string" } },
+        "criteria": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
     "hooks": { "$ref": "#/$defs/processHooks" },
     "roles": {
       "type": "array",
@@ -244,6 +272,8 @@
         "actor": { "enum": ["primary_agent", "director_agent", "worker_agent", "cli_tool", "operator"] },
         "required_inputs": { "type": "array", "items": { "type": "string" } },
         "produced_artifacts": { "type": "array", "items": { "type": "string" } },
+        "required_artifacts": { "type": "array", "items": { "type": "string" } },
+        "required_evidence": { "type": "array", "items": { "type": "string" } },
         "required_role": { "$ref": "#/$defs/id" },
         "required_capabilities": { "type": "array", "items": { "type": "string" } },
         "allowed_tools": { "type": "array", "items": { "type": "string" } },

@@ -42,11 +42,16 @@ The YAML snapshot records:
 - `freshness` and `reproducibility`
 - refresh policy
 - project identity
+- observed `project_classification`, including status, matched classifier/rule
+  ids, project types, platforms, and tags
 - flow root and manifest paths
 - source fingerprints
 - resolved hard policies and preferences
 - required and optional capabilities
 - selected processes, packages, templates, tools, and MCP entries
+- `active_resource_profile`, `execution_route`, and `capability_resolution`
+- required capabilities, provided capabilities, satisfied requirements, and
+  unsatisfied requirements as opaque ids
 - `available_platform_contracts`, `selected_platform_contracts`,
   `platform_stack`, and `platform_selection`
 - `workplace_coordination` with project mode, workplace default mode, effective
@@ -63,9 +68,10 @@ Meta-project types such as `agent-workspace`, `brownfield-workspace`, and
 platform stack. In that case `selected_platform_contracts` and `platform_stack`
 are empty, and `platform_selection.status` is `not_applicable`.
 
-Normal project types, such as `joomla-extension` or `software-project`, record
-selected contracts in both `selected_platform_contracts` and `platform_stack`
-when a platform is declared or detected.
+For ordinary projects, selected contracts are recorded in both
+`selected_platform_contracts` and `platform_stack` only when workplace/project
+data or an active project classifier declares a platform. Core does not infer a
+platform from concrete technology filenames.
 
 Use:
 
@@ -84,3 +90,17 @@ through the update system, impacted project context snapshots follow the normal
 freshness policy. ProcessForge does not refresh snapshots silently; session
 start and `project-context-check` report whether the snapshot is fresh,
 fresh_with_updates, stale, or broken.
+## Specializations And Overrides
+
+Project-context snapshots record selected specializations and project overrides
+as part of the effective context. The snapshot stores resource ids, source
+paths/refs, base hashes, override hashes, merge modes, effective fingerprints,
+activation or exclusion reasons, and conflicts. It must not embed full knowledge
+package content.
+
+Freshness includes specialization definitions, specialization registries,
+project specialization overrides, project overrides, active tool/MCP/template
+registries, active project classifiers and their observed result, process
+definitions, and selected platform contracts. Existing
+capsules remain pinned; new sessions should refresh or report stale context
+according to policy.

@@ -16,7 +16,8 @@
           "title": { "type": "string" },
           "kind": { "type": "string" },
           "roles": { "type": "array", "items": { "type": "string" } },
-          "capabilities": { "type": "array", "items": { "type": "string" } }
+          "capabilities": { "type": "array", "items": { "type": "string" } },
+          "supports_specializations": { "type": "array", "items": { "type": "string" } }
         },
         "additionalProperties": true
       }

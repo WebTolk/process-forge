@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-25T11:48:11Z
-- valid_until: 2026-08-01T11:48:11Z
+- generated_at: 2026-07-29T15:02:54Z
+- valid_until: 2026-08-05T15:02:54Z
 
 ## Freshness
 
@@ -25,6 +25,14 @@ fresh
 - install_mode: linked
 - distribution: processforge (available)
 
+## Coordination Mode
+
+- project_mode: inherit
+- workplace_default_project_mode: simple
+- effective_mode: simple
+- director_available_at_workplace: false
+- director_required: false
+
 ## Connected Knowledge Packages
 
 - processforge.core
@@ -38,6 +46,42 @@ fresh
 
 - None.
 
+## Selected Specializations
+
+- None.
+
+## Effective Resources
+
+- None.
+
+## Provided Capabilities
+
+- None.
+
+## Execution Route
+
+- process: knowledge-package-improvement
+- required_capabilities: process_governance, repository_write, research, review
+- required_evidence: None.
+
+## Capability Resolution
+
+- satisfied: 0
+- unsatisfied: 6
+
+## Applied Project Overrides
+
+- None.
+
+## Resolution Conflicts
+
+- research
+- process_governance
+- review
+- research
+- process_governance
+- repository_write
+
 ## Required Knowledge Resources
 
 - None.
@@ -48,10 +92,6 @@ fresh
 
 ## Enabled Processes
 
-- software-feature-development
-- bug-fix
-- testing
-- content-production
 - knowledge-package-improvement
 - process-version-upgrade
 - workplace-initialization
@@ -61,13 +101,11 @@ fresh
 - context-resolution
 - processforge-update-check
 - knowledge-resource-add
-- documentation-mirror-import
 - knowledge-package-update
 - template-add
 - tool-register
 - mcp-register
 - platform-contract-install
-- process-template-install
 - reusable-template-authoring
 - knowledge-package-authoring
 - platform-contract-authoring
@@ -78,12 +116,14 @@ fresh
 - multi-agent-task-orchestration
 - runtime-driver-registry
 - process-supervisor
+- agent-director-supervision
+- orchestrator-shell-agents-supervision
 
 ## Required Capabilities
 
-- markdown_editing (available, info)
-- repository_read (available, info)
-- schema_validation (available, info)
+- markdown_editing (missing, fail)
+- repository_read (missing, fail)
+- schema_validation (missing, fail)
 
 ## Optional Capabilities
 

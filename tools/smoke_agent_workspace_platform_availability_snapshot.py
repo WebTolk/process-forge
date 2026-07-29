@@ -22,7 +22,16 @@ def main() -> int:
         assert agent_snapshot["platform_selection"]["status"] == "not_applicable", agent_snapshot["platform_selection"]
 
         example_project = base / "example-extension"
-        write_project(example_project, project_type="example-extension", detected_platforms=["example"])
+        example_flow = write_project(example_project, project_type="example-extension")
+        manifest = example_flow / "process-forge.yaml"
+        manifest.write_text(
+            manifest.read_text(encoding="utf-8")
+            + """platform_contracts:
+  - id: platform.example
+    platform: example
+""",
+            encoding="utf-8",
+        )
         example_snapshot = build_project_context_snapshot(example_project, explicit_workplace=str(workplace_manifest.parent))
         assert any(item["id"] == "platform.example" for item in example_snapshot["selected_platform_contracts"]), example_snapshot["selected_platform_contracts"]
         assert any(item["id"] == "platform.example" for item in example_snapshot["platform_stack"]), example_snapshot["platform_stack"]

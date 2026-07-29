@@ -15,7 +15,10 @@
           "id": { "type": "string" },
           "from_process": { "type": "string" },
           "to_process": { "type": "string" },
-          "mode": { "enum": ["wait_for_result", "delegate_and_continue", "consultation", "final_transfer", "fork", "return_required"] }
+          "mode": { "enum": ["wait_for_result", "delegate_and_continue", "consultation", "final_transfer", "fork", "return_required"] },
+          "required_capabilities": { "type": "array", "items": { "type": "string" } },
+          "required_specializations": { "type": "array", "items": { "type": "string" } },
+          "preferred_specializations": { "type": "array", "items": { "type": "string" } }
         },
         "additionalProperties": true
       }

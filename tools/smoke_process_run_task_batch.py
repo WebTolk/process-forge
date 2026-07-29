@@ -80,13 +80,13 @@ def positive_workflow(root: Path) -> None:
     pf("run-create", "--project-root", str(project), "--id", run_id, "--title", "Release preparation", "--process", "task-batch-execution", "--apply")
     pf("agent-start-prompt", "--project-root", str(project))
     assert_contains(project / ".pf" / "START_AGENT_HERE.md", "run-status --project-root . --run release-prep")
-    pf("task-create", "--project-root", str(project), "--run", run_id, "--id", "task-001-fix", "--title", "Fix task", "--process", "bug-fix", "--apply")
+    pf("task-create", "--project-root", str(project), "--run", run_id, "--id", "task-001-fix", "--title", "First task", "--process", "task-batch-execution", "--apply")
     pf("iteration-add", "--project-root", str(project), "--task", "task-001-fix", "--kind", "work", "--summary", "Implemented first fix.", "--apply")
     pf("iteration-add", "--project-root", str(project), "--task", "task-001-fix", "--kind", "debug", "--status", "failed", "--summary", "Initial debug failed.", "--apply")
     pf("iteration-add", "--project-root", str(project), "--task", "task-001-fix", "--kind", "fix", "--summary", "Adjusted the fix.", "--apply")
     pf("iteration-add", "--project-root", str(project), "--task", "task-001-fix", "--kind", "debug", "--status", "passed", "--summary", "Debug passed.", "--apply")
     pf("task-complete", "--project-root", str(project), "--task", "task-001-fix", "--summary", "Fix complete.", "--apply")
-    pf("task-create", "--project-root", str(project), "--run", run_id, "--id", "task-002-test", "--title", "Test task", "--process", "testing", "--apply")
+    pf("task-create", "--project-root", str(project), "--run", run_id, "--id", "task-002-test", "--title", "Second task", "--process", "task-batch-execution", "--apply")
     pf("iteration-add", "--project-root", str(project), "--task", "task-002-test", "--kind", "work", "--summary", "Prepared test.", "--apply")
     pf("iteration-add", "--project-root", str(project), "--task", "task-002-test", "--kind", "debug", "--status", "passed", "--summary", "Test passed.", "--apply")
     pf("task-complete", "--project-root", str(project), "--task", "task-002-test", "--summary", "Test complete.", "--apply")
@@ -118,11 +118,11 @@ def positive_workflow(root: Path) -> None:
 
 def negative_workflow(root: Path) -> None:
     project = make_project(root, "negative")
-    pf("task-create", "--project-root", str(project), "--run", "missing-run", "--id", "task-001", "--title", "Missing run", "--process", "bug-fix", "--apply", expect=1)
+    pf("task-create", "--project-root", str(project), "--run", "missing-run", "--id", "task-001", "--title", "Missing run", "--process", "task-batch-execution", "--apply", expect=1)
     pf("iteration-add", "--project-root", str(project), "--task", "missing-task", "--kind", "work", "--summary", "Missing task", "--apply", expect=1)
     pf("run-create", "--project-root", str(project), "--id", "negative-run", "--title", "Negative run", "--process", "task-batch-execution", "--apply")
-    pf("task-create", "--project-root", str(project), "--run", "negative-run", "--id", "task-001-dup", "--title", "Duplicate", "--process", "bug-fix", "--apply")
-    pf("task-create", "--project-root", str(project), "--run", "negative-run", "--id", "task-001-dup", "--title", "Duplicate", "--process", "bug-fix", "--apply", expect=1)
+    pf("task-create", "--project-root", str(project), "--run", "negative-run", "--id", "task-001-dup", "--title", "Duplicate", "--process", "task-batch-execution", "--apply")
+    pf("task-create", "--project-root", str(project), "--run", "negative-run", "--id", "task-001-dup", "--title", "Duplicate", "--process", "task-batch-execution", "--apply", expect=1)
     pf("iteration-add", "--project-root", str(project), "--task", "task-001-dup", "--id", "iter-010", "--kind", "work", "--summary", "First iteration.", "--apply")
     pf("iteration-add", "--project-root", str(project), "--task", "task-001-dup", "--id", "iter-010", "--kind", "work", "--summary", "Duplicate iteration.", "--apply", expect=1)
     pf("run-complete", "--project-root", str(project), "--run", "negative-run", "--apply", expect=1)
@@ -154,7 +154,7 @@ def required_output_workflow(root: Path) -> None:
         "--title",
         "Required output task",
         "--process",
-        "testing",
+        "task-batch-execution",
         "--required-output",
         f"id=report,path={report_rel},type=markdown,required=true",
         "--expected-report-artifact",

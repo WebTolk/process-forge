@@ -35,14 +35,23 @@
       },
       "additionalProperties": true
     },
+    "project_classification": { "type": "object", "additionalProperties": true },
     "resolved_resources": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "effective_specializations": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "project_override_summary": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "active_resource_profile": { "type": "object", "additionalProperties": true },
+    "execution_route_summary": { "type": "object", "additionalProperties": true },
+    "capability_resolution_summary": { "type": "object", "additionalProperties": true },
+    "effective_resources": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "context": {
       "type": "object",
       "properties": {
         "snapshot_id": { "type": "string" },
         "freshness": { "type": "string" },
         "required_sources": { "type": "array", "items": { "type": "string" } },
-        "context_artifacts": { "type": "array", "items": { "$ref": "#/$defs/context_artifact" } }
+        "context_artifacts": { "type": "array", "items": { "$ref": "#/$defs/context_artifact" } },
+        "selected_specializations": { "type": "array", "items": { "type": "string" } },
+        "applied_project_overrides": { "type": "array", "items": { "type": "string" } }
       },
       "additionalProperties": true
     },

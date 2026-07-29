@@ -9,6 +9,8 @@
     "id": { "$ref": "#/$defs/id" },
     "title": { "type": "string", "minLength": 1 },
     "process": { "$ref": "#/$defs/id" },
+    "platform": { "type": "string" },
+    "selected_specializations": { "type": "array", "items": { "type": "string" } },
     "status": { "enum": ["draft", "open", "in_progress", "blocked", "review", "completed", "cancelled", "failed"] },
     "created_at": { "type": "string", "minLength": 1 },
     "updated_at": { "type": "string", "minLength": 1 },

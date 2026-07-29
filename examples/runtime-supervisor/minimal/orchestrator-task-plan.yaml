@@ -13,7 +13,7 @@ workers:
   - id: first-worker
     title: First worker
     role: test
-    process: testing
+    process: task-batch-execution
     execution_mode: assurance
     writer: true
     allowed_files: [.pf/artifacts/**]
@@ -31,7 +31,7 @@ workers:
   - id: second-worker
     title: Second worker
     role: test
-    process: testing
+    process: task-batch-execution
     execution_mode: assurance
     writer: true
     allowed_files: [.pf/artifacts/**]

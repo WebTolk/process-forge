@@ -1,0 +1,31 @@
+schema_version: 1
+id: domain-neutral-core-boundary-20260729
+title: Domain-neutral core boundary
+process: multi-agent-task-orchestration
+status: completed
+created_at: '2026-07-29T14:39:10Z'
+updated_at: '2026-07-29T15:53:29Z'
+objective: Remove domain assumptions from ProcessForge core, make project classification data-driven, preserve compatibility outside the default core catalog, and prove release invariants.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: task-001-domain-neutral-core-boundary
+    assignment: .pf/assignments/task-001-domain-neutral-core-boundary.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/domain-neutral-core-boundary-20260729/summary.md
+  - .pf/handoffs/runs/domain-neutral-core-boundary-20260729-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

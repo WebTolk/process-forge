@@ -15,7 +15,7 @@ project:
   id: example-project
   name: Example Project
   type:
-    - software_project
+    - fixture.project-type.a
 flow:
   root: ".pf"
   layout: pf

@@ -13,12 +13,12 @@ paths:
   logs: logs
 processes:
   - id: content-production
-    path: processes/core/content-production.yaml
+    path: examples/domain-packs/content-workflow/processes/content-production.yaml
 packages:
   - id: process-forge-core
     path: packages/process-forge-core.yaml
   - id: process-forge-content
-    path: packages/process-forge-content.yaml
+    path: examples/domain-packs/content-workflow/package.yaml
 policies:
   one_writer_per_file_scope: true
   approved_artifacts_are_protected: true

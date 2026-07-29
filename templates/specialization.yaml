@@ -1,0 +1,70 @@
+schema_version: 1
+kind: processforge.specialization
+id: specialization.example
+name: Example Specialization
+status: active
+description: >
+  A user/workplace-defined specialist resource profile that selects
+  platform-specific knowledge, tools, MCP providers, templates and capabilities.
+scope:
+  owner: workspace
+  visibility: local
+applies_to:
+  project_types: []
+  roles: []
+  tags: []
+resources:
+  requires:
+    knowledge_packages: []
+    tools: []
+    mcp: []
+    templates: []
+  recommends:
+    knowledge_packages: []
+    tools: []
+    mcp: []
+    templates: []
+  optional:
+    knowledge_packages: []
+    tools: []
+    mcp: []
+    templates: []
+  excludes:
+    knowledge_packages: []
+    tools: []
+    mcp: []
+    templates: []
+provides_capabilities: []
+platform_bindings:
+  - platforms:
+      - platform.example
+    platform_stack_includes: []
+    applies_to_project_types: []
+    tags: []
+    resources:
+      requires:
+        knowledge_packages: []
+        tools: []
+        mcp: []
+        templates: []
+      recommends:
+        knowledge_packages: []
+        tools: []
+        mcp: []
+        templates: []
+      optional:
+        knowledge_packages: []
+        tools: []
+        mcp: []
+        templates: []
+      excludes:
+        knowledge_packages: []
+        tools: []
+        mcp: []
+        templates: []
+    provides_capabilities: []
+tool_policy:
+  allowed_tools: []
+  disallowed_tools: []
+metadata:
+  tags: []

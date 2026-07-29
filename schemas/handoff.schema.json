@@ -15,6 +15,9 @@
     "used_templates": { "type": "array", "items": { "type": "string" } },
     "known_issues": { "type": "array", "items": { "type": "string" } },
     "risks": { "type": "array", "items": { "type": "string" } },
+    "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "required_specializations": { "type": "array", "items": { "type": "string" } },
+    "preferred_specializations": { "type": "array", "items": { "type": "string" } },
     "next_steps": { "type": "array", "items": { "type": "string" } },
     "forbidden_assumptions": { "type": "array", "items": { "type": "string" } }
   },

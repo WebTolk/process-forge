@@ -2,7 +2,7 @@ schema_version: 1
 id: task-001-example
 title: Example Task
 run_id: example-run
-process: software-feature-development
+process: task-batch-execution
 status: open
 created_at: "2026-01-01T00:00:00Z"
 updated_at: "2026-01-01T00:00:00Z"

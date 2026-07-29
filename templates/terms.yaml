@@ -118,7 +118,6 @@ terms:
     resolves_to:
       processes:
         - knowledge-resource-add
-        - documentation-mirror-import
         - template-add
         - tool-register
         - mcp-register

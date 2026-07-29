@@ -52,7 +52,7 @@ def main() -> int:
             "--title",
             "Shell task",
             "--process",
-            "testing",
+            "task-batch-execution",
             "--allowed-file",
             ".pf/artifacts/**",
             "--required-output",

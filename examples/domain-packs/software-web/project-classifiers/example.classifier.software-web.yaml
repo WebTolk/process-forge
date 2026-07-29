@@ -1,0 +1,41 @@
+schema_version: 1
+kind: processforge.project_classifier
+
+id: example.classifier.software-web
+name: Example Software/Web Classifier
+status: active
+
+rules:
+  - id: example.rule.composer-marker
+    when:
+      any:
+        - exists: composer.json
+        - exists: "*.php"
+    classify_as:
+      project_types:
+        - example.project-type.php
+      tags:
+        - example.tag.software
+    confidence: high
+  - id: example.rule.node-marker
+    when:
+      any:
+        - exists: package.json
+        - exists: "*.js"
+    classify_as:
+      project_types:
+        - example.project-type.javascript
+      tags:
+        - example.tag.software
+    confidence: high
+  - id: example.rule.python-marker
+    when:
+      any:
+        - exists: pyproject.toml
+        - exists: "*.py"
+    classify_as:
+      project_types:
+        - example.project-type.python
+      tags:
+        - example.tag.software
+    confidence: high

@@ -16,15 +16,14 @@ runtime:
   start_policy: manual
 workers:
   -
-    id: example-docs-worker
-    title: Documentation update
-    role: documentation
-    process: content-production
-    execution_mode: docs_only
+    id: fixture-worker-a
+    title: Fixture work item A
+    role: worker
+    process: task-batch-execution
+    execution_mode: implementation
     writer: true
     allowed_files:
-      - docs/**
-      - README.md
+      - .pf/artifacts/fixture-a/**
     allowed_read_files:
       - .pf/contexts/project-context.snapshot.yaml
     forbidden_files:
@@ -34,26 +33,25 @@ workers:
       - .pf/contexts/project-context.snapshot.yaml
     required_outputs:
       -
-        id: docs-report
-        path: .pf/artifacts/example-docs-worker-report.md
+        id: fixture-a-report
+        path: .pf/artifacts/fixture-a-report.md
         type: markdown
         required: true
-    expected_report_artifact: .pf/artifacts/example-docs-worker-report.md
+    expected_report_artifact: .pf/artifacts/fixture-a-report.md
     runtime_driver: manual
     dependencies: []
     worker_may_rebuild_context: false
   -
-    id: example-test-worker
-    title: Release test verification
-    role: release-assurance
-    process: testing
+    id: fixture-worker-b
+    title: Fixture work item B
+    role: reviewer
+    process: task-batch-execution
     execution_mode: assurance
     writer: true
     allowed_files:
-      - .pf/artifacts/**
+      - .pf/artifacts/fixture-b/**
     allowed_read_files:
-      - tools/**
-      - schemas/**
+      - .pf/artifacts/fixture-a/**
       - .pf/contexts/project-context.snapshot.yaml
     forbidden_files:
       - tools/processforge.py
@@ -61,14 +59,14 @@ workers:
       - .pf/contexts/project-context.snapshot.yaml
     required_outputs:
       -
-        id: test-report
-        path: .pf/artifacts/example-test-worker-report.md
+        id: fixture-b-report
+        path: .pf/artifacts/fixture-b-report.md
         type: markdown
         required: true
-    expected_report_artifact: .pf/artifacts/example-test-worker-report.md
+    expected_report_artifact: .pf/artifacts/fixture-b-report.md
     runtime_driver: manual
     dependencies:
-      - example-docs-worker
+      - fixture-worker-a
     worker_may_rebuild_context: false
 integration:
   required: true

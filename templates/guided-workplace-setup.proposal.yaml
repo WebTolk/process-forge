@@ -43,7 +43,7 @@ platform_policy:
   create: []
 first_project:
   onboard_now: false
-  project_type: generic-software-project
+  project_type: generic
 apply_steps:
   - review optional device-discovery findings and resource candidates
   - run workplace-init internals

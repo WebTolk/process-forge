@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/project-overrides.schema.json",
+  "title": "Project Overrides",
+  "type": "object",
+  "required": ["schema_version", "kind", "overrides"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "kind": { "const": "processforge.project_overrides" },
+    "overrides": {
+      "type": "object",
+      "properties": {
+        "templates": { "$ref": "#/$defs/overrideList" },
+        "knowledge_packages": { "$ref": "#/$defs/overrideList" },
+        "tools": { "$ref": "#/$defs/overrideList" },
+        "mcp": { "$ref": "#/$defs/overrideList" },
+        "specializations": { "$ref": "#/$defs/overrideList" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "mode": { "enum": ["overlay", "extension", "replace", "parameterize", "disable", "fork"] },
+    "overrideList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["target", "mode", "reason"],
+        "properties": {
+          "target": { "type": "string", "minLength": 1 },
+          "mode": { "$ref": "#/$defs/mode" },
+          "path": { "type": "string" },
+          "project_package": { "type": "string" },
+          "params": { "type": "object", "additionalProperties": true },
+          "reason": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

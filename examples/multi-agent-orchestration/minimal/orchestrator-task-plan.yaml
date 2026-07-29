@@ -15,7 +15,7 @@ workers:
     id: example-docs-worker
     title: Documentation update
     role: documentation
-    process: content-production
+    process: task-batch-execution
     execution_mode: docs_only
     writer: true
     allowed_files:
@@ -41,7 +41,7 @@ workers:
     id: example-test-worker
     title: Release test verification
     role: release-assurance
-    process: testing
+    process: task-batch-execution
     execution_mode: assurance
     writer: true
     allowed_files:

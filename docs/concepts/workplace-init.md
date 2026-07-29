@@ -12,6 +12,11 @@ The workplace layer is not a project. It records local capabilities, roots,
 registries, cache, runtime state, logs, and policies that a project may use
 through explicit resolution.
 
+Those capabilities are data declared by workplace, project, package, platform,
+tool, MCP, template, specialization, or override files. ProcessForge core does
+not install a domain capability catalog during workplace init and does not
+activate example domain resources as defaults.
+
 ## Command Model
 
 ```bash
@@ -44,6 +49,7 @@ registries/package-roots.yaml
 registries/templates.yaml
 registries/tools.yaml
 registries/mcp.yaml
+registries/project-classifiers.yaml
 logs/workplace-init-report.md
 artifacts/workplace-bootstrap-report.md
 reviews/workplace-bootstrap-review.md
@@ -54,6 +60,10 @@ The command also creates workplace directories needed by the manifest and
 runtime flow, including `registries/`, `cache/`, `runtime/`, `logs/`,
 `artifacts/`, `reviews/`, and `handoffs/`. Runtime events are written under
 `runtime/events/events.ndjson`.
+
+The generated project-classifier registry is empty. Workplace initialization
+does not inspect technology-specific filenames and does not import classifiers
+from example packages.
 
 ## Safety
 

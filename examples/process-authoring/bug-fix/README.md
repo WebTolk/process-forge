@@ -1,10 +1,10 @@
 ﻿# Bug Fix Process Authoring Example
 
-This example points to the public stable built-in `bug-fix` as a reference process pack.
+This example points to the optional `software-web` domain pack.
 
-- Process: `processes/core/bug-fix.yaml`
-- Prompt: `prompts/bug-fix-agent.md`
-- Documentation: `docs/processes/bug-fix.md`
+- Process: `examples/domain-packs/software-web/processes/bug-fix.yaml`
+- Prompt: `examples/domain-packs/software-web/prompts/bug-fix-agent.md`
+- Documentation: `examples/domain-packs/software-web/docs/processes/bug-fix.md`
 
 Validate with:
 

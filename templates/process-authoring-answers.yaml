@@ -230,7 +230,7 @@ process_transitions:
   can_handoff: true
   routes:
     - id: quality-audit-to-review
-      target_process: testing
+      target_process: task-batch-execution
       mode: wait_for_result
       input_artifacts: [audit-report]
       expected_output_artifacts: [audit-review]

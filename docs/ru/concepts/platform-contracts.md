@@ -81,3 +81,9 @@ Example only: документация может описывать реаль�
 Joomla -> JoomShopping, где child platform inherits parent context. Такой
 product-specific stack должен жить в workplace data или docs/examples, а не в
 core code paths ProcessForge.
+## Platform И Specialization
+
+Platform contract описывает, где выполняется работа. Он не кодирует роль.
+Для выбора роли или режима работы используйте specialization, а
+платформенно-специфичные knowledge, tools, MCP providers и templates выбирайте
+через `platform_bindings` внутри этой specialization.

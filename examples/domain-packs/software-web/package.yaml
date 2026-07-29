@@ -1,0 +1,34 @@
+schema_version: 1
+id: process-forge-software-development
+name: ProcessForge Software Development
+version: 1.0.0
+status: optional_example
+core: false
+installed_by_default: false
+kind: direction
+scope: software-work
+description: Optional example package for software development workflows. It is never installed or activated by default.
+dependencies:
+- process-forge-core
+rules:
+- id: verify-behavior
+  text: Software changes require behavior evidence appropriate to risk.
+templates:
+- validation-report-template
+tools:
+- id: test-runner
+  capability: test_running
+- id: repository-symbol-analysis
+  capability: repository_symbol_analysis
+mcp_servers: []
+validation:
+- id: changed-files-recorded
+  capability: change_tracking
+processes:
+- bug-fix
+- software-feature-development
+stable_processes:
+- bug-fix
+- software-feature-development
+experimental_processes: []
+internal_processes: []

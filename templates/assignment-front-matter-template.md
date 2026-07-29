@@ -3,7 +3,7 @@ schema_version: 1
 id: example-assignment
 status: ready
 role: worker
-process: software-feature-development
+process: task-batch-execution
 stage: implementation
 required_capabilities:
   - repository.read

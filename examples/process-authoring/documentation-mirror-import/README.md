@@ -2,8 +2,8 @@
 
 This example points to the public stable built-in `documentation-mirror-import` as a reference process pack.
 
-- Process: `processes/core/documentation-mirror-import.yaml`
-- Prompt: `prompts/documentation-mirror-import-agent.md`
+- Process: `examples/domain-packs/content-workflow/processes/documentation-mirror-import.yaml`
+- Prompt: `examples/domain-packs/content-workflow/prompts/documentation-mirror-import-agent.md`
 - Documentation: `docs/processes/documentation-mirror-import.md`
 
 Validate with:

@@ -80,8 +80,14 @@ REQUIRED_FILES = [
     "docs/concepts/process-events.md",
     "docs/concepts/process-directory-layout.md",
     "docs/concepts/project-scan-boundaries.md",
+    "docs/concepts/domain-neutral-core.md",
+    "docs/concepts/project-classifiers.md",
+    "docs/concepts/process-catalog-boundary.md",
     "docs/ru/concepts/process-directory-layout.md",
     "docs/ru/concepts/project-scan-boundaries.md",
+    "docs/ru/concepts/domain-neutral-core.md",
+    "docs/ru/concepts/project-classifiers.md",
+    "docs/ru/concepts/process-catalog-boundary.md",
     "docs/ru/concepts/project-context-snapshot.md",
     "docs/concepts/semantic-parity.md",
     "docs/concepts/runs-tasks-iterations.md",
@@ -168,8 +174,6 @@ REQUIRED_FILES = [
     "docs/assets/processforge-authoring-parity.svg",
     "docs/processes/process-authoring.md",
     "docs/processes/process-supervisor.md",
-    "docs/processes/software-feature-development.md",
-    "docs/ru/processes/software-feature-development.md",
     "docs/getting-started/task-batch-workflow.md",
     "docs/getting-started/guided-workplace-setup.md",
     "docs/getting-started/multi-agent-orchestration.md",
@@ -179,6 +183,12 @@ REQUIRED_FILES = [
     "docs/getting-started/agent-ledger-process-transitions.md",
     "docs/ru/getting-started/agent-ledger-process-transitions.md",
     "docs/getting-started/create-your-first-process.md",
+    "docs/concepts/specializations.md",
+    "docs/concepts/project-overrides.md",
+    "docs/concepts/process-vs-specialization.md",
+    "docs/ru/concepts/specializations.md",
+    "docs/ru/concepts/project-overrides.md",
+    "docs/ru/concepts/process-vs-specialization.md",
     "docs/validation/doctor-workplace.md",
     "docs/validation/doctor-project.md",
     "docs/validation/doctor-context.md",
@@ -193,6 +203,9 @@ REQUIRED_FILES = [
     "schemas/knowledge-resource-add-request.schema.json",
     "schemas/documentation-import-plan.schema.json",
     "schemas/platform-contract.schema.json",
+    "schemas/specialization.schema.json",
+    "schemas/specialization-registry.schema.json",
+    "schemas/project-overrides.schema.json",
     "schemas/template-package.schema.json",
     "schemas/tool-definition.schema.json",
     "schemas/mcp-definition.schema.json",
@@ -243,6 +256,8 @@ REQUIRED_FILES = [
     "schemas/project-init-answers.schema.json",
     "schemas/session-start.schema.json",
     "schemas/project-context-snapshot.schema.json",
+    "schemas/project-classifier.schema.json",
+    "schemas/project-classifier-registry.schema.json",
     "schemas/session-metadata.schema.json",
     "schemas/session-telemetry-event.schema.json",
     "schemas/event-envelope.schema.json",
@@ -262,6 +277,29 @@ REQUIRED_FILES = [
     "tools/smoke_session_start_context_check.py",
     "tools/smoke_update_apply_marks_context_stale.py",
     "tools/smoke_capsule_pins_context_snapshot.py",
+    "tools/specialization_smoke_helpers.py",
+    "tools/smoke_specialization_schema.py",
+    "tools/smoke_specialization_registry.py",
+    "tools/smoke_specialization_create_workplace_resource.py",
+    "tools/smoke_specialization_platform_binding.py",
+    "tools/smoke_specialization_context_resolution.py",
+    "tools/smoke_specialization_same_platform_different_context.py",
+    "tools/smoke_specialization_no_tool_leakage.py",
+    "tools/smoke_specialization_no_workflow_ownership.py",
+    "tools/smoke_process_owns_acceptance_not_specialization.py",
+    "tools/smoke_process_capability_requirement_resolution.py",
+    "tools/smoke_specialization_process_policy.py",
+    "tools/smoke_specialization_handoff_routing.py",
+    "tools/smoke_specialization_garage_mode_switch.py",
+    "tools/smoke_specialization_snapshot_fields.py",
+    "tools/smoke_specialization_capsule_activation.py",
+    "tools/smoke_specialization_no_core_id_hardcode.py",
+    "tools/smoke_project_overrides_schema.py",
+    "tools/smoke_project_overrides_resolution.py",
+    "tools/smoke_project_overrides_snapshot_fingerprint.py",
+    "tools/smoke_project_overrides_freshness.py",
+    "tools/smoke_project_overrides_capsule_summary.py",
+    "tools/smoke_project_override_does_not_mutate_workspace.py",
     "tools/smoke_software_lifecycle_process_contract.py",
     "tools/smoke_software_lifecycle_artifacts.py",
     "tools/smoke_software_lifecycle_description_alignment.py",
@@ -283,6 +321,16 @@ REQUIRED_FILES = [
     "tools/smoke_knowledge_package_release_update_manifest.py",
     "tools/smoke_evolve_learning_loop_end_to_end.py",
     "tools/smoke_software_process_uses_common_evolve.py",
+    "tools/smoke_domain_neutral_core_helpers.py",
+    "tools/smoke_core_has_no_domain_knowledge_seeds.py",
+    "tools/smoke_empty_workplace_has_no_domain_resources.py",
+    "tools/smoke_project_classification_data_driven.py",
+    "tools/smoke_no_hardcoded_file_project_detection.py",
+    "tools/smoke_optional_domain_pack_not_default.py",
+    "tools/smoke_domain_pack_can_classify_after_install.py",
+    "tools/smoke_core_process_catalog_domain_neutral.py",
+    "tools/smoke_core_prompts_domain_neutral.py",
+    "tools/smoke_runtime_no_domain_file_patterns.py",
     "schemas/hook-delivery.schema.json",
     "schemas/hook-result.schema.json",
     "schemas/chat-message.schema.json",
@@ -308,10 +356,6 @@ REQUIRED_FILES = [
     "schemas/artifact.schema.json",
     "schemas/review.schema.json",
     "schemas/handoff.schema.json",
-    "processes/core/software-feature-development.yaml",
-    "processes/core/bug-fix.yaml",
-    "processes/core/testing.yaml",
-    "processes/core/content-production.yaml",
     "processes/core/knowledge-package-improvement.yaml",
     "processes/core/process-version-upgrade.yaml",
     "processes/core/workplace-initialization.yaml",
@@ -321,7 +365,6 @@ REQUIRED_FILES = [
     "processes/core/context-resolution.yaml",
     "processes/core/processforge-update-check.yaml",
     "processes/core/knowledge-resource-add.yaml",
-    "processes/core/documentation-mirror-import.yaml",
     "processes/core/knowledge-package-update.yaml",
     "processes/core/template-add.yaml",
     "processes/core/tool-register.yaml",
@@ -348,6 +391,11 @@ REQUIRED_FILES = [
     "templates/registries/templates.yaml",
     "templates/registries/tools.yaml",
     "templates/registries/mcp.yaml",
+    "templates/registries/specializations.yaml",
+    "templates/registries/project-classifiers.yaml",
+    "templates/project-classifier.yaml",
+    "templates/specialization.yaml",
+    "templates/project-overrides.yaml",
     "templates/registries/runtime-drivers.yaml",
     "templates/runtime-drivers/manual.yaml",
     "templates/runtime-drivers/generic-shell.yaml",
@@ -449,6 +497,30 @@ REQUIRED_FILES = [
     "examples/process-authoring/bugfix-batch/answers.yaml",
     "examples/process-authoring/content-update/README.md",
     "examples/process-authoring/content-update/answers.yaml",
+    "examples/domain-packs/software-web/README.md",
+    "examples/domain-packs/software-web/package.yaml",
+    "examples/domain-packs/software-web/project-classifiers/example.classifier.software-web.yaml",
+    "examples/domain-packs/software-web/project-classifiers/registry-entry.yaml",
+    "examples/domain-packs/software-web/processes/software-feature-development.yaml",
+    "examples/domain-packs/software-web/processes/bug-fix.yaml",
+    "examples/domain-packs/software-web/prompts/software-feature-development-agent.md",
+    "examples/domain-packs/software-web/prompts/bug-fix-agent.md",
+    "examples/domain-packs/software-web/docs/processes/software-feature-development.md",
+    "examples/domain-packs/software-web/docs/processes/bug-fix.md",
+    "examples/domain-packs/software-web/docs/ru/processes/software-feature-development.md",
+    "examples/domain-packs/content-workflow/README.md",
+    "examples/domain-packs/content-workflow/package.yaml",
+    "examples/domain-packs/content-workflow/processes/content-production.yaml",
+    "examples/domain-packs/content-workflow/processes/documentation-mirror-import.yaml",
+    "examples/domain-packs/content-workflow/prompts/content-production-agent.md",
+    "examples/domain-packs/content-workflow/prompts/documentation-mirror-import-agent.md",
+    "examples/domain-packs/content-workflow/docs/processes/content-production.md",
+    "examples/domain-packs/content-workflow/docs/processes/documentation-mirror-import.md",
+    "examples/domain-packs/verification-workflow/README.md",
+    "examples/domain-packs/verification-workflow/package.yaml",
+    "examples/domain-packs/verification-workflow/processes/testing.yaml",
+    "examples/domain-packs/verification-workflow/prompts/testing-agent.md",
+    "examples/domain-packs/verification-workflow/docs/processes/testing.md",
     "bin/pf.py",
     "bin/pf",
     "bin/pf.bat",
@@ -601,6 +673,15 @@ def validate_instance(value: Any, node: dict[str, Any], root_schema: dict[str, A
     if "$ref" in node:
         return validate_instance(value, resolve_ref(root_schema, str(node["$ref"])), root_schema, path)
 
+    one_of = node.get("oneOf")
+    if isinstance(one_of, list):
+        matches = 0
+        for alternative in one_of:
+            if isinstance(alternative, dict) and not validate_instance(value, alternative, root_schema, path):
+                matches += 1
+        if matches != 1:
+            errors.append(f"{path}: expected exactly one oneOf alternative, got {matches}")
+
     expected_type = node.get("type")
     if isinstance(expected_type, list):
         if not any(schema_type_matches(value, item) for item in expected_type):
@@ -620,6 +701,12 @@ def validate_instance(value: Any, node: dict[str, Any], root_schema: dict[str, A
         errors.append(f"{path}: expected minLength {node['minLength']}")
     if "minItems" in node and isinstance(value, list) and len(value) < node["minItems"]:
         errors.append(f"{path}: expected minItems {node['minItems']}")
+    if "uniqueItems" in node and node["uniqueItems"] is True and isinstance(value, list):
+        normalized = [json.dumps(item, ensure_ascii=False, sort_keys=True) for item in value]
+        if len(normalized) != len(set(normalized)):
+            errors.append(f"{path}: expected uniqueItems")
+    if "minProperties" in node and isinstance(value, dict) and len(value) < node["minProperties"]:
+        errors.append(f"{path}: expected minProperties {node['minProperties']}")
     if "pattern" in node and isinstance(value, str) and not re.fullmatch(str(node["pattern"]), value):
         errors.append(f"{path}: does not match pattern {node['pattern']!r}")
 
@@ -695,19 +782,14 @@ def validate_yaml_like_files(root: Path) -> None:
             fail(f".pf/process-forge.yaml missing {key}")
 
     process_count = 0
-    non_development = False
     for path in process_definition_files(root):
         process_count += 1
         text = read_text(path)
         for key in PROCESS_REQUIRED_KEYS:
             if not has_yaml_key(text, key):
                 fail(f"{path.relative_to(root)} missing {key}")
-        if path.name in {"content-production.yaml", "testing.yaml"}:
-            non_development = True
     if process_count < 3:
         fail("expected at least three process definitions")
-    if not non_development:
-        fail("expected at least one non-development process")
 
     for path in sorted((root / "packages").glob("*.yaml")):
         text = read_text(path)
@@ -724,8 +806,31 @@ def validate_yaml_schema_files(root: Path) -> None:
         mappings.append((root / "templates" / "process.yaml", "process-definition.schema.json"))
     if (root / "templates" / "knowledge-candidate.yaml").is_file():
         mappings.append((root / "templates" / "knowledge-candidate.yaml", "knowledge-candidate.schema.json"))
+    if (root / "templates" / "project-classifier.yaml").is_file():
+        mappings.append((root / "templates" / "project-classifier.yaml", "project-classifier.schema.json"))
+    if (root / "templates" / "registries" / "project-classifiers.yaml").is_file():
+        mappings.append(
+            (root / "templates" / "registries" / "project-classifiers.yaml", "project-classifier-registry.schema.json")
+        )
     mappings.extend((path, "process-definition.schema.json") for path in process_definition_files(root))
     mappings.extend((path, "package-manifest.schema.json") for path in sorted((root / "packages").glob("*.yaml")))
+    mappings.extend(
+        (path, "package-manifest.schema.json")
+        for path in sorted((root / "examples" / "domain-packs").glob("*/package.yaml"))
+    )
+    mappings.extend(
+        (path, "process-definition.schema.json")
+        for path in sorted((root / "examples" / "domain-packs").glob("*/processes/*.yaml"))
+    )
+    mappings.extend(
+        (path, "project-classifier.schema.json")
+        for path in sorted((root / "examples" / "domain-packs").glob("*/project-classifiers/*.yaml"))
+        if path.name != "registry-entry.yaml"
+    )
+    mappings.extend(
+        (path, "project-classifier-registry.schema.json")
+        for path in sorted((root / "examples" / "domain-packs").glob("*/project-classifiers/registry-entry.yaml"))
+    )
     mappings.extend((path, "run.schema.json") for path in sorted((root / ".pf" / "runs").glob("*/run.yaml")))
     mappings.extend((path, "assignment.schema.json") for path in sorted((root / ".pf" / "assignments").glob("*.yaml")))
     if (root / "updates" / "processforge-update-index.yaml").is_file():
@@ -738,6 +843,8 @@ def validate_yaml_schema_files(root: Path) -> None:
         mappings.append((root / "templates" / "registries" / "installed-subjects.yaml", "installed-subjects.schema.json"))
     if (root / "templates" / "registries" / "update-site-overrides.yaml").is_file():
         mappings.append((root / "templates" / "registries" / "update-site-overrides.yaml", "update-site-overrides.schema.json"))
+    if (root / "templates" / "registries" / "specializations.yaml").is_file():
+        mappings.append((root / "templates" / "registries" / "specializations.yaml", "specialization-registry.schema.json"))
     if (root / "templates" / "registries" / "runtime-drivers.yaml").is_file():
         mappings.append((root / "templates" / "registries" / "runtime-drivers.yaml", "runtime-driver-registry.schema.json"))
     if (root / "templates" / "registries" / "agents.yaml").is_file():
@@ -760,6 +867,10 @@ def validate_yaml_schema_files(root: Path) -> None:
     for path in [root / "templates" / "platform-contract.yaml", root / "templates" / "platform-contract-example-parent.yaml"]:
         if path.is_file():
             mappings.append((path, "platform-contract.schema.json"))
+    if (root / "templates" / "specialization.yaml").is_file():
+        mappings.append((root / "templates" / "specialization.yaml", "specialization.schema.json"))
+    if (root / "templates" / "project-overrides.yaml").is_file():
+        mappings.append((root / "templates" / "project-overrides.yaml", "project-overrides.schema.json"))
 
     for context_root in [root / "contexts", root / ".pf" / "contexts"]:
         if (context_root / "context-index.yaml").is_file():

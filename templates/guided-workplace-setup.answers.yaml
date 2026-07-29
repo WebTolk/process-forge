@@ -62,6 +62,6 @@ coordination:
 first_project:
   onboard_now: false
   project_root: ""
-  project_type: generic-software-project
+  project_type: generic
   coordination_mode: inherit
   suggested_run: first-run

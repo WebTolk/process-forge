@@ -50,3 +50,9 @@ python bin/pf.py workplace-mode set --workplace ../pf-workplace --director-enabl
 python bin/pf.py workplace-mode set-default-project-mode --workplace ../pf-workplace --mode simple
 python bin/pf.py workplace-mode doctor --workplace ../pf-workplace
 ```
+## Порядок Создания Ресурсов
+
+После `workplace-init` создавайте ресурсы в таком порядке, когда они нужны:
+knowledge packages, tools/MCP, templates, platform contracts, затем
+specializations. Specializations ссылаются на уже существующие resource ids и
+хранятся в workplace или project flow, а не в ProcessForge distribution root.

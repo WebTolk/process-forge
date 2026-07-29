@@ -1,7 +1,8 @@
-# Project context snapshot
+# Project Context Snapshot
 
-Project context snapshot - вычисленная операционная карта проекта ProcessForge.
-Она создаётся при project init или project refresh и читается в начале сессии.
+Project context snapshot - вычисленная operational map проекта ProcessForge. Он
+создается во время project init или project-context-refresh и читается в начале
+сессии до широких scans по packages или templates.
 
 Основные пути:
 
@@ -12,21 +13,36 @@ Project context snapshot - вычисленная операционная ка�
 .pf/runtime/cache/workplace-context.snapshot.yaml
 ```
 
-Snapshot различает доступные platform contracts и выбранный platform stack.
-Для `agent-workspace`, `brownfield-workspace` и `meta-workspace` нормально иметь
-доступные contracts без выбранного stack:
+Snapshot строится из структурированных источников:
 
-```yaml
-available_platform_contracts:
-  - id: platform.joomla
-selected_platform_contracts: []
-platform_stack: []
-platform_selection:
-  status: not_applicable
-```
+- workplace и project manifests
+- process definitions
+- package definitions
+- tool, MCP, template и specialization registries
+- selected specialization definitions и platform bindings
+- project overrides
+- platform contracts
+- source fingerprints
+- observed `project_classification` со status, classifier/rule IDs, project
+  types, platforms и tags
 
-Для обычного проекта, например `joomla-extension`, выбранные platform contracts
-попадают в `selected_platform_contracts` и `platform_stack`.
+Snapshot записывает selected platform, platform stack, selected
+specializations, active resource profile, execution route, required
+capabilities, provided capabilities, capability resolution, applied project
+overrides, effective fingerprints и conflicts. Capabilities остаются opaque IDs;
+snapshot не разворачивает полный knowledge content.
 
-Runtime workplace snapshot может содержать локальную availability-информацию о
-tools и MCP. Он лежит в `.pf/runtime/cache/` и остаётся private.
+`capability_resolution` содержит satisfied и unsatisfied requirements. PF core
+не удовлетворяет user process capabilities по умолчанию. Если active resource
+profile не предоставляет required capability, snapshot фиксирует ее как
+`unsatisfied`, а context получает ресурсный conflict/status.
+
+Freshness учитывает specialization definitions, specialization registry,
+project specialization overrides, `project-overrides.yaml`, active
+tool/MCP/template registries, active project classifiers и результат их
+применения, process definition и selected platform contracts.
+Existing run/capsule остается pinned; новая сессия должна refresh или сообщить
+stale/fresh_with_updates согласно policy.
+
+Runtime workplace snapshot может содержать local availability state для tools и
+MCP. Он лежит в `.pf/runtime/cache/` и остается private.

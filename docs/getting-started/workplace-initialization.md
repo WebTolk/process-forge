@@ -57,3 +57,9 @@ whole device.
 Heavy local documentation should be registered as `knowledge_roots.local-docs`.
 The root may live near the workplace on disk, but project source scans treat it
 as external knowledge rather than project source.
+## Resource Creation Order
+
+After `workplace-init`, create resources in this order when they are needed:
+knowledge packages, tools/MCP, templates, platform contracts, then
+specializations. Specializations reference existing resource ids and are stored
+under the workplace or project flow, not in the ProcessForge distribution root.

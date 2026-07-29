@@ -1,0 +1,235 @@
+schema_version: 1
+id: documentation-mirror-import
+name: Documentation Mirror Import
+version: 1.0.0
+status: active
+catalog:
+  classification: EXAMPLE_ONLY
+  public_surface: true
+  role: optional_example
+description: Plan documentation mirror imports and resource indexes without crawling large documentation by default.
+required_capabilities:
+- research
+- schema_validation
+hooks:
+  emit:
+  - event: knowledge.resource.add.requested
+    required: true
+  - event: knowledge.package.updated
+    required: false
+roles:
+- id: planner
+  title: Planner
+  responsibility: Assesses source, license, topics, mirror boundaries, and index policy.
+  kind: primary_agent
+  responsibilities:
+  - Assesses source, license, topics, mirror boundaries, and index policy.
+stages:
+- id: intake
+  title: Intake
+  description: Capture source, topics, target package, and import intent.
+  required_inputs: []
+  produced_artifacts:
+  - documentation-import-request
+  required_role: planner
+  required_capabilities:
+  - research
+  allowed_tools: []
+  entry_gates: []
+  exit_gates:
+  - request-complete
+  goal: Capture source, topics, target package, and import intent.
+  actor: primary_agent
+  gates:
+  - request-complete
+- id: mirror-plan
+  title: Mirror Plan
+  description: Create license assessment, mirror plan, and resource index plan without downloading content.
+  required_inputs:
+  - documentation-import-request
+  produced_artifacts:
+  - source-register
+  - license-assessment
+  - mirror-plan
+  - resource-index
+  required_role: planner
+  required_capabilities:
+  - research
+  allowed_tools:
+  - processforge-cli
+  entry_gates:
+  - request-complete
+  exit_gates:
+  - mirror-plan-reviewed
+  goal: Create license assessment, mirror plan, and resource index plan without downloading content.
+  actor: primary_agent
+  gates:
+  - mirror-plan-reviewed
+artifact_definitions:
+- id: documentation-import-request
+  title: Documentation Import Request
+  owner_role: planner
+  template: knowledge-resource-add-request
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/documentation-import-request.md
+- id: mirror-plan
+  title: Mirror Plan
+  owner_role: planner
+  template: documentation-import-plan
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/mirror-plan.md
+- id: source-register
+  title: Source Register
+  owner_role: planner
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/source-register.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: license-assessment
+  title: License Assessment
+  owner_role: planner
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/license-assessment.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+- id: resource-index
+  title: Resource Index
+  owner_role: planner
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/resource-index.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+gates:
+- id: request-complete
+  description: Request includes source and topics.
+  blocking: true
+  type: checklist
+  required: true
+- id: mirror-plan-reviewed
+  description: Plan records source, license, update policy, and load_policy for heavy resources.
+  blocking: true
+  type: checklist
+  required: true
+required_packages:
+- process-forge-content
+- process-forge-knowledge-governance
+- process-forge-core
+required_templates:
+- documentation-import-plan.yaml
+allowed_tools:
+- processforge-cli
+forbidden_actions:
+- silently_download_large_sites
+evolve:
+  enabled: true
+  mode: optional
+  timing: end_of_run
+  default_scope: project
+  candidate_targets:
+  - knowledge_package
+  - template_package
+  - process_definition
+  - delivery_profile
+  - project_rule
+  - workplace_rule
+  - platform_contract
+  extraction_hints:
+  - Split candidates when an observation contains project-specific and platform-general parts.
+  - Default to the narrowest safe scope and require evidence before parent-platform promotion.
+  - reusable rule
+  - missing knowledge
+  - template improvement
+  - regression check
+  - process improvement
+  candidate_targeting:
+    default_scope: project
+    require_applicability: true
+    require_target: true
+    default_to_narrowest_scope: true
+  required_outputs:
+  - evolution-report
+  privacy:
+    default_sensitivity: internal
+    export_requires_sanitization: true
+    allow_private_paths: false
+  apply_policy:
+    auto_apply_global: false
+    create_candidates_only: true
+
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+  - mirror-plan
+  safe_changes:
+  - add_topic
+  blocked_changes:
+  - enable_crawler_by_default
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
+process_pack:
+  package: process-forge-content
+  example_required: true
+agent_prompt:
+  required: true

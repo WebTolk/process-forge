@@ -17,7 +17,7 @@ def main() -> int:
         hub = base / "knowledge-hub"
         init_project(project, workplace)
         candidate = write_candidate(project / ".pf" / "artifacts" / "evolve" / "knowledge-candidates" / "kc-docs-example-rule.yaml")
-        run_pf("evolve-run", "--project-root", str(project), "--workplace", str(workplace), "--process", "software-feature-development", "--run", "run-evolve-smoke", "--candidate-file", str(candidate))
+        run_pf("evolve-run", "--project-root", str(project), "--workplace", str(workplace), "--process", "process-authoring", "--run", "run-evolve-smoke", "--candidate-file", str(candidate))
         bundle = workplace / "learning" / "bundles" / "learning-export-smoke.zip"
         run_pf("evolve-candidate-export", "--workplace", str(workplace), "--target", "docs.example", "--output", str(bundle))
         run_pf("knowledge-hub-init", "--hub", str(hub), "--apply")

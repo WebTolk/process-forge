@@ -46,8 +46,6 @@ DEFAULT_SCAN_POLICY = {
         "**/.git/**",
         "**/.pf/runtime/**",
         "**/runtime/**",
-        "**/node_modules/**",
-        "**/vendor/**",
         "**/dist/**",
         "**/build/**",
     ],
@@ -318,44 +316,6 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "authoring_parity.completed",
 ]
 
-BUILTIN_CAPABILITIES = {
-    "repository.read",
-    "repository.scan",
-    "repository_read",
-    "markdown.editing",
-    "markdown_editing",
-    "filesystem.read",
-    "filesystem.write",
-    "php",
-    "html",
-    "css",
-    "javascript",
-    "web.accessibility",
-    "web.performance",
-    "schema_validation",
-    "validation",
-    "context.status",
-    "context.resolve",
-    "processforge-cli",
-    "architecture",
-    "artifact_review",
-    "content_planning",
-    "editorial_review",
-    "investigation",
-    "process_coordination",
-    "process_governance",
-    "reporting",
-    "repository_write",
-    "research",
-    "review",
-    "test_execution",
-    "test_planning",
-    "test_running",
-    "writing",
-}
-
-BUILTIN_SEED_CAPABILITIES = set(BUILTIN_CAPABILITIES)
-
 BACKSLASH = chr(92)
 COLON_WS = ":" + r"\s*"
 LOCAL_PATH_PATTERNS = [
@@ -405,10 +365,7 @@ EVOLVE_CANDIDATE_CATEGORIES = {
     "delivery",
     "tooling",
     "process",
-    "docs",
-    "content",
-    "seo",
-    "media",
+    "resource",
     "generic",
 }
 
@@ -420,6 +377,7 @@ DEFAULT_PATH_CONSTANTS = {
     "PF_TOOLS": "tools",
     "PF_MCP": "mcp",
     "PF_PLATFORM_CONTRACTS": "platform-contracts",
+    "PF_SPECIALIZATIONS": "specializations",
     "PF_PROCESS_TEMPLATES": "process-templates",
     "PF_RUNTIME": "runtime",
     "PF_CACHE": "cache",
@@ -748,6 +706,8 @@ def dump_yaml(data: Any, indent: int = 0) -> str:
     lines: list[str] = []
     prefix = " " * indent
     if isinstance(data, dict):
+        if not data:
+            lines.append(f"{prefix}{{}}")
         for key, value in data.items():
             if isinstance(value, (dict, list)):
                 lines.append(f"{prefix}{key}:")
@@ -915,10 +875,10 @@ def build_terms() -> dict[str, Any]:
             "resource_management": {
                 "label": "resource management",
                 "label_ru": "управление ресурсами",
-                "aliases": ["knowledge resource add", "resource index", "documentation import"],
-                "aliases_ru": ["управление знаниями", "индекс ресурсов", "импорт документации"],
+                "aliases": ["knowledge resource add", "resource index", "resource import"],
+                "aliases_ru": ["управление знаниями", "индекс ресурсов", "импорт ресурсов"],
                 "definition": "Proposal-first workplace processes and commands for maintaining knowledge resources, templates, tools, MCP, and platform contracts.",
-                "resolves_to": {"processes": ["knowledge-resource-add", "documentation-mirror-import", "template-add", "tool-register", "mcp-register"]},
+                "resolves_to": {"processes": ["knowledge-resource-add", "template-add", "tool-register", "mcp-register"]},
             },
             "resource_index": {
                 "label": "resource index",
@@ -1144,6 +1104,8 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
             "templates": "registries/templates.yaml",
             "tools": "registries/tools.yaml",
             "mcp": "registries/mcp.yaml",
+            "specializations": "registries/specializations.yaml",
+            "project_classifiers": "registries/project-classifiers.yaml",
             "runtime_drivers": "registries/runtime-drivers.yaml",
             "update_sources": "registries/update-sources.yaml",
             "installed_subjects": "registries/installed-subjects.yaml",
@@ -1249,6 +1211,8 @@ applied
 - registries/templates.yaml
 - registries/tools.yaml
 - registries/mcp.yaml
+- registries/specializations.yaml
+- registries/project-classifiers.yaml
 - registries/runtime-drivers.yaml
 - registries/update-sources.yaml
 - registries/installed-subjects.yaml
@@ -1357,6 +1321,12 @@ Run `project-onboard` for a concrete project.
         ),
         root / "registries" / "tools.yaml": dump_yaml({"schema_version": 1, "tools": []}),
         root / "registries" / "mcp.yaml": dump_yaml({"schema_version": 1, "mcp_servers": []}),
+        root / "registries" / "specializations.yaml": dump_yaml(
+            {"schema_version": 1, "specializations": []}
+        ),
+        root / "registries" / "project-classifiers.yaml": dump_yaml(
+            {"schema_version": 1, "project_classifiers": []}
+        ),
         root / "registries" / "agents.yaml": dump_yaml({"schema_version": 1, "agents": []}),
         root / "registries" / "runtime-drivers.yaml": dump_yaml(default_runtime_driver_registry()),
         root / "registries" / "update-sources.yaml": dump_yaml(
@@ -1499,7 +1469,7 @@ def command_init_workplace(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
     answers = load_answers(Path(args.answers).expanduser().resolve() if args.answers else None)
     files = build_workplace_files(root, answers)
-    planned_dirs = [root / "cache", root / "runtime", root / "runtime" / "events", root / "logs", root / "artifacts", root / "reviews", root / "handoffs", root / "packages", root / "knowledge", root / "reusable-templates", root / "platform-contracts", root / "runtime-drivers", root / "tools", root / "mcp"]
+    planned_dirs = [root / "cache", root / "runtime", root / "runtime" / "events", root / "logs", root / "artifacts", root / "reviews", root / "handoffs", root / "packages", root / "knowledge", root / "reusable-templates", root / "platform-contracts", root / "specializations", root / "runtime-drivers", root / "tools", root / "mcp"]
     if not args.apply:
         print_plan("workplace init dry run", list(files) + planned_dirs, root)
         return 0
@@ -1598,7 +1568,7 @@ def default_guided_workplace_answers(workplace: Path, session_id: str) -> dict[s
             "notes": "Do not create real platform contracts unless the user explicitly defines them.",
         },
         "coordination": {"director_capability": False, "default_project_mode": "simple", "initialize_director_office": False},
-        "first_project": {"onboard_now": False, "project_root": "", "project_type": "generic-software-project", "coordination_mode": "inherit", "suggested_run": "first-run"},
+        "first_project": {"onboard_now": False, "project_root": "", "project_type": "generic", "coordination_mode": "inherit", "suggested_run": "first-run"},
     }
 
 
@@ -1888,7 +1858,7 @@ def command_workplace_setup_apply(args: argparse.Namespace) -> int:
 ## Project Onboarding
 
 ```bash
-python {machine.get("processforge_root") or "<processforge-root>"}/bin/pf.py project-onboard --project-root <project-root> --workplace {workplace} --type generic-software-project --apply
+python {machine.get("processforge_root") or "<processforge-root>"}/bin/pf.py project-onboard --project-root <project-root> --workplace {workplace} --type generic --apply
 ```
 
 Inside an onboarded project, read `.pf/START_AGENT_HERE.md` and use `python .pf/runtime/bin/pf.py`.
@@ -2560,9 +2530,150 @@ def list_project_files(project_root: Path) -> list[Path]:
     return sorted(files, key=lambda item: item.relative_to(project_root).as_posix())
 
 
-def detect_project(project_root: Path) -> dict[str, Any]:
+def project_classifier_registry_documents(
+    workplace_manifest: Path | None,
+    project_root: Path,
+) -> list[tuple[dict[str, Any], Path]]:
+    documents: list[tuple[dict[str, Any], Path]] = []
+    if workplace_manifest and workplace_manifest.is_file():
+        registry = load_workplace_registry(workplace_manifest, "project_classifiers", "project-classifiers.yaml")
+        documents.append((registry, workplace_manifest.parent))
+    flow_registry = locate_flow_root(project_root) / "registries" / "project-classifiers.yaml"
+    if flow_registry.is_file():
+        data = load_yaml_document(flow_registry)
+        if isinstance(data, dict) and not yaml_error(data):
+            documents.append((data, flow_registry.parent.parent))
+    return documents
+
+
+def project_classifier_paths(
+    workplace_manifest: Path | None,
+    project_root: Path,
+    explicit_paths: list[Path] | None = None,
+) -> list[Path]:
+    candidates = [path.expanduser().resolve() for path in explicit_paths or []]
+    for registry, base in project_classifier_registry_documents(workplace_manifest, project_root):
+        entries = registry.get("project_classifiers")
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict) or str(entry.get("status", "active")) not in {"active", "enabled", "configured"}:
+                continue
+            raw_path = entry.get("path")
+            if raw_path:
+                candidates.append(resolve_registry_relative_path(base, str(raw_path), workplace_manifest))
+    unique: list[Path] = []
+    seen: set[Path] = set()
+    for path in candidates:
+        resolved = path.resolve()
+        if resolved not in seen and resolved.is_file():
+            seen.add(resolved)
+            unique.append(resolved)
+    return unique
+
+
+def project_classifier_condition_matches(condition: dict[str, Any], available_paths: set[str]) -> bool:
+    exists = condition.get("exists")
+    if not isinstance(exists, str) or not exists.strip():
+        return False
+    pattern = exists.strip().replace("\\", "/")
+    return any(path_matches_pattern(path, pattern) for path in available_paths)
+
+
+def project_classifier_rule_matches(rule: dict[str, Any], available_paths: set[str]) -> bool:
+    when = rule.get("when")
+    if not isinstance(when, dict):
+        return False
+    all_conditions = when.get("all")
+    any_conditions = when.get("any")
+    if isinstance(all_conditions, list):
+        return bool(all_conditions) and all(
+            isinstance(item, dict) and project_classifier_condition_matches(item, available_paths)
+            for item in all_conditions
+        )
+    if isinstance(any_conditions, list):
+        return any(
+            isinstance(item, dict) and project_classifier_condition_matches(item, available_paths)
+            for item in any_conditions
+        )
+    return False
+
+
+def classify_project(
+    project_root: Path,
+    workplace_manifest: Path | None = None,
+    explicit_classifier_paths: list[Path] | None = None,
+) -> dict[str, Any]:
     files = list_project_files(project_root)
-    rel_files = {rel(path, project_root) for path in files}
+    available_paths = {rel(path, project_root) for path in files}
+    for path in files:
+        parent = path.relative_to(project_root).parent
+        while parent != Path("."):
+            available_paths.add(parent.as_posix())
+            parent = parent.parent
+    available_paths.update(
+        path.name
+        for path in project_root.iterdir()
+        if path.is_dir() and path.name not in {".git", ".idea", ".serena"}
+    )
+    project_types: set[str] = set()
+    platforms: set[str] = set()
+    tags: set[str] = set()
+    matched_rules: list[dict[str, Any]] = []
+    confidence_rank = {"low": 1, "medium": 2, "high": 3}
+    confidence = "low"
+    loaded: list[str] = []
+    for path in project_classifier_paths(workplace_manifest, project_root, explicit_classifier_paths):
+        classifier = load_yaml_document(path)
+        if (
+            not isinstance(classifier, dict)
+            or yaml_error(classifier)
+            or classifier.get("kind") != "processforge.project_classifier"
+            or str(classifier.get("status", "active")) != "active"
+        ):
+            continue
+        classifier_id = str(classifier.get("id") or path.stem)
+        loaded.append(classifier_id)
+        rules = classifier.get("rules")
+        if not isinstance(rules, list):
+            continue
+        for rule in rules:
+            if not isinstance(rule, dict) or not project_classifier_rule_matches(rule, available_paths):
+                continue
+            classify_as = rule.get("classify_as")
+            if not isinstance(classify_as, dict):
+                continue
+            project_types.update(str(item) for item in classify_as.get("project_types", []) if str(item))
+            platforms.update(str(item) for item in classify_as.get("platforms", []) if str(item))
+            tags.update(str(item) for item in classify_as.get("tags", []) if str(item))
+            rule_confidence = str(rule.get("confidence", "medium"))
+            if confidence_rank.get(rule_confidence, 0) > confidence_rank.get(confidence, 0):
+                confidence = rule_confidence
+            matched_rules.append(
+                {
+                    "classifier": classifier_id,
+                    "rule": str(rule.get("id") or "rule"),
+                    "confidence": rule_confidence,
+                    "source": rel(path, project_root) if path.is_relative_to(project_root) else path.name,
+                }
+            )
+    return {
+        "status": "classified" if matched_rules else "unclassified",
+        "project_types": sorted(project_types),
+        "platforms": sorted(platforms),
+        "tags": sorted(tags),
+        "confidence": confidence,
+        "loaded_classifiers": sorted(set(loaded)),
+        "matched_rules": matched_rules,
+    }
+
+
+def detect_project(
+    project_root: Path,
+    workplace_manifest: Path | None = None,
+    explicit_classifier_paths: list[Path] | None = None,
+) -> dict[str, Any]:
+    files = list_project_files(project_root)
     top_dirs = sorted(
         {
             item.parts[0]
@@ -2571,49 +2682,23 @@ def detect_project(project_root: Path) -> dict[str, Any]:
             if item.parts
         }.union({path.name for path in project_root.iterdir() if path.is_dir() and path.name not in {".git", ".idea", ".serena"}})
     )
-    languages: set[str] = set()
-    platforms: set[str] = set()
-    frameworks: set[str] = set()
-    project_kind: set[str] = set()
-    evidence: list[str] = []
-
-    if "composer.json" in rel_files or any(path.suffix == ".php" for path in files):
-        languages.add("php")
-        project_kind.add("php_project")
-        evidence.append("composer.json or PHP files")
-    if "package.json" in rel_files:
-        languages.add("javascript")
-        project_kind.add("node_project")
-        evidence.append("package.json")
-    if "pyproject.toml" in rel_files or any(path.suffix == ".py" for path in files):
-        languages.add("python")
-        project_kind.add("python_project")
-        evidence.append("pyproject.toml or Python files")
-    if "phpunit.xml" in rel_files or "phpunit.xml.dist" in rel_files:
-        frameworks.add("phpunit")
-        evidence.append("phpunit.xml")
-    if ".github/workflows" in top_dirs or any(path.startswith(".github/workflows/") for path in rel_files):
-        frameworks.add("github-actions")
-        evidence.append(".github/workflows")
-    if "docs" in top_dirs:
-        project_kind.add("documentation_project")
-        evidence.append("docs directory")
-    if "content" in top_dirs:
-        project_kind.add("content_project")
-        evidence.append("content directory")
-    if "media" in top_dirs:
-        project_kind.add("media_project")
-        evidence.append("media directory")
-    if not project_kind:
-        project_kind.add("general_project")
-    confidence = "medium" if evidence else "low"
+    classification = classify_project(project_root, workplace_manifest, explicit_classifier_paths)
+    project_types = classification["project_types"] or ["unknown"]
+    evidence = [
+        f"{item['classifier']}/{item['rule']}"
+        for item in classification["matched_rules"]
+    ]
     return {
-        "languages": sorted(languages),
-        "platforms": sorted(platforms),
-        "frameworks": sorted(frameworks),
-        "project_kind": sorted(project_kind),
-        "confidence": confidence,
-        "evidence": evidence or ["No strong project markers found."],
+        "status": classification["status"],
+        "languages": [],
+        "platforms": classification["platforms"],
+        "frameworks": [],
+        "project_kind": project_types,
+        "tags": classification["tags"],
+        "confidence": classification["confidence"],
+        "loaded_classifiers": classification["loaded_classifiers"],
+        "matched_rules": classification["matched_rules"],
+        "evidence": evidence or ["No loaded project classifier matched."],
         "files": [rel(path, project_root) for path in files[:300]],
         "top_dirs": top_dirs,
     }
@@ -2652,7 +2737,6 @@ def selected_project_platforms(detected: dict[str, Any], answers: dict[str, Any]
         if value:
             selected.update(platform_contract_id(item).removeprefix("platform.") for item in answer_strings(value))
     selected.update(workplace_platform_ids_for_project_type(workplace_manifest, project_type, project_root))
-    selected.update(platform_ids_from_detection_rules(workplace_manifest, project_root))
     return sorted(selected)
 
 
@@ -2765,7 +2849,7 @@ def project_defaults(project_root: Path, answers: dict[str, Any], detected: dict
     project_answers = answers.get("project", {}) if isinstance(answers.get("project"), dict) else {}
     project_id = safe_id(str(project_answers.get("id") or project_root.name), "project")
     project_name = str(project_answers.get("name") or project_root.name or "ProcessForge Project")
-    detected_kind = detected["project_kind"][0] if detected["project_kind"] else "general_project"
+    detected_kind = detected["project_kind"][0] if detected["project_kind"] else "unknown"
     project_type = str(project_answers.get("type") or project_answers.get("type_hint") or detected_kind)
     if project_type == "auto":
         project_type = detected_kind
@@ -2953,7 +3037,7 @@ def load_workplace_registry(workplace_manifest: Path | None, registry_key: str, 
 
 
 def platform_contract_id(platform_id: str) -> str:
-    return platform_id if platform_id.startswith("platform.") else f"platform.{platform_id}"
+    return platform_id if platform_id.startswith("platform.") or platform_id.startswith("fixture.platform.") else f"platform.{platform_id}"
 
 
 def platform_contract_registry_entry(workplace_manifest: Path | None, contract_id: str) -> dict[str, Any] | None:
@@ -3357,6 +3441,564 @@ def platform_resource_findings(workplace_manifest: Path | None, resolved: dict[s
     return required_missing, recommended_missing
 
 
+RESOURCE_GROUP_KEYS = ("knowledge_packages", "tools", "mcp", "templates")
+RESOURCE_BUCKET_KEYS = ("requires", "recommends", "optional", "excludes")
+PROJECT_OVERRIDE_KINDS = {
+    "template": "templates",
+    "templates": "templates",
+    "knowledge_package": "knowledge_packages",
+    "knowledge_packages": "knowledge_packages",
+    "tool": "tools",
+    "tools": "tools",
+    "mcp": "mcp",
+    "specialization": "specializations",
+    "specializations": "specializations",
+}
+PROJECT_OVERRIDE_MODES = {"overlay", "extension", "replace", "parameterize", "disable", "fork"}
+
+
+def specialization_resource_id(raw: str) -> str:
+    return raw if raw.startswith("specialization.") or "." in raw else f"specialization.{raw}"
+
+
+def default_resource_buckets() -> dict[str, dict[str, list[str]]]:
+    return {bucket: {key: [] for key in RESOURCE_GROUP_KEYS} for bucket in RESOURCE_BUCKET_KEYS}
+
+
+def resource_bucket(data: dict[str, Any] | None, bucket: str, key: str) -> list[str]:
+    if not isinstance(data, dict):
+        return []
+    bucket_data = data.get(bucket) if isinstance(data.get(bucket), dict) else {}
+    return list_value(bucket_data.get(key)) if isinstance(bucket_data, dict) else []
+
+
+def merge_resource_buckets(target: dict[str, dict[str, list[str]]], resources: dict[str, Any] | None) -> None:
+    for bucket in RESOURCE_BUCKET_KEYS:
+        for key in RESOURCE_GROUP_KEYS:
+            values = resource_bucket(resources, bucket, key)
+            if values:
+                target[bucket][key].extend(values)
+
+
+def dedupe_sorted(values: list[str]) -> list[str]:
+    return sorted({str(item) for item in values if str(item)})
+
+
+def specialization_registry_path(workplace_root: Path) -> Path:
+    return update_registry_file(workplace_root, "specializations", "specializations.yaml")
+
+
+def specialization_path_from_registry_entry(workplace_root: Path, entry: dict[str, Any], workplace_manifest: Path | None = None) -> Path | None:
+    raw_path = entry.get("path")
+    if not raw_path:
+        return None
+    return resolve_registry_relative_path(workplace_root, str(raw_path), workplace_manifest or (workplace_root / "workplace.yaml"))
+
+
+def specialization_path_candidates(workplace_root: Path | None, specialization_id: str, project_root: Path | None = None) -> list[Path]:
+    normalized_id = specialization_resource_id(specialization_id)
+    candidates: list[Path] = []
+    if workplace_root:
+        registry = load_yaml_document(specialization_registry_path(workplace_root))
+        entries = registry.get("specializations") if isinstance(registry, dict) else []
+        if isinstance(entries, list):
+            for entry in entries:
+                if not isinstance(entry, dict) or str(entry.get("status", "available")) in {"missing", "disabled"}:
+                    continue
+                entry_id = specialization_resource_id(str(entry.get("id") or ""))
+                if entry_id == normalized_id:
+                    path = specialization_path_from_registry_entry(workplace_root, entry, workplace_root / "workplace.yaml")
+                    if path:
+                        candidates.append(path)
+        for root in [workplace_root / "specializations", workplace_root / "specializations" / "user", workplace_root / "specializations" / "custom"]:
+            candidates.extend([root / f"{normalized_id}.yaml", root / f"{normalized_id.removeprefix('specialization.')}.yaml"])
+    if project_root:
+        flow_root = locate_flow_root(project_root)
+        for root in [flow_root / "specializations", flow_root / "specializations" / "user", flow_root / "specializations" / "custom"]:
+            candidates.extend([root / f"{normalized_id}.yaml", root / f"{normalized_id.removeprefix('specialization.')}.yaml"])
+    unique: list[Path] = []
+    seen: set[Path] = set()
+    for path in candidates:
+        resolved = path.resolve()
+        if resolved not in seen:
+            seen.add(resolved)
+            unique.append(resolved)
+    return unique
+
+
+def specialization_manifest_index(workplace_manifest: Path | None, project_root: Path | None = None) -> dict[str, dict[str, Any]]:
+    workplace_root = workplace_manifest.parent if workplace_manifest and workplace_manifest.is_file() else None
+    index: dict[str, dict[str, Any]] = {}
+    paths: list[Path] = []
+    if workplace_root:
+        registry = load_yaml_document(specialization_registry_path(workplace_root))
+        entries = registry.get("specializations") if isinstance(registry, dict) else []
+        if isinstance(entries, list):
+            for entry in entries:
+                if isinstance(entry, dict):
+                    path = specialization_path_from_registry_entry(workplace_root, entry, workplace_manifest)
+                    if path:
+                        paths.append(path)
+        for root in [workplace_root / "specializations", workplace_root / "specializations" / "user", workplace_root / "specializations" / "custom"]:
+            if root.is_dir():
+                paths.extend(sorted(root.glob("*.yaml")))
+                paths.extend(sorted(root.glob("*.yml")))
+    if project_root:
+        flow_root = locate_flow_root(project_root)
+        for root in [flow_root / "specializations", flow_root / "specializations" / "user", flow_root / "specializations" / "custom"]:
+            if root.is_dir():
+                paths.extend(sorted(root.glob("*.yaml")))
+                paths.extend(sorted(root.glob("*.yml")))
+    for path in paths:
+        data = load_yaml_document(path)
+        if not isinstance(data, dict) or yaml_error(data) or not data.get("id"):
+            continue
+        normalized_id = specialization_resource_id(str(data["id"]))
+        source = "project" if project_root and path_is_relative_to(path, locate_flow_root(project_root)) else "workplace"
+        record = dict(data)
+        record["id"] = normalized_id
+        record["__manifest_path"] = path
+        record["__source"] = source
+        index[normalized_id] = record
+    return index
+
+
+def load_specialization(workplace_manifest: Path | None, specialization_id: str, project_root: Path | None = None) -> dict[str, Any] | None:
+    return specialization_manifest_index(workplace_manifest, project_root).get(specialization_resource_id(specialization_id))
+
+
+def platform_binding_matches(binding: dict[str, Any], selected_platforms: list[str], platform_stack: list[dict[str, Any]], process_id: str | None = None) -> bool:
+    selected = {platform_contract_id(item) for item in selected_platforms}
+    stack_ids = {str(item.get("id") or platform_contract_id(str(item.get("platform") or ""))) for item in platform_stack if isinstance(item, dict)}
+    binding_platforms = {platform_contract_id(item) for item in list_value(binding.get("platforms"))}
+    stack_includes = {platform_contract_id(item) for item in list_value(binding.get("platform_stack_includes"))}
+    process_filter = set(list_value(binding.get("applies_to_processes")))
+    if process_filter and process_id and process_id not in process_filter:
+        return False
+    return bool(selected.intersection(binding_platforms) or stack_ids.intersection(stack_includes))
+
+
+def project_overrides_path(project_root: Path) -> Path:
+    return locate_flow_root(project_root) / "project-overrides.yaml"
+
+
+def load_project_overrides(project_root: Path) -> dict[str, Any]:
+    path = project_overrides_path(project_root)
+    data = load_yaml_document(path)
+    if not isinstance(data, dict) or yaml_error(data):
+        return {"schema_version": 1, "kind": "processforge.project_overrides", "overrides": {}}
+    overrides = data.get("overrides")
+    if not isinstance(overrides, dict):
+        data["overrides"] = {}
+    return data
+
+
+def project_override_entries(project_root: Path) -> list[dict[str, Any]]:
+    data = load_project_overrides(project_root)
+    overrides = data.get("overrides") if isinstance(data.get("overrides"), dict) else {}
+    entries: list[dict[str, Any]] = []
+    for raw_kind, items in overrides.items():
+        kind = PROJECT_OVERRIDE_KINDS.get(str(raw_kind), str(raw_kind))
+        for item in items if isinstance(items, list) else []:
+            if isinstance(item, dict) and item.get("target"):
+                record = dict(item)
+                record["kind"] = kind
+                record["source"] = rel(project_overrides_path(project_root), project_root)
+                entries.append(record)
+    return entries
+
+
+def project_specialization_override_entries(project_root: Path, specialization_id: str) -> list[dict[str, Any]]:
+    target_id = specialization_resource_id(specialization_id)
+    return [
+        entry
+        for entry in project_override_entries(project_root)
+        if str(entry.get("kind") or "") == "specializations"
+        and specialization_resource_id(str(entry.get("target") or "")) == target_id
+    ]
+
+
+def project_override_path(project_root: Path, entry: dict[str, Any]) -> Path | None:
+    raw = entry.get("path") or entry.get("project_package")
+    if not raw:
+        return None
+    path = Path(str(raw))
+    if path.is_absolute():
+        return path
+    return project_root / path
+
+
+def load_project_override_document(project_root: Path, entry: dict[str, Any]) -> dict[str, Any]:
+    path = project_override_path(project_root, entry)
+    if not path or not path.is_file():
+        return {}
+    data = load_yaml_document(path)
+    return data if isinstance(data, dict) and not yaml_error(data) else {}
+
+
+def apply_specialization_overlay(
+    spec: dict[str, Any],
+    overlay: dict[str, Any],
+    mode: str,
+) -> tuple[dict[str, Any], list[str]]:
+    effective = dict(spec)
+    notes: list[str] = []
+    if mode == "replace":
+        effective = dict(overlay)
+        notes.append("replace document applied")
+    else:
+        resources = default_resource_buckets()
+        merge_resource_buckets(resources, spec.get("resources") if isinstance(spec.get("resources"), dict) else {})
+        merge_resource_buckets(resources, overlay.get("resources") if isinstance(overlay.get("resources"), dict) else {})
+        effective["resources"] = resources
+        capabilities = set(str(item) for item in as_list(spec.get("provides_capabilities")) if str(item))
+        capabilities.update(str(item) for item in as_list(overlay.get("provides_capabilities")) if str(item))
+        effective["provides_capabilities"] = dedupe_sorted(list(capabilities))
+        overlay_bindings = overlay.get("platform_bindings") if isinstance(overlay.get("platform_bindings"), list) else []
+        if overlay_bindings:
+            effective["platform_bindings"] = list(as_list(spec.get("platform_bindings"))) + [item for item in overlay_bindings if isinstance(item, dict)]
+        notes.append(f"{mode} overlay applied")
+    for key in ["__source", "__manifest_path"]:
+        if key in spec and key not in effective:
+            effective[key] = spec[key]
+    return effective, notes
+
+
+def sha256_optional_file(path: Path | None) -> str:
+    return "sha256:" + sha256_file(path) if path and path.is_file() else "missing"
+
+
+def effective_fingerprint_for(base_id: str, base_path: Path | None, override_path: Path | None, mode: str) -> str:
+    stable = {
+        "id": base_id,
+        "base_sha256": sha256_optional_file(base_path),
+        "override_sha256": sha256_optional_file(override_path),
+        "mode": mode,
+    }
+    return "sha256:" + hashlib.sha256(json.dumps(stable, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def resolved_override_record(project_root: Path, entry: dict[str, Any], base_path: Path | None = None) -> dict[str, Any]:
+    override_path = project_override_path(project_root, entry)
+    mode = str(entry.get("mode") or "extension")
+    target = str(entry.get("target") or "")
+    record = {
+        "kind": str(entry.get("kind") or ""),
+        "target": target,
+        "mode": mode,
+        "reason": str(entry.get("reason") or ""),
+        "path": rel(override_path, project_root) if override_path else "",
+        "sha256": sha256_optional_file(override_path),
+        "base_sha256": sha256_optional_file(base_path),
+        "effective_fingerprint": effective_fingerprint_for(target, base_path, override_path, mode),
+    }
+    if isinstance(entry.get("params"), dict):
+        record["params"] = entry["params"]
+    if entry.get("project_package"):
+        record["project_package"] = str(entry["project_package"])
+    return record
+
+
+def apply_resource_excludes(required: set[str], candidates: set[str], excludes: set[str], conflicts: list[dict[str, Any]], source: str, kind: str) -> set[str]:
+    for item in sorted(required.intersection(excludes)):
+        conflicts.append({"id": item, "kind": kind, "source": source, "reason": "cannot exclude required resource"})
+    return candidates - (excludes - required)
+
+
+def resource_profile_capability_provider(specialization_id: str, resources: dict[str, Any]) -> dict[str, Any]:
+    provider: dict[str, Any] = {"specialization": specialization_id}
+    for key in RESOURCE_GROUP_KEYS:
+        values: set[str] = set()
+        for bucket in ["requires", "recommends", "optional"]:
+            values.update(resource_bucket(resources, bucket, key))
+        provider[key] = dedupe_sorted(list(values))
+    return provider
+
+
+def active_registry_capability_providers(
+    workplace_manifest: Path | None,
+    activated: dict[str, set[str]],
+) -> tuple[set[str], dict[str, list[dict[str, Any]]]]:
+    capabilities: set[str] = set()
+    providers: dict[str, list[dict[str, Any]]] = {}
+    registry_specs = [
+        ("tools", "tools", "tool", "tools"),
+        ("mcp", "mcp_servers", "mcp", "mcp"),
+        ("templates", "templates", "template", "templates"),
+        ("templates", "template_roots", "template", "templates"),
+    ]
+    for registry_key, collection_key, provider_key, resource_key in registry_specs:
+        registry = load_workplace_registry(workplace_manifest, registry_key, f"{registry_key}.yaml")
+        entries = registry.get(collection_key) if isinstance(registry, dict) else None
+        if not isinstance(entries, list):
+            continue
+        active_ids = activated.get(resource_key, set())
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            resource_id = str(entry.get("id") or "")
+            if not resource_id or resource_id not in active_ids:
+                continue
+            if str(entry.get("status") or "available") in {"disabled", "missing"}:
+                continue
+            provided = values_from_registry_entry(entry)
+            capabilities.update(provided)
+            for capability in provided:
+                providers.setdefault(capability, []).append({"provider": "registry", provider_key: resource_id})
+    return capabilities, providers
+
+
+def build_execution_route(project_root: Path, process_id: str | None) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    route: dict[str, Any] = {
+        "process": process_id or "",
+        "stages": [],
+        "required_capabilities": [],
+        "capability_requirements": [],
+        "required_artifacts": [],
+        "required_evidence": [],
+        "acceptance_criteria": [],
+    }
+    if not process_id:
+        return route, []
+    try:
+        process_ref = resolve_process_definition(project_root, process_id)
+    except SystemExit:
+        return route, []
+    process = process_ref.process if isinstance(process_ref.process, dict) else {}
+    route["process"] = str(process.get("id") or process_ref.process_id or process_id)
+    top_required_capabilities = [str(item) for item in as_list(process.get("required_capabilities")) if str(item)]
+    capability_requirements: list[dict[str, Any]] = [
+        {"capability": item, "required_by": f"process:{route['process']}"}
+        for item in top_required_capabilities
+    ]
+    required_artifacts: set[str] = set(str(item) for item in as_list(process.get("required_artifacts")) if str(item))
+    required_evidence: set[str] = set(str(item) for item in as_list(process.get("required_evidence")) if str(item))
+    acceptance = process.get("acceptance") if isinstance(process.get("acceptance"), dict) else {}
+    if acceptance:
+        required_evidence.update(str(item) for item in as_list(acceptance.get("requires")) if str(item))
+        route["acceptance_criteria"] = [str(item) for item in as_list(acceptance.get("criteria")) if str(item)]
+    stages: list[dict[str, Any]] = []
+    for stage in process.get("stages", []) if isinstance(process.get("stages"), list) else []:
+        if not isinstance(stage, dict):
+            continue
+        stage_id = str(stage.get("id") or "stage")
+        stage_capabilities = [str(item) for item in as_list(stage.get("required_capabilities")) if str(item)]
+        stage_artifacts = [str(item) for item in as_list(stage.get("required_artifacts")) if str(item)]
+        stage_evidence = [str(item) for item in as_list(stage.get("required_evidence")) if str(item)]
+        required_artifacts.update(stage_artifacts)
+        required_evidence.update(stage_evidence)
+        for capability in stage_capabilities:
+            capability_requirements.append({"capability": capability, "required_by": f"{route['process']}:{stage_id}"})
+        stages.append(
+            {
+                "id": stage_id,
+                "required_capabilities": stage_capabilities,
+                "required_artifacts": stage_artifacts,
+                "required_evidence": stage_evidence,
+                "exit_gates": [str(item) for item in as_list(stage.get("exit_gates")) if str(item)],
+            }
+        )
+    route["stages"] = stages
+    route["capability_requirements"] = capability_requirements
+    route["required_capabilities"] = dedupe_sorted([item["capability"] for item in capability_requirements])
+    route["required_artifacts"] = dedupe_sorted(list(required_artifacts))
+    route["required_evidence"] = dedupe_sorted(list(required_evidence))
+    return route, []
+
+
+def build_capability_resolution(
+    execution_route: dict[str, Any],
+    provided_capabilities: set[str],
+    capability_providers: dict[str, list[dict[str, Any]]],
+    activated: dict[str, set[str]],
+) -> dict[str, list[dict[str, Any]]]:
+    satisfied: list[dict[str, Any]] = []
+    unsatisfied: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for requirement in execution_route.get("capability_requirements", []) if isinstance(execution_route.get("capability_requirements"), list) else []:
+        if not isinstance(requirement, dict):
+            continue
+        capability = str(requirement.get("capability") or "")
+        required_by = str(requirement.get("required_by") or execution_route.get("process") or "")
+        if not capability or (capability, required_by) in seen:
+            continue
+        seen.add((capability, required_by))
+        if capability in provided_capabilities:
+            provider = dict((capability_providers.get(capability) or [{"provider": "active_resource_profile"}])[0])
+            for key in RESOURCE_GROUP_KEYS:
+                provider[key] = [item for item in as_list(provider.get(key)) if item in activated.get(key, set())]
+            satisfied.append({"capability": capability, "required_by": required_by, "satisfied_by": provider})
+        else:
+            unsatisfied.append(
+                {
+                    "capability": capability,
+                    "required_by": required_by,
+                    "reason": "selected resource profile does not provide required capability",
+                    "suggested_fix": "select or update a specialization/platform binding that provides this capability",
+                }
+            )
+    return {"satisfied": satisfied, "unsatisfied": unsatisfied}
+
+
+def resolve_specialization_context(
+    project_root: Path,
+    workplace_manifest: Path | None,
+    *,
+    platform_ids: list[str],
+    process_id: str | None = None,
+    specialization_ids: list[str] | None = None,
+    platform_resolution: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    selected_ids = [specialization_resource_id(item) for item in (specialization_ids or [])]
+    platform_resolution = platform_resolution or resolve_platform_contracts(workplace_manifest, platform_ids, project_root=project_root)
+    required = {
+        "knowledge_packages": set(platform_resolution.get("required_knowledge_packages", [])),
+        "tools": set(platform_resolution.get("required_tools", [])),
+        "mcp": set(platform_resolution.get("required_mcp", [])),
+        "templates": set(platform_resolution.get("required_templates", [])),
+    }
+    recommended = {
+        "knowledge_packages": set(platform_resolution.get("recommended_knowledge_packages", [])),
+        "tools": set(platform_resolution.get("recommended_tools", [])),
+        "mcp": set(platform_resolution.get("recommended_mcp", [])),
+        "templates": set(platform_resolution.get("recommended_templates", [])),
+    }
+    optional = {key: set() for key in RESOURCE_GROUP_KEYS}
+    excluded = {key: set() for key in RESOURCE_GROUP_KEYS}
+    reasons: list[dict[str, Any]] = []
+    conflicts: list[dict[str, Any]] = []
+    selected_specializations: list[dict[str, Any]] = []
+    provided_capabilities: set[str] = set()
+    capability_providers: dict[str, list[dict[str, Any]]] = {}
+    index = specialization_manifest_index(workplace_manifest, project_root)
+    for specialization_id in selected_ids:
+        spec = index.get(specialization_id)
+        if not spec:
+            conflicts.append({"id": specialization_id, "kind": "specialization", "reason": "specialization not found"})
+            continue
+        specialization_overrides = project_specialization_override_entries(project_root, specialization_id)
+        for override_entry in specialization_overrides:
+            mode = str(override_entry.get("mode") or "extension")
+            if mode not in PROJECT_OVERRIDE_MODES:
+                conflicts.append({"id": specialization_id, "kind": "specialization", "reason": f"unsupported project override mode: {mode}"})
+                continue
+            overlay = load_project_override_document(project_root, override_entry)
+            if overlay:
+                spec, overlay_notes = apply_specialization_overlay(spec, overlay, mode)
+                for note in overlay_notes:
+                    reasons.append({"source": "project_override", "target": specialization_id, "reason": note})
+        resources = default_resource_buckets()
+        merge_resource_buckets(resources, spec.get("resources") if isinstance(spec.get("resources"), dict) else {})
+        spec_capabilities = set(str(item) for item in as_list(spec.get("provides_capabilities")) if str(item))
+        matched_bindings: list[dict[str, Any]] = []
+        for binding in spec.get("platform_bindings", []) if isinstance(spec.get("platform_bindings"), list) else []:
+            if isinstance(binding, dict) and platform_binding_matches(binding, platform_ids, platform_resolution.get("platform_stack", []), process_id):
+                matched_bindings.append(binding)
+                merge_resource_buckets(resources, binding.get("resources") if isinstance(binding.get("resources"), dict) else {})
+                spec_capabilities.update(str(item) for item in as_list(binding.get("provides_capabilities")) if str(item))
+        for key in RESOURCE_GROUP_KEYS:
+            required[key].update(resources["requires"][key])
+            recommended[key].update(resources["recommends"][key])
+            optional[key].update(resources["optional"][key])
+            excluded[key].update(resources["excludes"][key])
+        provided_capabilities.update(spec_capabilities)
+        provider = resource_profile_capability_provider(specialization_id, resources)
+        for capability in spec_capabilities:
+            capability_providers.setdefault(capability, []).append(dict(provider))
+        selected_specializations.append(
+            {
+                "id": specialization_id,
+                "source": str(spec.get("__source") or "workplace"),
+                "path": rel(spec.get("__manifest_path"), project_root) if isinstance(spec.get("__manifest_path"), Path) and path_is_relative_to(spec["__manifest_path"], project_root) else str(spec.get("__manifest_path") or ""),
+                "matched_bindings": [
+                    {
+                        "platforms": list_value(binding.get("platforms")),
+                        "platform_stack_includes": list_value(binding.get("platform_stack_includes")),
+                    }
+                    for binding in matched_bindings
+                ],
+                "provides_capabilities": dedupe_sorted(list(spec_capabilities)),
+                "sha256": sha256_optional_file(spec.get("__manifest_path") if isinstance(spec.get("__manifest_path"), Path) else None),
+            }
+        )
+        reasons.append({"source": specialization_id, "reason": "selected specialization resources merged"})
+    applied_overrides: list[dict[str, Any]] = []
+    for entry in project_override_entries(project_root):
+        kind = str(entry.get("kind") or "")
+        target = str(entry.get("target") or "")
+        mode = str(entry.get("mode") or "extension")
+        if mode not in PROJECT_OVERRIDE_MODES:
+            conflicts.append({"id": target, "kind": kind, "reason": f"unsupported project override mode: {mode}"})
+            continue
+        base_path = None
+        if kind == "specializations":
+            spec = index.get(specialization_resource_id(target))
+            base_path = spec.get("__manifest_path") if isinstance(spec, dict) and isinstance(spec.get("__manifest_path"), Path) else None
+        applied = resolved_override_record(project_root, entry, base_path)
+        applied_overrides.append(applied)
+        if kind in RESOURCE_GROUP_KEYS:
+            if mode == "disable":
+                excluded[kind].add(target)
+                reasons.append({"source": "project_override", "target": target, "reason": f"{kind} disabled"})
+            elif mode in {"extension", "parameterize", "overlay", "replace", "fork"}:
+                bucket = "required" if entry.get("required") is True else "recommended"
+                (required if bucket == "required" else recommended)[kind].add(str(entry.get("project_package") or target))
+                reasons.append({"source": "project_override", "target": target, "reason": f"{kind} {mode} applied"})
+        elif kind == "specializations":
+            reasons.append({"source": "project_override", "target": target, "reason": f"specialization {mode} recorded"})
+    activated = {}
+    for key in RESOURCE_GROUP_KEYS:
+        recommended[key] -= required[key]
+        activated_set = required[key].union(recommended[key]).union(optional[key])
+        activated[key] = apply_resource_excludes(required[key], activated_set, excluded[key], conflicts, "project/specialization", key)
+    registry_capabilities, registry_providers = active_registry_capability_providers(workplace_manifest, activated)
+    provided_capabilities.update(registry_capabilities)
+    for capability, providers in registry_providers.items():
+        capability_providers.setdefault(capability, []).extend(providers)
+    effective_fingerprints = {f"{item['kind']}:{item['target']}": item["effective_fingerprint"] for item in applied_overrides}
+    execution_route, route_conflicts = build_execution_route(project_root, process_id)
+    conflicts.extend(route_conflicts)
+    capability_resolution = build_capability_resolution(execution_route, provided_capabilities, capability_providers, activated)
+    for item in capability_resolution["unsatisfied"]:
+        conflicts.append({"id": item["capability"], "kind": "capability", "source": item["required_by"], "reason": item["reason"]})
+    active_resource_profile = {
+        "selected_platform": [platform_contract_id(item) for item in platform_ids],
+        "platform_stack": platform_resolution.get("platform_stack", []),
+        "selected_specializations": selected_specializations,
+        "available_knowledge_packages": dedupe_sorted(list(required["knowledge_packages"].union(recommended["knowledge_packages"]).union(optional["knowledge_packages"]))),
+        "activated_knowledge_packages": dedupe_sorted(list(activated["knowledge_packages"])),
+        "excluded_knowledge_packages": dedupe_sorted(list(excluded["knowledge_packages"])),
+        "available_tools": dedupe_sorted(list(required["tools"].union(recommended["tools"]).union(optional["tools"]))),
+        "activated_tools": dedupe_sorted(list(activated["tools"])),
+        "excluded_tools": dedupe_sorted(list(excluded["tools"])),
+        "available_mcp": dedupe_sorted(list(required["mcp"].union(recommended["mcp"]).union(optional["mcp"]))),
+        "activated_mcp": dedupe_sorted(list(activated["mcp"])),
+        "excluded_mcp": dedupe_sorted(list(excluded["mcp"])),
+        "activated_templates": dedupe_sorted(list(activated["templates"])),
+        "excluded_templates": dedupe_sorted(list(excluded["templates"])),
+        "provided_capabilities": dedupe_sorted(list(provided_capabilities)),
+        "applied_project_overrides": applied_overrides,
+        "effective_resources": [
+            {"kind": key, "id": item, "status": "activated"}
+            for key in RESOURCE_GROUP_KEYS
+            for item in dedupe_sorted(list(activated[key]))
+        ],
+        "effective_fingerprints": effective_fingerprints,
+        "resolution_reasons": reasons,
+        "conflicts": conflicts,
+    }
+    resolution_status = "needs_resources" if capability_resolution["unsatisfied"] else ("conflict" if conflicts else "resolved")
+    return {
+        **active_resource_profile,
+        "status": resolution_status,
+        "process": process_id or "",
+        "active_resource_profile": active_resource_profile,
+        "execution_route": execution_route,
+        "capability_resolution": capability_resolution,
+        "provided_capabilities": active_resource_profile["provided_capabilities"],
+    }
+
+
 def optional_platform_resource_warnings(workplace_manifest: Path | None, resolved: dict[str, Any], package_index_ids: set[str] | None = None) -> list[dict[str, Any]]:
     _required_missing, recommended_missing = platform_resource_findings(workplace_manifest, resolved, package_index_ids)
     return recommended_missing
@@ -3374,9 +4016,7 @@ def match_global_resources(workplace_manifest: Path, detected: dict[str, Any], r
     missing_platforms = [item for item in detected["platforms"] if item and item not in matched_platforms]
     matched_tools = [cap for cap in required + optional if cap and cap in tools_text]
     matched_mcp = [cap for cap in required + optional if cap and cap in mcp_text]
-    missing_required = [
-        cap for cap in required if cap not in BUILTIN_CAPABILITIES and cap not in tools_text and cap not in mcp_text
-    ]
+    missing_required = [cap for cap in required if cap not in tools_text and cap not in mcp_text]
     optional_missing = [cap for cap in optional if cap not in tools_text and cap not in mcp_text]
     matched_templates = ["template roots configured"] if "template_roots:" in templates_text and "[]" not in templates_text else []
     matched_packages = ["package roots configured"] if "package_roots:" in package_text and "[]" not in package_text else []
@@ -3395,7 +4035,7 @@ def match_global_resources(workplace_manifest: Path, detected: dict[str, Any], r
 
 def build_project_files(project_root: Path, workplace_manifest: Path, answers: dict[str, Any]) -> dict[Path, str]:
     flow_root = project_root / PROJECT_FLOW_ROOT
-    detected = detect_project(project_root)
+    detected = detect_project(project_root, workplace_manifest)
     defaults = project_defaults(project_root, answers, detected)
     detected["platforms"] = selected_project_platforms(detected, answers, defaults["type"], workplace_manifest, project_root)
     mode = project_mode(project_root, answers)
@@ -3405,8 +4045,8 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
         project_coordination["director"].update(coordination_answers["director"])
     required = answers.get("required_capabilities") if isinstance(answers.get("required_capabilities"), list) else []
     optional = answers.get("optional_capabilities") if isinstance(answers.get("optional_capabilities"), list) else []
-    required = required or ["repository.read", "markdown.editing"]
-    optional = optional or ["repository.symbol_analysis", "official_documentation"]
+    required = [str(item) for item in required if str(item)]
+    optional = [str(item) for item in optional if str(item)]
     platform_resolution = resolve_platform_contracts(workplace_manifest, detected["platforms"], project_root=project_root)
     required_platform_missing, recommended_platform_missing = platform_resource_findings(workplace_manifest, platform_resolution)
     required = sorted(set(required).union(platform_resolution["required_capabilities"]))
@@ -3469,9 +4109,13 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
         "workplace": {"reference": "local_file", "local_config": f"{PROJECT_FLOW_ROOT}/process-forge.local.yaml"},
         "coordination": project_coordination,
         "detected": {
+            "status": detected["status"],
             "languages": detected["languages"],
             "platforms": detected["platforms"],
             "project_kind": detected["project_kind"],
+            "tags": detected["tags"],
+            "loaded_classifiers": detected["loaded_classifiers"],
+            "matched_rules": detected["matched_rules"],
         },
         "platform_contracts": platform_resolution["contracts"],
         "platform_stack": platform_resolution["platform_stack"],
@@ -3487,6 +4131,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
             "reviews": "reviews",
             "adr": "adr",
             "schemas": "schemas",
+            "registries": "registries",
             "runtime": "runtime",
             "hooks": "hooks.yaml",
         },
@@ -3564,7 +4209,7 @@ This project uses ProcessForge.
 
 ## Status
 
-observed
+{detected["status"]}
 
 ## Languages
 
@@ -3590,6 +4235,10 @@ observed
 
 {markdown_list(detected["evidence"])}
 
+## Loaded Classifiers
+
+{markdown_list(detected["loaded_classifiers"])}
+
 ## Unknowns
 
 - Confirm exact project ownership and release workflow manually.
@@ -3605,25 +4254,9 @@ observed
 
 {markdown_list(detected["top_dirs"])}
 
-## Code
+## Files
 
-{markdown_list([item for item in detected["files"] if item.startswith(("src/", "app/", "administrator/", "plugins/"))])}
-
-## Docs
-
-{markdown_list([item for item in detected["files"] if item.startswith("docs/") or item == "README.md"])}
-
-## Tests
-
-{markdown_list([item for item in detected["files"] if "test" in item.lower()])}
-
-## Assets
-
-{markdown_list([item for item in detected["files"] if item.startswith(("media/", "assets/", "public/"))])}
-
-## Build Or Package Config
-
-{markdown_list([item for item in detected["files"] if item in {"composer.json", "package.json", "pyproject.toml", "phing.xml"} or item.startswith(".github/workflows/")])}
+{markdown_list(detected["files"])}
 
 ## Critical Files
 
@@ -3658,7 +4291,7 @@ observed
 
 ## Found Project-Local Tools
 
-{markdown_list([item for item in detected["files"] if item in {"composer.json", "package.json", "pyproject.toml", "phpunit.xml", "phing.xml"}])}
+None inferred from file names. Tool selection comes from loaded registries, platform contracts, and explicit project configuration.
 
 ## Available Global Tools
 
@@ -4131,6 +4764,9 @@ Review and confirm observed conventions.
         flow_root / "process-forge.yaml": dump_yaml(public_manifest),
         flow_root / "process-forge.local.yaml": dump_yaml(local_manifest),
         flow_root / "hooks.yaml": dump_yaml(hooks),
+        flow_root / "registries" / "project-classifiers.yaml": dump_yaml(
+            {"schema_version": 1, "project_classifiers": []}
+        ),
         flow_root / "assignments" / "first-assignment.yaml": dump_yaml(first_assignment),
         flow_root / "packages" / f"project.{defaults['id']}.yaml": dump_yaml(package),
         flow_root / "artifacts" / "project-profile.md": profile,
@@ -4577,19 +5213,31 @@ def core_hardcode_violations(root: Path) -> list[str]:
     if not patterns:
         return []
     targets = policy.get("targets")
-    target_paths = [str(item) for item in targets] if isinstance(targets, list) else ["tools/processforge.py"]
+    target_patterns = [str(item) for item in targets] if isinstance(targets, list) else ["tools/processforge.py"]
+    allowed_patterns = [str(item) for item in policy.get("allowed_paths", [])] if isinstance(policy.get("allowed_paths"), list) else []
+    target_paths: list[Path] = []
+    for target in target_patterns:
+        matches = [path for path in root.glob(target) if path.is_file()] if any(char in target for char in "*?[]") else [root / target]
+        target_paths.extend(path for path in matches if path.is_file())
     violations: list[str] = []
-    for target in target_paths:
-        path = root / target
-        if not path.is_file():
+    for path in sorted(set(target_paths), key=lambda item: item.as_posix()):
+        target = rel(path, root)
+        if any(fnmatch.fnmatch(target, pattern) for pattern in allowed_patterns):
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
         for entry in patterns:
+            entry_targets = [str(item) for item in entry.get("targets", [])] if isinstance(entry.get("targets"), list) else []
+            if entry_targets and not any(fnmatch.fnmatch(target, pattern) for pattern in entry_targets):
+                continue
+            entry_allowed = [str(item) for item in entry.get("allowed_paths", [])] if isinstance(entry.get("allowed_paths"), list) else []
+            if any(fnmatch.fnmatch(target, pattern) for pattern in entry_allowed):
+                continue
             raw_pattern = entry.get("pattern") or entry.get("id")
             if not raw_pattern:
                 continue
+            flags = re.IGNORECASE if bool(entry.get("case_insensitive", False)) else 0
             try:
-                matched = re.search(str(raw_pattern), text)
+                matched = re.search(str(raw_pattern), text, flags)
             except re.error:
                 matched = str(raw_pattern) in text
             if matched:
@@ -4873,7 +5521,7 @@ def command_examples_check(args: argparse.Namespace) -> int:
                 if forbidden_powershell_reference(text):
                     checks.append(check_with_hint("FAIL", f"{rel_path}: mentions PowerShell/.ps1", "Public examples should not mention removed wrappers.", "use python bin/pf.py or python .pf/runtime/bin/pf.py"))
                 if forbidden_base_technology_platform_reference(text):
-                    checks.append(check_with_hint("FAIL", f"{rel_path}: introduces a base-technology platform", "Base technologies should be knowledge packages and capabilities, not platform contracts.", "use docs.php or docs.web.* package examples"))
+                    checks.append(check_with_hint("FAIL", f"{rel_path}: introduces a base-technology platform", "Domain classifications belong to optional packs, not core platform contracts.", "move the example under examples/domain-packs and keep it inactive by default"))
                 if not is_public_path_safe(text):
                     checks.append(check_with_hint("FAIL", f"{rel_path}: contains private absolute path", "Examples must be portable.", "replace local paths with relative paths or placeholders"))
                 if "python tools/processforge.py doctor-project --project-root" in text:
@@ -4954,6 +5602,15 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py")], 30),
         ReleaseCommand("schema validation", [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)], 60),
         ReleaseCommand("public cleanliness", [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)], 60),
+        ReleaseCommand("smoke_core_has_no_domain_knowledge_seeds", [sys.executable, str(root / "tools" / "smoke_core_has_no_domain_knowledge_seeds.py")], 120),
+        ReleaseCommand("smoke_empty_workplace_has_no_domain_resources", [sys.executable, str(root / "tools" / "smoke_empty_workplace_has_no_domain_resources.py")], 120),
+        ReleaseCommand("smoke_project_classification_data_driven", [sys.executable, str(root / "tools" / "smoke_project_classification_data_driven.py")], 120),
+        ReleaseCommand("smoke_no_hardcoded_file_project_detection", [sys.executable, str(root / "tools" / "smoke_no_hardcoded_file_project_detection.py")], 120),
+        ReleaseCommand("smoke_optional_domain_pack_not_default", [sys.executable, str(root / "tools" / "smoke_optional_domain_pack_not_default.py")], 120),
+        ReleaseCommand("smoke_domain_pack_can_classify_after_install", [sys.executable, str(root / "tools" / "smoke_domain_pack_can_classify_after_install.py")], 120),
+        ReleaseCommand("smoke_core_process_catalog_domain_neutral", [sys.executable, str(root / "tools" / "smoke_core_process_catalog_domain_neutral.py")], 120),
+        ReleaseCommand("smoke_core_prompts_domain_neutral", [sys.executable, str(root / "tools" / "smoke_core_prompts_domain_neutral.py")], 120),
+        ReleaseCommand("smoke_runtime_no_domain_file_patterns", [sys.executable, str(root / "tools" / "smoke_runtime_no_domain_file_patterns.py")], 120),
         ReleaseCommand("checksum", [sys.executable, str(root / "tools" / "validate-process-forge-checksums.py"), "--root", str(root), "--check"], 60),
         ReleaseCommand("smoke_first_run", [sys.executable, str(root / "tools" / "smoke_first_run.py")], 120),
         ReleaseCommand("smoke_runtime_driver_registry", [sys.executable, str(root / "tools" / "smoke_runtime_driver_registry.py")], 120),
@@ -5005,6 +5662,35 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_session_start_context_check", [sys.executable, str(root / "tools" / "smoke_session_start_context_check.py")], 120),
         ReleaseCommand("smoke_update_apply_marks_context_stale", [sys.executable, str(root / "tools" / "smoke_update_apply_marks_context_stale.py")], 120),
         ReleaseCommand("smoke_capsule_pins_context_snapshot", [sys.executable, str(root / "tools" / "smoke_capsule_pins_context_snapshot.py")], 120),
+        ReleaseCommand("smoke_no_builtin_user_capability_satisfaction", [sys.executable, str(root / "tools" / "smoke_no_builtin_user_capability_satisfaction.py")], 120),
+        ReleaseCommand("smoke_capability_resolution_data_driven_only", [sys.executable, str(root / "tools" / "smoke_capability_resolution_data_driven_only.py")], 120),
+        ReleaseCommand("smoke_domain_neutral_music_video_fixtures", [sys.executable, str(root / "tools" / "smoke_domain_neutral_music_video_fixtures.py")], 120),
+        ReleaseCommand("smoke_runtime_no_domain_capability_constants", [sys.executable, str(root / "tools" / "smoke_runtime_no_domain_capability_constants.py")], 120),
+        ReleaseCommand("smoke_specialization_nested_workflow_fields_rejected", [sys.executable, str(root / "tools" / "smoke_specialization_nested_workflow_fields_rejected.py")], 120),
+        ReleaseCommand("smoke_specialization_freshness_tracks_definition_change", [sys.executable, str(root / "tools" / "smoke_specialization_freshness_tracks_definition_change.py")], 120),
+        ReleaseCommand("smoke_project_specialization_override_applies", [sys.executable, str(root / "tools" / "smoke_project_specialization_override_applies.py")], 120),
+        ReleaseCommand("smoke_specialization_schema", [sys.executable, str(root / "tools" / "smoke_specialization_schema.py")], 120),
+        ReleaseCommand("smoke_specialization_registry", [sys.executable, str(root / "tools" / "smoke_specialization_registry.py")], 120),
+        ReleaseCommand("smoke_specialization_create_workplace_resource", [sys.executable, str(root / "tools" / "smoke_specialization_create_workplace_resource.py")], 120),
+        ReleaseCommand("smoke_specialization_platform_binding", [sys.executable, str(root / "tools" / "smoke_specialization_platform_binding.py")], 120),
+        ReleaseCommand("smoke_specialization_context_resolution", [sys.executable, str(root / "tools" / "smoke_specialization_context_resolution.py")], 120),
+        ReleaseCommand("smoke_specialization_same_platform_different_context", [sys.executable, str(root / "tools" / "smoke_specialization_same_platform_different_context.py")], 120),
+        ReleaseCommand("smoke_specialization_no_tool_leakage", [sys.executable, str(root / "tools" / "smoke_specialization_no_tool_leakage.py")], 120),
+        ReleaseCommand("smoke_specialization_no_workflow_ownership", [sys.executable, str(root / "tools" / "smoke_specialization_no_workflow_ownership.py")], 120),
+        ReleaseCommand("smoke_process_owns_acceptance_not_specialization", [sys.executable, str(root / "tools" / "smoke_process_owns_acceptance_not_specialization.py")], 120),
+        ReleaseCommand("smoke_process_capability_requirement_resolution", [sys.executable, str(root / "tools" / "smoke_process_capability_requirement_resolution.py")], 120),
+        ReleaseCommand("smoke_specialization_process_policy", [sys.executable, str(root / "tools" / "smoke_specialization_process_policy.py")], 120),
+        ReleaseCommand("smoke_specialization_handoff_routing", [sys.executable, str(root / "tools" / "smoke_specialization_handoff_routing.py")], 120),
+        ReleaseCommand("smoke_specialization_garage_mode_switch", [sys.executable, str(root / "tools" / "smoke_specialization_garage_mode_switch.py")], 120),
+        ReleaseCommand("smoke_specialization_snapshot_fields", [sys.executable, str(root / "tools" / "smoke_specialization_snapshot_fields.py")], 120),
+        ReleaseCommand("smoke_specialization_capsule_activation", [sys.executable, str(root / "tools" / "smoke_specialization_capsule_activation.py")], 120),
+        ReleaseCommand("smoke_specialization_no_core_id_hardcode", [sys.executable, str(root / "tools" / "smoke_specialization_no_core_id_hardcode.py")], 120),
+        ReleaseCommand("smoke_project_overrides_schema", [sys.executable, str(root / "tools" / "smoke_project_overrides_schema.py")], 120),
+        ReleaseCommand("smoke_project_overrides_resolution", [sys.executable, str(root / "tools" / "smoke_project_overrides_resolution.py")], 120),
+        ReleaseCommand("smoke_project_overrides_snapshot_fingerprint", [sys.executable, str(root / "tools" / "smoke_project_overrides_snapshot_fingerprint.py")], 120),
+        ReleaseCommand("smoke_project_overrides_freshness", [sys.executable, str(root / "tools" / "smoke_project_overrides_freshness.py")], 120),
+        ReleaseCommand("smoke_project_overrides_capsule_summary", [sys.executable, str(root / "tools" / "smoke_project_overrides_capsule_summary.py")], 120),
+        ReleaseCommand("smoke_project_override_does_not_mutate_workspace", [sys.executable, str(root / "tools" / "smoke_project_override_does_not_mutate_workspace.py")], 120),
         ReleaseCommand("smoke_process_authoring_materialization_parity", [sys.executable, str(root / "tools" / "smoke_process_authoring_materialization_parity.py")], 180),
         ReleaseCommand("smoke_process_definition_schema_contract", [sys.executable, str(root / "tools" / "smoke_process_definition_schema_contract.py")], 180),
         ReleaseCommand("smoke_builtin_process_pack_completeness", [sys.executable, str(root / "tools" / "smoke_builtin_process_pack_completeness.py")], 120),
@@ -5624,7 +6310,7 @@ def values_from_registry_entry(entry: Any) -> list[str]:
     values: list[str] = []
     if not isinstance(entry, dict):
         return values
-    for key in ("capability", "capabilities", "provides"):
+    for key in ("capability", "capabilities", "provides", "provides_capabilities"):
         value = entry.get(key)
         if isinstance(value, str):
             values.append(value)
@@ -5670,7 +6356,7 @@ def resolve_capabilities(texts: dict[str, str], project_root: Path) -> dict[str,
     required = sorted(set(item for item in required if item))
     optional = sorted(set(item for item in optional if item))
     registry_providers = load_registry_capability_providers(project_root)
-    available = set(BUILTIN_SEED_CAPABILITIES).union(registry_providers)
+    available = set(registry_providers)
     missing_required = [item for item in required if item not in available]
     missing_optional = [item for item in optional if item not in available]
     return {
@@ -5678,7 +6364,6 @@ def resolve_capabilities(texts: dict[str, str], project_root: Path) -> dict[str,
         "optional": optional,
         "missing_required": missing_required,
         "missing_optional": missing_optional,
-        "builtin": sorted(BUILTIN_SEED_CAPABILITIES),
         "providers": registry_providers,
     }
 
@@ -5770,6 +6455,45 @@ def collect_project_snapshot_sources(project_root: Path) -> list[dict[str, Any]]
                     display_path="<private-workplace-manifest-ref>",
                 )
             )
+            workplace_root = workplace_path.parent
+            for rel_path, kind in [
+                ("registries/specializations.yaml", "workplace-specialization-registry"),
+                ("registries/project-classifiers.yaml", "workplace-project-classifier-registry"),
+                ("registries/tools.yaml", "workplace-tool-registry"),
+                ("registries/mcp.yaml", "workplace-mcp-registry"),
+                ("registries/templates.yaml", "workplace-template-registry"),
+            ]:
+                path = workplace_root / rel_path
+                if path.is_file():
+                    sources.append(
+                        fingerprint_record(
+                            path,
+                            project_root,
+                            safe_id(f"{kind}-{rel_path}", kind),
+                            kind,
+                            private=True,
+                            display_path=f"<private-workplace-ref>/{rel_path}",
+                        )
+                    )
+            for dirname, kind in [
+                ("specializations", "workplace-specialization"),
+                ("specializations/user", "workplace-specialization"),
+                ("specializations/custom", "workplace-specialization"),
+                ("project-classifiers", "workplace-project-classifier"),
+            ]:
+                root = workplace_root / dirname
+                if root.is_dir():
+                    for path in sorted(item for item in root.glob("*.y*ml") if item.is_file()):
+                        sources.append(
+                            fingerprint_record(
+                                path,
+                                project_root,
+                                safe_id(f"{kind}-{dirname}-{path.name}", kind),
+                                kind,
+                                private=True,
+                                display_path=f"<private-workplace-ref>/{dirname}/{path.name}",
+                            )
+                        )
 
     for path in manifest_path_refs(project_root, "processes"):
         source_id = safe_id(f"process-{rel(path, project_root)}", "process-source")
@@ -5778,11 +6502,20 @@ def collect_project_snapshot_sources(project_root: Path) -> list[dict[str, Any]]
         source_id = safe_id(f"package-{rel(path, project_root)}", "package-source")
         sources.append(fingerprint_record(path, project_root, source_id, "package"))
 
+    if project_overrides_path(project_root).is_file():
+        sources.append(fingerprint_record(project_overrides_path(project_root), project_root, "project-overrides", "project-overrides"))
     for dirname, kind in [
         ("processes", "process-override"),
         ("packages", "package-override"),
         ("registries", "registry"),
+        ("project-classifiers", "project-classifier"),
         ("templates", "template-override"),
+        ("specializations", "specialization"),
+        ("specializations/overrides", "specialization-override"),
+        ("tools/overrides", "tool-override"),
+        ("mcp/overrides", "mcp-override"),
+        ("knowledge", "project-knowledge"),
+        ("rules", "project-rules"),
     ]:
         root = flow_root / dirname
         if root.is_dir():
@@ -6884,11 +7617,11 @@ def project_knowledge_resource_index_checks(project_root: Path, distribution_roo
 
 
 def capability_records(required: list[str], optional: list[str], providers: dict[str, str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    available = set(BUILTIN_SEED_CAPABILITIES).union(providers)
+    available = set(providers)
 
     def record(capability: str, required_capability: bool) -> dict[str, Any]:
         is_available = capability in available
-        provider = "builtin" if capability in BUILTIN_SEED_CAPABILITIES else providers.get(capability)
+        provider = providers.get(capability)
         return {
             "id": capability,
             "status": "available" if is_available else "missing",
@@ -7007,6 +7740,12 @@ def project_context_check_result(project_root: Path, *, explicit_workplace: str 
         reasons.append(f"source removed: {source_id}")
 
     current = build_project_context_snapshot(project_root, explicit_workplace=explicit_workplace)
+    old_classification = snapshot.get("project_classification")
+    current_classification = current.get("project_classification")
+    if json.dumps(old_classification or {}, ensure_ascii=False, sort_keys=True) != json.dumps(
+        current_classification or {}, ensure_ascii=False, sort_keys=True
+    ):
+        reasons.append("project classification changed")
     old_resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
     old_resources = old_resolved.get("knowledge_resources") if isinstance(old_resolved.get("knowledge_resources"), list) else []
     current_by_instance, current_by_subject = current_resolved_resource_indexes(current)
@@ -7097,6 +7836,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             distribution_root = resolve_distribution_path(workplace_manifest_path, "processforge")
     elif isinstance(manifest_data.get("workplace"), dict) and manifest_data["workplace"].get("reference") == "auto":
         distribution_root = project_root
+    classification = classify_project(project_root, workplace_manifest_path)
     manifest_platform_contracts = manifest_data.get("platform_contracts") if isinstance(manifest_data.get("platform_contracts"), list) else []
     manifest_platform_ids = [
         str(item.get("platform") or str(item.get("id", "")).removeprefix("platform."))
@@ -7105,7 +7845,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     ]
     meta_project_without_selection = project_type_is_meta_workspace(manifest_data) and not manifest_platform_ids
     if not manifest_platform_ids and not meta_project_without_selection:
-        manifest_platform_ids = [str(item) for item in detected_data.get("platforms", []) if isinstance(item, str)]
+        manifest_platform_ids = classification["platforms"]
     platform_resolution = resolve_platform_contracts(workplace_manifest_path, manifest_platform_ids, project_root=project_root)
     available_platform_contracts = available_platform_contract_records(workplace_manifest_path, project_root)
     if meta_project_without_selection:
@@ -7119,14 +7859,26 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         platform_selection = {"status": "not_selected", "reason": "No platform contracts were selected for this project."}
     package_index_ids = set(package_manifest_index(project_root, distribution_root, workplace_manifest_path))
     required_resource_missing, recommended_resource_missing = platform_resource_findings(workplace_manifest_path, platform_resolution, package_index_ids)
+    process_refs = manifest_data.get("processes") if isinstance(manifest_data.get("processes"), list) else []
+    package_refs = manifest_data.get("packages") if isinstance(manifest_data.get("packages"), list) else []
+    process_id_for_resolution = str(manifest_data.get("process") or "")
+    if not process_id_for_resolution:
+        process_id_for_resolution = next((str(item.get("id")) for item in process_refs if isinstance(item, dict) and item.get("id")), "")
+    manifest_specializations = [str(item) for item in as_list(manifest_data.get("specializations")) if str(item)]
+    specialization_context = resolve_specialization_context(
+        project_root,
+        workplace_manifest_path,
+        platform_ids=manifest_platform_ids,
+        process_id=process_id_for_resolution,
+        specialization_ids=manifest_specializations,
+        platform_resolution=platform_resolution,
+    )
     package_ids = [
         str(item.get("id"))
         for item in manifest_data.get("knowledge_stack", [])
         if isinstance(item, dict) and item.get("id")
     ]
-    package_ids.extend(platform_resolution["knowledge_packages"])
-    process_refs = manifest_data.get("processes") if isinstance(manifest_data.get("processes"), list) else []
-    package_refs = manifest_data.get("packages") if isinstance(manifest_data.get("packages"), list) else []
+    package_ids.extend(specialization_context["activated_knowledge_packages"])
     enabled_processes = [
         {"id": str(item.get("id", "unknown")), "path": str(item.get("path", ""))}
         for item in process_refs
@@ -7138,7 +7890,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         if isinstance(item, dict)
     ]
     package_ids.extend(item["id"] for item in selected_packages)
-    required_package_ids = platform_resolution["required_knowledge_packages"]
+    required_package_ids = sorted(set(platform_resolution["required_knowledge_packages"]).intersection(set(specialization_context["activated_knowledge_packages"])))
     package_resources = resolve_package_resources(
         project_root,
         distribution_root,
@@ -7155,7 +7907,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     coordination_blocked = coordination_status["effective_mode"] == "organized" and (
         not coordination_status["workplace_director_enabled"] or not coordination_status["director_office_exists"]
     )
-    health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] or platform_resolution["circular_platforms"] or required_resource_missing or coordination_blocked else ("warn" if any(item["severity"] == "warn" for item in optional_records) or recommended_resource_missing else "pass")
+    health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] or platform_resolution["circular_platforms"] or required_resource_missing or specialization_context["conflicts"] or coordination_blocked else ("warn" if any(item["severity"] == "warn" for item in optional_records) or recommended_resource_missing else "pass")
     snapshot_id = f"ctx-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
     requirements = requirements_fingerprints(flow_root, project_root)
     source_fingerprints = {
@@ -7186,8 +7938,13 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         "project": {
             "id": str(project.get("id", safe_id(project_root.name))),
             "name": str(project.get("name", project_root.name)),
-            "type": project.get("type", ["software_project"]),
+            "type": (
+                project.get("type")
+                if str(project.get("type") or "") not in {"", "auto", "unknown"}
+                else (classification["project_types"][0] if classification["project_types"] else "unknown")
+            ),
         },
+        "project_classification": classification,
         "flow": {
             "root": flow_label(project_root),
             "layout": flow_layout(project_root),
@@ -7222,13 +7979,24 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         "requirements_fingerprint": requirements,
         "context_requirements": context_requirements,
         "context_policy": context_policy,
+        "resolved_context": specialization_context,
+        "active_resource_profile": specialization_context["active_resource_profile"],
+        "execution_route": specialization_context["execution_route"],
+        "capability_resolution": specialization_context["capability_resolution"],
+        "selected_specializations": specialization_context["selected_specializations"],
+        "applied_project_overrides": specialization_context["applied_project_overrides"],
+        "effective_fingerprints": specialization_context["effective_fingerprints"],
+        "resolution_reasons": specialization_context["resolution_reasons"],
+        "conflicts": specialization_context["conflicts"],
         "resolved": {
             "knowledge_packages": [{"id": item, "constraint": "declared"} for item in sorted(set(package_ids))],
             "knowledge_resources": resolved_knowledge_resources,
             "available_knowledge_resources": available_knowledge_resources,
             "template_packages": context_requirements.get("template_packages", []),
-            "templates": [],
-            "tools": context_requirements.get("tools", []),
+            "templates": [{"id": item, "status": "activated"} for item in specialization_context["activated_templates"]],
+            "excluded_templates": [{"id": item, "reason": "excluded by specialization or project override"} for item in specialization_context["excluded_templates"]],
+            "tools": [{"id": item, "status": "activated"} for item in specialization_context["activated_tools"]],
+            "excluded_tools": [{"id": item, "reason": "excluded by specialization or project override"} for item in specialization_context["excluded_tools"]],
             "platform_contracts": context_requirements.get("platform_contracts", []),
             "process_packages": selected_packages,
         },
@@ -7263,12 +8031,14 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "missing_required": required_resource_missing,
             "missing_recommended": recommended_resource_missing,
         },
-        "tools": {"required": platform_resolution["required_tools"], "recommended": platform_resolution["recommended_tools"], "source": "workplace-registry"},
-        "mcp": {"required": platform_resolution["required_mcp"], "recommended": platform_resolution["recommended_mcp"], "source": "workplace-registry"},
+        "tools": {"required": platform_resolution["required_tools"], "recommended": platform_resolution["recommended_tools"], "activated": specialization_context["activated_tools"], "excluded": specialization_context["excluded_tools"], "source": "workplace-registry"},
+        "mcp": {"required": platform_resolution["required_mcp"], "recommended": platform_resolution["recommended_mcp"], "activated": specialization_context["activated_mcp"], "excluded": specialization_context["excluded_mcp"], "source": "workplace-registry"},
         "templates": {
             "project": [str(item["path"]) for item in sources if item.get("kind") == "template"],
             "required": platform_resolution["required_templates"],
             "recommended": platform_resolution["recommended_templates"],
+            "activated": specialization_context["activated_templates"],
+            "excluded": specialization_context["excluded_templates"],
             "source": "workplace-registry",
         },
         "processes": {"enabled": enabled_processes},
@@ -7319,6 +8089,14 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
     processes = snapshot.get("processes", {}).get("enabled", []) if isinstance(snapshot.get("processes"), dict) else []
     project_templates = template_groups.get("project", []) if isinstance(template_groups.get("project"), list) else []
     workplace_coordination = snapshot.get("workplace_coordination", {}) if isinstance(snapshot.get("workplace_coordination"), dict) else {}
+    resolved_context = snapshot.get("resolved_context", {}) if isinstance(snapshot.get("resolved_context"), dict) else {}
+    selected_specializations = resolved_context.get("selected_specializations", []) if isinstance(resolved_context.get("selected_specializations"), list) else []
+    applied_project_overrides = resolved_context.get("applied_project_overrides", []) if isinstance(resolved_context.get("applied_project_overrides"), list) else []
+    effective_resources = resolved_context.get("effective_resources", []) if isinstance(resolved_context.get("effective_resources"), list) else []
+    provided_capabilities = resolved_context.get("provided_capabilities", []) if isinstance(resolved_context.get("provided_capabilities"), list) else []
+    execution_route = resolved_context.get("execution_route", {}) if isinstance(resolved_context.get("execution_route"), dict) else {}
+    capability_resolution = resolved_context.get("capability_resolution", {}) if isinstance(resolved_context.get("capability_resolution"), dict) else {}
+    resolution_conflicts = resolved_context.get("conflicts", []) if isinstance(resolved_context.get("conflicts"), list) else []
 
     def md_items(items: list[Any], empty: str = "None.") -> str:
         if not items:
@@ -7384,6 +8162,37 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
             "## Platform Stack",
             "",
             md_items(platform_stack),
+            "",
+            "## Selected Specializations",
+            "",
+            md_items(selected_specializations),
+            "",
+            "## Effective Resources",
+            "",
+            md_items(effective_resources),
+            "",
+            "## Provided Capabilities",
+            "",
+            md_items(provided_capabilities),
+            "",
+            "## Execution Route",
+            "",
+            f"- process: {execution_route.get('process', '')}",
+            f"- required_capabilities: {', '.join(execution_route.get('required_capabilities', [])) if isinstance(execution_route.get('required_capabilities'), list) and execution_route.get('required_capabilities') else 'None.'}",
+            f"- required_evidence: {', '.join(execution_route.get('required_evidence', [])) if isinstance(execution_route.get('required_evidence'), list) and execution_route.get('required_evidence') else 'None.'}",
+            "",
+            "## Capability Resolution",
+            "",
+            f"- satisfied: {len(capability_resolution.get('satisfied', [])) if isinstance(capability_resolution.get('satisfied'), list) else 0}",
+            f"- unsatisfied: {len(capability_resolution.get('unsatisfied', [])) if isinstance(capability_resolution.get('unsatisfied'), list) else 0}",
+            "",
+            "## Applied Project Overrides",
+            "",
+            md_items(applied_project_overrides),
+            "",
+            "## Resolution Conflicts",
+            "",
+            md_items(resolution_conflicts),
             "",
             "## Required Knowledge Resources",
             "",
@@ -8589,6 +9398,10 @@ def command_session_start(args: argparse.Namespace) -> int:
         if isinstance(capability, dict):
             append_telemetry_event(telemetry_path, "capability_check", required=False, **capability)
     append_telemetry_event(telemetry_path, "tool_selected", tool="processforge-cli", reason="session_start")
+    selected_specializations = [specialization_resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))]
+    if selected_specializations:
+        append_telemetry_event(telemetry_path, "specialization_switch", selected_specializations=selected_specializations, reason="explicit_session_start")
+        emit_process_event(project_root, "context.snapshot.refreshed", session_id=session_id, payload={"selected_specializations": selected_specializations, "reason": "garage_mode_specialization_switch"}, correlation_id=session_id)
     append_telemetry_event(telemetry_path, "tool_invoked", tool="processforge-cli", command="session-start")
     emit_process_event(project_root, "tool.invoked", session_id=session_id, payload={"tool": "processforge-cli", "command": "session-start"}, correlation_id=session_id)
     append_telemetry_event(telemetry_path, "tool_failed", tool=None, status="skipped")
@@ -9305,13 +10118,22 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
             "generated_at": snapshot_meta.get("generated_at"),
             "freshness_at_creation": status,
         },
+        "project_classification": snapshot.get("project_classification", {}),
         "resolved_resources": snapshot.get("resolved", {}).get("knowledge_resources", []) if isinstance(snapshot.get("resolved"), dict) else [],
+        "effective_specializations": snapshot.get("selected_specializations", []),
+        "project_override_summary": snapshot.get("applied_project_overrides", []),
+        "active_resource_profile": (snapshot.get("resolved_context", {}) if isinstance(snapshot.get("resolved_context"), dict) else {}).get("active_resource_profile", {}),
+        "execution_route_summary": (snapshot.get("resolved_context", {}) if isinstance(snapshot.get("resolved_context"), dict) else {}).get("execution_route", {}),
+        "capability_resolution_summary": (snapshot.get("resolved_context", {}) if isinstance(snapshot.get("resolved_context"), dict) else {}).get("capability_resolution", {}),
+        "effective_resources": (snapshot.get("resolved_context", {}) if isinstance(snapshot.get("resolved_context"), dict) else {}).get("effective_resources", []),
         "assignment": contract["assignment"],
         "context": {
             "snapshot_id": snapshot_meta.get("id", "project-context"),
             "freshness": status,
             "required_sources": contract["context"]["required_sources"],
             "context_artifacts": contract["context"]["context_artifacts"],
+            "selected_specializations": [str(item.get("id")) for item in snapshot.get("selected_specializations", []) if isinstance(item, dict)],
+            "applied_project_overrides": [str(item.get("target")) for item in snapshot.get("applied_project_overrides", []) if isinstance(item, dict)],
         },
         "scope": contract["scope"],
         "outputs": contract["outputs"],
@@ -11618,7 +12440,7 @@ def command_evolve_candidate_export(args: argparse.Namespace) -> int:
 def command_evolve_run(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    process_id = str(getattr(args, "process", None) or "software-feature-development")
+    process_id = str(getattr(args, "process", None) or "task-batch-execution")
     process = read_yaml_file(process_definition_path(project_root, process_id))
     evolve = process.get("evolve") if isinstance(process.get("evolve"), dict) else {}
     checks = validate_evolve_block(process_id, evolve, hard=True)
@@ -12707,6 +13529,7 @@ def command_agent_register(args: argparse.Namespace) -> int:
         "kind": args.kind,
         "roles": [str(item) for item in as_list(args.role)],
         "capabilities": [str(item) for item in as_list(args.capability)],
+        "supports_specializations": [specialization_resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", []))],
     }
     existing = next((item for item in agents if isinstance(item, dict) and item.get("id") == agent_id), None)
     if existing:
@@ -12737,7 +13560,10 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
     session_id = args.session or agent_session_id(agent_id)
     project_id = args.project_id or (safe_id(project_root.name, "project") if project_root else "")
     roles = [str(item) for item in as_list(args.role)]
-    capabilities = [str(item) for item in as_list(getattr(args, "capability", []))]
+    registry = load_agent_registry(workplace_root)
+    profile = next((item for item in registry.get("agents", []) if isinstance(item, dict) and item.get("id") == agent_id), {})
+    capabilities = [str(item) for item in (as_list(getattr(args, "capability", [])) or as_list(profile.get("capabilities")))]
+    supported_specializations = [specialization_resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", [])) or as_list(profile.get("supports_specializations"))]
     now = now_utc()
     presence = {
         "schema_version": 1,
@@ -12746,6 +13572,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
         "status": "online",
         "roles": roles,
         "capabilities": capabilities,
+        "supports_specializations": supported_specializations,
         "project_id": project_id,
         "project_root_ref": "project-root" if project_root else "",
         "process_id": args.process or "",
@@ -12769,6 +13596,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
             "run_id": args.run or "",
             "task_id": args.task or "",
             "roles": roles,
+            "supports_specializations": supported_specializations,
             "started_at": now,
         },
     )
@@ -13097,7 +13925,14 @@ def command_handoff_create(args: argparse.Namespace) -> int:
         "status": "waiting_for_agent",
         "route_id": str(route.get("id")),
         "from": {"process": str(route.get("from_process") or ""), "run_id": args.from_run, "stage": args.from_stage or ""},
-        "to": {"process": str(route.get("to_process") or ""), "mode": str(route.get("mode") or "wait_for_result"), "required_role": required_role_from_route(route)},
+        "to": {
+            "process": str(route.get("to_process") or ""),
+            "mode": str(route.get("mode") or "wait_for_result"),
+            "required_role": required_role_from_route(route),
+            "required_capabilities": [str(item) for item in as_list(route.get("required_capabilities"))],
+            "required_specializations": [specialization_resource_id(str(item)) for item in as_list(route.get("required_specializations"))],
+            "preferred_specializations": [specialization_resource_id(str(item)) for item in as_list(route.get("preferred_specializations"))],
+        },
         "input_artifacts": as_list((route.get("input_contract") if isinstance(route.get("input_contract"), dict) else {}).get("required_artifacts")),
         "expected_results": as_list((route.get("output_contract") if isinstance(route.get("output_contract"), dict) else {}).get("expected_artifacts")),
         "return_to": route.get("return") if isinstance(route.get("return"), dict) else {"process": str(route.get("from_process") or ""), "run_id": args.from_run},
@@ -13123,7 +13958,20 @@ def handoff_available_agents(args: argparse.Namespace, handoff: dict[str, Any], 
         return []
     role = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_role") or "")
     project_id = getattr(args, "project_id", None)
-    return checked_in_agents(resolve_workplace_root(workplace, project_root=project_root), role=role or None, project_id=project_id)
+    agents = checked_in_agents(resolve_workplace_root(workplace, project_root=project_root), role=role or None, project_id=project_id)
+    required_capabilities = set(str(item) for item in as_list((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_capabilities")))
+    if required_capabilities:
+        agents = [
+            agent for agent in agents
+            if required_capabilities.issubset({str(item) for item in as_list(agent.get("capabilities"))})
+        ]
+    required = set(as_list((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_specializations")))
+    if required:
+        agents = [
+            agent for agent in agents
+            if required.issubset({specialization_resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
+        ]
+    return agents
 
 
 def command_handoff_status(args: argparse.Namespace) -> int:
@@ -13135,6 +13983,7 @@ def command_handoff_status(args: argparse.Namespace) -> int:
         "handoff": handoff.get("id"),
         "status": handoff.get("status"),
         "required_role": (handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_role", ""),
+        "required_capabilities": (handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_capabilities", []),
         "available_agents": [{"agent_id": item.get("agent_id"), "session_id": item.get("session_id")} for item in agents],
     }
     if payload["status"] == "waiting_for_agent" and agents:
@@ -13240,6 +14089,18 @@ def command_agent_director_tick(args: argparse.Namespace) -> int:
             continue
         role = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_role") or "")
         agents = checked_in_agents(workplace_root, role=role or None, project_id=getattr(args, "project_id", None))
+        required_capabilities = set(str(item) for item in as_list((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_capabilities")))
+        if required_capabilities:
+            agents = [
+                agent for agent in agents
+                if required_capabilities.issubset({str(item) for item in as_list(agent.get("capabilities"))})
+            ]
+        required_specializations = set(as_list((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_specializations")))
+        if required_specializations:
+            agents = [
+                agent for agent in agents
+                if required_specializations.issubset({specialization_resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
+            ]
         if not agents:
             created = parse_runtime_timestamp(handoff.get("created_at"))
             if created and datetime.now(timezone.utc) > created + timedelta(seconds=int(args.wait_ttl or 3600)):
@@ -13444,36 +14305,36 @@ def default_orchestrator_task_plan(run_id: str, title: str) -> dict[str, Any]:
         },
         "workers": [
             {
-                "id": "docs-worker",
-                "title": "Documentation update",
-                "role": "documentation",
-                "process": "content-production",
-                "execution_mode": "docs_only",
+                "id": "fixture-worker-a",
+                "title": "Fixture work item A",
+                "role": "worker",
+                "process": "task-batch-execution",
+                "execution_mode": "implementation",
                 "writer": True,
-                "allowed_files": ["docs/**", "README.md"],
+                "allowed_files": [".pf/artifacts/fixture-a/**"],
                 "allowed_read_files": [".pf/contexts/project-context.snapshot.yaml"],
                 "forbidden_files": ["tools/**", "schemas/**"],
                 "required_sources": [".pf/contexts/project-context.snapshot.yaml"],
-                "required_outputs": [{"id": "docs-report", "path": ".pf/artifacts/docs-worker-report.md", "type": "markdown", "required": True}],
-                "expected_report_artifact": ".pf/artifacts/docs-worker-report.md",
+                "required_outputs": [{"id": "fixture-a-report", "path": ".pf/artifacts/fixture-a-report.md", "type": "markdown", "required": True}],
+                "expected_report_artifact": ".pf/artifacts/fixture-a-report.md",
                 "runtime_driver": "manual",
                 "worker_may_rebuild_context": False,
             },
             {
-                "id": "test-worker",
-                "title": "Release test verification",
-                "role": "release-assurance",
-                "process": "testing",
+                "id": "fixture-worker-b",
+                "title": "Fixture work item B",
+                "role": "reviewer",
+                "process": "task-batch-execution",
                 "execution_mode": "assurance",
                 "writer": True,
-                "allowed_files": [".pf/artifacts/**"],
-                "allowed_read_files": ["tools/**", "schemas/**", ".pf/contexts/project-context.snapshot.yaml"],
+                "allowed_files": [".pf/artifacts/fixture-b/**"],
+                "allowed_read_files": [".pf/artifacts/fixture-a/**", ".pf/contexts/project-context.snapshot.yaml"],
                 "forbidden_files": ["tools/processforge.py"],
                 "required_sources": [".pf/contexts/project-context.snapshot.yaml"],
-                "required_outputs": [{"id": "test-report", "path": ".pf/artifacts/test-worker-report.md", "type": "markdown", "required": True}],
-                "expected_report_artifact": ".pf/artifacts/test-worker-report.md",
+                "required_outputs": [{"id": "fixture-b-report", "path": ".pf/artifacts/fixture-b-report.md", "type": "markdown", "required": True}],
+                "expected_report_artifact": ".pf/artifacts/fixture-b-report.md",
                 "runtime_driver": "manual",
-                "depends_on": ["docs-worker"],
+                "depends_on": ["fixture-worker-a"],
                 "worker_may_rebuild_context": False,
             },
         ],
@@ -15271,6 +16132,8 @@ def command_run_create(args: argparse.Namespace) -> int:
         "created_at": now_utc(),
         "updated_at": now_utc(),
         "objective": args.objective or "",
+        "platform": getattr(args, "platform", None) or "",
+        "selected_specializations": [specialization_resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
         "scope": {"type": "project", "project_root": "."},
         "tasks": [],
         "final_artifacts": [],
@@ -15414,6 +16277,8 @@ def command_task_create(args: argparse.Namespace) -> int:
         "created_at": now_utc(),
         "updated_at": now_utc(),
         "objective": args.objective or "",
+        "platform": getattr(args, "platform", None) or "",
+        "selected_specializations": [specialization_resource_id(str(item)) for item in as_list(getattr(args, "specialization", []))],
         "order": order,
         "dependencies": {"blocked_by": [], "blocks": []},
         "iterations": [],
@@ -15754,6 +16619,24 @@ def command_context_resolve(args: argparse.Namespace) -> int:
     if not project_root.is_dir():
         raise SystemExit(f"FAIL: project root not found: {project_root}")
     require_flow_root(project_root)
+    if getattr(args, "platform", None) or getattr(args, "process", None) or getattr(args, "specialization", None):
+        flow_root = locate_flow_root(project_root)
+        workplace_manifest = resolve_workplace_manifest(flow_root / "process-forge.local.yaml") if (flow_root / "process-forge.local.yaml").is_file() else None
+        if getattr(args, "workplace", None):
+            workplace_manifest = workplace_manifest_path_from_root(Path(args.workplace).expanduser())
+        platform_ids = [str(item) for item in as_list(getattr(args, "platform", []))]
+        resolved = resolve_specialization_context(
+            project_root,
+            workplace_manifest,
+            platform_ids=platform_ids,
+            process_id=getattr(args, "process", None),
+            specialization_ids=[str(item) for item in as_list(getattr(args, "specialization", []))],
+        )
+        if getattr(args, "json", False):
+            print(json.dumps({"resolved_context": resolved}, ensure_ascii=False, indent=2, sort_keys=True))
+        else:
+            print(dump_yaml({"resolved_context": resolved}), end="")
+        return 1 if resolved.get("conflicts") else 0
     print("DEPRECATED: context-resolve is a compatibility command. Use project-context-refresh and project-context-check for .pf projects.")
     status, paths = write_context_outputs(project_root)
     print(f"STATUS: {status}")
@@ -15913,7 +16796,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
                 "FAIL",
                 f"{rel(manifest, project_root)} missing",
                 "The project has not been onboarded into ProcessForge or the .pf flow root is incomplete.",
-                "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply",
+                "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic --apply",
             )
         )
         manifest_data = {}
@@ -15949,7 +16832,7 @@ def command_doctor_project(args: argparse.Namespace) -> int:
                     "FAIL",
                     "process-forge.local.yaml missing",
                     "Linked projects need private local workplace/distribution coordinates.",
-                    "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply",
+                    "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic --apply",
                     "set workplace.reference: auto only for self-contained distribution dogfooding projects",
                 )
             )
@@ -16079,7 +16962,7 @@ Fix:
                     "FAIL",
                     f"{rel(path, project_root)} missing",
                     "A linked project needs its local Python launcher because it does not contain ProcessForge core tools.",
-                    "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply",
+                    "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic --apply",
                 )
             )
         elif rel_path.startswith("contexts/project-context.snapshot"):
@@ -18486,7 +19369,7 @@ def command_platform_create(args: argparse.Namespace) -> int:
             "templates": optional_templates,
             "tools": optional_tools,
             "mcp": optional_mcp,
-            "processes": [item for item in getattr(args, "process", []) if item] or ["software-feature-development"],
+            "processes": [item for item in getattr(args, "process", []) if item],
         },
         "policies": {"missing_required_capability": "block", "missing_optional_resource": "warn"},
     }
@@ -19070,6 +19953,239 @@ def command_mcp_register(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_specialization_list(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+    index = specialization_manifest_index(workplace_root / "workplace.yaml", project_root)
+    rows = [
+        {
+            "id": item.get("id"),
+            "name": item.get("name") or item.get("title") or item.get("id"),
+            "status": item.get("status", "active"),
+            "source": item.get("__source", "workplace"),
+            "path": rel(item.get("__manifest_path"), project_root or workplace_root) if isinstance(item.get("__manifest_path"), Path) else "",
+        }
+        for item in index.values()
+    ]
+    if getattr(args, "json", False):
+        print(json.dumps({"specializations": rows}, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    for row in sorted(rows, key=lambda item: str(item.get("id"))):
+        print(f"{row['id']}\t{row['status']}\t{row['source']}\t{row['path']}")
+    return 0
+
+
+def command_specialization_show(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+    data = load_specialization(workplace_root / "workplace.yaml", args.id, project_root)
+    if not data:
+        raise SystemExit(f"FAIL: specialization not found: {specialization_resource_id(args.id)}")
+    cleaned = {key: value for key, value in data.items() if not str(key).startswith("__")}
+    if getattr(args, "json", False):
+        print(json.dumps(cleaned, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(dump_yaml(cleaned), end="")
+    return 0
+
+
+def specialization_manifest_path(workplace_root: Path, specialization_id: str) -> Path | None:
+    normalized_id = specialization_resource_id(specialization_id)
+    for candidate in specialization_path_candidates(workplace_root, normalized_id, None):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def specialization_doctor_checks(workplace_root: Path, specialization_id: str) -> list[Check]:
+    normalized_id = specialization_resource_id(specialization_id)
+    checks: list[Check] = []
+    path = specialization_manifest_path(workplace_root, normalized_id)
+    checks.append(
+        check("PASS", "specialization manifest found")
+        if path
+        else check_with_hint(
+            "FAIL",
+            "specialization manifest found",
+            "The specialization id cannot be resolved through registries/specializations.yaml or the default specialization root.",
+            f"python bin/pf.py specialization-create --workplace <workplace-root> --id {normalized_id} --apply",
+        )
+    )
+    if not path:
+        return checks
+    data = load_yaml_document(path)
+    checks.append(check("PASS" if isinstance(data, dict) and data.get("kind") == "processforge.specialization" else "FAIL", "specialization kind valid"))
+    checks.append(check("PASS" if data.get("id") == normalized_id else "FAIL", "specialization id matches requested id"))
+    checks.append(check("PASS" if is_public_path_safe(path.read_text(encoding="utf-8", errors="replace")) else "FAIL", "specialization has no private absolute paths"))
+    for bucket in RESOURCE_BUCKET_KEYS:
+        for key in RESOURCE_GROUP_KEYS:
+            values = resource_bucket(data.get("resources") if isinstance(data.get("resources"), dict) else {}, bucket, key)
+            checks.append(check("PASS", f"resources.{bucket}.{key} valid list") if all(isinstance(item, str) for item in values) else check("FAIL", f"resources.{bucket}.{key} valid list"))
+    bindings = data.get("platform_bindings") if isinstance(data.get("platform_bindings"), list) else []
+    for index, binding in enumerate(bindings):
+        if not isinstance(binding, dict):
+            checks.append(check("FAIL", f"platform_bindings[{index}] is object"))
+            continue
+        checks.append(check("PASS" if list_value(binding.get("platforms")) or list_value(binding.get("platform_stack_includes")) else "WARN", f"platform_bindings[{index}] has platform selector"))
+        resources = binding.get("resources") if isinstance(binding.get("resources"), dict) else {}
+        for bucket in RESOURCE_BUCKET_KEYS:
+            for key in RESOURCE_GROUP_KEYS:
+                values = resource_bucket(resources, bucket, key)
+                checks.append(check("PASS", f"platform_bindings[{index}].resources.{bucket}.{key} valid list") if all(isinstance(item, str) for item in values) else check("FAIL", f"platform_bindings[{index}].resources.{bucket}.{key} valid list"))
+    return checks
+
+
+def command_specialization_doctor(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    return print_checks(specialization_doctor_checks(workplace_root, args.id))
+
+
+def command_specialization_create(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    specialization_id = specialization_resource_id(str(args.id))
+    target = workplace_root / "specializations" / f"{specialization_id}.yaml"
+    slug, proposal_path = write_resource_proposal(workplace_root, "specialization-create", specialization_id, {"specialization": specialization_id, "target": rel(target, workplace_root)})
+    if not getattr(args, "apply", False):
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        print(f"TARGET: {rel(target, workplace_root)}")
+        return 0
+    if target.exists() and not getattr(args, "force", False):
+        raise SystemExit(f"FAIL: specialization already exists: {rel(target, workplace_root)}")
+    document = {
+        "schema_version": 1,
+        "kind": "processforge.specialization",
+        "id": specialization_id,
+        "name": args.title or specialization_id,
+        "status": "active",
+        "description": args.description or "A workplace-defined specialist resource profile that selects resources data-driven.",
+        "scope": {"owner": "workspace", "visibility": "local"},
+        "applies_to": {"project_types": [], "roles": [], "tags": []},
+        "resources": default_resource_buckets(),
+        "provides_capabilities": [],
+        "platform_bindings": [],
+        "tool_policy": {"allowed_tools": [], "disallowed_tools": []},
+        "metadata": {"tags": []},
+    }
+    write_authoring_text(target, dump_yaml(document))
+    upsert_registry_entry(specialization_registry_path(workplace_root), "specializations", {"id": specialization_id, "path": rel(target, workplace_root), "status": "available", "scope": "workplace"})
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="specialization-create", event_type="specialization.created", target={"specialization_id": specialization_id}, status="created", message="specialization created"))
+    print(f"SPECIALIZATION: {rel(target, workplace_root)}")
+    return print_checks(specialization_doctor_checks(workplace_root, specialization_id))
+
+
+def command_specialization_bind_platform(args: argparse.Namespace) -> int:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    specialization_id = specialization_resource_id(str(args.specialization))
+    path = specialization_manifest_path(workplace_root, specialization_id)
+    if not path:
+        raise SystemExit(f"FAIL: specialization not found: {specialization_id}")
+    data = load_yaml_document(path)
+    if not isinstance(data, dict) or yaml_error(data):
+        raise SystemExit(f"FAIL: specialization YAML invalid: {rel(path, workplace_root)}")
+    binding = {
+        "platforms": [platform_contract_id(str(args.platform))],
+        "platform_stack_includes": [platform_contract_id(item) for item in getattr(args, "platform_stack_includes", [])],
+        "applies_to_project_types": [str(item) for item in getattr(args, "project_type", [])],
+        "tags": [],
+        "resources": default_resource_buckets(),
+        "provides_capabilities": [str(item) for item in getattr(args, "provides_capability", [])],
+    }
+    legacy_process_filters = [str(item) for item in getattr(args, "process", [])]
+    if legacy_process_filters:
+        binding["applies_to_processes"] = legacy_process_filters
+    for value in getattr(args, "requires_knowledge", []):
+        binding["resources"]["requires"]["knowledge_packages"].append(str(value))
+    for value in getattr(args, "requires_tool", []):
+        binding["resources"]["requires"]["tools"].append(str(value))
+    for value in getattr(args, "requires_mcp", []):
+        binding["resources"]["requires"]["mcp"].append(str(value))
+    for value in getattr(args, "requires_template", []):
+        binding["resources"]["requires"]["templates"].append(str(value))
+    if not getattr(args, "apply", False):
+        print(dump_yaml(binding), end="")
+        return 0
+    bindings = data.setdefault("platform_bindings", [])
+    if not isinstance(bindings, list):
+        bindings = []
+        data["platform_bindings"] = bindings
+    bindings.append(binding)
+    write_authoring_text(path, dump_yaml(data))
+    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="specialization-bind-platform", event_type="specialization.platform_bound", target={"specialization_id": specialization_id, "platform": platform_contract_id(str(args.platform))}, status="updated", message="specialization platform binding added"))
+    print(f"UPDATED: {rel(path, workplace_root)}")
+    return 0
+
+
+def command_project_override_list(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    entries = project_override_entries(project_root)
+    if getattr(args, "json", False):
+        print(json.dumps({"project_overrides": entries}, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
+    for entry in entries:
+        print(f"{entry.get('kind')}\t{entry.get('target')}\t{entry.get('mode')}\t{entry.get('reason', '')}")
+    return 0
+
+
+def command_project_override_add(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    flow_root = locate_flow_root(project_root)
+    kind = PROJECT_OVERRIDE_KINDS.get(str(args.kind), str(args.kind))
+    mode = str(args.mode)
+    if kind not in {"templates", "knowledge_packages", "tools", "mcp", "specializations"}:
+        raise SystemExit(f"FAIL: unsupported project override kind: {args.kind}")
+    if mode not in PROJECT_OVERRIDE_MODES:
+        raise SystemExit(f"FAIL: unsupported project override mode: {mode}")
+    path = project_overrides_path(project_root)
+    data = load_project_overrides(project_root)
+    overrides = data.setdefault("overrides", {})
+    entries = overrides.setdefault(kind, [])
+    if not isinstance(entries, list):
+        entries = []
+        overrides[kind] = entries
+    entry = {"target": str(args.target), "mode": mode, "reason": str(args.reason)}
+    if getattr(args, "path", None):
+        entry["path"] = str(args.path)
+    if getattr(args, "project_package", None):
+        entry["project_package"] = str(args.project_package)
+    params: dict[str, Any] = {}
+    for value in getattr(args, "param", []) or []:
+        if "=" not in value:
+            raise SystemExit("FAIL: --param must use key=value")
+        key, param_value = value.split("=", 1)
+        params[key] = param_value
+    if params:
+        entry["params"] = params
+    existing = next((item for item in entries if isinstance(item, dict) and str(item.get("target")) == str(args.target)), None)
+    if existing:
+        existing.update(entry)
+    else:
+        entries.append(entry)
+    if not getattr(args, "apply", False):
+        print(dump_yaml(data), end="")
+        return 0
+    flow_root.mkdir(parents=True, exist_ok=True)
+    write_authoring_text(path, dump_yaml(data))
+    print(f"WROTE: {rel(path, project_root)}")
+    return 0
+
+
+def command_project_override_doctor(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    path = project_overrides_path(project_root)
+    checks: list[Check] = []
+    checks.append(check("PASS", "project overrides file optional") if not path.is_file() else check("PASS", "project overrides file found"))
+    data = load_project_overrides(project_root)
+    checks.append(check("PASS" if data.get("kind") in {None, "processforge.project_overrides"} else "FAIL", "project overrides kind valid"))
+    for entry in project_override_entries(project_root):
+        mode = str(entry.get("mode") or "")
+        checks.append(check("PASS" if mode in PROJECT_OVERRIDE_MODES else "FAIL", f"{entry.get('kind')} {entry.get('target')} mode valid"))
+        override_path = project_override_path(project_root, entry)
+        if override_path:
+            checks.append(check("PASS" if path_is_relative_to(override_path, locate_flow_root(project_root)) else "FAIL", f"{entry.get('target')} override path is project-local"))
+            checks.append(check("PASS" if override_path.is_file() else "WARN", f"{entry.get('target')} override file exists"))
+    return print_checks(checks)
+
+
 def command_platform_contract_install(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     platform_id = safe_id(args.id.removeprefix("platform."), "platform")
@@ -19225,7 +20341,7 @@ def build_parser() -> argparse.ArgumentParser:
     project_onboard = sub.add_parser("project-onboard", help="Onboard a project into an existing ProcessForge workplace.")
     project_onboard.add_argument("--project-root", required=True, help="Project root path.")
     project_onboard.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    project_onboard.add_argument("--type", dest="project_type", required=True, help="Project type, for example generic-software-project or example-component.")
+    project_onboard.add_argument("--type", dest="project_type", required=True, help="Explicit project type, for example generic or fixture.project-type.a.")
     project_onboard.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
     project_onboard.add_argument("--answers", help="Optional project answers YAML.")
     project_onboard.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
@@ -19474,6 +20590,69 @@ def build_parser() -> argparse.ArgumentParser:
     mcp_register.add_argument("--apply", action="store_true", help="Update MCP registry.")
     mcp_register.set_defaults(func=command_mcp_register)
 
+    specialization_list = sub.add_parser("specialization-list", help="List workplace/project specialization resources.")
+    specialization_list.add_argument("--workplace", required=True, help="Workplace root path.")
+    specialization_list.add_argument("--project-root", help="Project root path for project-local specializations.")
+    specialization_list.add_argument("--json", action="store_true", help="Print JSON.")
+    specialization_list.set_defaults(func=command_specialization_list)
+
+    specialization_show = sub.add_parser("specialization-show", help="Show one specialization resource.")
+    specialization_show.add_argument("--workplace", required=True, help="Workplace root path.")
+    specialization_show.add_argument("--project-root", help="Project root path for project-local specializations.")
+    specialization_show.add_argument("--id", required=True, help="Specialization id.")
+    specialization_show.add_argument("--json", action="store_true", help="Print JSON.")
+    specialization_show.set_defaults(func=command_specialization_show)
+
+    specialization_doctor = sub.add_parser("specialization-doctor", help="Validate one specialization resource.")
+    specialization_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
+    specialization_doctor.add_argument("--id", required=True, help="Specialization id.")
+    specialization_doctor.set_defaults(func=command_specialization_doctor)
+
+    specialization_create = sub.add_parser("specialization-create", help="Create a workplace specialization resource.")
+    specialization_create.add_argument("--workplace", required=True, help="Workplace root path.")
+    specialization_create.add_argument("--id", required=True, help="Specialization id.")
+    specialization_create.add_argument("--title", help="Specialization title.")
+    specialization_create.add_argument("--description", help="Specialization description.")
+    specialization_create.add_argument("--apply", action="store_true", help="Write the specialization resource.")
+    specialization_create.add_argument("--force", action="store_true", help="Overwrite an existing specialization file.")
+    specialization_create.set_defaults(func=command_specialization_create)
+
+    specialization_bind_platform = sub.add_parser("specialization-bind-platform", help="Add a platform binding to a specialization.")
+    specialization_bind_platform.add_argument("--workplace", required=True, help="Workplace root path.")
+    specialization_bind_platform.add_argument("--specialization", required=True, help="Specialization id.")
+    specialization_bind_platform.add_argument("--platform", required=True, help="Platform id.")
+    specialization_bind_platform.add_argument("--platform-stack-includes", action="append", default=[], help="Platform stack id that also activates this binding. Repeatable.")
+    specialization_bind_platform.add_argument("--process", action="append", default=[], help="Deprecated process id filter. Repeatable.")
+    specialization_bind_platform.add_argument("--project-type", action="append", default=[], help="Project type filter. Repeatable.")
+    specialization_bind_platform.add_argument("--requires-knowledge", action="append", default=[], help="Required knowledge package id. Repeatable.")
+    specialization_bind_platform.add_argument("--requires-tool", action="append", default=[], help="Required tool id. Repeatable.")
+    specialization_bind_platform.add_argument("--requires-mcp", action="append", default=[], help="Required MCP id. Repeatable.")
+    specialization_bind_platform.add_argument("--requires-template", action="append", default=[], help="Required template id. Repeatable.")
+    specialization_bind_platform.add_argument("--provides-capability", action="append", default=[], help="Capability id provided by this binding. Repeatable.")
+    specialization_bind_platform.add_argument("--apply", action="store_true", help="Write the binding.")
+    specialization_bind_platform.set_defaults(func=command_specialization_bind_platform)
+
+    project_override_add = sub.add_parser("project-override-add", help="Add or update a project-local override entry.")
+    project_override_add.add_argument("--project-root", required=True, help="Project root path.")
+    project_override_add.add_argument("--kind", required=True, help="Override kind: template, knowledge_package, tool, mcp, specialization.")
+    project_override_add.add_argument("--target", required=True, help="Target resource id.")
+    project_override_add.add_argument("--mode", required=True, choices=sorted(PROJECT_OVERRIDE_MODES), help="Override mode.")
+    project_override_add.add_argument("--path", help="Project-local override file path.")
+    project_override_add.add_argument("--project-package", help="Project-local package id for knowledge package extensions.")
+    project_override_add.add_argument("--param", action="append", default=[], help="Parameter key=value. Repeatable.")
+    project_override_add.add_argument("--reason", required=True, help="Human-readable reason.")
+    project_override_add.add_argument("--apply", action="store_true", help="Write .pf/project-overrides.yaml.")
+    project_override_add.set_defaults(func=command_project_override_add)
+
+    project_override_list = sub.add_parser("project-override-list", help="List project-local overrides.")
+    project_override_list.add_argument("--project-root", required=True, help="Project root path.")
+    project_override_list.add_argument("--json", action="store_true", help="Print JSON.")
+    project_override_list.set_defaults(func=command_project_override_list)
+
+    project_override_doctor = sub.add_parser("project-override-doctor", help="Validate project-local overrides.")
+    project_override_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    project_override_doctor.set_defaults(func=command_project_override_doctor)
+
     platform_contract_install = sub.add_parser("platform-contract-install", help="Create or update a workplace platform contract.")
     platform_contract_install.add_argument("--workplace", required=True, help="Workplace root path.")
     platform_contract_install.add_argument("--id", required=True, help="Platform id, with or without platform. prefix.")
@@ -19672,8 +20851,10 @@ def build_parser() -> argparse.ArgumentParser:
     session_start.add_argument("--process", help="Process id.")
     session_start.add_argument("--run", help="Run id.")
     session_start.add_argument("--task", help="Task id.")
+    session_start.add_argument("--specialization", action="append", default=[], help="Selected specialization id for this session. Repeatable.")
     session_start.add_argument("--role", action="append", default=[], help="Checked-in role. Repeatable.")
     session_start.add_argument("--capability", action="append", default=[], help="Runtime capability. Repeatable.")
+    session_start.add_argument("--supports-specialization", action="append", default=[], help="Specialization id supported by this agent session. Repeatable.")
     session_start.add_argument("--ttl", type=int, default=300, help="Heartbeat TTL seconds.")
     session_start.add_argument("--json", action="store_true", help="Print JSON for agent session check-in.")
     session_start.set_defaults(func=command_session_start)
@@ -19836,7 +21017,7 @@ def build_parser() -> argparse.ArgumentParser:
     evolve_run = sub.add_parser("evolve-run", help="Create a run evolution report and optionally queue candidate files.")
     evolve_run.add_argument("--project-root", required=True, help="Project root path.")
     evolve_run.add_argument("--workplace", help="Workplace root path for durable learning queue.")
-    evolve_run.add_argument("--process", default="software-feature-development", help="Process id or YAML path.")
+    evolve_run.add_argument("--process", default="task-batch-execution", help="Process id or YAML path.")
     evolve_run.add_argument("--run", required=True, help="Run id.")
     evolve_run.add_argument("--candidate-file", action="append", default=[], help="Candidate YAML file to queue. Repeatable.")
     evolve_run.set_defaults(func=command_evolve_run)
@@ -20118,6 +21299,7 @@ def build_parser() -> argparse.ArgumentParser:
     agent_register.add_argument("--kind", default="operator_started_agent", help="Agent kind.")
     agent_register.add_argument("--role", action="append", default=[], help="Agent role. Repeatable.")
     agent_register.add_argument("--capability", action="append", default=[], help="Agent capability. Repeatable.")
+    agent_register.add_argument("--supports-specialization", action="append", default=[], help="Specialization id this agent profile supports. Repeatable.")
     agent_register.set_defaults(func=command_agent_register)
 
     agent_list = sub.add_parser("agent-list", help="List registered workplace agents.")
@@ -20136,6 +21318,7 @@ def build_parser() -> argparse.ArgumentParser:
     agent_checkin.add_argument("--task", help="Task id.")
     agent_checkin.add_argument("--role", action="append", default=[], help="Checked-in role. Repeatable.")
     agent_checkin.add_argument("--capability", action="append", default=[], help="Runtime capability. Repeatable.")
+    agent_checkin.add_argument("--supports-specialization", action="append", default=[], help="Specialization id supported by this session. Repeatable.")
     agent_checkin.add_argument("--ttl", type=int, default=300, help="Heartbeat TTL seconds.")
     agent_checkin.add_argument("--json", action="store_true", help="Print JSON.")
     agent_checkin.set_defaults(func=command_agent_checkin)
@@ -20375,6 +21558,8 @@ def build_parser() -> argparse.ArgumentParser:
     run_create.add_argument("--id", required=True, help="Run id.")
     run_create.add_argument("--title", required=True, help="Run title.")
     run_create.add_argument("--process", default="task-batch-execution", help="Process definition id.")
+    run_create.add_argument("--platform", help="Selected platform id for this run.")
+    run_create.add_argument("--specialization", action="append", default=[], help="Selected specialization id. Repeatable.")
     run_create.add_argument("--objective", help="Run objective.")
     run_create.add_argument("--status", default="in_progress", choices=sorted(RUN_STATUSES), help="Initial run status.")
     run_create.add_argument("--apply", action="store_true", help="Write run files.")
@@ -20413,6 +21598,8 @@ def build_parser() -> argparse.ArgumentParser:
     task_create.add_argument("--id", required=True, help="Task id.")
     task_create.add_argument("--title", required=True, help="Task title.")
     task_create.add_argument("--process", required=True, help="Task process id.")
+    task_create.add_argument("--platform", help="Selected platform id for this task.")
+    task_create.add_argument("--specialization", action="append", default=[], help="Selected specialization id. Repeatable.")
     task_create.add_argument("--objective", help="Task objective.")
     task_create.add_argument("--order", type=int, help="Task order override.")
     task_create.add_argument("--execution-mode", choices=["read_only", "planning_only", "docs_only", "implementation", "assurance", "release_delivery"], help="Assignment execution mode.")
@@ -20518,8 +21705,13 @@ def build_parser() -> argparse.ArgumentParser:
     chat_export.add_argument("--include-content", action="store_true", help="Opt in to include redacted transcript content in the outbox payload.")
     chat_export.set_defaults(func=command_chat_export)
 
-    context_resolve = sub.add_parser("context-resolve", help="Deprecated compatibility context index command.")
+    context_resolve = sub.add_parser("context-resolve", help="Resolve project context or explicit platform/process/specialization resources.")
     context_resolve.add_argument("--project-root", required=True, help="Project root path.")
+    context_resolve.add_argument("--workplace", help="Workplace root path for explicit specialization resolution.")
+    context_resolve.add_argument("--platform", action="append", default=[], help="Selected platform id. Repeatable.")
+    context_resolve.add_argument("--process", help="Process id.")
+    context_resolve.add_argument("--specialization", action="append", default=[], help="Selected specialization id. Repeatable.")
+    context_resolve.add_argument("--json", action="store_true", help="Print JSON.")
     context_resolve.set_defaults(func=command_context_resolve)
 
     context_compile = sub.add_parser("context-compile", help="Deprecated compatibility Execution Context Package command.")

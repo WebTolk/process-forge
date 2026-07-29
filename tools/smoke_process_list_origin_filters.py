@@ -15,7 +15,7 @@ def main() -> int:
     result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, timeout=60)
     assert result.returncode == 0, result.stdout + result.stderr
     assert "origin" in result.stdout.splitlines()[0], result.stdout
-    assert "software-feature-development" in result.stdout, result.stdout
+    assert "task-batch-execution" in result.stdout, result.stdout
     assert "\tcore\t" in result.stdout, result.stdout
     user = subprocess.run(command[:-1] + ["user", "--all"], cwd=ROOT, text=True, capture_output=True, timeout=60)
     assert user.returncode == 0, user.stdout + user.stderr

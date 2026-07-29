@@ -1,0 +1,34 @@
+schema_version: 1
+id: process-forge-content
+name: ProcessForge Content
+version: 1.0.0
+status: optional_example
+core: false
+installed_by_default: false
+kind: direction
+scope: content-work
+description: Optional example package for content planning, drafting, review, and publication handoff. It is never installed or activated by default.
+dependencies:
+- process-forge-core
+rules:
+- id: brief-before-draft
+  text: Content work starts from an explicit brief.
+templates:
+- artifact-template
+- review-template
+- handoff-template
+tools:
+- id: text-editor
+  capability: writing
+mcp_servers: []
+validation:
+- id: publication-readiness-review
+  capability: editorial_review
+processes:
+- content-production
+- documentation-mirror-import
+stable_processes:
+- content-production
+- documentation-mirror-import
+experimental_processes: []
+internal_processes: []

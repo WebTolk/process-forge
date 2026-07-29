@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "bin", "tools", "updates", "checksums"]
+PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates", "checksums"]
 PUBLIC_ROOT_FILES = ["README.md", "QUICKSTART.md", "LICENSE", "CHANGELOG.md", "VERSION", "requirements.txt", ".processforge-releaseignore"]
 PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 PF_PUBLIC_DIRS: list[str] = []
@@ -121,19 +121,7 @@ def flow_core_files(root_path: Path) -> list[Path]:
             and not any(part in SKIP_DIRS for part in path.relative_to(root).parts)
             and path.suffix.lower() in TEXT_SUFFIXES
         )
-    pf_root = root_path / ".pf"
-    if pf_root.is_dir():
-        for dirname in PF_FLOW_DIRS:
-            root = pf_root / dirname
-            if not root.is_dir():
-                continue
-            files.extend(
-                path
-                for path in root.rglob("*")
-                if path.is_file()
-                and not any(part in SKIP_DIRS or part in PF_PRIVATE_PARTS for part in path.relative_to(pf_root).parts)
-                and path.suffix.lower() in TEXT_SUFFIXES
-            )
+    files.extend(path for path in (root_path / name for name in PF_PUBLIC_ROOT_FILES) if path.is_file())
     return sorted(set(files), key=lambda path: path.relative_to(root_path).as_posix())
 
 

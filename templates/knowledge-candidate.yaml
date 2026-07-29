@@ -6,13 +6,13 @@ source_context:
     - platform.example-child
   knowledge_stack:
     - docs.example-child
-  project_type: example-software-project
+  project_type: fixture.project-type.a
   extension_type: example-extension
   extension_group: example-group
   package_context:
     package_id: docs.example-child
     package_type: knowledge_package
-  process_id: software-feature-development
+  process_id: task-batch-execution
   run_id: run-example
   task_id: task-example
   context_snapshot_id: snapshot-example
@@ -31,7 +31,7 @@ applicability:
     knowledge_packages:
       - docs.example-child
     project_types:
-      - example-software-project
+      - fixture.project-type.a
     extension_types:
       - example-extension
     extension_groups:
@@ -73,7 +73,7 @@ applicability_confidence:
     projects: 1
     platforms: 1
     versions: 1
-category: docs
+category: resource
 summary: Capture a reusable but narrowly scoped process observation.
 rationale: Child-platform observations stay narrow until promotion evidence is reviewed.
 statement:

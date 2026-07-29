@@ -1,40 +1,49 @@
 # Capability Resolution
 
-ProcessForge processes should ask for capabilities, not concrete tools.
+ProcessForge core is domain-neutral. It knows how to resolve capabilities, but
+it does not know which user or workplace capabilities exist.
 
-## Capability
-
-A capability names what must be possible:
+A capability is an opaque string id. Processes may require capability ids, and
+specializations, tools, MCP providers, templates, platform contracts, packages,
+or project overrides may provide capability ids through workspace or project
+data. The resolver only computes set membership:
 
 ```text
-repository.read
-repository.symbol_analysis
-php.static_analysis
-official_documentation
-browser.automation
-media.generate
+required_capabilities
+provided_capabilities
+satisfied = required intersect provided
+unsatisfied = required - provided
 ```
 
-## Provider
+No user process capability is satisfied by ProcessForge core by default. PF
+internal operations such as schema validation, hashing, snapshot writing, and
+archive checking are runtime mechanics; they are not providers for user process
+requirements.
 
-A provider is a configured tool or MCP server that can satisfy a capability.
+## Data Sources
 
-Examples:
+Provided capabilities can come from active data only:
 
-- a static analyzer executable
-- a documentation lookup MCP server
-- a browser automation MCP server
-- a package builder
+- selected specialization definitions
+- matched specialization `platform_bindings`
+- activated tool, MCP, and template definitions
+- platform contracts when explicitly selected by workspace/project data
+- project overrides and task-explicit resources
+- optional workplace, project, or package capability registries
 
-## Resolution Order
+If a process requires a capability that the active resource profile does not
+provide, the result is `unsatisfied` and the context status is
+`needs_resources`.
 
-1. Project-local provider.
-2. Workplace provider.
-3. Optional fallback provider.
-4. Missing capability report.
+## Examples
 
-Required missing capabilities block doctor checks. Optional missing capabilities produce warnings.
+Documentation examples use synthetic ids such as:
 
-## Public Boundary
+```text
+fixture.capability.a
+fixture.capability.b
+example.capability.domain-specific-thing
+```
 
-Public manifests record capability ids and selected package ids. Private local config records concrete paths and local preferences.
+Concrete software, media, legal, or other domain-shaped ids may appear only as
+examples in user/workplace/package data. They are never PF core defaults.

@@ -67,7 +67,7 @@ workers:
   - id: test-worker
     title: Test worker
     role: test
-    process: testing
+    process: task-batch-execution
     execution_mode: assurance
     writer: true
     allowed_files: [.pf/artifacts/test-worker.md]
@@ -103,7 +103,7 @@ def main() -> int:
         pf("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic-software-project", "--apply")
         pf("session-start", "--workplace", str(workplace), "--project-root", str(project), "--agent", "director-local", "--session", "sess-director", "--process", "multi-agent-task-orchestration", "--role", "agent-director")
         pf("agent-checkin", "--workplace", str(workplace), "--project-root", str(project), "--agent", "docs-agent", "--session", "sess-docs", "--process", "documentation", "--role", "docs")
-        pf("agent-checkin", "--workplace", str(workplace), "--project-root", str(project), "--agent", "test-agent", "--session", "sess-test", "--process", "testing", "--role", "test")
+        pf("agent-checkin", "--workplace", str(workplace), "--project-root", str(project), "--agent", "test-agent", "--session", "sess-test", "--process", "task-batch-execution", "--role", "test")
 
         write_plan(plan)
         pf("orchestrator-plan", "validate", "--project-root", str(project), "--plan", str(plan))

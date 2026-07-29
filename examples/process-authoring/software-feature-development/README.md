@@ -1,11 +1,11 @@
 ﻿# Software Feature Development Process Authoring Example
 
 This example points to the public stable built-in
-`software-feature-development` as a reference lifecycle process pack.
+`software-feature-development` from the optional `software-web` domain pack.
 
-- Process: `processes/core/software-feature-development.yaml`
-- Prompt: `prompts/software-feature-development-agent.md`
-- Documentation: `docs/processes/software-feature-development.md`
+- Process: `examples/domain-packs/software-web/processes/software-feature-development.yaml`
+- Prompt: `examples/domain-packs/software-web/prompts/software-feature-development-agent.md`
+- Documentation: `examples/domain-packs/software-web/docs/processes/software-feature-development.md`
 
 ## Compact Lifecycle
 

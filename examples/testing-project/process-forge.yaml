@@ -13,12 +13,12 @@ paths:
   logs: logs
 processes:
   - id: testing
-    path: processes/core/testing.yaml
+    path: examples/domain-packs/verification-workflow/processes/testing.yaml
 packages:
   - id: process-forge-core
     path: packages/process-forge-core.yaml
   - id: process-forge-testing
-    path: packages/process-forge-testing.yaml
+    path: examples/domain-packs/verification-workflow/package.yaml
 policies:
   one_writer_per_file_scope: true
   approved_artifacts_are_protected: true

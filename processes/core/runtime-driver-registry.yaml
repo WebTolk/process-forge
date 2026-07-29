@@ -183,10 +183,10 @@ run_completion:
   summary_required: true
   handoff_artifact_required: false
 required_packages:
-- process-forge-software-development
+- process-forge-core
 - process-forge-core
 process_pack:
-  package: process-forge-software-development
+  package: process-forge-core
   example_required: true
 agent_prompt:
   required: true

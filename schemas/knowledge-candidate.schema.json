@@ -110,7 +110,7 @@
       },
       "additionalProperties": true
     },
-    "category": { "enum": ["domain", "architecture", "implementation", "assurance", "delivery", "tooling", "process", "docs", "content", "seo", "media", "generic"] },
+    "category": { "enum": ["domain", "architecture", "implementation", "assurance", "delivery", "tooling", "process", "resource", "generic"] },
     "summary": { "type": "string", "minLength": 1 },
     "rationale": { "type": "string" },
     "statement": { "type": "object", "additionalProperties": true },

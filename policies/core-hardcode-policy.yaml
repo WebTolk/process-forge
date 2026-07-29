@@ -2,6 +2,19 @@ schema_version: 1
 
 targets:
   - tools/processforge.py
+  - bin/pf.py
+  - tools/*helpers.py
+  - schemas/*.json
+  - templates/*.yaml
+  - templates/registries/*.yaml
+  - processes/core/*.yaml
+  - prompts/*.md
+  - packages/*.yaml
+  - seeds/**/*.yaml
+
+allowed_paths:
+  - tools/smoke_*.py
+  - examples/domain-packs/**
 
 forbidden_core_patterns:
   - id: builtin-platform-contracts-constant
@@ -10,3 +23,44 @@ forbidden_core_patterns:
     pattern: "PLATFORM_REQUIRED_PARENTS"
   - id: base-tech-platform-ids-constant
     pattern: "BASE_TECHNOLOGY_PLATFORM_IDS"
+  - id: hardcoded-domain-project-detector
+    pattern: "composer\\.json|package\\.json|pyproject\\.toml|phpunit\\.xml|\\.github/workflows|\\*\\.(?:php|py|js)(?![a-z0-9])|node_project|python_project|php_project"
+    targets:
+      - tools/processforge.py
+      - bin/pf.py
+    case_insensitive: true
+  - id: domain-process-default
+    pattern: "software-feature-development|content-production|documentation-mirror-import|generic-software-project|software_project"
+    targets:
+      - tools/processforge.py
+      - schemas/*.json
+      - templates/*.yaml
+      - processes/core/*.yaml
+      - prompts/*.md
+      - packages/*.yaml
+    case_insensitive: true
+  - id: domain-capability-default
+    pattern: "content_planning|editorial_review|\\bseo\\b"
+    targets:
+      - tools/processforge.py
+      - schemas/*.json
+      - templates/*.yaml
+      - processes/core/*.yaml
+      - prompts/*.md
+      - packages/*.yaml
+    case_insensitive: true
+  - id: concrete-domain-platform
+    pattern: "\\bjoomla\\b|\\blaravel\\b"
+    targets:
+      - tools/processforge.py
+      - schemas/*.json
+      - templates/*.yaml
+      - processes/core/*.yaml
+      - prompts/*.md
+      - packages/*.yaml
+    case_insensitive: true
+  - id: domain-knowledge-seed
+    pattern: "docs\\.php|docs\\.web\\."
+    targets:
+      - seeds/**/*.yaml
+    case_insensitive: true

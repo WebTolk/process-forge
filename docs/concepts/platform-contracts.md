@@ -72,3 +72,9 @@ Example only: a documentation page may describe a real stack such as
 Joomla -> JoomShopping, where the child platform inherits the parent context.
 That kind of product-specific stack belongs in workplace data or docs/examples,
 not in ProcessForge core code paths.
+## Platform Versus Specialization
+
+Platform contracts describe where the work happens. They do not encode roles.
+Use a specialization for role or work-mode selection, and use
+`platform_bindings` inside that specialization to choose platform-specific
+knowledge, tools, MCP providers, and templates.

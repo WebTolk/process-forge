@@ -1,0 +1,20 @@
+schema_version: 1
+kind: processforge.project_classifier
+
+id: fixture.classifier.a
+name: Fixture Classifier A
+status: active
+
+rules:
+  - id: fixture.rule.marker-file
+    when:
+      all:
+        - exists: fixture.marker
+    classify_as:
+      project_types:
+        - fixture.project-type.a
+      platforms:
+        - platform.example.fixture-a
+      tags:
+        - fixture.tag.a
+    confidence: high

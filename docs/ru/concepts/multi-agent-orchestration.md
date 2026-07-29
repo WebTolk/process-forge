@@ -44,3 +44,10 @@ Worker не получает полный project context по умолчани�
 - orchestration summary
 - initial orchestrator handoff
 - `config-resolution-report.yaml` со значениями config, примененными к assignments, capsules, supervisor scheduling и output collection
+## Routing По Specialization
+
+Specialization отделена от agent identity. Agent profile может объявлять
+`supports_specializations`; handoff может указать `required_specializations`;
+factory routing может выбирать checked-in sessions по этим декларациям.
+Garage-mode switch specialization должен быть явным session/context refresh
+event.

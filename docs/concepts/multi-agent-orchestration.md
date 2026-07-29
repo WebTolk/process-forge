@@ -44,3 +44,11 @@ Workers do not receive full project context by default. Assignment capsules set 
 - orchestration summary
 - initial orchestrator handoff
 - `config-resolution-report.yaml` with the config values that were applied to assignments, capsules, supervisor scheduling, and output collection
+## Specialization Routing
+
+Specialization remains separate from agent identity. An agent profile may
+advertise `capabilities` and `supports_specializations`. A handoff should prefer
+`required_capabilities` for routing and use `required_specializations` or
+`preferred_specializations` only as secondary resource-profile constraints.
+Garage-mode specialization switches must be explicit session/context refresh
+events; they change the active resource profile, not the process definition.

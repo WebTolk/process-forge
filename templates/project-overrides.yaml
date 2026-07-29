@@ -1,0 +1,28 @@
+schema_version: 1
+kind: processforge.project_overrides
+overrides:
+  templates:
+    - target: template.example.release-notes
+      mode: extension
+      path: ".pf/templates/overrides/release-notes.yaml"
+      reason: "Example: project-specific release notes structure."
+  knowledge_packages:
+    - target: docs.example.platform
+      mode: extension
+      project_package: project.example.local-rules
+      reason: "Example: project-specific local rules."
+  tools:
+    - target: fixture.tool.b
+      mode: disable
+      reason: "Example: this project does not use fixture tool B."
+  mcp:
+    - target: fixture.mcp.a
+      mode: parameterize
+      params:
+        profile: project-fixture-profile
+      reason: "Example: project-specific MCP profile."
+  specializations:
+    - target: fixture.specialization.a
+      mode: overlay
+      path: ".pf/specializations/overrides/a.yaml"
+      reason: "Example: project-specific resource profile."

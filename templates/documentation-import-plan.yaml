@@ -1,29 +1,27 @@
 schema_version: 1
-id: example-documentation-import
-source: mdn
+id: fixture-resource-import
+source: fixture.source.a
 topics:
-  - html
-  - css
-  - js
+  - fixture.topic.a
 mode: plan_only
 download:
   enabled: false
   reason: "MVP creates a plan and index records before any mirror/download run."
 resources:
-  - id: mdn-html-docs
-    kind: documentation
-    title: "MDN HTML documentation mirror"
+  - id: fixture-resource-a
+    kind: reference
+    title: "Fixture resource mirror"
     path_ref:
       registry: external_resources
-      id: mdn-html-docs
+      id: fixture-resource-a
     load_policy: on_demand
     index_policy: full_text
     license:
       name: source-specific
     source:
       type: documentation_source
-      id: mdn
-      topic: html
+      id: fixture.source.a
+      topic: fixture.topic.a
     update_policy:
       mode: manual_plan_first
 index_policy: write_resource_index_without_loading_full_content

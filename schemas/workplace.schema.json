@@ -32,6 +32,8 @@
         "templates": { "type": "string" },
         "tools": { "type": "string" },
         "mcp": { "type": "string" },
+        "specializations": { "type": "string" },
+        "project_classifiers": { "type": "string" },
         "update_sources": { "type": "string" },
         "installed_subjects": { "type": "string" },
         "update_site_overrides": { "type": "string" }

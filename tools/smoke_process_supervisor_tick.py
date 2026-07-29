@@ -50,7 +50,7 @@ workers:
   - id: failing-worker
     title: Failing worker
     role: test
-    process: testing
+    process: task-batch-execution
     execution_mode: assurance
     writer: true
     allowed_files: [.pf/artifacts/**]

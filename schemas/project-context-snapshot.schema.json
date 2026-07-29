@@ -30,6 +30,19 @@
       },
       "additionalProperties": true
     },
+    "project_classification": {
+      "type": "object",
+      "properties": {
+        "status": { "enum": ["classified", "unclassified"] },
+        "project_types": { "type": "array", "items": { "type": "string" } },
+        "platforms": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "confidence": { "enum": ["low", "medium", "high"] },
+        "loaded_classifiers": { "type": "array", "items": { "type": "string" } },
+        "matched_rules": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      },
+      "additionalProperties": true
+    },
     "flow": {
       "type": "object",
       "required": ["root", "manifest", "local_config"],
@@ -67,6 +80,15 @@
     "requirements_fingerprint": { "type": "object", "additionalProperties": { "type": "string" } },
     "context_requirements": { "type": "object", "additionalProperties": true },
     "context_policy": { "type": "object", "additionalProperties": true },
+    "resolved_context": { "type": "object", "additionalProperties": true },
+    "active_resource_profile": { "type": "object", "additionalProperties": true },
+    "execution_route": { "type": "object", "additionalProperties": true },
+    "capability_resolution": { "type": "object", "additionalProperties": true },
+    "selected_specializations": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "applied_project_overrides": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "effective_fingerprints": { "type": "object", "additionalProperties": { "type": "string" } },
+    "resolution_reasons": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "conflicts": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "resolved": {
       "type": "object",
       "properties": {

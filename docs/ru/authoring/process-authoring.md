@@ -114,3 +114,9 @@ evolve:
 Observation по умолчанию остаётся в самом узком безопасном scope. Если вывод
 смешивает project-specific часть, platform knowledge, delivery profile и
 process improvement, он должен быть split на несколько candidates.
+## Specialization Policy
+
+Если process поддерживает specializations, держите `specialization_policy` как
+optional routing metadata. Workflow stages должны объявлять абстрактные
+`requires_capabilities`; конкретные resource bindings принадлежат
+specialization resources и их `platform_bindings`.

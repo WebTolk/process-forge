@@ -23,7 +23,7 @@ def main() -> int:
     assert not flat, f"flat process files remain: {[path.name for path in flat]}"
     entries = process_catalog_entries(ROOT)
     core_ids = {entry.process_id for entry in entries if entry.origin == "core"}
-    assert "software-feature-development" in core_ids, "core process not resolved"
+    assert "task-batch-execution" in core_ids, "neutral core process not resolved"
     assert all(entry.path.is_file() for entry in entries), "resolved process path missing"
     print("PASS: process directory layout")
     return 0
