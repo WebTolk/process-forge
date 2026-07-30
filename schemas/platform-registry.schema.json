@@ -15,12 +15,12 @@
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$" },
     "registryItem": {
       "type": "object",
-      "required": ["id", "name", "status"],
+      "required": ["id", "name", "path", "package_id", "status"],
       "properties": {
         "id": { "$ref": "#/$defs/id" },
-        "name": { "type": "string" },
-        "path": { "type": "string" },
-        "package_id": { "type": "string" },
+        "name": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "package_id": { "$ref": "#/$defs/id" },
         "status": { "enum": ["available", "optional", "missing", "disabled"] }
       },
       "additionalProperties": true

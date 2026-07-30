@@ -1,0 +1,84 @@
+schema_version: 1
+id: remediation-knowledge-builder-contract-20260730
+title: Enforce schema-valid knowledge hub package builds
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T07:42:00Z'
+updated_at: '2026-07-30T07:56:00Z'
+objective: Close the sole integrated-review blocker by making knowledge hub builds schema-valid and preventing release of an invalid package manifest.
+order: 13
+dependencies:
+  blocked_by:
+    - remediation-integrated-review-20260730
+  blocks: []
+iterations: []
+result:
+  status: done
+  summary: Hub builds now emit and prevalidate schema-valid mixed manifests, while release rejects invalid or mismatched manifests before any output mutation.
+  artifacts:
+    - tools/smoke_remediation_knowledge_builder_contract.py
+    - .pf/artifacts/pre-release-remediation-agents/knowledge-builder-contract.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/reviews/pre-release-remediation-integrated-review-20260730.md
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - schemas/package-manifest.schema.json
+allowed_read_files:
+  - tools/processforge.py
+  - tools/smoke_knowledge_package_build_from_candidates.py
+  - tools/smoke_knowledge_package_release_update_manifest.py
+  - docs/getting-started/evolve-learning-loop.md
+allowed_files:
+  - tools/processforge.py
+  - tools/smoke_remediation_knowledge_builder_contract.py
+  - .pf/artifacts/pre-release-remediation-agents/knowledge-builder-contract.md
+forbidden_files:
+  - schemas/**
+  - docs/**
+  - packs/**
+  - seeds/**
+ownership:
+  owner_id: remediation-knowledge-builder-contract-20260730
+  owner_label: generator-doctor-implementer
+  role: implementation-engineer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/smoke_remediation_knowledge_builder_contract.py
+    - .pf/artifacts/pre-release-remediation-agents/knowledge-builder-contract.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-transaction-design-20260730
+      owner: transaction-architect
+    - id: remediation-lifecycle-design-20260730
+      owner: lifecycle-architect
+  current_write_scope:
+    - tools/processforge.py
+    - tools/smoke_remediation_knowledge_builder_contract.py
+    - .pf/artifacts/pre-release-remediation-agents/knowledge-builder-contract.md
+  rule: Sole writer for tools/processforge.py; architecture workers remain report-only.
+required_outputs:
+  - id: knowledge-builder-contract-report
+    type: implementation_report
+    path: .pf/artifacts/pre-release-remediation-agents/knowledge-builder-contract.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/knowledge-builder-contract.md
+  format: evidence_backed_markdown
+  include:
+    - root_cause
+    - selected_kind_semantics
+    - build_schema_postcondition
+    - release_rejection
+    - tests
+    - residual_risks
+worker_may_rebuild_context: false
+runtime_driver: manual

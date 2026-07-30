@@ -28,6 +28,25 @@ python bin/pf.py workplace-init --workplace ./pf-workplace --apply
 python bin/pf.py doctor-workplace --root ./pf-workplace
 ```
 
+The default `generic` profile leaves all domain-specific official packs
+inactive:
+
+```bash
+python bin/pf.py workplace-init --profile generic --workplace ./pf-workplace --apply
+```
+
+Select a production workflow profile when the workplace should activate its
+official bundled pack:
+
+```bash
+python bin/pf.py workplace-init --profile software-development --workplace ./pf-workplace --apply
+python bin/pf.py workplace-init --profile content-workflow --workplace ./pf-workplace --apply
+python bin/pf.py workplace-init --profile verification --workplace ./pf-workplace --apply
+```
+
+Profiles activate data packs; they do not change the ProcessForge kernel.
+See [Official packs](official-packs.md) for discovery and explicit activation.
+
 Workplace coordination is capability-level. Enabling Director support makes a
 workplace organized-capable, but projects still choose their own mode:
 

@@ -14,10 +14,26 @@ python bin/pf.py release-test --root .
 
 Use `python bin/pf.py` from the ProcessForge distribution root.
 
+Keep mutable workplaces and projects outside the replaceable distribution
+directory. After `cd process-forge`, use sibling or other external paths, for
+example `../pf-workplace` and `../my-project`.
+
+For the production software-development profile, initialize the workplace
+explicitly before onboarding the project:
+
+```bash
+python bin/pf.py workplace-init --workplace ../pf-workplace --profile software-development --apply
+python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-workplace --type generic-software-project --apply
+```
+
+The `first-run` convenience command does not accept `--profile`; use the
+explicit two-command flow above when a bundled workplace profile is required.
+
 After a project is onboarded, use the project runtime launcher inside that
 project:
 
 ```bash
+cd ../my-project
 python .pf/runtime/bin/pf.py doctor-project --project-root .
 ```
 

@@ -1,4 +1,5 @@
 schema_version: 1
+profile: generic
 
 workplace:
   id: main-workstation

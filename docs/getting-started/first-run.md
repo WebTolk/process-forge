@@ -18,20 +18,26 @@ out of scope.
 Python CLI is the canonical runtime. The root `pf` wrappers are thin convenience launchers over `bin/pf.py`.
 
 ```bash
-python bin/pf.py first-run --workplace ./pf-workplace --project-root ./my-project --type generic-software-project --apply
+python bin/pf.py first-run --workplace ../pf-workplace --project-root ../my-project --type generic-software-project --apply
 ```
 
-For explicit control, run the two commands separately:
+The paths are deliberately outside the distribution directory. This keeps the
+mutable workplace and project intact when the ProcessForge installation is
+replaced or upgraded.
+
+`first-run` does not accept `--profile`. For the production
+software-development profile, run the two commands separately:
 
 ```bash
-python bin/pf.py workplace-init --workplace ./pf-workplace --apply
-python bin/pf.py project-onboard --project-root ./my-project --workplace ./pf-workplace --type generic-software-project --apply
-python bin/pf.py agent-start-prompt --project-root ./my-project
+python bin/pf.py workplace-init --workplace ../pf-workplace --profile software-development --apply
+python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-workplace --type generic-software-project --apply
+python bin/pf.py agent-start-prompt --project-root ../my-project
 ```
 
-Inside `./my-project`, run ProcessForge through `pf` or the project-local runtime launcher:
+Inside `../my-project`, run ProcessForge through `pf` or the project-local runtime launcher:
 
 ```bash
+cd ../my-project
 pf doctor-project --project-root .
 python .pf/runtime/bin/pf.py doctor-project --project-root .
 ```

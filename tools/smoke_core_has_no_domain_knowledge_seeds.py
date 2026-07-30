@@ -19,10 +19,10 @@ def main() -> None:
     present = {path.name for path in seed_root.glob("*.yaml")}
     if present.intersection(forbidden):
         raise AssertionError(f"domain seeds remain in core: {sorted(present.intersection(forbidden))}")
-    moved_root = ROOT / "examples" / "domain-packs" / "software-web" / "knowledge-packages"
+    moved_root = ROOT / "packs" / "official" / "software-development" / "knowledge-packages"
     missing = [name for name in forbidden if not (moved_root / name).is_file()]
     if missing:
-        raise AssertionError(f"moved domain examples missing: {sorted(missing)}")
+        raise AssertionError(f"official pack knowledge declarations missing: {sorted(missing)}")
     for path in seed_root.glob("*.yaml"):
         text = path.read_text(encoding="utf-8", errors="replace")
         if "id: docs.example-" not in text:

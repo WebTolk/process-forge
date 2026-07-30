@@ -1,0 +1,76 @@
+schema_version: 1
+id: remediation-first-slice-review-20260730
+title: Independently review critical and schema remediation
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T07:03:00Z'
+updated_at: '2026-07-30T07:18:30Z'
+objective: Independently verify PF-AUD-001 through PF-AUD-005 remediation, negative tests, compatibility, and write-scope compliance.
+order: 7
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations: []
+result:
+  status: failed
+  summary: Independent review accepted PF-AUD-001—003 but found two blocking contract regressions, leaving PF-AUD-004/005 partially fixed pending narrow follow-ups.
+  artifacts:
+    - .pf/reviews/pre-release-remediation-first-slice-review-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/first-slice-reviewer.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: false
+required_sources:
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/critical-cli.md
+  - .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
+allowed_read_files:
+  - tools/processforge.py
+  - tools/smoke_remediation_*.py
+  - schemas/**
+  - packs/**
+  - seeds/**
+  - .pf/assignments/remediation-*-20260730.yaml
+allowed_files:
+  - .pf/reviews/pre-release-remediation-first-slice-review-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/first-slice-reviewer.md
+forbidden_files:
+  - tools/**
+  - schemas/**
+  - packs/**
+  - seeds/**
+  - docs/**
+ownership:
+  owner_id: remediation-first-slice-review-20260730
+  owner_label: assurance-reviewer
+  role: assurance-reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/pre-release-remediation-first-slice-review-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/first-slice-reviewer.md
+  owned_globs: []
+required_outputs:
+  - id: first-slice-review
+    type: review
+    path: .pf/reviews/pre-release-remediation-first-slice-review-20260730.md
+    required: true
+  - id: reviewer-report
+    type: markdown
+    path: .pf/artifacts/pre-release-remediation-agents/first-slice-reviewer.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/reviews/pre-release-remediation-first-slice-review-20260730.md
+  format: evidence_backed_markdown
+  include:
+    - result
+    - finding_disposition
+    - independent_tests
+    - compatibility
+    - scope_compliance
+    - residual_risks
+worker_may_rebuild_context: false
+runtime_driver: manual

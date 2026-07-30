@@ -1,0 +1,52 @@
+schema_version: 1
+kind: processforge.pack
+id: processforge.official.content-workflow
+name: Official Content Workflow Process Pack
+version: 1.0.0
+origin: official
+tier: bundled
+status: stable
+production_ready: true
+bundled_with_distribution: true
+core_runtime_dependency: false
+activation:
+  active_by_default: false
+  available_by_default: true
+  profiles:
+    - content-workflow
+dependencies:
+  - process-forge-core
+rules:
+  - id: brief-before-draft
+    text: Content work starts from an explicit brief.
+provides:
+  capabilities:
+    - content_planning
+    - writing
+    - editorial_review
+    - research
+    - schema_validation
+  processes:
+    - content-production
+    - documentation-mirror-import
+  prompts:
+    - content-production-agent
+    - documentation-mirror-import-agent
+  knowledge_packages: []
+  project_classifiers: []
+  templates: []
+  tools: []
+  specializations: []
+processes:
+  - content-production
+  - documentation-mirror-import
+stable_processes:
+  - content-production
+  - documentation-mirror-import
+experimental_processes: []
+internal_processes: []
+quality:
+  tested: true
+  release_smokes:
+    - smoke_official_pack_manifest_schema
+    - smoke_official_packs_not_examples

@@ -1,0 +1,46 @@
+schema_version: 1
+kind: processforge.pack
+id: processforge.official.verification
+name: Official Verification Process Pack
+version: 1.0.0
+origin: official
+tier: bundled
+status: stable
+production_ready: true
+bundled_with_distribution: true
+core_runtime_dependency: false
+activation:
+  active_by_default: false
+  available_by_default: true
+  profiles:
+    - verification
+dependencies:
+  - process-forge-core
+rules:
+  - id: evidence-before-pass
+    text: A pass result needs recorded evidence.
+provides:
+  capabilities:
+    - test_planning
+    - test_execution
+    - reporting
+  processes:
+    - testing
+  prompts:
+    - testing-agent
+  knowledge_packages: []
+  project_classifiers: []
+  templates: []
+  tools: []
+  specializations: []
+processes:
+  - testing
+stable_processes:
+  - testing
+experimental_processes: []
+internal_processes: []
+quality:
+  tested: true
+  release_smokes:
+    - smoke_official_pack_manifest_schema
+    - smoke_official_pack_not_kernel

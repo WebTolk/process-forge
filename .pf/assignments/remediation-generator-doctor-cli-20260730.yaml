@@ -1,0 +1,93 @@
+schema_version: 1
+id: remediation-generator-doctor-cli-20260730
+title: Align generators, doctors, and registry safety
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T07:03:00Z'
+updated_at: '2026-07-30T07:24:30Z'
+objective: Complete PF-AUD-005 and PF-AUD-006 by aligning CLI generators with accepted schemas and making doctors and registry updates fail safely on invalid data.
+order: 5
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations: []
+result:
+  status: done
+  summary: Generators and doctors now share authoritative schemas, preserve invalid registries, remain observational, and reject an empty release-test selection.
+  artifacts:
+    - .pf/artifacts/pre-release-remediation-agents/generator-doctor-cli.md
+    - tools/smoke_remediation_generator_schema_alignment.py
+    - tools/smoke_remediation_doctor_contracts.py
+    - tools/smoke_remediation_registry_safety.py
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/artifacts/pre-release-product-audit-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
+allowed_read_files:
+  - schemas/**
+  - templates/**
+  - docs/**
+  - processes/**
+  - tools/**
+allowed_files:
+  - tools/processforge.py
+  - tools/smoke_remediation_generator_schema_alignment.py
+  - tools/smoke_remediation_doctor_contracts.py
+  - tools/smoke_remediation_registry_safety.py
+  - .pf/artifacts/pre-release-remediation-agents/generator-doctor-cli.md
+forbidden_files:
+  - schemas/**
+  - docs/**
+  - packs/**
+  - seeds/**
+  - tools/validate-process-forge-schemas.py
+ownership:
+  owner_id: remediation-generator-doctor-cli-20260730
+  owner_label: generator-doctor-implementer
+  role: implementation-engineer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/smoke_remediation_generator_schema_alignment.py
+    - tools/smoke_remediation_doctor_contracts.py
+    - tools/smoke_remediation_registry_safety.py
+    - .pf/artifacts/pre-release-remediation-agents/generator-doctor-cli.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-release-surface-20260730
+      owner: release-surface-implementer
+    - id: remediation-first-slice-review-20260730
+      owner: assurance-reviewer
+  current_write_scope:
+    - tools/processforge.py
+    - tools/smoke_remediation_generator_schema_alignment.py
+    - tools/smoke_remediation_doctor_contracts.py
+    - tools/smoke_remediation_registry_safety.py
+    - .pf/artifacts/pre-release-remediation-agents/generator-doctor-cli.md
+  rule: Sole writer for tools/processforge.py during the second remediation wave.
+required_outputs:
+  - id: generator-doctor-report
+    type: implementation_report
+    path: .pf/artifacts/pre-release-remediation-agents/generator-doctor-cli.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/generator-doctor-cli.md
+  format: evidence_backed_markdown
+  include:
+    - findings_closed
+    - generator_schema_postconditions
+    - doctor_layers
+    - registry_preservation
+    - tests
+    - residual_risks
+worker_may_rebuild_context: false
+runtime_driver: manual

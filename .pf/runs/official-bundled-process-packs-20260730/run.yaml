@@ -1,0 +1,31 @@
+schema_version: 1
+id: official-bundled-process-packs-20260730
+title: Official Bundled Process Packs
+process: multi-agent-task-orchestration
+status: completed
+created_at: '2026-07-30T04:34:54Z'
+updated_at: '2026-07-30T05:40:25Z'
+objective: Introduce first-class official bundled process packs while preserving a domain-neutral ProcessForge kernel.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: official-bundled-process-packs-implementation
+    assignment: .pf/assignments/official-bundled-process-packs-implementation.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/official-bundled-process-packs-20260730/summary.md
+  - .pf/handoffs/runs/official-bundled-process-packs-20260730-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true

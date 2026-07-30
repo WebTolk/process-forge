@@ -4,16 +4,20 @@
 ресурсами, authoring, инициализацию, context resolution, оркестрацию,
 supervision, обновления и универсальное выполнение задач.
 
-Предметные процессы сохранили стабильные идентификаторы, но перенесены в
-необязательные примеры:
+Готовые к эксплуатации предметные процессы сохраняют стабильные идентификаторы
+и размещаются в официальных пакетах поставки:
 
-- `examples/domain-packs/software-web`
-- `examples/domain-packs/content-workflow`
-- `examples/domain-packs/verification-workflow`
+- `packs/official/software-development`
+- `packs/official/content-workflow`
+- `packs/official/verification`
 
-Они помечены как `optional_example`, не устанавливаются при инициализации
-рабочего места и не входят в каталог по умолчанию. Рабочее место или проект
-может явно импортировать pack и зарегистрировать его процессы, prompts,
-knowledge packages, capabilities и classifiers через обычные resource-данные.
+Их manifests содержат `origin: official`,
+`bundled_with_distribution: true` и `core_runtime_dependency: false`.
+Официальные процессы доступны без копирования из `examples/`, но процессы,
+prompts, knowledge packages, capabilities и classifiers попадают в контекст
+только после активации pack. Профиль `generic` не активирует предметные пакеты.
+
+Пример может показывать использование официального процесса, но не должен
+содержать каноническое определение с тем же process id.
 
 Универсальные runtime-механизмы при этом остаются в `process-forge-core`.

@@ -25,6 +25,12 @@ Workplace init and project onboarding create empty registries. An operator or
 package installation flow must copy/import a classifier and add an active
 registry entry. Package discovery alone never activates it.
 
+An official bundled pack may provide classifier documents as data. They are
+evaluated only when that pack is active or explicitly selected. For example, a
+generic workplace does not attach meaning to `composer.json`; activating the
+official software-development pack makes its classifier available without
+adding any software-specific branch to the ProcessForge runtime.
+
 Classification is persisted in the project-context snapshot and copied into a
 context capsule. Changing a classifier, its registry, or a matching project
 marker makes the current snapshot stale and requires context refresh.

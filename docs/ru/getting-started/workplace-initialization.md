@@ -17,6 +17,24 @@ python bin/pf.py workplace-init --workplace ../pf-workplace --apply
 python bin/pf.py doctor-workplace --root ../pf-workplace
 ```
 
+Профиль `generic` оставляет все предметные официальные packs неактивными:
+
+```bash
+python bin/pf.py workplace-init --profile generic --workplace ../pf-workplace --apply
+```
+
+Если workplace должен сразу получить готовый предметный процесс, выберите
+соответствующий профиль:
+
+```bash
+python bin/pf.py workplace-init --profile software-development --workplace ../pf-workplace --apply
+python bin/pf.py workplace-init --profile content-workflow --workplace ../pf-workplace --apply
+python bin/pf.py workplace-init --profile verification --workplace ../pf-workplace --apply
+```
+
+Профиль активирует пакет данных, а не меняет ядро ProcessForge. Обнаружение и
+явная активация описаны в разделе [Официальные packs](official-packs.md).
+
 Не создавайте `.pf/` внутри проекта на этом шаге. Проект подключается отдельно
 через `project-onboard`.
 

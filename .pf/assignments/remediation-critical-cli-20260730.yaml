@@ -1,0 +1,82 @@
+schema_version: 1
+id: remediation-critical-cli-20260730
+title: Fix critical CLI boundaries and aggregate gates
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T06:36:00Z'
+updated_at: '2026-07-30T07:01:30Z'
+objective: Fix PF-AUD-001 through PF-AUD-004 without modifying schemas or documentation.
+order: 3
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations: []
+result:
+  status: done
+  summary: PF-AUD-001 through PF-AUD-004 were fixed with deliberate negative and targeted regression tests.
+  artifacts:
+    - .pf/artifacts/pre-release-remediation-agents/critical-cli.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/pre-release-product-audit-20260730.md
+  - .pf/artifacts/pre-release-remediation-plan-20260730.md
+  - .pf/assignments/remediation-critical-cli-20260730.yaml
+allowed_read_files:
+  - schemas/**
+  - docs/**
+  - processes/**
+  - templates/**
+  - tools/**
+allowed_files:
+  - tools/processforge.py
+  - tools/smoke_remediation_security_boundaries.py
+  - tools/smoke_remediation_aggregate_gates.py
+  - .pf/artifacts/pre-release-remediation-agents/critical-cli.md
+forbidden_files:
+  - schemas/**
+  - packs/**
+  - seeds/**
+  - docs/**
+  - tools/validate-process-forge-schemas.py
+ownership:
+  owner_id: remediation-critical-cli-20260730
+  owner_label: critical-cli-implementer
+  role: implementation-engineer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/smoke_remediation_security_boundaries.py
+    - tools/smoke_remediation_aggregate_gates.py
+    - .pf/artifacts/pre-release-remediation-agents/critical-cli.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks: []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/smoke_remediation_security_boundaries.py
+    - tools/smoke_remediation_aggregate_gates.py
+    - .pf/artifacts/pre-release-remediation-agents/critical-cli.md
+  rule: This assignment is the sole writer for tools/processforge.py during the first remediation slice.
+required_outputs:
+  - id: critical-cli-report
+    type: implementation_report
+    path: .pf/artifacts/pre-release-remediation-agents/critical-cli.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/critical-cli.md
+  format: evidence_backed_markdown
+  include:
+    - findings_closed
+    - files_changed
+    - negative_tests
+    - positive_tests
+    - residual_risks
+worker_may_rebuild_context: false
+runtime_driver: manual

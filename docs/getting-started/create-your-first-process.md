@@ -5,8 +5,8 @@ Start with guided authoring:
 ```bash
 cd ../my-project
 python .pf/runtime/bin/pf.py process-authoring-start --project-root . --id quality-audit --title "Quality Audit" --scope project --kind operational --apply
-python .pf/runtime/bin/pf.py process-authoring-review --project-root . --id quality-audit
-python .pf/runtime/bin/pf.py process-authoring-apply --project-root . --id quality-audit --apply
+python .pf/runtime/bin/pf.py process-authoring-review --project-root . --process quality-audit
+python .pf/runtime/bin/pf.py process-authoring-apply --project-root . --process quality-audit --apply
 python .pf/runtime/bin/pf.py process-doctor --project-root . --process quality-audit
 ```
 

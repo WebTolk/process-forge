@@ -5,9 +5,9 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ACTIVE_ROOTS = [".pf/process-forge.yaml", "docs", "examples", "packages", "templates", "schemas", "processes", "prompts"]
+ACTIVE_ROOTS = [".pf/process-forge.yaml", "docs", "examples", "packages", "packs", "templates", "schemas", "processes", "prompts"]
 PROCESS_REF = re.compile(
-    r"(?:\.\./)?(?:examples/domain-packs/[a-z0-9][a-z0-9_-]*/)?processes/[a-z0-9][a-z0-9_-]*\.yaml"
+    r"(?:\.\./)?(?:(?:examples/domain-packs|packs/official)/[a-z0-9][a-z0-9_-]*/)?processes/[a-z0-9][a-z0-9_-]*\.yaml"
 )
 
 
@@ -31,11 +31,11 @@ def main() -> int:
             normalized = value.removeprefix("../")
             if normalized.startswith(("processes/core/", "processes/user/", "processes/custom/")):
                 continue
-            if normalized.startswith("examples/domain-packs/"):
+            if normalized.startswith(("examples/domain-packs/", "packs/official/")):
                 continue
             offenders.append(f"{path.relative_to(ROOT).as_posix()}: {value}")
     assert not offenders, "\n".join(offenders[:40])
-    print("PASS: PF project process refs follow core/user/custom layout")
+    print("PASS: PF project process refs follow core/user/custom/official layout")
     return 0
 
 

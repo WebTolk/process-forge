@@ -5,13 +5,17 @@
   "type": "object",
   "required": ["id", "type", "version"],
   "properties": {
-    "id": { "type": "string", "minLength": 1 },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "id": { "$ref": "#/$defs/id" },
     "type": { "enum": ["file", "media", "prompt", "directory", "multi-file"] },
     "version": { "type": "string", "minLength": 1 },
     "payload": { "type": "array", "items": { "type": "string" } },
     "compatible_platforms": { "type": "array", "items": { "type": "string" } },
     "update_sites": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "metadata_optional": { "type": "boolean" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" }
   },
   "additionalProperties": true
 }

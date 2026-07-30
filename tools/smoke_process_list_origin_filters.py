@@ -16,10 +16,11 @@ def main() -> int:
     assert result.returncode == 0, result.stdout + result.stderr
     assert "origin" in result.stdout.splitlines()[0], result.stdout
     assert "task-batch-execution" in result.stdout, result.stdout
-    assert "\tcore\t" in result.stdout, result.stdout
+    assert "\tkernel\t" in result.stdout, result.stdout
+    assert "\tcore\t" not in result.stdout, result.stdout
     user = subprocess.run(command[:-1] + ["user", "--all"], cwd=ROOT, text=True, capture_output=True, timeout=60)
     assert user.returncode == 0, user.stdout + user.stderr
-    assert "No processes found." in user.stdout or "\tuser\t" in user.stdout
+    assert "No processes found." in user.stdout or "\tworkspace\t" in user.stdout
     print("PASS: process-list origin filters")
     return 0
 

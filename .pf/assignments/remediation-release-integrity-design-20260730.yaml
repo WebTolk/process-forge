@@ -1,0 +1,92 @@
+schema_version: 1
+id: remediation-release-integrity-design-20260730
+title: Design archive integrity, provenance, and launcher remediation
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T07:52:00Z'
+updated_at: '2026-07-30T08:16:00Z'
+objective: Define exact consumer ZIP integrity, relocated launcher recovery, provenance, clean archive boundary, and release metadata contracts for PF-AUD-014, PF-AUD-016, PF-AUD-018, PF-AUD-023, and PF-AUD-025.
+order: 15
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations: []
+result:
+  status: done
+  summary: Release manifest v2, pre-extraction ZIP safety, provenance, launcher fallback, distribution boundary, metadata policy, and phased ownership are frozen.
+  artifacts:
+    - .pf/adr/pre-release-remediation-release-integrity-design-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/release-integrity-architect.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/artifacts/pre-release-product-audit-20260730.md
+  - .pf/artifacts/pre-release-remediation-plan-20260730.md
+allowed_read_files:
+  - tools/**
+  - bin/**
+  - updates/**
+  - schemas/**
+  - .processforge-releaseignore
+  - checksums/**
+  - dist/**
+allowed_files:
+  - .pf/adr/pre-release-remediation-release-integrity-design-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/release-integrity-architect.md
+forbidden_files:
+  - tools/**
+  - bin/**
+  - updates/**
+  - schemas/**
+  - checksums/**
+  - dist/**
+  - docs/**
+ownership:
+  owner_id: remediation-release-integrity-design-20260730
+  owner_label: release-integrity-architect
+  role: release-architect
+  writer: true
+  owned_files:
+    - .pf/adr/pre-release-remediation-release-integrity-design-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/release-integrity-architect.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-knowledge-builder-contract-20260730
+      owner: generator-doctor-implementer
+    - id: remediation-provider-runtime-design-20260730
+      owner: provider-runtime-architect
+  current_write_scope:
+    - .pf/adr/pre-release-remediation-release-integrity-design-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/release-integrity-architect.md
+  rule: Read release code and artifacts but write only the ADR and report; do not rebuild inventory or ZIP.
+required_outputs:
+  - id: release-integrity-design-adr
+    type: adr
+    path: .pf/adr/pre-release-remediation-release-integrity-design-20260730.md
+    required: true
+  - id: release-integrity-architect-report
+    type: research_report
+    path: .pf/artifacts/pre-release-remediation-agents/release-integrity-architect.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/release-integrity-architect.md
+  format: evidence_backed_markdown
+  include:
+    - exact_symbols
+    - consumer_zip_contract
+    - launcher_candidate_order
+    - provenance_fields
+    - archive_boundary
+    - metadata_policy
+    - test_matrix
+    - implementation_scope
+worker_may_rebuild_context: false
+runtime_driver: manual

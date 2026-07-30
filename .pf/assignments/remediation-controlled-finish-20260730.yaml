@@ -1,0 +1,108 @@
+schema_version: 1
+id: remediation-controlled-finish-20260730
+title: Controlled narrow finish for pre-release remediation
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T08:56:00Z'
+updated_at: '2026-07-30T10:05:00Z'
+objective: Close only the confirmed transaction review blockers and correct public contract versioning for the 1.0.0 release without broad rewrites.
+order: 20
+iterations: []
+dependencies:
+  blocked_by:
+    - remediation-transaction-review-20260730
+    - remediation-strict-contract-audit-20260730
+  blocks: []
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/reviews/pre-release-remediation-transaction-review-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/transaction-reviewer.md
+  - .pf/adr/pre-release-remediation-no-compatibility-20260730.md
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+allowed_read_files:
+  - tools/**
+  - schemas/**
+  - templates/**
+  - docs/**
+  - processes/**
+  - .pf/**
+allowed_files:
+  - tools/processforge.py
+  - tools/smoke_remediation_transactional_authoring.py
+  - tools/smoke_remediation_platform_layout_strict.py
+  - tools/smoke_remediation_process_create_transaction.py
+  - tools/smoke_remediation_schema_inventory.py
+  - tools/smoke_remediation_contract_versioning.py
+  - schemas/reusable-template.schema.json
+  - templates/reusable-template-template.yaml
+  - .pf/adr/pre-release-remediation-no-compatibility-20260730.md
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/adr/pre-release-remediation-release-integrity-design-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/controlled-finish.md
+  - .pf/artifacts/pre-release-remediation-agents/contract-version-auditor.md
+  - .pf/artifacts/pre-release-remediation-agents/transaction-patch-scope-reviewer.md
+  - .pf/reviews/pre-release-remediation-controlled-finish-review-20260730.md
+  - .pf/logs/pre-release-remediation-20260730.md
+  - .pf/runs/pre-release-remediation-20260730/run.yaml
+  - .pf/assignments/remediation-controlled-finish-20260730.yaml
+forbidden_files:
+  - dist/**
+  - checksums/**
+ownership:
+  owner_id: remediation-controlled-finish-20260730
+  owner_label: root-orchestrator
+  role: controlled-implementation-orchestrator
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - schemas/reusable-template.schema.json
+    - tools/smoke_remediation_transactional_authoring.py
+    - tools/smoke_remediation_contract_versioning.py
+    - .pf/artifacts/pre-release-remediation-agents/controlled-finish.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: contract-version-auditor
+      owner: contract-version-auditor
+      write_scope:
+        - .pf/artifacts/pre-release-remediation-agents/contract-version-auditor.md
+    - id: transaction-patch-scope-reviewer
+      owner: transaction-patch-scope-reviewer
+      write_scope:
+        - .pf/artifacts/pre-release-remediation-agents/transaction-patch-scope-reviewer.md
+  current_write_scope:
+    - tools/processforge.py
+    - schemas/reusable-template.schema.json
+    - tools/smoke_remediation_transactional_authoring.py
+    - tools/smoke_remediation_contract_versioning.py
+    - .pf/artifacts/pre-release-remediation-agents/controlled-finish.md
+  rule: The root orchestrator is the only product writer; agents are report-only and must not edit product files.
+required_outputs:
+  - id: controlled-finish-report
+    type: implementation_report
+    path: .pf/artifacts/pre-release-remediation-agents/controlled-finish.md
+    required: true
+  - id: controlled-finish-review
+    type: review
+    path: .pf/reviews/pre-release-remediation-controlled-finish-review-20260730.md
+    required: true
+result:
+  status: done
+  summary: Targeted implementation and root-orchestrator review passed with conditions; final release archive gate and permanent crash-recovery smoke remain as release-delivery conditions.
+  artifacts:
+    - .pf/artifacts/pre-release-remediation-agents/controlled-finish.md
+    - .pf/reviews/pre-release-remediation-controlled-finish-review-20260730.md
+acceptance:
+  must:
+    - staged platform semantic failure blocks before entity or registry publication
+    - rollback and recovery verify exact pre-existing hashes and absence of pre-missing paths before rolled_back
+    - post-commit effects are persisted and replayed idempotently until committed_audit_complete
+    - dry-run runs the same common preflight as apply
+    - first public release contract uses schema_version 1 where the contract is newly introduced for 1.0.0
+    - targeted smokes and parser checks pass

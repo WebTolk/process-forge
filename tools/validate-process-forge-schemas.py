@@ -81,11 +81,13 @@ REQUIRED_FILES = [
     "docs/concepts/process-directory-layout.md",
     "docs/concepts/project-scan-boundaries.md",
     "docs/concepts/domain-neutral-core.md",
+    "docs/concepts/official-bundled-packs.md",
     "docs/concepts/project-classifiers.md",
     "docs/concepts/process-catalog-boundary.md",
     "docs/ru/concepts/process-directory-layout.md",
     "docs/ru/concepts/project-scan-boundaries.md",
     "docs/ru/concepts/domain-neutral-core.md",
+    "docs/ru/concepts/official-bundled-packs.md",
     "docs/ru/concepts/project-classifiers.md",
     "docs/ru/concepts/process-catalog-boundary.md",
     "docs/ru/concepts/project-context-snapshot.md",
@@ -120,6 +122,7 @@ REQUIRED_FILES = [
     "docs/ru/getting-started/installation.md",
     "docs/ru/getting-started/first-run.md",
     "docs/ru/getting-started/workplace-initialization.md",
+    "docs/ru/getting-started/official-packs.md",
     "docs/ru/getting-started/project-onboarding.md",
     "docs/ru/getting-started/agent-prompts.md",
     "docs/ru/getting-started/create-your-first-process.md",
@@ -215,6 +218,8 @@ REQUIRED_FILES = [
     "schemas/platform-registry.schema.json",
     "schemas/knowledge-roots-registry.schema.json",
     "schemas/package-roots-registry.schema.json",
+    "schemas/private-resource-paths-registry.schema.json",
+    "schemas/platform-contract-roots-registry.schema.json",
     "schemas/template-registry.schema.json",
     "schemas/tool-registry.schema.json",
     "schemas/mcp-registry.schema.json",
@@ -350,6 +355,7 @@ REQUIRED_FILES = [
     "schemas/knowledge-candidate.schema.json",
     "schemas/process-authoring-session.schema.json",
     "schemas/package-manifest.schema.json",
+    "schemas/process-pack-manifest.schema.json",
     "schemas/reusable-template.schema.json",
     "schemas/assignment.schema.json",
     "schemas/execution-context-package.schema.json",
@@ -462,6 +468,7 @@ REQUIRED_FILES = [
     "docs/ru/getting-started/initialization-order.md",
     "docs/getting-started/installation.md",
     "docs/getting-started/workplace-initialization.md",
+    "docs/getting-started/official-packs.md",
     "docs/getting-started/project-onboarding.md",
     "docs/getting-started/agent-prompts.md",
     "docs/concepts/workplace-vs-project.md",
@@ -497,30 +504,38 @@ REQUIRED_FILES = [
     "examples/process-authoring/bugfix-batch/answers.yaml",
     "examples/process-authoring/content-update/README.md",
     "examples/process-authoring/content-update/answers.yaml",
-    "examples/domain-packs/software-web/README.md",
-    "examples/domain-packs/software-web/package.yaml",
-    "examples/domain-packs/software-web/project-classifiers/example.classifier.software-web.yaml",
-    "examples/domain-packs/software-web/project-classifiers/registry-entry.yaml",
-    "examples/domain-packs/software-web/processes/software-feature-development.yaml",
-    "examples/domain-packs/software-web/processes/bug-fix.yaml",
-    "examples/domain-packs/software-web/prompts/software-feature-development-agent.md",
-    "examples/domain-packs/software-web/prompts/bug-fix-agent.md",
-    "examples/domain-packs/software-web/docs/processes/software-feature-development.md",
-    "examples/domain-packs/software-web/docs/processes/bug-fix.md",
-    "examples/domain-packs/software-web/docs/ru/processes/software-feature-development.md",
-    "examples/domain-packs/content-workflow/README.md",
-    "examples/domain-packs/content-workflow/package.yaml",
-    "examples/domain-packs/content-workflow/processes/content-production.yaml",
-    "examples/domain-packs/content-workflow/processes/documentation-mirror-import.yaml",
-    "examples/domain-packs/content-workflow/prompts/content-production-agent.md",
-    "examples/domain-packs/content-workflow/prompts/documentation-mirror-import-agent.md",
-    "examples/domain-packs/content-workflow/docs/processes/content-production.md",
-    "examples/domain-packs/content-workflow/docs/processes/documentation-mirror-import.md",
-    "examples/domain-packs/verification-workflow/README.md",
-    "examples/domain-packs/verification-workflow/package.yaml",
-    "examples/domain-packs/verification-workflow/processes/testing.yaml",
-    "examples/domain-packs/verification-workflow/prompts/testing-agent.md",
-    "examples/domain-packs/verification-workflow/docs/processes/testing.md",
+    "packs/official/software-development/README.md",
+    "packs/official/software-development/package.yaml",
+    "packs/official/software-development/project-classifiers/software-web.yaml",
+    "packs/official/software-development/project-classifiers/registry-entry.yaml",
+    "packs/official/software-development/processes/software-feature-development.yaml",
+    "packs/official/software-development/processes/bug-fix.yaml",
+    "packs/official/software-development/prompts/software-feature-development-agent.md",
+    "packs/official/software-development/prompts/bug-fix-agent.md",
+    "packs/official/software-development/docs/processes/software-feature-development.md",
+    "packs/official/software-development/docs/processes/bug-fix.md",
+    "packs/official/software-development/docs/ru/processes/software-feature-development.md",
+    "packs/official/software-development/knowledge-packages/docs.php.yaml",
+    "packs/official/software-development/knowledge-packages/docs.web.html.yaml",
+    "packs/official/software-development/knowledge-packages/docs.web.css.yaml",
+    "packs/official/software-development/knowledge-packages/docs.web.javascript.yaml",
+    "packs/official/software-development/knowledge-packages/docs.web.accessibility.yaml",
+    "packs/official/software-development/knowledge-packages/docs.web.performance.yaml",
+    "seeds/knowledge-packages/docs.example-parent.yaml",
+    "seeds/knowledge-packages/docs.example-child.yaml",
+    "packs/official/content-workflow/README.md",
+    "packs/official/content-workflow/package.yaml",
+    "packs/official/content-workflow/processes/content-production.yaml",
+    "packs/official/content-workflow/processes/documentation-mirror-import.yaml",
+    "packs/official/content-workflow/prompts/content-production-agent.md",
+    "packs/official/content-workflow/prompts/documentation-mirror-import-agent.md",
+    "packs/official/content-workflow/docs/processes/content-production.md",
+    "packs/official/content-workflow/docs/processes/documentation-mirror-import.md",
+    "packs/official/verification/README.md",
+    "packs/official/verification/package.yaml",
+    "packs/official/verification/processes/testing.yaml",
+    "packs/official/verification/prompts/testing-agent.md",
+    "packs/official/verification/docs/processes/testing.md",
     "bin/pf.py",
     "bin/pf",
     "bin/pf.bat",
@@ -552,6 +567,20 @@ REQUIRED_FILES = [
     "tools/smoke_windows_utf8_docs.py",
     "tools/smoke_pf_project_process_refs_follow_layout.py",
     "tools/smoke_no_removed_process_refs.py",
+    "tools/smoke_official_packs_not_examples.py",
+    "tools/smoke_official_pack_manifest_schema.py",
+    "tools/smoke_official_software_process_available.py",
+    "tools/smoke_official_pack_not_kernel.py",
+    "tools/smoke_generic_workplace_no_domain_pack_active.py",
+    "tools/smoke_software_profile_activates_official_pack.py",
+    "tools/smoke_official_pack_classifier_data_driven.py",
+    "tools/smoke_official_process_can_start_minimal_run.py",
+    "tools/smoke_core_domain_neutral_still_passes.py",
+    "tools/smoke_examples_do_not_shadow_official_processes.py",
+    "tools/smoke_remediation_schema_inventory.py",
+    "tools/smoke_remediation_transactional_authoring.py",
+    "tools/smoke_remediation_platform_layout_strict.py",
+    "tools/smoke_remediation_process_create_transaction.py",
     "tools/processforge_subprocess.py",
     "templates/session-start-template.yaml",
     "templates/session-status-report-template.md",
@@ -806,6 +835,8 @@ def validate_yaml_schema_files(root: Path) -> None:
         mappings.append((root / "templates" / "process.yaml", "process-definition.schema.json"))
     if (root / "templates" / "knowledge-candidate.yaml").is_file():
         mappings.append((root / "templates" / "knowledge-candidate.yaml", "knowledge-candidate.schema.json"))
+    if (root / "templates" / "template-package.yaml").is_file():
+        mappings.append((root / "templates" / "template-package.yaml", "template-package.schema.json"))
     if (root / "templates" / "project-classifier.yaml").is_file():
         mappings.append((root / "templates" / "project-classifier.yaml", "project-classifier.schema.json"))
     if (root / "templates" / "registries" / "project-classifiers.yaml").is_file():
@@ -814,6 +845,31 @@ def validate_yaml_schema_files(root: Path) -> None:
         )
     mappings.extend((path, "process-definition.schema.json") for path in process_definition_files(root))
     mappings.extend((path, "package-manifest.schema.json") for path in sorted((root / "packages").glob("*.yaml")))
+    mappings.extend(
+        (path, "process-pack-manifest.schema.json")
+        for path in sorted((root / "packs" / "official").glob("*/package.yaml"))
+    )
+    mappings.extend(
+        (path, "process-definition.schema.json")
+        for path in sorted((root / "packs" / "official").glob("*/processes/*.yaml"))
+    )
+    mappings.extend(
+        (path, "project-classifier.schema.json")
+        for path in sorted((root / "packs" / "official").glob("*/project-classifiers/*.yaml"))
+        if path.name != "registry-entry.yaml"
+    )
+    mappings.extend(
+        (path, "project-classifier-registry.schema.json")
+        for path in sorted((root / "packs" / "official").glob("*/project-classifiers/registry-entry.yaml"))
+    )
+    mappings.extend(
+        (path, "package-manifest.schema.json")
+        for path in sorted((root / "packs" / "official").glob("*/knowledge-packages/*.yaml"))
+    )
+    mappings.extend(
+        (path, "package-manifest.schema.json")
+        for path in sorted((root / "seeds" / "knowledge-packages").glob("*.yaml"))
+    )
     mappings.extend(
         (path, "package-manifest.schema.json")
         for path in sorted((root / "examples" / "domain-packs").glob("*/package.yaml"))
@@ -845,6 +901,8 @@ def validate_yaml_schema_files(root: Path) -> None:
         mappings.append((root / "templates" / "registries" / "update-site-overrides.yaml", "update-site-overrides.schema.json"))
     if (root / "templates" / "registries" / "specializations.yaml").is_file():
         mappings.append((root / "templates" / "registries" / "specializations.yaml", "specialization-registry.schema.json"))
+    if (root / "templates" / "registries" / "platforms.yaml").is_file():
+        mappings.append((root / "templates" / "registries" / "platforms.yaml", "platform-registry.schema.json"))
     if (root / "templates" / "registries" / "runtime-drivers.yaml").is_file():
         mappings.append((root / "templates" / "registries" / "runtime-drivers.yaml", "runtime-driver-registry.schema.json"))
     if (root / "templates" / "registries" / "agents.yaml").is_file():

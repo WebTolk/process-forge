@@ -1,0 +1,86 @@
+schema_version: 1
+id: remediation-transaction-review-20260730
+title: Independently review failure-atomic authoring
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T08:51:00Z'
+updated_at: '2026-07-30T09:07:00Z'
+objective: Independently decide whether the frozen strict transaction slice closes PF-AUD-010, PF-AUD-011, PF-AUD-019, and the process-create portion of PF-AUD-020.
+order: 19
+dependencies:
+  blocked_by:
+    - remediation-transactional-authoring-20260730
+  blocks: []
+iterations: []
+result:
+  status: failed
+  summary: Strict mode and main rollback paths passed, but platform semantic validation, verified crash recovery, and idempotent durable post-commit replay remain release blockers.
+  artifacts:
+    - .pf/reviews/pre-release-remediation-transaction-review-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/transaction-reviewer.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: false
+required_sources:
+  - .pf/adr/pre-release-remediation-no-compatibility-20260730.md
+  - .pf/adr/pre-release-remediation-transaction-design-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/transactional-authoring.md
+allowed_read_files:
+  - tools/**
+  - schemas/**
+  - .pf/assignments/remediation-transactional-authoring-20260730.yaml
+allowed_files:
+  - .pf/reviews/pre-release-remediation-transaction-review-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/transaction-reviewer.md
+forbidden_files:
+  - tools/**
+  - schemas/**
+  - docs/**
+  - processes/**
+ownership:
+  owner_id: remediation-transaction-review-20260730
+  owner_label: transaction-reviewer
+  role: assurance-reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/pre-release-remediation-transaction-review-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/transaction-reviewer.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-strict-contract-audit-20260730
+      owner: strict-contract-auditor
+  current_write_scope:
+    - .pf/reviews/pre-release-remediation-transaction-review-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/transaction-reviewer.md
+  rule: Product tree is frozen; report every defect without patching.
+required_outputs:
+  - id: transaction-review
+    type: review
+    path: .pf/reviews/pre-release-remediation-transaction-review-20260730.md
+    required: true
+  - id: transaction-reviewer-report
+    type: markdown
+    path: .pf/artifacts/pre-release-remediation-agents/transaction-reviewer.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/reviews/pre-release-remediation-transaction-review-20260730.md
+  format: evidence_backed_markdown
+  include:
+    - result
+    - finding_disposition
+    - source_inspection
+    - strict_mode_and_legacy_rejection
+    - failure_injection
+    - mutation_fingerprints
+    - journal_recovery
+    - post_commit_effects
+    - regression_tests
+    - residual_risks
+worker_may_rebuild_context: false
+runtime_driver: manual

@@ -1,0 +1,95 @@
+schema_version: 1
+id: remediation-release-surface-20260730
+title: Repair checksum and installation release surface
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T07:03:00Z'
+updated_at: '2026-07-30T07:15:51Z'
+objective: Fix the shipped-file checksum coverage and copy-paste installation boundary without modifying the main CLI or release archive.
+order: 6
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations: []
+result:
+  status: done
+  summary: Checksum selection now matches the release-pack surface and EN/RU installation guidance keeps mutable workplace and project roots outside the distribution.
+  artifacts:
+    - tools/smoke_remediation_checksum_surface.py
+    - .pf/artifacts/pre-release-remediation-agents/release-surface.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/artifacts/pre-release-product-audit-20260730.md
+allowed_read_files:
+  - tools/processforge.py
+  - .processforge-releaseignore
+  - README.md
+  - README.ru.md
+  - QUICKSTART.md
+  - QUICKSTART.ru.md
+allowed_files:
+  - tools/validate-process-forge-checksums.py
+  - tools/smoke_remediation_checksum_surface.py
+  - docs/getting-started/installation.md
+  - docs/getting-started/first-run.md
+  - docs/ru/getting-started/installation.md
+  - docs/ru/getting-started/first-run.md
+  - .pf/artifacts/pre-release-remediation-agents/release-surface.md
+forbidden_files:
+  - tools/processforge.py
+  - checksums/processforge.sha256
+  - dist/**
+  - updates/**
+ownership:
+  owner_id: remediation-release-surface-20260730
+  owner_label: release-surface-implementer
+  role: implementation-engineer
+  writer: true
+  owned_files:
+    - tools/validate-process-forge-checksums.py
+    - tools/smoke_remediation_checksum_surface.py
+    - docs/getting-started/installation.md
+    - docs/getting-started/first-run.md
+    - docs/ru/getting-started/installation.md
+    - docs/ru/getting-started/first-run.md
+    - .pf/artifacts/pre-release-remediation-agents/release-surface.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-generator-doctor-cli-20260730
+      owner: generator-doctor-implementer
+    - id: remediation-first-slice-review-20260730
+      owner: assurance-reviewer
+  current_write_scope:
+    - tools/validate-process-forge-checksums.py
+    - tools/smoke_remediation_checksum_surface.py
+    - docs/getting-started/installation.md
+    - docs/getting-started/first-run.md
+    - docs/ru/getting-started/installation.md
+    - docs/ru/getting-started/first-run.md
+    - .pf/artifacts/pre-release-remediation-agents/release-surface.md
+  rule: Do not refresh the checksum inventory or release ZIP until final integration.
+required_outputs:
+  - id: release-surface-report
+    type: implementation_report
+    path: .pf/artifacts/pre-release-remediation-agents/release-surface.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/release-surface.md
+  format: evidence_backed_markdown
+  include:
+    - findings_closed
+    - checksum_surface
+    - installation_boundary
+    - tests
+    - deferred_final_pack_steps
+worker_may_rebuild_context: false
+runtime_driver: manual

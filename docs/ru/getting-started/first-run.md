@@ -23,10 +23,17 @@
 python bin/pf.py first-run --workplace ../pf-workplace --project-root ../my-project --type generic-software-project --apply
 ```
 
+Пути намеренно находятся за пределами каталога дистрибутива: тогда изменяемые
+workplace и проект сохранятся при замене или обновлении установки ProcessForge.
+У `first-run` нет параметра `--profile`; эта команда не выбирает поставляемый
+профиль workplace.
+
 ## 1. Создать workplace
 
+Для рабочего профиля разработки ПО укажите `software-development` явно:
+
 ```bash
-python bin/pf.py workplace-init --workplace ../pf-workplace --apply
+python bin/pf.py workplace-init --workplace ../pf-workplace --profile software-development --apply
 python bin/pf.py doctor-workplace --root ../pf-workplace
 ```
 

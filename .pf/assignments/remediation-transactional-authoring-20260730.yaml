@@ -1,0 +1,111 @@
+schema_version: 1
+id: remediation-transactional-authoring-20260730
+title: Implement failure-atomic transactional authoring
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T08:10:00Z'
+updated_at: '2026-07-30T08:49:00Z'
+objective: Implement the accepted transaction ADR to close PF-AUD-010, PF-AUD-011, PF-AUD-019, and the process-create/dry-run portion of PF-AUD-020.
+order: 17
+dependencies:
+  blocked_by:
+    - remediation-transaction-design-20260730
+    - remediation-first-phases-final-review-20260730
+  blocks: []
+iterations: []
+result:
+  status: done
+  summary: Failure-atomic platform, knowledge, and process authoring now uses explicit modes, staged validation, registry-last commit, verified rollback, and strict canonical platform layout.
+  artifacts:
+    - .pf/artifacts/pre-release-remediation-agents/transactional-authoring.md
+    - tools/smoke_remediation_transactional_authoring.py
+    - tools/smoke_remediation_platform_layout_strict.py
+    - tools/smoke_remediation_process_create_transaction.py
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/adr/pre-release-remediation-transaction-design-20260730.md
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/adr/pre-release-remediation-no-compatibility-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/transaction-architect.md
+allowed_read_files:
+  - tools/**
+  - schemas/**
+  - docs/**
+  - processes/**
+allowed_files:
+  - tools/processforge.py
+  - schemas/private-resource-paths-registry.schema.json
+  - schemas/platform-contract-roots-registry.schema.json
+  - tools/validate-process-forge-schemas.py
+  - tools/smoke_remediation_transactional_authoring.py
+  - tools/smoke_remediation_platform_layout_strict.py
+  - tools/smoke_remediation_process_create_transaction.py
+  - .pf/artifacts/pre-release-remediation-agents/transactional-authoring.md
+forbidden_files:
+  - docs/**
+  - processes/**
+  - templates/**
+  - packs/**
+  - seeds/**
+  - checksums/**
+  - dist/**
+ownership:
+  owner_id: remediation-transactional-authoring-20260730
+  owner_label: transactional-authoring-implementer
+  role: implementation-engineer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - schemas/private-resource-paths-registry.schema.json
+    - schemas/platform-contract-roots-registry.schema.json
+    - tools/validate-process-forge-schemas.py
+    - tools/smoke_remediation_transactional_authoring.py
+    - tools/smoke_remediation_platform_layout_strict.py
+    - tools/smoke_remediation_process_create_transaction.py
+    - .pf/artifacts/pre-release-remediation-agents/transactional-authoring.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-provider-runtime-design-20260730
+      owner: provider-runtime-architect
+    - id: remediation-release-integrity-design-20260730
+      owner: release-integrity-architect
+  current_write_scope:
+    - tools/processforge.py
+    - schemas/private-resource-paths-registry.schema.json
+    - schemas/platform-contract-roots-registry.schema.json
+    - tools/validate-process-forge-schemas.py
+    - tools/smoke_remediation_transactional_authoring.py
+    - tools/smoke_remediation_platform_layout_strict.py
+    - tools/smoke_remediation_process_create_transaction.py
+    - .pf/artifacts/pre-release-remediation-agents/transactional-authoring.md
+  rule: Sole product writer; architecture workers remain report-only and no lifecycle implementation starts before freeze.
+required_outputs:
+  - id: transactional-authoring-report
+    type: implementation_report
+    path: .pf/artifacts/pre-release-remediation-agents/transactional-authoring.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/transactional-authoring.md
+  format: evidence_backed_markdown
+  include:
+    - findings_closed
+    - transaction_model
+    - pure_preflight
+    - staged_validation
+    - registry_last_commit
+    - rollback_and_recovery
+    - platform_migration
+    - dry_run_parity
+    - failure_injection_tests
+    - existing_regressions
+    - residual_risks
+worker_may_rebuild_context: false
+runtime_driver: manual

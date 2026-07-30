@@ -47,6 +47,7 @@ registries:
         """schema_version: 1
 platforms:
   - id: example
+    name: Example
     package_id: platform.example
     path: platform-contracts/platform.example/platform-contract.yaml
     status: available

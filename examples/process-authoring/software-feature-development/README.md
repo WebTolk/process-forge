@@ -1,11 +1,11 @@
 ﻿# Software Feature Development Process Authoring Example
 
-This example points to the public stable built-in
-`software-feature-development` from the optional `software-web` domain pack.
+This example points to the stable `software-feature-development` process from
+the official bundled `processforge.official.software-development` pack.
 
-- Process: `examples/domain-packs/software-web/processes/software-feature-development.yaml`
-- Prompt: `examples/domain-packs/software-web/prompts/software-feature-development-agent.md`
-- Documentation: `examples/domain-packs/software-web/docs/processes/software-feature-development.md`
+- Process: `packs/official/software-development/processes/software-feature-development.yaml`
+- Prompt: `packs/official/software-development/prompts/software-feature-development-agent.md`
+- Documentation: `packs/official/software-development/docs/processes/software-feature-development.md`
 
 ## Compact Lifecycle
 
@@ -45,8 +45,9 @@ expected_artifacts:
   - patch
 ```
 
-Validate with:
+Activate the official pack in the project's linked workplace, then validate:
 
 ```bash
+python bin/pf.py pack-activate --id processforge.official.software-development --workplace <workplace-root> --apply
 python bin/pf.py process-doctor --project-root . --process software-feature-development --contract-only
 ```

@@ -1,7 +1,0 @@
-schema_version: 1
-id: docs.web.javascript
-name: JavaScript Documentation
-version: "1.0.0"
-kind: documentation
-scope: distribution
-resources: []

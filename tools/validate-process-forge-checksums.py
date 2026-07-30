@@ -10,8 +10,19 @@ from pathlib import Path
 
 
 DEFAULT_ROOT = Path(__file__).resolve().parents[1]
-PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates", "checksums"]
-PUBLIC_ROOT_FILES = ["README.md", "QUICKSTART.md", "LICENSE", "CHANGELOG.md", "VERSION", "requirements.txt", ".processforge-releaseignore"]
+PUBLIC_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates", "checksums"]
+PUBLIC_ROOT_FILES = [
+    "README.md",
+    "README.ru.md",
+    "QUICKSTART.md",
+    "QUICKSTART.ru.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "VERSION",
+    "requirements.txt",
+    ".gitignore",
+    ".processforge-releaseignore",
+]
 PF_PUBLIC_ROOT_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 PUBLIC_INVENTORY = Path("checksums/processforge.sha256")
 LEGACY_INVENTORY = Path(".pf/artifacts/checksum-inventory.sha256")
@@ -27,35 +38,57 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def public_files(root_path: Path) -> list[Path]:
-    files: list[Path] = []
+def public_file_entries(root_path: Path) -> list[tuple[str, Path]]:
+    """Return the shipped archive path and source path for checksum coverage."""
+    files: list[tuple[str, Path]] = []
     for name in PUBLIC_ROOT_FILES:
         path = root_path / name
         if path.is_file():
-            files.append(path)
+            files.append((name, path))
+
+    # release-pack exposes AGENTS.md at the archive root. Source checkouts may
+    # use .pf/AGENTS.md as its canonical source, while extracted archives have
+    # both paths. Preserve the archive-visible name in either layout.
+    root_agents = root_path / "AGENTS.md"
+    pf_agents = root_path / ".pf" / "AGENTS.md"
+    if root_agents.is_file():
+        files.append(("AGENTS.md", root_agents))
+    elif pf_agents.is_file():
+        files.append(("AGENTS.md", pf_agents))
+
     for name in PF_PUBLIC_ROOT_FILES:
         path = root_path / name
         if path.is_file():
-            files.append(path)
+            files.append((name, path))
     for dirname in PUBLIC_DIRS:
         root = root_path / dirname
         if root.is_dir():
             files.extend(
-                path
+                (path.relative_to(root_path).as_posix(), path)
                 for path in root.rglob("*")
                 if path.is_file()
                 and not any(part in SKIP_DIRS for part in path.relative_to(root).parts)
                 and path.suffix not in SKIP_SUFFIXES
                 and path.relative_to(root_path).as_posix() != PUBLIC_INVENTORY.as_posix()
             )
-    return sorted(files, key=lambda path: path.relative_to(root_path).as_posix())
+    return sorted(files, key=lambda item: item[0])
+
+
+def public_files(root_path: Path) -> list[Path]:
+    """Compatibility view of source files included in the public inventory."""
+    files: list[Path] = []
+    seen: set[Path] = set()
+    for _archive_path, path in public_file_entries(root_path):
+        if path not in seen:
+            files.append(path)
+            seen.add(path)
+    return files
 
 
 def build_inventory(root_path: Path) -> str:
     lines = []
-    for path in public_files(root_path):
-        rel = path.relative_to(root_path).as_posix()
-        lines.append(f"{sha256(path)}  {rel}")
+    for archive_path, source_path in public_file_entries(root_path):
+        lines.append(f"{sha256(source_path)}  {archive_path}")
     return "\n".join(lines) + "\n"
 
 

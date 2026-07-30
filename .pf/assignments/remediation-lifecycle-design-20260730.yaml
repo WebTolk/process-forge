@@ -1,0 +1,85 @@
+schema_version: 1
+id: remediation-lifecycle-design-20260730
+title: Design process and lifecycle invariant remediation
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T07:32:00Z'
+updated_at: '2026-07-30T07:45:00Z'
+objective: Map exact process, context, run, task, catalog, and iteration invariants for PF-AUD-007, PF-AUD-008, PF-AUD-009, PF-AUD-017, and the iteration portion of PF-AUD-020.
+order: 12
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations: []
+result:
+  status: done
+  summary: Lifecycle symbols, invariant matrix, collision/version policy, context blocking, terminal transitions, and the sole-writer test scope are frozen for implementation.
+  artifacts:
+    - .pf/adr/pre-release-remediation-lifecycle-design-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/lifecycle-architect.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/artifacts/pre-release-product-audit-20260730.md
+  - .pf/artifacts/pre-release-remediation-plan-20260730.md
+allowed_read_files:
+  - tools/processforge.py
+  - tools/smoke_*.py
+  - schemas/**
+  - processes/**
+allowed_files:
+  - .pf/adr/pre-release-remediation-lifecycle-design-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/lifecycle-architect.md
+forbidden_files:
+  - tools/**
+  - schemas/**
+  - processes/**
+  - docs/**
+ownership:
+  owner_id: remediation-lifecycle-design-20260730
+  owner_label: lifecycle-architect
+  role: software-architect
+  writer: true
+  owned_files:
+    - .pf/adr/pre-release-remediation-lifecycle-design-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/lifecycle-architect.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-integrated-review-20260730
+      owner: assurance-reviewer
+    - id: remediation-transaction-design-20260730
+      owner: transaction-architect
+  current_write_scope:
+    - .pf/adr/pre-release-remediation-lifecycle-design-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/lifecycle-architect.md
+  rule: Analyze product code and tests but do not modify them.
+required_outputs:
+  - id: lifecycle-design-adr
+    type: adr
+    path: .pf/adr/pre-release-remediation-lifecycle-design-20260730.md
+    required: true
+  - id: lifecycle-architect-report
+    type: research_report
+    path: .pf/artifacts/pre-release-remediation-agents/lifecycle-architect.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/lifecycle-architect.md
+  format: evidence_backed_markdown
+  include:
+    - exact_symbols
+    - invariant_matrix
+    - collision_policy
+    - context_failure_contract
+    - lifecycle_transition_contract
+    - test_matrix
+    - implementation_scope
+worker_may_rebuild_context: false
+runtime_driver: manual

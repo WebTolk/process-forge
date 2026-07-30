@@ -1,0 +1,10 @@
+schema_version: 1
+id: docs.web.accessibility
+name: Web Accessibility Documentation
+version: "1.0.0"
+kind: documentation
+scope: distribution
+origin: official
+status: stable
+bundled_with_distribution: true
+resources: []

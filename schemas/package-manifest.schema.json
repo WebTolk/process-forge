@@ -9,7 +9,7 @@
     "id": { "$ref": "#/$defs/id" },
     "name": { "type": "string" },
     "version": { "type": "string" },
-    "kind": { "enum": ["core", "organization", "direction", "specialization", "platform", "toolchain", "documentation", "project", "process", "task", "agent_profile"] },
+    "kind": { "enum": ["core", "organization", "direction", "specialization", "platform", "toolchain", "documentation", "rules", "source", "mixed", "project", "process", "task", "agent_profile"] },
     "scope": { "type": "string" },
     "package_root": { "type": "string" },
     "description": { "type": "string" },
@@ -23,7 +23,7 @@
     "validation": { "type": "array", "items": { "type": "object" } }
   },
   "$defs": {
-    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" },
     "envRef": { "type": "string", "pattern": "^([A-Z_][A-Z0-9_]*|\\$\\{[A-Z_][A-Z0-9_]*\\}|(auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$" },
     "remoteUrl": { "type": "string", "pattern": "^https?://[^\\s/?#]+[^\\s]*$" },
     "updateSite": {

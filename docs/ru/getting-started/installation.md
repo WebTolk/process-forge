@@ -14,9 +14,25 @@ python bin/pf.py release-test --root .
 
 Из корня дистрибутива используйте `python bin/pf.py`.
 
+Храните изменяемые workplace и проекты за пределами заменяемого каталога
+дистрибутива. После `cd process-forge` указывайте соседние или другие внешние
+пути, например `../pf-workplace` и `../my-project`.
+
+Для рабочего профиля разработки ПО сначала явно инициализируйте workplace, а
+затем подключите проект:
+
+```bash
+python bin/pf.py workplace-init --workplace ../pf-workplace --profile software-development --apply
+python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-workplace --type generic-software-project --apply
+```
+
+У команды `first-run` нет параметра `--profile`. Если нужен поставляемый
+профиль workplace, используйте две отдельные команды выше.
+
 Внутри подключенного проекта используйте project-local launcher:
 
 ```bash
+cd ../my-project
 python .pf/runtime/bin/pf.py doctor-project --project-root .
 ```
 

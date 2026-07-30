@@ -1,0 +1,77 @@
+schema_version: 1
+id: remediation-platform-fixture-alignment-20260730
+title: Align legacy platform smoke fixture with registry schema
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T07:20:00Z'
+updated_at: '2026-07-30T07:27:00Z'
+objective: Update the shared test fixture to emit the accepted full platform registry identity without weakening safe registry preflight or silently migrating user data.
+order: 9
+dependencies:
+  blocked_by:
+    - remediation-generator-doctor-cli-20260730
+  blocks: []
+iterations: []
+result:
+  status: done
+  summary: The synthetic platform registry fixture now satisfies the accepted full identity schema without weakening or migrating product data.
+  artifacts:
+    - .pf/artifacts/pre-release-remediation-agents/platform-fixture-alignment.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - schemas/platform-registry.schema.json
+  - .pf/artifacts/pre-release-remediation-agents/generator-doctor-cli.md
+allowed_read_files:
+  - tools/core_boundary_smoke_helpers.py
+  - tools/smoke_platform_create_include_levels.py
+  - tools/processforge.py
+  - schemas/platform-registry.schema.json
+allowed_files:
+  - tools/core_boundary_smoke_helpers.py
+  - .pf/artifacts/pre-release-remediation-agents/platform-fixture-alignment.md
+forbidden_files:
+  - tools/processforge.py
+  - schemas/**
+  - docs/**
+ownership:
+  owner_id: remediation-platform-fixture-alignment-20260730
+  owner_label: fixture-maintainer
+  role: test-maintenance-engineer
+  writer: true
+  owned_files:
+    - tools/core_boundary_smoke_helpers.py
+    - .pf/artifacts/pre-release-remediation-agents/platform-fixture-alignment.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-generator-doctor-cli-20260730
+      owner: generator-doctor-implementer
+    - id: remediation-template-schema-correction-20260730
+      owner: schema-alignment-implementer
+  current_write_scope:
+    - tools/core_boundary_smoke_helpers.py
+    - .pf/artifacts/pre-release-remediation-agents/platform-fixture-alignment.md
+  rule: Change only the synthetic fixture; never relax product validation or rewrite legacy workplace data.
+required_outputs:
+  - id: platform-fixture-alignment-report
+    type: implementation_report
+    path: .pf/artifacts/pre-release-remediation-agents/platform-fixture-alignment.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/platform-fixture-alignment.md
+  format: evidence_backed_markdown
+  include:
+    - fixture_contract
+    - affected_tests
+    - tests
+    - residual_risks
+worker_may_rebuild_context: false
+runtime_driver: manual

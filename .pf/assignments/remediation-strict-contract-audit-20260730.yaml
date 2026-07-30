@@ -1,0 +1,91 @@
+schema_version: 1
+id: remediation-strict-contract-audit-20260730
+title: Audit and plan strict pre-release contract cutover
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T08:42:00Z'
+updated_at: '2026-07-30T09:10:00Z'
+objective: Find every remaining backward-compatibility branch, legacy shape, deprecated alias, migration warning, and compatibility-only public surface that violates the accepted strict pre-release policy.
+order: 18
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations: []
+result:
+  status: failed
+  summary: Twelve release-blocking legacy contract groups and one-time internal data migrations remain under the accepted no-compatibility policy.
+  artifacts:
+    - .pf/reviews/pre-release-remediation-strict-contract-audit-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/strict-contract-auditor.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: false
+required_sources:
+  - .pf/adr/pre-release-remediation-no-compatibility-20260730.md
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/adr/pre-release-remediation-provider-runtime-design-20260730.md
+  - .pf/adr/pre-release-remediation-release-integrity-design-20260730.md
+allowed_read_files:
+  - tools/**
+  - schemas/**
+  - templates/**
+  - processes/**
+  - docs/**
+  - packs/**
+  - seeds/**
+  - .pf/**
+allowed_files:
+  - .pf/artifacts/pre-release-remediation-agents/strict-contract-auditor.md
+  - .pf/reviews/pre-release-remediation-strict-contract-audit-20260730.md
+forbidden_files:
+  - tools/**
+  - schemas/**
+  - templates/**
+  - processes/**
+  - docs/**
+  - packs/**
+  - seeds/**
+ownership:
+  owner_id: remediation-strict-contract-audit-20260730
+  owner_label: strict-contract-auditor
+  role: assurance-reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/pre-release-remediation-agents/strict-contract-auditor.md
+    - .pf/reviews/pre-release-remediation-strict-contract-audit-20260730.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-transactional-authoring-20260730
+      owner: transactional-authoring-implementer
+  current_write_scope:
+    - .pf/artifacts/pre-release-remediation-agents/strict-contract-auditor.md
+    - .pf/reviews/pre-release-remediation-strict-contract-audit-20260730.md
+  rule: Read the full public contract surface but do not patch product files or the active transaction slice.
+required_outputs:
+  - id: strict-contract-audit
+    type: review
+    path: .pf/reviews/pre-release-remediation-strict-contract-audit-20260730.md
+    required: true
+  - id: strict-contract-auditor-report
+    type: markdown
+    path: .pf/artifacts/pre-release-remediation-agents/strict-contract-auditor.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/reviews/pre-release-remediation-strict-contract-audit-20260730.md
+  format: evidence_backed_markdown
+  include:
+    - result
+    - exact_legacy_surfaces
+    - canonical_replacements
+    - internal_data_migrations
+    - false_positives_to_keep
+    - task_partition
+    - release_blockers
+worker_may_rebuild_context: false
+runtime_driver: manual

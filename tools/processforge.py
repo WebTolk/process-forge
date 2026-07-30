@@ -20,7 +20,7 @@ import tempfile
 import time
 import uuid
 import zipfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -400,6 +400,641 @@ class WriteResult:
 
 
 @dataclass
+class AuthoringWrite:
+    destination: Path
+    content: bytes | None
+    role: str = "entity"
+    operation: str = "create"
+    schema_name: str | None = None
+    allow_replace: bool = False
+
+
+@dataclass
+class AuthoringEffect:
+    label: str
+    destination: str
+    role: str = "audit"
+    operation: str = "append"
+    condition: str = "after_commit"
+    kind: str = "callback"
+    payload: dict[str, Any] = field(default_factory=dict)
+    executable: bool = True
+    callback: Any = None
+
+
+@dataclass
+class AuthoringPlan:
+    transaction_id: str
+    command: str
+    runtime_root: Path
+    authoritative_writes: list[AuthoringWrite]
+    registry_writes: list[AuthoringWrite]
+    post_commit_effects: list[AuthoringEffect]
+    validation_callbacks: list[Any]
+
+
+AUTHORING_FAILURE_INJECTOR: Any = None
+
+
+def authoring_failure_point(phase: str, plan: AuthoringPlan, write: AuthoringWrite | None = None) -> None:
+    callback = AUTHORING_FAILURE_INJECTOR
+    if callback is not None:
+        callback(phase, plan, write)
+
+
+def authoring_mode(args: argparse.Namespace) -> str:
+    apply = bool(getattr(args, "apply", False))
+    dry_run = bool(getattr(args, "dry_run", False))
+    if apply == dry_run:
+        raise SystemExit("FAIL: choose exactly one of --dry-run or --apply")
+    if apply:
+        return "apply"
+    return "dry_run"
+
+
+def authoring_transaction_root(plan: AuthoringPlan) -> Path:
+    return plan.runtime_root / "authoring-transactions" / plan.transaction_id
+
+
+def authoring_journal_path(plan: AuthoringPlan) -> Path:
+    return authoring_transaction_root(plan) / "journal.yaml"
+
+
+def authoring_hash_bytes(content: bytes) -> str:
+    return hashlib.sha256(content).hexdigest()
+
+
+def authoring_file_hash(path: Path) -> str | None:
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
+def write_authoring_journal_data(path: Path, journal: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    try:
+        temporary.write_text(ensure_trailing_newline(dump_yaml(journal)), encoding="utf-8")
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
+def write_authoring_journal(plan: AuthoringPlan, journal: dict[str, Any]) -> None:
+    write_authoring_journal_data(authoring_journal_path(plan), journal)
+
+
+def incomplete_authoring_journals(runtime_root: Path) -> list[Path]:
+    root = runtime_root / "authoring-transactions"
+    if not root.is_dir():
+        return []
+    incomplete: list[Path] = []
+    terminal = {"rolled_back", "committed_audit_complete"}
+    for path in sorted(root.glob("*/journal.yaml")):
+        data = load_yaml_document(path)
+        if str(data.get("state") or "") not in terminal:
+            incomplete.append(path)
+    return incomplete
+
+
+def validate_authoring_parent_types(destination: Path) -> None:
+    if destination.exists() and destination.is_dir():
+        raise SystemExit(f"FAIL: authoring destination is a directory: {destination}")
+    parent = destination.parent
+    missing: list[Path] = []
+    while not parent.exists():
+        missing.append(parent)
+        if parent == parent.parent:
+            break
+        parent = parent.parent
+    if parent.exists() and not parent.is_dir():
+        raise SystemExit(f"FAIL: authoring destination parent is not a directory: {parent}")
+
+
+def preflight_authoring_plan(plan: AuthoringPlan) -> None:
+    incomplete = incomplete_authoring_journals(plan.runtime_root)
+    if incomplete:
+        raise SystemExit(
+            "FAIL: incomplete authoring transaction blocks mutation: "
+            + ", ".join(str(path) for path in incomplete)
+        )
+    writes = [*plan.authoritative_writes, *plan.registry_writes]
+    destinations = [write.destination.resolve() for write in writes]
+    if len(destinations) != len(set(destinations)):
+        raise SystemExit("FAIL: authoring plan contains duplicate destinations")
+    for write in writes:
+        validate_authoring_parent_types(write.destination)
+        if write.operation == "delete":
+            if not write.destination.is_file():
+                raise SystemExit(f"FAIL: authoring delete source missing: {write.destination}")
+            continue
+        if write.content is None:
+            raise SystemExit(f"FAIL: authoring write has no content: {write.destination}")
+        if write.destination.exists() and not write.allow_replace:
+            raise SystemExit(f"FAIL: authoring destination already exists: {write.destination}")
+    for callback in plan.validation_callbacks:
+        callback(plan, None)
+
+
+def render_authoring_plan(plan: AuthoringPlan, root: Path) -> None:
+    print(f"PLAN: {plan.command}")
+    print("TRANSACTION: <generated-on-apply>")
+    rows: list[tuple[str, str, str, str]] = []
+    for write in [*plan.authoritative_writes, *plan.registry_writes]:
+        rows.append(
+            (
+                rel(write.destination, root),
+                write.role,
+                write.operation,
+                f"schema={write.schema_name}" if write.schema_name else "",
+            )
+        )
+    for effect in plan.post_commit_effects:
+        rows.append((effect.destination, effect.role, effect.operation, effect.condition))
+    for destination, role, operation, condition in sorted(rows):
+        suffix = f" [{condition}]" if condition else ""
+        print(f"- {role}:{operation}: {destination}{suffix}")
+
+
+def render_authoring_dry_run(plan: AuthoringPlan, root: Path) -> None:
+    preflight_authoring_plan(plan)
+    render_authoring_plan(plan, root)
+
+
+def stage_authoring_plan(plan: AuthoringPlan) -> tuple[dict[str, Any], dict[Path, Path]]:
+    transaction_root = authoring_transaction_root(plan)
+    staged_root = transaction_root / "staged"
+    backup_root = transaction_root / "backups"
+    journal: dict[str, Any] = {
+        "schema_version": 1,
+        "transaction_id": plan.transaction_id,
+        "command": plan.command,
+        "state": "preparing",
+        "created_at": now_utc(),
+        "writes": [],
+        "created_directories": [],
+        "completed": [],
+        "post_commit_effects": [],
+    }
+    for index, effect in enumerate(plan.post_commit_effects):
+        effect_id = f"{plan.transaction_id}:{index + 1:04d}:{safe_id(effect.kind, 'effect')}"
+        journal["post_commit_effects"].append(
+            {
+                "effect_id": effect_id,
+                "label": effect.label,
+                "kind": effect.kind,
+                "payload": effect.payload,
+                "destination": effect.destination,
+                "role": effect.role,
+                "operation": effect.operation,
+                "condition": effect.condition,
+                "executable": bool(effect.executable),
+                "state": "pending" if effect.executable else "not_executable",
+                "attempts": 0,
+                "last_error": None,
+            }
+        )
+    write_authoring_journal(plan, journal)
+    authoring_failure_point("after_journal_prepare", plan)
+    staged: dict[Path, Path] = {}
+    for index, write in enumerate([*plan.authoritative_writes, *plan.registry_writes]):
+        staged_path = staged_root / f"{index:04d}.content"
+        backup_path = backup_root / f"{index:04d}.preimage"
+        staged_path.parent.mkdir(parents=True, exist_ok=True)
+        if write.operation != "delete":
+            assert write.content is not None
+            staged_path.write_bytes(write.content)
+            staged[write.destination] = staged_path
+        journal["writes"].append(
+            {
+                "destination": str(write.destination),
+                "role": write.role,
+                "operation": write.operation,
+                "pre_exists": write.destination.is_file(),
+                "pre_sha256": authoring_file_hash(write.destination),
+                "staged_sha256": authoring_hash_bytes(write.content) if write.content is not None else None,
+                "staged_path": str(staged_path) if write.operation != "delete" else None,
+                "backup_path": str(backup_path),
+                "published": False,
+            }
+        )
+        write_authoring_journal(plan, journal)
+        authoring_failure_point(f"after_staged_item:{index + 1}", plan, write)
+    return journal, staged
+
+
+def validate_staged_authoring_plan(
+    plan: AuthoringPlan,
+    journal: dict[str, Any],
+    staged: dict[Path, Path],
+) -> None:
+    for write in [*plan.authoritative_writes, *plan.registry_writes]:
+        if write.operation == "delete":
+            continue
+        staged_path = staged[write.destination]
+        if authoring_file_hash(staged_path) != authoring_hash_bytes(write.content or b""):
+            raise RuntimeError(f"staged authoring hash mismatch: {write.destination}")
+    for callback in plan.validation_callbacks:
+        callback(plan, staged)
+    journal["state"] = "prepared"
+    write_authoring_journal(plan, journal)
+
+
+def authoring_parent_chain(path: Path) -> list[Path]:
+    chain: list[Path] = []
+    parent = path.parent
+    while not parent.exists():
+        chain.append(parent)
+        if parent == parent.parent:
+            break
+        parent = parent.parent
+    return list(reversed(chain))
+
+
+def publish_authoring_write(
+    plan: AuthoringPlan,
+    write: AuthoringWrite,
+    record: dict[str, Any],
+    staged: dict[Path, Path],
+    journal: dict[str, Any],
+) -> None:
+    backup = Path(str(record["backup_path"]))
+    if write.destination.is_file():
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(write.destination, backup)
+    for directory in authoring_parent_chain(write.destination):
+        directory.mkdir()
+        journal["created_directories"].append(str(directory))
+    if write.operation == "delete":
+        write.destination.unlink()
+    else:
+        staged_path = staged[write.destination]
+        temporary = write.destination.with_name(f".{write.destination.name}.{plan.transaction_id}.tmp")
+        shutil.copy2(staged_path, temporary)
+        os.replace(temporary, write.destination)
+    record["published"] = True
+    journal["completed"].append(str(write.destination))
+    write_authoring_journal(plan, journal)
+
+
+def authoring_restore_record(record: dict[str, Any], transaction_id: str) -> list[str]:
+    errors: list[str] = []
+    destination = Path(str(record.get("destination") or ""))
+    backup = Path(str(record.get("backup_path") or ""))
+    try:
+        if record.get("pre_exists"):
+            expected = record.get("pre_sha256")
+            if not backup.is_file():
+                return [f"missing backup for {destination}"]
+            if expected and authoring_file_hash(backup) != expected:
+                return [f"backup hash mismatch for {destination}"]
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            temporary = destination.with_name(f".{destination.name}.{transaction_id}.restore")
+            shutil.copy2(backup, temporary)
+            os.replace(temporary, destination)
+        elif destination.exists():
+            if destination.is_file():
+                destination.unlink()
+            else:
+                shutil.rmtree(destination)
+    except OSError as exc:
+        errors.append(f"restore failed for {destination}: {exc}")
+    return errors
+
+
+def verify_authoring_rollback(journal: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for record in journal.get("writes", []) if isinstance(journal.get("writes"), list) else []:
+        if not isinstance(record, dict) or not record.get("published"):
+            continue
+        destination = Path(str(record.get("destination") or ""))
+        if record.get("pre_exists"):
+            expected = record.get("pre_sha256")
+            if not destination.is_file():
+                errors.append(f"pre-existing destination missing after rollback: {destination}")
+            elif expected and authoring_file_hash(destination) != expected:
+                errors.append(f"pre-existing destination hash mismatch after rollback: {destination}")
+        elif destination.exists():
+            errors.append(f"pre-missing destination still exists after rollback: {destination}")
+    for raw in journal.get("created_directories", []) if isinstance(journal.get("created_directories"), list) else []:
+        directory = Path(str(raw))
+        if directory.exists():
+            errors.append(f"created directory still exists after rollback: {directory}")
+    return errors
+
+
+def remove_authoring_created_directories(journal: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for raw in reversed(journal.get("created_directories", []) if isinstance(journal.get("created_directories"), list) else []):
+        directory = Path(str(raw))
+        try:
+            if directory.is_dir() and not any(directory.iterdir()):
+                directory.rmdir()
+        except OSError as exc:
+            errors.append(f"created directory cleanup failed for {directory}: {exc}")
+    return errors
+
+
+def rollback_authoring_plan(plan: AuthoringPlan, journal: dict[str, Any]) -> None:
+    journal["state"] = "rolling_back"
+    write_authoring_journal(plan, journal)
+    errors: list[str] = []
+    for record in reversed(journal.get("writes", [])):
+        if not record.get("published"):
+            continue
+        errors.extend(authoring_restore_record(record, plan.transaction_id))
+    errors.extend(remove_authoring_created_directories(journal))
+    errors.extend(verify_authoring_rollback(journal))
+    ok = not errors
+    journal["state"] = "rolled_back" if ok else "recovery_required"
+    journal["rollback_verified"] = ok
+    journal["recovery_errors"] = errors
+    write_authoring_journal(plan, journal)
+    if not ok:
+        raise RuntimeError(
+            f"authoring rollback could not be verified; recovery required: {authoring_journal_path(plan)}"
+        )
+
+
+def commit_authoring_plan(
+    plan: AuthoringPlan,
+    journal: dict[str, Any],
+    staged: dict[Path, Path],
+) -> None:
+    entity_writes = plan.authoritative_writes
+    registry_writes = plan.registry_writes
+    records = journal["writes"]
+    try:
+        authoring_failure_point("before_first_entity_publish", plan)
+        for index, write in enumerate(entity_writes):
+            journal["next_operation"] = str(write.destination)
+            write_authoring_journal(plan, journal)
+            publish_authoring_write(plan, write, records[index], staged, journal)
+            authoring_failure_point(f"after_entity_publish:{index + 1}", plan, write)
+        authoring_failure_point("before_first_registry_publish", plan)
+        offset = len(entity_writes)
+        for index, write in enumerate(registry_writes):
+            journal["next_operation"] = str(write.destination)
+            write_authoring_journal(plan, journal)
+            publish_authoring_write(plan, write, records[offset + index], staged, journal)
+            authoring_failure_point(f"after_registry_publish:{index + 1}", plan, write)
+        authoring_failure_point("before_commit_verification", plan)
+        for write in [*entity_writes, *registry_writes]:
+            if write.operation == "delete":
+                if write.destination.exists():
+                    raise RuntimeError(f"deleted authoring path still exists: {write.destination}")
+            elif authoring_file_hash(write.destination) != authoring_hash_bytes(write.content or b""):
+                raise RuntimeError(f"committed authoring hash mismatch: {write.destination}")
+        journal["state"] = "committed"
+        journal["committed_at"] = now_utc()
+        journal.pop("next_operation", None)
+        write_authoring_journal(plan, journal)
+    except BaseException:
+        rollback_authoring_plan(plan, journal)
+        raise
+
+
+def execute_authoring_effect(record: dict[str, Any], plan: AuthoringPlan | None = None) -> None:
+    kind = str(record.get("kind") or "")
+    payload = record.get("payload") if isinstance(record.get("payload"), dict) else {}
+    effect_id = str(record.get("effect_id") or "")
+    if kind == "callback" and plan is not None:
+        for effect in plan.post_commit_effects:
+            if effect.label == record.get("label") and effect.callback is not None:
+                effect.callback()
+                return
+        return
+    if kind == "process_event":
+        project_root = Path(str(payload["project_root"])).expanduser().resolve()
+        emit_process_event(
+            project_root,
+            str(payload["event_type"]),
+            process_id=str(payload["process_id"]),
+            subject=str(payload["process_id"]),
+            payload=payload.get("payload") if isinstance(payload.get("payload"), dict) else {},
+            correlation_id=str(payload["correlation_id"]),
+            event_id=f"evt_{safe_id(effect_id, 'effect')}",
+        )
+        return
+    if kind == "knowledge_audit":
+        workplace_root = Path(str(payload["workplace_root"])).expanduser().resolve()
+        slug = safe_id(effect_id, "effect")
+        _slug, proposal_path = write_resource_proposal(
+            workplace_root,
+            str(payload["command"]),
+            str(payload["resource_id"]),
+            payload.get("proposal_payload") if isinstance(payload.get("proposal_payload"), dict) else {},
+            slug=slug,
+        )
+        for event in payload.get("events", []) if isinstance(payload.get("events"), list) else []:
+            if not isinstance(event, dict):
+                continue
+            append_workplace_resource_event(
+                workplace_root,
+                resource_management_event(
+                    scope="workplace",
+                    command=str(payload["command"]),
+                    event_type=str(event["event_type"]),
+                    target=event.get("target") if isinstance(event.get("target"), dict) else {},
+                    status=str(event["status"]),
+                    message=str(event["message"]),
+                    event_id=f"evt_{safe_id(effect_id + '-' + str(event['event_type']), 'event')}",
+                ),
+            )
+        report = write_resource_management_report(
+            workplace_root,
+            slug,
+            str(payload.get("report_title") or "Knowledge Resource Add Report"),
+            [str(item) for item in payload.get("report_lines", []) if isinstance(item, str)],
+        )
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        print(f"REPORT: {rel(report, workplace_root)}")
+        return
+    if kind == "platform_audit":
+        workplace_root = Path(str(payload["workplace_root"])).expanduser().resolve()
+        slug = safe_id(effect_id, "effect")
+        _slug, proposal_path = write_resource_proposal(
+            workplace_root,
+            str(payload["command"]),
+            str(payload["contract_id"]),
+            payload.get("proposal_payload") if isinstance(payload.get("proposal_payload"), dict) else {},
+            slug=slug,
+        )
+        for event in payload.get("events", []) if isinstance(payload.get("events"), list) else []:
+            if not isinstance(event, dict):
+                continue
+            append_workplace_resource_event(
+                workplace_root,
+                resource_management_event(
+                    scope="workplace",
+                    command=str(payload["command"]),
+                    event_type=str(event["event_type"]),
+                    target=event.get("target") if isinstance(event.get("target"), dict) else {},
+                    status=str(event["status"]),
+                    message=str(event["message"]),
+                    event_id=f"evt_{safe_id(effect_id + '-' + str(event['event_type']), 'event')}",
+                ),
+            )
+        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
+        return
+    raise RuntimeError(f"unknown authoring effect kind: {kind}")
+
+
+def run_post_commit_effect_records(
+    journal: dict[str, Any],
+    journal_path: Path,
+    plan: AuthoringPlan | None = None,
+) -> None:
+    for record in journal.get("post_commit_effects", []) if isinstance(journal.get("post_commit_effects"), list) else []:
+        if not isinstance(record, dict) or not record.get("executable"):
+            continue
+        if record.get("state") == "succeeded":
+            continue
+        record["state"] = "running"
+        record["attempts"] = int(record.get("attempts") or 0) + 1
+        record["last_error"] = None
+        journal["state"] = "committed_audit_pending"
+        write_authoring_journal_data(journal_path, journal)
+        try:
+            execute_authoring_effect(record, plan)
+        except BaseException as exc:
+            record["state"] = "failed"
+            record["last_error"] = str(exc)
+            journal["state"] = "committed_audit_pending"
+            write_authoring_journal_data(journal_path, journal)
+            raise
+        record["state"] = "succeeded"
+        write_authoring_journal_data(journal_path, journal)
+    journal["state"] = "committed_audit_complete"
+    journal["post_commit_completed"] = [
+        str(record.get("label") or record.get("effect_id"))
+        for record in journal.get("post_commit_effects", [])
+        if isinstance(record, dict) and record.get("executable") and record.get("state") == "succeeded"
+    ]
+    write_authoring_journal_data(journal_path, journal)
+
+
+def run_post_commit_effects(plan: AuthoringPlan, journal: dict[str, Any]) -> None:
+    authoring_failure_point("after_commit_before_audit", plan)
+    run_post_commit_effect_records(journal, authoring_journal_path(plan), plan)
+
+
+def execute_authoring_plan(plan: AuthoringPlan) -> dict[str, Any]:
+    preflight_authoring_plan(plan)
+    journal, staged = stage_authoring_plan(plan)
+    try:
+        validate_staged_authoring_plan(plan, journal, staged)
+        commit_authoring_plan(plan, journal, staged)
+    except BaseException:
+        if journal.get("state") not in {"rolled_back", "recovery_required"}:
+            rollback_authoring_plan(plan, journal)
+        raise
+    run_post_commit_effects(plan, journal)
+    return journal
+
+
+def validate_authoring_recovery_journal(journal_path: Path, data: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    transaction_root = journal_path.parent.resolve()
+    if not isinstance(data.get("transaction_id"), str) or not data.get("transaction_id"):
+        errors.append("journal transaction_id missing")
+    writes = data.get("writes")
+    if not isinstance(writes, list):
+        return [*errors, "journal writes missing"]
+    for index, record in enumerate(writes):
+        if not isinstance(record, dict):
+            errors.append(f"write {index} is not an object")
+            continue
+        destination = Path(str(record.get("destination") or ""))
+        backup = Path(str(record.get("backup_path") or ""))
+        if not destination.is_absolute():
+            errors.append(f"write {index} destination is not absolute")
+        try:
+            backup.resolve().relative_to(transaction_root)
+        except ValueError:
+            errors.append(f"write {index} backup path escapes transaction root")
+    return errors
+
+
+def recover_authoring_transaction(journal_path: Path, *, apply: bool = True) -> str:
+    data = load_yaml_document(journal_path)
+    if not isinstance(data, dict):
+        raise SystemExit(f"FAIL: authoring journal is invalid: {journal_path}")
+    state = str(data.get("state") or "")
+    if state in {"rolled_back", "committed_audit_complete"}:
+        return state
+    if not apply:
+        return state or "unknown"
+    validation_errors = validate_authoring_recovery_journal(journal_path, data)
+    if validation_errors:
+        data["state"] = "recovery_required"
+        data["rollback_verified"] = False
+        data["recovery_errors"] = validation_errors
+        write_authoring_journal_data(journal_path, data)
+        return "recovery_required"
+    if state in {"committed", "committed_audit_pending"}:
+        run_post_commit_effect_records(data, journal_path, None)
+        return str(data["state"])
+    errors: list[str] = []
+    transaction_id = str(data.get("transaction_id") or journal_path.parent.name)
+    for record in reversed(data.get("writes", []) if isinstance(data.get("writes"), list) else []):
+        if not isinstance(record, dict) or not record.get("published"):
+            continue
+        errors.extend(authoring_restore_record(record, transaction_id))
+    errors.extend(remove_authoring_created_directories(data))
+    errors.extend(verify_authoring_rollback(data))
+    ok = not errors
+    data["state"] = "rolled_back" if ok else "recovery_required"
+    data["rollback_verified"] = ok
+    data["recovery_errors"] = errors
+    write_authoring_journal_data(journal_path, data)
+    return str(data["state"])
+
+
+def command_authoring_transaction_recover(args: argparse.Namespace) -> int:
+    runtime_root = Path(args.runtime_root).expanduser().resolve()
+    transaction_id = validate_resource_id(str(args.transaction), "authoring transaction")
+    journal_path = runtime_root / "authoring-transactions" / transaction_id / "journal.yaml"
+    if not journal_path.is_file():
+        raise SystemExit(f"FAIL: authoring transaction journal not found: {journal_path}")
+    mode = authoring_mode(args)
+    state = recover_authoring_transaction(journal_path, apply=mode == "apply")
+    print(f"TRANSACTION: {transaction_id}")
+    print(f"STATE: {state}")
+    return 1 if state == "recovery_required" else 0
+
+
+def planned_registry_upsert(
+    path: Path,
+    collection_key: str,
+    entry: dict[str, Any],
+    schema_name: str,
+) -> tuple[bytes, str, dict[str, Any]]:
+    if path.exists() and not path.is_file():
+        raise SystemExit(f"FAIL: registry path is not a file: {path}")
+    if path.is_file():
+        data = load_yaml_document(path)
+        error = yaml_error(data)
+        if error:
+            raise SystemExit(f"FAIL: registry YAML invalid; original preserved: {path}: {error}")
+        if not isinstance(data, dict) or not data:
+            raise SystemExit(f"FAIL: registry must be a non-empty YAML object; original preserved: {path}")
+        entries = data.get(collection_key)
+        if entries is None:
+            entries = []
+            data[collection_key] = entries
+        if not isinstance(entries, list):
+            raise SystemExit(
+                f"FAIL: registry collection {collection_key} must be a list; original preserved: {path}"
+            )
+    else:
+        data = {"schema_version": 1, collection_key: []}
+        entries = data[collection_key]
+    result = upsert_resource(entries, entry)
+    require_json_schema_document(data, schema_name, f"registry {path.name}")
+    return ensure_trailing_newline(dump_yaml(data)).encode("utf-8"), result, data
+
+
+@dataclass
 class PackageRootResolution:
     root_id: str
     original_path: str
@@ -419,6 +1054,10 @@ class ProcessDefinitionRef:
     root: Path
     catalog_role: str
     warnings: list[str]
+    pack_id: str = ""
+    active: bool = True
+    available: bool = True
+    production_ready: bool = False
 
 
 def safe_id(value: str, default: str = "project") -> str:
@@ -439,6 +1078,55 @@ def path_is_relative_to(path: Path, root: Path) -> bool:
         return True
     except ValueError:
         return False
+
+
+RESOURCE_ID_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$")
+WINDOWS_RESERVED_DEVICE_BASENAMES = {
+    "con",
+    "prn",
+    "aux",
+    "nul",
+    *{f"com{index}" for index in range(1, 10)},
+    *{f"lpt{index}" for index in range(1, 10)},
+}
+
+
+def validate_resource_id(raw: str, resource_kind: str = "resource") -> str:
+    value = str(raw)
+    invalid_reason = ""
+    if not value:
+        invalid_reason = "must not be empty"
+    elif value != value.strip() or any(ord(char) < 32 or ord(char) == 127 for char in value):
+        invalid_reason = "must not contain whitespace or control characters"
+    elif "%" in value:
+        invalid_reason = "must not contain percent-encoded path characters"
+    elif "/" in value or "\\" in value:
+        invalid_reason = "must not contain path separators"
+    elif ":" in value or re.match(r"^[a-zA-Z]:", value):
+        invalid_reason = "must not contain drive, URI, or alternate-stream syntax"
+    elif value.endswith((".", " ")):
+        invalid_reason = "must not end with a Windows-trimmed dot or space"
+    elif any(segment in {"", ".", ".."} for segment in value.split(".")):
+        invalid_reason = "must not contain empty or relative dot segments"
+    elif value.split(".", 1)[0] in WINDOWS_RESERVED_DEVICE_BASENAMES:
+        invalid_reason = "must not use a Windows reserved device basename"
+    elif not RESOURCE_ID_PATTERN.fullmatch(value):
+        invalid_reason = "must match ^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$"
+    if invalid_reason:
+        raise SystemExit(f"FAIL: invalid {resource_kind} id {value!r}: {invalid_reason}")
+    return value
+
+
+def contained_resource_path(root: Path, target: Path, resource_kind: str = "resource") -> Path:
+    try:
+        resolved_root = root.expanduser().resolve()
+        resolved_target = target.expanduser().resolve()
+        resolved_target.relative_to(resolved_root)
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise SystemExit(
+            f"FAIL: invalid {resource_kind} target cannot be contained under declared root: {target.as_posix()}"
+        ) from exc
+    return resolved_target
 
 
 def project_types_from_manifest(manifest_data: dict[str, Any]) -> list[str]:
@@ -1057,6 +1745,7 @@ def default_runtime_driver_registry() -> dict[str, Any]:
 
 def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str]:
     defaults = workplace_defaults(root, answers)
+    profile = str(answers.get("profile") or "generic").strip() or "generic"
     paths_answers = answers.get("paths", {}) if isinstance(answers.get("paths"), dict) else {}
     policies_answers = answers.get("policies", {}) if isinstance(answers.get("policies"), dict) else {}
     coordination_answers = answers.get("coordination", {}) if isinstance(answers.get("coordination"), dict) else {}
@@ -1106,6 +1795,7 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
             "mcp": "registries/mcp.yaml",
             "specializations": "registries/specializations.yaml",
             "project_classifiers": "registries/project-classifiers.yaml",
+            "process_packs": "registries/process-packs.yaml",
             "runtime_drivers": "registries/runtime-drivers.yaml",
             "update_sources": "registries/update-sources.yaml",
             "installed_subjects": "registries/installed-subjects.yaml",
@@ -1119,6 +1809,9 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
             "require_public_cleanliness_check": True,
         },
         "coordination": workplace_coordination,
+        "process_packs": {
+            "profile": profile,
+        },
         "capability_resolution": {
             "missing_required_capability": "block",
             "missing_optional_capability": "warn",
@@ -1167,6 +1860,7 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
                 ],
             }
         ]
+    active_process_packs = official_pack_registry_entries_for_profile(profile)
 
     agents = f"""# ProcessForge Workplace Layer
 
@@ -1213,6 +1907,7 @@ applied
 - registries/mcp.yaml
 - registries/specializations.yaml
 - registries/project-classifiers.yaml
+- registries/process-packs.yaml
 - registries/runtime-drivers.yaml
 - registries/update-sources.yaml
 - registries/installed-subjects.yaml
@@ -1326,6 +2021,9 @@ Run `project-onboard` for a concrete project.
         ),
         root / "registries" / "project-classifiers.yaml": dump_yaml(
             {"schema_version": 1, "project_classifiers": []}
+        ),
+        root / "registries" / "process-packs.yaml": dump_yaml(
+            {"schema_version": 1, "profile": profile, "process_packs": active_process_packs}
         ),
         root / "registries" / "agents.yaml": dump_yaml({"schema_version": 1, "agents": []}),
         root / "registries" / "runtime-drivers.yaml": dump_yaml(default_runtime_driver_registry()),
@@ -1468,6 +2166,10 @@ def append_workplace_event(root: Path, event_type: str, *, payload: dict[str, An
 def command_init_workplace(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
     answers = load_answers(Path(args.answers).expanduser().resolve() if args.answers else None)
+    profile = str(getattr(args, "profile", "") or "").strip()
+    if profile:
+        answers = dict(answers)
+        answers["profile"] = profile
     files = build_workplace_files(root, answers)
     planned_dirs = [root / "cache", root / "runtime", root / "runtime" / "events", root / "logs", root / "artifacts", root / "reviews", root / "handoffs", root / "packages", root / "knowledge", root / "reusable-templates", root / "platform-contracts", root / "specializations", root / "runtime-drivers", root / "tools", root / "mcp"]
     if not args.apply:
@@ -1951,6 +2653,7 @@ def registry_path_resolution_checks(workplace_root: Path, workplace_manifest: Pa
         ("templates", "templates.yaml"),
         ("tools", "tools.yaml"),
         ("mcp", "mcp.yaml"),
+        ("process_packs", "process-packs.yaml"),
     ]:
         raw_path = str(registries.get(key) or f"registries/{default_name}")
         resolution = resolve_path_with_constants(raw_path, workplace_root, constants)
@@ -2074,6 +2777,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
             checks.append(check("FAIL", "workplace.yaml appears to contain a secret value"))
         else:
             checks.append(check("PASS", "workplace.yaml contains no obvious secret values"))
+        load_doctor_yaml(manifest, "workplace.schema.json", "workplace manifest", checks)
         cfg = workplace_coordination_config(manifest)
         checks.append(check("PASS", f"default_project_mode is {cfg['default_project_mode']}"))
         checks.append(check("PASS", f"director_enabled is {str(bool(cfg.get('director_enabled'))).lower()}"))
@@ -2100,6 +2804,7 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
         "registries/templates.yaml",
         "registries/tools.yaml",
         "registries/mcp.yaml",
+        "registries/process-packs.yaml",
     ]:
         path = root / rel_path
         checks.append(
@@ -2114,6 +2819,26 @@ def command_doctor_workplace(args: argparse.Namespace) -> int:
         )
         if path.is_file() and contains_secret_value(path.read_text(encoding="utf-8", errors="replace")):
             checks.append(check("FAIL", f"{rel_path} appears to contain a secret value"))
+        registry_schema = {
+            "registries/distributions.yaml": "distributions-registry.schema.json",
+            "registries/platforms.yaml": "platform-registry.schema.json",
+            "registries/knowledge-roots.yaml": "knowledge-roots-registry.schema.json",
+            "registries/package-roots.yaml": "package-roots-registry.schema.json",
+            "registries/templates.yaml": "template-registry.schema.json",
+            "registries/tools.yaml": "tool-registry.schema.json",
+            "registries/mcp.yaml": "mcp-registry.schema.json",
+        }.get(rel_path)
+        if path.is_file() and registry_schema:
+            load_doctor_yaml(path, registry_schema, rel_path, checks)
+        elif path.is_file() and rel_path == "registries/process-packs.yaml":
+            process_pack_registry = load_yaml_document(path)
+            error = yaml_error(process_pack_registry)
+            if error:
+                checks.append(check("FAIL", f"{rel_path} YAML parse failed: {error}"))
+            elif not isinstance(process_pack_registry.get("process_packs"), list):
+                checks.append(check("FAIL", f"{rel_path} process_packs must be a list"))
+            else:
+                checks.append(check("PASS", f"{rel_path} has a valid process_packs collection"))
 
     for rel_dir in ["cache", "runtime", "logs"]:
         path = root / rel_dir
@@ -2543,6 +3268,25 @@ def project_classifier_registry_documents(
         data = load_yaml_document(flow_registry)
         if isinstance(data, dict) and not yaml_error(data):
             documents.append((data, flow_registry.parent.parent))
+    for manifest_path, manifest in active_official_pack_records(workplace_manifest):
+        provided = manifest.get("provides") if isinstance(manifest.get("provides"), dict) else {}
+        declared_ids = {str(item) for item in as_list(provided.get("project_classifiers")) if str(item)}
+        registry_path = manifest_path.parent / "project-classifiers" / "registry-entry.yaml"
+        registry = load_yaml_document(registry_path)
+        if not isinstance(registry, dict) or yaml_error(registry):
+            continue
+        entries = [
+            entry
+            for entry in as_list(registry.get("project_classifiers"))
+            if isinstance(entry, dict)
+            and (not declared_ids or str(entry.get("id") or "") in declared_ids)
+        ]
+        documents.append(
+            (
+                {"schema_version": 1, "project_classifiers": entries},
+                manifest_path.parent,
+            )
+        )
     return documents
 
 
@@ -3243,7 +3987,12 @@ def merge_id_list(target: dict[str, str], values: list[str], owner: str, conflic
             conflicts.append({"id": value, "first_owner": target[value], "second_owner": owner, "resolution": "dedupe"})
 
 
-def resolve_platform_contracts(workplace_manifest: Path | None, platform_ids: list[str], project_root: Path | None = None) -> dict[str, Any]:
+def resolve_platform_contracts(
+    workplace_manifest: Path | None,
+    platform_ids: list[str],
+    project_root: Path | None = None,
+    contract_overrides: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     contracts_by_id: dict[str, dict[str, Any]] = {}
     platform_stack: list[dict[str, Any]] = []
     required_capabilities: set[str] = set()
@@ -3271,7 +4020,13 @@ def resolve_platform_contracts(workplace_manifest: Path | None, platform_ids: li
         if contract_id in resolved:
             return
         resolving.append(contract_id)
-        contract, entry, status, source = load_platform_contract(workplace_manifest, contract_id, project_root)
+        if contract_overrides and contract_id in contract_overrides:
+            contract = contract_overrides[contract_id]
+            entry = {"id": contract_id, "status": "available", "source": "staged"}
+            status = "available"
+            source = "staged"
+        else:
+            contract, entry, status, source = load_platform_contract(workplace_manifest, contract_id, project_root)
         extends_refs = contract_extends(contract)
         required_platform_refs = contract_required_platforms(contract)
         for ref in extends_refs:
@@ -3492,11 +4247,29 @@ def specialization_path_from_registry_entry(workplace_root: Path, entry: dict[st
     raw_path = entry.get("path")
     if not raw_path:
         return None
-    return resolve_registry_relative_path(workplace_root, str(raw_path), workplace_manifest or (workplace_root / "workplace.yaml"))
+    manifest = workplace_manifest or (workplace_root / "workplace.yaml")
+    specialization_root = resolve_registry_relative_path(
+        workplace_root,
+        "${PF_SPECIALIZATIONS}",
+        manifest,
+    )
+    candidate = resolve_registry_relative_path(
+        workplace_root,
+        str(raw_path),
+        manifest,
+    )
+    return contained_resource_path(
+        specialization_root,
+        candidate,
+        "specialization",
+    )
 
 
 def specialization_path_candidates(workplace_root: Path | None, specialization_id: str, project_root: Path | None = None) -> list[Path]:
-    normalized_id = specialization_resource_id(specialization_id)
+    normalized_id = validate_resource_id(
+        specialization_resource_id(specialization_id),
+        "specialization",
+    )
     candidates: list[Path] = []
     if workplace_root:
         registry = load_yaml_document(specialization_registry_path(workplace_root))
@@ -3511,11 +4284,29 @@ def specialization_path_candidates(workplace_root: Path | None, specialization_i
                     if path:
                         candidates.append(path)
         for root in [workplace_root / "specializations", workplace_root / "specializations" / "user", workplace_root / "specializations" / "custom"]:
-            candidates.extend([root / f"{normalized_id}.yaml", root / f"{normalized_id.removeprefix('specialization.')}.yaml"])
+            candidates.extend(
+                [
+                    contained_resource_path(root, root / f"{normalized_id}.yaml", "specialization"),
+                    contained_resource_path(
+                        root,
+                        root / f"{normalized_id.removeprefix('specialization.')}.yaml",
+                        "specialization",
+                    ),
+                ]
+            )
     if project_root:
         flow_root = locate_flow_root(project_root)
         for root in [flow_root / "specializations", flow_root / "specializations" / "user", flow_root / "specializations" / "custom"]:
-            candidates.extend([root / f"{normalized_id}.yaml", root / f"{normalized_id.removeprefix('specialization.')}.yaml"])
+            candidates.extend(
+                [
+                    contained_resource_path(root, root / f"{normalized_id}.yaml", "specialization"),
+                    contained_resource_path(
+                        root,
+                        root / f"{normalized_id.removeprefix('specialization.')}.yaml",
+                        "specialization",
+                    ),
+                ]
+            )
     unique: list[Path] = []
     seen: set[Path] = set()
     for path in candidates:
@@ -3745,6 +4536,10 @@ def active_registry_capability_providers(
             capabilities.update(provided)
             for capability in provided:
                 providers.setdefault(capability, []).append({"provider": "registry", provider_key: resource_id})
+    pack_capabilities, pack_providers = official_pack_capability_providers(workplace_manifest)
+    capabilities.update(pack_capabilities)
+    for capability, items in pack_providers.items():
+        providers.setdefault(capability, []).extend(items)
     return capabilities, providers
 
 
@@ -3870,6 +4665,22 @@ def resolve_specialization_context(
     selected_specializations: list[dict[str, Any]] = []
     provided_capabilities: set[str] = set()
     capability_providers: dict[str, list[dict[str, Any]]] = {}
+    for _manifest_path, pack_manifest in active_official_pack_records(workplace_manifest):
+        pack_id = str(pack_manifest.get("id") or "")
+        provided = pack_manifest.get("provides") if isinstance(pack_manifest.get("provides"), dict) else {}
+        knowledge_packages = {
+            str(item)
+            for item in as_list(provided.get("knowledge_packages"))
+            if str(item)
+        }
+        if knowledge_packages:
+            optional["knowledge_packages"].update(knowledge_packages)
+            reasons.append(
+                {
+                    "source": pack_id,
+                    "reason": "active official process pack knowledge packages merged",
+                }
+            )
     index = specialization_manifest_index(workplace_manifest, project_root)
     for specialization_id in selected_ids:
         spec = index.get(specialization_id)
@@ -5012,7 +5823,7 @@ def command_first_run(args: argparse.Namespace) -> int:
     return command_init_project(project_args)
 
 
-RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates", "checksums"]
+RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates", "checksums"]
 RELEASE_ROOT_FILES = ["README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md", "CHANGELOG.md", "LICENSE", "VERSION", "requirements.txt", ".gitignore", ".processforge-releaseignore"]
 RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 RELEASE_REQUIRED_PATHS = [
@@ -5039,6 +5850,7 @@ RELEASE_REQUIRED_PATHS = [
     "processes/core",
     "processes/user",
     "processes/custom",
+    "packs/official",
     "prompts",
     "docs",
     "examples",
@@ -5338,7 +6150,7 @@ def release_checks(root: Path) -> list[Check]:
             text = path.read_text(encoding="utf-8", errors="replace")
             lower = text.lower()
             release_text_group = archive_path.split("/", 1)[0]
-            user_facing_text = release_text_group in {"README.md", "QUICKSTART.md", "CHANGELOG.md", "VERSION", "AGENTS.md", "docs", "prompts", "examples", "processes", "packages", "templates", "policies", "seeds"}
+            user_facing_text = release_text_group in {"README.md", "QUICKSTART.md", "CHANGELOG.md", "VERSION", "AGENTS.md", "docs", "prompts", "examples", "processes", "packages", "packs", "templates", "policies", "seeds"}
             if release_text_group in {"README.md", "QUICKSTART.md", "docs", "prompts", "examples"} and forbidden_powershell_reference(text):
                 checks.append(
                     check_with_hint(
@@ -5521,7 +6333,7 @@ def command_examples_check(args: argparse.Namespace) -> int:
                 if forbidden_powershell_reference(text):
                     checks.append(check_with_hint("FAIL", f"{rel_path}: mentions PowerShell/.ps1", "Public examples should not mention removed wrappers.", "use python bin/pf.py or python .pf/runtime/bin/pf.py"))
                 if forbidden_base_technology_platform_reference(text):
-                    checks.append(check_with_hint("FAIL", f"{rel_path}: introduces a base-technology platform", "Domain classifications belong to optional packs, not core platform contracts.", "move the example under examples/domain-packs and keep it inactive by default"))
+                    checks.append(check_with_hint("FAIL", f"{rel_path}: introduces a base-technology platform", "Domain classifications belong to explicit process packs, not core platform contracts.", "move the data into an official or custom process pack and keep it inactive by default"))
                 if not is_public_path_safe(text):
                     checks.append(check_with_hint("FAIL", f"{rel_path}: contains private absolute path", "Examples must be portable.", "replace local paths with relative paths or placeholders"))
                 if "python tools/processforge.py doctor-project --project-root" in text:
@@ -5599,7 +6411,7 @@ def print_release_command_output(result: ReleaseCommandResult) -> None:
 
 def release_test_commands(root: Path, *, clean_first: bool = True, public: bool = False) -> list[ReleaseCommand]:
     commands: list[ReleaseCommand] = [
-        ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py")], 30),
+        ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py"), str(root / "tools" / "specialization_smoke_helpers.py")], 30),
         ReleaseCommand("schema validation", [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)], 60),
         ReleaseCommand("public cleanliness", [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)], 60),
         ReleaseCommand("smoke_core_has_no_domain_knowledge_seeds", [sys.executable, str(root / "tools" / "smoke_core_has_no_domain_knowledge_seeds.py")], 120),
@@ -5611,6 +6423,16 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_core_process_catalog_domain_neutral", [sys.executable, str(root / "tools" / "smoke_core_process_catalog_domain_neutral.py")], 120),
         ReleaseCommand("smoke_core_prompts_domain_neutral", [sys.executable, str(root / "tools" / "smoke_core_prompts_domain_neutral.py")], 120),
         ReleaseCommand("smoke_runtime_no_domain_file_patterns", [sys.executable, str(root / "tools" / "smoke_runtime_no_domain_file_patterns.py")], 120),
+        ReleaseCommand("smoke_official_packs_not_examples", [sys.executable, str(root / "tools" / "smoke_official_packs_not_examples.py")], 120),
+        ReleaseCommand("smoke_official_pack_manifest_schema", [sys.executable, str(root / "tools" / "smoke_official_pack_manifest_schema.py")], 120),
+        ReleaseCommand("smoke_official_software_process_available", [sys.executable, str(root / "tools" / "smoke_official_software_process_available.py")], 120),
+        ReleaseCommand("smoke_official_pack_not_kernel", [sys.executable, str(root / "tools" / "smoke_official_pack_not_kernel.py")], 120),
+        ReleaseCommand("smoke_generic_workplace_no_domain_pack_active", [sys.executable, str(root / "tools" / "smoke_generic_workplace_no_domain_pack_active.py")], 120),
+        ReleaseCommand("smoke_software_profile_activates_official_pack", [sys.executable, str(root / "tools" / "smoke_software_profile_activates_official_pack.py")], 180),
+        ReleaseCommand("smoke_official_pack_classifier_data_driven", [sys.executable, str(root / "tools" / "smoke_official_pack_classifier_data_driven.py")], 180),
+        ReleaseCommand("smoke_official_process_can_start_minimal_run", [sys.executable, str(root / "tools" / "smoke_official_process_can_start_minimal_run.py")], 180),
+        ReleaseCommand("smoke_core_domain_neutral_still_passes", [sys.executable, str(root / "tools" / "smoke_core_domain_neutral_still_passes.py")], 180),
+        ReleaseCommand("smoke_examples_do_not_shadow_official_processes", [sys.executable, str(root / "tools" / "smoke_examples_do_not_shadow_official_processes.py")], 120),
         ReleaseCommand("checksum", [sys.executable, str(root / "tools" / "validate-process-forge-checksums.py"), "--root", str(root), "--check"], 60),
         ReleaseCommand("smoke_first_run", [sys.executable, str(root / "tools" / "smoke_first_run.py")], 120),
         ReleaseCommand("smoke_runtime_driver_registry", [sys.executable, str(root / "tools" / "smoke_runtime_driver_registry.py")], 120),
@@ -5827,12 +6649,33 @@ def command_release_test(args: argparse.Namespace) -> int:
         if unknown:
             print("FAIL: unknown --only check(s): " + ", ".join(unknown))
             return 1
-        public_requested = public_requested or "public-gate" in only
-        commands = [item for item in commands if item.label in only]
+        public_group_selected = "public-gate" in only
+        public_requested = public_requested or public_group_selected
+        commands = [
+            item
+            for item in commands
+            if item.label in only or (public_group_selected and item.public_gate)
+        ]
+        if not commands and "git diff --check" not in only:
+            print("FAIL: --only selection resolved to no release commands")
+            return 1
     if "public-gate" in skip:
         public_requested = False
     if skip:
-        commands = [item for item in commands if item.label not in skip]
+        commands = [
+            item
+            for item in commands
+            if item.label not in skip
+            and not ("public-gate" in skip and item.public_gate)
+        ]
+    git_check_selected = (
+        (root / ".git").exists()
+        and (not only or "git diff --check" in only)
+        and "git diff --check" not in skip
+    )
+    if not commands and not git_check_selected:
+        print("FAIL: release-test selection resolved to no runnable checks")
+        return 1
     print("ProcessForge release-test")
     started_at = now_utc()
     started = time.perf_counter()
@@ -6459,6 +7302,7 @@ def collect_project_snapshot_sources(project_root: Path) -> list[dict[str, Any]]
             for rel_path, kind in [
                 ("registries/specializations.yaml", "workplace-specialization-registry"),
                 ("registries/project-classifiers.yaml", "workplace-project-classifier-registry"),
+                ("registries/process-packs.yaml", "workplace-process-pack-registry"),
                 ("registries/tools.yaml", "workplace-tool-registry"),
                 ("registries/mcp.yaml", "workplace-mcp-registry"),
                 ("registries/templates.yaml", "workplace-template-registry"),
@@ -6473,6 +7317,21 @@ def collect_project_snapshot_sources(project_root: Path) -> list[dict[str, Any]]
                             kind,
                             private=True,
                             display_path=f"<private-workplace-ref>/{rel_path}",
+                        )
+                    )
+            for manifest_path, manifest in active_official_pack_records(workplace_path):
+                pack_id = str(manifest.get("id") or manifest_path.parent.name)
+                pack_sources = [manifest_path]
+                pack_sources.extend(sorted((manifest_path.parent / "project-classifiers").glob("*.yaml")))
+                for path in pack_sources:
+                    sources.append(
+                        fingerprint_record(
+                            path,
+                            project_root,
+                            safe_id(f"official-pack-{pack_id}-{path.stem}", "official-pack"),
+                            "official-process-pack",
+                            private=True,
+                            display_path=f"<distribution-pack>/{pack_id}/{path.relative_to(manifest_path.parent).as_posix()}",
                         )
                     )
             for dirname, kind in [
@@ -6744,15 +7603,29 @@ def resolve_package_root(workplace_root: Path, package_root_id: str | None = Non
 
 
 def package_path_candidates(root_path: Path, package_id: str) -> list[Path]:
+    validated_id = validate_resource_id(package_id, "knowledge package")
     return [
-        root_path / package_id / "package.yaml",
-        root_path / f"{package_id}.yaml",
+        contained_resource_path(
+            root_path,
+            root_path / validated_id / "package.yaml",
+            "knowledge package",
+        ),
+        contained_resource_path(
+            root_path,
+            root_path / f"{validated_id}.yaml",
+            "knowledge package",
+        ),
     ]
 
 
 def resolve_package_path(workplace_root: Path, package_id: str, package_root_id: str | None = None, *, mode: str = "read") -> tuple[PackageRootResolution, Path]:
+    validated_id = validate_resource_id(package_id, "knowledge package")
     root = resolve_package_root(workplace_root, package_root_id, mode=mode)
-    return root, root.resolved_path / package_id / "package.yaml"
+    return root, contained_resource_path(
+        root.resolved_path,
+        root.resolved_path / validated_id / "package.yaml",
+        "knowledge package",
+    )
 
 
 def workplace_package_roots(workplace_manifest: Path | None) -> list[PackageRootResolution]:
@@ -6782,6 +7655,14 @@ def package_manifest_candidates(project_root: Path, distribution_root: Path | No
             candidates.extend(sorted(root.glob("*.yml")))
             candidates.extend(sorted(root.glob("*/package.yaml")))
             candidates.extend(sorted(root.glob("*/package.yml")))
+    for process_pack_path, process_pack in active_official_pack_records(workplace_manifest):
+        provided = process_pack.get("provides") if isinstance(process_pack.get("provides"), dict) else {}
+        for package_id in as_list(provided.get("knowledge_packages")):
+            if not package_id:
+                continue
+            package_path = process_pack_path.parent / "knowledge-packages" / f"{package_id}.yaml"
+            if package_path.is_file():
+                candidates.append(package_path)
     unique: list[Path] = []
     seen: set[Path] = set()
     for path in candidates:
@@ -7165,10 +8046,11 @@ def resource_management_event(
     target: dict[str, Any],
     status: str,
     message: str,
+    event_id: str | None = None,
 ) -> dict[str, Any]:
     return {
         "schema_version": 1,
-        "event_id": f"evt_{uuid.uuid4().hex}",
+        "event_id": event_id or f"evt_{uuid.uuid4().hex}",
         "event_type": event_type,
         "occurred_at": now_utc(),
         "scope": scope,
@@ -7181,6 +8063,15 @@ def resource_management_event(
 def append_workplace_resource_event(workplace_root: Path, event: dict[str, Any]) -> Path:
     target = workplace_root / "runtime" / "events" / "events.ndjson"
     target.parent.mkdir(parents=True, exist_ok=True)
+    event_id = str(event.get("event_id") or "")
+    if event_id and target.is_file():
+        for line in target.read_text(encoding="utf-8", errors="replace").splitlines():
+            try:
+                existing = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(existing, dict) and str(existing.get("event_id") or "") == event_id:
+                return target
     target.write_text(
         (target.read_text(encoding="utf-8") if target.is_file() else "")
         + json.dumps(redact_telemetry_value(event), ensure_ascii=False, sort_keys=True)
@@ -7278,8 +8169,6 @@ def normalize_resource_record(resource: dict[str, Any], package_id: str, workpla
     if "path_ref" not in record:
         record["path_ref"] = public_resource_path_ref(resource_id, raw_path, source_url, workplace_root)
     if raw_path and (path_string_is_absolute(raw_path) or PATH_CONSTANT_PATTERN.search(raw_path)):
-        if workplace_root and register_private_path and record.get("path_ref", {}).get("registry") == "private_resource_paths":
-            ensure_private_resource_path(workplace_root, resource_id, raw_path)
         record["path_status"] = "resolved_private_path_hidden"
         resolution = workplace_path_resolution(workplace_root, raw_path) if workplace_root else None
         if resolution and resolution.get("errors"):
@@ -7363,7 +8252,12 @@ def load_workplace_package_manifest(workplace_root: Path, package_id: str, packa
     else:
         root, path = resolve_package_path(workplace_root, package_id, None, mode=mode)
     data = load_yaml_document(path)
-    if not data or yaml_error(data):
+    error = yaml_error(data)
+    if error:
+        if mode == "write":
+            raise SystemExit(f"FAIL: package manifest YAML invalid: {rel(path, workplace_root)}: {error}")
+        return path, data, root
+    if not data:
         data = {
             "schema_version": 1,
             "id": package_id,
@@ -7381,7 +8275,13 @@ def load_workplace_package_manifest(workplace_root: Path, package_id: str, packa
 def resource_index_path_for_package(manifest_path: Path, workplace_root: Path, package_id: str) -> Path:
     if manifest_path.name == "package.yaml":
         return manifest_path.parent / "indexes" / "resource-index.yaml"
-    return workplace_root / "packages" / package_id / "indexes" / "resource-index.yaml"
+    validated_id = validate_resource_id(package_id, "knowledge package")
+    package_root = workplace_root / "packages"
+    return contained_resource_path(
+        package_root,
+        package_root / validated_id / "indexes" / "resource-index.yaml",
+        "knowledge package",
+    )
 
 
 def build_resource_index(package_manifest: dict[str, Any], workplace_root: Path | None = None, package_root_id: str | None = None) -> dict[str, Any]:
@@ -7462,7 +8362,7 @@ def resource_path_ref_missing(workplace_root: Path, resource: dict[str, Any]) ->
 def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, package_root_id: str | None = None) -> list[Check]:
     manifest_path, manifest, package_root = load_workplace_package_manifest(workplace_root, package_id, package_root_id, mode="read")
     checks: list[Check] = []
-    if not manifest:
+    if not manifest_path.is_file():
         return [
             check_with_hint(
                 "FAIL",
@@ -7481,19 +8381,17 @@ def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, packa
                 "check registries/package-roots.yaml and pass --package-root when multiple roots contain the same package id",
             )
         )
-    if not manifest_path.is_file():
-        checks.append(
-            check_with_hint(
-                "FAIL",
-                f"package {package_id} not found through package_roots",
-                "The package manifest is missing from the selected package_root.",
-                f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root <package-root> --title \"{package_id}\" --apply",
-            )
-        )
-        return checks
     checks.append(check("PASS", f"package {package_id} resolved through package root {package_root.root_id}"))
+    loaded = load_doctor_yaml(
+        manifest_path,
+        "package-manifest.schema.json",
+        f"package {package_id} manifest",
+        checks,
+    )
+    if loaded is None:
+        return checks
+    manifest = loaded
     resources = manifest.get("resources") if isinstance(manifest.get("resources"), list) else []
-    checks.append(check("PASS", f"package {package_id} manifest loaded"))
     for resource in resources:
         if not isinstance(resource, dict):
             checks.append(check("FAIL", f"package {package_id} contains non-object resource"))
@@ -8441,10 +9339,11 @@ def processforge_event(
     privacy: str = "private",
     correlation_id: str | None = None,
     causation_id: str | None = None,
+    event_id: str | None = None,
     actor: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     correlation = correlation_id or session_id or f"corr-{uuid.uuid4().hex[:12]}"
-    event_id = f"evt_{uuid.uuid4().hex}"
+    event_id = event_id or f"evt_{uuid.uuid4().hex}"
     clean_data = redact_telemetry_value(data if data is not None else (payload or {}))
     actor_data = actor or {"type": "agent", "id": "processforge-cli", "role": "orchestrator"}
     event_subject = subject or assignment_path or assignment_id_value or session_id or event_type
@@ -8598,8 +9497,20 @@ def dispatch_hooks(project_root: Path, event: dict[str, Any], *, dry_run: bool =
 def append_process_event(project_root: Path, event: dict[str, Any], *, dispatch: bool = True) -> Path:
     events_path, _outbox = event_runtime_paths(project_root)
     events_path.parent.mkdir(parents=True, exist_ok=True)
-    with events_path.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
+    event_id = event_id_value(event)
+    exists = False
+    if events_path.is_file():
+        for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            try:
+                existing = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(existing, dict) and event_id_value(existing) == event_id:
+                exists = True
+                break
+    if not exists:
+        with events_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
     if dispatch:
         dispatch_hooks(project_root, event, dry_run=False, outbox=True)
     return events_path
@@ -10507,6 +11418,130 @@ def process_override_declared(process: dict[str, Any], overridden_process_id: st
     return str(override.get("overrides") or "") == overridden_process_id and bool(str(override.get("reason") or "").strip())
 
 
+def official_pack_manifest_records(root: Path | None = None) -> list[tuple[Path, dict[str, Any]]]:
+    distribution_root = (root or ROOT).resolve()
+    records: list[tuple[Path, dict[str, Any]]] = []
+    for path in sorted((distribution_root / "packs" / "official").glob("*/package.yaml")):
+        data = load_yaml_document(path)
+        if (
+            isinstance(data, dict)
+            and not yaml_error(data)
+            and data.get("kind") == "processforge.pack"
+            and data.get("origin") == "official"
+            and data.get("id")
+        ):
+            records.append((path, data))
+    return records
+
+
+def official_pack_registry_entries_for_profile(profile: str) -> list[dict[str, Any]]:
+    selected: list[dict[str, Any]] = []
+    for _path, manifest in official_pack_manifest_records():
+        activation = manifest.get("activation") if isinstance(manifest.get("activation"), dict) else {}
+        profiles = {str(item) for item in as_list(activation.get("profiles")) if str(item)}
+        if profile not in profiles:
+            continue
+        selected.append(
+            {
+                "id": str(manifest["id"]),
+                "origin": "official",
+                "status": "active",
+                "version": str(manifest.get("version") or ""),
+            }
+        )
+    return selected
+
+
+def workplace_process_pack_registry(workplace_manifest: Path | None) -> dict[str, Any]:
+    if not workplace_manifest or not workplace_manifest.is_file():
+        return {"schema_version": 1, "process_packs": []}
+    registry = load_workplace_registry(workplace_manifest, "process_packs", "process-packs.yaml")
+    return registry if isinstance(registry, dict) else {"schema_version": 1, "process_packs": []}
+
+
+def active_process_pack_ids(workplace_manifest: Path | None) -> set[str]:
+    active: set[str] = set()
+    for entry in as_list(workplace_process_pack_registry(workplace_manifest).get("process_packs")):
+        if not isinstance(entry, dict):
+            continue
+        status = str(entry.get("status") or "active")
+        if entry.get("id") and status in {"active", "enabled", "configured"}:
+            active.add(str(entry["id"]))
+    return active
+
+
+def active_official_pack_records(workplace_manifest: Path | None) -> list[tuple[Path, dict[str, Any]]]:
+    active_ids = active_process_pack_ids(workplace_manifest)
+    return [
+        (path, manifest)
+        for path, manifest in official_pack_manifest_records()
+        if str(manifest.get("id") or "") in active_ids
+    ]
+
+
+def official_pack_capability_providers(
+    workplace_manifest: Path | None,
+) -> tuple[set[str], dict[str, list[dict[str, Any]]]]:
+    capabilities: set[str] = set()
+    providers: dict[str, list[dict[str, Any]]] = {}
+    for _path, manifest in active_official_pack_records(workplace_manifest):
+        pack_id = str(manifest.get("id") or "")
+        provided = manifest.get("provides") if isinstance(manifest.get("provides"), dict) else {}
+        declared = {str(item) for item in as_list(provided.get("capabilities")) if str(item)}
+        for tool in as_list(provided.get("tools")):
+            if isinstance(tool, dict):
+                declared.update(values_from_registry_entry(tool))
+        capabilities.update(declared)
+        for capability in declared:
+            providers.setdefault(capability, []).append(
+                {"provider": "active_process_pack", "process_pack": pack_id}
+            )
+    return capabilities, providers
+
+
+def official_process_definition_refs(
+    project_root: Path,
+    *,
+    include_available: bool = False,
+    workplace_manifest: Path | None = None,
+) -> list[ProcessDefinitionRef]:
+    if workplace_manifest is None:
+        workplace_manifest = resolve_project_workplace_manifest(project_root)
+    active_ids = active_process_pack_ids(workplace_manifest)
+    entries: list[ProcessDefinitionRef] = []
+    for manifest_path, manifest in official_pack_manifest_records():
+        pack_id = str(manifest.get("id") or "")
+        active = pack_id in active_ids
+        if not active and not include_available:
+            continue
+        process_root = manifest_path.parent / "processes"
+        provided = manifest.get("provides") if isinstance(manifest.get("provides"), dict) else {}
+        declared = {str(item) for item in as_list(provided.get("processes")) if str(item)}
+        for path in sorted(process_root.glob("*.yaml")):
+            data = load_yaml_document(path)
+            if yaml_error(data) or not isinstance(data, dict):
+                continue
+            process_id = str(data.get("id") or path.stem)
+            if declared and process_id not in declared:
+                continue
+            entries.append(
+                ProcessDefinitionRef(
+                    process_id=process_id,
+                    path=path,
+                    process=data,
+                    origin="official",
+                    root=manifest_path.parent,
+                    catalog_role=process_catalog_role(data),
+                    warnings=[],
+                    pack_id=pack_id,
+                    active=active,
+                    available=True,
+                    production_ready=bool(manifest.get("production_ready")),
+                )
+            )
+    return entries
+
+
 def process_root_candidates(project_root: Path) -> list[tuple[Path, str, bool]]:
     flow_root = locate_flow_root(project_root)
     candidates = [
@@ -10542,11 +11577,48 @@ def process_root_yaml_files(root: Path, *, legacy_flat: bool) -> list[Path]:
     return sorted([path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in {".yaml", ".yml"}])
 
 
-def process_catalog_entries(project_root: Path, *, strict: bool = False) -> list[ProcessDefinitionRef]:
+def process_catalog_entries(
+    project_root: Path,
+    *,
+    strict: bool = False,
+    include_available_official: bool = False,
+    workplace_manifest: Path | None = None,
+) -> list[ProcessDefinitionRef]:
     selected: dict[str, ProcessDefinitionRef] = {}
     order: list[str] = []
     duplicate_messages: dict[str, list[str]] = {}
+
+    def register(entry: ProcessDefinitionRef) -> None:
+        process_id = entry.process_id
+        if process_id not in selected:
+            selected[process_id] = entry
+            order.append(process_id)
+            return
+        current = selected[process_id]
+        message = (
+            f"duplicate process_id {process_id}: {rel(current.path, project_root)} "
+            f"wins over {rel(entry.path, project_root)}"
+        )
+        if (
+            current.origin in {"user", "custom"}
+            and entry.origin in {"core", "official"}
+            and not process_override_declared(current.process, process_id)
+        ):
+            message += f"; user/custom override of {entry.origin} process requires process_override.reason"
+        duplicate_messages.setdefault(process_id, []).append(message)
+        if strict:
+            current.warnings.append("STRICT: " + message)
+
+    official_added = False
     for root, origin, legacy_flat in process_root_candidates(project_root):
+        if origin == "core" and not official_added:
+            for official_entry in official_process_definition_refs(
+                project_root,
+                include_available=include_available_official,
+                workplace_manifest=workplace_manifest,
+            ):
+                register(official_entry)
+            official_added = True
         for path in process_root_yaml_files(root, legacy_flat=legacy_flat):
             data = load_yaml_document(path)
             if yaml_error(data) or not isinstance(data, dict):
@@ -10566,27 +11638,30 @@ def process_catalog_entries(project_root: Path, *, strict: bool = False) -> list
                 catalog_role=process_catalog_role(data),
                 warnings=warnings,
             )
-            if process_id not in selected:
-                selected[process_id] = entry
-                order.append(process_id)
-                continue
-            current = selected[process_id]
-            message = f"duplicate process_id {process_id}: {rel(current.path, project_root)} wins over {rel(path, project_root)}"
-            if current.origin in {"user", "custom"} and origin == "core" and not process_override_declared(current.process, process_id):
-                message += "; user/custom override of core process requires process_override.reason"
-            duplicate_messages.setdefault(process_id, []).append(message)
-            if strict:
-                current.warnings.append("STRICT: " + message)
+            register(entry)
     for process_id, messages in duplicate_messages.items():
         selected[process_id].warnings.extend(messages)
     return [selected[process_id] for process_id in order]
 
 
-def resolve_process_definition(project_root: Path, process_or_path: str) -> ProcessDefinitionRef:
+def resolve_process_definition(
+    project_root: Path,
+    process_or_path: str,
+    *,
+    include_available_official: bool = False,
+    workplace_manifest: Path | None = None,
+) -> ProcessDefinitionRef:
     candidate = Path(process_or_path)
     if candidate.suffix in {".yaml", ".yml"}:
         path = candidate if candidate.is_absolute() else project_root / candidate
         if path.is_file():
+            for official_entry in official_process_definition_refs(
+                project_root,
+                include_available=True,
+                workplace_manifest=workplace_manifest,
+            ):
+                if official_entry.path.resolve() == path.resolve():
+                    return official_entry
             data = read_yaml_file(path)
             process_id = str(data.get("id") or path.stem) if isinstance(data, dict) else path.stem
             origin = "legacy_flat"
@@ -10602,10 +11677,48 @@ def resolve_process_definition(project_root: Path, process_or_path: str) -> Proc
                     pass
             return ProcessDefinitionRef(process_id, path, data, origin, root, process_catalog_role(data) if isinstance(data, dict) else "canonical", [])
     process_id = safe_id(process_or_path, "process")
-    for entry in process_catalog_entries(project_root):
+    for entry in process_catalog_entries(
+        project_root,
+        include_available_official=include_available_official,
+        workplace_manifest=workplace_manifest,
+    ):
         if entry.process_id == process_id:
             return entry
+    for entry in official_process_definition_refs(
+        project_root,
+        include_available=True,
+        workplace_manifest=workplace_manifest,
+    ):
+        if entry.process_id == process_id and not entry.active:
+            raise SystemExit(
+                f"FAIL: process {process_id} is available in official pack {entry.pack_id} "
+                "but is not active in this workplace.\n"
+                "Fix: run "
+                f"python bin/pf.py pack-activate --id {entry.pack_id} --workplace <path> --apply"
+            )
     raise SystemExit(f"FAIL: process not found: {process_id}")
+
+
+def require_official_process_active(project_root: Path, process_id: str) -> None:
+    normalized = safe_id(process_id, "process")
+    effective = next(
+        (
+            entry
+            for entry in process_catalog_entries(
+                project_root,
+                include_available_official=True,
+            )
+            if entry.process_id == normalized
+        ),
+        None,
+    )
+    if effective is not None and effective.origin == "official" and not effective.active:
+        raise SystemExit(
+            f"FAIL: process {normalized} is available in official pack {effective.pack_id} "
+            "but is not active in this workplace.\n"
+            "Fix: run "
+            f"python bin/pf.py pack-activate --id {effective.pack_id} --workplace <path> --apply"
+        )
 
 
 def process_definition_exists(project_root: Path, process_id: str) -> bool:
@@ -10918,8 +12031,11 @@ def normalize_evolve_block(raw: Any, *, answers: bool = False) -> dict[str, Any]
     block["enabled"] = enabled
     if not enabled:
         block["mode"] = "disabled"
+        decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
+        reason = str(block.get("reason") or decision.get("reason") or "").strip()
+        if reason:
+            block["reason"] = reason
         if answers:
-            decision = block.get("decision") if isinstance(block.get("decision"), dict) else {}
             decision["value"] = "disabled"
             block["decision"] = decision
         for optional_key in ["timing", "default_scope", "candidate_targets", "candidate_targeting", "extraction_hints", "required_outputs", "privacy", "apply_policy", "prompts"]:
@@ -11140,6 +12256,60 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
     return base
 
 
+def materialize_process_responsibility_boundaries(value: Any) -> dict[str, list[str]]:
+    if not isinstance(value, dict):
+        return {}
+    if all(
+        isinstance(items, list) and all(isinstance(item, str) for item in items)
+        for items in value.values()
+    ):
+        return {str(key): list(items) for key, items in value.items()}
+
+    output: dict[str, list[str]] = {}
+
+    def add(role: str, message: str) -> None:
+        text = message.strip()
+        if text:
+            output.setdefault(role, []).append(text)
+
+    role_fields = {
+        "coordinator_role": "coordinator",
+        "execution_inspector_role": "execution_inspector",
+        "worker_role": "worker",
+    }
+    for field, role in role_fields.items():
+        if value.get(field):
+            add(role, f"Assigned role: {value[field]}.")
+    if isinstance(value.get("needs_agent_director"), bool):
+        add(
+            "director",
+            "Required by this process." if value["needs_agent_director"] else "Not required by this process.",
+        )
+    if isinstance(value.get("needs_execution_inspector"), bool):
+        add(
+            "execution_inspector",
+            "Required by this process." if value["needs_execution_inspector"] else "Not required by this process.",
+        )
+    list_fields = {
+        "director_decisions": "director",
+        "inspector_checks": "execution_inspector",
+        "worker_actions": "worker",
+        "automatic_cli_checks": "cli_tools",
+    }
+    consumed = {*role_fields, "needs_agent_director", "needs_execution_inspector", *list_fields}
+    for field, role in list_fields.items():
+        for item in string_list(value.get(field)):
+            add(role, item)
+    for key, items in value.items():
+        if key in consumed:
+            continue
+        if isinstance(items, list):
+            for item in items:
+                if isinstance(item, str):
+                    add(str(key), item)
+    return output
+
+
 def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
     process = answers.get("process") if isinstance(answers.get("process"), dict) else {}
     process_id = safe_id(str(process.get("id", "new-process")), "new-process")
@@ -11303,13 +12473,16 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         "expected_artifacts",
         "process_transitions",
         "agent_requirements",
-        "responsibility_boundaries",
         "subagent_policy",
         "runtime_requirements",
         "metadata",
     ]:
         if key in answers:
             output[key] = answers[key]
+    if "responsibility_boundaries" in answers:
+        output["responsibility_boundaries"] = materialize_process_responsibility_boundaries(
+            answers["responsibility_boundaries"]
+        )
     return output
 
 
@@ -11478,7 +12651,7 @@ def command_process_authoring_start(args: argparse.Namespace) -> int:
 def command_process_authoring_review(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    process_id = safe_id(args.process or getattr(args, "id", ""), "process")
+    process_id = safe_id(args.process or "", "process")
     paths = process_authoring_paths(project_root, process_id)
     if not paths["draft"].is_file():
         raise SystemExit(f"FAIL: draft not found: {rel(paths['draft'], project_root)}")
@@ -11600,44 +12773,128 @@ def write_process_authoring_example(project_root: Path, process: dict[str, Any],
     return files
 
 
-def command_process_authoring_apply(args: argparse.Namespace) -> int:
-    project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
-    process_id = safe_id(args.process or getattr(args, "id", ""), "process")
-    paths = process_authoring_paths(project_root, process_id)
-    if not paths["draft"].is_file():
-        raise SystemExit(f"FAIL: draft not found: {rel(paths['draft'], project_root)}")
-    answers = read_yaml_file(paths["answers"]) if paths["answers"].is_file() else {}
-    draft = read_yaml_file(paths["draft"])
-    checks = validate_process_authoring_logic(draft, answers)
-    review_text = render_logic_review(draft, checks)
-    paths["logic_review"].write_text(review_text, encoding="utf-8")
-    failures = [item for item in checks if item.level == "FAIL"]
-    if failures:
-        emit_process_event(project_root, "process_authoring.failed", process_id=process_id, subject=process_id, severity="error", payload={"failures": [item.message for item in failures]}, correlation_id=f"process-authoring-{process_id}")
-        return print_checks(checks)
-    output = answers.get("output") if isinstance(answers.get("output"), dict) else {}
-    output_root = safe_id(str(getattr(args, "output_root", "") or output.get("process_root") or "user"), "user")
+def process_yaml_content(value: dict[str, Any]) -> bytes:
+    return ensure_trailing_newline(dump_yaml(value)).encode("utf-8")
+
+
+def build_process_authoring_example_documents(
+    project_root: Path,
+    process: dict[str, Any],
+    answers: dict[str, Any],
+    review_text: str,
+) -> list[tuple[Path, bytes]]:
+    process_id = str(process.get("id") or "process")
+    example_root = project_root / "examples" / "process-authoring" / process_id
+    title = str(process.get("name") or title_from_id(process_id))
+    readme = "\n".join(
+        [
+            f"# Process Authoring Example: {title}",
+            "",
+            "This example shows the authoring inputs, generated process draft, and logic review produced before apply.",
+            "",
+            "```bash",
+            f"python bin/pf.py process-create --project-root <project-root> --answers examples/process-authoring/{process_id}/answers.yaml --apply",
+            f"python bin/pf.py process-doctor --project-root <project-root> --process {process_id}",
+            "```",
+            "",
+        ]
+    )
+    return [
+        (example_root / "README.md", readme.encode("utf-8")),
+        (example_root / "answers.yaml", process_yaml_content(answers)),
+        (example_root / "draft.process.yaml", process_yaml_content(process)),
+        (example_root / "logic-review.md", review_text.encode("utf-8")),
+        (
+            example_root / f"process-authoring-{process_id}-report.md",
+            f"# {title} Process Authoring Report\n\nStatus: authored and applied through ProcessForge process authoring.\n".encode("utf-8"),
+        ),
+        (
+            example_root / f"process-authoring-{process_id}-review.md",
+            f"# {title} Process Authoring Review\n\nResult: pass.\n".encode("utf-8"),
+        ),
+        (
+            example_root / f"process-authoring-{process_id}-handoff.md",
+            f"# {title} Process Authoring Handoff\n\nThe example process is ready for `process-doctor` and task-batch use.\n".encode("utf-8"),
+        ),
+    ]
+
+
+def process_authoring_event_effect(
+    project_root: Path,
+    process_id: str,
+    event_type: str,
+    payload: dict[str, Any],
+) -> AuthoringEffect:
+    return AuthoringEffect(
+        label=f"event:{event_type}",
+        destination=rel(locate_flow_root(project_root) / "runtime" / "events" / "events.ndjson", project_root),
+        role="audit",
+        operation="append",
+        condition="after_commit",
+        kind="process_event",
+        payload={
+            "project_root": str(project_root),
+            "process_id": process_id,
+            "event_type": event_type,
+            "payload": payload,
+            "correlation_id": f"process-authoring-{process_id}",
+        },
+    )
+
+
+def build_process_create_plan(
+    project_root: Path,
+    answers: dict[str, Any],
+    *,
+    output_root: str,
+    allow_core: bool,
+    existing_session: bool,
+) -> tuple[AuthoringPlan, dict[str, Path]]:
+    flow_root = require_flow_root(project_root)
+    require_json_schema_document(
+        answers,
+        "process-authoring-answers.schema.json",
+        "process authoring answers",
+    )
+    process_id = safe_id(str((answers.get("process") or {}).get("id") or ""), "process")
+    output_root = safe_id(output_root or "user", "user")
     if output_root not in {"user", "custom", "core"}:
         raise SystemExit("FAIL: output process root must be user, custom, or core")
-    if output_root == "core" and not bool(getattr(args, "core", False)):
+    if output_root == "core" and not allow_core:
         raise SystemExit("FAIL: writing process-authoring output to processes/core requires --core")
-    target_process = project_root / "processes" / output_root / f"{process_id}.yaml"
-    target_prompt = project_root / "prompts" / f"{process_id}-agent.md"
-    target_doc = project_root / "docs" / "processes" / f"{process_id}.md"
+
+    draft = process_from_authoring_answers(answers)
     draft.setdefault("catalog", {})
     if isinstance(draft["catalog"], dict):
         draft["catalog"].setdefault("role", "canonical")
+    checks = validate_process_authoring_logic(draft, answers)
+    failures = [item.message for item in checks if item.level == "FAIL"]
+    if failures:
+        raise SystemExit("FAIL: process authoring logic failed: " + "; ".join(failures))
+    review_text = render_logic_review(draft, checks)
+
+    paths = process_authoring_paths(project_root, process_id)
+    target_process = contained_resource_path(
+        project_root / "processes" / output_root,
+        project_root / "processes" / output_root / f"{process_id}.yaml",
+        "process",
+    )
+    target_prompt = contained_resource_path(
+        project_root / "prompts",
+        project_root / "prompts" / f"{process_id}-agent.md",
+        "process prompt",
+    )
+    target_doc = contained_resource_path(
+        project_root / "docs" / "processes",
+        project_root / "docs" / "processes" / f"{process_id}.md",
+        "process documentation",
+    )
     answers.setdefault("output", {})
     if isinstance(answers["output"], dict):
         answers["output"]["process_root"] = output_root
         answers["output"]["path"] = rel(target_process, project_root)
-    write_yaml_file(target_process, draft)
-    target_prompt.parent.mkdir(parents=True, exist_ok=True)
-    target_prompt.write_text(render_process_agent_prompt(draft), encoding="utf-8")
-    target_doc.parent.mkdir(parents=True, exist_ok=True)
-    target_doc.write_text(render_process_doc(draft), encoding="utf-8")
-    example_files = write_process_authoring_example(project_root, draft, answers, review_text)
+
+    example_documents = build_process_authoring_example_documents(project_root, draft, answers, review_text)
     report_lines = [
         f"# Process Authoring Apply Report: {process_id}",
         "",
@@ -11649,21 +12906,151 @@ def command_process_authoring_apply(args: argparse.Namespace) -> int:
         "## Example Files",
         "",
     ]
-    report_lines.extend(f"- `{rel(path, project_root)}`" for path in example_files)
-    paths["apply_report"].write_text("\n".join(report_lines) + "\n", encoding="utf-8")
-    append_authoring_log(paths, "authoring session applied")
-    emit_process_event(project_root, "process.created", process_id=process_id, subject=process_id, payload={"path": rel(target_process, project_root)}, correlation_id=f"process-authoring-{process_id}")
-    emit_process_event(project_root, "process_authoring.applied", process_id=process_id, subject=process_id, payload={"process": rel(target_process, project_root), "prompt": rel(target_prompt, project_root), "docs": rel(target_doc, project_root)}, correlation_id=f"process-authoring-{process_id}")
-    emit_process_event(project_root, "process_authoring.completed", process_id=process_id, subject=process_id, payload={"report": rel(paths["apply_report"], project_root)}, correlation_id=f"process-authoring-{process_id}")
-    print(f"WROTE: {rel(target_process, project_root)}")
-    print(f"WROTE: {rel(target_prompt, project_root)}")
-    print(f"WROTE: {rel(target_doc, project_root)}")
-    print(f"WROTE: {rel(paths['apply_report'], project_root)}")
+    report_lines.extend(f"- `{rel(path, project_root)}`" for path, _content in example_documents)
+    timestamp = now_utc()
+    if existing_session and paths["log"].is_file():
+        prior_log = paths["log"].read_text(encoding="utf-8")
+        log_text = ensure_trailing_newline(prior_log) + f"- {timestamp}: authoring session applied\n"
+    else:
+        log_text = (
+            f"- {timestamp}: authoring session created by process-create\n"
+            f"- {timestamp}: authoring session applied\n"
+        )
+
+    session_documents = [
+        (paths["answers"], process_yaml_content(answers)),
+        (paths["draft"], process_yaml_content(draft)),
+        (paths["questions"], render_authoring_questions(answers).encode("utf-8")),
+        (paths["logic_review"], review_text.encode("utf-8")),
+        (paths["log"], log_text.encode("utf-8")),
+        (paths["apply_report"], ("\n".join(report_lines) + "\n").encode("utf-8")),
+    ]
+    public_documents = [
+        (target_process, process_yaml_content(draft)),
+        (target_prompt, render_process_agent_prompt(draft).encode("utf-8")),
+        (target_doc, render_process_doc(draft).encode("utf-8")),
+        *example_documents,
+    ]
+    writes = [
+        AuthoringWrite(
+            destination=path,
+            content=content,
+            role="entity",
+            operation="replace" if existing_session and path in paths.values() else "create",
+            schema_name="process-definition.schema.json" if path == target_process else None,
+            allow_replace=existing_session and path in paths.values(),
+        )
+        for path, content in [*session_documents, *public_documents]
+    ]
+
+    def validate_process_plan(_plan: AuthoringPlan, staged: dict[Path, Path] | None) -> None:
+        candidate_path = staged[target_process] if staged is not None else None
+        candidate = load_yaml_document(candidate_path) if candidate_path is not None else draft
+        require_json_schema_document(
+            candidate,
+            "process-definition.schema.json",
+            f"process {process_id}",
+        )
+        candidate_checks = validate_process_authoring_logic(candidate, answers)
+        candidate_failures = [item.message for item in candidate_checks if item.level == "FAIL"]
+        if candidate_failures:
+            raise SystemExit("FAIL: staged process validation failed: " + "; ".join(candidate_failures))
+
+    events = [
+        (
+            "process_authoring.started",
+            {"process_id": process_id, "session": rel(paths["root"], project_root)},
+        ),
+        ("process_authoring.answers.created", {"path": rel(paths["answers"], project_root)}),
+        ("process_authoring.draft.created", {"path": rel(paths["draft"], project_root)}),
+    ] if not existing_session else []
+    events.extend(
+        [
+            ("process.created", {"path": rel(target_process, project_root)}),
+            (
+                "process_authoring.applied",
+                {
+                    "process": rel(target_process, project_root),
+                    "prompt": rel(target_prompt, project_root),
+                    "docs": rel(target_doc, project_root),
+                },
+            ),
+            ("process_authoring.completed", {"report": rel(paths["apply_report"], project_root)}),
+        ]
+    )
+    effects: list[AuthoringEffect] = []
+    for event_type, payload in events:
+        effects.append(process_authoring_event_effect(project_root, process_id, event_type, payload))
+        effects.append(
+            AuthoringEffect(
+                label=f"hook-outbox:{event_type}",
+                destination=f".pf/runtime/hooks/outbox/<event-id>.<hook-id>.json",
+                role="conditional_hook",
+                operation="create",
+                condition=f"after_commit when hooks.yaml selects {event_type}",
+                executable=False,
+            )
+        )
+        effects.append(
+            AuthoringEffect(
+                label=f"hook-result:{event_type}",
+                destination=f".pf/runtime/hooks/results/<delivery-id>.json",
+                role="conditional_hook",
+                operation="create",
+                condition=f"after_commit when hook delivery runs for {event_type}",
+                executable=False,
+            )
+        )
+    plan = AuthoringPlan(
+        transaction_id=f"process-{process_id}-{uuid.uuid4().hex}",
+        command="process-authoring-apply" if existing_session else "process-create",
+        runtime_root=flow_root / "runtime",
+        authoritative_writes=writes,
+        registry_writes=[],
+        post_commit_effects=effects,
+        validation_callbacks=[validate_process_plan],
+    )
+    return plan, {
+        **paths,
+        "target_process": target_process,
+        "target_prompt": target_prompt,
+        "target_doc": target_doc,
+    }
+
+
+def command_process_authoring_apply(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    mode = authoring_mode(args)
+    process_id = safe_id(args.process or getattr(args, "id", ""), "process")
+    paths = process_authoring_paths(project_root, process_id)
+    if not paths["draft"].is_file():
+        raise SystemExit(f"FAIL: draft not found: {rel(paths['draft'], project_root)}")
+    answers = read_yaml_file(paths["answers"]) if paths["answers"].is_file() else {}
+    output = answers.get("output") if isinstance(answers.get("output"), dict) else {}
+    output_root = safe_id(str(getattr(args, "output_root", "") or output.get("process_root") or "user"), "user")
+    plan, destinations = build_process_create_plan(
+        project_root,
+        answers,
+        output_root=output_root,
+        allow_core=bool(getattr(args, "core", False)),
+        existing_session=True,
+    )
+    if mode == "dry_run":
+        render_authoring_dry_run(plan, project_root)
+        return 0
+    execute_authoring_plan(plan)
+    print(f"WROTE: {rel(destinations['target_process'], project_root)}")
+    print(f"WROTE: {rel(destinations['target_prompt'], project_root)}")
+    print(f"WROTE: {rel(destinations['target_doc'], project_root)}")
+    print(f"WROTE: {rel(destinations['apply_report'], project_root)}")
     return 0
 
 
 def command_process_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    mode = authoring_mode(args)
     raw_answers = load_answers(Path(args.answers).expanduser().resolve()) if args.answers else {}
     if args.answers and "evolve" not in raw_answers:
         raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
@@ -11675,34 +13062,47 @@ def command_process_create(args: argparse.Namespace) -> int:
     answers.setdefault("output", {})
     if isinstance(answers["output"], dict):
         answers["output"]["process_root"] = output_root
-    start_args = argparse.Namespace(project_root=str(project_root), answers=None, id=process_id, title=str(answers["process"]["name"]), description=str(answers["process"]["description"]), dry_run=getattr(args, "dry_run", False))
-    if getattr(args, "dry_run", False):
-        return command_process_authoring_start(start_args)
-    paths = process_authoring_paths(project_root, process_id)
-    write_yaml_file(paths["answers"], answers)
-    write_yaml_file(paths["draft"], process_from_authoring_answers(answers))
-    paths["questions"].write_text(render_authoring_questions(answers), encoding="utf-8")
-    append_authoring_log(paths, "authoring session created by process-create")
-    emit_process_event(project_root, "process_authoring.started", process_id=process_id, subject=process_id, payload={"process_id": process_id, "session": rel(paths["root"], project_root)}, correlation_id=f"process-authoring-{process_id}")
-    emit_process_event(project_root, "process_authoring.answers.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["answers"], project_root)}, correlation_id=f"process-authoring-{process_id}")
-    emit_process_event(project_root, "process_authoring.draft.created", process_id=process_id, subject=process_id, payload={"path": rel(paths["draft"], project_root)}, correlation_id=f"process-authoring-{process_id}")
-    return command_process_authoring_apply(argparse.Namespace(project_root=str(project_root), process=process_id, output_root=output_root, core=getattr(args, "core", False)))
+    plan, destinations = build_process_create_plan(
+        project_root,
+        answers,
+        output_root=output_root,
+        allow_core=bool(getattr(args, "core", False)),
+        existing_session=False,
+    )
+    if mode == "dry_run":
+        render_authoring_dry_run(plan, project_root)
+        return 0
+    execute_authoring_plan(plan)
+    print(f"WROTE: {rel(destinations['target_process'], project_root)}")
+    print(f"WROTE: {rel(destinations['target_prompt'], project_root)}")
+    print(f"WROTE: {rel(destinations['target_doc'], project_root)}")
+    print(f"WROTE: {rel(destinations['apply_report'], project_root)}")
+    return 0
 
 
 def process_definition_path(project_root: Path, process_or_path: str) -> Path:
     return resolve_process_definition(project_root, process_or_path).path
 
 
-def validate_process_definition_files(project_root: Path, process: dict[str, Any], process_path: Path) -> list[Check]:
+def validate_process_definition_files(
+    project_root: Path,
+    process: dict[str, Any],
+    process_path: Path,
+    *,
+    companion_root: Path | None = None,
+) -> list[Check]:
     process_id = str(process.get("id") or process_path.stem)
     checks = validate_process_authoring_logic(process, {})
     checks.append(check("PASS" if not public_yaml_has_private_path(process) else "FAIL", f"{rel(process_path, project_root)} has no private absolute paths"))
-    prompt = project_root / "prompts" / f"{process_id}-agent.md"
-    doc = project_root / "docs" / "processes" / f"{process_id}.md"
-    example = project_root / "examples" / "process-authoring" / process_id / "README.md"
+    companions = process_companion_paths(companion_root or project_root, process_id)
+    prompt = companions["prompt"]
+    doc = companions["doc"]
+    example = companions["example"]
+    pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
+    example_required = bool(pack.get("example_required", True))
     checks.append(check("PASS" if prompt.is_file() else "FAIL", f"{rel(prompt, project_root)} exists"))
     checks.append(check("PASS" if doc.is_file() else "FAIL", f"{rel(doc, project_root)} exists"))
-    checks.append(check("PASS" if example.is_file() else "FAIL", f"{rel(example, project_root)} exists"))
+    checks.append(check("PASS" if example.is_file() or not example_required else "FAIL", f"{rel(example, project_root)} exists or is explicitly exempt"))
     return checks
 
 
@@ -11782,6 +13182,7 @@ def validate_process_contract(
     process_path: Path,
     *,
     strict: bool = False,
+    companion_root: Path | None = None,
 ) -> list[Check]:
     process_id = str(process.get("id") or process_path.stem)
     meta = process_catalog_metadata(process)
@@ -11831,7 +13232,7 @@ def validate_process_contract(
     if "handoff_required" in process:
         checks.append(check("FAIL" if hard else "WARN", f"{process_id} deprecated handoff_required used without explicit semantics"))
 
-    companions = process_companion_paths(project_root, process_id)
+    companions = process_companion_paths(companion_root or project_root, process_id)
     pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
     agent_prompt = process.get("agent_prompt") if isinstance(process.get("agent_prompt"), dict) else {}
     prompt_required = bool(agent_prompt.get("required", True))
@@ -11902,7 +13303,13 @@ def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[
         if public and meta["classification"] == "INTERNAL_MAINTENANCE":
             strict_checks = [check("PASS", f"{process_id} internal maintenance process skipped by public catalog doctor")]
         else:
-            strict_checks = validate_process_contract(root, process, path, strict=process_is_public_stable(process))
+            strict_checks = validate_process_contract(
+                root,
+                process,
+                path,
+                strict=process_is_public_stable(process),
+                companion_root=entry.root if entry.origin == "official" else root,
+            )
         failures = [item.message for item in strict_checks if item.level == "FAIL"]
         warnings = [item.message for item in strict_checks if item.level == "WARN"]
         checks.extend(strict_checks)
@@ -11919,7 +13326,7 @@ def builtin_process_catalog_report(root: Path, *, public: bool = False) -> dict[
             summary["pass"] += 1
         process_pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
         package_id = str(process_pack.get("package") or (string_list(process.get("required_packages"))[0] if string_list(process.get("required_packages")) else ""))
-        companions = process_companion_paths(root, process_id)
+        companions = process_companion_paths(entry.root if entry.origin == "official" else root, process_id)
         rows.append(
             {
                 "id": process_id,
@@ -11995,13 +13402,27 @@ def command_process_doctor(args: argparse.Namespace) -> int:
     resolved = resolve_process_definition(project_root, args.process)
     path = resolved.path
     process = resolved.process
-    checks = validate_process_definition_files(project_root, process, path)
-    checks.extend(validate_process_contract(project_root, process, path, strict=getattr(args, "contract_only", False)))
+    companion_root = resolved.root if resolved.origin == "official" else project_root
+    checks: list[Check] = []
+    append_json_schema_checks(
+        checks,
+        process,
+        "process-definition.schema.json",
+        f"process {args.process}",
+    )
+    checks.extend(validate_process_definition_files(project_root, process, path, companion_root=companion_root))
+    checks.extend(
+        validate_process_contract(
+            project_root,
+            process,
+            path,
+            strict=getattr(args, "contract_only", False),
+            companion_root=companion_root,
+        )
+    )
     checks.extend(validate_process_against_project_mode(process, project_root, force=getattr(args, "force", False)))
     checks.extend(check("WARN", warning) for warning in resolved.warnings)
     result = print_checks(checks)
-    process_id = str(process.get("id") or path.stem)
-    emit_process_event(project_root, "process.doctor.failed" if result else "process.doctor.passed", process_id=process_id, severity="error" if result else "info", subject=process_id, payload={"path": rel(path, project_root), "result": "fail" if result else "pass"}, correlation_id=f"process-{process_id}")
     return result
 
 
@@ -12009,16 +13430,44 @@ def iter_process_definitions(project_root: Path) -> list[tuple[str, Path, dict[s
     return [(entry.process_id, entry.path, entry.process) for entry in process_catalog_entries(project_root)]
 
 
+def public_process_origin(origin: str) -> str:
+    return {
+        "core": "kernel",
+        "user": "workspace",
+        "custom": "project",
+        "legacy_flat": "project",
+    }.get(origin, origin)
+
+
 def command_process_list(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    entries = process_catalog_entries(project_root)
+    workplace_manifest = None
+    if getattr(args, "workplace", None):
+        workplace_manifest = workplace_manifest_path_from_root(
+            Path(args.workplace).expanduser().resolve()
+        )
+    show_available = bool(getattr(args, "available", False) or getattr(args, "all", False))
+    entries = process_catalog_entries(
+        project_root,
+        include_available_official=show_available,
+        workplace_manifest=workplace_manifest,
+    )
     origin_filter = str(getattr(args, "origin", "") or "")
     role_filter = str(getattr(args, "role", "") or "")
     status_filter = str(getattr(args, "status", "") or "")
     show_all = bool(getattr(args, "all", False))
     if origin_filter:
+        origin_filter = {
+            "kernel": "core",
+            "workspace": "user",
+            "project": "custom",
+        }.get(origin_filter, origin_filter)
         entries = [entry for entry in entries if entry.origin == origin_filter]
+    if bool(getattr(args, "active", False)):
+        entries = [entry for entry in entries if entry.active]
+    if bool(getattr(args, "available", False)):
+        entries = [entry for entry in entries if entry.available]
     if role_filter:
         entries = [entry for entry in entries if entry.catalog_role == role_filter]
     if status_filter:
@@ -12034,10 +13483,15 @@ def command_process_list(args: argparse.Namespace) -> int:
     if not entries:
         print("No processes found.")
         return 0
-    print("id\tstatus\torigin\trole\tversion\tname\troot\tpath")
+    print("id\tstatus\torigin\trole\tversion\tname\tpack_id\tactive\tavailable\tproduction_ready\troot\tpath")
     for entry in entries:
         data = entry.process
-        print(f"{entry.process_id}\t{data.get('status', 'unknown')}\t{entry.origin}\t{entry.catalog_role}\t{data.get('version', '')}\t{data.get('name', '')}\t{rel(entry.root, project_root)}\t{rel(entry.path, project_root)}")
+        print(
+            f"{entry.process_id}\t{data.get('status', 'unknown')}\t{public_process_origin(entry.origin)}\t{entry.catalog_role}\t"
+            f"{data.get('version', '')}\t{data.get('name', '')}\t{entry.pack_id}\t"
+            f"{str(entry.active).lower()}\t{str(entry.available).lower()}\t"
+            f"{str(entry.production_ready).lower()}\t{rel(entry.root, project_root)}\t{rel(entry.path, project_root)}"
+        )
         for warning in entry.warnings:
             print(f"WARN: {warning}", file=sys.stderr)
     return 0
@@ -12046,14 +13500,28 @@ def command_process_list(args: argparse.Namespace) -> int:
 def command_process_describe(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    resolved = resolve_process_definition(project_root, args.process)
+    workplace_manifest = None
+    if getattr(args, "workplace", None):
+        workplace_manifest = workplace_manifest_path_from_root(
+            Path(args.workplace).expanduser().resolve()
+        )
+    resolved = resolve_process_definition(
+        project_root,
+        args.process,
+        include_available_official=True,
+        workplace_manifest=workplace_manifest,
+    )
     path = resolved.path
     data = resolved.process
     print(f"PROCESS: {data.get('id', path.stem)}")
     print(f"NAME: {data.get('name', '')}")
     print(f"STATUS: {data.get('status', '')}")
     print(f"VERSION: {data.get('version', '')}")
-    print(f"ORIGIN: {resolved.origin}")
+    print(f"ORIGIN: {public_process_origin(resolved.origin)}")
+    print(f"PACK_ID: {resolved.pack_id}")
+    print(f"ACTIVE: {str(resolved.active).lower()}")
+    print(f"AVAILABLE: {str(resolved.available).lower()}")
+    print(f"PRODUCTION_READY: {str(resolved.production_ready).lower()}")
     print(f"ROLE: {resolved.catalog_role}")
     print(f"ROOT: {rel(resolved.root, project_root)}")
     print(f"PATH: {rel(path, project_root)}")
@@ -12073,6 +13541,83 @@ def command_process_describe(args: argparse.Namespace) -> int:
     for gate_item in as_list(data.get("gates")):
         if isinstance(gate_item, dict):
             print(f"- {gate_item.get('id')}: {gate_item.get('description', '')}")
+    return 0
+
+
+def command_pack_list(args: argparse.Namespace) -> int:
+    workplace_manifest: Path | None = None
+    if getattr(args, "workplace", None):
+        workplace_manifest = workplace_manifest_path_from_root(
+            Path(args.workplace).expanduser().resolve()
+        )
+    elif getattr(args, "project_root", None):
+        project_root = Path(args.project_root).expanduser().resolve()
+        workplace_manifest = resolve_project_workplace_manifest(project_root)
+    active_ids = active_process_pack_ids(workplace_manifest)
+    records = official_pack_manifest_records()
+    if bool(getattr(args, "active", False)):
+        records = [
+            (path, manifest)
+            for path, manifest in records
+            if str(manifest.get("id") or "") in active_ids
+        ]
+    print("id\torigin\ttier\tstatus\tactive\tavailable\tproduction_ready\tversion\tpath")
+    for path, manifest in records:
+        pack_id = str(manifest.get("id") or "")
+        activation = manifest.get("activation") if isinstance(manifest.get("activation"), dict) else {}
+        print(
+            f"{pack_id}\t{manifest.get('origin', '')}\t{manifest.get('tier', '')}\t"
+            f"{manifest.get('status', '')}\t{str(pack_id in active_ids).lower()}\t"
+            f"{str(bool(activation.get('available_by_default', False))).lower()}\t"
+            f"{str(bool(manifest.get('production_ready', False))).lower()}\t"
+            f"{manifest.get('version', '')}\t{rel(path, ROOT)}"
+        )
+    return 0
+
+
+def command_pack_activate(args: argparse.Namespace) -> int:
+    workplace = Path(args.workplace).expanduser().resolve()
+    workplace_manifest = workplace_manifest_path_from_root(workplace)
+    if not workplace_manifest.is_file():
+        raise SystemExit(f"FAIL: workplace manifest not found: {workplace_manifest}")
+    pack_id = str(args.id)
+    manifests = {
+        str(manifest.get("id") or ""): (path, manifest)
+        for path, manifest in official_pack_manifest_records()
+    }
+    if pack_id not in manifests:
+        raise SystemExit(f"FAIL: official process pack not found: {pack_id}")
+    registry_path = workplace / "registries" / "process-packs.yaml"
+    registry = load_yaml_document(registry_path) if registry_path.is_file() else {}
+    if not isinstance(registry, dict) or yaml_error(registry):
+        registry = {}
+    entries = [entry for entry in as_list(registry.get("process_packs")) if isinstance(entry, dict)]
+    entries = [entry for entry in entries if str(entry.get("id") or "") != pack_id]
+    manifest = manifests[pack_id][1]
+    entries.append(
+        {
+            "id": pack_id,
+            "origin": "official",
+            "status": "active",
+            "version": str(manifest.get("version") or ""),
+        }
+    )
+    document = {
+        "schema_version": 1,
+        "profile": str(registry.get("profile") or "custom"),
+        "process_packs": sorted(entries, key=lambda item: str(item.get("id") or "")),
+    }
+    if not args.apply:
+        print(f"PLAN: activate {pack_id} in {registry_path}")
+        return 0
+    write_yaml_file(registry_path, document)
+    append_workplace_event(
+        workplace,
+        "process.pack.activated",
+        payload={"pack_id": pack_id, "origin": "official"},
+    )
+    print(f"ACTIVATED: {pack_id}")
+    print(f"REGISTRY: {rel(registry_path, workplace)}")
     return 0
 
 
@@ -12556,10 +14101,14 @@ def command_knowledge_hub_import(args: argparse.Namespace) -> int:
 
 
 def command_knowledge_package_build_from_candidates(args: argparse.Namespace) -> int:
+    package_id = validate_resource_id(str(args.package), "knowledge package")
     hub = ensure_hub_layout(Path(args.hub).expanduser().resolve())
-    package_id = str(args.package)
     version = str(args.version)
-    package_root = hub / "packages" / package_id
+    package_root = contained_resource_path(
+        hub / "packages",
+        hub / "packages" / package_id,
+        "knowledge package",
+    )
     candidates = [read_yaml_file(path) for path in sorted((hub / "candidates").glob("*.yaml"))]
     candidates = [item for item in candidates if candidate_destination_matches(item, package_id)]
     if not candidates:
@@ -12571,6 +14120,19 @@ def command_knowledge_package_build_from_candidates(args: argparse.Namespace) ->
             hub,
         )
         return 0
+    package_manifest = {
+        "schema_version": 1,
+        "id": package_id,
+        "name": package_id,
+        "version": version,
+        "kind": "mixed",
+        "scope": "workplace",
+    }
+    require_json_schema_document(
+        package_manifest,
+        "package-manifest.schema.json",
+        f"knowledge package {package_id}",
+    )
     (package_root / "resources").mkdir(parents=True, exist_ok=True)
     curated_candidates = [item for item in candidates if candidate_ready_for_curated_package(item)]
     incoming_candidates = [item for item in candidates if not candidate_ready_for_curated_package(item)]
@@ -12597,7 +14159,7 @@ def command_knowledge_package_build_from_candidates(args: argparse.Namespace) ->
         resources.append({"id": "incoming-learnings", "path": "resources/incoming-learnings.md", "type": "markdown"})
     (package_root / "resources" / "candidate-notes.md").write_text("\n".join(notes), encoding="utf-8")
     write_yaml_file(package_root / "resources" / "index.yaml", {"schema_version": 1, "resources": resources})
-    write_yaml_file(package_root / "package.yaml", {"schema_version": 1, "id": package_id, "name": package_id, "version": version, "kind": "knowledge_package", "scope": "workplace"})
+    write_yaml_file(package_root / "package.yaml", package_manifest)
     changelog_items = ["- Added reviewed learning candidates to `resources/candidate-notes.md`."]
     if incoming_candidates:
         changelog_items.append("- Staged unreviewed parent-platform candidates in `resources/incoming-learnings.md`.")
@@ -12608,12 +14170,29 @@ def command_knowledge_package_build_from_candidates(args: argparse.Namespace) ->
 
 
 def command_knowledge_package_release(args: argparse.Namespace) -> int:
+    package_id = validate_resource_id(str(args.package), "knowledge package")
     hub = ensure_hub_layout(Path(args.hub).expanduser().resolve())
-    package_id = str(args.package)
     version = str(args.version)
-    package_root = hub / "packages" / package_id
+    package_root = contained_resource_path(
+        hub / "packages",
+        hub / "packages" / package_id,
+        "knowledge package",
+    )
     if not package_root.is_dir():
         raise SystemExit("FAIL: package not built: " + package_id)
+    package_manifest_path = package_root / "package.yaml"
+    if not package_manifest_path.is_file():
+        raise SystemExit("FAIL: package manifest missing: " + str(package_manifest_path))
+    package = read_yaml_file(package_manifest_path)
+    require_json_schema_document(
+        package,
+        "package-manifest.schema.json",
+        f"knowledge package {package_id}",
+    )
+    if str(package.get("id") or "") != package_id:
+        raise SystemExit(
+            f"FAIL: package manifest id {package.get('id')!r} does not match requested package {package_id!r}"
+        )
     output = Path(args.output).expanduser()
     if not output.is_absolute():
         output = hub / output
@@ -12651,7 +14230,6 @@ def command_knowledge_package_release(args: argparse.Namespace) -> int:
         hub / "updates" / "processforge-update-index.yaml",
         {"schema_version": 1, "updates": [{"id": package_id, "manifest": rel(update_manifest, hub), "version": version, "artifact": rel(output, hub)}]},
     )
-    package = read_yaml_file(package_root / "package.yaml")
     package["version"] = version
     package["update_sites"] = [
         {
@@ -12666,7 +14244,12 @@ def command_knowledge_package_release(args: argparse.Namespace) -> int:
             "policy": {"allow_stage": True, "allow_apply": True, "backup_before_apply": True, "install_path": f"packages/{package_id}"},
         }
     ]
-    write_yaml_file(package_root / "package.yaml", package)
+    require_json_schema_document(
+        package,
+        "package-manifest.schema.json",
+        f"released knowledge package {package_id}",
+    )
+    write_yaml_file(package_manifest_path, package)
     print(f"RELEASED: {output}")
     print(f"MANIFEST: {update_manifest}")
     return 0
@@ -13309,7 +14892,7 @@ def command_authoring_parity_check_all(args: argparse.Namespace) -> int:
         },
     )
     print(f"SUMMARY: {rel(summary, project_root)}")
-    return process_result
+    return 1 if result == "FAIL" else 0
 
 
 HANDOFF_MODES = {"wait_for_result", "delegate_and_continue", "consultation", "final_transfer", "fork", "return_required"}
@@ -16120,6 +17703,8 @@ def command_run_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     run_id = safe_id(args.id, "run")
+    process_id = safe_id(args.process, "task-batch-execution")
+    require_official_process_active(project_root, process_id)
     path = run_yaml_path(project_root, run_id)
     if path.exists():
         raise SystemExit(f"FAIL: run already exists: {rel(path, project_root)}")
@@ -16127,7 +17712,7 @@ def command_run_create(args: argparse.Namespace) -> int:
         "schema_version": 1,
         "id": run_id,
         "title": args.title,
-        "process": safe_id(args.process, "task-batch-execution"),
+        "process": process_id,
         "status": args.status,
         "created_at": now_utc(),
         "updated_at": now_utc(),
@@ -16260,6 +17845,8 @@ def command_task_create(args: argparse.Namespace) -> int:
     run = load_run(project_root, args.run)
     run_id = str(run.get("id", safe_id(args.run, "run")))
     task_id = safe_id(args.id, "task")
+    process_id = safe_id(args.process, "task")
+    require_official_process_active(project_root, process_id)
     path = assignment_yaml_path(project_root, task_id)
     if path.exists():
         raise SystemExit(f"FAIL: task already exists: {rel(path, project_root)}")
@@ -16272,7 +17859,7 @@ def command_task_create(args: argparse.Namespace) -> int:
         "id": task_id,
         "title": args.title,
         "run_id": run_id,
-        "process": safe_id(args.process, "task"),
+        "process": process_id,
         "status": "open",
         "created_at": now_utc(),
         "updated_at": now_utc(),
@@ -16328,6 +17915,8 @@ def command_task_create(args: argparse.Namespace) -> int:
         expected_report["language"] = args.expected_report_language
     if getattr(args, "expected_report_artifact", None):
         expected_report["artifact"] = normalize_assignment_path(args.expected_report_artifact)
+        if len(required_outputs) == 1:
+            required_outputs[0].setdefault("path", expected_report["artifact"])
     if expected_report:
         expected_report.setdefault("format", "concise_markdown")
         expected_report.setdefault("include", [item["id"] for item in required_outputs])
@@ -16369,6 +17958,7 @@ def command_task_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
+    require_official_process_active(project_root, task_process_id(task))
     task["status"] = "in_progress"
     save_task(project_root, task)
     update_run_task_status(project_root, str(task.get("run_id", "")), task_id, "in_progress")
@@ -16789,7 +18379,13 @@ def command_doctor_project(args: argparse.Namespace) -> int:
         text = manifest.read_text(encoding="utf-8", errors="replace")
         checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "public manifest has no local absolute paths"))
         checks.append(check("PASS" if not contains_secret_value(text) else "FAIL", "public manifest contains no secret values"))
-        manifest_data = load_yaml_document(manifest)
+        loaded_manifest = load_doctor_yaml(
+            manifest,
+            "process-forge-manifest.schema.json",
+            "project ProcessForge manifest",
+            checks,
+        )
+        manifest_data = loaded_manifest or {}
     else:
         checks.append(
             check_with_hint(
@@ -17145,6 +18741,69 @@ def validate_update_instance_against_schema(value: Any, node: dict[str, Any], ro
     if "$ref" in node:
         return validate_update_instance_against_schema(value, update_resolve_schema_ref(root_schema, str(node["$ref"])), root_schema, path)
 
+    all_of = node.get("allOf")
+    if isinstance(all_of, list):
+        for alternative in all_of:
+            if isinstance(alternative, dict):
+                errors.extend(
+                    validate_update_instance_against_schema(
+                        value,
+                        alternative,
+                        root_schema,
+                        path,
+                    )
+                )
+
+    any_of = node.get("anyOf")
+    if isinstance(any_of, list):
+        matches = sum(
+            1
+            for alternative in any_of
+            if isinstance(alternative, dict)
+            and not validate_update_instance_against_schema(value, alternative, root_schema, path)
+        )
+        if matches == 0:
+            errors.append(f"{path}: expected at least one anyOf alternative")
+
+    one_of = node.get("oneOf")
+    if isinstance(one_of, list):
+        matches = sum(
+            1
+            for alternative in one_of
+            if isinstance(alternative, dict)
+            and not validate_update_instance_against_schema(value, alternative, root_schema, path)
+        )
+        if matches != 1:
+            errors.append(f"{path}: expected exactly one oneOf alternative, got {matches}")
+
+    excluded = node.get("not")
+    if isinstance(excluded, dict) and not validate_update_instance_against_schema(
+        value,
+        excluded,
+        root_schema,
+        path,
+    ):
+        errors.append(f"{path}: matched forbidden not schema")
+
+    conditional = node.get("if")
+    if isinstance(conditional, dict):
+        condition_matches = not validate_update_instance_against_schema(
+            value,
+            conditional,
+            root_schema,
+            path,
+        )
+        branch = node.get("then") if condition_matches else node.get("else")
+        if isinstance(branch, dict):
+            errors.extend(
+                validate_update_instance_against_schema(
+                    value,
+                    branch,
+                    root_schema,
+                    path,
+                )
+            )
+
     expected_type = node.get("type")
     if isinstance(expected_type, list):
         if not any(update_schema_type_matches(value, item) for item in expected_type):
@@ -17164,6 +18823,12 @@ def validate_update_instance_against_schema(value: Any, node: dict[str, Any], ro
         errors.append(f"{path}: expected minLength {node['minLength']}")
     if "minItems" in node and isinstance(value, list) and len(value) < node["minItems"]:
         errors.append(f"{path}: expected minItems {node['minItems']}")
+    if "uniqueItems" in node and node["uniqueItems"] is True and isinstance(value, list):
+        normalized = [json.dumps(item, ensure_ascii=False, sort_keys=True) for item in value]
+        if len(normalized) != len(set(normalized)):
+            errors.append(f"{path}: expected uniqueItems")
+    if "minProperties" in node and isinstance(value, dict) and len(value) < node["minProperties"]:
+        errors.append(f"{path}: expected minProperties {node['minProperties']}")
     if "pattern" in node and isinstance(value, str) and not re.fullmatch(str(node["pattern"]), value):
         errors.append(f"{path}: does not match pattern {node['pattern']!r}")
 
@@ -17211,6 +18876,37 @@ def append_json_schema_checks(checks: list[Check], data: Any, schema_name: str, 
         return
     for message in errors:
         checks.append(check("FAIL", f"{label} schema validation failed: {message}"))
+    if not errors:
+        checks.append(check("PASS", f"{label} matches {schema_name}"))
+
+
+def require_json_schema_document(data: Any, schema_name: str, label: str) -> None:
+    """Fail an apply/release precondition when a governed document is invalid."""
+    checks: list[Check] = []
+    append_json_schema_checks(checks, data, schema_name, label)
+    failures = [item.message for item in checks if item.level == "FAIL"]
+    if failures:
+        raise SystemExit("FAIL: " + "; ".join(failures))
+
+
+def load_doctor_yaml(
+    path: Path,
+    schema_name: str,
+    label: str,
+    checks: list[Check],
+) -> dict[str, Any] | None:
+    """Load and schema-check a governed YAML document without mutating it."""
+    data = load_yaml_document(path)
+    error = yaml_error(data)
+    if error:
+        checks.append(check("FAIL", f"{label} YAML parse failed: {error}"))
+        return None
+    if not isinstance(data, dict) or not data:
+        checks.append(check("FAIL", f"{label} must be a non-empty YAML object"))
+        return None
+    checks.append(check("PASS", f"{label} is valid YAML"))
+    append_json_schema_checks(checks, data, schema_name, label)
+    return data
 
 
 def valid_remote_url_shape(url: str, *, require_https: bool) -> tuple[bool, str]:
@@ -18947,8 +20643,8 @@ def command_path_resolve(args: argparse.Namespace) -> int:
     return 0
 
 
-def write_resource_proposal(workplace_root: Path, command: str, object_id: str, payload: dict[str, Any]) -> tuple[str, Path]:
-    slug = resource_management_slug(command, object_id)
+def write_resource_proposal(workplace_root: Path, command: str, object_id: str, payload: dict[str, Any], slug: str | None = None) -> tuple[str, Path]:
+    slug = slug or resource_management_slug(command, object_id)
     proposal = {
         "schema_version": 1,
         "proposal_id": slug,
@@ -18980,7 +20676,7 @@ def emit_package_root_resolution_event(workplace_root: Path, command: str, packa
     )
 
 
-def command_knowledge_add_url(args: argparse.Namespace) -> int:
+def _legacy_command_knowledge_add_url(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     package_id = str(args.package)
     package_root_id = getattr(args, "package_root", None)
@@ -19087,7 +20783,7 @@ def command_knowledge_add_url(args: argparse.Namespace) -> int:
     return 0
 
 
-def command_knowledge_add_resource(args: argparse.Namespace) -> int:
+def _legacy_command_knowledge_add_resource(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     package_id = str(args.package)
     package_root_id = getattr(args, "package_root", None)
@@ -19186,6 +20882,259 @@ def command_knowledge_add_resource(args: argparse.Namespace) -> int:
     return 0
 
 
+def private_resource_registry_entry(resource_id: str, raw_path: str) -> dict[str, Any]:
+    return {
+        "id": resource_id,
+        "label": resource_id.replace("-", " ").title(),
+        "path": raw_path,
+        "visibility": "private",
+        "status": "available",
+    }
+
+
+def build_knowledge_resource_add_plan(
+    args: argparse.Namespace,
+    command_name: str,
+    raw_resource: dict[str, Any],
+) -> tuple[AuthoringPlan, dict[str, Any], str, Path, Path, PackageRootResolution]:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    if not (workplace_root / "workplace.yaml").is_file():
+        raise SystemExit(f"FAIL: workplace is not initialized: {workplace_root}")
+    package_id = validate_resource_id(str(args.package), "knowledge package")
+    package_root_id = getattr(args, "package_root", None)
+    manifest_path, manifest, package_root = load_workplace_package_manifest(
+        workplace_root,
+        package_id,
+        package_root_id,
+        mode="read",
+    )
+    if manifest_path.is_file() and yaml_error(manifest):
+        raise SystemExit(
+            f"FAIL: package manifest YAML invalid; original preserved: {manifest_path}: {yaml_error(manifest)}"
+        )
+    resources = manifest.get("resources")
+    if resources is None:
+        resources = []
+        manifest["resources"] = resources
+    if not isinstance(resources, list):
+        raise SystemExit("FAIL: knowledge package resources must be a list")
+    resource = normalize_resource_record(
+        raw_resource,
+        package_id,
+        workplace_root,
+        register_private_path=False,
+    )
+    resource_id = str(resource["id"])
+    result = upsert_resource(resources, resource)
+    manifest["package_root"] = package_root.root_id
+    require_json_schema_document(
+        manifest,
+        "package-manifest.schema.json",
+        f"knowledge package {package_id}",
+    )
+    index = build_resource_index(
+        manifest,
+        workplace_root,
+        package_root.root_id,
+    )
+    require_json_schema_document(
+        index,
+        "knowledge-resource-index.schema.json",
+        f"knowledge package {package_id} resource index",
+    )
+    index_path = resource_index_path_for_package(
+        manifest_path,
+        workplace_root,
+        package_id,
+    )
+    entity_writes = [
+        AuthoringWrite(
+            manifest_path,
+            ensure_trailing_newline(dump_yaml(manifest)).encode("utf-8"),
+            role="entity",
+            operation="replace" if manifest_path.is_file() else "create",
+            schema_name="package-manifest.schema.json",
+            allow_replace=manifest_path.is_file(),
+        ),
+        AuthoringWrite(
+            index_path,
+            ensure_trailing_newline(dump_yaml(index)).encode("utf-8"),
+            role="entity",
+            operation="replace" if index_path.is_file() else "create",
+            schema_name="knowledge-resource-index.schema.json",
+            allow_replace=index_path.is_file(),
+        ),
+    ]
+    registry_writes: list[AuthoringWrite] = []
+    raw_path = str(raw_resource.get("path") or "")
+    path_ref = resource.get("path_ref") if isinstance(resource.get("path_ref"), dict) else {}
+    if raw_path and path_ref.get("registry") == "private_resource_paths":
+        private_registry = workplace_root / "registries" / "private-resource-paths.yaml"
+        registry_bytes, _private_result, _private_data = planned_registry_upsert(
+            private_registry,
+            "private_resource_paths",
+            private_resource_registry_entry(resource_id, raw_path),
+            "private-resource-paths-registry.schema.json",
+        )
+        registry_writes.append(
+            AuthoringWrite(
+                private_registry,
+                registry_bytes,
+                role="registry",
+                operation="replace" if private_registry.is_file() else "create",
+                schema_name="private-resource-paths-registry.schema.json",
+                allow_replace=private_registry.is_file(),
+            )
+        )
+    transaction_id = f"{safe_id(command_name, 'knowledge')}-{resource_id}-{uuid.uuid4().hex[:12]}"
+    plan = AuthoringPlan(
+        transaction_id=transaction_id,
+        command=command_name,
+        runtime_root=workplace_root / "runtime",
+        authoritative_writes=entity_writes,
+        registry_writes=registry_writes,
+        post_commit_effects=[],
+        validation_callbacks=[],
+    )
+
+    plan.post_commit_effects.append(
+        AuthoringEffect(
+            "knowledge-audit-events",
+            "runtime/resource-management/proposals/<transaction>.yaml, reports, and runtime/events/events.ndjson",
+            kind="knowledge_audit",
+            payload={
+                "workplace_root": str(workplace_root),
+                "command": command_name,
+                "resource_id": resource_id,
+                "proposal_payload": {
+                    "transaction_id": transaction_id,
+                    "package_id": package_id,
+                    "package_root": package_root.root_id,
+                    "package_root_warnings": package_root.warnings,
+                    "resource": resource,
+                    "apply_writes": [
+                        rel(manifest_path, workplace_root),
+                        rel(index_path, workplace_root),
+                        *[
+                            rel(write.destination, workplace_root)
+                            for write in registry_writes
+                        ],
+                    ],
+                },
+                "events": [
+                    {
+                        "event_type": "knowledge.resource.added",
+                        "status": result,
+                        "message": "resource manifest and index updated",
+                        "target": {
+                            "package_id": package_id,
+                            "resource_id": resource_id,
+                            "package_root": package_root.root_id,
+                            "transaction_id": transaction_id,
+                        },
+                    },
+                    {
+                        "event_type": "package.updated",
+                        "status": result,
+                        "message": "package manifest updated through package root",
+                        "target": {
+                            "package_id": package_id,
+                            "resource_id": resource_id,
+                            "package_root": package_root.root_id,
+                            "transaction_id": transaction_id,
+                        },
+                    },
+                    {
+                        "event_type": "knowledge.package.updated",
+                        "status": "updated",
+                        "message": "package resource index refreshed",
+                        "target": {
+                            "package_id": package_id,
+                            "resource_id": resource_id,
+                            "package_root": package_root.root_id,
+                            "transaction_id": transaction_id,
+                        },
+                    },
+                ],
+                "report_title": "Knowledge Resource Add Report",
+                "report_lines": [
+                    f"- transaction_id: {transaction_id}",
+                    f"- package: {package_id}",
+                    f"- package_root: {package_root.root_id}",
+                    f"- resource: {resource_id}",
+                    f"- manifest: {rel(manifest_path, workplace_root)}",
+                    f"- index: {rel(index_path, workplace_root)}",
+                    f"- path_ref: {resource.get('path_ref')}",
+                ],
+            },
+        )
+    )
+    return plan, resource, result, manifest_path, index_path, package_root
+
+
+def command_knowledge_add_url(args: argparse.Namespace) -> int:
+    mode = authoring_mode(args)
+    resource_id = safe_id(
+        args.id or resource_id_from_url(args.url, "article"),
+        "resource",
+    )
+    raw_resource = {
+        "id": resource_id,
+        "kind": args.kind,
+        "title": args.title or resource_id.replace("-", " ").title(),
+        "description": args.description
+        or f"External {args.kind} resource registered from URL.",
+        "source": {"type": "url", "url": args.url},
+        "license": {"name": args.license or "unknown"},
+        "load_policy": args.load_policy,
+        "index_policy": args.index_policy,
+    }
+    plan, resource, result, manifest_path, index_path, package_root = (
+        build_knowledge_resource_add_plan(args, "knowledge-add-url", raw_resource)
+    )
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    if mode == "dry_run":
+        preflight_authoring_plan(plan)
+        for warning in package_root.warnings:
+            print(warning)
+        render_authoring_dry_run(plan, workplace_root)
+        return 0
+    execute_authoring_plan(plan)
+    print(f"{result.upper()}: {resource['id']}")
+    print(f"PACKAGE_ROOT: {package_root.root_id}")
+    print(f"MANIFEST: {rel(manifest_path, workplace_root)}")
+    print(f"INDEX: {rel(index_path, workplace_root)}")
+    return 0
+
+
+def command_knowledge_add_resource(args: argparse.Namespace) -> int:
+    mode = authoring_mode(args)
+    resource_file = Path(args.resource_file).expanduser().resolve()
+    data = load_yaml_document(resource_file)
+    if not data or yaml_error(data):
+        raise SystemExit(f"FAIL: resource file is missing or invalid: {args.resource_file}")
+    plan, resource, result, manifest_path, index_path, package_root = (
+        build_knowledge_resource_add_plan(
+            args,
+            "knowledge-add-resource",
+            data,
+        )
+    )
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    if mode == "dry_run":
+        preflight_authoring_plan(plan)
+        for warning in package_root.warnings:
+            print(warning)
+        render_authoring_dry_run(plan, workplace_root)
+        return 0
+    execute_authoring_plan(plan)
+    print(f"{result.upper()}: {resource['id']}")
+    print(f"PACKAGE_ROOT: {package_root.root_id}")
+    print(f"MANIFEST: {rel(manifest_path, workplace_root)}")
+    print(f"INDEX: {rel(index_path, workplace_root)}")
+    return 0
+
+
 def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     package_id = str(args.package)
@@ -19233,40 +21182,23 @@ def command_knowledge_package_doctor(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
     package_id = str(args.package)
     checks = knowledge_package_doctor_checks(workplace_root, package_id, getattr(args, "package_root", None))
-    for item in checks:
-        if "duplicate package id" in item.message:
-            append_workplace_resource_event(
-                workplace_root,
-                resource_management_event(
-                    scope="workplace",
-                    command="knowledge-package-doctor",
-                    event_type="package.duplicate.detected",
-                    target={"package_id": package_id},
-                    status="warn",
-                    message=item.message,
-                ),
-            )
-    if any(item.level == "FAIL" for item in checks):
-        append_workplace_resource_event(
-            workplace_root,
-            resource_management_event(
-                scope="workplace",
-                command="knowledge-package-doctor",
-                event_type="package.doctor.failed",
-                target={"package_id": package_id},
-                status="failed",
-                message="; ".join(item.message for item in checks if item.level == "FAIL"),
-            ),
-        )
     return print_checks(checks)
 
 
 def command_knowledge_package_create(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
-    package_id = str(args.id)
+    package_id = validate_resource_id(str(args.id), "knowledge package")
     package_root = resolve_package_root(workplace_root, args.package_root, mode="write" if args.apply else "read")
-    package_dir = package_root.resolved_path / package_id
-    manifest_path = package_dir / "package.yaml"
+    package_dir = contained_resource_path(
+        package_root.resolved_path,
+        package_root.resolved_path / package_id,
+        "knowledge package",
+    )
+    manifest_path = contained_resource_path(
+        package_root.resolved_path,
+        package_dir / "package.yaml",
+        "knowledge package",
+    )
     slug, proposal_path = write_resource_proposal(workplace_root, "knowledge-package-create", package_id, {"package_id": package_id, "package_root": package_root.root_id, "target": rel(manifest_path, workplace_root)})
     emit_package_root_resolution_event(workplace_root, "knowledge-package-create", package_id, package_root)
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="knowledge-package-create", event_type="knowledge_package.authoring.started", target={"package_id": package_id, "package_root": package_root.root_id}, status="dry_run" if args.dry_run else "started", message="knowledge package authoring started"))
@@ -19316,86 +21248,6 @@ def normalize_platform_id(raw: str) -> tuple[str, str]:
     return platform_id, platform_contract_id(platform_id)
 
 
-def command_platform_create(args: argparse.Namespace) -> int:
-    workplace_root = Path(args.workplace).expanduser().resolve()
-    platform_id, contract_id = normalize_platform_id(args.id)
-    for entry in policy_entries(load_policy_document("platform-id-policy.yaml"), "discouraged_platform_ids"):
-        if policy_id_matches(contract_id, entry):
-            print(str(entry.get("user_message", entry.get("message", "WARN: platform id is discouraged by policy."))), file=sys.stderr)
-    root_id, platform_root = resolve_platform_root(workplace_root, getattr(args, "platform_root", None), mode="write" if args.apply else "read")
-    target = platform_root / contract_id
-    contract_path = target / "platform-contract.yaml"
-    required_packages = [item for item in getattr(args, "requires_package", []) if item]
-    recommended_packages = [item for item in getattr(args, "recommends_package", []) if item]
-    optional_packages = [item for item in getattr(args, "optional_package", []) if item]
-    optional_packages.extend(item for item in getattr(args, "package", []) if item)
-    optional_packages.extend(item for item in getattr(args, "knowledge_package", []) if item)
-    required_templates = [item for item in getattr(args, "requires_template", []) if item]
-    recommended_templates = [item for item in getattr(args, "recommends_template", []) if item]
-    optional_templates = [item for item in getattr(args, "optional_template", []) if item]
-    optional_templates.extend(item for item in getattr(args, "template", []) if item)
-    required_tools = [item for item in getattr(args, "requires_tool", []) if item]
-    recommended_tools = [item for item in getattr(args, "recommends_tool", []) if item]
-    optional_tools = [item for item in getattr(args, "optional_tool", []) if item]
-    optional_tools.extend(item for item in getattr(args, "tool", []) if item)
-    required_mcp = [item for item in getattr(args, "requires_mcp", []) if item]
-    recommended_mcp = [item for item in getattr(args, "recommends_mcp", []) if item]
-    optional_mcp = [item for item in getattr(args, "optional_mcp", []) if item]
-    optional_mcp.extend(item for item in getattr(args, "mcp", []) if item)
-    project_types = [item for item in getattr(args, "project_type", []) if item] or [platform_id]
-    slug, proposal_path = write_resource_proposal(workplace_root, "platform-create", contract_id, {"platform": contract_id, "platform_root": root_id, "target": rel(contract_path, workplace_root)})
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-create", event_type="platform.authoring.started", target={"platform": contract_id}, status="dry_run" if args.dry_run else "started", message="platform authoring started"))
-    if args.dry_run:
-        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
-        return 0
-    if contract_path.exists() and not args.force:
-        raise SystemExit(f"FAIL: platform contract already exists: {rel(contract_path, workplace_root)}")
-    for dirname in ["tests", "artifacts", "reviews", "handoffs"]:
-        (target / dirname).mkdir(parents=True, exist_ok=True)
-    contract = {
-        "schema_version": 1,
-        "id": contract_id,
-        "title": args.title,
-        "type": "platform_contract",
-        "version": "1.0.0",
-        "status": "draft",
-        "project_type_hints": project_types,
-        "applies_to": {"platforms": [platform_id], "project_type_hints": project_types},
-        "requires": {"capabilities": ["filesystem.read", "filesystem.write"], "knowledge_packages": required_packages, "tools": required_tools, "mcp": required_mcp, "templates": required_templates},
-        "recommends": {"knowledge_packages": recommended_packages, "templates": recommended_templates, "tools": recommended_tools, "mcp": recommended_mcp},
-        "optional": {"knowledge_packages": optional_packages, "templates": optional_templates, "tools": optional_tools, "mcp": optional_mcp},
-        "includes": {
-            "knowledge_packages": optional_packages,
-            "templates": optional_templates,
-            "tools": optional_tools,
-            "mcp": optional_mcp,
-            "processes": [item for item in getattr(args, "process", []) if item],
-        },
-        "policies": {"missing_required_capability": "block", "missing_optional_resource": "warn"},
-    }
-    write_authoring_text(contract_path, dump_yaml(contract))
-    write_authoring_text(target / "README.md", f"# {args.title}\n\nPlatform contract `{contract_id}`.")
-    write_authoring_text(target / "project-types.yaml", dump_yaml({"schema_version": 1, "project_type_hints": project_types}))
-    write_authoring_text(target / "capabilities.yaml", dump_yaml({"schema_version": 1, "capabilities": contract["requires"]["capabilities"]}))
-    write_authoring_text(target / "knowledge.yaml", dump_yaml({"schema_version": 1, "requires": required_packages, "recommends": recommended_packages, "optional": optional_packages}))
-    write_authoring_text(target / "templates.yaml", dump_yaml({"schema_version": 1, "requires": required_templates, "recommends": recommended_templates, "optional": optional_templates}))
-    write_authoring_text(target / "tools.yaml", dump_yaml({"schema_version": 1, "requires": required_tools, "recommends": recommended_tools, "optional": optional_tools}))
-    write_authoring_text(target / "mcp.yaml", dump_yaml({"schema_version": 1, "requires": required_mcp, "recommends": recommended_mcp, "optional": optional_mcp}))
-    write_authoring_text(target / "processes.yaml", dump_yaml({"schema_version": 1, "processes": contract["includes"]["processes"]}))
-    write_authoring_text(target / "artifacts" / "platform-contract-authoring-report.md", f"# Platform Contract Authoring Report\n\n- platform: {contract_id}\n- platform_root: {root_id}")
-    write_authoring_text(target / "reviews" / "platform-contract-authoring-review.md", "# Platform Contract Authoring Review\n\nResult: pass_with_conditions")
-    write_authoring_text(target / "handoffs" / "platform-contract-ready-handoff.md", f"# Handoff: platform-create -> project-onboarding\n\nPlatform `{contract_id}` is ready for project type matching.")
-    upsert_registry_entry(workplace_root / "registries" / "platforms.yaml", "platforms", {"id": platform_id, "package_id": contract_id, "path": rel(contract_path, workplace_root), "status": "available"})
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-create", event_type="platform.contract.created", target={"platform": contract_id}, status="created", message="platform contract created"))
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-create", event_type="platform.contract.linked", target={"platform": contract_id}, status="linked", message="platform registry updated"))
-    doctor_status, doctor_output = run_command_capture(command_platform_contract_doctor, argparse.Namespace(workplace=str(workplace_root), platform=contract_id))
-    print(doctor_output, end="")
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-create", event_type="platform.contract.doctor.passed" if doctor_status == 0 else "platform.contract.doctor.failed", target={"platform": contract_id}, status="passed" if doctor_status == 0 else "failed", message="platform doctor completed"))
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-create", event_type="platform.authoring.completed", target={"platform": contract_id}, status="completed", message="platform authoring completed"))
-    print(f"PLATFORM: {rel(contract_path, workplace_root)}")
-    return doctor_status
-
-
 def platform_contract_path(workplace_root: Path, platform: str) -> Path | None:
     platform_id, contract_id = normalize_platform_id(platform)
     for candidate_id in [contract_id, platform_id]:
@@ -19409,6 +21261,149 @@ def platform_contract_path(workplace_root: Path, platform: str) -> Path | None:
         if candidate.is_file():
             return candidate
     return None
+
+
+def platform_contract_semantic_checks(
+    workplace_root: Path,
+    data: dict[str, Any],
+    platform: str,
+    *,
+    platform_resolution: dict[str, Any] | None = None,
+) -> list[Check]:
+    checks: list[Check] = []
+    checks.append(check("PASS" if data.get("id") else "FAIL", "platform contract id present"))
+    contract_id = platform_contract_id(str(data.get("id") or platform))
+    for entry in policy_entries(load_policy_document("platform-id-policy.yaml"), "discouraged_platform_ids"):
+        if policy_id_matches(contract_id, entry):
+            checks.append(
+                check_with_hint(
+                    str(entry.get("user_created_behavior", "WARN")).upper(),
+                    str(entry.get("message", f"platform id discouraged: {contract_id}")),
+                    str(entry.get("why", "The platform id matched a data-driven platform id policy.")),
+                    str(entry.get("fix", "update the platform id or policy manifest")),
+                )
+            )
+    hints = data.get("project_type_hints")
+    if not isinstance(hints, list):
+        applies_to = data.get("applies_to") if isinstance(data.get("applies_to"), dict) else {}
+        hints = applies_to.get("project_type_hints") if isinstance(applies_to.get("project_type_hints"), list) else []
+    checks.append(check("PASS" if isinstance(hints, list) and hints else "WARN", "project_type_hints configured"))
+    requires = data.get("requires") if isinstance(data.get("requires"), dict) else {}
+    checks.append(check("PASS" if requires.get("capabilities") else "WARN", "required capabilities listed"))
+    extends_refs = contract_extends(data)
+    required_platform_refs = contract_required_platforms(data)
+    checks.append(check("PASS", "extends entries are valid") if all(ref.get("id") for ref in extends_refs) else check("FAIL", "extends entries are valid"))
+    checks.append(check("PASS", "requires.platforms entries are valid") if all(ref.get("id") for ref in required_platform_refs) else check("FAIL", "requires.platforms entries are valid"))
+    for ref in extends_refs:
+        if ref.get("required") is False:
+            checks.append(
+                check_with_hint(
+                    "FAIL",
+                    f"extends parent is required: {ref['id']}",
+                    "Platform inheritance cannot be optional in the pre-release contract model.",
+                    "set required: true or move the platform reference to requires.platforms if it is only a dependency",
+                )
+            )
+    required_platform_by_id = {str(ref["id"]): bool(ref.get("required", True)) for ref in required_platform_refs}
+    for ref in extends_refs:
+        if required_platform_by_id.get(str(ref["id"])) is False:
+            checks.append(
+                check_with_hint(
+                    "FAIL",
+                    f"child platform cannot weaken required parent dependency: {ref['id']}",
+                    "An inherited parent is required by definition; requires.platforms cannot mark the same parent optional.",
+                    "set requires.platforms[].required: true for the parent platform",
+                )
+            )
+    platform_resolution = platform_resolution or resolve_platform_contracts(workplace_root / "workplace.yaml", [data.get("id") or platform])
+    for missing in platform_resolution["missing_required_contracts"]:
+        checks.append(
+            check_with_hint(
+                "FAIL",
+                f"required platform available: {missing}",
+                "The platform contract extends or requires a platform that is not registered in the workplace.",
+                f"python bin/pf.py platform-create --workplace <workplace-root> --id {missing} --title \"{missing}\" --apply",
+            )
+        )
+    for cycle in platform_resolution["circular_platforms"]:
+        checks.append(
+            check_with_hint(
+                "FAIL",
+                f"circular platform inheritance detected: {cycle}",
+                "Platform inheritance must resolve to an acyclic parent-first stack.",
+                "remove one extends edge from the cycle and rerun platform-contract-doctor",
+            )
+        )
+    checks.append(check("PASS" if platform_resolution["platform_stack"] else "FAIL", "resolved platform stack valid"))
+    checks.append(check("PASS", "resolved platform stack computed without mutating workplace state"))
+    inherited_required, inherited_recommended = platform_resource_findings(workplace_root / "workplace.yaml", platform_resolution)
+    for item in inherited_required:
+        checks.append(
+            check_with_hint(
+                "FAIL",
+                f"required {item['kind']} available through resolved platform stack: {item['id']}",
+                "A platform in the resolved stack marks this resource as required.",
+                "register the missing resource in the workplace registry or package roots before using this platform",
+            )
+        )
+    for item in inherited_recommended:
+        checks.append(
+            check_with_hint(
+                "WARN",
+                f"optional {item['kind']} available through resolved platform stack: {item['id']}",
+                "A platform in the resolved stack recommends this resource, but onboarding can continue.",
+                "register the resource if this platform should provide the optional capability",
+            )
+        )
+    for package_id in list_value(requires.get("knowledge_packages")):
+        manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
+        checks.append(
+            check("PASS", f"required knowledge package available: {package_id}")
+            if manifest
+            else check_with_hint(
+                "FAIL",
+                f"required knowledge package available: {package_id}",
+                "This platform contract marks the package as required.",
+                f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title \"{package_id}\" --apply",
+                "mark it as required: false or move it to includes.knowledge_packages if optional",
+            )
+        )
+    for package_id in contract_includes(data, "knowledge_packages"):
+        manifest = package_manifest_index(workplace_root, None, workplace_root / "workplace.yaml").get(package_id)
+        checks.append(
+            check("PASS", f"optional knowledge package available: {package_id}")
+            if manifest
+            else check_with_hint(
+                "WARN",
+                f"optional knowledge package available: {package_id}",
+                "This platform contract recommends the package, but onboarding can continue.",
+                f"python bin/pf.py knowledge-package-create --workplace <workplace-root> --id {package_id} --package-root global --title \"{package_id}\" --apply",
+            )
+        )
+    for template_id in list_value(requires.get("templates")):
+        checks.append(
+            check("PASS", f"required template available: {template_id}")
+            if template_manifest_path(workplace_root, template_id)
+            else check_with_hint(
+                "FAIL",
+                f"required template available: {template_id}",
+                "This platform contract marks the template as required.",
+                f"python bin/pf.py template-create --workplace <workplace-root> --id {template_id} --title \"{template_id}\" --apply",
+                "move it to includes.templates if optional",
+            )
+        )
+    for template_id in contract_includes(data, "templates"):
+        checks.append(
+            check("PASS", f"optional template available: {template_id}")
+            if template_manifest_path(workplace_root, template_id)
+            else check_with_hint(
+                "WARN",
+                f"optional template available: {template_id}",
+                "This platform contract recommends the template, but onboarding can continue without it.",
+                f"python bin/pf.py template-create --workplace <workplace-root> --id {template_id} --title \"{template_id}\" --apply",
+            )
+        )
+    return checks
 
 
 def command_platform_contract_doctor(args: argparse.Namespace) -> int:
@@ -19429,7 +21424,14 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
     if contract_path:
         text = contract_path.read_text(encoding="utf-8", errors="replace")
         checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "platform contract has no local absolute paths"))
-        data = load_yaml_document(contract_path)
+        data = load_doctor_yaml(
+            contract_path,
+            "platform-contract.schema.json",
+            f"platform {platform} contract",
+            checks,
+        )
+        if data is None:
+            return print_checks(checks)
         checks.append(check("PASS" if data.get("id") else "FAIL", "platform contract id present"))
         contract_id = platform_contract_id(str(data.get("id") or platform))
         for entry in policy_entries(load_policy_document("platform-id-policy.yaml"), "discouraged_platform_ids"):
@@ -19494,24 +21496,7 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
                 )
             )
         checks.append(check("PASS" if platform_resolution["platform_stack"] else "FAIL", "resolved platform stack valid"))
-        stack_report = contract_path.parent / "artifacts" / "platform-stack.snapshot.yaml"
-        stack_report.parent.mkdir(parents=True, exist_ok=True)
-        stack_report.write_text(
-            ensure_trailing_newline(
-                dump_yaml(
-                    {
-                        "schema_version": 1,
-                        "platform": data.get("id") or platform,
-                        "resolved_at": now_utc(),
-                        "platform_stack": platform_resolution["platform_stack"],
-                        "required_knowledge_packages": platform_resolution["required_knowledge_packages"],
-                        "recommended_knowledge_packages": platform_resolution["recommended_knowledge_packages"],
-                    }
-                )
-            ),
-            encoding="utf-8",
-        )
-        checks.append(check("PASS", f"resolved platform stack written: {rel(stack_report, workplace_root)}"))
+        checks.append(check("PASS", "resolved platform stack computed without mutating workplace state"))
         inherited_required, inherited_recommended = platform_resource_findings(workplace_root / "workplace.yaml", platform_resolution)
         for item in inherited_required:
             checks.append(
@@ -19582,8 +21567,6 @@ def command_platform_contract_doctor(args: argparse.Namespace) -> int:
         for forbidden in ["package.yaml", "template.yaml"]:
             copied = [path for path in contract_path.parent.rglob(forbidden) if path != contract_path]
             checks.append(check("PASS" if not copied else "FAIL", f"no copied {forbidden} inside platform contract"))
-    failed = any(item.level == "FAIL" for item in checks)
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="platform-contract-doctor", event_type="platform.contract.doctor.failed" if failed else "platform.contract.doctor.passed", target={"platform": platform}, status="failed" if failed else "passed", message="platform contract doctor completed"))
     return print_checks(checks)
 
 
@@ -19769,12 +21752,13 @@ def command_template_create(args: argparse.Namespace) -> int:
         (target / dirname).mkdir(parents=True, exist_ok=True)
     manifest = {
         "schema_version": 1,
+        "type": "reusable_template",
         "id": template_id,
         "title": args.title,
         "kind": args.kind,
         "version": "1.0.0",
         "description": args.description or f"Reusable template {args.title}.",
-        "inputs": [{"id": "project_name", "required": True}, {"id": "template_scope", "required": False}],
+        "inputs": [{"id": "project", "required": True}, {"id": "scope", "required": False}],
         "outputs": [{"path": f"{safe_id(template_id, 'template')}.md"}],
         "files": [{"source": f"files/{safe_id(template_id, 'template')}.md", "target": "{{ output_path }}"}],
         "prompts": [{"path": "prompts/authoring-notes.md"}],
@@ -19782,7 +21766,7 @@ def command_template_create(args: argparse.Namespace) -> int:
     }
     write_authoring_text(target / "template.yaml", dump_yaml(manifest))
     write_authoring_text(target / "README.md", f"# {args.title}\n\nReusable template `{template_id}`.")
-    write_authoring_text(target / "files" / f"{safe_id(template_id, 'template')}.md", f"# {{{{ project_name }}}}\n\nTemplate scope: {{{{ template_scope }}}}")
+    write_authoring_text(target / "files" / f"{safe_id(template_id, 'template')}.md", f"# {{{{ project }}}}\n\nTemplate scope: {{{{ scope }}}}")
     write_authoring_text(target / "prompts" / "authoring-notes.md", f"# Authoring Notes\n\nUse template `{template_id}` through ProcessForge template selection.")
     write_authoring_text(target / "artifacts" / "template-authoring-report.md", f"# Template Authoring Report\n\n- template: {template_id}\n- template_root: {root_id}")
     write_authoring_text(target / "reviews" / "template-authoring-review.md", "# Template Authoring Review\n\nResult: pass_with_conditions")
@@ -19831,7 +21815,16 @@ def command_template_doctor(args: argparse.Namespace) -> int:
     if manifest_path:
         text = manifest_path.read_text(encoding="utf-8", errors="replace")
         checks.append(check("PASS" if is_public_path_safe(text) else "FAIL", "template manifest has no local absolute paths"))
-        data = load_yaml_document(manifest_path)
+        data = load_doctor_yaml(
+            manifest_path,
+            "reusable-template.schema.json",
+            f"template {template_id} manifest",
+            checks,
+        )
+        if data is None:
+            return print_checks(checks)
+        if data.get("schema_version") == 1:
+            checks.append(check("WARN", "legacy reusable template schema_version 1 requires explicit migration"))
         checks.append(check("PASS" if data.get("id") == template_id else "FAIL", "template id matches requested id"))
         root = manifest_path.parent
         for dirname in ["files", "prompts", "examples", "artifacts", "reviews", "handoffs"]:
@@ -19862,22 +21855,66 @@ def command_template_doctor(args: argparse.Namespace) -> int:
                         f"restore {prompt_path} under the template root or remove the prompt entry from template.yaml",
                     )
                 )
-    failed = any(item.level == "FAIL" for item in checks)
-    append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-doctor", event_type="template.doctor.failed" if failed else "template.doctor.passed", target={"template_id": template_id}, status="failed" if failed else "passed", message="template doctor completed"))
     return print_checks(checks)
 
 
 def upsert_registry_entry(path: Path, collection_key: str, entry: dict[str, Any]) -> str:
-    data = load_yaml_document(path)
-    if not data or yaml_error(data):
+    if path.exists() and not path.is_file():
+        raise SystemExit(f"FAIL: registry path is not a file: {path}")
+    if path.is_file():
+        data = load_yaml_document(path)
+        error = yaml_error(data)
+        if error:
+            raise SystemExit(f"FAIL: registry YAML invalid; original preserved: {path}: {error}")
+        if not isinstance(data, dict) or not data:
+            raise SystemExit(f"FAIL: registry must be a non-empty YAML object; original preserved: {path}")
+        if collection_key not in data:
+            entries = []
+            data[collection_key] = entries
+        else:
+            entries = data.get(collection_key)
+        if not isinstance(entries, list):
+            raise SystemExit(
+                f"FAIL: registry collection {collection_key} must be a list; original preserved: {path}"
+            )
+    else:
         data = {"schema_version": 1, collection_key: []}
-    entries = data.get(collection_key)
-    if not isinstance(entries, list):
-        entries = []
-        data[collection_key] = entries
+        entries = data[collection_key]
     result = upsert_resource(entries, entry)
+    registry_schemas = {
+        "distributions.yaml": "distributions-registry.schema.json",
+        "platforms.yaml": "platform-registry.schema.json",
+        "knowledge-roots.yaml": "knowledge-roots-registry.schema.json",
+        "package-roots.yaml": "package-roots-registry.schema.json",
+        "templates.yaml": "template-registry.schema.json",
+        "tools.yaml": "tool-registry.schema.json",
+        "mcp.yaml": "mcp-registry.schema.json",
+        "specializations.yaml": "specialization-registry.schema.json",
+        "project-classifiers.yaml": "project-classifier-registry.schema.json",
+        "runtime-drivers.yaml": "runtime-driver-registry.schema.json",
+        "private-resource-paths.yaml": "private-resource-paths-registry.schema.json",
+        "platform-contract-roots.yaml": "platform-contract-roots-registry.schema.json",
+    }
+    schema_name = registry_schemas.get(path.name)
+    if schema_name:
+        schema_path = ROOT / "schemas" / schema_name
+        try:
+            schema = json.loads(schema_path.read_text(encoding="utf-8"))
+            errors = validate_update_instance_against_schema(data, schema, schema, "$")
+        except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
+            raise SystemExit(f"FAIL: registry schema validation unavailable for {path}: {exc}") from exc
+        if errors:
+            raise SystemExit(
+                f"FAIL: registry update rejected; original preserved: {path}: {'; '.join(errors[:8])}"
+            )
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(ensure_trailing_newline(dump_yaml(data)), encoding="utf-8")
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    try:
+        temporary.write_text(ensure_trailing_newline(dump_yaml(data)), encoding="utf-8")
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
     return result
 
 
@@ -20013,7 +22050,14 @@ def specialization_doctor_checks(workplace_root: Path, specialization_id: str) -
     )
     if not path:
         return checks
-    data = load_yaml_document(path)
+    data = load_doctor_yaml(
+        path,
+        "specialization.schema.json",
+        f"specialization {normalized_id} manifest",
+        checks,
+    )
+    if data is None:
+        return checks
     checks.append(check("PASS" if isinstance(data, dict) and data.get("kind") == "processforge.specialization" else "FAIL", "specialization kind valid"))
     checks.append(check("PASS" if data.get("id") == normalized_id else "FAIL", "specialization id matches requested id"))
     checks.append(check("PASS" if is_public_path_safe(path.read_text(encoding="utf-8", errors="replace")) else "FAIL", "specialization has no private absolute paths"))
@@ -20042,8 +22086,17 @@ def command_specialization_doctor(args: argparse.Namespace) -> int:
 
 def command_specialization_create(args: argparse.Namespace) -> int:
     workplace_root = Path(args.workplace).expanduser().resolve()
-    specialization_id = specialization_resource_id(str(args.id))
-    target = workplace_root / "specializations" / f"{specialization_id}.yaml"
+    requested_id = validate_resource_id(str(args.id), "specialization")
+    specialization_id = validate_resource_id(
+        specialization_resource_id(requested_id),
+        "specialization",
+    )
+    specialization_root = workplace_root / "specializations"
+    target = contained_resource_path(
+        specialization_root,
+        specialization_root / f"{specialization_id}.yaml",
+        "specialization",
+    )
     slug, proposal_path = write_resource_proposal(workplace_root, "specialization-create", specialization_id, {"specialization": specialization_id, "target": rel(target, workplace_root)})
     if not getattr(args, "apply", False):
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
@@ -20186,57 +22239,557 @@ def command_project_override_doctor(args: argparse.Namespace) -> int:
     return print_checks(checks)
 
 
-def command_platform_contract_install(args: argparse.Namespace) -> int:
-    workplace_root = Path(args.workplace).expanduser().resolve()
-    platform_id = safe_id(args.id.removeprefix("platform."), "platform")
+def platform_dependency_preflight(
+    workplace_root: Path,
+    required_packages: list[str],
+    required_templates: list[str],
+    required_tools: list[str],
+    required_mcp: list[str],
+) -> None:
+    missing: list[str] = []
+    for package_id in required_packages:
+        if not find_workplace_package_manifests(workplace_root, package_id):
+            missing.append(f"knowledge package {package_id}")
+    for template_id in required_templates:
+        if template_manifest_path(workplace_root, template_id) is None:
+            missing.append(f"template {template_id}")
+    tool_ids = registry_ids_from_workplace(workplace_root, "tools.yaml", "tools")
+    mcp_ids = registry_ids_from_workplace(workplace_root, "mcp.yaml", "mcp_servers")
+    missing.extend(f"tool {item}" for item in required_tools if item not in tool_ids)
+    missing.extend(f"MCP {item}" for item in required_mcp if item not in mcp_ids)
+    if missing:
+        raise SystemExit("FAIL: required platform resources missing: " + ", ".join(missing))
+
+
+def platform_authoring_values(args: argparse.Namespace) -> dict[str, Any]:
+    platform_id = validate_resource_id(
+        str(args.id).removeprefix("platform."),
+        "platform",
+    )
     contract_id = platform_contract_id(platform_id)
-    contract_path = workplace_root / "platforms" / platform_id / "platform.yaml"
-    contract = {
+    required_packages = [
+        item for item in getattr(args, "requires_package", []) if item
+    ]
+    recommended_packages = [
+        item for item in getattr(args, "recommends_package", []) if item
+    ]
+    optional_packages = [
+        item for item in getattr(args, "optional_package", []) if item
+    ]
+    required_templates = [
+        item for item in getattr(args, "requires_template", []) if item
+    ]
+    recommended_templates = [
+        item for item in getattr(args, "recommends_template", []) if item
+    ]
+    optional_templates = [
+        item for item in getattr(args, "optional_template", []) if item
+    ]
+    required_tools = [item for item in getattr(args, "requires_tool", []) if item]
+    recommended_tools = [
+        item for item in getattr(args, "recommends_tool", []) if item
+    ]
+    optional_tools = [item for item in getattr(args, "optional_tool", []) if item]
+    required_mcp = [item for item in getattr(args, "requires_mcp", []) if item]
+    recommended_mcp = [
+        item for item in getattr(args, "recommends_mcp", []) if item
+    ]
+    optional_mcp = [item for item in getattr(args, "optional_mcp", []) if item]
+    project_types = [item for item in getattr(args, "project_type", []) if item] or [
+        platform_id
+    ]
+    return {
+        "platform_id": platform_id,
+        "contract_id": contract_id,
+        "title": str(getattr(args, "title", "") or title_from_id(platform_id)),
+        "version": str(getattr(args, "version", "") or "1.0.0"),
+        "required_packages": required_packages,
+        "recommended_packages": recommended_packages,
+        "optional_packages": optional_packages,
+        "required_templates": required_templates,
+        "recommended_templates": recommended_templates,
+        "optional_templates": optional_templates,
+        "required_tools": required_tools,
+        "recommended_tools": recommended_tools,
+        "optional_tools": optional_tools,
+        "required_mcp": required_mcp,
+        "recommended_mcp": recommended_mcp,
+        "optional_mcp": optional_mcp,
+        "project_types": project_types,
+        "processes": [item for item in getattr(args, "process", []) if item],
+    }
+
+
+def platform_contract_from_values(values: dict[str, Any]) -> dict[str, Any]:
+    return {
         "schema_version": 1,
-        "id": contract_id,
+        "id": values["contract_id"],
+        "title": values["title"],
         "type": "platform_contract",
-        "version": args.version,
-        "applies_to": {"platforms": [platform_id]},
+        "version": values["version"],
+        "status": "draft",
+        "project_type_hints": values["project_types"],
+        "applies_to": {
+            "platforms": [values["platform_id"]],
+            "project_type_hints": values["project_types"],
+        },
         "requires": {
-            "capabilities": [item for item in args.required_capabilities.split(",") if item],
-            "knowledge_packages": [item for item in args.required_packages.split(",") if item],
-            "tools": [item for item in args.required_tools.split(",") if item],
-            "mcp": [item for item in args.required_mcp.split(",") if item],
-            "templates": [item for item in args.required_templates.split(",") if item],
+            "capabilities": ["filesystem.read", "filesystem.write"],
+            "knowledge_packages": values["required_packages"],
+            "tools": values["required_tools"],
+            "mcp": values["required_mcp"],
+            "templates": values["required_templates"],
+        },
+        "recommends": {
+            "knowledge_packages": values["recommended_packages"],
+            "templates": values["recommended_templates"],
+            "tools": values["recommended_tools"],
+            "mcp": values["recommended_mcp"],
+        },
+        "optional": {
+            "knowledge_packages": values["optional_packages"],
+            "templates": values["optional_templates"],
+            "tools": values["optional_tools"],
+            "mcp": values["optional_mcp"],
         },
         "includes": {
-            "knowledge_packages": [item for item in args.recommended_packages.split(",") if item],
-            "tools": [item for item in args.recommended_tools.split(",") if item],
-            "mcp": [item for item in args.recommended_mcp.split(",") if item],
-            "templates": [item for item in args.recommended_templates.split(",") if item],
+            "knowledge_packages": values["optional_packages"],
+            "templates": values["optional_templates"],
+            "tools": values["optional_tools"],
+            "mcp": values["optional_mcp"],
+            "processes": values["processes"],
         },
-        "policies": {"missing_required_capability": "block", "missing_optional_resource": "warn"},
+        "policies": {
+            "missing_required_capability": "block",
+            "missing_optional_resource": "warn",
+        },
     }
-    slug, proposal_path = write_resource_proposal(workplace_root, "platform-contract-install", platform_id, {"contract": contract})
-    if args.dry_run:
-        print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
-        return 0
-    contract_path.parent.mkdir(parents=True, exist_ok=True)
-    contract_path.write_text(ensure_trailing_newline(dump_yaml(contract)), encoding="utf-8")
-    upsert_registry_entry(
-        workplace_root / "registries" / "platforms.yaml",
-        "platforms",
-        {"id": platform_id, "package_id": contract_id, "path": rel(contract_path, workplace_root), "status": "available"},
-    )
-    append_workplace_resource_event(
-        workplace_root,
-        resource_management_event(
-            scope="workplace",
-            command="platform-contract-install",
-            event_type="platform.contract.updated",
-            target={"package_id": contract_id},
-            status="updated",
-            message="platform contract and registry updated",
+
+
+def platform_entity_documents(
+    target: Path,
+    values: dict[str, Any],
+    contract: dict[str, Any],
+    root_id: str,
+) -> list[tuple[Path, bytes, str | None]]:
+    title = values["title"]
+    contract_id = values["contract_id"]
+    documents: list[tuple[Path, bytes, str | None]] = [
+        (
+            target / "platform-contract.yaml",
+            ensure_trailing_newline(dump_yaml(contract)).encode("utf-8"),
+            "platform-contract.schema.json",
         ),
+        (
+            target / "README.md",
+            ensure_trailing_newline(
+                f"# {title}\n\nPlatform contract `{contract_id}`."
+            ).encode("utf-8"),
+            None,
+        ),
+        (
+            target / "project-types.yaml",
+            ensure_trailing_newline(
+                dump_yaml(
+                    {
+                        "schema_version": 1,
+                        "project_type_hints": values["project_types"],
+                    }
+                )
+            ).encode("utf-8"),
+            None,
+        ),
+        (
+            target / "capabilities.yaml",
+            ensure_trailing_newline(
+                dump_yaml(
+                    {
+                        "schema_version": 1,
+                        "capabilities": contract["requires"]["capabilities"],
+                    }
+                )
+            ).encode("utf-8"),
+            None,
+        ),
+        (
+            target / "knowledge.yaml",
+            ensure_trailing_newline(
+                dump_yaml(
+                    {
+                        "schema_version": 1,
+                        "requires": values["required_packages"],
+                        "recommends": values["recommended_packages"],
+                        "optional": values["optional_packages"],
+                    }
+                )
+            ).encode("utf-8"),
+            None,
+        ),
+        (
+            target / "templates.yaml",
+            ensure_trailing_newline(
+                dump_yaml(
+                    {
+                        "schema_version": 1,
+                        "requires": values["required_templates"],
+                        "recommends": values["recommended_templates"],
+                        "optional": values["optional_templates"],
+                    }
+                )
+            ).encode("utf-8"),
+            None,
+        ),
+        (
+            target / "tools.yaml",
+            ensure_trailing_newline(
+                dump_yaml(
+                    {
+                        "schema_version": 1,
+                        "requires": values["required_tools"],
+                        "recommends": values["recommended_tools"],
+                        "optional": values["optional_tools"],
+                    }
+                )
+            ).encode("utf-8"),
+            None,
+        ),
+        (
+            target / "mcp.yaml",
+            ensure_trailing_newline(
+                dump_yaml(
+                    {
+                        "schema_version": 1,
+                        "requires": values["required_mcp"],
+                        "recommends": values["recommended_mcp"],
+                        "optional": values["optional_mcp"],
+                    }
+                )
+            ).encode("utf-8"),
+            None,
+        ),
+        (
+            target / "processes.yaml",
+            ensure_trailing_newline(
+                dump_yaml(
+                    {
+                        "schema_version": 1,
+                        "processes": values["processes"],
+                    }
+                )
+            ).encode("utf-8"),
+            None,
+        ),
+        (
+            target / "artifacts" / "platform-contract-authoring-report.md",
+            ensure_trailing_newline(
+                f"# Platform Contract Authoring Report\n\n- platform: {contract_id}\n- platform_root: {root_id}"
+            ).encode("utf-8"),
+            None,
+        ),
+        (
+            target / "reviews" / "platform-contract-authoring-review.md",
+            ensure_trailing_newline(
+                "# Platform Contract Authoring Review\n\nResult: pass_with_conditions"
+            ).encode("utf-8"),
+            None,
+        ),
+        (
+            target / "handoffs" / "platform-contract-ready-handoff.md",
+            ensure_trailing_newline(
+                f"# Handoff: platform-create -> project-onboarding\n\nPlatform `{contract_id}` is ready for project type matching."
+            ).encode("utf-8"),
+            None,
+        ),
+    ]
+    return documents
+
+
+def build_platform_authoring_plan(
+    args: argparse.Namespace,
+    command_name: str,
+) -> tuple[AuthoringPlan, dict[str, Any], Path]:
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    if not (workplace_root / "workplace.yaml").is_file():
+        raise SystemExit(f"FAIL: workplace is not initialized: {workplace_root}")
+    values = platform_authoring_values(args)
+    platform_dependency_preflight(
+        workplace_root,
+        values["required_packages"],
+        values["required_templates"],
+        values["required_tools"],
+        values["required_mcp"],
     )
-    report = write_resource_management_report(workplace_root, slug, "Platform Contract Install Report", [f"- contract: {contract_id}", f"- path: {rel(contract_path, workplace_root)}"])
+    root_id, platform_root = resolve_platform_root(
+        workplace_root,
+        getattr(args, "platform_root", None),
+        mode="read",
+    )
+    target = contained_resource_path(
+        platform_root,
+        platform_root / values["contract_id"],
+        "platform",
+    )
+    contract_path = target / "platform-contract.yaml"
+    legacy_path = (
+        workplace_root
+        / "platforms"
+        / values["platform_id"]
+        / "platform.yaml"
+    )
+    registry_data = load_yaml_document(workplace_root / "registries" / "platforms.yaml")
+    registry_entries = (
+        registry_data.get("platforms")
+        if isinstance(registry_data.get("platforms"), list)
+        else []
+    )
+    existing_entry = next(
+        (
+            item
+            for item in registry_entries
+            if isinstance(item, dict)
+            and str(item.get("id")) == values["platform_id"]
+        ),
+        None,
+    )
+    if legacy_path.is_file():
+        raise SystemExit(
+            "FAIL: unsupported legacy platform state exists at "
+            f"{legacy_path}; remove or recreate it through a separately reviewed conversion"
+        )
+    if existing_entry and "platforms/" in str(existing_entry.get("path") or "").replace("\\", "/"):
+        raise SystemExit(
+            "FAIL: unsupported legacy platform registry entry; remove or recreate it "
+            "through a separately reviewed conversion"
+        )
+    force = bool(getattr(args, "force", False))
+    if contract_path.exists() and not force:
+        raise SystemExit(f"FAIL: platform contract already exists: {contract_path}")
+    contract = platform_contract_from_values(values)
+    require_json_schema_document(
+        contract,
+        "platform-contract.schema.json",
+        f"platform {values['contract_id']} contract",
+    )
+    registry_path = workplace_root / "registries" / "platforms.yaml"
+    registry_bytes, _result, _proposed = planned_registry_upsert(
+        registry_path,
+        "platforms",
+        {
+            "id": values["platform_id"],
+            "name": values["title"],
+            "package_id": values["contract_id"],
+            "path": rel(contract_path, workplace_root),
+            "status": "available",
+        },
+        "platform-registry.schema.json",
+    )
+    registry_writes: list[AuthoringWrite] = []
+    root_registry = workplace_root / "registries" / "platform-contract-roots.yaml"
+    root_data = load_yaml_document(root_registry)
+    roots = (
+        root_data.get("platform_contract_roots")
+        if isinstance(root_data.get("platform_contract_roots"), list)
+        else []
+    )
+    if not roots:
+        root_bytes, _root_result, _root_proposed = planned_registry_upsert(
+            root_registry,
+            "platform_contract_roots",
+            {
+                "id": "global",
+                "label": "Global platform contracts",
+                "path": "${PF_PLATFORM_CONTRACTS}",
+                "scope": "workplace",
+                "status": "available",
+            },
+            "platform-contract-roots-registry.schema.json",
+        )
+        registry_writes.append(
+            AuthoringWrite(
+                root_registry,
+                root_bytes,
+                role="registry",
+                operation="replace" if root_registry.is_file() else "create",
+                schema_name="platform-contract-roots-registry.schema.json",
+                allow_replace=root_registry.is_file(),
+            )
+        )
+    registry_writes.append(
+        AuthoringWrite(
+            registry_path,
+            registry_bytes,
+            role="registry",
+            operation="replace" if registry_path.is_file() else "create",
+            schema_name="platform-registry.schema.json",
+            allow_replace=registry_path.is_file(),
+        )
+    )
+    entity_writes = [
+        AuthoringWrite(
+            path,
+            content,
+            role="entity",
+            operation="replace" if path.exists() else "create",
+            schema_name=schema_name,
+            allow_replace=force,
+        )
+        for path, content, schema_name in platform_entity_documents(
+            target,
+            values,
+            contract,
+            root_id,
+        )
+    ]
+    transaction_id = f"{safe_id(command_name, 'platform')}-{values['platform_id']}-{uuid.uuid4().hex[:12]}"
+    plan = AuthoringPlan(
+        transaction_id=transaction_id,
+        command=command_name,
+        runtime_root=workplace_root / "runtime",
+        authoritative_writes=entity_writes,
+        registry_writes=registry_writes,
+        post_commit_effects=[],
+        validation_callbacks=[],
+    )
+
+    def validate_platform_plan(_plan: AuthoringPlan, staged: dict[Path, Path] | None) -> None:
+        candidate = contract
+        if staged is not None:
+            candidate = load_yaml_document(staged[contract_path])
+        require_json_schema_document(
+            candidate,
+            "platform-contract.schema.json",
+            f"platform {values['contract_id']} staged contract",
+        )
+        platform_resolution = resolve_platform_contracts(
+            workplace_root / "workplace.yaml",
+            [values["contract_id"]],
+            contract_overrides={values["contract_id"]: candidate},
+        )
+        failures = [
+            item.message
+            for item in platform_contract_semantic_checks(
+                workplace_root,
+                candidate,
+                values["contract_id"],
+                platform_resolution=platform_resolution,
+            )
+            if item.level == "FAIL"
+        ]
+        if failures:
+            raise SystemExit("FAIL: staged platform validation failed: " + "; ".join(failures))
+
+    plan.validation_callbacks.append(validate_platform_plan)
+    plan.post_commit_effects.append(
+        AuthoringEffect(
+            "platform-audit-events",
+            "runtime/resource-management/proposals/<transaction>.yaml and runtime/events/events.ndjson",
+            kind="platform_audit",
+            payload={
+                "workplace_root": str(workplace_root),
+                "command": command_name,
+                "contract_id": values["contract_id"],
+                "proposal_payload": {
+                    "transaction_id": transaction_id,
+                    "platform": values["contract_id"],
+                    "platform_root": root_id,
+                    "target": rel(contract_path, workplace_root),
+                },
+                "events": [
+                    {
+                        "event_type": "platform.contract.created",
+                        "status": "created",
+                        "message": "platform contract created",
+                        "target": {"platform": values["contract_id"], "transaction_id": transaction_id},
+                    },
+                    {
+                        "event_type": "platform.contract.linked",
+                        "status": "linked",
+                        "message": "platform registry updated",
+                        "target": {"platform": values["contract_id"], "transaction_id": transaction_id},
+                    },
+                    {
+                        "event_type": "platform.contract.doctor.passed",
+                        "status": "passed",
+                        "message": "staged platform checks passed",
+                        "target": {"platform": values["contract_id"], "transaction_id": transaction_id},
+                    },
+                    {
+                        "event_type": "platform.authoring.completed",
+                        "status": "completed",
+                        "message": "platform authoring completed",
+                        "target": {"platform": values["contract_id"], "transaction_id": transaction_id},
+                    },
+                ],
+            },
+        )
+    )
+    return plan, values, contract_path
+
+
+def command_platform_create(args: argparse.Namespace) -> int:
+    mode = authoring_mode(args)
+    plan, _values, contract_path = build_platform_authoring_plan(args, "platform-create")
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    if mode == "dry_run":
+        render_authoring_dry_run(plan, workplace_root)
+        return 0
+    execute_authoring_plan(plan)
+    print(f"PLATFORM: {rel(contract_path, workplace_root)}")
+    return 0
+
+
+def install_platform_args(args: argparse.Namespace) -> argparse.Namespace:
+    platform_id = validate_resource_id(
+        str(args.id).removeprefix("platform."),
+        "platform",
+    )
+    return argparse.Namespace(
+        workplace=args.workplace,
+        id=platform_id,
+        title=title_from_id(platform_id),
+        version=args.version,
+        platform_root=None,
+        project_type=[platform_id],
+        requires_package=[item for item in args.required_packages.split(",") if item],
+        recommends_package=[
+            item for item in args.recommended_packages.split(",") if item
+        ],
+        optional_package=[],
+        requires_template=[
+            item for item in args.required_templates.split(",") if item
+        ],
+        recommends_template=[
+            item for item in args.recommended_templates.split(",") if item
+        ],
+        optional_template=[],
+        requires_tool=[item for item in args.required_tools.split(",") if item],
+        recommends_tool=[
+            item for item in args.recommended_tools.split(",") if item
+        ],
+        optional_tool=[],
+        requires_mcp=[item for item in args.required_mcp.split(",") if item],
+        recommends_mcp=[item for item in args.recommended_mcp.split(",") if item],
+        optional_mcp=[],
+        process=[],
+        force=False,
+        apply=bool(getattr(args, "apply", False)),
+        dry_run=bool(getattr(args, "dry_run", False)),
+    )
+
+
+def command_platform_contract_install(args: argparse.Namespace) -> int:
+    normalized = install_platform_args(args)
+    mode = authoring_mode(normalized)
+    plan, _values, contract_path = build_platform_authoring_plan(
+        normalized,
+        "platform-contract-install",
+    )
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    if mode == "dry_run":
+        render_authoring_dry_run(plan, workplace_root)
+        return 0
+    execute_authoring_plan(plan)
     print(f"CONTRACT: {rel(contract_path, workplace_root)}")
-    print(f"REPORT: {rel(report, workplace_root)}")
     return 0
 
 
@@ -20247,6 +22800,7 @@ def build_parser() -> argparse.ArgumentParser:
     init_workplace = sub.add_parser("init-workplace", help="Initialize a ProcessForge workplace layer.")
     init_workplace.add_argument("--root", required=True, help="Workplace root path.")
     init_workplace.add_argument("--answers", help="Optional workplace answers YAML.")
+    init_workplace.add_argument("--profile", help="Opaque workplace profile id used to select bundled process packs from manifest data.")
     init_workplace.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     init_workplace.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     init_workplace.add_argument("--apply", action="store_true", help="Write files.")
@@ -20256,6 +22810,7 @@ def build_parser() -> argparse.ArgumentParser:
     workplace_init = sub.add_parser("workplace-init", help="First-run alias for init-workplace.")
     workplace_init.add_argument("--workplace", dest="root", required=True, help="Workplace root path.")
     workplace_init.add_argument("--answers", help="Optional workplace answers YAML.")
+    workplace_init.add_argument("--profile", help="Opaque workplace profile id used to select bundled process packs from manifest data.")
     workplace_init.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     workplace_init.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     workplace_init.add_argument("--apply", action="store_true", help="Write files.")
@@ -20337,6 +22892,19 @@ def build_parser() -> argparse.ArgumentParser:
     init_project.add_argument("--force", action="store_true", help="Overwrite existing files.")
     init_project.add_argument("--allow-missing-workplace", action="store_true", help="Allow apply mode with a missing workplace manifest.")
     init_project.set_defaults(func=command_init_project)
+
+    project_init = sub.add_parser("project-init", help="Alias for init-project.")
+    project_init.add_argument("--project-root", required=True, help="Project root path.")
+    project_init.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    project_init.add_argument("--type", dest="project_type", help="Project type override.")
+    project_init.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
+    project_init.add_argument("--answers", help="Optional project answers YAML.")
+    project_init.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
+    project_init.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
+    project_init.add_argument("--apply", action="store_true", help="Write files.")
+    project_init.add_argument("--force", action="store_true", help="Overwrite existing files.")
+    project_init.add_argument("--allow-missing-workplace", action="store_true", help="Allow apply mode with a missing workplace manifest.")
+    project_init.set_defaults(func=command_init_project)
 
     project_onboard = sub.add_parser("project-onboard", help="Onboard a project into an existing ProcessForge workplace.")
     project_onboard.add_argument("--project-root", required=True, help="Project root path.")
@@ -20503,7 +23071,7 @@ def build_parser() -> argparse.ArgumentParser:
     knowledge_add_url.add_argument("--license", help="License note.")
     knowledge_add_url.add_argument("--load-policy", dest="load_policy", help="Load policy override.")
     knowledge_add_url.add_argument("--index-policy", dest="index_policy", help="Index policy override.")
-    knowledge_add_url.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    knowledge_add_url.add_argument("--dry-run", action="store_true", help="Show the complete transaction plan without writing.")
     knowledge_add_url.add_argument("--apply", action="store_true", help="Update package manifest and resource index.")
     knowledge_add_url.set_defaults(func=command_knowledge_add_url)
 
@@ -20512,7 +23080,7 @@ def build_parser() -> argparse.ArgumentParser:
     knowledge_add_resource.add_argument("--package", required=True, help="Knowledge package id.")
     knowledge_add_resource.add_argument("--package-root", dest="package_root", help="Package root id from registries/package-roots.yaml.")
     knowledge_add_resource.add_argument("--resource-file", required=True, help="YAML knowledge resource record.")
-    knowledge_add_resource.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    knowledge_add_resource.add_argument("--dry-run", action="store_true", help="Show the complete transaction plan without writing.")
     knowledge_add_resource.add_argument("--apply", action="store_true", help="Update package manifest and resource index.")
     knowledge_add_resource.set_defaults(func=command_knowledge_add_resource)
 
@@ -20666,7 +23234,7 @@ def build_parser() -> argparse.ArgumentParser:
     platform_contract_install.add_argument("--recommended-tools", default="", help="Comma-separated recommended tool ids.")
     platform_contract_install.add_argument("--recommended-mcp", default="", help="Comma-separated recommended MCP ids.")
     platform_contract_install.add_argument("--recommended-templates", default="", help="Comma-separated recommended template ids.")
-    platform_contract_install.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    platform_contract_install.add_argument("--dry-run", action="store_true", help="Show the complete transaction plan without writing.")
     platform_contract_install.add_argument("--apply", action="store_true", help="Write contract and registry entry.")
     platform_contract_install.set_defaults(func=command_platform_contract_install)
 
@@ -20677,7 +23245,7 @@ def build_parser() -> argparse.ArgumentParser:
     knowledge_package_create.add_argument("--description", help="Package description.")
     knowledge_package_create.add_argument("--package-root", dest="package_root", required=True, help="Package root id from registries/package-roots.yaml.")
     knowledge_package_create.add_argument("--kind", default="documentation", choices=["documentation", "rules", "source", "project", "platform", "mixed"], help="Package kind.")
-    knowledge_package_create.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    knowledge_package_create.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     knowledge_package_create.add_argument("--apply", action="store_true", help="Write package files.")
     knowledge_package_create.add_argument("--force", action="store_true", help="Overwrite an existing package.")
     knowledge_package_create.set_defaults(func=command_knowledge_package_create)
@@ -20700,13 +23268,8 @@ def build_parser() -> argparse.ArgumentParser:
     platform_create.add_argument("--requires-mcp", action="append", default=[], help="Required MCP id. May be repeated.")
     platform_create.add_argument("--recommends-mcp", action="append", default=[], help="Recommended MCP id. May be repeated.")
     platform_create.add_argument("--optional-mcp", action="append", default=[], help="Optional MCP id. May be repeated.")
-    platform_create.add_argument("--package", action="append", default=[], help="Deprecated/ambiguous. Use --requires-package, --recommends-package or --optional-package.")
-    platform_create.add_argument("--knowledge-package", action="append", default=[], help="Deprecated/ambiguous. Use --requires-package, --recommends-package or --optional-package.")
-    platform_create.add_argument("--template", action="append", default=[], help="Deprecated/ambiguous. Use --requires-template, --recommends-template or --optional-template.")
-    platform_create.add_argument("--tool", action="append", default=[], help="Deprecated/ambiguous. Use --requires-tool, --recommends-tool or --optional-tool.")
-    platform_create.add_argument("--mcp", action="append", default=[], help="Deprecated/ambiguous. Use --requires-mcp, --recommends-mcp or --optional-mcp.")
     platform_create.add_argument("--process", action="append", default=[], help="Referenced process id. May be repeated.")
-    platform_create.add_argument("--dry-run", action="store_true", help="Write proposal only.")
+    platform_create.add_argument("--dry-run", action="store_true", help="Show the complete transaction plan without writing.")
     platform_create.add_argument("--apply", action="store_true", help="Write platform contract files.")
     platform_create.add_argument("--force", action="store_true", help="Overwrite an existing platform contract.")
     platform_create.set_defaults(func=command_platform_create)
@@ -20911,17 +23474,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     process_authoring_review = sub.add_parser("process-authoring-review", help="Review a process authoring draft for structural logic issues.")
     process_authoring_review.add_argument("--project-root", required=True, help="Project root path.")
-    process_authoring_review.add_argument("--process", help="Process id.")
-    process_authoring_review.add_argument("--id", help="Compatibility alias for --process.")
+    process_authoring_review.add_argument("--process", required=True, help="Process id.")
     process_authoring_review.set_defaults(func=command_process_authoring_review)
 
     process_authoring_apply = sub.add_parser("process-authoring-apply", help="Apply a reviewed process authoring draft.")
     process_authoring_apply.add_argument("--project-root", required=True, help="Project root path.")
-    process_authoring_apply.add_argument("--process", help="Process id.")
-    process_authoring_apply.add_argument("--id", help="Compatibility alias for --process.")
+    process_authoring_apply.add_argument("--process", required=True, help="Process id.")
     process_authoring_apply.add_argument("--output-root", choices=["user", "custom", "core"], help="Process root for generated process YAML. Defaults to user.")
     process_authoring_apply.add_argument("--core", action="store_true", help="Allow writing generated process YAML to processes/core.")
-    process_authoring_apply.add_argument("--apply", action="store_true", help="Accepted for command symmetry; apply is the default action.")
+    process_authoring_apply.add_argument("--dry-run", action="store_true", help="Show the complete transaction plan without writing.")
+    process_authoring_apply.add_argument("--apply", action="store_true", help="Apply the complete process authoring transaction.")
     process_authoring_apply.set_defaults(func=command_process_authoring_apply)
 
     process_authoring_import = sub.add_parser("process-authoring-import", help="Backfill an authoring session from an existing process definition.")
@@ -20976,6 +23538,13 @@ def build_parser() -> argparse.ArgumentParser:
     process_create.add_argument("--apply", action="store_true", help="Write the process, prompt, docs, and example.")
     process_create.set_defaults(func=command_process_create)
 
+    authoring_transaction_recover = sub.add_parser("authoring-transaction-recover", help="Recover or replay an authoring transaction.")
+    authoring_transaction_recover.add_argument("--runtime-root", required=True, help="Runtime root containing authoring-transactions.")
+    authoring_transaction_recover.add_argument("--transaction", required=True, help="Transaction id.")
+    authoring_transaction_recover.add_argument("--dry-run", action="store_true", help="Show current transaction recovery state without writing.")
+    authoring_transaction_recover.add_argument("--apply", action="store_true", help="Recover rollback state or replay pending post-commit effects.")
+    authoring_transaction_recover.set_defaults(func=command_authoring_transaction_recover)
+
     process_doctor = sub.add_parser("process-doctor", help="Validate a process definition and its generated companion files.")
     process_doctor.add_argument("--project-root", required=True, help="Project root path.")
     process_doctor.add_argument("--process", required=True, help="Process id or YAML path.")
@@ -20991,9 +23560,26 @@ def build_parser() -> argparse.ArgumentParser:
     builtin_process_catalog_doctor.add_argument("--write-report", help="Write the JSON report to this path.")
     builtin_process_catalog_doctor.set_defaults(func=command_builtin_process_catalog_doctor)
 
+    pack_list = sub.add_parser("pack-list", help="List bundled process packs.")
+    pack_list.add_argument("--origin", choices=["official"], default="official", help="Filter by pack origin.")
+    pack_list.add_argument("--available", action="store_true", help="List packs available from the distribution.")
+    pack_list.add_argument("--active", action="store_true", help="List only packs active in the selected workplace.")
+    pack_list.add_argument("--workplace", help="Workplace root used to resolve activation state.")
+    pack_list.add_argument("--project-root", help="Project root used to resolve its linked workplace.")
+    pack_list.set_defaults(func=command_pack_list)
+
+    pack_activate = sub.add_parser("pack-activate", help="Activate a bundled process pack in a workplace.")
+    pack_activate.add_argument("--id", required=True, help="Exact process pack id.")
+    pack_activate.add_argument("--workplace", required=True, help="Workplace root path.")
+    pack_activate.add_argument("--apply", action="store_true", help="Write the activation registry.")
+    pack_activate.set_defaults(func=command_pack_activate)
+
     process_list = sub.add_parser("process-list", help="List available process definitions.")
-    process_list.add_argument("--project-root", required=True, help="Project root path.")
-    process_list.add_argument("--origin", choices=["core", "user", "custom", "legacy_flat"], help="Filter by process origin/root kind.")
+    process_list.add_argument("--project-root", default=".", help="Project root path.")
+    process_list.add_argument("--workplace", help="Workplace root override used to resolve official pack activation.")
+    process_list.add_argument("--origin", choices=["kernel", "core", "official", "workspace", "project", "user", "custom", "examples", "legacy_flat"], help="Filter by process origin/root kind.")
+    process_list.add_argument("--active", action="store_true", help="List only active process definitions.")
+    process_list.add_argument("--available", action="store_true", help="Include bundled official processes that are available but inactive.")
     process_list.add_argument("--role", help="Filter by catalog role.")
     process_list.add_argument("--status", help="Filter by process status.")
     process_list.add_argument("--all", action="store_true", help="Include internal, hidden, and legacy-flat processes.")
@@ -21001,8 +23587,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     process_describe = sub.add_parser("process-describe", help="Describe a process definition.")
     process_describe.add_argument("--project-root", required=True, help="Project root path.")
+    process_describe.add_argument("--workplace", help="Workplace root override used to resolve official pack activation.")
     process_describe.add_argument("--process", required=True, help="Process id or YAML path.")
     process_describe.set_defaults(func=command_process_describe)
+
+    process_show = sub.add_parser("process-show", help="Show one active or available process definition.")
+    process_show.add_argument("process", help="Process id or YAML path.")
+    process_show.add_argument("--project-root", default=".", help="Project root path.")
+    process_show.add_argument("--workplace", help="Workplace root override used to resolve official pack activation.")
+    process_show.set_defaults(func=command_process_describe)
 
     process_layout_doctor = sub.add_parser("process-layout-doctor", help="Validate process directory layout roots and collision policy.")
     process_layout_doctor.add_argument("--root", default=".", help="Repository/project root path.")
@@ -21732,14 +24325,34 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    strict_authoring_commands = {
+        "authoring-transaction-recover",
+        "knowledge-add-url",
+        "knowledge-add-resource",
+        "platform-contract-install",
+        "platform-create",
+        "process-authoring-apply",
+        "process-create",
+    }
     apply_optional = (
         (args.command == "workplace-setup" and getattr(args, "workplace_setup_command", "") in {"review", "status"})
         or args.command == "project-context-refresh"
     )
-    if hasattr(args, "apply") and not args.apply and not apply_optional:
-        args.dry_run = True
     if hasattr(args, "apply") and args.apply and getattr(args, "dry_run", False):
         parser.error("choose either --dry-run or --apply")
+    if args.command in strict_authoring_commands and not (
+        bool(getattr(args, "apply", False)) ^ bool(getattr(args, "dry_run", False))
+    ):
+        parser.error("choose exactly one of --dry-run or --apply")
+    if (
+        hasattr(args, "apply")
+        and not args.apply
+        and not apply_optional
+        and args.command not in strict_authoring_commands
+    ):
+        if not getattr(args, "dry_run", False):
+            args.mode_implicit = True
+        args.dry_run = True
     return args.func(args)
 
 

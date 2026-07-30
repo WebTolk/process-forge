@@ -1,0 +1,62 @@
+schema_version: 1
+kind: processforge.pack
+id: processforge.official.software-development
+name: Official Software Development Process Pack
+version: 1.0.0
+origin: official
+tier: bundled
+status: stable
+production_ready: true
+bundled_with_distribution: true
+core_runtime_dependency: false
+activation:
+  active_by_default: false
+  available_by_default: true
+  profiles:
+    - software-development
+    - software-developer
+dependencies:
+  - process-forge-core
+rules:
+  - id: verify-behavior
+    text: Software changes require behavior evidence appropriate to risk.
+provides:
+  capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - repository_read
+    - repository_write
+    - test_running
+    - review
+  processes:
+    - bug-fix
+    - software-feature-development
+  prompts:
+    - bug-fix-agent
+    - software-feature-development-agent
+  knowledge_packages:
+    - docs.php
+    - docs.web.html
+    - docs.web.css
+    - docs.web.javascript
+    - docs.web.accessibility
+    - docs.web.performance
+  project_classifiers:
+    - processforge.official.software-web.classifier
+  templates: []
+  tools: []
+  specializations: []
+processes:
+  - bug-fix
+  - software-feature-development
+stable_processes:
+  - bug-fix
+  - software-feature-development
+experimental_processes: []
+internal_processes: []
+quality:
+  tested: true
+  release_smokes:
+    - smoke_official_software_process_available
+    - smoke_official_process_can_start_minimal_run

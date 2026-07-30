@@ -1,0 +1,41 @@
+schema_version: 1
+kind: processforge.project_classifier
+
+id: processforge.official.software-web.classifier
+name: Official Software/Web Classifier
+status: active
+
+rules:
+  - id: processforge.official.rule.composer-marker
+    when:
+      any:
+        - exists: composer.json
+        - exists: "*.php"
+    classify_as:
+      project_types:
+        - software.php-composer
+      tags:
+        - software
+    confidence: high
+  - id: processforge.official.rule.node-marker
+    when:
+      any:
+        - exists: package.json
+        - exists: "*.js"
+    classify_as:
+      project_types:
+        - software.javascript-node
+      tags:
+        - software
+    confidence: high
+  - id: processforge.official.rule.python-marker
+    when:
+      any:
+        - exists: pyproject.toml
+        - exists: "*.py"
+    classify_as:
+      project_types:
+        - software.python
+      tags:
+        - software
+    confidence: high

@@ -3,26 +3,64 @@
   "$id": "https://processforge.local/schemas/reusable-template.schema.json",
   "title": "Reusable Template Manifest",
   "type": "object",
-  "required": ["schema_version", "id", "version", "source_package", "type"],
+  "required": ["schema_version", "type", "id", "title", "kind", "version", "files"],
   "properties": {
-    "schema_version": { "type": "integer", "minimum": 1 },
+    "schema_version": { "const": 1 },
+    "type": { "const": "reusable_template" },
     "id": { "$ref": "#/$defs/id" },
-    "version": { "type": "string" },
+    "title": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["document", "scaffold", "prompt", "assignment", "media_prompt"] },
+    "version": { "type": "string", "minLength": 1 },
     "source_package": { "$ref": "#/$defs/id" },
-    "type": { "type": "string" },
-    "compatible_stages": { "type": "array", "items": { "type": "string" } },
-    "compatible_platforms": { "type": "array", "items": { "type": "string" } },
-    "placeholders": { "type": "array", "items": { "type": "string" } },
-    "allowed_modifications": { "type": "array", "items": { "type": "string" } },
-    "forbidden_modifications": { "type": "array", "items": { "type": "string" } },
-    "post_copy_instructions": { "type": "array", "items": { "type": "string" } },
-    "validation_rules": { "type": "array", "items": { "type": "string" } },
-    "update_sites": { "type": "array", "items": { "$ref": "#/$defs/updateSite" } },
-    "usage_recording_policy": { "type": "string" }
+    "description": { "type": "string" },
+    "inputs": { "type": "array", "items": { "$ref": "#/$defs/input" } },
+    "outputs": { "type": "array", "items": { "$ref": "#/$defs/output" } },
+    "files": { "type": "array", "items": { "$ref": "#/$defs/file" } },
+    "prompts": { "type": "array", "items": { "$ref": "#/$defs/prompt" } },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "update_sites": { "type": "array", "items": { "$ref": "#/$defs/updateSite" } }
   },
+  "additionalProperties": true,
   "$defs": {
-    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
-    "envRef": { "type": "string", "pattern": "^([A-Z_][A-Z0-9_]*|\\$\\{[A-Z_][A-Z0-9_]*\\}|(auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" },
+    "input": {
+      "type": "object",
+      "required": ["id", "required"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "required": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "output": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "file": {
+      "type": "object",
+      "required": ["source", "target"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "prompt": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "envRef": {
+      "type": "string",
+      "pattern": "^([A-Z_][A-Z0-9_]*|\\$\\{[A-Z_][A-Z0-9_]*\\}|(auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$"
+    },
     "remoteUrl": { "type": "string", "pattern": "^https?://[^\\s/?#]+[^\\s]*$" },
     "updateSite": {
       "type": "object",
@@ -48,6 +86,5 @@
       },
       "additionalProperties": true
     }
-  },
-  "additionalProperties": true
+  }
 }

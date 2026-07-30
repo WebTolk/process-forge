@@ -12,7 +12,7 @@ platform contract:
 
 ```bash
 python bin/pf.py knowledge-package-create --workplace ./pf-workplace --id docs.example --title "Example Documentation" --package-root global --apply
-python bin/pf.py platform-create --workplace ./pf-workplace --id platform.example --title "Example Platform" --project-type example-component --knowledge-package docs.example --apply
+python bin/pf.py platform-create --workplace ./pf-workplace --id platform.example --title "Example Platform" --project-type example-component --requires-package docs.example --apply
 python bin/pf.py platform-contract-doctor --workplace ./pf-workplace --platform platform.example
 ```
 

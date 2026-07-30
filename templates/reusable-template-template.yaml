@@ -1,19 +1,23 @@
 schema_version: 1
+type: reusable_template
 id: example-template
+title: Example Template
+kind: document
 version: 1.0.0
 source_package: process-forge-core
-type: artifact
-compatible_stages: []
-compatible_platforms:
-  - any
-placeholders:
-  - "<placeholder>"
-allowed_modifications:
-  - replace_placeholders
-forbidden_modifications:
-  - remove_required_sections_without_reason
-post_copy_instructions:
-  - Mark non-applicable sections as "Not applicable" with a reason.
-validation_rules:
-  - no_unresolved_required_placeholders
-usage_recording_policy: record_template_id_version_source_target_and_changes
+description: Example reusable template manifest.
+inputs:
+  - id: project
+    required: true
+  - id: scope
+    required: false
+outputs:
+  - path: example-template.md
+files:
+  - source: files/example-template.md
+    target: "{{ output_path }}"
+prompts:
+  - path: prompts/authoring-notes.md
+tags:
+  - example
+  - processforge-template

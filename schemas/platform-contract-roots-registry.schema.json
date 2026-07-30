@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/platform-contract-roots-registry.schema.json",
+  "title": "Platform Contract Roots Registry",
+  "type": "object",
+  "required": ["schema_version", "platform_contract_roots"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "platform_contract_roots": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/item" }
+    }
+  },
+  "$defs": {
+    "item": {
+      "type": "object",
+      "required": ["id", "label", "path", "scope", "status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" },
+        "label": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "scope": { "enum": ["workplace", "distribution", "project"] },
+        "status": { "enum": ["available", "missing", "disabled"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

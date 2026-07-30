@@ -7,8 +7,8 @@ Process authoring помогает создать process definition через 
 
 ```bash
 python .pf/runtime/bin/pf.py process-authoring-start --project-root . --id <process-id> --title "<title>" --scope project --kind operational --apply
-python .pf/runtime/bin/pf.py process-authoring-review --project-root . --id <process-id>
-python .pf/runtime/bin/pf.py process-authoring-apply --project-root . --id <process-id> --apply
+python .pf/runtime/bin/pf.py process-authoring-review --project-root . --process <process-id>
+python .pf/runtime/bin/pf.py process-authoring-apply --project-root . --process <process-id> --apply
 python .pf/runtime/bin/pf.py process-doctor --project-root . --process <process-id>
 ```
 

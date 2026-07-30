@@ -1,0 +1,83 @@
+schema_version: 1
+id: remediation-transaction-design-20260730
+title: Design transactional authoring remediation
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T07:32:00Z'
+updated_at: '2026-07-30T07:49:00Z'
+objective: Map exact write graphs and define the smallest failure-atomic implementation for PF-AUD-010, PF-AUD-011, PF-AUD-019, and the process-create/dry-run portion of PF-AUD-020.
+order: 11
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations: []
+result:
+  status: done
+  summary: Exact authoring write graphs, failure-atomic transaction phases, registry-last rules, platform migration, dry-run parity, and the sole-writer implementation scope are frozen.
+  artifacts:
+    - .pf/adr/pre-release-remediation-transaction-design-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/transaction-architect.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/artifacts/pre-release-product-audit-20260730.md
+  - .pf/artifacts/pre-release-remediation-plan-20260730.md
+allowed_read_files:
+  - tools/processforge.py
+  - tools/smoke_*.py
+  - schemas/**
+  - processes/**
+allowed_files:
+  - .pf/adr/pre-release-remediation-transaction-design-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/transaction-architect.md
+forbidden_files:
+  - tools/**
+  - schemas/**
+  - processes/**
+  - docs/**
+ownership:
+  owner_id: remediation-transaction-design-20260730
+  owner_label: transaction-architect
+  role: software-architect
+  writer: true
+  owned_files:
+    - .pf/adr/pre-release-remediation-transaction-design-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/transaction-architect.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-integrated-review-20260730
+      owner: assurance-reviewer
+  current_write_scope:
+    - .pf/adr/pre-release-remediation-transaction-design-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/transaction-architect.md
+  rule: Analyze product code and tests but do not modify them.
+required_outputs:
+  - id: transaction-design-adr
+    type: adr
+    path: .pf/adr/pre-release-remediation-transaction-design-20260730.md
+    required: true
+  - id: transaction-architect-report
+    type: research_report
+    path: .pf/artifacts/pre-release-remediation-agents/transaction-architect.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/transaction-architect.md
+  format: evidence_backed_markdown
+  include:
+    - exact_symbols
+    - write_graphs
+    - failure_points
+    - transaction_algorithm
+    - platform_layout_migration
+    - test_matrix
+    - implementation_scope
+worker_may_rebuild_context: false
+runtime_driver: manual

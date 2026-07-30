@@ -13,7 +13,7 @@ paths:
   logs: logs
 processes:
   - id: software-feature-development
-    path: examples/domain-packs/software-web/processes/software-feature-development.yaml
+    path: packs/official/software-development/processes/software-feature-development.yaml
 execution_profiles:
   delivery_profiles:
     project.default_delivery:
@@ -27,8 +27,8 @@ execution_profiles:
 packages:
   - id: process-forge-core
     path: packages/process-forge-core.yaml
-  - id: process-forge-software-development
-    path: examples/domain-packs/software-web/package.yaml
+  - id: processforge.official.software-development
+    path: packs/official/software-development/package.yaml
 policies:
   one_writer_per_file_scope: true
   approved_artifacts_are_protected: true

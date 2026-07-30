@@ -1,0 +1,79 @@
+schema_version: 1
+id: remediation-template-schema-correction-20260730
+title: Correct reusable-template empty files contract
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T07:17:00Z'
+updated_at: '2026-07-30T07:23:30Z'
+objective: Resolve the independent-review contradiction between the accepted reusable-template v2 ADR and the schema while preserving required files field and version-dispatch coverage.
+order: 8
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations: []
+result:
+  status: done
+  summary: Reusable-template v2 keeps files required while accepting the ADR-authoritative empty array, with explicit positive and negative regression coverage.
+  artifacts:
+    - .pf/artifacts/pre-release-remediation-agents/template-schema-correction.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/reviews/pre-release-remediation-first-slice-review-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
+allowed_read_files:
+  - schemas/reusable-template.schema.json
+  - tools/validate-process-forge-schemas.py
+  - tools/smoke_remediation_schema_inventory.py
+allowed_files:
+  - schemas/reusable-template.schema.json
+  - tools/smoke_remediation_schema_inventory.py
+  - .pf/artifacts/pre-release-remediation-agents/template-schema-correction.md
+forbidden_files:
+  - tools/processforge.py
+  - tools/validate-process-forge-schemas.py
+  - docs/**
+  - templates/**
+ownership:
+  owner_id: remediation-template-schema-correction-20260730
+  owner_label: schema-alignment-implementer
+  role: implementation-engineer
+  writer: true
+  owned_files:
+    - schemas/reusable-template.schema.json
+    - tools/smoke_remediation_schema_inventory.py
+    - .pf/artifacts/pre-release-remediation-agents/template-schema-correction.md
+  owned_globs: []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-generator-doctor-cli-20260730
+      owner: generator-doctor-implementer
+    - id: remediation-first-slice-review-20260730
+      owner: assurance-reviewer
+  current_write_scope:
+    - schemas/reusable-template.schema.json
+    - tools/smoke_remediation_schema_inventory.py
+    - .pf/artifacts/pre-release-remediation-agents/template-schema-correction.md
+  rule: Remove only the contradictory non-empty constraint; add positive empty-files and negative missing-files evidence without touching the CLI.
+required_outputs:
+  - id: template-schema-correction-report
+    type: implementation_report
+    path: .pf/artifacts/pre-release-remediation-agents/template-schema-correction.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/template-schema-correction.md
+  format: evidence_backed_markdown
+  include:
+    - contradiction
+    - change
+    - positive_and_negative_tests
+    - residual_risks
+worker_may_rebuild_context: false
+runtime_driver: manual

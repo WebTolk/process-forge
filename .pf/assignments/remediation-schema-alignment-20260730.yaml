@@ -1,0 +1,96 @@
+schema_version: 1
+id: remediation-schema-alignment-20260730
+title: Align public schemas and schema inventory
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T06:36:00Z'
+updated_at: '2026-07-30T06:51:37Z'
+objective: Align package, template, and platform registry schemas with current public resources and extend release schema coverage without modifying the main CLI.
+order: 4
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations: []
+result:
+  status: done
+  summary: Public schemas and release schema inventory were aligned under the accepted ADR; CLI generator and doctor integration remains in the parent task.
+  artifacts:
+    - .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/pre-release-product-audit-20260730.md
+  - .pf/artifacts/pre-release-remediation-plan-20260730.md
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+allowed_read_files:
+  - tools/processforge.py
+  - templates/**
+  - docs/**
+  - processes/**
+allowed_files:
+  - schemas/package-manifest.schema.json
+  - schemas/reusable-template.schema.json
+  - schemas/template-package.schema.json
+  - schemas/platform-registry.schema.json
+  - packs/official/**/knowledge-packages/*.yaml
+  - seeds/knowledge-packages/*.yaml
+  - tools/validate-process-forge-schemas.py
+  - tools/smoke_remediation_schema_inventory.py
+  - .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
+forbidden_files:
+  - tools/processforge.py
+  - docs/**
+  - templates/**
+ownership:
+  owner_id: remediation-schema-alignment-20260730
+  owner_label: schema-alignment-implementer
+  role: implementation-engineer
+  writer: true
+  owned_files:
+    - schemas/package-manifest.schema.json
+    - schemas/reusable-template.schema.json
+    - schemas/template-package.schema.json
+    - schemas/platform-registry.schema.json
+    - tools/validate-process-forge-schemas.py
+    - tools/smoke_remediation_schema_inventory.py
+    - .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
+  owned_globs:
+    - packs/official/**/knowledge-packages/*.yaml
+    - seeds/knowledge-packages/*.yaml
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    - id: remediation-critical-cli-20260730
+      owner: critical-cli-implementer
+  current_write_scope:
+    - schemas/package-manifest.schema.json
+    - schemas/reusable-template.schema.json
+    - schemas/template-package.schema.json
+    - schemas/platform-registry.schema.json
+    - packs/official/**/knowledge-packages/*.yaml
+    - seeds/knowledge-packages/*.yaml
+    - tools/validate-process-forge-schemas.py
+    - tools/smoke_remediation_schema_inventory.py
+    - .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
+  rule: Do not edit tools/processforge.py; wait for the approved ADR before applying schema changes.
+required_outputs:
+  - id: schema-alignment-report
+    type: implementation_report
+    path: .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
+  format: evidence_backed_markdown
+  include:
+    - schema_decisions_applied
+    - resources_migrated
+    - validation_coverage
+    - tests
+    - residual_risks
+worker_may_rebuild_context: false
+runtime_driver: manual

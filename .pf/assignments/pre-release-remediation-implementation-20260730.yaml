@@ -1,0 +1,208 @@
+schema_version: 1
+id: pre-release-remediation-implementation-20260730
+title: Remediate pre-release ProcessForge product audit findings
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: in_progress
+created_at: '2026-07-30T06:28:15Z'
+updated_at: '2026-07-30T07:15:51Z'
+objective: Resolve all Critical and High findings from the 2026-07-30 pre-release product audit, restore trustworthy authoring and release gates, and produce a clean traceable release candidate.
+platform: ""
+selected_specializations: []
+order: 1
+dependencies:
+  blocked_by: []
+  blocks: []
+iterations:
+  - id: contract-decisions
+    kind: research
+    status: completed
+    started_at: '2026-07-30T06:36:00Z'
+    completed_at: '2026-07-30T06:48:13Z'
+    summary: Freeze authoritative id, schema, doctor, transaction, and release-integrity contracts before implementation.
+    artifacts:
+      - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - id: security-boundaries
+    kind: fix
+    status: completed
+    started_at: '2026-07-30T06:36:00Z'
+    completed_at: '2026-07-30T07:01:30Z'
+    summary: Close package and specialization root escapes and add deliberate traversal regression tests.
+    artifacts: []
+  - id: schema-doctor-alignment
+    kind: fix
+    status: completed
+    started_at: '2026-07-30T06:36:00Z'
+    completed_at: '2026-07-30T07:27:00Z'
+    summary: Align creators, schemas, seeds, official manifests, doctors, and schema inventory.
+    artifacts:
+      - .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
+      - .pf/artifacts/pre-release-remediation-agents/generator-doctor-cli.md
+      - .pf/artifacts/pre-release-remediation-agents/template-schema-correction.md
+  - id: transactional-authoring
+    kind: fix
+    status: in_progress
+    started_at: '2026-07-30T08:10:00Z'
+    summary: Make entity creation atomic and prevent failed or partial entities from becoming available.
+    artifacts: []
+  - id: lifecycle-resolution
+    kind: fix
+    status: planned
+    summary: Restore process immutability, collision policy, lifecycle postconditions, and unknown process handling.
+    artifacts: []
+  - id: provider-runtime-surfaces
+    kind: fix
+    status: planned
+    summary: Enforce tool and MCP contracts and complete classifier and runtime-driver diagnostics.
+    artifacts: []
+  - id: release-integrity
+    kind: fix
+    status: in_progress
+    started_at: '2026-07-30T06:36:00Z'
+    summary: Repair aggregate gates, archive integrity, provenance, launcher relocation, and installation boundary documentation.
+    artifacts: []
+  - id: assurance-release-candidate
+    kind: test
+    status: planned
+    summary: Run negative regressions, project dogfooding, clean-install tests, and full source and extracted release gates.
+    artifacts:
+      - .pf/artifacts/pre-release-remediation-report-20260730.md
+      - .pf/reviews/pre-release-remediation-review-20260730.md
+      - .pf/handoffs/pre-release-remediation-release-handoff-20260730.md
+result:
+  status: pending
+  summary: ""
+  artifacts: []
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/pre-release-product-audit-20260730.md
+  - .pf/reviews/pre-release-product-audit-20260730-review.md
+  - .pf/artifacts/pre-release-remediation-plan-20260730.md
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+allowed_files:
+  - tools/processforge.py
+  - tools/validate-process-forge-schemas.py
+  - tools/validate-process-forge-checksums.py
+  - tools/validate-public-cleanliness.py
+  - tools/smoke_*.py
+  - schemas/**
+  - processes/**
+  - templates/**
+  - seeds/**
+  - packs/**
+  - docs/**
+  - updates/**
+  - checksums/processforge.sha256
+  - dist/processforge.zip
+  - dist/processforge.manifest.json
+  - .processforge-releaseignore
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/artifacts/pre-release-remediation-*.md
+  - .pf/reviews/pre-release-remediation-*.md
+  - .pf/handoffs/pre-release-remediation-*.md
+  - .pf/logs/pre-release-remediation-20260730.md
+  - .pf/runs/pre-release-remediation-20260730/**
+  - .pf/assignments/pre-release-remediation-implementation-20260730.yaml
+  - .pf/assignments/remediation-*-20260730.yaml
+  - .pf/runtime/assignment-capsules/**
+  - .pf/runtime/current-session.json
+forbidden_files:
+  - .git/**
+  - .pf/contexts/**
+  - .pf/artifacts/pre-release-product-audit-20260730.md
+  - .pf/reviews/pre-release-product-audit-20260730-review.md
+ownership:
+  owner_id: pre-release-remediation-implementation-20260730
+  owner_label: remediation-orchestrator
+  role: orchestrator
+  writer: true
+  owned_files:
+    - .pf/assignments/pre-release-remediation-implementation-20260730.yaml
+    - .pf/runs/pre-release-remediation-20260730/**
+    - .pf/logs/pre-release-remediation-20260730.md
+    - .pf/artifacts/pre-release-remediation-*.md
+    - .pf/reviews/pre-release-remediation-*.md
+    - .pf/handoffs/pre-release-remediation-*.md
+    - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  owned_globs:
+    - tools/**
+    - schemas/**
+    - processes/**
+    - templates/**
+    - seeds/**
+    - packs/**
+    - docs/**
+    - updates/**
+    - checksums/**
+    - dist/**
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks: []
+  current_write_scope:
+    - tools/**
+    - schemas/**
+    - processes/**
+    - templates/**
+    - seeds/**
+    - packs/**
+    - docs/**
+    - updates/**
+    - checksums/**
+    - dist/**
+    - .pf/assignments/pre-release-remediation-implementation-20260730.yaml
+    - .pf/runs/pre-release-remediation-20260730/**
+    - .pf/logs/pre-release-remediation-20260730.md
+    - .pf/artifacts/pre-release-remediation-*.md
+    - .pf/reviews/pre-release-remediation-*.md
+    - .pf/handoffs/pre-release-remediation-*.md
+    - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+    - .pf/assignments/remediation-*-20260730.yaml
+    - .pf/runtime/assignment-capsules/**
+    - .pf/runtime/current-session.json
+  rule: Only one implementation writer may modify tools/processforge.py; reviewers and test engineers start after the relevant implementation slice is frozen.
+subagents:
+  allow: true
+  max_subagents: 3
+  allowed_roles:
+    - contract-architect
+    - implementation-engineer
+    - assurance-reviewer
+  require_reports: true
+  reports_dir: .pf/artifacts/pre-release-remediation-agents
+required_outputs:
+  - id: remediation-plan
+    type: implementation_plan
+    path: .pf/artifacts/pre-release-remediation-plan-20260730.md
+    required: true
+  - id: remediation-report
+    type: implementation_report
+    path: .pf/artifacts/pre-release-remediation-report-20260730.md
+    required: true
+  - id: remediation-review
+    type: review
+    path: .pf/reviews/pre-release-remediation-review-20260730.md
+    required: true
+  - id: release-handoff
+    type: handoff
+    path: .pf/handoffs/pre-release-remediation-release-handoff-20260730.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-report-20260730.md
+  format: evidence_backed_markdown
+  include:
+    - finding_disposition_matrix
+    - files_changed
+    - negative_regression_results
+    - schema_and_doctor_results
+    - dogfooding_results
+    - release_archive_results
+    - residual_risks_and_waivers
+    - release_recommendation
+worker_may_rebuild_context: true
+runtime_driver: manual

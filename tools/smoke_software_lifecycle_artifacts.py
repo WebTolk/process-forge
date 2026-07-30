@@ -9,7 +9,7 @@ import yaml  # type: ignore
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROCESS = ROOT / "examples" / "domain-packs" / "software-web" / "processes" / "software-feature-development.yaml"
+PROCESS = ROOT / "packs" / "official" / "software-development" / "processes" / "software-feature-development.yaml"
 
 
 REQUIRED_ARTIFACTS = {

@@ -1,0 +1,73 @@
+schema_version: 1
+id: remediation-contract-architect-20260730
+title: Freeze remediation contracts and schema authority
+run_id: pre-release-remediation-20260730
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-07-30T06:36:00Z'
+updated_at: '2026-07-30T06:48:13Z'
+objective: Decide authoritative id, manifest, doctor, transaction, release integrity, and launcher precedence contracts before broad remediation.
+order: 2
+dependencies:
+  blocked_by: []
+  blocks:
+    - remediation-schema-alignment-20260730
+iterations: []
+result:
+  status: done
+  summary: Authoritative remediation contracts were accepted and documented without product-code changes.
+  artifacts:
+    - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/contract-architect.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/pre-release-product-audit-20260730.md
+  - .pf/artifacts/pre-release-remediation-plan-20260730.md
+  - schemas/package-manifest.schema.json
+  - schemas/reusable-template.schema.json
+  - schemas/template-package.schema.json
+  - schemas/platform-registry.schema.json
+allowed_read_files:
+  - tools/processforge.py
+  - schemas/**
+  - templates/**
+  - packs/**
+  - seeds/**
+  - docs/**
+  - updates/**
+allowed_files:
+  - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+  - .pf/artifacts/pre-release-remediation-agents/contract-architect.md
+ownership:
+  owner_id: remediation-contract-architect-20260730
+  owner_label: contract-architect
+  role: contract-architect
+  writer: true
+  owned_files:
+    - .pf/adr/pre-release-remediation-schema-authority-20260730.md
+    - .pf/artifacts/pre-release-remediation-agents/contract-architect.md
+  owned_globs: []
+required_outputs:
+  - id: schema-authority-adr
+    type: adr
+    path: .pf/adr/pre-release-remediation-schema-authority-20260730.md
+    required: true
+  - id: contract-architect-report
+    type: markdown
+    path: .pf/artifacts/pre-release-remediation-agents/contract-architect.md
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pre-release-remediation-agents/contract-architect.md
+  format: evidence_backed_markdown
+  include:
+    - decisions
+    - compatibility
+    - migration
+    - implementation_constraints
+worker_may_rebuild_context: false
+runtime_driver: manual

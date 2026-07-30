@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/process-pack-manifest.schema.json",
+  "title": "Official Bundled Process Pack Manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "id",
+    "name",
+    "version",
+    "origin",
+    "tier",
+    "status",
+    "production_ready",
+    "bundled_with_distribution",
+    "core_runtime_dependency",
+    "activation",
+    "provides",
+    "quality"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "processforge.pack"
+    },
+    "id": {
+      "$ref": "#/$defs/dottedId"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "origin": {
+      "const": "official"
+    },
+    "tier": {
+      "const": "bundled"
+    },
+    "status": {
+      "enum": [
+        "stable",
+        "beta",
+        "experimental",
+        "deprecated"
+      ]
+    },
+    "production_ready": {
+      "type": "boolean"
+    },
+    "bundled_with_distribution": {
+      "const": true
+    },
+    "core_runtime_dependency": {
+      "const": false
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dottedId"
+      },
+      "uniqueItems": true
+    },
+    "activation": {
+      "type": "object",
+      "required": [
+        "active_by_default",
+        "available_by_default",
+        "profiles"
+      ],
+      "properties": {
+        "active_by_default": {
+          "const": false
+        },
+        "available_by_default": {
+          "const": true
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/simpleId"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "provides": {
+      "type": "object",
+      "required": [
+        "processes"
+      ],
+      "properties": {
+        "capabilities": {
+          "$ref": "#/$defs/referenceIdList"
+        },
+        "processes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/simpleId"
+          },
+          "uniqueItems": true
+        },
+        "prompts": {
+          "$ref": "#/$defs/idList"
+        },
+        "knowledge_packages": {
+          "$ref": "#/$defs/idList"
+        },
+        "project_classifiers": {
+          "$ref": "#/$defs/idList"
+        },
+        "templates": {
+          "$ref": "#/$defs/idList"
+        },
+        "tools": {
+          "$ref": "#/$defs/idList"
+        },
+        "specializations": {
+          "$ref": "#/$defs/idList"
+        }
+      },
+      "additionalProperties": true
+    },
+    "quality": {
+      "type": "object",
+      "required": [
+        "tested",
+        "release_smokes"
+      ],
+      "properties": {
+        "tested": {
+          "type": "boolean"
+        },
+        "release_smokes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/referenceId"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "simpleId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "dottedId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$"
+    },
+    "referenceId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]*$"
+    },
+    "idList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dottedId"
+      },
+      "uniqueItems": true
+    },
+    "referenceIdList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/referenceId"
+      },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,285 @@
+schema_version: 1
+id: content-production
+name: Content Production
+version: 1.0.0
+status: active
+description: Produce, review, and prepare content for publication.
+required_capabilities:
+- content_planning
+- writing
+- editorial_review
+hooks:
+  emit:
+  - event: process.started
+    required: true
+  - event: stage.started
+    required: true
+  - event: stage.completed
+    required: true
+  - event: assignment.created
+    required: true
+  - event: artifact.created
+    required: true
+  - event: gate.failed
+    required: true
+  - event: chat.message.recorded
+    required: false
+  subscriptions:
+  - event: assignment.completed
+    actions:
+    - type: create_review_request
+  - event: gate.failed
+    actions:
+    - type: block_stage
+    - type: notify_orchestrator
+  tracking:
+    include:
+    - process_id
+    - process_version
+    - stage_id
+    - assignment_id
+    - artifact_refs
+    - actor
+    - session_id
+    - status
+roles:
+- id: editor
+  title: Editor
+  responsibility: Defines brief, audience, and quality bar.
+  kind: primary_agent
+  responsibilities:
+  - Defines brief, audience, and quality bar.
+- id: writer
+  title: Writer
+  responsibility: Produces the draft.
+  kind: primary_agent
+  responsibilities:
+  - Produces the draft.
+- id: reviewer
+  title: Reviewer
+  responsibility: Reviews accuracy, structure, and publication readiness.
+  kind: primary_agent
+  responsibilities:
+  - Reviews accuracy, structure, and publication readiness.
+stages:
+- id: brief
+  title: Brief
+  description: Define audience, purpose, constraints, and sources.
+  required_inputs: []
+  produced_artifacts:
+  - content-brief
+  required_role: editor
+  required_capabilities:
+  - content_planning
+  allowed_tools: []
+  entry_gates: []
+  exit_gates:
+  - brief-approved
+  goal: Define audience, purpose, constraints, and sources.
+  actor: primary_agent
+  gates:
+  - brief-approved
+- id: draft
+  title: Draft
+  description: Produce the first complete draft.
+  required_inputs:
+  - content-brief
+  produced_artifacts:
+  - content-draft
+  required_role: writer
+  required_capabilities:
+  - writing
+  allowed_tools:
+  - text_editor
+  entry_gates:
+  - brief-approved
+  exit_gates:
+  - draft-ready
+  goal: Produce the first complete draft.
+  actor: primary_agent
+  gates:
+  - draft-ready
+- id: editorial-review
+  title: Editorial Review
+  description: Review accuracy, structure, and publication readiness.
+  required_inputs:
+  - content-draft
+  produced_artifacts:
+  - editorial-review
+  - publication-handoff
+  required_role: reviewer
+  required_capabilities:
+  - editorial_review
+  allowed_tools:
+  - validator
+  entry_gates:
+  - draft-ready
+  exit_gates:
+  - publication-ready
+  goal: Review accuracy, structure, and publication readiness.
+  actor: primary_agent
+  gates:
+  - publication-ready
+artifact_definitions:
+- id: content-brief
+  title: Content Brief
+  owner_role: editor
+  template: artifact-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/content-brief.md
+- id: content-draft
+  title: Content Draft
+  owner_role: writer
+  template: artifact-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/content-draft.md
+- id: editorial-review
+  title: Editorial Review
+  owner_role: reviewer
+  template: review-template
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+  type: markdown
+  required: true
+  path_hint: .pf/artifacts/editorial-review.md
+- id: publication-handoff
+  title: Publication Handoff
+  owner_role: reviewer
+  type: markdown
+  required: true
+  template: artifact-template
+  path_hint: .pf/artifacts/publication-handoff.md
+  lifecycle:
+  - draft
+  - ready_for_review
+  - approved
+gates:
+- id: brief-approved
+  description: Brief is accepted and source constraints are explicit.
+  blocking: true
+  type: checklist
+  required: true
+- id: draft-ready
+  description: Draft is complete enough for review.
+  blocking: true
+  type: checklist
+  required: true
+- id: publication-ready
+  description: Review is complete and handoff exists.
+  blocking: true
+  type: checklist
+  required: true
+required_packages:
+- process-forge-core
+- processforge.official.content-workflow
+required_templates:
+- artifact-template
+- review-template
+- handoff-template
+allowed_tools:
+- text_editor
+- validator
+forbidden_actions:
+- publish_without_review
+evolve:
+  enabled: true
+  mode: optional
+  timing: end_of_run
+  default_scope: project
+  candidate_targets:
+  - knowledge_package
+  - template_package
+  - project_rule
+  extraction_hints:
+  - Split candidates when an observation contains project-specific and platform-general parts.
+  - Default to the narrowest safe scope and require evidence before parent-platform promotion.
+  - reusable editorial rule
+  - missing knowledge
+  - template improvement
+  - Keep project voice and campaign notes as project_rule candidates.
+  - Promote global style guidance only when applicability is explicit.
+  candidate_targeting:
+    default_scope: project
+    require_applicability: true
+    require_target: true
+    default_to_narrowest_scope: true
+  required_outputs:
+  - evolution-report
+  privacy:
+    default_sensitivity: internal
+    export_requires_sanitization: true
+    allow_private_paths: false
+  apply_policy:
+    auto_apply_global: false
+    create_candidates_only: true
+
+evolution_policy:
+  active_run_upgrade:
+    default: manual_only
+  protected_artifacts:
+  - content-brief
+  - editorial-review
+  safe_changes:
+  - add_optional_review_check
+  blocked_changes:
+  - remove_source_requirements_after_drafting
+  requires_approval:
+  - change_publication_criteria
+catalog:
+  classification: PUBLIC_STABLE
+  public_surface: true
+  strict_contract: true
+public_surface: true
+execution_mode: single_agent
+coordination_requirements:
+  mode: simple_allowed
+  director_inbox:
+    required: false
+    optional: false
+  error_workflow:
+    mode: none
+  simple_mode_behavior: disable_director_features
+error_handling:
+  enabled: false
+  mode: none
+  fallback_if_no_director: needs_operator
+responsibility_boundaries:
+  operator:
+  - Provides the objective, constraints, approvals, and final acceptance.
+  primary_agent:
+  - Executes the process stages, writes required artifacts, and runs gates.
+  director:
+  - Coordinates handoffs and leases only when the effective project mode requires Director.
+  inspector:
+  - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+  worker:
+  - Works only from an assigned capsule and writes declared outputs.
+  cli_tools:
+  - Run deterministic ProcessForge checks and write machine-readable results.
+subagent_policy:
+  allowed: false
+  require_reports: false
+  allowed_roles: []
+process_transitions: []
+stage_completion:
+  handoff_note_required: true
+run_completion:
+  summary_required: true
+  handoff_artifact_required: true
+process_pack:
+  package: processforge.official.content-workflow
+  example_required: false
+agent_prompt:
+  required: true

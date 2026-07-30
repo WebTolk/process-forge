@@ -25,7 +25,7 @@ def main() -> int:
             process_ids.add(str(data["id"]))
     assert not (FORBIDDEN_PROCESS_IDS & process_ids), sorted(FORBIDDEN_PROCESS_IDS & process_ids)
     software_process = (
-        ROOT / "examples" / "domain-packs" / "software-web" / "processes" / "software-feature-development.yaml"
+        ROOT / "packs" / "official" / "software-development" / "processes" / "software-feature-development.yaml"
     ).read_text(encoding="utf-8")
     assert "Joomla" not in software_process
     assert "joomla" not in software_process

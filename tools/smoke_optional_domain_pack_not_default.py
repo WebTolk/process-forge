@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke that optional domain examples are not in default resolver roots."""
+"""Compatibility smoke that bundled domain packs remain inactive by default."""
 
 from smoke_domain_neutral_core_helpers import DOMAIN_CORE_PROCESS_IDS, ROOT, load_processforge
 
@@ -12,10 +12,19 @@ def main() -> None:
     core_processes = {path.stem for path in (ROOT / "processes" / "core").glob("*.yaml")}
     if core_processes.intersection(DOMAIN_CORE_PROCESS_IDS):
         raise AssertionError(core_processes.intersection(DOMAIN_CORE_PROCESS_IDS))
-    for path in (ROOT / "examples" / "domain-packs").glob("*/package.yaml"):
+    manifests = sorted((ROOT / "packs" / "official").glob("*/package.yaml"))
+    if len(manifests) != 3:
+        raise AssertionError(manifests)
+    for path in manifests:
         package = pf.load_yaml_document(path)
-        if package.get("status") != "optional_example" or package.get("core") is not False or package.get("installed_by_default") is not False:
-            raise AssertionError(f"invalid optional pack metadata: {path}")
+        activation = package.get("activation", {})
+        if (
+            package.get("origin") != "official"
+            or package.get("core_runtime_dependency") is not False
+            or activation.get("available_by_default") is not True
+            or activation.get("active_by_default") is not False
+        ):
+            raise AssertionError(f"invalid bundled pack activation metadata: {path}")
     print("PASS: smoke_optional_domain_pack_not_default")
 
 

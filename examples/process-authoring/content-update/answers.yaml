@@ -114,7 +114,7 @@ gates:
     blocking: true
     required_artifact: content-handoff
 required_capabilities: [markdown_editing, reporting, artifact_review]
-required_packages: [process-forge-core, process-forge-content]
+required_packages: [process-forge-core, processforge.official.content-workflow]
 required_templates: [artifact-template, review-template, handoff-template]
 allowed_tools: [processforge-cli, validator]
 forbidden_actions: [write_private_absolute_paths_to_public_files, skip_editorial_review]

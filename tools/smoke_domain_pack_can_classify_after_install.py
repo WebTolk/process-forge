@@ -10,7 +10,7 @@ from smoke_domain_neutral_core_helpers import ROOT, load_processforge
 
 def main() -> None:
     pf = load_processforge()
-    source = ROOT / "examples" / "domain-packs" / "software-web" / "project-classifiers" / "example.classifier.software-web.yaml"
+    source = ROOT / "packs" / "official" / "software-development" / "project-classifiers" / "software-web.yaml"
     with tempfile.TemporaryDirectory(prefix="pf-domain-pack-import-") as tmp:
         project = Path(tmp) / "project"
         project.mkdir()
@@ -27,14 +27,14 @@ def main() -> None:
         (registry_dir / "project-classifiers.yaml").write_text(
             f"""schema_version: 1
 project_classifiers:
-  - id: example.classifier.software-web
+  - id: processforge.official.software-web.classifier
     path: project-classifiers/{source.name}
     status: active
 """,
             encoding="utf-8",
         )
         after = pf.detect_project(project)
-        if after["status"] != "classified" or after["project_kind"] != ["example.project-type.php"]:
+        if after["status"] != "classified" or after["project_kind"] != ["software.php-composer"]:
             raise AssertionError(after)
     print("PASS: smoke_domain_pack_can_classify_after_install")
 

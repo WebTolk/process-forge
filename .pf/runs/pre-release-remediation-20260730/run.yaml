@@ -1,0 +1,125 @@
+schema_version: 1
+id: pre-release-remediation-20260730
+title: Pre-release ProcessForge remediation
+process: multi-agent-task-orchestration
+status: in_progress
+created_at: '2026-07-30T06:28:15Z'
+updated_at: '2026-07-30T07:15:51Z'
+objective: Implement and independently verify the remediation required to turn the 2026-07-30 product audit from NO-GO into a traceable release candidate.
+platform: ""
+selected_specializations: []
+scope:
+  type: project
+  project_root: .
+tasks:
+  - id: pre-release-remediation-implementation-20260730
+    assignment: .pf/assignments/pre-release-remediation-implementation-20260730.yaml
+    status: in_progress
+    order: 1
+    blocking: true
+  - id: remediation-contract-architect-20260730
+    assignment: .pf/assignments/remediation-contract-architect-20260730.yaml
+    status: done
+    order: 2
+    blocking: true
+  - id: remediation-critical-cli-20260730
+    assignment: .pf/assignments/remediation-critical-cli-20260730.yaml
+    status: done
+    order: 3
+    blocking: true
+  - id: remediation-schema-alignment-20260730
+    assignment: .pf/assignments/remediation-schema-alignment-20260730.yaml
+    status: done
+    order: 4
+    blocking: true
+  - id: remediation-generator-doctor-cli-20260730
+    assignment: .pf/assignments/remediation-generator-doctor-cli-20260730.yaml
+    status: done
+    order: 5
+    blocking: true
+  - id: remediation-release-surface-20260730
+    assignment: .pf/assignments/remediation-release-surface-20260730.yaml
+    status: done
+    order: 6
+    blocking: true
+  - id: remediation-first-slice-review-20260730
+    assignment: .pf/assignments/remediation-first-slice-review-20260730.yaml
+    status: done
+    order: 7
+    blocking: true
+  - id: remediation-template-schema-correction-20260730
+    assignment: .pf/assignments/remediation-template-schema-correction-20260730.yaml
+    status: done
+    order: 8
+    blocking: true
+  - id: remediation-platform-fixture-alignment-20260730
+    assignment: .pf/assignments/remediation-platform-fixture-alignment-20260730.yaml
+    status: done
+    order: 9
+    blocking: true
+  - id: remediation-integrated-review-20260730
+    assignment: .pf/assignments/remediation-integrated-review-20260730.yaml
+    status: done
+    order: 10
+    blocking: true
+  - id: remediation-transaction-design-20260730
+    assignment: .pf/assignments/remediation-transaction-design-20260730.yaml
+    status: done
+    order: 11
+    blocking: true
+  - id: remediation-lifecycle-design-20260730
+    assignment: .pf/assignments/remediation-lifecycle-design-20260730.yaml
+    status: done
+    order: 12
+    blocking: true
+  - id: remediation-knowledge-builder-contract-20260730
+    assignment: .pf/assignments/remediation-knowledge-builder-contract-20260730.yaml
+    status: done
+    order: 13
+    blocking: true
+  - id: remediation-provider-runtime-design-20260730
+    assignment: .pf/assignments/remediation-provider-runtime-design-20260730.yaml
+    status: done
+    order: 14
+    blocking: true
+  - id: remediation-release-integrity-design-20260730
+    assignment: .pf/assignments/remediation-release-integrity-design-20260730.yaml
+    status: done
+    order: 15
+    blocking: true
+  - id: remediation-first-phases-final-review-20260730
+    assignment: .pf/assignments/remediation-first-phases-final-review-20260730.yaml
+    status: done
+    order: 16
+    blocking: true
+  - id: remediation-transactional-authoring-20260730
+    assignment: .pf/assignments/remediation-transactional-authoring-20260730.yaml
+    status: done
+    order: 17
+    blocking: true
+  - id: remediation-strict-contract-audit-20260730
+    assignment: .pf/assignments/remediation-strict-contract-audit-20260730.yaml
+    status: done
+    order: 18
+    blocking: true
+  - id: remediation-transaction-review-20260730
+    assignment: .pf/assignments/remediation-transaction-review-20260730.yaml
+    status: done
+    order: 19
+    blocking: true
+  - id: remediation-controlled-finish-20260730
+    assignment: .pf/assignments/remediation-controlled-finish-20260730.yaml
+    status: done
+    order: 20
+    blocking: true
+final_artifacts:
+  - .pf/artifacts/pre-release-remediation-plan-20260730.md
+  - .pf/artifacts/pre-release-remediation-report-20260730.md
+  - .pf/reviews/pre-release-remediation-review-20260730.md
+  - .pf/handoffs/pre-release-remediation-release-handoff-20260730.md
+events:
+  emitted:
+    - run.created
+    - run.started
+privacy:
+  public_safe: true

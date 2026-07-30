@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROMPT = ROOT / "examples" / "domain-packs" / "software-web" / "prompts" / "software-feature-development-agent.md"
+PROMPT = ROOT / "packs" / "official" / "software-development" / "prompts" / "software-feature-development-agent.md"
 
 
 def main() -> int:

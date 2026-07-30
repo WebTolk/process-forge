@@ -1,0 +1,6 @@
+schema_version: 1
+
+project_classifiers:
+  - id: processforge.official.software-web.classifier
+    path: project-classifiers/software-web.yaml
+    status: active

@@ -15,6 +15,7 @@ targets:
 allowed_paths:
   - tools/smoke_*.py
   - examples/domain-packs/**
+  - packs/official/**
 
 forbidden_core_patterns:
   - id: builtin-platform-contracts-constant
