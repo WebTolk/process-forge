@@ -7,29 +7,36 @@
 - План санации: `.pf/artifacts/pre-release-remediation-plan-20260730.md`
 - Итоговый пакет: `dist/processforge.zip`
 - Итоговый manifest: `dist/processforge.manifest.json`
-- Итоговый статус: **package built; release candidate requires conditions**
+- Итоговый статус: **clean release package built; full release validation PASS**
 
 ## 1. Короткий вывод
 
-Пакет ProcessForge собран заново после контролируемого среза санации.
+Пакет ProcessForge собран заново после контролируемого среза санации и
+дополнительной стабилизации release validation.
 
-Сборка и быстрые публичные gates прошли:
+Финальная проверенная последовательность прошла:
 
 - schema validation — PASS;
 - public cleanliness — PASS;
 - checksum inventory — rewritten and checked, PASS;
 - `release-check` — PASS;
 - `release-pack` — PASS, 790 files;
-- `release-archive-test --extracted-test quick` — PASS, manifest/ZIP/source
-  hashes согласованы.
+- source `release-test --root . --public --trace-smokes` — PASS,
+  564.49 seconds;
+- full `release-archive-test --archive dist/processforge.zip --root .
+  --extracted-test full --timeout-scale 1` — PASS;
+- clean rebuild after `clean --release` — PASS, 790 files;
+- final full `release-archive-test` on rebuilt ZIP — PASS, extracted
+  `release-test --public` 532.02 seconds.
 
-Полный public release gate **не засчитан как PASS**: команда
-`python bin/pf.py release-test --root . --public --no-clean --trace-smokes`
-не завершилась за 424 секунды и была остановлена вместе с её дочерними
-процессами. Это не доказанный functional FAIL, но это release-blocker уровня
-validation reliability: релиз 1.0.0 нельзя объявлять полностью проверенным,
-пока полный gate не завершится или пока команда не будет разбита на
-диагностируемые сегменты.
+The earlier suspected hang in
+`smoke_specialization_freshness_tracks_definition_change.py` was not
+reproduced. The smoke passed directly, passed through `release-test --only`,
+and passed inside the full source and extracted archive gates. The previous
+timeout was caused by the way validation was launched and logged: live logs were
+placed under `.pf/runtime`, while `release-test` starts with `clean --release`
+and removes `.pf/runtime`. On Windows this produced a locked-file conflict when
+the log file was open.
 
 ## 2. Собранный пакет
 
@@ -42,10 +49,10 @@ validation reliability: релиз 1.0.0 нельзя объявлять пол�
 - ZIP entries: 790
 - ZIP size: 996954 bytes
 - ZIP SHA-256:
-  `FBE1274468B7E4EB8381E0F80C05E0D9E2F7322C5904B898103EA6D8736141F5`
+  `A7A3412AFD1083C3BC5A09EA1200AF3D21AB1E2D41B6A6976C06E324D56F96EA`
 - Manifest size: 126956 bytes
 - Manifest SHA-256:
-  `A903675AC2F17BFC89978427A86D0A2A90609DF05BF6E9A943BAC47EEDAC901D`
+  `778E2CB2027A46C40F41A2509A670FD3B999083C47749A450FE1871C3E25C3FB`
 - Manifest version: `1.0.0`
 - Manifest file count: 790
 
@@ -64,16 +71,8 @@ PASS release-test extracted archive
 RESULT: PASS
 ```
 
-Extracted archive quick test запускал только:
-
-- `py_compile`;
-- `schema validation`;
-- `public cleanliness`;
-- `checksum`.
-
-Полный extracted archive test не запускался после source timeout, потому что он
-ожидаемо повторяет тот же длинный public `release-test` внутри распакованного
-архива и без предварительной стабилизации диагностики даст мало нового сигнала.
+Final extracted archive test запускал полный `release-test --public` внутри
+распакованного архива. Время вложенного public gate: 532.02 seconds.
 
 ## 3. Что было обнаружено исходным аудитом
 
@@ -256,31 +255,50 @@ warnings для уже изменённых файлов.
 - active docs/schemas/templates/tools/ADRs не содержат нового
   reusable-template v2/workplaceV2 public contract.
 
-## 8. Проверки, которые не являются PASS
+## 8. Release validation stabilization
 
 ### 8.1. Full public release-test
 
 Команда:
 
 ```powershell
-python bin/pf.py release-test --root . --public --no-clean --trace-smokes
+python bin/pf.py release-test --root . --public --trace-smokes
 ```
 
 Результат:
 
-- timeout after 424 seconds;
-- stdout не был получен до timeout;
-- обнаруженные дочерние процессы release-test были остановлены вручную;
-- зависание было в районе
-  `smoke_specialization_freshness_tracks_definition_change.py` /
-  `project-context-refresh` по process command line.
+- PASS;
+- elapsed: 564.49 seconds;
+- trace: `.pf/runtime/release-test/latest-trace.ndjson`;
+- `smoke_specialization_freshness_tracks_definition_change.py` прошёл в составе
+  полного public gate.
 
-Статус: **не PASS**.
+Статус: **PASS**.
 
 ### 8.2. Full extracted archive test
 
-Не запускался после source timeout. Quick archive validation PASS, но full
-archive validation остаётся обязательным gate перед публикацией.
+Команда:
+
+```powershell
+python bin/pf.py release-archive-test --archive dist/processforge.zip --root . --extracted-test full --timeout-scale 1
+```
+
+Результат:
+
+- PASS on pre-rebuild package;
+- clean rebuild completed after `clean --release`;
+- PASS again on final rebuilt package;
+- final extracted public release-test elapsed: 532.02 seconds.
+
+Статус: **PASS**.
+
+### 8.3. Root cause of previous timeout
+
+Previous external monitoring stored live release-test logs in `.pf/runtime`.
+That path is intentionally removed by the first release-test step
+`clean --release`. On Windows, deleting `.pf/runtime` while stdout/stderr log
+files were open caused `PermissionError: [WinError 32]`. The validation itself
+was stable after logs were moved outside the checkout to `%TEMP%`.
 
 ## 9. Состояние assignment/review matrix
 
@@ -322,19 +340,15 @@ Parent assignment:
 
 Release-blocking before publish:
 
-1. Стабилизировать полный `release-test --public`, минимум диагностировать и
-   закрыть hang around specialization freshness / project-context-refresh.
-2. Прогнать full source public release-test до PASS.
-3. Прогнать full extracted archive test до PASS.
-4. Добавить постоянный crash-recovery smoke для interrupted transaction /
+1. Добавить постоянный crash-recovery smoke для interrupted transaction /
    corrupted backup или явно оформить waiver.
-5. Принять решение по release manifest contract:
+2. Принять решение по release manifest contract:
    - текущий package manifest валиден для текущего tooling и quick archive
-     validation;
+     validation/full archive validation;
    - release-integrity design требует более богатой provenance-модели, но
      после решения о first public `schema_version: 1` её надо проектировать как
      manifest v1 for release 1.0.0, а не v2.
-6. Разобрать strict-contract backlog без broad rewrite:
+3. Разобрать strict-contract backlog без broad rewrite:
    - MCP auth model;
    - legacy/flat aliases;
    - provider/runtime contract;
@@ -377,11 +391,10 @@ Non-blocking but important:
 
 Рекомендуемый следующий узкий шаг:
 
-1. Изолировать зависающий smoke:
-   `smoke_specialization_freshness_tracks_definition_change.py`.
-2. Исправить или ограничить timeout/reporting так, чтобы public release-test
-   завершался детерминированно.
-3. Повторить:
+1. Добавить постоянный crash-recovery smoke для interrupted transaction /
+   corrupted backup или оформить явный waiver.
+2. Принять release-manifest v1-for-1.0.0 provenance contract.
+3. После этого повторить финальный release shield:
    - checksum `--write`;
    - checksum `--check`;
    - source `release-test --public`;

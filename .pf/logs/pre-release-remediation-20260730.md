@@ -533,3 +533,33 @@ source full release-test, rebuild package, run full archive test, and rerun
 Next steps: Diagnose `smoke_specialization_freshness_tracks_definition_change`
 or split/timeout the public release gate, then repeat the release sequence.
 Handoff: No intentionally active release-test child processes remain.
+
+## 2026-07-30 14:49 +04:00 - root-orchestrator
+
+Task: Stabilize release validation without changing the packs model.
+Files analyzed: `tools/smoke_specialization_freshness_tracks_definition_change.py`,
+`tools/specialization_smoke_helpers.py`, release-test runner, subprocess helper,
+release logs, process command lines.
+Files changed: `dist/processforge.zip`, `dist/processforge.manifest.json`,
+`.pf/artifacts/pre-release-remediation-final-report-20260730.md`, and this log.
+Artifacts changed: final clean release ZIP rebuilt with 790 entries; manifest
+rebuilt; final report updated from timeout blocker to full validation PASS.
+Templates used: release checklist and project-local `.pf` report/log contract.
+Tools used: targeted `release-test --only
+smoke_specialization_freshness_tracks_definition_change`, full source
+`release-test --public --trace-smokes`, full `release-archive-test`, clean
+release rebuild, ZIP/hash inspection.
+Decisions: Do not change `packs/**`. The suspected specialization freshness hang
+was not reproduced; the smoke passed directly, through `--only`, in full source
+release-test, and in extracted archive. The previous timeout was caused by
+placing live monitor logs under `.pf/runtime`, which conflicts with
+`clean --release` on Windows because the directory is deleted while logs are
+open. Use `%TEMP%` or another path outside the checkout for live validation
+monitor logs.
+Risks: Full release validation is now green for the current slice. Remaining
+release risks are product backlog items, not release-runner instability:
+permanent crash-recovery smoke/waiver and release-manifest provenance contract.
+Next steps: Commit and push the final validation/package refresh; then continue
+with the next narrow backlog item.
+Handoff: No intentionally active release-test or release-archive-test child
+processes remain.
