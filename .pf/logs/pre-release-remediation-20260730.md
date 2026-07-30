@@ -587,3 +587,26 @@ Next steps: Update checksums, create clean source commit, run full public
 release-test from the clean commit, rebuild ZIP/manifest, run full
 release-archive-test, then commit/push final artifacts if they changed.
 Handoff: none.
+
+## 2026-07-30 16:06 +04:00 - root-orchestrator
+
+Task: Complete final 1.0.0 release closeout shield and rebuild package.
+Files changed: `dist/processforge.zip`,
+`dist/processforge.manifest.json`,
+`.pf/artifacts/pre-release-remediation-final-report-20260730.md`.
+Artifacts changed: `dist/processforge.zip`,
+`dist/processforge.manifest.json`,
+`.pf/artifacts/pre-release-remediation-final-report-20260730.md`.
+Templates used: Project-local `.pf` artifact/log conventions.
+Tools used: ProcessForge `release-test`, `release-pack`,
+`release-archive-test`; PowerShell/Python package inspection.
+Decisions: Final package provenance points to clean source commit
+`99f0b81f0c9f176c64a2ffe6ed67b12ad9b2162c`, before the artifact-only package
+commit. This matches the accepted release-manifest v1 provenance model for
+tracked `dist/**` artifacts.
+Risks: Post-1.0 strict backlog remains intentionally separate:
+distribution-installed-tool split, deeper MCP auth, provider/runtime execution
+contracts, lifecycle invariant hardening, and non-blocking alias cleanup.
+Next steps: Run final schema/public/checksum/git checks, commit final package
+artifacts, push, and verify `origin/main`.
+Handoff: none.

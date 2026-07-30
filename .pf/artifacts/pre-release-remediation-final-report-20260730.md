@@ -442,3 +442,45 @@ The release sequence after this update must be:
 6. full `release-archive-test --archive dist/processforge.zip --root .
    --extracted-test full --timeout-scale 1`;
 7. commit/push final ZIP/manifest if they changed.
+
+## 14. Final closeout evidence
+
+Final closeout after the release-manifest v1 and crash-recovery additions:
+
+- source commit used for final package provenance:
+  `99f0b81f0c9f176c64a2ffe6ed67b12ad9b2162c`;
+- source `release-test --root . --public --trace-smokes`: PASS,
+  elapsed `631.61s`;
+- `smoke_authoring_crash_recovery`: PASS inside source release-test;
+- `smoke_release_manifest_provenance_contract`: PASS inside source
+  release-test;
+- `smoke_specialization_freshness_tracks_definition_change`: PASS inside
+  source release-test;
+- final `release-pack --root . --output dist/processforge.zip`: PASS,
+  `793` files;
+- final full `release-archive-test --archive dist/processforge.zip --root .
+  --extracted-test full --timeout-scale 1`: PASS;
+- extracted public release-test inside final archive: PASS, elapsed `627.64s`;
+- crash-recovery waiver: not used.
+
+Final package:
+
+- ZIP: `dist/processforge.zip`;
+- ZIP entries: `793`;
+- ZIP size: `1005225` bytes;
+- ZIP SHA-256:
+  `01a25b9c16d4aa0679db35666b91b52b80d5431ce7d636610cf1d31230895e2a`;
+- Manifest: `dist/processforge.manifest.json`;
+- Manifest schema version: `1`;
+- Manifest version: `1.0.0`;
+- Manifest size: `145183` bytes;
+- Manifest SHA-256:
+  `fddec5ab532522ac85d231e2404fcc8de3ca3d8b4310029100ca32622dbb6259`;
+- Manifest source tree:
+  `1ed742b0c3d7aa12291ce34995545fd3acb3ecce`;
+- Manifest generated_at/source date:
+  `2026-07-30T11:44:01Z` / `1785411841`;
+- Official packs recorded:
+  `processforge.official.content-workflow`,
+  `processforge.official.software-development`,
+  `processforge.official.verification`.
