@@ -401,3 +401,44 @@ Non-blocking but important:
    - `release-pack`;
    - full `release-archive-test`;
    - `git diff --check`.
+
+## 13. 1.0.0 release closeout update
+
+This section supersedes the remaining release-blocking checklist in section
+10 for the narrow closeout slice requested after the release-validation
+stabilization.
+
+Closed now:
+
+- permanent crash-recovery smoke added:
+  `tools/smoke_authoring_crash_recovery.py`;
+- crash-recovery waiver: not used;
+- release-manifest v1 provenance contract added:
+  `schemas/release-manifest.schema.json`;
+- `release-pack` now requires clean Git source provenance before publishing
+  and records commit, tree, deterministic source date, archive size/SHA-256,
+  entry count, per-file size/SHA-256, and official pack manifest provenance;
+- `release-archive-test` now validates the v1 sidecar as a consumer contract;
+- `tools/smoke_release_manifest_provenance_contract.py` added to the public
+  release-test shield.
+
+Strict-contract backlog decision:
+
+- current 1.0.0 closeout covers crash recovery, release-manifest v1
+  provenance, final full release shield, and first-public `schema_version: 1`;
+- MCP auth deep model, provider/runtime execution contracts, deeper lifecycle
+  invariants, distribution-as-installed-tool split without project `.pf`
+  files, and non-blocking legacy/flat alias cleanup are documented as
+  post-1.0 work in
+  `.pf/artifacts/pre-release-strict-contract-backlog-decision-20260730.md`.
+
+The release sequence after this update must be:
+
+1. checksum `--write`;
+2. checksum `--check`;
+3. clean source commit;
+4. full `release-test --root . --public --trace-smokes`;
+5. final `release-pack --root . --output dist/processforge.zip`;
+6. full `release-archive-test --archive dist/processforge.zip --root .
+   --extracted-test full --timeout-scale 1`;
+7. commit/push final ZIP/manifest if they changed.

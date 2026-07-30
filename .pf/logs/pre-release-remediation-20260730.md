@@ -563,3 +563,27 @@ Next steps: Commit and push the final validation/package refresh; then continue
 with the next narrow backlog item.
 Handoff: No intentionally active release-test or release-archive-test child
 processes remain.
+## 2026-07-30 15:41 +04:00 - root-orchestrator
+
+Task: Close the remaining narrow 1.0.0 release checks: crash-recovery smoke,
+release-manifest v1 provenance, strict-contract backlog decision, clean source
+shield, and final package.
+Files changed: `tools/processforge.py`,
+`tools/validate-process-forge-schemas.py`,
+`tools/smoke_authoring_crash_recovery.py`,
+`tools/smoke_release_manifest_provenance_contract.py`,
+`schemas/release-manifest.schema.json`,
+`.pf/artifacts/pre-release-strict-contract-backlog-decision-20260730.md`.
+Artifacts changed:
+`.pf/artifacts/pre-release-strict-contract-backlog-decision-20260730.md`.
+Templates used: Project-local `.pf` artifact/log conventions.
+Tools used: Serena pattern search; PowerShell validation; ProcessForge CLI.
+Decisions: No `packs` model changes. Do not use waiver for crash recovery.
+Release manifest is v1 for 1.0.0 and is validated both by schema and
+consumer-side archive inspection. Strict-contract backlog is split into
+release-blocking closeout versus explicit post-1.0 work.
+Risks: Full source shield and archive shield still pending at this log point.
+Next steps: Update checksums, create clean source commit, run full public
+release-test from the clean commit, rebuild ZIP/manifest, run full
+release-archive-test, then commit/push final artifacts if they changed.
+Handoff: none.
