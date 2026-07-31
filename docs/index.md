@@ -65,6 +65,8 @@ provides explicit paths and choices.
 
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Path constants](concepts/path-constants.md)
+- [Context resolution](concepts/context-resolution.md)
+- [Cascade merge](concepts/cascade-merge.md)
 - [Package roots](concepts/workplace-resources.md)
 - [Package roots overview](concepts/package-roots.md)
 - [Project snapshot](concepts/project-context-snapshot.md)

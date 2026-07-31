@@ -306,6 +306,8 @@ semantic parity, применяй process только после review и до
 - [Порядок инициализации](docs/ru/getting-started/initialization-order.md)
 - [Командный справочник агента](docs/ru/getting-started/agent-prompts.md)
 - [Этапы встроенных процессов](docs/ru/processes/built-in-processes.md)
+- [Вычисление контекста](docs/ru/concepts/context-resolution.md)
+- [Каскадное объединение](docs/ru/concepts/cascade-merge.md)
 - [Workplace vs project](docs/ru/concepts/workplace-vs-project.md)
 - [Модель среды выполнения](docs/ru/concepts/runtime-model.md)
 - [Модель агентской сессии](docs/ru/concepts/agent-session-model.md)

@@ -71,6 +71,8 @@ workplace; каждый репозиторий хранит только про�
 - [Runtime drivers](concepts/runtime-drivers.md)
 - [Process supervisor](concepts/process-supervisor.md)
 - [Граница Director, Ledger, Inspector и Worker](concepts/director-ledger-inspector-boundary.md)
+- [Вычисление контекста](concepts/context-resolution.md)
+- [Каскадное объединение](concepts/cascade-merge.md)
 - [Константы путей](concepts/path-constants.md)
 - [Корни пакетов](concepts/package-roots.md)
 - [Снимок проекта](concepts/project-snapshot.md)

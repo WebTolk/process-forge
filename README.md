@@ -279,6 +279,8 @@ Detailed index:
 - [Initialization order](docs/getting-started/initialization-order.md)
 - [Agent command runbook](docs/getting-started/agent-prompts.md)
 - [Built-in process stages](docs/processes/built-in-processes.md)
+- [Context resolution](docs/concepts/context-resolution.md)
+- [Cascade merge](docs/concepts/cascade-merge.md)
 - [Workplace vs project](docs/concepts/workplace-vs-project.md)
 - [Runtime model](docs/concepts/runtime-model.md)
 - [Runtime drivers](docs/concepts/runtime-drivers.md)
