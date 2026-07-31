@@ -1,26 +1,141 @@
 # ProcessForge
 
+<div align="center">
+
+**A platform-neutral, AI-provider-neutral framework for creating and running AI-assisted processes.**
+
+[![Version](https://img.shields.io/badge/version-1.0.0-2F6FED?style=for-the-badge)](VERSION)
+[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](requirements.txt)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
+[![File First](https://img.shields.io/badge/runtime-file--first-2E7D32?style=for-the-badge)](docs/concepts/runtime-model.md)
+[![Platform Neutral](https://img.shields.io/badge/core-platform--neutral-6A1B9A?style=for-the-badge)](docs/concepts/domain-neutral-core.md)
+[![Provider Neutral](https://img.shields.io/badge/AI-provider--neutral-455A64?style=for-the-badge)](docs/concepts/runtime-drivers.md)
+
 **Russian documentation:** [README.ru.md](README.ru.md)
 
-ProcessForge is a file-first process framework for AI-assisted project work.
-It keeps process definitions, runs, tasks, iterations, artifacts, reviews,
-handoffs, knowledge packages, templates, tools, MCP registrations, and platform
-contracts in versionable files.
+</div>
 
-This README is written for people. It starts from the workplace model and gives
-copy-paste prompts for an operator. AI agents should use the command runbook in
+ProcessForge is a file-first framework for creating, versioning, and executing
+AI-assisted processes. It is independent of concrete implementation platforms
+and AI providers: domains, toolchains, knowledge packages, templates, runtime
+drivers, and platform contracts are attached through versionable files instead
+of being hardcoded into the core.
+
+This README is written for people. AI agents should use the command runbook in
 [docs/getting-started/agent-prompts.md](docs/getting-started/agent-prompts.md),
 which is limited to commands and mechanics implemented in the current codebase.
 
 ![ProcessForge workplace layout](docs/assets/processforge-architecture.svg)
 
-## What ProcessForge Is
+## Why Use It
+
+ProcessForge turns repeatable AI work into explicit process assets:
+
+- formal process definitions with stages, roles, artifacts, gates,
+  capabilities, tools, hooks, and handoff rules;
+- project-local `.pf/` state for assignments, runs, tasks, iterations,
+  artifacts, reviews, logs, handoffs, snapshots, and private runtime data;
+- formalized knowledge through knowledge packages, resource indexes, source
+  metadata, load policies, and update policies;
+- reusable templates, tool registrations, MCP registrations, runtime drivers,
+  and platform contracts that compose project context without core hardcode;
+- cascade-based context resolution from workplace and project resources into
+  locked snapshots, assignment capsules, resolved rules, and parameters;
+- versioned files, checksums, release manifests, archive validation, and update
+  checks from declared sources.
+
+The result is a workflow system that a human can inspect in Git and an AI agent
+can execute without relying on a hidden SaaS backend, one specific model, or one
+specific product platform.
+
+## Two Work Modes
+
+### Garage Mode (1-1-1-1)
+
+Use this for normal work: one human operator, one primary agent session, one
+project, and one active process/run. The primary agent performs the work, runs
+checks, writes artifacts, and finishes with a summary or handoff.
+
+### Forge / Factory Mode
+
+Use this when work must be split into independent branches. An orchestrator can
+create bounded assignments and capsules, launch or coordinate worker sessions,
+collect their outputs, and integrate the result through handoffs and reviews.
+
+## Quick Start
+
+### Get ProcessForge
+
+Download the release archive from the repository:
+
+```bash
+curl -L -o processforge.zip https://github.com/WebTolk/process-forge/raw/main/dist/processforge.zip
+```
+
+Or clone the repository if you want to work from source:
+
+```bash
+git clone https://github.com/WebTolk/process-forge.git
+```
+
+### Install It As A Tool
+
+Put ProcessForge in a stable tool directory and unpack it there:
+
+```bash
+mkdir -p <tools-root>/processforge
+unzip processforge.zip -d <tools-root>/processforge
+python <tools-root>/processforge/bin/pf.py version
+```
+
+For source checkouts, use the repository root as `<processforge-root>`:
+
+```bash
+python <processforge-root>/bin/pf.py version
+```
+
+### Start With An Agent Prompt
+
+For guided setup, copy this into your AI agent:
+
+```text
+Initialize ProcessForge in step-by-step mode. It is located at
+<processforge-root>.
+```
+
+For automatic setup, use this only when you already know the target paths and
+want the agent to inspect existing instructions and resources first:
+
+```text
+Initialize ProcessForge in fully automatic mode. It is located at
+<processforge-root>. First inspect the current AGENTS.md and setup skills.
+```
+
+After the workplace is ready, connect a project:
+
+```text
+Connect this project to my existing ProcessForge workplace.
+
+Inspect the project first, choose a conservative project type, create the
+project-local .pf layer, read .pf/START_AGENT_HERE.md, run doctor checks, and
+summarize what ProcessForge now knows about the project.
+
+Keep global resources in the workplace. Do not copy heavy documentation,
+source mirrors, toolchains, or the ProcessForge repository into this project.
+```
+
+Inside an onboarded project, start each ProcessForge-backed session from
+`.pf/START_AGENT_HERE.md`.
+
+More starter prompts are in [QUICKSTART.md](QUICKSTART.md).
+
+## Operating Model
+
+### What ProcessForge Is
 
 A workplace is a physical or virtual machine where humans and AI agents work:
 a desktop, laptop, server, or runner host. ProcessForge is installed once as a
 tool for that workplace.
-
-## Core Entities
 
 The workplace stores global machine-level resources: process definitions,
 knowledge packages, reusable templates, tool registrations, MCP registrations,
@@ -37,38 +152,7 @@ Project context has a lock-file model. `.pf/process-forge.yaml` declares
 `fresh`, `fresh_with_updates`, `stale`, or `broken`; assignment capsules pin a
 snapshot id/checksum and are not rewritten by later refreshes.
 
-## Work Modes
-
-### Garage Mode (1-1-1-1)
-
-The atomic execution unit is `1-1-1-1`: one human operator, one primary agent
-session, one project, and one active process/run. In the default single-agent
-flow the primary agent performs the work, runs CLI checks, writes artifacts,
-and checks out; Worker and Inspector are phases/checks of the same session, not
-separate participants. Agent Ledger is CLI/files, not a separate agent. Director
-and Supervisor/Execution Inspector are only needed for multi-agent,
-process-transition, or external runtime-worker scenarios. See
-[docs/concepts/agent-session-model.md](docs/concepts/agent-session-model.md).
-
-### Forge / Factory Mode
-
-A workplace can be Director-capable while individual projects remain simple.
-Project coordination mode resolves as `simple`, `organized`, or `inherit` from
-the workplace default. Use `organized` only for projects that should use the
-workplace Director Office; simple projects keep the normal 1-1-1-1 flow.
-
-Process definitions describe process mechanics. They are configurable YAML
-constructors with any number of stages, roles, artifacts, gates, capabilities,
-allowed tools, and hooks. They do not need to name an implementation platform.
-
-Platform contracts are composition entities for a concrete project context. A
-platform may be single or composed as parent plus child. The contract connects
-the required and recommended stack of knowledge packages, templates, tools, MCP
-providers, capabilities, processes, coding standards, project type hints, and
-policy data. ProcessForge core resolves these contracts from manifests; it does
-not hardcode any real product, CMS, framework, marketplace, or business domain.
-
-## How The Layers Relate
+### How The Layers Relate
 
 Use ProcessForge from the outside in:
 
@@ -84,7 +168,7 @@ The project layer depends on the workplace layer. It should not contain copied
 ProcessForge source code, heavy documentation mirrors, shared toolchains, or
 global resource payloads.
 
-## Initialization Order
+### Initialization Order
 
 Use this order for a new workplace:
 
@@ -122,18 +206,59 @@ Use `first-run`, `workplace-init`, and direct create/register commands as the
 fully automatic path only when the operator explicitly requests automation and
 provides the required paths and answers.
 
-## Quick Start
+## Work Modes In Detail
 
-1. Read this README to understand the model and boundaries.
-2. Open [Quickstart prompts](QUICKSTART.md) and copy the setup prompt into your
-   AI agent.
-3. Let the agent run guided workplace setup.
-4. Create or register workplace resources: knowledge, templates, tools, MCP
-   providers, package roots, and platform contracts.
-5. Onboard the first project only after the workplace and its shared resources
-   are ready.
-6. Inside the project, start every ProcessForge-backed session from
-   `.pf/START_AGENT_HERE.md`.
+### Garage Mode (1-1-1-1)
+
+The atomic execution unit is `1-1-1-1`: one human operator, one primary agent
+session, one project, and one active process/run. In the default single-agent
+flow the primary agent performs the work, runs CLI checks, writes artifacts,
+and checks out; Worker and Inspector are phases/checks of the same session, not
+separate participants. Agent Ledger is CLI/files, not a separate agent.
+
+Basic prompt:
+
+```text
+Initialize this project with ProcessForge, connect the required tools and
+knowledge, and use it for <what we are doing>. Fill all required artifacts.
+```
+
+Start a work session:
+
+```text
+Start a ProcessForge run for this work.
+
+Read .pf/START_AGENT_HERE.md first. Create a run, split the work into explicit
+tasks, record work/debug/fix/review iterations, keep artifacts and handoffs in
+the project-local .pf folder, and finish with a run summary and doctor check.
+```
+
+### Forge / Factory Mode
+
+A workplace can be Director-capable while individual projects remain simple.
+Project coordination mode resolves as `simple`, `organized`, or `inherit` from
+the workplace default. Use `organized` only for projects that should use the
+workplace Director Office; simple projects keep the normal 1-1-1-1 flow.
+
+Director and Supervisor/Execution Inspector are only needed for multi-agent,
+process-transition, or external runtime-worker scenarios. See
+[docs/concepts/agent-session-model.md](docs/concepts/agent-session-model.md).
+
+For shell-agent plans, `orchestrator-shell-plan-apply --model <model>` passes
+one selected model to every shell worker in the applied plan.
+
+## Core Building Blocks
+
+Process definitions describe process mechanics. They are configurable YAML
+constructors with any number of stages, roles, artifacts, gates, capabilities,
+allowed tools, and hooks. They do not need to name an implementation platform.
+
+Platform contracts are composition entities for a concrete project context. A
+platform may be single or composed as parent plus child. The contract connects
+the required and recommended stack of knowledge packages, templates, tools, MCP
+providers, capabilities, processes, coding standards, project type hints, and
+policy data. ProcessForge core resolves these contracts from manifests; it does
+not hardcode any real product, CMS, framework, marketplace, or business domain.
 
 ## Supported Wizards And Creation Commands
 
@@ -167,8 +292,6 @@ ProcessForge currently supports file-first creation flows for:
   `session-status`, and `session-end`
 - orchestrator shell agents: `orchestrator-shell-plan-create`,
   `orchestrator-shell-plan-validate`, and `orchestrator-shell-plan-apply`
-  with optional `--model <model>` to pass one selected model to every shell
-  worker in the applied plan
 - runtime drivers and worker execution: `runtime-driver list`,
   `runtime-driver validate`, `worker-run prepare`, `worker-run start`,
   `worker-run status`, `worker-run collect`, `supervisor tick`,
@@ -183,73 +306,6 @@ Agent Director. The responsibility boundary is documented in
 The `--interactive` flag is accepted by first-run initialization commands for
 UX compatibility, but the current implementation is file-first and does not
 require terminal prompting.
-
-## Operator Prompts
-
-### Prepare A Workplace By Guided Setup
-
-```text
-Initialize ProcessForge in step-by-step mode. It is located at
-<processforge-root>.
-```
-
-### Fully Automatic Setup
-
-```text
-Initialize ProcessForge in fully automatic mode. It is located at
-<processforge-root>. First inspect the current AGENTS.md and setup skills.
-```
-
-In automatic mode, the agent first reports what it found on the device, maps
-existing instructions, skills, docs, tools, platforms, and project roots to
-ProcessForge entities, asks for approval of the setup scenario, and only then
-applies changes.
-
-### Connect A Project
-
-```text
-Connect this project to my existing ProcessForge workplace.
-
-Inspect the project first, choose a conservative project type, create the
-project-local .pf layer, read .pf/START_AGENT_HERE.md, run doctor checks, and
-summarize what ProcessForge now knows about the project.
-
-Keep global resources in the workplace. Do not copy heavy documentation,
-source mirrors, toolchains, or the ProcessForge repository into this project.
-```
-
-### Compose A Platform Stack
-
-```text
-Create the ProcessForge resources needed for this project platform.
-
-Work dependency-first: register tools and MCP servers, create or import
-knowledge packages, create reusable templates, then create a platform contract
-that composes those resources. If the platform has a parent and child, model
-that inheritance in the platform manifests and prove it with the platform
-doctor and project snapshot.
-```
-
-### Start A Work Session
-
-```text
-Start a ProcessForge run for this work.
-
-Read .pf/START_AGENT_HERE.md first. Create a run, split the work into explicit
-tasks, record work/debug/fix/review iterations, keep artifacts and handoffs in
-the project-local .pf folder, and finish with a run summary and doctor check.
-```
-
-### Create A Process
-
-```text
-Create a new ProcessForge process for this project.
-
-Use the process authoring workflow. Ask me for missing decisions, keep the
-authoring answers and draft process current, review semantic parity, apply the
-process only after review, and prove that the process can be listed, described,
-and used for a run.
-```
 
 ## Documentation Map
 

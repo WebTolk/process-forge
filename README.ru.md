@@ -1,28 +1,144 @@
 # ProcessForge
 
+<div align="center">
+
+**Фреймворк для создания ИИ-процессов, независимый от конкретных платформ и ИИ-провайдеров.**
+
+[![Версия](https://img.shields.io/badge/version-1.0.0-2F6FED?style=for-the-badge)](VERSION)
+[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](requirements.txt)
+[![Лицензия](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
+[![File First](https://img.shields.io/badge/runtime-file--first-2E7D32?style=for-the-badge)](docs/ru/concepts/runtime-model.md)
+[![Platform Neutral](https://img.shields.io/badge/core-platform--neutral-6A1B9A?style=for-the-badge)](docs/ru/concepts/domain-neutral-core.md)
+[![Provider Neutral](https://img.shields.io/badge/AI-provider--neutral-455A64?style=for-the-badge)](docs/ru/concepts/runtime-drivers.md)
+
 **Документация на английском:** [README.md](README.md)
 
-ProcessForge - файловая среда для управляемой работы человека и ИИ-агентов над
-проектами. Она хранит описания процессов, запуски, задачи, итерации,
-артефакты, проверки, передачи между участниками, пакеты знаний (knowledge
-packages), шаблоны, инструменты, регистрации MCP и платформенные контракты
-(platform contracts) в версионируемых файлах.
+</div>
 
-Этот README написан для человека. Он начинается с модели рабочего места и даёт
-готовые промпты для оператора. ИИ-агенты должны использовать командный
+ProcessForge - файловый фреймворк для создания, версионирования и выполнения
+ИИ-процессов. Он не зависит от конкретных платформ реализации и ИИ-провайдеров:
+предметные области, toolchains, knowledge packages, шаблоны, runtime drivers и
+platform contracts подключаются через версионируемые файлы, а не зашиваются в
+ядро.
+
+Этот README написан для человека. ИИ-агенты должны использовать командный
 справочник в
 [docs/ru/getting-started/agent-prompts.md](docs/ru/getting-started/agent-prompts.md);
 там перечислены только команды и механики, подтверждённые текущей кодовой базой.
 
 ![Схема рабочего места ProcessForge](docs/assets/processforge-architecture.svg)
 
-## Что такое ProcessForge
+## Зачем это нужно
+
+ProcessForge превращает повторяемую ИИ-работу в явные process assets:
+
+- формальные описания процессов со стадиями, ролями, артефактами, gates,
+  capabilities, инструментами, hooks и правилами handoff;
+- проектный слой `.pf/` для assignments, runs, tasks, iterations, artifacts,
+  reviews, logs, handoffs, snapshots и закрытых runtime-данных;
+- формализованные знания через knowledge packages, resource indexes, source
+  metadata, load policies и update policies;
+- reusable templates, tool registrations, MCP registrations, runtime drivers и
+  platform contracts, которые собирают контекст проекта без hardcode в ядре;
+- каскадное вычисление контекста из workplace и project resources в locked
+  snapshots, assignment capsules, resolved rules и parameters;
+- версионируемые файлы, checksums, release manifests, archive validation и
+  обновление ресурсов из объявленных источников.
+
+В результате workflow остаётся видимым в Git для человека и исполнимым для
+ИИ-агента без скрытого SaaS backend, одного обязательного model provider или
+одной конкретной продуктовой платформы.
+
+## Два режима работы
+
+### Режим гаража (1-1-1-1)
+
+Обычный режим: один оператор, один основной agent session, один проект и один
+активный process/run. Основной агент выполняет работу, запускает проверки,
+ведёт артефакты и завершает с summary или handoff.
+
+### Режим Кузницы / Фабрики
+
+Режим для разделения работы на независимые ветки. Orchestrator создаёт
+ограниченные assignments и capsules, запускает или координирует worker sessions,
+собирает их outputs и интегрирует результат через handoffs и reviews.
+
+## Быстрый старт
+
+### Получить ProcessForge
+
+Скачайте release archive из репозитория:
+
+```bash
+curl -L -o processforge.zip https://github.com/WebTolk/process-forge/raw/main/dist/processforge.zip
+```
+
+Или клонируйте репозиторий, если хотите работать из исходников:
+
+```bash
+git clone https://github.com/WebTolk/process-forge.git
+```
+
+### Установить как инструмент
+
+Положите ProcessForge в стабильный каталог инструментов и распакуйте архив:
+
+```bash
+mkdir -p <tools-root>/processforge
+unzip processforge.zip -d <tools-root>/processforge
+python <tools-root>/processforge/bin/pf.py version
+```
+
+Для source checkout используйте корень репозитория как `<processforge-root>`:
+
+```bash
+python <processforge-root>/bin/pf.py version
+```
+
+### Стартовый промпт для агента
+
+Для пошаговой настройки скопируйте в ИИ-агента:
+
+```text
+Инициализируй ProcessForge в пошаговом режиме. Он находится в папке
+<путь-к-processforge>.
+```
+
+Для полностью автоматической настройки используйте этот вариант только когда
+целевые пути уже известны и агент должен сначала изучить существующие
+инструкции и ресурсы:
+
+```text
+Инициализируй ProcessForge в полностью автоматическом режиме. Он находится в
+папке <путь-к-processforge>. Сначала исследуй текущий AGENTS.md и навыки для
+настройки.
+```
+
+После готовности workplace подключите проект:
+
+```text
+Подключи этот проект к существующему ProcessForge workplace.
+
+Сначала изучи проект, выбери консервативный project type, создай проектный
+слой .pf, прочитай .pf/START_AGENT_HERE.md, запусти doctor checks и кратко
+опиши, что ProcessForge теперь знает о проекте.
+
+Глобальные ресурсы держи в workplace. Не копируй тяжёлую документацию, зеркала
+исходного кода, toolchains или репозиторий ProcessForge внутрь проекта.
+```
+
+Внутри подключённого проекта начинайте каждую ProcessForge-сессию с
+`.pf/START_AGENT_HERE.md`.
+
+Больше стартовых промптов: [QUICKSTART.ru.md](QUICKSTART.ru.md).
+
+## Рабочая модель
+
+### Что такое ProcessForge
 
 Рабочее место (workplace) - это физическая или виртуальная машина, где работают
 человек и ИИ-агенты: компьютер, ноутбук, сервер или узел выполнения. ProcessForge
 устанавливается один раз как инструмент этого рабочего места.
-
-## Основные сущности
 
 Workplace хранит общие ресурсы машины: описания процессов, пакеты знаний,
 повторно используемые шаблоны, регистрации инструментов, регистрации MCP,
@@ -33,66 +149,15 @@ Workplace хранит общие ресурсы машины: описания 
 context, выбранные глобальные ресурсы, назначения, запуски, задачи, итерации,
 артефакты, проверки, передачи, hooks и закрытые файлы среды выполнения.
 
-## Режимы работы
+Project context имеет lock-модель. `.pf/process-forge.yaml` объявляет
+`context_requirements`; `project-context-refresh` записывает разрешённый lock в
+`.pf/contexts/project-context.snapshot.yaml` и поколения в
+`.pf/contexts/project-context.snapshots/`. `project-context-check` возвращает
+`fresh`, `fresh_with_updates`, `stale` или `broken`; assignment capsules
+закрепляют snapshot id/checksum и не перепривязываются при последующих
+обновлениях.
 
-Для человека ProcessForge проще понимать через два рабочих образа.
-
-### Режим гаража (1-1-1-1)
-
-Первый образ - гараж с инструментами. Это обычный режим `1-1-1-1`: один
-оператор, один основной агент, один проект и один активный process/run. Агент
-работает как мастер в своём гараже: берёт нужные инструменты, читает нужные
-знания, ведёт артефакты процесса, запускает проверки и возвращает результат.
-Agent Director здесь не нужен; Worker и Inspector остаются ролями или фазами
-той же агентской сессии.
-
-Базовый промпт для такого режима:
-
-```text
-Инициализируй проект по ProcessForge, подключи все необходимые инструменты и
-знания, мы делаем <название того, что делаем>. Заполняй все требуемые артефакты.
-```
-
-Пример для разработки Joomla-плагина:
-
-```text
-Инициализируй проект по ProcessForge, подключи все необходимые инструменты и
-знания для разработки Joomla-плагина. Мы делаем контентный плагин Joomla,
-который добавляет AI-пояснение к материалам сайта. Заполняй все требуемые
-артефакты, фиксируй решения по архитектуре, реализации, проверкам и поставке.
-```
-
-### Режим Кузницы / Фабрики
-
-Второй образ - кузница или фабрика. Это мультиагентный режим: несколько
-параллельных агентов получают изолированные задачи, Agent Director координирует
-их работу, Agent Ledger ведёт журнал вахтёра, а handoffs и process transitions
-передают результаты между участниками и процессами. Такой режим нужен для
-сложных процессов: ветвлений, дочерних процессов, возврата в родительский
-процесс с результатами, внешних runtime workers и проверяемых параллельных
-веток работы. См. подробнее в
-[модели агентской сессии](docs/ru/concepts/agent-session-model.md).
-
-Workplace может быть Director-capable, а отдельные проекты при этом остаются
-simple. Режим координации проекта вычисляется как `simple`, `organized` или
-`inherit` от значения по умолчанию в workplace. `organized` нужен только тем
-проектам, которые должны использовать Director Office рабочего места; simple
-projects сохраняют обычный сценарий 1-1-1-1.
-
-Process definitions описывают механику процесса. Это YAML-конструкторы с
-произвольным количеством стадий, ролей, артефактов, контрольных ворот,
-capabilities, разрешённых инструментов и hooks. Им не нужно называть конкретную
-платформу реализации.
-
-Platform contracts - композиционные сущности для конкретного проектного
-контекста. Платформа может быть одиночной или составной: parent плюс child.
-Контракт подключает обязательный и рекомендуемый стек пакетов знаний, шаблонов,
-инструментов, MCP providers, capabilities, процессов, стандартов кода,
-подсказок типа проекта и политик. Ядро ProcessForge разрешает эти контракты из
-манифестов; в коде ядра нет жёсткой привязки к конкретным продуктам, CMS,
-фреймворкам, маркетплейсам или предметным областям.
-
-## Как связаны слои
+### Как связаны слои
 
 Используйте ProcessForge снаружи внутрь:
 
@@ -109,7 +174,7 @@ Platform contracts - композиционные сущности для кон
 ProcessForge, тяжёлые зеркала документации, общие toolchains или содержимое
 глобальных ресурсов.
 
-## Порядок инициализации
+### Порядок инициализации
 
 Для нового рабочего места используйте такой порядок:
 
@@ -148,17 +213,63 @@ agent root могут быть источниками инструкций ил�
 полностью автоматический путь только когда оператор явно просит автоматизацию и
 даёт нужные пути и ответы.
 
-## Быстрый старт
+## Режимы работы подробно
 
-1. Прочитайте этот README, чтобы понять модель и границы.
-2. Откройте [промпты быстрого старта](QUICKSTART.ru.md) и скопируйте промпт
-   настройки в ИИ-агента.
-3. Дайте агенту провести пошаговую настройку workplace.
-4. Создайте или зарегистрируйте ресурсы workplace: знания, шаблоны,
-   инструменты, MCP providers, корни пакетов и platform contracts.
-5. Подключайте первый проект только после готовности workplace и общих ресурсов.
-6. Внутри проекта начинайте каждую ProcessForge-сессию с
-   `.pf/START_AGENT_HERE.md`.
+### Режим гаража (1-1-1-1)
+
+Атомарная единица выполнения - `1-1-1-1`: один человек-оператор, один основной
+agent session, один project и один активный process/run. В обычном single-agent
+flow основной агент выполняет работу, запускает CLI checks, пишет артефакты и
+завершает с checkout; Worker и Inspector остаются фазами или проверками той же
+сессии, а не отдельными участниками. Agent Ledger - это CLI/files, не отдельный
+агент.
+
+Базовый промпт:
+
+```text
+Инициализируй проект по ProcessForge, подключи все необходимые инструменты и
+знания, мы делаем <название того, что делаем>. Заполняй все требуемые артефакты.
+```
+
+Начать рабочую сессию:
+
+```text
+Начни ProcessForge run для этой работы.
+
+Сначала прочитай .pf/START_AGENT_HERE.md. Создай run, разбей работу на явные
+задачи, фиксируй итерации work/debug/fix/review, сохраняй артефакты и передачи
+в проектной папке .pf, а в конце сделай run summary и doctor check.
+```
+
+### Режим Кузницы / Фабрики
+
+Workplace может быть Director-capable, а отдельные проекты при этом остаются
+simple. Режим координации проекта вычисляется как `simple`, `organized` или
+`inherit` от значения по умолчанию в workplace. `organized` нужен только тем
+проектам, которые должны использовать Director Office рабочего места; simple
+projects сохраняют обычный сценарий 1-1-1-1.
+
+Director и Supervisor/Execution Inspector нужны только для multi-agent,
+process-transition или external runtime-worker scenarios. Подробнее:
+[модель агентской сессии](docs/ru/concepts/agent-session-model.md).
+
+Для shell-agent plans `orchestrator-shell-plan-apply --model <model>` передаёт
+одну выбранную model всем shell workers в applied plan.
+
+## Основные строительные блоки
+
+Process definitions описывают механику процесса. Это YAML-конструкторы с
+произвольным количеством стадий, ролей, артефактов, контрольных ворот,
+capabilities, разрешённых инструментов и hooks. Им не нужно называть конкретную
+платформу реализации.
+
+Platform contracts - композиционные сущности для конкретного проектного
+контекста. Платформа может быть одиночной или составной: parent плюс child.
+Контракт подключает обязательный и рекомендуемый стек пакетов знаний, шаблонов,
+инструментов, MCP providers, capabilities, процессов, стандартов кода,
+подсказок типа проекта и политик. Ядро ProcessForge разрешает эти контракты из
+манифестов; в коде ядра нет жёсткой привязки к конкретным продуктам, CMS,
+фреймворкам, маркетплейсам или предметным областям.
 
 ## Поддерживаемые мастера и команды создания
 
@@ -168,6 +279,9 @@ ProcessForge сейчас поддерживает файловые сценар
 - guided workplace setup: `workplace-setup start`, `workplace-setup review`,
   `workplace-setup apply` и `workplace-setup status`
 - project onboarding: `project-onboard` / `init-project`
+- coordination modes: `workplace-mode status`, `workplace-mode set`,
+  `project-mode status`, `project-mode set`, `director-inbox-submit`,
+  `director-case-refresh` и `error-route`
 - first run bootstrap: `first-run`
 - process authoring: `process-authoring-start`, `process-authoring-review`,
   `process-authoring-apply` и one-command `process-create`
@@ -185,15 +299,10 @@ ProcessForge сейчас поддерживает файловые сценар
 - agent ledger и handoffs: `agent-register`, `agent-checkin`,
   `agent-availability`, `agent-lease-grant`, `process-route-list`,
   `handoff-create`, `handoff-status` и `agent-director-tick`
-- coordination modes: `workplace-mode status`, `workplace-mode set`,
-  `project-mode status`, `project-mode set`, `director-inbox-submit`,
-  `director-case-refresh` и `error-route`
 - primary agent sessions: `session-start`, `session-heartbeat`,
   `session-status` и `session-end`
 - orchestrator shell agents: `orchestrator-shell-plan-create`,
   `orchestrator-shell-plan-validate` и `orchestrator-shell-plan-apply`
-  с optional `--model <model>`, чтобы передать выбранную model всем shell
-  workers в applied plan
 - runtime drivers и worker execution: `runtime-driver list`,
   `runtime-driver validate`, `worker-run prepare`, `worker-run start`,
   `worker-run status`, `worker-run collect`, `supervisor tick`,
@@ -208,74 +317,6 @@ Director. Граница ответственности описана в
 Флаг `--interactive` принимается командами first-run initialization ради
 совместимости пользовательского опыта, но текущая реализация остаётся файловой
 и не требует вопросов в терминале.
-
-## Prompts для оператора
-
-### Подготовить workplace через пошаговую настройку
-
-```text
-Инициализируй ProcessForge в пошаговом режиме. Он находится в папке
-<путь-к-processforge>.
-```
-
-### Полностью автоматическая настройка
-
-```text
-Инициализируй ProcessForge в полностью автоматическом режиме. Он находится в
-папке <путь-к-processforge>. Сначала исследуй текущий AGENTS.md и навыки для
-настройки.
-```
-
-В автоматическом режиме агент сначала рассказывает, что нашёл на устройстве,
-переводит существующие инструкции, навыки, документы, инструменты, платформы и
-корни проектов в будущие сущности ProcessForge, запрашивает подтверждение
-сценария настройки и только после этого применяет изменения.
-
-### Подключить проект
-
-```text
-Подключи этот проект к существующему ProcessForge workplace.
-
-Сначала изучи проект, выбери консервативный project type, создай проектный
-слой .pf, прочитай .pf/START_AGENT_HERE.md, запусти doctor checks и кратко
-опиши, что ProcessForge теперь знает о проекте.
-
-Глобальные ресурсы держи в workplace. Не копируй тяжёлую документацию, зеркала
-исходного кода, toolchains или репозиторий ProcessForge внутрь проекта.
-```
-
-### Собрать platform stack
-
-```text
-Создай ресурсы ProcessForge, которые нужны платформе этого проекта.
-
-Иди от зависимостей: зарегистрируй инструменты и MCP servers, создай или
-импортируй пакеты знаний, создай повторно используемые шаблоны, затем создай
-platform contract, который собирает эти ресурсы. Если у платформы есть parent и
-child, опиши наследование в platform manifests и докажи его через platform
-doctor и project snapshot.
-```
-
-### Начать рабочую сессию
-
-```text
-Начни ProcessForge run для этой работы.
-
-Сначала прочитай .pf/START_AGENT_HERE.md. Создай run, разбей работу на явные
-задачи, фиксируй итерации work/debug/fix/review, сохраняй артефакты и передачи
-в проектной папке .pf, а в конце сделай run summary и doctor check.
-```
-
-### Создать процесс
-
-```text
-Создай новый ProcessForge process для этого проекта.
-
-Используй process authoring workflow. Спрашивай недостающие решения,
-поддерживай ответы authoring и черновик процесса в актуальном состоянии, проверь
-semantic parity, применяй process только после review и докажи, что его можно
-вывести в списке, описать и использовать для run.
-```
 
 ## Карта документации
 
@@ -364,12 +405,3 @@ semantic parity, применяй process только после review и до
 
 ProcessForge распространяется по лицензии Apache License, Version 2.0. См.
 [LICENSE](LICENSE) и [NOTICE](NOTICE).
-# Lock-модель проектного контекста
-
-`.pf/process-forge.yaml` объявляет `context_requirements`, а
-`project-context-refresh` записывает разрешённый lock в
-`.pf/contexts/project-context.snapshot.yaml` и поколения в
-`.pf/contexts/project-context.snapshots/`. `project-context-check` возвращает
-`fresh`, `fresh_with_updates`, `stale` или `broken`. Assignment capsules
-закрепляют snapshot id/checksum и не перепривязываются при последующих
-обновлениях.
