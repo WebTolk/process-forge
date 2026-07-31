@@ -101,13 +101,11 @@ Agent Director or Supervisor is present unless the process explicitly uses
 multi-agent, handoff, or external runtime-worker mechanics.
 
 If the workplace supports Director, check the project effective mode before
-using Director mechanics:
+using Director mechanics. Relevant commands for the agent:
 
-```bash
-python bin/pf.py project-mode status --project-root <project-root> --workplace <workplace-root>
-python bin/pf.py project-mode set --project-root <project-root> --mode simple
-python bin/pf.py project-mode set --project-root <project-root> --mode organized --init-office
-```
+- python bin/pf.py project-mode status --project-root <project-root> --workplace <workplace-root>
+- python bin/pf.py project-mode set --project-root <project-root> --mode simple
+- python bin/pf.py project-mode set --project-root <project-root> --mode organized --init-office
 
 Use task-batch execution. Split the work into tasks, record iterations as work
 progresses, write artifacts/reviews/handoffs when the process calls for them,

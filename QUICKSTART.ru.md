@@ -105,11 +105,11 @@ multi-agent, handoff или external runtime-worker mechanics.
 
 Если workplace поддерживает Director, сначала проверь effective mode проекта:
 
-```bash
-python bin/pf.py project-mode status --project-root <project-root> --workplace <workplace-root>
-python bin/pf.py project-mode set --project-root <project-root> --mode simple
-python bin/pf.py project-mode set --project-root <project-root> --mode organized --init-office
-```
+Команды для агента:
+
+- python bin/pf.py project-mode status --project-root <project-root> --workplace <workplace-root>
+- python bin/pf.py project-mode set --project-root <project-root> --mode simple
+- python bin/pf.py project-mode set --project-root <project-root> --mode organized --init-office
 
 Используй task-batch execution. Разбей работу на задачи, фиксируй итерации по
 ходу работы, записывай артефакты, проверки и handoffs там, где этого требует
@@ -240,7 +240,8 @@ package dependencies и detection rules приходят из manifests и polic
 похожие папки конфигурации агентов. Установите ProcessForge один раз как
 инструмент и укажите агенту, где он установлен; проектные инструкции находятся
 в `.pf/START_AGENT_HERE.md`.
-# Lock-модель project context
+
+## Lock-модель проектного контекста
 
 При подключении проекта агент должен выполнить `project-context-check
 --session-start --json` после обновления снимка. Работу можно продолжать при
