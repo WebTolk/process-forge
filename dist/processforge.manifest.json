@@ -1,15 +1,15 @@
 {
   "archive": {
-    "entry_count": 801,
+    "entry_count": 804,
     "filename": "processforge.zip",
     "format": "zip",
-    "sha256": "cbc8bc9e1e7cb45660a4c6ee5808b3f76eae638b9b104fdc91c9ec58faf42fe5",
-    "size": 1032733
+    "sha256": "72d44a8b02adcbe6dabb2e4726a2d433ed91d528dd6c41c44f8ac437a63c6649",
+    "size": 1041616
   },
   "build": {
     "deterministic": true,
-    "generated_at": "2026-07-31T11:22:42Z",
-    "source_date_epoch": 1785496962
+    "generated_at": "2026-07-31T11:55:55Z",
+    "source_date_epoch": 1785498955
   },
   "files": [
     {
@@ -49,8 +49,13 @@
     },
     {
       "path": "LICENSE",
-      "sha256": "78905db42385027e670f035b61f2131f6cdd79b44e8a04d511bff28b454ca810",
-      "size": 358
+      "sha256": "5153373bdbe5e354b22f3ccab1230720815dc2fab19135b2e4b218f67f3483a0",
+      "size": 11355
+    },
+    {
+      "path": "NOTICE",
+      "sha256": "8d226cb8bdf9df953b969c92c3a490f55910a287eff277e0a2894a19fafd7408",
+      "size": 205
     },
     {
       "path": "QUICKSTART.md",
@@ -64,13 +69,13 @@
     },
     {
       "path": "README.md",
-      "sha256": "5a7f21fe1ba94525fde7d06305a11d0cbbd46d602cd50005d4ff6d10cffe3649",
-      "size": 15704
+      "sha256": "f9db05b88c435b1683101b1c9654c35729fd956002982ac9151ee07a10f631c3",
+      "size": 15899
     },
     {
       "path": "README.ru.md",
-      "sha256": "217b5f076d07b822f81ba7859b05437d62bbaed418642c7ddad1239452bf933d",
-      "size": 25195
+      "sha256": "73b572f68f917a0e89ae12d6f2bf0ccfcc8e8a4d9206066937f46f20c4f94bf9",
+      "size": 25477
     },
     {
       "path": "VERSION",
@@ -94,8 +99,8 @@
     },
     {
       "path": "checksums/processforge.sha256",
-      "sha256": "a4d6356f159a9bd00109ec0eff63be12e5f2223b5c90b38c6456d676d1dddcab",
-      "size": 88413
+      "sha256": "b0f6fa9efc9113ca8dc82fcfef038ea97d1fc9bc16823d0e4ba3e43be20a8fa4",
+      "size": 88694
     },
     {
       "path": "docs/assets/processforge-architecture.svg",
@@ -679,8 +684,8 @@
     },
     {
       "path": "docs/index.md",
-      "sha256": "5393ac91a585ead350bac8e29aeaffe3b2edca2676d3342d349768bf40f23d80",
-      "size": 5094
+      "sha256": "4dbea293ff9a64aa6ebe5805fa23e6f4c85761803e1b3792270ca82ed3f64a52",
+      "size": 5194
     },
     {
       "path": "docs/known-limitations.md",
@@ -878,9 +883,19 @@
       "size": 2391
     },
     {
+      "path": "docs/ru/concepts/cascade-merge.md",
+      "sha256": "4a2051c22c6ffc55086aa6e630b25dd786f906e8978bac2816b6e8081cceb410",
+      "size": 4569
+    },
+    {
       "path": "docs/ru/concepts/context-capsule.md",
       "sha256": "68fe450823d9baa7d473e3e1c4771cbc2812074a4db7169f555a75b6b7a17c3b",
       "size": 1044
+    },
+    {
+      "path": "docs/ru/concepts/context-resolution.md",
+      "sha256": "efd65c9b9647c824302768fffaf9212cf183b20634aa0a501e2b0a5518c0d18a",
+      "size": 5863
     },
     {
       "path": "docs/ru/concepts/director-ledger-inspector-boundary.md",
@@ -1159,8 +1174,8 @@
     },
     {
       "path": "docs/ru/index.md",
-      "sha256": "d050b4047e1b0045563eec9b340ae437dd25c48512fb33e638930ece1f7d7296",
-      "size": 7044
+      "sha256": "e6aba517e14ad2eab98ebd4aab93cbbf5f52977a42e8080bd7b047bd42c1d61c",
+      "size": 7193
     },
     {
       "path": "docs/ru/known-limitations.md",
@@ -3229,8 +3244,8 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "1a0a23821929d5d6afd77c354c5a42f26ab42d88b3b3eb5938d1c8b9cbc9de63",
-      "size": 1297925
+      "sha256": "0ac12085a31544bd70068420c204b9b87d3ff3ab4470695722d95507b967eff0",
+      "size": 1297949
     },
     {
       "path": "tools/processforge_subprocess.py",
@@ -3724,8 +3739,8 @@
     },
     {
       "path": "tools/smoke_remediation_checksum_surface.py",
-      "sha256": "e7e5b0523e1fdc0d8ac7436edc1ca11757aa5f67e438c14f9bd036aca51ff3b5",
-      "size": 6540
+      "sha256": "9ac7335e693521ec3e17ae2cf047ebe08f0634be2d92aefdaf8790a14ecbf63e",
+      "size": 6554
     },
     {
       "path": "tools/smoke_remediation_doctor_contracts.py",
@@ -3989,18 +4004,18 @@
     },
     {
       "path": "tools/validate-process-forge-checksums.py",
-      "sha256": "aa36a17a7a1dc41ab530bac8878e530bee44248920a13be529a5043c0b69867d",
-      "size": 5584
+      "sha256": "87d54a003e83acd537ad3e012cab46a91696d954d416d03acc0364e50740559c",
+      "size": 5598
     },
     {
       "path": "tools/validate-process-forge-schemas.py",
-      "sha256": "b441f1e97cb0713727978c17666533c8ca3dcbb107c1a3e7241b0dd85564dd9b",
-      "size": 50247
+      "sha256": "abe2b751deaccad4723b20d6960d5581ab61056a23ac11f03fb9ba767c5d09a2",
+      "size": 50261
     },
     {
       "path": "tools/validate-public-cleanliness.py",
-      "sha256": "b706e4d25cc4b5e8e7958a4865e71bf17b05f35b0f4ed8b64911cb49f92576e4",
-      "size": 10467
+      "sha256": "1fa68f9b394996e1397ab992cc502700053bdc9a3206e242ae00b76ba32ca08c",
+      "size": 10477
     },
     {
       "path": "updates/migrations/0.1.0-linked-workplace.md",
@@ -4043,9 +4058,9 @@
   "schema_bundle_version": "1.0",
   "schema_version": 1,
   "source": {
-    "commit": "d2c7e2d868db571332a5cf7b3ed564c5171b15f7",
+    "commit": "9445db76c296a2f1edbb53e8f1ce5eaacf816fa6",
     "dirty": false,
-    "tree": "fcd1395e55aa5c857dca5e7a51f95b470f55c6ef",
+    "tree": "413f33cc92ada57744978a79aedeb278704f09bc",
     "vcs": "git"
   },
   "version": "1.0.0"
