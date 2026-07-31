@@ -107,6 +107,27 @@ Add resolver, schemas/templates/docs, smoke coverage, and run targeted checks.
 Handoff:
 None.
 
+## 2026-07-31 13:50 - codex
+
+Task:
+Document optional shell-agent model selection after initial implementation push.
+Files changed:
+README.md; README.ru.md; QUICKSTART.md; CHANGELOG.md; checksums/processforge.sha256; .pf/logs/agent-log.md.
+Artifacts changed:
+.pf/logs/agent-log.md.
+Templates used:
+None.
+Tools used:
+PowerShell, rg, apply_patch, checksum validator, release-check, git diff --check.
+Decisions:
+Added top-level documentation and changelog visibility for `orchestrator-shell-plan-apply --model <model>`. Kept the deeper EN/RU concept and getting-started docs from the implementation commit as the detailed behavior reference.
+Risks:
+`QUICKSTART.ru.md` displayed unstable mojibake context in PowerShell, so this second documentation pass did not edit that file; the RU top-level README and RU deep docs already mention the option.
+Next steps:
+Commit and push the documentation-only slice.
+Handoff:
+None.
+
 ## 2026-07-31 13:36 - codex
 
 Task:

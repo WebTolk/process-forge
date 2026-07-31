@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added optional shell-agent model selection for multi-agent shell runs through
+  `orchestrator-shell-plan-apply --model <model>`, propagated to generated
+  worker metadata, environment, and runtime-driver command arguments.
+
 ## 1.0.0 - 2026-07-20
 
 ### Added

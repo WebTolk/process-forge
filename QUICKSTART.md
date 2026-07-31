@@ -136,6 +136,10 @@ launch each worker with only its worker launch prompt, and reconcile outputs
 into an integration report before delivery.
 ```
 
+For shell-agent plans, `orchestrator-shell-plan-apply --model <model>` is the
+top-level way to select a model for every shell worker in that plan. If the
+flag is omitted, worker commands are generated without model arguments.
+
 ## 10. Use Agent Ledger And Process Handoffs
 
 ```text

@@ -161,6 +161,8 @@ ProcessForge currently supports file-first creation flows for:
   `session-status`, and `session-end`
 - orchestrator shell agents: `orchestrator-shell-plan-create`,
   `orchestrator-shell-plan-validate`, and `orchestrator-shell-plan-apply`
+  with optional `--model <model>` to pass one selected model to every shell
+  worker in the applied plan
 - runtime drivers and worker execution: `runtime-driver list`,
   `runtime-driver validate`, `worker-run prepare`, `worker-run start`,
   `worker-run status`, `worker-run collect`, `supervisor tick`,

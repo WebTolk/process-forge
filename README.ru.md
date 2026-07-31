@@ -188,6 +188,8 @@ ProcessForge сейчас поддерживает файловые сценар
   `session-status` и `session-end`
 - orchestrator shell agents: `orchestrator-shell-plan-create`,
   `orchestrator-shell-plan-validate` и `orchestrator-shell-plan-apply`
+  с optional `--model <model>`, чтобы передать выбранную model всем shell
+  workers в applied plan
 - runtime drivers и worker execution: `runtime-driver list`,
   `runtime-driver validate`, `worker-run prepare`, `worker-run start`,
   `worker-run status`, `worker-run collect`, `supervisor tick`,
