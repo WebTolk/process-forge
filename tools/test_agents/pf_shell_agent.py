@@ -101,7 +101,7 @@ def write_exit(status: str, exit_code: int, skip: bool = False) -> None:
         write_json(Path(raw_path), {"schema_version": 1, "exit_code": exit_code, "finished_at": now_utc(), "status": status})
 
 
-def write_report(path: Path, mode: str, status: str, capsule: Path, worker_prompt: Path, subagent_reports: list[str]) -> None:
+def write_report(path: Path, mode: str, status: str, model: str, capsule: Path, worker_prompt: Path, subagent_reports: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     leak_keys = sorted(key for key in os.environ if key.startswith("PF_LEAK_TEST"))
     lines = [
@@ -109,6 +109,7 @@ def write_report(path: Path, mode: str, status: str, capsule: Path, worker_promp
         "",
         f"- status: `{status}`",
         f"- mode: `{mode}`",
+        f"- model: `{model}`",
         f"- capsule_exists: `{str(capsule.is_file()).lower()}`",
         f"- worker_prompt_exists: `{str(worker_prompt.is_file()).lower()}`",
         f"- leak_keys: `{len(leak_keys)}`",
@@ -132,6 +133,7 @@ def main() -> int:
     parser.add_argument("--output", required=True, help="Expected report path.")
     parser.add_argument("--heartbeat", required=True, help="Heartbeat JSON path.")
     parser.add_argument("--mode", choices=["success", "env-dump", "fail", "sleep"], default="success")
+    parser.add_argument("--model", default="", help="Optional agent model selected by ProcessForge.")
     parser.add_argument("--sleep-seconds", type=float, default=0.0)
     parser.add_argument("--heartbeat-interval", type=float, default=0.0)
     parser.add_argument("--skip-exit-marker", action="store_true")
@@ -144,6 +146,7 @@ def main() -> int:
     project_root = Path(os.environ.get("PF_PROJECT_ROOT") or ".")
     task_id = os.environ.get("PF_TASK_ID") or os.environ.get("PF_WORKER_TASK_ID", "")
     subagent_policy = read_capsule_policy(capsule)
+    model = str(args.model or os.environ.get("PF_AGENT_MODEL") or "")
     subagent_reports = write_simulated_subagent_reports(project_root, task_id, subagent_policy)
     write_heartbeat(heartbeat, args.mode, 0)
 
@@ -159,12 +162,12 @@ def main() -> int:
             sequence += 1
     if args.mode in {"success", "env-dump", "sleep"}:
         write_heartbeat(heartbeat, args.mode, sequence + 1, "completed")
-        write_report(output, args.mode, "completed", capsule, worker_prompt, subagent_reports)
+        write_report(output, args.mode, "completed", model, capsule, worker_prompt, subagent_reports)
         write_exit("completed", 0, args.skip_exit_marker)
         print(json.dumps({"event": "pf_shell_agent.completed", "mode": args.mode, "pid": os.getpid()}, sort_keys=True), flush=True)
         return 0
     write_heartbeat(heartbeat, args.mode, sequence + 1, "failed")
-    write_report(output, args.mode, "failed", capsule, worker_prompt, subagent_reports)
+    write_report(output, args.mode, "failed", model, capsule, worker_prompt, subagent_reports)
     write_exit("failed", 7, args.skip_exit_marker)
     print(json.dumps({"event": "pf_shell_agent.failed", "mode": args.mode, "pid": os.getpid()}, sort_keys=True), flush=True)
     return 7

@@ -33,12 +33,16 @@ For shell workers:
 
 ```bash
 python bin/pf.py orchestrator-shell-plan-create --project-root . --run orchestrated-work --title "Orchestrated work" --answers examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml --apply
-python bin/pf.py orchestrator-shell-plan-apply --project-root . --run orchestrated-work --workplace <workplace> --apply
+python bin/pf.py orchestrator-shell-plan-apply --project-root . --run orchestrated-work --workplace <workplace> --model <model> --apply
 ```
 
 Shell-agent plan fields are behavioral. `allow_write_scope_overlap: true` changes generated assignment and capsule overlap policy and supervisor scheduling for that plan. Subagent policy is copied into the capsule and enforced by `worker-run collect`.
 
-After apply, inspect `.pf/runs/<run-id>/config-resolution-report.yaml` to see the resolved driver, overlap, start, output, and subagent-report behavior.
+`--model` is optional. When present, it applies to all shell workers in the
+plan and is exposed through assignment/capsule metadata, `PF_AGENT_MODEL`, and
+shell command model arguments.
+
+After apply, inspect `.pf/runs/<run-id>/config-resolution-report.yaml` to see the resolved driver, model, overlap, start, output, and subagent-report behavior.
 
 Boundary rule: Agent Ledger records check-in/check-out, presence, and leases;
 Agent Director uses those records to coordinate routes, handoffs, leases, and

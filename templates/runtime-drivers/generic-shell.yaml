@@ -7,6 +7,9 @@ command:
   args:
     - "{worker_prompt_path}"
     - "{capsule_path}"
+  model_args:
+    - "--model"
+    - "{agent_model}"
 working_directory: "{project_root}"
 environment:
   inherit: true

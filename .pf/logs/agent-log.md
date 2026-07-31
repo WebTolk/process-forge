@@ -107,6 +107,27 @@ Add resolver, schemas/templates/docs, smoke coverage, and run targeted checks.
 Handoff:
 None.
 
+## 2026-07-31 13:36 - codex
+
+Task:
+Final validation for optional shell-agent model selection.
+Files changed:
+No additional source changes except this validation log entry and checksum refresh.
+Artifacts changed:
+.pf/logs/agent-log.md; checksums/processforge.sha256; .pf/runtime/release-test/latest-report.md; .pf/runtime/release-test/latest-report.json.
+Templates used:
+Existing runtime driver manifests.
+Tools used:
+py_compile, shell-agent smokes, runtime-driver registry smoke, schema/public/checksum validators, release-check, release-test --public, git diff --check.
+Decisions:
+Kept `--model` optional: empty model leaves shell command argv unchanged, non-empty model is propagated through plan normalization, assignment/capsule metadata, worker command state, environment, and runtime-driver model args.
+Risks:
+`release-test --public` completed with RESULT: FAIL only because `smoke_release_manifest_provenance_contract` requires clean Git for release-pack and this task intentionally leaves uncommitted changes. The target shell-agent smoke and release-check passed.
+Next steps:
+Commit the validated slice, then rerun `release-test --public` from clean Git before release packaging.
+Handoff:
+None.
+
 ## 2026-07-31 10:42 - codex
 
 Task:
@@ -167,5 +188,26 @@ Risks:
 Inline credentials are now possible in local/private parameter sources by design; public/export sanitization remains a separate policy concern.
 Next steps:
 If this slice is accepted, refresh any installed distribution copy and run the broader public release-test before packaging.
+Handoff:
+None.
+
+## 2026-07-31 13:13 - codex
+
+Task:
+Add optional shell-agent model selection for multi-agent orchestrator apply.
+Files changed:
+tools/processforge.py; tools/test_agents/pf_shell_agent.py; tools/smoke_orchestrator_shell_agents_with_subagent_policy.py; schemas/runtime-driver.schema.json; schemas/orchestrator-shell-agent-plan.schema.json; templates/runtime-drivers/generic-shell.yaml; templates/runtime-drivers/test-shell-agent.yaml; docs/concepts/runtime-drivers.md; docs/concepts/shell-agent-subagent-policy.md; docs/getting-started/agent-ledger-process-transitions.md; docs/ru/concepts/runtime-drivers.md; docs/ru/concepts/shell-agent-subagent-policy.md; docs/ru/getting-started/agent-ledger-process-transitions.md; checksums/processforge.sha256; .pf/logs/agent-log.md.
+Artifacts changed:
+.pf/logs/agent-log.md.
+Templates used:
+Existing runtime driver manifests.
+Tools used:
+Serena search/read memory, PowerShell, apply_patch, py_compile, focused smoke tests, schema/public/checksum validators.
+Decisions:
+`orchestrator-shell-plan-apply --model <model>` records the model on all workers in the applied shell-agent plan. Runtime drivers receive it through `agent_model`, `PF_AGENT_MODEL`, `{agent_model}`, and conditional `command.model_args`; if no model is set, no `--model` args are appended.
+Risks:
+Full public release-test was not run in this slice; prior log notes it can be timeout-prone on this Windows machine.
+Next steps:
+Run the broader public release-test and rebuild the release archive before publishing a new package from this HEAD.
 Handoff:
 None.

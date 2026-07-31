@@ -13,7 +13,8 @@
       "type": "object",
       "properties": {
         "executable": { "type": "string" },
-        "args": { "type": "array", "items": { "type": "string" } }
+        "args": { "type": "array", "items": { "type": "string" } },
+        "model_args": { "type": "array", "items": { "type": "string" } }
       },
       "additionalProperties": true
     },
@@ -30,6 +31,8 @@
                 "PF_RUN_ID",
                 "PF_TASK_ID",
                 "PF_AGENT_RUN_DIR",
+                "PF_AGENT_EXIT_PATH",
+                "PF_AGENT_MODEL",
                 "PF_PROJECT_ROOT",
                 "PF_RUNTIME_DRIVER_ID",
                 "PF_WORKER_RUN_ID",

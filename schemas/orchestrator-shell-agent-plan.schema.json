@@ -25,6 +25,7 @@
         "supervisor_profile": { "type": "string" },
         "start_policy": { "enum": ["manual", "prepare", "supervisor"] },
         "max_parallel_workers": { "type": "integer", "minimum": 1 },
+        "model": { "type": "string", "minLength": 1 },
         "metadata": { "type": "object", "additionalProperties": true }
       },
       "patternProperties": {
@@ -47,6 +48,7 @@
           "writer": { "type": "boolean" },
           "owner": { "type": "string" },
           "runtime_driver": { "$ref": "#/$defs/id" },
+          "model": { "type": "string", "minLength": 1 },
           "allow_subagents": { "type": "boolean" },
           "subagent_policy": {
             "type": "object",

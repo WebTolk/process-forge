@@ -27,16 +27,23 @@ python .pf/runtime/bin/pf.py runtime-driver describe --project-root . --driver t
 Driver placeholders are restricted to runtime facts such as `{project_root}`,
 `{run_id}`, `{task_id}`, `{agent_run_dir}`, `{driver_id}`,
 `{capsule_path}`, `{worker_prompt_path}`, `{expected_report_path}`,
-`{stdout_path}`, `{stderr_path}`, `{heartbeat_path}`, and `{exit_path}`.
+`{stdout_path}`, `{stderr_path}`, `{heartbeat_path}`, `{exit_path}`, and
+`{agent_model}`.
 Unknown placeholders fail validation.
 
 ProcessForge always injects reserved worker environment variables including
 `PF_RUN_ID`, `PF_TASK_ID`, `PF_AGENT_RUN_DIR`, `PF_AGENT_EXIT_PATH`,
-`PF_PROJECT_ROOT`, `PF_RUNTIME_DRIVER_ID`, `PF_WORKER_RUN_ID`, and
-`PF_WORKER_TASK_ID`. Shell drivers cannot override those names. A detached
+`PF_AGENT_MODEL`, `PF_PROJECT_ROOT`, `PF_RUNTIME_DRIVER_ID`,
+`PF_WORKER_RUN_ID`, and `PF_WORKER_TASK_ID`. Shell drivers cannot override
+those names. A detached
 contract-aware worker should write its final marker to `PF_AGENT_EXIT_PATH`;
 if the supervisor later observes a lost process without that marker, it records
 `unknown_exit` instead of inferring success from a report artifact.
+
+When a shell worker has an agent model, ProcessForge exposes it as
+`PF_AGENT_MODEL` and `{agent_model}`. If the driver command does not define
+`model_args`, ProcessForge appends `--model {agent_model}` only when the model
+is non-empty.
 
 Shell execution uses `shell=False` and no network permission by default.
 ProcessForge does not install agents, create agent folders, or require a daemon

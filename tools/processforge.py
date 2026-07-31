@@ -128,6 +128,7 @@ RESERVED_WORKER_ENV_KEYS = {
     "PF_TASK_ID",
     "PF_AGENT_RUN_DIR",
     "PF_AGENT_EXIT_PATH",
+    "PF_AGENT_MODEL",
     "PF_PROJECT_ROOT",
     "PF_RUNTIME_DRIVER_ID",
     "PF_WORKER_RUN_ID",
@@ -1704,6 +1705,7 @@ def default_runtime_driver_documents() -> dict[str, dict[str, Any]]:
                     "--mode",
                     "success",
                 ],
+                "model_args": ["--model", "{agent_model}"],
             },
             "working_directory": "{project_root}",
             "environment": {
@@ -11494,6 +11496,7 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
             "required_outputs": normalize_required_outputs(metadata.get("required_outputs")),
             "expected_report": metadata.get("expected_report") if isinstance(metadata.get("expected_report"), dict) else {},
         },
+        "agent_model": normalize_agent_model(metadata.get("agent_model") or metadata.get("model") or ""),
         "subagent_policy": normalize_subagent_policy(metadata.get("subagent_policy")),
     }
 
@@ -11622,6 +11625,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
         },
         "scope": contract["scope"],
         "outputs": contract["outputs"],
+        "agent_model": contract["agent_model"],
         "subagent_policy": contract["subagent_policy"],
         "workplace_coordination": capsule_coordination_block(snapshot, metadata),
         "capabilities": {"required": required_records, "optional": optional_records},
@@ -16523,6 +16527,7 @@ RUNTIME_DRIVER_PLACEHOLDERS = {
     "stderr_path",
     "heartbeat_path",
     "exit_path",
+    "agent_model",
 }
 
 AGENT_RUN_STATUSES = {
@@ -16699,6 +16704,7 @@ def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) 
             "PF_TASK_ID": variables["task_id"],
             "PF_AGENT_RUN_DIR": variables["agent_run_dir"],
             "PF_AGENT_EXIT_PATH": variables["exit_path"],
+            "PF_AGENT_MODEL": variables["agent_model"],
             "PF_PROJECT_ROOT": variables["project_root"],
             "PF_RUNTIME_DRIVER_ID": variables["driver_id"],
             "PF_WORKER_RUN_ID": variables["run_id"],
@@ -16748,8 +16754,10 @@ def validate_runtime_driver_document(driver: dict[str, Any], executable_override
         command = driver.get("command") if isinstance(driver.get("command"), dict) else {}
         executable = str(command.get("executable") or "")
         args = command.get("args") if isinstance(command.get("args"), list) else []
+        model_args = command.get("model_args") if "model_args" in command else []
         checks.append(check("PASS" if executable else "FAIL", "shell command executable present"))
         checks.append(check("PASS" if isinstance(args, list) else "FAIL", "shell command args list present"))
+        checks.append(check("PASS" if isinstance(model_args, list) else "FAIL", "shell command model_args list when present"))
         checks.append(check("WARN" if security.get("allow_shell") is True else "PASS", "allow_shell false by default"))
         checks.append(check("FAIL" if security.get("allow_network") is True else "PASS", "allow_network false by default"))
     if kind == "manual":
@@ -16869,6 +16877,17 @@ def runtime_driver_for_task(project_root: Path, task: dict[str, Any], driver_arg
     return driver
 
 
+def normalize_agent_model(value: Any) -> str:
+    if value in (None, ""):
+        return ""
+    text = str(value).strip()
+    if not text:
+        return ""
+    if any(char in text for char in "\r\n\0"):
+        raise SystemExit("FAIL: agent model contains unsupported control characters")
+    return text
+
+
 def build_worker_process_command(project_root: Path, task: dict[str, Any], driver: dict[str, Any], executable_override: str | None = None) -> tuple[dict[str, Any], dict[str, Path]]:
     task_id = safe_id(str(task.get("id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
@@ -16892,6 +16911,7 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "stderr_path": str(paths["stderr"]),
         "heartbeat_path": str(paths["heartbeat"]),
         "exit_path": str(paths["exit"]),
+        "agent_model": normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
     }
     io = driver.get("io") if isinstance(driver.get("io"), dict) else {}
     stdout_path = Path(str(expand_runtime_value(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
@@ -16918,6 +16938,11 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
     command_spec = driver.get("command") if isinstance(driver.get("command"), dict) else {}
     executable = executable_override or str(expand_runtime_value(command_spec.get("executable") or "", variables))
     args = expand_runtime_value(command_spec.get("args") if isinstance(command_spec.get("args"), list) else [], variables)
+    if variables["agent_model"]:
+        model_args_raw = command_spec.get("model_args") if "model_args" in command_spec else ["--model", "{agent_model}"]
+        if not isinstance(model_args_raw, list):
+            raise SystemExit("FAIL: runtime driver command.model_args must be a list when model is set")
+        args.extend(expand_runtime_value(model_args_raw, variables))
     env, inherit_env = build_worker_environment(driver, variables)
     working_directory = str(expand_runtime_value(driver.get("working_directory") or "{project_root}", variables))
     command = {
@@ -16925,6 +16950,7 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "run_id": run_id,
         "task_id": task_id,
         "driver_id": str(driver.get("id") or "manual"),
+        "agent_model": variables["agent_model"],
         "kind": str(driver.get("kind") or "manual"),
         "command": {
             "executable": executable,
@@ -16953,6 +16979,7 @@ def write_agent_run_state(project_root: Path, task: dict[str, Any], driver: dict
         "run_id": run_id,
         "task_id": task_id,
         "driver_id": str(driver.get("id") or "manual"),
+        "agent_model": normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
         "status": status,
         "pid": pid,
         "started_at": started_at,
@@ -17088,8 +17115,12 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
     return state
 
 
-def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None = None, executable_override: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
+def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None = None, executable_override: str | None = None, model_arg: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
     task = load_task(project_root, task_id)
+    agent_model = normalize_agent_model(model_arg or task.get("agent_model") or task.get("model") or "")
+    if agent_model and task.get("agent_model") != agent_model:
+        task["agent_model"] = agent_model
+        save_task(project_root, task)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     capsule_status, capsule_rel = existing_capsule_status(project_root, task_id)
     if capsule_status in {"fresh", "legacy"}:
@@ -17133,7 +17164,7 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None))
+    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None))
     print(f"PREPARED: {task_id} driver={driver.get('id')} status={json_read(paths['status']).get('status')}")
     return 0
 
@@ -17142,7 +17173,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None))
+    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None))
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     if str(driver.get("kind")) == "manual":
         print(f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}")
@@ -17497,7 +17528,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
                 skipped.append(task_id)
                 continue
             try:
-                status = command_worker_run_start(argparse.Namespace(project_root=str(project_root), task=task_id, driver=driver_id, executable=None, detach=True, wait=False))
+                status = command_worker_run_start(argparse.Namespace(project_root=str(project_root), task=task_id, driver=driver_id, executable=None, model=None, detach=True, wait=False))
             except SystemExit as exc:
                 status = int(exc.code) if isinstance(exc.code, int) else 1
                 print(exc)
@@ -17675,7 +17706,7 @@ ORCHESTRATOR_PLAN_TOP_LEVEL_KEYS = {
     "allow_write_scope_overlap",
     "metadata",
 }
-ORCHESTRATOR_PLAN_RUNTIME_KEYS = {"default_driver", "supervisor_profile", "start_policy", "max_parallel_workers", "metadata"}
+ORCHESTRATOR_PLAN_RUNTIME_KEYS = {"default_driver", "supervisor_profile", "start_policy", "max_parallel_workers", "model", "metadata"}
 ORCHESTRATOR_PLAN_WORKER_KEYS = {
     "id",
     "title",
@@ -17686,6 +17717,7 @@ ORCHESTRATOR_PLAN_WORKER_KEYS = {
     "writer",
     "owner",
     "runtime_driver",
+    "model",
     "allow_subagents",
     "subagent_policy",
     "allowed_files",
@@ -17716,6 +17748,23 @@ def plan_allows_write_scope_overlap(plan: dict[str, Any]) -> bool:
     return plan.get("allow_write_scope_overlap") is True
 
 
+def apply_orchestrator_model_override(plan: dict[str, Any], model: str | None) -> dict[str, Any]:
+    agent_model = normalize_agent_model(model)
+    if not agent_model:
+        return plan
+    result = copy.deepcopy(plan)
+    runtime = result.get("runtime")
+    if not isinstance(runtime, dict):
+        runtime = {}
+        result["runtime"] = runtime
+    runtime["model"] = agent_model
+    workers = result.get("workers") if isinstance(result.get("workers"), list) else []
+    for worker in workers:
+        if isinstance(worker, dict):
+            worker["model"] = agent_model
+    return result
+
+
 def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) -> list[Check]:
     checks: list[Check] = []
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
@@ -17731,6 +17780,8 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
         if "max_parallel_workers" in runtime:
             max_parallel = runtime.get("max_parallel_workers")
             checks.append(check("PASS" if type(max_parallel) is int and max_parallel >= 1 else "FAIL", "runtime.max_parallel_workers positive integer"))
+        if "model" in runtime:
+            checks.append(check("PASS" if normalize_agent_model(runtime.get("model")) else "FAIL", "runtime.model non-empty string when present"))
     checks.append(check("PASS" if run.get("id") else "FAIL", "run.id present"))
     checks.append(check("PASS" if run.get("title") else "FAIL", "run.title present"))
     checks.append(check("PASS" if str(run.get("process") or "multi-agent-task-orchestration") == "multi-agent-task-orchestration" else "FAIL", "run process is multi-agent-task-orchestration"))
@@ -17765,6 +17816,8 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
         outputs = normalize_required_outputs(raw_worker.get("required_outputs"))
         writer = bool(raw_worker.get("writer", True))
         driver_id = str(raw_worker.get("runtime_driver") or default_driver)
+        if "model" in raw_worker:
+            checks.append(check("PASS" if normalize_agent_model(raw_worker.get("model")) else "FAIL", f"{worker_id} model non-empty string when present"))
         if writer:
             checks.append(check("PASS" if allowed else "FAIL", f"{worker_id} writer has allowed_files"))
         checks.append(check("PASS" if driver_id in {item[0] for item in runtime_driver_id_list(project_root=project_root)} else "FAIL", f"{worker_id} runtime_driver registered: {driver_id}"))
@@ -17935,6 +17988,7 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
     run = plan.get("run") if isinstance(plan.get("run"), dict) else {}
     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
     default_driver = str(runtime.get("default_driver") or "manual")
+    default_model = normalize_agent_model(runtime.get("model") or "")
     normalized_workers: list[dict[str, Any]] = []
     for order, worker in enumerate(plan.get("workers", []) if isinstance(plan.get("workers"), list) else [], start=1):
         if not isinstance(worker, dict):
@@ -17945,6 +17999,7 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
                 "id": worker_id,
                 "order": order,
                 "runtime_driver": str(worker.get("runtime_driver") or default_driver),
+                "model": normalize_agent_model(worker.get("model") or default_model),
                 "allow_subagents": bool(worker.get("allow_subagents", False)),
                 "subagent_policy": worker_subagent_policy(worker),
                 "allowed_files": assignment_scope_items(worker.get("allowed_files")),
@@ -17967,6 +18022,7 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
             "supervisor_profile": str(runtime.get("supervisor_profile") or "default"),
             "start_policy": str(runtime.get("start_policy") or "manual"),
             "max_parallel_workers": int(runtime.get("max_parallel_workers") or 1),
+            "model": default_model,
         },
         "allow_write_scope_overlap": plan_allows_write_scope_overlap(plan),
         "workers": normalized_workers,
@@ -17976,9 +18032,22 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
 def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) -> dict[str, Any]:
     normalized = normalized_orchestrator_plan(project_root, plan)
     run_id = str(normalized["run"]["id"])
+    runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
+    default_model = normalize_agent_model(runtime.get("model") or "")
+    raw_workers: dict[str, dict[str, Any]] = {}
+    for raw_worker in plan.get("workers", []) if isinstance(plan.get("workers"), list) else []:
+        if isinstance(raw_worker, dict):
+            raw_workers[safe_id(str(raw_worker.get("id") or "worker"), "worker")] = raw_worker
     workers: list[dict[str, Any]] = []
     for worker in normalized["workers"]:
         policy = worker["subagent_policy"] if isinstance(worker.get("subagent_policy"), dict) else {}
+        raw_worker = raw_workers.get(str(worker["id"]), {})
+        if normalize_agent_model(raw_worker.get("model") if isinstance(raw_worker, dict) else ""):
+            model_source = f"workers[{worker['id']}].model"
+        elif default_model:
+            model_source = "runtime.model"
+        else:
+            model_source = "default.empty"
         workers.append(
             {
                 "id": worker["id"],
@@ -17986,6 +18055,11 @@ def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) -> 
                     "value": worker["runtime_driver"],
                     "source": f"workers[{worker['id']}].runtime_driver",
                     "behavior": ["worker-run.runtime_driver"],
+                },
+                "agent_model": {
+                    "value": normalize_agent_model(worker.get("model")),
+                    "source": model_source,
+                    "behavior": ["assignment.agent_model", "capsule.agent_model", "worker-run.PF_AGENT_MODEL", "runtime-driver.command.model_args"],
                 },
                 "subagent_policy": {
                     "allow": bool(policy.get("allow")),
@@ -18113,6 +18187,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     plan = load_orchestrator_plan(project_root, args.plan, getattr(args, "run", None))
+    plan = apply_orchestrator_model_override(plan, getattr(args, "model", None))
     checks = validate_orchestrator_task_plan(project_root, plan)
     if any(item.level == "FAIL" for item in checks):
         print_checks(checks)
@@ -18122,6 +18197,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
     title = str(run.get("title") or run_id)
     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
     default_driver = str(runtime.get("default_driver") or "manual")
+    default_model = normalize_agent_model(runtime.get("model") or "")
     workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
     planned = [run_yaml_path(project_root, run_id), orchestrator_plan_path(project_root, run_id), run_root(project_root, run_id) / "worker-prompts", run_root(project_root, run_id) / "config-resolution-report.yaml"]
     if not args.apply or getattr(args, "dry_run", False):
@@ -18178,6 +18254,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
                     expected_report_language=str(worker.get("expected_report_language") or "en"),
                     expected_report_artifact=str(worker.get("expected_report_artifact") or ""),
                     force_with_handoff=bool(plan.get("allow_write_scope_overlap", False) or as_list(worker.get("dependencies")) or as_list(worker.get("depends_on"))),
+                    agent_model=normalize_agent_model(worker.get("model") or default_model),
                     dry_run=False,
                 ),
             )
@@ -18187,6 +18264,9 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         task = load_task(project_root, task_id)
         task["worker_may_rebuild_context"] = bool(worker.get("worker_may_rebuild_context", False))
         task["runtime_driver"] = str(worker.get("runtime_driver") or default_driver)
+        agent_model = normalize_agent_model(worker.get("model") or default_model)
+        if agent_model:
+            task["agent_model"] = agent_model
         task["subagent_policy"] = worker_subagent_policy(worker)
         blocked_by = sorted({safe_id(str(item), "task") for item in [*as_list(worker.get("dependencies")), *as_list(worker.get("depends_on"))] if item})
         if blocked_by:
@@ -18484,6 +18564,9 @@ def command_task_create(args: argparse.Namespace) -> int:
         }
     if required_outputs:
         task["required_outputs"] = required_outputs
+    agent_model = normalize_agent_model(getattr(args, "agent_model", None) or getattr(args, "model", None) or "")
+    if agent_model:
+        task["agent_model"] = agent_model
     expected_report: dict[str, Any] = {}
     if getattr(args, "expected_report_language", None):
         expected_report["language"] = args.expected_report_language
@@ -24275,12 +24358,14 @@ def build_parser() -> argparse.ArgumentParser:
     worker_run_prepare.add_argument("--task", required=True, help="Task id.")
     worker_run_prepare.add_argument("--driver", help="Runtime driver id or manifest path.")
     worker_run_prepare.add_argument("--executable", help="Executable override for generic shell drivers.")
+    worker_run_prepare.add_argument("--model", help="Optional agent model for shell runtime drivers.")
     worker_run_prepare.set_defaults(func=command_worker_run_prepare)
     worker_run_start = worker_run_sub.add_parser("start", help="Start a prepared worker command and wait for completion.")
     worker_run_start.add_argument("--project-root", required=True, help="Project root path.")
     worker_run_start.add_argument("--task", required=True, help="Task id.")
     worker_run_start.add_argument("--driver", help="Runtime driver id or manifest path.")
     worker_run_start.add_argument("--executable", help="Executable override for generic shell drivers.")
+    worker_run_start.add_argument("--model", help="Optional agent model for shell runtime drivers.")
     worker_run_start.add_argument("--detach", action="store_true", help="Start the worker process and return immediately.")
     worker_run_start.add_argument("--wait", action="store_true", help="Wait for completion. This is the default unless --detach is set.")
     worker_run_start.set_defaults(func=command_worker_run_start)
@@ -24714,6 +24799,7 @@ def build_parser() -> argparse.ArgumentParser:
             shell_plan.add_argument("--run", help="Run id when --plan is omitted.")
             if alias_name.endswith("apply"):
                 shell_plan.add_argument("--workplace", help="Workplace root path for lease grants.")
+                shell_plan.add_argument("--model", help="Optional agent model passed to shell workers in this multi-agent plan.")
                 shell_plan.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
                 shell_plan.add_argument("--apply", action="store_true", help="Create run, tasks, capsules, prompts, leases, and supervisor runs.")
             else:

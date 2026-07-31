@@ -33,7 +33,7 @@ python bin/pf.py agent-director-tick --workplace <workplace> --project-root .
 
 ```bash
 python bin/pf.py orchestrator-shell-plan-create --project-root . --run orchestrated-work --title "Orchestrated work" --answers examples/orchestrator-shell-agents/minimal/orchestrator-shell-agent-plan.yaml --apply
-python bin/pf.py orchestrator-shell-plan-apply --project-root . --run orchestrated-work --workplace <workplace> --apply
+python bin/pf.py orchestrator-shell-plan-apply --project-root . --run orchestrated-work --workplace <workplace> --model <model> --apply
 ```
 
 Поля shell-agent plan задают поведение. `allow_write_scope_overlap: true` меняет
@@ -41,8 +41,12 @@ overlap policy в generated assignment и capsule, а также supervisor sche
 для этого plan. `subagent_policy` копируется в capsule и проверяется командой
 `worker-run collect`.
 
+`--model` необязателен. Если он указан, модель применяется ко всем shell
+workers в plan и передаётся через assignment/capsule metadata,
+`PF_AGENT_MODEL` и shell command model arguments.
+
 После apply смотрите `.pf/runs/<run-id>/config-resolution-report.yaml`: там
-записано разрешённое поведение для driver, overlap, start policy, outputs и
+записано разрешённое поведение для driver, model, overlap, start policy, outputs и
 subagent reports.
 
 Правило границы: Agent Ledger записывает check-in/check-out, presence и leases;

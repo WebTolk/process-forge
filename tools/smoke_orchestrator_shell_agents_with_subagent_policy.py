@@ -15,6 +15,7 @@ from processforge_subprocess import CommandResult, diagnostic_text, run_command 
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "processforge.py"
 PLAN = ROOT / "examples" / "orchestrator-shell-agents" / "minimal" / "orchestrator-shell-agent-plan.yaml"
+AGENT_MODEL = "gpt-test-shell-agent"
 
 
 def pf(*args: str, expect: int = 0, timeout: int = 120) -> CommandResult:
@@ -114,8 +115,9 @@ def main() -> int:
         pf("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic-software-project", "--apply")
         pf("orchestrator-shell-plan-create", "--project-root", str(project), "--run", "orchestrated-work", "--title", "Orchestrated work", "--answers", str(PLAN), "--apply")
         pf("orchestrator-shell-plan-validate", "--project-root", str(project), "--run", "orchestrated-work", "--write-normalized", ".pf/artifacts/orchestrator-shell-plan.normalized.yaml")
-        pf("orchestrator-shell-plan-apply", "--project-root", str(project), "--run", "orchestrated-work", "--workplace", str(workplace), "--apply", timeout=180)
+        pf("orchestrator-shell-plan-apply", "--project-root", str(project), "--run", "orchestrated-work", "--workplace", str(workplace), "--model", AGENT_MODEL, "--apply", timeout=180)
         run_root = project / ".pf" / "runs" / "orchestrated-work"
+        agent_runs = project / ".pf" / "runtime" / "agent-runs" / "orchestrated-work"
         docs_report = project / ".pf" / "artifacts" / "docs-shell-agent-report.md"
         test_report = project / ".pf" / "artifacts" / "test-shell-agent-report.md"
         subagent_dir = project / ".pf" / "artifacts" / "subagents" / "docs-shell-agent"
@@ -125,8 +127,15 @@ def main() -> int:
         resolution = read_yaml(run_root / "config-resolution-report.yaml")
         resolved = resolution.get("resolved") if isinstance(resolution.get("resolved"), dict) else {}
         overlap = resolved.get("allow_write_scope_overlap") if isinstance(resolved.get("allow_write_scope_overlap"), dict) else {}
+        normalized = read_yaml(run_root / "orchestrator-shell-plan.normalized.yaml")
+        normalized_runtime = normalized.get("runtime") if isinstance(normalized.get("runtime"), dict) else {}
+        normalized_workers = normalized.get("workers") if isinstance(normalized.get("workers"), list) else []
         require(overlap.get("value") is True, project, "allow_write_scope_overlap was not resolved to true")
+        require(normalized_runtime.get("model") == AGENT_MODEL, project, "normalized runtime model did not reflect CLI override")
+        require(all(isinstance(worker, dict) and worker.get("model") == AGENT_MODEL for worker in normalized_workers), project, "normalized workers did not receive CLI model override")
         require(docs_report.is_file() and test_report.is_file(), project, "required shell-agent reports missing")
+        require(f"model: `{AGENT_MODEL}`" in docs_report.read_text(encoding="utf-8"), project, "docs shell-agent report did not record selected model")
+        require(f"model: `{AGENT_MODEL}`" in test_report.read_text(encoding="utf-8"), project, "test shell-agent report did not record selected model")
         require("simulated_subagents: `true`" in docs_report.read_text(encoding="utf-8"), project, "subagent-enabled worker did not declare simulated subagent usage")
         require("simulated_subagents: `false`" in test_report.read_text(encoding="utf-8"), project, "subagent-disabled worker reported subagent usage")
         require((subagent_dir / "doc-reviewer.md").is_file() and (subagent_dir / "link-checker.md").is_file(), project, "required subagent reports were not written")
@@ -134,6 +143,22 @@ def main() -> int:
         test_assignment = read_yaml(project / ".pf" / "assignments" / "test-shell-agent.yaml")
         docs_capsule = read_yaml(project / ".pf" / "contexts" / "assignment-capsules" / "docs-shell-agent.capsule.yaml")
         test_capsule = read_yaml(project / ".pf" / "contexts" / "assignment-capsules" / "test-shell-agent.capsule.yaml")
+        docs_command = read_yaml(agent_runs / "docs-shell-agent" / "command.json")
+        test_command = read_yaml(agent_runs / "test-shell-agent" / "command.json")
+        docs_command_block = docs_command.get("command") if isinstance(docs_command.get("command"), dict) else {}
+        test_command_block = test_command.get("command") if isinstance(test_command.get("command"), dict) else {}
+        docs_env = docs_command_block.get("environment") if isinstance(docs_command_block.get("environment"), dict) else {}
+        test_env = test_command_block.get("environment") if isinstance(test_command_block.get("environment"), dict) else {}
+        require(docs_assignment.get("agent_model") == AGENT_MODEL, project, "docs assignment did not record selected model")
+        require(test_assignment.get("agent_model") == AGENT_MODEL, project, "test assignment did not record selected model")
+        require(docs_capsule.get("agent_model") == AGENT_MODEL, project, "docs capsule did not record selected model")
+        require(test_capsule.get("agent_model") == AGENT_MODEL, project, "test capsule did not record selected model")
+        require(docs_command.get("agent_model") == AGENT_MODEL, project, "docs command state did not record selected model")
+        require(test_command.get("agent_model") == AGENT_MODEL, project, "test command state did not record selected model")
+        require("--model" in docs_command_block.get("argv", []) and AGENT_MODEL in docs_command_block.get("argv", []), project, "docs shell command argv did not include --model")
+        require("--model" in test_command_block.get("argv", []) and AGENT_MODEL in test_command_block.get("argv", []), project, "test shell command argv did not include --model")
+        require(docs_env.get("PF_AGENT_MODEL") == AGENT_MODEL, project, "docs shell command env did not include PF_AGENT_MODEL")
+        require(test_env.get("PF_AGENT_MODEL") == AGENT_MODEL, project, "test shell command env did not include PF_AGENT_MODEL")
         require(overlap_status(docs_assignment) != "fail", project, "docs assignment retained overlap_check fail despite allowed overlap")
         require(overlap_status(test_assignment) != "fail", project, "test assignment retained overlap_check fail despite allowed overlap")
         docs_capsule_scope = docs_capsule.get("scope") if isinstance(docs_capsule.get("scope"), dict) else {}

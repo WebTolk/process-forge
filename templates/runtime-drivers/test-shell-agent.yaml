@@ -16,6 +16,9 @@ command:
     - "{heartbeat_path}"
     - "--mode"
     - "success"
+  model_args:
+    - "--model"
+    - "{agent_model}"
 working_directory: "{project_root}"
 environment:
   inherit: false
