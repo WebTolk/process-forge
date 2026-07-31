@@ -39,8 +39,8 @@ ProcessForge turns repeatable AI work into explicit process assets:
   metadata, load policies, and update policies;
 - reusable templates, tool registrations, MCP registrations, runtime drivers,
   and platform contracts that compose project context without core hardcode;
-- cascade-based context resolution from workplace and project resources into
-  locked snapshots, assignment capsules, resolved rules, and parameters;
+- **cascade-based context resolution from workplace and project resources into
+  locked snapshots, assignment capsules, resolved rules, and parameters;**
 - versioned files, checksums, release manifests, archive validation, and update
   checks from declared sources.
 
