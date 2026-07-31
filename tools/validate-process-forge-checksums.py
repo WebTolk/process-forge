@@ -17,6 +17,7 @@ PUBLIC_ROOT_FILES = [
     "QUICKSTART.md",
     "QUICKSTART.ru.md",
     "LICENSE",
+    "NOTICE",
     "CHANGELOG.md",
     "VERSION",
     "requirements.txt",

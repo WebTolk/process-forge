@@ -362,7 +362,8 @@ semantic parity, применяй process только после review и до
 
 ## Лицензия
 
-См. [LICENSE](LICENSE).
+ProcessForge распространяется по лицензии Apache License, Version 2.0. См.
+[LICENSE](LICENSE) и [NOTICE](NOTICE).
 # Lock-модель проектного контекста
 
 `.pf/process-forge.yaml` объявляет `context_requirements`, а

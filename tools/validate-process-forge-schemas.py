@@ -20,6 +20,7 @@ REQUIRED_FILES = [
     "QUICKSTART.ru.md",
     "CHANGELOG.md",
     "LICENSE",
+    "NOTICE",
     "VERSION",
     "requirements.txt",
     ".pf/AGENTS.md",

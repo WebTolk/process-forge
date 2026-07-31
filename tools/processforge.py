@@ -5910,7 +5910,7 @@ def command_first_run(args: argparse.Namespace) -> int:
 
 
 RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates", "checksums"]
-RELEASE_ROOT_FILES = ["README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md", "CHANGELOG.md", "LICENSE", "VERSION", "requirements.txt", ".gitignore", ".processforge-releaseignore"]
+RELEASE_ROOT_FILES = ["README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md", "CHANGELOG.md", "LICENSE", "NOTICE", "VERSION", "requirements.txt", ".gitignore", ".processforge-releaseignore"]
 RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 RELEASE_REQUIRED_PATHS = [
     "README.md",
@@ -5919,6 +5919,7 @@ RELEASE_REQUIRED_PATHS = [
     "QUICKSTART.ru.md",
     "CHANGELOG.md",
     "LICENSE",
+    "NOTICE",
     "requirements.txt",
     "AGENTS.md",
     ".gitignore",

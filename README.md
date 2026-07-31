@@ -342,4 +342,5 @@ installed and that project-specific instructions live in `.pf/START_AGENT_HERE.m
 
 ## License
 
-See [LICENSE](LICENSE).
+ProcessForge is licensed under the Apache License, Version 2.0. See
+[LICENSE](LICENSE) and [NOTICE](NOTICE).

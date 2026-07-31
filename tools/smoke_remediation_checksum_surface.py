@@ -20,6 +20,7 @@ EXPECTED_ROOT_PATHS = {
     "AGENTS.md",
     "CHANGELOG.md",
     "LICENSE",
+    "NOTICE",
     "QUICKSTART.md",
     "QUICKSTART.ru.md",
     "README.md",
