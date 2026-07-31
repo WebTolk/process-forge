@@ -31,6 +31,11 @@ generic workplace does not attach meaning to `composer.json`; activating the
 official software-development pack makes its classifier available without
 adding any software-specific branch to the ProcessForge runtime.
 
+When no active classifier matches but an inactive official pack has a matching
+classifier, onboarding reports include an inactive classifier suggestion. This
+is a hint to activate or import the pack intentionally; it is not automatic
+classification and does not make core domain-aware.
+
 Classification is persisted in the project-context snapshot and copied into a
 context capsule. Changing a classifier, its registry, or a matching project
 marker makes the current snapshot stale and requires context refresh.

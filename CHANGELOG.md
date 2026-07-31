@@ -7,6 +7,12 @@
 - Added optional shell-agent model selection for multi-agent shell runs through
   `orchestrator-shell-plan-apply --model <model>`, propagated to generated
   worker metadata, environment, and runtime-driver command arguments.
+- Added locked official pack activation to protect `process-packs.yaml` from
+  concurrent `pack-activate` writers.
+- Added inactive classifier suggestions when a project matches a classifier from
+  an official pack that is available but not active.
+- Added explicit runtime-access capability waivers for `doctor-project` registry
+  declaration gaps.
 
 ## 1.0.0 - 2026-07-20
 

@@ -35,6 +35,25 @@ If a process requires a capability that the active resource profile does not
 provide, the result is `unsatisfied` and the context status is
 `needs_resources`.
 
+`doctor-project` reports missing required capabilities as registry declaration
+gaps. That means no active provider declared the capability; it is not proof
+that the runtime lacked actual access. Prefer registering the real provider in
+the workplace. If local runtime access was independently verified and the
+registry mismatch is accepted for the current delivery, record an explicit
+waiver in `.pf/artifacts/capability-waivers.yaml`:
+
+```yaml
+schema_version: 1
+capability_waivers:
+  - capability: filesystem.read
+    status: active
+    reason: runtime access verified; registry provider declaration is pending
+    evidence: .pf/artifacts/delivery-report.md
+```
+
+An active waiver downgrades the `doctor-project` capability gap to `WARN`; it
+does not satisfy capability resolution or mutate workplace registries.
+
 ## Examples
 
 Documentation examples use synthetic ids such as:

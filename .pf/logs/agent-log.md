@@ -107,6 +107,27 @@ Add resolver, schemas/templates/docs, smoke coverage, and run targeted checks.
 Handoff:
 None.
 
+## 2026-07-31 14:33 - codex
+
+Task:
+Harden real ProcessForge operator friction from Joomla plugin automation report without rewriting working flows.
+Files changed:
+tools/processforge.py; tools/smoke_official_pack_classifier_data_driven.py; tools/smoke_doctor_project_capability_waiver.py; docs/concepts/project-classifiers.md; docs/concepts/capability-resolution.md; docs/validation/doctor-project.md; CHANGELOG.md; checksums/processforge.sha256; .pf/logs/agent-log.md.
+Artifacts changed:
+.pf/logs/agent-log.md.
+Templates used:
+None.
+Tools used:
+Serena search attempt, PowerShell targeted reads, rg, apply_patch, py_compile, focused smokes.
+Decisions:
+Kept Serena/MCP availability outside PF responsibility. Added a narrow registry lock and atomic write for `pack-activate`; added inactive official classifier suggestions without domain hardcode; added explicit capability waiver handling for `doctor-project` registry declaration gaps while preserving strict capability resolution.
+Risks:
+The capability waiver is a doctor-level diagnostic override only. It does not satisfy context capability resolution and should not replace registering reusable workplace providers.
+Next steps:
+Run schema/public/checksum/release checks and commit if green.
+Handoff:
+None.
+
 ## 2026-07-31 13:50 - codex
 
 Task:

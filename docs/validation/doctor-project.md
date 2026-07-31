@@ -27,6 +27,9 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
   reported and protected by role-aware scan guards.
 - Project-local package resources do not produce a false resource-index warning
   when the index is optional.
+- Required capability gaps distinguish registry declaration state from runtime
+  proof. An explicit `.pf/artifacts/capability-waivers.yaml` entry can record
+  independently verified runtime access and downgrade that gap to `WARN`.
 - Project package draft exists.
 - Init artifacts exist.
 - Init review exists.

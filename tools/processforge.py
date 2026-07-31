@@ -3325,6 +3325,72 @@ def project_classifier_paths(
     return unique
 
 
+def project_available_paths(project_root: Path, files: list[Path] | None = None) -> set[str]:
+    source_files = files if files is not None else list_project_files(project_root)
+    available_paths = {rel(path, project_root) for path in source_files}
+    for path in source_files:
+        parent = path.relative_to(project_root).parent
+        while parent != Path("."):
+            available_paths.add(parent.as_posix())
+            parent = parent.parent
+    available_paths.update(
+        path.name
+        for path in project_root.iterdir()
+        if path.is_dir() and path.name not in {".git", ".idea", ".serena"}
+    )
+    return available_paths
+
+
+def inactive_official_classifier_hints(workplace_manifest: Path | None, project_root: Path, files: list[Path] | None = None) -> list[str]:
+    active_ids = active_process_pack_ids(workplace_manifest)
+    available_paths = project_available_paths(project_root, files)
+    hints: list[str] = []
+    seen: set[str] = set()
+    for manifest_path, manifest in official_pack_manifest_records():
+        pack_id = str(manifest.get("id") or "")
+        if not pack_id or pack_id in active_ids:
+            continue
+        provided = manifest.get("provides") if isinstance(manifest.get("provides"), dict) else {}
+        declared_ids = {str(item) for item in as_list(provided.get("project_classifiers")) if str(item)}
+        if not declared_ids:
+            continue
+        registry_path = manifest_path.parent / "project-classifiers" / "registry-entry.yaml"
+        registry = load_yaml_document(registry_path)
+        if not isinstance(registry, dict) or yaml_error(registry):
+            continue
+        for entry in as_list(registry.get("project_classifiers")):
+            if not isinstance(entry, dict) or str(entry.get("status", "active")) not in {"active", "enabled", "configured"}:
+                continue
+            classifier_id = str(entry.get("id") or "")
+            if classifier_id and classifier_id not in declared_ids:
+                continue
+            raw_path = entry.get("path")
+            if not raw_path:
+                continue
+            classifier_path = resolve_registry_relative_path(manifest_path.parent, str(raw_path), workplace_manifest)
+            classifier = load_yaml_document(classifier_path)
+            if (
+                not isinstance(classifier, dict)
+                or yaml_error(classifier)
+                or classifier.get("kind") != "processforge.project_classifier"
+                or str(classifier.get("status", "active")) != "active"
+            ):
+                continue
+            for rule in classifier.get("rules", []) if isinstance(classifier.get("rules"), list) else []:
+                if not isinstance(rule, dict) or not project_classifier_rule_matches(rule, available_paths):
+                    continue
+                key = f"{pack_id}:{classifier_id or classifier.get('id')}"
+                if key in seen:
+                    continue
+                seen.add(key)
+                hints.append(
+                    f"{pack_id} could classify this project via {classifier.get('id') or classifier_id}; "
+                    f"activate with `python bin/pf.py pack-activate --id {pack_id} --workplace <workplace-root> --apply`, "
+                    "then rerun project-context-refresh."
+                )
+    return hints
+
+
 def project_classifier_condition_matches(condition: dict[str, Any], available_paths: set[str]) -> bool:
     exists = condition.get("exists")
     if not isinstance(exists, str) or not exists.strip():
@@ -3358,17 +3424,7 @@ def classify_project(
     explicit_classifier_paths: list[Path] | None = None,
 ) -> dict[str, Any]:
     files = list_project_files(project_root)
-    available_paths = {rel(path, project_root) for path in files}
-    for path in files:
-        parent = path.relative_to(project_root).parent
-        while parent != Path("."):
-            available_paths.add(parent.as_posix())
-            parent = parent.parent
-    available_paths.update(
-        path.name
-        for path in project_root.iterdir()
-        if path.is_dir() and path.name not in {".git", ".idea", ".serena"}
-    )
+    available_paths = project_available_paths(project_root, files)
     project_types: set[str] = set()
     platforms: set[str] = set()
     tags: set[str] = set()
@@ -3410,6 +3466,7 @@ def classify_project(
                     "source": rel(path, project_root) if path.is_relative_to(project_root) else path.name,
                 }
             )
+    inactive_hints = inactive_official_classifier_hints(workplace_manifest, project_root, files) if not matched_rules else []
     return {
         "status": "classified" if matched_rules else "unclassified",
         "project_types": sorted(project_types),
@@ -3418,6 +3475,7 @@ def classify_project(
         "confidence": confidence,
         "loaded_classifiers": sorted(set(loaded)),
         "matched_rules": matched_rules,
+        "inactive_classifier_hints": inactive_hints,
     }
 
 
@@ -3451,6 +3509,7 @@ def detect_project(
         "confidence": classification["confidence"],
         "loaded_classifiers": classification["loaded_classifiers"],
         "matched_rules": classification["matched_rules"],
+        "inactive_classifier_hints": classification["inactive_classifier_hints"],
         "evidence": evidence or ["No loaded project classifier matched."],
         "files": [rel(path, project_root) for path in files[:300]],
         "top_dirs": top_dirs,
@@ -5062,6 +5121,10 @@ This project uses ProcessForge.
 
 {markdown_list(detected["loaded_classifiers"])}
 
+## Inactive Classifier Suggestions
+
+{markdown_list(detected["inactive_classifier_hints"])}
+
 ## Unknowns
 
 - Confirm exact project ownership and release workflow manually.
@@ -5256,6 +5319,16 @@ None inferred from file names. Tool selection comes from loaded registries, plat
 ## Optional Missing Capabilities
 
 {markdown_list(matches["optional_missing"])}
+
+## Capability Diagnostics
+
+- Missing required capabilities are registry declaration gaps, not proof that
+  the active runtime lacks access.
+- If runtime access was verified independently, record the evidence in
+  `.pf/artifacts/capability-waivers.yaml` with `capability`, `status`,
+  `reason`, and `evidence`.
+- Prefer registering the real provider in the workplace registry when the
+  capability should be reusable.
 
 ## Conflicts
 
@@ -6502,6 +6575,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_capsule_pins_context_snapshot", [sys.executable, str(root / "tools" / "smoke_capsule_pins_context_snapshot.py")], 120),
         ReleaseCommand("smoke_no_builtin_user_capability_satisfaction", [sys.executable, str(root / "tools" / "smoke_no_builtin_user_capability_satisfaction.py")], 120),
         ReleaseCommand("smoke_capability_resolution_data_driven_only", [sys.executable, str(root / "tools" / "smoke_capability_resolution_data_driven_only.py")], 120),
+        ReleaseCommand("smoke_doctor_project_capability_waiver", [sys.executable, str(root / "tools" / "smoke_doctor_project_capability_waiver.py")], 120),
         ReleaseCommand("smoke_domain_neutral_music_video_fixtures", [sys.executable, str(root / "tools" / "smoke_domain_neutral_music_video_fixtures.py")], 120),
         ReleaseCommand("smoke_runtime_no_domain_capability_constants", [sys.executable, str(root / "tools" / "smoke_runtime_no_domain_capability_constants.py")], 120),
         ReleaseCommand("smoke_specialization_nested_workflow_fields_rejected", [sys.executable, str(root / "tools" / "smoke_specialization_nested_workflow_fields_rejected.py")], 120),
@@ -7267,15 +7341,68 @@ def report_has_missing_required_capabilities(path: Path) -> bool:
     return report_section_has_items(path, "## Missing Required Capabilities")
 
 
-def report_section_has_items(path: Path, marker: str) -> bool:
+def report_section_items(path: Path, marker: str) -> list[str]:
     if not path.is_file():
-        return False
+        return []
     text = path.read_text(encoding="utf-8", errors="replace")
     if marker not in text:
-        return False
+        return []
     section = text.split(marker, 1)[1].split("\n## ", 1)[0]
-    listed = [line.strip() for line in section.splitlines() if line.strip().startswith("- ")]
-    return any(line != "- None." for line in listed)
+    items: list[str] = []
+    for line in section.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("- ") and stripped != "- None.":
+            items.append(stripped[2:].strip())
+    return items
+
+
+def report_section_has_items(path: Path, marker: str) -> bool:
+    return bool(report_section_items(path, marker))
+
+
+def active_capability_waivers(project_root: Path) -> dict[str, list[dict[str, Any]]]:
+    flow_root = locate_flow_root(project_root)
+    paths = [
+        flow_root / "capability-waivers.yaml",
+        flow_root / "artifacts" / "capability-waivers.yaml",
+    ]
+    active: dict[str, list[dict[str, Any]]] = {}
+    now = datetime.now(timezone.utc)
+    for path in paths:
+        if not path.is_file():
+            continue
+        data = load_yaml_document(path)
+        if not isinstance(data, dict) or yaml_error(data):
+            continue
+        records = data.get("capability_waivers")
+        if not isinstance(records, list):
+            records = data.get("waivers")
+        if not isinstance(records, list):
+            continue
+        for record in records:
+            if not isinstance(record, dict):
+                continue
+            capability = str(record.get("capability") or "").strip()
+            if not capability:
+                continue
+            status = str(record.get("status") or "active")
+            if status not in {"active", "waived", "verified"}:
+                continue
+            expires_at = parse_snapshot_timestamp(record.get("expires_at"))
+            if expires_at is not None and expires_at < now:
+                continue
+            active.setdefault(capability, []).append({**record, "path": rel(path, project_root)})
+    return active
+
+
+def capability_waiver_help() -> str:
+    return """create .pf/artifacts/capability-waivers.yaml with explicit evidence, for example:
+schema_version: 1
+capability_waivers:
+  - capability: filesystem.read
+    status: active
+    reason: runtime access verified; registry provider declaration is pending
+    evidence: .pf/artifacts/delivery-report.md"""
 
 
 def public_snapshot_path_checks(project_root: Path) -> list[Check]:
@@ -11726,6 +11853,56 @@ def write_yaml_file(path: Path, data: dict[str, Any]) -> None:
     path.write_text(ensure_trailing_newline(dump_yaml(data)), encoding="utf-8")
 
 
+def write_yaml_file_atomic(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    temporary.write_text(ensure_trailing_newline(dump_yaml(data)), encoding="utf-8")
+    os.replace(temporary, path)
+
+
+@contextlib.contextmanager
+def registry_file_lock(path: Path, *, timeout_seconds: float = 30.0, stale_after_seconds: float = 300.0) -> Any:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = path.with_name(f".{path.name}.lock")
+    deadline = time.monotonic() + timeout_seconds
+    while True:
+        try:
+            fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write(
+                    json.dumps(
+                        {
+                            "path": str(path),
+                            "pid": os.getpid(),
+                            "created_at": now_utc(),
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                        sort_keys=True,
+                    )
+                    + "\n"
+                )
+            break
+        except FileExistsError:
+            try:
+                age = time.time() - lock_path.stat().st_mtime
+                if age > stale_after_seconds:
+                    lock_path.unlink()
+                    continue
+            except OSError:
+                pass
+            if time.monotonic() >= deadline:
+                raise SystemExit(f"FAIL: registry is locked by another writer: {lock_path}")
+            time.sleep(0.1)
+    try:
+        yield
+    finally:
+        try:
+            lock_path.unlink()
+        except FileNotFoundError:
+            pass
+
+
 def parse_cli_bool(value: Any, *, name: str = "value") -> bool:
     if isinstance(value, bool):
         return value
@@ -14166,29 +14343,30 @@ def command_pack_activate(args: argparse.Namespace) -> int:
     if pack_id not in manifests:
         raise SystemExit(f"FAIL: official process pack not found: {pack_id}")
     registry_path = workplace / "registries" / "process-packs.yaml"
-    registry = load_yaml_document(registry_path) if registry_path.is_file() else {}
-    if not isinstance(registry, dict) or yaml_error(registry):
-        registry = {}
-    entries = [entry for entry in as_list(registry.get("process_packs")) if isinstance(entry, dict)]
-    entries = [entry for entry in entries if str(entry.get("id") or "") != pack_id]
-    manifest = manifests[pack_id][1]
-    entries.append(
-        {
-            "id": pack_id,
-            "origin": "official",
-            "status": "active",
-            "version": str(manifest.get("version") or ""),
-        }
-    )
-    document = {
-        "schema_version": 1,
-        "profile": str(registry.get("profile") or "custom"),
-        "process_packs": sorted(entries, key=lambda item: str(item.get("id") or "")),
-    }
     if not args.apply:
         print(f"PLAN: activate {pack_id} in {registry_path}")
         return 0
-    write_yaml_file(registry_path, document)
+    with registry_file_lock(registry_path):
+        registry = load_yaml_document(registry_path) if registry_path.is_file() else {}
+        if not isinstance(registry, dict) or yaml_error(registry):
+            registry = {}
+        entries = [entry for entry in as_list(registry.get("process_packs")) if isinstance(entry, dict)]
+        entries = [entry for entry in entries if str(entry.get("id") or "") != pack_id]
+        manifest = manifests[pack_id][1]
+        entries.append(
+            {
+                "id": pack_id,
+                "origin": "official",
+                "status": "active",
+                "version": str(manifest.get("version") or ""),
+            }
+        )
+        document = {
+            "schema_version": 1,
+            "profile": str(registry.get("profile") or "custom"),
+            "process_packs": sorted(entries, key=lambda item: str(item.get("id") or "")),
+        }
+        write_yaml_file_atomic(registry_path, document)
     append_workplace_event(
         workplace,
         "process.pack.activated",
@@ -19168,8 +19346,27 @@ def command_doctor_project(args: argparse.Namespace) -> int:
     package_exists = any((flow_root / "packages").glob("project.*.yaml")) if (flow_root / "packages").is_dir() else False
     checks.append(check("PASS" if package_exists else ("WARN" if auto_workplace_mode else "FAIL"), "project package draft exists"))
     resource_report = flow_root / "artifacts" / "global-resource-matching-report.md"
-    if report_has_missing_required_capabilities(resource_report):
-        checks.append(check("FAIL", "required capabilities are missing"))
+    missing_capabilities = report_section_items(resource_report, "## Missing Required Capabilities")
+    capability_waivers = active_capability_waivers(project_root) if missing_capabilities else {}
+    unwaived_capabilities = [capability for capability in missing_capabilities if capability not in capability_waivers]
+    waived_capabilities = [capability for capability in missing_capabilities if capability in capability_waivers]
+    if unwaived_capabilities:
+        checks.append(
+            check_with_hint(
+                "FAIL",
+                "required capability registry declarations are missing: " + ", ".join(unwaived_capabilities),
+                "ProcessForge capability resolution is registry-driven. This means no active provider declared the capability; it does not prove the runtime lacked actual access.",
+                "register the capability provider in the workplace, rerun project-onboard or project-context-refresh, then rerun doctor-project",
+                capability_waiver_help(),
+            )
+        )
+    elif waived_capabilities:
+        checks.append(
+            check(
+                "WARN",
+                "required capabilities covered by explicit runtime-access waiver: " + ", ".join(waived_capabilities),
+            )
+        )
     elif resource_report.is_file():
         checks.append(check("PASS", "required capabilities are resolved or built in"))
     if report_section_has_items(resource_report, "## Missing Required Platform Contracts"):
