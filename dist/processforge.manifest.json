@@ -3,13 +3,13 @@
     "entry_count": 804,
     "filename": "processforge.zip",
     "format": "zip",
-    "sha256": "72d44a8b02adcbe6dabb2e4726a2d433ed91d528dd6c41c44f8ac437a63c6649",
-    "size": 1041616
+    "sha256": "076bc293db6ab2309d7d34bc204ce6004403a0319cfa7e576f14a4f9f9deea26",
+    "size": 1043559
   },
   "build": {
     "deterministic": true,
-    "generated_at": "2026-07-31T11:55:55Z",
-    "source_date_epoch": 1785498955
+    "generated_at": "2026-07-31T12:34:35Z",
+    "source_date_epoch": 1785501275
   },
   "files": [
     {
@@ -59,23 +59,23 @@
     },
     {
       "path": "QUICKSTART.md",
-      "sha256": "0cb8ad0576317fd2e6f4d1ccb920fd88848c0c5acf167e66ec591b9e23401070",
-      "size": 8069
+      "sha256": "896c256873d226cc80413bb17b915906ddc4d7e08d41cc9a46a7e8ce97620dae",
+      "size": 8096
     },
     {
       "path": "QUICKSTART.ru.md",
-      "sha256": "4cee3f6b5b29423580cb5c0c5f67822e555a4050ccc42f28371eb2b3b7a9e07e",
-      "size": 14687
+      "sha256": "aabe7e7fdca9e128774de9b7d6c4f3456f73377bab8f7c5f7e427421d208f898",
+      "size": 14744
     },
     {
       "path": "README.md",
-      "sha256": "f9db05b88c435b1683101b1c9654c35729fd956002982ac9151ee07a10f631c3",
-      "size": 15899
+      "sha256": "98a9fbb5938cddcd8d230af71b62716c1e6f5e91415e5592102ed9f051c467fb",
+      "size": 17758
     },
     {
       "path": "README.ru.md",
-      "sha256": "73b572f68f917a0e89ae12d6f2bf0ccfcc8e8a4d9206066937f46f20c4f94bf9",
-      "size": 25477
+      "sha256": "0e793b798a976b1cd764235b7e196edd5912598618c38f078c71bc106882a3c0",
+      "size": 31057
     },
     {
       "path": "VERSION",
@@ -99,7 +99,7 @@
     },
     {
       "path": "checksums/processforge.sha256",
-      "sha256": "b0f6fa9efc9113ca8dc82fcfef038ea97d1fc9bc16823d0e4ba3e43be20a8fa4",
+      "sha256": "5c2bb3991c2d935393a4564675667c469048e2e831dcf14ebc2cfed6f3dd7ec8",
       "size": 88694
     },
     {
@@ -4058,9 +4058,9 @@
   "schema_bundle_version": "1.0",
   "schema_version": 1,
   "source": {
-    "commit": "9445db76c296a2f1edbb53e8f1ce5eaacf816fa6",
+    "commit": "ae4e846e455efa6549d1bb1aca74988f2766acc1",
     "dirty": false,
-    "tree": "413f33cc92ada57744978a79aedeb278704f09bc",
+    "tree": "e6103b51d36b77fe8c3341535c977fa9fddf2317",
     "vcs": "git"
   },
   "version": "1.0.0"
