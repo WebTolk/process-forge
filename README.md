@@ -37,6 +37,10 @@ Project context has a lock-file model. `.pf/process-forge.yaml` declares
 `fresh`, `fresh_with_updates`, `stale`, or `broken`; assignment capsules pin a
 snapshot id/checksum and are not rewritten by later refreshes.
 
+## Work Modes
+
+### Garage Mode (1-1-1-1)
+
 The atomic execution unit is `1-1-1-1`: one human operator, one primary agent
 session, one project, and one active process/run. In the default single-agent
 flow the primary agent performs the work, runs CLI checks, writes artifacts,
@@ -45,6 +49,8 @@ separate participants. Agent Ledger is CLI/files, not a separate agent. Director
 and Supervisor/Execution Inspector are only needed for multi-agent,
 process-transition, or external runtime-worker scenarios. See
 [docs/concepts/agent-session-model.md](docs/concepts/agent-session-model.md).
+
+### Forge / Factory Mode
 
 A workplace can be Director-capable while individual projects remain simple.
 Project coordination mode resolves as `simple`, `organized`, or `inherit` from
@@ -256,6 +262,7 @@ For humans:
 - [Workplace vs project](docs/concepts/workplace-vs-project.md)
 - [Resource authoring](docs/getting-started/resource-authoring.md)
 - [Project onboarding](docs/getting-started/project-onboarding.md)
+- [Built-in process stages](docs/processes/built-in-processes.md)
 
 For AI agents:
 
@@ -271,6 +278,7 @@ Detailed index:
 - [Installation and requirements](docs/getting-started/installation.md)
 - [Initialization order](docs/getting-started/initialization-order.md)
 - [Agent command runbook](docs/getting-started/agent-prompts.md)
+- [Built-in process stages](docs/processes/built-in-processes.md)
 - [Workplace vs project](docs/concepts/workplace-vs-project.md)
 - [Runtime model](docs/concepts/runtime-model.md)
 - [Runtime drivers](docs/concepts/runtime-drivers.md)

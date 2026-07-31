@@ -27,6 +27,7 @@ workplace; каждый репозиторий хранит только про�
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Создание ресурсов](../getting-started/resource-authoring.md)
 - [Подключение проекта](getting-started/project-onboarding.md)
+- [Этапы встроенных процессов](processes/built-in-processes.md)
 
 ## Для ИИ-агентов
 
@@ -48,6 +49,7 @@ workplace; каждый репозиторий хранит только про�
 - [Командный справочник агента и промпты](getting-started/agent-prompts.md)
 - [Первый собственный процесс](getting-started/create-your-first-process.md)
 - [Рабочий сценарий task batch](getting-started/task-batch-workflow.md)
+- [Этапы встроенных процессов](processes/built-in-processes.md)
 - [Multi-agent orchestration](getting-started/multi-agent-orchestration.md)
 - [Runtime driver and supervisor](getting-started/runtime-driver-supervisor.md)
 

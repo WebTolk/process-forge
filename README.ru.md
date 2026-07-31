@@ -37,6 +37,8 @@ context, выбранные глобальные ресурсы, назначе�
 
 Для человека ProcessForge проще понимать через два рабочих образа.
 
+### Режим гаража (1-1-1-1)
+
 Первый образ - гараж с инструментами. Это обычный режим `1-1-1-1`: один
 оператор, один основной агент, один проект и один активный process/run. Агент
 работает как мастер в своём гараже: берёт нужные инструменты, читает нужные
@@ -59,6 +61,8 @@ Agent Director здесь не нужен; Worker и Inspector остаются 
 который добавляет AI-пояснение к материалам сайта. Заполняй все требуемые
 артефакты, фиксируй решения по архитектуре, реализации, проверкам и поставке.
 ```
+
+### Режим Кузницы / Фабрики
 
 Второй образ - кузница или фабрика. Это мультиагентный режим: несколько
 параллельных агентов получают изолированные задачи, Agent Director координирует
@@ -284,6 +288,7 @@ semantic parity, применяй process только после review и до
 - [Workplace vs project](docs/ru/concepts/workplace-vs-project.md)
 - [Создание ресурсов](docs/getting-started/resource-authoring.md)
 - [Подключение проекта](docs/ru/getting-started/project-onboarding.md)
+- [Этапы встроенных процессов](docs/ru/processes/built-in-processes.md)
 
 Для ИИ-агентов:
 
@@ -300,6 +305,7 @@ semantic parity, применяй process только после review и до
 - [Установка и требования](docs/ru/getting-started/installation.md)
 - [Порядок инициализации](docs/ru/getting-started/initialization-order.md)
 - [Командный справочник агента](docs/ru/getting-started/agent-prompts.md)
+- [Этапы встроенных процессов](docs/ru/processes/built-in-processes.md)
 - [Workplace vs project](docs/ru/concepts/workplace-vs-project.md)
 - [Модель среды выполнения](docs/ru/concepts/runtime-model.md)
 - [Модель агентской сессии](docs/ru/concepts/agent-session-model.md)

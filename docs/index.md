@@ -21,6 +21,7 @@ provides explicit paths and choices.
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Resource authoring](getting-started/resource-authoring.md)
 - [Project onboarding](getting-started/project-onboarding.md)
+- [Built-in process stages](processes/built-in-processes.md)
 
 ## For AI Agents
 
@@ -42,6 +43,7 @@ provides explicit paths and choices.
 - [Agent command runbook and prompts](getting-started/agent-prompts.md)
 - [Create your first process](getting-started/create-your-first-process.md)
 - [Task batch workflow](getting-started/task-batch-workflow.md)
+- [Built-in process stages](processes/built-in-processes.md)
 - [Multi-agent orchestration](getting-started/multi-agent-orchestration.md)
 - [Runtime driver and supervisor quickstart](getting-started/runtime-driver-supervisor.md)
 - [Quick getting started path](getting-started.md)
