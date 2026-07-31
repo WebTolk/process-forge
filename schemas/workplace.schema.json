@@ -32,6 +32,7 @@
         "templates": { "type": "string" },
         "tools": { "type": "string" },
         "mcp": { "type": "string" },
+        "parameters": { "type": "string" },
         "specializations": { "type": "string" },
         "project_classifiers": { "type": "string" },
         "update_sources": { "type": "string" },
@@ -42,6 +43,7 @@
     },
     "tools": { "type": "array", "items": { "$ref": "#/$defs/capabilityProvider" } },
     "mcp_servers": { "type": "array", "items": { "$ref": "#/$defs/capabilityProvider" } },
+    "parameters": { "type": "object", "additionalProperties": true },
     "policies": { "type": "object" },
     "coordination": {
       "type": "object",

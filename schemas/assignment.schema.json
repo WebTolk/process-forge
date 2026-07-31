@@ -32,6 +32,7 @@
     "execution_mode": { "$ref": "#/$defs/execution_mode" },
     "context_artifacts": { "type": "array", "items": { "$ref": "#/$defs/context_artifact" } },
     "required_sources": { "type": "array", "items": { "type": "string" } },
+    "parameters": { "type": "object", "additionalProperties": true },
     "allowed_files": { "type": "array", "items": { "type": "string" } },
     "allowed_read_files": { "type": "array", "items": { "type": "string" } },
     "forbidden_files": { "type": "array", "items": { "type": "string" } },

@@ -21,6 +21,10 @@ use as <processforge-root>.
 ```text
 Initialize ProcessForge in step-by-step mode. It is located at
 <processforge-root>.
+
+Use explicit paths for the ProcessForge distribution, workplace, optional
+global agent root, and project roots. Do not treat the current working directory
+as a project unless I explicitly select it for project onboarding.
 ```
 
 The guided setup command family is `workplace-setup start`,
@@ -32,10 +36,17 @@ The guided setup command family is `workplace-setup start`,
 ```text
 Initialize ProcessForge in fully automatic mode. It is located at
 <processforge-root>. First inspect the current AGENTS.md and setup skills.
+
+Use explicit paths for the ProcessForge distribution, workplace, optional
+global agent root, and project roots. Do not treat the current working directory
+as a project unless I explicitly select it for project onboarding.
 ```
 
 In automatic mode, the agent first explains what is where and what role it has,
 proposes a setup scenario, gets approval, and only then applies changes.
+Agent configuration folders such as `.codex`, `.claude`, `.agents`, or custom
+names may become instruction or knowledge sources; they are not projects by
+name or by launch location.
 
 ## 4. Create Shared Resources
 

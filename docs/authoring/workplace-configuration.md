@@ -34,6 +34,30 @@ python bin/pf.py workplace-init --workplace <workplace-root> --apply
 ```bash
 python bin/pf.py doctor-workplace --root <workplace-root>
 ```
+
+## Parameters
+
+Workplace defaults for structured parameters can be declared directly in the
+workplace answers/manifest or in the workplace parameter registry:
+
+```text
+<workplace-root>/registries/parameters.yaml
+```
+
+Use this for machine-local defaults that many projects may inherit: local test
+stands, default publication channels, render presets, accounting profiles, or
+any other domain-neutral parameter tree. ProcessForge stores and merges the
+structure; it does not interpret the namespace.
+
+Projects override these values through `.pf/process-forge.yaml`, private
+`.pf/process-forge.local.yaml` `overrides.parameters`, `.pf/parameters.yaml`, or
+`.pf/parameters.local.yaml`. The project context snapshot receives the computed
+`resolved_parameters` tree and `parameter_resolution` provenance.
+
+Do not write parameters in `AGENTS.md` expecting the resolver to parse them.
+Markdown agent instructions are guidance. Machine parameters need an explicit
+structured YAML or JSON source.
+
 # Path Constants
 
 Define reusable path bases in `workplace.yaml`:

@@ -25,6 +25,7 @@
       "additionalProperties": true
     },
     "includes": { "type": "object", "additionalProperties": true },
+    "parameters": { "type": "object", "additionalProperties": true },
     "update_sites": { "type": "array", "items": { "$ref": "#/$defs/updateSite" } },
     "policies": { "type": "object", "additionalProperties": true }
   },

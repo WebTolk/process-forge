@@ -37,6 +37,7 @@
     },
     "required_capabilities": { "type": "array", "items": { "type": "string" } },
     "optional_capabilities": { "type": "array", "items": { "type": "string" } },
+    "parameters": { "type": "object", "additionalProperties": true },
     "context_requirements": {
       "type": "object",
       "description": "Declared context dependencies, similar to package requirements.",

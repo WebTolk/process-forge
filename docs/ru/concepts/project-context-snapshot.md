@@ -32,6 +32,19 @@ capabilities, provided capabilities, capability resolution, applied project
 overrides, effective fingerprints и conflicts. Capabilities остаются opaque IDs;
 snapshot не разворачивает полный knowledge content.
 
+Snapshot также записывает `resolved_parameters` и `parameter_resolution`.
+Параметры собираются только из структурированных источников: workplace
+`parameters`, `registries/parameters.yaml`, активных platform/specialization
+sources, project manifest, private `overrides.parameters`, `.pf/parameters.yaml`,
+`.pf/parameters.local.yaml`, process/stage/task/assignment `parameters` при их
+активации. `AGENTS.md` и другие Markdown-инструкции не являются машинными
+источниками параметров.
+
+Merge параметров нейтрален к предметной области: maps сливаются рекурсивно,
+scalars заменяются более конкретным слоем, списки объектов с `id` сливаются по
+`id`, списки без `id` заменяются целиком, `null` удаляет ключ map, а `_delete`
+или `__delete__` удаляет элемент списка по `id`.
+
 `capability_resolution` содержит satisfied и unsatisfied requirements. PF core
 не удовлетворяет user process capabilities по умолчанию. Если active resource
 profile не предоставляет required capability, snapshot фиксирует ее как

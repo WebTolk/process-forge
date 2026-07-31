@@ -80,6 +80,8 @@
     "requirements_fingerprint": { "type": "object", "additionalProperties": { "type": "string" } },
     "context_requirements": { "type": "object", "additionalProperties": true },
     "context_policy": { "type": "object", "additionalProperties": true },
+    "resolved_parameters": { "type": "object", "additionalProperties": true },
+    "parameter_resolution": { "type": "object", "additionalProperties": true },
     "resolved_context": { "type": "object", "additionalProperties": true },
     "active_resource_profile": { "type": "object", "additionalProperties": true },
     "execution_route": { "type": "object", "additionalProperties": true },

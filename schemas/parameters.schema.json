@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/parameters.schema.json",
+  "title": "ProcessForge Parameters",
+  "type": "object",
+  "required": ["schema_version", "kind", "parameters"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "kind": { "const": "processforge.parameters" },
+    "scope": { "type": "string" },
+    "parameters": { "type": "object", "additionalProperties": true },
+    "merge_policy": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": true
+}

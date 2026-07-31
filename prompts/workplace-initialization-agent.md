@@ -11,6 +11,13 @@ Initialize ProcessForge in fully automatic mode. It is located at
 <processforge-root>. First inspect the current AGENTS.md and setup skills.
 ```
 
+Do not infer roles from the current working directory. The operator-provided
+`<processforge-root>` is the installed distribution, `<workplace-root>` is the
+stateful workplace, and any global agent configuration folder such as `.codex`,
+`.claude`, `.agents`, or a custom name is only an optional instruction or
+knowledge source. It must not become `--project-root` unless the operator
+explicitly asks to onboard that directory as a project.
+
 For automatic setup, run the process in two phases.
 
 Phase 1 is read-only device discovery. Inspect the accessible `AGENTS.md`,

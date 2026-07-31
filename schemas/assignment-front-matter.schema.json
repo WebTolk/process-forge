@@ -16,6 +16,7 @@
     "allowed_files": { "type": "array", "items": { "type": "string" } },
     "forbidden_files": { "type": "array", "items": { "type": "string" } },
     "required_outputs": { "type": "array", "items": { "type": "string" } },
+    "parameters": { "type": "object", "additionalProperties": true },
     "selected_sources": { "type": "array", "items": { "type": "string" } },
     "telemetry_path": { "type": "string" },
     "hooks": {

@@ -9,6 +9,13 @@ the agent inspects accessible `AGENTS.md`, skills, local docs, platforms,
 toolchains, tools, MCP configuration, and project roots, then proposes which
 ProcessForge entities to create or register before apply.
 
+The command can be run from any directory. Do not use the shell current working
+directory as an implicit project root. Machine setup records explicit roles:
+installed ProcessForge distribution, workplace root, optional global agent root,
+knowledge roots, and candidate project roots. A global agent root may be a
+knowledge source, but it is not a project unless a later approved
+`project-onboard` step targets it explicitly.
+
 It creates:
 
 - `workplace.yaml`

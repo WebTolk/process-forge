@@ -38,6 +38,8 @@ The YAML snapshot records:
 - generated `id`
 - `generated_at` and `valid_until`
 - `context_requirements` copied from the project manifest
+- `resolved_parameters` and `parameter_resolution` for effective structured
+  parameter values
 - `resolved.knowledge_resources` with instance ids, versions, generations, and fingerprints
 - `freshness` and `reproducibility`
 - refresh policy
@@ -60,6 +62,27 @@ The YAML snapshot records:
 
 The runtime workplace snapshot may contain local tool or MCP availability state.
 It lives under `.pf/runtime/cache/` and is private.
+
+## Resolved Parameters
+
+Project context snapshots include the effective `resolved_parameters` tree and
+a `parameter_resolution` block with source records, provenance, conflicts, and
+status. The resolver starts from structured workplace parameters by default and
+does not parse `AGENTS.md` as parameters.
+
+Parameter merge is domain-neutral: maps merge recursively, scalar values are
+replaced by more specific layers, lists of objects with `id` merge by `id`, and
+lists without item ids are replaced.
+
+Snapshots record source fingerprints for structured parameter files so changes
+to workplace or project parameter sources make the snapshot stale. The Markdown
+snapshot summarizes parameter namespaces and source/conflict counts; the YAML
+snapshot carries the effective tree for agents and tooling.
+
+Assignment capsules resolve assignment-level `parameters` over the pinned
+project snapshot. This lets a task temporarily select or override a stand,
+render preset, accounting profile, publication channel, or any other structured
+parameter without changing the project snapshot.
 
 ## Platform Selection
 

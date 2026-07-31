@@ -105,6 +105,13 @@ new machine for a human. The agent should ask questions in blocks, write
 run `doctor-workplace`, and only then move to resource authoring or project
 onboarding.
 
+The launch directory is not a ProcessForge role. During machine setup the agent
+must use explicit paths for the installed ProcessForge distribution, the
+workplace root, optional global agent/instruction roots, and real project roots.
+Folders named `.codex`, `.claude`, `.agents`, or any custom agent root can be
+knowledge or instruction sources; they do not become projects unless the
+operator explicitly targets them with `project-onboard`.
+
 Use `first-run`, `workplace-init`, and direct create/register commands as the
 fully automatic path only when the operator explicitly requests automation and
 provides the required paths and answers.

@@ -121,6 +121,7 @@
     "generated_files": { "type": "object", "additionalProperties": true },
     "description": { "type": "string" },
     "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "parameters": { "type": "object", "additionalProperties": true },
     "required_artifacts": { "type": "array", "items": { "type": "string" } },
     "required_evidence": { "type": "array", "items": { "type": "string" } },
     "acceptance": {
@@ -276,6 +277,7 @@
         "required_evidence": { "type": "array", "items": { "type": "string" } },
         "required_role": { "$ref": "#/$defs/id" },
         "required_capabilities": { "type": "array", "items": { "type": "string" } },
+        "parameters": { "type": "object", "additionalProperties": true },
         "allowed_tools": { "type": "array", "items": { "type": "string" } },
         "entry_gates": { "type": "array", "items": { "type": "string" } },
         "exit_gates": { "type": "array", "items": { "type": "string" } },

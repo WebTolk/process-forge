@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import contextlib
 import fnmatch
 import hashlib
@@ -1751,6 +1752,7 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
     policies_answers = answers.get("policies", {}) if isinstance(answers.get("policies"), dict) else {}
     coordination_answers = answers.get("coordination", {}) if isinstance(answers.get("coordination"), dict) else {}
     director_answers = coordination_answers.get("director", {}) if isinstance(coordination_answers.get("director"), dict) else {}
+    workplace_parameters = answers.get("parameters") if isinstance(answers.get("parameters"), dict) else {}
     workplace_coordination = default_workplace_coordination()
     workplace_coordination["director_enabled"] = bool(coordination_answers.get("director_enabled", False))
     workplace_coordination["director_office_enabled"] = bool(coordination_answers.get("director_office_enabled", False))
@@ -1794,6 +1796,7 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
             "templates": "registries/templates.yaml",
             "tools": "registries/tools.yaml",
             "mcp": "registries/mcp.yaml",
+            "parameters": "registries/parameters.yaml",
             "specializations": "registries/specializations.yaml",
             "project_classifiers": "registries/project-classifiers.yaml",
             "process_packs": "registries/process-packs.yaml",
@@ -1806,7 +1809,8 @@ def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str
             "prefer_project_overrides": True,
             "require_explicit_override_for_locked_policies": True,
             "shell_is_fallback": bool(policies_answers.get("shell_is_fallback", True)),
-            "do_not_store_secret_values": True,
+            "prefer_secret_refs": True,
+            "public_exports_must_sanitize_secrets": True,
             "require_public_cleanliness_check": True,
         },
         "coordination": workplace_coordination,
@@ -1876,7 +1880,7 @@ This directory is a ProcessForge workplace layer.
 
 ## Rules
 
-- Do not store credentials or secret values.
+- Prefer secret refs for portable data; keep any inline local credentials in private/local parameter sources.
 - Keep local absolute paths in workplace-local files only.
 - Project public files must not contain local absolute paths.
 - Project settings may override workplace defaults only through merge policy.
@@ -1906,6 +1910,7 @@ applied
 - registries/templates.yaml
 - registries/tools.yaml
 - registries/mcp.yaml
+- registries/parameters.yaml
 - registries/specializations.yaml
 - registries/project-classifiers.yaml
 - registries/process-packs.yaml
@@ -1916,7 +1921,7 @@ applied
 
 ## Notes
 
-- Secret values were not stored.
+- Secret refs are preferred for portable data; local private parameter files may carry inline credentials when the operator accepts that risk.
 - Project public manifests must keep local paths out.
 """
 
@@ -2017,6 +2022,7 @@ Run `project-onboard` for a concrete project.
         ),
         root / "registries" / "tools.yaml": dump_yaml({"schema_version": 1, "tools": []}),
         root / "registries" / "mcp.yaml": dump_yaml({"schema_version": 1, "mcp_servers": []}),
+        root / "registries" / "parameters.yaml": dump_yaml({"schema_version": 1, "kind": "processforge.parameters", "scope": "workplace", "parameters": workplace_parameters}),
         root / "registries" / "specializations.yaml": dump_yaml(
             {"schema_version": 1, "specializations": []}
         ),
@@ -4097,6 +4103,7 @@ def resolve_platform_contracts(
                 "mcp": sorted(contract_optional_items(contract, "mcp")),
                 "templates": sorted(contract_optional_items(contract, "templates")),
             },
+            "parameters": parameter_payload(contract),
         }
         resolving.pop()
         resolved.add(contract_id)
@@ -4900,6 +4907,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
         "platform_contracts": [{"id": item, "required": True} for item in sorted(set(detected["platforms"]))],
     }
     context_policy = answers.get("context_policy") if isinstance(answers.get("context_policy"), dict) else default_context_policy({})
+    project_parameters = answers.get("parameters") if isinstance(answers.get("parameters"), dict) else {}
 
     public_manifest = {
         "schema_version": 1,
@@ -4948,6 +4956,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
             "hooks": "hooks.yaml",
         },
         "knowledge_stack": knowledge_stack,
+        "parameters": project_parameters,
         "context_requirements": context_requirements,
         "context_policy": context_policy,
         "required_capabilities": required,
@@ -4979,7 +4988,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
         "workplace": {"manifest": str(workplace_manifest.resolve())},
         "process_forge": {"distribution_override": str(ROOT.resolve())},
         "local": {"project_root": str(project_root.resolve())},
-        "overrides": {"package_roots": [], "template_roots": [], "tool_preferences": {}, "context_requirements": {}, "context_policy": {}},
+        "overrides": {"package_roots": [], "template_roots": [], "tool_preferences": {}, "parameters": {}, "context_requirements": {}, "context_policy": {}},
         "runtime": {
             "mode": "manual",
             "queue": "runtime/queue",
@@ -5575,6 +5584,7 @@ Review and confirm observed conventions.
         flow_root / "START_AGENT_HERE.md": start_agent_here,
         flow_root / "process-forge.yaml": dump_yaml(public_manifest),
         flow_root / "process-forge.local.yaml": dump_yaml(local_manifest),
+        flow_root / "parameters.yaml": dump_yaml({"schema_version": 1, "kind": "processforge.parameters", "scope": "project", "parameters": {}}),
         flow_root / "hooks.yaml": dump_yaml(hooks),
         flow_root / "registries" / "project-classifiers.yaml": dump_yaml(
             {"schema_version": 1, "project_classifiers": []}
@@ -6482,6 +6492,9 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_resource_versioning_modes", [sys.executable, str(root / "tools" / "smoke_resource_versioning_modes.py")], 120),
         ReleaseCommand("smoke_project_context_snapshot_lock_model", [sys.executable, str(root / "tools" / "smoke_project_context_snapshot_lock_model.py")], 120),
         ReleaseCommand("smoke_project_context_freshness_policies", [sys.executable, str(root / "tools" / "smoke_project_context_freshness_policies.py")], 120),
+        ReleaseCommand("smoke_parameter_cascade_resolution", [sys.executable, str(root / "tools" / "smoke_parameter_cascade_resolution.py")], 120),
+        ReleaseCommand("smoke_parameter_freshness", [sys.executable, str(root / "tools" / "smoke_parameter_freshness.py")], 120),
+        ReleaseCommand("smoke_parameter_assignment_capsule", [sys.executable, str(root / "tools" / "smoke_parameter_assignment_capsule.py")], 120),
         ReleaseCommand("smoke_session_start_context_check", [sys.executable, str(root / "tools" / "smoke_session_start_context_check.py")], 120),
         ReleaseCommand("smoke_update_apply_marks_context_stale", [sys.executable, str(root / "tools" / "smoke_update_apply_marks_context_stale.py")], 120),
         ReleaseCommand("smoke_capsule_pins_context_snapshot", [sys.executable, str(root / "tools" / "smoke_capsule_pins_context_snapshot.py")], 120),
@@ -7572,6 +7585,7 @@ def collect_project_snapshot_sources(project_root: Path) -> list[dict[str, Any]]
                 ("registries/tools.yaml", "workplace-tool-registry"),
                 ("registries/mcp.yaml", "workplace-mcp-registry"),
                 ("registries/templates.yaml", "workplace-template-registry"),
+                ("registries/parameters.yaml", "workplace-parameter-registry"),
             ]:
                 path = workplace_root / rel_path
                 if path.is_file():
@@ -7629,6 +7643,12 @@ def collect_project_snapshot_sources(project_root: Path) -> list[dict[str, Any]]
 
     if project_overrides_path(project_root).is_file():
         sources.append(fingerprint_record(project_overrides_path(project_root), project_root, "project-overrides", "project-overrides"))
+    for parameter_path_candidate, source_id, private in [
+        (flow_root / "parameters.yaml", "project-parameters", False),
+        (flow_root / "parameters.local.yaml", "project-local-parameters", True),
+    ]:
+        if parameter_path_candidate.is_file():
+            sources.append(fingerprint_record(parameter_path_candidate, project_root, source_id, "project-parameters", private=private))
     for dirname, kind in [
         ("processes", "process-override"),
         ("packages", "package-override"),
@@ -8034,6 +8054,256 @@ def deep_merge_dicts(base: dict[str, Any], override: dict[str, Any]) -> dict[str
             result[key] = deep_merge_dicts(result[key], value)
         else:
             result[key] = value
+    return result
+
+
+def parameter_path(base: str, key: str) -> str:
+    return f"{base}.{key}" if base else key
+
+
+def parameter_list_item_path(base: str, item_id: str) -> str:
+    return f"{base}[id={item_id}]" if base else f"[id={item_id}]"
+
+
+def parameter_list_merges_by_id(base: Any, override: Any) -> bool:
+    if not isinstance(base, list) or not isinstance(override, list):
+        return False
+    if not base or not override:
+        return False
+    combined = [*base, *override]
+    return all(isinstance(item, dict) and item.get("id") not in (None, "") for item in combined)
+
+
+def merge_parameter_value(base: Any, override: Any, source_id: str, path: str, provenance: dict[str, Any]) -> Any:
+    if isinstance(base, dict) and isinstance(override, dict):
+        return merge_parameter_maps(base, override, source_id, path, provenance)
+    if parameter_list_merges_by_id(base, override):
+        result = [copy.deepcopy(item) for item in base]
+        index = {str(item["id"]): idx for idx, item in enumerate(result) if isinstance(item, dict) and item.get("id") not in (None, "")}
+        for item in override:
+            item_id = str(item["id"])
+            item_path = parameter_list_item_path(path, item_id)
+            if item.get("__delete__") is True or item.get("_delete") is True:
+                if item_id in index:
+                    del result[index[item_id]]
+                    provenance[item_path] = {"source": source_id, "action": "delete"}
+                    index = {str(value["id"]): idx for idx, value in enumerate(result) if isinstance(value, dict) and value.get("id") not in (None, "")}
+                continue
+            if item_id in index:
+                result[index[item_id]] = merge_parameter_maps(result[index[item_id]], item, source_id, item_path, provenance)
+            else:
+                result.append(copy.deepcopy(item))
+                provenance[item_path] = {"source": source_id, "action": "add"}
+        return result
+    provenance[path or "<root>"] = {"source": source_id, "action": "replace"}
+    return copy.deepcopy(override)
+
+
+def merge_parameter_maps(base: dict[str, Any], override: dict[str, Any], source_id: str, path: str = "", provenance: dict[str, Any] | None = None) -> dict[str, Any]:
+    provenance = provenance if provenance is not None else {}
+    result = copy.deepcopy(base)
+    for key, value in override.items():
+        key_text = str(key)
+        key_path = parameter_path(path, key_text)
+        if value is None:
+            if key_text in result:
+                del result[key_text]
+                provenance[key_path] = {"source": source_id, "action": "delete"}
+            continue
+        if key_text in result:
+            result[key_text] = merge_parameter_value(result[key_text], value, source_id, key_path, provenance)
+        else:
+            result[key_text] = copy.deepcopy(value)
+            provenance[key_path] = {"source": source_id, "action": "add"}
+    return result
+
+
+def parameter_payload(data: dict[str, Any]) -> dict[str, Any]:
+    parameters = data.get("parameters") if isinstance(data, dict) else {}
+    return parameters if isinstance(parameters, dict) else {}
+
+
+def parameter_source_record(source_id: str, layer: str, parameters: dict[str, Any], *, path: Path | None = None, project_root: Path | None = None, private: bool = False, display_path: str | None = None) -> dict[str, Any]:
+    record: dict[str, Any] = {
+        "id": source_id,
+        "layer": layer,
+        "keys": sorted(str(key) for key in parameters),
+        "private": private,
+    }
+    if path:
+        record["path"] = display_path or (rel(path, project_root) if project_root and path_is_relative_to(path, project_root) else str(path))
+        record["checksum"] = "sha256:" + sha256_file(path) if path.is_file() else "missing"
+    return record
+
+
+def workplace_parameter_paths(workplace_manifest: Path | None) -> list[Path]:
+    if not workplace_manifest or not workplace_manifest.is_file():
+        return []
+    workplace_root = workplace_manifest.parent
+    workplace_data = load_yaml_document(workplace_manifest)
+    registries = workplace_data.get("registries") if isinstance(workplace_data.get("registries"), dict) else {}
+    paths: list[Path] = []
+    raw_registry = registries.get("parameters") if isinstance(registries, dict) else None
+    if raw_registry:
+        paths.append(resolve_registry_relative_path(workplace_root, str(raw_registry), workplace_manifest))
+    default_path = workplace_root / "registries" / "parameters.yaml"
+    if default_path not in paths:
+        paths.append(default_path)
+    return paths
+
+
+def add_parameter_source(
+    result: dict[str, Any],
+    *,
+    source_id: str,
+    layer: str,
+    parameters: dict[str, Any],
+    path: Path | None = None,
+    project_root: Path | None = None,
+    private: bool = False,
+    display_path: str | None = None,
+) -> None:
+    if not parameters:
+        return
+    result["sources"].append(parameter_source_record(source_id, layer, parameters, path=path, project_root=project_root, private=private, display_path=display_path))
+    result["resolved_parameters"] = merge_parameter_maps(result["resolved_parameters"], parameters, source_id, provenance=result["provenance"])
+
+
+def process_parameters_from_path(path: Path) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+    data = load_yaml_document(path)
+    stages = data.get("stages") if isinstance(data.get("stages"), list) else []
+    stage_parameters: dict[str, dict[str, Any]] = {}
+    for stage in stages:
+        if not isinstance(stage, dict) or not stage.get("id"):
+            continue
+        params = parameter_payload(stage)
+        if params:
+            stage_parameters[str(stage["id"])] = params
+    return parameter_payload(data), stage_parameters
+
+
+def resolve_project_parameters(
+    project_root: Path,
+    workplace_manifest: Path | None,
+    manifest_data: dict[str, Any],
+    platform_resolution: dict[str, Any],
+    specialization_ids: list[str],
+    platform_ids: list[str],
+    process_id: str | None,
+    process_paths: list[Path],
+) -> dict[str, Any]:
+    flow_root = locate_flow_root(project_root)
+    result: dict[str, Any] = {
+        "status": "resolved",
+        "resolved_parameters": {},
+        "sources": [],
+        "provenance": {},
+        "conflicts": [],
+    }
+    if workplace_manifest and workplace_manifest.is_file():
+        workplace_data = load_yaml_document(workplace_manifest)
+        add_parameter_source(
+            result,
+            source_id="workplace-manifest",
+            layer="workplace",
+            parameters=parameter_payload(workplace_data),
+            path=workplace_manifest,
+            project_root=project_root,
+            private=True,
+            display_path="<private-workplace-manifest-ref>",
+        )
+        for index, path in enumerate(workplace_parameter_paths(workplace_manifest)):
+            data = load_yaml_document(path)
+            add_parameter_source(
+                result,
+                source_id=f"workplace-parameters-{index + 1}",
+                layer="workplace",
+                parameters=parameter_payload(data),
+                path=path,
+                project_root=project_root,
+                private=True,
+                display_path=f"<private-workplace-ref>/{path.relative_to(workplace_manifest.parent).as_posix()}" if path_is_relative_to(path, workplace_manifest.parent) else "<private-workplace-parameters-ref>",
+            )
+    for contract in platform_resolution.get("contracts", []) if isinstance(platform_resolution.get("contracts"), list) else []:
+        if isinstance(contract, dict):
+            add_parameter_source(
+                result,
+                source_id=f"platform:{contract.get('id', 'unknown')}",
+                layer="platform",
+                parameters=parameter_payload(contract),
+            )
+    index = specialization_manifest_index(workplace_manifest, project_root)
+    for specialization_id in [specialization_resource_id(item) for item in specialization_ids if str(item)]:
+        spec = index.get(specialization_id)
+        if not isinstance(spec, dict):
+            continue
+        for override_entry in project_specialization_override_entries(project_root, specialization_id):
+            mode = str(override_entry.get("mode") or "extension")
+            if mode not in PROJECT_OVERRIDE_MODES:
+                result["conflicts"].append({"id": specialization_id, "kind": "specialization", "reason": f"unsupported project override mode: {mode}"})
+                continue
+            overlay = load_project_override_document(project_root, override_entry)
+            if overlay:
+                spec, _overlay_notes = apply_specialization_overlay(spec, overlay, mode)
+        add_parameter_source(
+            result,
+            source_id=f"specialization:{specialization_id}",
+            layer="specialization",
+            parameters=parameter_payload(spec),
+            path=spec.get("__manifest_path") if isinstance(spec.get("__manifest_path"), Path) else None,
+            project_root=project_root,
+            private=str(spec.get("__source") or "") == "workplace",
+        )
+        for binding_index, binding in enumerate(spec.get("platform_bindings", []) if isinstance(spec.get("platform_bindings"), list) else []):
+            if isinstance(binding, dict) and platform_binding_matches(binding, platform_ids, platform_resolution.get("platform_stack", []), process_id):
+                add_parameter_source(
+                    result,
+                    source_id=f"specialization:{specialization_id}:binding:{binding_index + 1}",
+                    layer="specialization",
+                    parameters=parameter_payload(binding),
+                )
+    add_parameter_source(result, source_id="project-manifest", layer="project", parameters=parameter_payload(manifest_data), path=flow_root / "process-forge.yaml", project_root=project_root)
+    project_parameters = flow_root / "parameters.yaml"
+    add_parameter_source(result, source_id="project-parameters", layer="project", parameters=parameter_payload(load_yaml_document(project_parameters)), path=project_parameters, project_root=project_root)
+    local_config = flow_root / "process-forge.local.yaml"
+    local_data = load_yaml_document(local_config)
+    local_overrides = local_data.get("overrides") if isinstance(local_data.get("overrides"), dict) else {}
+    add_parameter_source(result, source_id="project-local-overrides", layer="project", parameters=parameter_payload(local_overrides), path=local_config, project_root=project_root, private=True)
+    project_local_parameters = flow_root / "parameters.local.yaml"
+    add_parameter_source(result, source_id="project-local-parameters", layer="project", parameters=parameter_payload(load_yaml_document(project_local_parameters)), path=project_local_parameters, project_root=project_root, private=True)
+    for index, path in enumerate(process_paths):
+        parameters, _stage_parameters = process_parameters_from_path(path)
+        add_parameter_source(result, source_id=f"process:{path.stem}:{index + 1}", layer="process", parameters=parameters, path=path, project_root=project_root)
+    if result["conflicts"]:
+        result["status"] = "conflict"
+    return result
+
+
+def resolve_assignment_parameters(project_root: Path, snapshot: dict[str, Any], assignment_metadata: dict[str, Any]) -> dict[str, Any]:
+    base = snapshot.get("resolved_parameters") if isinstance(snapshot.get("resolved_parameters"), dict) else {}
+    snapshot_resolution = snapshot.get("parameter_resolution") if isinstance(snapshot.get("parameter_resolution"), dict) else {}
+    result: dict[str, Any] = {
+        "status": "resolved",
+        "resolved_parameters": copy.deepcopy(base),
+        "sources": copy.deepcopy(snapshot_resolution.get("sources", [])) if isinstance(snapshot_resolution.get("sources"), list) else [],
+        "provenance": copy.deepcopy(snapshot_resolution.get("provenance", {})) if isinstance(snapshot_resolution.get("provenance"), dict) else {},
+        "conflicts": copy.deepcopy(snapshot_resolution.get("conflicts", [])) if isinstance(snapshot_resolution.get("conflicts"), list) else [],
+    }
+    process_ref = assignment_metadata.get("process")
+    process_id = str(process_ref.get("id") if isinstance(process_ref, dict) else process_ref or "")
+    stage_id = str(assignment_metadata.get("stage") or "")
+    if process_id:
+        try:
+            process_path = resolve_process_definition(project_root, process_id).path
+            process_parameters, stage_parameters = process_parameters_from_path(process_path)
+            add_parameter_source(result, source_id=f"assignment-process:{process_id}", layer="process", parameters=process_parameters, path=process_path, project_root=project_root)
+            if stage_id and stage_id in stage_parameters:
+                add_parameter_source(result, source_id=f"assignment-stage:{process_id}:{stage_id}", layer="stage", parameters=stage_parameters[stage_id], path=process_path, project_root=project_root)
+        except SystemExit:
+            result["conflicts"].append({"id": process_id, "kind": "process", "reason": "assignment process parameters could not be loaded"})
+    add_parameter_source(result, source_id="assignment", layer="task", parameters=parameter_payload(assignment_metadata))
+    if result["conflicts"]:
+        result["status"] = "conflict"
     return result
 
 
@@ -9067,11 +9337,21 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     resolved_knowledge_resources = select_resolved_knowledge_resources(package_resources, context_requirements)
     available_knowledge_resources = [resolved_resource_instance(resource) for resource in package_resources]
     reproducibility = aggregate_reproducibility(resolved_knowledge_resources)
+    parameter_resolution = resolve_project_parameters(
+        project_root,
+        workplace_manifest_path,
+        manifest_data,
+        platform_resolution,
+        manifest_specializations,
+        manifest_platform_ids,
+        process_id_for_resolution,
+        manifest_path_refs(project_root, "processes"),
+    )
     coordination_status = effective_project_coordination(project_root, explicit_workplace)
     coordination_blocked = coordination_status["effective_mode"] == "organized" and (
         not coordination_status["workplace_director_enabled"] or not coordination_status["director_office_exists"]
     )
-    health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] or platform_resolution["circular_platforms"] or required_resource_missing or specialization_context["conflicts"] or coordination_blocked else ("warn" if any(item["severity"] == "warn" for item in optional_records) or recommended_resource_missing else "pass")
+    health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] or platform_resolution["circular_platforms"] or required_resource_missing or specialization_context["conflicts"] or parameter_resolution["conflicts"] or coordination_blocked else ("warn" if any(item["severity"] == "warn" for item in optional_records) or recommended_resource_missing else "pass")
     snapshot_id = f"ctx-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
     requirements = requirements_fingerprints(flow_root, project_root)
     source_fingerprints = {
@@ -9080,6 +9360,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         "knowledge_roots_registry": "sha256:" + sha256_file(workplace_manifest_path.parent / "registries" / "knowledge-roots.yaml") if workplace_manifest_path and (workplace_manifest_path.parent / "registries" / "knowledge-roots.yaml").is_file() else "missing",
         "template_registry": "sha256:" + sha256_file(workplace_manifest_path.parent / "registries" / "templates.yaml") if workplace_manifest_path and (workplace_manifest_path.parent / "registries" / "templates.yaml").is_file() else "missing",
         "tool_registry": "sha256:" + sha256_file(workplace_manifest_path.parent / "registries" / "tools.yaml") if workplace_manifest_path and (workplace_manifest_path.parent / "registries" / "tools.yaml").is_file() else "missing",
+        "parameters_registry": "sha256:" + sha256_file(workplace_manifest_path.parent / "registries" / "parameters.yaml") if workplace_manifest_path and (workplace_manifest_path.parent / "registries" / "parameters.yaml").is_file() else "missing",
         "installed_subjects": "sha256:" + sha256_file(workplace_manifest_path.parent / "registries" / "installed-subjects.yaml") if workplace_manifest_path and (workplace_manifest_path.parent / "registries" / "installed-subjects.yaml").is_file() else "missing",
     }
     return {
@@ -9143,6 +9424,13 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         "requirements_fingerprint": requirements,
         "context_requirements": context_requirements,
         "context_policy": context_policy,
+        "resolved_parameters": parameter_resolution["resolved_parameters"],
+        "parameter_resolution": {
+            "status": parameter_resolution["status"],
+            "sources": parameter_resolution["sources"],
+            "provenance": parameter_resolution["provenance"],
+            "conflicts": parameter_resolution["conflicts"],
+        },
         "resolved_context": specialization_context,
         "active_resource_profile": specialization_context["active_resource_profile"],
         "execution_route": specialization_context["execution_route"],
@@ -9151,7 +9439,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         "applied_project_overrides": specialization_context["applied_project_overrides"],
         "effective_fingerprints": specialization_context["effective_fingerprints"],
         "resolution_reasons": specialization_context["resolution_reasons"],
-        "conflicts": specialization_context["conflicts"],
+        "conflicts": specialization_context["conflicts"] + parameter_resolution["conflicts"],
         "resolved": {
             "knowledge_packages": [{"id": item, "constraint": "declared"} for item in sorted(set(package_ids))],
             "knowledge_resources": resolved_knowledge_resources,
@@ -9178,7 +9466,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "hard": [
                 {"id": "public.no_local_absolute_paths", "value": True, "locked": True},
                 {"id": "files.one_writer_per_scope", "value": True, "locked": True},
-                {"id": "secrets.do_not_store", "value": True, "locked": True},
+                {"id": "secrets.public_exports_sanitized", "value": True, "locked": True},
                 {"id": "runtime.private", "value": True, "locked": True},
                 {"id": "markdown.not_machine_merge_source", "value": True, "locked": True},
             ],
@@ -9261,6 +9549,10 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
     execution_route = resolved_context.get("execution_route", {}) if isinstance(resolved_context.get("execution_route"), dict) else {}
     capability_resolution = resolved_context.get("capability_resolution", {}) if isinstance(resolved_context.get("capability_resolution"), dict) else {}
     resolution_conflicts = resolved_context.get("conflicts", []) if isinstance(resolved_context.get("conflicts"), list) else []
+    resolved_parameters = snapshot.get("resolved_parameters", {}) if isinstance(snapshot.get("resolved_parameters"), dict) else {}
+    parameter_resolution = snapshot.get("parameter_resolution", {}) if isinstance(snapshot.get("parameter_resolution"), dict) else {}
+    parameter_sources = parameter_resolution.get("sources", []) if isinstance(parameter_resolution.get("sources"), list) else []
+    parameter_conflicts = parameter_resolution.get("conflicts", []) if isinstance(parameter_resolution.get("conflicts"), list) else []
 
     def md_items(items: list[Any], empty: str = "None.") -> str:
         if not items:
@@ -9353,6 +9645,12 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
             "## Applied Project Overrides",
             "",
             md_items(applied_project_overrides),
+            "",
+            "## Resolved Parameters",
+            "",
+            f"- namespaces: {', '.join(sorted(str(key) for key in resolved_parameters)) if resolved_parameters else 'None.'}",
+            f"- sources: {len(parameter_sources)}",
+            f"- conflicts: {len(parameter_conflicts)}",
             "",
             "## Resolution Conflicts",
             "",
@@ -9992,6 +10290,8 @@ def write_workplace_context_snapshot(project_root: Path, snapshot: dict[str, Any
             "local_config_exists": local_config.is_file(),
         },
         "capabilities": snapshot.get("capabilities", {}),
+        "resolved_parameters": snapshot.get("resolved_parameters", {}),
+        "parameter_resolution": snapshot.get("parameter_resolution", {}),
         "workplace_coordination": snapshot.get("workplace_coordination", {}),
         "tools": snapshot.get("tools", {}),
         "mcp": snapshot.get("mcp", {}),
@@ -11276,6 +11576,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     if overlap_check["status"] == "fail" and not args.force:
         raise SystemExit("FAIL: assignment write scope overlaps active assignments: " + dump_yaml(overlap_check))
     contract["scope"]["non_overlap"]["overlap_check"] = overlap_check
+    assignment_parameter_resolution = resolve_assignment_parameters(project_root, snapshot, metadata)
     capsule = {
         "schema_version": 1,
         "capsule": {
@@ -11297,6 +11598,12 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
         },
         "project_classification": snapshot.get("project_classification", {}),
         "resolved_resources": snapshot.get("resolved", {}).get("knowledge_resources", []) if isinstance(snapshot.get("resolved"), dict) else [],
+        "resolved_parameters": assignment_parameter_resolution["resolved_parameters"],
+        "parameter_resolution_summary": {
+            "status": assignment_parameter_resolution["status"],
+            "sources": assignment_parameter_resolution["sources"],
+            "conflicts": assignment_parameter_resolution["conflicts"],
+        },
         "effective_specializations": snapshot.get("selected_specializations", []),
         "project_override_summary": snapshot.get("applied_project_overrides", []),
         "active_resource_profile": (snapshot.get("resolved_context", {}) if isinstance(snapshot.get("resolved_context"), dict) else {}).get("active_resource_profile", {}),
@@ -11311,6 +11618,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
             "context_artifacts": contract["context"]["context_artifacts"],
             "selected_specializations": [str(item.get("id")) for item in snapshot.get("selected_specializations", []) if isinstance(item, dict)],
             "applied_project_overrides": [str(item.get("target")) for item in snapshot.get("applied_project_overrides", []) if isinstance(item, dict)],
+            "parameter_sources": [str(item.get("id")) for item in assignment_parameter_resolution["sources"] if isinstance(item, dict)],
         },
         "scope": contract["scope"],
         "outputs": contract["outputs"],

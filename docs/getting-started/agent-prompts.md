@@ -8,6 +8,13 @@ archive names, and reports.
 
 - Treat ProcessForge as an installed tool, not as content to copy into
   `.codex`, `.claude`, `.agents`, or similar agent configuration folders.
+- Do not infer ProcessForge roles from the current working directory or from
+  folder names such as `.codex`, `.claude`, `.agents`, or any custom agent
+  root. Use explicit paths for the distribution root, workplace root, global
+  agent/instruction root, and project roots.
+- A global agent root can be registered as a knowledge root, but it is not a
+  ProcessForge project unless the operator explicitly asks to onboard it and a
+  project-local `.pf/process-forge.yaml` is created there intentionally.
 - From the ProcessForge distribution root, use `python bin/pf.py`.
 - Inside an onboarded project, use `python .pf/runtime/bin/pf.py`.
 - Read `.pf/START_AGENT_HERE.md` before project work.
@@ -89,6 +96,17 @@ During guided setup, ask questions in blocks, update `answers.yaml`, regenerate
 the proposal, show `proposal.md` before apply, and do not onboard a project
 until resource choices are settled.
 
+Record the machine layout as distinct roles:
+
+- `<processforge-root>`: installed ProcessForge distribution.
+- `<workplace-path>`: ProcessForge workplace state and registries.
+- `<agent-root>`: optional global agent configuration/instruction folder.
+- `<project-root>`: an actual project selected for `project-onboard`.
+
+If the agent session starts in `<agent-root>` or `<processforge-root>`, keep
+that as operator context only. Never pass that directory as `--project-root`
+unless the operator explicitly says it is the target project.
+
 ## Fully Automatic Workplace Setup
 
 Use this path only when the operator explicitly asks for automatic setup. The
@@ -105,6 +123,8 @@ workplace rules, skills become processes or reusable templates, local docs
 become knowledge packages/resources, platforms become platform contracts,
 toolchains/tools become registries or contracts, MCP configuration becomes MCP
 registry entries, and project roots become project-onboarding candidates.
+Do not convert the global agent root itself into a project just because it is
+the current working directory.
 
 Apply only after the operator approves the automatic setup proposal.
 
@@ -130,6 +150,10 @@ python <processforge-root>/bin/pf.py first-run --workplace <workplace-path> --pr
 
 Project onboarding is allowed only after the workplace exists and required
 shared resources are present, validated, or explicitly out of scope.
+
+The target `<project-root>` must be explicit. Do not reuse the current working
+directory as a project root during machine setup unless the operator confirms
+that exact directory is the project being onboarded.
 
 For dry-run, `<project-root>` must already exist. Apply mode can create a
 missing greenfield project root.

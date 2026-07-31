@@ -4,6 +4,11 @@ Project onboarding is run once per project after a workplace exists and after
 required workplace resources are created, registered, validated, or explicitly
 out of scope.
 
+The project root must be selected explicitly. During machine or workplace setup,
+do not treat the current working directory, the ProcessForge distribution root,
+or a global agent configuration folder as the project unless the operator
+confirms that exact directory as the project target.
+
 It creates the project-local `.pf/` flow root:
 
 - `.pf/AGENTS.md`

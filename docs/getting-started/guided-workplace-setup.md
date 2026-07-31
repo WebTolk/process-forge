@@ -12,6 +12,12 @@ The order stays strict: workplace first, workplace resources second (knowledge,
 templates, tools, MCP, package roots, platform contracts), and project
 onboarding third.
 
+The agent can be launched from any convenient directory. Launch location is not
+semantic: the current working directory is not automatically the workplace and
+is not automatically a project. Guided setup must record explicit paths for the
+installed ProcessForge distribution, the workplace root, optional global agent
+instruction roots, and real project roots.
+
 Read-only device discovery is optional in guided mode. The agent may offer to
 inspect accessible `AGENTS.md`, setup skills, local docs, platforms, toolchains,
 tools, MCP configuration, and project roots when that would help turn existing
@@ -64,6 +70,9 @@ ProcessForge is installed at <processforge-root>.
 Workplace is <workplace-root>.
 
 Do not copy ProcessForge into agent config folders or projects.
+
+Do not treat the current working directory as a project root unless the operator
+explicitly selected it for project onboarding.
 
 Inside onboarded projects:
 1. Read .pf/START_AGENT_HERE.md first.

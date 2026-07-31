@@ -57,6 +57,7 @@
       "items": { "$ref": "#/$defs/idPathRef" }
     },
     "knowledge_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "parameters": { "type": "object", "additionalProperties": true },
     "platform_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "platform_contracts": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "selected_resources": { "type": "object", "additionalProperties": true },

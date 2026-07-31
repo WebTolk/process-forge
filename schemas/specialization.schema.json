@@ -30,6 +30,7 @@
       "additionalProperties": false
     },
     "resources": { "$ref": "#/$defs/resourceBuckets" },
+    "parameters": { "type": "object", "additionalProperties": true },
     "provides_capabilities": { "type": "array", "items": { "type": "string" } },
     "platform_bindings": {
       "type": "array",
@@ -42,6 +43,7 @@
           "applies_to_processes": { "type": "array", "items": { "type": "string" } },
           "tags": { "type": "array", "items": { "type": "string" } },
           "resources": { "$ref": "#/$defs/resourceBuckets" },
+          "parameters": { "type": "object", "additionalProperties": true },
           "provides_capabilities": { "type": "array", "items": { "type": "string" } }
         },
         "allOf": [{ "$ref": "#/$defs/noWorkflowFields" }],

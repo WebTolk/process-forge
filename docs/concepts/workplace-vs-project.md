@@ -18,6 +18,11 @@ The project process is `project-onboarding`.
 
 Project onboarding may reference workplace registries through local config, but it must not recreate the workplace or copy global packages into the project. Public project files must not contain local absolute paths.
 
+The current working directory is not part of this boundary model. A setup agent
+may be launched from the distribution root, the workplace root, a global agent
+configuration folder, or somewhere else. Only explicit command arguments and
+manifest files assign roles.
+
 The ProcessForge distribution and the workplace may live inside a broad
 meta-project folder on disk. Project scans still exclude those subtrees by role:
 `distribution_root`, `workplace_root`, `knowledge_root`, `runtime_root`, and

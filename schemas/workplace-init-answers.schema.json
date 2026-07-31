@@ -18,6 +18,7 @@
       "additionalProperties": true
     },
     "paths": { "type": "object" },
+    "parameters": { "type": "object", "additionalProperties": true },
     "setup_mode": { "enum": ["guided", "automatic", "manual", "unknown"] },
     "device_discovery": {
       "type": "object",

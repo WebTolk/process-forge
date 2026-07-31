@@ -37,6 +37,8 @@
     },
     "project_classification": { "type": "object", "additionalProperties": true },
     "resolved_resources": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "resolved_parameters": { "type": "object", "additionalProperties": true },
+    "parameter_resolution_summary": { "type": "object", "additionalProperties": true },
     "effective_specializations": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "project_override_summary": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "active_resource_profile": { "type": "object", "additionalProperties": true },
