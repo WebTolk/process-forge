@@ -64,35 +64,15 @@ collect their outputs, and integrate the result through handoffs and reviews.
 
 ## Quick Start
 
-### Get ProcessForge
+### Place ProcessForge
 
-Download the release archive from the repository:
+Download the release archive, [dist/processforge.zip](dist/processforge.zip),
+and unpack it into a stable folder that your AI agents can access, for example
+a shared agent tools folder. Use that folder as `<processforge-root>` in the
+prompts below.
 
-```bash
-curl -L -o processforge.zip https://github.com/WebTolk/process-forge/raw/main/dist/processforge.zip
-```
-
-Or clone the repository if you want to work from source:
-
-```bash
-git clone https://github.com/WebTolk/process-forge.git
-```
-
-### Install It As A Tool
-
-Put ProcessForge in a stable tool directory and unpack it there:
-
-```bash
-mkdir -p <tools-root>/processforge
-unzip processforge.zip -d <tools-root>/processforge
-python <tools-root>/processforge/bin/pf.py version
-```
-
-For source checkouts, use the repository root as `<processforge-root>`:
-
-```bash
-python <processforge-root>/bin/pf.py version
-```
+If you work from a source checkout, use the repository root as
+`<processforge-root>`.
 
 ### Start With An Agent Prompt
 
