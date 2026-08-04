@@ -1,7 +1,7 @@
 schema_version: 1
 
 process_forge:
-  version: 1.0.0
+  version: 1.0.1
   version_constraint: "^1.0"
   mode: file_only
   install_mode: linked
@@ -157,7 +157,7 @@ knowledge_stack:
     source: distribution
     distribution: processforge
   - id: project.process-forge
-    version: "1.0.0"
+    version: "1.0.1"
     source: project
 
 packages:

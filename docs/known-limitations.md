@@ -33,7 +33,8 @@ artifacts.
   under `.pf/runtime/release-test/`.
 - A long-running watcher or runner is a future optional layer, not part of the core runtime.
 - Runtime driver execution is opt-in. Built-in neutral drivers are limited to
-  `manual`, `generic-shell`, `test-echo-worker`, and `test-shell-agent`.
+  `manual`, `generic-shell`, `codex-exec`, `test-echo-worker`, and
+  `test-shell-agent`.
 - Shell-launched proof workers write `heartbeat.json` as a required live
   process artifact under `.pf/runtime/agent-runs/<run-id>/<task-id>/`; this
   does not make ProcessForge a background daemon.

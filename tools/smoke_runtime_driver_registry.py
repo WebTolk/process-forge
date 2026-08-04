@@ -23,7 +23,7 @@ def pf(*args: str, expect: int = 0) -> CommandResult:
 
 def main() -> int:
     listed = pf("runtime-driver", "list", "--project-root", str(ROOT)).stdout
-    for driver_id in ["manual", "generic-shell", "test-echo-worker", "test-shell-agent"]:
+    for driver_id in ["manual", "generic-shell", "codex-exec", "test-echo-worker", "test-shell-agent"]:
         if driver_id not in listed:
             raise AssertionError(f"missing runtime driver in list: {driver_id}")
         if driver_id == "generic-shell":

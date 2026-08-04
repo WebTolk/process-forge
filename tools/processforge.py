@@ -34,11 +34,11 @@ from processforge_subprocess import diagnostic_text, format_command as format_su
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT_FLOW_ROOT = ".pf"
-PROCESSFORGE_VERSION = "1.0.0"
+PROCESSFORGE_VERSION = "1.0.1"
 PROCESSFORGE_SPEC_VERSION = "1.0"
 PROCESSFORGE_SCHEMA_BUNDLE_VERSION = "1.0"
 RELEASE_NAME = "processforge"
-RELEASE_ARCHIVE_VERSION = "1.0.0"
+RELEASE_ARCHIVE_VERSION = "1.0.1"
 PROCESSFORGE_CORE_PROJECT_TYPES = {"processforge-development", "processforge-core-development"}
 META_PROJECT_TYPES = {"agent-workspace", "brownfield-workspace", "meta-workspace"}
 DEFAULT_SCAN_POLICY = {
@@ -129,8 +129,10 @@ RESERVED_WORKER_ENV_KEYS = {
     "PF_AGENT_RUN_DIR",
     "PF_AGENT_EXIT_PATH",
     "PF_AGENT_MODEL",
+    "PF_AGENT_REASONING_EFFORT",
     "PF_PROJECT_ROOT",
     "PF_RUNTIME_DRIVER_ID",
+    "PF_WORKSPACE_ACCESS_FILE",
     "PF_WORKER_RUN_ID",
     "PF_WORKER_TASK_ID",
 }
@@ -1649,6 +1651,54 @@ def default_runtime_driver_documents() -> dict[str, dict[str, Any]]:
                 "allow_network": False,
             },
         },
+        "codex-exec": {
+            "schema_version": 1,
+            "id": "codex-exec",
+            "title": "Codex Exec Worker",
+            "kind": "shell",
+            "command": {
+                "executable": "{python_executable}",
+                "args": [
+                    "{processforge_root}/tools/codex_exec_worker.py",
+                    "--worker-prompt",
+                    "{worker_prompt_path}",
+                    "--capsule",
+                    "{capsule_path}",
+                    "--workspace-access",
+                    "{workspace_access_path}",
+                    "--output",
+                    "{expected_report_path}",
+                    "--heartbeat",
+                    "{heartbeat_path}",
+                ],
+                "model_args": [],
+            },
+            "working_directory": "{project_root}",
+            "environment": {
+                "inherit": True,
+                "variables": {
+                    "PF_CODEX_REASONING_EFFORT": "{agent_reasoning_effort}",
+                    "PF_CODEX_SANDBOX": "read-only",
+                },
+            },
+            "io": {
+                "stdin": "none",
+                "stdout": ".pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log",
+                "stderr": ".pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log",
+            },
+            "heartbeat": {
+                "mode": "file",
+                "path": ".pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json",
+                "optional": True,
+            },
+            "limits": {"timeout_seconds": 3600, "max_retries": 0},
+            "security": {
+                "allow_shell": False,
+                "require_explicit_executable": False,
+                "allow_network": True,
+                "network_reason": "Codex CLI requires network access to reach its configured model provider.",
+            },
+        },
         "test-echo-worker": {
             "schema_version": 1,
             "id": "test-echo-worker",
@@ -1742,7 +1792,7 @@ def default_runtime_driver_registry() -> dict[str, Any]:
                 "status": "available",
                 "builtin": True,
             }
-            for driver_id in ["manual", "generic-shell", "test-echo-worker", "test-shell-agent"]
+            for driver_id in ["manual", "generic-shell", "codex-exec", "test-echo-worker", "test-shell-agent"]
         ],
     }
 
@@ -6498,7 +6548,7 @@ def print_release_command_output(result: ReleaseCommandResult) -> None:
 
 def release_test_commands(root: Path, *, clean_first: bool = True, public: bool = False) -> list[ReleaseCommand]:
     commands: list[ReleaseCommand] = [
-        ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py"), str(root / "tools" / "specialization_smoke_helpers.py")], 30),
+        ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py"), str(root / "tools" / "specialization_smoke_helpers.py"), str(root / "tools" / "codex_exec_worker.py")], 30),
         ReleaseCommand("schema validation", [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)], 60),
         ReleaseCommand("public cleanliness", [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)], 60),
         ReleaseCommand("smoke_core_has_no_domain_knowledge_seeds", [sys.executable, str(root / "tools" / "smoke_core_has_no_domain_knowledge_seeds.py")], 120),
@@ -6524,6 +6574,8 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_first_run", [sys.executable, str(root / "tools" / "smoke_first_run.py")], 120),
         ReleaseCommand("smoke_runtime_driver_registry", [sys.executable, str(root / "tools" / "smoke_runtime_driver_registry.py")], 120),
         ReleaseCommand("smoke_worker_run_shell", [sys.executable, str(root / "tools" / "smoke_worker_run_shell.py")], 180),
+        ReleaseCommand("smoke_worker_workspace_access", [sys.executable, str(root / "tools" / "smoke_worker_workspace_access.py")], 180),
+        ReleaseCommand("smoke_codex_exec_worker", [sys.executable, str(root / "tools" / "smoke_codex_exec_worker.py")], 180),
         ReleaseCommand("smoke_process_supervisor_tick", [sys.executable, str(root / "tools" / "smoke_process_supervisor_tick.py")], 180),
         ReleaseCommand("smoke_director_inspector_boundary", [sys.executable, str(root / "tools" / "smoke_director_inspector_boundary.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
@@ -9023,6 +9075,173 @@ def resource_path_ref_missing(workplace_root: Path, resource: dict[str, Any]) ->
     if ref_id not in registry_ids_from_workplace(workplace_root, registry_file, collection_key):
         return f"path_ref target missing: {registry}/{ref_id}"
     return None
+
+
+def workspace_registry_specs() -> dict[str, tuple[str, str, str]]:
+    return {
+        "knowledge_roots": ("knowledge_roots", "knowledge-roots.yaml", "knowledge_roots"),
+        "template_roots": ("template_roots", "templates.yaml", "template_roots"),
+        "templates": ("template_roots", "templates.yaml", "template_roots"),
+        "package_roots": ("package_roots", "package-roots.yaml", "package_roots"),
+        "tools": ("tools", "tools.yaml", "tools"),
+        "mcp": ("mcp", "mcp.yaml", "mcp_servers"),
+        "private_resource_paths": ("private_resource_paths", "private-resource-paths.yaml", "private_resource_paths"),
+    }
+
+
+def workplace_registry_entry(workplace_manifest: Path | None, registry: str, ref_id: str) -> dict[str, Any] | None:
+    spec = workspace_registry_specs().get(registry)
+    if not spec or not workplace_manifest:
+        return None
+    registry_key, default_name, collection_key = spec
+    data = load_workplace_registry(workplace_manifest, registry_key, default_name)
+    entries = data.get(collection_key) if isinstance(data, dict) else None
+    if not isinstance(entries, list):
+        return None
+    for entry in entries:
+        if isinstance(entry, dict) and str(entry.get("id") or "") == ref_id:
+            return entry
+    return None
+
+
+def resolve_workspace_path_ref(project_root: Path, path_ref: dict[str, Any], *, workplace_manifest: Path | None = None) -> dict[str, Any]:
+    manifest = normalize_workplace_manifest(workplace_manifest or project_workplace_manifest(project_root))
+    workplace_root = manifest.parent if manifest else None
+    package_id = str(path_ref.get("package") or "")
+    relative_path = str(path_ref.get("relative_path") or "").strip()
+    if package_id:
+        bases: list[Path] = []
+        if package_id == "self":
+            bases.append(project_root)
+        else:
+            bases.append(locate_flow_root(project_root) / "packages" / package_id)
+            if workplace_root:
+                manifest_path, _manifest, _package_root = load_workplace_package_manifest(workplace_root, package_id, mode="read")
+                if manifest_path:
+                    bases.append(manifest_path.parent)
+        for base in bases:
+            candidate = (base / relative_path).resolve() if relative_path else base.resolve()
+            if candidate.exists():
+                return {"status": "resolved", "path": str(candidate)}
+        return {"status": "unresolved", "reason": f"package path not found: {package_id}/{relative_path}".rstrip("/")}
+    registry = str(path_ref.get("registry") or "")
+    ref_id = str(path_ref.get("id") or "")
+    if registry == "external_resources":
+        return {"status": "external", "url": path_ref.get("url") or ""}
+    if not registry or not ref_id:
+        return {"status": "unresolved", "reason": "path_ref must include package or registry/id"}
+    if not manifest or not workplace_root:
+        return {"status": "unresolved", "reason": "workplace manifest is not configured"}
+    entry = workplace_registry_entry(manifest, registry, ref_id)
+    if not entry:
+        return {"status": "unresolved", "reason": f"registry target missing: {registry}/{ref_id}"}
+    raw_path = entry.get("path")
+    if not raw_path:
+        return {"status": "descriptor", "entry": {str(key): value for key, value in entry.items() if str(key) != "path"}}
+    root_resolution = workplace_path_resolution(workplace_root, str(raw_path))
+    if root_resolution.get("errors"):
+        return {"status": "unresolved", "reason": "; ".join(str(item) for item in root_resolution.get("errors", []))}
+    base = path_resolution_to_path(root_resolution)
+    candidate = (base / relative_path).resolve() if relative_path else base.resolve()
+    return {"status": "resolved" if candidate.exists() else "missing", "path": str(candidate)}
+
+
+def workspace_ref_matches_resource(resource: dict[str, Any], requested: Any) -> bool:
+    if isinstance(requested, dict):
+        if requested.get("path_ref") and resource.get("path_ref") == requested.get("path_ref"):
+            return True
+        requested_id = str(requested.get("id") or requested.get("resource_id") or "").strip()
+        requested_package = str(requested.get("package_id") or requested.get("package") or "").strip()
+    else:
+        text = str(requested).strip()
+        if text == "*":
+            return True
+        requested_package, _, requested_id = text.partition(":")
+        if not requested_id:
+            requested_id = requested_package
+            requested_package = ""
+    ids = {
+        str(resource.get("id") or ""),
+        str(resource.get("instance_id") or ""),
+    }
+    for value in list(ids):
+        if ":" in value:
+            ids.add(value.rsplit(":", 1)[-1])
+        if "@" in value:
+            ids.add(value.split("@", 1)[0])
+    package_id = str(resource.get("package_id") or "")
+    ids.add(f"{package_id}:{resource.get('id')}")
+    ids.add(f"{package_id}:{resource.get('instance_id')}")
+    if requested_id not in ids:
+        return False
+    return not requested_package or requested_package == package_id
+
+
+def workspace_access_runtime_document(project_root: Path, task: dict[str, Any]) -> dict[str, Any]:
+    task_id = safe_id(str(task.get("id") or "task"), "task")
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    capsule_path = locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml"
+    capsule = load_yaml_document(capsule_path)
+    requested = normalize_workspace_access(task.get("workspace_access") or capsule.get("workspace_access"))
+    resources = capsule.get("resolved_resources") if isinstance(capsule.get("resolved_resources"), list) else []
+    selected_resources = [
+        resource
+        for resource in resources
+        if isinstance(resource, dict) and any(workspace_ref_matches_resource(resource, item) for item in requested["knowledge_resources"])
+    ]
+    manifest = normalize_workplace_manifest(project_workplace_manifest(project_root))
+    document: dict[str, Any] = {
+        "schema_version": 1,
+        "generated_at": now_utc(),
+        "run_id": run_id,
+        "task_id": task_id,
+        "visibility": "private_runtime",
+        "policy": {
+            "do_not_copy_private_paths_to_public_artifacts": True,
+            "assignment_scope_remains_project_relative": True,
+        },
+        "workplace_manifest": str(manifest) if manifest else "",
+        "requested": requested,
+        "grants": {key: [] for key in WORKSPACE_ACCESS_KEYS},
+    }
+    for resource in selected_resources:
+        path_ref = resource.get("path_ref") if isinstance(resource.get("path_ref"), dict) else {}
+        grant = {
+            "id": str(resource.get("id") or ""),
+            "instance_id": str(resource.get("instance_id") or ""),
+            "package_id": str(resource.get("package_id") or ""),
+            "kind": str(resource.get("kind") or ""),
+            "load_policy": str(resource.get("load_policy") or "on_demand"),
+            "path_ref": path_ref,
+            "resolution": resolve_workspace_path_ref(project_root, path_ref, workplace_manifest=manifest) if path_ref else {"status": "unresolved", "reason": "missing path_ref"},
+        }
+        document["grants"]["knowledge_resources"].append(grant)
+    registry_for_group = {"templates": "templates", "tools": "tools", "mcp": "mcp"}
+    for group, registry in registry_for_group.items():
+        for item in requested[group]:
+            if isinstance(item, dict):
+                path_ref = item.get("path_ref") if isinstance(item.get("path_ref"), dict) else {"registry": registry, "id": str(item.get("id") or "")}
+                label = str(item.get("id") or item.get("name") or "")
+            else:
+                label = str(item)
+                path_ref = {"registry": registry, "id": label}
+            document["grants"][group].append(
+                {
+                    "id": label,
+                    "path_ref": path_ref,
+                    "resolution": resolve_workspace_path_ref(project_root, path_ref, workplace_manifest=manifest),
+                }
+            )
+    return document
+
+
+def write_workspace_access_runtime_file(project_root: Path, task: dict[str, Any]) -> Path:
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    task_id = safe_id(str(task.get("id") or "task"), "task")
+    paths = worker_run_paths(project_root, run_id, task_id)
+    document = workspace_access_runtime_document(project_root, task)
+    json_write(paths["workspace_access"], document)
+    return paths["workspace_access"]
 
 
 def knowledge_package_doctor_checks(workplace_root: Path, package_id: str, package_root_id: str | None = None) -> list[Check]:
@@ -11624,9 +11843,73 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
             "required_outputs": normalize_required_outputs(metadata.get("required_outputs")),
             "expected_report": metadata.get("expected_report") if isinstance(metadata.get("expected_report"), dict) else {},
         },
+        "workspace_access": normalize_workspace_access(metadata.get("workspace_access")),
         "agent_model": normalize_agent_model(metadata.get("agent_model") or metadata.get("model") or ""),
+        "agent_reasoning_effort": normalize_agent_reasoning_effort(metadata.get("agent_reasoning_effort") or metadata.get("reasoning_effort") or ""),
         "subagent_policy": normalize_subagent_policy(metadata.get("subagent_policy")),
     }
+
+
+WORKSPACE_ACCESS_KEYS = ("knowledge_resources", "templates", "tools", "mcp")
+
+
+def normalize_workspace_access(value: Any) -> dict[str, list[Any]]:
+    raw = value if isinstance(value, dict) else {}
+    aliases = {
+        "knowledge": "knowledge_resources",
+        "resources": "knowledge_resources",
+        "knowledge_resource_refs": "knowledge_resources",
+        "template_refs": "templates",
+        "tool_refs": "tools",
+        "mcp_refs": "mcp",
+        "mcp_servers": "mcp",
+    }
+    result: dict[str, list[Any]] = {key: [] for key in WORKSPACE_ACCESS_KEYS}
+    for key, target in aliases.items():
+        if key in raw:
+            result[target].extend(as_list(raw.get(key)))
+    for key in WORKSPACE_ACCESS_KEYS:
+        result[key].extend(as_list(raw.get(key)))
+    cleaned: dict[str, list[Any]] = {}
+    for key, items in result.items():
+        normalized: list[Any] = []
+        seen: set[str] = set()
+        for item in items:
+            if isinstance(item, dict):
+                marker = json.dumps(item, sort_keys=True, ensure_ascii=False)
+                normalized_item: Any = {str(k): v for k, v in item.items()}
+            else:
+                text = str(item).strip()
+                if not text:
+                    continue
+                marker = text
+                normalized_item = text
+            if marker in seen:
+                continue
+            seen.add(marker)
+            normalized.append(normalized_item)
+        cleaned[key] = normalized
+    return cleaned
+
+
+def workspace_access_public_path_issues(access: dict[str, list[Any]]) -> list[str]:
+    issues: list[str] = []
+    for group, items in access.items():
+        for index, item in enumerate(items):
+            if isinstance(item, str):
+                if path_string_is_absolute(item) or PATH_CONSTANT_PATTERN.search(item):
+                    issues.append(f"workspace_access.{group}[{index}] must be an id/path_ref, not a private path")
+                continue
+            if not isinstance(item, dict):
+                continue
+            if "path" in item or "resolved_path" in item or "absolute_path" in item:
+                issues.append(f"workspace_access.{group}[{index}] must not include raw path fields")
+            for key, value in item.items():
+                if str(key) == "path_ref":
+                    continue
+                if isinstance(value, str) and (path_string_is_absolute(value) or PATH_CONSTANT_PATTERN.search(value)):
+                    issues.append(f"workspace_access.{group}[{index}].{key} must not include a private path")
+    return issues
 
 
 def validate_assignment_required_sources(project_root: Path, contract: dict[str, Any]) -> list[str]:
@@ -11698,6 +11981,9 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     snapshot_sha = "sha256:" + sha256_file(snapshot_yaml)
     snapshot_meta = snapshot.get("snapshot", {}) if isinstance(snapshot.get("snapshot"), dict) else {}
     contract = normalized_assignment_contract(project_root, assignment, metadata)
+    workspace_access_issues = workspace_access_public_path_issues(contract["workspace_access"])
+    if workspace_access_issues:
+        raise SystemExit("FAIL: workspace access must use public refs: " + "; ".join(workspace_access_issues))
     missing_sources = validate_assignment_required_sources(project_root, contract)
     if missing_sources:
         raise SystemExit("FAIL: assignment required sources missing: " + ", ".join(missing_sources))
@@ -11753,7 +12039,9 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
         },
         "scope": contract["scope"],
         "outputs": contract["outputs"],
+        "workspace_access": contract["workspace_access"],
         "agent_model": contract["agent_model"],
+        "agent_reasoning_effort": contract["agent_reasoning_effort"],
         "subagent_policy": contract["subagent_policy"],
         "workplace_coordination": capsule_coordination_block(snapshot, metadata),
         "capabilities": {"required": required_records, "optional": optional_records},
@@ -16699,6 +16987,7 @@ RUNTIME_DRIVER_PLACEHOLDERS = {
     "driver_id",
     "capsule_path",
     "worker_prompt_path",
+    "workspace_access_path",
     "expected_report_path",
     "python_executable",
     "executable",
@@ -16707,6 +16996,7 @@ RUNTIME_DRIVER_PLACEHOLDERS = {
     "heartbeat_path",
     "exit_path",
     "agent_model",
+    "agent_reasoning_effort",
 }
 
 AGENT_RUN_STATUSES = {
@@ -16884,8 +17174,10 @@ def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) 
             "PF_AGENT_RUN_DIR": variables["agent_run_dir"],
             "PF_AGENT_EXIT_PATH": variables["exit_path"],
             "PF_AGENT_MODEL": variables["agent_model"],
+            "PF_AGENT_REASONING_EFFORT": variables["agent_reasoning_effort"],
             "PF_PROJECT_ROOT": variables["project_root"],
             "PF_RUNTIME_DRIVER_ID": variables["driver_id"],
+            "PF_WORKSPACE_ACCESS_FILE": variables["workspace_access_path"],
             "PF_WORKER_RUN_ID": variables["run_id"],
             "PF_WORKER_TASK_ID": variables["task_id"],
         }
@@ -16938,7 +17230,8 @@ def validate_runtime_driver_document(driver: dict[str, Any], executable_override
         checks.append(check("PASS" if isinstance(args, list) else "FAIL", "shell command args list present"))
         checks.append(check("PASS" if isinstance(model_args, list) else "FAIL", "shell command model_args list when present"))
         checks.append(check("WARN" if security.get("allow_shell") is True else "PASS", "allow_shell false by default"))
-        checks.append(check("FAIL" if security.get("allow_network") is True else "PASS", "allow_network false by default"))
+        network_reason = str(security.get("network_reason") or "").strip()
+        checks.append(check("PASS" if security.get("allow_network") is not True or network_reason else "FAIL", "allow_network explicit reason when enabled"))
     if kind == "manual":
         behavior = driver.get("behavior") if isinstance(driver.get("behavior"), dict) else {}
         checks.append(check("PASS" if behavior.get("do_not_start_process") is True else "FAIL", "manual driver does not start process"))
@@ -17024,6 +17317,7 @@ def worker_run_paths(project_root: Path, run_id: str, task_id: str) -> dict[str,
         "stderr": root / "stderr.log",
         "heartbeat": root / "heartbeat.json",
         "collection": root / "collection-report.md",
+        "workspace_access": root / "workspace-access.json",
     }
 
 
@@ -17067,6 +17361,17 @@ def normalize_agent_model(value: Any) -> str:
     return text
 
 
+def normalize_agent_reasoning_effort(value: Any) -> str:
+    if value in (None, ""):
+        return ""
+    text = str(value).strip().lower()
+    if not text:
+        return ""
+    if text not in {"minimal", "low", "medium", "high"}:
+        raise SystemExit(f"FAIL: agent reasoning effort must be one of minimal, low, medium, high; got {text}")
+    return text
+
+
 def build_worker_process_command(project_root: Path, task: dict[str, Any], driver: dict[str, Any], executable_override: str | None = None) -> tuple[dict[str, Any], dict[str, Path]]:
     task_id = safe_id(str(task.get("id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
@@ -17083,6 +17388,7 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "driver_id": str(driver.get("id") or "manual"),
         "capsule_path": str(capsule_path),
         "worker_prompt_path": str(prompt_path),
+        "workspace_access_path": str(paths["workspace_access"]),
         "expected_report_path": str(report_path),
         "python_executable": sys.executable,
         "executable": executable_override or "",
@@ -17091,6 +17397,7 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "heartbeat_path": str(paths["heartbeat"]),
         "exit_path": str(paths["exit"]),
         "agent_model": normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
+        "agent_reasoning_effort": normalize_agent_reasoning_effort(task.get("agent_reasoning_effort") or task.get("reasoning_effort") or ""),
     }
     io = driver.get("io") if isinstance(driver.get("io"), dict) else {}
     stdout_path = Path(str(expand_runtime_value(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
@@ -17130,6 +17437,7 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "task_id": task_id,
         "driver_id": str(driver.get("id") or "manual"),
         "agent_model": variables["agent_model"],
+        "agent_reasoning_effort": variables["agent_reasoning_effort"],
         "kind": str(driver.get("kind") or "manual"),
         "command": {
             "executable": executable,
@@ -17294,11 +17602,15 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
     return state
 
 
-def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None = None, executable_override: str | None = None, model_arg: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
+def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None = None, executable_override: str | None = None, model_arg: str | None = None, reasoning_effort_arg: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
     task = load_task(project_root, task_id)
     agent_model = normalize_agent_model(model_arg or task.get("agent_model") or task.get("model") or "")
+    agent_reasoning_effort = normalize_agent_reasoning_effort(reasoning_effort_arg or task.get("agent_reasoning_effort") or task.get("reasoning_effort") or "")
     if agent_model and task.get("agent_model") != agent_model:
         task["agent_model"] = agent_model
+        save_task(project_root, task)
+    if agent_reasoning_effort and task.get("agent_reasoning_effort") != agent_reasoning_effort:
+        task["agent_reasoning_effort"] = agent_reasoning_effort
         save_task(project_root, task)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     capsule_status, capsule_rel = existing_capsule_status(project_root, task_id)
@@ -17319,6 +17631,9 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
         print(output, end="")
         if status:
             raise SystemExit(status)
+    task = load_task(project_root, task_id)
+    workspace_access_path = write_workspace_access_runtime_file(project_root, task)
+    print(f"WROTE: {rel(workspace_access_path, project_root)}\n", end="")
     status, output = run_command_capture(command_worker_launch_prompt_create, argparse.Namespace(project_root=str(project_root), task=task_id, output=None, apply=True, dry_run=False))
     print(output, end="")
     if status:
@@ -17343,7 +17658,7 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None))
+    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
     print(f"PREPARED: {task_id} driver={driver.get('id')} status={json_read(paths['status']).get('status')}")
     return 0
 
@@ -17352,7 +17667,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None))
+    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     if str(driver.get("kind")) == "manual":
         print(f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}")
@@ -17885,7 +18200,7 @@ ORCHESTRATOR_PLAN_TOP_LEVEL_KEYS = {
     "allow_write_scope_overlap",
     "metadata",
 }
-ORCHESTRATOR_PLAN_RUNTIME_KEYS = {"default_driver", "supervisor_profile", "start_policy", "max_parallel_workers", "model", "metadata"}
+ORCHESTRATOR_PLAN_RUNTIME_KEYS = {"default_driver", "supervisor_profile", "start_policy", "max_parallel_workers", "model", "reasoning_effort", "metadata"}
 ORCHESTRATOR_PLAN_WORKER_KEYS = {
     "id",
     "title",
@@ -17897,6 +18212,8 @@ ORCHESTRATOR_PLAN_WORKER_KEYS = {
     "owner",
     "runtime_driver",
     "model",
+    "reasoning_effort",
+    "agent_reasoning_effort",
     "allow_subagents",
     "subagent_policy",
     "allowed_files",
@@ -17904,6 +18221,7 @@ ORCHESTRATOR_PLAN_WORKER_KEYS = {
     "forbidden_files",
     "required_sources",
     "context_artifacts",
+    "workspace_access",
     "required_outputs",
     "expected_report_artifact",
     "expected_report_language",
@@ -17961,6 +18279,8 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
             checks.append(check("PASS" if type(max_parallel) is int and max_parallel >= 1 else "FAIL", "runtime.max_parallel_workers positive integer"))
         if "model" in runtime:
             checks.append(check("PASS" if normalize_agent_model(runtime.get("model")) else "FAIL", "runtime.model non-empty string when present"))
+        if "reasoning_effort" in runtime:
+            checks.append(check("PASS" if normalize_agent_reasoning_effort(runtime.get("reasoning_effort")) else "FAIL", "runtime.reasoning_effort valid when present"))
     checks.append(check("PASS" if run.get("id") else "FAIL", "run.id present"))
     checks.append(check("PASS" if run.get("title") else "FAIL", "run.title present"))
     checks.append(check("PASS" if str(run.get("process") or "multi-agent-task-orchestration") == "multi-agent-task-orchestration" else "FAIL", "run process is multi-agent-task-orchestration"))
@@ -17992,17 +18312,21 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
         allowed = assignment_scope_items(raw_worker.get("allowed_files"))
         forbidden = assignment_scope_items(raw_worker.get("forbidden_files"))
         read_allowed = assignment_scope_items(raw_worker.get("allowed_read_files"))
+        workspace_access = normalize_workspace_access(raw_worker.get("workspace_access"))
         outputs = normalize_required_outputs(raw_worker.get("required_outputs"))
         writer = bool(raw_worker.get("writer", True))
         driver_id = str(raw_worker.get("runtime_driver") or default_driver)
         if "model" in raw_worker:
             checks.append(check("PASS" if normalize_agent_model(raw_worker.get("model")) else "FAIL", f"{worker_id} model non-empty string when present"))
+        if "reasoning_effort" in raw_worker or "agent_reasoning_effort" in raw_worker:
+            checks.append(check("PASS" if normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") or raw_worker.get("agent_reasoning_effort")) else "FAIL", f"{worker_id} reasoning_effort valid when present"))
         if writer:
             checks.append(check("PASS" if allowed else "FAIL", f"{worker_id} writer has allowed_files"))
         checks.append(check("PASS" if driver_id in {item[0] for item in runtime_driver_id_list(project_root=project_root)} else "FAIL", f"{worker_id} runtime_driver registered: {driver_id}"))
         for dep_id in worker_dependency_set(raw_worker):
             checks.append(check("PASS" if dep_id in workers_by_id else "FAIL", f"{worker_id} dependency exists: {dep_id}"))
-        checks.append(check("PASS" if read_allowed or raw_worker.get("required_sources") else "WARN", f"{worker_id} has bounded read/context scope"))
+        has_workspace_access = any(workspace_access[key] for key in WORKSPACE_ACCESS_KEYS)
+        checks.append(check("PASS" if read_allowed or raw_worker.get("required_sources") or has_workspace_access else "WARN", f"{worker_id} has bounded read/context scope"))
         forbidden_conflicts = assignment_scope_conflicts(worker_id, allowed, worker_id, forbidden, repo_files, reason_prefix="forbidden_wins:")
         checks.append(check("PASS" if not forbidden_conflicts else "FAIL", f"{worker_id} forbidden_files do not overlap allowed_files"))
         subagent_policy = worker_subagent_policy(raw_worker)
@@ -18048,6 +18372,8 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
     task = load_task(project_root, task_id)
     run_id = str(task.get("run_id") or "")
     capsule = rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root)
+    workspace_access = rel(worker_run_paths(project_root, safe_id(run_id or "run", "run"), task_id)["workspace_access"], project_root)
+    requested_workspace_access = normalize_workspace_access(task.get("workspace_access"))
     allowed_files = assignment_scope_items(task.get("allowed_files"))
     allowed_read_files = assignment_scope_items(task.get("allowed_read_files"))
     forbidden_files = assignment_scope_items(task.get("forbidden_files"))
@@ -18063,6 +18389,8 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
         "Do not rebuild full project context unless explicitly allowed.",
         "Do not edit files outside allowed_files.",
         "Do not read files outside allowed_read_files unless explicitly allowed.",
+        "Use workspace_access_file for explicitly granted workplace resources.",
+        "Do not copy private paths from workspace_access_file into public project artifacts, assignments, capsules, or reports.",
         "Respect forbidden_files.",
         "Produce required_outputs.",
         "Write expected_report.",
@@ -18076,7 +18404,15 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
         f"- run_id: `{run_id}`",
         f"- assignment: `{rel(assignment_yaml_path(project_root, task_id), project_root)}`",
         f"- capsule: `{capsule}`",
+        f"- workspace_access_file: `{workspace_access}`",
         "- worker_may_rebuild_context: `false`",
+        "",
+        "## workspace_access",
+        "",
+        f"- knowledge_resources: `{len(requested_workspace_access['knowledge_resources'])}`",
+        f"- templates: `{len(requested_workspace_access['templates'])}`",
+        f"- tools: `{len(requested_workspace_access['tools'])}`",
+        f"- mcp: `{len(requested_workspace_access['mcp'])}`",
         "",
         "## allowed_files",
         "",
@@ -18168,6 +18504,9 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
     default_driver = str(runtime.get("default_driver") or "manual")
     default_model = normalize_agent_model(runtime.get("model") or "")
+    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
+    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
     normalized_workers: list[dict[str, Any]] = []
     for order, worker in enumerate(plan.get("workers", []) if isinstance(plan.get("workers"), list) else [], start=1):
         if not isinstance(worker, dict):
@@ -18179,12 +18518,14 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
                 "order": order,
                 "runtime_driver": str(worker.get("runtime_driver") or default_driver),
                 "model": normalize_agent_model(worker.get("model") or default_model),
+                "reasoning_effort": normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
                 "allow_subagents": bool(worker.get("allow_subagents", False)),
                 "subagent_policy": worker_subagent_policy(worker),
                 "allowed_files": assignment_scope_items(worker.get("allowed_files")),
                 "allowed_read_files": assignment_scope_items(worker.get("allowed_read_files")),
                 "forbidden_files": assignment_scope_items(worker.get("forbidden_files")),
                 "required_outputs": normalize_required_outputs(worker.get("required_outputs")),
+                "workspace_access": normalize_workspace_access(worker.get("workspace_access")),
                 "expected_report_artifact": str(worker.get("expected_report_artifact") or default_expected_report_artifact(worker_id)),
                 "depends_on": sorted(worker_dependency_set(worker)),
             }
@@ -18202,6 +18543,7 @@ def normalized_orchestrator_plan(project_root: Path, plan: dict[str, Any]) -> di
             "start_policy": str(runtime.get("start_policy") or "manual"),
             "max_parallel_workers": int(runtime.get("max_parallel_workers") or 1),
             "model": default_model,
+            "reasoning_effort": default_reasoning_effort,
         },
         "allow_write_scope_overlap": plan_allows_write_scope_overlap(plan),
         "workers": normalized_workers,
@@ -18213,6 +18555,7 @@ def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) -> 
     run_id = str(normalized["run"]["id"])
     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
     default_model = normalize_agent_model(runtime.get("model") or "")
+    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
     raw_workers: dict[str, dict[str, Any]] = {}
     for raw_worker in plan.get("workers", []) if isinstance(plan.get("workers"), list) else []:
         if isinstance(raw_worker, dict):
@@ -18239,6 +18582,11 @@ def build_config_resolution_report(project_root: Path, plan: dict[str, Any]) -> 
                     "value": normalize_agent_model(worker.get("model")),
                     "source": model_source,
                     "behavior": ["assignment.agent_model", "capsule.agent_model", "worker-run.PF_AGENT_MODEL", "runtime-driver.command.model_args"],
+                },
+                "agent_reasoning_effort": {
+                    "value": normalize_agent_reasoning_effort(worker.get("reasoning_effort") or default_reasoning_effort),
+                    "source": f"workers[{worker['id']}].reasoning_effort" if normalize_agent_reasoning_effort(raw_worker.get("reasoning_effort") if isinstance(raw_worker, dict) else "") else ("runtime.reasoning_effort" if default_reasoning_effort else "default.empty"),
+                    "behavior": ["assignment.agent_reasoning_effort", "capsule.agent_reasoning_effort", "worker-run.PF_AGENT_REASONING_EFFORT", "codex-exec.PF_CODEX_REASONING_EFFORT"],
                 },
                 "subagent_policy": {
                     "allow": bool(policy.get("allow")),
@@ -18377,6 +18725,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
     runtime = plan.get("runtime") if isinstance(plan.get("runtime"), dict) else {}
     default_driver = str(runtime.get("default_driver") or "manual")
     default_model = normalize_agent_model(runtime.get("model") or "")
+    default_reasoning_effort = normalize_agent_reasoning_effort(runtime.get("reasoning_effort") or "")
     workers = plan.get("workers") if isinstance(plan.get("workers"), list) else []
     planned = [run_yaml_path(project_root, run_id), orchestrator_plan_path(project_root, run_id), run_root(project_root, run_id) / "worker-prompts", run_root(project_root, run_id) / "config-resolution-report.yaml"]
     if not args.apply or getattr(args, "dry_run", False):
@@ -18424,6 +18773,10 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
                     read_file=[],
                     context_artifact=normalize_context_artifacts(worker.get("context_artifacts")),
                     required_source=assignment_scope_items(worker.get("required_sources")),
+                    workspace_knowledge_resource=normalize_workspace_access(worker.get("workspace_access"))["knowledge_resources"],
+                    workspace_template=normalize_workspace_access(worker.get("workspace_access"))["templates"],
+                    workspace_tool=normalize_workspace_access(worker.get("workspace_access"))["tools"],
+                    workspace_mcp=normalize_workspace_access(worker.get("workspace_access"))["mcp"],
                     forbidden_file=assignment_scope_items(worker.get("forbidden_files")),
                     forbidden_glob=[],
                     owner=str(worker.get("owner") or task_id),
@@ -18434,6 +18787,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
                     expected_report_artifact=str(worker.get("expected_report_artifact") or ""),
                     force_with_handoff=bool(plan.get("allow_write_scope_overlap", False) or as_list(worker.get("dependencies")) or as_list(worker.get("depends_on"))),
                     agent_model=normalize_agent_model(worker.get("model") or default_model),
+                    reasoning_effort=normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort),
                     dry_run=False,
                 ),
             )
@@ -18446,6 +18800,10 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         agent_model = normalize_agent_model(worker.get("model") or default_model)
         if agent_model:
             task["agent_model"] = agent_model
+        agent_reasoning_effort = normalize_agent_reasoning_effort(worker.get("reasoning_effort") or worker.get("agent_reasoning_effort") or default_reasoning_effort)
+        if agent_reasoning_effort:
+            task["agent_reasoning_effort"] = agent_reasoning_effort
+        task["workspace_access"] = normalize_workspace_access(worker.get("workspace_access"))
         task["subagent_policy"] = worker_subagent_policy(worker)
         blocked_by = sorted({safe_id(str(item), "task") for item in [*as_list(worker.get("dependencies")), *as_list(worker.get("depends_on"))] if item})
         if blocked_by:
@@ -18718,6 +19076,16 @@ def command_task_create(args: argparse.Namespace) -> int:
         task["context_artifacts"] = context_artifacts
     if required_sources:
         task["required_sources"] = required_sources
+    workspace_access = normalize_workspace_access(
+        {
+            "knowledge_resources": getattr(args, "workspace_knowledge_resource", []),
+            "templates": getattr(args, "workspace_template", []),
+            "tools": getattr(args, "workspace_tool", []),
+            "mcp": getattr(args, "workspace_mcp", []),
+        }
+    )
+    if any(workspace_access[key] for key in WORKSPACE_ACCESS_KEYS):
+        task["workspace_access"] = workspace_access
     if allowed_files:
         task["allowed_files"] = allowed_files
     if allowed_read_files:
@@ -18746,6 +19114,9 @@ def command_task_create(args: argparse.Namespace) -> int:
     agent_model = normalize_agent_model(getattr(args, "agent_model", None) or getattr(args, "model", None) or "")
     if agent_model:
         task["agent_model"] = agent_model
+    agent_reasoning_effort = normalize_agent_reasoning_effort(getattr(args, "reasoning_effort", None) or getattr(args, "agent_reasoning_effort", None) or "")
+    if agent_reasoning_effort:
+        task["agent_reasoning_effort"] = agent_reasoning_effort
     expected_report: dict[str, Any] = {}
     if getattr(args, "expected_report_language", None):
         expected_report["language"] = args.expected_report_language
@@ -24557,6 +24928,7 @@ def build_parser() -> argparse.ArgumentParser:
     worker_run_prepare.add_argument("--driver", help="Runtime driver id or manifest path.")
     worker_run_prepare.add_argument("--executable", help="Executable override for generic shell drivers.")
     worker_run_prepare.add_argument("--model", help="Optional agent model for shell runtime drivers.")
+    worker_run_prepare.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
     worker_run_prepare.set_defaults(func=command_worker_run_prepare)
     worker_run_start = worker_run_sub.add_parser("start", help="Start a prepared worker command and wait for completion.")
     worker_run_start.add_argument("--project-root", required=True, help="Project root path.")
@@ -24564,6 +24936,7 @@ def build_parser() -> argparse.ArgumentParser:
     worker_run_start.add_argument("--driver", help="Runtime driver id or manifest path.")
     worker_run_start.add_argument("--executable", help="Executable override for generic shell drivers.")
     worker_run_start.add_argument("--model", help="Optional agent model for shell runtime drivers.")
+    worker_run_start.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
     worker_run_start.add_argument("--detach", action="store_true", help="Start the worker process and return immediately.")
     worker_run_start.add_argument("--wait", action="store_true", help="Wait for completion. This is the default unless --detach is set.")
     worker_run_start.set_defaults(func=command_worker_run_start)
@@ -24593,6 +24966,8 @@ def build_parser() -> argparse.ArgumentParser:
         if alias_name in {"worker-run-prepare", "worker-run-start"}:
             alias.add_argument("--driver", help="Runtime driver id or manifest path.")
             alias.add_argument("--executable", help="Executable override for generic shell drivers.")
+            alias.add_argument("--model", help="Optional agent model for shell runtime drivers.")
+            alias.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
         alias.set_defaults(func=func)
 
     supervisor = sub.add_parser("supervisor", help="Historical technical command for the Process Execution Inspector loop.")
@@ -25060,6 +25435,10 @@ def build_parser() -> argparse.ArgumentParser:
     task_create.add_argument("--read-file", action="append", default=[], help="Alias for --allowed-read-file.")
     task_create.add_argument("--context-artifact", action="append", default=[], help="Repository-relative context artifact. Repeatable.")
     task_create.add_argument("--required-source", action="append", default=[], help="Required source to include in assignment capsules. Repeatable.")
+    task_create.add_argument("--workspace-knowledge-resource", action="append", default=[], help="Workplace knowledge resource id/ref granted through private runtime access. Repeatable.")
+    task_create.add_argument("--workspace-template", action="append", default=[], help="Workplace template root/id granted through private runtime access. Repeatable.")
+    task_create.add_argument("--workspace-tool", action="append", default=[], help="Workplace tool id granted through private runtime access. Repeatable.")
+    task_create.add_argument("--workspace-mcp", action="append", default=[], help="Workplace MCP server id granted through private runtime access. Repeatable.")
     task_create.add_argument("--forbidden-file", action="append", default=[], help="Repository-relative forbidden write file or simple glob. Repeatable.")
     task_create.add_argument("--forbidden-glob", action="append", default=[], help="Repository-relative forbidden write glob. Stored in forbidden_files. Repeatable.")
     task_create.add_argument("--owner", help="Assignment owner id.")
@@ -25068,6 +25447,7 @@ def build_parser() -> argparse.ArgumentParser:
     task_create.add_argument("--required-output", action="append", default=[], help="Required output id. Repeatable.")
     task_create.add_argument("--expected-report-language", help="Expected report language.")
     task_create.add_argument("--expected-report-artifact", help="Expected durable report artifact.")
+    task_create.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
     task_create.add_argument("--force-with-handoff", action="store_true", help="Allow write-scope overlap and record the overlap check for orchestrator handoff.")
     task_create.add_argument("--apply", action="store_true", help="Write task files.")
     task_create.set_defaults(func=command_task_create)

@@ -1,0 +1,41 @@
+schema_version: 1
+id: codex-exec
+title: Codex Exec Worker
+kind: shell
+command:
+  executable: "{python_executable}"
+  args:
+    - "{processforge_root}/tools/codex_exec_worker.py"
+    - "--worker-prompt"
+    - "{worker_prompt_path}"
+    - "--capsule"
+    - "{capsule_path}"
+    - "--workspace-access"
+    - "{workspace_access_path}"
+    - "--output"
+    - "{expected_report_path}"
+    - "--heartbeat"
+    - "{heartbeat_path}"
+  model_args: []
+working_directory: "{project_root}"
+environment:
+  inherit: true
+  variables:
+    PF_CODEX_REASONING_EFFORT: "{agent_reasoning_effort}"
+    PF_CODEX_SANDBOX: read-only
+io:
+  stdin: none
+  stdout: .pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log
+  stderr: .pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log
+heartbeat:
+  mode: file
+  path: .pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json
+  optional: true
+limits:
+  timeout_seconds: 3600
+  max_retries: 0
+security:
+  allow_shell: false
+  require_explicit_executable: false
+  allow_network: true
+  network_reason: Codex CLI requires network access to reach its configured model provider.

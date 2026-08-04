@@ -2,8 +2,19 @@
 
 ## Unreleased
 
+## 1.0.1 - 2026-08-04
+
 ### Added
 
+- Added first-class worker `workspace_access` grants for workplace knowledge,
+  templates, tools, and MCP references without copying shared resources into
+  project artifacts.
+- Added private worker runtime access maps under
+  `.pf/runtime/agent-runs/<run>/<task>/workspace-access.json`.
+- Added the built-in `codex-exec` runtime driver and portable Codex CLI worker
+  wrapper.
+- Added smoke coverage for workspace access resolution, public path hygiene, and
+  the `codex-exec` launch path.
 - Added optional shell-agent model selection for multi-agent shell runs through
   `orchestrator-shell-plan-apply --model <model>`, propagated to generated
   worker metadata, environment, and runtime-driver command arguments.
