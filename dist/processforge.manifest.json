@@ -1,21 +1,21 @@
 {
   "archive": {
-    "entry_count": 804,
+    "entry_count": 809,
     "filename": "processforge.zip",
     "format": "zip",
-    "sha256": "076bc293db6ab2309d7d34bc204ce6004403a0319cfa7e576f14a4f9f9deea26",
-    "size": 1043559
+    "sha256": "99b5821121550838e3b8d923cdedd6edff4e80bef7055a1cab2b1adc1f6ce3b4",
+    "size": 1055240
   },
   "build": {
     "deterministic": true,
-    "generated_at": "2026-07-31T12:34:35Z",
-    "source_date_epoch": 1785501275
+    "generated_at": "2026-08-04T16:34:15Z",
+    "source_date_epoch": 1785861255
   },
   "files": [
     {
       "path": ".gitignore",
-      "sha256": "56e4207c0e9464fb0edbbbd0e88e2e8caab2a26bf86374dbbca5cacb385a9f24",
-      "size": 383
+      "sha256": "5d6a03438ff4b4e599ae2f621cb956ac95d7ffab2f1efa826d8996594c49c0d4",
+      "size": 417
     },
     {
       "path": ".pf/AGENTS.md",
@@ -29,13 +29,13 @@
     },
     {
       "path": ".pf/process-forge.yaml",
-      "sha256": "9fbc47abb1b607bb881da53dd4cc0a4591569567b4194e50938302264e622d97",
+      "sha256": "118ed03be4edd0bb941b4f1032842ac7cd5aa242576961c56710d544f4a41321",
       "size": 5094
     },
     {
       "path": ".processforge-releaseignore",
-      "sha256": "68e075ae3f034de6d74dbdc7604902677d6ee9a384ae3fac76dda42dd3b73e78",
-      "size": 416
+      "sha256": "05f655cdd487cc12bebd5d9909f321ba3a8094bc3c153db0fa1b0dfc9aa26d53",
+      "size": 425
     },
     {
       "path": "AGENTS.md",
@@ -44,8 +44,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "e12cf7e9ddfbf156bcd57c9e6dc837d3135220708f42778fc8bde30159433334",
-      "size": 2536
+      "sha256": "2dde731c2544ac86c42e518d7853dccbb548b93ea71c72c5c4242edc0856019d",
+      "size": 3050
     },
     {
       "path": "LICENSE",
@@ -69,17 +69,17 @@
     },
     {
       "path": "README.md",
-      "sha256": "98a9fbb5938cddcd8d230af71b62716c1e6f5e91415e5592102ed9f051c467fb",
+      "sha256": "473d5627b5717f12bc13c84de7cdccb34600a7e03256dcbd35550f0983078d39",
       "size": 17758
     },
     {
       "path": "README.ru.md",
-      "sha256": "0e793b798a976b1cd764235b7e196edd5912598618c38f078c71bc106882a3c0",
+      "sha256": "153efa8f19be3a584e6d217d49e5bf3067e72975993576816b9a25d84d3e58f9",
       "size": 31057
     },
     {
       "path": "VERSION",
-      "sha256": "59854984853104df5c353e2f681a15fc7924742f9a2e468c29af248dce45ce03",
+      "sha256": "44e161e4495cac2cf7858043e9e6418e9579f0ddcfae826f9a372622968ce066",
       "size": 6
     },
     {
@@ -99,8 +99,8 @@
     },
     {
       "path": "checksums/processforge.sha256",
-      "sha256": "5c2bb3991c2d935393a4564675667c469048e2e831dcf14ebc2cfed6f3dd7ec8",
-      "size": 88694
+      "sha256": "cfe85bf21c67b60a379d7c28276e6949f91ee0b3e25d00381dc0cc5a7ec04954",
+      "size": 89222
     },
     {
       "path": "docs/assets/processforge-architecture.svg",
@@ -494,8 +494,8 @@
     },
     {
       "path": "docs/concepts/runtime-drivers.md",
-      "sha256": "4def88f026e689a4189c302cc401807ace293babd188116b5598ed9e22a60b95",
-      "size": 2422
+      "sha256": "2b8c2a12b3f0c2dc6e1474aad054817860aaaad22ff874c6375280a616100b61",
+      "size": 2592
     },
     {
       "path": "docs/concepts/runtime-model.md",
@@ -689,8 +689,8 @@
     },
     {
       "path": "docs/known-limitations.md",
-      "sha256": "1d74e6b2d0e35346a7bf913f4da6da56cc195d63ccafb019af50380159675dc8",
-      "size": 3518
+      "sha256": "e2ef9faf43621b4205467ddcb2d1dae6c1c3ae72d6c308dc9d1f96d93517d871",
+      "size": 3534
     },
     {
       "path": "docs/processes/agent-director-supervision.md",
@@ -2554,8 +2554,8 @@
     },
     {
       "path": "schemas/runtime-driver.schema.json",
-      "sha256": "b9dfaf667fc18cc6e53f483228dda8df8a6ae2ee498f1282c3d0675122ab7e41",
-      "size": 2680
+      "sha256": "4a19587df65b0fad742ddb465bf41ef9583e2286bc2f95f6434f340d5898d66b",
+      "size": 2769
     },
     {
       "path": "schemas/session-metadata.schema.json",
@@ -3059,8 +3059,8 @@
     },
     {
       "path": "templates/registries/runtime-drivers.yaml",
-      "sha256": "c4e6f2c6715f55fdd919bd804607820f547fb72464f25ca55dbca54fa1874e02",
-      "size": 489
+      "sha256": "22751898c4c402f1e880d1a6cccf4b20d3157bd1b871173e2c44b6b3df3d9baf",
+      "size": 597
     },
     {
       "path": "templates/registries/specializations.yaml",
@@ -3116,6 +3116,11 @@
       "path": "templates/run.yaml",
       "sha256": "ee3f892421ba6b5c3ce1655a6102415bf5297d134780c0dfef59749b3a0d9323",
       "size": 370
+    },
+    {
+      "path": "templates/runtime-drivers/codex-exec.yaml",
+      "sha256": "fc38bc4190163c491275cc1747da1b53e0436ee03e09483d63d8c332fa80e91d",
+      "size": 1090
     },
     {
       "path": "templates/runtime-drivers/generic-shell.yaml",
@@ -3228,6 +3233,11 @@
       "size": 1485
     },
     {
+      "path": "tools/codex_exec_worker.py",
+      "sha256": "0ba27ac02b5a6db07a67ed6ea880de643631f34de8c45d962ebf7de8f72689bc",
+      "size": 4604
+    },
+    {
       "path": "tools/context_lock_smoke_helpers.py",
       "sha256": "0be91ce36d80fc3998ee8d279e07563e6cf98bdebd9f5aef194794bc8ea57543",
       "size": 6018
@@ -3244,8 +3254,8 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "0ac12085a31544bd70068420c204b9b87d3ff3ab4470695722d95507b967eff0",
-      "size": 1297949
+      "sha256": "9f880a5f07ebc71b680cfdbac455a8576b6bdab63b142f8ea63ae4da3dfa1e60",
+      "size": 1320003
     },
     {
       "path": "tools/processforge_subprocess.py",
@@ -3301,6 +3311,11 @@
       "path": "tools/smoke_child_platform_not_promoted_to_parent.py",
       "sha256": "fe4351a014dcdd1198d4f1bf56b48bfda962ec2f978870f9f51d156fd6b81ec0",
       "size": 3388
+    },
+    {
+      "path": "tools/smoke_codex_exec_worker.py",
+      "sha256": "781d5df9ec51afe3ced4b2a9dfc5ac1ac1662a8fd1011470149ef1d194bc229a",
+      "size": 6222
     },
     {
       "path": "tools/smoke_config_behavior_contracts.py",
@@ -3794,8 +3809,8 @@
     },
     {
       "path": "tools/smoke_runtime_driver_registry.py",
-      "sha256": "39a83969d708ba850347c8809e61b6975391d32f5103dad522e1d5eb34a25e84",
-      "size": 3545
+      "sha256": "2dbf239b1845daebb13b654381db76732a4f027b944b2bc50ac0d04923ea70e7",
+      "size": 3559
     },
     {
       "path": "tools/smoke_runtime_no_domain_capability_constants.py",
@@ -3978,6 +3993,11 @@
       "size": 3852
     },
     {
+      "path": "tools/smoke_worker_workspace_access.py",
+      "sha256": "dc85534b70fed07a4cfb2ef1bdead7d412769cc0b01a8230305b366c843947e4",
+      "size": 5691
+    },
+    {
       "path": "tools/smoke_workplace_learning_queue.py",
       "sha256": "01dc17d6b91412e68284acaba9e0b839726ddc659646bf798889646ffc9b478d",
       "size": 1212
@@ -4009,13 +4029,13 @@
     },
     {
       "path": "tools/validate-process-forge-schemas.py",
-      "sha256": "abe2b751deaccad4723b20d6960d5581ab61056a23ac11f03fb9ba767c5d09a2",
-      "size": 50261
+      "sha256": "dea526e275487a118aafa0b968bc2be8b01419e2eea1192c73ec96f23af34086",
+      "size": 50430
     },
     {
       "path": "tools/validate-public-cleanliness.py",
-      "sha256": "1fa68f9b394996e1397ab992cc502700053bdc9a3206e242ae00b76ba32ca08c",
-      "size": 10477
+      "sha256": "f96de885e6f3449bf8c1dee1415d718463ece04d669ce081530d36ef09cab957",
+      "size": 10821
     },
     {
       "path": "updates/migrations/0.1.0-linked-workplace.md",
@@ -4028,9 +4048,14 @@
       "size": 1017
     },
     {
+      "path": "updates/migrations/1.0.1-worker-workspace-access.md",
+      "sha256": "ddcb9e94a06cd52f74a909f0b9976603fc672d80f3ffbf8a8d9bdd716c8c2e8d",
+      "size": 437
+    },
+    {
       "path": "updates/processforge-update-index.yaml",
-      "sha256": "be282886d13551135a4abafa9dbf146fd1c86cf98cec4e2a97a8cb68f5ac7b75",
-      "size": 2042
+      "sha256": "90614254fb3b4e7d9a2ec1856c9b53ac7eadb24b8186be358e41efe6610aad17",
+      "size": 3019
     }
   ],
   "name": "processforge",
@@ -4058,10 +4083,10 @@
   "schema_bundle_version": "1.0",
   "schema_version": 1,
   "source": {
-    "commit": "ae4e846e455efa6549d1bb1aca74988f2766acc1",
+    "commit": "6f87337786ecd0b488b668e40e9a46caf77667d3",
     "dirty": false,
-    "tree": "e6103b51d36b77fe8c3341535c977fa9fddf2317",
+    "tree": "890637e44b74a12905d509b6375e4f4e9205ca6e",
     "vcs": "git"
   },
-  "version": "1.0.0"
+  "version": "1.0.1"
 }
