@@ -28,12 +28,12 @@ installed ProcessForge distribution; workplaces and projects stay separate.
 Recommended manual flow:
 
 1. Extract `processforge.zip` to a new versioned directory outside the project,
-   for example `<processforge-root-1.0.1>`.
+   for example `<processforge-root-1.0.2>`.
 2. Verify the new distribution:
 
    ```powershell
-   python <processforge-root-1.0.1>/bin/pf.py version
-   python <processforge-root-1.0.1>/bin/pf.py release-test --root <processforge-root-1.0.1> --public
+   python <processforge-root-1.0.2>/bin/pf.py version
+   python <processforge-root-1.0.2>/bin/pf.py release-test --root <processforge-root-1.0.2> --public
    ```
 
 3. Update `<workplace>/registries/distributions.yaml` so the `processforge`
@@ -41,16 +41,16 @@ Recommended manual flow:
 4. Validate the workplace:
 
    ```powershell
-   python <processforge-root-1.0.1>/bin/pf.py doctor-workplace --workplace <workplace>
+   python <processforge-root-1.0.2>/bin/pf.py doctor-workplace --workplace <workplace>
    ```
 
 5. For each linked project, assess and refresh the project context:
 
    ```powershell
-   python <processforge-root-1.0.1>/bin/pf.py project-upgrade-check --project-root <project>
-   python <processforge-root-1.0.1>/bin/pf.py project-context-refresh --project-root <project>
-   python <processforge-root-1.0.1>/bin/pf.py project-context-check --project-root <project>
-   python <processforge-root-1.0.1>/bin/pf.py doctor-project --project-root <project>
+   python <processforge-root-1.0.2>/bin/pf.py project-upgrade-check --project-root <project>
+   python <processforge-root-1.0.2>/bin/pf.py project-context-refresh --project-root <project>
+   python <processforge-root-1.0.2>/bin/pf.py project-context-check --project-root <project>
+   python <processforge-root-1.0.2>/bin/pf.py doctor-project --project-root <project>
    ```
 
 Keep the previous distribution directory until validation passes. To roll back,
@@ -87,7 +87,7 @@ After the assessment:
    the relevant ProcessForge process or CLI command, then rerun the context and
    project doctors.
 
-For ProcessForge `1.0.1`, no project `.pf` migration is required. Existing
+For ProcessForge `1.0.2`, no project `.pf` migration is required. Existing
 assignments and capsules remain valid; new shell-agent flows may use
 `workspace_access` to grant workplace knowledge, templates, tools, and MCP
 through a private runtime access file.

@@ -34,11 +34,11 @@ from processforge_subprocess import diagnostic_text, format_command as format_su
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT_FLOW_ROOT = ".pf"
-PROCESSFORGE_VERSION = "1.0.1"
+PROCESSFORGE_VERSION = "1.0.2"
 PROCESSFORGE_SPEC_VERSION = "1.0"
 PROCESSFORGE_SCHEMA_BUNDLE_VERSION = "1.0"
 RELEASE_NAME = "processforge"
-RELEASE_ARCHIVE_VERSION = "1.0.1"
+RELEASE_ARCHIVE_VERSION = "1.0.2"
 PROCESSFORGE_CORE_PROJECT_TYPES = {"processforge-development", "processforge-core-development"}
 META_PROJECT_TYPES = {"agent-workspace", "brownfield-workspace", "meta-workspace"}
 DEFAULT_SCAN_POLICY = {

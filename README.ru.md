@@ -4,7 +4,7 @@
 
 **Фреймворк для создания ИИ-процессов, независимый от конкретных платформ и поставщиков ИИ.**
 
-[![Версия](https://img.shields.io/badge/version-1.0.1-2F6FED?style=for-the-badge)](VERSION)
+[![Версия](https://img.shields.io/badge/version-1.0.2-2F6FED?style=for-the-badge)](VERSION)
 [![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](requirements.txt)
 [![Лицензия](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
 [![Файловый режим](https://img.shields.io/badge/runtime-file--first-2E7D32?style=for-the-badge)](docs/ru/concepts/runtime-model.md)

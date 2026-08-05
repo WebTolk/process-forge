@@ -31,12 +31,12 @@ HTTPS, `sha256` и ручное подтверждение оператора п
 Рекомендуемый ручной порядок:
 
 1. Распакуйте `processforge.zip` в новую версионную папку вне проекта,
-   например `<processforge-root-1.0.1>`.
+   например `<processforge-root-1.0.2>`.
 2. Проверьте новый дистрибутив:
 
    ```powershell
-   python <processforge-root-1.0.1>/bin/pf.py version
-   python <processforge-root-1.0.1>/bin/pf.py release-test --root <processforge-root-1.0.1> --public
+   python <processforge-root-1.0.2>/bin/pf.py version
+   python <processforge-root-1.0.2>/bin/pf.py release-test --root <processforge-root-1.0.2> --public
    ```
 
 3. В `<workplace>/registries/distributions.yaml` обновите запись
@@ -45,17 +45,17 @@ HTTPS, `sha256` и ручное подтверждение оператора п
 4. Проверьте рабочее место:
 
    ```powershell
-   python <processforge-root-1.0.1>/bin/pf.py doctor-workplace --workplace <workplace>
+   python <processforge-root-1.0.2>/bin/pf.py doctor-workplace --workplace <workplace>
    ```
 
 5. Для каждого связанного проекта выполните проверку и обновление снимка
    контекста:
 
    ```powershell
-   python <processforge-root-1.0.1>/bin/pf.py project-upgrade-check --project-root <project>
-   python <processforge-root-1.0.1>/bin/pf.py project-context-refresh --project-root <project>
-   python <processforge-root-1.0.1>/bin/pf.py project-context-check --project-root <project>
-   python <processforge-root-1.0.1>/bin/pf.py doctor-project --project-root <project>
+   python <processforge-root-1.0.2>/bin/pf.py project-upgrade-check --project-root <project>
+   python <processforge-root-1.0.2>/bin/pf.py project-context-refresh --project-root <project>
+   python <processforge-root-1.0.2>/bin/pf.py project-context-check --project-root <project>
+   python <processforge-root-1.0.2>/bin/pf.py doctor-project --project-root <project>
    ```
 
 Старую папку дистрибутива держите до успешной проверки. Для отката верните путь
@@ -91,7 +91,7 @@ python bin/pf.py project-upgrade-check --project-root <project>
    соответствующий процесс или команду ProcessForge, затем снова выполните
    `project-context-refresh`, `project-context-check` и `doctor-project`.
 
-Для ProcessForge `1.0.1` миграция проектных `.pf` не требуется. Старые
+Для ProcessForge `1.0.2` миграция проектных `.pf` не требуется. Старые
 assignments и capsules остаются валидными; новые shell-agent flows могут
 использовать `workspace_access`, чтобы получать общие знания, шаблоны,
 инструменты и MCP через приватный runtime-файл.

@@ -2,7 +2,7 @@ schema_version: 1
 
 product:
   id: processforge
-  current_version: "1.0.1"
+  current_version: "1.0.2"
 
 update_sites:
   - id: processforge-official
@@ -26,7 +26,7 @@ update_sites:
 
 channels:
   stable:
-    latest: "1.0.1"
+    latest: "1.0.2"
 
 versions:
   - version: "0.1.0"
@@ -94,3 +94,30 @@ versions:
       - templates/runtime-drivers/codex-exec.yaml
       - templates/registries/runtime-drivers.yaml
       - schemas/runtime-driver.schema.json
+
+  - version: "1.0.2"
+    channel: stable
+    released_at: "2026-08-05"
+    compatibility:
+      min_project_schema: 1
+      max_project_schema: 1
+    migration:
+      required: false
+      guide: updates/migrations/1.0.2-update-server-contract.md
+    changes:
+      - type: updates
+        summary: "Update servers now use a simple manifest and changelog URL contract, including local file manifests for offline or staged installations."
+        breaking: false
+      - type: documentation
+        summary: "Documentation now reflects the current runtime driver launch flow and the simplified update model."
+        breaking: false
+      - type: validation
+        summary: "Schemas and smokes now validate providerless update sites and reject the unsupported legacy url field."
+        breaking: false
+    affected_files:
+      - tools/processforge.py
+      - schemas/update-site.schema.json
+      - schemas/entity-update-sites.schema.json
+      - schemas/update-source-registry.schema.json
+      - docs/concepts/update-sites.md
+      - docs/ru/concepts/update-sites.md
