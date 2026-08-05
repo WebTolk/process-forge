@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test stage, verify, apply, and rollback for local file provider packages."""
+"""Smoke-test stage, verify, apply, and rollback for local-file packages."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def main() -> int:
         require_ok(run_pf("update", "rollback", "--workplace", str(workplace), "--candidate", candidate_id))
         restored = (workplace / "packages" / "acme.software-processes" / "package.yaml").read_text(encoding="utf-8")
         assert "version: 1.0.0" in restored
-    print("PASS: update stage/verify/apply/rollback file provider smoke")
+    print("PASS: update stage/verify/apply/rollback local-file smoke")
     return 0
 
 

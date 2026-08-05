@@ -46,3 +46,45 @@ refresh, audit artifact, and this log.
 
 Handoff:
 None.
+
+## 2026-08-05 08:18 - codex
+
+Task:
+Simplify update-server documentation and validation so provider names are not
+part of the public update-site contract.
+
+Files changed:
+docs/concepts/update-sites.md, docs/ru/concepts/update-sites.md,
+docs/getting-started/update-system.md, docs/ru/getting-started/update-system.md,
+docs/concepts/update-lifecycle.md, docs/ru/concepts/update-lifecycle.md,
+docs/authoring/update-sites-for-packages.md, README.md, README.ru.md,
+schemas/update-site.schema.json, schemas/entity-update-sites.schema.json,
+schemas/update-source-registry.schema.json,
+schemas/normalized-update-manifest.schema.json,
+schemas/installed-update-sites.schema.json, resource update-site schemas,
+tools/processforge.py, update smoke fixtures.
+
+Artifacts changed:
+None.
+
+Templates used:
+None.
+
+Tools used:
+rg, ProcessForge smoke tests, apply_patch.
+
+Decisions:
+Use `manifest_url` and `changelog_url` as the sufficient public update-server
+contract. Runtime source kind is inferred from `manifest_url`; `url` is now an
+unsupported update-site field.
+
+Risks:
+Compatibility with any unpublished local update registry that used `url` will
+require manual conversion to `manifest_url`.
+
+Next steps:
+Run update smokes, schema validation, public cleanliness, checksum validation,
+and release-check.
+
+Handoff:
+None.

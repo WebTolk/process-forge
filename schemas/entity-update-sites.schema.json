@@ -14,17 +14,6 @@
     "sourceId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
     "envRef": { "type": "string", "pattern": "^([A-Z_][A-Z0-9_]*|\\$\\{[A-Z_][A-Z0-9_]*\\}|(auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$" },
     "remoteUrl": { "type": "string", "pattern": "^https?://[^\\s/?#]+[^\\s]*$" },
-    "provider": {
-      "enum": [
-        "processforge_json",
-        "processforge_json_file",
-        "github_releases",
-        "gitverse_releases",
-        "gitlab_releases",
-        "generic_http_directory",
-        "tuf_repository"
-      ]
-    },
     "assetPatterns": {
       "type": "object",
       "properties": {
@@ -47,18 +36,17 @@
     },
     "updateSite": {
       "type": "object",
-      "required": ["id", "enabled"],
+      "required": ["manifest_url", "changelog_url"],
       "properties": {
         "id": { "$ref": "#/$defs/sourceId" },
         "name": { "type": "string" },
         "enabled": { "type": "boolean" },
-        "provider": { "$ref": "#/$defs/provider" },
-        "type": { "$ref": "#/$defs/provider" },
+        "provider": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
         "priority": { "type": "integer" },
         "manifest_url": { "type": "string", "minLength": 1 },
         "changelog_url": { "type": "string", "minLength": 1 },
         "channel": { "type": "string", "minLength": 1 },
-        "url": { "$ref": "#/$defs/remoteUrl" },
         "path": { "type": "string" },
         "owner": { "type": "string" },
         "repo": { "type": "string" },

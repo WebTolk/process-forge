@@ -1,6 +1,8 @@
 # Update Sites
 
-Update sites are the ProcessForge contract for discovering new versions of installed subjects. They are intentionally file-first and can run without a daemon, database, web UI, or real network in tests.
+Update sites are the ProcessForge contract for discovering new versions of
+installed subjects. They are intentionally file-first and can run without a
+daemon, database, web UI, or real network in tests.
 
 An update-able subject declares one or more `update_sites` entries:
 
@@ -8,7 +10,6 @@ An update-able subject declares one or more `update_sites` entries:
 update_sites:
   - id: vendor-main
     enabled: true
-    provider: processforge_json_file
     manifest_url: "file:///mirror/acme-processes.json"
     changelog_url: "file:///mirror/acme-processes-changelog.md"
     channel: stable
@@ -27,30 +28,22 @@ update_sites:
       notify_director_inbox: true
 ```
 
-`manifest_url` is the canonical field. Legacy `url` is accepted and migration-warned by the update-site validator. `changelog_url` should be present for public packages, templates, tools, processes, and knowledge updates that change behavior.
+`manifest_url` points to the update manifest. `changelog_url` points to the
+human-readable change log. The manifest may be a local file, as in the example
+above, or a remote HTTP(S) URL. ProcessForge chooses the read path from the URL
+itself; operators do not need to declare a source type.
 
-MVP provider support:
-
-| Provider | Status | Capabilities |
-| --- | --- | --- |
-| `processforge_json_file` | implemented | fetch local manifest, copy local artifact |
-| `processforge_json` | implemented | fetch HTTP/HTTPS manifest and artifact with timeouts |
-| `generic_http_directory` | planned | schema name only |
-| `github_releases` | planned | schema name only |
-| `gitlab_releases` | planned | schema name only |
-| `gitverse_releases` | planned | schema name only |
-| `tuf_repository` | planned | schema name only |
-
-Only implemented providers are claimed by smoke tests. Public smokes use local `file:///` manifests and artifacts.
+Public smokes use local `file:///` manifests and artifacts so tests stay
+deterministic.
 
 Supported installed subject types include `processforge_distribution`, `workplace`, `process_package`, `knowledge_package`, `template_package`, `tool_package`, `tool_definition`, `platform_contract`, `mcp_definition`, `process_definition`, `reusable_template`, and `knowledge_resource`. `project_pf` is assessment-only and is excluded from normal downloadable update candidates.
 
 ## Evolve Package Releases
 
 The common evolve learning loop does not bypass update sites. A knowledge hub
-release writes a local file-provider update manifest for a reviewed package
-version. Workplaces then use the normal `update candidates refresh`, `update
-stage`, `update verify`, and `update apply` commands.
+release writes a local update manifest for a reviewed package version.
+Workplaces then use the normal `update candidates refresh`, `update stage`,
+`update verify`, and `update apply` commands.
 
 Unreviewed candidates and generated learning bundles are not public archive
 content. Only reviewed package releases and update manifests are distributed.

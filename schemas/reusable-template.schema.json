@@ -64,13 +64,14 @@
     "remoteUrl": { "type": "string", "pattern": "^https?://[^\\s/?#]+[^\\s]*$" },
     "updateSite": {
       "type": "object",
-      "required": ["id", "enabled", "type"],
+      "required": ["manifest_url", "changelog_url"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "enabled": { "type": "boolean" },
         "type": { "type": "string", "minLength": 1 },
         "priority": { "type": "integer" },
-        "url": { "$ref": "#/$defs/remoteUrl" },
+        "manifest_url": { "type": "string", "minLength": 1 },
+        "changelog_url": { "type": "string", "minLength": 1 },
         "path": { "type": "string" },
         "owner": { "type": "string" },
         "repo": { "type": "string" },

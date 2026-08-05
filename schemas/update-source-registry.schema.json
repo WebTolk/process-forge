@@ -51,17 +51,6 @@
         "package"
       ]
     },
-    "provider": {
-      "enum": [
-        "processforge_json",
-        "processforge_json_file",
-        "github_releases",
-        "gitverse_releases",
-        "gitlab_releases",
-        "generic_http_directory",
-        "tuf_repository"
-      ]
-    },
     "subjectFilter": {
       "type": "object",
       "required": ["type", "ids"],
@@ -97,17 +86,16 @@
     },
     "source": {
       "type": "object",
-      "required": ["id", "enabled", "provider", "priority"],
+      "required": ["manifest_url", "changelog_url"],
       "properties": {
         "id": { "$ref": "#/$defs/sourceId" },
         "name": { "type": "string" },
         "enabled": { "type": "boolean" },
-        "provider": { "$ref": "#/$defs/provider" },
+        "provider": { "type": "string", "minLength": 1 },
         "priority": { "type": "integer" },
         "manifest_url": { "type": "string", "minLength": 1 },
         "changelog_url": { "type": "string", "minLength": 1 },
         "channel": { "type": "string", "minLength": 1 },
-        "url": { "$ref": "#/$defs/remoteUrl" },
         "path": { "type": "string" },
         "owner": { "type": "string" },
         "repo": { "type": "string" },

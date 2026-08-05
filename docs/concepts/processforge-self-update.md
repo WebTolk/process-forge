@@ -22,11 +22,10 @@ steps, and rollback notes.
 
 The newer `pf update ...` commands are now the unified updater MVP surface. They
 validate global bootstrap update sources, derive installed entity update sites
-from manifests and registries, read local override metadata, fetch
-`processforge_json_file` / `processforge_json` manifests, write candidate and
-notification caches, stage artifacts, verify sha256 and package identity, apply
-supported local file-provider package/tool updates with `--confirm`, and roll
-back from backups.
+from manifests and registries, read local override metadata, fetch local or
+HTTP(S) manifests from `manifest_url`, write candidate and notification caches,
+stage artifacts, verify sha256 and package identity, apply supported local-file
+package/tool updates with `--confirm`, and roll back from backups.
 
 `installed-subjects.yaml` is local installed-state metadata. Scanned manifests
 remain the primary source of update-site discovery; when an installed subject

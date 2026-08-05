@@ -3,14 +3,13 @@
   "$id": "https://processforge.local/schemas/update-site.schema.json",
   "title": "ProcessForge Unified Update Site",
   "type": "object",
-  "required": ["id", "enabled", "provider", "manifest_url", "channel", "trust", "policy"],
+  "required": ["manifest_url", "changelog_url"],
   "properties": {
     "id": { "$ref": "#/$defs/id" },
     "enabled": { "type": "boolean" },
-    "provider": { "$ref": "#/$defs/provider" },
-    "type": { "$ref": "#/$defs/provider" },
+    "provider": { "type": "string", "minLength": 1 },
+    "type": { "type": "string", "minLength": 1 },
     "manifest_url": { "type": "string", "minLength": 1 },
-    "url": { "type": "string", "minLength": 1 },
     "changelog_url": { "type": "string", "minLength": 1 },
     "channel": { "type": "string", "minLength": 1 },
     "channels": { "type": "array", "items": { "type": "string", "minLength": 1 } },
@@ -21,17 +20,6 @@
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
-    "provider": {
-      "enum": [
-        "processforge_json",
-        "processforge_json_file",
-        "github_releases",
-        "gitverse_releases",
-        "gitlab_releases",
-        "generic_http_directory",
-        "tuf_repository"
-      ]
-    },
     "trust": {
       "type": "object",
       "required": ["require_https", "require_sha256", "allow_unsigned", "signature_required"],

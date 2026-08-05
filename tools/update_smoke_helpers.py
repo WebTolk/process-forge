@@ -86,7 +86,6 @@ tools:
     update_sites:
       - id: tool-main
         enabled: true
-        provider: processforge_json_file
         manifest_url: file:///{(workplace / 'updates' / 'manifest.json').as_posix()}
         changelog_url: file:///{(workplace / 'updates' / 'CHANGELOG.md').as_posix()}
         channel: stable
@@ -121,7 +120,6 @@ version: 1.0.0
 update_sites:
   - id: acme-main
     enabled: true
-    provider: processforge_json_file
     manifest_url: file:///{(workplace / 'updates' / 'manifest.json').as_posix()}
     changelog_url: file:///{(workplace / 'updates' / 'CHANGELOG.md').as_posix()}
     channel: stable

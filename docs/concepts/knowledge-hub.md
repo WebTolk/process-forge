@@ -14,7 +14,7 @@ knowledge-hub/
 
 The MVP imports learning bundles, indexes candidates, builds package
 `candidate-notes.md`, writes changelog/release plan files, creates a package
-zip, and writes a local file-provider update manifest. Import preserves
+zip, and writes a local update manifest. Import preserves
 `target`, `applicability`, `generalization`, `routing`, and `promotion`.
 
 Package builds select candidates only when `routing.recommended_destination.id`

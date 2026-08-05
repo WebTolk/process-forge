@@ -16,7 +16,9 @@ python bin/pf.py update apply --workplace <workplace> --candidate <candidate-id>
 python bin/pf.py update rollback --workplace <workplace> --candidate <candidate-id>
 ```
 
-For deterministic local testing, use `provider: processforge_json_file` and `file:///` manifest/artifact URLs. For real remote update servers, use `provider: processforge_json`, HTTPS URLs, sha256 hashes, and operator review before staging or applying.
+For deterministic local testing, use `file:///` manifest and artifact URLs.
+For real remote update servers, use HTTPS URLs, sha256 hashes, and operator
+review before staging or applying.
 
 ## Updating The Installed ProcessForge Core
 

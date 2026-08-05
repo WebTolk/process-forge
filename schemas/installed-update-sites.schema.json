@@ -27,7 +27,7 @@
     },
     "source": {
       "type": "object",
-      "required": ["id"],
+      "required": ["id", "manifest_url", "changelog_url"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "provider": { "type": "string", "minLength": 1 },
@@ -36,7 +36,6 @@
         "manifest_url": { "type": "string" },
         "changelog_url": { "type": "string" },
         "channel": { "type": "string" },
-        "url": { "type": "string" },
         "path": { "type": "string" },
         "owner": { "type": "string" },
         "repo": { "type": "string" },

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test unified update-site schema and legacy URL warnings."""
+"""Smoke-test unified update-site schema without provider routing."""
 
 from __future__ import annotations
 
@@ -21,7 +21,6 @@ version: 1.0.0
 update_sites:
   - id: main
     enabled: true
-    provider: processforge_json_file
     manifest_url: file:///tmp/acme-update.json
     changelog_url: file:///tmp/acme-changelog.md
     channel: stable
@@ -41,21 +40,19 @@ update_sites:
         )
         require_ok(run_pf("update", "entity-sources", "rebuild", "--workplace", str(workplace), "--dry-run"))
         write_yaml(
-            workplace / "packages" / "legacy.pkg" / "package.yaml",
+            workplace / "packages" / "minimal.pkg" / "package.yaml",
             """
-id: legacy.pkg
+id: minimal.pkg
 type: process_package
 version: 1.0.0
 update_sites:
-  - id: legacy
-    enabled: true
-    provider: processforge_json_file
-    url: file:///tmp/legacy-update.json
+  - manifest_url: file:///tmp/minimal-update.json
+    changelog_url: file:///tmp/minimal-changelog.md
 """,
         )
-        legacy = require_ok(run_pf("update", "entity-sources", "rebuild", "--workplace", str(workplace), "--dry-run"))
-        if "legacy" not in legacy:
-            raise AssertionError(legacy)
+        minimal = require_ok(run_pf("update", "entity-sources", "rebuild", "--workplace", str(workplace), "--dry-run"))
+        if "minimal" not in minimal:
+            raise AssertionError(minimal)
         write_yaml(
             workplace / "packages" / "bad.pkg" / "package.yaml",
             """
@@ -65,11 +62,12 @@ version: 1.0.0
 update_sites:
   - id: bad
     enabled: true
-    provider: processforge_json
+    url: file:///tmp/bad-update.json
+    changelog_url: file:///tmp/bad-changelog.md
 """,
         )
         failed = run_pf("update", "entity-sources", "rebuild", "--workplace", str(workplace), "--dry-run")
-        if failed.returncode == 0 or "requires manifest_url" not in failed.stdout:
+        if failed.returncode == 0 or "unsupported url field" not in failed.stdout:
             raise AssertionError(failed.stdout)
     print("PASS: unified update-site schema smoke")
     return 0

@@ -7,7 +7,6 @@ product:
 update_sites:
   - id: processforge-official
     enabled: true
-    provider: processforge_json
     manifest_url: "https://example.com/processforge/update.json"
     changelog_url: "https://example.com/processforge/changelog.md"
     channel: stable

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test local file-provider update candidate discovery."""
+"""Smoke-test local-file update candidate discovery."""
 
 from __future__ import annotations
 

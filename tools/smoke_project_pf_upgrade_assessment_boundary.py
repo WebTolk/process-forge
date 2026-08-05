@@ -28,8 +28,8 @@ version: 1.0.0
 update_sites:
   - id: forbidden
     enabled: true
-    provider: processforge_json_file
     manifest_url: file:///tmp/project-pf-download.json
+    changelog_url: file:///tmp/project-pf-changelog.md
 """,
         )
         require_ok(run_pf("update", "candidates", "refresh", "--workplace", str(workplace)))

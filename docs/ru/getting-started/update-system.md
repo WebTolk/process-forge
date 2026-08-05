@@ -19,10 +19,9 @@ python bin/pf.py update apply --workplace <workplace> --candidate <candidate-id>
 python bin/pf.py update rollback --workplace <workplace> --candidate <candidate-id>
 ```
 
-Для воспроизводимых локальных проверок используйте
-`provider: processforge_json_file` и URL вида `file:///...`. Для настоящего
-удалённого сервера обновлений используйте `provider: processforge_json`, HTTPS,
-`sha256` и ручное подтверждение оператора перед применением.
+Для воспроизводимых локальных проверок используйте `manifest_url` и артефакты с
+URL вида `file:///...`. Для настоящего удалённого сервера обновлений используйте
+HTTPS, `sha256` и ручное подтверждение оператора перед применением.
 
 ## Как обновлять установленное ядро ProcessForge
 

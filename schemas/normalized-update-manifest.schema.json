@@ -48,7 +48,7 @@
         "prerelease": { "type": "boolean" },
         "released_at": { "type": "string" },
         "yanked": { "type": "boolean" },
-        "source": { "type": "object", "required": ["id", "provider"], "additionalProperties": true },
+        "source": { "type": "object", "additionalProperties": true },
         "release": { "type": "object", "additionalProperties": true },
         "compatibility": { "type": "object", "additionalProperties": true },
         "dependencies": { "type": "array", "items": { "type": "object", "additionalProperties": true } },

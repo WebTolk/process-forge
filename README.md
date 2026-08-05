@@ -362,7 +362,7 @@ Development and release-check requirements:
 - Git for source installation and release checks such as `git diff --check`.
 - Ability to run subprocesses and create temporary directories.
 - ZIP support from the Python standard library.
-- Update tests are deterministic and use local file-provider fixtures; public
+- Update tests are deterministic and use local-file fixtures; public
   release checks do not require real network access.
 
 Optional integrations include MCP servers, external tools, browser checks, and

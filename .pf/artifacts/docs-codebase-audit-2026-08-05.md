@@ -48,6 +48,10 @@ Checked documentation against the current ProcessForge implementation for:
 - Update-system docs did not explain the operational difference between
   updating the installed ProcessForge distribution and updating project `.pf`
   state. Added both procedures.
+- Update-server docs over-specified provider names and legacy `url` behavior
+  before the update system is fully established. Public docs and validation now
+  treat `manifest_url` and `changelog_url` as the sufficient update-site
+  contract; source kind is inferred from `manifest_url`.
 
 ## Validation
 

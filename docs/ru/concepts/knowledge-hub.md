@@ -14,7 +14,7 @@ knowledge-hub/
 
 MVP импортирует bundles, индексирует candidates, строит package
 `candidate-notes.md`, пишет changelog/release plan, создаёт package zip и
-локальный file-provider update manifest.
+локальный манифест обновления.
 
 Hub не переписывает curated docs молча. Candidate notes проходят review, а
 released packages распространяются через существующую update system.

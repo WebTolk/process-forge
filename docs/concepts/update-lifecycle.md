@@ -7,7 +7,7 @@ The update lifecycle is explicit and operator-controlled:
 3. `update changelog show` prints the candidate changelog URL and local changelog content for file-based manifests.
 4. `update stage` copies or downloads the artifact into `runtime/update/staged/<candidate-id>/` and verifies sha256 when required.
 5. `update verify` checks the staged artifact checksum and, for package zip artifacts, validates subject id/type/version from the package manifest.
-6. `update apply --confirm` creates a backup, applies the file-provider update for supported subject types, updates installed subjects, and writes an apply record.
+6. `update apply --confirm` creates a backup, applies the local-file update for supported subject types, updates installed subjects, and writes an apply record.
 7. `update rollback` restores the backup and writes a rollback record.
 8. `update doctor` validates update runtime caches.
 

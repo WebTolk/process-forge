@@ -28,7 +28,7 @@
     "remoteUrl": { "type": "string", "pattern": "^https?://[^\\s/?#]+[^\\s]*$" },
     "updateSite": {
       "type": "object",
-      "required": ["id", "enabled"],
+      "required": ["manifest_url", "changelog_url"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "name": { "type": "string" },
@@ -39,7 +39,6 @@
         "manifest_url": { "type": "string", "minLength": 1 },
         "changelog_url": { "type": "string", "minLength": 1 },
         "channel": { "type": "string", "minLength": 1 },
-        "url": { "$ref": "#/$defs/remoteUrl" },
         "path": { "type": "string" },
         "owner": { "type": "string" },
         "repo": { "type": "string" },

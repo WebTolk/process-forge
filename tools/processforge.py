@@ -15209,7 +15209,7 @@ def command_knowledge_package_build_from_candidates(args: argparse.Namespace) ->
     if incoming_candidates:
         changelog_items.append("- Staged unreviewed parent-platform candidates in `resources/incoming-learnings.md`.")
     (package_root / "changelog.md").write_text(f"# Changelog\n\n## {version}\n\n" + "\n".join(changelog_items) + "\n", encoding="utf-8")
-    (package_root / f"release-plan-{version}.md").write_text(f"# Release Plan {version}\n\n- Build package from imported candidates.\n- Publish through file-provider update manifest.\n", encoding="utf-8")
+    (package_root / f"release-plan-{version}.md").write_text(f"# Release Plan {version}\n\n- Build package from imported candidates.\n- Publish through local update manifest.\n", encoding="utf-8")
     print(f"BUILT: {package_root}")
     return 0
 
@@ -15280,7 +15280,6 @@ def command_knowledge_package_release(args: argparse.Namespace) -> int:
         {
             "id": f"{safe_id(package_id)}-local",
             "enabled": True,
-            "provider": "processforge_json_file",
             "manifest_url": "file:///" + update_manifest.as_posix(),
             "changelog_url": "file:///" + (package_root / "changelog.md").as_posix(),
             "channel": "stable",
@@ -19801,16 +19800,6 @@ Fix:
     return print_checks(checks)
 
 
-UPDATE_PROVIDER_TYPES = {
-    "processforge_json",
-    "processforge_json_file",
-    "github_releases",
-    "gitverse_releases",
-    "gitlab_releases",
-    "generic_http_directory",
-    "tuf_repository",
-}
-
 UPDATE_SUBJECT_TYPES = {
     "*",
     "processforge_distribution",
@@ -19838,7 +19827,6 @@ UPDATE_SOURCE_PUBLIC_KEYS = [
     "type",
     "provider",
     "priority",
-    "url",
     "manifest_url",
     "changelog_url",
     "channel",
@@ -19866,9 +19854,6 @@ UPDATE_SOURCE_LOCAL_KEYS = [
 SHA256_HEX_RE = re.compile(r"^[A-Fa-f0-9]{64}$")
 ENV_REFERENCE_RE = re.compile(r"^(?:[A-Z_][A-Z0-9_]*|\$\{[A-Z_][A-Z0-9_]*\}|(?:auth_ref|secret_ref):[A-Za-z0-9][A-Za-z0-9_.-]*)$")
 CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
-UPDATE_REMOTE_PROVIDERS = {"processforge_json", "generic_http_directory", "tuf_repository"}
-UPDATE_RELEASE_PROVIDERS = {"github_releases", "gitverse_releases", "gitlab_releases"}
-
 
 def update_workplace_root(raw: str) -> Path:
     path = Path(raw).expanduser().resolve()
@@ -19912,16 +19897,27 @@ def load_update_yaml(path: Path) -> dict[str, Any]:
 
 
 def update_location(source: dict[str, Any], provider_key: str) -> str:
-    provider = str(source.get(provider_key) or source.get("provider") or source.get("type") or "")
-    if provider in {"processforge_json", "generic_http_directory", "tuf_repository"}:
-        return str(source.get("manifest_url") or source.get("url") or "")
-    if provider == "processforge_json_file":
-        return str(source.get("manifest_url") or source.get("path") or source.get("url") or "")
-    if provider in {"github_releases", "gitverse_releases", "gitlab_releases"}:
-        owner = str(source.get("owner") or "")
-        repo = str(source.get("repo") or "")
-        return f"{owner}/{repo}" if owner or repo else ""
-    return ""
+    return str(source.get("manifest_url") or "")
+
+
+def update_source_kind(source: dict[str, Any]) -> str:
+    manifest_url = update_location(source, "provider")
+    parsed = urlparse(manifest_url)
+    scheme = parsed.scheme.lower()
+    if scheme == "file" or not scheme:
+        return "local_file"
+    if scheme in {"http", "https"}:
+        return "http"
+    return scheme or "unknown"
+
+
+def update_site_source_id(source: dict[str, Any]) -> str:
+    raw = source.get("id")
+    if isinstance(raw, str) and raw.strip():
+        return raw
+    manifest_url = update_location(source, "provider")
+    digest = hashlib.sha256(manifest_url.encode("utf-8")).hexdigest()[:12] if manifest_url else "missing"
+    return f"manifest-{digest}"
 
 
 def source_requires_https(source: dict[str, Any], defaults: dict[str, Any] | None = None) -> bool:
@@ -20191,22 +20187,23 @@ def append_update_source_checks(
         return
 
     source_id = source.get("id")
-    if not isinstance(source_id, str) or not source_id.strip():
-        checks.append(check("FAIL", f"{label} missing id"))
-    elif not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", source_id):
+    if source_id is not None and (not isinstance(source_id, str) or not source_id.strip()):
+        checks.append(check("FAIL", f"{label} id must be a non-empty string when present"))
+    elif isinstance(source_id, str) and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", source_id):
         checks.append(check("FAIL", f"{label} id must use letters, digits, dot, underscore, or hyphen"))
 
     enabled = source.get("enabled")
-    if not isinstance(enabled, bool):
-        checks.append(check("FAIL", f"{label} missing boolean enabled"))
+    if enabled is not None and not isinstance(enabled, bool):
+        checks.append(check("FAIL", f"{label} enabled must be a boolean when present"))
 
     provider = source.get(provider_key)
     if not provider:
         provider = source.get("provider" if provider_key == "type" else "type")
-    if not isinstance(provider, str) or not provider.strip():
-        checks.append(check("FAIL", f"{label} missing {provider_key}"))
-    elif provider not in UPDATE_PROVIDER_TYPES:
-        checks.append(check("FAIL", f"{label} unsupported {provider_key} {provider!r}"))
+    if provider is not None and (not isinstance(provider, str) or not provider.strip()):
+        checks.append(check("FAIL", f"{label} {provider_key} must be a non-empty string when present"))
+
+    if "url" in source:
+        checks.append(check("FAIL", f"{label} uses unsupported url field; use manifest_url"))
 
     if "priority" not in source:
         if require_priority:
@@ -20237,32 +20234,27 @@ def append_update_source_checks(
                 if not isinstance(ids, list) or not all(isinstance(item, str) and item.strip() for item in ids):
                     checks.append(check("FAIL", f"{subject_label}.ids must be a list of non-empty strings"))
 
-    provider_text = str(provider or "")
-    if provider_text in UPDATE_REMOTE_PROVIDERS:
-        url = source.get("manifest_url") or source.get("url")
-        if not isinstance(url, str) or not url.strip():
-            checks.append(check("FAIL", f"{label} provider {provider_text} requires manifest_url"))
-        else:
-            valid, reason = valid_remote_url_shape(url, require_https=source_requires_https(source, defaults))
+    manifest_url = source.get("manifest_url")
+    if not isinstance(manifest_url, str) or not manifest_url.strip():
+        checks.append(check("FAIL", f"{label} missing manifest_url"))
+    else:
+        parsed = urlparse(manifest_url)
+        scheme = parsed.scheme.lower()
+        if scheme in {"http", "https"}:
+            valid, reason = valid_remote_url_shape(manifest_url, require_https=source_requires_https(source, defaults))
             if not valid:
                 checks.append(check("FAIL", f"{label} manifest_url {reason}"))
-            if "manifest_url" not in source and "url" in source:
-                checks.append(check("WARN", f"{label} uses legacy url; migrate to manifest_url"))
-    elif provider_text == "processforge_json_file":
-        local_location = source.get("manifest_url") or source.get("path") or source.get("url")
-        if not isinstance(local_location, str) or not str(local_location).strip():
-            checks.append(check("FAIL", f"{label} provider processforge_json_file requires manifest_url or path"))
-        if "manifest_url" not in source and ("path" in source or "url" in source):
-            checks.append(check("WARN", f"{label} uses legacy local location; migrate to manifest_url"))
-    elif provider_text in UPDATE_RELEASE_PROVIDERS:
-        for key in ("owner", "repo"):
-            if not isinstance(source.get(key), str) or not str(source.get(key)).strip():
-                checks.append(check("FAIL", f"{label} provider {provider_text} requires {key}"))
-        api_base_url = source.get("api_base_url")
-        if isinstance(api_base_url, str) and api_base_url.strip():
-            valid, reason = valid_remote_url_shape(api_base_url, require_https=source_requires_https(source, defaults))
-            if not valid:
-                checks.append(check("FAIL", f"{label} api_base_url {reason}"))
+        elif scheme == "file" or not scheme:
+            if CONTROL_CHAR_RE.search(manifest_url) or any(char.isspace() for char in manifest_url):
+                checks.append(check("FAIL", f"{label} manifest_url must not contain whitespace or control characters"))
+            if scheme == "file" and not (parsed.path or parsed.netloc):
+                checks.append(check("FAIL", f"{label} manifest_url file URL must include a path"))
+        else:
+            checks.append(check("FAIL", f"{label} manifest_url unsupported scheme {scheme!r}"))
+
+    changelog_url = source.get("changelog_url")
+    if not isinstance(changelog_url, str) or not changelog_url.strip():
+        checks.append(check("FAIL", f"{label} missing changelog_url"))
 
     auth = source.get("auth")
     if isinstance(auth, dict):
@@ -20299,8 +20291,8 @@ def validate_update_source_registry_data(data: dict[str, Any], path: Path) -> li
             f"sources[{index}]",
             provider_key="provider",
             defaults=defaults,
-            require_subjects=True,
-            require_priority=True,
+            require_subjects=False,
+            require_priority=False,
         )
     if not checks:
         checks.append(check("PASS", f"{path} valid"))
@@ -20319,7 +20311,7 @@ def print_update_source_list(data: dict[str, Any], *, json_output: bool = False)
     if json_output:
         print(json.dumps({"schema_version": 1, "sources": sources}, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
-    print("ID\tENABLED\tPRIORITY\tPROVIDER\tCHANNELS\tLOCATION")
+    print("ID\tENABLED\tPRIORITY\tSOURCE_KIND\tCHANNELS\tLOCATION")
     for source in sources:
         channels = ",".join(str(item) for item in source.get("channels", [])) if isinstance(source.get("channels"), list) else ""
         print(
@@ -20328,7 +20320,7 @@ def print_update_source_list(data: dict[str, Any], *, json_output: bool = False)
                     str(source.get("id", "")),
                     str(bool(source.get("enabled", False))).lower(),
                     str(source.get("priority", "")),
-                    str(source.get("provider", "")),
+                    update_source_kind(source),
                     channels,
                     update_location(source, "provider"),
                 ]
@@ -20601,17 +20593,11 @@ def derived_update_site_record(
     *,
     parent: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    source_id = str(site.get("id"))
+    source_id = update_site_source_id(site)
     site_id = update_site_stable_key(subject_type, subject_id, source_id)
     source = {key: site[key] for key in UPDATE_SOURCE_PUBLIC_KEYS if key in site}
     source["id"] = source_id
-    provider = str(site.get("provider") or site.get("type") or "processforge_json")
-    source["provider"] = provider
-    source["type"] = provider
-    if "manifest_url" not in source and isinstance(site.get("url"), str):
-        source["manifest_url"] = site["url"]
-    if "manifest_url" not in source and isinstance(site.get("path"), str):
-        source["manifest_url"] = site["path"]
+    source["type"] = update_source_kind(source)
     if "channel" not in source:
         channels = site.get("channels")
         if isinstance(channels, list) and channels:
@@ -20677,10 +20663,11 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], 
             for index, site in enumerate(update_sites):
                 label = f"{rel(record['manifest_path'], workplace_root)}.update_sites[{index}]"
                 append_update_source_checks(checks, site, label, provider_key="type")
-                if isinstance(site, dict) and isinstance(site.get("id"), str):
-                    if site["id"] in seen:
-                        checks.append(check("FAIL", f"{label} duplicate update site id {site['id']}"))
-                    seen.add(site["id"])
+                if isinstance(site, dict) and isinstance(site.get("manifest_url"), str):
+                    source_id = update_site_source_id(site)
+                    if source_id in seen:
+                        checks.append(check("FAIL", f"{label} duplicate update site id {source_id}"))
+                    seen.add(source_id)
                     sites.append(
                         derived_update_site_record(
                             workplace_root,
@@ -20712,7 +20699,7 @@ def build_installed_update_sites(workplace_root: Path) -> tuple[dict[str, Any], 
                 for index, site in enumerate(resource_sites):
                     label = f"{rel(record['manifest_path'], workplace_root)}.resources[{resource.get('id')}].update_sites[{index}]"
                     append_update_source_checks(checks, site, label, provider_key="type")
-                    if isinstance(site, dict) and isinstance(site.get("id"), str):
+                    if isinstance(site, dict) and isinstance(site.get("manifest_url"), str):
                         sites.append(
                             derived_update_site_record(
                                 workplace_root,
@@ -21074,17 +21061,18 @@ def load_yaml_or_json_text(text: str) -> dict[str, Any]:
 
 def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple[dict[str, Any], list[str]]:
     warnings: list[str] = []
-    provider = str(source.get("provider") or source.get("type") or "")
     location = update_location(source, "provider")
     if not location:
         return {}, ["missing manifest_url"]
-    if provider == "processforge_json_file" or location.startswith("file://"):
+    parsed = urlparse(location)
+    scheme = parsed.scheme.lower()
+    if scheme == "file" or not scheme:
         path = file_url_to_path(location, workplace_root)
         data = load_yaml_or_json_document(path)
         if not data:
             return {}, [f"manifest not found or invalid: {path}"]
         return data, warnings
-    if provider == "processforge_json":
+    if scheme in {"http", "https"}:
         try:
             with urlopen(location, timeout=15) as response:
                 text = response.read().decode("utf-8")
@@ -21094,7 +21082,7 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
         if not data:
             return {}, [f"manifest response invalid: {location}"]
         return data, warnings
-    return {}, [f"provider {provider} is planned or unsupported for fetch"]
+    return {}, [f"manifest_url scheme is unsupported: {scheme}"]
 
 
 def semantic_version_key(value: str) -> tuple[int, tuple[int, ...] | str]:
@@ -24879,7 +24867,7 @@ def build_parser() -> argparse.ArgumentParser:
     knowledge_package_build_from_candidates.add_argument("--apply", action="store_true", help="Write package files.")
     knowledge_package_build_from_candidates.set_defaults(func=command_knowledge_package_build_from_candidates)
 
-    knowledge_package_release = sub.add_parser("knowledge-package-release", help="Create a package release artifact and file-provider update manifest.")
+    knowledge_package_release = sub.add_parser("knowledge-package-release", help="Create a package release artifact and local update manifest.")
     knowledge_package_release.add_argument("--hub", required=True, help="Hub root path.")
     knowledge_package_release.add_argument("--package", required=True, help="Package id, for example docs.example.")
     knowledge_package_release.add_argument("--version", required=True, help="Package version.")
