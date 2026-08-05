@@ -179,13 +179,14 @@ def runtime_driver_neutrality_failures(root_path: Path) -> list[str]:
         "templates/registries/runtime-drivers.yaml",
         "templates/runtime-drivers/codex-exec.yaml",
         "docs/concepts/runtime-drivers.md",
+        "docs/ru/concepts/runtime-drivers.md",
         "tools/smoke_runtime_driver_registry.py",
     }
     for path in sorted(set(files), key=lambda item: item.relative_to(root_path).as_posix()):
         rel = path.relative_to(root_path).as_posix()
         text = path.read_text(encoding="utf-8", errors="replace").lower()
         for term in forbidden_terms:
-            if term == "codex" and rel in provider_specific_driver_files:
+            if term in {"codex", "chatgpt"} and rel in provider_specific_driver_files:
                 continue
             if term in text:
                 failures.append(f"{rel}: runtime driver surface mentions agent ecosystem term {term!r}")

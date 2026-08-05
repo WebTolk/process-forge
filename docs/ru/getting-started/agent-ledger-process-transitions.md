@@ -45,9 +45,14 @@ overlap policy в generated assignment и capsule, а также supervisor sche
 workers в plan и передаётся через assignment/capsule metadata,
 `PF_AGENT_MODEL` и shell command model arguments.
 
+Уровень мышления не задаётся флагом `orchestrator-shell-plan-apply`. Его
+задают в плане через `runtime.reasoning_effort` или у конкретного worker через
+`reasoning_effort`; команды `worker-run prepare/start` также могут
+переопределить его через `--reasoning-effort`.
+
 После apply смотрите `.pf/runs/<run-id>/config-resolution-report.yaml`: там
-записано разрешённое поведение для driver, model, overlap, start policy, outputs и
-subagent reports.
+записано разрешённое поведение для driver, model, reasoning effort, overlap,
+start policy, outputs и subagent reports.
 
 Правило границы: Agent Ledger записывает check-in/check-out, presence и leases;
 Agent Director использует эти записи для routes, handoffs, leases и

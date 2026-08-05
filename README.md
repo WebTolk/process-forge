@@ -225,7 +225,9 @@ process-transition, or external runtime-worker scenarios. See
 [docs/concepts/agent-session-model.md](docs/concepts/agent-session-model.md).
 
 For shell-agent plans, `orchestrator-shell-plan-apply --model <model>` passes
-one selected model to every shell worker in the applied plan.
+one selected model to every shell worker in the applied plan. Reasoning effort
+is selected separately in the plan (`runtime.reasoning_effort` or worker
+`reasoning_effort`) or on `worker-run prepare/start` with `--reasoning-effort`.
 
 ## Core Building Blocks
 

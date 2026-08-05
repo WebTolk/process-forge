@@ -261,6 +261,9 @@ ProcessForge, тяжёлые зеркала документации, общие
 Для планов shell-агентов (shell-agent plans)
 `orchestrator-shell-plan-apply --model <model>` передаёт одну выбранную модель
 всем shell-исполнителям (shell workers) в применяемом плане (applied plan).
+Уровень мышления выбирается отдельно: в плане через
+`runtime.reasoning_effort` или `reasoning_effort` конкретного исполнителя, либо
+при `worker-run prepare/start` через `--reasoning-effort`.
 
 ## Основные строительные блоки
 
@@ -366,7 +369,7 @@ ProcessForge сейчас поддерживает файловые сценар
 - [Платформенные контракты](docs/ru/concepts/platform-contracts.md)
 - [Наследование платформ](docs/ru/concepts/platform-inheritance.md)
 - [Навигация по ресурсам знаний](docs/ru/concepts/knowledge-resource-navigation.md)
-- [Площадки обновлений](docs/ru/concepts/update-sites.md)
+- [Сервера обновлений](docs/ru/concepts/update-sites.md)
 - [Жизненный цикл обновлений](docs/ru/concepts/update-lifecycle.md)
 - [Система обновлений](docs/ru/getting-started/update-system.md)
 - [Запуски, задачи и итерации (runs, tasks, iterations)](docs/ru/concepts/runs-tasks-iterations.md)

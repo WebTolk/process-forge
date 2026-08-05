@@ -93,7 +93,9 @@ def main() -> int:
     output = Path(args.output).expanduser().resolve()
     heartbeat = Path(args.heartbeat).expanduser().resolve() if args.heartbeat else None
 
-    model = os.environ.get("PF_AGENT_MODEL") or os.environ.get("PF_CODEX_MODEL") or "gpt-5.3-codex-spark"
+    model = os.environ.get("PF_AGENT_MODEL") or os.environ.get("PF_CODEX_MODEL") or ""
+    if not model:
+        raise SystemExit("FAIL: Codex model is not configured; set PF_AGENT_MODEL through the orchestrator or PF_CODEX_MODEL")
     effort = os.environ.get("PF_CODEX_REASONING_EFFORT") or ""
     sandbox = os.environ.get("PF_CODEX_SANDBOX") or "read-only"
     project_root = os.environ.get("PF_PROJECT_ROOT") or str(Path.cwd())

@@ -42,7 +42,12 @@ Shell-agent plan fields are behavioral. `allow_write_scope_overlap: true` change
 plan and is exposed through assignment/capsule metadata, `PF_AGENT_MODEL`, and
 shell command model arguments.
 
-After apply, inspect `.pf/runs/<run-id>/config-resolution-report.yaml` to see the resolved driver, model, overlap, start, output, and subagent-report behavior.
+Reasoning effort is not a CLI flag on `orchestrator-shell-plan-apply`. Set it
+in the plan with `runtime.reasoning_effort` or per worker with
+`reasoning_effort`; `worker-run prepare/start` can also override it with
+`--reasoning-effort`.
+
+After apply, inspect `.pf/runs/<run-id>/config-resolution-report.yaml` to see the resolved driver, model, reasoning effort, overlap, start, output, and subagent-report behavior.
 
 Boundary rule: Agent Ledger records check-in/check-out, presence, and leases;
 Agent Director uses those records to coordinate routes, handoffs, leases, and

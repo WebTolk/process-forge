@@ -12,6 +12,8 @@ from pathlib import Path
 
 from context_lock_smoke_helpers import make_project, refresh, require_ok, run_pf, write_yaml
 
+MODEL = "chatgpt-5.3-codex-spark"
+
 
 def write_fake_codex(bin_dir: Path) -> None:
     fake = bin_dir / "fake_codex.py"
@@ -90,7 +92,7 @@ local:
         refresh(project)
         write_yaml(
             project / ".pf" / "assignments" / "codex-task.yaml",
-            """
+            f"""
 schema_version: 1
 id: codex-task
 title: Codex task
@@ -103,7 +105,7 @@ allowed_files:
 workspace_access:
   knowledge_resources:
     - joomla-core
-agent_model: gpt-5.3-codex-spark
+agent_model: {MODEL}
 agent_reasoning_effort: high
 required_capabilities: []
 required_outputs:
@@ -149,7 +151,7 @@ expected_report:
             raise AssertionError("codex-exec prompt payload missing workspace access reference")
         if not report.get("workspace_access_file"):
             raise AssertionError("fake Codex process did not receive PF_WORKSPACE_ACCESS_FILE")
-        if report.get("agent_model") != "gpt-5.3-codex-spark":
+        if report.get("agent_model") != MODEL:
             raise AssertionError("fake Codex process did not receive PF_AGENT_MODEL")
         if report.get("agent_reasoning_effort") != "high":
             raise AssertionError("fake Codex process did not receive PF_AGENT_REASONING_EFFORT")
@@ -157,6 +159,35 @@ expected_report:
             raise AssertionError("fake Codex process did not receive PF_CODEX_REASONING_EFFORT")
         if 'model_reasoning_effort="high"' not in argv:
             raise AssertionError("codex-exec did not pass selected high reasoning effort")
+        write_yaml(
+            project / ".pf" / "assignments" / "codex-task-no-model.yaml",
+            """
+schema_version: 1
+id: codex-task-no-model
+title: Codex task without model
+run_id: codex-run
+process: task-batch-execution
+status: open
+objective: Confirm codex-exec does not choose a model.
+allowed_files:
+  - .pf/artifacts/**
+agent_reasoning_effort: medium
+required_capabilities: []
+required_outputs:
+  - id: report
+    path: .pf/artifacts/codex-exec-no-model-report.json
+    type: json
+    required: true
+expected_report:
+  artifact: .pf/artifacts/codex-exec-no-model-report.json
+""",
+        )
+        no_model = run_pf("worker-run", "start", "--project-root", str(project), "--task", "codex-task-no-model", "--driver", "codex-exec")
+        if no_model.returncode == 0:
+            raise AssertionError("codex-exec accepted a shell-agent run without an orchestrator-selected model")
+        no_model_report = project / ".pf" / "artifacts" / "codex-exec-no-model-report.json"
+        if no_model_report.exists():
+            raise AssertionError("codex-exec missing-model failure still produced a worker report")
     print("PASS: codex exec worker smoke")
     return 0
 

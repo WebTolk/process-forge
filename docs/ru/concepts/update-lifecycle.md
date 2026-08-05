@@ -1,14 +1,52 @@
-# Update lifecycle
+# Жизненный цикл обновлений
 
-Цикл обновления явный и управляется оператором:
+Обновление в ProcessForge всегда явное и управляется оператором. Система может
+найти новую версию, подготовить её, проверить контрольные суммы и записать
+уведомления, но не применяет обновление без подтверждения.
 
-1. `update entity-sources rebuild` собирает update sites из manifest-ов, installed subjects, registries и overrides.
-2. `update candidates refresh` читает manifests, сравнивает версии и пишет `runtime/update/candidates.json`.
-3. `update notifications list` показывает уведомления; Director inbox опционален.
-4. `update changelog show` показывает URL changelog и локальное содержимое для file-provider.
-5. `update stage` копирует artifact в `runtime/update/staged/<candidate-id>/` и проверяет sha256.
-6. `update verify` проверяет staged artifact и identity из package manifest внутри zip.
-7. `update apply --confirm` создаёт backup, применяет поддержанное локальное обновление и обновляет installed subjects.
-8. `update rollback` восстанавливает backup.
+Основной порядок:
 
-Автоматического apply нет. Tool policy `custom_command_requires_confirmation` блокируется по умолчанию; ProcessForge не исполняет произвольные remote postinstall scripts.
+1. `update entity-sources rebuild` собирает сведения о серверах обновлений из
+   манифестов установленных сущностей, `installed-subjects`, реестров и
+   локальных переопределений.
+2. `update candidates refresh` читает локальные или удалённые манифесты,
+   сравнивает установленную и доступную версии, пишет
+   `runtime/update/candidates.json` и создаёт уведомления.
+3. `update notifications list` показывает найденные уведомления.
+4. `update changelog show` показывает ссылку на список изменений, а для
+   файлового provider-а выводит локальное содержимое.
+5. `update stage` копирует или скачивает артефакт в
+   `runtime/update/staged/<candidate-id>/` и проверяет `sha256`, если это
+   требуется политикой доверия.
+6. `update verify` повторно проверяет подготовленный артефакт. Для zip-пакетов
+   дополнительно сверяются id, тип и версия внутри манифеста пакета.
+7. `update apply --confirm` создаёт резервную копию, применяет поддержанное
+   локальное файловое обновление, обновляет запись об установленной сущности и
+   пишет отчёт применения.
+8. `update rollback` восстанавливает резервную копию и пишет отчёт отката.
+9. `update doctor` проверяет служебные файлы подсистемы обновлений.
+
+`apply` не запускается автоматически. Политика
+`custom_command_requires_confirmation` по умолчанию блокируется: ProcessForge не
+исполняет произвольные удалённые postinstall-скрипты.
+
+Служебное состояние обновлений не входит в публичный архив:
+
+```text
+runtime/update/candidates.json
+runtime/update/notifications.json
+runtime/update/staged/
+runtime/update/backups/
+runtime/update/rollbacks/
+```
+
+Интеграция с Director необязательна. Если в рабочем месте есть
+`director/inbox/`, уведомления об обновлениях могут дублироваться туда как
+`type=update_available`; при этом CLI и файловые записи остаются основным
+простым способом работы.
+
+Ядро ProcessForge и проектная `.pf` обновляются по разным правилам. Ядро - это
+заменяемый дистрибутив инструмента. Проектная `.pf` - рабочее состояние
+конкретного проекта; она не перезаписывается архивом ядра. Для неё сначала
+создаётся оценка обновления, затем оператор решает, нужны ли миграции,
+обновление снимка контекста или ручные изменения проектных файлов.
