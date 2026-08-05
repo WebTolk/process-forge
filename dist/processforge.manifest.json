@@ -1,15 +1,15 @@
 {
   "archive": {
-    "entry_count": 809,
+    "entry_count": 810,
     "filename": "processforge.zip",
     "format": "zip",
-    "sha256": "99b5821121550838e3b8d923cdedd6edff4e80bef7055a1cab2b1adc1f6ce3b4",
-    "size": 1055240
+    "sha256": "3f9e14eaef5bcb792e5e1cc182c1ed1bc45b5888d600bb04d2aef3a959a14e9b",
+    "size": 1063035
   },
   "build": {
     "deterministic": true,
-    "generated_at": "2026-08-04T16:34:15Z",
-    "source_date_epoch": 1785861255
+    "generated_at": "2026-08-05T04:53:32Z",
+    "source_date_epoch": 1785905612
   },
   "files": [
     {
@@ -29,7 +29,7 @@
     },
     {
       "path": ".pf/process-forge.yaml",
-      "sha256": "118ed03be4edd0bb941b4f1032842ac7cd5aa242576961c56710d544f4a41321",
+      "sha256": "48656046c01873c4d4ff8238e7bedc505c11dc09eed8327eb6b1f3fbb5d1e0b6",
       "size": 5094
     },
     {
@@ -44,8 +44,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "2dde731c2544ac86c42e518d7853dccbb548b93ea71c72c5c4242edc0856019d",
-      "size": 3050
+      "sha256": "6992340ea29f185b0090917ab26056f10eae3bc927db00bd85a898abc068aeb0",
+      "size": 3626
     },
     {
       "path": "LICENSE",
@@ -69,17 +69,17 @@
     },
     {
       "path": "README.md",
-      "sha256": "473d5627b5717f12bc13c84de7cdccb34600a7e03256dcbd35550f0983078d39",
-      "size": 17758
+      "sha256": "f1b975a2e4ef7f00af012c2f40ac2e53735174a9e6ef111691aaf5f2fb1f61b7",
+      "size": 17919
     },
     {
       "path": "README.ru.md",
-      "sha256": "153efa8f19be3a584e6d217d49e5bf3067e72975993576816b9a25d84d3e58f9",
-      "size": 31057
+      "sha256": "2adab446b082c78b9e254f56d147ff46ecd40901fc6bd10502e4e9ea1cb734bd",
+      "size": 31279
     },
     {
       "path": "VERSION",
-      "sha256": "44e161e4495cac2cf7858043e9e6418e9579f0ddcfae826f9a372622968ce066",
+      "sha256": "9fd28642d3aca191e5c7fc2383cfd6fabb2aac8743f029dabb8989ac584e31bc",
       "size": 6
     },
     {
@@ -99,8 +99,8 @@
     },
     {
       "path": "checksums/processforge.sha256",
-      "sha256": "cfe85bf21c67b60a379d7c28276e6949f91ee0b3e25d00381dc0cc5a7ec04954",
-      "size": 89222
+      "sha256": "0ca83d062c0bbff46d99110b735532c456c1e40495b62d254426cc260f70e27e",
+      "size": 89340
     },
     {
       "path": "docs/assets/processforge-architecture.svg",
@@ -174,8 +174,8 @@
     },
     {
       "path": "docs/authoring/update-sites-for-packages.md",
-      "sha256": "9333d17625ff92e0919115587a4092af66c806a33caeb628a511e52244d1094b",
-      "size": 1383
+      "sha256": "55b1a3bcff384c3b279e00b1b8663be6798afe17769124824949a683b90b5595",
+      "size": 1328
     },
     {
       "path": "docs/authoring/workplace-configuration.md",
@@ -304,8 +304,8 @@
     },
     {
       "path": "docs/concepts/knowledge-hub.md",
-      "sha256": "e733ee2ff54b2e406d8c9da291143ef6f86c78954dcfce664a4c898b7fbb322a",
-      "size": 1240
+      "sha256": "4da6aa19dd1e0076c7015890b6a1c31c9d4e2ea5551b3874f5b990ac22b74326",
+      "size": 1226
     },
     {
       "path": "docs/concepts/knowledge-resource-navigation.md",
@@ -409,8 +409,8 @@
     },
     {
       "path": "docs/concepts/processforge-self-update.md",
-      "sha256": "42af827ab060aabb7aa97534510f081c547c825ab7b1fb5fb88114c930271928",
-      "size": 2028
+      "sha256": "f8fcd37496ab567b3ce9280a6f82ad191904a3ef1168aaa37fcbf67a29702bfb",
+      "size": 2009
     },
     {
       "path": "docs/concepts/project-classifiers.md",
@@ -494,8 +494,8 @@
     },
     {
       "path": "docs/concepts/runtime-drivers.md",
-      "sha256": "2b8c2a12b3f0c2dc6e1474aad054817860aaaad22ff874c6375280a616100b61",
-      "size": 2592
+      "sha256": "a4c5b4a0bef54fa179203ae35f227fdbdf3b97907034f34fa3f0e29cae352dd3",
+      "size": 5624
     },
     {
       "path": "docs/concepts/runtime-model.md",
@@ -519,8 +519,8 @@
     },
     {
       "path": "docs/concepts/shell-agent-subagent-policy.md",
-      "sha256": "95008e77db1ae1e70ce58038482c195e202011fa07357957b0b3a5e8060951a7",
-      "size": 1900
+      "sha256": "d77c60d5240a9cef4f483685d3ad2a37237fc32a25acff04bb9c42cb8a01c36c",
+      "size": 2396
     },
     {
       "path": "docs/concepts/specializations.md",
@@ -549,13 +549,13 @@
     },
     {
       "path": "docs/concepts/update-lifecycle.md",
-      "sha256": "ee933f91c21b4b0f58106c3082235497e682c761125858d7440d0b920b808c42",
-      "size": 1669
+      "sha256": "f83c2bf7626364c15898cb0ac0ef0da3ff77e7d1355d7b1e736fc1ecdea6525e",
+      "size": 1666
     },
     {
       "path": "docs/concepts/update-sites.md",
-      "sha256": "63c689f28a76195644a2f4a3de3f35d0fcc3b9ac75437f854ca8bbc35ce4a7fb",
-      "size": 2579
+      "sha256": "6785b598dc49b7d2f5b9b8617716b8d9f418e224fa4ed812953b1f1c26c19f7f",
+      "size": 2025
     },
     {
       "path": "docs/concepts/workplace-init.md",
@@ -604,8 +604,8 @@
     },
     {
       "path": "docs/getting-started/agent-ledger-process-transitions.md",
-      "sha256": "758bd4022bc6088a3d2bd84a09a4d9afd346d551dad2135912b443c22d621065",
-      "size": 2870
+      "sha256": "bb845ccad0f7f551df28d160cebeed23ec65f407b7778aace44cd32746f6ac99",
+      "size": 3125
     },
     {
       "path": "docs/getting-started/agent-prompts.md",
@@ -674,8 +674,8 @@
     },
     {
       "path": "docs/getting-started/update-system.md",
-      "sha256": "2b265cfb70d7b047ba4ee752ab40a83d77c0b5faeebc7c0163eb1d8544566430",
-      "size": 1260
+      "sha256": "266fdf105a77c38f277dec691de62d33f225c465b0fa7dd194d57f05d889b618",
+      "size": 3914
     },
     {
       "path": "docs/getting-started/workplace-initialization.md",
@@ -859,8 +859,8 @@
     },
     {
       "path": "docs/ru/authoring/update-sites-for-packages.md",
-      "sha256": "b7342da66f7e1bdb592d6b1a0d70654a00d0af5426251dc5954af8bf5a108a1d",
-      "size": 949
+      "sha256": "03c833b097273219093fc3a686f026aafc46a6b2818a9cd4a381b1a4515c517d",
+      "size": 1206
     },
     {
       "path": "docs/ru/concepts/agent-director.md",
@@ -929,8 +929,8 @@
     },
     {
       "path": "docs/ru/concepts/knowledge-hub.md",
-      "sha256": "d221db5729b7308ba16d76855d102876352f5454a7bb5af2730f0dff68785237",
-      "size": 1487
+      "sha256": "6235c047df2719279411a108220ff0a797f416752727f4be7505763bb56241f1",
+      "size": 1494
     },
     {
       "path": "docs/ru/concepts/knowledge-resource-navigation.md",
@@ -1044,8 +1044,8 @@
     },
     {
       "path": "docs/ru/concepts/runtime-drivers.md",
-      "sha256": "8117044a468fe1da0590c60aa300e691418c1e1d3f2f8272d6717b78c586c745",
-      "size": 2490
+      "sha256": "77b79ed3b96501bc98a5e3aa26c6792cebc23b206b6ed2e93b5276501dc0c4c7",
+      "size": 7253
     },
     {
       "path": "docs/ru/concepts/runtime-model.md",
@@ -1059,8 +1059,8 @@
     },
     {
       "path": "docs/ru/concepts/shell-agent-subagent-policy.md",
-      "sha256": "f12b92d62f23c10ed1f7a156931dbc123731e9677865a31a8e7548abda24b6d2",
-      "size": 2289
+      "sha256": "88221c5574ac907c0d752817b75be4d442fd82c7f66bf8aba804299ed4ecbeb4",
+      "size": 3025
     },
     {
       "path": "docs/ru/concepts/specializations.md",
@@ -1069,13 +1069,13 @@
     },
     {
       "path": "docs/ru/concepts/update-lifecycle.md",
-      "sha256": "da9122212e995d18ae2022178bce024e06b452498704fdc33b63c6d72b922d2b",
-      "size": 1326
+      "sha256": "2e31c02692366f0b07836fe83cd04e3ee864772411fc78da004f52ba50bfb201",
+      "size": 3922
     },
     {
       "path": "docs/ru/concepts/update-sites.md",
-      "sha256": "809c07aa221219d23269fdbef847568f41d20c90fa6915b696353f36496b5ba0",
-      "size": 1692
+      "sha256": "79347174c15bb0994bb1bfa6265858e928581ffc4b489f9a4d3e52dbb4307db7",
+      "size": 3530
     },
     {
       "path": "docs/ru/concepts/workplace-init.md",
@@ -1099,8 +1099,8 @@
     },
     {
       "path": "docs/ru/getting-started/agent-ledger-process-transitions.md",
-      "sha256": "7301bd5ceb03789daff345be6d1d0a8de237528ec9db9b1fe66ea6ecdc1f3b31",
-      "size": 3561
+      "sha256": "df3140029ef486726fc14c2a5281c8d594719559a0d108c7362dde2750c633e4",
+      "size": 3956
     },
     {
       "path": "docs/ru/getting-started/agent-prompts.md",
@@ -1164,8 +1164,8 @@
     },
     {
       "path": "docs/ru/getting-started/update-system.md",
-      "sha256": "1fc000dd974ca4ff84dadc519893441eabb512473f7e20376a865c14970b8ff4",
-      "size": 1214
+      "sha256": "be78030a07babcdca4c030e5f1817f318ffa0df37cce9603832c270205278313",
+      "size": 5640
     },
     {
       "path": "docs/ru/getting-started/workplace-initialization.md",
@@ -2254,8 +2254,8 @@
     },
     {
       "path": "schemas/entity-update-sites.schema.json",
-      "sha256": "fa3e39e72ad2f9ee1db2921efd172798d7c6f66f4f61ae8f93d639049dc9185e",
-      "size": 3290
+      "sha256": "198123ff64bb258801d94eded0d8af4e1c4bbe41a09d8fcee4f3cf8064a40a64",
+      "size": 3016
     },
     {
       "path": "schemas/event-envelope.schema.json",
@@ -2319,8 +2319,8 @@
     },
     {
       "path": "schemas/installed-update-sites.schema.json",
-      "sha256": "075b98dfed9eb29f0d04c150d22d13413076f64ceb3408407124bd4e851ed6f9",
-      "size": 2552
+      "sha256": "67597fa5934f6de9ebe635037d9f5a7c97ba310e59509c02c4f10df7360e167e",
+      "size": 2548
     },
     {
       "path": "schemas/iteration.schema.json",
@@ -2359,8 +2359,8 @@
     },
     {
       "path": "schemas/mcp-definition.schema.json",
-      "sha256": "f427df860cec1b48836d1f050a4f528b42da42d07997c4d8fd25c85f3fe86038",
-      "size": 2545
+      "sha256": "0e8fa2551d6e117f2383299223f8db3eb14248353d88d1c930e3692384154604",
+      "size": 2513
     },
     {
       "path": "schemas/mcp-registry.schema.json",
@@ -2369,8 +2369,8 @@
     },
     {
       "path": "schemas/normalized-update-manifest.schema.json",
-      "sha256": "334c52a30e7a0905b4a990a9ffc4cbe7220b5fd196cc6a4a6e51f59c9f64dc8f",
-      "size": 3135
+      "sha256": "94920d7bd8ab00ff60723f8ab721c73e9c055633b97cc58d120453ae9c70e93d",
+      "size": 3103
     },
     {
       "path": "schemas/orchestrator-shell-agent-plan.schema.json",
@@ -2384,8 +2384,8 @@
     },
     {
       "path": "schemas/package-manifest.schema.json",
-      "sha256": "dc9bde27464a35f697b809ff9f9a033e64b043a92047baeef844cd8c0b150725",
-      "size": 4408
+      "sha256": "0319d11c66dc31f6e6a2eecb2d6321dccca8c3acce7808461c7e9ee60e9c6b26",
+      "size": 4376
     },
     {
       "path": "schemas/package-roots-registry.schema.json",
@@ -2414,8 +2414,8 @@
     },
     {
       "path": "schemas/platform-contract.schema.json",
-      "sha256": "06e075caeab3c6886163129b25dec77381e14959c0eeb3b03abc5289e9ea60dd",
-      "size": 3393
+      "sha256": "9f4b706b2c9e892e279b2e28e6a4eb8037001bcdfee9c0dacb6e53371d497e68",
+      "size": 3361
     },
     {
       "path": "schemas/platform-registry.schema.json",
@@ -2439,8 +2439,8 @@
     },
     {
       "path": "schemas/process-definition.schema.json",
-      "sha256": "2d61b000d91b5766ca4e2b57f3565bb7f8df08519bac8f39eb86858c12b47fe8",
-      "size": 15512
+      "sha256": "2b153740fd47f531b493d0c170dd99024182b781013a9ae7a9f1cb242b5b7833",
+      "size": 15597
     },
     {
       "path": "schemas/process-event.schema.json",
@@ -2534,8 +2534,8 @@
     },
     {
       "path": "schemas/reusable-template.schema.json",
-      "sha256": "8838aba79f0279ff7e90e926711892aa6b9a800d58211c04f6804562fa5a0bb1",
-      "size": 3642
+      "sha256": "588112314d905f9a8ede957b259dc6077f82104dfcad0de6940db31411f19ea1",
+      "size": 3727
     },
     {
       "path": "schemas/review.schema.json",
@@ -2609,8 +2609,8 @@
     },
     {
       "path": "schemas/tool-definition.schema.json",
-      "sha256": "4b9378066f85e03620d5d1482d906e0c69d8eb86fbe99d02ca25777bb8c4d6cd",
-      "size": 2619
+      "sha256": "47082bd61537ea09276394f901ff784cf20ceac20e40a67b2c7ff2076979d503",
+      "size": 2587
     },
     {
       "path": "schemas/tool-registry.schema.json",
@@ -2644,13 +2644,13 @@
     },
     {
       "path": "schemas/update-site.schema.json",
-      "sha256": "b0c892a280463c3d67532772a58e0372c6d03c256b43b5b0177b8dd377bcfa06",
-      "size": 3066
+      "sha256": "65d7850e7b5903e2c18519b9dc49b537b2f8a1f94ff4bbd6df586620f9e51768",
+      "size": 2733
     },
     {
       "path": "schemas/update-source-registry.schema.json",
-      "sha256": "4249ab7a93dddc5d2ac476976d9c20824f130f200c22953a3aa89a0529636538",
-      "size": 4783
+      "sha256": "bc5a82324b4a9688033eb5c2faaa6588849100ba4a503c33ea9724358cb94f8a",
+      "size": 4479
     },
     {
       "path": "schemas/update-stage-record.schema.json",
@@ -3234,8 +3234,8 @@
     },
     {
       "path": "tools/codex_exec_worker.py",
-      "sha256": "0ba27ac02b5a6db07a67ed6ea880de643631f34de8c45d962ebf7de8f72689bc",
-      "size": 4604
+      "sha256": "18bd78477e8029e2e285fea8f87944c32027f92b1a1ad71b4c5b2b9396742627",
+      "size": 4730
     },
     {
       "path": "tools/context_lock_smoke_helpers.py",
@@ -3254,8 +3254,8 @@
     },
     {
       "path": "tools/processforge.py",
-      "sha256": "9f880a5f07ebc71b680cfdbac455a8576b6bdab63b142f8ea63ae4da3dfa1e60",
-      "size": 1320003
+      "sha256": "69c61f1499d8f4576cbcde23addd46085c7fac35954f28f1e162c0fcdad1f2a8",
+      "size": 1318912
     },
     {
       "path": "tools/processforge_subprocess.py",
@@ -3314,8 +3314,8 @@
     },
     {
       "path": "tools/smoke_codex_exec_worker.py",
-      "sha256": "781d5df9ec51afe3ced4b2a9dfc5ac1ac1662a8fd1011470149ef1d194bc229a",
-      "size": 6222
+      "sha256": "92589d2342a2be78296c25a3aa0dc67bf5e5085c801f06a2bea07a671d80af15",
+      "size": 7355
     },
     {
       "path": "tools/smoke_config_behavior_contracts.py",
@@ -3709,8 +3709,8 @@
     },
     {
       "path": "tools/smoke_project_pf_upgrade_assessment_boundary.py",
-      "sha256": "904ccf77426d936e08590465e20b811143bb3425563bbb71236ae9a5b620f07b",
-      "size": 1560
+      "sha256": "edcaf6f272e75a4e2c5b044f6f7d83f7827d39701249e8afdd95764d01432ea7",
+      "size": 1578
     },
     {
       "path": "tools/smoke_project_scan_excludes_distribution_root.py",
@@ -3959,8 +3959,8 @@
     },
     {
       "path": "tools/smoke_update_candidate_discovery.py",
-      "sha256": "4cee91a58d207268a9439ff54c5cca76a8c89251e9a04255557d9b8b9593d245",
-      "size": 1666
+      "sha256": "44d4a9130a10503e8ccb3d140478dcf1974c6b6e2ed16d1a1f4b8d2c2eccda79",
+      "size": 1657
     },
     {
       "path": "tools/smoke_update_notifications.py",
@@ -3969,13 +3969,13 @@
     },
     {
       "path": "tools/smoke_update_sites_schema.py",
-      "sha256": "b5713a0a14fcb5d71af5a7405c046c6f91b770ec1b510049dc423478d2bd2e57",
-      "size": 2215
+      "sha256": "df7e795313afeddcc07ecc8d07ca4129d935130c9638f6860c7fc7031223933c",
+      "size": 2230
     },
     {
       "path": "tools/smoke_update_stage_verify_apply_file_provider.py",
-      "sha256": "551486be4addee2d58a99386e02632b9e17e2f4a39e48dfdb86429787bb39122",
-      "size": 1845
+      "sha256": "1bdf2418625d0ea361d2d86fcfeda3713c5368ead1c7206496bc5099c6f85733",
+      "size": 1833
     },
     {
       "path": "tools/smoke_windows_utf8_docs.py",
@@ -4019,8 +4019,8 @@
     },
     {
       "path": "tools/update_smoke_helpers.py",
-      "sha256": "44999d62e846b2085827b10268374b73bc7573e37f79c0dbcf701907bbf130f4",
-      "size": 6624
+      "sha256": "fcbf4927c3af7f907bf31de5b36e62f5dace742bf958f5e76fda5bf975d3e6d5",
+      "size": 6546
     },
     {
       "path": "tools/validate-process-forge-checksums.py",
@@ -4034,8 +4034,8 @@
     },
     {
       "path": "tools/validate-public-cleanliness.py",
-      "sha256": "f96de885e6f3449bf8c1dee1415d718463ece04d669ce081530d36ef09cab957",
-      "size": 10821
+      "sha256": "b54b64e92e38784ca67f1a079dcfdac3f8048a89a292950b648a6f378818bb76",
+      "size": 10881
     },
     {
       "path": "updates/migrations/0.1.0-linked-workplace.md",
@@ -4053,9 +4053,14 @@
       "size": 437
     },
     {
+      "path": "updates/migrations/1.0.2-update-server-contract.md",
+      "sha256": "b0333187ca9eda14c6cd7a75d5ebe14dd8b339f8aa70b9f3ab4df325a5fb520d",
+      "size": 762
+    },
+    {
       "path": "updates/processforge-update-index.yaml",
-      "sha256": "90614254fb3b4e7d9a2ec1856c9b53ac7eadb24b8186be358e41efe6610aad17",
-      "size": 3019
+      "sha256": "ea522edbf98ef53b8dba2d9e00a4a749092df70e90a9a8eadbd2f738028a7d78",
+      "size": 4059
     }
   ],
   "name": "processforge",
@@ -4083,10 +4088,10 @@
   "schema_bundle_version": "1.0",
   "schema_version": 1,
   "source": {
-    "commit": "6f87337786ecd0b488b668e40e9a46caf77667d3",
+    "commit": "803d8e0bff6787f1f184606eeab0529e962a8e74",
     "dirty": false,
-    "tree": "890637e44b74a12905d509b6375e4f4e9205ca6e",
+    "tree": "a33f0ae310a881c34c970969bf233e076b61f3c9",
     "vcs": "git"
   },
-  "version": "1.0.1"
+  "version": "1.0.2"
 }

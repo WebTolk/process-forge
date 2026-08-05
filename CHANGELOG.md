@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 1.0.2 - 2026-08-05
+
+### Changed
+
+- Simplified the update server contract to rely on `manifest_url` and
+  `changelog_url` instead of provider-specific update site types.
+- Updated the update documentation to describe server-based manifests and local
+  file manifests without legacy `url` compatibility wording.
+- Updated runtime-driver documentation to match the current shell-agent launch
+  flow and model/reasoning selection behavior.
+
+### Fixed
+
+- Aligned update-site validation, schema fixtures, and update discovery smokes
+  with the providerless update server model.
+
 ## 1.0.1 - 2026-08-04
 
 ### Added
