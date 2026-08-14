@@ -1,0 +1,118 @@
+schema_version: 1
+id: ledger-hooks-mcp-next-stage-20260814
+title: Make Agent Ledger authoritative for Runtime, Codex hooks, and read-only MCP
+run_id: ledger-hooks-mcp-next-stage-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T00:00:00Z'
+updated_at: '2026-08-14T00:00:00Z'
+objective: Replace Runtime session-map authority with Agent Ledger-backed routing; provide a thin Codex hook adapter, a read-only stdio MCP bridge, and one rebuildable Core-owned projector without duplicating PF Core business logic.
+dependencies:
+  blocked_by:
+    - pre-release-remediation-implementation-20260730
+iterations:
+  - id: audit
+    kind: research
+    status: completed
+    summary: Loaded live PF context, prior Runtime, Ledger, lifecycle, hook, adapter, MCP, and coordination artifacts; compared the documented boundary with current Runtime code.
+    artifacts:
+      - .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/baseline-audit.md
+  - id: implementation
+    kind: work
+    status: completed
+    summary: Ledger-centric routing, adapter, MCP facade, projector, documentation, and focused regression coverage.
+  - id: assurance
+    kind: test
+    status: passed
+    summary: Focused Runtime/Ledger/hook/MCP and daemon-regression smokes passed; a real Codex lifecycle session delivered through the live Runtime, and the independent remediation review passed.
+result:
+  status: done
+  summary: Ledger-centric Runtime, project-local Codex hooks, read-only MCP, live daemon proof, and independent remediation review completed.
+  artifacts:
+    - .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/implementation-report.md
+    - .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/independent-review-waiver.md
+    - .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/live-validation.md
+    - .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/review-remediation.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/pf_runtime/**
+  - tools/processforge.py
+  - tools/smoke_runtime_ledger_hooks_mcp.py
+  - .codex/hooks.json
+  - docs/concepts/runtime-model.md
+  - docs/concepts/hooks-events.md
+  - docs/concepts/runtime-mcp.md
+  - docs/ru/concepts/runtime-model.md
+  - docs/ru/concepts/hooks-events.md
+  - docs/ru/concepts/runtime-mcp.md
+  - .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/**
+  - .pf/logs/ledger-hooks-mcp-next-stage-20260814.md
+  - .pf/handoffs/ledger-hooks-mcp-next-stage-20260814-handoff.md
+  - .pf/assignments/ledger-hooks-mcp-next-stage-20260814.yaml
+  - .pf/contexts/assignment-capsules/ledger-hooks-mcp-next-stage-20260814.capsule.yaml
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/contexts/project-context.snapshot.yaml
+  - задания/process-forge-ledger-hooks-mcp-next-stage-master-prompt.md
+  - .pf/artifacts/**
+  - .pf/assignments/**
+  - .pf/handoffs/**
+  - .pf/reviews/**
+  - docs/**
+  - schemas/**
+  - tools/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/**
+    - tools/processforge.py
+    - tools/smoke_runtime_ledger_hooks_mcp.py
+    - .codex/hooks.json
+    - docs/concepts/runtime-model.md
+    - docs/concepts/hooks-events.md
+    - docs/concepts/runtime-mcp.md
+    - docs/ru/concepts/runtime-model.md
+    - docs/ru/concepts/hooks-events.md
+    - docs/ru/concepts/runtime-mcp.md
+    - .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/**
+    - .pf/logs/ledger-hooks-mcp-next-stage-20260814.md
+    - .pf/handoffs/ledger-hooks-mcp-next-stage-20260814-handoff.md
+    - .pf/assignments/ledger-hooks-mcp-next-stage-20260814.yaml
+    - .pf/contexts/assignment-capsules/ledger-hooks-mcp-next-stage-20260814.capsule.yaml
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks: []
+  current_write_scope:
+    - tools/pf_runtime/**
+    - tools/processforge.py
+    - tools/smoke_runtime_ledger_hooks_mcp.py
+  rule: This is a declared successor slice of the still-open historical remediation parent; preserve pre-existing uncommitted work and do not touch files outside this assignment.
+required_outputs:
+  - id: baseline-audit
+    type: markdown
+    required: true
+    path: .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/baseline-audit.md
+  - id: implementation-report
+    type: markdown
+    required: true
+    path: .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/implementation-report.md
+  - id: focused-smoke
+    type: smoke
+    required: true
+    path: tools/smoke_runtime_ledger_hooks_mcp.py
+  - id: independent-review
+    type: markdown
+    required: true
+    path: .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/independent-review-waiver.md
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/ledger-hooks-mcp-next-stage-20260814/implementation-report.md
+  format: concise_markdown

@@ -1,0 +1,103 @@
+schema_version: 1
+id: runtime-liveness-remediation
+title: Repair Runtime startup and stop liveness
+run_id: runtime-liveness-remediation-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T04:06:12Z'
+updated_at: '2026-08-14T04:12:28Z'
+objective: Close the live-PID endpoint-publication race and make runtime stop handle a live process even before endpoint publication. Add deterministic regressions while retaining stale dead-PID recovery.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Repaired live-start singleton locking and stop-before-endpoint behavior with deterministic Runtime regressions.
+  artifacts:
+    - .pf/artifacts/runtime-liveness-remediation-20260814/runtime-liveness-remediation-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/pf_runtime/service.py
+  - tools/smoke_long_lived_runtime.py
+  - .pf/artifacts/runtime-liveness-remediation-20260814/runtime-liveness-remediation-report.md
+  - .pf/logs/runtime-liveness-remediation-20260814.md
+  - .pf/handoffs/runtime-liveness-remediation-20260814-handoff.md
+  - .pf/assignments/runtime-liveness-remediation.yaml
+allowed_read_files:
+  - tools/pf_runtime/host.py
+  - tools/processforge.py
+  - tools/pf_runtime/service.py
+  - tools/smoke_long_lived_runtime.py
+  - .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/service.py
+    - tools/smoke_long_lived_runtime.py
+    - .pf/artifacts/runtime-liveness-remediation-20260814/runtime-liveness-remediation-report.md
+    - .pf/logs/runtime-liveness-remediation-20260814.md
+    - .pf/handoffs/runtime-liveness-remediation-20260814-handoff.md
+    - .pf/assignments/runtime-liveness-remediation.yaml
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/pf_runtime/service.py
+    - tools/smoke_long_lived_runtime.py
+    - .pf/artifacts/runtime-liveness-remediation-20260814/runtime-liveness-remediation-report.md
+    - .pf/logs/runtime-liveness-remediation-20260814.md
+    - .pf/handoffs/runtime-liveness-remediation-20260814-handoff.md
+    - .pf/assignments/runtime-liveness-remediation.yaml
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: runtime-liveness-remediation
+        current_scope: tools/pf_runtime/service.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+      -
+        current_assignment: runtime-liveness-remediation
+        current_scope: tools/smoke_long_lived_runtime.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/smoke_*.py
+        reason: file_matches_glob
+      -
+        current_assignment: runtime-liveness-remediation
+        current_scope: tools/smoke_long_lived_runtime.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+required_outputs:
+  -
+    id: runtime-liveness-remediation-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/runtime-liveness-remediation-20260814/runtime-liveness-remediation-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/runtime-liveness-remediation-20260814/runtime-liveness-remediation-report.md
+  format: concise_markdown
+  include:
+    - runtime-liveness-remediation-report

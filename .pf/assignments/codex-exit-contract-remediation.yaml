@@ -1,0 +1,95 @@
+schema_version: 1
+id: codex-exit-contract-remediation
+title: Publish codex worker exit contract
+run_id: codex-exit-contract-remediation-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T06:13:09Z'
+updated_at: '2026-08-14T06:17:02Z'
+objective: Write the durable PF agent-run exit contract from codex_exec_worker after Codex exits, and extend its focused fake-Codex smoke to assert it.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Codex worker now writes durable exit contract; fake-Codex smoke verifies it.
+  artifacts:
+    - .pf/artifacts/stage-projectors-next-20260814/codex-exit-contract-remediation.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/codex_exec_worker.py
+  - tools/smoke_codex_exec_worker.py
+  - .pf/artifacts/stage-projectors-next-20260814/codex-exit-contract-remediation.md
+  - .pf/logs/stage-projectors-next-implementation-20260814.md
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - tools/codex_exec_worker.py
+    - tools/smoke_codex_exec_worker.py
+    - .pf/artifacts/stage-projectors-next-20260814/codex-exit-contract-remediation.md
+    - .pf/logs/stage-projectors-next-implementation-20260814.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/codex_exec_worker.py
+    - tools/smoke_codex_exec_worker.py
+    - .pf/artifacts/stage-projectors-next-20260814/codex-exit-contract-remediation.md
+    - .pf/logs/stage-projectors-next-implementation-20260814.md
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: codex-exit-contract-remediation
+        current_scope: tools/codex_exec_worker.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+      -
+        current_assignment: codex-exit-contract-remediation
+        current_scope: tools/smoke_codex_exec_worker.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/smoke_*.py
+        reason: file_matches_glob
+      -
+        current_assignment: codex-exit-contract-remediation
+        current_scope: tools/smoke_codex_exec_worker.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+      -
+        current_assignment: codex-exit-contract-remediation
+        current_scope: .pf/logs/stage-projectors-next-implementation-20260814.md
+        other_assignment: stage-projectors-worker-driver-remediation
+        other_scope: .pf/logs/stage-projectors-next-implementation-20260814.md
+        reason: same_file
+required_outputs:
+  -
+    id: codex-exit-contract-remediation
+    path: .pf/artifacts/stage-projectors-next-20260814/codex-exit-contract-remediation.md
+    type: markdown
+    required: true
+expected_report:
+  artifact: .pf/artifacts/stage-projectors-next-20260814/codex-exit-contract-remediation.md
+  format: concise_markdown
+  include:
+    - codex-exit-contract-remediation

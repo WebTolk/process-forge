@@ -58,6 +58,12 @@ def prompt_payload(worker_prompt: Path, capsule: Path, workspace_access: Path) -
         [
             read_text(worker_prompt).rstrip(),
             "",
+            "## Output Delivery Contract",
+            "",
+            "Your final response is captured verbatim as the assignment's expected report artifact.",
+            "Return only the complete report content in the requested format; do not say that you saved it, link to it, or add a conversational preface.",
+            "For a read-only assignment, do not attempt to write the report file yourself.",
+            "",
             "## Assignment Capsule",
             "",
             read_text(capsule).rstrip(),
@@ -78,6 +84,18 @@ def write_heartbeat(path: Path | None, status: str, extra: dict[str, Any] | None
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def write_exit_contract(path: Path | None, returncode: int) -> None:
+    """Publish the durable completion fact required by detached Inspector runs."""
+    if not path:
+        return
+    status = "completed" if returncode == 0 else "failed"
+    payload = {"schema_version": 1, "exit_code": returncode, "status": status}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.tmp")
+    tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    os.replace(tmp, path)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--worker-prompt", required=True)
@@ -92,6 +110,7 @@ def main() -> int:
     workspace_access = Path(args.workspace_access).expanduser().resolve()
     output = Path(args.output).expanduser().resolve()
     heartbeat = Path(args.heartbeat).expanduser().resolve() if args.heartbeat else None
+    exit_contract = Path(os.environ["PF_AGENT_EXIT_PATH"]).expanduser().resolve() if os.environ.get("PF_AGENT_EXIT_PATH") else None
 
     model = os.environ.get("PF_AGENT_MODEL") or os.environ.get("PF_CODEX_MODEL") or ""
     if not model:
@@ -122,8 +141,18 @@ def main() -> int:
         command.extend(["--add-dir", str(path)])
     command.extend(["-o", str(output), "-"])
 
+    output.parent.mkdir(parents=True, exist_ok=True)
     write_heartbeat(heartbeat, "starting", {"model": model, "workspace_dirs": [str(path) for path in add_dirs]})
-    result = subprocess.run(command, input=prompt_payload(worker_prompt, capsule, workspace_access), text=True, check=False)
+    # Codex CLI reads its stdin as UTF-8.  ``text=True`` would encode this
+    # payload with the Windows console/code-page default, corrupting a valid
+    # non-ASCII assignment (for example a Russian project path) before the
+    # CLI receives it.  Supply explicit UTF-8 bytes instead.
+    result = subprocess.run(
+        command,
+        input=prompt_payload(worker_prompt, capsule, workspace_access).encode("utf-8"),
+        check=False,
+    )
+    write_exit_contract(exit_contract, int(result.returncode))
     write_heartbeat(heartbeat, "completed" if result.returncode == 0 else "failed", {"exit_code": result.returncode})
     return int(result.returncode)
 

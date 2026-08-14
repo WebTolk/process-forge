@@ -1,0 +1,82 @@
+schema_version: 1
+id: verification-current-work-state-20260814
+title: Verification state and current work state
+process: task-batch-execution
+status: in_progress
+created_at: '2026-08-14T08:08:36Z'
+updated_at: '2026-08-14T08:58:44Z'
+objective: Audit, implement, validate and independently review declaration-driven verification-state and current-work-state.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: verification-current-work-state-audit
+    assignment: .pf/assignments/verification-current-work-state-audit.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: verification-authoritative-facts-inventory
+    assignment: .pf/assignments/verification-authoritative-facts-inventory.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: verification-current-work-state-implementation
+    assignment: .pf/assignments/verification-current-work-state-implementation.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: verification-current-work-state-independent-review
+    assignment: .pf/assignments/verification-current-work-state-independent-review.yaml
+    status: done
+    order: 4
+    blocking: true
+  -
+    id: verification-current-work-state-remediation-review
+    assignment: .pf/assignments/verification-current-work-state-remediation-review.yaml
+    status: done
+    order: 5
+    blocking: true
+  -
+    id: verification-current-work-state-live-runtime-proof
+    assignment: .pf/assignments/verification-current-work-state-live-runtime-proof.yaml
+    status: done
+    order: 6
+    blocking: true
+  -
+    id: verification-current-work-state-final-regression
+    assignment: .pf/assignments/verification-current-work-state-final-regression.yaml
+    status: done
+    order: 7
+    blocking: true
+  -
+    id: verification-runtime-lifecycle-investigation
+    assignment: .pf/assignments/verification-runtime-lifecycle-investigation.yaml
+    status: done
+    order: 8
+    blocking: true
+  -
+    id: verification-runtime-lifecycle-isolated-repro
+    assignment: .pf/assignments/verification-runtime-lifecycle-isolated-repro.yaml
+    status: done
+    order: 9
+    blocking: true
+  -
+    id: verification-runtime-lifecycle-temp-rerun
+    assignment: .pf/assignments/verification-runtime-lifecycle-temp-rerun.yaml
+    status: done
+    order: 10
+    blocking: true
+final_artifacts:
+  []
+events:
+  emitted:
+    - run.created
+privacy:
+  public_safe: true

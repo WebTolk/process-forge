@@ -1,0 +1,31 @@
+schema_version: 1
+id: codebase-audit-findings-validation-20260814
+title: Validate codebase audit findings
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T06:55:43Z'
+updated_at: '2026-08-14T07:00:07Z'
+objective: Behaviorally validate the worker-run, release-public, and local-config conclusions from the short codebase audit without product changes.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: validate-codebase-audit-findings
+    assignment: .pf/assignments/validate-codebase-audit-findings.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/codebase-audit-findings-validation-20260814/summary.md
+  - .pf/handoffs/runs/codebase-audit-findings-validation-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

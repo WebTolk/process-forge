@@ -1,0 +1,43 @@
+schema_version: 1
+id: audit-remediation-plan-20260814
+title: Evidence-based remediation planning for worker-run findings
+process: orchestrator-shell-agents-supervision
+status: completed
+created_at: '2026-08-14T00:00:00Z'
+updated_at: '2026-08-14T07:10:14Z'
+objective: Produce a reviewed, implementation-ready plan for the confirmed duplicate worker start and ad-hoc driver provenance defects, using isolated Codex Spark shell-worker evidence only.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: plan-concurrency-start-guard
+    assignment: .pf/assignments/plan-concurrency-start-guard.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: plan-driver-provenance
+    assignment: .pf/assignments/plan-driver-provenance.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: plan-regression-interface
+    assignment: .pf/assignments/plan-regression-interface.yaml
+    status: done
+    order: 3
+    blocking: true
+final_artifacts:
+  - .pf/runs/audit-remediation-plan-20260814/summary.md
+  - .pf/handoffs/runs/audit-remediation-plan-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

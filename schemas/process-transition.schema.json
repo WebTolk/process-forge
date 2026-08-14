@@ -12,7 +12,8 @@
     "requires_agent": { "type": "object", "additionalProperties": true },
     "input_contract": { "type": "object", "additionalProperties": true },
     "output_contract": { "type": "object", "additionalProperties": true },
-    "return": { "type": "object", "additionalProperties": true }
+    "return": { "type": "object", "additionalProperties": true },
+    "route_id": { "type": "string" }
   },
   "additionalProperties": true
 }

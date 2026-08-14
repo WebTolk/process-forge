@@ -1,0 +1,31 @@
+schema_version: 1
+id: agent-reliability-20260813
+title: Agent reliability audit and architecture
+process: process-supervisor
+status: completed
+created_at: '2026-08-13T13:46:22Z'
+updated_at: '2026-08-13T13:53:01Z'
+objective: Audit ProcessForge long-session agent reliability issues and prepare a target architecture and migration plan before product code changes.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: audit-and-architecture
+    assignment: .pf/assignments/audit-and-architecture.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/agent-reliability-20260813/summary.md
+  - .pf/handoffs/runs/agent-reliability-20260813-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

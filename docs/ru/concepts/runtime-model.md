@@ -31,3 +31,28 @@ UTF-8 и доступ на чтение и запись к дистрибути�
 Обычное использование не требует PowerShell, Git, демона или фонового процесса.
 Git нужен только для интеграции с системой контроля версий или для проверок
 разработки и релиза.
+# Runtime, Ledger и интерфейсы только для чтения
+
+PF Runtime — локальный workplace-scoped host жизненного цикла, scheduler и IPC,
+а не второй PF Core. Каноническая привязка `session -> project` принадлежит
+Agent Ledger; карты Runtime являются только восстанавливаемым кэшем. После
+удаления кэша маршрут восстанавливается из Ledger, а запрос к другому проекту
+для той же session отклоняется.
+
+Тонкий адаптер Codex передаёт наблюдаемые факты в существующий путь событий PF.
+Read-only MCP предоставляет `pf.project_state`, `pf.work_state`, `pf.resolve`
+и `pf.workplace_state` только для уже привязанной Ledger session.
+
+## Декларативные технические проекции
+
+Process definition может объявить у стадии `technical_obligations`. Runtime Host
+читает эту декларацию и записывает только отдельный generated-файл в
+`.pf/artifacts/projections/`; stage business logic не переносится в Runtime, а
+semantic reports, handoffs и body выходных артефактов не переписываются.
+
+Первый projector `required-output-readiness` привязан к стадии `collect`
+`process-supervisor`. Он использует assignment, состояние worker из Inspector и
+fingerprint required outputs. Состояние бывает `current`, `stale`, `missing` или
+`invalid`; projection rebuild выполняется через `runtime-host
+rebuild-projections`, а CLI-проверка без daemon — через `runtime-host
+projection-doctor`.

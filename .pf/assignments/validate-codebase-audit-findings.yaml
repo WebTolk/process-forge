@@ -1,0 +1,69 @@
+schema_version: 1
+id: validate-codebase-audit-findings
+title: Validate audit findings with focused tests
+run_id: codebase-audit-findings-validation-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T06:55:45Z'
+updated_at: '2026-08-14T07:00:05Z'
+objective: Run isolated behavioral tests for duplicate worker start, --wait semantics, public release gate separation, and local config exclusion. Write an evidence-backed Russian report only; do not alter product source.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Behaviorally validated audit findings in isolated PF projects; no product code changed.
+  artifacts:
+    - .pf/artifacts/codebase-audit-20260814/findings-validation.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/codebase-audit-20260814/findings-validation.md
+  - .pf/logs/codebase-audit-findings-validation-20260814.md
+allowed_read_files:
+  - tools/processforge.py
+  - tools/smoke_worker_run_shell.py
+  - tools/validate-process-forge-schemas.py
+  - processes/**
+  - schemas/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: assurance-engineer
+  writer: true
+  owned_files:
+    - .pf/artifacts/codebase-audit-20260814/findings-validation.md
+    - .pf/logs/codebase-audit-findings-validation-20260814.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/codebase-audit-20260814/findings-validation.md
+    - .pf/logs/codebase-audit-findings-validation-20260814.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: findings-validation
+    path: .pf/artifacts/codebase-audit-20260814/findings-validation.md
+    type: markdown
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/codebase-audit-20260814/findings-validation.md
+  format: concise_markdown
+  include:
+    - findings-validation

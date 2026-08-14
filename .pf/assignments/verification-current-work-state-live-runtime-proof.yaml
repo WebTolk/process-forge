@@ -1,0 +1,70 @@
+schema_version: 1
+id: verification-current-work-state-live-runtime-proof
+title: Prove verification-state through the live Runtime and MCP surface
+run_id: verification-current-work-state-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T08:44:04Z'
+updated_at: '2026-08-14T08:51:39Z'
+objective: Produce reproducible live Runtime and MCP evidence for the new declaration-driven verification state. Use no source edits. Start and stop only the existing local Runtime. If the installed Codex hook adapter cannot be invoked, distinguish that blocking absence from CLI/Runtime proof and record exact commands and observed state.
+platform: ""
+selected_specializations:
+  []
+order: 6
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/verification-current-work-state-20260814/live-runtime-mcp-proof.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/verification-current-work-state-20260814/live-runtime-mcp-proof.md
+allowed_read_files:
+  - .pf/artifacts/verification-current-work-state-20260814/audit-report.md
+  - .pf/artifacts/verification-current-work-state-20260814/verification-state-design.md
+  - .pf/artifacts/verification-current-work-state-20260814/implementation-report.md
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - processes/core/process-supervisor.yaml
+  - tools/smoke_verification_current_work_state.py
+ownership:
+  owner_id: verification-current-work-state-coordinator
+  owner_label: worker-verification-current-work-state-coordinator
+  role: runtime-assurance
+  writer: true
+  owned_files:
+    - .pf/artifacts/verification-current-work-state-20260814/live-runtime-mcp-proof.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/verification-current-work-state-20260814/live-runtime-mcp-proof.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: live-runtime-mcp-proof
+    type: unspecified
+    required: true
+    path: .pf/artifacts/verification-current-work-state-20260814/live-runtime-mcp-proof.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/verification-current-work-state-20260814/live-runtime-mcp-proof.md
+  format: concise_markdown
+  include:
+    - live-runtime-mcp-proof
+agent_model: gpt-5.4

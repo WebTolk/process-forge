@@ -1,0 +1,31 @@
+schema_version: 1
+id: stage-projectors-next-implementation-20260814
+title: Stage projector first slice
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T05:43:42Z'
+updated_at: '2026-08-14T06:03:51Z'
+objective: Implement the first declaration-driven required-output readiness projection with freshness, doctor evidence, and read-only work-state view.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: stage-projectors-next-implementation
+    assignment: .pf/assignments/stage-projectors-next-implementation.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/stage-projectors-next-implementation-20260814/summary.md
+  - .pf/handoffs/runs/stage-projectors-next-implementation-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

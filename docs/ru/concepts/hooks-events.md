@@ -29,3 +29,10 @@ python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type assign
 
 File-first runtime ProcessForge пишет локальные файлы. Сетевая доставка не
 входит в core runtime.
+# Адаптер Codex Runtime
+
+`tools/pf_runtime/codex_hooks.py` принимает только подтверждённые факты
+`SessionStart`, `SessionEnd` и `PostToolUse`, нормализует их и передаёт в
+существующий путь Runtime/Core. Он не исполняет команды из payload, не создаёт
+task и не принимает решений по стадиям. Hook вне ProcessForge-проекта спокойно
+игнорируется, поэтому наблюдение не становится точкой отказа Codex.

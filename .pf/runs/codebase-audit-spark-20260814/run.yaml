@@ -1,0 +1,49 @@
+schema_version: 1
+id: codebase-audit-spark-20260814
+title: Short evidence-based codebase audit
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T06:37:36Z'
+updated_at: '2026-08-14T06:44:53Z'
+objective: Use isolated Codex Spark shell workers to find confirmed inconsistencies, inaccuracies, and defects without editing product code.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: audit-runtime-observation
+    assignment: .pf/assignments/audit-runtime-observation.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: audit-process-contracts
+    assignment: .pf/assignments/audit-process-contracts.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: audit-quality-public-surface
+    assignment: .pf/assignments/audit-quality-public-surface.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: audit-codebase-synthesis
+    assignment: .pf/assignments/audit-codebase-synthesis.yaml
+    status: done
+    order: 4
+    blocking: true
+final_artifacts:
+  - .pf/runs/codebase-audit-spark-20260814/summary.md
+  - .pf/handoffs/runs/codebase-audit-spark-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

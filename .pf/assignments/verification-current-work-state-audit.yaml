@@ -1,0 +1,77 @@
+schema_version: 1
+id: verification-current-work-state-audit
+title: Audit authoritative verification facts and viable stage target
+run_id: verification-current-work-state-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T08:08:37Z'
+updated_at: '2026-08-14T08:12:08Z'
+objective: 'Produce a read-only targeted audit for the master prompt: classify authoritative facts, identify existing verification semantics, assess rebuildability and scheduler/read path, then recommend a bounded slice. Do not change product code.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Cancelled before substantive audit because the capsule lacked necessary read access; the durable cancellation report records this limitation.
+  artifacts:
+    - .pf/artifacts/verification-current-work-state-20260814/audit-report.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/contexts/project-context.snapshot.yaml
+    role: input
+    required: true
+    mutable_by_worker: false
+required_sources:
+  - задания/process-forge-verification-current-work-state-detailed-master-prompt.md
+allowed_files:
+  - .pf/artifacts/verification-current-work-state-20260814/*
+  - .pf/logs/verification-current-work-state-20260814*
+allowed_read_files:
+  - задания/process-forge-verification-current-work-state-detailed-master-prompt.md
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+ownership:
+  owner_id: codex-spark-auditor
+  owner_label: worker-codex-spark-auditor
+  role: task-worker
+  writer: true
+  owned_files:
+    - .pf/artifacts/verification-current-work-state-20260814/*
+    - .pf/logs/verification-current-work-state-20260814*
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/verification-current-work-state-20260814/*
+    - .pf/logs/verification-current-work-state-20260814*
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: audit-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/verification-current-work-state-20260814/audit-report.md
+agent_reasoning_effort: minimal
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/verification-current-work-state-20260814/audit-report.md
+  format: concise_markdown
+  include:
+    - audit-report
+agent_model: gpt-5.3-codex-spark

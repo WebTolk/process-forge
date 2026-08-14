@@ -1,0 +1,64 @@
+schema_version: 1
+id: runtime-lifecycle-clean-repro-20260814
+title: Runtime lifecycle clean reproduction
+process: process-supervisor
+status: in_progress
+created_at: '2026-08-14T09:14:28Z'
+updated_at: '2026-08-14T09:30:45Z'
+objective: Establish a clean-room proof of the long-lived Runtime lifecycle by first classifying the Windows temporary-workspace blocker, then reproducing and remediating only evidence-backed defects.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: runtime-test-harness-investigation
+    assignment: .pf/assignments/runtime-test-harness-investigation.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: runtime-temp-matrix-execution
+    assignment: .pf/assignments/runtime-temp-matrix-execution.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: runtime-lifecycle-clean-smoke
+    assignment: .pf/assignments/runtime-lifecycle-clean-smoke.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: runtime-lifecycle-clean-trace
+    assignment: .pf/assignments/runtime-lifecycle-clean-trace.yaml
+    status: done
+    order: 4
+    blocking: true
+  -
+    id: runtime-workplace-state-differential
+    assignment: .pf/assignments/runtime-workplace-state-differential.yaml
+    status: done
+    order: 5
+    blocking: true
+  -
+    id: runtime-workplace-state-differential-report
+    assignment: .pf/assignments/runtime-workplace-state-differential-report.yaml
+    status: done
+    order: 6
+    blocking: true
+  -
+    id: runtime-stale-fixture-causal-repro
+    assignment: .pf/assignments/runtime-stale-fixture-causal-repro.yaml
+    status: done
+    order: 7
+    blocking: true
+final_artifacts:
+  []
+events:
+  emitted:
+    - run.created
+privacy:
+  public_safe: true

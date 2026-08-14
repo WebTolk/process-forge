@@ -1,0 +1,82 @@
+schema_version: 1
+id: verification-authoritative-facts-inventory
+title: Inventory authoritative verification facts
+run_id: verification-current-work-state-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T08:12:09Z'
+updated_at: '2026-08-14T08:15:29Z'
+objective: Read-only inventory of concrete authoritative, derived, semantic, diagnostic and insufficient facts for verification-state. Inspect existing stage projectors, runtime read path and durable PF evidence. Do not change code, process definitions, existing artifacts or logs. Write only the assigned inventory report.
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/verification-current-work-state-20260814/authoritative-facts-inventory.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-verification-current-work-state-detailed-master-prompt.md
+allowed_files:
+  - .pf/artifacts/verification-current-work-state-20260814/authoritative-facts-inventory.md
+allowed_read_files:
+  - задания/process-forge-verification-current-work-state-detailed-master-prompt.md
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/contexts/**
+  - .pf/assignments/**
+  - .pf/runs/**
+  - .pf/artifacts/**
+  - .pf/reviews/**
+  - .pf/handoffs/**
+  - processes/core/**
+  - schemas/**
+  - tools/processforge.py
+  - tools/pf_runtime/**
+  - tools/smoke_stage_projectors.py
+  - tools/smoke_runtime*.py
+  - tools/smoke_worker*.py
+  - docs/concepts/runtime-*.md
+ownership:
+  owner_id: codex-spark-facts-auditor
+  owner_label: worker-codex-spark-facts-auditor
+  role: task-worker
+  writer: true
+  owned_files:
+    - .pf/artifacts/verification-current-work-state-20260814/authoritative-facts-inventory.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/verification-current-work-state-20260814/authoritative-facts-inventory.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: authoritative-facts-inventory
+    type: unspecified
+    required: true
+    path: .pf/artifacts/verification-current-work-state-20260814/authoritative-facts-inventory.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/verification-current-work-state-20260814/authoritative-facts-inventory.md
+  format: concise_markdown
+  include:
+    - authoritative-facts-inventory
+agent_model: gpt-5.3-codex-spark

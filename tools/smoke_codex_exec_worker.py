@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import stat
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -13,6 +14,7 @@ from pathlib import Path
 from context_lock_smoke_helpers import make_project, refresh, require_ok, run_pf, write_yaml
 
 MODEL = "chatgpt-5.3-codex-spark"
+WORKER = Path(__file__).with_name("codex_exec_worker.py")
 
 
 def write_fake_codex(bin_dir: Path) -> None:
@@ -28,10 +30,11 @@ from pathlib import Path
 
 argv = sys.argv[1:]
 output = Path(argv[argv.index("-o") + 1])
-output.parent.mkdir(parents=True, exist_ok=True)
+if not output.parent.is_dir():
+    raise SystemExit("output parent was not created by codex-exec worker")
 payload = {
     "argv": argv,
-    "stdin": sys.stdin.read(),
+    "stdin": sys.stdin.buffer.read().decode("utf-8"),
     "workspace_access_file": os.environ.get("PF_WORKSPACE_ACCESS_FILE", ""),
     "agent_model": os.environ.get("PF_AGENT_MODEL", ""),
     "agent_reasoning_effort": os.environ.get("PF_AGENT_REASONING_EFFORT", ""),
@@ -46,6 +49,10 @@ output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     shell = bin_dir / "codex"
     shell.write_text(f'#!/usr/bin/env sh\n"{sys.executable}" "$(dirname "$0")/fake_codex.py" "$@"\n', encoding="utf-8")
     shell.chmod(shell.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+
+def optional_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8", errors="replace") if path.is_file() else "<not created>"
 
 
 def main() -> int:
@@ -99,7 +106,7 @@ title: Codex task
 run_id: codex-run
 process: task-batch-execution
 status: open
-objective: Execute codex-exec with workspace access.
+objective: "Execute codex-exec with workspace access and verify UTF-8 payload: Проверка кириллицы."
 allowed_files:
   - .pf/artifacts/**
 workspace_access:
@@ -132,9 +139,9 @@ expected_report:
                         [
                             result.stdout,
                             "STDOUT",
-                            stdout.read_text(encoding="utf-8", errors="replace"),
+                            optional_text(stdout),
                             "STDERR",
-                            stderr.read_text(encoding="utf-8", errors="replace"),
+                            optional_text(stderr),
                         ]
                     )
                 )
@@ -149,6 +156,12 @@ expected_report:
             raise AssertionError("codex-exec --add-dir does not match resolved shared docs")
         if "workspace_access_file" not in report["stdin"]:
             raise AssertionError("codex-exec prompt payload missing workspace access reference")
+        if "Проверка кириллицы" not in report["stdin"]:
+            raise AssertionError("codex-exec did not provide a UTF-8-decodable non-ASCII prompt payload")
+        if "Your final response is captured verbatim" not in report["stdin"]:
+            raise AssertionError("codex-exec prompt does not explain the output artifact delivery contract")
+        if "do not attempt to write the report file yourself" not in report["stdin"]:
+            raise AssertionError("codex-exec prompt does not distinguish read-only report delivery")
         if not report.get("workspace_access_file"):
             raise AssertionError("fake Codex process did not receive PF_WORKSPACE_ACCESS_FILE")
         if report.get("agent_model") != MODEL:
@@ -159,6 +172,38 @@ expected_report:
             raise AssertionError("fake Codex process did not receive PF_CODEX_REASONING_EFFORT")
         if 'model_reasoning_effort="high"' not in argv:
             raise AssertionError("codex-exec did not pass selected high reasoning effort")
+        direct_exit = root / "direct-worker-exit.json"
+        direct_output = root / "direct-worker-output.json"
+        direct_heartbeat = root / "direct-worker-heartbeat.json"
+        direct_env = os.environ.copy()
+        direct_env["PATH"] = str(fake_bin) + os.pathsep + direct_env.get("PATH", "")
+        direct_env.update(
+            {
+                "PF_AGENT_MODEL": MODEL,
+                "PF_CODEX_REASONING_EFFORT": "high",
+                "PF_CODEX_SANDBOX": "read-only",
+                "PF_PROJECT_ROOT": str(project),
+                "PF_AGENT_EXIT_PATH": str(direct_exit),
+            }
+        )
+        direct = subprocess.run(
+            [
+                sys.executable,
+                str(WORKER),
+                "--worker-prompt", str(project / ".pf" / "runs" / "codex-run" / "worker-prompts" / "codex-task.md"),
+                "--capsule", str(project / ".pf" / "contexts" / "assignment-capsules" / "codex-task.capsule.yaml"),
+                "--workspace-access", str(project / ".pf" / "runtime" / "agent-runs" / "codex-run" / "codex-task" / "workspace-access.json"),
+                "--output", str(direct_output),
+                "--heartbeat", str(direct_heartbeat),
+            ],
+            env=direct_env,
+            check=False,
+        )
+        if direct.returncode != 0:
+            raise AssertionError("direct codex-exec worker did not complete")
+        exit_payload = json.loads(direct_exit.read_text(encoding="utf-8"))
+        if exit_payload != {"schema_version": 1, "exit_code": 0, "status": "completed"}:
+            raise AssertionError("codex-exec worker did not publish its durable exit contract")
         write_yaml(
             project / ".pf" / "assignments" / "codex-task-no-model.yaml",
             """

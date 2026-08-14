@@ -6582,6 +6582,8 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_agent_ledger", [sys.executable, str(root / "tools" / "smoke_agent_ledger.py")], 120),
         ReleaseCommand("smoke_single_agent_session_flow", [sys.executable, str(root / "tools" / "smoke_single_agent_session_flow.py")], 180),
         ReleaseCommand("smoke_multi_project_agent_sessions", [sys.executable, str(root / "tools" / "smoke_multi_project_agent_sessions.py")], 180),
+        ReleaseCommand("smoke_runtime_host_poc", [sys.executable, str(root / "tools" / "smoke_runtime_host_poc.py")], 180),
+        ReleaseCommand("smoke_long_lived_runtime", [sys.executable, str(root / "tools" / "smoke_long_lived_runtime.py")], 240),
         ReleaseCommand("smoke_multi_agent_as_composed_sessions", [sys.executable, str(root / "tools" / "smoke_multi_agent_as_composed_sessions.py")], 180),
         ReleaseCommand("smoke_project_coordination_modes", [sys.executable, str(root / "tools" / "smoke_project_coordination_modes.py")], 180),
         ReleaseCommand("smoke_mixed_workplace_projects", [sys.executable, str(root / "tools" / "smoke_mixed_workplace_projects.py")], 180),
@@ -13232,6 +13234,9 @@ def default_process_authoring_answers(process_id: str, title: str, description: 
             {"id": "review-notes", "title": "Review Notes", "owner_role": "reviewer", "template": "review-template"},
             {"id": "handoff", "title": "Handoff", "owner_role": "author", "template": "handoff-template"},
         ],
+        "evidence_definitions": [
+            {"id": "review-attestation", "title": "Review attestation", "kind": "attestation"},
+        ],
         "gates": [
             {"id": "brief-approved", "description": "Brief is explicit enough to start work.", "blocking": True, "required_artifact": "brief"},
             {"id": "work-ready-for-review", "description": "Work output exists and is ready for review.", "blocking": True, "required_artifact": "work-output"},
@@ -13275,6 +13280,7 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
         "stages",
         "artifacts",
         "artifact_definitions",
+        "evidence_definitions",
         "gates",
         "hooks",
         "evolve",
@@ -13285,6 +13291,7 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
         "responsibility_boundaries",
         "subagent_policy",
         "runtime_requirements",
+        "runtime_execution_boundary",
         "stage_completion",
         "run_completion",
         "metadata",
@@ -13418,7 +13425,7 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         if isinstance(item, dict):
             stage_id = safe_id(str(item.get("id") or item.get("title") or "stage"), "stage")
             produced = [safe_id(value, "artifact") for value in string_list(item.get("produced_artifacts"))]
-            exits = [safe_id(value, "gate") for value in string_list(item.get("exit_gates"))]
+            exits = [safe_id(value, "gate") for value in string_list(item.get("exit_gates") or item.get("gates"))]
             if not produced and artifact_ids:
                 produced = [sorted(artifact_ids)[0]]
             if not exits and gate_ids:
@@ -13437,12 +13444,15 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
                     "actor": str(item.get("actor") or "primary_agent"),
                     "required_inputs": [safe_id(value, "artifact") for value in string_list(item.get("required_inputs"))],
                     "produced_artifacts": produced,
+                    "required_artifacts": [safe_id(value, "artifact") for value in string_list(item.get("required_artifacts"))],
+                    "required_evidence": [safe_id(value, "evidence") for value in string_list(item.get("required_evidence"))],
                     "required_role": role_id,
                     "required_capabilities": string_list(item.get("required_capabilities")),
+                    "parameters": item.get("parameters") if isinstance(item.get("parameters"), dict) else {},
                     "allowed_tools": string_list(item.get("allowed_tools")),
                     "entry_gates": [safe_id(value, "gate") for value in string_list(item.get("entry_gates"))],
                     "exit_gates": exits,
-                    "gates": [safe_id(value, "gate") for value in string_list(item.get("gates"))] or exits,
+                    "automation_bindings": as_list(item.get("automation_bindings")) or as_list(item.get("technical_obligations")),
                 }
             )
     if not artifacts:
@@ -13498,6 +13508,17 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         "roles": roles,
         "stages": stages,
         "artifact_definitions": artifacts,
+        "evidence_definitions": [
+            {
+                "id": safe_id(str(item.get("id") or item.get("title") or "evidence"), "evidence"),
+                "title": str(item.get("title") or title_from_id(safe_id(str(item.get("id") or "evidence"), "evidence"))),
+                "kind": str(item.get("kind") or "attestation"),
+                **({"artifact": safe_id(str(item.get("artifact")), "artifact")} if item.get("artifact") else {}),
+                **({"description": str(item.get("description"))} if item.get("description") else {}),
+            }
+            for item in as_list(answers.get("evidence_definitions"))
+            if isinstance(item, dict)
+        ],
         "gates": gates,
         "required_packages": string_list(answers.get("required_packages")) or ["process-forge-core"],
         "required_templates": string_list(answers.get("required_templates")) or ["artifact-template"],
@@ -13519,6 +13540,7 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         "agent_requirements",
         "subagent_policy",
         "runtime_requirements",
+        "runtime_execution_boundary",
         "metadata",
     ]:
         if key in answers:
@@ -13610,6 +13632,7 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
     roles = [item for item in as_list(process.get("roles")) if isinstance(item, dict)]
     stages = [item for item in as_list(process.get("stages")) if isinstance(item, dict)]
     artifacts = [item for item in as_list(process.get("artifact_definitions")) if isinstance(item, dict)]
+    evidence = [item for item in as_list(process.get("evidence_definitions")) if isinstance(item, dict)]
     gates = [item for item in as_list(process.get("gates")) if isinstance(item, dict)]
 
     def id_values(items: list[dict[str, Any]], label: str) -> set[str]:
@@ -13620,6 +13643,8 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
 
     role_ids = id_values(roles, "role")
     artifact_ids = id_values(artifacts, "artifact")
+    declared_artifact_ids = declared_process_artifact_ids(process)
+    evidence_ids = id_values(evidence, "evidence") if evidence else set()
     gate_ids = id_values(gates, "gate")
     stage_ids = id_values(stages, "stage")
     checks.append(check("PASS" if stage_ids else "FAIL", "at least one stage exists"))
@@ -13631,10 +13656,29 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
         stage_id = safe_id(str(stage.get("id", "")), "stage")
         role_id = safe_id(str(stage.get("required_role", "")), "role")
         checks.append(check("PASS" if role_id in role_ids else "FAIL", f"stage {stage_id} references existing role"))
-        for artifact_id in [safe_id(value, "artifact") for value in string_list(stage.get("produced_artifacts"))]:
-            checks.append(check("PASS" if artifact_id in artifact_ids else "FAIL", f"stage {stage_id} produces known artifact {artifact_id}"))
+        for field in ["required_inputs", "produced_artifacts", "required_artifacts"]:
+            for artifact_id in [safe_id(value, "artifact") for value in string_list(stage.get(field))]:
+                checks.append(check("PASS" if artifact_id in declared_artifact_ids else "FAIL", f"stage {stage_id} {field} references known artifact {artifact_id}"))
+        for evidence_id in [safe_id(value, "evidence") for value in string_list(stage.get("required_evidence"))]:
+            checks.append(check("PASS" if evidence_id in evidence_ids else "FAIL", f"stage {stage_id} references known evidence {evidence_id}"))
         for gate_id in [safe_id(value, "gate") for value in string_list(stage.get("entry_gates")) + string_list(stage.get("exit_gates"))]:
             checks.append(check("PASS" if gate_id in gate_ids else "FAIL", f"stage {stage_id} references known gate {gate_id}"))
+        if stage.get("gates"):
+            checks.append(check("WARN", f"stage {stage_id} uses deprecated gates alias; use exit_gates"))
+        if stage.get("technical_obligations"):
+            checks.append(check("WARN", f"stage {stage_id} uses deprecated technical_obligations; use automation_bindings"))
+        for binding in as_list(stage.get("automation_bindings")):
+            if not isinstance(binding, dict):
+                checks.append(check("FAIL", f"stage {stage_id} automation binding is an object"))
+                continue
+            binding_id = safe_id(str(binding.get("id") or ""), "binding")
+            checks.append(check("PASS" if binding.get("projector") else "FAIL", f"stage {stage_id} automation binding {binding_id} projector declared"))
+            if binding.get("artifact"):
+                artifact_id = safe_id(str(binding.get("artifact")), "artifact")
+                checks.append(check("PASS" if artifact_id in declared_artifact_ids else "FAIL", f"automation binding {binding_id} artifact exists: {artifact_id}"))
+            if binding.get("gate"):
+                gate_id = safe_id(str(binding.get("gate")), "gate")
+                checks.append(check("PASS" if gate_id in gate_ids else "FAIL", f"automation binding {binding_id} gate exists: {gate_id}"))
     for artifact in artifacts:
         owner = safe_id(str(artifact.get("owner_role", "")), "role")
         checks.append(check("PASS" if owner in role_ids else "FAIL", f"artifact {artifact.get('id', '')} owner role exists"))
@@ -13644,10 +13688,6 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
         if required_artifact:
             artifact_id = safe_id(str(required_artifact), "artifact")
             checks.append(check("PASS" if artifact_id in artifact_ids else "FAIL", f"gate {gate_id} required artifact exists: {artifact_id}"))
-    review_index = next((index for index, item in enumerate(stages) if "review" in safe_id(str(item.get("id", "")), "stage")), -1)
-    for index, stage in enumerate(stages):
-        if bool(stage.get("handoff_required")) and (review_index < 0 or review_index > index):
-            checks.append(check("WARN", f"handoff stage {stage.get('id', '')} appears before review"))
     run_model = process.get("run_model") if isinstance(process.get("run_model"), dict) else {}
     task_loop = run_model.get("default_task_loop") if isinstance(run_model.get("default_task_loop"), dict) else {}
     if run_model.get("supports_multiple_tasks") is True:
@@ -14259,22 +14299,77 @@ def validate_process_contract(
         checks.append(check("PASS" if string_list(responsibilities) else ("FAIL" if hard else "WARN"), f"{label} responsibilities declared"))
 
     defined_artifacts = declared_process_artifact_ids(process)
+    evidence_ids = {str(item.get("id")) for item in as_list(process.get("evidence_definitions")) if isinstance(item, dict) and item.get("id")}
     produced = produced_process_artifact_ids(process)
     missing = sorted(produced - defined_artifacts)
     checks.append(check("PASS" if not missing else ("FAIL" if hard else "WARN"), f"{process_id} produced artifacts declared: {', '.join(missing) if missing else 'all'}"))
     gate_ids = {str(item.get("id")) for item in as_list(process.get("gates")) if isinstance(item, dict) and item.get("id")}
+    for gate in as_list(process.get("gates")):
+        if isinstance(gate, dict) and gate.get("required_artifact"):
+            artifact_id = str(gate.get("required_artifact"))
+            checks.append(check("PASS" if artifact_id in defined_artifacts else ("FAIL" if hard else "WARN"), f"{process_id} gate {gate.get('id', '')} required artifact declared: {artifact_id}"))
     for stage in as_list(process.get("stages")):
         if not isinstance(stage, dict):
             continue
         stage_id = str(stage.get("id") or "stage")
         checks.append(check("PASS" if stage.get("actor") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} actor declared"))
         checks.append(check("PASS" if stage.get("goal") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} goal declared"))
-        unknown_gates = sorted(set(string_list(stage.get("gates")) + string_list(stage.get("exit_gates"))) - gate_ids)
+        unknown_gates = sorted(set(string_list(stage.get("entry_gates")) + string_list(stage.get("gates")) + string_list(stage.get("exit_gates"))) - gate_ids)
         checks.append(check("PASS" if not unknown_gates else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} gates valid: {', '.join(unknown_gates) if unknown_gates else 'all'}"))
+        for field in ["required_inputs", "produced_artifacts", "required_artifacts"]:
+            unknown_artifacts = sorted(set(string_list(stage.get(field))) - defined_artifacts)
+            checks.append(check("PASS" if not unknown_artifacts else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} {field} valid: {', '.join(unknown_artifacts) if unknown_artifacts else 'all'}"))
+        unknown_evidence = sorted(set(string_list(stage.get("required_evidence"))) - evidence_ids)
+        checks.append(check("PASS" if not unknown_evidence else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} evidence valid: {', '.join(unknown_evidence) if unknown_evidence else 'all'}"))
+        if stage.get("gates"):
+            checks.append(check("WARN", f"{process_id}.{stage_id} uses deprecated gates alias"))
+        if stage.get("technical_obligations"):
+            checks.append(check("WARN", f"{process_id}.{stage_id} uses deprecated technical_obligations alias"))
+        for binding in as_list(stage.get("automation_bindings")):
+            if not isinstance(binding, dict):
+                checks.append(check("FAIL" if hard else "WARN", f"{process_id}.{stage_id} automation binding is object"))
+                continue
+            binding_id = str(binding.get("id") or "binding")
+            checks.append(check("PASS" if binding.get("projector") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} projector declared"))
+            if binding.get("artifact"):
+                checks.append(check("PASS" if str(binding.get("artifact")) in defined_artifacts else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} artifact valid"))
+            if binding.get("gate"):
+                checks.append(check("PASS" if str(binding.get("gate")) in gate_ids else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} gate valid"))
         if "handoff_required" in stage:
             checks.append(check("FAIL" if hard else "WARN", f"{process_id}.{stage_id} deprecated handoff_required used without explicit semantics"))
     if "handoff_required" in process:
         checks.append(check("FAIL" if hard else "WARN", f"{process_id} deprecated handoff_required used without explicit semantics"))
+    transitions = as_list(process.get("process_transitions"))
+    route_file = process_routes_path(project_root)
+    route_map = load_process_route_map(project_root) if route_file.is_file() else {"routes": []}
+    routes_by_id = {
+        str(route.get("id") or ""): route
+        for route in as_list(route_map.get("routes"))
+        if isinstance(route, dict) and route.get("id")
+    }
+    transition_ids: set[str] = set()
+    for transition in transitions:
+        if not isinstance(transition, dict):
+            checks.append(check("FAIL" if hard else "WARN", f"{process_id} transition is an object"))
+            continue
+        transition_id = str(transition.get("id") or "")
+        checks.append(check("PASS" if transition_id and transition_id not in transition_ids else ("FAIL" if hard else "WARN"), f"{process_id} transition id unique: {transition_id or 'missing'}"))
+        transition_ids.add(transition_id)
+        checks.append(check("PASS" if str(transition.get("from_process") or "") == process_id else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} starts from declaring process"))
+        checks.append(check("PASS" if transition.get("to_process") else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} target declared"))
+        checks.append(check("PASS" if str(transition.get("mode") or "") in HANDOFF_MODES else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} mode valid"))
+        route_id = str(transition.get("route_id") or "")
+        if route_id:
+            checks.append(check("PASS" if route_file.is_file() else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route map exists"))
+            route = routes_by_id.get(route_id)
+            checks.append(check("PASS" if route is not None else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route exists: {route_id}"))
+            if route is not None:
+                same_contract = (
+                    str(route.get("from_process") or "") == process_id
+                    and str(route.get("to_process") or "") == str(transition.get("to_process") or "")
+                    and str(route.get("mode") or "") == str(transition.get("mode") or "")
+                )
+                checks.append(check("PASS" if same_contract else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route contract matches: {route_id}"))
 
     companions = process_companion_paths(companion_root or project_root, process_id)
     pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
@@ -15320,6 +15415,7 @@ PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
     "roles",
     "stages",
     "artifact_definitions",
+    "evidence_definitions",
     "gates",
     "required_packages",
     "required_templates",
@@ -15332,6 +15428,7 @@ PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
     "responsibility_boundaries",
     "subagent_policy",
     "runtime_requirements",
+    "runtime_execution_boundary",
     "stage_completion",
     "run_completion",
     "metadata",
@@ -15385,6 +15482,7 @@ def process_to_authoring_answers(process: dict[str, Any]) -> dict[str, Any]:
         "roles": as_list(process.get("roles")),
         "stages": as_list(process.get("stages")),
         "artifacts": as_list(process.get("artifact_definitions")),
+        "evidence_definitions": as_list(process.get("evidence_definitions")),
         "gates": as_list(process.get("gates")),
         "required_capabilities": string_list(process.get("required_capabilities")),
         "required_packages": string_list(process.get("required_packages")),
@@ -15401,6 +15499,7 @@ def process_to_authoring_answers(process: dict[str, Any]) -> dict[str, Any]:
         "responsibility_boundaries",
         "subagent_policy",
         "runtime_requirements",
+        "runtime_execution_boundary",
         "stage_completion",
         "run_completion",
         "metadata",
@@ -15537,8 +15636,9 @@ def process_semantics(process: dict[str, Any]) -> dict[str, Any]:
         "purpose": str(process.get("purpose") or process.get("description") or ""),
         "run_model": process.get("run_model") if isinstance(process.get("run_model"), dict) else {},
         "roles": object_by_id(process.get("roles"), ["title", "responsibility"]),
-        "stages": object_by_id(process.get("stages"), ["title", "required_role", "required_inputs", "produced_artifacts", "entry_gates", "exit_gates", "handoff_required"]),
+        "stages": object_by_id(process.get("stages"), ["title", "required_role", "required_inputs", "produced_artifacts", "required_artifacts", "required_evidence", "entry_gates", "exit_gates", "automation_bindings", "handoff_required"]),
         "artifact_definitions": object_by_id(process.get("artifact_definitions"), ["title", "owner_role", "template", "lifecycle"]),
+        "evidence_definitions": object_by_id(process.get("evidence_definitions"), ["title", "kind", "artifact"]),
         "gates": object_by_id(process.get("gates"), ["description", "blocking", "required_artifact", "stage", "stage_id"]),
         "events": {"emits": event_emits(process)},
         "requirements": {
@@ -16202,6 +16302,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
         "supports_specializations": supported_specializations,
         "project_id": project_id,
         "project_root_ref": "project-root" if project_root else "",
+        "project_root": str(project_root) if project_root else "",
         "process_id": args.process or "",
         "run_id": args.run or "",
         "task_id": args.task or "",
@@ -16219,6 +16320,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
             "session_id": session_id,
             "project_id": project_id,
             "project_root_ref": "project-root" if project_root else "",
+            "project_root": str(project_root) if project_root else "",
             "process_id": args.process or "",
             "run_id": args.run or "",
             "task_id": args.task or "",
@@ -16491,6 +16593,7 @@ def validate_process_route_map(project_root: Path) -> list[Check]:
     data = load_process_route_map(project_root)
     routes = data.get("routes") if isinstance(data.get("routes"), list) else []
     checks = [check("PASS" if data.get("schema_version") else "FAIL", "process route map schema_version present")]
+    append_json_schema_checks(checks, data, "process-route-map.schema.json", "process route map")
     seen: set[str] = set()
     for route in routes:
         if not isinstance(route, dict):
@@ -17100,6 +17203,21 @@ def resolve_runtime_driver(driver_ref: str, *, workplace_manifest: Path | None =
     raise SystemExit(f"FAIL: runtime driver not found: {driver_ref}")
 
 
+def runtime_driver_ref_is_direct_path(driver_ref: str) -> bool:
+    direct = Path(driver_ref).expanduser()
+    return direct.suffix in {".yaml", ".yml", ".json"} or direct.is_file()
+
+
+def normalized_runtime_driver_ref(driver_ref: str, project_root: Path) -> str:
+    direct = Path(driver_ref).expanduser()
+    if not direct.is_absolute():
+        direct = (project_root / direct).resolve()
+    try:
+        return direct.relative_to(project_root).as_posix()
+    except ValueError:
+        return str(direct)
+
+
 def runtime_driver_id_list(*, workplace_manifest: Path | None = None, project_root: Path | None = None) -> list[tuple[str, str, str]]:
     found: dict[str, tuple[str, str, str]] = {}
     for registry_path in runtime_driver_registry_paths(workplace_manifest, project_root):
@@ -17323,6 +17441,30 @@ def worker_run_paths(project_root: Path, run_id: str, task_id: str) -> dict[str,
 DETACHED_WORKER_PROCESSES: dict[tuple[str, str, str], subprocess.Popen[bytes]] = {}
 
 
+@contextlib.contextmanager
+def worker_run_lifecycle_lock(project_root: Path, run_id: str, task_id: str) -> Any:
+    root = agent_run_root(project_root, run_id, task_id)
+    root.mkdir(parents=True, exist_ok=True)
+    lock_path = root / ".lifecycle.lock"
+    deadline = time.time() + 30.0
+    fd: int | None = None
+    while fd is None:
+        try:
+            fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            if time.time() >= deadline:
+                raise SystemExit(f"FAIL: worker run lifecycle lock unavailable for {run_id}/{task_id}")
+            time.sleep(0.05)
+    try:
+        payload = {"schema_version": 1, "pid": os.getpid(), "created_at": now_utc()}
+        os.write(fd, json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8"))
+        yield
+    finally:
+        if fd is not None:
+            os.close(fd)
+        lock_path.unlink(missing_ok=True)
+
+
 def expand_runtime_value(value: Any, variables: dict[str, str]) -> Any:
     if isinstance(value, str):
         def replace(match: re.Match[str]) -> str:
@@ -17343,10 +17485,78 @@ def runtime_driver_for_task(project_root: Path, task: dict[str, Any], driver_arg
     driver_id = driver_arg or str(task.get("runtime_driver") or "manual")
     workplace_manifest = project_workplace_manifest(project_root)
     driver = resolve_runtime_driver(driver_id, workplace_manifest=workplace_manifest, project_root=project_root)
+    if driver_arg and runtime_driver_ref_is_direct_path(driver_arg):
+        driver = copy.deepcopy(driver)
+        driver["_driver_ref"] = normalized_runtime_driver_ref(driver_arg, project_root)
     failures = [item.message for item in validate_runtime_driver_document(driver) if item.level == "FAIL"]
     if failures:
         raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(failures))
     return driver
+
+
+def runtime_driver_for_worker_state(project_root: Path, task: dict[str, Any], state: dict[str, Any], fallback_driver_ref: str | None = None) -> dict[str, Any]:
+    task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
+    run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
+    command = json_read(worker_run_paths(project_root, run_id, task_id)["command"])
+    driver_ref = command.get("driver_ref")
+    if isinstance(driver_ref, str) and driver_ref.strip():
+        try:
+            return runtime_driver_for_task(project_root, task, driver_ref.strip())
+        except SystemExit as exc:
+            raise SystemExit(f"FAIL: saved runtime driver_ref invalid for {run_id}/{task_id}: {driver_ref}: {exc}") from exc
+    driver_id = str(state.get("driver_id") or fallback_driver_ref or task.get("runtime_driver") or "manual")
+    return runtime_driver_for_task(project_root, task, driver_id)
+
+
+def worker_run_state_requires_reconciliation(project_root: Path, run_id: str, task_id: str, state: dict[str, Any]) -> bool:
+    if str(state.get("status") or "") != "running":
+        return False
+    paths = worker_run_paths(project_root, run_id, task_id)
+    if paths["exit"].is_file():
+        return True
+    pid = state.get("pid")
+    if not isinstance(pid, int):
+        return True
+    command = json_read(paths["command"])
+    started_at = str(state.get("started_at") or "")
+    started_dt = parse_runtime_timestamp(started_at)
+    timeout_seconds = int(state.get("timeout_seconds") or ((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30))
+    if started_dt and datetime.now(timezone.utc) > started_dt + timedelta(seconds=timeout_seconds):
+        return True
+    proc = DETACHED_WORKER_PROCESSES.get(worker_process_key(project_root, run_id, task_id))
+    if proc is not None:
+        return proc.poll() is not None
+    return not process_pid_running(pid)
+
+
+def existing_running_worker_run(project_root: Path, task: dict[str, Any], fallback_driver_ref: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]] | None:
+    task_id = safe_id(str(task.get("id") or "task"), "task")
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    paths = worker_run_paths(project_root, run_id, task_id)
+    state = load_agent_run_state(project_root, run_id, task_id)
+    if str(state.get("status") or "") != "running":
+        return None
+    driver = runtime_driver_for_worker_state(project_root, task, state, fallback_driver_ref)
+    observed = observe_worker_run(project_root, task, driver, state) if worker_run_state_requires_reconciliation(project_root, run_id, task_id, state) else state
+    if str(observed.get("status") or "") == "running":
+        return observed, driver, paths
+    return None
+
+
+def emit_worker_run_skip(project_root: Path, task: dict[str, Any], driver: dict[str, Any], state: dict[str, Any], event_type: str) -> None:
+    task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
+    run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
+    pid = state.get("pid")
+    emit_process_event(
+        project_root,
+        event_type,
+        process_id=task_process_id(task),
+        subject=task_id,
+        assignment_id_value=task_id,
+        assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root),
+        payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": pid if isinstance(pid, int) else None, "reason": "already running"},
+        correlation_id=f"run-{run_id}",
+    )
 
 
 def normalize_agent_model(value: Any) -> str:
@@ -17450,6 +17660,9 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "paths": {key: rel(path, project_root) for key, path in paths.items() if key != "root"},
         "limits": parse_runtime_driver_limits(driver)[0],
     }
+    driver_ref = driver.get("_driver_ref")
+    if isinstance(driver_ref, str) and driver_ref.strip():
+        command["driver_ref"] = driver_ref.strip()
     return command, paths
 
 
@@ -17536,7 +17749,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
     task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
     if isinstance(driver, str):
-        driver = runtime_driver_for_task(project_root, task, driver)
+        driver = runtime_driver_for_worker_state(project_root, task, state, driver)
     paths = worker_run_paths(project_root, run_id, task_id)
     status = str(state.get("status") or "")
     if status != "running":
@@ -17648,6 +17861,10 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     command, paths = build_worker_process_command(project_root, task, driver, executable_override)
     state_status = "manual_required" if str(driver.get("kind")) == "manual" else "ready"
     paths["root"].mkdir(parents=True, exist_ok=True)
+    # A deliberate prepare is a new attempt.  An old durable exit contract
+    # belongs to the preceding attempt and must not be observed as the result
+    # of a newly launched process.
+    paths["exit"].unlink(missing_ok=True)
     write_agent_run_state(project_root, task, driver, state_status, command=command, paths=paths)
     emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status}, correlation_id=f"run-{run_id}")
     return task, driver, paths
@@ -17657,7 +17874,16 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
+    task = load_task(project_root, task_id)
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        running = existing_running_worker_run(project_root, task, getattr(args, "driver", None))
+        if running:
+            state, driver, paths = running
+            emit_worker_run_skip(project_root, task, driver, state, "worker.run.prepare_skipped")
+            print(f"SKIPPED: {task_id} already running pid={state.get('pid')}")
+            return 0
+        task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
     print(f"PREPARED: {task_id} driver={driver.get('id')} status={json_read(paths['status']).get('status')}")
     return 0
 
@@ -17666,52 +17892,63 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
+    task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    if str(driver.get("kind")) == "manual":
-        print(f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}")
-        return 0
-    command = json_read(paths["command"])
-    argv = command.get("command", {}).get("argv") if isinstance(command.get("command"), dict) else []
-    if not argv:
-        write_agent_run_state(project_root, task, driver, "failed", failure_reason="empty argv", command=command, paths=paths)
-        print(f"FAIL: empty command argv for {task_id}")
-        return 1
-    timeout_seconds = int((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30)
-    env = {str(key): str(value) for key, value in (command.get("command", {}).get("environment") or {}).items()}
-    cwd = command.get("command", {}).get("working_directory") or str(project_root)
-    paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
-    paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
-    started_at = now_utc()
     detach = bool(getattr(args, "detach", False))
-    with paths["stdout"].open("wb") as stdout, paths["stderr"].open("wb") as stderr:
-        try:
-            proc = subprocess.Popen([str(item) for item in argv], cwd=str(cwd), env=env, stdout=stdout, stderr=stderr, shell=False)
-            write_agent_run_state(project_root, task, driver, "running", pid=proc.pid, started_at=started_at, command=command, paths=paths)
-            json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
-            if detach:
-                DETACHED_WORKER_PROCESSES[worker_process_key(project_root, run_id, task_id)] = proc
-                emit_process_event(project_root, "worker.run.started", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
-                print(f"RUNNING: {task_id} pid={proc.pid}")
-                return 0
-            try:
-                exit_code = proc.wait(timeout=timeout_seconds)
-                finished_at = now_utc()
-                final_status = "completed" if exit_code == 0 else "failed"
-                write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
-                json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                exit_code = -1
-                final_status = "timed_out"
-                finished_at = now_utc()
-                write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason="timeout", command=command, paths=paths)
-                json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
-        except OSError as exc:
-            finished_at = now_utc()
-            write_agent_run_state(project_root, task, driver, "failed", started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=str(exc), command=command, paths=paths)
-            print(f"FAIL: start failed for {task_id}: {exc}")
+    proc: subprocess.Popen[bytes] | None = None
+    with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        running = existing_running_worker_run(project_root, task, getattr(args, "driver", None))
+        if running:
+            state, driver, paths = running
+            emit_worker_run_skip(project_root, task, driver, state, "worker.run.start_skipped")
+            print(f"SKIPPED: {task_id} already running pid={state.get('pid')}")
+            return 0
+        task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
+        run_id = safe_id(str(task.get("run_id") or "run"), "run")
+        if str(driver.get("kind")) == "manual":
+            print(f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}")
+            return 0
+        command = json_read(paths["command"])
+        argv = command.get("command", {}).get("argv") if isinstance(command.get("command"), dict) else []
+        if not argv:
+            write_agent_run_state(project_root, task, driver, "failed", failure_reason="empty argv", command=command, paths=paths)
+            print(f"FAIL: empty command argv for {task_id}")
             return 1
+        timeout_seconds = int((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30)
+        env = {str(key): str(value) for key, value in (command.get("command", {}).get("environment") or {}).items()}
+        cwd = command.get("command", {}).get("working_directory") or str(project_root)
+        paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
+        paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
+        started_at = now_utc()
+        with paths["stdout"].open("wb") as stdout, paths["stderr"].open("wb") as stderr:
+            try:
+                proc = subprocess.Popen([str(item) for item in argv], cwd=str(cwd), env=env, stdout=stdout, stderr=stderr, shell=False)
+            except OSError as exc:
+                finished_at = now_utc()
+                write_agent_run_state(project_root, task, driver, "failed", started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=str(exc), command=command, paths=paths)
+                print(f"FAIL: start failed for {task_id}: {exc}")
+                return 1
+        write_agent_run_state(project_root, task, driver, "running", pid=proc.pid, started_at=started_at, command=command, paths=paths)
+        json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
+        if detach:
+            DETACHED_WORKER_PROCESSES[worker_process_key(project_root, run_id, task_id)] = proc
+            emit_process_event(project_root, "worker.run.started", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
+            print(f"RUNNING: {task_id} pid={proc.pid}")
+            return 0
+    assert proc is not None
+    try:
+        exit_code = proc.wait(timeout=timeout_seconds)
+        finished_at = now_utc()
+        final_status = "completed" if exit_code == 0 else "failed"
+        write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
+        json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        exit_code = -1
+        final_status = "timed_out"
+        finished_at = now_utc()
+        write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason="timeout", command=command, paths=paths)
+        json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
     emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
     print(f"{final_status.upper()}: {task_id} exit_code={exit_code}")
     return 0 if final_status == "completed" else 1
@@ -17747,7 +17984,7 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
             subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
             os.kill(int(pid), signal.SIGTERM)
-    driver = runtime_driver_for_task(project_root, task, str(state.get("driver_id") or task.get("runtime_driver") or "manual"))
+    driver = runtime_driver_for_worker_state(project_root, task, state)
     paths = worker_run_paths(project_root, run_id, task_id)
     if state.get("status") in {"completed", "failed", "timed_out", "unknown_exit", "lost", "cancelled"}:
         print(f"STATUS: already-terminal {task_id} status={state.get('status')}")
@@ -17797,7 +18034,7 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
         lines.append(f"- subagent_policy_failure: `{item}`")
     paths["collection"].write_text("\n".join(lines) + "\n", encoding="utf-8")
     if missing or subagent_failures:
-        driver = runtime_driver_for_task(project_root, task, str(state.get("driver_id") or task.get("runtime_driver") or "manual"))
+        driver = runtime_driver_for_worker_state(project_root, task, state)
         reasons = []
         if missing:
             reasons.append("missing outputs: " + ", ".join(missing))
@@ -17821,7 +18058,9 @@ def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state
     failure_reason = str(state.get("failure_reason") or runtime_status)
     task["status"] = "failed"
     task["result"] = {
-        "status": runtime_status,
+        # Assignment result is a semantic delivery outcome; the more granular
+        # Inspector runtime status belongs in its durable agent-run record.
+        "status": "failed",
         "summary": f"Worker runtime ended with {runtime_status}: {failure_reason}",
         "artifacts": [],
     }
@@ -17963,9 +18202,13 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
             task_id = safe_id(str(item.get("id") or "task"), "task")
             task = load_task(project_root, task_id)
             worker = workers.get(task_id)
-            driver_id = str((worker or {}).get("runtime_driver") or task.get("runtime_driver") or default_driver)
-            task_rows.append((task_id, task, worker, driver_id))
             state = load_agent_run_state(project_root, run_id, task_id)
+            # A prepared run records the concrete driver as durable Inspector
+            # state.  A supervisor must observe that driver, not fall back to
+            # its run default (commonly `manual`), otherwise it can rewrite a
+            # shell worker's timeout and lifecycle while the process is live.
+            driver_id = str(state.get("driver_id") or (worker or {}).get("runtime_driver") or task.get("runtime_driver") or default_driver)
+            task_rows.append((task_id, task, worker, driver_id))
             if state.get("status") == "running":
                 observed_state = observe_worker_run(project_root, task, driver_id, state)
                 observed.append(task_id)
@@ -18136,6 +18379,132 @@ def command_supervisor_stop(args: argparse.Namespace) -> int:
         write_supervisor_state(project_root, state)
     print(f"STOP REQUESTED: {rel(stop_file, project_root)}")
     return 0
+
+
+def command_runtime_serve(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_serve(args, sys.modules[__name__])
+
+
+def command_runtime_start(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_start(args, sys.modules[__name__])
+
+
+def command_runtime_stop(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_stop(args, sys.modules[__name__])
+
+
+def command_runtime_restart(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_restart(args, sys.modules[__name__])
+
+
+def command_runtime_status(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_status(args, sys.modules[__name__])
+
+
+def command_runtime_doctor(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_doctor(args, sys.modules[__name__])
+
+
+def command_runtime_event(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_event(args, sys.modules[__name__])
+
+
+def command_runtime_session_register(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_session_register(args, sys.modules[__name__])
+
+
+def command_runtime_project_state(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_project_state(args, sys.modules[__name__])
+
+
+def command_runtime_work_state(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_work_state(args, sys.modules[__name__])
+
+
+def command_runtime_resolve(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_resolve(args, sys.modules[__name__])
+
+
+def command_runtime_tick(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_tick(args, sys.modules[__name__])
+
+
+def command_runtime_host_init(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_init(args, sys.modules[__name__])
+
+
+def command_runtime_host_event(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_event(args, sys.modules[__name__])
+
+
+def command_runtime_host_status(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_status(args, sys.modules[__name__])
+
+
+def command_runtime_host_project_state(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_project_state(args, sys.modules[__name__])
+
+
+def command_runtime_host_work_state(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_work_state(args, sys.modules[__name__])
+
+
+def command_runtime_host_resolve(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_resolve(args, sys.modules[__name__])
+
+
+def command_runtime_host_tick(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_tick(args, sys.modules[__name__])
+
+
+def command_runtime_host_rebuild_projections(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_rebuild_projections(args, sys.modules[__name__])
+
+
+def command_runtime_host_projection_doctor(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_projection_doctor(args, sys.modules[__name__])
 
 
 def load_orchestrator_plan(project_root: Path, plan_arg: str | None = None, run_arg: str | None = None) -> dict[str, Any]:
@@ -19037,6 +19406,12 @@ def command_task_create(args: argparse.Namespace) -> int:
     task_id = safe_id(args.id, "task")
     process_id = safe_id(args.process, "task")
     require_official_process_active(project_root, process_id)
+    stage_id = safe_id(str(getattr(args, "stage", "") or ""), "stage") if getattr(args, "stage", None) else ""
+    if stage_id:
+        definition = resolve_process_definition(project_root, process_id)
+        declared_stages = {str(item.get("id") or "") for item in as_list(definition.process.get("stages")) if isinstance(item, dict)}
+        if stage_id not in declared_stages:
+            raise SystemExit(f"FAIL: stage {stage_id} is not declared by process {process_id}")
     path = assignment_yaml_path(project_root, task_id)
     if path.exists():
         raise SystemExit(f"FAIL: task already exists: {rel(path, project_root)}")
@@ -19061,6 +19436,8 @@ def command_task_create(args: argparse.Namespace) -> int:
         "iterations": [],
         "result": {"status": "pending", "summary": "", "artifacts": []},
     }
+    if stage_id:
+        task["stage"] = stage_id
     allowed_files = assignment_scope_items([*as_list(getattr(args, "allowed_file", [])), *as_list(getattr(args, "allowed_glob", []))])
     allowed_read_files = assignment_scope_items([*as_list(getattr(args, "read_file", [])), *as_list(getattr(args, "allowed_read_file", []))])
     context_artifacts = normalize_context_artifacts(getattr(args, "context_artifact", []))
@@ -19198,12 +19575,36 @@ def command_task_complete(args: argparse.Namespace) -> int:
     return 0
 
 
+def task_verification_fingerprint(project_root: Path, task: dict[str, Any]) -> str:
+    """Fingerprint the task declaration and its declared verification inputs."""
+    inputs: list[dict[str, Any]] = []
+    for output in normalize_required_outputs(task.get("required_outputs")):
+        if not bool(output.get("required", True)):
+            continue
+        path = task_output_path(project_root, output)
+        item = {"id": str(output.get("id") or "output"), "path": rel(path, project_root) if path else "", "status": "missing"}
+        if path and path.is_file():
+            item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
+        inputs.append(item)
+    expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+    expected_path = str(expected.get("artifact") or "")
+    if expected_path:
+        path = project_root / normalize_assignment_path(expected_path)
+        item = {"id": "expected-report", "path": normalize_assignment_path(expected_path), "status": "missing"}
+        if path.is_file():
+            item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
+        inputs.append(item)
+    payload = {"assignment": task, "inputs": inputs}
+    return "sha256:" + hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
 def command_task_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
     checks = validate_task_consistency(project_root, task_id)
     result = print_checks(checks)
-    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass"})
+    task = load_task(project_root, task_id)
+    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": task_verification_fingerprint(project_root, task)})
     return result
 
 
@@ -25026,6 +25427,155 @@ def build_parser() -> argparse.ArgumentParser:
     execution_inspector_stop_alias.add_argument("--project-root", required=True, help="Project root path.")
     execution_inspector_stop_alias.set_defaults(func=command_supervisor_stop)
 
+    runtime = sub.add_parser("runtime", help="Run and control the long-lived local PF Runtime process.")
+    runtime_sub = runtime.add_subparsers(dest="runtime_command", required=True)
+
+    runtime_serve = runtime_sub.add_parser("serve", help="Run PF Runtime in the foreground for one workplace.")
+    runtime_serve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_serve.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
+    runtime_serve.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")
+    runtime_serve.set_defaults(func=command_runtime_serve)
+
+    runtime_start = runtime_sub.add_parser("start", help="Start PF Runtime in the background for one workplace.")
+    runtime_start.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_start.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
+    runtime_start.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")
+    runtime_start.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for readiness.")
+    runtime_start.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_start.set_defaults(func=command_runtime_start)
+
+    runtime_stop = runtime_sub.add_parser("stop", help="Stop PF Runtime for one workplace.")
+    runtime_stop.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_stop.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for graceful shutdown.")
+    runtime_stop.set_defaults(func=command_runtime_stop)
+
+    runtime_restart = runtime_sub.add_parser("restart", help="Restart PF Runtime for one workplace.")
+    runtime_restart.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_restart.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
+    runtime_restart.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")
+    runtime_restart.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for stop/start.")
+    runtime_restart.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_restart.set_defaults(func=command_runtime_restart)
+
+    runtime_status = runtime_sub.add_parser("status", help="Print PF Runtime process and projection status.")
+    runtime_status.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_status.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_status.set_defaults(func=command_runtime_status)
+
+    runtime_doctor = runtime_sub.add_parser("doctor", help="Check PF Runtime state, singleton, auth, and protocol compatibility.")
+    runtime_doctor.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_doctor.set_defaults(func=command_runtime_doctor)
+
+    runtime_event = runtime_sub.add_parser("event", help="Send one normalized agent event through the long-lived runtime.")
+    runtime_event.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_event.add_argument("--project-root", help="Project root path override.")
+    runtime_event.add_argument("--input", default="-", help="JSON input path or '-' for stdin.")
+    runtime_event.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_event.set_defaults(func=command_runtime_event)
+
+    runtime_session = runtime_sub.add_parser("session-register", help="Bind a Codex/runtime session id to one project.")
+    runtime_session.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_session.add_argument("--session", required=True, help="Runtime/agent session id.")
+    runtime_session.add_argument("--agent", help="Agent id.")
+    runtime_session.add_argument("--project-root", help="Project root path.")
+    runtime_session.add_argument("--cwd", help="Working directory fallback used by hook adapters.")
+    runtime_session.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_session.set_defaults(func=command_runtime_session_register)
+
+    runtime_project_state = runtime_sub.add_parser("project-state", help="Read project state for a routed Runtime session.")
+    runtime_project_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_project_state.add_argument("--session", help="Runtime/agent session id.")
+    runtime_project_state.add_argument("--project-root", help="Project root path fallback.")
+    runtime_project_state.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_project_state.set_defaults(func=command_runtime_project_state)
+
+    runtime_work_state = runtime_sub.add_parser("work-state", help="Read current work state for a routed Runtime session.")
+    runtime_work_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_work_state.add_argument("--session", help="Runtime/agent session id.")
+    runtime_work_state.add_argument("--project-root", help="Project root path fallback.")
+    runtime_work_state.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_work_state.set_defaults(func=command_runtime_work_state)
+
+    runtime_resolve = runtime_sub.add_parser("resolve", help="Resolve the project handle for a Runtime session.")
+    runtime_resolve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_resolve.add_argument("--session", help="Runtime/agent session id.")
+    runtime_resolve.add_argument("--project-root", help="Project root path fallback.")
+    runtime_resolve.add_argument("--resource", help="Resolved knowledge resource id.")
+    runtime_resolve.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_resolve.set_defaults(func=command_runtime_resolve)
+
+    runtime_tick = runtime_sub.add_parser("tick", help="Request one Runtime scheduler pass for known or explicit projects.")
+    runtime_tick.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_tick.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
+    runtime_tick.add_argument("--director", action="store_true", help="Run hosted Agent Director tick for organized projects.")
+    runtime_tick.add_argument("--inspector", action="store_true", help="Run hosted Execution Inspector tick.")
+    runtime_tick.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_tick.set_defaults(func=command_runtime_tick)
+
+    runtime_host = sub.add_parser("runtime-host", help="Host existing PF Core runtime passes through a lazy local Runtime PoC.")
+    runtime_host_sub = runtime_host.add_subparsers(dest="runtime_host_command", required=True)
+
+    runtime_host_init = runtime_host_sub.add_parser("init", help="Initialize or refresh Runtime project handles.")
+    runtime_host_init.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_init.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
+    runtime_host_init.set_defaults(func=command_runtime_host_init)
+
+    runtime_host_event = runtime_host_sub.add_parser("event", help="Accept one normalized agent event and append a PF event envelope.")
+    runtime_host_event.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
+    runtime_host_event.add_argument("--project-root", help="Project root path override.")
+    runtime_host_event.add_argument("--input", default="-", help="JSON input path or '-' for stdin.")
+    runtime_host_event.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_event.set_defaults(func=command_runtime_host_event)
+
+    runtime_host_status = runtime_host_sub.add_parser("status", help="Print Runtime host status.")
+    runtime_host_status.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_status.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
+    runtime_host_status.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_status.set_defaults(func=command_runtime_host_status)
+
+    runtime_host_project_state = runtime_host_sub.add_parser("project-state", help="MCP-like read-only project state for a routed Runtime session.")
+    runtime_host_project_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_project_state.add_argument("--session", help="Runtime/agent session id.")
+    runtime_host_project_state.add_argument("--project-root", help="Project root path fallback.")
+    runtime_host_project_state.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_project_state.set_defaults(func=command_runtime_host_project_state)
+
+    runtime_host_work_state = runtime_host_sub.add_parser("work-state", help="MCP-like read-only work state for a routed Runtime session.")
+    runtime_host_work_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_work_state.add_argument("--session", help="Runtime/agent session id.")
+    runtime_host_work_state.add_argument("--project-root", help="Project root path fallback.")
+    runtime_host_work_state.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_work_state.set_defaults(func=command_runtime_host_work_state)
+
+    runtime_host_resolve = runtime_host_sub.add_parser("resolve", help="Resolve the project handle for a Runtime session.")
+    runtime_host_resolve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_resolve.add_argument("--session", help="Runtime/agent session id.")
+    runtime_host_resolve.add_argument("--project-root", help="Project root path fallback.")
+    runtime_host_resolve.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_resolve.set_defaults(func=command_runtime_host_resolve)
+
+    runtime_host_tick = runtime_host_sub.add_parser("tick", help="Run hosted Ledger maintenance plus optional Director/Inspector ticks.")
+    runtime_host_tick.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_tick.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
+    runtime_host_tick.add_argument("--director", action="store_true", help="Host existing agent-director-tick for organized projects.")
+    runtime_host_tick.add_argument("--inspector", action="store_true", help="Host existing execution inspector tick.")
+    runtime_host_tick.add_argument("--run", help="Run id for inspector tick.")
+    runtime_host_tick.add_argument("--profile", help="Supervisor/inspector profile.")
+    runtime_host_tick.add_argument("--driver", help="Runtime driver override.")
+    runtime_host_tick.add_argument("--wait-ttl", type=int, default=3600, help="Director wait TTL seconds.")
+    runtime_host_tick.add_argument("--lease-ttl", type=int, default=3600, help="Director lease TTL seconds.")
+    runtime_host_tick.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_tick.set_defaults(func=command_runtime_host_tick)
+
+    runtime_host_rebuild = runtime_host_sub.add_parser("rebuild-projections", help="Rebuild Runtime projections from durable project event journals.")
+    runtime_host_rebuild.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
+    runtime_host_rebuild.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_rebuild.set_defaults(func=command_runtime_host_rebuild_projections)
+
+    runtime_host_projection_doctor = runtime_host_sub.add_parser("projection-doctor", help="Validate declaration-driven technical projection freshness and readiness.")
+    runtime_host_projection_doctor.add_argument("--project-root", action="append", required=True, help="Project root path. Repeatable.")
+    runtime_host_projection_doctor.set_defaults(func=command_runtime_host_projection_doctor)
+
     orchestrator_plan = sub.add_parser("orchestrator-plan", help="Create, validate, apply, or inspect a multi-agent orchestration plan.")
     orchestrator_plan_sub = orchestrator_plan.add_subparsers(dest="orchestrator_plan_command", required=True)
     orchestrator_plan_create = orchestrator_plan_sub.add_parser("create", help="Create an orchestrator task plan.")
@@ -25412,6 +25962,7 @@ def build_parser() -> argparse.ArgumentParser:
     task_create.add_argument("--id", required=True, help="Task id.")
     task_create.add_argument("--title", required=True, help="Task title.")
     task_create.add_argument("--process", required=True, help="Task process id.")
+    task_create.add_argument("--stage", help="Declared Process Stage for this assignment; must exist in the selected Process.")
     task_create.add_argument("--platform", help="Selected platform id for this task.")
     task_create.add_argument("--specialization", action="append", default=[], help="Selected specialization id. Repeatable.")
     task_create.add_argument("--objective", help="Task objective.")

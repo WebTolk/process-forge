@@ -1,0 +1,31 @@
+schema_version: 1
+id: stage-projectors-worker-driver-remediation-20260814
+title: Repair worker driver observation
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T06:06:36Z'
+updated_at: '2026-08-14T06:17:01Z'
+objective: Preserve a prepared shell worker driver when Runtime supervisor observes it.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: stage-projectors-worker-driver-remediation
+    assignment: .pf/assignments/stage-projectors-worker-driver-remediation.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/stage-projectors-worker-driver-remediation-20260814/summary.md
+  - .pf/handoffs/runs/stage-projectors-worker-driver-remediation-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

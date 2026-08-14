@@ -29,6 +29,9 @@ Use ProcessForge as a file-first process system. Work through assignments, execu
 - Runner and backend support are optional future modes, not requirements.
 - Public product files must not include private paths, secrets, machine names, or temporary private notes.
 - Use stable machine-readable ids for statuses, processes, artifacts, assignments, templates, and packages.
+- Create every repository-local temporary directory under `.pf/tmp/`; never create temporary worker, debug, staging, or scratch directories at the repository root.
+- In particular, do not create root directories named `.pf-worker-shell-*` or similar runner sandboxes. Clean `.pf/tmp/` outputs after use unless they are declared durable evidence.
+- System temporary directories are allowed only for isolated tests that never write a temporary directory into the repository.
 
 ## Standard Statuses
 

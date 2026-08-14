@@ -1,0 +1,31 @@
+schema_version: 1
+id: stage-projectors-next-review-20260814
+title: Independent stage projector review
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T06:04:07Z'
+updated_at: '2026-08-14T06:17:29Z'
+objective: Independent read-only review of the completed stage projector implementation.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: stage-projectors-next-independent-review
+    assignment: .pf/assignments/stage-projectors-next-independent-review.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/stage-projectors-next-review-20260814/summary.md
+  - .pf/handoffs/runs/stage-projectors-next-review-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

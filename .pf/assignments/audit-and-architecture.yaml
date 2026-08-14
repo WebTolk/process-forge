@@ -1,0 +1,82 @@
+schema_version: 1
+id: audit-and-architecture
+title: Audit agent reliability and propose target architecture
+run_id: agent-reliability-20260813
+process: process-supervisor
+status: done
+created_at: '2026-08-13T13:46:36Z'
+updated_at: '2026-08-13T13:52:44Z'
+objective: 'Produce the required audit report: existing mechanisms, confirmed problems, shared root causes, semantic .webtolk losses, target architecture, and migration plan.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Completed audit/design checkpoint for ProcessForge long-session agent reliability; product implementation awaits operator approval.
+  artifacts:
+    - .pf/artifacts/agent-reliability-20260813/audit-report.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/logs/agent-reliability-20260813.md
+  - .pf/handoffs/agent-reliability-20260813-handoff.md
+  - .pf/artifacts/agent-reliability-20260813/**
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/contexts/project-context.snapshot.yaml
+  - задания/process-forge-agent-reliability-master-prompt.md
+  - tools/processforge.py
+  - tools/**
+  - processes/**
+  - templates/**
+  - schemas/**
+  - .pf/runs/**
+  - .pf/artifacts/**
+  - .pf/logs/**
+  - .pf/handoffs/**
+  - .pf/reviews/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: orchestrator
+  writer: true
+  owned_files:
+    - .pf/logs/agent-reliability-20260813.md
+    - .pf/handoffs/agent-reliability-20260813-handoff.md
+    - .pf/artifacts/agent-reliability-20260813/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/logs/agent-reliability-20260813.md
+    - .pf/handoffs/agent-reliability-20260813-handoff.md
+    - .pf/artifacts/agent-reliability-20260813/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: reliability-audit-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/agent-reliability-20260813/audit-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/agent-reliability-20260813/audit-report.md
+  format: concise_markdown
+  include:
+    - reliability-audit-report

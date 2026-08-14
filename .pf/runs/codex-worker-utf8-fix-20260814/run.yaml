@@ -1,0 +1,31 @@
+schema_version: 1
+id: codex-worker-utf8-fix-20260814
+title: Codex worker UTF-8 transport fix
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T03:55:05Z'
+updated_at: '2026-08-14T03:56:53Z'
+objective: Repair the codex-exec stdin encoding boundary exposed by the independent Runtime review, prove it with a non-ASCII prompt regression, and preserve the worker contract.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: codex-worker-utf8-fix
+    assignment: .pf/assignments/codex-worker-utf8-fix.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/codex-worker-utf8-fix-20260814/summary.md
+  - .pf/handoffs/runs/codex-worker-utf8-fix-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

@@ -1,0 +1,31 @@
+schema_version: 1
+id: runtime-final-independent-review-20260814
+title: Final independent Runtime review
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T04:01:56Z'
+updated_at: '2026-08-14T04:05:56Z'
+objective: Obtain an actionable independent review of the first Runtime correctness slice after codex-exec transport and output-delivery defects were repaired.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: runtime-final-independent-review
+    assignment: .pf/assignments/runtime-final-independent-review.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/runtime-final-independent-review-20260814/summary.md
+  - .pf/handoffs/runs/runtime-final-independent-review-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

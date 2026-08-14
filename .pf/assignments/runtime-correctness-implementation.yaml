@@ -1,0 +1,141 @@
+schema_version: 1
+id: runtime-correctness-implementation
+title: Runtime correctness and recovery
+run_id: runtime-general-line-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T03:41:33Z'
+updated_at: '2026-08-14T03:49:08Z'
+objective: 'Implement the first approved Runtime correctness slice without duplicating PF Core logic: session-bound /event isolation, concurrent state-write safety, liveness/stale recovery, and deterministic Windows oversized IPC behavior with regressions.'
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Implemented and proved the Runtime correctness slice: /event isolation, serialized cache writes, liveness recovery, and deterministic Windows oversized IPC regression coverage.'
+  artifacts:
+    - .pf/artifacts/runtime-general-line-20260814/runtime-correctness-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/service.py
+  - tools/smoke_runtime_host_poc.py
+  - tools/smoke_long_lived_runtime.py
+  - tools/processforge.py
+  - .pf/artifacts/runtime-general-line-20260814/**
+  - .pf/logs/runtime-general-line-20260814.md
+  - .pf/handoffs/runtime-general-line-20260814-handoff.md
+  - .pf/assignments/runtime-correctness-implementation.yaml
+allowed_read_files:
+  - schemas/**
+  - tools/**
+  - .pf/artifacts/**
+  - задания/process-forge-runtime-general-line-master-prompt.md
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/host.py
+    - tools/pf_runtime/service.py
+    - tools/smoke_runtime_host_poc.py
+    - tools/smoke_long_lived_runtime.py
+    - tools/processforge.py
+    - .pf/artifacts/runtime-general-line-20260814/**
+    - .pf/logs/runtime-general-line-20260814.md
+    - .pf/handoffs/runtime-general-line-20260814-handoff.md
+    - .pf/assignments/runtime-correctness-implementation.yaml
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/pf_runtime/host.py
+    - tools/pf_runtime/service.py
+    - tools/smoke_runtime_host_poc.py
+    - tools/smoke_long_lived_runtime.py
+    - tools/processforge.py
+    - .pf/artifacts/runtime-general-line-20260814/**
+    - .pf/logs/runtime-general-line-20260814.md
+    - .pf/handoffs/runtime-general-line-20260814-handoff.md
+    - .pf/assignments/runtime-correctness-implementation.yaml
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: runtime-correctness-implementation
+        current_scope: tools/pf_runtime/host.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+      -
+        current_assignment: runtime-correctness-implementation
+        current_scope: tools/pf_runtime/service.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+      -
+        current_assignment: runtime-correctness-implementation
+        current_scope: tools/smoke_runtime_host_poc.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/smoke_*.py
+        reason: file_matches_glob
+      -
+        current_assignment: runtime-correctness-implementation
+        current_scope: tools/smoke_runtime_host_poc.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+      -
+        current_assignment: runtime-correctness-implementation
+        current_scope: tools/smoke_long_lived_runtime.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/smoke_*.py
+        reason: file_matches_glob
+      -
+        current_assignment: runtime-correctness-implementation
+        current_scope: tools/smoke_long_lived_runtime.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+      -
+        current_assignment: runtime-correctness-implementation
+        current_scope: tools/processforge.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/processforge.py
+        reason: same_file
+      -
+        current_assignment: runtime-correctness-implementation
+        current_scope: tools/processforge.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+required_outputs:
+  -
+    id: runtime-correctness-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/runtime-general-line-20260814/runtime-correctness-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/runtime-general-line-20260814/runtime-correctness-report.md
+  format: concise_markdown
+  include:
+    - runtime-correctness-report

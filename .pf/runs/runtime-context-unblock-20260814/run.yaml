@@ -1,0 +1,37 @@
+schema_version: 1
+id: runtime-context-unblock-20260814
+title: Runtime context unblock
+process: context-resolution
+status: completed
+created_at: '2026-08-14T03:51:28Z'
+updated_at: '2026-08-14T03:58:53Z'
+objective: Restore a fresh project context and unblock assignment capsules without changing PF Core domain semantics or the shared workplace registry.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: runtime-context-unblock
+    assignment: .pf/assignments/runtime-context-unblock.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: runtime-correctness-independent-review
+    assignment: .pf/assignments/runtime-correctness-independent-review.yaml
+    status: done
+    order: 2
+    blocking: true
+final_artifacts:
+  - .pf/runs/runtime-context-unblock-20260814/summary.md
+  - .pf/handoffs/runs/runtime-context-unblock-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

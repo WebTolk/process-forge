@@ -1,0 +1,31 @@
+schema_version: 1
+id: runtime-review-triangulation-20260814
+title: Runtime findings triangulation
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T03:58:54Z'
+updated_at: '2026-08-14T04:01:44Z'
+objective: Produce an actionable, evidence-backed independent Runtime correctness review after the initial review report omitted concrete defect details.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: runtime-review-triangulation
+    assignment: .pf/assignments/runtime-review-triangulation.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/runtime-review-triangulation-20260814/summary.md
+  - .pf/handoffs/runs/runtime-review-triangulation-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

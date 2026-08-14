@@ -37,6 +37,24 @@ Apply writes public files:
 - `docs/processes/<process-id>.md`
 - `examples/process-authoring/<process-id>/`
 
+## Contract Vocabulary
+
+`Stage` declares **what** work is required: inputs, produced or required
+artifacts, required evidence, and entry/exit gates. `Gate` is the only
+blocking decision surface. `artifact_definitions` and `evidence_definitions`
+declare the identifiers referenced by a Stage.
+
+Use `exit_gates`, not the legacy `gates` alias. Runtime-specific projectors
+belong in `automation_bindings`; they describe **how** an observation is
+computed and must not introduce a second blocker list. The former
+`technical_obligations` name remains readable only for compatibility.
+
+`process_transitions` describe a Process-to-Process contract. Project-local
+`.pf/process-routes.yaml` is the executable route map used by handoffs; it is
+not a Stage progression mechanism. An assignment may declare `stage`; Runtime
+otherwise uses only an explicit Process `runtime_execution_boundary` mapping
+from durable worker status to a Stage.
+
 ## Logic Review
 
 `process-authoring-review` checks for duplicate ids, missing roles, missing

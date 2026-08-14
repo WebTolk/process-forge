@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-29T15:02:54Z
-- valid_until: 2026-08-05T15:02:54Z
+- generated_at: 2026-08-14T10:36:58Z
+- valid_until: 2026-08-21T10:36:58Z
 
 ## Freshness
 
@@ -20,7 +20,7 @@ fresh
 
 ## Linked ProcessForge
 
-- version: 1.0.0
+- version: 1.0.2
 - constraint: ^1.0
 - install_mode: linked
 - distribution: processforge (available)
@@ -52,11 +52,25 @@ fresh
 
 ## Effective Resources
 
-- None.
+- docs.php (activated, None)
+- docs.web.accessibility (activated, None)
+- docs.web.css (activated, None)
+- docs.web.html (activated, None)
+- docs.web.javascript (activated, None)
+- docs.web.performance (activated, None)
 
 ## Provided Capabilities
 
-- None.
+- architecture
+- investigation
+- process_coordination
+- reporting
+- repository_read
+- repository_write
+- review
+- test_execution
+- test_planning
+- test_running
 
 ## Execution Route
 
@@ -66,21 +80,25 @@ fresh
 
 ## Capability Resolution
 
-- satisfied: 0
-- unsatisfied: 6
+- satisfied: 2
+- unsatisfied: 4
 
 ## Applied Project Overrides
 
 - None.
 
+## Resolved Parameters
+
+- namespaces: None.
+- sources: 0
+- conflicts: 0
+
 ## Resolution Conflicts
 
 - research
 - process_governance
-- review
 - research
 - process_governance
-- repository_write
 
 ## Required Knowledge Resources
 
@@ -121,9 +139,9 @@ fresh
 
 ## Required Capabilities
 
-- markdown_editing (missing, fail)
-- repository_read (missing, fail)
-- schema_validation (missing, fail)
+- markdown_editing (available, info)
+- repository_read (available, info)
+- schema_validation (available, info)
 
 ## Optional Capabilities
 
@@ -151,7 +169,7 @@ fresh
 
 - public.no_local_absolute_paths
 - files.one_writer_per_scope
-- secrets.do_not_store
+- secrets.public_exports_sanitized
 - runtime.private
 - markdown.not_machine_merge_source
 

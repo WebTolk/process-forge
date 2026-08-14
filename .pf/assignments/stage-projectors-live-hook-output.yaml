@@ -1,0 +1,59 @@
+schema_version: 1
+id: stage-projectors-live-hook-output
+title: Live hook-backed output
+run_id: stage-projectors-live-proof-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T05:57:56Z'
+updated_at: '2026-08-14T06:03:10Z'
+objective: Create only the declared live proof output through a real hook-backed Codex session.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from manual
+  artifacts:
+    - .pf/artifacts/stage-projectors-next-20260814/live-hook-output.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/stage-projectors-next-20260814/live-hook-output.md
+ownership:
+  owner_id: codex-live-proof
+  owner_label: worker-codex-live-proof
+  role: live-validation
+  writer: true
+  owned_files:
+    - .pf/artifacts/stage-projectors-next-20260814/live-hook-output.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/stage-projectors-next-20260814/live-hook-output.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: live-hook-output
+    path: .pf/artifacts/stage-projectors-next-20260814/live-hook-output.md
+    type: markdown
+    required: true
+expected_report:
+  artifact: .pf/artifacts/stage-projectors-next-20260814/live-hook-output.md
+  format: concise_markdown
+  include:
+    - live-hook-output

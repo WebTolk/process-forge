@@ -1,0 +1,31 @@
+schema_version: 1
+id: ledger-hooks-mcp-remediation-review-20260814
+title: Ledger hooks MCP remediation review
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T05:09:07Z'
+updated_at: '2026-08-14T05:11:18Z'
+objective: Independently review remediation of Ledger hooks MCP findings and live proof.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: ledger-hooks-mcp-remediation-review
+    assignment: .pf/assignments/ledger-hooks-mcp-remediation-review.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/ledger-hooks-mcp-remediation-review-20260814/summary.md
+  - .pf/handoffs/runs/ledger-hooks-mcp-remediation-review-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

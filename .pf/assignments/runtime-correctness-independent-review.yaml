@@ -1,0 +1,70 @@
+schema_version: 1
+id: runtime-correctness-independent-review
+title: Independent Runtime correctness review
+run_id: runtime-context-unblock-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T03:53:04Z'
+updated_at: '2026-08-14T03:58:25Z'
+objective: Read-only independent review of the Runtime correctness slice. Verify that it preserves PF Core authority and report only concrete defects, security/recovery gaps, missing regressions, or an explicit pass. Do not edit product code.
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/runtime-context-unblock-20260814/runtime-independent-review.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/runtime-context-unblock-20260814/runtime-independent-review.md
+allowed_read_files:
+  - tools/pf_runtime/**
+  - tools/processforge.py
+  - tools/smoke_runtime_host_poc.py
+  - tools/smoke_long_lived_runtime.py
+  - schemas/**
+  - .pf/artifacts/runtime-general-line-20260814/**
+  - задания/process-forge-runtime-general-line-master-prompt.md
+ownership:
+  owner_id: shell-worker-runtime-correctness-review
+  owner_label: worker-shell-worker-runtime-correctness-review
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/runtime-context-unblock-20260814/runtime-independent-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/runtime-context-unblock-20260814/runtime-independent-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-independent-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/runtime-context-unblock-20260814/runtime-independent-review.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/runtime-context-unblock-20260814/runtime-independent-review.md
+  format: concise_markdown
+  include:
+    - runtime-independent-review
+agent_model: gpt-5.3-codex-spark

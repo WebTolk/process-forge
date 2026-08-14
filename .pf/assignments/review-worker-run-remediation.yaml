@@ -1,0 +1,71 @@
+schema_version: 1
+id: review-worker-run-remediation
+title: Independent review of worker-run remediation
+run_id: worker-run-remediation-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T00:00:00Z'
+updated_at: '2026-08-14T07:45:07Z'
+objective: Read-only independent review of the completed worker-run remediation. Inspect the current diff and code paths in tools/processforge.py and tools/smoke_worker_run_shell.py. Verify cross-process duplicate-start prevention, prepare safety, external direct-path Inspector recovery, cleanup, no legacy scenario, and that no unrelated changes were introduced. Do not edit product files. Produce PASS/WARN/FAIL with precise evidence.
+platform: ""
+selected_specializations:
+  []
+order: 6
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/reviews/worker-run-remediation-20260814-independent-review.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/worker-run-remediation-20260814-independent-review.md
+allowed_read_files:
+  - tools/processforge.py
+  - tools/smoke_worker_run_shell.py
+  - .pf/artifacts/codebase-audit-20260814/remediation-plan.md
+  - .pf/artifacts/codebase-audit-20260814/implementation-lifecycle-worker-report.md
+  - .pf/artifacts/codebase-audit-20260814/harden-worker-run-shell-smoke-report.md
+  - .pf/artifacts/codebase-audit-20260814/remove-legacy-worker-run-regression-report.md
+ownership:
+  owner_id: pf-review-worker-run-remediation
+  owner_label: worker-pf-review-worker-run-remediation
+  role: assurance-reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/worker-run-remediation-20260814-independent-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/worker-run-remediation-20260814-independent-review.md
+  rule: Do not edit product files or other review scopes.
+required_outputs:
+  -
+    id: worker-run-remediation-independent-review
+    path: .pf/reviews/worker-run-remediation-20260814-independent-review.md
+    type: markdown
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/reviews/worker-run-remediation-20260814-independent-review.md
+  format: concise_markdown
+  include:
+    - verdict
+    - evidence
+    - residual_risks
+agent_model: gpt-5.3-codex-spark

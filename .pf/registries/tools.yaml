@@ -8,3 +8,24 @@ tools:
     command: python tools/processforge.py
     scope: project
     status: available
+  -
+    id: processforge-project-filesystem
+    name: Project Filesystem Access
+    capability: repository_read
+    provides:
+      - repository_read
+      - markdown_editing
+    command: powershell -NoProfile -Command Get-ChildItem -Force
+    scope: project
+    status: configured
+  -
+    id: processforge-schema-validator
+    name: ProcessForge Schema Validator
+    capability: schema_validation
+    provides:
+      - schema_validation
+    command: python tools/validate-process-forge-schemas.py --root .
+    scope: project
+    healthcheck:
+      command: python tools/validate-process-forge-schemas.py --root .
+    status: configured

@@ -1,0 +1,67 @@
+schema_version: 1
+id: verification-runtime-lifecycle-isolated-repro
+title: Reproduce Runtime lifecycle in an isolated single-worker environment
+run_id: verification-current-work-state-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T08:54:17Z'
+updated_at: '2026-08-14T08:56:00Z'
+objective: Run only the official long-lived Runtime and runtime ledger/MCP smoke scripts sequentially in an isolated, no-parallel-worker period. Record exact PASS/FAIL and the first reproducible lifecycle transition; do not change source or manually delete project/runtime state.
+platform: ""
+selected_specializations:
+  []
+order: 9
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-isolated-repro.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-isolated-repro.md
+allowed_read_files:
+  - tools/smoke_long_lived_runtime.py
+  - tools/smoke_runtime_ledger_hooks_mcp.py
+  - tools/pf_runtime/service.py
+  - .pf/artifacts/verification-current-work-state-20260814/live-runtime-mcp-proof.md
+ownership:
+  owner_id: verification-current-work-state-coordinator
+  owner_label: worker-verification-current-work-state-coordinator
+  role: isolated-runtime-assurance
+  writer: true
+  owned_files:
+    - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-isolated-repro.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-isolated-repro.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-lifecycle-isolated-repro
+    type: unspecified
+    required: true
+    path: .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-isolated-repro.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-isolated-repro.md
+  format: concise_markdown
+  include:
+    - runtime-lifecycle-isolated-repro
+agent_model: gpt-5.3-codex-spark

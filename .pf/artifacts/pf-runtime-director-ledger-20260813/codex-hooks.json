@@ -1,0 +1,42 @@
+{
+  "description": "ProcessForge lifecycle observation hooks.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python tools/pf_runtime/codex_hooks.py",
+            "commandWindows": "python tools\\pf_runtime\\codex_hooks.py",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python tools/pf_runtime/codex_hooks.py",
+            "commandWindows": "python tools\\pf_runtime\\codex_hooks.py",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python tools/pf_runtime/codex_hooks.py",
+            "commandWindows": "python tools\\pf_runtime\\codex_hooks.py",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}

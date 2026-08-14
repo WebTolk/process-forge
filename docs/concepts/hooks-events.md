@@ -29,3 +29,11 @@ python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type assign
 
 The current file-first runtime writes local files. Network delivery and
 long-running event processing are outside the core runtime.
+# Codex Runtime adapter
+
+`tools/pf_runtime/codex_hooks.py` is a thin hook adapter. It accepts only the
+documented `SessionStart`, `SessionEnd`, and `PostToolUse` facts, normalizes
+them, and sends them through the existing Runtime/Core event path. It never
+executes hook payload commands, creates tasks, chooses resources, or makes
+stage decisions. A hook outside a ProcessForge project is ignored successfully
+so observation cannot make Codex unavailable.

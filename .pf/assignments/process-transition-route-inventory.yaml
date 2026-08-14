@@ -1,0 +1,69 @@
+schema_version: 1
+id: process-transition-route-inventory
+title: Inventory Process Transition and Route boundary
+run_id: process-stage-contract-normalization-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T10:21:17Z'
+updated_at: '2026-08-14T10:23:58Z'
+objective: Read-only inventory of Process Transition versus Process Route definitions, schemas, and generic execution use. Identify canonical versus duplicate/legacy fields and any process/stage hardcode; do not implement.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Worker report independently spot-checked: Process Transition and project route map are separate semantic surfaces with duplicate underspecified schemas; current project has no route map. Shell worker process exited without final status and was cancelled after PID verification.'
+  artifacts:
+    - .pf/artifacts/process-stage-contract-normalization-20260814/process-transition-route-inventory.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/process-stage-contract-normalization-20260814/process-transition-route-inventory.md
+allowed_read_files:
+  - schemas/process-definition.schema.json
+  - schemas/process-transition.schema.json
+  - schemas/process-route-map.schema.json
+  - .pf/process-routes.yaml
+  - tools/processforge.py
+  - docs
+ownership:
+  owner_id: process-transition-route-worker
+  owner_label: worker-process-transition-route-worker
+  role: transition-route-inventory
+  writer: true
+  owned_files:
+    - .pf/artifacts/process-stage-contract-normalization-20260814/process-transition-route-inventory.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/process-stage-contract-normalization-20260814/process-transition-route-inventory.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: process-transition-route-inventory
+    type: unspecified
+    required: true
+    path: .pf/artifacts/process-stage-contract-normalization-20260814/process-transition-route-inventory.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/process-stage-contract-normalization-20260814/process-transition-route-inventory.md
+  format: concise_markdown
+  include:
+    - process-transition-route-inventory
+agent_model: gpt-5.3-codex-spark

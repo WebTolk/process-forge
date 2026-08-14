@@ -1,0 +1,28 @@
+schema_version: 1
+id: interrupted-session-code-audit-20260814
+title: Post-reboot runtime code audit
+process: process-supervisor
+status: blocked
+created_at: '2026-08-14T03:13:19Z'
+updated_at: '2026-08-14T03:13:21Z'
+objective: Read-only audit of the uncommitted PF Runtime slice after the scheduled Windows restart.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: runtime-readonly-review
+    assignment: .pf/assignments/runtime-readonly-review.yaml
+    status: blocked
+    order: 1
+    blocking: true
+final_artifacts:
+  []
+events:
+  emitted:
+    - run.created
+privacy:
+  public_safe: true
