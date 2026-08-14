@@ -3,18 +3,22 @@ id: pre-release-remediation-implementation-20260730
 title: Remediate pre-release ProcessForge product audit findings
 run_id: pre-release-remediation-20260730
 process: multi-agent-task-orchestration
-status: in_progress
+status: done
 created_at: '2026-07-30T06:28:15Z'
-updated_at: '2026-07-30T07:15:51Z'
+updated_at: '2026-08-14T13:15:38Z'
 objective: Resolve all Critical and High findings from the 2026-07-30 pre-release product audit, restore trustworthy authoring and release gates, and produce a clean traceable release candidate.
 platform: ""
-selected_specializations: []
+selected_specializations:
+  []
 order: 1
 dependencies:
-  blocked_by: []
-  blocks: []
+  blocked_by:
+    []
+  blocks:
+    []
 iterations:
-  - id: contract-decisions
+  -
+    id: contract-decisions
     kind: research
     status: completed
     started_at: '2026-07-30T06:36:00Z'
@@ -22,14 +26,17 @@ iterations:
     summary: Freeze authoritative id, schema, doctor, transaction, and release-integrity contracts before implementation.
     artifacts:
       - .pf/adr/pre-release-remediation-schema-authority-20260730.md
-  - id: security-boundaries
+  -
+    id: security-boundaries
     kind: fix
     status: completed
     started_at: '2026-07-30T06:36:00Z'
     completed_at: '2026-07-30T07:01:30Z'
     summary: Close package and specialization root escapes and add deliberate traversal regression tests.
-    artifacts: []
-  - id: schema-doctor-alignment
+    artifacts:
+      []
+  -
+    id: schema-doctor-alignment
     kind: fix
     status: completed
     started_at: '2026-07-30T06:36:00Z'
@@ -39,29 +46,38 @@ iterations:
       - .pf/artifacts/pre-release-remediation-agents/schema-alignment.md
       - .pf/artifacts/pre-release-remediation-agents/generator-doctor-cli.md
       - .pf/artifacts/pre-release-remediation-agents/template-schema-correction.md
-  - id: transactional-authoring
+  -
+    id: transactional-authoring
     kind: fix
     status: in_progress
     started_at: '2026-07-30T08:10:00Z'
     summary: Make entity creation atomic and prevent failed or partial entities from becoming available.
-    artifacts: []
-  - id: lifecycle-resolution
+    artifacts:
+      []
+  -
+    id: lifecycle-resolution
     kind: fix
     status: planned
     summary: Restore process immutability, collision policy, lifecycle postconditions, and unknown process handling.
-    artifacts: []
-  - id: provider-runtime-surfaces
+    artifacts:
+      []
+  -
+    id: provider-runtime-surfaces
     kind: fix
     status: planned
     summary: Enforce tool and MCP contracts and complete classifier and runtime-driver diagnostics.
-    artifacts: []
-  - id: release-integrity
+    artifacts:
+      []
+  -
+    id: release-integrity
     kind: fix
     status: in_progress
     started_at: '2026-07-30T06:36:00Z'
     summary: Repair aggregate gates, archive integrity, provenance, launcher relocation, and installation boundary documentation.
-    artifacts: []
-  - id: assurance-release-candidate
+    artifacts:
+      []
+  -
+    id: assurance-release-candidate
     kind: test
     status: planned
     summary: Run negative regressions, project dogfooding, clean-install tests, and full source and extracted release gates.
@@ -70,9 +86,13 @@ iterations:
       - .pf/reviews/pre-release-remediation-review-20260730.md
       - .pf/handoffs/pre-release-remediation-release-handoff-20260730.md
 result:
-  status: pending
-  summary: ""
-  artifacts: []
+  status: done
+  summary: 'Superseded stale manual assignment: user authorized release of broad tools/** ownership for the bounded Python Core Phase B bootstrap slice. The historical remediation objective is not delivered; unresolved work remains traceable in the legacy run and requires a new explicit assignment.'
+  artifacts:
+    - .pf/artifacts/pre-release-remediation-report-20260730.md
+  waivers:
+    remediation-review: stale manual assignment released by explicit user authorization; no review delivered
+    release-handoff: stale manual assignment released by explicit user authorization; no handoff delivered
 execution_mode:
   kind: implementation
   code_changes_allowed: true
@@ -142,7 +162,8 @@ ownership:
     - dist/**
 non_overlap:
   policy: block_on_write_overlap
-  active_parallel_tasks: []
+  active_parallel_tasks:
+    []
   current_write_scope:
     - tools/**
     - schemas/**
@@ -175,19 +196,23 @@ subagents:
   require_reports: true
   reports_dir: .pf/artifacts/pre-release-remediation-agents
 required_outputs:
-  - id: remediation-plan
+  -
+    id: remediation-plan
     type: implementation_plan
     path: .pf/artifacts/pre-release-remediation-plan-20260730.md
     required: true
-  - id: remediation-report
+  -
+    id: remediation-report
     type: implementation_report
     path: .pf/artifacts/pre-release-remediation-report-20260730.md
     required: true
-  - id: remediation-review
+  -
+    id: remediation-review
     type: review
     path: .pf/reviews/pre-release-remediation-review-20260730.md
     required: true
-  - id: release-handoff
+  -
+    id: release-handoff
     type: handoff
     path: .pf/handoffs/pre-release-remediation-release-handoff-20260730.md
     required: true

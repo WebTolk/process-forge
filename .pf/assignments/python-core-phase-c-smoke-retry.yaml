@@ -1,0 +1,74 @@
+schema_version: 1
+id: python-core-phase-c-smoke-retry
+title: Phase C resolver smoke retry with controlled temp
+run_id: python-core-refactor-phase-c-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T14:41:13Z'
+updated_at: '2026-08-14T14:43:17Z'
+objective: Repeat the two non-passing Phase C relevant smoke commands and capture exact diagnostic output. For smoke_process_resolver_multiple_roots, set TEMP and TMP to the project .pf/tmp directory before execution to avoid the system temporary-directory permission issue. Run smoke_builtin_process_catalog unchanged, distinguish pre-existing/contextual failure from catalog seam regression using its diagnostics. Do not edit product files; write Russian report only.
+platform: ""
+selected_specializations:
+  []
+order: 8
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-c-20260814/smoke-retry.md
+stage: task-result-fixation
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/artifacts/python-core-refactor-phase-c-20260814/postchange-characterization.md
+    role: input
+    required: true
+    mutable_by_worker: false
+allowed_files:
+  - .pf/artifacts/python-core-refactor-phase-c-20260814/smoke-retry.md
+allowed_read_files:
+  - tools/smoke_process_resolver_multiple_roots.py
+  - tools/smoke_builtin_process_catalog.py
+  - tools/processforge.py
+  - src/processforge_core/process_catalog/service.py
+ownership:
+  owner_id: shell-worker-spark
+  owner_label: worker-shell-worker-spark
+  role: smoke-retry-engineer
+  writer: true
+  owned_files:
+    - .pf/artifacts/python-core-refactor-phase-c-20260814/smoke-retry.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/python-core-refactor-phase-c-20260814/smoke-retry.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: smoke-retry
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-c-20260814/smoke-retry.md
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-c-20260814/smoke-retry.md
+  format: concise_markdown
+  include:
+    - smoke-retry
+agent_model: gpt-5.3-codex-spark

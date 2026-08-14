@@ -1,0 +1,63 @@
+schema_version: 1
+id: python-core-phase-b-bootstrap-spec-review
+title: Review bootstrap reachability and Phase B specification
+run_id: python-core-refactor-phase-b-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T12:59:07Z'
+updated_at: '2026-08-14T13:03:31Z'
+objective: Independently review the Phase B bootstrap specification for actual direct-script reachability on Windows and package/import correctness. In particular, determine how tools/pf_runtime/mcp_server.py and codex_hooks.py can load src/processforge_core/bootstrap.py before src is on sys.path, without retaining duplicated file-local path hacks. Verify the proposed stable-module loading does not create a second legacy core module or break host/service package imports. Return a concrete corrected recommendation and verdict. Do not modify code or other artifacts.
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec-review.md
+stage: run-review
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec.md
+  - tools/processforge.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/service.py
+  - bin/pf.py
+ownership:
+  owner_id: python-core-phase-b-bootstrap-spec-review
+  owner_label: worker-python-core-phase-b-bootstrap-spec-review
+  role: python-import-architecture-reviewer
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: bootstrap-spec-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec-review.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec-review.md
+  format: concise_markdown
+  include:
+    - bootstrap-spec-review
+agent_model: gpt-5.4

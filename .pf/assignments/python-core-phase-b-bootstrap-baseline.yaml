@@ -1,0 +1,62 @@
+schema_version: 1
+id: python-core-phase-b-bootstrap-baseline
+title: Capture Phase B direct-script import baseline
+run_id: python-core-refactor-phase-b-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T13:08:39Z'
+updated_at: '2026-08-14T13:11:25Z'
+objective: Read-only baseline for the reviewed Phase B bootstrap slice. Record the current direct-script import mechanisms in MCP and hooks, then run only non-mutating help/import-startup checks that are safe without a configured workplace. State exact commands, exit codes, and observed behavior. Do not change source or runtime state.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-b-20260814/bootstrap-baseline.md
+stage: task-execution-loop
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec-review.md
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/processforge.py
+  - bin/pf.py
+ownership:
+  owner_id: python-core-phase-b-bootstrap-baseline
+  owner_label: worker-python-core-phase-b-bootstrap-baseline
+  role: characterization-engineer
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: bootstrap-baseline
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-b-20260814/bootstrap-baseline.md
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-b-20260814/bootstrap-baseline.md
+  format: concise_markdown
+  include:
+    - bootstrap-baseline
+agent_model: gpt-5.3-codex-spark

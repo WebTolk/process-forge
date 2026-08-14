@@ -1,0 +1,69 @@
+schema_version: 1
+id: python-core-phase-b-bootstrap-review
+title: Review implemented Phase B bootstrap seam
+run_id: python-core-refactor-phase-b-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T13:32:06Z'
+updated_at: '2026-08-14T13:37:01Z'
+objective: Independently review the applied Phase B package/import foundation against the baseline, specification, and review. Verify direct-script shim reachability, exactly-one legacy processforge module identity, normal pf_runtime.host/service package imports, no unintended domain extraction, adapter behavior preservation, smoke quality, and Windows input considerations. Run read-only checks where useful. Do not edit files. Give a Russian pass/fail verdict with exact issues or residual conditions.
+platform: ""
+selected_specializations:
+  []
+order: 7
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-review.md
+stage: run-review
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec-review.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/bootstrap-baseline.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-patch.md
+  - src/processforge_core/__init__.py
+  - src/processforge_core/bootstrap.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/smoke_processforge_core_package_bootstrap.py
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/service.py
+  - bin/pf.py
+ownership:
+  owner_id: python-core-phase-b-bootstrap-review
+  owner_label: worker-python-core-phase-b-bootstrap-review
+  role: python-core-bootstrap-reviewer
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: bootstrap-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-review.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-review.md
+  format: concise_markdown
+  include:
+    - bootstrap-review
+agent_model: gpt-5.4

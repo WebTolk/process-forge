@@ -1,0 +1,73 @@
+schema_version: 1
+id: python-core-phase-e-adapter-inventory
+title: Phase E catalog adapter bridge inventory
+run_id: python-core-refactor-phase-e-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T15:26:40Z'
+updated_at: '2026-08-14T15:29:12Z'
+objective: Inventory the three remaining legacy calls from tools/processforge.py to private process_catalog service helpers. Map signatures, all callers, behavior and public API options without changing code. Produce concise Russian artifact.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-inventory.md
+stage: task-planning
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/artifacts/python-core-refactor-phase-d-20260814/review-adjudication.md
+    role: input
+    required: true
+    mutable_by_worker: false
+allowed_files:
+  - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-inventory.md
+allowed_read_files:
+  - tools/processforge.py
+  - src/processforge_core/process_catalog/__init__.py
+  - src/processforge_core/process_catalog/service.py
+ownership:
+  owner_id: shell-worker-spark
+  owner_label: worker-shell-worker-spark
+  role: inventory-engineer
+  writer: true
+  owned_files:
+    - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-inventory.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-inventory.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: adapter-inventory
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-inventory.md
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-inventory.md
+  format: concise_markdown
+  include:
+    - adapter-inventory
+agent_model: gpt-5.3-codex-spark

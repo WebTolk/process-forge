@@ -1,0 +1,92 @@
+schema_version: 1
+id: python-core-process-contract-inventory
+title: Process contract code inventory
+run_id: python-core-refactor-phase-a-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T11:48:25Z'
+updated_at: '2026-08-14T11:51:48Z'
+objective: Inventory current ownership, call clusters, dependencies, state and I/O for Process Definition loading, normalization, validation, Doctor, Authoring, Stage, Gate, Artifact/Evidence and Process Transition. Report facts with file and symbol references; do not propose code changes.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-a-20260814/process-contract-inventory.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/artifacts/process-stage-contract-normalization-20260814/**
+  - schemas/process-definition.schema.json
+  - processes/core/**
+  - packs/**
+  - tools/processforge.py
+  - tools/smoke_process*.py
+  - tools/validate-process-forge-schemas.py
+forbidden_files:
+  - tools/pf_runtime/**
+  - bin/**
+  - docs/**
+ownership:
+  owner_id: python-core-process-contract-inventory
+  owner_label: worker-python-core-process-contract-inventory
+  role: architecture-inventory
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    []
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: process-contract-inventory
+    path: .pf/artifacts/python-core-refactor-phase-a-20260814/process-contract-inventory.md
+    type: markdown
+    required: true
+agent_model: gpt-5.3-codex-spark
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/process-contract-inventory.md
+  format: concise_markdown
+  include:
+    - process-contract-inventory
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+agent_reasoning_effort: low

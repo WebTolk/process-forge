@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import importlib
+import importlib.util
 import io
 import json
 import os
@@ -16,10 +16,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-TOOLS_ROOT = str(Path(__file__).resolve().parents[1])
-if TOOLS_ROOT not in sys.path:
-    sys.path.insert(0, TOOLS_ROOT)
-
+_RUNTIME_BOOTSTRAP: Any | None = None
 
 EVENTS = {
     "SessionStart": {"startup": "agent.session.started", "resume": "agent.session.resumed", "compact": "agent.session.compacted"},
@@ -28,8 +25,22 @@ EVENTS = {
 }
 
 
-def core_module() -> Any:
-    return importlib.import_module("processforge")
+def runtime_bootstrap() -> Any:
+    global _RUNTIME_BOOTSTRAP
+    if _RUNTIME_BOOTSTRAP is None:
+        repo_root = Path(__file__).resolve().parents[2]
+        module_name = "processforge_core.bootstrap"
+        module = sys.modules.get(module_name)
+        if module is None:
+            bootstrap_path = repo_root / "src" / "processforge_core" / "bootstrap.py"
+            spec = importlib.util.spec_from_file_location(module_name, bootstrap_path)
+            if spec is None or spec.loader is None:
+                raise ImportError(f"could not load bootstrap module: {bootstrap_path}")
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
+        _RUNTIME_BOOTSTRAP = module.bootstrap_runtime(__file__)
+    return _RUNTIME_BOOTSTRAP
 
 
 def normalized_event(payload: dict[str, Any]) -> dict[str, Any] | None:
@@ -63,13 +74,15 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
     event = normalized_event(payload)
     if not event:
         return {"status": "ignored"}
-    core = core_module()
+    runtime = runtime_bootstrap()
+    core = runtime.core
+    host = runtime.host
+    service = runtime.service
     project_root = Path(str(event["project_root"])).expanduser()
     try:
         core.require_flow_root(project_root)
     except SystemExit:
         return {"status": "ignored", "reason": "not_processforge_project"}
-    from pf_runtime import host, service
 
     # Prefer the active Runtime so hook delivery shares its authenticated IPC,
     # lifecycle record and operator journal.  A hook must remain advisory: an

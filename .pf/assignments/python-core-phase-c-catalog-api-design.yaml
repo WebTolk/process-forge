@@ -1,0 +1,73 @@
+schema_version: 1
+id: python-core-phase-c-catalog-api-design
+title: Design minimal shared catalog resolver API
+run_id: python-core-refactor-phase-c-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T14:03:08Z'
+updated_at: '2026-08-14T14:09:00Z'
+objective: 'Using the Phase C inventory, produce a precise behavior-preserving design for the smallest first Process Definition API extraction. Correct the inventory''s over-broad recommendation: do not move host payloads, MCP tool mapping, hooks, validation, authoring, routes, handoff, event/work-state, or service transport. Specify exact Python module/package files, public functions/models, legacy wrappers, dependency injection or callback boundaries needed to avoid importing the monolith from canonical Core, characterization tests, and a migration sequence that makes both CLI and runtime host use the same catalog API. Explain whether this first cut must include any helper functions and why. Do not edit product code.'
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-design.md
+stage: task-planning
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-design.md
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/artifacts/python-core-refactor-phase-c-20260814/process-definition-inventory.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-refactor-plan.md
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - src/processforge_core/bootstrap.py
+  - schemas/process-definition.schema.json
+  - processes/core/**
+ownership:
+  owner_id: python-core-phase-c-catalog-api-design
+  owner_label: worker-python-core-phase-c-catalog-api-design
+  role: python-core-catalog-architect
+  writer: true
+  owned_files:
+    - .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-design.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-design.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: catalog-api-design
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-design.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-design.md
+  format: concise_markdown
+  include:
+    - catalog-api-design
+agent_model: gpt-5.4

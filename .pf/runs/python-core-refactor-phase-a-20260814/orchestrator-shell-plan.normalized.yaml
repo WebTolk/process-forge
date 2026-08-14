@@ -1,0 +1,170 @@
+schema_version: 1
+run:
+  id: python-core-refactor-phase-a-20260814
+  title: Python Core refactor Phase A audit
+  process: multi-agent-task-orchestration
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 3
+  model: gpt-5.3-codex-spark
+  reasoning_effort: ""
+allow_write_scope_overlap: false
+workers:
+  -
+    id: python-core-process-contract-inventory
+    order: 1
+    runtime_driver: codex-exec
+    model: gpt-5.3-codex-spark
+    reasoning_effort: ""
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      []
+    allowed_read_files:
+      - .pf/AGENTS.md
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/process-stage-contract-normalization-20260814/**
+      - schemas/process-definition.schema.json
+      - processes/core/**
+      - packs/**
+      - tools/processforge.py
+      - tools/smoke_process*.py
+      - tools/validate-process-forge-schemas.py
+    forbidden_files:
+      - tools/pf_runtime/**
+      - bin/**
+      - docs/**
+    required_outputs:
+      -
+        id: process-contract-inventory
+        path: .pf/artifacts/python-core-refactor-phase-a-20260814/process-contract-inventory.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/process-contract-inventory.md
+    depends_on:
+      []
+  -
+    id: python-core-adapter-runtime-inventory
+    order: 2
+    runtime_driver: codex-exec
+    model: gpt-5.3-codex-spark
+    reasoning_effort: ""
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      []
+    allowed_read_files:
+      - .pf/AGENTS.md
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/process-stage-contract-normalization-20260814/**
+      - tools/processforge.py
+      - tools/pf_runtime/**
+      - tools/smoke_runtime*.py
+      - tools/smoke_worker*.py
+      - tools/smoke_agent*.py
+      - tools/smoke_current*.py
+      - tools/smoke_stage*.py
+      - bin/pf.py
+      - templates/registries/runtime-drivers.yaml
+      - schemas/*runtime*.json
+      - schemas/*worker*.json
+      - schemas/*agent*.json
+    forbidden_files:
+      - docs/**
+      - dist/**
+    required_outputs:
+      -
+        id: adapter-runtime-inventory
+        path: .pf/artifacts/python-core-refactor-phase-a-20260814/adapter-runtime-inventory.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/adapter-runtime-inventory.md
+    depends_on:
+      []
+  -
+    id: python-core-public-surface-inventory
+    order: 3
+    runtime_driver: codex-exec
+    model: gpt-5.3-codex-spark
+    reasoning_effort: ""
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      []
+    allowed_read_files:
+      - .pf/AGENTS.md
+      - .pf/contexts/project-context.snapshot.yaml
+      - README.md
+      - README.ru.md
+      - QUICKSTART.md
+      - QUICKSTART.ru.md
+      - docs/**
+      - bin/pf.py
+      - tools/processforge.py
+      - tools/release_archive_test.py
+      - tools/smoke_*.py
+      - tools/validate-public-cleanliness.py
+      - dist/**
+      - packages/**
+      - checksums/**
+      - .processforge-releaseignore
+      - requirements.txt
+      - VERSION
+    forbidden_files:
+      - .pf/runtime/**
+    required_outputs:
+      -
+        id: public-surface-inventory
+        path: .pf/artifacts/python-core-refactor-phase-a-20260814/public-surface-inventory.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/public-surface-inventory.md
+    depends_on:
+      []

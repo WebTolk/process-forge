@@ -29,10 +29,35 @@ from typing import Any
 from urllib.parse import urlparse
 from urllib.request import url2pathname, urlopen
 
+def _bootstrap_repo_src() -> Path:
+    repo_root = Path(__file__).resolve().parents[1]
+    src_root = repo_root / "src"
+    src_value = str(src_root)
+    if src_value not in sys.path:
+        first_entry = Path(sys.path[0] or ".").resolve() if sys.path else None
+        tools_root = (repo_root / "tools").resolve()
+        sys.path.insert(1 if first_entry == tools_root else 0, src_value)
+    return repo_root
+
+
+ROOT = _bootstrap_repo_src()
+
+from processforge_core.process_catalog import (
+    PROCESS_CATALOG_CLASSIFICATIONS as CATALOG_PROCESS_CATALOG_CLASSIFICATIONS,
+    ProcessCatalogContext,
+    ProcessDefinitionRef,
+    official_process_definition_refs as catalog_official_process_definition_refs,
+    process_catalog_metadata as catalog_process_catalog_metadata,
+    process_catalog_entries as catalog_process_catalog_entries,
+    process_catalog_role as catalog_process_catalog_role,
+    process_definition_exists as catalog_process_definition_exists,
+    process_root_candidates as catalog_process_root_candidates,
+    process_root_yaml_files as catalog_process_root_yaml_files,
+    require_official_process_active as catalog_require_official_process_active,
+    resolve_process_definition as catalog_resolve_process_definition,
+)
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
-
-ROOT = Path(__file__).resolve().parents[1]
 PROJECT_FLOW_ROOT = ".pf"
 PROCESSFORGE_VERSION = "1.0.2"
 PROCESSFORGE_SPEC_VERSION = "1.0"
@@ -1048,21 +1073,6 @@ class PackageRootResolution:
     warnings: list[str]
     fallback: bool = False
     entry: dict[str, Any] | None = None
-
-
-@dataclass
-class ProcessDefinitionRef:
-    process_id: str
-    path: Path
-    process: dict[str, Any]
-    origin: str
-    root: Path
-    catalog_role: str
-    warnings: list[str]
-    pack_id: str = ""
-    active: bool = True
-    available: bool = True
-    production_ready: bool = False
 
 
 def safe_id(value: str, default: str = "project") -> str:
@@ -12446,17 +12456,25 @@ def validate_process_against_project_mode(process_data: dict[str, Any], project_
     return [check("PASS", f"process coordination requirements match effective {effective_mode} mode")]
 
 
+def _process_catalog_context(
+    project_root: Path,
+    *,
+    workplace_manifest: Path | None = None,
+) -> ProcessCatalogContext:
+    resolved_project_root = project_root.expanduser().resolve()
+    effective_workplace_manifest = workplace_manifest
+    if effective_workplace_manifest is None:
+        effective_workplace_manifest = resolve_project_workplace_manifest(resolved_project_root)
+    return ProcessCatalogContext(
+        project_root=resolved_project_root,
+        flow_root=locate_flow_root(resolved_project_root),
+        distribution_root=ROOT.resolve(),
+        active_official_pack_ids=frozenset(active_process_pack_ids(effective_workplace_manifest)),
+    )
+
+
 def process_catalog_role(process: dict[str, Any]) -> str:
-    catalog = process.get("catalog") if isinstance(process.get("catalog"), dict) else {}
-    role = str(catalog.get("role") or "").strip()
-    if role:
-        return safe_id(role, "canonical")
-    meta = process_catalog_metadata(process)
-    if meta["classification"] == "INTERNAL_MAINTENANCE":
-        return "internal"
-    if meta["classification"] == "DEPRECATED":
-        return "legacy_alias"
-    return "canonical"
+    return catalog_process_catalog_role(process)
 
 
 def process_override_declared(process: dict[str, Any], overridden_process_id: str) -> bool:
@@ -12551,76 +12569,19 @@ def official_process_definition_refs(
     include_available: bool = False,
     workplace_manifest: Path | None = None,
 ) -> list[ProcessDefinitionRef]:
-    if workplace_manifest is None:
-        workplace_manifest = resolve_project_workplace_manifest(project_root)
-    active_ids = active_process_pack_ids(workplace_manifest)
-    entries: list[ProcessDefinitionRef] = []
-    for manifest_path, manifest in official_pack_manifest_records():
-        pack_id = str(manifest.get("id") or "")
-        active = pack_id in active_ids
-        if not active and not include_available:
-            continue
-        process_root = manifest_path.parent / "processes"
-        provided = manifest.get("provides") if isinstance(manifest.get("provides"), dict) else {}
-        declared = {str(item) for item in as_list(provided.get("processes")) if str(item)}
-        for path in sorted(process_root.glob("*.yaml")):
-            data = load_yaml_document(path)
-            if yaml_error(data) or not isinstance(data, dict):
-                continue
-            process_id = str(data.get("id") or path.stem)
-            if declared and process_id not in declared:
-                continue
-            entries.append(
-                ProcessDefinitionRef(
-                    process_id=process_id,
-                    path=path,
-                    process=data,
-                    origin="official",
-                    root=manifest_path.parent,
-                    catalog_role=process_catalog_role(data),
-                    warnings=[],
-                    pack_id=pack_id,
-                    active=active,
-                    available=True,
-                    production_ready=bool(manifest.get("production_ready")),
-                )
-            )
-    return entries
+    context = _process_catalog_context(project_root, workplace_manifest=workplace_manifest)
+    return catalog_official_process_definition_refs(
+        context,
+        include_available=include_available,
+    )
 
 
 def process_root_candidates(project_root: Path) -> list[tuple[Path, str, bool]]:
-    flow_root = locate_flow_root(project_root)
-    candidates = [
-        (flow_root / "processes" / "user", "user", False),
-        (flow_root / "processes" / "custom", "custom", False),
-        (project_root / "processes" / "user", "user", False),
-        (project_root / "processes" / "custom", "custom", False),
-        (ROOT / "processes" / "user", "user", False),
-        (ROOT / "processes" / "custom", "custom", False),
-        (project_root / "processes" / "core", "core", False),
-        (ROOT / "processes" / "core", "core", False),
-        (flow_root / "processes", "legacy_flat", True),
-        (project_root / "processes", "legacy_flat", True),
-        (ROOT / "processes", "legacy_flat", True),
-    ]
-    seen: set[Path] = set()
-    unique: list[tuple[Path, str, bool]] = []
-    for path, origin, legacy in candidates:
-        resolved = path.resolve()
-        key = resolved
-        if key in seen:
-            continue
-        seen.add(key)
-        unique.append((path, origin, legacy))
-    return unique
+    return catalog_process_root_candidates(_process_catalog_context(project_root))
 
 
 def process_root_yaml_files(root: Path, *, legacy_flat: bool) -> list[Path]:
-    if not root.is_dir():
-        return []
-    if legacy_flat:
-        return sorted([*root.glob("*.yaml"), *root.glob("*.yml")])
-    return sorted([path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in {".yaml", ".yml"}])
+    return catalog_process_root_yaml_files(root, legacy_flat=legacy_flat)
 
 
 def process_catalog_entries(
@@ -12630,64 +12591,12 @@ def process_catalog_entries(
     include_available_official: bool = False,
     workplace_manifest: Path | None = None,
 ) -> list[ProcessDefinitionRef]:
-    selected: dict[str, ProcessDefinitionRef] = {}
-    order: list[str] = []
-    duplicate_messages: dict[str, list[str]] = {}
-
-    def register(entry: ProcessDefinitionRef) -> None:
-        process_id = entry.process_id
-        if process_id not in selected:
-            selected[process_id] = entry
-            order.append(process_id)
-            return
-        current = selected[process_id]
-        message = (
-            f"duplicate process_id {process_id}: {rel(current.path, project_root)} "
-            f"wins over {rel(entry.path, project_root)}"
-        )
-        if (
-            current.origin in {"user", "custom"}
-            and entry.origin in {"core", "official"}
-            and not process_override_declared(current.process, process_id)
-        ):
-            message += f"; user/custom override of {entry.origin} process requires process_override.reason"
-        duplicate_messages.setdefault(process_id, []).append(message)
-        if strict:
-            current.warnings.append("STRICT: " + message)
-
-    official_added = False
-    for root, origin, legacy_flat in process_root_candidates(project_root):
-        if origin == "core" and not official_added:
-            for official_entry in official_process_definition_refs(
-                project_root,
-                include_available=include_available_official,
-                workplace_manifest=workplace_manifest,
-            ):
-                register(official_entry)
-            official_added = True
-        for path in process_root_yaml_files(root, legacy_flat=legacy_flat):
-            data = load_yaml_document(path)
-            if yaml_error(data) or not isinstance(data, dict):
-                continue
-            process_id = str(data.get("id") or path.stem)
-            warnings: list[str] = []
-            if legacy_flat:
-                warnings.append(
-                    f"Legacy flat process path detected: {rel(path, project_root)}. Move built-ins to processes/core/ and user processes to processes/user/."
-                )
-            entry = ProcessDefinitionRef(
-                process_id=process_id,
-                path=path,
-                process=data,
-                origin=origin,
-                root=root,
-                catalog_role=process_catalog_role(data),
-                warnings=warnings,
-            )
-            register(entry)
-    for process_id, messages in duplicate_messages.items():
-        selected[process_id].warnings.extend(messages)
-    return [selected[process_id] for process_id in order]
+    context = _process_catalog_context(project_root, workplace_manifest=workplace_manifest)
+    return catalog_process_catalog_entries(
+        context,
+        strict=strict,
+        include_available_official=include_available_official,
+    )
 
 
 def resolve_process_definition(
@@ -12697,82 +12606,20 @@ def resolve_process_definition(
     include_available_official: bool = False,
     workplace_manifest: Path | None = None,
 ) -> ProcessDefinitionRef:
-    candidate = Path(process_or_path)
-    if candidate.suffix in {".yaml", ".yml"}:
-        path = candidate if candidate.is_absolute() else project_root / candidate
-        if path.is_file():
-            for official_entry in official_process_definition_refs(
-                project_root,
-                include_available=True,
-                workplace_manifest=workplace_manifest,
-            ):
-                if official_entry.path.resolve() == path.resolve():
-                    return official_entry
-            data = read_yaml_file(path)
-            process_id = str(data.get("id") or path.stem) if isinstance(data, dict) else path.stem
-            origin = "legacy_flat"
-            root = path.parent
-            parts = path.parts
-            if "processes" in parts:
-                try:
-                    index = parts.index("processes")
-                    if len(parts) > index + 1 and parts[index + 1] in {"core", "user", "custom"}:
-                        origin = parts[index + 1]
-                        root = Path(*parts[: index + 2])
-                except ValueError:
-                    pass
-            return ProcessDefinitionRef(process_id, path, data, origin, root, process_catalog_role(data) if isinstance(data, dict) else "canonical", [])
-    process_id = safe_id(process_or_path, "process")
-    for entry in process_catalog_entries(
-        project_root,
+    context = _process_catalog_context(project_root, workplace_manifest=workplace_manifest)
+    return catalog_resolve_process_definition(
+        context,
+        process_or_path,
         include_available_official=include_available_official,
-        workplace_manifest=workplace_manifest,
-    ):
-        if entry.process_id == process_id:
-            return entry
-    for entry in official_process_definition_refs(
-        project_root,
-        include_available=True,
-        workplace_manifest=workplace_manifest,
-    ):
-        if entry.process_id == process_id and not entry.active:
-            raise SystemExit(
-                f"FAIL: process {process_id} is available in official pack {entry.pack_id} "
-                "but is not active in this workplace.\n"
-                "Fix: run "
-                f"python bin/pf.py pack-activate --id {entry.pack_id} --workplace <path> --apply"
-            )
-    raise SystemExit(f"FAIL: process not found: {process_id}")
+    )
 
 
 def require_official_process_active(project_root: Path, process_id: str) -> None:
-    normalized = safe_id(process_id, "process")
-    effective = next(
-        (
-            entry
-            for entry in process_catalog_entries(
-                project_root,
-                include_available_official=True,
-            )
-            if entry.process_id == normalized
-        ),
-        None,
-    )
-    if effective is not None and effective.origin == "official" and not effective.active:
-        raise SystemExit(
-            f"FAIL: process {normalized} is available in official pack {effective.pack_id} "
-            "but is not active in this workplace.\n"
-            "Fix: run "
-            f"python bin/pf.py pack-activate --id {effective.pack_id} --workplace <path> --apply"
-        )
+    catalog_require_official_process_active(_process_catalog_context(project_root), process_id)
 
 
 def process_definition_exists(project_root: Path, process_id: str) -> bool:
-    try:
-        resolve_process_definition(project_root, process_id)
-        return True
-    except SystemExit:
-        return False
+    return catalog_process_definition_exists(_process_catalog_context(project_root), process_id)
 
 
 def active_run_ids(project_root: Path) -> list[str]:
@@ -14190,32 +14037,11 @@ def validate_process_definition_files(
     return checks
 
 
-PROCESS_CATALOG_CLASSIFICATIONS = {
-    "PUBLIC_STABLE",
-    "PUBLIC_EXPERIMENTAL",
-    "INTERNAL_MAINTENANCE",
-    "EXAMPLE_ONLY",
-    "DEPRECATED",
-}
+PROCESS_CATALOG_CLASSIFICATIONS = CATALOG_PROCESS_CATALOG_CLASSIFICATIONS
 
 
 def process_catalog_metadata(process: dict[str, Any]) -> dict[str, Any]:
-    catalog = process.get("catalog") if isinstance(process.get("catalog"), dict) else {}
-    status = str(process.get("status") or "draft")
-    classification = str(catalog.get("classification") or "").upper()
-    if classification not in PROCESS_CATALOG_CLASSIFICATIONS:
-        if status == "active":
-            classification = "PUBLIC_STABLE"
-        elif status == "experimental":
-            classification = "PUBLIC_EXPERIMENTAL"
-        elif status == "internal":
-            classification = "INTERNAL_MAINTENANCE"
-        elif status == "deprecated":
-            classification = "DEPRECATED"
-        else:
-            classification = "PUBLIC_EXPERIMENTAL"
-    public_surface = catalog.get("public_surface", process.get("public_surface", classification != "INTERNAL_MAINTENANCE"))
-    return {"classification": classification, "public_surface": bool(public_surface), "status": status}
+    return catalog_process_catalog_metadata(process)
 
 
 def process_is_public_stable(process: dict[str, Any]) -> bool:

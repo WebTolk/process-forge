@@ -1,0 +1,80 @@
+schema_version: 1
+id: python-core-phase-c-catalog-api-patch-correction
+title: Phase C catalog patch import-path correction
+run_id: python-core-refactor-phase-c-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T14:26:10Z'
+updated_at: '2026-08-14T14:34:28Z'
+objective: 'Correct the rejected catalog API patch design. Verified blocker: importing processforge_core from the project root raises ModuleNotFoundError, so direct CLI launch would fail after adding package imports. Produce a revised complete unified diff that preserves the accepted Phase C boundary and makes direct CLI launch safely import src/processforge_core without circular bootstrap or module-identity regressions. Explain the import-path mechanism and focused verification commands. Do not alter product files; write the corrective report only.'
+platform: ""
+selected_specializations:
+  []
+order: 5
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-patch-correction.md
+stage: task-planning
+execution_mode:
+  kind: docs_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-patch-design.md
+    role: input
+    required: true
+    mutable_by_worker: false
+  -
+    path: .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-review.md
+    role: input
+    required: true
+    mutable_by_worker: false
+allowed_files:
+  - .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-patch-correction.md
+allowed_read_files:
+  - .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-patch-design.md
+  - .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-review.md
+  - src/processforge_core/bootstrap.py
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+ownership:
+  owner_id: shell-worker-gpt54
+  owner_label: worker-shell-worker-gpt54
+  role: corrective-patch-designer
+  writer: true
+  owned_files:
+    - .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-patch-correction.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-patch-correction.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: catalog-api-patch-correction
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-patch-correction.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-patch-correction.md
+  format: concise_markdown
+  include:
+    - catalog-api-patch-correction
+agent_model: gpt-5.4

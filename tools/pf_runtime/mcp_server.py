@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 import argparse
-import importlib
+import importlib.util
 import json
 import os
 import sys
 from pathlib import Path
 from typing import Any
 
-TOOLS_ROOT = str(Path(__file__).resolve().parents[1])
-if TOOLS_ROOT not in sys.path:
-    sys.path.insert(0, TOOLS_ROOT)
-
+_RUNTIME_BOOTSTRAP: Any | None = None
 
 TOOLS = {
     "pf.project_state": "Read the current routed ProcessForge project state.",
@@ -23,13 +20,27 @@ TOOLS = {
 }
 
 
-def core_module() -> Any:
-    return importlib.import_module("processforge")
+def runtime_bootstrap() -> Any:
+    global _RUNTIME_BOOTSTRAP
+    if _RUNTIME_BOOTSTRAP is None:
+        repo_root = Path(__file__).resolve().parents[2]
+        module_name = "processforge_core.bootstrap"
+        module = sys.modules.get(module_name)
+        if module is None:
+            bootstrap_path = repo_root / "src" / "processforge_core" / "bootstrap.py"
+            spec = importlib.util.spec_from_file_location(module_name, bootstrap_path)
+            if spec is None or spec.loader is None:
+                raise ImportError(f"could not load bootstrap module: {bootstrap_path}")
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
+        _RUNTIME_BOOTSTRAP = module.bootstrap_runtime(__file__)
+    return _RUNTIME_BOOTSTRAP
 
 
-def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_id: str, core: Any) -> dict[str, Any]:
-    from pf_runtime import host
-
+def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any]:
+    host = runtime.host
+    core = runtime.core
     supplied_session = str(arguments.get("session_id") or session_id or "")
     if not supplied_session:
         raise ValueError("PF_MCP_SESSION_ID or session_id is required")
@@ -52,7 +63,8 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
     raise ValueError(f"unknown tool: {name}")
 
 
-def respond(request: dict[str, Any], workplace: Path, session_id: str, core: Any) -> dict[str, Any] | None:
+def respond(request: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
+    core = runtime.core
     method = str(request.get("method") or "")
     request_id = request.get("id")
     if method == "notifications/initialized":
@@ -65,7 +77,7 @@ def respond(request: dict[str, Any], workplace: Path, session_id: str, core: Any
     if method == "tools/call":
         params = request.get("params") if isinstance(request.get("params"), dict) else {}
         try:
-            result = tool_result(str(params.get("name") or ""), params.get("arguments") if isinstance(params.get("arguments"), dict) else {}, workplace, session_id, core)
+            result = tool_result(str(params.get("name") or ""), params.get("arguments") if isinstance(params.get("arguments"), dict) else {}, workplace, session_id, runtime)
             return {"jsonrpc": "2.0", "id": request_id, "result": {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False, sort_keys=True)}]}}
         except Exception as exc:
             return {"jsonrpc": "2.0", "id": request_id, "result": {"content": [{"type": "text", "text": str(exc)}], "isError": True}}
@@ -77,13 +89,14 @@ def main() -> int:
     parser.add_argument("--workplace", required=True)
     parser.add_argument("--session", default=os.environ.get("PF_MCP_SESSION_ID", ""))
     args = parser.parse_args()
-    core = core_module()
+    runtime = runtime_bootstrap()
+    core = runtime.core
     workplace = core.resolve_workplace_root(args.workplace)
     for line in sys.stdin:
         if not line.strip():
             continue
         try:
-            response = respond(json.loads(line), workplace, args.session, core)
+            response = respond(json.loads(line), workplace, args.session, runtime)
             if response is not None:
                 print(json.dumps(response, ensure_ascii=False), flush=True)
         except Exception as exc:

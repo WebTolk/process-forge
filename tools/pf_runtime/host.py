@@ -102,7 +102,8 @@ def execution_stage(task: dict[str, Any], run_state: dict[str, Any], process: di
 
 def resolved_process(project_root: Path, process_id: str, core: Any) -> dict[str, Any] | None:
     """Resolve a process once, then invalidate only when its declaration changes."""
-    key = (str(project_root.resolve()), process_id)
+    resolved_project_root = project_root.resolve()
+    key = (str(resolved_project_root), process_id)
     cached = PROCESS_DEFINITION_CACHE.get(key)
     if cached is not None:
         path, modified_ns, process = cached
@@ -112,7 +113,19 @@ def resolved_process(project_root: Path, process_id: str, core: Any) -> dict[str
         except OSError:
             pass
     try:
-        definition = core.resolve_process_definition(project_root, process_id)
+        from processforge_core.process_catalog import (
+            ProcessCatalogContext,
+            resolve_process_definition as resolve_process_definition_core,
+        )
+
+        workplace_manifest = core.resolve_project_workplace_manifest(resolved_project_root)
+        context = ProcessCatalogContext(
+            project_root=resolved_project_root,
+            flow_root=core.locate_flow_root(resolved_project_root),
+            distribution_root=core.ROOT.resolve(),
+            active_official_pack_ids=frozenset(core.active_process_pack_ids(workplace_manifest)),
+        )
+        definition = resolve_process_definition_core(context, process_id)
     except SystemExit:
         return None
     try:

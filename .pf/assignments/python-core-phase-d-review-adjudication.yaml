@@ -1,0 +1,82 @@
+schema_version: 1
+id: python-core-phase-d-review-adjudication
+title: Phase D review scope adjudication
+run_id: python-core-refactor-phase-d-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T15:12:35Z'
+updated_at: '2026-08-14T15:15:20Z'
+objective: Adjudicate the apparent FAIL in the Phase D code review against the approved Phase D design/review scope. Determine whether the remaining process_catalog_core private-helper bridge in tools/processforge.py is a regression introduced by Phase D or pre-existing Phase C adapter debt outside the classification/metadata change. Verify the actual Phase D diff and affected consumers. Return concise Russian disposition and, if accepted, precise residual-risk wording. Do not edit product files.
+platform: ""
+selected_specializations:
+  []
+order: 7
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-d-20260814/review-adjudication.md
+stage: run-review
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/artifacts/python-core-refactor-phase-d-20260814/classification-code-review.md
+    role: input
+    required: true
+    mutable_by_worker: false
+  -
+    path: .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-code-review.md
+    role: input
+    required: true
+    mutable_by_worker: false
+allowed_files:
+  - .pf/artifacts/python-core-refactor-phase-d-20260814/review-adjudication.md
+allowed_read_files:
+  - .pf/artifacts/python-core-refactor-phase-d-20260814/classification-design.md
+  - .pf/artifacts/python-core-refactor-phase-d-20260814/classification-design-review.md
+  - .pf/artifacts/python-core-refactor-phase-d-20260814/classification-code-review.md
+  - .pf/artifacts/python-core-refactor-phase-c-20260814/catalog-api-code-review.md
+  - tools/processforge.py
+  - src/processforge_core/process_catalog/__init__.py
+  - src/processforge_core/process_catalog/service.py
+ownership:
+  owner_id: shell-worker-gpt54
+  owner_label: worker-shell-worker-gpt54
+  role: review-adjudicator
+  writer: true
+  owned_files:
+    - .pf/artifacts/python-core-refactor-phase-d-20260814/review-adjudication.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/python-core-refactor-phase-d-20260814/review-adjudication.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: review-adjudication
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-d-20260814/review-adjudication.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-d-20260814/review-adjudication.md
+  format: concise_markdown
+  include:
+    - review-adjudication
+agent_model: gpt-5.4
