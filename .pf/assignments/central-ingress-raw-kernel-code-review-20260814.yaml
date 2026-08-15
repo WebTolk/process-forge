@@ -1,0 +1,66 @@
+schema_version: 1
+id: central-ingress-raw-kernel-code-review-20260814
+title: Review implemented raw ingress kernel
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T18:11:57Z'
+updated_at: '2026-08-14T18:16:53Z'
+objective: Read-only code review of tools/pf_runtime/raw_ingress_kernel.py against the idempotency/replay contract. Create .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-code-review.md. Check canonicalization correctness, path containment, lock and atomic-write safety, native-identity conflict handling, duplicate semantics, recovery limitations, private-data boundary, API defects, and whether the minimal kernel can safely precede host/service wiring. Independently run only safe syntax/unit-style temporary checks if needed. Return pass/conditional/fail and concrete fixes; do not modify source.
+platform: ""
+selected_specializations:
+  []
+order: 23
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Review accepted as a failing quality gate. All seven findings were routed to the corrective patch; it is not evidence of acceptance for host/service wiring.
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-code-review.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-code-review.md
+allowed_read_files:
+  - tools/pf_runtime/raw_ingress_kernel.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-contract.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+ownership:
+  owner_id: shell-gpt54
+  owner_label: worker-shell-gpt54
+  role: raw-kernel-code-reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-code-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-code-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: raw-kernel-code-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-code-review.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-code-review.md
+  format: concise_markdown
+  include:
+    - raw-kernel-code-review
+agent_model: gpt-5.4

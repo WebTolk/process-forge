@@ -1,0 +1,76 @@
+schema_version: 1
+id: central-ingress-test-inventory-quality-20260814
+title: Correct runtime event test inventory against executable paths
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T17:03:45Z'
+updated_at: '2026-08-14T17:09:06Z'
+objective: 'Read-only quality correction: replace only .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory.md. Verify every claimed test and each claimed Codex event mapping against exact code. Separate direct observed test coverage from indirect coverage and untested gaps. In particular do not claim Codex event support beyond what tools/pf_runtime/codex_hooks.py actually dispatches. Include exact files/functions and runnable command names, but do not modify sources or execute destructive tests.'
+platform: ""
+selected_specializations:
+  []
+order: 11
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Administrative closure: launch was blocked by overlapping completed assignment scope; no worker output was accepted. Independent review task central-ingress-test-inventory-review-20260814 supplied the required correction.'
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory-review.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory.md
+allowed_read_files:
+  - tools
+  - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory.md
+ownership:
+  owner_id: shell-gpt54
+  owner_label: worker-shell-gpt54
+  role: test-inventory-quality-auditor
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory.md
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: central-ingress-test-inventory-quality-20260814
+        current_scope: .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory.md
+        other_assignment: central-ingress-test-inventory-20260814
+        other_scope: .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory.md
+        reason: same_file
+required_outputs:
+  -
+    id: current-event-test-inventory
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory.md
+  format: concise_markdown
+  include:
+    - current-event-test-inventory
+agent_model: gpt-5.4

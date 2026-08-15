@@ -1,0 +1,74 @@
+schema_version: 1
+id: central-ingress-characterization-review-20260814
+title: Independently review ingress characterization and validation plan
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T17:37:56Z'
+updated_at: '2026-08-14T17:43:15Z'
+objective: 'Planning-only independent review: create .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-review.md. Verify that the characterization plan covers actual current behavior and every first-slice acceptance requirement: raw-first ordering, all currently mapped Codex semantics, unknown raw capture, native-identity conflict index, deterministic derived ids, Runtime/fallback equivalence, cross-project/mismatch behavior, crash and replay, interprocess concurrency, chat/manual compatibility, auth/security, and release/privacy. Identify missing tests, wrong baseline assertions, or blockers before implementation. No code changes.'
+platform: ""
+selected_specializations:
+  []
+order: 17
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Conditional review accepted. Implementation task must include the five mandatory gates: unknown SessionStart source baseline, pre/post expectation split, native-identity conflict index, raw fidelity semantics, and archive inspection with private fixtures.'
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-review.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-review.md
+allowed_read_files:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-plan.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory-review.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-contract.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-v2.md
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/processforge.py
+ownership:
+  owner_id: shell-gpt55-review
+  owner_label: worker-shell-gpt55-review
+  role: characterization-reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: characterization-and-validation-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-review.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-review.md
+  format: concise_markdown
+  include:
+    - characterization-and-validation-review
+agent_model: gpt-5.5

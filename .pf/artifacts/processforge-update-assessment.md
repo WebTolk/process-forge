@@ -2,13 +2,13 @@
 
 ## Status
 
-requires_approval
+safe
 
 ## Project
 
 - root: process-forge
-- current_version: 0.1.0
-- available_version: 1.0.0
+- current_version: 1.0.2
+- available_version: 1.0.2
 - channel: stable
 
 ## Breaking Changes
@@ -18,19 +18,22 @@ requires_approval
 ## Required Migrations
 
 - required: False
-- guide: updates/migrations/1.0.0-stable-release.md
+- guide: updates/migrations/1.0.2-update-server-contract.md
 
 ## Changes
 
-- release: Stable ProcessForge 1.0.0 distribution with platform-agnostic core docs, resource authoring, update checks, release packaging, and project onboarding validation.
-- documentation: Human docs now start from workplace/device abstractions; agent docs reflect implemented CLI commands.
+- updates: Update servers now use a simple manifest and changelog URL contract, including local file manifests for offline or staged installations.
+- documentation: Documentation now reflects the current runtime driver launch flow and the simplified update model.
+- validation: Schemas and smokes now validate providerless update sites and reject the unsupported legacy url field.
 
 ## Affected Files
 
-- .pf/process-forge.yaml
-- .pf/hooks.yaml
-- .pf/contexts/project-context.snapshot.yaml
-- .pf/runtime/bin/pf.py
+- tools/processforge.py
+- schemas/update-site.schema.json
+- schemas/entity-update-sites.schema.json
+- schemas/update-source-registry.schema.json
+- docs/concepts/update-sites.md
+- docs/ru/concepts/update-sites.md
 
 ## Required Manual Review
 

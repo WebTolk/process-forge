@@ -1,0 +1,72 @@
+schema_version: 1
+id: central-ingress-assistant-response-capture-design-20260815
+title: Design durable assistant response capture
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: open
+created_at: '2026-08-15T05:16:21Z'
+updated_at: '2026-08-15T05:16:51Z'
+objective: Planning only. Revise the proposed chat-capture direction so durable records contain both user prompts and actual assistant answers where technically available. Establish exact provider evidence for Codex hooks versus PF-owned Codex worker stream/output; never infer an assistant answer from lifecycle metadata. Propose the smallest provider-neutral raw-first boundary, content/identity/privacy/access/retry semantics, and a phased delivery plan. Clearly mark any unavailable generic Codex response capture as unsupported rather than fabricating it. Do not edit source.
+platform: ""
+selected_specializations:
+  []
+order: 38
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/assistant-response-capture-design.md
+allowed_read_files:
+  - tools/pf_runtime/codex_hooks.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/raw_ingress_kernel.py
+  - tools/codex_exec_worker.py
+  - tools/processforge.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/chat-capture-slice-design.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/chat-capture-readiness-audit.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/agent-event-capabilities-matrix.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/provider-official-contracts-audit.md
+ownership:
+  owner_id: shell-gpt55
+  owner_label: worker-shell-gpt55
+  role: assistant-response-capture-architect
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/assistant-response-capture-design.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/assistant-response-capture-design.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: assistant-response-capture-design
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/assistant-response-capture-design.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/assistant-response-capture-design.md
+  format: concise_markdown
+  include:
+    - assistant-response-capture-design
+agent_model: gpt-5.5

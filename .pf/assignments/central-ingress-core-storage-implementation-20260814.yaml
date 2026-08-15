@@ -1,0 +1,76 @@
+schema_version: 1
+id: central-ingress-core-storage-implementation-20260814
+title: Implement raw ingress storage and idempotency core
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: open
+created_at: '2026-08-14T17:48:38Z'
+updated_at: '2026-08-14T17:48:42Z'
+objective: Implement the first, isolated code portion only. Add tools/pf_runtime/central_event_ingress_core.py and tools/smoke_central_event_ingress_core.py. The Core module must expose provider-neutral raw-envelope validation plus deterministic canonical JSON/raw identity; file-first workplace raw shard append protected across processes; bounded raw-id index and a separate stable-native-identity conflict index excluding payload hash; duplicate receipt semantics; conflict quarantine; derived-key helpers; atomic JSON index/checkpoint write helper; and raw-only replay planning/missing derived bookkeeping. Do not wire Runtime, host, Codex adapter, or chat yet. Tests must prove canonical identity stability, duplicate no-second-line behavior, native-id payload conflict, interprocess-safe shard integrity at a bounded scale, atomic state write, and path containment/private storage. Follow the accepted idempotency contract and keep private data out of reports.
+platform: ""
+selected_specializations:
+  []
+order: 19
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+allowed_files:
+  - tools/pf_runtime/central_event_ingress_core.py
+  - tools/smoke_central_event_ingress_core.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/core-storage-implementation-report.md
+allowed_read_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-contract.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout-v2.md
+  - tools/pf_runtime/host.py
+  - tools/processforge.py
+ownership:
+  owner_id: shell-gpt54
+  owner_label: worker-shell-gpt54
+  role: raw-ingress-core-implementer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/central_event_ingress_core.py
+    - tools/smoke_central_event_ingress_core.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/core-storage-implementation-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/pf_runtime/central_event_ingress_core.py
+    - tools/smoke_central_event_ingress_core.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/core-storage-implementation-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: core-storage-implementation-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/core-storage-implementation-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/core-storage-implementation-report.md
+  format: concise_markdown
+  include:
+    - core-storage-implementation-report
+agent_model: gpt-5.4

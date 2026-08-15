@@ -6586,6 +6586,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_worker_run_shell", [sys.executable, str(root / "tools" / "smoke_worker_run_shell.py")], 180),
         ReleaseCommand("smoke_worker_workspace_access", [sys.executable, str(root / "tools" / "smoke_worker_workspace_access.py")], 180),
         ReleaseCommand("smoke_codex_exec_worker", [sys.executable, str(root / "tools" / "smoke_codex_exec_worker.py")], 180),
+        ReleaseCommand("smoke_central_event_replay", [sys.executable, str(root / "tools" / "smoke_central_event_replay.py")], 180),
         ReleaseCommand("smoke_process_supervisor_tick", [sys.executable, str(root / "tools" / "smoke_process_supervisor_tick.py")], 180),
         ReleaseCommand("smoke_director_inspector_boundary", [sys.executable, str(root / "tools" / "smoke_director_inspector_boundary.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),

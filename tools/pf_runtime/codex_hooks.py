@@ -70,15 +70,40 @@ def normalized_event(payload: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
+    """Build a raw Codex envelope; mapping stays in this thin adapter."""
+
+    cwd = str(payload.get("cwd") or "")
+    hook = str(payload.get("hook_event_name") or "Unknown")
+    if not cwd:
+        return None
+    return {
+        "provider": "codex",
+        "adapter": "codex-hooks",
+        "native_event_type": hook,
+        # Codex hook input has no documented stable delivery identifier.
+        "native_event_id": None,
+        "native_id_scope": "session",
+        "native_event_id_stable": False,
+        "source_session_id": str(payload.get("session_id") or "") or None,
+        "source_project_ref": cwd,
+        "payload_version": "codex-hooks.v1",
+        "raw_payload": dict(payload),
+        # Existing normalization is deliberately attached rather than moved
+        # into Host/Core, so other providers need no core changes.
+        "derived_event": normalized_event(payload),
+    }
+
+
 def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
-    event = normalized_event(payload)
-    if not event:
+    envelope = native_envelope(payload)
+    if not envelope:
         return {"status": "ignored"}
     runtime = runtime_bootstrap()
     core = runtime.core
     host = runtime.host
     service = runtime.service
-    project_root = Path(str(event["project_root"])).expanduser()
+    project_root = Path(str(envelope["source_project_ref"])).expanduser()
     try:
         core.require_flow_root(project_root)
     except SystemExit:
@@ -95,7 +120,7 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
                 argparse.Namespace(workplace=str(workplace_root), json=True),
                 core,
                 "/event",
-                event,
+                envelope,
             )
         if exit_code == 0:
             return {"status": "delivered", "transport": "runtime"}
@@ -103,7 +128,7 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
         pass
 
     with contextlib.redirect_stdout(io.StringIO()):
-        result = host.ingest_event(event, None, core)
+        result = host.ingest_event(envelope, None, core)
     return {"status": "delivered", "transport": "ledger-fallback", **result}
 
 

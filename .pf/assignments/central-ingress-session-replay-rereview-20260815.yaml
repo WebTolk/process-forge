@@ -1,0 +1,67 @@
+schema_version: 1
+id: central-ingress-session-replay-rereview-20260815
+title: Re-review corrected session replay evidence
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-15T04:40:28Z'
+updated_at: '2026-08-15T04:50:33Z'
+objective: 'Read only: verify that the replay smoke correction resolves every FAIL finding in session-replay-code-review.md. Inspect exact changed smoke evidence plus session_replay.py. Return PASS only if .pf/tmp cleanup, malformed raw checkpoint stop, failed repair checkpoint stop, and prior scope/security findings are proven. Do not change source.'
+platform: ""
+selected_specializations:
+  []
+order: 34
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/session-replay-rereview.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/session-replay-rereview.md
+allowed_read_files:
+  - tools/pf_runtime/session_replay.py
+  - tools/smoke_central_event_replay.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/session-replay-code-review.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/session-replay-smoke-correction-report.md
+ownership:
+  owner_id: shell-gpt54
+  owner_label: worker-shell-gpt54
+  role: session-replay-rereviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/session-replay-rereview.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/session-replay-rereview.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: session-replay-rereview
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/session-replay-rereview.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/session-replay-rereview.md
+  format: concise_markdown
+  include:
+    - session-replay-rereview
+agent_model: gpt-5.4

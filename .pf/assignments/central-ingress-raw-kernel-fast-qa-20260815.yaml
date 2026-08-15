@@ -1,0 +1,64 @@
+schema_version: 1
+id: central-ingress-raw-kernel-fast-qa-20260815
+title: Fast independent QA of corrected raw ingress kernel
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: open
+created_at: '2026-08-15T03:21:42Z'
+updated_at: '2026-08-15T03:21:47Z'
+objective: 'Read-only bounded QA. Create .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-fast-qa.md. Inspect only tools/pf_runtime/raw_ingress_kernel.py. Run safe temporary checks for: non-string keys rejected; payload-size reject before receipt; duplicate receipt; native-id payload conflict in poisoned bucket; removed-index recovery; collision bucket selection; path containment; and py_compile. Report each pass/fail with exact evidence. Do not do broad repository search and do not modify source.'
+platform: ""
+selected_specializations:
+  []
+order: 25
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-fast-qa.md
+allowed_read_files:
+  - tools/pf_runtime/raw_ingress_kernel.py
+ownership:
+  owner_id: shell-spark
+  owner_label: worker-shell-spark
+  role: raw-kernel-fast-qa
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-fast-qa.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-fast-qa.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: raw-kernel-fast-qa
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-fast-qa.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-fast-qa.md
+  format: concise_markdown
+  include:
+    - raw-kernel-fast-qa
+agent_model: gpt-5.3-codex-spark

@@ -1,0 +1,67 @@
+schema_version: 1
+id: central-ingress-raw-kernel-implementation-20260814
+title: Implement isolated raw ingress identity and storage kernel
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: open
+created_at: '2026-08-14T17:51:38Z'
+updated_at: '2026-08-14T17:51:42Z'
+objective: 'Implement exactly one new pure-stdlib module tools/pf_runtime/raw_ingress_kernel.py. Do not search or modify any other source file. Implement only: canonical_json with NFC/sorted keys; validate_native_envelope mapping; deterministic raw_event_id and native_identity_key (the latter excludes payload hash); shard path containment; append_raw with interprocess-safe lock, complete NDJSON append and atomic indexes; duplicate vs poisoned native-id detection; atomic_write_json; deterministic derived_key helper. Public API must be documented in module docstrings. Do not integrate host/service/Codex, do not create tests, do not read tools/processforge.py. Return a report noting exact public functions and one simple syntax check.'
+platform: ""
+selected_specializations:
+  []
+order: 20
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/pf_runtime/raw_ingress_kernel.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-implementation-report.md
+allowed_read_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-contract.md
+ownership:
+  owner_id: shell-gpt54
+  owner_label: worker-shell-gpt54
+  role: raw-kernel-implementer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/raw_ingress_kernel.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-implementation-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/pf_runtime/raw_ingress_kernel.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-implementation-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: raw-kernel-implementation-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-implementation-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-implementation-report.md
+  format: concise_markdown
+  include:
+    - raw-kernel-implementation-report
+agent_model: gpt-5.4

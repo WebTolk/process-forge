@@ -1,0 +1,68 @@
+schema_version: 1
+id: central-ingress-session-replay-release-registration-20260815
+title: Register session replay smoke in release test
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-15T04:54:42Z'
+updated_at: '2026-08-15T04:57:26Z'
+objective: 'Make the smallest scoped change: register tools/smoke_central_event_replay.py as a ReleaseCommand in tools/processforge.py release_test_commands, following neighboring smoke command style. Do not change replay logic, other release behavior, or public CLI. Run the single registered release-test selection and write a concise report.'
+platform: ""
+selected_specializations:
+  []
+order: 36
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Spark worker added the one-command release registration; orchestrator independently accepted the exact diff, py_compile, selected release-test, and diff check.
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/session-replay-release-registration-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/session-replay-release-registration-report.md
+allowed_read_files:
+  - tools/smoke_central_event_replay.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/session-replay-test-convention-audit.md
+ownership:
+  owner_id: shell-spark
+  owner_label: worker-shell-spark
+  role: session-replay-release-registration
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/session-replay-release-registration-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/session-replay-release-registration-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: session-replay-release-registration
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/session-replay-release-registration-report.md
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/session-replay-release-registration-report.md
+  format: concise_markdown
+  include:
+    - session-replay-release-registration
+agent_model: gpt-5.3-codex-spark

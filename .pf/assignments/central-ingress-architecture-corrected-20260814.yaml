@@ -1,0 +1,89 @@
+schema_version: 1
+id: central-ingress-architecture-corrected-20260814
+title: Produce evidence-bound central ingress architecture
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: open
+created_at: '2026-08-14T17:07:58Z'
+updated_at: '2026-08-14T17:08:02Z'
+objective: 'Planning-only corrective architecture task. Using the master prompt and the accepted current-state, chat, schema, provider-contract, and provider-matrix artifacts, produce exactly three repository-relative artifacts: central-event-ingress-design-v2.md, event-storage-layout-v2.md, and event-routing-policy-v2.md. Reconcile raw-first workplace storage with the actual normalization-first host.ingest_event flow, project-local event journal, Ledger ownership, Runtime fallback, chat transcript separation, and current schema constraints. Specify provider-neutral Core/API boundaries, durable bounded/sharded raw journal, envelope/versioning, idempotency and concurrency, resolve/route policy, offline/replay, security/privacy/retention, and a minimal implementation sequence preserving existing normalized SessionStart/End/PostTool semantics. No code changes. Do not use hypothetical generic APIs that contradict observed runtime paths. Include explicit decisions and open risks.'
+platform: ""
+selected_specializations:
+  []
+order: 13
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-v2.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout-v2.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-routing-policy-v2.md
+allowed_read_files:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-current-state-audit.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/chat-model-inventory.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-schema-reconciliation.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/provider-official-contracts-audit.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/agent-event-capabilities-matrix.md
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/processforge.py
+ownership:
+  owner_id: shell-gpt55
+  owner_label: worker-shell-gpt55
+  role: corrected-architecture-owner
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-v2.md
+    - .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout-v2.md
+    - .pf/artifacts/central-agent-event-ingress-20260814/event-routing-policy-v2.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-v2.md
+    - .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout-v2.md
+    - .pf/artifacts/central-agent-event-ingress-20260814/event-routing-policy-v2.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: central-event-ingress-design-v2
+    type: unspecified
+    required: true
+  -
+    id: event-storage-layout-v2
+    type: unspecified
+    required: true
+  -
+    id: event-routing-policy-v2
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-v2.md
+  format: concise_markdown
+  include:
+    - central-event-ingress-design-v2
+    - event-storage-layout-v2
+    - event-routing-policy-v2
+agent_model: gpt-5.5

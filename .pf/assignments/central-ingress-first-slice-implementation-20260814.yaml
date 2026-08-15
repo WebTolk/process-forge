@@ -1,0 +1,94 @@
+schema_version: 1
+id: central-ingress-first-slice-implementation-20260814
+title: Implement bounded central raw-first ingress first slice
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T17:43:17Z'
+updated_at: '2026-08-15T03:35:00Z'
+objective: Implement only the reviewed first slice of Central Agent Event Ingress. Add a provider-neutral Core raw ingress and workplace-level durable raw journal with shard-safe interprocess append, raw-id and native-identity conflict indexes, deterministic raw/derived IDs, duplicate/missing-only repair, and atomic index/checkpoint persistence. Route Runtime /event and Codex direct fallback through one Core path. Switch Codex adapter to submit raw native envelopes while preserving current normalized SessionStart startup/resume/compact, SessionEnd, and PostToolUse Bash/non-Bash semantics and legacy normalized event IDs. Capture unknown supported/native Codex hooks as raw-only without false normalization. Preserve manual chat UUID behavior; only add automatic chat behavior if real content and deterministic IDs are fully supported. Add focused characterization/smoke coverage for pre/post behavior, unknown SessionStart source, duplicate/runtime-fallback equivalence, native-identity payload conflict, cross-project mismatch, crash/replay, concurrency, privacy and archive exclusion. Do not migrate full work-state/projectors, add new providers, add UI, or alter public core boundaries beyond this slice. Run focused checks and report exact results.
+platform: ""
+selected_specializations:
+  []
+order: 18
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Main-contour raw-first ingress first slice implemented and self-validated; worker residue rejected.
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/first-slice-implementation-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+allowed_files:
+  - tools/pf_runtime/central_event_ingress.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/service.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/processforge.py
+  - schemas/pf-runtime-agent-event.schema.json
+  - tools/smoke_central_event_ingress.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/first-slice-implementation-report.md
+allowed_read_files:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-v2.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout-v2.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-routing-policy-v2.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-contract.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-plan.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/characterization-and-validation-review.md
+ownership:
+  owner_id: shell-gpt55
+  owner_label: worker-shell-gpt55
+  role: first-slice-implementer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/central_event_ingress.py
+    - tools/pf_runtime/host.py
+    - tools/pf_runtime/service.py
+    - tools/pf_runtime/codex_hooks.py
+    - tools/processforge.py
+    - schemas/pf-runtime-agent-event.schema.json
+    - tools/smoke_central_event_ingress.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/first-slice-implementation-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/pf_runtime/central_event_ingress.py
+    - tools/pf_runtime/host.py
+    - tools/pf_runtime/service.py
+    - tools/pf_runtime/codex_hooks.py
+    - tools/processforge.py
+    - schemas/pf-runtime-agent-event.schema.json
+    - tools/smoke_central_event_ingress.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/first-slice-implementation-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: first-slice-implementation-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/first-slice-implementation-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/first-slice-implementation-report.md
+  format: concise_markdown
+  include:
+    - first-slice-implementation-report
+agent_model: gpt-5.5

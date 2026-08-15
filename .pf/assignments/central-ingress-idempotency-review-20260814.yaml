@@ -1,0 +1,74 @@
+schema_version: 1
+id: central-ingress-idempotency-review-20260814
+title: Independently verify idempotency and replay contract
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T17:32:00Z'
+updated_at: '2026-08-14T17:35:06Z'
+objective: Planning-only independent review of idempotency-and-replay-contract.md against B1, the accepted design, current host/codex/chat behavior and master prompt. Create .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md. Give pass/fail/conditional findings for canonical identity serialization, provider-native-id fallback, false-positive/collision behavior, duplicate raw receipt, deterministic derived project/Ledger/chat keys, preservation of legacy Codex IDs, manual chat compatibility, Runtime-vs-fallback equivalence, replay checkpoint atomicity and privacy. State whether B1 is actually resolved and whether implementation may proceed; no code/design changes.
+platform: ""
+selected_specializations:
+  []
+order: 16
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Accepted as conditional pass. B1 is resolved at design level; first implementation must include a native-identity conflict index excluding payload hash and interprocess-atomic index/checkpoint writes.
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+allowed_read_files:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-contract.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-review.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-v2.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout-v2.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-routing-policy-v2.md
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/processforge.py
+ownership:
+  owner_id: shell-gpt55-review
+  owner_label: worker-shell-gpt55-review
+  role: idempotency-contract-reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: idempotency-and-replay-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+  format: concise_markdown
+  include:
+    - idempotency-and-replay-review
+agent_model: gpt-5.5

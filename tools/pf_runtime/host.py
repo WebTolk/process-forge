@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from . import RUNTIME_PROTOCOL_VERSION
+from .raw_ingress_kernel import NativeAgentEvent, RawIngressKernel
 
 
 # One Runtime process may serve several concurrent loopback requests.  This
@@ -566,7 +567,7 @@ def command_event(args: argparse.Namespace, core: Any) -> int:
     return 0
 
 
-def ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *, project_ref: str | None = None) -> dict[str, Any]:
+def _ingest_derived_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *, project_ref: str | None = None) -> dict[str, Any]:
     project_ref = project_ref or raw.get("project_root") or raw.get("cwd")
     if not project_ref:
         raise SystemExit("FAIL: runtime event requires --project-root or project_root/cwd in input")
@@ -597,6 +598,94 @@ def ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *,
         stage_projection = rebuild_stage_obligations(project_root, core)
         payload = {"event_id": core.event_id_value(event), "duplicate": duplicate, "project_id": handle["project_id"], "events": core.rel(core.event_runtime_paths(project_root)[0], project_root), "projection": core.rel(projection, project_root), "stage_projection": core.rel(stage_projection, project_root)}
         return payload
+
+
+def _is_native_envelope(raw: dict[str, Any]) -> bool:
+    return bool(
+        raw.get("provider")
+        and raw.get("adapter")
+        and raw.get("native_event_type")
+        and isinstance(raw.get("raw_payload"), dict)
+    )
+
+
+def _runtime_native_envelope(raw: dict[str, Any], project_ref: str | None) -> dict[str, Any]:
+    """Wrap legacy normalized Runtime input without changing its derived ID."""
+
+    source = raw.get("source") if isinstance(raw.get("source"), dict) else {}
+    return {
+        "provider": "processforge",
+        "adapter": str(source.get("adapter") or raw.get("adapter") or "runtime-legacy"),
+        "native_event_type": str(raw.get("event_type") or raw.get("type") or "runtime.event"),
+        "raw_payload": dict(raw),
+        "native_event_id": raw.get("event_id"),
+        "native_id_scope": "adapter",
+        "native_event_id_stable": bool(raw.get("event_id")),
+        "source_session_id": str(source.get("session_id") or raw.get("session_id") or "") or None,
+        "source_project_ref": str(project_ref or raw.get("project_root") or raw.get("cwd") or "") or None,
+        "derived_event": dict(raw),
+    }
+
+
+def _raw_receipt_payload(receipt: Any) -> dict[str, Any]:
+    return {
+        "raw_event_id": receipt.raw_event_id,
+        "accepted": receipt.accepted,
+        "deduplicated": receipt.deduplicated,
+        "raw_location": receipt.raw_location,
+        "routing_status": receipt.routing_status,
+        "normalized_event_ids": list(receipt.normalized_event_ids),
+        "chat_message_ids": list(receipt.chat_message_ids),
+        "diagnostics": dict(receipt.diagnostics),
+    }
+
+
+def ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *, project_ref: str | None = None) -> dict[str, Any]:
+    """Persist a private raw event before attempting its derived project effect.
+
+    Adapters provide native envelopes and may attach an already-normalized
+    ``derived_event``.  The Host remains provider-neutral: it only validates
+    project scope and executes the existing normalized-event behavior.
+    """
+
+    envelope = dict(raw) if _is_native_envelope(raw) else _runtime_native_envelope(raw, project_ref)
+    source_project_ref = str(envelope.get("source_project_ref") or project_ref or "")
+    if not source_project_ref:
+        raise SystemExit("FAIL: runtime event requires --project-root or project_root/cwd in input")
+    project_root = resolve_project(source_project_ref, core)
+    workplace_root = workplace_root or core.resolve_workplace_root(None, project_root=project_root)
+    native = NativeAgentEvent(
+        provider=str(envelope["provider"]),
+        adapter=str(envelope["adapter"]),
+        native_event_type=str(envelope["native_event_type"]),
+        raw_payload=dict(envelope["raw_payload"]),
+        payload_version=str(envelope.get("payload_version") or "1"),
+        native_event_id=str(envelope.get("native_event_id") or "") or None,
+        native_id_scope=str(envelope.get("native_id_scope") or "provider"),
+        native_event_id_stable=bool(envelope.get("native_event_id_stable", True)),
+        source_session_id=str(envelope.get("source_session_id") or "") or None,
+        source_project_ref=source_project_ref,
+    )
+    receipt = RawIngressKernel(workplace_root).ingest(native)
+    response = _raw_receipt_payload(receipt)
+    if not receipt.accepted:
+        return response
+
+    derived = envelope.get("derived_event")
+    if not isinstance(derived, dict):
+        return response
+    derived_ref = str(derived.get("project_root") or derived.get("cwd") or "")
+    if derived_ref and resolve_project(derived_ref, core) != project_root:
+        raise PermissionError("derived event project_root does not match native envelope")
+    # Preserve the established CLI/Runtime 403 behavior for project/session
+    # denial.  The raw receipt already exists at this point for later audit.
+    routed = _ingest_derived_event(derived, workplace_root, core, project_ref=str(project_root))
+    return {
+        **routed,
+        **response,
+        "routing_status": "routed",
+        "normalized_event_ids": [str(routed["event_id"])],
+    }
 
 
 def command_status(args: argparse.Namespace, core: Any) -> int:

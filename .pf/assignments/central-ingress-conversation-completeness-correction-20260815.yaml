@@ -1,0 +1,69 @@
+schema_version: 1
+id: central-ingress-conversation-completeness-correction-20260815
+title: Correct full conversation capture design
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: open
+created_at: '2026-08-15T05:24:04Z'
+updated_at: '2026-08-15T05:24:35Z'
+objective: 'Planning only, correction of two existing designs. Make the requirement precise: all actual correspondence that PF or a provider technically receives must enter central ingress as ordered durable private conversation records; telemetry is separate. Resolve the missing PF-owned input-side record before Codex worker execution, without misclassifying the full generated capsule/system instructions as a human user message. Define the exact canonical message sources and roles, pairing/order/dedup identity, raw envelope and privacy boundaries, and explicit limits for generic Codex hooks whose assistant body is unavailable. Produce a concrete revised first implementation slice and focused acceptance. Do not edit source.'
+platform: ""
+selected_specializations:
+  []
+order: 40
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-correction.md
+allowed_read_files:
+  - tools/codex_exec_worker.py
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/raw_ingress_kernel.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/assistant-response-capture-design.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-telemetry-boundary-design.md
+ownership:
+  owner_id: shell-gpt55
+  owner_label: worker-shell-gpt55
+  role: conversation-completeness-architect
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-correction.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-correction.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: conversation-completeness-correction
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-correction.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-correction.md
+  format: concise_markdown
+  include:
+    - conversation-completeness-correction
+agent_model: gpt-5.5

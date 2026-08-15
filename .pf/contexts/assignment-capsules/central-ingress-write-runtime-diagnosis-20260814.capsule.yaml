@@ -1,0 +1,409 @@
+schema_version: 1
+capsule:
+  id: central-ingress-write-runtime-diagnosis-20260814-capsule
+  generated_at: '2026-08-14T18:00:31Z'
+  assignment_id: central-ingress-write-runtime-diagnosis-20260814
+  assignment_path: .pf/assignments/central-ingress-write-runtime-diagnosis-20260814.yaml
+  assignment_checksum: 304c755ed351ce7ee77f989fd26f3d9fb0935628e28ab5e55d775d4600f07adb
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 12d476a36cd615fe39cb8ac3fd548e3738886df584217ca1e6334ebf025a8579
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260814-161506-682b70
+  sha256: 'sha256:12d476a36cd615fe39cb8ac3fd548e3738886df584217ca1e6334ebf025a8579'
+  generated_at: '2026-08-14T16:15:01Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  []
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+execution_route_summary:
+  process: knowledge-package-improvement
+  stages:
+    -
+      id: propose
+      required_capabilities:
+        - research
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - proposal-complete
+    -
+      id: assess
+      required_capabilities:
+        - process_governance
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - compatibility-reviewed
+    -
+      id: integrate
+      required_capabilities:
+        - repository_write
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - package-updated
+  required_capabilities:
+    - process_governance
+    - repository_write
+    - research
+    - review
+  capability_requirements:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+  unsatisfied:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: central-ingress-write-runtime-diagnosis-20260814
+  path: .pf/assignments/central-ingress-write-runtime-diagnosis-20260814.yaml
+  status: open
+  objective: 'Read-only narrow diagnosis: create .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md. Inspect only the project-local workspace-write wrapper, generic-shell driver command records and the three stopped worker stderr/status files. Determine with evidence why workers reached analysis but made no source writes or heartbeat updates. Recommend the smallest safe ProcessForge execution change, distinguishing project-local workaround from installed-distribution change. Do not modify code or run a write worker.'
+  execution_mode:
+    kind: read_only
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260814-161506-682b70
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/central-ingress-write-runtime-diagnosis-20260814.yaml
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+  allowed_read_files:
+    - .pf/tmp/codex_workspace_write_worker.py
+    - .pf/tmp/codex_workspace_write_worker.cmd
+    - .pf/runtime/agent-runs/central-agent-event-ingress-20260814
+    - .pf/assignments/central-ingress-first-slice-implementation-20260814.yaml
+  forbidden_files:
+    []
+  ownership:
+    owner_id: shell-spark
+    owner_label: worker-shell-spark
+    role: runtime-diagnostics-auditor
+    writer: true
+    owned_files:
+      - .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: write-worker-runtime-diagnosis
+      type: unspecified
+      required: true
+      path: .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+  expected_report:
+    language: ru
+    artifact: .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+    format: concise_markdown
+    include:
+      - write-worker-runtime-diagnosis
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.3-codex-spark
+agent_reasoning_effort: medium
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/central-ingress-write-runtime-diagnosis-20260814.ndjson
+  event_correlation_id: assignment-central-ingress-write-runtime-diagnosis-20260814
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/central-ingress-write-runtime-diagnosis-20260814.yaml
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: write-worker-runtime-diagnosis
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-central-ingress-write-runtime-diagnosis-20260814
