@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from . import RUNTIME_PROTOCOL_VERSION
-from .raw_ingress_kernel import NativeAgentEvent, RawIngressKernel
+from .raw_ingress_kernel import NativeAgentEvent, RawIngressKernel, deterministic_derived_key
 
 
 # One Runtime process may serve several concurrent loopback requests.  This
@@ -640,6 +640,175 @@ def _raw_receipt_payload(receipt: Any) -> dict[str, Any]:
     }
 
 
+def _conversation_denial(reason: str, **details: Any) -> tuple[list[str], dict[str, Any]]:
+    return [], {"conversation": {"status": "denied", "reason": reason, **details}}
+
+
+def _is_safe_automatic_content(content: str) -> bool:
+    # Marker names may appear in a safe worker report that explains which
+    # private values were withheld. Reject their values (via secret/path
+    # checks below), not the vocabulary used to describe that policy.
+    return not bool(__import__("re").search(r"(?:[a-zA-Z]:[\\/]|/(?:users|home|tmp|var)/)", content))
+
+
+def worker_input_summary(run_id: str, task_id: str, attempt: str, payload_hash: str, expected_report: str) -> str:
+    return (
+        f"ProcessForge launched worker run `{run_id}`, task `{task_id}`, attempt `{attempt}`; "
+        f"stdin_payload_hash=`{payload_hash}`; expected_report=`{expected_report}`."
+    )
+
+
+def _worker_input_contract(envelope: dict[str, Any], project_root: Path, core: Any) -> dict[str, Any] | None:
+    raw = envelope.get("raw_payload") if isinstance(envelope.get("raw_payload"), dict) else {}
+    run_id, task_id, attempt = (str(raw.get(key) or "") for key in ("run_id", "task_id", "attempt"))
+    payload = raw.get("stdin_payload")
+    payload_hash = str(raw.get("stdin_payload_hash") or "")
+    expected_report = str(raw.get("expected_report") or "")
+    if not run_id or not task_id or not attempt or not isinstance(payload, str) or not payload_hash or not expected_report:
+        return None
+    if payload_hash != "sha256:" + hashlib.sha256(payload.encode("utf-8")).hexdigest():
+        return None
+    contract_path = project_root / ".pf" / "runtime" / "agent-runs" / core.safe_id(run_id, "run") / core.safe_id(task_id, "task") / "worker-input-contract.json"
+    try:
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    required = {"run_id": run_id, "task_id": task_id, "attempt": attempt, "stdin_payload_hash": payload_hash, "expected_report": expected_report}
+    if any(str(contract.get(key) or "") != value for key, value in required.items()):
+        return None
+    summary = worker_input_summary(run_id, task_id, attempt, payload_hash, expected_report)
+    if str(contract.get("summary") or "") != summary:
+        return None
+    return {**required, "summary": summary}
+
+
+def _allowed_conversation_message(envelope: dict[str, Any], item: dict[str, Any]) -> bool:
+    provider, adapter, event_type = (str(envelope.get(key) or "") for key in ("provider", "adapter", "native_event_type"))
+    role = str(item.get("message_role") or "")
+    source = item.get("content_source") if isinstance(item.get("content_source"), dict) else {}
+    kind, provenance = str(source.get("kind") or ""), str(source.get("content_provenance") or "")
+    raw = envelope.get("raw_payload") if isinstance(envelope.get("raw_payload"), dict) else {}
+    session = str(envelope.get("source_session_id") or "")
+    if (provider, adapter, event_type, role, kind, provenance) == ("codex", "codex-hooks", "UserPromptSubmit", "user", "codex_hook", "provider_payload"):
+        return isinstance(raw.get("prompt"), str) and item.get("content") == raw.get("prompt")
+    if provider != "processforge" or adapter != "pf-codex-exec-worker":
+        return False
+    run_id, task_id, attempt = (str(raw.get(key) or "") for key in ("run_id", "task_id", "attempt"))
+    if session != f"pf-worker:{run_id}:{task_id}:attempt:{attempt}":
+        return False
+    if event_type == "WorkerPromptPayloadSubmitted":
+        return (
+            (role, kind, provenance) == ("system", "pf_codex_exec_input", "pf_owned_safe_summary")
+            and str(envelope.get("native_event_id") or "") == f"worker-input:{run_id}:{task_id}:attempt:{attempt}"
+            and item.get("content") == worker_input_summary(run_id, task_id, attempt, str(raw.get("stdin_payload_hash") or ""), str(raw.get("expected_report") or ""))
+        )
+    if event_type == "WorkerExpectedReportCaptured":
+        report_content = raw.get("report_content")
+        report_hash = "sha256:" + hashlib.sha256(report_content.encode("utf-8")).hexdigest() if isinstance(report_content, str) else ""
+        return (
+            (role, kind, provenance) == ("assistant", "pf_codex_exec_output", "pf_owned_output_file")
+            and str(envelope.get("native_event_id") or "") == f"worker-output:{run_id}:{task_id}:attempt:{attempt}:{report_hash}"
+            and item.get("content") == report_content
+        )
+    return False
+
+
+def _worker_session_authorized(envelope: dict[str, Any], project_root: Path, core: Any) -> bool:
+    raw = envelope.get("raw_payload") if isinstance(envelope.get("raw_payload"), dict) else {}
+    run_id, task_id = str(raw.get("run_id") or ""), str(raw.get("task_id") or "")
+    if not run_id or not task_id:
+        return False
+    try:
+        task = core.load_task(project_root, task_id)
+    except (OSError, SystemExit):
+        return False
+    if str(task.get("run_id") or "") != run_id:
+        return False
+    state = core.load_agent_run_state(project_root, run_id, task_id)
+    attempt = str(raw.get("attempt") or "")
+    if not state or attempt != str(state.get("attempt") or ""):
+        return False
+    expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+    expected_report = str(expected.get("artifact") or "")
+    if str(raw.get("expected_report") or "") != expected_report:
+        return False
+    if str(envelope.get("native_event_type") or "") == "WorkerPromptPayloadSubmitted" and _worker_input_contract(envelope, project_root, core) is None:
+        return False
+    if str(envelope.get("native_event_type") or "") == "WorkerExpectedReportCaptured":
+        report = project_root / expected_report
+        if not report.is_file() or report.read_text(encoding="utf-8", errors="replace") != raw.get("report_content"):
+            return False
+    return True
+
+
+def _conversation_messages(
+    envelope: dict[str, Any], receipt: Any, project_root: Path, workplace_root: Path, core: Any
+) -> tuple[list[str], dict[str, Any]]:
+    messages = envelope.get("derived_conversation_messages")
+    if messages is None:
+        return [], {}
+    if not isinstance(messages, list):
+        return _conversation_denial("messages_not_list")
+    session_id = str(envelope.get("source_session_id") or "")
+    if not session_id:
+        return _conversation_denial("missing_session")
+    is_worker = str(envelope.get("provider") or "") == "processforge" and str(envelope.get("adapter") or "") == "pf-codex-exec-worker"
+    presence = ledger_session(session_id, workplace_root, core)
+    if is_worker:
+        authorized = _worker_session_authorized(envelope, project_root, core)
+    else:
+        authorized = bool(presence) and str(presence.get("project_id") or "") == core.project_id(project_root)
+    if not authorized:
+        return _conversation_denial("session_not_authorized", session_id=session_id)
+    identifiers: list[str] = []
+    for sequence, item in enumerate(messages):
+        if not isinstance(item, dict):
+            return _conversation_denial("message_not_object", sequence=sequence)
+        content = item.get("content")
+        role = str(item.get("message_role") or "")
+        participant = item.get("participant") if isinstance(item.get("participant"), dict) else {}
+        source = item.get("content_source") if isinstance(item.get("content_source"), dict) else {}
+        if not isinstance(content, str) or not content.strip() or role not in {"user", "assistant", "system"}:
+            return _conversation_denial("invalid_message", sequence=sequence)
+        if not _allowed_conversation_message(envelope, item):
+            return _conversation_denial("untrusted_conversation_provenance", sequence=sequence)
+        if not _is_safe_automatic_content(content) or not _is_safe_automatic_content(json.dumps(source, ensure_ascii=False, sort_keys=True)) or core.contains_secret_value(content):
+            return _conversation_denial("unsafe_automatic_content", sequence=sequence)
+        raw_id = str(receipt.raw_event_id or "")
+        key = deterministic_derived_key(
+            raw_id,
+            "conversation_message",
+            f"processforge.conversation-capture.{envelope['adapter']}",
+            "1",
+            {
+                "session_id": session_id,
+                "turn_id": str(item.get("turn_id") or raw_id),
+                "message_role": role,
+                "delivery_sequence": int((item.get("delivery") or {}).get("sequence") or sequence),
+                "content_hash": "sha256:" + hashlib.sha256(content.encode("utf-8")).hexdigest(),
+            },
+        )
+        message_id = "msg_" + key[:32]
+        event_id = "evt_" + hashlib.sha256(("chat.message.recorded:" + message_id).encode("utf-8")).hexdigest()[:32]
+        _path, record, _event = core.append_chat_message(
+            project_root,
+            session_id=session_id,
+            participant_id=str(participant.get("id") or envelope.get("adapter") or "agent"),
+            participant_role=str(participant.get("role") or role),
+            participant_type=str(participant.get("type") or "agent"),
+            message_role=role,
+            content=content,
+            turn_id=str(item.get("turn_id") or raw_id),
+            parent_message_id=str(item.get("parent_message_id") or "") or None,
+            source_kind=str(source.get("kind") or "automatic_capture"),
+            assignment_id_value=str((envelope.get("raw_payload") or {}).get("task_id") or "") or None,
+            message_id=message_id,
+            event_id=event_id,
+        )
+        identifiers.append(str(record.get("message_id") or message_id))
+    return identifiers, {}
+
+
 def ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *, project_ref: str | None = None) -> dict[str, Any]:
     """Persist a private raw event before attempting its derived project effect.
 
@@ -670,6 +839,10 @@ def ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *,
     response = _raw_receipt_payload(receipt)
     if not receipt.accepted:
         return response
+
+    chat_message_ids, conversation_diagnostics = _conversation_messages(envelope, receipt, project_root, workplace_root, core)
+    response["chat_message_ids"] = chat_message_ids
+    response["diagnostics"] = {**response["diagnostics"], **conversation_diagnostics}
 
     derived = envelope.get("derived_event")
     if not isinstance(derived, dict):

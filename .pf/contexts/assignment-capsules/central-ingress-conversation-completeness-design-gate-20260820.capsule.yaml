@@ -1,0 +1,413 @@
+schema_version: 1
+capsule:
+  id: central-ingress-conversation-completeness-design-gate-20260820-capsule
+  generated_at: '2026-08-20T11:52:38Z'
+  assignment_id: central-ingress-conversation-completeness-design-gate-20260820
+  assignment_path: .pf/assignments/central-ingress-conversation-completeness-design-gate-20260820.yaml
+  assignment_checksum: 3b15639511435b8e9d68212c3d278d5e6d44c708bbd9e94879ebc3a5ec9b0646
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: c8314cbb966c870c5ccb08c5d4da17087045045aeccbd722653b2c3e62def3b6
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260820-115224-5dab47
+  sha256: 'sha256:c8314cbb966c870c5ccb08c5d4da17087045045aeccbd722653b2c3e62def3b6'
+  generated_at: '2026-08-20T11:52:20Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  []
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+execution_route_summary:
+  process: knowledge-package-improvement
+  stages:
+    -
+      id: propose
+      required_capabilities:
+        - research
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - proposal-complete
+    -
+      id: assess
+      required_capabilities:
+        - process_governance
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - compatibility-reviewed
+    -
+      id: integrate
+      required_capabilities:
+        - repository_write
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - package-updated
+  required_capabilities:
+    - process_governance
+    - repository_write
+    - research
+    - review
+  capability_requirements:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+  unsatisfied:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: central-ingress-conversation-completeness-design-gate-20260820
+  path: .pf/assignments/central-ingress-conversation-completeness-design-gate-20260820.yaml
+  status: open
+  objective: Review the corrected conversation-capture design, not implementation presence. Verify that its prescribed bounded changes can satisfy every five pause-checkpoint gate without leaking private launch data or treating telemetry as conversation. Reconcile the correction with the actual listed source boundaries and return PASS/FAIL plus exact required implementation/test scope. Do not change product source.
+  execution_mode:
+    kind: assurance
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260820-115224-5dab47
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/central-ingress-conversation-completeness-design-gate-20260820.yaml
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-design-gate-20260820.md
+  allowed_read_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/pause-checkpoint-20260815.md
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-security-correction.md
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-security-rereview-20260820.md
+    - tools/codex_exec_worker.py
+    - tools/processforge.py
+    - tools/pf_runtime/host.py
+    - tools/pf_runtime/raw_ingress_kernel.py
+    - tools/pf_runtime/codex_hooks.py
+  forbidden_files:
+    []
+  ownership:
+    owner_id: main-orchestrator
+    owner_label: worker-main-orchestrator
+    role: conversation-completeness-design-gate-reviewer
+    writer: true
+    owned_files:
+      - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-design-gate-20260820.md
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-design-gate-20260820.md
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: conversation-completeness-design-gate-20260820
+      type: unspecified
+      required: true
+      path: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-design-gate-20260820.md
+  expected_report:
+    language: ru
+    artifact: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-design-gate-20260820.md
+    format: concise_markdown
+    include:
+      - conversation-completeness-design-gate-20260820
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: ""
+agent_reasoning_effort: high
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/central-ingress-conversation-completeness-design-gate-20260820.ndjson
+  event_correlation_id: assignment-central-ingress-conversation-completeness-design-gate-20260820
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/central-ingress-conversation-completeness-design-gate-20260820.yaml
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-design-gate-20260820.md
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: conversation-completeness-design-gate-20260820
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-design-gate-20260820.md
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-central-ingress-conversation-completeness-design-gate-20260820

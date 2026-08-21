@@ -2,9 +2,9 @@ schema_version: 1
 id: stage-projectors-next-audit-20260814
 title: Stage projectors next audit
 process: process-supervisor
-status: in_progress
+status: completed
 created_at: '2026-08-14T05:40:20Z'
-updated_at: '2026-08-14T05:57:22Z'
+updated_at: '2026-08-21T04:52:46Z'
 objective: Audit current ProcessForge stage, artifact, projector, event, doctor, and MCP model before selecting one minimal automatic projection slice.
 platform: ""
 selected_specializations:
@@ -26,9 +26,12 @@ tasks:
     order: 2
     blocking: true
 final_artifacts:
-  []
+  - .pf/runs/stage-projectors-next-audit-20260814/summary.md
+  - .pf/handoffs/runs/stage-projectors-next-audit-20260814-handoff.md
 events:
   emitted:
     - run.created
+    - run.completed
+    - run.summary.created
 privacy:
   public_safe: true

@@ -414,10 +414,84 @@ def smoke_direct_path_recovery(project: Path, *, driver_root: Path) -> str:
     return direct_task
 
 
+def smoke_durable_exit_reconciliation(project: Path) -> str:
+    task_id = "durable-exit-reconciliation"
+    create_task(project, task_id, title="Durable exit reconciliation")
+    report_path = project / f".pf/artifacts/{task_id}-report.md"
+    exit_path = runtime_root(project, task_id) / "exit.json"
+    driver_path = project / ".pf" / "runtime" / "regression-drivers" / "durable-exit-reconciliation.yaml"
+    script = (
+        "import json, pathlib\n"
+        f"path = pathlib.Path(r'{exit_path}')\n"
+        "path.parent.mkdir(parents=True, exist_ok=True)\n"
+        "path.write_text(json.dumps({'schema_version': 1, 'exit_code': 0, 'status': 'completed'}) + '\\n', encoding='utf-8')\n"
+    )
+    driver_path.write_text(
+        "\n".join(
+            [
+                "schema_version: 1",
+                "id: durable-exit-reconciliation",
+                "title: Durable Exit Reconciliation Driver",
+                "kind: shell",
+                "command:",
+                "  executable: '{python_executable}'",
+                "  args:",
+                "    - '-c'",
+                f"    - {json.dumps(script)}",
+                "working_directory: '{project_root}'",
+                "environment:",
+                "  inherit: false",
+                "  variables: {}",
+                "io:",
+                "  stdin: none",
+                "  stdout: '.pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log'",
+                "  stderr: '.pf/runtime/agent-runs/{run_id}/{task_id}/stderr.log'",
+                "heartbeat:",
+                "  mode: file",
+                "  path: '.pf/runtime/agent-runs/{run_id}/{task_id}/heartbeat.json'",
+                "  optional: true",
+                "limits:",
+                "  timeout_seconds: 30",
+                "  max_retries: 0",
+                "security:",
+                "  allow_shell: false",
+                "  require_explicit_executable: false",
+                "  allow_network: false",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    start_task(task_id, project, driver=driver_path)
+    deadline = time.time() + 8.0
+    while time.time() < deadline:
+        if exit_path.is_file():
+            break
+        time.sleep(0.1)
+    if not exit_path.is_file():
+        raise AssertionError("detached worker did not write its durable exit contract")
+
+    status = pf("worker-run", "status", "--project-root", str(project), "--task", task_id, expect=0)
+    if "status: completed" not in (status.stdout + status.stderr):
+        raise AssertionError("worker-run status did not reconcile the durable exit contract")
+    reconciled = read_json(status_path(project, task_id))
+    if reconciled.get("status") != "completed" or reconciled.get("exit_code") != 0:
+        raise AssertionError(f"unexpected reconciled state: {reconciled}")
+
+    report_path.write_text("- durable exit: `collected`\n", encoding="utf-8")
+    collect = pf("worker-run", "collect", "--project-root", str(project), "--task", task_id, expect=0)
+    if "DONE:" not in (collect.stdout + collect.stderr):
+        raise AssertionError("worker-run collect did not finish a reconciled worker")
+    return task_id
+
+
 def main() -> int:
     tasks_for_cleanup: list[str] = []
-    temp_root = make_temporary_root("pf-worker-shell", ROOT)
-    driver_root = make_temporary_root("pf-worker-shell-driver", ROOT)
+    temp_parent = ROOT / ".pf" / "tmp"
+    temp_parent.mkdir(parents=True, exist_ok=True)
+    temp_root = make_temporary_root("pf-worker-shell", temp_parent)
+    driver_root = make_temporary_root("pf-worker-shell-driver", temp_parent)
     project = None
     try:
         project = make_project(temp_root)
@@ -429,6 +503,7 @@ def main() -> int:
         tasks_for_cleanup.append(smoke_duplicate_start_parallel(project))
         tasks_for_cleanup.append(smoke_prepare_while_running(project))
         tasks_for_cleanup.append(smoke_direct_path_recovery(project, driver_root=driver_root))
+        tasks_for_cleanup.append(smoke_durable_exit_reconciliation(project))
     finally:
         if project is not None:
             for task_id in tasks_for_cleanup:

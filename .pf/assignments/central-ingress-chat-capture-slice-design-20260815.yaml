@@ -3,9 +3,9 @@ id: central-ingress-chat-capture-slice-design-20260815
 title: Design bounded automatic chat capture slice
 run_id: central-agent-event-ingress-20260814
 process: task-batch-execution
-status: open
+status: done
 created_at: '2026-08-15T04:58:36Z'
-updated_at: '2026-08-15T04:59:36Z'
+updated_at: '2026-08-21T04:54:14Z'
 objective: Planning only. From the accepted raw-first ingress and chat-readiness audit, design one minimal Codex-supported automatic chat-capture slice that reuses existing transcript/chat-record semantics, preserves raw-first storage, captures only provider-proven content, and adds no public CLI. Specify exact files/boundaries, durable identity, project/session authorization, privacy/retention behavior, replay relation, failure/fallback semantics, and focused smoke acceptance. Do not edit source.
 platform: ""
 selected_specializations:
@@ -19,8 +19,8 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: done
+  summary: 'Reconciled: design artifact exists and was superseded by the accepted 20260820 conversation-completeness design gate and implementation.'
   artifacts:
     []
 execution_mode:

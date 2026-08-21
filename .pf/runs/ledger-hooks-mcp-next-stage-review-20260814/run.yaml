@@ -2,9 +2,9 @@ schema_version: 1
 id: ledger-hooks-mcp-next-stage-review-20260814
 title: Ledger hooks MCP independent review
 process: process-supervisor
-status: in_progress
+status: completed
 created_at: '2026-08-14T04:49:30Z'
-updated_at: '2026-08-14T04:57:44Z'
+updated_at: '2026-08-21T04:52:42Z'
 objective: Independent read-only review of the Ledger, Codex hooks, and MCP slice
 platform: ""
 selected_specializations:
@@ -20,9 +20,12 @@ tasks:
     order: 1
     blocking: true
 final_artifacts:
-  []
+  - .pf/runs/ledger-hooks-mcp-next-stage-review-20260814/summary.md
+  - .pf/handoffs/runs/ledger-hooks-mcp-next-stage-review-20260814-handoff.md
 events:
   emitted:
     - run.created
+    - run.completed
+    - run.summary.created
 privacy:
   public_safe: true

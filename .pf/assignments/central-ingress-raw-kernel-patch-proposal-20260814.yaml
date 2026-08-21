@@ -3,9 +3,9 @@ id: central-ingress-raw-kernel-patch-proposal-20260814
 title: Draft reviewable raw ingress kernel patch
 run_id: central-agent-event-ingress-20260814
 process: task-batch-execution
-status: open
+status: done
 created_at: '2026-08-14T17:59:38Z'
-updated_at: '2026-08-14T17:59:46Z'
+updated_at: '2026-08-21T04:54:11Z'
 objective: 'Read-only code-authoring task: create .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-patch-proposal.md containing one complete unified diff that adds only tools/pf_runtime/raw_ingress_kernel.py. Do not write source files. The module must be pure stdlib and implement the accepted raw identity/storage contract: canonical JSON/NFC, raw event identity, stable native-identity key without payload hash, path containment, hourly shard selection, interprocess-safe append, raw/native indexes written atomically, duplicate/poison decision, deterministic derived key and atomic JSON write. Keep the API compact, documented, and testable. Include a short explanation and a precise syntax-check command after the diff. Do not integrate host/service/Codex yet.'
 platform: ""
 selected_specializations:
@@ -19,8 +19,8 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: done
+  summary: 'Reconciled: patch proposal exists and was superseded by the subsequently delivered implementation and review sequence.'
   artifacts:
     []
 execution_mode:

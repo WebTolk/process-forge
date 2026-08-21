@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -74,6 +75,83 @@ def prompt_payload(worker_prompt: Path, capsule: Path, workspace_access: Path) -
             "",
         ]
     )
+
+
+def capture_worker_input(payload_text: str, output: Path) -> dict[str, Any]:
+    """Persist the exact PF-owned launch payload before starting Codex.
+
+    The raw envelope is private.  The derived system message deliberately
+    contains only stable ids, a digest and a repository-relative report ref.
+    """
+
+    import processforge as core
+    from pf_runtime import host
+
+    project_root = Path(os.environ.get("PF_PROJECT_ROOT") or Path.cwd()).resolve()
+    run_id = str(os.environ.get("PF_RUN_ID") or os.environ.get("PF_WORKER_RUN_ID") or "")
+    task_id = str(os.environ.get("PF_TASK_ID") or os.environ.get("PF_WORKER_TASK_ID") or "")
+    attempt = str(os.environ.get("PF_WORKER_ATTEMPT") or "1")
+    if not run_id or not task_id:
+        # The helper remains usable by the pre-existing direct CLI smoke.  A
+        # prepared ProcessForge worker always has both ids and therefore
+        # cannot silently bypass the fail-closed ingress capture below.
+        if os.environ.get("PF_AGENT_RUN_DIR"):
+            raise SystemExit("FAIL: PF worker input capture requires run and task ids")
+        return {"accepted": True, "chat_message_ids": []}
+    try:
+        expected_report = output.resolve().relative_to(project_root).as_posix()
+    except ValueError as exc:
+        raise SystemExit("FAIL: expected report must remain inside the project") from exc
+    payload_hash = "sha256:" + hashlib.sha256(payload_text.encode("utf-8")).hexdigest()
+    session_id = f"pf-worker:{run_id}:{task_id}:attempt:{attempt}"
+    summary = host.worker_input_summary(run_id, task_id, attempt, payload_hash, expected_report)
+    agent_run_dir_raw = os.environ.get("PF_AGENT_RUN_DIR") or ""
+    if not agent_run_dir_raw:
+        raise SystemExit("FAIL: PF worker input capture requires PF_AGENT_RUN_DIR")
+    agent_run_dir = Path(agent_run_dir_raw).resolve()
+    expected_run_dir = project_root / ".pf" / "runtime" / "agent-runs" / core.safe_id(run_id, "run") / core.safe_id(task_id, "task")
+    if agent_run_dir != expected_run_dir.resolve():
+        raise SystemExit("FAIL: PF worker input capture run directory does not match run/task identity")
+    input_contract = {"schema_version": 1, "run_id": run_id, "task_id": task_id, "attempt": attempt, "stdin_payload_hash": payload_hash, "expected_report": expected_report, "summary": summary}
+    contract_path = agent_run_dir / "worker-input-contract.json"
+    contract_tmp = contract_path.with_suffix(".json.tmp")
+    contract_tmp.write_text(json.dumps(input_contract, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    contract_tmp.replace(contract_path)
+    envelope = {
+        "provider": "processforge",
+        "adapter": "pf-codex-exec-worker",
+        "native_event_type": "WorkerPromptPayloadSubmitted",
+        "native_event_id": f"worker-input:{run_id}:{task_id}:attempt:{attempt}",
+        "native_id_scope": "project",
+        "native_event_id_stable": True,
+        "source_session_id": session_id,
+        "source_project_ref": str(project_root),
+        "payload_version": "1",
+        "raw_payload": {
+            "run_id": run_id,
+            "task_id": task_id,
+            "attempt": attempt,
+            "stdin_payload": payload_text,
+            "stdin_payload_hash": payload_hash,
+            "expected_report": expected_report,
+        },
+        "derived_conversation_messages": [
+            {
+                "message_role": "system",
+                "participant": {"id": "processforge-runtime", "type": "agent", "role": "worker_launcher"},
+                "session_id": session_id,
+                "turn_id": f"worker-turn:{run_id}:{task_id}:attempt:{attempt}",
+                "content": summary,
+                "content_source": {"kind": "pf_codex_exec_input", "provider": "processforge", "adapter": "pf-codex-exec-worker", "native_event_type": "WorkerPromptPayloadSubmitted", "content_provenance": "pf_owned_safe_summary"},
+                "delivery": {"state": "complete", "sequence": 0, "final": True},
+            }
+        ],
+    }
+    workplace_root = core.resolve_workplace_root(None, project_root=project_root)
+    result = host.ingest_event(envelope, workplace_root, core)
+    if not result.get("accepted") or len(result.get("chat_message_ids") or []) != 1:
+        raise SystemExit("FAIL: PF worker input conversation capture was not accepted")
+    return result
 
 
 def write_heartbeat(path: Path | None, status: str, extra: dict[str, Any] | None = None) -> None:
@@ -147,9 +225,11 @@ def main() -> int:
     # payload with the Windows console/code-page default, corrupting a valid
     # non-ASCII assignment (for example a Russian project path) before the
     # CLI receives it.  Supply explicit UTF-8 bytes instead.
+    payload_text = prompt_payload(worker_prompt, capsule, workspace_access)
+    capture_worker_input(payload_text, output)
     result = subprocess.run(
         command,
-        input=prompt_payload(worker_prompt, capsule, workspace_access).encode("utf-8"),
+        input=payload_text.encode("utf-8"),
         check=False,
     )
     write_exit_contract(exit_contract, int(result.returncode))

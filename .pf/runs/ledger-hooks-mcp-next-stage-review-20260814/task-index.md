@@ -1,6 +1,6 @@
 # Task Index: ledger-hooks-mcp-next-stage-review-20260814
 
-Run status: `in_progress`
+Run status: `completed`
 
 | Order | Task | Status | Assignment |
 | --- | --- | --- | --- |

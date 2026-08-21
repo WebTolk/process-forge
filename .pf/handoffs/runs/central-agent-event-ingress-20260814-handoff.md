@@ -1,5 +1,5 @@
 # Run Handoff: central-agent-event-ingress-20260814
 
-Status: `in_progress`
+Status: `completed`
 
 Summary: `.pf/runs/central-agent-event-ingress-20260814/summary.md`

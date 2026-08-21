@@ -3,9 +3,9 @@ id: central-ingress-core-storage-implementation-20260814
 title: Implement raw ingress storage and idempotency core
 run_id: central-agent-event-ingress-20260814
 process: task-batch-execution
-status: open
+status: done
 created_at: '2026-08-14T17:48:38Z'
-updated_at: '2026-08-14T17:48:42Z'
+updated_at: '2026-08-21T04:55:15Z'
 objective: Implement the first, isolated code portion only. Add tools/pf_runtime/central_event_ingress_core.py and tools/smoke_central_event_ingress_core.py. The Core module must expose provider-neutral raw-envelope validation plus deterministic canonical JSON/raw identity; file-first workplace raw shard append protected across processes; bounded raw-id index and a separate stable-native-identity conflict index excluding payload hash; duplicate receipt semantics; conflict quarantine; derived-key helpers; atomic JSON index/checkpoint write helper; and raw-only replay planning/missing derived bookkeeping. Do not wire Runtime, host, Codex adapter, or chat yet. Tests must prove canonical identity stability, duplicate no-second-line behavior, native-id payload conflict, interprocess-safe shard integrity at a bounded scale, atomic state write, and path containment/private storage. Follow the accepted idempotency contract and keep private data out of reports.
 platform: ""
 selected_specializations:
@@ -19,10 +19,13 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: done
+  summary: 'Reconciled: isolated storage work was superseded by the delivered raw ingress kernel and later integrated replay implementation.'
   artifacts:
     []
+  waivers:
+    core-storage-implementation-report: Superseded before the standalone report was written; later accepted implementation and review evidence are authoritative.
+    expected-report: Superseded before the standalone report was written; later accepted implementation and review evidence are authoritative.
 execution_mode:
   kind: implementation
   code_changes_allowed: true

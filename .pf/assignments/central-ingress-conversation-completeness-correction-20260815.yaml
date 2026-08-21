@@ -3,9 +3,9 @@ id: central-ingress-conversation-completeness-correction-20260815
 title: Correct full conversation capture design
 run_id: central-agent-event-ingress-20260814
 process: task-batch-execution
-status: open
+status: done
 created_at: '2026-08-15T05:24:04Z'
-updated_at: '2026-08-15T05:24:35Z'
+updated_at: '2026-08-21T04:54:17Z'
 objective: 'Planning only, correction of two existing designs. Make the requirement precise: all actual correspondence that PF or a provider technically receives must enter central ingress as ordered durable private conversation records; telemetry is separate. Resolve the missing PF-owned input-side record before Codex worker execution, without misclassifying the full generated capsule/system instructions as a human user message. Define the exact canonical message sources and roles, pairing/order/dedup identity, raw envelope and privacy boundaries, and explicit limits for generic Codex hooks whose assistant body is unavailable. Produce a concrete revised first implementation slice and focused acceptance. Do not edit source.'
 platform: ""
 selected_specializations:
@@ -19,8 +19,8 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: done
+  summary: 'Reconciled: correction artifact exists and was superseded by the accepted 20260820 design gate and implementation.'
   artifacts:
     []
 execution_mode:

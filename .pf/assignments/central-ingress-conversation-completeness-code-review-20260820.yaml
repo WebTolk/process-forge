@@ -1,0 +1,70 @@
+schema_version: 1
+id: central-ingress-conversation-completeness-code-review-20260820
+title: Independently review conversation completeness implementation
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-20T12:07:37Z'
+updated_at: '2026-08-20T12:12:16Z'
+objective: Independently review the completed conversation-capture implementation against the approved correction and test contract. Verify raw-only exact payload, safe transcript summary, fail-closed worker input/output boundaries, deterministic atomic transcript/event idempotency, authorization, Codex UserPromptSubmit-only capture, release registration, and no telemetry-to-assistant conversion. Return PASS/FAIL; do not change source.
+platform: ""
+selected_specializations:
+  []
+order: 47
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Independent review failed and routed two verified security/recovery findings to corrective implementation.
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-code-review-20260820.md
+stage: task-execution-loop
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-code-review-20260820.md
+allowed_read_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-implementation-report-20260820.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-test-contract-20260820.md
+  - tools/codex_exec_worker.py
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/smoke_conversation_completeness.py
+ownership:
+  owner_id: independent-reviewer
+  owner_label: worker-independent-reviewer
+  role: conversation-completeness-code-reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-code-review-20260820.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-code-review-20260820.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: conversation-completeness-code-review-20260820
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-code-review-20260820.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-code-review-20260820.md
+  format: concise_markdown
+  include:
+    - conversation-completeness-code-review-20260820

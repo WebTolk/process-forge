@@ -1,0 +1,419 @@
+schema_version: 1
+capsule:
+  id: central-ingress-worker-input-provenance-correction-20260820-capsule
+  generated_at: '2026-08-20T12:52:28Z'
+  assignment_id: central-ingress-worker-input-provenance-correction-20260820
+  assignment_path: .pf/assignments/central-ingress-worker-input-provenance-correction-20260820.yaml
+  assignment_checksum: 3663cfaf553c1e75f433d962a7eeea445819d32abc669151a524fab4d79def7d
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 385a4054de3e3987bbd4fcc679c6b649a2d797309e3556ac230201483e47f8b1
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260820-125213-dc400f
+  sha256: 'sha256:385a4054de3e3987bbd4fcc679c6b649a2d797309e3556ac230201483e47f8b1'
+  generated_at: '2026-08-20T12:52:09Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  []
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+execution_route_summary:
+  process: knowledge-package-improvement
+  stages:
+    -
+      id: propose
+      required_capabilities:
+        - research
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - proposal-complete
+    -
+      id: assess
+      required_capabilities:
+        - process_governance
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - compatibility-reviewed
+    -
+      id: integrate
+      required_capabilities:
+        - repository_write
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - package-updated
+  required_capabilities:
+    - process_governance
+    - repository_write
+    - research
+    - review
+  capability_requirements:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+  unsatisfied:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: central-ingress-worker-input-provenance-correction-20260820
+  path: .pf/assignments/central-ingress-worker-input-provenance-correction-20260820.yaml
+  status: open
+  objective: 'Close the final independent-review blocker: make WorkerPromptPayloadSubmitted fail closed unless its system summary exactly matches a canonical PF-owned digest/summary contract tied to the input payload and worker state. Add a negative forged-safe-summary smoke and preserve valid capture.'
+  execution_mode:
+    kind: implementation
+    code_changes_allowed: true
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260820-125213-dc400f
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/central-ingress-worker-input-provenance-correction-20260820.yaml
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - tools/codex_exec_worker.py
+    - tools/pf_runtime/host.py
+    - tools/smoke_conversation_completeness.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/worker-input-provenance-correction-report-20260820.md
+  allowed_read_files:
+    - tools/processforge.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-20260820.md
+  forbidden_files:
+    []
+  ownership:
+    owner_id: main-orchestrator
+    owner_label: worker-main-orchestrator
+    role: worker-input-provenance-corrector
+    writer: true
+    owned_files:
+      - tools/codex_exec_worker.py
+      - tools/pf_runtime/host.py
+      - tools/smoke_conversation_completeness.py
+      - .pf/artifacts/central-agent-event-ingress-20260814/worker-input-provenance-correction-report-20260820.md
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - tools/codex_exec_worker.py
+      - tools/pf_runtime/host.py
+      - tools/smoke_conversation_completeness.py
+      - .pf/artifacts/central-agent-event-ingress-20260814/worker-input-provenance-correction-report-20260820.md
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: worker-input-provenance-correction-report-20260820
+      type: unspecified
+      required: true
+      path: .pf/artifacts/central-agent-event-ingress-20260814/worker-input-provenance-correction-report-20260820.md
+  expected_report:
+    language: ru
+    artifact: .pf/artifacts/central-agent-event-ingress-20260814/worker-input-provenance-correction-report-20260820.md
+    format: concise_markdown
+    include:
+      - worker-input-provenance-correction-report-20260820
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: ""
+agent_reasoning_effort: high
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/central-ingress-worker-input-provenance-correction-20260820.ndjson
+  event_correlation_id: assignment-central-ingress-worker-input-provenance-correction-20260820
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/central-ingress-worker-input-provenance-correction-20260820.yaml
+allowed_files:
+  - tools/codex_exec_worker.py
+  - tools/pf_runtime/host.py
+  - tools/smoke_conversation_completeness.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/worker-input-provenance-correction-report-20260820.md
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: worker-input-provenance-correction-report-20260820
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/worker-input-provenance-correction-report-20260820.md
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-central-ingress-worker-input-provenance-correction-20260820

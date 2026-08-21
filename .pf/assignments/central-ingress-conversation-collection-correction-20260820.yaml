@@ -1,0 +1,73 @@
+schema_version: 1
+id: central-ingress-conversation-collection-correction-20260820
+title: Correct collectible worker report capture after lifecycle reconciliation
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-20T12:42:07Z'
+updated_at: '2026-08-20T12:45:59Z'
+objective: Diagnose and correct the fail-closed Host authorization path that rejects the real completed PF worker expected report during worker-run collect. Preserve provenance and privacy checks, add focused regression coverage, then collect the existing worker report exactly once.
+platform: ""
+selected_specializations:
+  []
+order: 51
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Corrected false privacy rejection of safe marker vocabulary and collected the completed worker report as one assistant message.
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-collection-correction-report-20260820.md
+stage: task-execution-loop
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/pf_runtime/host.py
+  - tools/smoke_conversation_completeness.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-collection-correction-report-20260820.md
+allowed_read_files:
+  - tools/processforge.py
+  - tools/codex_exec_worker.py
+  - .pf/runtime/agent-runs/central-agent-event-ingress-20260814/central-ingress-conversation-completeness-expanded-smoke-20260820/status.json
+  - .pf/runtime/agent-runs/central-agent-event-ingress-20260814/central-ingress-conversation-completeness-expanded-smoke-20260820/exit.json
+ownership:
+  owner_id: main-orchestrator
+  owner_label: worker-main-orchestrator
+  role: conversation-collection-corrector
+  writer: true
+  owned_files:
+    - tools/pf_runtime/host.py
+    - tools/smoke_conversation_completeness.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-collection-correction-report-20260820.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/pf_runtime/host.py
+    - tools/smoke_conversation_completeness.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-collection-correction-report-20260820.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: conversation-collection-correction-report-20260820
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/conversation-collection-correction-report-20260820.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/conversation-collection-correction-report-20260820.md
+  format: concise_markdown
+  include:
+    - conversation-collection-correction-report-20260820

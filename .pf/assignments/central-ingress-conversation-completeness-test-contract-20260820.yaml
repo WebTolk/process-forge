@@ -1,0 +1,70 @@
+schema_version: 1
+id: central-ingress-conversation-completeness-test-contract-20260820
+title: Specify focused conversation capture test contract
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-20T11:55:53Z'
+updated_at: '2026-08-20T11:58:06Z'
+objective: Create the focused, executable test contract for the approved conversation-capture slice. Cover worker input capture fail-closed privacy, Host conversation routing/authorization/idempotency/recovery, collectible expected-report assistant capture, and Codex UserPromptSubmit. Name required smoke scenarios and forbidden sources. Do not change product source.
+platform: ""
+selected_specializations:
+  []
+order: 45
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Focused conversation-capture test contract completed and checked against the approved design gate.
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-test-contract-20260820.md
+stage: task-execution-loop
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-test-contract-20260820.md
+allowed_read_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-design-gate-20260820.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-security-correction.md
+  - tools/codex_exec_worker.py
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/smoke_central_event_ingress.py
+ownership:
+  owner_id: main-orchestrator
+  owner_label: worker-main-orchestrator
+  role: conversation-completeness-test-designer
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-test-contract-20260820.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-test-contract-20260820.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: conversation-completeness-test-contract-20260820
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-test-contract-20260820.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-test-contract-20260820.md
+  format: concise_markdown
+  include:
+    - conversation-completeness-test-contract-20260820

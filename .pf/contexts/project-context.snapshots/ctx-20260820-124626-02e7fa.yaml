@@ -1,0 +1,1255 @@
+schema_version: 1
+id: ctx-20260820-124626-02e7fa
+generated_at: '2026-08-20T12:46:22Z'
+snapshot:
+  id: ctx-20260820-124626-02e7fa
+  generated_at: '2026-08-20T12:46:22Z'
+  valid_until: '2026-08-27T12:46:22Z'
+  refresh_policy:
+    max_age_days: 7
+    refresh_when_sources_change: true
+    refresh_when_workplace_changes: true
+    refresh_when_package_versions_change: true
+    refresh_when_required_tools_change: true
+  health:
+    status: blocked
+project:
+  id: process-forge
+  name: ProcessForge
+  type: processforge-development
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+flow:
+  root: .pf
+  layout: pf
+  manifest: .pf/process-forge.yaml
+  local_config: .pf/process-forge.local.yaml
+process_forge:
+  version: 1.0.2
+  version_constraint: ^1.0
+  install_mode: linked
+  distribution:
+    id: processforge
+    source: workplace
+    path: <private-distribution-ref>
+    status: available
+platform_contracts:
+  available:
+    -
+      id: platform.joomla
+      platform: joomla
+      registry_entry: joomla
+      source: platform-contracts/platform.joomla/platform-contract.yaml
+      status: available
+  selected:
+    []
+  stack:
+    []
+  missing_required:
+    []
+  circular:
+    []
+  missing_required_resources:
+    []
+  missing_recommended_resources:
+    []
+available_platform_contracts:
+  -
+    id: platform.joomla
+    platform: joomla
+    registry_entry: joomla
+    source: platform-contracts/platform.joomla/platform-contract.yaml
+    status: available
+selected_platform_contracts:
+  []
+platform_selection:
+  status: not_selected
+  reason: No platform contracts were selected for this project.
+platform_stack:
+  []
+sources:
+  fingerprints:
+    -
+      id: project_manifest
+      path: .pf/process-forge.yaml
+      kind: manifest
+      checksum: 564a5e768a1b5056fa6ae0bfb5a98b254d2971f776c74e913b7bb3b57fb5d558
+    -
+      id: local_config
+      path: .pf/process-forge.local.yaml
+      kind: local-config
+      checksum: 1a2991b658ac8d8ed5d52740fc63e50815736950dc380310a125de34231b532d
+      private: true
+    -
+      id: workplace_manifest
+      path: <private-workplace-manifest-ref>
+      kind: workplace
+      checksum: ffe0674587ded8487545c7ac49d829bbab6a65108bdfaea6f2ba43035f33e51d
+      private: true
+    -
+      id: workplace-specialization-registry-registries-specializations-yaml
+      path: <private-workplace-ref>/registries/specializations.yaml
+      kind: workplace-specialization-registry
+      checksum: 734fa4ae49334a70b0236c57f6ae6227f3431c4b5434e7c49630c86c874c4039
+      private: true
+    -
+      id: workplace-project-classifier-registry-registries-project-classifiers-yaml
+      path: <private-workplace-ref>/registries/project-classifiers.yaml
+      kind: workplace-project-classifier-registry
+      checksum: d1c26c4994bae658594d9dcfae02f8879a318db78a679dd3f06d6f492c92da32
+      private: true
+    -
+      id: workplace-process-pack-registry-registries-process-packs-yaml
+      path: <private-workplace-ref>/registries/process-packs.yaml
+      kind: workplace-process-pack-registry
+      checksum: ecd4ea0fe28f22250187d77dcdb0aaad52ecd23698dc46b9b8d6a390f0ea18db
+      private: true
+    -
+      id: workplace-tool-registry-registries-tools-yaml
+      path: <private-workplace-ref>/registries/tools.yaml
+      kind: workplace-tool-registry
+      checksum: f5d46316c132ac4b9d5264571dd126a432fadefaf88d8ed12faeae491fb4c8b5
+      private: true
+    -
+      id: workplace-mcp-registry-registries-mcp-yaml
+      path: <private-workplace-ref>/registries/mcp.yaml
+      kind: workplace-mcp-registry
+      checksum: ddd2ce0f6108381acb805d9714f3b4b990e4150fed58b31099e53938274ab938
+      private: true
+    -
+      id: workplace-template-registry-registries-templates-yaml
+      path: <private-workplace-ref>/registries/templates.yaml
+      kind: workplace-template-registry
+      checksum: 6fe70970531eddee119c32aca9d352eaa66b51e2df24affddfb6648254928608
+      private: true
+    -
+      id: official-pack-processforge-official-software-development-package
+      path: <distribution-pack>/processforge.official.software-development/package.yaml
+      kind: official-process-pack
+      checksum: bac70e62ac7f682c7ee536918f9c2d42b3cfa4b5d5bb163293da0f2d9286911a
+      private: true
+    -
+      id: official-pack-processforge-official-software-development-registry-entry
+      path: <distribution-pack>/processforge.official.software-development/project-classifiers/registry-entry.yaml
+      kind: official-process-pack
+      checksum: afa5cfe932f91e49710fb2a1b52c623f14388180d8a189c9ff37abf7d5dd6f1d
+      private: true
+    -
+      id: official-pack-processforge-official-software-development-software-web
+      path: <distribution-pack>/processforge.official.software-development/project-classifiers/software-web.yaml
+      kind: official-process-pack
+      checksum: 04e718bcfcee1e51f1dd2c86b692422b437ab6340d3096f407bcfedd8fa85848
+      private: true
+    -
+      id: official-pack-processforge-official-verification-package
+      path: <distribution-pack>/processforge.official.verification/package.yaml
+      kind: official-process-pack
+      checksum: 20a75ec8c1607d5b054b6100297fe9e962434be35fbbf031a56c0bed726bb715
+      private: true
+    -
+      id: workplace-specialization-specializations-specialization-joomla-administrator-yaml
+      path: <private-workplace-ref>/specializations/specialization.joomla-administrator.yaml
+      kind: workplace-specialization
+      checksum: 6fb1046ddce9deda0a4a3516981110fd2ef9cfe59dae776fa6050fc0d2fe0972
+      private: true
+    -
+      id: workplace-specialization-specializations-specialization-joomla-backend-yaml
+      path: <private-workplace-ref>/specializations/specialization.joomla-backend.yaml
+      kind: workplace-specialization
+      checksum: d1c187200b645133cbb1a1a22c470cdad0fbbd9a42fa404f5681da65b994d172
+      private: true
+    -
+      id: workplace-specialization-specializations-specialization-joomla-content-manager-yaml
+      path: <private-workplace-ref>/specializations/specialization.joomla-content-manager.yaml
+      kind: workplace-specialization
+      checksum: 5394f4de22be512955cd364abe6a8edae61ee8de4448e0083a717abdfe30af80
+      private: true
+    -
+      id: workplace-specialization-specializations-specialization-joomla-frontend-yaml
+      path: <private-workplace-ref>/specializations/specialization.joomla-frontend.yaml
+      kind: workplace-specialization
+      checksum: 3b5f74caed9aaecd6d83e1fd656aa415fc89520a5ee52473252fe2a7cfff89b4
+      private: true
+    -
+      id: workplace-specialization-specializations-specialization-joomla-fullstack-yaml
+      path: <private-workplace-ref>/specializations/specialization.joomla-fullstack.yaml
+      kind: workplace-specialization
+      checksum: 4d7e348a0b8fc0839b3b769e2f6527f2e073e82ac7c7bbe312856baa16c6430c
+      private: true
+    -
+      id: process-processes-core-knowledge-package-improvement-yaml
+      path: processes/core/knowledge-package-improvement.yaml
+      kind: process
+      checksum: f3b902a7f683199661e9b44283a9459e53628b7b425057109393bc8f4fe319d6
+    -
+      id: process-processes-core-process-version-upgrade-yaml
+      path: processes/core/process-version-upgrade.yaml
+      kind: process
+      checksum: 1e3f843c6a87d18278a11ae2433c3771c7d70c7ff5b65eb028ac714004b37aa2
+    -
+      id: process-processes-core-workplace-initialization-yaml
+      path: processes/core/workplace-initialization.yaml
+      kind: process
+      checksum: 246d016350ee4c5bd7cf91594686a3a5addd2cd5a86c1a57a3802991fbe7206d
+    -
+      id: process-processes-core-project-onboarding-yaml
+      path: processes/core/project-onboarding.yaml
+      kind: process
+      checksum: ff838aa48d621291420fe370ed7a55ab65708b0c04bbd7f5baac4f0152640ddf
+    -
+      id: process-processes-core-project-initialization-yaml
+      path: processes/core/project-initialization.yaml
+      kind: process
+      checksum: 1dc8197135871d7153f782e0208729c7adf62d69466f1546bed9e5ecc63bdd58
+    -
+      id: process-processes-core-session-bootstrap-yaml
+      path: processes/core/session-bootstrap.yaml
+      kind: process
+      checksum: c66d15b7af343622d68318dc573bb24d7f69d95e0c88f8e9cabf68dc6f26231b
+    -
+      id: process-processes-core-context-resolution-yaml
+      path: processes/core/context-resolution.yaml
+      kind: process
+      checksum: 7fa178d235b16fdc58eab152afb0c75ae92c09deae5c73b937c33e2f7634a5cf
+    -
+      id: process-processes-core-processforge-update-check-yaml
+      path: processes/core/processforge-update-check.yaml
+      kind: process
+      checksum: 3eb76d9adaef12d22f806e14066cfdde6f672e98b8a5233779400b4940c88ff0
+    -
+      id: process-processes-core-knowledge-resource-add-yaml
+      path: processes/core/knowledge-resource-add.yaml
+      kind: process
+      checksum: 0d87f5d7a2f79469cebc05de54bfe6456c3bdb5fb53b1b27a94b208e89c2b47b
+    -
+      id: process-processes-core-knowledge-package-update-yaml
+      path: processes/core/knowledge-package-update.yaml
+      kind: process
+      checksum: 4f3998b2c8d4c93f98fac897f99de07ec106544554efa7129d40abef6c339d54
+    -
+      id: process-processes-core-template-add-yaml
+      path: processes/core/template-add.yaml
+      kind: process
+      checksum: 3b2881d98527b833298b8b4e316f8fc49cd6827e7b119b812c355f2c8ed2a58f
+    -
+      id: process-processes-core-tool-register-yaml
+      path: processes/core/tool-register.yaml
+      kind: process
+      checksum: 85cb501c693393f84075b463bb6d6e8e5e3c474660cc00bf76846da26d34b689
+    -
+      id: process-processes-core-mcp-register-yaml
+      path: processes/core/mcp-register.yaml
+      kind: process
+      checksum: eeed0f5307ba19cfc1648d38a2f51064c961beb3a3c32d100f07f36e5eac92f0
+    -
+      id: process-processes-core-platform-contract-install-yaml
+      path: processes/core/platform-contract-install.yaml
+      kind: process
+      checksum: 39f684dcc211e43d6fda3760f106b33e199bf508eba0be2356cc312095a72692
+    -
+      id: process-processes-core-reusable-template-authoring-yaml
+      path: processes/core/reusable-template-authoring.yaml
+      kind: process
+      checksum: 94cbaad07af3306963d2a90b5a60cf23090de0b46307e2c79ceb4e9f8dbde44e
+    -
+      id: process-processes-core-knowledge-package-authoring-yaml
+      path: processes/core/knowledge-package-authoring.yaml
+      kind: process
+      checksum: 7a0a5d588c9cdebbafb94d88709811ef88689332dc0ae15e5f45c11bf6fac65f
+    -
+      id: process-processes-core-platform-contract-authoring-yaml
+      path: processes/core/platform-contract-authoring.yaml
+      kind: process
+      checksum: 64b31b6a32c589824b5f5df3ec41f41e81837e02eeca400fde0276b9d8442bef
+    -
+      id: process-processes-core-process-authoring-yaml
+      path: processes/core/process-authoring.yaml
+      kind: process
+      checksum: 0a4161d5d57d1d1c25801b8e683b2ac0c9e10639f19ba3433b6cc5d75c96f481
+    -
+      id: process-processes-core-authoring-parity-audit-yaml
+      path: processes/core/authoring-parity-audit.yaml
+      kind: process
+      checksum: 218252175bc3ea39f234249ab2001c8012edabad32e0285562e6b0ef8b9ae6ef
+    -
+      id: process-processes-core-task-batch-execution-yaml
+      path: processes/core/task-batch-execution.yaml
+      kind: process
+      checksum: 5273361dab3d2b3247838abef03fbc66262b01b021e90f9c5783235f04b51da9
+    -
+      id: process-processes-core-guided-workplace-setup-yaml
+      path: processes/core/guided-workplace-setup.yaml
+      kind: process
+      checksum: b2f73b00a5c9129f8a1d9aa953c54dd79580c0215c9cfb5f25c8dd3fc6500b46
+    -
+      id: process-processes-core-multi-agent-task-orchestration-yaml
+      path: processes/core/multi-agent-task-orchestration.yaml
+      kind: process
+      checksum: 3bbe3bae4dce7bfd40b8c0a08fa835281c808c8b87f65f3dfa8ca1fbdd1efb54
+    -
+      id: process-processes-core-runtime-driver-registry-yaml
+      path: processes/core/runtime-driver-registry.yaml
+      kind: process
+      checksum: bc0435ed2bd8d45e38f583bd1bd27dcc8cffb7fd9b7ed9ca2e2095ac16281440
+    -
+      id: process-processes-core-process-supervisor-yaml
+      path: processes/core/process-supervisor.yaml
+      kind: process
+      checksum: 4e81606946572b953bee7577d6383e525f90fda95fb9a146dd8bf41e44512b34
+    -
+      id: process-processes-core-agent-director-supervision-yaml
+      path: processes/core/agent-director-supervision.yaml
+      kind: process
+      checksum: 9598f734f66a5c2f3f9d272149b7dc2bfed2981c1f3edbad9d4fed0451c190e3
+    -
+      id: process-processes-core-orchestrator-shell-agents-supervision-yaml
+      path: processes/core/orchestrator-shell-agents-supervision.yaml
+      kind: process
+      checksum: 9e847848140d7c2c6d1729b2277f1b35fdf57d2a01716b89420b735e1fc2bd91
+    -
+      id: package-packages-process-forge-core-yaml
+      path: packages/process-forge-core.yaml
+      kind: package
+      checksum: 39e5ad04709c8ac52196418e6cfb990d521701033e6a84a9272c335204001ee2
+    -
+      id: package-packages-process-forge-knowledge-governance-yaml
+      path: packages/process-forge-knowledge-governance.yaml
+      kind: package
+      checksum: b180698dbcd9521ceb8a35859c78ab7106e2917a32ad4aab95af10fc7b0b3b4d
+    -
+      id: registry-registries-tools-yaml
+      path: .pf/registries/tools.yaml
+      kind: registry
+      checksum: c20aab44c3aa379b4776a3e6cde74d2fae180c326335c3cca6cea8bf7449db61
+requirements_fingerprint:
+  process_forge_yaml: 'sha256:564a5e768a1b5056fa6ae0bfb5a98b254d2971f776c74e913b7bb3b57fb5d558'
+  process_forge_local_yaml: 'sha256:1a2991b658ac8d8ed5d52740fc63e50815736950dc380310a125de34231b532d'
+context_requirements:
+  knowledge_packages:
+    []
+  knowledge_resources:
+    []
+  template_packages:
+    []
+  tools:
+    []
+  platform_contracts:
+    []
+context_policy:
+  on_session_start:
+    check_freshness: true
+    check_update_candidates: if_due
+    if_fresh: continue
+    if_fresh_with_updates: notify
+    if_stale: ask_operator
+    if_broken: block
+  auto_refresh:
+    enabled: false
+    allow_patch: true
+    allow_minor: false
+    allow_major: false
+    allow_rolling_resources: false
+  active_run_behavior:
+    existing_capsules: pin_existing
+    new_capsules: require_fresh_snapshot
+  organized_mode:
+    stale_snapshot_action: needs_operator
+resolved_parameters:
+  {}
+parameter_resolution:
+  status: resolved
+  sources:
+    []
+  provenance:
+    {}
+  conflicts:
+    []
+resolved_context:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+  status: needs_resources
+  process: knowledge-package-improvement
+  active_resource_profile:
+    selected_platform:
+      []
+    platform_stack:
+      []
+    selected_specializations:
+      []
+    available_knowledge_packages:
+      - docs.php
+      - docs.web.accessibility
+      - docs.web.css
+      - docs.web.html
+      - docs.web.javascript
+      - docs.web.performance
+    activated_knowledge_packages:
+      - docs.php
+      - docs.web.accessibility
+      - docs.web.css
+      - docs.web.html
+      - docs.web.javascript
+      - docs.web.performance
+    excluded_knowledge_packages:
+      []
+    available_tools:
+      []
+    activated_tools:
+      []
+    excluded_tools:
+      []
+    available_mcp:
+      []
+    activated_mcp:
+      []
+    excluded_mcp:
+      []
+    activated_templates:
+      []
+    excluded_templates:
+      []
+    provided_capabilities:
+      - architecture
+      - investigation
+      - process_coordination
+      - reporting
+      - repository_read
+      - repository_write
+      - review
+      - test_execution
+      - test_planning
+      - test_running
+    applied_project_overrides:
+      []
+    effective_resources:
+      -
+        kind: knowledge_packages
+        id: docs.php
+        status: activated
+      -
+        kind: knowledge_packages
+        id: docs.web.accessibility
+        status: activated
+      -
+        kind: knowledge_packages
+        id: docs.web.css
+        status: activated
+      -
+        kind: knowledge_packages
+        id: docs.web.html
+        status: activated
+      -
+        kind: knowledge_packages
+        id: docs.web.javascript
+        status: activated
+      -
+        kind: knowledge_packages
+        id: docs.web.performance
+        status: activated
+    effective_fingerprints:
+      {}
+    resolution_reasons:
+      -
+        source: processforge.official.software-development
+        reason: active official process pack knowledge packages merged
+    conflicts:
+      -
+        id: research
+        kind: capability
+        source: 'process:knowledge-package-improvement'
+        reason: selected resource profile does not provide required capability
+      -
+        id: process_governance
+        kind: capability
+        source: 'process:knowledge-package-improvement'
+        reason: selected resource profile does not provide required capability
+      -
+        id: research
+        kind: capability
+        source: 'knowledge-package-improvement:propose'
+        reason: selected resource profile does not provide required capability
+      -
+        id: process_governance
+        kind: capability
+        source: 'knowledge-package-improvement:assess'
+        reason: selected resource profile does not provide required capability
+  execution_route:
+    process: knowledge-package-improvement
+    stages:
+      -
+        id: propose
+        required_capabilities:
+          - research
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - proposal-complete
+      -
+        id: assess
+        required_capabilities:
+          - process_governance
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - compatibility-reviewed
+      -
+        id: integrate
+        required_capabilities:
+          - repository_write
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - package-updated
+    required_capabilities:
+      - process_governance
+      - repository_write
+      - research
+      - review
+    capability_requirements:
+      -
+        capability: research
+        required_by: 'process:knowledge-package-improvement'
+      -
+        capability: process_governance
+        required_by: 'process:knowledge-package-improvement'
+      -
+        capability: review
+        required_by: 'process:knowledge-package-improvement'
+      -
+        capability: research
+        required_by: 'knowledge-package-improvement:propose'
+      -
+        capability: process_governance
+        required_by: 'knowledge-package-improvement:assess'
+      -
+        capability: repository_write
+        required_by: 'knowledge-package-improvement:integrate'
+    required_artifacts:
+      []
+    required_evidence:
+      []
+    acceptance_criteria:
+      []
+  capability_resolution:
+    satisfied:
+      -
+        capability: review
+        required_by: 'process:knowledge-package-improvement'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: repository_write
+        required_by: 'knowledge-package-improvement:integrate'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+    unsatisfied:
+      -
+        capability: research
+        required_by: 'process:knowledge-package-improvement'
+        reason: selected resource profile does not provide required capability
+        suggested_fix: select or update a specialization/platform binding that provides this capability
+      -
+        capability: process_governance
+        required_by: 'process:knowledge-package-improvement'
+        reason: selected resource profile does not provide required capability
+        suggested_fix: select or update a specialization/platform binding that provides this capability
+      -
+        capability: research
+        required_by: 'knowledge-package-improvement:propose'
+        reason: selected resource profile does not provide required capability
+        suggested_fix: select or update a specialization/platform binding that provides this capability
+      -
+        capability: process_governance
+        required_by: 'knowledge-package-improvement:assess'
+        reason: selected resource profile does not provide required capability
+        suggested_fix: select or update a specialization/platform binding that provides this capability
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+execution_route:
+  process: knowledge-package-improvement
+  stages:
+    -
+      id: propose
+      required_capabilities:
+        - research
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - proposal-complete
+    -
+      id: assess
+      required_capabilities:
+        - process_governance
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - compatibility-reviewed
+    -
+      id: integrate
+      required_capabilities:
+        - repository_write
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - package-updated
+  required_capabilities:
+    - process_governance
+    - repository_write
+    - research
+    - review
+  capability_requirements:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution:
+  satisfied:
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+  unsatisfied:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+selected_specializations:
+  []
+applied_project_overrides:
+  []
+effective_fingerprints:
+  {}
+resolution_reasons:
+  -
+    source: processforge.official.software-development
+    reason: active official process pack knowledge packages merged
+conflicts:
+  -
+    id: research
+    kind: capability
+    source: 'process:knowledge-package-improvement'
+    reason: selected resource profile does not provide required capability
+  -
+    id: process_governance
+    kind: capability
+    source: 'process:knowledge-package-improvement'
+    reason: selected resource profile does not provide required capability
+  -
+    id: research
+    kind: capability
+    source: 'knowledge-package-improvement:propose'
+    reason: selected resource profile does not provide required capability
+  -
+    id: process_governance
+    kind: capability
+    source: 'knowledge-package-improvement:assess'
+    reason: selected resource profile does not provide required capability
+resolved:
+  knowledge_packages:
+    -
+      id: docs.php
+      constraint: declared
+    -
+      id: docs.web.accessibility
+      constraint: declared
+    -
+      id: docs.web.css
+      constraint: declared
+    -
+      id: docs.web.html
+      constraint: declared
+    -
+      id: docs.web.javascript
+      constraint: declared
+    -
+      id: docs.web.performance
+      constraint: declared
+    -
+      id: process-forge-core
+      constraint: declared
+    -
+      id: process-forge-knowledge-governance
+      constraint: declared
+    -
+      id: processforge.core
+      constraint: declared
+    -
+      id: project.process-forge
+      constraint: declared
+  knowledge_resources:
+    []
+  available_knowledge_resources:
+    []
+  template_packages:
+    []
+  templates:
+    []
+  excluded_templates:
+    []
+  tools:
+    []
+  excluded_tools:
+    []
+  platform_contracts:
+    []
+  process_packages:
+    -
+      id: process-forge-core
+      path: ../packages/process-forge-core.yaml
+    -
+      id: process-forge-knowledge-governance
+      path: ../packages/process-forge-knowledge-governance.yaml
+freshness:
+  status: fresh
+  checked_at: '2026-08-20T12:46:22Z'
+  stale_reasons:
+    []
+  update_available:
+    []
+  broken_refs:
+    []
+reproducibility:
+  level: exact
+  reasons:
+    []
+source_fingerprints:
+  workplace_manifest: ffe0674587ded8487545c7ac49d829bbab6a65108bdfaea6f2ba43035f33e51d
+  package_roots_registry: 'sha256:6a6bfe485b123f49b9dfa2d586c55a132a4ae8b2d6348a8d8ab6fc1e88a83c70'
+  knowledge_roots_registry: 'sha256:2733faabff2dc10f6aebda9d1338769e5dbd724817e85639f67d90dd550ea5b2'
+  template_registry: 'sha256:6fe70970531eddee119c32aca9d352eaa66b51e2df24affddfb6648254928608'
+  tool_registry: 'sha256:f5d46316c132ac4b9d5264571dd126a432fadefaf88d8ed12faeae491fb4c8b5'
+  parameters_registry: missing
+  installed_subjects: 'sha256:7e1838c48fb61e63001b54d4b84b5869f92fba298c8d25386095988881b28f8f'
+knowledge_stack:
+  -
+    id: processforge.core
+    version: ^1.0
+    source: distribution
+    distribution: processforge
+  -
+    id: project.process-forge
+    version: 1.0.2
+    source: project
+resolved_policies:
+  hard:
+    -
+      id: public.no_local_absolute_paths
+      value: true
+      locked: true
+    -
+      id: files.one_writer_per_scope
+      value: true
+      locked: true
+    -
+      id: secrets.public_exports_sanitized
+      value: true
+      locked: true
+    -
+      id: runtime.private
+      value: true
+      locked: true
+    -
+      id: markdown.not_machine_merge_source
+      value: true
+      locked: true
+  preferences:
+    -
+      id: templates.project_overrides_global
+      value: true
+    -
+      id: session.prefer_project_context_snapshot
+      value: true
+capabilities:
+  required:
+    -
+      id: markdown_editing
+      status: available
+      provider: processforge-project-filesystem
+      severity: info
+    -
+      id: repository_read
+      status: available
+      provider: processforge-project-filesystem
+      severity: info
+    -
+      id: schema_validation
+      status: available
+      provider: processforge-schema-validator
+      severity: info
+  optional:
+    -
+      id: browser_verification
+      status: missing
+      provider: null
+      severity: warn
+    -
+      id: official_documentation_lookup
+      status: missing
+      provider: null
+      severity: warn
+    -
+      id: repository_symbol_analysis
+      status: missing
+      provider: null
+      severity: warn
+knowledge_resources:
+  selected:
+    []
+  required:
+    []
+  recommended:
+    []
+  missing_required:
+    []
+  missing_recommended:
+    []
+tools:
+  required:
+    []
+  recommended:
+    []
+  activated:
+    []
+  excluded:
+    []
+  source: workplace-registry
+mcp:
+  required:
+    []
+  recommended:
+    []
+  activated:
+    []
+  excluded:
+    []
+  source: workplace-registry
+templates:
+  project:
+    []
+  required:
+    []
+  recommended:
+    []
+  activated:
+    []
+  excluded:
+    []
+  source: workplace-registry
+processes:
+  enabled:
+    -
+      id: knowledge-package-improvement
+      path: ../processes/core/knowledge-package-improvement.yaml
+    -
+      id: process-version-upgrade
+      path: ../processes/core/process-version-upgrade.yaml
+    -
+      id: workplace-initialization
+      path: ../processes/core/workplace-initialization.yaml
+    -
+      id: project-onboarding
+      path: ../processes/core/project-onboarding.yaml
+    -
+      id: project-initialization
+      path: ../processes/core/project-initialization.yaml
+    -
+      id: session-bootstrap
+      path: ../processes/core/session-bootstrap.yaml
+    -
+      id: context-resolution
+      path: ../processes/core/context-resolution.yaml
+    -
+      id: processforge-update-check
+      path: ../processes/core/processforge-update-check.yaml
+    -
+      id: knowledge-resource-add
+      path: ../processes/core/knowledge-resource-add.yaml
+    -
+      id: knowledge-package-update
+      path: ../processes/core/knowledge-package-update.yaml
+    -
+      id: template-add
+      path: ../processes/core/template-add.yaml
+    -
+      id: tool-register
+      path: ../processes/core/tool-register.yaml
+    -
+      id: mcp-register
+      path: ../processes/core/mcp-register.yaml
+    -
+      id: platform-contract-install
+      path: ../processes/core/platform-contract-install.yaml
+    -
+      id: reusable-template-authoring
+      path: ../processes/core/reusable-template-authoring.yaml
+    -
+      id: knowledge-package-authoring
+      path: ../processes/core/knowledge-package-authoring.yaml
+    -
+      id: platform-contract-authoring
+      path: ../processes/core/platform-contract-authoring.yaml
+    -
+      id: process-authoring
+      path: ../processes/core/process-authoring.yaml
+    -
+      id: authoring-parity-audit
+      path: ../processes/core/authoring-parity-audit.yaml
+    -
+      id: task-batch-execution
+      path: ../processes/core/task-batch-execution.yaml
+    -
+      id: guided-workplace-setup
+      path: ../processes/core/guided-workplace-setup.yaml
+    -
+      id: multi-agent-task-orchestration
+      path: ../processes/core/multi-agent-task-orchestration.yaml
+    -
+      id: runtime-driver-registry
+      path: ../processes/core/runtime-driver-registry.yaml
+    -
+      id: process-supervisor
+      path: ../processes/core/process-supervisor.yaml
+    -
+      id: agent-director-supervision
+      path: ../processes/core/agent-director-supervision.yaml
+    -
+      id: orchestrator-shell-agents-supervision
+      path: ../processes/core/orchestrator-shell-agents-supervision.yaml
+packages:
+  selected:
+    -
+      id: process-forge-core
+      path: ../packages/process-forge-core.yaml
+    -
+      id: process-forge-knowledge-governance
+      path: ../packages/process-forge-knowledge-governance.yaml
+workplace_coordination:
+  project_mode: inherit
+  workplace_default_project_mode: simple
+  effective_mode: simple
+  director_enabled: false
+  director_available_at_workplace: false
+  director_office_exists: false
+  director_required: false
+  director_process: null
+  director_inbox:
+    enabled: false
+session:
+  startup_read_order:
+    - .pf/AGENTS.md
+    - .pf/process-forge.yaml
+    - .pf/contexts/project-context.snapshot.md
+    - current assignment
+    - relevant logs/reviews/handoffs
+  telemetry_root: .pf/runtime/telemetry
+  events_log: .pf/runtime/events/events.ndjson

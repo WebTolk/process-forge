@@ -3,9 +3,9 @@ id: central-ingress-raw-kernel-implementation-20260814
 title: Implement isolated raw ingress identity and storage kernel
 run_id: central-agent-event-ingress-20260814
 process: task-batch-execution
-status: open
+status: done
 created_at: '2026-08-14T17:51:38Z'
-updated_at: '2026-08-14T17:51:42Z'
+updated_at: '2026-08-21T04:55:33Z'
 objective: 'Implement exactly one new pure-stdlib module tools/pf_runtime/raw_ingress_kernel.py. Do not search or modify any other source file. Implement only: canonical_json with NFC/sorted keys; validate_native_envelope mapping; deterministic raw_event_id and native_identity_key (the latter excludes payload hash); shard path containment; append_raw with interprocess-safe lock, complete NDJSON append and atomic indexes; duplicate vs poisoned native-id detection; atomic_write_json; deterministic derived_key helper. Public API must be documented in module docstrings. Do not integrate host/service/Codex, do not create tests, do not read tools/processforge.py. Return a report noting exact public functions and one simple syntax check.'
 platform: ""
 selected_specializations:
@@ -19,10 +19,13 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: done
+  summary: 'Reconciled: raw_ingress_kernel.py was delivered and governed by later review, replay, and release-registration evidence.'
   artifacts:
     []
+  waivers:
+    raw-kernel-implementation-report: Superseded before the standalone report was written; later accepted implementation and review evidence are authoritative.
+    expected-report: Superseded before the standalone report was written; later accepted implementation and review evidence are authoritative.
 execution_mode:
   kind: implementation
   code_changes_allowed: true

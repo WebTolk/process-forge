@@ -2,9 +2,9 @@ schema_version: 1
 id: central-agent-event-ingress-20260814
 title: Central Agent Event Ingress
 process: orchestrator-shell-agents-supervision
-status: in_progress
+status: completed
 created_at: '2026-08-14T16:45:35Z'
-updated_at: '2026-08-15T05:46:24Z'
+updated_at: '2026-08-21T04:56:31Z'
 objective: Design and deliver a provider-neutral, raw-first central agent event ingress with durable workplace capture, chat history, safe routing, replay, and thin provider adapters.
 platform: ""
 selected_specializations:
@@ -34,7 +34,7 @@ tasks:
   -
     id: central-ingress-architecture-design-20260814
     assignment: .pf/assignments/central-ingress-architecture-design-20260814.yaml
-    status: open
+    status: done
     order: 4
     blocking: true
   -
@@ -88,7 +88,7 @@ tasks:
   -
     id: central-ingress-architecture-corrected-20260814
     assignment: .pf/assignments/central-ingress-architecture-corrected-20260814.yaml
-    status: open
+    status: done
     order: 13
     blocking: true
   -
@@ -124,25 +124,25 @@ tasks:
   -
     id: central-ingress-core-storage-implementation-20260814
     assignment: .pf/assignments/central-ingress-core-storage-implementation-20260814.yaml
-    status: open
+    status: done
     order: 19
     blocking: true
   -
     id: central-ingress-raw-kernel-implementation-20260814
     assignment: .pf/assignments/central-ingress-raw-kernel-implementation-20260814.yaml
-    status: open
+    status: done
     order: 20
     blocking: true
   -
     id: central-ingress-raw-kernel-patch-proposal-20260814
     assignment: .pf/assignments/central-ingress-raw-kernel-patch-proposal-20260814.yaml
-    status: open
+    status: done
     order: 21
     blocking: true
   -
     id: central-ingress-write-runtime-diagnosis-20260814
     assignment: .pf/assignments/central-ingress-write-runtime-diagnosis-20260814.yaml
-    status: open
+    status: done
     order: 22
     blocking: true
   -
@@ -154,13 +154,13 @@ tasks:
   -
     id: central-ingress-raw-kernel-re-review-20260814
     assignment: .pf/assignments/central-ingress-raw-kernel-re-review-20260814.yaml
-    status: open
+    status: done
     order: 24
     blocking: true
   -
     id: central-ingress-raw-kernel-fast-qa-20260815
     assignment: .pf/assignments/central-ingress-raw-kernel-fast-qa-20260815.yaml
-    status: open
+    status: done
     order: 25
     blocking: true
   -
@@ -178,7 +178,7 @@ tasks:
   -
     id: central-ingress-raw-kernel-rereview-main-20260815
     assignment: .pf/assignments/central-ingress-raw-kernel-rereview-main-20260815.yaml
-    status: open
+    status: done
     order: 28
     blocking: true
   -
@@ -232,38 +232,122 @@ tasks:
   -
     id: central-ingress-chat-capture-slice-design-20260815
     assignment: .pf/assignments/central-ingress-chat-capture-slice-design-20260815.yaml
-    status: open
+    status: done
     order: 37
     blocking: true
   -
     id: central-ingress-assistant-response-capture-design-20260815
     assignment: .pf/assignments/central-ingress-assistant-response-capture-design-20260815.yaml
-    status: open
+    status: done
     order: 38
     blocking: true
   -
     id: central-ingress-conversation-telemetry-boundary-20260815
     assignment: .pf/assignments/central-ingress-conversation-telemetry-boundary-20260815.yaml
-    status: open
+    status: done
     order: 39
     blocking: true
   -
     id: central-ingress-conversation-completeness-correction-20260815
     assignment: .pf/assignments/central-ingress-conversation-completeness-correction-20260815.yaml
-    status: open
+    status: done
     order: 40
     blocking: true
   -
     id: central-ingress-conversation-completeness-security-review-20260815
     assignment: .pf/assignments/central-ingress-conversation-completeness-security-review-20260815.yaml
-    status: open
+    status: done
     order: 41
     blocking: true
   -
     id: central-ingress-conversation-completeness-security-correction-20260815
     assignment: .pf/assignments/central-ingress-conversation-completeness-security-correction-20260815.yaml
-    status: open
+    status: done
     order: 42
+    blocking: true
+  -
+    id: central-ingress-conversation-completeness-security-rereview-20260820
+    assignment: .pf/assignments/central-ingress-conversation-completeness-security-rereview-20260820.yaml
+    status: done
+    order: 43
+    blocking: true
+  -
+    id: central-ingress-conversation-completeness-design-gate-20260820
+    assignment: .pf/assignments/central-ingress-conversation-completeness-design-gate-20260820.yaml
+    status: done
+    order: 44
+    blocking: true
+  -
+    id: central-ingress-conversation-completeness-test-contract-20260820
+    assignment: .pf/assignments/central-ingress-conversation-completeness-test-contract-20260820.yaml
+    status: done
+    order: 45
+    blocking: true
+  -
+    id: central-ingress-conversation-completeness-implementation-20260820
+    assignment: .pf/assignments/central-ingress-conversation-completeness-implementation-20260820.yaml
+    status: done
+    order: 46
+    blocking: true
+  -
+    id: central-ingress-conversation-completeness-code-review-20260820
+    assignment: .pf/assignments/central-ingress-conversation-completeness-code-review-20260820.yaml
+    status: done
+    order: 47
+    blocking: true
+  -
+    id: central-ingress-conversation-completeness-rereview-20260820
+    assignment: .pf/assignments/central-ingress-conversation-completeness-rereview-20260820.yaml
+    status: done
+    order: 48
+    blocking: true
+  -
+    id: central-ingress-conversation-completeness-expanded-smoke-20260820
+    assignment: .pf/assignments/central-ingress-conversation-completeness-expanded-smoke-20260820.yaml
+    status: done
+    order: 49
+    blocking: true
+  -
+    id: central-ingress-worker-lifecycle-reconciliation-20260820
+    assignment: .pf/assignments/central-ingress-worker-lifecycle-reconciliation-20260820.yaml
+    status: done
+    order: 50
+    blocking: true
+  -
+    id: central-ingress-conversation-collection-correction-20260820
+    assignment: .pf/assignments/central-ingress-conversation-collection-correction-20260820.yaml
+    status: done
+    order: 51
+    blocking: true
+  -
+    id: central-ingress-conversation-completeness-final-rereview-20260820
+    assignment: .pf/assignments/central-ingress-conversation-completeness-final-rereview-20260820.yaml
+    status: done
+    order: 52
+    blocking: true
+  -
+    id: central-ingress-worker-input-provenance-correction-20260820
+    assignment: .pf/assignments/central-ingress-worker-input-provenance-correction-20260820.yaml
+    status: done
+    order: 53
+    blocking: true
+  -
+    id: central-ingress-conversation-completeness-final-rereview-2-20260820
+    assignment: .pf/assignments/central-ingress-conversation-completeness-final-rereview-2-20260820.yaml
+    status: done
+    order: 54
+    blocking: true
+  -
+    id: central-ingress-worker-event-id-correction-20260820
+    assignment: .pf/assignments/central-ingress-worker-event-id-correction-20260820.yaml
+    status: done
+    order: 55
+    blocking: true
+  -
+    id: central-ingress-conversation-completeness-final-rereview-3-20260820
+    assignment: .pf/assignments/central-ingress-conversation-completeness-final-rereview-3-20260820.yaml
+    status: done
+    order: 56
     blocking: true
 final_artifacts:
   - .pf/runs/central-agent-event-ingress-20260814/summary.md
@@ -272,5 +356,6 @@ events:
   emitted:
     - run.created
     - run.summary.created
+    - run.completed
 privacy:
   public_safe: true

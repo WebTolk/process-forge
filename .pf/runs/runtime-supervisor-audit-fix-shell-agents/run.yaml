@@ -2,9 +2,9 @@ schema_version: 1
 id: runtime-supervisor-audit-fix-shell-agents
 title: Runtime Supervisor Audit Fix And Shell Agents
 process: software-feature-development
-status: in_progress
+status: completed
 created_at: '2026-07-24T12:02:23Z'
-updated_at: '2026-07-24T12:33:58Z'
+updated_at: '2026-08-21T04:52:45Z'
 objective: Fix confirmed runtime/supervisor/release/docs/process metadata findings and prove shell-launched worker agents through ProcessForge runtime drivers.
 scope:
   type: project
@@ -23,9 +23,12 @@ tasks:
     order: 2
     blocking: true
 final_artifacts:
-  []
+  - .pf/runs/runtime-supervisor-audit-fix-shell-agents/summary.md
+  - .pf/handoffs/runs/runtime-supervisor-audit-fix-shell-agents-handoff.md
 events:
   emitted:
     - run.created
+    - run.completed
+    - run.summary.created
 privacy:
   public_safe: true

@@ -2,9 +2,9 @@ schema_version: 1
 id: runtime-lifecycle-clean-repro-20260814
 title: Runtime lifecycle clean reproduction
 process: process-supervisor
-status: in_progress
+status: completed
 created_at: '2026-08-14T09:14:28Z'
-updated_at: '2026-08-14T09:30:45Z'
+updated_at: '2026-08-21T04:52:44Z'
 objective: Establish a clean-room proof of the long-lived Runtime lifecycle by first classifying the Windows temporary-workspace blocker, then reproducing and remediating only evidence-backed defects.
 platform: ""
 selected_specializations:
@@ -56,9 +56,12 @@ tasks:
     order: 7
     blocking: true
 final_artifacts:
-  []
+  - .pf/runs/runtime-lifecycle-clean-repro-20260814/summary.md
+  - .pf/handoffs/runs/runtime-lifecycle-clean-repro-20260814-handoff.md
 events:
   emitted:
     - run.created
+    - run.completed
+    - run.summary.created
 privacy:
   public_safe: true

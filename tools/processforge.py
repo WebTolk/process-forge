@@ -5969,7 +5969,7 @@ def command_first_run(args: argparse.Namespace) -> int:
     return command_init_project(project_args)
 
 
-RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates", "checksums"]
+RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "src", "tools", "updates", "checksums"]
 RELEASE_ROOT_FILES = ["README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md", "CHANGELOG.md", "LICENSE", "NOTICE", "VERSION", "requirements.txt", ".gitignore", ".processforge-releaseignore"]
 RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 RELEASE_REQUIRED_PATHS = [
@@ -5991,6 +5991,7 @@ RELEASE_REQUIRED_PATHS = [
     "bin/pf.py",
     "bin/pf",
     "bin/pf.bat",
+    "src/processforge_core",
     "tools",
     "schemas",
     "templates",
@@ -6587,6 +6588,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_worker_workspace_access", [sys.executable, str(root / "tools" / "smoke_worker_workspace_access.py")], 180),
         ReleaseCommand("smoke_codex_exec_worker", [sys.executable, str(root / "tools" / "smoke_codex_exec_worker.py")], 180),
         ReleaseCommand("smoke_central_event_replay", [sys.executable, str(root / "tools" / "smoke_central_event_replay.py")], 180),
+        ReleaseCommand("smoke_conversation_completeness", [sys.executable, str(root / "tools" / "smoke_conversation_completeness.py")], 180),
         ReleaseCommand("smoke_process_supervisor_tick", [sys.executable, str(root / "tools" / "smoke_process_supervisor_tick.py")], 180),
         ReleaseCommand("smoke_director_inspector_boundary", [sys.executable, str(root / "tools" / "smoke_director_inspector_boundary.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
@@ -10539,16 +10541,52 @@ def append_chat_message(
     stage_id: str | None = None,
     assignment_id_value: str | None = None,
     include_event_content: bool = False,
+    message_id: str | None = None,
+    event_id: str | None = None,
 ) -> tuple[Path, dict[str, Any], dict[str, Any]]:
     transcript = chat_transcript_path(project_root, session_id)
     transcript.parent.mkdir(parents=True, exist_ok=True)
-    existing_lines = transcript.read_text(encoding="utf-8", errors="replace").splitlines() if transcript.is_file() else []
-    line_number = len([line for line in existing_lines if line.strip()]) + 1
+    requested_message_id = message_id or f"msg_{uuid.uuid4().hex}"
     redacted_content, redaction = redact_chat_content(content)
-    message_id = f"msg_{uuid.uuid4().hex}"
-    record = {
+    lock = transcript.with_suffix(transcript.suffix + ".lock")
+    deadline = time.monotonic() + 20.0
+    descriptor: int | None = None
+    while descriptor is None:
+        try:
+            descriptor = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            if time.monotonic() >= deadline:
+                raise SystemExit(f"FAIL: timed out waiting for chat transcript lock: {lock.name}")
+            time.sleep(0.05)
+    try:
+        existing_lines = transcript.read_text(encoding="utf-8", errors="replace").splitlines() if transcript.is_file() else []
+        for line in existing_lines:
+            try:
+                existing = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(existing, dict) and str(existing.get("message_id") or "") == requested_message_id:
+                if event_id:
+                    body = existing.get("message") if isinstance(existing.get("message"), dict) else {}
+                    existing_participant = existing.get("participant") if isinstance(existing.get("participant"), dict) else {}
+                    core_data = {
+                        "session_id": session_id,
+                        "message_id": requested_message_id,
+                        "participant": existing_participant,
+                        "message": {
+                            "role": body.get("role"),
+                            "content_hash": body.get("content_hash"),
+                            "redaction": body.get("redaction", "none"),
+                            "content_ref": {"path": rel(transcript, project_root), "line": 0, "message_id": requested_message_id},
+                            "content_mode": "metadata_only",
+                        },
+                    }
+                    emit_process_event(project_root, "chat.message.recorded", session_id=session_id, assignment_id_value=assignment_id_value, process_id=process_id, stage=stage_id, subject=f"chat/{session_id}/{requested_message_id}", data=core_data, privacy="private", correlation_id=session_id, event_id=event_id)
+                return transcript, existing, {}
+        line_number = len([line for line in existing_lines if line.strip()]) + 1
+        record = {
         "schema_version": 1,
-        "message_id": message_id,
+        "message_id": requested_message_id,
         "session_id": session_id,
         "turn_id": turn_id or f"turn_{line_number}",
         "parent_message_id": parent_message_id,
@@ -10564,13 +10602,13 @@ def append_chat_message(
         "source": {"kind": source_kind, "hook_event": None, "transcript_path": rel(transcript, project_root)},
         "process": {"id": process_id, "stage_id": stage_id},
         "assignment": {"id": assignment_id_value},
-    }
-    with transcript.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
-    content_ref = {"path": rel(transcript, project_root), "line": line_number, "message_id": message_id}
-    event_data: dict[str, Any] = {
+        }
+        with transcript.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+        content_ref = {"path": rel(transcript, project_root), "line": line_number, "message_id": requested_message_id}
+        event_data: dict[str, Any] = {
         "session_id": session_id,
-        "message_id": message_id,
+        "message_id": requested_message_id,
         "participant": record["participant"],
         "message": {
             "role": message_role,
@@ -10578,25 +10616,30 @@ def append_chat_message(
             "redaction": redaction,
             "content_ref": content_ref,
         },
-    }
-    if include_event_content:
-        event_data["message"]["content"] = redacted_content
-        event_data["message"]["content_mode"] = "full" if redaction == "none" else redaction
-    else:
-        event_data["message"]["content_mode"] = "metadata_only"
-    event = emit_process_event(
+        }
+        if include_event_content:
+            event_data["message"]["content"] = redacted_content
+            event_data["message"]["content_mode"] = "full" if redaction == "none" else redaction
+        else:
+            event_data["message"]["content_mode"] = "metadata_only"
+        event = emit_process_event(
         project_root,
         "chat.message.recorded",
         session_id=session_id,
         assignment_id_value=assignment_id_value,
         process_id=process_id,
         stage=stage_id,
-        subject=f"chat/{session_id}/{message_id}",
+        subject=f"chat/{session_id}/{requested_message_id}",
         data=event_data,
         privacy="private",
         correlation_id=session_id,
-    )
-    return transcript, record, event
+        event_id=event_id,
+        )
+        return transcript, record, event
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        lock.unlink(missing_ok=True)
 
 
 def load_chat_messages(project_root: Path, session_id: str) -> list[dict[str, Any]]:
@@ -11587,7 +11630,10 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
             continue
         out_path = task_output_path(project_root, output)
         if out_path is None:
-            checks.append(check("FAIL", f"required output has no path: {output_id}"))
+            if output_id in waiver_map:
+                checks.append(check("WARN", f"required output without path waived: {output_id} ({waiver_map[output_id]})"))
+            else:
+                checks.append(check("FAIL", f"required output has no path: {output_id}"))
             continue
         output_rel = normalize_assignment_path(str(output.get("path") or ""))
         if out_path.is_file():
@@ -11604,8 +11650,9 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
         expected_path = project_root / expected_artifact
         if expected_path.is_file():
             checks.append(check("PASS", f"expected report exists: {expected_artifact}"))
-        elif "expected_report" in waiver_map:
-            checks.append(check("WARN", f"expected report waived: {expected_artifact} ({waiver_map['expected_report']})"))
+        elif "expected-report" in waiver_map or "expected_report" in waiver_map:
+            waiver_reason = waiver_map.get("expected-report") or waiver_map["expected_report"]
+            checks.append(check("WARN", f"expected report waived: {expected_artifact} ({waiver_reason})"))
         elif not enforce_missing:
             checks.append(check("WARN", f"expected report pending: {expected_artifact}"))
         else:
@@ -17787,7 +17834,11 @@ def command_worker_run_status(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    state = load_agent_run_state(project_root, run_id, task_id)
+    with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        state = load_agent_run_state(project_root, run_id, task_id)
+        if state and worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
+            driver = runtime_driver_for_worker_state(project_root, task, state)
+            state = observe_worker_run(project_root, task, driver, state)
     if not state:
         print(f"STATUS: not-prepared {task_id}")
         return 1
@@ -17827,7 +17878,11 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    state = load_agent_run_state(project_root, run_id, task_id)
+    with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        state = load_agent_run_state(project_root, run_id, task_id)
+        if state and worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
+            driver = runtime_driver_for_worker_state(project_root, task, state)
+            state = observe_worker_run(project_root, task, driver, state)
     if not state:
         print(f"FAIL: worker run is not prepared: {task_id}")
         return 1
@@ -17869,6 +17924,44 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
             reasons.append("subagent policy failures: " + "; ".join(subagent_failures))
         write_agent_run_state(project_root, task, driver, "failed", failure_reason="; ".join(reasons), paths=paths)
         print("FAIL: " + "; ".join(reasons))
+        return 1
+    report_content = report_path.read_text(encoding="utf-8", errors="replace")
+    report_hash = sha256_text(report_content)
+    attempt = str(state.get("attempt") or 1)
+    expected_report = rel(report_path, project_root)
+    session_id = f"pf-worker:{run_id}:{task_id}:attempt:{attempt}"
+    envelope = {
+        "provider": "processforge",
+        "adapter": "pf-codex-exec-worker",
+        "native_event_type": "WorkerExpectedReportCaptured",
+        "native_event_id": f"worker-output:{run_id}:{task_id}:attempt:{attempt}:{report_hash}",
+        "native_id_scope": "project",
+        "native_event_id_stable": True,
+        "source_session_id": session_id,
+        "source_project_ref": str(project_root),
+        "payload_version": "1",
+        "raw_payload": {
+            "run_id": run_id,
+            "task_id": task_id,
+            "attempt": attempt,
+            "expected_report": expected_report,
+            "report_content": report_content,
+            "report_hash": report_hash,
+        },
+        "derived_conversation_messages": [{
+            "message_role": "assistant",
+            "participant": {"id": str(task.get("ownership", {}).get("owner_id") or "worker"), "type": "agent", "role": "worker"},
+            "session_id": session_id,
+            "turn_id": f"worker-turn:{run_id}:{task_id}:attempt:{attempt}",
+            "content": report_content,
+            "content_source": {"kind": "pf_codex_exec_output", "provider": "processforge", "adapter": "pf-codex-exec-worker", "native_event_type": "WorkerExpectedReportCaptured", "content_provenance": "pf_owned_output_file"},
+            "delivery": {"state": "complete", "sequence": 1, "final": True},
+        }],
+    }
+    from pf_runtime import host as runtime_host
+    capture = runtime_host.ingest_event(envelope, None, sys.modules[__name__])
+    if not capture.get("accepted") or len(capture.get("chat_message_ids") or []) != 1:
+        print("FAIL: collectible expected report was not captured as exactly one assistant transcript message")
         return 1
     status, output = run_command_capture(command_task_complete, argparse.Namespace(project_root=str(project_root), task=task_id, summary=f"Collected worker run output from {state.get('driver_id')}", artifact=[expected_report_artifact(task)], dry_run=False))
     print(output, end="")

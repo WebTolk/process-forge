@@ -2,9 +2,9 @@ schema_version: 1
 id: pre-release-remediation-20260730
 title: Pre-release ProcessForge remediation
 process: multi-agent-task-orchestration
-status: in_progress
+status: completed
 created_at: '2026-07-30T06:28:15Z'
-updated_at: '2026-08-14T13:15:38Z'
+updated_at: '2026-08-21T04:52:43Z'
 objective: Implement and independently verify the remediation required to turn the 2026-07-30 product audit from NO-GO into a traceable release candidate.
 platform: ""
 selected_specializations:
@@ -134,13 +134,13 @@ tasks:
     order: 20
     blocking: true
 final_artifacts:
-  - .pf/artifacts/pre-release-remediation-plan-20260730.md
-  - .pf/artifacts/pre-release-remediation-report-20260730.md
-  - .pf/reviews/pre-release-remediation-review-20260730.md
-  - .pf/handoffs/pre-release-remediation-release-handoff-20260730.md
+  - .pf/runs/pre-release-remediation-20260730/summary.md
+  - .pf/handoffs/runs/pre-release-remediation-20260730-handoff.md
 events:
   emitted:
     - run.created
     - run.started
+    - run.completed
+    - run.summary.created
 privacy:
   public_safe: true

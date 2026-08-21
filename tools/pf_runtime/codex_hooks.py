@@ -77,7 +77,7 @@ def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
     hook = str(payload.get("hook_event_name") or "Unknown")
     if not cwd:
         return None
-    return {
+    envelope = {
         "provider": "codex",
         "adapter": "codex-hooks",
         "native_event_type": hook,
@@ -93,6 +93,26 @@ def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
         # into Host/Core, so other providers need no core changes.
         "derived_event": normalized_event(payload),
     }
+    prompt = payload.get("prompt")
+    if hook == "UserPromptSubmit" and isinstance(prompt, str) and prompt.strip() and envelope["source_session_id"]:
+        envelope["derived_conversation_messages"] = [
+            {
+                "message_role": "user",
+                "participant": {"id": "operator", "type": "human", "role": "operator"},
+                "session_id": envelope["source_session_id"],
+                "turn_id": str(payload.get("turn_id") or "") or None,
+                "content": prompt,
+                "content_source": {
+                    "kind": "codex_hook",
+                    "provider": "codex",
+                    "adapter": "codex-hooks",
+                    "native_event_type": "UserPromptSubmit",
+                    "content_provenance": "provider_payload",
+                },
+                "delivery": {"state": "complete", "sequence": 0, "final": True},
+            }
+        ]
+    return envelope
 
 
 def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
