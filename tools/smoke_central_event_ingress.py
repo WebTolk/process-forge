@@ -146,7 +146,8 @@ def main() -> int:
             env=adapter_env,
             check=True,
         )
-        unknown_result = json.loads(unknown_hook.stdout)
+        assert not unknown_hook.stdout
+        unknown_result = json.loads(unknown_hook.stderr)
         assert unknown_result["status"] == "delivered" and unknown_result["normalized_event_ids"] == []
         assert len(raw_records(workplace)) == 3
 

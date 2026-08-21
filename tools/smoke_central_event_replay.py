@@ -145,6 +145,17 @@ def assert_malformed_raw_checkpoint_stops_at_previous_success(workplace: Path, p
     assert checkpoint_after["last_raw_location"] != malformed_location, checkpoint_after
 
 
+def assert_conversation_replay_repairs_transcript(workplace: Path, project: Path, core: object) -> None:
+    session = "central-replay-conversation"
+    raw_append(workplace, project, session, "SessionStart", {"hook_event_name": "SessionStart", "source": "startup", "cwd": str(project), "session_id": session})
+    raw_append(workplace, project, session, "UserPromptSubmit", {"hook_event_name": "UserPromptSubmit", "cwd": str(project), "session_id": session, "turn_id": "turn-1", "prompt": "Replay this prompt."})
+    raw_append(workplace, project, session, "Stop", {"hook_event_name": "Stop", "cwd": str(project), "session_id": session, "turn_id": "turn-1", "last_assistant_message": "Replay this answer."})
+    result = replay_session_raw_records(workplace, core, session_id=session, project_ref=str(project))
+    assert result["status"] == "ok" and result["counts"]["repaired"] == 3, result
+    messages = core.load_chat_messages(project, session)
+    assert [item["message"]["content"] for item in messages] == ["Replay this prompt.", "Replay this answer."], messages
+
+
 def main() -> int:
     runtime = runtime_bootstrap()
     core = runtime.core
@@ -226,6 +237,7 @@ def main() -> int:
         assert repaired["counts"]["repaired"] == 1, repaired
         assert tool_event in project_event_ids(first, core)
 
+        assert_conversation_replay_repairs_transcript(workplace, first, core)
         assert_failed_repair_checkpoint_stops_at_previous_success(workplace, first, core)
         assert_malformed_raw_checkpoint_stops_at_previous_success(workplace, first, core)
 

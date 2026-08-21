@@ -22,11 +22,16 @@ Raw storage uses hourly shards, deduplication indexes, quarantine records and re
 
 ## Codex adapter and registration
 
-`tools/pf_runtime/codex_hooks.py` is a thin adapter. Its currently normalized mappings are `SessionStart`, `SessionEnd`, and `PostToolUse`. `UserPromptSubmit` is accepted raw-first and, when both prompt and source session are available, records the user prompt in the private conversation transcript.
+`tools/pf_runtime/codex_hooks.py` is a thin adapter. Its normalized mappings include session lifecycle, compaction and tool facts. Every registered event is accepted raw-first. `UserPromptSubmit` records the user prompt, `Stop` records `last_assistant_message`, and `SubagentStop` records the subagent final message when their Ledger session and project binding are valid.
 
 This capability is not proof that every Codex hook is registered in an environment. The distribution does not install a host `.codex/hooks.json`. Adapter acceptance, normalized mapping, conversation mapping and actual host registration are separate facts. Unknown native events can remain raw-only.
 
-Generic interactive Codex assistant responses and host subagent responses are not currently captured by this adapter.
+Generic interactive Codex assistant responses and host subagent responses are captured only where Codex provides `last_assistant_message`; interim streaming output and unavailable provider fields remain raw-only or absent.
+
+Use `tools/pf_runtime/codex_integration.py` only as an explicit opt-in to merge
+project-local registration. It does not prove Codex actually loaded or trusted
+the hooks; inspect `/hooks` in the target Codex client. See
+[Codex Session Read Layer](codex-session-read.md).
 
 ## Project hooks
 

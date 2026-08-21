@@ -60,20 +60,57 @@ def main() -> int:
         adapter_env = dict(os.environ)
         adapter_env["PF_CODEX_HOOK_DEBUG"] = "1"
         adapter = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "codex_hooks.py")], input=json.dumps(hook), text=True, capture_output=True, cwd=ROOT, env=adapter_env, check=True)
-        if json.loads(adapter.stdout).get("status") != "delivered":
+        if json.loads(adapter.stderr).get("status") != "delivered" or adapter.stdout:
             raise AssertionError("Codex adapter did not deliver a documented tool event")
 
-        request = "\n".join([json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}), json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "pf.project_state", "arguments": {}}})]) + "\n"
+        clear_hook = {"hook_event_name": "SessionStart", "source": "clear", "cwd": str(first), "session_id": "sess-clear"}
+        clear_adapter = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "codex_hooks.py")], input=json.dumps(clear_hook), text=True, capture_output=True, cwd=ROOT, env=adapter_env, check=True)
+        if "ProcessForge session id: sess-clear" not in clear_adapter.stdout:
+            raise AssertionError("Codex clear session did not receive a bound SessionStart handoff")
+
+        request = "\n".join([
+            json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}),
+            json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "pf.project_state", "arguments": {}}}),
+            json.dumps({"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {}}}),
+            json.dumps({"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "pf.session_chat", "arguments": {"limit": 5}}}),
+            json.dumps({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "pf.session_activity", "arguments": {"limit": 5}}}),
+        ]) + "\n"
         server = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "mcp_server.py"), "--workplace", str(workplace), "--session", "sess-a"], input=request, text=True, capture_output=True, cwd=ROOT, check=True)
         responses = [json.loads(line) for line in server.stdout.splitlines() if line.strip()]
-        if len(responses) != 2 or "result" not in responses[1]:
+        if len(responses) != 5 or "result" not in responses[1]:
             raise AssertionError("MCP bridge did not return project state")
+        context = json.loads(responses[2]["result"]["content"][0]["text"])
+        chat = json.loads(responses[3]["result"]["content"][0]["text"])
+        activity = json.loads(responses[4]["result"]["content"][0]["text"])
+        if context.get("session", {}).get("id") != "sess-a" or chat.get("kind") != "pf.session_chat" or activity.get("kind") != "pf.session_activity":
+            raise AssertionError("MCP session read models were not Ledger-bound")
 
         denied_request = "\n".join([json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}), json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "pf.project_state", "arguments": {"project_root": str(second)}}})]) + "\n"
         denied_server = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "mcp_server.py"), "--workplace", str(workplace), "--session", "sess-a"], input=denied_request, text=True, capture_output=True, cwd=ROOT, check=True)
         denied_responses = [json.loads(line) for line in denied_server.stdout.splitlines() if line.strip()]
         if not denied_responses[-1].get("result", {}).get("isError"):
             raise AssertionError("MCP accepted cross-project project_root")
+
+        missing_request = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {}}}) + "\n"
+        missing_server = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "mcp_server.py"), "--workplace", str(workplace)], input=missing_request, text=True, capture_output=True, cwd=ROOT, check=True)
+        missing_response = json.loads(missing_server.stdout)
+        missing_error = json.loads(missing_response["result"]["content"][0]["text"])
+        if missing_error != {"error": {"code": "missing_session"}}:
+            raise AssertionError("MCP session error leaked details or used an unstable code")
+
+        mismatch_request = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {"project_root": str(second)}}}) + "\n"
+        mismatch_server = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "mcp_server.py"), "--workplace", str(workplace), "--session", "sess-a"], input=mismatch_request, text=True, capture_output=True, cwd=ROOT, check=True)
+        mismatch_response = json.loads(mismatch_server.stdout)
+        mismatch_error = json.loads(mismatch_response["result"]["content"][0]["text"])
+        if mismatch_error != {"error": {"code": "session_project_mismatch"}}:
+            raise AssertionError("MCP session context did not fail closed on project mismatch")
+
+        switch_request = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {"session_id": "sess-b"}}}) + "\n"
+        switch_server = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "mcp_server.py"), "--workplace", str(workplace), "--session", "sess-a"], input=switch_request, text=True, capture_output=True, cwd=ROOT, check=True)
+        switch_response = json.loads(switch_server.stdout)
+        switch_error = json.loads(switch_response["result"]["content"][0]["text"])
+        if switch_error != {"error": {"code": "session_mismatch"}}:
+            raise AssertionError("MCP process allowed its configured session to be overridden")
 
         pf("runtime", "start", "--workplace", str(workplace), "--timeout", "10")
         service_path = workplace / "runtime" / "pf-runtime" / "service.json"

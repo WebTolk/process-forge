@@ -19,8 +19,10 @@ from typing import Any
 _RUNTIME_BOOTSTRAP: Any | None = None
 
 EVENTS = {
-    "SessionStart": {"startup": "agent.session.started", "resume": "agent.session.resumed", "compact": "agent.session.compacted"},
+    "SessionStart": {"startup": "agent.session.started", "resume": "agent.session.resumed", "clear": "agent.session.started", "compact": "agent.session.compacted"},
     "SessionEnd": {"default": "agent.session.ended"},
+    "PreCompact": {"default": "agent.session.compaction.started"},
+    "PostCompact": {"default": "agent.session.compacted"},
     "PostToolUse": {"default": "agent.command.completed"},
 }
 
@@ -112,6 +114,28 @@ def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
                 "delivery": {"state": "complete", "sequence": 0, "final": True},
             }
         ]
+    assistant_message = payload.get("last_assistant_message")
+    if hook in {"Stop", "SubagentStop"} and isinstance(assistant_message, str) and assistant_message.strip() and envelope["source_session_id"]:
+        is_subagent = hook == "SubagentStop"
+        agent_id = str(payload.get("agent_id") or "")
+        participant_id = f"subagent:{agent_id}" if is_subagent and agent_id else ("subagent" if is_subagent else "codex")
+        envelope.setdefault("derived_conversation_messages", []).append(
+            {
+                "message_role": "assistant",
+                "participant": {"id": participant_id, "type": "subagent" if is_subagent else "agent", "role": "subagent" if is_subagent else "assistant"},
+                "session_id": envelope["source_session_id"],
+                "turn_id": str(payload.get("turn_id") or "") or None,
+                "content": assistant_message,
+                "content_source": {
+                    "kind": "codex_hook",
+                    "provider": "codex",
+                    "adapter": "codex-hooks",
+                    "native_event_type": hook,
+                    "content_provenance": "provider_payload",
+                },
+                "delivery": {"state": "complete", "sequence": 1, "final": True},
+            }
+        )
     return envelope
 
 
@@ -156,11 +180,21 @@ def main() -> int:
     try:
         payload = json.load(sys.stdin)
         result = dispatch(payload if isinstance(payload, dict) else {})
-        # Codex treats stdout as hook-protocol output.  Observation hooks do
-        # not need to steer a session, so leave stdout empty in normal use;
-        # arbitrary diagnostic JSON is rejected as an invalid hook result.
+        # Stop and SubagentStop require a JSON result on stdout.  An empty
+        # object is a neutral protocol response: this observer never blocks,
+        # rewrites, or continues a Codex session.
+        hook = str(payload.get("hook_event_name") or "") if isinstance(payload, dict) else ""
+        if hook in {"Stop", "SubagentStop"}:
+            print("{}")
+        elif hook == "SessionStart" and result.get("status") == "delivered":
+            session_id = str(payload.get("session_id") or "")
+            # This is a non-controlling handoff of the already Ledger-bound
+            # identifier.  It lets the current Codex turn call session MCP
+            # tools without searching private PF state or guessing a path.
+            print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": f"ProcessForge session id: {session_id}. Use it only with pf.session_* tools for this project."}}, ensure_ascii=False))
         if os.environ.get("PF_CODEX_HOOK_DEBUG") == "1":
-            print(json.dumps(result, ensure_ascii=False))
+            # Never append diagnostic output to Codex hook protocol stdout.
+            print(json.dumps(result, ensure_ascii=False), file=sys.stderr)
     except Exception as exc:  # hooks are observation, never a Codex failure point
         if os.environ.get("PF_CODEX_HOOK_DEBUG") == "1":
             print(json.dumps({"status": "ignored", "reason": type(exc).__name__}, ensure_ascii=False))

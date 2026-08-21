@@ -691,6 +691,11 @@ def _allowed_conversation_message(envelope: dict[str, Any], item: dict[str, Any]
     session = str(envelope.get("source_session_id") or "")
     if (provider, adapter, event_type, role, kind, provenance) == ("codex", "codex-hooks", "UserPromptSubmit", "user", "codex_hook", "provider_payload"):
         return isinstance(raw.get("prompt"), str) and item.get("content") == raw.get("prompt")
+    if (provider, adapter, event_type, role, kind, provenance) in {
+        ("codex", "codex-hooks", "Stop", "assistant", "codex_hook", "provider_payload"),
+        ("codex", "codex-hooks", "SubagentStop", "assistant", "codex_hook", "provider_payload"),
+    }:
+        return isinstance(raw.get("last_assistant_message"), str) and item.get("content") == raw.get("last_assistant_message") and str(item.get("session_id") or session) == session
     if provider != "processforge" or adapter != "pf-codex-exec-worker":
         return False
     run_id, task_id, attempt = (str(raw.get(key) or "") for key in ("run_id", "task_id", "attempt"))

@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import json
 import re
+from types import SimpleNamespace
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from .codex_hooks import normalized_event
-from .host import _ingest_derived_event, event_exists, resolve_project, stable_event_id
+from .codex_hooks import native_envelope, normalized_event
+from .host import _conversation_messages, _ingest_derived_event, event_exists, resolve_project, stable_event_id
 from .raw_ingress_kernel import RawIngressKernel, atomic_write_json, contained_path
 
 PROCESSOR_ID = "processforge.session-replay.codex-hooks"
@@ -139,10 +140,24 @@ def _process_record(
         return _record_status("denied", raw_location, raw_event_id, code="source_project_mismatch")
 
     raw_payload = record.get("raw_payload")
-    derived = normalized_event(dict(raw_payload)) if isinstance(raw_payload, dict) else None
-    if derived is None:
+    envelope = native_envelope(dict(raw_payload)) if isinstance(raw_payload, dict) else None
+    if envelope is None:
         counts["unsupported_mapping"] += 1
         return _record_status("unsupported_mapping", raw_location, raw_event_id)
+    chat_message_ids, conversation_diagnostics = _conversation_messages(
+        envelope,
+        SimpleNamespace(raw_event_id=raw_event_id),
+        project_root,
+        workplace_root,
+        core,
+    )
+    derived = normalized_event(dict(raw_payload))
+    if derived is None:
+        if chat_message_ids:
+            counts["repaired"] += 1
+            return _record_status("repaired", raw_location, raw_event_id, chat_message_ids=chat_message_ids)
+        counts["unsupported_mapping"] += 1
+        return _record_status("unsupported_mapping", raw_location, raw_event_id, diagnostics=conversation_diagnostics)
 
     if not _derived_scope_allowed(derived, project_root, str(record.get("source_session_id") or ""), core):
         counts["denied"] += 1
@@ -151,7 +166,7 @@ def _process_record(
     event_id = stable_event_id(derived)
     if event_exists(project_root, event_id, core):
         counts["present"] += 1
-        return _record_status("present", raw_location, raw_event_id, event_id=event_id)
+        return _record_status("present", raw_location, raw_event_id, event_id=event_id, chat_message_ids=chat_message_ids)
 
     try:
         routed = _ingest_derived_event(derived, workplace_root, core, project_ref=str(project_root))
@@ -160,7 +175,7 @@ def _process_record(
         return _record_status("failed", raw_location, raw_event_id, code=type(exc).__name__, message=str(exc))
 
     counts["repaired"] += 1
-    return _record_status("repaired", raw_location, raw_event_id, event_id=str(routed.get("event_id") or event_id))
+    return _record_status("repaired", raw_location, raw_event_id, event_id=str(routed.get("event_id") or event_id), chat_message_ids=chat_message_ids)
 
 
 def _same_project(project_ref: str, project_root: Path, core: Any) -> bool:

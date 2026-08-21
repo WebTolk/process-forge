@@ -294,10 +294,26 @@ def smoke_codex_user_prompt(root: Path) -> None:
     assert_denied(denied, "untrusted_conversation_provenance")
     assert len(transcript(project, session)) == 1
 
+    stop = native_envelope({"hook_event_name": "Stop", "cwd": str(project), "session_id": session, "turn_id": "turn-1", "last_assistant_message": "Main assistant final."})
+    assert stop is not None
+    first_stop = event(workplace, stop, root / "stop.json")
+    repeated_stop = event(workplace, stop, root / "stop-repeat.json")
+    assert first_stop["chat_message_ids"] == repeated_stop["chat_message_ids"] and len(first_stop["chat_message_ids"]) == 1
+    rows = transcript(project, session)
+    assert [row["message"]["role"] for row in rows] == ["user", "assistant"]
+
+    subagent_stop = native_envelope({"hook_event_name": "SubagentStop", "cwd": str(project), "session_id": session, "turn_id": "turn-1", "agent_id": "reviewer", "last_assistant_message": "Subagent final."})
+    assert subagent_stop is not None
+    subagent_result = event(workplace, subagent_stop, root / "subagent-stop.json")
+    assert len(subagent_result["chat_message_ids"]) == 1
+    rows = transcript(project, session)
+    assert len(rows) == 3 and rows[-1]["participant"]["type"] == "subagent"
+    assert "Main assistant final." not in events_text(project) and "Subagent final." not in events_text(project)
+
     lifecycle = native_envelope({"hook_event_name": "SessionEnd", "cwd": str(project), "session_id": session})
     assert lifecycle is not None
     event(workplace, lifecycle, root / "end.json")
-    assert len(transcript(project, session)) == 1
+    assert len(transcript(project, session)) == 3
     pf("events-validate", "--project-root", str(project))
 
 

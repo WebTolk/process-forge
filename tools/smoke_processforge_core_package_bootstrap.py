@@ -84,8 +84,9 @@ def main() -> int:
         extra_env={"PF_CODEX_HOOK_DEBUG": "1"},
     )
     assert hook_debug.returncode == 0, hook_debug.stderr
-    assert '"status": "ignored"' in hook_debug.stdout
-    assert '"reason": "not_processforge_project"' in hook_debug.stdout
+    assert not hook_debug.stdout
+    assert '"status": "ignored"' in hook_debug.stderr
+    assert '"reason": "not_processforge_project"' in hook_debug.stderr
 
     print("ok")
     return 0

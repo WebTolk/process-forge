@@ -1,0 +1,108 @@
+schema_version: 1
+id: codex-mcp-session-read-implementation-20260821
+title: Implement Codex MCP session read layer
+run_id: codex-mcp-session-read-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T09:03:24Z'
+updated_at: '2026-08-21T09:23:17Z'
+objective: Audit, design, implement, and validate the read-only Ledger-bound session context/chat/activity MCP surface and Codex hook capture.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Implemented Ledger-bound Codex MCP session context, chat, and activity reads; completed hook capture, installer, reviews, and focused validation.
+  artifacts:
+    - .pf/artifacts/codex-mcp-session-read-20260821/mcp-implementation-report.md
+    - .pf/artifacts/codex-mcp-session-read-20260821/codex-conversation-completeness-proof.md
+    - .pf/artifacts/codex-mcp-session-read-20260821/mcp-session-context-proof.md
+    - .pf/artifacts/codex-mcp-session-read-20260821/final-validation.md
+  waivers:
+    mcp-implementation-report: path omitted at task creation; delivered in result artifacts
+    codex-conversation-completeness-proof: path omitted at task creation; delivered in result artifacts
+    mcp-session-context-proof: path omitted at task creation; delivered in result artifacts
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - src/processforge_core/**
+  - tools/pf_runtime/**
+  - tools/smoke_*
+  - docs/**
+  - .pf/artifacts/codex-mcp-session-read-20260821/**
+  - .pf/logs/codex-mcp-session-read-20260821.md
+  - .pf/handoffs/codex-mcp-session-read-20260821-handoff.md
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: primary_agent
+  writer: true
+  owned_files:
+    - src/processforge_core/**
+    - tools/pf_runtime/**
+    - tools/smoke_*
+    - docs/**
+    - .pf/artifacts/codex-mcp-session-read-20260821/**
+    - .pf/logs/codex-mcp-session-read-20260821.md
+    - .pf/handoffs/codex-mcp-session-read-20260821-handoff.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/**
+    - tools/pf_runtime/**
+    - tools/smoke_*
+    - docs/**
+    - .pf/artifacts/codex-mcp-session-read-20260821/**
+    - .pf/logs/codex-mcp-session-read-20260821.md
+    - .pf/handoffs/codex-mcp-session-read-20260821-handoff.md
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: codex-mcp-session-read-implementation-20260821
+        current_scope: tools/smoke_*
+        other_assignment: release-docs-correction-20260821
+        other_scope: tools/smoke_public_cleanliness.py
+        reason: glob_matches_file
+      -
+        current_assignment: codex-mcp-session-read-implementation-20260821
+        current_scope: docs/**
+        other_assignment: release-docs-correction-20260821
+        other_scope: docs/**
+        reason: same_glob
+      -
+        current_assignment: codex-mcp-session-read-implementation-20260821
+        current_scope: tools/smoke_*
+        other_assignment: release-smoke-isolation-20260821
+        other_scope: tools/smoke_official_software_process_available.py
+        reason: glob_matches_file
+required_outputs:
+  -
+    id: mcp-implementation-report
+    type: unspecified
+    required: true
+  -
+    id: codex-conversation-completeness-proof
+    type: unspecified
+    required: true
+  -
+    id: mcp-session-context-proof
+    type: unspecified
+    required: true
