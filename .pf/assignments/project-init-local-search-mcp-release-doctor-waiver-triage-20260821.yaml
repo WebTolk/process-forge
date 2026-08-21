@@ -1,0 +1,68 @@
+schema_version: 1
+id: project-init-local-search-mcp-release-doctor-waiver-triage-20260821
+title: Triage release doctor capability-waiver regression
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T17:36:01Z'
+updated_at: '2026-08-21T17:48:19Z'
+objective: Reproduce and diagnose the public release-suite failure in smoke_doctor_project_capability_waiver. Identify the exact doctor check and whether it is caused by the current slice. Do not edit product code.
+platform: ""
+selected_specializations:
+  []
+order: 54
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Diagnosed the release smoke failure as a command-boundary assertion issue, then verified the targeted remediation.
+  artifacts:
+    - .pf/reviews/project-init-local-search-mcp-release-doctor-waiver-triage-20260821.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/project-init-local-search-mcp-release-doctor-waiver-triage-20260821.md
+allowed_read_files:
+  - tools/smoke_doctor_project_capability_waiver.py
+  - tools/processforge.py
+  - .pf/tmp/project-init-local-search-mcp-release-suite-20260821-rerun.stdout.log
+  - .pf/runtime/release-test/latest-report.md
+ownership:
+  owner_id: shell-reviewer
+  owner_label: worker-shell-reviewer
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/project-init-local-search-mcp-release-doctor-waiver-triage-20260821.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/project-init-local-search-mcp-release-doctor-waiver-triage-20260821.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: doctor-waiver-triage
+    path: .pf/reviews/project-init-local-search-mcp-release-doctor-waiver-triage-20260821.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/reviews/project-init-local-search-mcp-release-doctor-waiver-triage-20260821.md
+  format: concise_markdown
+  include:
+    - doctor-waiver-triage
+agent_model: gpt-5.5

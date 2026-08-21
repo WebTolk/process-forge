@@ -1,0 +1,67 @@
+schema_version: 1
+id: project-init-local-search-mcp-doctor-waiver-smoke-review-20260821
+title: Review doctor capability-waiver smoke remediation
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T17:39:56Z'
+updated_at: '2026-08-21T17:43:16Z'
+objective: Review the narrowed doctor capability-waiver smoke contract after remediation. Confirm it still proves blocked project init, unwaived doctor failure, and waived doctor success. Do not edit product code.
+platform: ""
+selected_specializations:
+  []
+order: 56
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Independent review accepted the repaired smoke contract; local writable-environment execution supplied the runtime evidence.
+  artifacts:
+    - .pf/reviews/project-init-local-search-mcp-doctor-waiver-smoke-review-20260821.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/project-init-local-search-mcp-doctor-waiver-smoke-review-20260821.md
+allowed_read_files:
+  - tools/smoke_doctor_project_capability_waiver.py
+  - tools/processforge.py
+  - .pf/artifacts/project-init-local-search-mcp-20260821
+ownership:
+  owner_id: shell-reviewer
+  owner_label: worker-shell-reviewer
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/project-init-local-search-mcp-doctor-waiver-smoke-review-20260821.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/project-init-local-search-mcp-doctor-waiver-smoke-review-20260821.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: doctor-waiver-smoke-review
+    path: .pf/reviews/project-init-local-search-mcp-doctor-waiver-smoke-review-20260821.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/reviews/project-init-local-search-mcp-doctor-waiver-smoke-review-20260821.md
+  format: concise_markdown
+  include:
+    - doctor-waiver-smoke-review
+agent_model: gpt-5.5

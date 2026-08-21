@@ -1,0 +1,26 @@
+schema_version: 1
+workplace:
+  manifest: 'D:\.agents\processforge-workplace\workplace.yaml'
+process_forge:
+  distribution_override: 'D:\Dev\process-forge'
+local:
+  project_root: 'D:\Dev\process-forge'
+overrides:
+  package_roots:
+    []
+  template_roots:
+    []
+  tool_preferences:
+    {}
+  parameters:
+    {}
+  context_requirements:
+    {}
+  context_policy:
+    {}
+runtime:
+  mode: manual
+  queue: runtime/queue
+  events: runtime/events
+  hooks: runtime/hooks
+  chat: runtime/chat

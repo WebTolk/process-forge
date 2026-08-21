@@ -1,0 +1,70 @@
+schema_version: 1
+id: project-init-local-search-mcp-task-output-schema-remediation-20260821
+title: Repair current run task output paths
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T16:54:02Z'
+updated_at: '2026-08-21T17:48:18Z'
+objective: Add explicit durable paths for every required output in the three current-run assignments created before task-create fail-fast validation.
+platform: ""
+selected_specializations:
+  []
+order: 53
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Added durable paths to current run outputs and made task-create reject pathless outputs.
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/task-output-schema-remediation.md
+stage: release-delivery
+execution_mode:
+  kind: release_delivery
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/assignments/project-init-local-search-mcp-first-assignment-schema-migration-20260821.yaml
+  - .pf/assignments/project-init-local-search-mcp-release-checksum-refresh-20260821.yaml
+  - .pf/assignments/project-init-local-search-mcp-windows-release-cleanup-remediation-20260821.yaml
+  - .pf/artifacts/project-init-local-search-mcp-20260821/task-output-schema-remediation.md
+ownership:
+  owner_id: primary
+  owner_label: worker-primary
+  role: release-engineer
+  writer: true
+  owned_files:
+    - .pf/assignments/project-init-local-search-mcp-first-assignment-schema-migration-20260821.yaml
+    - .pf/assignments/project-init-local-search-mcp-release-checksum-refresh-20260821.yaml
+    - .pf/assignments/project-init-local-search-mcp-windows-release-cleanup-remediation-20260821.yaml
+    - .pf/artifacts/project-init-local-search-mcp-20260821/task-output-schema-remediation.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/assignments/project-init-local-search-mcp-first-assignment-schema-migration-20260821.yaml
+    - .pf/assignments/project-init-local-search-mcp-release-checksum-refresh-20260821.yaml
+    - .pf/assignments/project-init-local-search-mcp-windows-release-cleanup-remediation-20260821.yaml
+    - .pf/artifacts/project-init-local-search-mcp-20260821/task-output-schema-remediation.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: task-output-schema-remediation
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/task-output-schema-remediation.md
+    type: unspecified
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/task-output-schema-remediation.md
+  format: concise_markdown
+  include:
+    - task-output-schema-remediation

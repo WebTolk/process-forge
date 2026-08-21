@@ -1,0 +1,68 @@
+schema_version: 1
+id: project-init-local-search-mcp-spark-stdio-review-20260821
+title: Spark review of automated stdio MCP smoke
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: open
+created_at: '2026-08-21T14:21:51Z'
+updated_at: '2026-08-21T14:21:51Z'
+objective: Independently review metadata-only snapshot producer and the new automated stdio MCP smoke for containment, fixture isolation and assertions. Run the focused smoke if possible; do not edit product code.
+platform: ""
+selected_specializations:
+  []
+order: 19
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/project-init-local-search-mcp-spark-stdio-review-20260821.md
+allowed_read_files:
+  - tools/processforge.py
+  - tools/smoke_project_init_local_search_mcp.py
+  - tools/pf_runtime/mcp_server.py
+  - .pf/artifacts/project-init-local-search-mcp-20260821/producer-and-stdio-implementation-report.md
+ownership:
+  owner_id: shell-spark
+  owner_label: worker-shell-spark
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/project-init-local-search-mcp-spark-stdio-review-20260821.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/project-init-local-search-mcp-spark-stdio-review-20260821.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: spark-stdio-review
+    path: .pf/reviews/project-init-local-search-mcp-spark-stdio-review-20260821.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: medium
+agent_model: gpt-5.3-codex-spark
+expected_report:
+  language: ru
+  artifact: .pf/reviews/project-init-local-search-mcp-spark-stdio-review-20260821.md
+  format: concise_markdown
+  include:
+    - spark-stdio-review

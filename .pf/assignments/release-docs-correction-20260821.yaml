@@ -3,9 +3,9 @@ id: release-docs-correction-20260821
 title: Correct release gates and synchronize event documentation
 run_id: distribution-release-docs-sync-20260821
 process: task-batch-execution
-status: in_progress
+status: done
 created_at: '2026-08-21T07:37:28Z'
-updated_at: '2026-08-21T07:37:43Z'
+updated_at: '2026-08-21T13:29:48Z'
 objective: Implement narrow release checksum/public-cleanliness preflights, preserve security fixtures, register critical core/ingress/replay smokes, and synchronize public English/Russian documentation to the current raw-first architecture.
 platform: ""
 selected_specializations:
@@ -19,16 +19,23 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: done
+  summary: Collected worker run output from codex-exec
   artifacts:
-    []
+    - .pf/artifacts/distribution-release-docs-sync-20260821/release-gate-correction-report.md
 stage: task-execution-loop
 execution_mode:
   kind: implementation
   code_changes_allowed: true
   artifact_changes_allowed: true
   requires_review: true
+allowed_read_files:
+  - tools/processforge.py
+  - tools/smoke_official_software_process_available.py
+  - tools/validate-public-cleanliness.py
+  - tools/smoke_public_cleanliness.py
+  - .pf/artifacts/distribution-release-docs-sync-20260821/release-gate-correction-report.md
+  - .pf/artifacts/distribution-release-docs-sync-20260821/documentation-update-report.md
 allowed_files:
   - tools/processforge.py
   - tools/validate-public-cleanliness.py
@@ -104,3 +111,5 @@ expected_report:
   format: concise_markdown
   include:
     []
+agent_model: gpt-5.3-codex-spark
+agent_reasoning_effort: medium

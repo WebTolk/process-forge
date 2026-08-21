@@ -1,18 +1,18 @@
 schema_version: 1
 capsule:
   id: release-docs-correction-20260821-capsule
-  generated_at: '2026-08-21T07:37:42Z'
+  generated_at: '2026-08-21T13:28:07Z'
   assignment_id: release-docs-correction-20260821
   assignment_path: .pf/assignments/release-docs-correction-20260821.yaml
-  assignment_checksum: 34e0227a6d842e29cb531bf4cf7a094d89d893e364e6600fe32162857ca51418
+  assignment_checksum: aaff0c319d489318041e01c874706d15986bc4fedea2ea64831c899e3a11b97c
   snapshot: .pf/contexts/project-context.snapshot.yaml
-  snapshot_checksum: 36734230fdbbf84ae89396b674d61cc9c6989f598dfb3488224bc8e1fb00b60c
+  snapshot_checksum: e622e9ce19ca275987c424566bd82b54cc3caf7192ba531c73badbd3f4e62a64
   immutable: true
   worker_may_rebuild_context: false
 context_snapshot:
-  id: ctx-20260820-130403-6722a8
-  sha256: 'sha256:36734230fdbbf84ae89396b674d61cc9c6989f598dfb3488224bc8e1fb00b60c'
-  generated_at: '2026-08-20T13:03:58Z'
+  id: ctx-20260821-090357-958422
+  sha256: 'sha256:e622e9ce19ca275987c424566bd82b54cc3caf7192ba531c73badbd3f4e62a64'
+  generated_at: '2026-08-21T09:03:53Z'
   freshness_at_creation: fresh
 project_classification:
   status: classified
@@ -293,7 +293,7 @@ effective_resources:
 assignment:
   id: release-docs-correction-20260821
   path: .pf/assignments/release-docs-correction-20260821.yaml
-  status: open
+  status: in_progress
   objective: Implement narrow release checksum/public-cleanliness preflights, preserve security fixtures, register critical core/ingress/replay smokes, and synchronize public English/Russian documentation to the current raw-first architecture.
   execution_mode:
     kind: implementation
@@ -301,7 +301,7 @@ assignment:
     artifact_changes_allowed: true
     requires_review: true
 context:
-  snapshot_id: ctx-20260820-130403-6722a8
+  snapshot_id: ctx-20260821-090357-958422
   freshness: fresh
   required_sources:
     - .pf/contexts/project-context.snapshot.yaml
@@ -334,7 +334,12 @@ scope:
     - .pf/artifacts/distribution-release-docs-sync-20260821/**
     - .pf/runs/distribution-release-docs-sync-20260821/**
   allowed_read_files:
-    []
+    - tools/processforge.py
+    - tools/smoke_official_software_process_available.py
+    - tools/validate-public-cleanliness.py
+    - tools/smoke_public_cleanliness.py
+    - .pf/artifacts/distribution-release-docs-sync-20260821/release-gate-correction-report.md
+    - .pf/artifacts/distribution-release-docs-sync-20260821/documentation-update-report.md
   forbidden_files:
     - tools/pf_runtime/**
     - src/**
@@ -387,9 +392,26 @@ scope:
       - .pf/runs/distribution-release-docs-sync-20260821/**
     rule: Do not edit files owned by active parallel tasks.
     overlap_check:
-      status: pass
+      status: fail
       conflicts:
-        []
+        -
+          current_assignment: release-docs-correction-20260821
+          current_scope: .pf/logs/distribution-release-docs-sync-20260821.md
+          other_assignment: release-smoke-isolation-20260821
+          other_scope: .pf/logs/distribution-release-docs-sync-20260821.md
+          reason: same_file
+        -
+          current_assignment: release-docs-correction-20260821
+          current_scope: .pf/artifacts/distribution-release-docs-sync-20260821/**
+          other_assignment: release-smoke-isolation-20260821
+          other_scope: .pf/artifacts/distribution-release-docs-sync-20260821/**
+          reason: same_glob
+        -
+          current_assignment: release-docs-correction-20260821
+          current_scope: .pf/runs/distribution-release-docs-sync-20260821/**
+          other_assignment: release-smoke-isolation-20260821
+          other_scope: .pf/runs/distribution-release-docs-sync-20260821/**
+          reason: same_glob
 outputs:
   required_outputs:
     []
@@ -408,8 +430,8 @@ workspace_access:
     []
   mcp:
     []
-agent_model: ""
-agent_reasoning_effort: ""
+agent_model: gpt-5.3-codex-spark
+agent_reasoning_effort: medium
 subagent_policy:
   allow: false
   max_subagents: 0

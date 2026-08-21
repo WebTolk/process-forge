@@ -1,0 +1,39 @@
+schema_version: 1
+id: project.process-forge
+name: ProcessForge Knowledge
+version: 1.0.0
+kind: project
+scope: project
+status: draft
+project:
+  id: process-forge
+provides:
+  capabilities:
+    - project.process-forge.context
+content:
+  references:
+    - artifacts/project-profile.md
+    - artifacts/repository-map.md
+    - artifacts/project-conventions.md
+    - artifacts/toolchain-detection-report.md
+    - artifacts/template-matching-report.md
+resources:
+  -
+    id: project-profile
+    kind: note_collection
+    title: Project profile and repository map
+    path: artifacts/project-profile.md
+    load_policy: when_relevant
+    index_policy: full_text
+  -
+    id: project-artifacts
+    kind: reference
+    title: Project ProcessForge artifacts
+    path: artifacts
+    load_policy: on_demand
+    index_policy: metadata
+policies:
+  file_ownership:
+    default: one_writer_per_scope
+  public_cleanliness:
+    forbid_absolute_local_paths: true

@@ -15,6 +15,7 @@ import platform
 import re
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -56,6 +57,7 @@ from processforge_core.process_catalog import (
     require_official_process_active as catalog_require_official_process_active,
     resolve_process_definition as catalog_resolve_process_definition,
 )
+from processforge_core import project_initialization
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
 PROJECT_FLOW_ROOT = ".pf"
@@ -4849,7 +4851,13 @@ def resolve_specialization_context(
             {
                 "id": specialization_id,
                 "source": str(spec.get("__source") or "workplace"),
-                "path": rel(spec.get("__manifest_path"), project_root) if isinstance(spec.get("__manifest_path"), Path) and path_is_relative_to(spec["__manifest_path"], project_root) else str(spec.get("__manifest_path") or ""),
+                # A selected workplace specialization is a private resolution
+                # input.  Its absolute manifest path must never escape into a
+                # public project-context snapshot; Runtime resolves it again
+                # through the authorized workplace registry when needed.
+                "path": rel(spec.get("__manifest_path"), project_root)
+                if isinstance(spec.get("__manifest_path"), Path) and path_is_relative_to(spec["__manifest_path"], project_root)
+                else "<private-specialization-ref>",
                 "matched_bindings": [
                     {
                         "platforms": list_value(binding.get("platforms")),
@@ -5049,6 +5057,8 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
         },
         "workplace": {"reference": "local_file", "local_config": f"{PROJECT_FLOW_ROOT}/process-forge.local.yaml"},
         "coordination": project_coordination,
+        "process": str(answers.get("process") or ""),
+        "specializations": [str(item) for item in as_list(answers.get("specializations")) if str(item)],
         "detected": {
             "status": detected["status"],
             "languages": detected["languages"],
@@ -5493,9 +5503,12 @@ Run doctor after apply mode.
         "schema_version": 1,
         "id": "first-assignment",
         "title": "Verify ProcessForge project onboarding",
+        "run_id": f"project-onboarding-{defaults['id']}",
         "process": "project-onboarding",
         "status": "open",
         "objective": "Verify that this project is connected to ProcessForge and ready for future assignment work.",
+        "iterations": [],
+        "result": {"status": "pending", "summary": "", "artifacts": []},
         "tasks": [
             "Read .pf/AGENTS.md",
             "Read .pf/contexts/project-context.snapshot.yaml",
@@ -5757,62 +5770,29 @@ def finalize_project_onboarding_doctor_artifacts(project_root: Path, status: int
 
 ## Doctor Output
 
-```text
-{output.rstrip()}
-```
+The full doctor diagnostic is intentionally not copied into this public
+artifact. Run `pf doctor-project --project-root .` locally for the current
+diagnostic output.
 
 ## Fix Hints
 
-{"- None required." if status == 0 else "- Resolve the FAIL lines above, then rerun `pf doctor-project --project-root .`."}
+{"- None required." if status == 0 else "- Rerun `pf doctor-project --project-root .`, resolve its FAIL lines, then rerun deterministic repair."}
 """
     write_file(report, content, force=True)
 
 
-def command_init_project(args: argparse.Namespace) -> int:
-    project_root = Path(args.project_root).expanduser().resolve()
-    workplace = Path(args.workplace).expanduser().resolve()
-    if workplace.is_dir():
-        workplace = workplace / "workplace.yaml"
-    answers = load_answers(Path(args.answers).expanduser().resolve() if args.answers else None)
-    project_type = getattr(args, "project_type", None)
-    if project_type:
-        project_answers = answers.get("project") if isinstance(answers.get("project"), dict) else {}
-        project_answers["type"] = project_type
-        answers["project"] = project_answers
-    coordination_mode = getattr(args, "coordination_mode", None)
-    if coordination_mode:
-        coordination_answers = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
-        coordination_answers["mode"] = coordination_mode
-        answers["coordination"] = coordination_answers
-    if args.apply and not workplace.is_file() and not args.allow_missing_workplace:
-        raise SystemExit(
-            f"""FAIL: workplace manifest is required before project onboarding.
-
-Why:
-  Project onboarding links a project to an existing ProcessForge workplace.
-
-Fix:
-  python bin/pf.py workplace-init --workplace {workplace.parent} --apply
-  python bin/pf.py project-onboard --project-root {project_root} --workplace {workplace.parent} --type {project_type or '<project-type>'} --apply"""
-        )
-    if not project_root.exists() and args.apply:
-        project_root.mkdir(parents=True)
-    if not project_root.exists() and args.apply:
-        raise SystemExit(f"FAIL: project root not found: {project_root}")
-    files = build_project_files(project_root, workplace, answers)
+def execute_project_initialization(request: dict[str, Any], files: dict[Path, str]) -> dict[str, Any]:
+    """CLI writer adapter used only by project_initialization.initialize_project()."""
+    project_root = request["project_root"]
+    project_root.mkdir(parents=True, exist_ok=True)
+    project_type = request.get("project_type")
+    force = bool(request.get("force", False))
     flow_root = project_root / PROJECT_FLOW_ROOT
-    planned_paths = list(files) + [flow_root / item for item in PROJECT_FLOW_DIRS] + [project_root / ".gitignore"]
-    if not args.apply:
-        print_plan("project init dry run", planned_paths, project_root)
-        mode = project_mode(project_root, answers)
-        print(f"MODE: {mode}")
-        return 0
-
     for dirname in PROJECT_FLOW_DIRS:
         (flow_root / dirname).mkdir(parents=True, exist_ok=True)
-    emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": getattr(args, "command", "init-project")})
-    results = [write_file(path, content, force=args.force) for path, content in files.items()]
-    results.append(append_gitignore_entries(project_root / ".gitignore", PROJECT_PRIVATE_GITIGNORE, force=args.force))
+    emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": request.get("command", "project-onboard")})
+    results = [write_file(path, content, force=force) for path, content in files.items()]
+    results.append(append_gitignore_entries(project_root / ".gitignore", PROJECT_PRIVATE_GITIGNORE, force=force))
     emit_process_event(project_root, "project.flow_root.created", process_id="project-onboarding", process_version="1.0.0", payload={"flow_root": PROJECT_FLOW_ROOT})
     emit_process_event(project_root, "project.platform.detected", process_id="project-onboarding", process_version="1.0.0", payload={"project_type": project_type or "auto"})
     snapshot_status, snapshot_paths, _snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root)
@@ -5821,7 +5801,6 @@ Fix:
     emit_process_event(project_root, "agent.start_prompt.generated", process_id="project-onboarding", process_version="1.0.0", payload={"path": ".pf/START_AGENT_HERE.md"})
     emit_process_event(project_root, "assignment.created", process_id="project-onboarding", process_version="1.0.0", assignment_id_value="first-assignment", assignment_path=".pf/assignments/first-assignment.yaml", payload={"path": ".pf/assignments/first-assignment.yaml"})
     doctor_status, doctor_output = run_command_capture(command_doctor_project, argparse.Namespace(project_root=str(project_root)))
-    print(doctor_output, end="")
     finalize_project_onboarding_doctor_artifacts(project_root, doctor_status, doctor_output)
     emit_process_event(
         project_root,
@@ -5831,11 +5810,84 @@ Fix:
         payload={"status": "pass" if doctor_status == 0 else "fail"},
     )
     emit_process_event(project_root, "project.onboarding.completed", process_id="project-onboarding", process_version="1.0.0", payload={"files": [rel(result.target, project_root) for result in results], "doctor_status": doctor_status})
-    for result in results:
-        print(f"{result.status.upper()}: {rel(result.target, project_root)}")
-    for path in snapshot_paths.values():
-        print(f"WROTE: {rel(path, project_root)}")
-    return doctor_status
+    return {
+        "status": "complete" if doctor_status == 0 else "blocked",
+        "project": {"id": project_id(project_root)},
+        "created_or_reused": [{"path": rel(result.target, project_root), "status": result.status} for result in results],
+        "snapshot": {"status": snapshot_status, "id": _snapshot.get("snapshot", {}).get("id") if isinstance(_snapshot.get("snapshot"), dict) else None},
+        "doctor": {"status": "pass" if doctor_status == 0 else "fail"},
+        "next_action": "continue" if doctor_status == 0 else "resolve_doctor_failures",
+    }
+
+
+def execute_project_repair(project_root: Path, *, workplace: str | None, reason: str) -> dict[str, Any]:
+    """Deterministic refresh-only repair adapter; semantic artifacts are untouched."""
+    status, paths, snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root, explicit_workplace=workplace)
+    doctor_status, doctor_output = run_command_capture(command_doctor_project, argparse.Namespace(project_root=str(project_root)))
+    finalize_project_onboarding_doctor_artifacts(project_root, doctor_status, doctor_output)
+    emit_process_event(project_root, "context.snapshot.refreshed", process_id="project-initialization", process_version="1.0.0", payload={"status": status, "reason": reason, "paths": {key: rel(path, project_root) for key, path in paths.items()}})
+    return {
+        "status": "complete" if doctor_status == 0 else "blocked",
+        "repair_action": "refresh_context",
+        "snapshot": {"status": status, "id": snapshot.get("snapshot", {}).get("id") if isinstance(snapshot.get("snapshot"), dict) else None},
+        "doctor": {"status": "pass" if doctor_status == 0 else "fail"},
+        "next_action": "continue" if doctor_status == 0 else "resolve_doctor_failures",
+    }
+
+
+def _project_initialization_error(exc: project_initialization.ProjectInitializationError) -> SystemExit:
+    hints = {
+        "apply_required": "Rerun with --apply (or MCP apply: true).",
+        "workplace_manifest_required": "Initialize the workplace first, or explicitly allow a missing workplace where that is safe.",
+        "project_root_missing": "Create the project root before a dry run, or use --apply for greenfield onboarding.",
+        "project_not_initialized": "Use project-onboard for a new project; repair only accepts an existing .pf project.",
+    }
+    return SystemExit(f"FAIL: {exc.code}. {hints.get(exc.code, 'Check the initialization request.')}")
+
+
+def command_init_project(args: argparse.Namespace) -> int:
+    request = {
+        "project_root": args.project_root,
+        "workplace": args.workplace,
+        "answers_path": args.answers,
+        "project_type": getattr(args, "project_type", None),
+        "coordination_mode": getattr(args, "coordination_mode", None),
+        "platforms": list(getattr(args, "platform", []) or []),
+        "specializations": list(getattr(args, "specialization", []) or []),
+        "process": getattr(args, "process", None),
+        "force": bool(args.force),
+        "allow_missing_workplace": bool(args.allow_missing_workplace),
+        "apply": args.apply is True,
+        "command": getattr(args, "command", "project-onboard"),
+    }
+    try:
+        result = project_initialization.initialize_project(request, sys.modules[__name__])
+    except project_initialization.ProjectInitializationError as exc:
+        raise _project_initialization_error(exc) from exc
+    if result.get("applied") is not True:
+        print(dump_yaml(result), end="")
+        return 0
+    payload = result.get("result") if isinstance(result.get("result"), dict) else {}
+    print(dump_yaml(payload), end="")
+    return 0 if payload.get("doctor", {}).get("status") == "pass" else 1
+
+
+def command_project_init_status(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    payload = project_initialization.status(project_root, sys.modules[__name__], workplace=getattr(args, "workplace", None))
+    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else dump_yaml(payload))
+    return 0
+
+
+def command_project_init_repair(args: argparse.Namespace) -> int:
+    request = {"project_root": args.project_root, "workplace": getattr(args, "workplace", None), "repair_action": args.repair_action, "reason": args.reason, "apply": args.apply is True}
+    try:
+        result = project_initialization.repair_project(request, sys.modules[__name__])
+    except project_initialization.ProjectInitializationError as exc:
+        raise _project_initialization_error(exc) from exc
+    print(dump_yaml(result), end="")
+    payload = result.get("result") if isinstance(result.get("result"), dict) else {}
+    return 0 if result.get("applied") is not True or payload.get("doctor", {}).get("status") == "pass" else 1
 
 
 def default_start_agent_here(project_root: Path) -> str:
@@ -6415,6 +6467,19 @@ def command_release_check(args: argparse.Namespace) -> int:
 
 
 def safe_remove_generated_path(path: Path, root: Path) -> bool:
+    def retry_readonly_removal(func: Any, target: str, _exc_info: Any) -> None:
+        """Retry an approved generated-file removal after clearing Windows ReadOnly.
+
+        Git object files copied into a temporary release stage can retain the
+        Windows ReadOnly attribute.  ``shutil.rmtree`` otherwise aborts the
+        entire release cleanup even though the enclosing path has already
+        passed this function's generated-path containment checks.
+        """
+
+        target_path = Path(target)
+        target_path.chmod(target_path.stat().st_mode | stat.S_IWRITE)
+        func(target)
+
     resolved_root = root.resolve()
     resolved_path = path.resolve()
     try:
@@ -6422,13 +6487,17 @@ def safe_remove_generated_path(path: Path, root: Path) -> bool:
     except ValueError:
         return False
     if path.is_dir() and resolved_path == (resolved_root / ".pf" / "runtime"):
-        shutil.rmtree(path)
+        shutil.rmtree(path, onerror=retry_readonly_removal)
         return True
     if path.is_dir() and path.name in RELEASE_GENERATED_DIRS:
-        shutil.rmtree(path)
+        shutil.rmtree(path, onerror=retry_readonly_removal)
         return True
     if path.is_file() and path.suffix.lower() in RELEASE_GENERATED_SUFFIXES:
-        path.unlink()
+        try:
+            path.unlink()
+        except PermissionError:
+            path.chmod(path.stat().st_mode | stat.S_IWRITE)
+            path.unlink()
         return True
     return False
 
@@ -6638,6 +6707,8 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_resource_versioning_modes", [sys.executable, str(root / "tools" / "smoke_resource_versioning_modes.py")], 120),
         ReleaseCommand("smoke_project_context_snapshot_lock_model", [sys.executable, str(root / "tools" / "smoke_project_context_snapshot_lock_model.py")], 120),
         ReleaseCommand("smoke_project_context_freshness_policies", [sys.executable, str(root / "tools" / "smoke_project_context_freshness_policies.py")], 120),
+        ReleaseCommand("smoke_project_init_local_search_mcp", [sys.executable, str(root / "tools" / "smoke_project_init_local_search_mcp.py")], 180),
+        ReleaseCommand("smoke_project_init_acceptance", [sys.executable, str(root / "tools" / "smoke_project_init_acceptance.py")], 180),
         ReleaseCommand("smoke_parameter_cascade_resolution", [sys.executable, str(root / "tools" / "smoke_parameter_cascade_resolution.py")], 120),
         ReleaseCommand("smoke_parameter_freshness", [sys.executable, str(root / "tools" / "smoke_parameter_freshness.py")], 120),
         ReleaseCommand("smoke_parameter_assignment_capsule", [sys.executable, str(root / "tools" / "smoke_parameter_assignment_capsule.py")], 120),
@@ -8358,7 +8429,16 @@ def parameter_source_record(source_id: str, layer: str, parameters: dict[str, An
         "private": private,
     }
     if path:
-        record["path"] = display_path or (rel(path, project_root) if project_root and path_is_relative_to(path, project_root) else str(path))
+        # Private workplace sources may contribute metadata to a public
+        # snapshot, but never their absolute filesystem location. Callers can
+        # supply a more specific stable marker through `display_path`.
+        record["path"] = display_path or (
+            rel(path, project_root)
+            if project_root and path_is_relative_to(path, project_root)
+            else "<private-source-ref>"
+            if private
+            else str(path)
+        )
         record["checksum"] = "sha256:" + sha256_file(path) if path.is_file() else "missing"
     return record
 
@@ -8683,6 +8763,7 @@ def context_requirements_from_manifest(manifest_data: dict[str, Any]) -> dict[st
         "knowledge_packages": requirements.get("knowledge_packages", []) if isinstance(requirements.get("knowledge_packages"), list) else [],
         "knowledge_resources": requirements.get("knowledge_resources", []) if isinstance(requirements.get("knowledge_resources"), list) else [],
         "template_packages": requirements.get("template_packages", []) if isinstance(requirements.get("template_packages"), list) else [],
+        "templates": requirements.get("templates", []) if isinstance(requirements.get("templates"), list) else [],
         "tools": requirements.get("tools", []) if isinstance(requirements.get("tools"), list) else [],
         "platform_contracts": requirements.get("platform_contracts", []) if isinstance(requirements.get("platform_contracts"), list) else [],
     }
@@ -9107,7 +9188,7 @@ def resource_path_ref_missing(workplace_root: Path, resource: dict[str, Any]) ->
     known = {
         "knowledge_roots": ("knowledge-roots.yaml", "knowledge_roots"),
         "package_roots": ("package-roots.yaml", "package_roots"),
-        "templates": ("templates.yaml", "template_roots"),
+        "templates": ("templates.yaml", "templates"),
         "tools": ("tools.yaml", "tools"),
         "mcp": ("mcp.yaml", "mcp_servers"),
         "private_resource_paths": ("private-resource-paths.yaml", "private_resource_paths"),
@@ -9126,7 +9207,7 @@ def workspace_registry_specs() -> dict[str, tuple[str, str, str]]:
     return {
         "knowledge_roots": ("knowledge_roots", "knowledge-roots.yaml", "knowledge_roots"),
         "template_roots": ("template_roots", "templates.yaml", "template_roots"),
-        "templates": ("template_roots", "templates.yaml", "template_roots"),
+        "templates": ("templates", "templates.yaml", "templates"),
         "package_roots": ("package_roots", "package-roots.yaml", "package_roots"),
         "tools": ("tools", "tools.yaml", "tools"),
         "mcp": ("mcp", "mcp.yaml", "mcp_servers"),
@@ -9165,7 +9246,12 @@ def resolve_workspace_path_ref(project_root: Path, path_ref: dict[str, Any], *, 
                 if manifest_path:
                     bases.append(manifest_path.parent)
         for base in bases:
-            candidate = (base / relative_path).resolve() if relative_path else base.resolve()
+            resolved_base = base.resolve()
+            candidate = (resolved_base / relative_path).resolve() if relative_path else resolved_base
+            try:
+                candidate.relative_to(resolved_base)
+            except ValueError:
+                return {"status": "unresolved", "reason": "invalid_path_ref: relative_path escapes declared package root"}
             if candidate.exists():
                 return {"status": "resolved", "path": str(candidate)}
         return {"status": "unresolved", "reason": f"package path not found: {package_id}/{relative_path}".rstrip("/")}
@@ -9186,8 +9272,17 @@ def resolve_workspace_path_ref(project_root: Path, path_ref: dict[str, Any], *, 
     root_resolution = workplace_path_resolution(workplace_root, str(raw_path))
     if root_resolution.get("errors"):
         return {"status": "unresolved", "reason": "; ".join(str(item) for item in root_resolution.get("errors", []))}
-    base = path_resolution_to_path(root_resolution)
-    candidate = (base / relative_path).resolve() if relative_path else base.resolve()
+    base = path_resolution_to_path(root_resolution).resolve()
+    if registry != "private_resource_paths":
+        try:
+            base.relative_to(workplace_root.resolve())
+        except ValueError:
+            return {"status": "unresolved", "reason": "invalid_path_ref: registry path escapes workplace root"}
+    candidate = (base / relative_path).resolve() if relative_path else base
+    try:
+        candidate.relative_to(base)
+    except ValueError:
+        return {"status": "unresolved", "reason": "invalid_path_ref: relative_path escapes declared registry root"}
     return {"status": "resolved" if candidate.exists() else "missing", "path": str(candidate)}
 
 
@@ -9730,6 +9825,41 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     context_policy = default_context_policy(manifest_data)
     resolved_knowledge_resources = select_resolved_knowledge_resources(package_resources, context_requirements)
     available_knowledge_resources = [resolved_resource_instance(resource) for resource in package_resources]
+    local_search_resources = [
+        {
+            "id": str(item.get("id") or ""),
+            "resource_id": str(item.get("id") or ""),
+            "package_id": str(item.get("package_id") or ""),
+            "kind": str(item.get("kind") or "knowledge"),
+            "path_ref": item.get("path_ref") if isinstance(item.get("path_ref"), dict) else {},
+            "status": str(item.get("status") or "available"),
+            "load_policy": "snapshot_authorized",
+            "index_policy": "metadata_first",
+        }
+        for item in available_knowledge_resources
+        if str(item.get("id") or "")
+    ]
+    template_ids = {str(item) for item in specialization_context.get("activated_templates", []) if str(item)}
+    template_ids.update(
+        str(item.get("id") or "")
+        for item in context_requirements.get("templates", [])
+        if isinstance(item, dict) and str(item.get("id") or "")
+    )
+    for template_id in sorted(template_ids):
+        entry = workplace_registry_entry(workplace_manifest_path, "templates", template_id)
+        if entry and str(entry.get("status") or "available") not in {"missing", "disabled"}:
+            local_search_resources.append(
+                {
+                    "id": template_id,
+                    "resource_id": template_id,
+                    "package_id": str(entry.get("template_root") or ""),
+                    "kind": "template",
+                    "path_ref": {"registry": "templates", "id": template_id},
+                    "status": str(entry.get("status") or "available"),
+                    "load_policy": "snapshot_authorized",
+                    "index_policy": "metadata_first",
+                }
+            )
     reproducibility = aggregate_reproducibility(resolved_knowledge_resources)
     parameter_resolution = resolve_project_parameters(
         project_root,
@@ -9846,6 +9976,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "platform_contracts": context_requirements.get("platform_contracts", []),
             "process_packages": selected_packages,
         },
+        "local_search_resources": local_search_resources,
         "freshness": {
             "status": "fresh",
             "checked_at": generated_at,
@@ -19488,6 +19619,13 @@ def command_task_create(args: argparse.Namespace) -> int:
         expected_report["artifact"] = normalize_assignment_path(args.expected_report_artifact)
         if len(required_outputs) == 1:
             required_outputs[0].setdefault("path", expected_report["artifact"])
+    missing_output_paths = [str(item.get("id") or "output") for item in required_outputs if not str(item.get("path") or "").strip()]
+    if missing_output_paths:
+        raise SystemExit(
+            "FAIL: every required output needs a path; use "
+            "--required-output id=<id>,path=<repository-relative-path>. Missing: "
+            + ", ".join(missing_output_paths)
+        )
     if expected_report:
         expected_report.setdefault("format", "concise_markdown")
         expected_report.setdefault("include", [item["id"] for item in required_outputs])
@@ -20167,14 +20305,22 @@ Fix:
         elif auto_workplace_mode:
             checks.append(check("WARN", f"{rel(path, project_root)} missing"))
         elif rel_path == "runtime/bin/pf.py":
-            checks.append(
-                check_with_hint(
-                    "FAIL",
-                    f"{rel(path, project_root)} missing",
-                    "A linked project needs its local Python launcher because it does not contain ProcessForge core tools.",
-                    "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic --apply",
+            if looks_like_processforge_distribution(project_root):
+                checks.append(
+                    check(
+                        "WARN",
+                        f"{rel(path, project_root)} missing for self-contained ProcessForge distribution",
+                    )
                 )
-            )
+            else:
+                checks.append(
+                    check_with_hint(
+                        "FAIL",
+                        f"{rel(path, project_root)} missing",
+                        "A linked project needs its local Python launcher because it does not contain ProcessForge core tools.",
+                        "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic --apply",
+                    )
+                )
         elif rel_path.startswith("contexts/project-context.snapshot"):
             checks.append(
                 check_with_hint(
@@ -23243,7 +23389,7 @@ def command_template_add(args: argparse.Namespace) -> int:
             message="template add proposal created",
         ),
     )
-    if args.dry_run:
+    if args.dry_run or args.apply is not True:
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
         return 0
     if not source.is_dir():
@@ -24488,6 +24634,9 @@ def build_parser() -> argparse.ArgumentParser:
     init_project.add_argument("--workplace", required=True, help="Path to workplace.yaml.")
     init_project.add_argument("--type", dest="project_type", help="Project type override.")
     init_project.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
+    init_project.add_argument("--platform", action="append", default=[], help="Explicit platform contract id. Repeatable.")
+    init_project.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
+    init_project.add_argument("--process", help="Explicit active process id.")
     init_project.add_argument("--answers", help="Optional project answers YAML.")
     init_project.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     init_project.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
@@ -24501,6 +24650,9 @@ def build_parser() -> argparse.ArgumentParser:
     project_init.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
     project_init.add_argument("--type", dest="project_type", help="Project type override.")
     project_init.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
+    project_init.add_argument("--platform", action="append", default=[], help="Explicit platform contract id. Repeatable.")
+    project_init.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
+    project_init.add_argument("--process", help="Explicit active process id.")
     project_init.add_argument("--answers", help="Optional project answers YAML.")
     project_init.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     project_init.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
@@ -24514,6 +24666,9 @@ def build_parser() -> argparse.ArgumentParser:
     project_onboard.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
     project_onboard.add_argument("--type", dest="project_type", required=True, help="Explicit project type, for example generic or fixture.project-type.a.")
     project_onboard.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
+    project_onboard.add_argument("--platform", action="append", default=[], help="Explicit platform contract id. Repeatable.")
+    project_onboard.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
+    project_onboard.add_argument("--process", help="Explicit active process id.")
     project_onboard.add_argument("--answers", help="Optional project answers YAML.")
     project_onboard.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     project_onboard.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
@@ -24521,6 +24676,20 @@ def build_parser() -> argparse.ArgumentParser:
     project_onboard.add_argument("--force", action="store_true", help="Overwrite existing files.")
     project_onboard.add_argument("--allow-missing-workplace", action="store_true", help="Allow apply mode with a missing workplace manifest.")
     project_onboard.set_defaults(func=command_init_project)
+
+    project_init_status = sub.add_parser("project-init-status", help="Read the bounded project initialization status.")
+    project_init_status.add_argument("--project-root", required=True, help="Project root path.")
+    project_init_status.add_argument("--workplace", help="Optional workplace root or manifest for context resolution.")
+    project_init_status.add_argument("--json", action="store_true", help="Print JSON.")
+    project_init_status.set_defaults(func=command_project_init_status)
+
+    project_init_repair = sub.add_parser("project-init-repair", help="Repair deterministic project initialization state.")
+    project_init_repair.add_argument("--project-root", required=True, help="Existing PF project root path.")
+    project_init_repair.add_argument("--workplace", help="Optional workplace root or manifest for context resolution.")
+    project_init_repair.add_argument("--repair-action", default="refresh_context", choices=["refresh_context", "restore_deterministic_artifacts"], help="Deterministic repair action.")
+    project_init_repair.add_argument("--reason", default="manual", help="Repair reason recorded in the event journal.")
+    project_init_repair.add_argument("--apply", action="store_true", help="Perform the repair; omission is a non-mutating plan.")
+    project_init_repair.set_defaults(func=command_project_init_repair)
 
     doctor_project = sub.add_parser("doctor-project", help="Validate a ProcessForge project layer.")
     doctor_project.add_argument("--project-root", required=True, help="Project root path.")

@@ -1,0 +1,74 @@
+schema_version: 1
+id: project-init-local-search-mcp-producer-and-stdio-20260821
+title: Implement snapshot search producer and stdio MCP smoke
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T14:07:52Z'
+updated_at: '2026-08-21T14:21:41Z'
+objective: Implement metadata-only local_search_resources in the project context snapshot without private absolute paths, extend the focused smoke with a real temporary Ledger-bound stdio MCP initialize/tools-list/foreign-project mismatch proof, and document/verify the result. Keep Runtime resolution bounded and no web console.
+platform: ""
+selected_specializations:
+  []
+order: 17
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Implemented public metadata-only local_search_resources and automated the real Ledger-bound stdio MCP smoke; validation passed.
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/producer-and-stdio-implementation-report.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - tools/smoke_project_init_local_search_mcp.py
+  - .pf/artifacts/project-init-local-search-mcp-20260821/producer-and-stdio-implementation-report.md
+allowed_read_files:
+  - .pf/artifacts/project-init-local-search-mcp-20260821/assurance-audit.md
+  - src/processforge_core/local_resource_search.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/session_read.py
+  - tools/processforge.py
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: developer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/smoke_project_init_local_search_mcp.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/producer-and-stdio-implementation-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/smoke_project_init_local_search_mcp.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/producer-and-stdio-implementation-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: producer-and-stdio-implementation-report
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/producer-and-stdio-implementation-report.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/producer-and-stdio-implementation-report.md
+  format: concise_markdown
+  include:
+    - producer-and-stdio-implementation-report

@@ -1,0 +1,65 @@
+schema_version: 1
+id: project-init-local-search-mcp-public-doc-path-remediation-20260821
+title: Remove public absolute path from Codex session documentation
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T16:39:59Z'
+updated_at: '2026-08-21T16:40:18Z'
+objective: Replace the portable-looking but scanner-invalid absolute Windows path example in Codex MCP host configuration documentation with unambiguous non-absolute placeholders. Preserve the setup meaning and record the remediation.
+platform: ""
+selected_specializations:
+  []
+order: 47
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Portable placeholders replace absolute-looking public documentation paths.
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/public-doc-path-remediation.md
+stage: implementation
+execution_mode:
+  kind: docs_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - docs/concepts/codex-session-read.md
+  - .pf/artifacts/project-init-local-search-mcp-20260821/public-doc-path-remediation.md
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: documentation-remediation-engineer
+  writer: true
+  owned_files:
+    - docs/concepts/codex-session-read.md
+    - .pf/artifacts/project-init-local-search-mcp-20260821/public-doc-path-remediation.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - docs/concepts/codex-session-read.md
+    - .pf/artifacts/project-init-local-search-mcp-20260821/public-doc-path-remediation.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: public-doc-path-remediation
+    type: unspecified
+    required: true
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/public-doc-path-remediation.md
+agent_reasoning_effort: minimal
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/public-doc-path-remediation.md
+  format: concise_markdown
+  include:
+    - public-doc-path-remediation

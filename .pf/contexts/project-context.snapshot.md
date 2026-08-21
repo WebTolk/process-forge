@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-08-21T09:03:53Z
-- valid_until: 2026-08-28T09:03:53Z
+- generated_at: 2026-08-21T17:54:59Z
+- valid_until: 2026-08-28T17:54:59Z
 
 ## Freshness
 
@@ -106,7 +106,8 @@ fresh
 
 ## Recommended Knowledge Resources
 
-- None.
+- project.process-forge:project-profile (indexed, None)
+- project.process-forge:project-artifacts (indexed, None)
 
 ## Enabled Processes
 

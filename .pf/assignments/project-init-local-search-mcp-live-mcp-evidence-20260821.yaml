@@ -1,0 +1,70 @@
+schema_version: 1
+id: project-init-local-search-mcp-live-mcp-evidence-20260821
+title: Live Codex MCP evidence audit
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T15:51:34Z'
+updated_at: '2026-08-21T16:11:30Z'
+objective: Independently verify whether this machine has a real Codex MCP registration and whether controlled live evidence can prove pf.search visibility and Codex-first behaviour. Execute only read-only configuration/CLI checks and, if possible, a controlled non-mutating request. Write a factual RU report distinguishing verified evidence, unavailable integration, and exact next action. Do not change product code or register/configure an MCP server.
+platform: ""
+selected_specializations:
+  []
+order: 36
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/live-codex-mcp-evidence.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/project-init-local-search-mcp-20260821/live-codex-mcp-evidence.md
+  - .pf/logs/project-init-local-search-mcp-live-mcp-evidence-20260821.md
+allowed_read_files:
+  - .pf/reviews/project-init-local-search-mcp-final-acceptance-review-20260821.md
+  - .pf/artifacts/project-init-local-search-mcp-20260821/codex-mcp-tool-visibility-audit.md
+  - tools/pf_runtime/mcp_server.py
+ownership:
+  owner_id: shell-worker
+  owner_label: worker-shell-worker
+  role: integration-assurance-engineer
+  writer: true
+  owned_files:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/live-codex-mcp-evidence.md
+    - .pf/logs/project-init-local-search-mcp-live-mcp-evidence-20260821.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/live-codex-mcp-evidence.md
+    - .pf/logs/project-init-local-search-mcp-live-mcp-evidence-20260821.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: live-codex-mcp-evidence
+    type: unspecified
+    required: true
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/live-codex-mcp-evidence.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/live-codex-mcp-evidence.md
+  format: concise_markdown
+  include:
+    - live-codex-mcp-evidence
+agent_model: gpt-5.5

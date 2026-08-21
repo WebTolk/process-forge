@@ -57,7 +57,7 @@ separate. Register the stdio server with an explicit installed-distribution
 path and workplace, for example:
 
 ```powershell
-codex mcp add processforge -- py -3 "D:\path\to\processforge\tools\pf_runtime\mcp_server.py" --workplace "D:\path\to\processforge-workplace"
+codex mcp add processforge -- py -3 "<processforge-install>/tools/pf_runtime/mcp_server.py" --workplace "<processforge-workplace>"
 ```
 
 Do not put a mutable current-session id into a shared host configuration. When

@@ -1,0 +1,67 @@
+schema_version: 1
+id: project-init-local-search-mcp-final-acceptance-rereview-20260821
+title: Independent final acceptance rereview
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T17:48:50Z'
+updated_at: '2026-08-21T17:52:53Z'
+objective: Review the current completed project initialization, snapshot-authorized FTS5 search, template navigation, session obligations, and actual smoke evidence against the master prompt. Distinguish verified pass, product gap, and environment-only blocker. Do not edit product code.
+platform: ""
+selected_specializations:
+  []
+order: 57
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Independent rereview accepted the product slice; only approval-policy live MCP evidence and dirty-tree archive generation remain external blockers.
+  artifacts:
+    - .pf/reviews/project-init-local-search-mcp-final-acceptance-rereview-20260821.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/project-init-local-search-mcp-final-acceptance-rereview-20260821.md
+allowed_read_files:
+  - tools/smoke_project_init_local_search_mcp.py
+  - tools/smoke_project_init_acceptance.py
+  - tools/smoke_doctor_project_capability_waiver.py
+  - src/processforge_core/project_initialization.py
+  - src/processforge_core/local_resource_search.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/session_read.py
+  - tools/processforge.py
+  - .pf/artifacts/project-init-local-search-mcp-20260821
+ownership:
+  owner_id: shell-final-reviewer
+  owner_label: worker-shell-final-reviewer
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/project-init-local-search-mcp-final-acceptance-rereview-20260821.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/project-init-local-search-mcp-final-acceptance-rereview-20260821.md
+  rule: Do not edit files owned by active parallel tasks.
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/reviews/project-init-local-search-mcp-final-acceptance-rereview-20260821.md
+  format: concise_markdown
+  include:
+    []
+agent_model: gpt-5.5

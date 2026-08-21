@@ -1,0 +1,69 @@
+schema_version: 1
+id: project-init-local-search-mcp-shared-init-audit-20260821
+title: Audit shared initialize and repair service seam
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T14:41:49Z'
+updated_at: '2026-08-21T14:47:29Z'
+objective: Map the exact minimal refactor that makes CLI initialization/repair and the controlled MCP initialization exception use one Core/application service without duplicating resolver logic or destructive writes. Do not edit product code.
+platform: ""
+selected_specializations:
+  []
+order: 23
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: gpt-5.5 audit mapped the minimal shared service seam; no code was changed.
+  artifacts:
+    - .pf/reviews/project-init-local-search-mcp-shared-init-audit-20260821.md
+stage: architecture-plan
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/project-init-local-search-mcp-shared-init-audit-20260821.md
+allowed_read_files:
+  - tools/processforge.py
+  - src/processforge_core/project_initialization.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/host.py
+  - docs/authoring/project-initialization.md
+ownership:
+  owner_id: shell-architect
+  owner_label: worker-shell-architect
+  role: architect
+  writer: true
+  owned_files:
+    - .pf/reviews/project-init-local-search-mcp-shared-init-audit-20260821.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/project-init-local-search-mcp-shared-init-audit-20260821.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: shared-init-audit
+    type: unspecified
+    required: true
+    path: .pf/reviews/project-init-local-search-mcp-shared-init-audit-20260821.md
+agent_reasoning_effort: high
+agent_model: gpt-5.5
+expected_report:
+  language: ru
+  artifact: .pf/reviews/project-init-local-search-mcp-shared-init-audit-20260821.md
+  format: concise_markdown
+  include:
+    - shared-init-audit

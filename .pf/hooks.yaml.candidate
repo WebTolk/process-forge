@@ -1,0 +1,29 @@
+schema_version: 1
+hooks:
+  mode: outbox
+  default_timeout: 30
+  network_send_enabled: false
+  targets:
+    -
+      id: wtaicc-outbox
+      type: outbox
+      enabled: true
+      path: .pf/runtime/hooks/outbox/wtaicc
+      event_types:
+        - '*'
+    -
+      id: wtaicc-webhook-future
+      type: webhook
+      enabled: false
+      url_ref: wtaicc.webhook.url
+      secret_ref: wtaicc.webhook.secret
+      event_types:
+        - assignment.completed
+        - artifact.created
+        - chat.message.recorded
+policies:
+  do_not_send_network_by_default: true
+  secrets_are_refs_only: true
+  chat_content_requires_opt_in: true
+  command_hooks_can_block: true
+  outbox_hooks_are_non_blocking: true

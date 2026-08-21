@@ -1,0 +1,65 @@
+schema_version: 1
+id: project-init-local-search-mcp-fixture-neutrality-remediation-20260821
+title: Make acceptance fixture pass public neutrality gate
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T16:40:41Z'
+updated_at: '2026-08-21T17:48:13Z'
+objective: Remove the literal normalized fixture platform identifier that violates the public release-neutrality scanner while preserving the same platform-binding assertion and fixture behavior. Record the remediation.
+platform: ""
+selected_specializations:
+  []
+order: 48
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Replaced the public-neutrality violating fixture literal while preserving the binding assertion.
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/fixture-neutrality-remediation.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/smoke_project_init_acceptance.py
+  - .pf/artifacts/project-init-local-search-mcp-20260821/fixture-neutrality-remediation.md
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: release-remediation-engineer
+  writer: true
+  owned_files:
+    - tools/smoke_project_init_acceptance.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/fixture-neutrality-remediation.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/smoke_project_init_acceptance.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/fixture-neutrality-remediation.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: fixture-neutrality-remediation
+    type: unspecified
+    required: true
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/fixture-neutrality-remediation.md
+agent_reasoning_effort: minimal
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/fixture-neutrality-remediation.md
+  format: concise_markdown
+  include:
+    - fixture-neutrality-remediation

@@ -1,0 +1,87 @@
+schema_version: 1
+id: project-init-local-search-mcp-post-remediation-review-20260821
+title: Independent post-remediation acceptance review
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T16:15:35Z'
+updated_at: '2026-08-21T16:34:02Z'
+objective: Independently review the completed implementation and new evidence against the master prompt. Verify changed public-path handling, acceptance fixture coverage, Codex MCP registration evidence, task/run consistency and remaining blockers. Do not change code. Produce a concise RU review with an acceptance verdict.
+platform: ""
+selected_specializations:
+  []
+order: 43
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/reviews/project-init-local-search-mcp-post-remediation-review-20260821.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/acceptance-fixtures-proof.md
+    role: input
+    required: true
+    mutable_by_worker: false
+  -
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/codex-mcp-registration-proof.md
+    role: input
+    required: true
+    mutable_by_worker: false
+  -
+    path: .pf/reviews/project-init-local-search-mcp-final-acceptance-review-20260821.md
+    role: input
+    required: true
+    mutable_by_worker: false
+allowed_files:
+  - .pf/reviews/project-init-local-search-mcp-post-remediation-review-20260821.md
+  - .pf/logs/project-init-local-search-mcp-post-remediation-review-20260821.md
+allowed_read_files:
+  - задания/process-forge-project-init-local-search-mcp-master-prompt.md
+  - tools/processforge.py
+  - tools/pf_runtime/session_read.py
+  - tools/smoke_project_init_acceptance.py
+ownership:
+  owner_id: shell-worker
+  owner_label: worker-shell-worker
+  role: independent-acceptance-reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/project-init-local-search-mcp-post-remediation-review-20260821.md
+    - .pf/logs/project-init-local-search-mcp-post-remediation-review-20260821.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/project-init-local-search-mcp-post-remediation-review-20260821.md
+    - .pf/logs/project-init-local-search-mcp-post-remediation-review-20260821.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: post-remediation-review
+    type: unspecified
+    required: true
+    path: .pf/reviews/project-init-local-search-mcp-post-remediation-review-20260821.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/reviews/project-init-local-search-mcp-post-remediation-review-20260821.md
+  format: concise_markdown
+  include:
+    - post-remediation-review
+agent_model: gpt-5.5

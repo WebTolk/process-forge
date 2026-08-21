@@ -129,6 +129,9 @@ def session_context_payload(
         if str(item.get("task_status") or "") == "blocked"
     ]
     health = context.get("health") if isinstance(context.get("health"), dict) else {}
+    obligations_projection = host.stage_obligations_payload(project_root, core)
+    obligations = obligations_projection.get("obligations") if isinstance(obligations_projection.get("obligations"), list) else []
+    active_obligation = next((item for item in obligations if isinstance(item, dict) and str(item.get("task_id") or "") == str(active.get("task_id") or "")), {})
     if str(context.get("status") or "") not in {"fresh", "ok"}:
         blockers.append({"kind": "context", "status": context.get("status"), "health": health.get("status")})
     return {
@@ -148,6 +151,18 @@ def session_context_payload(
             "stage_id": active.get("stage_id"),
             "task_status": active.get("task_status"),
             "worker_status": active.get("worker_status"),
+            "stage_obligations": {
+                "freshness": obligations_projection.get("status"),
+                # The durable stage identity belongs to the obligation
+                # projection as well as to `work.stage_id`: otherwise two
+                # gate-less stages are indistinguishable to an MCP consumer.
+                "stage_id": active_obligation.get("stage_id") or active.get("stage_id"),
+                "inputs": active_obligation.get("inputs", []),
+                "outputs": active_obligation.get("outputs", []),
+                "evidence": active_obligation.get("evidence", []),
+                "entry_gates": active_obligation.get("entry_gates", []),
+                "exit_gates": active_obligation.get("exit_gates", []),
+            },
         },
         "blockers": blockers[:10],
         "active_agents": agents[:20],

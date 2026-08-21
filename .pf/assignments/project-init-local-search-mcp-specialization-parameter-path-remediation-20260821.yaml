@@ -1,0 +1,70 @@
+schema_version: 1
+id: project-init-local-search-mcp-specialization-parameter-path-remediation-20260821
+title: Remediate private specialization parameter source path
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T16:11:47Z'
+updated_at: '2026-08-21T16:15:18Z'
+objective: Prevent private workplace specialization manifest paths from appearing through parameter_resolution source records in public project context snapshots. Preserve project-local relative paths and private runtime resolution. Add or extend regression proof in the owned acceptance fixture.
+platform: ""
+selected_specializations:
+  []
+order: 41
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Private specialization parameter source paths are redacted and acceptance fixture passes.
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-parameter-path-remediation.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - tools/smoke_project_init_acceptance.py
+  - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-parameter-path-remediation.md
+allowed_read_files:
+  - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-audit.md
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: security-remediation-engineer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/smoke_project_init_acceptance.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-parameter-path-remediation.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/smoke_project_init_acceptance.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-parameter-path-remediation.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: specialization-parameter-path-remediation
+    type: unspecified
+    required: true
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/specialization-parameter-path-remediation.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/specialization-parameter-path-remediation.md
+  format: concise_markdown
+  include:
+    - specialization-parameter-path-remediation

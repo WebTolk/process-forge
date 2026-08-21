@@ -98,11 +98,14 @@ required_outputs:
     id: mcp-implementation-report
     type: unspecified
     required: true
+    path: .pf/artifacts/codex-mcp-session-read-20260821/mcp-implementation-report.md
   -
     id: codex-conversation-completeness-proof
     type: unspecified
     required: true
+    path: .pf/artifacts/codex-mcp-session-read-20260821/codex-conversation-completeness-proof.md
   -
     id: mcp-session-context-proof
     type: unspecified
     required: true
+    path: .pf/artifacts/codex-mcp-session-read-20260821/mcp-session-context-proof.md

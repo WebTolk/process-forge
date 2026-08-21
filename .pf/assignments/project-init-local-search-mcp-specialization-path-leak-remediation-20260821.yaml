@@ -1,0 +1,69 @@
+schema_version: 1
+id: project-init-local-search-mcp-specialization-path-leak-remediation-20260821
+title: Remediate public specialization manifest path leak
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T15:57:22Z'
+updated_at: '2026-08-21T16:11:21Z'
+objective: Make selected specialization provenance in public project context snapshot metadata-only when its source is outside the project, preserving project-relative paths for project-local sources. Do not alter runtime private resolution. Produce a concise remediation report.
+platform: ""
+selected_specializations:
+  []
+order: 39
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Public specialization path leak removed and covered by clean fixture.
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-remediation.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-remediation.md
+allowed_read_files:
+  - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-audit.md
+  - schemas/project-context-snapshot.schema.json
+  - src/processforge_core/project_initialization.py
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: core-remediation-engineer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-remediation.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-remediation.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: specialization-path-leak-remediation
+    type: unspecified
+    required: true
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-remediation.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-remediation.md
+  format: concise_markdown
+  include:
+    - specialization-path-leak-remediation
