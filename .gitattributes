@@ -1,0 +1,2 @@
+# Public checksum inventory is byte-based; text checkouts must be deterministic.
+* text=auto eol=lf
