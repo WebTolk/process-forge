@@ -1,10 +1,10 @@
 schema_version: 1
 capsule:
   id: distribution-consistency-audit-20260821-capsule
-  generated_at: '2026-08-21T07:24:11Z'
+  generated_at: '2026-08-21T07:45:36Z'
   assignment_id: distribution-consistency-audit-20260821
   assignment_path: .pf/assignments/distribution-consistency-audit-20260821.yaml
-  assignment_checksum: c3bd971b39a065596da07b0aac94808fc43b4176c6315317f37055ea9bd3f5bf
+  assignment_checksum: 5b625b2db6ae014d27b01cc24d1a344f38270621b9427c639ca2330861f2c1b4
   snapshot: .pf/contexts/project-context.snapshot.yaml
   snapshot_checksum: 36734230fdbbf84ae89396b674d61cc9c6989f598dfb3488224bc8e1fb00b60c
   immutable: true
@@ -293,7 +293,7 @@ effective_resources:
 assignment:
   id: distribution-consistency-audit-20260821
   path: .pf/assignments/distribution-consistency-audit-20260821.yaml
-  status: open
+  status: done
   objective: Establish current source and extracted-archive behavior, false positives, runtime storage boundaries, documentation accuracy, and hook registration before any corrective edits.
   execution_mode:
     kind: read_only
@@ -351,22 +351,27 @@ outputs:
   required_outputs:
     -
       id: distribution-consistency-audit
+      path: .pf/artifacts/distribution-release-docs-sync-20260821/distribution-consistency-audit.md
       type: unspecified
       required: true
     -
       id: public-cleanliness-false-positive-audit
+      path: .pf/artifacts/distribution-release-docs-sync-20260821/public-cleanliness-false-positive-audit.md
       type: unspecified
       required: true
     -
       id: codex-hook-registration-audit
+      path: .pf/artifacts/distribution-release-docs-sync-20260821/codex-hook-registration-audit.md
       type: unspecified
       required: true
     -
       id: event-docs-sync-audit
+      path: .pf/artifacts/distribution-release-docs-sync-20260821/event-docs-sync-audit.md
       type: unspecified
       required: true
     -
       id: event-storage-scaling-risk
+      path: .pf/artifacts/distribution-release-docs-sync-20260821/event-storage-scaling-risk.md
       type: unspecified
       required: true
   expected_report:
@@ -418,22 +423,27 @@ forbidden_files:
 required_outputs:
   -
     id: distribution-consistency-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/distribution-consistency-audit.md
     type: unspecified
     required: true
   -
     id: public-cleanliness-false-positive-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/public-cleanliness-false-positive-audit.md
     type: unspecified
     required: true
   -
     id: codex-hook-registration-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/codex-hook-registration-audit.md
     type: unspecified
     required: true
   -
     id: event-docs-sync-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/event-docs-sync-audit.md
     type: unspecified
     required: true
   -
     id: event-storage-scaling-risk
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/event-storage-scaling-risk.md
     type: unspecified
     required: true
 required_capabilities:

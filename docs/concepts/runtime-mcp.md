@@ -13,3 +13,7 @@ the workplace or guess private paths.
 Ledger-bound project. It is a read-only view of the generated
 `stage-obligations` artifact; MCP does not create a second project binding or
 write projection state.
+
+MCP is not a raw-ingress API and does not expose workplace raw payloads or
+private conversation bodies. See [Hooks And Events](hooks-events.md) for the
+separate adapter and replay boundary.

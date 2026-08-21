@@ -13,6 +13,16 @@ ProcessForge сейчас работает как файловый инстру�
   поверхностный и сообщает WARN;
 - агентские промпты помогают стартовать работу, но не заменяют проектную
   проверку и `doctor-project`.
+- регистрация Codex hooks принадлежит окружению: shipped adapter не доказывает,
+  что все hooks реально зарегистрированы;
+- automatic capture ограничен attributed `UserPromptSubmit` и PF-owned
+  worker records; generic assistant/subagent responses пока не захватываются;
+- session replay восстанавливает только поддержанные normalized derived events,
+  а не полный transcript;
+- raw ingress отклоняет payload больше 1 048 576 байт: blob spill и receipt
+  для oversized payload пока отсутствуют;
+- file-per-event raw indexes и сканирование shards при recovery требуют
+  отдельного решения о масштабировании после измерения нагрузки.
 
 Для обычного подключённого проекта используйте:
 

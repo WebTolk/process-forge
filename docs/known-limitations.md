@@ -42,6 +42,17 @@ artifacts.
   host AI environment may launch its own subagents with ProcessForge
   assignment/capsule scope, but ProcessForge does not install or impersonate
   those host agents.
+- Codex hook registration is environment-owned: the shipped adapter does not
+  prove that all host hooks are registered.
+- Current automatic conversation coverage is limited to attributed
+  `UserPromptSubmit` prompts and PF-owned worker records; generic assistant and
+  subagent responses are not captured.
+- Session replay repairs supported normalized Codex-derived project events; it
+  does not reconstruct a complete generic conversation transcript.
+- Raw ingress rejects canonical payloads larger than 1,048,576 bytes. There is
+  no oversized-payload blob spill or receipt yet.
+- Raw indexes are file-per-event and recovery may scan raw shards; scaling
+  improvements require measurement and a separate storage decision.
 - Future watcher/runner work must stay bounded: streaming reads, offsets or checkpoints, bounded queues, subprocess timeouts, and no full-project in-memory cache by default.
 - Platform-specific shell scripts are not required for release validation and are not part of the release surface.
 

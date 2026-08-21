@@ -288,6 +288,7 @@ def smoke_codex_user_prompt(root: Path) -> None:
     assert len(rows) == 1 and rows[0]["message"]["role"] == "user"
     assert "Hello, capture this." not in events_text(project) and '"content_mode": "metadata_only"' in events_text(project)
 
+    # public-cleanliness: allow-private-path-fixture
     unsafe = {**prompt, "native_event_type": "Unsafe", "raw_payload": {"value": "kept raw"}, "derived_conversation_messages": [{"message_role": "system", "participant": {"id": "system", "type": "system", "role": "system"}, "content": "C:\\Users\\private", "content_source": {"kind": "automatic"}}]}
     denied = event(workplace, unsafe, root / "unsafe.json")
     assert_denied(denied, "untrusted_conversation_provenance")
@@ -410,6 +411,7 @@ def smoke_worker_capture(root: Path) -> None:
     assistant = [row for row in rows if row.get("message", {}).get("role") == "assistant"]
     assert len(assistant) == 1 and assistant[0]["message"]["content"] == report_content
     assert "Exact expected report content." not in events_text(project)
+    # public-cleanliness: allow-private-path-fixture
     assert_no_extra_content(project, ["workspace-access", "workspace_access", "assignment capsule", "C:\\Users\\private"])
     pf("events-validate", "--project-root", str(project))
     pf("events-validate", "--project-root", str(second))

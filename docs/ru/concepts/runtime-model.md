@@ -20,6 +20,18 @@ ProcessForge работает через короткие CLI-команды. К
 Долгоживущий watcher или runner может появиться отдельным слоем позже, но ядро
 среды выполнения не требует демона.
 
+## Центральный raw ingress workplace
+
+Нативный payload агента сначала записывается в приватный Raw Event Journal
+workplace: `<workplace>/runtime/agent-events/`, а не прямо в project event.
+Там находятся raw shards, dedupe/index state, quarantine и replay checkpoints.
+Agent Ledger и Runtime service state/logs также относятся к workplace;
+проектные records остаются в `.pf/runtime/`.
+
+В архив входят `src/processforge_core`, `tools/processforge.py` и
+`tools/pf_runtime/*`, но не raw journals, chat transcripts, quarantine,
+event indexes и replay checkpoints.
+
 ## Требования к среде выполнения
 
 Для среды выполнения рекомендуется Python 3.11+. Python 3.10+ допустим только

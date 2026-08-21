@@ -4,7 +4,7 @@ title: Distribution, release-gates and docs synchronization
 process: task-batch-execution
 status: in_progress
 created_at: '2026-08-21T07:23:54Z'
-updated_at: '2026-08-21T07:31:41Z'
+updated_at: '2026-08-21T07:48:00Z'
 objective: Align the live ProcessForge release archive, release gates, checksum inventory, public-cleanliness semantics, and built-in architecture documentation with the current Python Core and Central Event Ingress implementation.
 platform: ""
 selected_specializations:
@@ -24,6 +24,18 @@ tasks:
     assignment: .pf/assignments/distribution-audit-evidence-20260821.yaml
     status: done
     order: 2
+    blocking: true
+  -
+    id: release-docs-correction-20260821
+    assignment: .pf/assignments/release-docs-correction-20260821.yaml
+    status: in_progress
+    order: 3
+    blocking: true
+  -
+    id: release-smoke-isolation-20260821
+    assignment: .pf/assignments/release-smoke-isolation-20260821.yaml
+    status: in_progress
+    order: 4
     blocking: true
 final_artifacts:
   []

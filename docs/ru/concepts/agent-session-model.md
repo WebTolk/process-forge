@@ -118,3 +118,10 @@ python bin/pf.py session-end --project-root <project>
 
 Aliases являются thin wrappers над `agent-checkin`, `agent-heartbeat`,
 `agent-status` и `agent-checkout`.
+
+## Ограничение захвата диалога
+
+Текущий адаптер Codex фиксирует пользовательский `UserPromptSubmit` только при
+известных project и session. PF-owned summaries ввода codex-exec worker и его
+ожидаемые отчёты также фиксируются с проверкой provenance. Универсальные ответы
+assistant и сообщения host subagent автоматически не захватываются.

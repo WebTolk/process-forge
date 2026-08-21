@@ -12,3 +12,7 @@ resolved context текущего проекта, не заставляя аге
 Ledger-bound проекта. Это read-only view generated-артефакта
 `stage-obligations`: MCP не создаёт вторую project binding и не записывает
 projection state.
+
+MCP не является API raw ingress и не раскрывает raw payload workplace или body
+приватного диалога. Граница адаптера и replay описана в
+[Hooks и события](hooks-events.md).

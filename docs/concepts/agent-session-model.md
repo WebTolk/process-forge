@@ -93,3 +93,11 @@ python bin/pf.py session-end --project-root <project>
 
 The aliases are thin wrappers over `agent-checkin`, `agent-heartbeat`,
 `agent-status`, and `agent-checkout`.
+
+## Conversation capture limit
+
+For the current Codex adapter, a `UserPromptSubmit` can record the operator
+prompt when project and session attribution are present. PF-owned codex-exec
+worker input summaries and collectible expected reports can also be recorded
+with explicit provenance checks. Generic interactive assistant responses and
+host subagent messages are not currently captured automatically.

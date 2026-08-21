@@ -6562,6 +6562,9 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py"), str(root / "tools" / "specialization_smoke_helpers.py"), str(root / "tools" / "codex_exec_worker.py")], 30),
         ReleaseCommand("schema validation", [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)], 60),
         ReleaseCommand("public cleanliness", [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)], 60),
+        ReleaseCommand("smoke_public_cleanliness", [sys.executable, str(root / "tools" / "smoke_public_cleanliness.py")], 60),
+        ReleaseCommand("smoke_processforge_core_package_bootstrap", [sys.executable, str(root / "tools" / "smoke_processforge_core_package_bootstrap.py")], 120),
+        ReleaseCommand("smoke_central_event_ingress", [sys.executable, str(root / "tools" / "smoke_central_event_ingress.py")], 180),
         ReleaseCommand("smoke_core_has_no_domain_knowledge_seeds", [sys.executable, str(root / "tools" / "smoke_core_has_no_domain_knowledge_seeds.py")], 120),
         ReleaseCommand("smoke_empty_workplace_has_no_domain_resources", [sys.executable, str(root / "tools" / "smoke_empty_workplace_has_no_domain_resources.py")], 120),
         ReleaseCommand("smoke_project_classification_data_driven", [sys.executable, str(root / "tools" / "smoke_project_classification_data_driven.py")], 120),
@@ -7072,6 +7075,18 @@ def command_release_pack(args: argparse.Namespace) -> int:
         for item in failures:
             print(f"FAIL: {item.message}")
         return 1
+    for label, script in [
+        ("public cleanliness", root / "tools" / "validate-public-cleanliness.py"),
+        ("checksum inventory", root / "tools" / "validate-process-forge-checksums.py"),
+    ]:
+        command = [sys.executable, str(script), "--root", str(root)]
+        if label == "checksum inventory":
+            command.append("--check")
+        result = subprocess.run(command, cwd=root, text=True, encoding="utf-8", errors="replace", capture_output=True, check=False)
+        if result.returncode != 0:
+            print(f"FAIL: release-pack preflight {label}")
+            print((result.stdout or result.stderr).strip())
+            return 1
     patterns = release_ignore_patterns(root)
     files = [(archive_path, path) for archive_path, path in release_source_files(root) if not release_ignore_match(archive_path, patterns) and not release_path_is_forbidden(archive_path)]
     if args.dry_run:
@@ -7332,9 +7347,24 @@ def command_release_archive_test(args: argparse.Namespace) -> int:
         if not cli.is_file():
             print(f"FAIL: extracted archive has no CLI: {cli}")
             return 1
+        for label, target in [("bin/pf.py --help", extract_root / "bin" / "pf.py"), ("tools/processforge.py --help", cli)]:
+            result = run_release_command(label, [sys.executable, str(target), "--help"], extract_root, timeout=30)
+            print_release_command_output(result)
+            if result.status != "PASS":
+                print("RESULT: FAIL")
+                return 1
         command = [sys.executable, str(cli), "release-test", "--root", str(extract_root)]
         if extracted_test == "quick":
-            command.extend(["--only", "py_compile", "--only", "schema validation", "--only", "public cleanliness", "--only", "checksum"])
+            command.extend([
+                "--only", "py_compile",
+                "--only", "schema validation",
+                "--only", "public cleanliness",
+                "--only", "checksum",
+                "--only", "smoke_processforge_core_package_bootstrap",
+                "--only", "smoke_central_event_ingress",
+                "--only", "smoke_conversation_completeness",
+                "--only", "smoke_central_event_replay",
+            ])
         else:
             command.append("--public")
         result = run_release_command(
@@ -13199,7 +13229,45 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
     for key in ["required_capabilities", "required_packages", "required_templates", "allowed_tools", "forbidden_actions"]:
         if key in raw:
             base[key] = string_list(raw[key])
+    base["process_transitions"] = normalize_process_transitions(base.get("process_transitions"), process_id)
     return base
+
+
+def normalize_process_transitions(value: Any, source_process: str) -> list[dict[str, Any]]:
+    """Materialize legacy authoring-route shorthand as schema-valid transitions."""
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, dict)]
+    if not isinstance(value, dict):
+        return []
+
+    shared_return = {
+        key: value[key]
+        for key in ["offline_agent_policy", "continuation_capsule_required", "post_handoff_run_owner"]
+        if key in value
+    }
+    transitions: list[dict[str, Any]] = []
+    for route in as_list(value.get("routes")):
+        if not isinstance(route, dict):
+            continue
+        target_process = safe_id(str(route.get("to_process") or route.get("target_process") or ""), "")
+        if not target_process:
+            continue
+        transition: dict[str, Any] = {
+            "id": safe_id(str(route.get("id") or f"{source_process}-to-{target_process}"), "transition"),
+            "from_process": source_process,
+            "to_process": target_process,
+            "mode": str(route.get("mode") or "wait_for_result"),
+        }
+        if route.get("required_role"):
+            transition["requires_agent"] = {"required_role": str(route["required_role"])}
+        if route.get("input_artifacts"):
+            transition["input_contract"] = {"artifacts": string_list(route["input_artifacts"])}
+        if route.get("expected_output_artifacts"):
+            transition["output_contract"] = {"artifacts": string_list(route["expected_output_artifacts"])}
+        if shared_return:
+            transition["return"] = shared_return
+        transitions.append(transition)
+    return transitions
 
 
 def materialize_process_responsibility_boundaries(value: Any) -> dict[str, list[str]]:

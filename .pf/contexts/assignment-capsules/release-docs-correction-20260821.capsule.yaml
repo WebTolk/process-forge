@@ -1,10 +1,10 @@
 schema_version: 1
 capsule:
-  id: distribution-audit-evidence-20260821-capsule
-  generated_at: '2026-08-21T07:45:46Z'
-  assignment_id: distribution-audit-evidence-20260821
-  assignment_path: .pf/assignments/distribution-audit-evidence-20260821.yaml
-  assignment_checksum: 3eec68dc1bbd5af42c8fbdeacb92607c831a773c73e8fe252aede0ff32590663
+  id: release-docs-correction-20260821-capsule
+  generated_at: '2026-08-21T07:37:42Z'
+  assignment_id: release-docs-correction-20260821
+  assignment_path: .pf/assignments/release-docs-correction-20260821.yaml
+  assignment_checksum: 34e0227a6d842e29cb531bf4cf7a094d89d893e364e6600fe32162857ca51418
   snapshot: .pf/contexts/project-context.snapshot.yaml
   snapshot_checksum: 36734230fdbbf84ae89396b674d61cc9c6989f598dfb3488224bc8e1fb00b60c
   immutable: true
@@ -291,13 +291,13 @@ effective_resources:
     id: docs.web.performance
     status: activated
 assignment:
-  id: distribution-audit-evidence-20260821
-  path: .pf/assignments/distribution-audit-evidence-20260821.yaml
-  status: done
-  objective: Write durable audit reports and a project log for the completed read-only release/docs investigation; do not edit product files.
+  id: release-docs-correction-20260821
+  path: .pf/assignments/release-docs-correction-20260821.yaml
+  status: open
+  objective: Implement narrow release checksum/public-cleanliness preflights, preserve security fixtures, register critical core/ingress/replay smokes, and synchronize public English/Russian documentation to the current raw-first architecture.
   execution_mode:
-    kind: docs_only
-    code_changes_allowed: false
+    kind: implementation
+    code_changes_allowed: true
     artifact_changes_allowed: true
     requires_review: true
 context:
@@ -305,7 +305,7 @@ context:
   freshness: fresh
   required_sources:
     - .pf/contexts/project-context.snapshot.yaml
-    - .pf/assignments/distribution-audit-evidence-20260821.yaml
+    - .pf/assignments/release-docs-correction-20260821.yaml
   context_artifacts:
     []
   selected_specializations:
@@ -316,27 +316,51 @@ context:
     []
 scope:
   allowed_files:
+    - tools/processforge.py
+    - tools/validate-public-cleanliness.py
+    - tools/smoke_public_cleanliness.py
+    - README.md
+    - README.ru.md
+    - QUICKSTART.md
+    - QUICKSTART.ru.md
+    - checksums/processforge.sha256
+    - .processforge-releaseignore
     - .pf/logs/distribution-release-docs-sync-20260821.md
     - .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
+    - .pf/assignments/release-docs-correction-20260821.yaml
+    - .pf/contexts/assignment-capsules/release-docs-correction-20260821.capsule.yaml
+    - .pf/continuations/distribution-release-docs-sync-clean-baseline-20260821.yaml
+    - docs/**
     - .pf/artifacts/distribution-release-docs-sync-20260821/**
+    - .pf/runs/distribution-release-docs-sync-20260821/**
   allowed_read_files:
     []
   forbidden_files:
-    - README.md
-    - README.ru.md
-    - tools/**
-    - docs/**
-    - checksums/**
+    - tools/pf_runtime/**
     - src/**
   ownership:
     owner_id: codex
     owner_label: worker-codex
-    role: run-coordinator
+    role: release-sync-implementer
     writer: true
     owned_files:
+      - tools/processforge.py
+      - tools/validate-public-cleanliness.py
+      - tools/smoke_public_cleanliness.py
+      - README.md
+      - README.ru.md
+      - QUICKSTART.md
+      - QUICKSTART.ru.md
+      - checksums/processforge.sha256
+      - .processforge-releaseignore
       - .pf/logs/distribution-release-docs-sync-20260821.md
       - .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
+      - .pf/assignments/release-docs-correction-20260821.yaml
+      - .pf/contexts/assignment-capsules/release-docs-correction-20260821.capsule.yaml
+      - .pf/continuations/distribution-release-docs-sync-clean-baseline-20260821.yaml
+      - docs/**
       - .pf/artifacts/distribution-release-docs-sync-20260821/**
+      - .pf/runs/distribution-release-docs-sync-20260821/**
     owned_globs:
       []
   non_overlap:
@@ -344,67 +368,37 @@ scope:
     active_parallel_tasks:
       []
     current_write_scope:
+      - tools/processforge.py
+      - tools/validate-public-cleanliness.py
+      - tools/smoke_public_cleanliness.py
+      - README.md
+      - README.ru.md
+      - QUICKSTART.md
+      - QUICKSTART.ru.md
+      - checksums/processforge.sha256
+      - .processforge-releaseignore
       - .pf/logs/distribution-release-docs-sync-20260821.md
       - .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
+      - .pf/assignments/release-docs-correction-20260821.yaml
+      - .pf/contexts/assignment-capsules/release-docs-correction-20260821.capsule.yaml
+      - .pf/continuations/distribution-release-docs-sync-clean-baseline-20260821.yaml
+      - docs/**
       - .pf/artifacts/distribution-release-docs-sync-20260821/**
+      - .pf/runs/distribution-release-docs-sync-20260821/**
     rule: Do not edit files owned by active parallel tasks.
     overlap_check:
-      status: fail
+      status: pass
       conflicts:
-        -
-          current_assignment: distribution-audit-evidence-20260821
-          current_scope: .pf/logs/distribution-release-docs-sync-20260821.md
-          other_assignment: release-docs-correction-20260821
-          other_scope: .pf/logs/distribution-release-docs-sync-20260821.md
-          reason: same_file
-        -
-          current_assignment: distribution-audit-evidence-20260821
-          current_scope: .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
-          other_assignment: release-docs-correction-20260821
-          other_scope: .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
-          reason: same_file
-        -
-          current_assignment: distribution-audit-evidence-20260821
-          current_scope: .pf/artifacts/distribution-release-docs-sync-20260821/**
-          other_assignment: release-docs-correction-20260821
-          other_scope: .pf/artifacts/distribution-release-docs-sync-20260821/**
-          reason: same_glob
+        []
 outputs:
   required_outputs:
-    -
-      id: distribution-consistency-audit
-      path: .pf/artifacts/distribution-release-docs-sync-20260821/distribution-consistency-audit.md
-      type: unspecified
-      required: true
-    -
-      id: public-cleanliness-false-positive-audit
-      path: .pf/artifacts/distribution-release-docs-sync-20260821/public-cleanliness-false-positive-audit.md
-      type: unspecified
-      required: true
-    -
-      id: codex-hook-registration-audit
-      path: .pf/artifacts/distribution-release-docs-sync-20260821/codex-hook-registration-audit.md
-      type: unspecified
-      required: true
-    -
-      id: event-docs-sync-audit
-      path: .pf/artifacts/distribution-release-docs-sync-20260821/event-docs-sync-audit.md
-      type: unspecified
-      required: true
-    -
-      id: event-storage-scaling-risk
-      path: .pf/artifacts/distribution-release-docs-sync-20260821/event-storage-scaling-risk.md
-      type: unspecified
-      required: true
+    []
   expected_report:
     language: ru
+    artifact: .pf/artifacts/distribution-release-docs-sync-20260821/release-gate-correction-report.md
     format: concise_markdown
     include:
-      - distribution-consistency-audit
-      - public-cleanliness-false-positive-audit
-      - codex-hook-registration-audit
-      - event-docs-sync-audit
-      - event-storage-scaling-risk
+      []
 workspace_access:
   knowledge_resources:
     []
@@ -433,52 +427,38 @@ capabilities:
   optional:
     []
 telemetry:
-  events: .pf/runtime/telemetry/distribution-audit-evidence-20260821.ndjson
-  event_correlation_id: assignment-distribution-audit-evidence-20260821
+  events: .pf/runtime/telemetry/release-docs-correction-20260821.ndjson
+  event_correlation_id: assignment-release-docs-correction-20260821
 required_sources:
   - .pf/contexts/project-context.snapshot.yaml
-  - .pf/assignments/distribution-audit-evidence-20260821.yaml
+  - .pf/assignments/release-docs-correction-20260821.yaml
 allowed_files:
-  - .pf/logs/distribution-release-docs-sync-20260821.md
-  - .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
-  - .pf/artifacts/distribution-release-docs-sync-20260821/**
-forbidden_files:
+  - tools/processforge.py
+  - tools/validate-public-cleanliness.py
+  - tools/smoke_public_cleanliness.py
   - README.md
   - README.ru.md
-  - tools/**
+  - QUICKSTART.md
+  - QUICKSTART.ru.md
+  - checksums/processforge.sha256
+  - .processforge-releaseignore
+  - .pf/logs/distribution-release-docs-sync-20260821.md
+  - .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
+  - .pf/assignments/release-docs-correction-20260821.yaml
+  - .pf/contexts/assignment-capsules/release-docs-correction-20260821.capsule.yaml
+  - .pf/continuations/distribution-release-docs-sync-clean-baseline-20260821.yaml
   - docs/**
-  - checksums/**
+  - .pf/artifacts/distribution-release-docs-sync-20260821/**
+  - .pf/runs/distribution-release-docs-sync-20260821/**
+forbidden_files:
+  - tools/pf_runtime/**
   - src/**
 required_outputs:
-  -
-    id: distribution-consistency-audit
-    path: .pf/artifacts/distribution-release-docs-sync-20260821/distribution-consistency-audit.md
-    type: unspecified
-    required: true
-  -
-    id: public-cleanliness-false-positive-audit
-    path: .pf/artifacts/distribution-release-docs-sync-20260821/public-cleanliness-false-positive-audit.md
-    type: unspecified
-    required: true
-  -
-    id: codex-hook-registration-audit
-    path: .pf/artifacts/distribution-release-docs-sync-20260821/codex-hook-registration-audit.md
-    type: unspecified
-    required: true
-  -
-    id: event-docs-sync-audit
-    path: .pf/artifacts/distribution-release-docs-sync-20260821/event-docs-sync-audit.md
-    type: unspecified
-    required: true
-  -
-    id: event-storage-scaling-risk
-    path: .pf/artifacts/distribution-release-docs-sync-20260821/event-storage-scaling-risk.md
-    type: unspecified
-    required: true
+  []
 required_capabilities:
   []
 optional_capabilities:
   []
 selected_sources:
   []
-event_correlation_id: assignment-distribution-audit-evidence-20260821
+event_correlation_id: assignment-release-docs-correction-20260821

@@ -20,6 +20,12 @@ python bin/pf.py chat-record --project-root <project-root> --session-id session-
 
 `chat-record` writes the transcript line and emits `chat.message.recorded`.
 
+Automatic capture is deliberately narrower than the generic transcript model:
+the current Codex adapter records `UserPromptSubmit` user prompts, while
+PF-owned codex-exec worker input summaries and collectible expected reports use
+explicit provenance checks. Generic assistant and subagent replies are not yet
+automatically captured.
+
 By default, the emitted event contains:
 
 - message id
@@ -50,6 +56,9 @@ Default export mode is `metadata_only`. Full redacted content requires
 
 Chat relay redacts secret-like values, stores runtime transcripts under ignored
 `.pf/runtime/`, and keeps network delivery disabled in the MVP.
+
+Raw provider payloads are stored separately in the private workplace Raw Event
+Journal. A project event/outbox payload must not contain a full raw body.
 
 Recommended assignment-level options:
 

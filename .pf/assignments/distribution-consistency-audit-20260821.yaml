@@ -68,22 +68,27 @@ ownership:
 required_outputs:
   -
     id: distribution-consistency-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/distribution-consistency-audit.md
     type: unspecified
     required: true
   -
     id: public-cleanliness-false-positive-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/public-cleanliness-false-positive-audit.md
     type: unspecified
     required: true
   -
     id: codex-hook-registration-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/codex-hook-registration-audit.md
     type: unspecified
     required: true
   -
     id: event-docs-sync-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/event-docs-sync-audit.md
     type: unspecified
     required: true
   -
     id: event-storage-scaling-risk
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/event-storage-scaling-risk.md
     type: unspecified
     required: true
 expected_report:

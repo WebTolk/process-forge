@@ -1,0 +1,106 @@
+schema_version: 1
+id: release-docs-correction-20260821
+title: Correct release gates and synchronize event documentation
+run_id: distribution-release-docs-sync-20260821
+process: task-batch-execution
+status: in_progress
+created_at: '2026-08-21T07:37:28Z'
+updated_at: '2026-08-21T07:37:43Z'
+objective: Implement narrow release checksum/public-cleanliness preflights, preserve security fixtures, register critical core/ingress/replay smokes, and synchronize public English/Russian documentation to the current raw-first architecture.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+stage: task-execution-loop
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - tools/validate-public-cleanliness.py
+  - tools/smoke_public_cleanliness.py
+  - README.md
+  - README.ru.md
+  - QUICKSTART.md
+  - QUICKSTART.ru.md
+  - checksums/processforge.sha256
+  - .processforge-releaseignore
+  - .pf/logs/distribution-release-docs-sync-20260821.md
+  - .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
+  - .pf/assignments/release-docs-correction-20260821.yaml
+  - .pf/contexts/assignment-capsules/release-docs-correction-20260821.capsule.yaml
+  - .pf/continuations/distribution-release-docs-sync-clean-baseline-20260821.yaml
+  - docs/**
+  - .pf/artifacts/distribution-release-docs-sync-20260821/**
+  - .pf/runs/distribution-release-docs-sync-20260821/**
+forbidden_files:
+  - tools/pf_runtime/**
+  - src/**
+ownership:
+  owner_id: codex
+  owner_label: worker-codex
+  role: release-sync-implementer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/validate-public-cleanliness.py
+    - tools/smoke_public_cleanliness.py
+    - README.md
+    - README.ru.md
+    - QUICKSTART.md
+    - QUICKSTART.ru.md
+    - checksums/processforge.sha256
+    - .processforge-releaseignore
+    - .pf/logs/distribution-release-docs-sync-20260821.md
+    - .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
+    - .pf/assignments/release-docs-correction-20260821.yaml
+    - .pf/contexts/assignment-capsules/release-docs-correction-20260821.capsule.yaml
+    - .pf/continuations/distribution-release-docs-sync-clean-baseline-20260821.yaml
+    - docs/**
+    - .pf/artifacts/distribution-release-docs-sync-20260821/**
+    - .pf/runs/distribution-release-docs-sync-20260821/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/validate-public-cleanliness.py
+    - tools/smoke_public_cleanliness.py
+    - README.md
+    - README.ru.md
+    - QUICKSTART.md
+    - QUICKSTART.ru.md
+    - checksums/processforge.sha256
+    - .processforge-releaseignore
+    - .pf/logs/distribution-release-docs-sync-20260821.md
+    - .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
+    - .pf/assignments/release-docs-correction-20260821.yaml
+    - .pf/contexts/assignment-capsules/release-docs-correction-20260821.capsule.yaml
+    - .pf/continuations/distribution-release-docs-sync-clean-baseline-20260821.yaml
+    - docs/**
+    - .pf/artifacts/distribution-release-docs-sync-20260821/**
+    - .pf/runs/distribution-release-docs-sync-20260821/**
+  rule: Do not edit files owned by active parallel tasks.
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/distribution-release-docs-sync-20260821/release-gate-correction-report.md
+  format: concise_markdown
+  include:
+    []

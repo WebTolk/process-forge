@@ -22,3 +22,7 @@ handoffs, start worker processes, or validate task outputs. The Director reads
 ledger state to coordinate work; the Execution Inspector reads task/runtime
 state to verify execution. See [Agent Session Model](agent-session-model.md) and
 [Director, Ledger, Inspector, And Worker Boundary](director-ledger-inspector-boundary.md).
+
+The ledger is workplace-scoped but distinct from the private Raw Event Journal.
+Raw ingress can create derived session/telemetry effects only after project
+scope validation; it does not make the Ledger a copy of every raw payload.

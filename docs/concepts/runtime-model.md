@@ -3,8 +3,9 @@
 ![Run lifecycle](../assets/processforge-run-lifecycle.svg)
 
 ProcessForge uses short-lived CLI commands by default. A command reads project
-and workplace files, writes the requested artifact or runtime record, emits
-events under `.pf/runtime/`, and exits.
+and workplace files, writes the requested artifact or runtime record, and
+exits. The optional Runtime host and MCP facade are adapters around the shared
+Python Core; `tools/processforge.py` remains the legacy CLI-adapter boundary.
 
 The file layout is the runtime contract:
 
@@ -17,6 +18,18 @@ The file layout is the runtime contract:
 - `.pf/runtime/events/events.ndjson` stores event envelopes.
 - `.pf/runtime/agent-runs/` stores optional worker process state.
 - `.pf/runtime/supervisor/` stores optional supervisor loop state.
+
+## Workplace raw ingress
+
+Agent-native payloads are first written to the private workplace Raw Event
+Journal under `<workplace>/runtime/agent-events/`, not directly to a project
+event file. It stores raw shards, dedupe/index state, quarantine and replay
+checkpoints. Agent Ledger and Runtime service state/logs are also
+workplace-scoped. Project records remain local to `.pf/runtime/`.
+
+The release archive includes `src/processforge_core`, `tools/processforge.py`
+and `tools/pf_runtime/*` source, but never workplace raw journals, chat
+transcripts, quarantine data, event indexes or replay checkpoints.
 
 The optional future watcher or runner can observe these files, but the core
 runtime does not require a daemon.
