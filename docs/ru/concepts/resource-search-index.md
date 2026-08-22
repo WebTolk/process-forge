@@ -23,9 +23,14 @@ python bin/pf.py search-index status --project-root <project> --workplace <workp
 python bin/pf.py search-index refresh --project-root <project> --workplace <workplace>
 python bin/pf.py search-index rebuild --project-root <project> --workplace <workplace>
 python bin/pf.py search-index doctor --project-root <project> --workplace <workplace>
+python bin/pf.py search-index tick --project-root <project> --workplace <workplace>
 ```
 
 `status` работает read-only. `refresh` обновляет scope текущего snapshot проекта. `rebuild` удаляет производную DB и строит её заново для текущего snapshot проекта.
+
+`status --verify-files` выполняет явную fingerprint-проверку файлов текущего snapshot scope. Так можно пометить индекс `stale`, если разрешённые файлы изменились вне ProcessForge.
+
+`tick` — один bounded maintenance pass для Runtime или оператора. По умолчанию он проверяет fingerprints и refresh делает только если scope отсутствует или stale. MCP-запросы не выполняют такую проверку на каждый query.
 
 ## Runtime и MCP
 
@@ -51,4 +56,4 @@ search:
 
 ## Текущие ограничения
 
-Текущий slice сохраняет индекс производным и пересобираемым, использует SQLite FTS5 и не добавляет скрытый глобальный поиск. Периодическое Runtime maintenance, инкрементальный dirty marking, расширенные crash recovery states и production benchmark остаются следующими slices.
+Текущий slice сохраняет индекс производным и пересобираемым, использует SQLite FTS5 и не добавляет скрытый глобальный поиск. Bounded maintenance tick доступен для Runtime/operator scheduling. Event-based dirty marking, расширенные crash recovery states и production benchmark остаются следующими slices.

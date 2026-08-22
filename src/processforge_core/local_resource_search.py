@@ -232,6 +232,14 @@ def _delete_scope(db: sqlite3.Connection, scope_key: str) -> None:
     db.execute("DELETE FROM documents WHERE scope_key=?", (scope_key,))
 
 
+def _document_fingerprint_map(roots: list[AuthorizedRoot]) -> dict[str, str]:
+    result: dict[str, str] = {}
+    for resource_id, _package_id, _kind, canonical, path_ref, raw in _documents(roots):
+        fingerprint, _content = raw.split("\n", 1)
+        result[f"{resource_id}:{path_ref}:{canonical}"] = fingerprint
+    return result
+
+
 def build_index(project_root: Path, snapshot: dict[str, Any], *, workplace_root: Path | None = None, full_reconciliation: bool = False) -> dict[str, Any]:
     roots = authorized_roots(project_root, snapshot)
     path = index_path(project_root, workplace_root)
@@ -276,7 +284,7 @@ def rebuild_index(project_root: Path, snapshot: dict[str, Any], *, workplace_roo
     return build_index(project_root, snapshot, workplace_root=workplace_root, full_reconciliation=True)
 
 
-def index_status(project_root: Path, snapshot: dict[str, Any] | None = None, *, workplace_root: Path | None = None) -> dict[str, Any]:
+def index_status(project_root: Path, snapshot: dict[str, Any] | None = None, *, workplace_root: Path | None = None, verify_files: bool = False) -> dict[str, Any]:
     capability = sqlite_fts5_capability()
     path = index_path(project_root, workplace_root)
     payload: dict[str, Any] = {
@@ -310,6 +318,20 @@ def index_status(project_root: Path, snapshot: dict[str, Any] | None = None, *, 
                     payload["status"] = "stale"
                     payload["stale_resource_count"] = 1
                     return payload
+                if verify_files and snapshot is not None:
+                    stored_rows = db.execute("SELECT resource_id, path_ref, canonical_path, fingerprint FROM documents WHERE scope_key=?", (scope_key,)).fetchall()
+                    stored = {f"{item[0]}:{item[1]}:{item[2]}": str(item[3]) for item in stored_rows}
+                    current = _document_fingerprint_map(authorized_roots(project_root, snapshot))
+                    if stored != current:
+                        payload["status"] = "stale"
+                        payload["stale_resource_count"] = 1
+                        payload["resource_count"] = row[2]
+                        payload["document_count"] = row[3]
+                        payload["failed_file_count"] = row[4]
+                        payload["last_successful_refresh"] = row[5]
+                        payload["last_full_reconciliation"] = row[6]
+                        payload["error"] = "document_fingerprint_changed"
+                        return payload
                 payload.update(
                     {
                         "status": row[0],
@@ -341,6 +363,20 @@ def index_status(project_root: Path, snapshot: dict[str, Any] | None = None, *, 
         payload["status"] = "degraded"
         payload["error"] = str(exc) or "index_unreadable"
     return payload
+
+
+def maintenance_tick(project_root: Path, snapshot: dict[str, Any], *, workplace_root: Path | None = None, verify_files: bool = True) -> dict[str, Any]:
+    before = index_status(project_root, snapshot, workplace_root=workplace_root, verify_files=verify_files)
+    action = "none"
+    result: dict[str, Any] | None = None
+    if before.get("status") in {"missing", "stale"}:
+        result = build_index(project_root, snapshot, workplace_root=workplace_root)
+        action = "refresh"
+    elif before.get("status") == "degraded" and str(before.get("error") or "").startswith("index_schema_"):
+        result = rebuild_index(project_root, snapshot, workplace_root=workplace_root)
+        action = "rebuild"
+    after = index_status(project_root, snapshot, workplace_root=workplace_root, verify_files=False)
+    return {"schema_version": 1, "kind": "pf.search_index.maintenance_tick", "action": action, "before": before, "after": after, "result": result}
 
 
 def search(project_root: Path, snapshot: dict[str, Any], *, query: Any, limit: Any = None, limitstart: Any = None, offset: Any = None, workplace_root: Path | None = None) -> dict[str, Any]:

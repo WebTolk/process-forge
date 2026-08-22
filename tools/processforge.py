@@ -22490,7 +22490,7 @@ def command_search_index_status(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     workplace_root = Path(args.workplace).expanduser().resolve()
     _context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
-    status = index_status(project_root, snapshot, workplace_root=workplace_root)
+    status = index_status(project_root, snapshot, workplace_root=workplace_root, verify_files=bool(getattr(args, "verify_files", False)))
     print_search_index_status(status)
     return 1 if status.get("status") == "degraded" else 0
 
@@ -22543,6 +22543,26 @@ def command_search_index_doctor(args: argparse.Namespace) -> int:
         check("PASS" if int(status.get("failed_file_count") or 0) == 0 else "WARN", "failed file count is zero"),
     ]
     return print_checks(checks)
+
+
+def command_search_index_tick(args: argparse.Namespace) -> int:
+    from processforge_core.local_resource_search import maintenance_tick
+
+    project_root = Path(args.project_root).expanduser().resolve()
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+    if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+        print(f"FAIL: project context is not fresh: {context.get('status')}")
+        return 1
+    payload = maintenance_tick(project_root, snapshot, workplace_root=workplace_root, verify_files=not bool(getattr(args, "skip_file_verify", False)))
+    print(f"ACTION: {payload.get('action')}")
+    after = payload.get("after") if isinstance(payload.get("after"), dict) else {}
+    print(f"STATUS: {after.get('status')}")
+    print(f"GENERATION: {after.get('generation') or 'none'}")
+    print(f"DOCUMENTS: {after.get('document_count')}")
+    if after.get("error"):
+        print(f"ERROR: {after.get('error')}")
+    return 0 if after.get("status") == "fresh" else 1
 
 
 def command_core_update_status(args: argparse.Namespace) -> int:
@@ -25039,6 +25059,7 @@ def build_parser() -> argparse.ArgumentParser:
     search_index_status = search_index_sub.add_parser("status", help="Show search index readiness for a project snapshot.")
     search_index_status.add_argument("--project-root", required=True, help="Project root path.")
     search_index_status.add_argument("--workplace", required=True, help="Workplace root path.")
+    search_index_status.add_argument("--verify-files", action="store_true", help="Read authorized files and mark the scope stale when fingerprints changed.")
     search_index_status.set_defaults(func=command_search_index_status)
     search_index_refresh = search_index_sub.add_parser("refresh", help="Refresh the project snapshot scope in the workplace search index.")
     search_index_refresh.add_argument("--project-root", required=True, help="Project root path.")
@@ -25052,6 +25073,11 @@ def build_parser() -> argparse.ArgumentParser:
     search_index_doctor.add_argument("--project-root", required=True, help="Project root path.")
     search_index_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
     search_index_doctor.set_defaults(func=command_search_index_doctor)
+    search_index_tick = search_index_sub.add_parser("tick", help="Run one bounded maintenance pass for the project snapshot search scope.")
+    search_index_tick.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_tick.add_argument("--workplace", required=True, help="Workplace root path.")
+    search_index_tick.add_argument("--skip-file-verify", action="store_true", help="Skip file fingerprint verification and only refresh missing/stale metadata state.")
+    search_index_tick.set_defaults(func=command_search_index_tick)
 
     core_update = sub.add_parser("core-update", help="Plan and apply manifest-based ProcessForge core archive updates.")
     core_update_sub = core_update.add_subparsers(dest="core_update_command", required=True)

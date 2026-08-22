@@ -23,9 +23,14 @@ python bin/pf.py search-index status --project-root <project> --workplace <workp
 python bin/pf.py search-index refresh --project-root <project> --workplace <workplace>
 python bin/pf.py search-index rebuild --project-root <project> --workplace <workplace>
 python bin/pf.py search-index doctor --project-root <project> --workplace <workplace>
+python bin/pf.py search-index tick --project-root <project> --workplace <workplace>
 ```
 
 `status` is read-only. `refresh` updates the current project snapshot scope. `rebuild` removes the derived DB and builds it again for the current project snapshot scope.
+
+`status --verify-files` performs an explicit file fingerprint check for the current snapshot scope. It can mark the index `stale` when authorized files changed outside ProcessForge.
+
+`tick` is one bounded maintenance pass suitable for Runtime or operator scheduling. It verifies fingerprints by default and refreshes only when the scope is missing or stale. MCP calls do not perform this verification on every query.
 
 ## Runtime and MCP contract
 
@@ -51,4 +56,4 @@ The index stores private resolved paths only as runtime data. Public project sna
 
 ## Current limits
 
-This implementation keeps the index derived and rebuildable, uses SQLite FTS5, and avoids hidden global search. Periodic Runtime maintenance, incremental dirty marking, crash recovery states beyond safe rebuild, and production-scale benchmark coverage remain future slices.
+This implementation keeps the index derived and rebuildable, uses SQLite FTS5, and avoids hidden global search. A bounded maintenance tick is available for Runtime/operator scheduling. Event-based dirty marking, crash recovery states beyond safe rebuild, and production-scale benchmark coverage remain future slices.

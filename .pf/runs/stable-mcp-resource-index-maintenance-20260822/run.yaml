@@ -1,0 +1,31 @@
+schema_version: 1
+id: stable-mcp-resource-index-maintenance-20260822
+title: Implement search index maintenance tick
+process: software-feature-development
+status: completed
+created_at: '2026-08-22T14:04:50Z'
+updated_at: '2026-08-22T14:11:23Z'
+objective: Add bounded search-index maintenance tick and stale fingerprint detection for Runtime/operator periodic refresh without MCP background work.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: stable-mcp-resource-index-maintenance-tick-20260822
+    assignment: .pf/assignments/stable-mcp-resource-index-maintenance-tick-20260822.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/stable-mcp-resource-index-maintenance-20260822/summary.md
+  - .pf/handoffs/runs/stable-mcp-resource-index-maintenance-20260822-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

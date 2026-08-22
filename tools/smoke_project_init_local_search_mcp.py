@@ -98,6 +98,13 @@ def main() -> int:
         assert "REFRESHED:" in refresh_output and "DOCUMENTS:" in refresh_output
         doctor_output = cli("search-index", "doctor", "--project-root", str(first), "--workplace", str(workplace))
         assert "PASS: SQLite FTS5 available" in doctor_output
+        noop_tick = cli("search-index", "tick", "--project-root", str(first), "--workplace", str(workplace))
+        assert "ACTION: none" in noop_tick
+        (allowed / "guide.md").write_text("MCP snapshot authorized search maintenancetoken", encoding="utf-8")
+        verified_status = cli("search-index", "status", "--project-root", str(first), "--workplace", str(workplace), "--verify-files")
+        assert "STATUS: stale" in verified_status and "document_fingerprint_changed" in verified_status
+        refresh_tick = cli("search-index", "tick", "--project-root", str(first), "--workplace", str(workplace))
+        assert "ACTION: refresh" in refresh_tick and "STATUS: fresh" in refresh_tick
         requests = [
             {"jsonrpc": "2.0", "id": 1, "method": "initialize"},
             {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
@@ -105,12 +112,13 @@ def main() -> int:
             {"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "pf.project_initialization.status", "arguments": {"session_id": "smoke-session", "project_root": str(second)}}},
             {"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "traversal-secret-token"}}},
             {"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "External knowledge root"}}},
-            {"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "pf.project_initialization.repair", "arguments": {"session_id": "smoke-session"}}},
-            {"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": {"name": "pf.project_initialization.repair", "arguments": {"session_id": "smoke-session", "apply": True, "reason": "stdio-smoke"}}},
-            {"jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {"name": "pf.project_initialization.initialize", "arguments": {"session_id": "smoke-session", "apply": True, "answers_path": str(root / "outside.md")}}},
-            {"jsonrpc": "2.0", "id": 10, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "Joomla Plugin Manifest"}}},
-            {"jsonrpc": "2.0", "id": 11, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "registry-secret-token"}}},
-            {"jsonrpc": "2.0", "id": 12, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {"session_id": "smoke-session"}}},
+            {"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "maintenancetoken"}}},
+            {"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": {"name": "pf.project_initialization.repair", "arguments": {"session_id": "smoke-session"}}},
+            {"jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {"name": "pf.project_initialization.repair", "arguments": {"session_id": "smoke-session", "apply": True, "reason": "stdio-smoke"}}},
+            {"jsonrpc": "2.0", "id": 10, "method": "tools/call", "params": {"name": "pf.project_initialization.initialize", "arguments": {"session_id": "smoke-session", "apply": True, "answers_path": str(root / "outside.md")}}},
+            {"jsonrpc": "2.0", "id": 11, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "Joomla Plugin Manifest"}}},
+            {"jsonrpc": "2.0", "id": 12, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "registry-secret-token"}}},
+            {"jsonrpc": "2.0", "id": 13, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {"session_id": "smoke-session"}}},
         ]
         result = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "mcp_server.py"), "--workplace", str(workplace), "--session", "smoke-session"], cwd=ROOT, text=True, encoding="utf-8", errors="replace", input="\n".join(json.dumps(item) for item in requests) + "\n", capture_output=True)
         assert result.returncode == 0, result.stderr
@@ -128,18 +136,20 @@ def main() -> int:
         assert external_result["results"], external_result
         assert external_result["results"][0]["provenance"]["package_id"] == "fixture"
         assert Path(external_result["results"][0]["local_path"]).is_file()
-        assert responses[6]["result"]["isError"] is True
-        assert json.loads(responses[6]["result"]["content"][0]["text"])["error"]["code"] == "apply_required"
-        repair_result = json.loads(responses[7]["result"]["content"][0]["text"])
+        maintenance_result = json.loads(responses[6]["result"]["content"][0]["text"])
+        assert maintenance_result["results"] and maintenance_result["results"][0]["canonical_path"] == "guide.md", maintenance_result
+        assert responses[7]["result"]["isError"] is True
+        assert json.loads(responses[7]["result"]["content"][0]["text"])["error"]["code"] == "apply_required"
+        repair_result = json.loads(responses[8]["result"]["content"][0]["text"])
         assert repair_result["action"] == "repair" and repair_result["applied"] is True
         assert repair_result["result"]["doctor"]["status"] == "pass"
-        assert responses[8]["result"]["isError"] is True
-        assert json.loads(responses[8]["result"]["content"][0]["text"])["error"]["code"] == "invalid_arguments"
-        template_result = json.loads(responses[9]["result"]["content"][0]["text"])
+        assert responses[9]["result"]["isError"] is True
+        assert json.loads(responses[9]["result"]["content"][0]["text"])["error"]["code"] == "invalid_arguments"
+        template_result = json.loads(responses[10]["result"]["content"][0]["text"])
         assert template_result["results"][0]["provenance"]["kind"] == "template"
         assert Path(template_result["results"][0]["local_path"]).is_file()
-        assert json.loads(responses[10]["result"]["content"][0]["text"])["results"] == []
-        session_context = json.loads(responses[11]["result"]["content"][0]["text"])
+        assert json.loads(responses[11]["result"]["content"][0]["text"])["results"] == []
+        session_context = json.loads(responses[12]["result"]["content"][0]["text"])
         assert session_context["search"]["status"] == "fresh"
         assert session_context["search"]["generation"]
         assert (workplace / "runtime" / "search" / "local-resource-search.sqlite").is_file()
