@@ -23,3 +23,21 @@ Decisions: Use derived DB schema v3 and rebuild-on-schema-mismatch; keep `index_
 Risks: Real Joomla core source snapshot root `D:\.agents\docs\Joomla-core` was absent, so production corpus benchmark is blocked in this environment.
 Next steps: Commit source/report state, build release archive from clean Git source, validate extracted archive.
 Handoff: source commit required before `release-pack`.
+
+## 2026-08-22 22:09 - codex-main
+
+Task: Fix `release-pack` clean-source blocker exposed by `.pf` runtime projections.
+Files changed: `tools/processforge.py`, `checksums/processforge.sha256`, `.pf/artifacts/projections/*`.
+Artifacts changed: runtime projection snapshots refreshed.
+Templates used: release-delivery acceptance constraints.
+Tools used: `py_compile`, direct helper assertion, checksum writer, `release-pack --dry-run`.
+Decisions: Keep Git provenance strict for source, but allow only modified `.pf/artifacts/projections/command-history.md` and `stage-obligations.json`, which are runtime-generated and excluded from the release archive.
+Risks: Any non-projection dirty path, deletion, or untracked file remains a release-pack blocker.
+Next steps: Commit the fix, build the release archive, validate extracted archive.
+Handoff: none.
+
+Update: Root cause was `git_release_output()` using `.strip()`, which removed the leading porcelain status space from ` M .pf/...`; changed it to strip only trailing newlines before the final archive attempt.
+
+Update: A second `release-pack` attempt passed provenance and exposed ZIP/manifest ordering drift because generated `processforge-core.manifest.json` was appended after sorted source files; fixed `write_release_zip()` to sort source and generated entries together.
+
+Update: `release-archive-test --root` then exposed that freshness comparison knew only physical root files; changed it to recompute the generated core manifest hash from the root release set and sidecar provenance.

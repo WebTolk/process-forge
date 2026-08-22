@@ -6103,6 +6103,10 @@ RELEASE_FORBIDDEN_PF_PREFIXES = (
 RELEASE_FORBIDDEN_SUFFIXES = {".pyc", ".pyo", ".ps1", ".zip"}
 RELEASE_GENERATED_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 RELEASE_GENERATED_SUFFIXES = {".pyc", ".pyo"}
+RELEASE_ALLOWED_PROJECTION_DIRTY_PATHS = {
+    ".pf/artifacts/projections/command-history.md",
+    ".pf/artifacts/projections/stage-obligations.json",
+}
 
 
 def release_ignore_patterns(root: Path) -> list[str]:
@@ -6182,6 +6186,17 @@ def release_path_is_forbidden(rel_path: str) -> str | None:
     if "runtime/chat/transcripts" in rel_path or "chat/transcripts" in rel_path:
         return "local chat transcript"
     return None
+
+
+def release_git_dirty_path(status_line: str) -> tuple[str, str]:
+    status = status_line[:2]
+    path = status_line[3:].replace("\\", "/") if len(status_line) > 3 else ""
+    return status, path
+
+
+def release_git_dirty_is_allowed_projection(status_line: str) -> bool:
+    status, path = release_git_dirty_path(status_line)
+    return status in {" M", "M ", "MM"} and path in RELEASE_ALLOWED_PROJECTION_DIRTY_PATHS
 
 
 def forbidden_powershell_reference(text: str) -> bool:
@@ -7039,16 +7054,17 @@ def git_release_output(root: Path, *args: str) -> str:
     if result.returncode != 0:
         detail = (result.stderr or result.stdout or "").strip()
         raise SystemExit(f"FAIL: git {' '.join(args)} failed: {detail}")
-    return result.stdout.strip()
+    return result.stdout.rstrip("\r\n")
 
 
 def release_git_provenance(root: Path) -> dict[str, Any]:
     if not (root / ".git").exists():
         raise SystemExit("FAIL: release-pack requires a Git source checkout for release manifest provenance")
     dirty = git_release_output(root, "status", "--porcelain=v1", "--untracked-files=all").splitlines()
-    if dirty:
-        sample = ", ".join(line.strip() for line in dirty[:20])
-        suffix = f"; +{len(dirty) - 20} more" if len(dirty) > 20 else ""
+    blocking_dirty = [line for line in dirty if not release_git_dirty_is_allowed_projection(line)]
+    if blocking_dirty:
+        sample = ", ".join(line.strip() for line in blocking_dirty[:20])
+        suffix = f"; +{len(blocking_dirty) - 20} more" if len(blocking_dirty) > 20 else ""
         raise SystemExit(f"FAIL: release-pack requires clean git source before publishing: {sample}{suffix}")
     commit = git_release_output(root, "rev-parse", "HEAD")
     tree = git_release_output(root, "rev-parse", "HEAD^{tree}")
@@ -7110,21 +7126,13 @@ def release_zip_datetime(source_epoch: int) -> tuple[int, int, int, int, int, in
 def write_release_zip(output: Path, files: list[tuple[str, Path]], source_epoch: int, extra_entries: list[tuple[str, bytes]] | None = None) -> list[dict[str, Any]]:
     manifest_files: list[dict[str, Any]] = []
     zip_datetime = release_zip_datetime(source_epoch)
+    entries: list[tuple[str, Path | None, bytes | None]] = [(archive_path, source_path, None) for archive_path, source_path in files]
+    entries.extend((archive_path, None, content) for archive_path, content in extra_entries or [])
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-        for archive_path, source_path in files:
-            content = source_path.read_bytes()
-            info = zipfile.ZipInfo(archive_path, date_time=zip_datetime)
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = 0o100644 << 16
-            archive.writestr(info, content, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
-            manifest_files.append(
-                {
-                    "path": archive_path,
-                    "size": len(content),
-                    "sha256": hashlib.sha256(content).hexdigest(),
-                }
-            )
-        for archive_path, content in extra_entries or []:
+        for archive_path, source_path, generated_content in sorted(entries, key=lambda item: item[0]):
+            content = source_path.read_bytes() if source_path is not None else generated_content
+            if content is None:
+                raise SystemExit(f"FAIL: release-pack entry has no content: {archive_path}")
             info = zipfile.ZipInfo(archive_path, date_time=zip_datetime)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o100644 << 16
@@ -7221,7 +7229,7 @@ def command_release_pack(args: argparse.Namespace) -> int:
         return 1
     print(f"WROTE: {rel(output, root)}")
     print(f"WROTE: {rel(manifest_path, root)}")
-    print(f"FILES: {len(files)}")
+    print(f"FILES: {len(manifest_files)}")
     return 0
 
 
@@ -7388,21 +7396,43 @@ def inspect_release_archive(archive_path: Path, manifest_path: Path | None = Non
     return checks
 
 
-def expected_release_manifest_from_root(root: Path) -> dict[str, str]:
+def expected_release_files_from_root(root: Path) -> list[tuple[str, Path]]:
     patterns = release_ignore_patterns(root)
-    expected: dict[str, str] = {}
+    expected: list[tuple[str, Path]] = []
     for archive_path, source_path in release_source_files(root):
         if release_ignore_match(archive_path, patterns):
             continue
         if release_path_is_forbidden(archive_path):
             continue
-        expected[archive_path] = sha256_file(source_path)
+        expected.append((archive_path, source_path))
+    return expected
+
+
+def expected_release_manifest_from_root(root: Path, manifest_data: dict[str, Any] | None = None) -> dict[str, str]:
+    expected_files = expected_release_files_from_root(root)
+    expected = {archive_path: sha256_file(source_path) for archive_path, source_path in expected_files}
+    if manifest_data:
+        from processforge_core.core_update import CORE_MANIFEST_NAME, make_core_manifest_from_release_files, manifest_bytes
+
+        build = manifest_data.get("build") if isinstance(manifest_data.get("build"), dict) else {}
+        source = manifest_data.get("source") if isinstance(manifest_data.get("source"), dict) else None
+        core_manifest = make_core_manifest_from_release_files(
+            expected_files,
+            version=str(manifest_data.get("version") or RELEASE_ARCHIVE_VERSION),
+            source=source,
+            generated_at=str(build.get("generated_at") or ""),
+        )
+        expected[CORE_MANIFEST_NAME] = hashlib.sha256(manifest_bytes(core_manifest)).hexdigest()
     return expected
 
 
 def archive_manifest_freshness_checks(root: Path, archive_path: Path, manifest_path: Path) -> list[Check]:
     checks: list[Check] = []
-    expected = expected_release_manifest_from_root(root)
+    manifest_data: dict[str, Any] | None = None
+    if manifest_path.is_file():
+        loaded_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest_data = loaded_manifest if isinstance(loaded_manifest, dict) else None
+    expected = expected_release_manifest_from_root(root, manifest_data)
     if not archive_path.is_file():
         return [check("FAIL", f"archive exists for root freshness check: {archive_path}")]
     with zipfile.ZipFile(archive_path) as archive:
@@ -7423,9 +7453,8 @@ def archive_manifest_freshness_checks(root: Path, archive_path: Path, manifest_p
             checks.append(check("FAIL", f"stale archive entry hash: {name}"))
     else:
         checks.append(check("PASS", "archive file hashes match current root"))
-    if manifest_path.is_file():
-        data = json.loads(manifest_path.read_text(encoding="utf-8"))
-        manifest_files = data.get("files") if isinstance(data, dict) else None
+    if manifest_data:
+        manifest_files = manifest_data.get("files")
         manifest_hashes = {str(item.get("path")): str(item.get("sha256")) for item in manifest_files if isinstance(item, dict) and item.get("path")} if isinstance(manifest_files, list) else {}
         checks.append(check("PASS" if manifest_hashes == expected else "FAIL", "manifest hashes match current root release file set"))
     return checks
