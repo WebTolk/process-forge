@@ -32,6 +32,11 @@ python bin/pf.py search-index tick --project-root <project> --workplace <workpla
 
 `tick` is one bounded maintenance pass suitable for Runtime or operator scheduling. It verifies fingerprints by default and refreshes only when the scope is missing or stale. MCP calls do not perform this verification on every query.
 
+If the derived DB is degraded because the schema is missing or mismatched, `tick`
+rebuilds the derived index instead of leaving the scope permanently degraded.
+`fts5_unavailable` remains a true degraded capability state and is not rebuilt
+away.
+
 ## Automatic maintenance triggers
 
 ProcessForge runs the same bounded maintenance pass from lifecycle commands that can change the authorized search scope:
@@ -48,6 +53,11 @@ The automatic pass writes a private derived report:
 ```
 
 It is intentionally bounded to known ProcessForge projects and never builds a global workplace index. When a project context is stale, ProcessForge reports `SEARCH_INDEX_SKIPPED` with the required next action instead of rebuilding against obsolete authorization data.
+
+Resource-management events also mark existing workplace search scopes `stale`.
+This gives PF-owned mutations a central dirty signal even when a future CLI
+command forgets to call the lifecycle maintenance helper. The next bounded
+maintenance pass verifies fingerprints and refreshes the affected project scope.
 
 ## Runtime and MCP contract
 
@@ -73,4 +83,4 @@ The index stores private resolved paths only as runtime data. Public project sna
 
 ## Current limits
 
-This implementation keeps the index derived and rebuildable, uses SQLite FTS5, and avoids hidden global search. Lifecycle-triggered maintenance covers first-run, project context refresh, resource authoring, and update apply/rollback paths. Crash recovery states beyond safe rebuild and production-scale benchmark coverage remain future slices.
+This implementation keeps the index derived and rebuildable, uses SQLite FTS5, and avoids hidden global search. Lifecycle-triggered maintenance covers first-run, project context refresh, resource authoring, update apply/rollback paths, external add/change/delete detection via fingerprint reconciliation, and safe rebuild from schema-degraded derived DB state. Production-scale benchmark coverage remains a future slice.

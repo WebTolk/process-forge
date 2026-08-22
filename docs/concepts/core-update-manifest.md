@@ -65,4 +65,23 @@ Backups are written before replacing or removing old PF-owned files. If an updat
 
 File operation failures, including locked-file style failures surfaced by the OS, are converted into explicit `file_operation_failed` errors and leave `runtime/core-update/in-progress.json` with `status: failed`.
 
-This first slice provides conservative incomplete-state reporting. Automated continue/rollback repair can be added as a later slice.
+The incomplete update journal records:
+
+- installed and target versions;
+- update archive;
+- backup directory;
+- counts;
+- completed operations;
+- pending operations;
+- backed-up files;
+- failure code/message when available.
+
+`core-update repair` classifies incomplete states as:
+
+- `safe_to_rollback` when the update failed before manifest write and the old manifest backup is present;
+- `manual_repair_required` when the manifest was already written, the journal is incomplete, or safety cannot be proven;
+- `nothing_to_repair` when no incomplete update exists.
+
+Automated continue/rollback execution remains intentionally narrower than the
+classification contract and should only be added for states that the journal can
+prove safe.

@@ -225,11 +225,14 @@ def _check_schema(db: sqlite3.Connection) -> None:
 
 
 def _delete_scope(db: sqlite3.Connection, scope_key: str) -> None:
-    document_ids = [row[0] for row in db.execute("SELECT id FROM documents WHERE scope_key=?", (scope_key,)).fetchall()]
-    if document_ids:
-        placeholders = ",".join("?" for _item in document_ids)
-        db.execute(f"DELETE FROM documents_fts WHERE document_id IN ({placeholders})", document_ids)
+    db.execute("DELETE FROM documents_fts WHERE scope_key=?", (scope_key,))
     db.execute("DELETE FROM documents WHERE scope_key=?", (scope_key,))
+
+
+def _error_code(exc: BaseException) -> str:
+    if isinstance(exc, LocalSearchError):
+        return exc.code
+    return str(exc) or type(exc).__name__
 
 
 def _document_fingerprint_map(roots: list[AuthorizedRoot]) -> dict[str, str]:
@@ -361,7 +364,35 @@ def index_status(project_root: Path, snapshot: dict[str, Any] | None = None, *, 
             db.close()
     except (OSError, sqlite3.Error, LocalSearchError) as exc:
         payload["status"] = "degraded"
-        payload["error"] = str(exc) or "index_unreadable"
+        payload["error"] = _error_code(exc) or "index_unreadable"
+    return payload
+
+
+def mark_index_dirty(project_root: Path, snapshot: dict[str, Any] | None = None, *, workplace_root: Path | None = None, reason: str = "dirty") -> dict[str, Any]:
+    path = index_path(project_root, workplace_root)
+    payload = {
+        "schema_version": 1,
+        "kind": "pf.search_index.dirty_mark",
+        "path": str(path),
+        "reason": reason,
+        "status": "missing",
+        "marked_scope_count": 0,
+    }
+    if not path.is_file():
+        return payload
+    db = sqlite3.connect(path)
+    try:
+        _check_schema(db)
+        scope_key = _scope_key(snapshot) if snapshot is not None else None
+        if scope_key:
+            cursor = db.execute("UPDATE index_state SET status='stale', last_error=? WHERE scope_key=?", (reason, scope_key))
+        else:
+            cursor = db.execute("UPDATE index_state SET status='stale', last_error=?", (reason,))
+        db.commit()
+        payload["status"] = "stale" if cursor.rowcount else "missing"
+        payload["marked_scope_count"] = int(cursor.rowcount or 0)
+    finally:
+        db.close()
     return payload
 
 
@@ -369,12 +400,20 @@ def maintenance_tick(project_root: Path, snapshot: dict[str, Any], *, workplace_
     before = index_status(project_root, snapshot, workplace_root=workplace_root, verify_files=verify_files)
     action = "none"
     result: dict[str, Any] | None = None
-    if before.get("status") in {"missing", "stale"}:
-        result = build_index(project_root, snapshot, workplace_root=workplace_root)
-        action = "refresh"
-    elif before.get("status") == "degraded" and str(before.get("error") or "").startswith("index_schema_"):
-        result = rebuild_index(project_root, snapshot, workplace_root=workplace_root)
-        action = "rebuild"
+    error = str(before.get("error") or "")
+    try:
+        if before.get("status") in {"missing", "stale"}:
+            result = build_index(project_root, snapshot, workplace_root=workplace_root)
+            action = "refresh"
+        elif before.get("status") == "degraded" and error != "fts5_unavailable":
+            result = rebuild_index(project_root, snapshot, workplace_root=workplace_root)
+            action = "rebuild"
+    except (OSError, sqlite3.Error, LocalSearchError) as exc:
+        action = "failed_" + ("rebuild" if before.get("status") == "degraded" else "refresh")
+        after_failure = index_status(project_root, snapshot, workplace_root=workplace_root, verify_files=False)
+        after_failure["status"] = "degraded"
+        after_failure["error"] = _error_code(exc)
+        return {"schema_version": 1, "kind": "pf.search_index.maintenance_tick", "action": action, "before": before, "after": after_failure, "result": result}
     after = index_status(project_root, snapshot, workplace_root=workplace_root, verify_files=False)
     return {"schema_version": 1, "kind": "pf.search_index.maintenance_tick", "action": action, "before": before, "after": after, "result": result}
 

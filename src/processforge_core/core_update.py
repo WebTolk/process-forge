@@ -296,6 +296,11 @@ def atomic_write(target: Path, content: bytes) -> None:
     os.replace(temporary, target)
 
 
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def apply_update(core_root: Path, archive_path: Path, *, confirm: bool = False, force_local_modifications: bool = False) -> dict[str, Any]:
     if not confirm:
         raise CoreUpdateError("confirm_required", "core update apply requires explicit confirmation")
@@ -309,24 +314,68 @@ def apply_update(core_root: Path, archive_path: Path, *, confirm: bool = False, 
     backup_dir.mkdir(parents=True, exist_ok=True)
     in_progress_path = work_root / "in-progress.json"
     in_progress_path.parent.mkdir(parents=True, exist_ok=True)
-    in_progress_path.write_text(json.dumps({"schema_version": 1, "update_id": update_id, "status": "applying", "started_at": now_utc(), "backup_dir": str(backup_dir)}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     backed_up: dict[str, str | None] = {}
+    pending_operations: list[dict[str, str]] = []
+    for relative_path in sorted(set(plan["removed"]).union(plan["changed"])):
+        pending_operations.append({"op": "backup", "path": relative_path})
+    for relative_path in plan["removed"]:
+        pending_operations.append({"op": "delete", "path": relative_path})
+    for relative_path in sorted(set(plan["added"]).union(plan["changed"])):
+        pending_operations.append({"op": "write", "path": relative_path})
+    pending_operations.append({"op": "write_manifest", "path": CORE_MANIFEST_NAME})
+    progress = {
+        "schema_version": 1,
+        "update_id": update_id,
+        "status": "applying",
+        "started_at": now_utc(),
+        "core_root": str(core_root.resolve()),
+        "archive": str(archive_path.resolve()),
+        "backup_dir": str(backup_dir),
+        "installed_version": plan.get("installed_version"),
+        "target_version": plan.get("available_version"),
+        "counts": plan.get("counts"),
+        "completed_operations": [],
+        "pending_operations": pending_operations,
+        "backed_up": backed_up,
+    }
+
+    def complete_operation(op: str, relative_path: str) -> None:
+        completed = progress["completed_operations"]
+        pending = progress["pending_operations"]
+        assert isinstance(completed, list)
+        assert isinstance(pending, list)
+        completed.append({"op": op, "path": relative_path, "completed_at": now_utc()})
+        for index, item in enumerate(list(pending)):
+            if isinstance(item, dict) and item.get("op") == op and item.get("path") == relative_path:
+                del pending[index]
+                break
+        write_json(in_progress_path, progress)
+
+    old_manifest = installed_manifest(core_root)
+    if old_manifest:
+        write_json(backup_dir / "control" / "old-manifest.json", old_manifest)
+    write_json(backup_dir / "control" / "new-manifest.json", plan["new_manifest"])
+    write_json(in_progress_path, progress)
     try:
         for relative_path in sorted(set(plan["removed"]).union(plan["changed"])):
             backed_up[relative_path] = backup_file(core_root, backup_dir, relative_path)
+            complete_operation("backup", relative_path)
         for relative_path in plan["removed"]:
             target = ensure_inside(core_root, relative_path)
             if target.exists():
                 target.unlink()
                 prune_empty_parents(core_root, relative_path)
+            complete_operation("delete", relative_path)
         with zipfile.ZipFile(archive_path) as archive:
             for relative_path in sorted(set(plan["added"]).union(plan["changed"])):
                 content = archive.read(relative_path)
                 atomic_write(ensure_inside(core_root, relative_path), content)
+                complete_operation("write", relative_path)
         atomic_write(manifest_path(core_root), manifest_bytes(plan["new_manifest"]))
+        complete_operation("write_manifest", CORE_MANIFEST_NAME)
         record = {"schema_version": 1, "update_id": update_id, "status": "applied", "applied_at": now_utc(), "available_version": plan["available_version"], "backup_dir": str(backup_dir), "backed_up": backed_up, "counts": plan["counts"]}
         last_apply = work_root / "last-apply.json"
-        last_apply.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        write_json(last_apply, record)
         in_progress_path.unlink(missing_ok=True)
         return record
     except CoreUpdateError:
@@ -334,6 +383,7 @@ def apply_update(core_root: Path, archive_path: Path, *, confirm: bool = False, 
     except OSError as exc:
         try:
             failure = {
+                **progress,
                 "schema_version": 1,
                 "update_id": update_id,
                 "status": "failed",
@@ -341,14 +391,39 @@ def apply_update(core_root: Path, archive_path: Path, *, confirm: bool = False, 
                 "backup_dir": str(backup_dir),
                 "error": {"code": "file_operation_failed", "message": str(exc)},
             }
-            in_progress_path.write_text(json.dumps(failure, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            write_json(in_progress_path, failure)
         except OSError:
             pass
         raise CoreUpdateError("file_operation_failed", str(exc)) from exc
+
+
+def recovery_assessment(in_progress: dict[str, Any]) -> str:
+    status = str(in_progress.get("status") or "")
+    if status not in {"failed", "applying"}:
+        return "manual_repair_required"
+    completed = in_progress.get("completed_operations")
+    if not isinstance(completed, list):
+        return "manual_repair_required"
+    manifest_written = any(isinstance(item, dict) and item.get("op") == "write_manifest" for item in completed)
+    if manifest_written:
+        return "manual_repair_required"
+    raw_backup_dir = str(in_progress.get("backup_dir") or "")
+    backup_dir = Path(raw_backup_dir) if raw_backup_dir else None
+    if status == "failed" and backup_dir is not None and backup_dir.is_dir() and (backup_dir / "control" / "old-manifest.json").is_file():
+        return "safe_to_rollback"
+    return "manual_repair_required"
 
 
 def repair_status(core_root: Path) -> dict[str, Any]:
     status = core_status(core_root)
     if not status.get("incomplete_update"):
         return {"schema_version": 1, "kind": "processforge.core_update.repair", "status": "nothing_to_repair", "core_root": str(core_root.resolve())}
-    return {"schema_version": 1, "kind": "processforge.core_update.repair", "status": "manual_repair_required", "core_root": str(core_root.resolve()), "in_progress": status.get("in_progress")}
+    in_progress = status.get("in_progress") if isinstance(status.get("in_progress"), dict) else {}
+    assessment = recovery_assessment(in_progress)
+    return {
+        "schema_version": 1,
+        "kind": "processforge.core_update.repair",
+        "status": assessment,
+        "core_root": str(core_root.resolve()),
+        "in_progress": in_progress,
+    }

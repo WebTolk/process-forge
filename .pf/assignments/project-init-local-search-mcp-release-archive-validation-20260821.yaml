@@ -19,7 +19,7 @@ dependencies:
 iterations:
   []
 result:
-  status: blocked
+  status: failed
   summary: Archive validation evidence and its declared report are absent; closure requires a new explicit validation run.
   artifacts:
     []

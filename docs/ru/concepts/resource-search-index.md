@@ -32,6 +32,8 @@ python bin/pf.py search-index tick --project-root <project> --workplace <workpla
 
 `tick` — один bounded maintenance pass для Runtime или оператора. По умолчанию он проверяет fingerprints и делает refresh только если scope отсутствует или stale. MCP-запросы не выполняют такую проверку на каждый query.
 
+Если производная DB стала degraded из-за отсутствующей или несовпадающей схемы, `tick` пересобирает derived index. `fts5_unavailable` остаётся настоящим degraded capability state и не скрывается rebuild/fallback.
+
 ## Автоматические maintenance triggers
 
 ProcessForge запускает тот же bounded maintenance pass из lifecycle-команд, которые могут изменить авторизованный поисковый scope:
@@ -48,6 +50,8 @@ ProcessForge запускает тот же bounded maintenance pass из lifecy
 ```
 
 Он намеренно ограничен известными ProcessForge projects и никогда не строит глобальный workplace index. Если project context устарел, ProcessForge выводит `SEARCH_INDEX_SKIPPED` с нужным следующим действием вместо rebuild по устаревшим authorization data.
+
+Resource-management events также помечают существующие workplace search scopes как `stale`. Это даёт PF-owned mutations центральный dirty-сигнал даже если будущая CLI-команда забудет вызвать lifecycle maintenance helper. Следующий bounded maintenance pass проверяет fingerprints и обновляет затронутый project scope.
 
 ## Runtime и MCP
 
@@ -73,4 +77,4 @@ search:
 
 ## Текущие ограничения
 
-Этот slice сохраняет индекс производным и пересобираемым, использует SQLite FTS5 и не добавляет скрытый глобальный поиск. Lifecycle-triggered maintenance покрывает first-run, project context refresh, resource authoring и update apply/rollback paths. Crash recovery states beyond safe rebuild и production-scale benchmark coverage остаются будущими slices.
+Этот slice сохраняет индекс производным и пересобираемым, использует SQLite FTS5 и не добавляет скрытый глобальный поиск. Lifecycle-triggered maintenance покрывает first-run, project context refresh, resource authoring, update apply/rollback paths, external add/change/delete detection через fingerprint reconciliation и safe rebuild из schema-degraded derived DB state. Production-scale benchmark coverage остаётся будущим slice.

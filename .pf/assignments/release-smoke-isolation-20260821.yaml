@@ -19,7 +19,7 @@ dependencies:
 iterations:
   []
 result:
-  status: blocked
+  status: failed
   summary: Ownership overlap with release-docs-correction-20260821 prevents a safe retry; no closure artifact exists.
   artifacts:
     []

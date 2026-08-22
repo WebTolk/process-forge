@@ -16,7 +16,7 @@ dependencies:
 iterations:
   []
 result:
-  status: blocked
+  status: failed
   summary: Historic audit has no durable report or release-readiness evidence; reopen only with fresh scope.
   artifacts:
     []

@@ -1,12 +1,12 @@
 # Manifest обновления ядра
 
-Обновление ядра ProcessForge использует явный manifest владения:
+Обновления ядра ProcessForge используют явный ownership manifest:
 
 ```text
 processforge-core.manifest.json
 ```
 
-Release archive содержит manifest новой версии. Установленное ядро хранит текущий manifest в корне distribution directory. Этот manifest задаёт границу PF-owned файлов.
+Release archive содержит manifest новой версии. Установленный core root хранит текущий manifest в корне distribution directory. Manifest задаёт границу PF-owned файлов.
 
 ## Контракт manifest
 
@@ -24,7 +24,7 @@ Release archive содержит manifest новой версии. Устано�
 
 Пути должны быть относительными к core root. Absolute paths, backslashes, пустые сегменты, `.`, `..` и выход за core root отклоняются.
 
-`runtime/`, workplace data, project `.pf` data, caches, SQLite indexes и update journals являются derived/local state и не должны считаться core-owned payload files.
+`runtime/`, workplace data, project `.pf` data, caches, SQLite indexes и update journals являются derived/local state и не должны моделироваться как core-owned payload files.
 
 ## Flow обновления
 
@@ -44,18 +44,18 @@ Updater вычисляет:
 ```text
 removed = old_manifest.files - new_manifest.files
 added   = new_manifest.files - old_manifest.files
-changed = общие пути с другим sha256
+changed = common paths with different sha256
 ```
 
-Удаляются только пути, которые были в старом manifest и отсутствуют в новом. Неизвестные файлы сохраняются. Каталоги удаляются только если стали пустыми.
+Удаляются только paths, которые были в старом manifest и отсутствуют в новом manifest. Unknown files сохраняются. Directories удаляются только когда становятся пустыми.
 
-Локально изменённые PF-owned файлы определяются сравнением текущего hash со старым установленным manifest. По умолчанию они блокируют apply.
+Locally modified PF-owned files определяются сравнением текущего file hash со старым installed manifest. Они блокируют apply, если оператор явно не использовал force option.
 
-Новый installed manifest записывается последним, после успешных файловых изменений.
+Новый installed manifest записывается последним, после успешных file changes.
 
 ## Recovery
 
-Apply пишет runtime state в:
+Apply пишет runtime update state в:
 
 ```text
 <core>/runtime/core-update/
@@ -65,4 +65,22 @@ Backups создаются до замены или удаления стары�
 
 File operation failures, включая locked-file style ошибки от ОС, возвращаются как явный `file_operation_failed` и оставляют `runtime/core-update/in-progress.json` со `status: failed`.
 
-В этом первом slice repair консервативно сообщает incomplete state. Автоматический continue/rollback можно добавить отдельным slice.
+Incomplete update journal записывает:
+
+- `installed_version`
+- `target_version`
+- `archive`
+- `backup_dir`
+- `counts`
+- `completed_operations`
+- `pending_operations`
+- `backed_up`
+- `error`
+
+`core-update repair` классифицирует incomplete states:
+
+- `safe_to_rollback`, если update упал до записи manifest и backup старого manifest существует;
+- `manual_repair_required`, если manifest уже записан, journal неполный или безопасность нельзя доказать;
+- `nothing_to_repair`, если incomplete update отсутствует.
+
+Автоматическое выполнение continue/rollback намеренно уже, чем classification contract, и должно добавляться только для состояний, которые journal доказывает безопасными.

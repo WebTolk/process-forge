@@ -8960,7 +8960,21 @@ def append_workplace_resource_event(workplace_root: Path, event: dict[str, Any])
         + "\n",
         encoding="utf-8",
     )
+    mark_search_index_dirty_after_resource_event(workplace_root, event)
     return target
+
+
+def mark_search_index_dirty_after_resource_event(workplace_root: Path, event: dict[str, Any]) -> None:
+    result = event.get("result") if isinstance(event.get("result"), dict) else {}
+    status = str(result.get("status") or "")
+    if status in {"dry_run", "skipped", "passed", "failed"}:
+        return
+    try:
+        from processforge_core.local_resource_search import mark_index_dirty
+
+        mark_index_dirty(workplace_root, workplace_root=workplace_root, reason=str(event.get("event_type") or "resource_event"))
+    except Exception:
+        return
 
 
 def default_load_policy(kind: str, requested: str | None = None) -> str:

@@ -142,7 +142,10 @@ def main() -> int:
         status = core_status(core)
         assert status["incomplete_update"] is True
         assert status["in_progress"]["status"] == "failed"
-        assert repair_status(core)["status"] == "manual_repair_required"
+        assert status["in_progress"]["pending_operations"]
+        assert status["in_progress"]["completed_operations"]
+        assert status["in_progress"]["error"]["code"] == "file_operation_failed"
+        assert repair_status(core)["status"] == "safe_to_rollback"
 
     print("PASS: manifest-based core update smoke")
     return 0
