@@ -61,6 +61,8 @@ Apply writes runtime update state under:
 <core>/runtime/core-update/
 ```
 
-Backups are written before replacing or removing old PF-owned files. If an update is interrupted, `core-update status` reports `incomplete_update`, and `core-update repair` reports the incomplete state for operator handling.
+Backups are written before replacing or removing old PF-owned files. If an update is interrupted or a file operation fails, `core-update status` reports `incomplete_update`, and `core-update repair` reports the incomplete state for operator handling.
+
+File operation failures, including locked-file style failures surfaced by the OS, are converted into explicit `file_operation_failed` errors and leave `runtime/core-update/in-progress.json` with `status: failed`.
 
 This first slice provides conservative incomplete-state reporting. Automated continue/rollback repair can be added as a later slice.

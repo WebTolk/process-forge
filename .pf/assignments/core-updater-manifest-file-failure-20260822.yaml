@@ -1,0 +1,80 @@
+schema_version: 1
+id: core-updater-manifest-file-failure-20260822
+title: Handle core updater file operation failures
+run_id: core-updater-manifest-locking-20260822
+process: software-feature-development
+status: done
+created_at: '2026-08-22T14:12:26Z'
+updated_at: '2026-08-22T14:13:59Z'
+objective: Convert core updater file operation failures into explicit CoreUpdateError with incomplete update state and smoke coverage.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Core updater file-operation failure hardening completed: explicit file_operation_failed error, failed incomplete state, smoke/docs/report.'
+  artifacts:
+    - .pf/artifacts/core-updater-manifest-20260822/core-updater-smoke-report.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - src/processforge_core/core_update.py
+  - tools/smoke_core_update_manifest.py
+  - docs/concepts/core-update-manifest.md
+  - docs/ru/concepts/core-update-manifest.md
+  - .pf/artifacts/core-updater-manifest-20260822/core-updater-smoke-report.md
+  - .pf/logs/core-updater-manifest-locking-20260822.md
+allowed_read_files:
+  - .pf/artifacts/core-updater-manifest-20260822/core-updater-implementation-report.md
+  - задания/process-forge-core-updater-manifest-master-prompt.md
+ownership:
+  owner_id: root
+  owner_label: worker-root
+  role: lead-implementer
+  writer: true
+  owned_files:
+    - src/processforge_core/core_update.py
+    - tools/smoke_core_update_manifest.py
+    - docs/concepts/core-update-manifest.md
+    - docs/ru/concepts/core-update-manifest.md
+    - .pf/artifacts/core-updater-manifest-20260822/core-updater-smoke-report.md
+    - .pf/logs/core-updater-manifest-locking-20260822.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/core_update.py
+    - tools/smoke_core_update_manifest.py
+    - docs/concepts/core-update-manifest.md
+    - docs/ru/concepts/core-update-manifest.md
+    - .pf/artifacts/core-updater-manifest-20260822/core-updater-smoke-report.md
+    - .pf/logs/core-updater-manifest-locking-20260822.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: core-updater-smoke-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/core-updater-manifest-20260822/core-updater-smoke-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/artifacts/core-updater-manifest-20260822/core-updater-smoke-report.md
+  format: concise_markdown
+  include:
+    - core-updater-smoke-report

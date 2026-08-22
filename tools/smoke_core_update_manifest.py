@@ -15,7 +15,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from processforge_core.core_update import CORE_MANIFEST_NAME, make_core_manifest, manifest_bytes
+from processforge_core import core_update
+from processforge_core.core_update import CORE_MANIFEST_NAME, CoreUpdateError, apply_update, core_status, make_core_manifest, manifest_bytes, repair_status
 
 
 def run_pf(*args: str) -> subprocess.CompletedProcess[str]:
@@ -113,6 +114,35 @@ def main() -> int:
             package.writestr(CORE_MANIFEST_NAME, json.dumps(manifest))
         plan = run_pf("core-update", "plan", "--core-root", str(root / "core"), "--archive", str(archive))
         assert plan.returncode != 0 and "invalid_manifest_path" in plan.stdout
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-locked-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        archive = root / "processforge.zip"
+        write_archive(archive, {"dir/b.txt": "new-b", "dir/c.txt": "same-c", "d.txt": "new-d"})
+        original_atomic_write = core_update.atomic_write
+
+        def fail_on_changed_file(target: Path, content: bytes) -> None:
+            if target.name == "b.txt":
+                raise OSError("locked fixture")
+            original_atomic_write(target, content)
+
+        core_update.atomic_write = fail_on_changed_file
+        try:
+            try:
+                apply_update(core, archive, confirm=True)
+            except CoreUpdateError as exc:
+                assert exc.code == "file_operation_failed"
+            else:
+                raise AssertionError("locked file failure was accepted")
+        finally:
+            core_update.atomic_write = original_atomic_write
+        status = core_status(core)
+        assert status["incomplete_update"] is True
+        assert status["in_progress"]["status"] == "failed"
+        assert repair_status(core)["status"] == "manual_repair_required"
 
     print("PASS: manifest-based core update smoke")
     return 0

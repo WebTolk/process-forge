@@ -329,8 +329,22 @@ def apply_update(core_root: Path, archive_path: Path, *, confirm: bool = False, 
         last_apply.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         in_progress_path.unlink(missing_ok=True)
         return record
-    except Exception:
+    except CoreUpdateError:
         raise
+    except OSError as exc:
+        try:
+            failure = {
+                "schema_version": 1,
+                "update_id": update_id,
+                "status": "failed",
+                "failed_at": now_utc(),
+                "backup_dir": str(backup_dir),
+                "error": {"code": "file_operation_failed", "message": str(exc)},
+            }
+            in_progress_path.write_text(json.dumps(failure, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        except OSError:
+            pass
+        raise CoreUpdateError("file_operation_failed", str(exc)) from exc
 
 
 def repair_status(core_root: Path) -> dict[str, Any]:

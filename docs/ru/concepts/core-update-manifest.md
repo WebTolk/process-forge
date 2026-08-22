@@ -61,6 +61,8 @@ Apply пишет runtime state в:
 <core>/runtime/core-update/
 ```
 
-Backups создаются до замены или удаления старых PF-owned файлов. Если update прерван, `core-update status` показывает `incomplete_update`, а `core-update repair` возвращает состояние для оператора.
+Backups создаются до замены или удаления старых PF-owned файлов. Если update прерван или файловая операция завершилась ошибкой, `core-update status` показывает `incomplete_update`, а `core-update repair` возвращает состояние для оператора.
+
+File operation failures, включая locked-file style ошибки от ОС, возвращаются как явный `file_operation_failed` и оставляют `runtime/core-update/in-progress.json` со `status: failed`.
 
 В этом первом slice repair консервативно сообщает incomplete state. Автоматический continue/rollback можно добавить отдельным slice.
