@@ -41,3 +41,15 @@ Update: Root cause was `git_release_output()` using `.strip()`, which removed th
 Update: A second `release-pack` attempt passed provenance and exposed ZIP/manifest ordering drift because generated `processforge-core.manifest.json` was appended after sorted source files; fixed `write_release_zip()` to sort source and generated entries together.
 
 Update: `release-archive-test --root` then exposed that freshness comparison knew only physical root files; changed it to recompute the generated core manifest hash from the root release set and sidecar provenance.
+
+## 2026-08-22 22:24 - codex-main
+
+Task: Build and validate resource-indexing release archive.
+Files changed: `dist/processforge-1.0.2-resource-indexing-20260822.zip`, `dist/processforge-1.0.2-resource-indexing-20260822.manifest.json`, final `.pf/artifacts/resource-indexing-release-boundary/*.md`.
+Artifacts changed: final validation, archive correction, qualification reports.
+Templates used: release-delivery acceptance constraints.
+Tools used: `release-pack`, `release-archive-test --extracted-test quick`, extracted `smoke_resource_indexing_policy_acceptance.py`, extracted `smoke_project_init_local_search_mcp.py`, process inspection for full-gate blocker.
+Decisions: Treat quick archive validation plus targeted extracted resource-indexing/MCP smokes as release proof for this boundary; classify full public release-test hang in long-lived runtime as separate blocker.
+Risks: Full extracted public release-test was interrupted after several minutes in `smoke_long_lived_runtime.py` / `runtime project-state`; orphan child processes were stopped.
+Next steps: Commit and push final archive/report/projection state.
+Handoff: none.

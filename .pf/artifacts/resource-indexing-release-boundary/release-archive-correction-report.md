@@ -2,27 +2,30 @@
 
 ## Status
 
-Pre-commit release archive build is blocked as designed because `release-pack` requires a clean Git source tree.
+Corrected and validated.
 
 Observed:
 
 ```text
-FAIL: release-pack requires clean git source before publishing
+WROTE: dist/processforge-1.0.2-resource-indexing-20260822.zip
+WROTE: dist/processforge-1.0.2-resource-indexing-20260822.manifest.json
+FILES: 865
 ```
 
-## Confirmed Current Gates
+## Corrections
 
-- `python tools/processforge.py release-check --root .` PASS.
-- `python tools/validate-public-cleanliness.py --root .` PASS.
-- `python tools/validate-process-forge-checksums.py --root . --check` PASS after checksum refresh.
-- Sidecar manifest contract code already checks sorted unique file paths, physical ZIP member matching, per-file hashes, archive hash/size, and current-root freshness when `--root` is supplied.
+- `release_git_provenance()` now preserves Git porcelain leading status spaces by using trailing-newline trimming instead of `.strip()`.
+- Clean-source provenance remains strict, but modified runtime-generated `.pf/artifacts/projections/command-history.md` and `stage-obligations.json` are allowed because they are excluded from the release archive.
+- `write_release_zip()` now sorts physical source entries and generated entries together, so ZIP order and sidecar manifest order stay deterministic.
+- `release-archive-test --root` now recomputes the generated `processforge-core.manifest.json` hash from the current root release set and sidecar provenance.
 
-## Required Next Step
+## Confirmed Gates
 
-Commit the source/report changes, then run:
+- `python tools/processforge.py release-pack --root . --output dist/processforge-1.0.2-resource-indexing-20260822.zip` PASS.
+- `python tools/processforge.py release-archive-test --archive dist/processforge-1.0.2-resource-indexing-20260822.zip --root . --extracted-test quick` PASS.
+- Extracted archive `tools/smoke_resource_indexing_policy_acceptance.py` PASS.
+- Extracted archive `tools/smoke_project_init_local_search_mcp.py` PASS.
 
-```text
-python tools/processforge.py release-pack --root . --output dist/processforge-1.0.2-resource-indexing-20260822.zip
-python tools/processforge.py release-archive-test --archive dist/processforge-1.0.2-resource-indexing-20260822.zip --root . --extracted-test quick
-python tools/processforge.py release-archive-test --archive dist/processforge-1.0.2-resource-indexing-20260822.zip --root . --extracted-test full
-```
+## Remaining Blocker
+
+Full extracted public release-test was interrupted after several minutes in the long-lived runtime path (`smoke_long_lived_runtime.py` / `runtime project-state`). This remains separate from archive contract and resource-indexing release proof.
