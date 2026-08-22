@@ -115,7 +115,7 @@ def native_envelope(payload: dict[str, Any]) -> dict[str, Any] | None:
             }
         ]
     assistant_message = payload.get("last_assistant_message")
-    if hook in {"Stop", "SubagentStop"} and isinstance(assistant_message, str) and assistant_message.strip() and envelope["source_session_id"]:
+    if hook in {"Stop", "SubagentStop", "SessionEnd"} and isinstance(assistant_message, str) and assistant_message.strip() and envelope["source_session_id"]:
         is_subagent = hook == "SubagentStop"
         agent_id = str(payload.get("agent_id") or "")
         participant_id = f"subagent:{agent_id}" if is_subagent and agent_id else ("subagent" if is_subagent else "codex")

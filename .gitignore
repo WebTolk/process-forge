@@ -30,4 +30,6 @@ runtime/events/outbox/
 /runtime/pf-runtime-host/
 /private-notes/
 /.secrets/
+/.codex/hooks.json
+/.codex/hooks.json.pf-backup-*
 /задания

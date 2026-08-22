@@ -5,12 +5,13 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import urllib.error
 import urllib.request
+import uuid
 from pathlib import Path
 
 from processforge_subprocess import diagnostic_text, run_command
@@ -41,8 +42,12 @@ def event(path: Path, project_root: Path, session: str, agent: str, event_type: 
 
 
 def main() -> int:
-    with tempfile.TemporaryDirectory(prefix="pf-ledger-hooks-mcp-") as temp:
-        root, workplace = Path(temp), Path(temp) / "workplace"
+    tmp_root = ROOT / ".pf" / "tmp"
+    tmp_root.mkdir(parents=True, exist_ok=True)
+    root = tmp_root / f"pf-ledger-hooks-mcp-{uuid.uuid4().hex}"
+    root.mkdir()
+    try:
+        workplace = root / "workplace"
         pf("workplace-init", "--workplace", str(workplace), "--apply")
         first, second = project(root, "first", workplace), project(root, "second", workplace)
         pf("runtime-host", "event", "--workplace", str(workplace), "--input", str(event(root / "a.json", first, "sess-a", "codex")))
@@ -129,6 +134,8 @@ def main() -> int:
         else:
             raise AssertionError("Runtime accepted an unauthorized shutdown")
         pf("runtime", "stop", "--workplace", str(workplace), "--timeout", "10")
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
     print("PASS: Runtime Ledger, Codex adapter, and MCP smoke")
     return 0
 

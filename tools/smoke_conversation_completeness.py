@@ -288,6 +288,28 @@ def smoke_codex_user_prompt(root: Path) -> None:
     assert len(rows) == 1 and rows[0]["message"]["role"] == "user"
     assert "Hello, capture this." not in events_text(project) and '"content_mode": "metadata_only"' in events_text(project)
 
+    race_session = "conversation-race-session"
+    race_prompt = native_envelope({"hook_event_name": "UserPromptSubmit", "cwd": str(project), "session_id": race_session, "turn_id": "turn-race", "prompt": "Capture after start."})
+    assert race_prompt is not None
+    deferred = event(workplace, race_prompt, root / "race-prompt.json")
+    deferred_repeat = event(workplace, race_prompt, root / "race-prompt-repeat.json")
+    diagnostics = deferred.get("diagnostics") if isinstance(deferred.get("diagnostics"), dict) else {}
+    conversation = diagnostics.get("conversation") if isinstance(diagnostics.get("conversation"), dict) else {}
+    if deferred.get("chat_message_ids") != [] or conversation.get("status") != "deferred":
+        raise AssertionError(f"expected pre-start prompt to defer, got {json.dumps(deferred, ensure_ascii=False, sort_keys=True)}")
+    if deferred_repeat.get("chat_message_ids") != []:
+        raise AssertionError("duplicate pre-start prompt should remain pending without transcript output")
+    race_start = native_envelope({"hook_event_name": "SessionStart", "cwd": str(project), "session_id": race_session})
+    assert race_start is not None
+    race_started = event(workplace, race_start, root / "race-start.json")
+    if len(race_started["chat_message_ids"]) != 1:
+        raise AssertionError(f"expected start to flush one pending prompt, got {json.dumps(race_started, ensure_ascii=False, sort_keys=True)}")
+    race_after_start = event(workplace, race_prompt, root / "race-prompt-after-start.json")
+    if race_after_start["chat_message_ids"] != race_started["chat_message_ids"]:
+        raise AssertionError("flushed prompt and duplicate replay used different chat ids")
+    race_rows = transcript(project, race_session)
+    assert len(race_rows) == 1 and race_rows[0]["message"]["role"] == "user"
+
     # public-cleanliness: allow-private-path-fixture
     unsafe = {**prompt, "native_event_type": "Unsafe", "raw_payload": {"value": "kept raw"}, "derived_conversation_messages": [{"message_role": "system", "participant": {"id": "system", "type": "system", "role": "system"}, "content": "C:\\Users\\private", "content_source": {"kind": "automatic"}}]}
     denied = event(workplace, unsafe, root / "unsafe.json")
@@ -309,6 +331,74 @@ def smoke_codex_user_prompt(root: Path) -> None:
     rows = transcript(project, session)
     assert len(rows) == 3 and rows[-1]["participant"]["type"] == "subagent"
     assert "Main assistant final." not in events_text(project) and "Subagent final." not in events_text(project)
+
+    fallback_session = "conversation-end-fallback-session"
+    fallback_start = native_envelope({"hook_event_name": "SessionStart", "cwd": str(project), "session_id": fallback_session})
+    assert fallback_start is not None
+    event(workplace, fallback_start, root / "fallback-start.json")
+    fallback_end = native_envelope({"hook_event_name": "SessionEnd", "cwd": str(project), "session_id": fallback_session, "turn_id": "turn-final", "last_assistant_message": "Session end final."})
+    assert fallback_end is not None
+    fallback_result = event(workplace, fallback_end, root / "fallback-end.json")
+    if len(fallback_result["chat_message_ids"]) != 1:
+        raise AssertionError(f"expected SessionEnd fallback to capture one assistant message, got {json.dumps(fallback_result, ensure_ascii=False, sort_keys=True)}")
+    fallback_rows = transcript(project, fallback_session)
+    assert len(fallback_rows) == 1 and fallback_rows[0]["message"]["role"] == "assistant"
+    fallback_repeat = event(workplace, fallback_end, root / "fallback-end-repeat.json")
+    if len(transcript(project, fallback_session)) != 1 or fallback_repeat.get("chat_message_ids") not in ([], fallback_result["chat_message_ids"]):
+        raise AssertionError("SessionEnd fallback duplicate was not idempotent")
+    assert "Session end final." not in events_text(project)
+
+    collision_session = "conversation-primary-fallback-collision-session"
+    collision_start = native_envelope({"hook_event_name": "SessionStart", "cwd": str(project), "session_id": collision_session})
+    assert collision_start is not None
+    event(workplace, collision_start, root / "collision-start.json")
+    collision_stop = native_envelope({"hook_event_name": "Stop", "cwd": str(project), "session_id": collision_session, "turn_id": "turn-collision", "last_assistant_message": "Primary final."})
+    assert collision_stop is not None
+    collision_stop_result = event(workplace, collision_stop, root / "collision-stop.json")
+    if len(collision_stop_result["chat_message_ids"]) != 1:
+        raise AssertionError(f"expected Stop to capture primary assistant message, got {json.dumps(collision_stop_result, ensure_ascii=False, sort_keys=True)}")
+    collision_end = native_envelope({"hook_event_name": "SessionEnd", "cwd": str(project), "session_id": collision_session, "turn_id": "turn-collision", "last_assistant_message": "Primary final."})
+    assert collision_end is not None
+    collision_end_result = event(workplace, collision_end, root / "collision-end.json")
+    if collision_end_result["chat_message_ids"] != []:
+        raise AssertionError(f"expected SessionEnd fallback to skip already captured primary final, got {json.dumps(collision_end_result, ensure_ascii=False, sort_keys=True)}")
+    collision_rows = transcript(project, collision_session)
+    if len(collision_rows) != 1 or collision_rows[0]["message"]["role"] != "assistant":
+        raise AssertionError("SessionEnd fallback duplicated the primary Stop assistant message")
+    assert "Primary final." not in events_text(project)
+
+    no_turn_collision_session = "conversation-primary-fallback-no-turn-collision-session"
+    no_turn_collision_start = native_envelope({"hook_event_name": "SessionStart", "cwd": str(project), "session_id": no_turn_collision_session})
+    assert no_turn_collision_start is not None
+    event(workplace, no_turn_collision_start, root / "no-turn-collision-start.json")
+    no_turn_stop = native_envelope({"hook_event_name": "Stop", "cwd": str(project), "session_id": no_turn_collision_session, "last_assistant_message": "No turn primary final."})
+    assert no_turn_stop is not None
+    no_turn_stop_result = event(workplace, no_turn_stop, root / "no-turn-collision-stop.json")
+    if len(no_turn_stop_result["chat_message_ids"]) != 1:
+        raise AssertionError(f"expected no-turn Stop to capture primary assistant message, got {json.dumps(no_turn_stop_result, ensure_ascii=False, sort_keys=True)}")
+    no_turn_end = native_envelope({"hook_event_name": "SessionEnd", "cwd": str(project), "session_id": no_turn_collision_session, "last_assistant_message": "No turn primary final."})
+    assert no_turn_end is not None
+    no_turn_end_result = event(workplace, no_turn_end, root / "no-turn-collision-end.json")
+    if no_turn_end_result["chat_message_ids"] != []:
+        raise AssertionError(f"expected no-turn SessionEnd fallback to skip already captured primary final, got {json.dumps(no_turn_end_result, ensure_ascii=False, sort_keys=True)}")
+    no_turn_collision_rows = transcript(project, no_turn_collision_session)
+    if len(no_turn_collision_rows) != 1 or no_turn_collision_rows[0]["message"]["role"] != "assistant":
+        raise AssertionError("No-turn SessionEnd fallback duplicated the primary Stop assistant message")
+    assert "No turn primary final." not in events_text(project)
+
+    no_turn_fallback_session = "conversation-end-no-turn-fallback-session"
+    no_turn_fallback_start = native_envelope({"hook_event_name": "SessionStart", "cwd": str(project), "session_id": no_turn_fallback_session})
+    assert no_turn_fallback_start is not None
+    event(workplace, no_turn_fallback_start, root / "no-turn-fallback-start.json")
+    no_turn_fallback_end = native_envelope({"hook_event_name": "SessionEnd", "cwd": str(project), "session_id": no_turn_fallback_session, "last_assistant_message": "No turn fallback final."})
+    assert no_turn_fallback_end is not None
+    no_turn_fallback_result = event(workplace, no_turn_fallback_end, root / "no-turn-fallback-end.json")
+    if len(no_turn_fallback_result["chat_message_ids"]) != 1:
+        raise AssertionError(f"expected no-turn SessionEnd fallback to capture one assistant message, got {json.dumps(no_turn_fallback_result, ensure_ascii=False, sort_keys=True)}")
+    no_turn_fallback_rows = transcript(project, no_turn_fallback_session)
+    if len(no_turn_fallback_rows) != 1 or no_turn_fallback_rows[0]["message"]["role"] != "assistant":
+        raise AssertionError("No-turn SessionEnd fallback without primary did not capture the assistant message")
+    assert "No turn fallback final." not in events_text(project)
 
     lifecycle = native_envelope({"hook_event_name": "SessionEnd", "cwd": str(project), "session_id": session})
     assert lifecycle is not None
@@ -434,8 +524,8 @@ def smoke_worker_capture(root: Path) -> None:
 
 
 def main() -> int:
-    tmp_root = ROOT / ".tmp"
-    tmp_root.mkdir(exist_ok=True)
+    tmp_root = ROOT / ".pf" / "tmp"
+    tmp_root.mkdir(parents=True, exist_ok=True)
     root = tmp_root / f"pf-conversation-{uuid.uuid4().hex}"
     root.mkdir()
     try:

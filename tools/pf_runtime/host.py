@@ -26,6 +26,7 @@ from .raw_ingress_kernel import NativeAgentEvent, RawIngressKernel, deterministi
 # durable authority still belongs to the existing PF Core files.
 STATE_LOCK = threading.RLock()
 PROCESS_DEFINITION_CACHE: dict[tuple[str, str], tuple[Path, int, dict[str, Any]]] = {}
+PENDING_CONVERSATION_CAPTURES: dict[tuple[str, str], dict[str, tuple[dict[str, Any], Any]]] = {}
 
 
 def state_lock() -> threading.RLock:
@@ -644,6 +645,118 @@ def _conversation_denial(reason: str, **details: Any) -> tuple[list[str], dict[s
     return [], {"conversation": {"status": "denied", "reason": reason, **details}}
 
 
+def _conversation_deferred(reason: str, **details: Any) -> tuple[list[str], dict[str, Any]]:
+    return [], {"conversation": {"status": "deferred", "reason": reason, **details}}
+
+
+def _conversation_reason(diagnostics: dict[str, Any]) -> str:
+    conversation = diagnostics.get("conversation") if isinstance(diagnostics.get("conversation"), dict) else {}
+    return str(conversation.get("reason") or "")
+
+
+def _is_worker_conversation(envelope: dict[str, Any]) -> bool:
+    return str(envelope.get("provider") or "") == "processforge" and str(envelope.get("adapter") or "") == "pf-codex-exec-worker"
+
+
+def _pending_conversation_key(project_root: Path, session_id: str, core: Any) -> tuple[str, str]:
+    return (core.project_id(project_root), session_id)
+
+
+def _pending_conversation_state_key(project_root: Path, session_id: str, core: Any) -> str:
+    project_id = core.project_id(project_root)
+    digest = hashlib.sha256(json.dumps({"project_id": project_id, "session_id": session_id}, sort_keys=True).encode("utf-8")).hexdigest()
+    return "pending_" + digest[:32]
+
+
+def _defer_conversation_capture(envelope: dict[str, Any], receipt: Any, project_root: Path, workplace_root: Path, core: Any) -> None:
+    session_id = str(envelope.get("source_session_id") or "")
+    raw_id = str(receipt.raw_event_id or "")
+    if not session_id or not raw_id:
+        return
+    with state_lock():
+        pending = PENDING_CONVERSATION_CAPTURES.setdefault(_pending_conversation_key(project_root, session_id, core), {})
+        pending[raw_id] = (dict(envelope), receipt)
+        state = load_state(workplace_root)
+        durable = state.setdefault("pending_conversation_captures", {})
+        session_key = _pending_conversation_state_key(project_root, session_id, core)
+        session_pending = durable.setdefault(
+            session_key,
+            {
+                "project_id": core.project_id(project_root),
+                "session_id": session_id,
+                "items": {},
+            },
+        )
+        items = session_pending.setdefault("items", {})
+        items[raw_id] = {"raw_event_id": raw_id, "envelope": dict(envelope)}
+        save_state(workplace_root, state, core)
+
+
+def _flush_deferred_conversation(
+    project_root: Path, workplace_root: Path, session_id: str, core: Any
+) -> tuple[list[str], dict[str, Any]]:
+    if not session_id:
+        return [], {}
+    with state_lock():
+        memory_key = _pending_conversation_key(project_root, session_id, core)
+        queued = dict(PENDING_CONVERSATION_CAPTURES.get(memory_key, {}))
+        state = load_state(workplace_root)
+        durable = state.setdefault("pending_conversation_captures", {})
+        session_key = _pending_conversation_state_key(project_root, session_id, core)
+        stored = durable.get(session_key, {})
+    stored_items = stored.get("items") if isinstance(stored, dict) and isinstance(stored.get("items"), dict) else {}
+    for raw_id, item in stored_items.items():
+        if raw_id in queued or not isinstance(item, dict) or not isinstance(item.get("envelope"), dict):
+            continue
+        queued[str(raw_id)] = (dict(item["envelope"]), argparse.Namespace(raw_event_id=str(item.get("raw_event_id") or raw_id)))
+    if not queued:
+        return [], {}
+    identifiers: list[str] = []
+    failures: list[dict[str, Any]] = []
+    succeeded: list[str] = []
+    for raw_id, (envelope, receipt) in queued.items():
+        chat_ids, diagnostics = _conversation_messages(envelope, receipt, project_root, workplace_root, core)
+        identifiers.extend(chat_ids)
+        reason = _conversation_reason(diagnostics)
+        if reason:
+            failures.append({"raw_event_id": raw_id, "reason": reason})
+        else:
+            succeeded.append(raw_id)
+    if succeeded:
+        with state_lock():
+            memory_pending = PENDING_CONVERSATION_CAPTURES.get(_pending_conversation_key(project_root, session_id, core), {})
+            for raw_id in succeeded:
+                memory_pending.pop(raw_id, None)
+            if not memory_pending:
+                PENDING_CONVERSATION_CAPTURES.pop(_pending_conversation_key(project_root, session_id, core), None)
+            state = load_state(workplace_root)
+            durable = state.setdefault("pending_conversation_captures", {})
+            session_key = _pending_conversation_state_key(project_root, session_id, core)
+            stored = durable.get(session_key, {})
+            stored_items = stored.get("items") if isinstance(stored, dict) and isinstance(stored.get("items"), dict) else {}
+            for raw_id in succeeded:
+                stored_items.pop(raw_id, None)
+            if isinstance(stored, dict) and stored_items:
+                stored["items"] = stored_items
+                durable[session_key] = stored
+            else:
+                durable.pop(session_key, None)
+            save_state(workplace_root, state, core)
+    diagnostics: dict[str, Any] = {"deferred_conversation": {"flushed": len(queued), "chat_message_ids": identifiers}}
+    if failures:
+        diagnostics["deferred_conversation"]["failures"] = failures
+    return identifiers, diagnostics
+
+
+def _derived_event_type(raw: dict[str, Any]) -> str:
+    return str(raw.get("event_type") or raw.get("type") or "")
+
+
+def _derived_session_id(raw: dict[str, Any]) -> str:
+    source = raw.get("source") if isinstance(raw.get("source"), dict) else {}
+    return str(source.get("session_id") or raw.get("session_id") or "")
+
+
 def _is_safe_automatic_content(content: str) -> bool:
     # Marker names may appear in a safe worker report that explains which
     # private values were withheld. Reject their values (via secret/path
@@ -694,6 +807,7 @@ def _allowed_conversation_message(envelope: dict[str, Any], item: dict[str, Any]
     if (provider, adapter, event_type, role, kind, provenance) in {
         ("codex", "codex-hooks", "Stop", "assistant", "codex_hook", "provider_payload"),
         ("codex", "codex-hooks", "SubagentStop", "assistant", "codex_hook", "provider_payload"),
+        ("codex", "codex-hooks", "SessionEnd", "assistant", "codex_hook", "provider_payload"),
     }:
         return isinstance(raw.get("last_assistant_message"), str) and item.get("content") == raw.get("last_assistant_message") and str(item.get("session_id") or session) == session
     if provider != "processforge" or adapter != "pf-codex-exec-worker":
@@ -746,8 +860,38 @@ def _worker_session_authorized(envelope: dict[str, Any], project_root: Path, cor
     return True
 
 
+def _is_session_end_fallback_duplicate(envelope: dict[str, Any], item: dict[str, Any], project_root: Path, core: Any) -> bool:
+    if str(envelope.get("provider") or "") != "codex" or str(envelope.get("adapter") or "") != "codex-hooks":
+        return False
+    if str(envelope.get("native_event_type") or "") != "SessionEnd" or str(item.get("message_role") or "") != "assistant":
+        return False
+    content = item.get("content")
+    turn_id = str(item.get("turn_id") or "")
+    session_id = str(envelope.get("source_session_id") or "")
+    if not isinstance(content, str) or not content.strip() or not session_id:
+        return False
+    for existing in core.load_chat_messages(project_root, session_id):
+        body = existing.get("message") if isinstance(existing.get("message"), dict) else {}
+        participant = existing.get("participant") if isinstance(existing.get("participant"), dict) else {}
+        existing_primary = str(participant.get("id") or "") == "codex" or str(participant.get("type") or "") == "subagent"
+        if (
+            (not turn_id or str(existing.get("turn_id") or "") == turn_id)
+            and existing_primary
+            and body.get("role") == "assistant"
+            and body.get("content") == content
+        ):
+            return True
+    return False
+
+
 def _conversation_messages(
-    envelope: dict[str, Any], receipt: Any, project_root: Path, workplace_root: Path, core: Any
+    envelope: dict[str, Any],
+    receipt: Any,
+    project_root: Path,
+    workplace_root: Path,
+    core: Any,
+    *,
+    ended_session_presence: dict[str, Any] | None = None,
 ) -> tuple[list[str], dict[str, Any]]:
     messages = envelope.get("derived_conversation_messages")
     if messages is None:
@@ -757,12 +901,13 @@ def _conversation_messages(
     session_id = str(envelope.get("source_session_id") or "")
     if not session_id:
         return _conversation_denial("missing_session")
-    is_worker = str(envelope.get("provider") or "") == "processforge" and str(envelope.get("adapter") or "") == "pf-codex-exec-worker"
+    is_worker = _is_worker_conversation(envelope)
     presence = ledger_session(session_id, workplace_root, core)
     if is_worker:
         authorized = _worker_session_authorized(envelope, project_root, core)
     else:
-        authorized = bool(presence) and str(presence.get("project_id") or "") == core.project_id(project_root)
+        active_presence = presence or ended_session_presence or {}
+        authorized = bool(active_presence) and str(active_presence.get("project_id") or "") == core.project_id(project_root)
     if not authorized:
         return _conversation_denial("session_not_authorized", session_id=session_id)
     identifiers: list[str] = []
@@ -777,6 +922,8 @@ def _conversation_messages(
             return _conversation_denial("invalid_message", sequence=sequence)
         if not _allowed_conversation_message(envelope, item):
             return _conversation_denial("untrusted_conversation_provenance", sequence=sequence)
+        if _is_session_end_fallback_duplicate(envelope, item, project_root, core):
+            continue
         if not _is_safe_automatic_content(content) or not _is_safe_automatic_content(json.dumps(source, ensure_ascii=False, sort_keys=True)) or core.contains_secret_value(content):
             return _conversation_denial("unsafe_automatic_content", sequence=sequence)
         raw_id = str(receipt.raw_event_id or "")
@@ -845,25 +992,59 @@ def ingest_event(raw: dict[str, Any], workplace_root: Path | None, core: Any, *,
     if not receipt.accepted:
         return response
 
-    chat_message_ids, conversation_diagnostics = _conversation_messages(envelope, receipt, project_root, workplace_root, core)
-    response["chat_message_ids"] = chat_message_ids
-    response["diagnostics"] = {**response["diagnostics"], **conversation_diagnostics}
-
     derived = envelope.get("derived_event")
-    if not isinstance(derived, dict):
-        return response
-    derived_ref = str(derived.get("project_root") or derived.get("cwd") or "")
-    if derived_ref and resolve_project(derived_ref, core) != project_root:
-        raise PermissionError("derived event project_root does not match native envelope")
-    # Preserve the established CLI/Runtime 403 behavior for project/session
-    # denial.  The raw receipt already exists at this point for later audit.
-    routed = _ingest_derived_event(derived, workplace_root, core, project_ref=str(project_root))
-    return {
-        **routed,
-        **response,
-        "routing_status": "routed",
-        "normalized_event_ids": [str(routed["event_id"])],
-    }
+    derived_event_type = _derived_event_type(derived) if isinstance(derived, dict) else ""
+    derived_session_id = _derived_session_id(derived) if isinstance(derived, dict) else ""
+    ended_session_presence: dict[str, Any] | None = None
+    if (
+        isinstance(derived, dict)
+        and derived_event_type in {"agent.session.ended", "agent.session.stopped"}
+        and isinstance(envelope.get("derived_conversation_messages"), list)
+        and derived_session_id
+    ):
+        ended_session_presence = ledger_session(derived_session_id, workplace_root, core)
+
+    if isinstance(derived, dict):
+        derived_ref = str(derived.get("project_root") or derived.get("cwd") or "")
+        if derived_ref and resolve_project(derived_ref, core) != project_root:
+            raise PermissionError("derived event project_root does not match native envelope")
+        # Preserve the established CLI/Runtime 403 behavior for project/session
+        # denial.  The raw receipt already exists at this point for later audit.
+        routed = _ingest_derived_event(derived, workplace_root, core, project_ref=str(project_root))
+        response = {
+            **routed,
+            **response,
+            "routing_status": "routed",
+            "normalized_event_ids": [str(routed["event_id"])],
+        }
+        if derived_event_type in {"agent.session.started", "agent.session.resumed"}:
+            flushed_ids, flushed_diagnostics = _flush_deferred_conversation(project_root, workplace_root, derived_session_id, core)
+            response["chat_message_ids"] = [*response["chat_message_ids"], *flushed_ids]
+            response["diagnostics"] = {**response["diagnostics"], **flushed_diagnostics}
+
+    chat_message_ids, conversation_diagnostics = _conversation_messages(
+        envelope,
+        receipt,
+        project_root,
+        workplace_root,
+        core,
+        ended_session_presence=ended_session_presence,
+    )
+    if (
+        _conversation_reason(conversation_diagnostics) == "session_not_authorized"
+        and not _is_worker_conversation(envelope)
+        and derived_event_type not in {"agent.session.ended", "agent.session.stopped"}
+        and str(envelope.get("source_session_id") or "")
+        and not ledger_session(str(envelope.get("source_session_id") or ""), workplace_root, core)
+    ):
+        _defer_conversation_capture(envelope, receipt, project_root, workplace_root, core)
+        chat_message_ids, conversation_diagnostics = _conversation_deferred(
+            "session_not_authorized",
+            session_id=str(envelope.get("source_session_id") or ""),
+        )
+    response["chat_message_ids"] = [*response["chat_message_ids"], *chat_message_ids]
+    response["diagnostics"] = {**response["diagnostics"], **conversation_diagnostics}
+    return response
 
 
 def command_status(args: argparse.Namespace, core: Any) -> int:

@@ -1,0 +1,79 @@
+schema_version: 1
+id: codex-capture-remediation-release-review-20260822
+title: Release gate review for Codex capture remediation
+run_id: codex-message-capture-remediation-execution-20260822
+process: task-batch-execution
+status: done
+created_at: '2026-08-22T12:22:25Z'
+updated_at: '2026-08-22T12:26:55Z'
+objective: Perform the final read-only release gate. Verify the no-turn SessionEnd primary/fallback collision is correctly handled without suppressing a fallback that lacks a primary event; ensure prior review findings remain fixed, scope remains compliant, and tests substantiate the result. Return pass only if the code and regressions justify it.
+platform: ""
+selected_specializations:
+  []
+order: 6
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/reviews/codex-message-capture-remediation-release-review-20260822.md
+stage: task-execution-loop
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/codex-message-capture-remediation-release-review-20260822.md
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/reviews/codex-message-capture-remediation-execution-20260822.md
+  - .pf/reviews/codex-message-capture-remediation-final-review-20260822.md
+  - .pf/artifacts/codex-message-capture-remediation-execution-20260822/no-turn-remediation-report.md
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/pf_runtime/raw_ingress_kernel.py
+  - tools/smoke_conversation_completeness.py
+  - tools/smoke_runtime_ledger_hooks_mcp.py
+forbidden_files:
+  - tools/**
+  - src/**
+  - schemas/**
+  - docs/**
+  - .codex/hooks.json
+ownership:
+  owner_id: codex-capture-remediation-release-review-20260822
+  owner_label: worker-codex-capture-remediation-release-review-20260822
+  role: release-reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/codex-message-capture-remediation-release-review-20260822.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/codex-message-capture-remediation-release-review-20260822.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: release-review-report
+    path: .pf/reviews/codex-message-capture-remediation-release-review-20260822.md
+    type: markdown
+    required: true
+agent_reasoning_effort: high
+agent_model: gpt-5.5
+expected_report:
+  language: en
+  artifact: .pf/reviews/codex-message-capture-remediation-release-review-20260822.md
+  format: concise_markdown
+  include:
+    - release-review-report
