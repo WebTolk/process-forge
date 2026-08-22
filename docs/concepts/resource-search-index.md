@@ -1,22 +1,75 @@
 # Resource Search Index
 
-ProcessForge exposes local resource search through three separate layers:
+ProcessForge local search has three separate boundaries:
 
-- the project context snapshot is the authorization boundary;
-- the SQLite search index is private, derived, and rebuildable;
-- MCP is only a query adapter.
+- versioned workplace resources declare what may be indexed;
+- the workplace SQLite FTS5 index stores derived resource documents;
+- the project context snapshot authorizes which resource ids a session may query.
 
-The search index is stored under the workplace runtime directory:
+Projects do not own search documents. They only carry allowed resource
+identities and fingerprints in the snapshot. The private derived DB lives under:
 
 ```text
 <workplace>/runtime/search/local-resource-search.sqlite
 ```
 
-The index can contain multiple project snapshot scopes, but a query is always filtered by the active Ledger session, bound project, and fresh project snapshot. `pf.search` must not fall back to the full workplace, other projects, home directories, Context7, or the web.
+`pf.search` is a query adapter. It does not fall back to the full workplace,
+other projects, home directories, Context7, the web, or a hidden `rg` pass over
+large source trees.
+
+## Indexing Policy
+
+Resources use one reusable contract:
+
+```yaml
+indexing:
+  enabled: true
+  mode: fulltext # fulltext | metadata | none
+  fields:
+    - title
+    - description
+    - tags
+  sources:
+    - path: articles
+      mode: fulltext
+      include:
+        - "**/*.md"
+      exclude:
+        - drafts/**
+    - path: core/6.1.2
+      mode: metadata
+      role: source_tree
+```
+
+`fulltext` stores metadata plus selected text files in FTS. `metadata` stores
+identity, title, description, version, root/path reference, and declared
+metadata only. `none` excludes the resource from local search.
+
+Large source trees, SDK mirrors, vendor trees, and multi-version platform
+snapshots should use `metadata` unless their manifest explicitly selects a
+small fulltext source. Search can return a navigation root, but Codex should use
+normal filesystem reads and `rg` inside the selected root when it needs source
+code detail.
+
+## SQLite Model
+
+The derived DB schema is resource-oriented:
+
+```text
+resources
+documents
+documents_fts
+index_state
+```
+
+`resources` tracks `resource_id`, `resource_type`, `version`, `fingerprint`,
+`indexing_policy_hash`, `root_ref`, and refresh status. `documents` tracks
+`resource_id`, `relative_path`, `kind`, `title`, hashes, and JSON metadata.
+`documents_fts` stores searchable fulltext fields. `index_state` stores the
+current project snapshot authorization state without duplicating documents per
+project.
 
 ## CLI
-
-Operators can inspect and maintain the index without MCP:
 
 ```bash
 python bin/pf.py search-index status --project-root <project> --workplace <workplace>
@@ -26,51 +79,23 @@ python bin/pf.py search-index doctor --project-root <project> --workplace <workp
 python bin/pf.py search-index tick --project-root <project> --workplace <workplace>
 ```
 
-`status` is read-only. `refresh` updates the current project snapshot scope. `rebuild` removes the derived DB and builds it again for the current project snapshot scope.
+`status` is read-only. `status --verify-files` performs explicit fingerprint
+reconciliation and reports stale state when authorized resource content changed.
+`refresh` updates indexable resources for the current fresh snapshot. `rebuild`
+deletes the derived DB and builds it again. `tick` is the bounded maintenance
+unit for operators and Runtime scheduling.
 
-`status --verify-files` performs an explicit file fingerprint check for the current snapshot scope. It can mark the index `stale` when authorized files changed outside ProcessForge.
+## Runtime And MCP
 
-`tick` is one bounded maintenance pass suitable for Runtime or operator scheduling. It verifies fingerprints by default and refreshes only when the scope is missing or stale. MCP calls do not perform this verification on every query.
+Runtime maintenance should periodically run `tick` for known projects with
+fresh snapshots. PF-owned resource mutations mark existing index state stale;
+external file changes are detected by fingerprint verification during `tick`.
 
-If the derived DB is degraded because the schema is missing or mismatched, `tick`
-rebuilds the derived index instead of leaving the scope permanently degraded.
-`fts5_unavailable` remains a true degraded capability state and is not rebuilt
-away.
+`pf.search` never reports stale data as `fresh`. If the index is missing, stale,
+or degraded, the result carries that `search_status` and returns no matches
+until maintenance refreshes the derived DB.
 
-## Automatic maintenance triggers
-
-ProcessForge runs the same bounded maintenance pass from lifecycle commands that can change the authorized search scope:
-
-- `workplace-init` creates the private search runtime report and ticks any already-known onboarded projects under the workplace.
-- `project-onboard`, `project-init-repair`, and `project-context-refresh` tick the current project after writing a fresh project context snapshot.
-- resource authoring commands such as `knowledge-add-url`, `knowledge-add-resource`, `knowledge-index-refresh`, `template-create`, `tool-register`, `mcp-register`, `platform-create`, and `platform-contract-install` tick known onboarded projects under the workplace.
-- `update-apply` and `update-rollback` mark impacted project snapshots stale first, then run maintenance; stale projects are skipped until `project-context-refresh` creates a fresh snapshot.
-
-The automatic pass writes a private derived report:
-
-```text
-<workplace>/runtime/search/latest-maintenance.yaml
-```
-
-It is intentionally bounded to known ProcessForge projects and never builds a global workplace index. When a project context is stale, ProcessForge reports `SEARCH_INDEX_SKIPPED` with the required next action instead of rebuilding against obsolete authorization data.
-
-Resource-management events also mark existing workplace search scopes `stale`.
-This gives PF-owned mutations a central dirty signal even when a future CLI
-command forgets to call the lifecycle maintenance helper. The next bounded
-maintenance pass verifies fingerprints and refreshes the affected project scope.
-
-## Runtime and MCP contract
-
-`pf.search` returns navigation-oriented results, not generated answers. The payload includes:
-
-- `search_status`
-- `index_generation`
-- `total`
-- `limit`
-- `offset`
-- `items` / `results`
-
-`pf.session_context` includes compact search readiness:
+`pf.session_context` exposes compact readiness:
 
 ```yaml
 search:
@@ -79,8 +104,5 @@ search:
   stale: false
 ```
 
-The index stores private resolved paths only as runtime data. Public project snapshots and public artifacts must keep `path_ref` references instead of machine-local absolute paths.
-
-## Current limits
-
-This implementation keeps the index derived and rebuildable, uses SQLite FTS5, and avoids hidden global search. Lifecycle-triggered maintenance covers first-run, project context refresh, resource authoring, update apply/rollback paths, external add/change/delete detection via fingerprint reconciliation, and safe rebuild from schema-degraded derived DB state. Production-scale benchmark coverage remains a future slice.
+Resolved local paths are request-local runtime data. Public snapshots and
+artifacts keep `path_ref` references instead of private absolute paths.

@@ -31,6 +31,7 @@
       "enum": ["always_index", "project_init", "session_start", "when_relevant", "on_demand", "never_auto_load"]
     },
     "index_policy": { "type": "string" },
+    "indexing": { "$ref": "resource-indexing.schema.json" },
     "description": { "type": "string" },
     "license": { "type": "object", "additionalProperties": true },
     "source": { "type": "object", "additionalProperties": true },

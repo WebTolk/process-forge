@@ -1,13 +1,15 @@
-"""Snapshot-authorized, rebuildable SQLite FTS5 local resource search.
+"""Workplace-owned, snapshot-authorized SQLite FTS5 local resource search.
 
-The module intentionally has no registry or workplace discovery.  Its caller
-supplies the current project snapshot; only paths explicitly present there can
-enter the corpus.
+The index is resource-oriented: documents are stored once per resource in the
+workplace DB. Project snapshots only authorize which resource identities may be
+queried; they do not own or duplicate indexed documents.
 """
 
 from __future__ import annotations
 
+import fnmatch
 import hashlib
+import json
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -19,7 +21,8 @@ MAX_FILE_BYTES = 1_000_000
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
 TEXT_SUFFIXES = {".md", ".txt", ".rst", ".py", ".json", ".yaml", ".yml", ".toml", ".ini", ".csv"}
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
+POLICY_MODES = {"fulltext", "metadata", "none"}
 
 
 @dataclass(frozen=True)
@@ -28,11 +31,27 @@ class LocalSearchError(Exception):
 
 
 @dataclass(frozen=True)
-class AuthorizedRoot:
+class IndexSource:
+    path: str
+    mode: str
+    include: tuple[str, ...]
+    exclude: tuple[str, ...]
+    role: str
+
+
+@dataclass(frozen=True)
+class AuthorizedResource:
     resource_id: str
     package_id: str
     kind: str
+    title: str
+    description: str
+    version: str
+    fingerprint: str
     root: Path
+    root_ref: str
+    indexing: dict[str, Any]
+    sources: tuple[IndexSource, ...]
 
 
 def _snapshot_checksum(snapshot: dict[str, Any]) -> str:
@@ -81,32 +100,156 @@ def pagination(*, limit: Any = None, limitstart: Any = None, offset: Any = None)
     return page_limit, start
 
 
+def _stable_json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _policy_hash(policy: dict[str, Any]) -> str:
+    return hashlib.sha256(_stable_json(policy).encode("utf-8")).hexdigest()
+
+
 def _resource_records(snapshot: dict[str, Any]) -> Iterable[dict[str, Any]]:
     resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
     for key in ("available_knowledge_resources", "knowledge_resources", "templates", "template_resources"):
         rows = resolved.get(key) if isinstance(resolved, dict) else []
         if isinstance(rows, list):
             yield from (row for row in rows if isinstance(row, dict))
-    # Future snapshot producers can publish this explicit compact manifest.
     rows = snapshot.get("local_search_resources")
     if isinstance(rows, list):
         yield from (row for row in rows if isinstance(row, dict))
 
 
-def authorized_roots(project_root: Path, snapshot: dict[str, Any]) -> list[AuthorizedRoot]:
-    result: list[AuthorizedRoot] = []
+def _fingerprint_value(row: dict[str, Any]) -> str:
+    raw = row.get("fingerprint")
+    if isinstance(raw, dict):
+        value = raw.get("value")
+        if value:
+            return str(value)
+    if raw:
+        return str(raw)
+    version = str(row.get("version") or row.get("generation") or "")
+    identity = {
+        "id": row.get("id") or row.get("resource_id"),
+        "path_ref": row.get("path_ref"),
+        "version": version,
+        "indexing": row.get("indexing") or row.get("index_policy"),
+    }
+    return "sha256:" + hashlib.sha256(_stable_json(identity).encode("utf-8")).hexdigest()
+
+
+def _string_list(value: Any) -> tuple[str, ...]:
+    if isinstance(value, list):
+        return tuple(str(item) for item in value if str(item))
+    return ()
+
+
+def _normalize_source(raw: dict[str, Any], default_mode: str) -> IndexSource:
+    mode = str(raw.get("mode") or default_mode or "metadata")
+    if mode not in POLICY_MODES:
+        mode = "metadata"
+    return IndexSource(
+        path=str(raw.get("path") or "."),
+        mode=mode,
+        include=_string_list(raw.get("include")) or ("**/*",),
+        exclude=_string_list(raw.get("exclude")),
+        role=str(raw.get("role") or ""),
+    )
+
+
+def normalize_indexing_policy(row: dict[str, Any]) -> dict[str, Any]:
+    """Normalize the public indexing contract for one resource."""
+
+    raw = row.get("indexing") if isinstance(row.get("indexing"), dict) else None
+    if raw is None:
+        legacy = str(row.get("index_policy") or "").strip()
+        if legacy in {"none", "never", "disabled"}:
+            raw = {"enabled": False, "mode": "none"}
+        elif legacy in {"metadata", "metadata_first", "index_only"}:
+            raw = {"enabled": True, "mode": "metadata", "fields": ["title", "description", "tags", "path"]}
+        elif legacy in {"fulltext", "always_index", "snapshot_authorized"}:
+            raw = {
+                "enabled": True,
+                "mode": "fulltext",
+                "fields": ["title", "description", "path"],
+                "sources": [{"path": ".", "mode": "fulltext", "include": ["**/*.md", "**/*.txt", "**/*.rst"]}],
+            }
+        else:
+            # Compatibility for old direct callers. Snapshot producers should
+            # write explicit `indexing` and not rely on this fallback.
+            raw = {
+                "enabled": True,
+                "mode": "fulltext",
+                "fields": ["title", "description", "path"],
+                "sources": [{"path": ".", "mode": "fulltext", "include": ["**/*"]}],
+                "legacy_default": True,
+            }
+    enabled = bool(raw.get("enabled", True))
+    mode = str(raw.get("mode") or ("metadata" if enabled else "none"))
+    if mode not in POLICY_MODES:
+        mode = "metadata"
+    if not enabled:
+        mode = "none"
+    fields = _string_list(raw.get("fields")) or ("title", "description", "path")
+    source_rows = raw.get("sources") if isinstance(raw.get("sources"), list) else []
+    sources = tuple(_normalize_source(item, mode) for item in source_rows if isinstance(item, dict))
+    if not sources and mode != "none":
+        sources = (_normalize_source({"path": ".", "mode": mode, "include": ["**/*"]}, mode),)
+    return {
+        "enabled": enabled,
+        "mode": mode,
+        "fields": list(fields),
+        "sources": [
+            {
+                "path": item.path,
+                "mode": item.mode,
+                "include": list(item.include),
+                "exclude": list(item.exclude),
+                **({"role": item.role} if item.role else {}),
+            }
+            for item in sources
+        ],
+        **({"legacy_default": True} if raw.get("legacy_default") else {}),
+    }
+
+
+def authorized_resource_ids(snapshot: dict[str, Any]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for row in _resource_records(snapshot):
+        resource_id = str(row.get("id") or row.get("resource_id") or "").strip()
+        if resource_id and resource_id not in seen:
+            seen.add(resource_id)
+            result.append(resource_id)
+    return result
+
+
+def indexable_resource_ids(resources: list[AuthorizedResource]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for resource in resources:
+        if resource.resource_id not in seen:
+            seen.add(resource.resource_id)
+            result.append(resource.resource_id)
+    return result
+
+
+def authorized_roots(project_root: Path, snapshot: dict[str, Any]) -> list[AuthorizedResource]:
+    result: list[AuthorizedResource] = []
     seen: set[tuple[str, str]] = set()
     for row in _resource_records(snapshot):
         resource_id = str(row.get("id") or row.get("resource_id") or "").strip()
         if not resource_id:
+            continue
+        policy = normalize_indexing_policy(row)
+        if policy.get("mode") == "none":
             continue
         raw_paths: list[Any] = []
         for key in ("content_roots", "search_roots", "paths"):
             if isinstance(row.get(key), list):
                 raw_paths.extend(row[key])
         raw_paths.extend(row.get(key) for key in ("resolved_path", "local_path", "path") if row.get(key))
-        for raw in raw_paths:
-            value = str(raw or "").strip()
+        for raw_path in raw_paths:
+            value = str(raw_path or "").strip()
             if not value or value.startswith("<") or "://" in value:
                 continue
             candidate = Path(value)
@@ -120,44 +263,138 @@ def authorized_roots(project_root: Path, snapshot: dict[str, Any]) -> list[Autho
             if identity in seen:
                 continue
             seen.add(identity)
-            result.append(AuthorizedRoot(resource_id, str(row.get("package_id") or row.get("package") or ""), str(row.get("kind") or "knowledge"), root))
+            sources = tuple(_normalize_source(item, str(policy.get("mode") or "metadata")) for item in policy.get("sources", []) if isinstance(item, dict))
+            result.append(
+                AuthorizedResource(
+                    resource_id=resource_id,
+                    package_id=str(row.get("package_id") or row.get("package") or ""),
+                    kind=str(row.get("kind") or "knowledge"),
+                    title=str(row.get("title") or resource_id),
+                    description=str(row.get("description") or ""),
+                    version=str(row.get("version") or row.get("generation") or ""),
+                    fingerprint=_fingerprint_value(row),
+                    root=root,
+                    root_ref=_stable_json(row.get("path_ref")) if isinstance(row.get("path_ref"), dict) else str(root),
+                    indexing=policy,
+                    sources=sources,
+                )
+            )
     return result
 
 
-def _iter_text_files(root: AuthorizedRoot) -> Iterable[Path]:
-    if root.root.is_file():
-        if root.root.suffix.lower() in TEXT_SUFFIXES and root.root.stat().st_size <= MAX_FILE_BYTES:
-            yield root.root
+def _matches_any(path: str, patterns: tuple[str, ...]) -> bool:
+    return any(fnmatch.fnmatch(path, pattern) or fnmatch.fnmatch("/" + path, pattern) for pattern in patterns)
+
+
+def _iter_source_files(root: Path, source: IndexSource) -> Iterable[tuple[Path, str]]:
+    base = (root / source.path).resolve() if source.path not in {"", "."} else root
+    try:
+        base.relative_to(root if root.is_dir() else root.parent)
+    except ValueError:
         return
-    for path in root.root.rglob("*"):
+    if base.is_file():
+        rel_path = base.relative_to(root.parent if not root.is_dir() else root).as_posix() if root != base else base.name
+        if base.suffix.lower() in TEXT_SUFFIXES and base.stat().st_size <= MAX_FILE_BYTES:
+            yield base, rel_path
+        return
+    if not base.is_dir():
+        return
+    for path in base.rglob("*"):
         try:
-            if path.is_file() and path.suffix.lower() in TEXT_SUFFIXES and path.stat().st_size <= MAX_FILE_BYTES:
-                yield path
+            if not (path.is_file() and path.suffix.lower() in TEXT_SUFFIXES and path.stat().st_size <= MAX_FILE_BYTES):
+                continue
+            rel_path = path.relative_to(root).as_posix() if root.is_dir() else path.name
+            source_rel = path.relative_to(base).as_posix()
+            if not _matches_any(source_rel, source.include):
+                continue
+            if source.exclude and (_matches_any(source_rel, source.exclude) or _matches_any(rel_path, source.exclude)):
+                continue
+            yield path, rel_path
         except OSError:
             continue
 
 
-def _documents(roots: list[AuthorizedRoot]) -> list[tuple[str, str, str, str, str, str]]:
-    documents: list[tuple[str, str, str, str, str, str]] = []
-    for item in roots:
-        for path in _iter_text_files(item):
-            try:
-                text = path.read_text(encoding="utf-8", errors="replace")
-                canonical = path.relative_to(item.root).as_posix() if item.root.is_dir() else path.name
-            except (OSError, ValueError):
+def _metadata_content(resource: AuthorizedResource, source: IndexSource | None = None) -> str:
+    parts = [
+        resource.title,
+        resource.description,
+        resource.resource_id,
+        resource.package_id,
+        resource.kind,
+        resource.version,
+        resource.root_ref,
+    ]
+    if source is not None:
+        parts.extend([source.path, source.role])
+    return "\n".join(item for item in parts if item)
+
+
+def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
+    documents: list[dict[str, Any]] = []
+    for resource in resources:
+        policy_hash = _policy_hash(resource.indexing)
+        if all(source.mode != "fulltext" for source in resource.sources):
+            content = _metadata_content(resource, resource.sources[0] if resource.sources else None)
+            content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+            documents.append(
+                {
+                    "resource_id": resource.resource_id,
+                    "package_id": resource.package_id,
+                    "kind": resource.kind,
+                    "relative_path": ".",
+                    "title": resource.title,
+                    "content": content,
+                    "content_hash": content_hash,
+                    "fingerprint": f"{resource.fingerprint}:{policy_hash}:{content_hash}",
+                    "metadata": {"mode": "metadata", "root_ref": resource.root_ref, "version": resource.version},
+                }
+            )
+            continue
+        for source in resource.sources:
+            if source.mode == "none":
                 continue
-            digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
-            documents.append((item.resource_id, item.package_id, item.kind, canonical, f"{item.resource_id}:{canonical}", digest + "\n" + text))
+            if source.mode == "metadata":
+                content = _metadata_content(resource, source)
+                content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+                documents.append(
+                    {
+                        "resource_id": resource.resource_id,
+                        "package_id": resource.package_id,
+                        "kind": resource.kind,
+                        "relative_path": source.path or ".",
+                        "title": resource.title,
+                        "content": content,
+                        "content_hash": content_hash,
+                        "fingerprint": f"{resource.fingerprint}:{policy_hash}:{content_hash}",
+                        "metadata": {"mode": "metadata", "role": source.role, "root_ref": resource.root_ref, "version": resource.version},
+                    }
+                )
+                continue
+            for path, relative_path in _iter_source_files(resource.root, source):
+                try:
+                    text = path.read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    continue
+                content = _metadata_content(resource, source) + "\n" + text
+                content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
+                documents.append(
+                    {
+                        "resource_id": resource.resource_id,
+                        "package_id": resource.package_id,
+                        "kind": resource.kind,
+                        "relative_path": relative_path,
+                        "title": relative_path,
+                        "content": content,
+                        "content_hash": content_hash,
+                        "fingerprint": f"{resource.fingerprint}:{policy_hash}:{relative_path}:{content_hash}",
+                        "metadata": {"mode": "fulltext", "root_ref": resource.root_ref, "version": resource.version},
+                    }
+                )
     return documents
 
 
 def index_path(project_root: Path, workplace_root: Path | None = None) -> Path:
-    """Return the private derived search DB path.
-
-    MCP and CLI callers should pass a workplace root so all projects share one
-    workplace-level index.  The project-local fallback preserves older tests and
-    direct library callers until they are migrated.
-    """
+    """Return the private derived search DB path."""
 
     if workplace_root is not None:
         return workplace_root / "runtime" / "search" / "local-resource-search.sqlite"
@@ -186,9 +423,37 @@ def _ensure_schema(db: sqlite3.Connection) -> None:
     db.execute("INSERT OR REPLACE INTO meta VALUES (?, ?)", ("schema_version", str(SCHEMA_VERSION)))
     db.execute("INSERT OR REPLACE INTO meta VALUES (?, ?)", ("sqlite_version", sqlite3.sqlite_version))
     db.execute(
+        "CREATE TABLE IF NOT EXISTS resources ("
+        "resource_id TEXT PRIMARY KEY, "
+        "resource_type TEXT, "
+        "version TEXT, "
+        "fingerprint TEXT, "
+        "indexing_policy_hash TEXT, "
+        "root_ref TEXT, "
+        "indexed_at TEXT, "
+        "status TEXT NOT NULL, "
+        "last_error TEXT)"
+    )
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS documents ("
+        "id INTEGER PRIMARY KEY, "
+        "resource_id TEXT NOT NULL, "
+        "package_id TEXT, "
+        "kind TEXT, "
+        "relative_path TEXT NOT NULL, "
+        "title TEXT, "
+        "content_hash TEXT, "
+        "metadata TEXT, "
+        "fingerprint TEXT, "
+        "UNIQUE(resource_id, relative_path))"
+    )
+    db.execute("CREATE INDEX IF NOT EXISTS documents_resource_idx ON documents(resource_id)")
+    db.execute("CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING fts5(title, content, document_id UNINDEXED, resource_id UNINDEXED)")
+    db.execute(
         "CREATE TABLE IF NOT EXISTS index_state ("
         "scope_key TEXT PRIMARY KEY, "
         "snapshot_checksum TEXT NOT NULL, "
+        "allowed_resource_ids TEXT NOT NULL, "
         "status TEXT NOT NULL, "
         "generation TEXT NOT NULL, "
         "resource_count INTEGER NOT NULL, "
@@ -198,24 +463,11 @@ def _ensure_schema(db: sqlite3.Connection) -> None:
         "last_full_reconciliation TEXT, "
         "last_error TEXT)"
     )
-    db.execute(
-        "CREATE TABLE IF NOT EXISTS documents ("
-        "id INTEGER PRIMARY KEY, "
-        "scope_key TEXT NOT NULL, "
-        "resource_id TEXT, "
-        "package_id TEXT, "
-        "kind TEXT, "
-        "canonical_path TEXT, "
-        "path_ref TEXT, "
-        "fingerprint TEXT)"
-    )
-    db.execute("CREATE INDEX IF NOT EXISTS documents_scope_idx ON documents(scope_key)")
-    db.execute("CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING fts5(title, content, document_id UNINDEXED, scope_key UNINDEXED)")
 
 
 def _check_schema(db: sqlite3.Connection) -> None:
-    required = {"meta", "index_state", "documents", "documents_fts"}
-    rows = db.execute("SELECT name FROM sqlite_master WHERE name IN ('meta', 'index_state', 'documents', 'documents_fts')").fetchall()
+    required = {"meta", "resources", "index_state", "documents", "documents_fts"}
+    rows = db.execute("SELECT name FROM sqlite_master WHERE name IN ('meta', 'resources', 'index_state', 'documents', 'documents_fts')").fetchall()
     existing = {str(row[0]) for row in rows}
     if required - existing:
         raise LocalSearchError("index_schema_missing")
@@ -224,9 +476,10 @@ def _check_schema(db: sqlite3.Connection) -> None:
         raise LocalSearchError("index_schema_mismatch")
 
 
-def _delete_scope(db: sqlite3.Connection, scope_key: str) -> None:
-    db.execute("DELETE FROM documents_fts WHERE scope_key=?", (scope_key,))
-    db.execute("DELETE FROM documents WHERE scope_key=?", (scope_key,))
+def _delete_resource(db: sqlite3.Connection, resource_id: str) -> None:
+    db.execute("DELETE FROM documents_fts WHERE resource_id=?", (resource_id,))
+    db.execute("DELETE FROM documents WHERE resource_id=?", (resource_id,))
+    db.execute("DELETE FROM resources WHERE resource_id=?", (resource_id,))
 
 
 def _error_code(exc: BaseException) -> str:
@@ -235,50 +488,61 @@ def _error_code(exc: BaseException) -> str:
     return str(exc) or type(exc).__name__
 
 
-def _document_fingerprint_map(roots: list[AuthorizedRoot]) -> dict[str, str]:
-    result: dict[str, str] = {}
-    for resource_id, _package_id, _kind, canonical, path_ref, raw in _documents(roots):
-        fingerprint, _content = raw.split("\n", 1)
-        result[f"{resource_id}:{path_ref}:{canonical}"] = fingerprint
-    return result
+def _document_fingerprint_map(resources: list[AuthorizedResource]) -> dict[str, str]:
+    return {f"{item['resource_id']}:{item['relative_path']}": str(item["fingerprint"]) for item in _documents(resources)}
+
+
+def _stored_fingerprint_map(db: sqlite3.Connection, resource_ids: list[str]) -> dict[str, str]:
+    if not resource_ids:
+        return {}
+    placeholders = ",".join("?" for _ in resource_ids)
+    rows = db.execute(f"SELECT resource_id, relative_path, fingerprint FROM documents WHERE resource_id IN ({placeholders})", resource_ids).fetchall()
+    return {f"{row[0]}:{row[1]}": str(row[2]) for row in rows}
+
+
+def _scope_generation(snapshot: dict[str, Any], resource_ids: list[str], fingerprints: dict[str, str]) -> str:
+    seed = {"snapshot": _snapshot_checksum(snapshot), "allowed_resource_ids": sorted(resource_ids), "fingerprints": fingerprints}
+    return hashlib.sha256(_stable_json(seed).encode("utf-8")).hexdigest()[:16]
 
 
 def build_index(project_root: Path, snapshot: dict[str, Any], *, workplace_root: Path | None = None, full_reconciliation: bool = False) -> dict[str, Any]:
-    roots = authorized_roots(project_root, snapshot)
+    resources = authorized_roots(project_root, snapshot)
+    resource_ids = indexable_resource_ids(resources)
     path = index_path(project_root, workplace_root)
     path.parent.mkdir(parents=True, exist_ok=True)
-    documents = _documents(roots)
+    documents = _documents(resources)
     scope_key = _scope_key(snapshot)
-    generation_seed = "\n".join(sorted(row[4] + ":" + row[5].split("\n", 1)[0] for row in documents))
-    generation = hashlib.sha256((scope_key + "\n" + generation_seed).encode("utf-8")).hexdigest()[:16]
+    refreshed_at = _now_utc()
+    fingerprints = {f"{item['resource_id']}:{item['relative_path']}": str(item["fingerprint"]) for item in documents}
+    generation = _scope_generation(snapshot, resource_ids, fingerprints)
     db = sqlite3.connect(path)
     try:
         _ensure_schema(db)
-        _delete_scope(db, scope_key)
-        for resource_id, package_id, kind, canonical, path_ref, raw in documents:
-            fingerprint, content = raw.split("\n", 1)
-            cursor = db.execute("INSERT INTO documents (scope_key, resource_id, package_id, kind, canonical_path, path_ref, fingerprint) VALUES (?, ?, ?, ?, ?, ?, ?)", (scope_key, resource_id, package_id, kind, canonical, path_ref, fingerprint))
-            db.execute("INSERT INTO documents_fts (title, content, document_id, scope_key) VALUES (?, ?, ?, ?)", (canonical, content, cursor.lastrowid, scope_key))
-        refreshed_at = _now_utc()
+        for resource in resources:
+            _delete_resource(db, resource.resource_id)
+            db.execute(
+                "INSERT OR REPLACE INTO resources (resource_id, resource_type, version, fingerprint, indexing_policy_hash, root_ref, indexed_at, status, last_error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (resource.resource_id, resource.kind, resource.version, resource.fingerprint, _policy_hash(resource.indexing), resource.root_ref, refreshed_at, "fresh", None),
+            )
+        for item in documents:
+            cursor = db.execute(
+                "INSERT OR REPLACE INTO documents (resource_id, package_id, kind, relative_path, title, content_hash, metadata, fingerprint) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (item["resource_id"], item["package_id"], item["kind"], item["relative_path"], item["title"], item["content_hash"], _stable_json(item["metadata"]), item["fingerprint"]),
+            )
+            document_id = cursor.lastrowid
+            if not document_id:
+                row = db.execute("SELECT id FROM documents WHERE resource_id=? AND relative_path=?", (item["resource_id"], item["relative_path"])).fetchone()
+                document_id = int(row[0])
+            db.execute("DELETE FROM documents_fts WHERE document_id=?", (document_id,))
+            db.execute("INSERT INTO documents_fts (title, content, document_id, resource_id) VALUES (?, ?, ?, ?)", (item["title"], item["content"], document_id, item["resource_id"]))
         db.execute(
-            "INSERT OR REPLACE INTO index_state (scope_key, snapshot_checksum, status, generation, resource_count, document_count, failed_file_count, last_successful_refresh, last_full_reconciliation, last_error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                scope_key,
-                _snapshot_checksum(snapshot),
-                "fresh",
-                generation,
-                len(roots),
-                len(documents),
-                0,
-                refreshed_at,
-                refreshed_at if full_reconciliation else None,
-                None,
-            ),
+            "INSERT OR REPLACE INTO index_state (scope_key, snapshot_checksum, allowed_resource_ids, status, generation, resource_count, document_count, failed_file_count, last_successful_refresh, last_full_reconciliation, last_error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (scope_key, _snapshot_checksum(snapshot), _stable_json(sorted(resource_ids)), "fresh", generation, len(resource_ids), len(documents), 0, refreshed_at, refreshed_at if full_reconciliation else None, None),
         )
         db.commit()
     finally:
         db.close()
-    return {"status": "fresh", "indexed": len(documents), "resources": len(roots), "snapshot_checksum": _snapshot_checksum(snapshot), "generation": generation}
+    return {"status": "fresh", "indexed": len(documents), "resources": len(resource_ids), "snapshot_checksum": _snapshot_checksum(snapshot), "generation": generation}
 
 
 def rebuild_index(project_root: Path, snapshot: dict[str, Any], *, workplace_root: Path | None = None) -> dict[str, Any]:
@@ -316,40 +580,41 @@ def index_status(project_root: Path, snapshot: dict[str, Any] | None = None, *, 
             _check_schema(db)
             scope_key = _scope_key(snapshot) if snapshot is not None else None
             if scope_key:
-                row = db.execute("SELECT status, generation, resource_count, document_count, failed_file_count, last_successful_refresh, last_full_reconciliation, last_error FROM index_state WHERE scope_key=?", (scope_key,)).fetchone()
+                row = db.execute("SELECT status, generation, resource_count, document_count, failed_file_count, last_successful_refresh, last_full_reconciliation, last_error, allowed_resource_ids, snapshot_checksum FROM index_state WHERE scope_key=?", (scope_key,)).fetchone()
+                current_resources = authorized_roots(project_root, snapshot or {})
+                resource_ids = indexable_resource_ids(current_resources)
                 if not row:
                     payload["status"] = "stale"
-                    payload["stale_resource_count"] = 1
+                    payload["stale_resource_count"] = len(resource_ids) or 1
+                    payload["error"] = "scope_not_indexed"
+                    return payload
+                if row[9] != _snapshot_checksum(snapshot or {}):
+                    payload["status"] = "stale"
+                    payload["stale_resource_count"] = len(resource_ids) or 1
+                    payload["error"] = "snapshot_checksum_changed"
+                    return payload
+                if json.loads(row[8] or "[]") != sorted(resource_ids):
+                    payload["status"] = "stale"
+                    payload["stale_resource_count"] = len(resource_ids) or 1
+                    payload["error"] = "allowed_resources_changed"
+                    return payload
+                missing_resources = [item for item in resource_ids if not db.execute("SELECT 1 FROM resources WHERE resource_id=?", (item,)).fetchone()]
+                if missing_resources:
+                    payload["status"] = "stale"
+                    payload["stale_resource_count"] = len(missing_resources)
+                    payload["error"] = "resource_not_indexed"
                     return payload
                 if verify_files and snapshot is not None:
-                    stored_rows = db.execute("SELECT resource_id, path_ref, canonical_path, fingerprint FROM documents WHERE scope_key=?", (scope_key,)).fetchall()
-                    stored = {f"{item[0]}:{item[1]}:{item[2]}": str(item[3]) for item in stored_rows}
-                    current = _document_fingerprint_map(authorized_roots(project_root, snapshot))
+                    current = _document_fingerprint_map(current_resources)
+                    stored = _stored_fingerprint_map(db, resource_ids)
                     if stored != current:
-                        payload["status"] = "stale"
-                        payload["stale_resource_count"] = 1
-                        payload["resource_count"] = row[2]
-                        payload["document_count"] = row[3]
-                        payload["failed_file_count"] = row[4]
-                        payload["last_successful_refresh"] = row[5]
-                        payload["last_full_reconciliation"] = row[6]
-                        payload["error"] = "document_fingerprint_changed"
+                        payload.update({"status": "stale", "stale_resource_count": 1, "resource_count": row[2], "document_count": row[3], "failed_file_count": row[4], "last_successful_refresh": row[5], "last_full_reconciliation": row[6], "error": "document_fingerprint_changed"})
                         return payload
-                payload.update(
-                    {
-                        "status": row[0],
-                        "generation": row[1],
-                        "resource_count": row[2],
-                        "document_count": row[3],
-                        "failed_file_count": row[4],
-                        "last_successful_refresh": row[5],
-                        "last_full_reconciliation": row[6],
-                    }
-                )
+                payload.update({"status": row[0], "generation": row[1], "resource_count": row[2], "document_count": row[3], "failed_file_count": row[4], "last_successful_refresh": row[5], "last_full_reconciliation": row[6]})
                 if row[7]:
                     payload["error"] = row[7]
             else:
-                row = db.execute("SELECT count(*), COALESCE(sum(resource_count), 0), COALESCE(sum(document_count), 0), COALESCE(sum(failed_file_count), 0), max(last_successful_refresh), max(last_full_reconciliation) FROM index_state").fetchone()
+                row = db.execute("SELECT count(*), count(*), COALESCE((SELECT count(*) FROM documents), 0), 0, max(indexed_at), max(indexed_at) FROM resources").fetchone()
                 payload.update(
                     {
                         "status": "fresh" if row and row[0] else "missing",
@@ -362,7 +627,7 @@ def index_status(project_root: Path, snapshot: dict[str, Any] | None = None, *, 
                 )
         finally:
             db.close()
-    except (OSError, sqlite3.Error, LocalSearchError) as exc:
+    except (OSError, sqlite3.Error, LocalSearchError, json.JSONDecodeError) as exc:
         payload["status"] = "degraded"
         payload["error"] = _error_code(exc) or "index_unreadable"
     return payload
@@ -370,14 +635,7 @@ def index_status(project_root: Path, snapshot: dict[str, Any] | None = None, *, 
 
 def mark_index_dirty(project_root: Path, snapshot: dict[str, Any] | None = None, *, workplace_root: Path | None = None, reason: str = "dirty") -> dict[str, Any]:
     path = index_path(project_root, workplace_root)
-    payload = {
-        "schema_version": 1,
-        "kind": "pf.search_index.dirty_mark",
-        "path": str(path),
-        "reason": reason,
-        "status": "missing",
-        "marked_scope_count": 0,
-    }
+    payload = {"schema_version": 1, "kind": "pf.search_index.dirty_mark", "path": str(path), "reason": reason, "status": "missing", "marked_scope_count": 0}
     if not path.is_file():
         return payload
     db = sqlite3.connect(path)
@@ -423,55 +681,77 @@ def search(project_root: Path, snapshot: dict[str, Any], *, query: Any, limit: A
         raise LocalSearchError("invalid_query")
     page_limit, start = pagination(limit=limit, limitstart=limitstart, offset=offset)
     path = index_path(project_root, workplace_root)
-    expected = _snapshot_checksum(snapshot)
     scope_key = _scope_key(snapshot)
+    resource_ids = indexable_resource_ids(authorized_roots(project_root, snapshot))
+    state = index_status(project_root, snapshot, workplace_root=workplace_root, verify_files=False)
+    if state.get("status") != "fresh":
+        return {
+            "schema_version": 1,
+            "kind": "pf.search",
+            "search_status": state.get("status"),
+            "index_generation": state.get("generation"),
+            "query": query,
+            "total": 0,
+            "limit": page_limit,
+            "offset": start,
+            "items": [],
+            "results": [],
+            "page": {"limit": page_limit, "limitstart": start, "offset": start, "returned": 0, "total": 0, "next_limitstart": None},
+            "degraded_reason": state.get("error") or "index_not_fresh",
+        }
+    if not resource_ids:
+        return {
+            "schema_version": 1,
+            "kind": "pf.search",
+            "search_status": "fresh",
+            "index_generation": state.get("generation"),
+            "query": query,
+            "total": 0,
+            "limit": page_limit,
+            "offset": start,
+            "items": [],
+            "results": [],
+            "page": {"limit": page_limit, "limitstart": start, "offset": start, "returned": 0, "total": 0, "next_limitstart": None},
+        }
     try:
-        if not path.is_file():
-            state = {**build_index(project_root, snapshot, workplace_root=workplace_root), "status": "missing"}
-        else:
-            stored = None
-            db = sqlite3.connect(path)
-            try:
-                _ensure_schema(db)
-                stored = db.execute("SELECT snapshot_checksum, generation FROM index_state WHERE scope_key=?", (scope_key,)).fetchone()
-            except (sqlite3.Error, LocalSearchError):
-                db.close()
-                path.unlink(missing_ok=True)
-                state = {**build_index(project_root, snapshot, workplace_root=workplace_root), "status": "stale"}
-                db = sqlite3.connect(path)
-            finally:
-                try:
-                    db.close()
-                except sqlite3.Error:
-                    pass
-            if stored is not None:
-                state = {"status": "fresh", "indexed": None, "resources": None, "snapshot_checksum": expected, "generation": stored[1] if stored else None}
-                if stored[0] != expected:
-                    rebuilt = build_index(project_root, snapshot, workplace_root=workplace_root)
-                    state = {**rebuilt, "status": "stale"}
-            else:
-                rebuilt = build_index(project_root, snapshot, workplace_root=workplace_root)
-                state = {**rebuilt, "status": "stale"}
         db = sqlite3.connect(path)
-    except (OSError, sqlite3.Error) as exc:
+    except OSError as exc:
         raise LocalSearchError("search_unavailable") from exc
-    # Treat normal user input as one literal FTS phrase.  This keeps `-`,
-    # punctuation and other FTS operators from unexpectedly becoming syntax.
     fts_query = '"' + query.replace('"', '""') + '"'
+    placeholders = ",".join("?" for _ in resource_ids)
+    args = [fts_query, *resource_ids]
     try:
         try:
-            total = int(db.execute("SELECT count(*) FROM documents_fts WHERE documents_fts MATCH ? AND scope_key=?", (fts_query, scope_key)).fetchone()[0])
-            rows = db.execute("SELECT d.resource_id, d.package_id, d.kind, d.canonical_path, d.path_ref, bm25(documents_fts) FROM documents_fts JOIN documents d ON d.id = documents_fts.document_id WHERE documents_fts MATCH ? AND documents_fts.scope_key=? ORDER BY bm25(documents_fts), d.resource_id, d.canonical_path LIMIT ? OFFSET ?", (fts_query, scope_key, page_limit, start)).fetchall()
+            total = int(db.execute(f"SELECT count(*) FROM documents_fts WHERE documents_fts MATCH ? AND resource_id IN ({placeholders})", args).fetchone()[0])
+            rows = db.execute(
+                f"SELECT d.resource_id, d.package_id, d.kind, d.relative_path, d.metadata, bm25(documents_fts) FROM documents_fts JOIN documents d ON d.id = documents_fts.document_id WHERE documents_fts MATCH ? AND documents_fts.resource_id IN ({placeholders}) ORDER BY bm25(documents_fts), d.resource_id, d.relative_path LIMIT ? OFFSET ?",
+                [*args, page_limit, start],
+            ).fetchall()
         except sqlite3.OperationalError as exc:
             raise LocalSearchError("invalid_query" if "syntax" in str(exc).lower() else "search_unavailable") from exc
     finally:
         db.close()
-    items = [{"resource_id": row[0], "resource_type": row[2], "title": row[3], "provenance": {"package_id": row[1], "kind": row[2], "snapshot_checksum": expected}, "canonical_path": row[3], "relative_path": row[3], "path_ref": row[4], "match": {"fields": ["title", "content"], "rank": row[5], "reason": "FTS5 title/content match"}} for row in rows]
+    expected = _snapshot_checksum(snapshot)
+    items = [
+        {
+            "resource_id": row[0],
+            "resource_type": row[2],
+            "title": row[3],
+            "provenance": {"package_id": row[1], "kind": row[2], "snapshot_checksum": expected},
+            "canonical_path": row[3],
+            "relative_path": row[3],
+            "path_ref": f"{row[0]}:{row[3]}",
+            "metadata": json.loads(row[4] or "{}"),
+            "match": {"fields": ["title", "content"], "rank": row[5], "reason": "FTS5 title/content match"},
+        }
+        for row in rows
+    ]
     return {
         "schema_version": 1,
         "kind": "pf.search",
-        "search_status": state["status"],
+        "search_status": "fresh",
         "index_generation": state.get("generation"),
+        "scope_key": scope_key,
         "query": query,
         "total": total,
         "limit": page_limit,

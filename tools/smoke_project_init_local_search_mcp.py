@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from processforge_core.local_resource_search import LocalSearchError, search
+from processforge_core.local_resource_search import LocalSearchError, maintenance_tick, search
 import processforge as core
 
 
@@ -29,6 +29,12 @@ def main() -> int:
         snapshot = {"snapshot": {"id": "smoke"}, "local_search_resources": [{"id": "docs", "package_id": "smoke", "kind": "knowledge", "content_roots": [str(allowed)]}]}
         result = search(project, snapshot, query="authorized", limit=1, limitstart=0)
         assert result["search_status"] == "missing"
+        assert not result["index_generation"]
+        assert result["results"] == []
+        tick = maintenance_tick(project, snapshot)
+        assert tick["action"] == "refresh" and tick["after"]["status"] == "fresh"
+        result = search(project, snapshot, query="authorized", limit=1, limitstart=0)
+        assert result["search_status"] == "fresh"
         assert result["index_generation"]
         assert result["results"][0]["canonical_path"] == "guide.md"
         assert result["results"][0]["path_ref"] == "docs:guide.md"
@@ -93,7 +99,7 @@ def main() -> int:
         escaped_resolution = core.resolve_workspace_path_ref(first, {"registry": "knowledge_roots", "id": "external-docs", "relative_path": "../outside.md"}, workplace_manifest=workplace / "workplace.yaml")
         assert escaped_resolution["status"] == "unresolved"
         status_output = cli("search-index", "status", "--project-root", str(first), "--workplace", str(workplace))
-        assert "STATUS: fresh" in status_output
+        assert "STATUS: stale" in status_output
         assert (workplace / "runtime" / "search" / "latest-maintenance.yaml").is_file()
         refresh_output = cli("search-index", "refresh", "--project-root", str(first), "--workplace", str(workplace))
         assert "REFRESHED:" in refresh_output and "DOCUMENTS:" in refresh_output
@@ -127,8 +133,15 @@ def main() -> int:
         assert responses[0]["result"]["serverInfo"]["name"] == "processforge"
         assert "pf.search" in [item["name"] for item in responses[1]["result"]["tools"]]
         search_result = json.loads(responses[2]["result"]["content"][0]["text"])
-        assert search_result["results"][0]["canonical_path"] == "guide.md"
-        assert str(allowed) not in responses[2]["result"]["content"][0]["text"]
+        first_match = search_result["results"][0]
+        assert first_match["canonical_path"] == "guide.md"
+        assert first_match["relative_path"] == "guide.md"
+        assert first_match["path_ref"] == "allowed:guide.md"
+        assert str(allowed) not in first_match["canonical_path"]
+        assert str(allowed) not in first_match["path_ref"]
+        assert str(allowed) not in json.dumps(first_match["provenance"], ensure_ascii=False)
+        if first_match.get("local_path"):
+            assert Path(first_match["local_path"]).is_file()
         assert responses[3]["result"]["isError"] is True
         assert json.loads(responses[3]["result"]["content"][0]["text"])["error"]["code"] == "session_project_mismatch"
         escaped_result = json.loads(responses[4]["result"]["content"][0]["text"])

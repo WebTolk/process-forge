@@ -1,0 +1,214 @@
+schema_version: 1
+id: resource-indexing-release-boundary-main
+title: Resource indexing and 1.0.2 release boundary
+run_id: resource-indexing-release-boundary-20260822
+process: software-feature-development
+status: in_progress
+created_at: '2026-08-22T17:36:40Z'
+updated_at: '2026-08-22T17:37:37Z'
+objective: 'Complete the master prompt in задания/process-forge-resource-indexing-release-boundary-master-prompt.md: release scope freeze, declarative indexing policy, workplace-owned search index correctness, runtime maintenance, release archive/privacy fixes, docs, acceptance reports, and final validation.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/contexts/project-context.snapshot.yaml
+    role: input
+    required: true
+    mutable_by_worker: false
+allowed_files:
+  - tools/processforge.py
+  - .pf/logs/resource-indexing-release-boundary-20260822.md
+  - .pf/assignments/resource-indexing-release-boundary-main.yaml
+  - .pf/contexts/assignment-capsules/resource-indexing-release-boundary-main.capsule.yaml
+  - tools/smoke_*.py
+  - tools/validate-*.py
+  - tools/validate_*.py
+  - bin/**
+  - schemas/**
+  - docs/**
+  - tests/**
+  - packages/**
+  - processes/**
+  - templates/**
+  - prompts/**
+  - examples/**
+  - updates/**
+  - dist/processforge-1.0.2-rc-*
+  - dist/processforge-1.0.2-resource-indexing-*
+  - .pf/artifacts/resource-indexing-release-boundary/**
+  - .pf/reviews/resource-indexing-release-boundary/**
+  - .pf/runs/resource-indexing-release-boundary-20260822/**
+allowed_read_files:
+  - задания/process-forge-resource-indexing-release-boundary-master-prompt.md
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - .pf/logs/resource-indexing-release-boundary-20260822.md
+    - .pf/assignments/resource-indexing-release-boundary-main.yaml
+    - .pf/contexts/assignment-capsules/resource-indexing-release-boundary-main.capsule.yaml
+    - tools/smoke_*.py
+    - tools/validate-*.py
+    - tools/validate_*.py
+    - bin/**
+    - schemas/**
+    - docs/**
+    - tests/**
+    - packages/**
+    - processes/**
+    - templates/**
+    - prompts/**
+    - examples/**
+    - updates/**
+    - dist/processforge-1.0.2-rc-*
+    - dist/processforge-1.0.2-resource-indexing-*
+    - .pf/artifacts/resource-indexing-release-boundary/**
+    - .pf/reviews/resource-indexing-release-boundary/**
+    - .pf/runs/resource-indexing-release-boundary-20260822/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - .pf/logs/resource-indexing-release-boundary-20260822.md
+    - .pf/assignments/resource-indexing-release-boundary-main.yaml
+    - .pf/contexts/assignment-capsules/resource-indexing-release-boundary-main.capsule.yaml
+    - tools/smoke_*.py
+    - tools/validate-*.py
+    - tools/validate_*.py
+    - bin/**
+    - schemas/**
+    - docs/**
+    - tests/**
+    - packages/**
+    - processes/**
+    - templates/**
+    - prompts/**
+    - examples/**
+    - updates/**
+    - dist/processforge-1.0.2-rc-*
+    - dist/processforge-1.0.2-resource-indexing-*
+    - .pf/artifacts/resource-indexing-release-boundary/**
+    - .pf/reviews/resource-indexing-release-boundary/**
+    - .pf/runs/resource-indexing-release-boundary-20260822/**
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: resource-indexing-release-boundary-main
+        current_scope: tools/smoke_*.py
+        other_assignment: release-smoke-isolation-20260821
+        other_scope: tools/smoke_official_software_process_available.py
+        reason: glob_matches_file
+required_outputs:
+  -
+    id: release-scope-freeze
+    path: .pf/artifacts/resource-indexing-release-boundary/release-1.0.2-scope-freeze.md
+    type: unspecified
+    required: true
+  -
+    id: policy-audit
+    path: .pf/artifacts/resource-indexing-release-boundary/resource-indexing-policy-audit.md
+    type: unspecified
+    required: true
+  -
+    id: indexing-contract
+    path: .pf/artifacts/resource-indexing-release-boundary/resource-indexing-contract.md
+    type: unspecified
+    required: true
+  -
+    id: search-index-v2-design
+    path: .pf/artifacts/resource-indexing-release-boundary/resource-search-index-v2-design.md
+    type: unspecified
+    required: true
+  -
+    id: implementation-report
+    path: .pf/artifacts/resource-indexing-release-boundary/resource-indexing-implementation-report.md
+    type: unspecified
+    required: true
+  -
+    id: acceptance-report
+    path: .pf/artifacts/resource-indexing-release-boundary/resource-indexing-acceptance-report.md
+    type: unspecified
+    required: true
+  -
+    id: performance-report
+    path: .pf/artifacts/resource-indexing-release-boundary/resource-index-performance-report.md
+    type: unspecified
+    required: true
+  -
+    id: archive-correction-report
+    path: .pf/artifacts/resource-indexing-release-boundary/release-archive-correction-report.md
+    type: unspecified
+    required: true
+  -
+    id: qualification-report
+    path: .pf/artifacts/resource-indexing-release-boundary/release-1.0.2-qualification-report.md
+    type: unspecified
+    required: true
+  -
+    id: post-102-backlog
+    path: .pf/artifacts/resource-indexing-release-boundary/post-1.0.2-backlog.md
+    type: unspecified
+    required: true
+  -
+    id: architecture-review
+    path: .pf/reviews/resource-indexing-release-boundary/independent-architecture-review.md
+    type: unspecified
+    required: true
+  -
+    id: release-review
+    path: .pf/reviews/resource-indexing-release-boundary/independent-release-review.md
+    type: unspecified
+    required: true
+  -
+    id: final-validation
+    path: .pf/artifacts/resource-indexing-release-boundary/final-validation.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/resource-indexing-release-boundary/final-validation.md
+  format: concise_markdown
+  include:
+    - release-scope-freeze
+    - policy-audit
+    - indexing-contract
+    - search-index-v2-design
+    - implementation-report
+    - acceptance-report
+    - performance-report
+    - archive-correction-report
+    - qualification-report
+    - post-102-backlog
+    - architecture-review
+    - release-review
+    - final-validation

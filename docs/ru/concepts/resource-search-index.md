@@ -1,22 +1,76 @@
 # Индекс поиска ресурсов
 
-ProcessForge разделяет три слоя:
+Локальный поиск ProcessForge разделяет три границы:
 
-- project context snapshot задаёт границу авторизации;
-- SQLite search index является приватным, производным и пересобираемым;
-- MCP только адаптирует запросы.
+- версионируемые ресурсы workplace объявляют, что можно индексировать;
+- workplace-level SQLite FTS5 index хранит производные документы ресурсов;
+- project context snapshot разрешает, какие `resource_id` доступны сессии.
 
-Индекс хранится в runtime рабочей области:
+Проекты не владеют поисковыми документами. Они хранят только разрешенные
+идентификаторы ресурсов и fingerprints в snapshot. Приватная производная DB
+находится здесь:
 
 ```text
 <workplace>/runtime/search/local-resource-search.sqlite
 ```
 
-В одном индексе могут быть разные snapshot-scopes, но каждый `pf.search` фильтруется через Ledger session, привязанный project и свежий project snapshot. Скрытого fallback на весь workplace, другие проекты, home directory, Context7 или web быть не должно.
+`pf.search` является query adapter. Он не делает fallback на весь workplace,
+другие проекты, home directory, Context7, web или скрытый `rg` по большим
+деревьям исходного кода.
+
+## Indexing Policy
+
+Для ресурсов используется единый reusable contract:
+
+```yaml
+indexing:
+  enabled: true
+  mode: fulltext # fulltext | metadata | none
+  fields:
+    - title
+    - description
+    - tags
+  sources:
+    - path: articles
+      mode: fulltext
+      include:
+        - "**/*.md"
+      exclude:
+        - drafts/**
+    - path: core/6.1.2
+      mode: metadata
+      role: source_tree
+```
+
+`fulltext` кладет в FTS metadata и выбранные текстовые файлы. `metadata`
+сохраняет только identity, title, description, version, root/path reference и
+объявленную metadata. `none` исключает ресурс из локального поиска.
+
+Большие source trees, SDK mirrors, vendor trees и multi-version platform
+snapshots должны использовать `metadata`, если manifest явно не выбирает
+маленький fulltext source. Поиск может вернуть navigation root, но для деталей
+исходного кода Codex должен использовать обычные filesystem reads и `rg` внутри
+выбранного root.
+
+## SQLite Model
+
+Производная DB ориентирована на ресурсы:
+
+```text
+resources
+documents
+documents_fts
+index_state
+```
+
+`resources` хранит `resource_id`, `resource_type`, `version`, `fingerprint`,
+`indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+`resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+`documents_fts` хранит searchable fulltext fields. `index_state` хранит
+authorization state текущего project snapshot без дублирования documents под
+каждый проект.
 
 ## CLI
-
-Оператор может диагностировать и обслуживать индекс без MCP:
 
 ```bash
 python bin/pf.py search-index status --project-root <project> --workplace <workplace>
@@ -26,45 +80,24 @@ python bin/pf.py search-index doctor --project-root <project> --workplace <workp
 python bin/pf.py search-index tick --project-root <project> --workplace <workplace>
 ```
 
-`status` работает read-only. `refresh` обновляет scope текущего project snapshot. `rebuild` удаляет производную DB и строит её заново для текущего project snapshot scope.
+`status` работает read-only. `status --verify-files` выполняет явную
+fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+bounded maintenance unit для оператора и Runtime scheduling.
 
-`status --verify-files` выполняет явную fingerprint-проверку файлов текущего snapshot scope. Так можно пометить индекс `stale`, если разрешённые файлы изменились вне ProcessForge.
+## Runtime И MCP
 
-`tick` — один bounded maintenance pass для Runtime или оператора. По умолчанию он проверяет fingerprints и делает refresh только если scope отсутствует или stale. MCP-запросы не выполняют такую проверку на каждый query.
+Runtime maintenance должен периодически запускать `tick` для известных проектов
+со свежими snapshots. PF-owned resource mutations помечают существующий index
+state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+во время `tick`.
 
-Если производная DB стала degraded из-за отсутствующей или несовпадающей схемы, `tick` пересобирает derived index. `fts5_unavailable` остаётся настоящим degraded capability state и не скрывается rebuild/fallback.
+`pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+или degraded, результат возвращает этот `search_status` и пустые matches до
+maintenance refresh производной DB.
 
-## Автоматические maintenance triggers
-
-ProcessForge запускает тот же bounded maintenance pass из lifecycle-команд, которые могут изменить авторизованный поисковый scope:
-
-- `workplace-init` создаёт приватный runtime-отчёт поиска и делает tick для уже известных onboarded projects под workplace.
-- `project-onboard`, `project-init-repair` и `project-context-refresh` делают tick текущего проекта после записи свежего project context snapshot.
-- resource-authoring команды `knowledge-add-url`, `knowledge-add-resource`, `knowledge-index-refresh`, `template-create`, `tool-register`, `mcp-register`, `platform-create` и `platform-contract-install` делают tick известных onboarded projects под workplace.
-- `update-apply` и `update-rollback` сначала помечают затронутые project snapshots как stale, затем запускают maintenance; stale projects пропускаются до `project-context-refresh`.
-
-Автоматический pass пишет приватный производный отчёт:
-
-```text
-<workplace>/runtime/search/latest-maintenance.yaml
-```
-
-Он намеренно ограничен известными ProcessForge projects и никогда не строит глобальный workplace index. Если project context устарел, ProcessForge выводит `SEARCH_INDEX_SKIPPED` с нужным следующим действием вместо rebuild по устаревшим authorization data.
-
-Resource-management events также помечают существующие workplace search scopes как `stale`. Это даёт PF-owned mutations центральный dirty-сигнал даже если будущая CLI-команда забудет вызвать lifecycle maintenance helper. Следующий bounded maintenance pass проверяет fingerprints и обновляет затронутый project scope.
-
-## Runtime и MCP
-
-`pf.search` возвращает навигационные результаты, а не генерирует ответ. В payload есть:
-
-- `search_status`
-- `index_generation`
-- `total`
-- `limit`
-- `offset`
-- `items` / `results`
-
-`pf.session_context` возвращает компактную готовность поиска:
+`pf.session_context` показывает компактную готовность поиска:
 
 ```yaml
 search:
@@ -73,8 +106,5 @@ search:
   stale: false
 ```
 
-Индекс может хранить приватные resolved paths как runtime data. Public snapshots и public artifacts должны хранить `path_ref`, а не machine-local absolute paths.
-
-## Текущие ограничения
-
-Этот slice сохраняет индекс производным и пересобираемым, использует SQLite FTS5 и не добавляет скрытый глобальный поиск. Lifecycle-triggered maintenance покрывает first-run, project context refresh, resource authoring, update apply/rollback paths, external add/change/delete detection через fingerprint reconciliation и safe rebuild из schema-degraded derived DB state. Production-scale benchmark coverage остаётся будущим slice.
+Resolved local paths являются request-local runtime data. Public snapshots и
+artifacts хранят `path_ref`, а не private absolute paths.

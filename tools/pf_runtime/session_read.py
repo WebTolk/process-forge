@@ -7,6 +7,7 @@ the existing ProcessForge Core files.
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -139,7 +140,15 @@ def session_context_payload(
 
             snapshot_path, _snapshot_md = core.project_context_snapshot_paths(project_root)
             snapshot = core.load_yaml_document(snapshot_path)
-            search_status = index_status(project_root, snapshot if isinstance(snapshot, dict) else {}, workplace_root=workplace_root)
+            runtime_snapshot = copy.deepcopy(snapshot if isinstance(snapshot, dict) else {})
+            resources = runtime_snapshot.get("local_search_resources") if isinstance(runtime_snapshot.get("local_search_resources"), list) else []
+            for resource in resources:
+                if not isinstance(resource, dict) or not isinstance(resource.get("path_ref"), dict):
+                    continue
+                resolution = core.resolve_workspace_path_ref(project_root, resource["path_ref"], workplace_manifest=workplace_root / "workplace.yaml")
+                if resolution.get("status") == "resolved" and resolution.get("path"):
+                    resource["content_roots"] = [str(resolution["path"])]
+            search_status = index_status(project_root, runtime_snapshot, workplace_root=workplace_root)
             search_projection = {
                 "status": search_status.get("status"),
                 "generation": search_status.get("generation"),

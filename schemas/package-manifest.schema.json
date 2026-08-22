@@ -66,6 +66,7 @@
         "path_status": { "type": "string" },
         "load_policy": { "type": "string", "minLength": 1 },
         "index_policy": { "type": "string" },
+        "indexing": { "$ref": "resource-indexing.schema.json" },
         "license": { "type": "object", "additionalProperties": true },
         "source": { "type": "object", "additionalProperties": true },
         "update_policy": { "type": "object", "additionalProperties": true },

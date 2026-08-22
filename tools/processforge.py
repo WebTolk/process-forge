@@ -6730,6 +6730,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_project_context_snapshot_lock_model", [sys.executable, str(root / "tools" / "smoke_project_context_snapshot_lock_model.py")], 120),
         ReleaseCommand("smoke_project_context_freshness_policies", [sys.executable, str(root / "tools" / "smoke_project_context_freshness_policies.py")], 120),
         ReleaseCommand("smoke_project_init_local_search_mcp", [sys.executable, str(root / "tools" / "smoke_project_init_local_search_mcp.py")], 180),
+        ReleaseCommand("smoke_resource_indexing_policy_acceptance", [sys.executable, str(root / "tools" / "smoke_resource_indexing_policy_acceptance.py")], 180),
         ReleaseCommand("smoke_project_init_acceptance", [sys.executable, str(root / "tools" / "smoke_project_init_acceptance.py")], 180),
         ReleaseCommand("smoke_parameter_cascade_resolution", [sys.executable, str(root / "tools" / "smoke_parameter_cascade_resolution.py")], 120),
         ReleaseCommand("smoke_parameter_freshness", [sys.executable, str(root / "tools" / "smoke_parameter_freshness.py")], 120),
@@ -9888,10 +9889,19 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "resource_id": str(item.get("id") or ""),
             "package_id": str(item.get("package_id") or ""),
             "kind": str(item.get("kind") or "knowledge"),
+            "title": str(item.get("title") or item.get("id") or ""),
+            "description": str(item.get("description") or ""),
+            "version": str(item.get("version") or item.get("generation") or ""),
+            "fingerprint": item.get("fingerprint") if isinstance(item.get("fingerprint"), dict) else {},
             "path_ref": item.get("path_ref") if isinstance(item.get("path_ref"), dict) else {},
             "status": str(item.get("status") or "available"),
             "load_policy": "snapshot_authorized",
-            "index_policy": "metadata_first",
+            "indexing": item.get("indexing") if isinstance(item.get("indexing"), dict) else {
+                "enabled": True,
+                "mode": "metadata",
+                "fields": ["title", "description", "version", "path"],
+                "sources": [{"path": ".", "mode": "metadata", "role": str(item.get("kind") or "knowledge")}],
+            },
         }
         for item in available_knowledge_resources
         if str(item.get("id") or "")
@@ -9911,10 +9921,21 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
                     "resource_id": template_id,
                     "package_id": str(entry.get("template_root") or ""),
                     "kind": "template",
+                    "title": str(entry.get("title") or template_id),
+                    "description": str(entry.get("description") or ""),
+                    "version": str(entry.get("version") or ""),
                     "path_ref": {"registry": "templates", "id": template_id},
                     "status": str(entry.get("status") or "available"),
                     "load_policy": "snapshot_authorized",
-                    "index_policy": "metadata_first",
+                    "indexing": entry.get("indexing") if isinstance(entry.get("indexing"), dict) else {
+                        "enabled": True,
+                        "mode": "metadata",
+                        "fields": ["title", "description", "version", "path"],
+                        "sources": [
+                            {"path": "README.md", "mode": "fulltext", "include": ["README.md"], "role": "description"},
+                            {"path": ".", "mode": "metadata", "role": "template_root"},
+                        ],
+                    },
                 }
             )
     reproducibility = aggregate_reproducibility(resolved_knowledge_resources)
