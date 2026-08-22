@@ -2270,7 +2270,9 @@ def command_init_workplace(args: argparse.Namespace) -> int:
         "workplace.doctor.passed" if doctor_status == 0 else "workplace.doctor.failed",
         payload={"status": "pass" if doctor_status == 0 else "fail"},
     )
+    maintenance = search_index_maintenance_for_known_projects(root, reason="workplace-init")
     append_workplace_event(root, "workplace.initialization.completed", payload={"files": [rel(result.target, root) for result in results], "doctor_status": doctor_status})
+    print_search_index_maintenance_summary(maintenance)
     for result in results:
         print(f"{result.status.upper()}: {rel(result.target, root)}")
     return doctor_status
@@ -5810,12 +5812,21 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
         process_version="1.0.0",
         payload={"status": "pass" if doctor_status == 0 else "fail"},
     )
+    search_index: dict[str, Any] | None = None
+    workplace_manifest = resolve_project_workplace_manifest(project_root, request.get("workplace"))
+    if workplace_manifest:
+        search_index = search_index_maintenance_for_known_projects(
+            workplace_manifest.parent,
+            reason="project-onboarding",
+            project_roots=[project_root],
+        )
     emit_process_event(project_root, "project.onboarding.completed", process_id="project-onboarding", process_version="1.0.0", payload={"files": [rel(result.target, project_root) for result in results], "doctor_status": doctor_status})
     return {
         "status": "complete" if doctor_status == 0 else "blocked",
         "project": {"id": project_id(project_root)},
         "created_or_reused": [{"path": rel(result.target, project_root), "status": result.status} for result in results],
         "snapshot": {"status": snapshot_status, "id": _snapshot.get("snapshot", {}).get("id") if isinstance(_snapshot.get("snapshot"), dict) else None},
+        "search_index": search_index,
         "doctor": {"status": "pass" if doctor_status == 0 else "fail"},
         "next_action": "continue" if doctor_status == 0 else "resolve_doctor_failures",
     }
@@ -5827,10 +5838,19 @@ def execute_project_repair(project_root: Path, *, workplace: str | None, reason:
     doctor_status, doctor_output = run_command_capture(command_doctor_project, argparse.Namespace(project_root=str(project_root)))
     finalize_project_onboarding_doctor_artifacts(project_root, doctor_status, doctor_output)
     emit_process_event(project_root, "context.snapshot.refreshed", process_id="project-initialization", process_version="1.0.0", payload={"status": status, "reason": reason, "paths": {key: rel(path, project_root) for key, path in paths.items()}})
+    search_index: dict[str, Any] | None = None
+    workplace_manifest = resolve_project_workplace_manifest(project_root, workplace)
+    if workplace_manifest:
+        search_index = search_index_maintenance_for_known_projects(
+            workplace_manifest.parent,
+            reason="project-repair",
+            project_roots=[project_root],
+        )
     return {
         "status": "complete" if doctor_status == 0 else "blocked",
         "repair_action": "refresh_context",
         "snapshot": {"status": status, "id": snapshot.get("snapshot", {}).get("id") if isinstance(snapshot.get("snapshot"), dict) else None},
+        "search_index": search_index,
         "doctor": {"status": "pass" if doctor_status == 0 else "fail"},
         "next_action": "continue" if doctor_status == 0 else "resolve_doctor_failures",
     }
@@ -11569,9 +11589,19 @@ def command_project_context_refresh(args: argparse.Namespace) -> int:
         payload={"status": status, "health": health, "paths": {key: rel(path, project_root) for key, path in paths.items()}},
         correlation_id=session_id,
     )
+    workplace_manifest = resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))
+    maintenance: dict[str, Any] | None = None
+    if workplace_manifest:
+        maintenance = search_index_maintenance_for_known_projects(
+            workplace_manifest.parent,
+            reason="project-context-refresh",
+            project_roots=[project_root],
+        )
     print(f"STATUS: {status}")
     for path in paths.values():
         print(f"WROTE: {rel(path, project_root)}")
+    if maintenance:
+        print_search_index_maintenance_summary(maintenance)
     print(f"TELEMETRY: {rel(telemetry_path, project_root)}")
     return 1 if health == "blocked" else 0
 
@@ -22374,6 +22404,7 @@ def command_update_apply(args: argparse.Namespace) -> int:
     print(f"BACKUP: {rel(backup_dir, workplace_root)}")
     if marked:
         print("SNAPSHOTS_MARKED_STALE: " + ", ".join(rel(path, workplace_root) for path in marked))
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="update-apply"))
     return 0
 
 
@@ -22417,6 +22448,7 @@ def command_update_rollback(args: argparse.Namespace) -> int:
     print(f"RESTORE_PATH: {rel(restore_path, workplace_root)}")
     if marked:
         print("SNAPSHOTS_MARKED_STALE: " + ", ".join(rel(path, workplace_root) for path in marked))
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="update-rollback"))
     return 0
 
 
@@ -22464,6 +22496,149 @@ def local_search_runtime_snapshot(project_root: Path, workplace_root: Path) -> t
         if resolution.get("status") == "resolved" and resolution.get("path"):
             resource["content_roots"] = [str(resolution["path"])]
     return context, runtime_snapshot
+
+
+def search_index_project_label(project_root: Path, workplace_root: Path) -> str:
+    try:
+        return rel(project_root, workplace_root)
+    except ValueError:
+        return project_root.name or str(project_root)
+
+
+def write_search_index_maintenance_runtime_report(workplace_root: Path, payload: dict[str, Any]) -> Path:
+    report_path = workplace_root / "runtime" / "search" / "latest-maintenance.yaml"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(ensure_trailing_newline(dump_yaml(payload)), encoding="utf-8")
+    return report_path
+
+
+def search_index_maintenance_for_known_projects(
+    workplace_root: Path,
+    *,
+    reason: str,
+    project_roots: list[Path] | None = None,
+    verify_files: bool = True,
+) -> dict[str, Any]:
+    """Run bounded local-search maintenance for projects that already selected resources.
+
+    The search index is project-scoped: the project context snapshot decides which
+    knowledge/resources/templates are visible. A workplace-wide resource change can
+    therefore only tick known projects with fresh snapshots; stale projects must
+    refresh their context before ProcessForge can safely rebuild their search index.
+    """
+    from processforge_core.local_resource_search import maintenance_tick
+
+    raw_projects = project_roots if project_roots is not None else project_roots_under_workplace(workplace_root)
+    projects: list[Path] = []
+    seen: set[str] = set()
+    for project in raw_projects:
+        candidate = project.expanduser().resolve()
+        key = str(candidate).lower() if os.name == "nt" else str(candidate)
+        if key not in seen:
+            seen.add(key)
+            projects.append(candidate)
+    payload: dict[str, Any] = {
+        "schema_version": 1,
+        "kind": "pf.search_index.maintenance",
+        "created_at": now_utc(),
+        "reason": reason,
+        "project_count": len(projects),
+        "results": [],
+    }
+    results = payload["results"]
+    assert isinstance(results, list)
+    for project_root in projects:
+        row: dict[str, Any] = {
+            "project": search_index_project_label(project_root, workplace_root),
+            "status": "pending",
+        }
+        try:
+            if not (project_root / ".pf" / "process-forge.yaml").is_file():
+                row.update({"status": "skipped", "reason": "not_processforge_project"})
+                results.append(row)
+                continue
+            context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+            context_status = str(context.get("status") or "unknown")
+            row["context_status"] = context_status
+            if context_status not in {"fresh", "fresh_with_updates"}:
+                row.update(
+                    {
+                        "status": "skipped",
+                        "reason": "project_context_not_fresh",
+                        "recommended_action": context.get("recommended_action") or "project-context-refresh",
+                    }
+                )
+                results.append(row)
+                continue
+            tick = maintenance_tick(project_root, snapshot, workplace_root=workplace_root, verify_files=verify_files)
+            after = tick.get("after") if isinstance(tick.get("after"), dict) else {}
+            row.update(
+                {
+                    "status": "ok" if after.get("status") == "fresh" else "degraded",
+                    "action": tick.get("action"),
+                    "search_status": after.get("status"),
+                    "generation": after.get("generation"),
+                    "document_count": after.get("document_count"),
+                    "stale_resource_count": after.get("stale_resource_count"),
+                    "failed_file_count": after.get("failed_file_count"),
+                }
+            )
+            if after.get("error"):
+                row["error"] = after.get("error")
+            emit_process_event(
+                project_root,
+                "search.index.maintenance.completed",
+                payload={
+                    "reason": reason,
+                    "action": row.get("action"),
+                    "status": row.get("search_status"),
+                    "generation": row.get("generation"),
+                },
+            )
+        except Exception as exc:  # pragma: no cover - defensive CLI boundary.
+            row.update({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
+        results.append(row)
+    report_path = write_search_index_maintenance_runtime_report(workplace_root, payload)
+    payload["report"] = rel(report_path, workplace_root)
+    try:
+        append_workplace_event(
+            workplace_root,
+            "search.index.maintenance.completed",
+            payload={
+                "reason": reason,
+                "project_count": payload["project_count"],
+                "report": payload["report"],
+                "statuses": [row.get("status") for row in results if isinstance(row, dict)],
+            },
+        )
+    except Exception:
+        pass
+    return payload
+
+
+def print_search_index_maintenance_summary(payload: dict[str, Any]) -> None:
+    print(f"SEARCH_INDEX_PROJECTS: {payload.get('project_count', 0)}")
+    if payload.get("report"):
+        print(f"SEARCH_INDEX_REPORT: {payload.get('report')}")
+    results = payload.get("results") if isinstance(payload.get("results"), list) else []
+    for row in results:
+        if not isinstance(row, dict):
+            continue
+        project = row.get("project")
+        if row.get("status") in {"ok", "degraded"}:
+            print(
+                "SEARCH_INDEX: "
+                f"{project} action={row.get('action')} status={row.get('search_status')} "
+                f"generation={row.get('generation') or 'none'} documents={row.get('document_count')}"
+            )
+        elif row.get("status") == "skipped":
+            print(
+                "SEARCH_INDEX_SKIPPED: "
+                f"{project} reason={row.get('reason')} context={row.get('context_status') or 'unknown'} "
+                f"next={row.get('recommended_action') or 'none'}"
+            )
+        elif row.get("status") == "error":
+            print(f"SEARCH_INDEX_ERROR: {project} error={row.get('error')}")
 
 
 def print_search_index_status(payload: dict[str, Any]) -> None:
@@ -23076,6 +23251,7 @@ def command_knowledge_add_url(args: argparse.Namespace) -> int:
     print(f"PACKAGE_ROOT: {package_root.root_id}")
     print(f"MANIFEST: {rel(manifest_path, workplace_root)}")
     print(f"INDEX: {rel(index_path, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="knowledge-add-url"))
     return 0
 
 
@@ -23104,6 +23280,7 @@ def command_knowledge_add_resource(args: argparse.Namespace) -> int:
     print(f"PACKAGE_ROOT: {package_root.root_id}")
     print(f"MANIFEST: {rel(manifest_path, workplace_root)}")
     print(f"INDEX: {rel(index_path, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="knowledge-add-resource"))
     return 0
 
 
@@ -23147,6 +23324,7 @@ def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
     print(f"PACKAGE_ROOT: {package_root.root_id}")
     print(f"INDEX: {rel(index_path, workplace_root)}")
     print(f"REPORT: {rel(report, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="knowledge-index-refresh"))
     return 0
 
 
@@ -23751,6 +23929,7 @@ def command_template_create(args: argparse.Namespace) -> int:
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.doctor.passed" if doctor_status == 0 else "template.doctor.failed", target={"template_id": template_id}, status="passed" if doctor_status == 0 else "failed", message="template doctor completed"))
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.authoring.completed", target={"template_id": template_id}, status="completed", message="template authoring completed"))
     print(f"TEMPLATE: {rel(target, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="template-create"))
     return doctor_status
 
 
@@ -23923,6 +24102,7 @@ def command_tool_register(args: argparse.Namespace) -> int:
     report = write_resource_management_report(workplace_root, slug, "Tool Register Report", [f"- tool: {tool_id}", f"- status: {result}"])
     print(f"{result.upper()}: {tool_id}")
     print(f"REPORT: {rel(report, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="tool-register"))
     return 0
 
 
@@ -23959,6 +24139,7 @@ def command_mcp_register(args: argparse.Namespace) -> int:
     report = write_resource_management_report(workplace_root, slug, "MCP Register Report", [f"- mcp: {mcp_id}", f"- status: {result}"])
     print(f"{result.upper()}: {mcp_id}")
     print(f"REPORT: {rel(report, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="mcp-register"))
     return 0
 
 
@@ -24707,6 +24888,7 @@ def command_platform_create(args: argparse.Namespace) -> int:
         return 0
     execute_authoring_plan(plan)
     print(f"PLATFORM: {rel(contract_path, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="platform-create"))
     return 0
 
 
@@ -24762,6 +24944,7 @@ def command_platform_contract_install(args: argparse.Namespace) -> int:
         return 0
     execute_authoring_plan(plan)
     print(f"CONTRACT: {rel(contract_path, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="platform-contract-install"))
     return 0
 
 

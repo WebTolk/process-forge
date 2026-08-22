@@ -32,6 +32,23 @@ python bin/pf.py search-index tick --project-root <project> --workplace <workpla
 
 `tick` is one bounded maintenance pass suitable for Runtime or operator scheduling. It verifies fingerprints by default and refreshes only when the scope is missing or stale. MCP calls do not perform this verification on every query.
 
+## Automatic maintenance triggers
+
+ProcessForge runs the same bounded maintenance pass from lifecycle commands that can change the authorized search scope:
+
+- `workplace-init` creates the private search runtime report and ticks any already-known onboarded projects under the workplace.
+- `project-onboard`, `project-init-repair`, and `project-context-refresh` tick the current project after writing a fresh project context snapshot.
+- resource authoring commands such as `knowledge-add-url`, `knowledge-add-resource`, `knowledge-index-refresh`, `template-create`, `tool-register`, `mcp-register`, `platform-create`, and `platform-contract-install` tick known onboarded projects under the workplace.
+- `update-apply` and `update-rollback` mark impacted project snapshots stale first, then run maintenance; stale projects are skipped until `project-context-refresh` creates a fresh snapshot.
+
+The automatic pass writes a private derived report:
+
+```text
+<workplace>/runtime/search/latest-maintenance.yaml
+```
+
+It is intentionally bounded to known ProcessForge projects and never builds a global workplace index. When a project context is stale, ProcessForge reports `SEARCH_INDEX_SKIPPED` with the required next action instead of rebuilding against obsolete authorization data.
+
 ## Runtime and MCP contract
 
 `pf.search` returns navigation-oriented results, not generated answers. The payload includes:
@@ -56,4 +73,4 @@ The index stores private resolved paths only as runtime data. Public project sna
 
 ## Current limits
 
-This implementation keeps the index derived and rebuildable, uses SQLite FTS5, and avoids hidden global search. A bounded maintenance tick is available for Runtime/operator scheduling. Event-based dirty marking, crash recovery states beyond safe rebuild, and production-scale benchmark coverage remain future slices.
+This implementation keeps the index derived and rebuildable, uses SQLite FTS5, and avoids hidden global search. Lifecycle-triggered maintenance covers first-run, project context refresh, resource authoring, and update apply/rollback paths. Crash recovery states beyond safe rebuild and production-scale benchmark coverage remain future slices.

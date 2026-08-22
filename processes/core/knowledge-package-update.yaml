@@ -15,6 +15,8 @@ hooks:
     required: true
   - event: snapshot.stale
     required: false
+  - event: search.index.maintenance.completed
+    required: false
 roles:
 - id: maintainer
   title: Maintainer
@@ -67,6 +69,7 @@ stages:
   - change-proposal
   produced_artifacts:
   - resource-index
+  - search-index-maintenance-report
   - compatibility-check
   - review
   required_role: maintainer
@@ -106,6 +109,16 @@ artifact_definitions:
   type: markdown
   required: true
   path_hint: .pf/artifacts/resource-index.md
+- id: search-index-maintenance-report
+  title: Search Index Maintenance Report
+  owner_role: maintainer
+  template: artifact-template
+  lifecycle:
+  - generated
+  - refreshed
+  type: yaml
+  required: false
+  path_hint: runtime/search/latest-maintenance.yaml
 - id: change-proposal
   title: Change Proposal
   owner_role: maintainer
@@ -163,6 +176,7 @@ required_templates:
 allowed_tools:
 - processforge-cli
 - validator
+- processforge-search-index
 forbidden_actions:
 - load_heavy_resource_content_into_prompt
 evolve:

@@ -93,7 +93,8 @@ def main() -> int:
         escaped_resolution = core.resolve_workspace_path_ref(first, {"registry": "knowledge_roots", "id": "external-docs", "relative_path": "../outside.md"}, workplace_manifest=workplace / "workplace.yaml")
         assert escaped_resolution["status"] == "unresolved"
         status_output = cli("search-index", "status", "--project-root", str(first), "--workplace", str(workplace))
-        assert "STATUS: missing" in status_output or "STATUS: stale" in status_output
+        assert "STATUS: fresh" in status_output
+        assert (workplace / "runtime" / "search" / "latest-maintenance.yaml").is_file()
         refresh_output = cli("search-index", "refresh", "--project-root", str(first), "--workplace", str(workplace))
         assert "REFRESHED:" in refresh_output and "DOCUMENTS:" in refresh_output
         doctor_output = cli("search-index", "doctor", "--project-root", str(first), "--workplace", str(workplace))
