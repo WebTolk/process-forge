@@ -132,6 +132,21 @@ def session_context_payload(
     obligations_projection = host.stage_obligations_payload(project_root, core)
     obligations = obligations_projection.get("obligations") if isinstance(obligations_projection.get("obligations"), list) else []
     active_obligation = next((item for item in obligations if isinstance(item, dict) and str(item.get("task_id") or "") == str(active.get("task_id") or "")), {})
+    search_projection = {"status": "unavailable", "generation": None, "stale": True}
+    if str(context.get("status") or "") in {"fresh", "fresh_with_updates", "ok"}:
+        try:
+            from processforge_core.local_resource_search import index_status
+
+            snapshot_path, _snapshot_md = core.project_context_snapshot_paths(project_root)
+            snapshot = core.load_yaml_document(snapshot_path)
+            search_status = index_status(project_root, snapshot if isinstance(snapshot, dict) else {}, workplace_root=workplace_root)
+            search_projection = {
+                "status": search_status.get("status"),
+                "generation": search_status.get("generation"),
+                "stale": search_status.get("status") not in {"fresh"},
+            }
+        except Exception:
+            search_projection = {"status": "degraded", "generation": None, "stale": True}
     if str(context.get("status") or "") not in {"fresh", "ok"}:
         blockers.append({"kind": "context", "status": context.get("status"), "health": health.get("status")})
     return {
@@ -171,6 +186,7 @@ def session_context_payload(
             "policy_action": (context.get("policy") or {}).get("action") if isinstance(context.get("policy"), dict) else None,
             "health": health.get("status"),
         },
+        "search": search_projection,
         # Context is authorized by the session, but must describe current
         # project work even when a durable fact was emitted by another active
         # project agent rather than this exact session.

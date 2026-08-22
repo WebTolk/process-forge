@@ -71,7 +71,7 @@ def assert_fts_lifecycle(project: Path) -> None:
         "snapshot": {"id": "empty"},
         "local_search_resources": [{"id": "empty", "package_id": "fixture", "kind": "knowledge", "content_roots": [str(empty_root)]}],
     }
-    assert search(project, empty_snapshot, query="anything")["search_status"] == "empty"
+    assert search(project, empty_snapshot, query="anything")["search_status"] == "missing"
 
     current_root = project / "current-root"
     current_root.mkdir()
@@ -81,9 +81,9 @@ def assert_fts_lifecycle(project: Path) -> None:
         "local_search_resources": [{"id": "current", "package_id": "fixture", "kind": "knowledge", "content_roots": [str(current_root)]}],
     }
     # The existing empty index belongs to another snapshot, therefore the
-    # first switch is intentionally stale and rebuilds before becoming current.
+    # first switch is intentionally stale and rebuilds before becoming fresh.
     assert search(project, current_snapshot, query="lifecycle")["search_status"] == "stale"
-    assert search(project, current_snapshot, query="lifecycle")["search_status"] == "current"
+    assert search(project, current_snapshot, query="lifecycle")["search_status"] == "fresh"
     stale_snapshot = {**current_snapshot, "snapshot": {"id": "stale"}}
     assert search(project, stale_snapshot, query="lifecycle")["search_status"] == "stale"
     with patch("processforge_core.local_resource_search.sqlite3.connect", side_effect=sqlite3.OperationalError("fixture unavailable")):

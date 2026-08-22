@@ -1,0 +1,2257 @@
+schema_version: 1
+capsule:
+  id: stable-mcp-resource-index-master-intake-20260822-capsule
+  generated_at: '2026-08-22T13:21:23Z'
+  assignment_id: stable-mcp-resource-index-master-intake-20260822
+  assignment_path: .pf/assignments/stable-mcp-resource-index-master-intake-20260822.yaml
+  assignment_checksum: 638b191b98017ce3b002244817eb8989f8a3dd1d7f8be920d8c6ce97a7d8a111
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 4886af0ba9d75bfe8c801b134ca29a0b10f1eef7fb7a23f4ae06408359b040f6
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260822-113651-0aea2b
+  sha256: 'sha256:4886af0ba9d75bfe8c801b134ca29a0b10f1eef7fb7a23f4ae06408359b040f6'
+  generated_at: '2026-08-22T11:36:43Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  -
+    id: 'docs.api.gitverse:root'
+    kind: documentation
+    package_id: docs.api.gitverse
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.api.gitverse:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: rest-api/gitverse
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:ce3699ef5ea242c0315703fe5f67d3cb99d6c4f6bcbcfb005a36b72c46ebae20'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.api.max-platform:root'
+    kind: documentation
+    package_id: docs.api.max-platform
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.api.max-platform:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: rest-api/max-platform-api
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:dfa1b55a48319b7679521b964bfdea4e1f858169fdde883c8ac3f0ef4e13ed94'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.api.mcn-telephony:root'
+    kind: documentation
+    package_id: docs.api.mcn-telephony
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.api.mcn-telephony:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: rest-api/mcn-telephony
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:30dbe9b02bcf59764c6c1ac013f286fffae2d45cc30f4ee2563ac90d18a5d283'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.api.moo-team:root'
+    kind: documentation
+    package_id: docs.api.moo-team
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.api.moo-team:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: rest-api/api-moo-team
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:b8d58282e8f1fc220c35a9af9ea84e47e7d76a81d88684d8ae5f98c89dbddb4d'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.api.otpravka-pochta:root'
+    kind: documentation
+    package_id: docs.api.otpravka-pochta
+    requirement: recommended
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'docs.api.otpravka-pochta:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: rest-api/otpravka-pochta
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:472a304a5043c38dfa16a7bd1d7ddabc7ea60aa26052edab82f692a912bdeb93'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.device:root'
+    kind: documentation
+    package_id: docs.device
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.device:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: .
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:ba5654a821424a9c45d2238dbcf1b7d049295878922cb9fa1df5dc39f37b51ba'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla:root'
+    kind: documentation
+    package_id: docs.joomla
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:25ca72219e5e662878015bd8036d982541f9ebc18d8ac1a92099a2e00b525177'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-6-1:root'
+    kind: documentation
+    package_id: docs.joomla-6-1
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-6-1:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-6-1-docs
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:57fe67e370d1f3e721d51716634ac5949aa08a9f5bb34909ea0c0b341a3bc135'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-administrator:root'
+    kind: documentation
+    package_id: docs.joomla-administrator
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-administrator:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-administrator-docs
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:f16dc86ccb4b622565f6b5343ea9cf84351dffdd40248ae09a873a16845e0a39'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-context7:root'
+    kind: documentation
+    package_id: docs.joomla-context7
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-context7:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Joomla-context7
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:6990ab07f83193b10dbcc5a94cf1e27f997d22772a2a61a55b10d2c537acc5ee'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-context7.v2026-02-21:root'
+    kind: documentation
+    package_id: docs.joomla-context7.v2026-02-21
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-context7.v2026-02-21:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Joomla-context7/2026-02-21
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:23c438cf81e2b61e4da9b23a8d1d6a1255c51cd1b061d0a4f32ff47efe31534a'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-context7.v2026-02-21-refresh:root'
+    kind: documentation
+    package_id: docs.joomla-context7.v2026-02-21-refresh
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-context7.v2026-02-21-refresh:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Joomla-context7/2026-02-21-refresh
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:7c89355cd3aa4aafdca6f8d0ca4e030ed822c95a2bd98447a6c67aa94200fae0'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-core:root'
+    kind: source_tree
+    package_id: docs.joomla-core
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-core:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:b7ec6732ee998127f45b6213da618a43a4d4844800cd1e52ebda2201fcc7eb48'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-core.branch-v1-5-x:root'
+    kind: source_tree
+    package_id: docs.joomla-core.branch-v1-5-x
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-core.branch-v1-5-x:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/1.5.x
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:bc4430ff51b73c4a22898c9d4ce9e33f64de7e99095f936b30db7cf3750db2eb'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-core.branch-v1-x:root'
+    kind: source_tree
+    package_id: docs.joomla-core.branch-v1-x
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-core.branch-v1-x:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/1.x
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:4e56e62fcce7569252a06e64bf17beb2c360981d33ac6526baded371ea97b66c'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-core.branch-v2-5-x:root'
+    kind: source_tree
+    package_id: docs.joomla-core.branch-v2-5-x
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-core.branch-v2-5-x:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/2.5.x
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:a6e6ece4b71d82337c70479a5cfeed79339f13f55fbb0a9dd8258ce30127695d'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-core.branch-v3-x:root'
+    kind: source_tree
+    package_id: docs.joomla-core.branch-v3-x
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-core.branch-v3-x:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/3.x
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:b0b3206ffc20567c7528e77528ce7eacef0c78737328de0db2d7197f13a89560'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-core.branch-v4-x:root'
+    kind: source_tree
+    package_id: docs.joomla-core.branch-v4-x
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-core.branch-v4-x:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/4.x
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:04799227f5cc5d1dc147b109a6d609a0ea40ee512baccba66b773cccd39de1a5'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-core.branch-v5-x:root'
+    kind: source_tree
+    package_id: docs.joomla-core.branch-v5-x
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-core.branch-v5-x:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/5.x
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:8991ba301f6b5ea257780c7d38f771bce32b0038ab71bfc2fc22a2d2b1a68b4c'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-core.branch-v6-x:root'
+    kind: source_tree
+    package_id: docs.joomla-core.branch-v6-x
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-core.branch-v6-x:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/6.x
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:fc93dfa8b14285ad6af92f4425be5f6f99c4fbb002a3623125d4607cac7f1bc2'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-core.v1-0-15:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v1-0-15
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v1-0-15:source-tree@1.0.15'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/1.x/1.0.15
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:38e7abe3468ce3f50b5590a7d41a570ac680e7042c1aee1d1ed0824fda473174'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.0.15
+  -
+    id: 'docs.joomla-core.v1-5-26:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v1-5-26
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v1-5-26:source-tree@1.5.26'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/1.5.x/1.5.26
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:8bb9020a86fc0d207e4f0c56bfecb5333b8f574c10f9b196e4d01588d590f2ef'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.5.26
+  -
+    id: 'docs.joomla-core.v2-5-28:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v2-5-28
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v2-5-28:source-tree@2.5.28'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/2.5.x/2.5.28
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:bf8cf4baa56daa7ea2360244aeb99a974cc3c9f7e98a0c1cddd614460133866e'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 2.5.28
+  -
+    id: 'docs.joomla-core.v3-10-12:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v3-10-12
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v3-10-12:source-tree@3.10.12'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/3.x/3.10.12
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:49771d40d07f5e0399130b7d0dd662b987856928762daec0bc0446f4a26b20be'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 3.10.12
+  -
+    id: 'docs.joomla-core.v4-4-14:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v4-4-14
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v4-4-14:source-tree@4.4.14'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/4.x/4.4.14
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:d43e7a641b6b56726d5a83381b3e945834147f62df24b5b1be7950d1412397b5'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 4.4.14
+  -
+    id: 'docs.joomla-core.v5-4-5:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v5-4-5
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v5-4-5:source-tree@5.4.5'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/5.x/5.4.5
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:78e6306e106ecb5773e42e2b7c90ef7f51150a7a7f976f49fdd28027148c04f4'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 5.4.5
+  -
+    id: 'docs.joomla-core.v5-4-6:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v5-4-6
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v5-4-6:source-tree@5.4.6'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/5.x/5.4.6
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:921bd22aee5763fb46ee2783f2a40c71a308113d2dc20df3b1953772470fb616'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 5.4.6
+  -
+    id: 'docs.joomla-core.v5-4-7:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v5-4-7
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v5-4-7:source-tree@5.4.7'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/5.x/5.4.7
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:1a4eb592f8d1ca5792a3020f4f61689a3fc6f6005c1040d6398b7b180fb4e01d'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 5.4.7
+  -
+    id: 'docs.joomla-core.v6-0-4:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v6-0-4
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v6-0-4:source-tree@6.0.4'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/6.x/6.0.4
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:e0fdfbc29ab63d8ce8ea49c5a95f0259c436a6b64dd0ccd505192435bdb96d9e'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 6.0.4
+  -
+    id: 'docs.joomla-core.v6-1-0:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v6-1-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v6-1-0:source-tree@6.1.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/6.x/6.1.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:1b794d84575d083ba65095878f87be11d5c7062e88adbb608896cf120aa2014a'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 6.1.0
+  -
+    id: 'docs.joomla-core.v6-1-1:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v6-1-1
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v6-1-1:source-tree@6.1.1'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/6.x/6.1.1
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:7bb01a457733641baaea2e3056716926eee909bd1fd2840e02b1c92313bd5c52'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 6.1.1
+  -
+    id: 'docs.joomla-core.v6-1-2:source-tree'
+    kind: source_tree
+    package_id: docs.joomla-core.v6-1-2
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomla-core.v6-1-2:source-tree@6.1.2'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/Joomla-core/6.x/6.1.2
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:69c0932d319ef91def38cc38ac480574894a88aef02b425a52194189463fe62f'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 6.1.2
+  -
+    id: 'docs.joomla-development-articles:root'
+    kind: documentation
+    package_id: docs.joomla-development-articles
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-development-articles:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/joomla-development-articles
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:13c2a11cf7ab168757de8481d00d8ee640821fa5dfa0266906c1ab8fc4f11ab4'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-extensions:root'
+    kind: documentation
+    package_id: docs.joomla-extensions
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-extensions:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/3rd-party-extensions-docs
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:94e7981a5b87176411491e4c344abc7cb7b366e155aa75d885f6f7ad5b4919e8'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-extensions.joomshopping:root'
+    kind: documentation
+    package_id: docs.joomla-extensions.joomshopping
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-extensions.joomshopping:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/3rd-party-extensions-docs/joomshopping
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:17df96eccdc64d7e61329fa23272fba6477ae823c06314ace2375dbae27d8108'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-extensions.radical-form:root'
+    kind: documentation
+    package_id: docs.joomla-extensions.radical-form
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-extensions.radical-form:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/3rd-party-extensions-docs/radical-form
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:1a68f0d090294980a043ac34db7e480da6730175ae3f831b6b4f2fe990677d38'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-extensions.revars:root'
+    kind: documentation
+    package_id: docs.joomla-extensions.revars
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-extensions.revars:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/3rd-party-extensions-docs/revars
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:e9929be1c2bde2d6ad0e5cc3ba47f2dd9565407d8482d141138d3266c4bd7a47'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-extensions.web-tolk-dev-catalog:root'
+    kind: documentation
+    package_id: docs.joomla-extensions.web-tolk-dev-catalog
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-extensions.web-tolk-dev-catalog:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/3rd-party-extensions-docs/web-tolk-dev-catalog
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:edf8115382646fe9c2621da6d0ee7ff238c71df13fbd49fca9508586b1320c36'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-extensions.web-tolk-extensions:root'
+    kind: documentation
+    package_id: docs.joomla-extensions.web-tolk-extensions
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-extensions.web-tolk-extensions:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/3rd-party-extensions-docs/web-tolk-extensions
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:1d3b76577a95be45ff65a681449408b792afd4898a0aeacc88d69121542485c3'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomla-toolkit:root'
+    kind: documentation
+    package_id: docs.joomla-toolkit
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomla-toolkit:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/core/joomla-toolkit
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:c90bb9cc5e51d1e73d704bb524281cb8ed87a7fbbedd9235d76036e3c22e1538'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomshopping:root'
+    kind: documentation
+    package_id: docs.joomshopping
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomshopping:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/3rd-party-extensions-docs/joomshopping
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:ad6d7f89f420139f85914559143abe2edc7f61ad1d51b0f0608593cc12b3f769'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomshopping-core:root'
+    kind: source_tree
+    package_id: docs.joomshopping-core
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.joomshopping-core:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Joomshopping-core
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:beea541a6a689a62db473e8ba25e6ccdc3991ac9551afa733df88b4dedad79da'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.joomshopping-core.v5-9-1:source-tree'
+    kind: source_tree
+    package_id: docs.joomshopping-core.v5-9-1
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomshopping-core.v5-9-1:source-tree@5.9.1'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Joomshopping-core/5.9.1
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:96006f2d59d98df88d003be28b2c378047e605ad216605f6eae6c6915faac9ad'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 5.9.1
+  -
+    id: 'docs.joomshopping-core.v5-9-2:source-tree'
+    kind: source_tree
+    package_id: docs.joomshopping-core.v5-9-2
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.joomshopping-core.v5-9-2:source-tree@5.9.2'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Joomshopping-core/5.9.2
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:0001d495a0880416f8f4d1284c4e5de16c381e9e2eb2596af32d71cc186c51eb'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 5.9.2
+  -
+    id: 'docs.marketing-seo-geo-ai:root'
+    kind: documentation
+    package_id: docs.marketing-seo-geo-ai
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.marketing-seo-geo-ai:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: marketing-seo-geo-ai-knowledge
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:7a4027c65eae8001fc0c490347a17c6f833d1447a36709f7151cd1910ef7085b'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.radicalmart:root'
+    kind: documentation
+    package_id: docs.radicalmart
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.radicalmart:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-core
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:3d4d705bd035d422e6d5ea660e7c4f49e60acd07859c2bec24bfe938f0494131'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.radicalmart-core:root'
+    kind: source_tree
+    package_id: docs.radicalmart-core
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.radicalmart-core:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-core
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:2dec073c8b7a56559c4d8c3e8853b447f1863eba8968c11f0f0db7ddd94425c3'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.radicalmart-core.radicalmart-express-v3-x.v3-0-4:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-core.radicalmart-express-v3-x.v3-0-4
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-core.radicalmart-express-v3-x.v3-0-4:source-tree@3.0.4'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-core/Radicalmart Express/3.x/3.0.4
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:506d4a007e4c8534a317738c1f2c7bc9f01bde118c361a1b22430c502efe4ab3'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 3.0.4
+  -
+    id: 'docs.radicalmart-core.radicalmart-v2-x.v2-2-4:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-core.radicalmart-v2-x.v2-2-4
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-core.radicalmart-v2-x.v2-2-4:source-tree@2.2.4'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-core/RadicalMart/2.x/2.2.4
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:f990ccbdbbb11dc9752004c07cc935a2487fcb28afef6fb57e614fc4ff9e7f07'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 2.2.4
+  -
+    id: 'docs.radicalmart-core.radicalmart-v3-x.v3-0-23:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-core.radicalmart-v3-x.v3-0-23
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-core.radicalmart-v3-x.v3-0-23:source-tree@3.0.23'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-core/RadicalMart/3.x/3.0.23
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:a6e46f1dcbe0874f55ca23390f529aa07e9741f928e04bd2c46113d7efe9070e'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 3.0.23
+  -
+    id: 'docs.radicalmart-extensions:root'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.radicalmart-extensions:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:9b1c01010dbf66648fc9870a0967526f38c34e7abf6a31282272126bd3613eef'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.radicalmart-extensions.analytics.v1-1-0:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.analytics.v1-1-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.analytics.v1-1-0:source-tree@1.1.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/Analytics/1.1.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:bd82efae3a4fa9f44a8f8982e7556a0863a1414bd70d57827ac56b84c585b2f5'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.1.0
+  -
+    id: 'docs.radicalmart-extensions.export-core.v0-2-1-dev:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.export-core.v0-2-1-dev
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.export-core.v0-2-1-dev:source-tree@0.2.1-dev'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/Export/Core/0.2.1-dev
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:887571976bb635ba509dfab7438c67505f3071a6858f1d51511455e023a673f1'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 0.2.1-dev
+  -
+    id: 'docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-0-0:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-0-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-0-0:source-tree@1.0.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/Export/Plugins/plg_radicalmart_export_yml/1.0.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:43b2059889cdcb8c17ac89f20ebdef1842460bb3692b58b4d692de931331d1b8'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.0.0
+  -
+    id: 'docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-1-1-dev:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-1-1-dev
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-1-1-dev:source-tree@1.1.1-dev'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/Export/Plugins/plg_radicalmart_export_yml/1.1.1-dev
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:4b1a9115e25258938d0181097750518c5fe6512ee86abf7f95e27682fbeaf5ce'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.1.1-dev
+  -
+    id: 'docs.radicalmart-extensions.import-core.v0-8-6:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.import-core.v0-8-6
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.import-core.v0-8-6:source-tree@0.8.6'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/Import/Core/0.8.6
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:5322d5131214660bbeca8eeb1b16ce6fe7b20f773c7561f4fa2c24d4e4d69db7'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 0.8.6
+  -
+    id: 'docs.radicalmart-extensions.import-core.v0-9-1-dev:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.import-core.v0-9-1-dev
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.import-core.v0-9-1-dev:source-tree@0.9.1-dev'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/Import/Core/0.9.1-dev
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:8ab7ea735cd2bab324c264b3493fed2114b0f3c888d0cf586b98ac9767965366'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 0.9.1-dev
+  -
+    id: 'docs.radicalmart-extensions.import-plugins-plg-radicalmart-import-excel.v1-0-0:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.import-plugins-plg-radicalmart-import-excel.v1-0-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.import-plugins-plg-radicalmart-import-excel.v1-0-0:source-tree@1.0.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/Import/pLugins/plg_radicalmart_import_excel/1.0.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:3b86f4bc39f91dc1bfc77de2fdfbe9f50cbcaa528e78f3a0445b785b014ffc30'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.0.0
+  -
+    id: 'docs.radicalmart-extensions.modules-filter-extended-mod-msg-rmf.v2-0-0:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.modules-filter-extended-mod-msg-rmf.v2-0-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.modules-filter-extended-mod-msg-rmf.v2-0-0:source-tree@2.0.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/Modules/filter_extended_mod_msg_rmf/2.0.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:3fbe5a9752d5837f95b33e796a91e24f71450050c680b8efc2b4cd9683137955'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 2.0.0
+  -
+    id: 'docs.radicalmart-extensions.plugins-crm-retailcrm.v1-0-2:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.plugins-crm-retailcrm.v1-0-2
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.plugins-crm-retailcrm.v1-0-2:source-tree@1.0.2'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/plugins/CRM/RetailCRM/1.0.2
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:a910ea9534c1082d402bc19463fac2d53aa5086c3dac2cd319f863cc716975b9'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.0.2
+  -
+    id: 'docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-gallery.v1-0-0:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-gallery.v1-0-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-gallery.v1-0-0:source-tree@1.0.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/plugins/Fields/plg_radicalmart_fields_gallery/1.0.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:f03e360b7320bb3326e2ad40cffd474be182dd7cac22c99fe67d2edfa40061c1'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.0.0
+  -
+    id: 'docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-standard.v2-1-5:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-standard.v2-1-5
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-standard.v2-1-5:source-tree@2.1.5'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/plugins/Fields/plg_radicalmart_fields_standard/2.1.5
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:350786b1dcd52ae147ca5d6593f104a076f8381708c7d5871c6368c3a7c5dcc8'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 2.1.5
+  -
+    id: 'docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-resize.v1-1-0:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-resize.v1-1-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-resize.v1-1-0:source-tree@1.1.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/plugins/Media/plg_radicalmart_media_resize/1.1.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:c5110f97b80e05801ceee017c4eda0ea16ec5c2c6e9af67b0f5e765ade645ec2'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.1.0
+  -
+    id: 'docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-video.v1-0-0:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-video.v1-0-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-video.v1-0-0:source-tree@1.0.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/plugins/Media/plg_radicalmart_media_video/1.0.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:eccabed37f5a7f31163c9e5f63f2b525a0e152bead0e1f1ac4cfdb5ba443d31d'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.0.0
+  -
+    id: 'docs.radicalmart-extensions.plugins-payment-plg-radicalmart-payment-robokassa.v2-0-0:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.plugins-payment-plg-radicalmart-payment-robokassa.v2-0-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.plugins-payment-plg-radicalmart-payment-robokassa.v2-0-0:source-tree@2.0.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/plugins/payment/plg_radicalmart_payment_robokassa/2.0.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:5efcd1a74778c4f9355506313d69900ce7b87e1b1a9a96764feccbea672a7934'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 2.0.0
+  -
+    id: 'docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-addresses.v1-0-0:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-addresses.v1-0-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-addresses.v1-0-0:source-tree@1.0.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/plugins/shipping/plg_radicalmart_shipping_addresses/1.0.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:52f75a6f6b416d7ab9f823a7a836f688d4e74a7f69d6b27889264aa390d69108'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.0.0
+  -
+    id: 'docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-apiship.v1-0-2:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-apiship.v1-0-2
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-apiship.v1-0-2:source-tree@1.0.2'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/plugins/shipping/plg_radicalmart_shipping_apiship/1.0.2
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:738449d2f34c5c86e1d3df1be8a5e03d31f4aef38945c3c9ae6000ba2ad94eed'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.0.2
+  -
+    id: 'docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-standard.v3-0-0:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-standard.v3-0-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-standard.v3-0-0:source-tree@3.0.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/plugins/shipping/plg_radicalmart_shipping_standard/3.0.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:86e0aea7fd963f3f4c917b9cc905b0704b9fbcc9ebb6e9674379674fe25f4a65'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 3.0.0
+  -
+    id: 'docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-zone.v1-0-0:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-zone.v1-0-0
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-zone.v1-0-0:source-tree@1.0.0'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/plugins/shipping/plg_radicalmart_shipping_zone/1.0.0
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:7445879728d9dd02ebbba8bd8082f260911a6932a42ee1996b47b2dc39a1b984'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 1.0.0
+  -
+    id: 'docs.radicalmart-extensions.templates-uikit-pkg-radicalmart-uikit.v3-0-16:source-tree'
+    kind: source_tree
+    package_id: docs.radicalmart-extensions.templates-uikit-pkg-radicalmart-uikit.v3-0-16
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.radicalmart-extensions.templates-uikit-pkg-radicalmart-uikit.v3-0-16:source-tree@3.0.16'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Radicalmart-extensions/templates/uikit/pkg_radicalmart_uikit/3.0.16
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:e64b80a2b68d0cec076cfdf5b3dcf3b89336e25b09db0b932231edc796d67fe6'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 3.0.16
+  -
+    id: 'docs.rest-api:root'
+    kind: documentation
+    package_id: docs.rest-api
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.rest-api:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: rest-api
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:8fef1256fa75cd05b830f6f170a8d56f99cc77449ab84eb1d0c1daf9a255c16f'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.seo:root'
+    kind: documentation
+    package_id: docs.seo
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.seo:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: SEO
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:4a28a8c65bb913faf9e48cfedacfc2f141ad2ba2cd4ae3aa45b3ec607b2d807c'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.virtuemart:root'
+    kind: documentation
+    package_id: docs.virtuemart
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.virtuemart:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Virtuemart-core
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:a4a987f2bac01a8d8ee2c74c6b7a27346493882d12462c0fee3e70196eb687f5'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.virtuemart-core:root'
+    kind: source_tree
+    package_id: docs.virtuemart-core
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.virtuemart-core:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Virtuemart-core
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:8aff28ff4ed100e17071b81a33df9cd98f7fd940b9676bb27286c63c1e7c8f62'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.virtuemart-core.v4-4-10:source-tree'
+    kind: source_tree
+    package_id: docs.virtuemart-core.v4-4-10
+    requirement: recommended
+    versioning_mode: multi_version
+    retention_policy: keep_versions
+    instance_id: 'docs.virtuemart-core.v4-4-10:source-tree@4.4.10'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: joomla/Virtuemart-core/4.4.10
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:d1407c2ad1d0bd15bb721d43ec211d18cb8a7361159c83445f2206120e0715bf'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resolved_version: 4.4.10
+  -
+    id: 'docs.web:root'
+    kind: documentation
+    package_id: docs.web
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.web:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: web
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:2bb024526012a4429717015238fecc61356c3685d1919425e1b73160152b767e'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.web.api:root'
+    kind: documentation
+    package_id: docs.web.api
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.web.api:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: web/api
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:069c28c35095293dfeb8909137cda92644e5d9507b87d28f437b274f7f607d73'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.web.css-framework:root'
+    kind: documentation
+    package_id: docs.web.css-framework
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.web.css-framework:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: web/css-framework
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:d1383dfaf322b21a7c54d7ab534cc617c4b5b5235b935a233eb670447cfff22f'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.web.javascript-framework:root'
+    kind: documentation
+    package_id: docs.web.javascript-framework
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.web.javascript-framework:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: web/javascript-framework
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:48f50e349016a20efa1ad2b5dfbdbc33bc2411b000df3dc57d09d5acc0e160c9'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'docs.web.yandex-maps-js-api:root'
+    kind: documentation
+    package_id: docs.web.yandex-maps-js-api
+    requirement: recommended
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.web.yandex-maps-js-api:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: web/yandex-maps-js-api
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:247180bd6c35c2c83bc2da448747e9e893baeb1c0487528212f57e2928217800'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+  -
+    id: 'project.process-forge:project-profile'
+    kind: note_collection
+    package_id: project.process-forge
+    requirement: recommended
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-profile@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts/project-profile.md
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:33c8f9edf949d6d99e3287d47c440a1341c1445fdd5361a4038e546d1f422ef0'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+  -
+    id: 'project.process-forge:project-artifacts'
+    kind: reference
+    package_id: project.process-forge
+    requirement: recommended
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-artifacts@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:66f3079b7370d98d92f0fec9594cec7fe61fe44aab9cc97ae7b4ee74d4a73aa6'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+execution_route_summary:
+  process: knowledge-package-improvement
+  stages:
+    -
+      id: propose
+      required_capabilities:
+        - research
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - proposal-complete
+    -
+      id: assess
+      required_capabilities:
+        - process_governance
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - compatibility-reviewed
+    -
+      id: integrate
+      required_capabilities:
+        - repository_write
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - package-updated
+  required_capabilities:
+    - process_governance
+    - repository_write
+    - research
+    - review
+  capability_requirements:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+  unsatisfied:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: stable-mcp-resource-index-master-intake-20260822
+  path: .pf/assignments/stable-mcp-resource-index-master-intake-20260822.yaml
+  status: open
+  objective: 'Read задания/process-forge-stable-mcp-resource-index-master-prompt.md and produce an executable PF decomposition: task graph, write scopes, artifact map, quality gates, blockers, and recommended first implementation slice. Do not edit product code.'
+  execution_mode:
+    kind: planning_only
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260822-113651-0aea2b
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/stable-mcp-resource-index-master-intake-20260822.yaml
+    - задания/process-forge-stable-mcp-resource-index-master-prompt.md
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - .pf/artifacts/stable-mcp-resource-index-20260822/master-worker-intake-report.md
+  allowed_read_files:
+    - .pf/AGENTS.md
+    - .pf/process-forge.yaml
+    - .pf/contexts/project-context.snapshot.yaml
+    - задания/process-forge-stable-mcp-resource-index-master-prompt.md
+  forbidden_files:
+    - tools/**
+    - src/**
+    - schemas/**
+    - docs/**
+  ownership:
+    owner_id: stable-mcp-resource-index-master-intake-20260822
+    owner_label: worker-stable-mcp-resource-index-master-intake-20260822
+    role: orchestration-planner
+    writer: true
+    owned_files:
+      - .pf/artifacts/stable-mcp-resource-index-20260822/master-worker-intake-report.md
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/artifacts/stable-mcp-resource-index-20260822/master-worker-intake-report.md
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: master-worker-intake-report
+      type: unspecified
+      required: true
+      path: .pf/artifacts/stable-mcp-resource-index-20260822/master-worker-intake-report.md
+  expected_report:
+    language: en
+    artifact: .pf/artifacts/stable-mcp-resource-index-20260822/master-worker-intake-report.md
+    format: concise_markdown
+    include:
+      - master-worker-intake-report
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.5
+agent_reasoning_effort: high
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/stable-mcp-resource-index-master-intake-20260822.ndjson
+  event_correlation_id: assignment-stable-mcp-resource-index-master-intake-20260822
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/stable-mcp-resource-index-master-intake-20260822.yaml
+  - задания/process-forge-stable-mcp-resource-index-master-prompt.md
+allowed_files:
+  - .pf/artifacts/stable-mcp-resource-index-20260822/master-worker-intake-report.md
+forbidden_files:
+  - tools/**
+  - src/**
+  - schemas/**
+  - docs/**
+required_outputs:
+  -
+    id: master-worker-intake-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/stable-mcp-resource-index-20260822/master-worker-intake-report.md
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-stable-mcp-resource-index-master-intake-20260822

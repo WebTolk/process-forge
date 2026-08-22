@@ -162,6 +162,7 @@ RESERVED_WORKER_ENV_KEYS = {
     "PF_WORKSPACE_ACCESS_FILE",
     "PF_WORKER_RUN_ID",
     "PF_WORKER_TASK_ID",
+    "PF_WORKER_ATTEMPT",
 }
 
 GLOBAL_AGENT_SECTION_START = "<!-- PROCESSFORGE:START -->"
@@ -6702,6 +6703,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_update_candidate_discovery", [sys.executable, str(root / "tools" / "smoke_update_candidate_discovery.py")], 120),
         ReleaseCommand("smoke_update_notifications", [sys.executable, str(root / "tools" / "smoke_update_notifications.py")], 120),
         ReleaseCommand("smoke_update_stage_verify_apply_file_provider", [sys.executable, str(root / "tools" / "smoke_update_stage_verify_apply_file_provider.py")], 120),
+        ReleaseCommand("smoke_core_update_manifest", [sys.executable, str(root / "tools" / "smoke_core_update_manifest.py")], 120),
         ReleaseCommand("smoke_project_pf_upgrade_assessment_boundary", [sys.executable, str(root / "tools" / "smoke_project_pf_upgrade_assessment_boundary.py")], 120),
         ReleaseCommand("smoke_tool_update_policy", [sys.executable, str(root / "tools" / "smoke_tool_update_policy.py")], 120),
         ReleaseCommand("smoke_resource_versioning_modes", [sys.executable, str(root / "tools" / "smoke_resource_versioning_modes.py")], 120),
@@ -7084,12 +7086,24 @@ def release_zip_datetime(source_epoch: int) -> tuple[int, int, int, int, int, in
     return (moment.year, moment.month, moment.day, moment.hour, moment.minute, moment.second)
 
 
-def write_release_zip(output: Path, files: list[tuple[str, Path]], source_epoch: int) -> list[dict[str, Any]]:
+def write_release_zip(output: Path, files: list[tuple[str, Path]], source_epoch: int, extra_entries: list[tuple[str, bytes]] | None = None) -> list[dict[str, Any]]:
     manifest_files: list[dict[str, Any]] = []
     zip_datetime = release_zip_datetime(source_epoch)
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for archive_path, source_path in files:
             content = source_path.read_bytes()
+            info = zipfile.ZipInfo(archive_path, date_time=zip_datetime)
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o100644 << 16
+            archive.writestr(info, content, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+            manifest_files.append(
+                {
+                    "path": archive_path,
+                    "size": len(content),
+                    "sha256": hashlib.sha256(content).hexdigest(),
+                }
+            )
+        for archive_path, content in extra_entries or []:
             info = zipfile.ZipInfo(archive_path, date_time=zip_datetime)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o100644 << 16
@@ -7163,15 +7177,19 @@ def command_release_pack(args: argparse.Namespace) -> int:
     if args.dry_run:
         print(f"DRY-RUN: would write {output}")
         print(f"DRY-RUN: would write {manifest_path}")
-        print(f"FILES: {len(files)}")
+        print(f"FILES: {len(files) + 1}")
+        print("INCLUDE: processforge-core.manifest.json [generated]")
         for archive_path, _path in files[:50]:
             print(f"INCLUDE: {archive_path}")
         if len(files) > 50:
             print(f"... {len(files) - 50} more files")
         return 0
     provenance = release_git_provenance(root)
+    from processforge_core.core_update import CORE_MANIFEST_NAME, make_core_manifest_from_release_files, manifest_bytes
+
+    core_manifest = make_core_manifest_from_release_files(files, version=RELEASE_ARCHIVE_VERSION, source=provenance["source"], generated_at=provenance["generated_at"])
     output.parent.mkdir(parents=True, exist_ok=True)
-    manifest_files = write_release_zip(output, files, int(provenance["source_date_epoch"]))
+    manifest_files = write_release_zip(output, files, int(provenance["source_date_epoch"]), extra_entries=[(CORE_MANIFEST_NAME, manifest_bytes(core_manifest))])
     manifest = release_manifest_payload(root, output, manifest_files, provenance)
     manifest_path.write_text(ensure_trailing_newline(json.dumps(manifest, indent=2, sort_keys=True)), encoding="utf-8")
     consumer_checks = inspect_release_archive(output, manifest_path)
@@ -9273,7 +9291,12 @@ def resolve_workspace_path_ref(project_root: Path, path_ref: dict[str, Any], *, 
     if root_resolution.get("errors"):
         return {"status": "unresolved", "reason": "; ".join(str(item) for item in root_resolution.get("errors", []))}
     base = path_resolution_to_path(root_resolution).resolve()
-    if registry != "private_resource_paths":
+    # A knowledge root is an explicit workplace trust boundary.  Local heavy
+    # documentation is intentionally allowed to live outside the workplace
+    # directory (for example, in a shared device documentation root); deny
+    # every other registry path outside the workplace unless it is the
+    # dedicated private-resource mechanism.
+    if registry not in {"private_resource_paths", "knowledge_roots"}:
         try:
             base.relative_to(workplace_root.resolve())
         except ValueError:
@@ -17370,6 +17393,7 @@ def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) 
             "PF_WORKSPACE_ACCESS_FILE": variables["workspace_access_path"],
             "PF_WORKER_RUN_ID": variables["run_id"],
             "PF_WORKER_TASK_ID": variables["task_id"],
+            "PF_WORKER_ATTEMPT": variables["attempt"],
         }
     )
     explicit = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
@@ -17654,7 +17678,14 @@ def normalize_agent_reasoning_effort(value: Any) -> str:
     return text
 
 
-def build_worker_process_command(project_root: Path, task: dict[str, Any], driver: dict[str, Any], executable_override: str | None = None) -> tuple[dict[str, Any], dict[str, Path]]:
+def build_worker_process_command(
+    project_root: Path,
+    task: dict[str, Any],
+    driver: dict[str, Any],
+    executable_override: str | None = None,
+    *,
+    attempt: int = 1,
+) -> tuple[dict[str, Any], dict[str, Path]]:
     task_id = safe_id(str(task.get("id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     paths = worker_run_paths(project_root, run_id, task_id)
@@ -17666,6 +17697,7 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "processforge_root": str(ROOT),
         "run_id": run_id,
         "task_id": task_id,
+        "attempt": str(attempt),
         "agent_run_dir": str(paths["root"]),
         "driver_id": str(driver.get("id") or "manual"),
         "capsule_path": str(capsule_path),
@@ -17717,6 +17749,7 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "schema_version": 1,
         "run_id": run_id,
         "task_id": task_id,
+        "attempt": str(attempt),
         "driver_id": str(driver.get("id") or "manual"),
         "agent_model": variables["agent_model"],
         "agent_reasoning_effort": variables["agent_reasoning_effort"],
@@ -17739,13 +17772,33 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
     return command, paths
 
 
-def write_agent_run_state(project_root: Path, task: dict[str, Any], driver: dict[str, Any], status: str, *, pid: int | None = None, started_at: str | None = None, finished_at: str | None = None, exit_code: int | None = None, failure_reason: str | None = None, command: dict[str, Any] | None = None, paths: dict[str, Path] | None = None) -> dict[str, Any]:
+def write_agent_run_state(
+    project_root: Path,
+    task: dict[str, Any],
+    driver: dict[str, Any],
+    status: str,
+    *,
+    pid: int | None = None,
+    started_at: str | None = None,
+    finished_at: str | None = None,
+    exit_code: int | None = None,
+    failure_reason: str | None = None,
+    command: dict[str, Any] | None = None,
+    paths: dict[str, Path] | None = None,
+    attempt: int | None = None,
+) -> dict[str, Any]:
     task_id = safe_id(str(task.get("id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     paths = paths or worker_run_paths(project_root, run_id, task_id)
     driver_limits, limit_errors = parse_runtime_driver_limits(driver)
     if limit_errors:
         raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(limit_errors))
+    previous_state = json_read(paths["status"])
+    if attempt is None:
+        try:
+            attempt = max(1, int(previous_state.get("attempt") or 1))
+        except (TypeError, ValueError):
+            attempt = 1
     state = {
         "schema_version": 1,
         "run_id": run_id,
@@ -17758,7 +17811,7 @@ def write_agent_run_state(project_root: Path, task: dict[str, Any], driver: dict
         "finished_at": finished_at,
         "exit_code": exit_code,
         "timeout_seconds": driver_limits["timeout_seconds"],
-        "attempt": 1,
+        "attempt": attempt,
         "max_retries": driver_limits["max_retries"],
         "capsule_path": rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
         "worker_prompt_path": rel(worker_prompt_path(project_root, run_id, task_id), project_root),
@@ -17931,15 +17984,21 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     ]
     if start_failures:
         raise SystemExit("FAIL: runtime driver is not start-ready: " + "; ".join(start_failures))
-    command, paths = build_worker_process_command(project_root, task, driver, executable_override)
+    paths = worker_run_paths(project_root, run_id, task_id)
+    previous_state = json_read(paths["status"])
+    try:
+        attempt = max(1, int(previous_state.get("attempt") or 0) + 1)
+    except (TypeError, ValueError):
+        attempt = 1
+    command, paths = build_worker_process_command(project_root, task, driver, executable_override, attempt=attempt)
     state_status = "manual_required" if str(driver.get("kind")) == "manual" else "ready"
     paths["root"].mkdir(parents=True, exist_ok=True)
     # A deliberate prepare is a new attempt.  An old durable exit contract
     # belongs to the preceding attempt and must not be observed as the result
     # of a newly launched process.
     paths["exit"].unlink(missing_ok=True)
-    write_agent_run_state(project_root, task, driver, state_status, command=command, paths=paths)
-    emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status}, correlation_id=f"run-{run_id}")
+    write_agent_run_state(project_root, task, driver, state_status, command=command, paths=paths, attempt=attempt)
+    emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status, "attempt": attempt}, correlation_id=f"run-{run_id}")
     return task, driver, paths
 
 
@@ -22392,6 +22451,150 @@ def command_path_resolve(args: argparse.Namespace) -> int:
     return 0
 
 
+def local_search_runtime_snapshot(project_root: Path, workplace_root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    context = project_context_check_result(project_root, explicit_workplace=str(workplace_root))
+    snapshot_path, _snapshot_md = project_context_snapshot_paths(project_root)
+    snapshot = load_yaml_document(snapshot_path) if snapshot_path.is_file() else {}
+    runtime_snapshot = copy.deepcopy(snapshot if isinstance(snapshot, dict) else {})
+    resources = runtime_snapshot.get("local_search_resources") if isinstance(runtime_snapshot.get("local_search_resources"), list) else []
+    for resource in resources:
+        if not isinstance(resource, dict) or not isinstance(resource.get("path_ref"), dict):
+            continue
+        resolution = resolve_workspace_path_ref(project_root, resource["path_ref"], workplace_manifest=workplace_root / "workplace.yaml")
+        if resolution.get("status") == "resolved" and resolution.get("path"):
+            resource["content_roots"] = [str(resolution["path"])]
+    return context, runtime_snapshot
+
+
+def print_search_index_status(payload: dict[str, Any]) -> None:
+    sqlite_info = payload.get("sqlite") if isinstance(payload.get("sqlite"), dict) else {}
+    print(f"STATUS: {payload.get('status')}")
+    print(f"GENERATION: {payload.get('generation') or 'none'}")
+    print(f"SQLITE_VERSION: {sqlite_info.get('sqlite_version') or 'unknown'}")
+    print(f"FTS5: {'available' if sqlite_info.get('fts5_available') else 'unavailable'}")
+    print(f"RESOURCES: {payload.get('resource_count')}")
+    print(f"DOCUMENTS: {payload.get('document_count')}")
+    print(f"STALE_RESOURCES: {payload.get('stale_resource_count')}")
+    print(f"FAILED_FILES: {payload.get('failed_file_count')}")
+    print(f"LAST_SUCCESSFUL_REFRESH: {payload.get('last_successful_refresh') or 'none'}")
+    print(f"LAST_FULL_RECONCILIATION: {payload.get('last_full_reconciliation') or 'none'}")
+    if payload.get("error"):
+        print(f"ERROR: {payload.get('error')}")
+    if payload.get("path"):
+        print(f"INDEX: {payload.get('path')}")
+
+
+def command_search_index_status(args: argparse.Namespace) -> int:
+    from processforge_core.local_resource_search import index_status
+
+    project_root = Path(args.project_root).expanduser().resolve()
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    _context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+    status = index_status(project_root, snapshot, workplace_root=workplace_root)
+    print_search_index_status(status)
+    return 1 if status.get("status") == "degraded" else 0
+
+
+def command_search_index_refresh(args: argparse.Namespace) -> int:
+    from processforge_core.local_resource_search import build_index
+
+    project_root = Path(args.project_root).expanduser().resolve()
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+    if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+        print(f"FAIL: project context is not fresh: {context.get('status')}")
+        return 1
+    result = build_index(project_root, snapshot, workplace_root=workplace_root)
+    print(f"REFRESHED: {result.get('generation')}")
+    print(f"RESOURCES: {result.get('resources')}")
+    print(f"DOCUMENTS: {result.get('indexed')}")
+    return 0
+
+
+def command_search_index_rebuild(args: argparse.Namespace) -> int:
+    from processforge_core.local_resource_search import rebuild_index
+
+    project_root = Path(args.project_root).expanduser().resolve()
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+    if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+        print(f"FAIL: project context is not fresh: {context.get('status')}")
+        return 1
+    result = rebuild_index(project_root, snapshot, workplace_root=workplace_root)
+    print(f"REBUILT: {result.get('generation')}")
+    print(f"RESOURCES: {result.get('resources')}")
+    print(f"DOCUMENTS: {result.get('indexed')}")
+    return 0
+
+
+def command_search_index_doctor(args: argparse.Namespace) -> int:
+    from processforge_core.local_resource_search import index_status
+
+    project_root = Path(args.project_root).expanduser().resolve()
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+    status = index_status(project_root, snapshot, workplace_root=workplace_root)
+    sqlite_info = status.get("sqlite") if isinstance(status.get("sqlite"), dict) else {}
+    checks = [
+        check("PASS" if sqlite_info.get("fts5_available") else "FAIL", "SQLite FTS5 available"),
+        check("PASS" if status.get("status") != "degraded" else "FAIL", "search index readable"),
+        check("PASS" if str(context.get("status") or "") in {"fresh", "fresh_with_updates"} else "WARN", f"project context freshness: {context.get('status')}"),
+        check("PASS" if status.get("status") == "fresh" else "WARN", f"search index status: {status.get('status')}"),
+        check("PASS" if int(status.get("failed_file_count") or 0) == 0 else "WARN", "failed file count is zero"),
+    ]
+    return print_checks(checks)
+
+
+def command_core_update_status(args: argparse.Namespace) -> int:
+    from processforge_core.core_update import CoreUpdateError, core_status
+
+    try:
+        payload = core_status(Path(args.core_root).expanduser().resolve())
+    except CoreUpdateError as exc:
+        print(json.dumps({"error": {"code": exc.code, "message": exc.message}}, indent=2, sort_keys=True))
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def command_core_update_plan(args: argparse.Namespace) -> int:
+    from processforge_core.core_update import CoreUpdateError, build_plan
+
+    try:
+        payload = build_plan(Path(args.core_root).expanduser().resolve(), Path(args.archive).expanduser().resolve())
+    except CoreUpdateError as exc:
+        print(json.dumps({"error": {"code": exc.code, "message": exc.message}}, indent=2, sort_keys=True))
+        return 1
+    printable = {key: value for key, value in payload.items() if key != "new_manifest"}
+    print(json.dumps(printable, indent=2, sort_keys=True))
+    return 0 if payload.get("status") != "blocked" else 2
+
+
+def command_core_update_apply(args: argparse.Namespace) -> int:
+    from processforge_core.core_update import CoreUpdateError, apply_update
+
+    try:
+        payload = apply_update(
+            Path(args.core_root).expanduser().resolve(),
+            Path(args.archive).expanduser().resolve(),
+            confirm=bool(args.confirm),
+            force_local_modifications=bool(args.force_local_modifications),
+        )
+    except CoreUpdateError as exc:
+        print(json.dumps({"error": {"code": exc.code, "message": exc.message}}, indent=2, sort_keys=True))
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def command_core_update_repair(args: argparse.Namespace) -> int:
+    from processforge_core.core_update import repair_status
+
+    payload = repair_status(Path(args.core_root).expanduser().resolve())
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if payload.get("status") != "manual_repair_required" else 2
+
+
 def write_resource_proposal(workplace_root: Path, command: str, object_id: str, payload: dict[str, Any], slug: str | None = None) -> tuple[str, Path]:
     slug = slug or resource_management_slug(command, object_id)
     proposal = {
@@ -24830,6 +25033,44 @@ def build_parser() -> argparse.ArgumentParser:
     path_resolve.add_argument("--workplace", required=True, help="Workplace root path.")
     path_resolve.add_argument("--path", required=True, help="Raw path with optional ${CONST}.")
     path_resolve.set_defaults(func=command_path_resolve)
+
+    search_index = sub.add_parser("search-index", help="Inspect and maintain the derived workplace local resource search index.")
+    search_index_sub = search_index.add_subparsers(dest="search_index_command", required=True)
+    search_index_status = search_index_sub.add_parser("status", help="Show search index readiness for a project snapshot.")
+    search_index_status.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_status.add_argument("--workplace", required=True, help="Workplace root path.")
+    search_index_status.set_defaults(func=command_search_index_status)
+    search_index_refresh = search_index_sub.add_parser("refresh", help="Refresh the project snapshot scope in the workplace search index.")
+    search_index_refresh.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_refresh.add_argument("--workplace", required=True, help="Workplace root path.")
+    search_index_refresh.set_defaults(func=command_search_index_refresh)
+    search_index_rebuild = search_index_sub.add_parser("rebuild", help="Rebuild the derived workplace search index for the project snapshot scope.")
+    search_index_rebuild.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_rebuild.add_argument("--workplace", required=True, help="Workplace root path.")
+    search_index_rebuild.set_defaults(func=command_search_index_rebuild)
+    search_index_doctor = search_index_sub.add_parser("doctor", help="Validate search index capabilities and readiness.")
+    search_index_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
+    search_index_doctor.set_defaults(func=command_search_index_doctor)
+
+    core_update = sub.add_parser("core-update", help="Plan and apply manifest-based ProcessForge core archive updates.")
+    core_update_sub = core_update.add_subparsers(dest="core_update_command", required=True)
+    core_update_status = core_update_sub.add_parser("status", help="Read installed core manifest and incomplete update state.")
+    core_update_status.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+    core_update_status.set_defaults(func=command_core_update_status)
+    core_update_plan = core_update_sub.add_parser("plan", help="Validate an archive and print add/change/remove plan without modifying files.")
+    core_update_plan.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+    core_update_plan.add_argument("--archive", required=True, help="ProcessForge release archive containing processforge-core.manifest.json.")
+    core_update_plan.set_defaults(func=command_core_update_plan)
+    core_update_apply = core_update_sub.add_parser("apply", help="Apply a manifest-based core update from an explicit archive.")
+    core_update_apply.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+    core_update_apply.add_argument("--archive", required=True, help="ProcessForge release archive containing processforge-core.manifest.json.")
+    core_update_apply.add_argument("--confirm", action="store_true", help="Required confirmation for file changes.")
+    core_update_apply.add_argument("--force-local-modifications", action="store_true", help="Allow replacing locally modified PF-owned files after backup.")
+    core_update_apply.set_defaults(func=command_core_update_apply)
+    core_update_repair = core_update_sub.add_parser("repair", help="Inspect incomplete core update repair state.")
+    core_update_repair.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+    core_update_repair.set_defaults(func=command_core_update_repair)
 
     knowledge_add_url = sub.add_parser("knowledge-add-url", help="Create or apply a proposal to add a URL-backed knowledge resource.")
     knowledge_add_url.add_argument("--workplace", required=True, help="Workplace root path.")

@@ -122,7 +122,7 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
                 # It is never persisted in the public snapshot or returned.
                 resource["content_roots"] = [str(resolution["path"])]
         try:
-            payload = search(bound_project, runtime_snapshot, query=arguments.get("query"), limit=arguments.get("limit"), limitstart=arguments.get("limitstart"), offset=arguments.get("offset"))
+            payload = search(bound_project, runtime_snapshot, query=arguments.get("query"), limit=arguments.get("limit"), limitstart=arguments.get("limitstart"), offset=arguments.get("offset"), workplace_root=workplace)
         except LocalSearchError as exc:
             raise session_read.SessionReadError(exc.code) from exc
         by_id = {str(item.get("id") or item.get("resource_id") or ""): item for item in resources if isinstance(item, dict)}

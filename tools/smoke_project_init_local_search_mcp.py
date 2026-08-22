@@ -12,8 +12,10 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT / "tools"))
 
 from processforge_core.local_resource_search import LocalSearchError, search
+import processforge as core
 
 
 def main() -> int:
@@ -26,9 +28,11 @@ def main() -> int:
         outside.write_text("forbidden-secret-token", encoding="utf-8")
         snapshot = {"snapshot": {"id": "smoke"}, "local_search_resources": [{"id": "docs", "package_id": "smoke", "kind": "knowledge", "content_roots": [str(allowed)]}]}
         result = search(project, snapshot, query="authorized", limit=1, limitstart=0)
-        assert result["search_status"] == "current"
+        assert result["search_status"] == "missing"
+        assert result["index_generation"]
         assert result["results"][0]["canonical_path"] == "guide.md"
         assert result["results"][0]["path_ref"] == "docs:guide.md"
+        assert search(project, snapshot, query="authorized")["search_status"] == "fresh"
         changed = {"snapshot": {"id": "smoke-next"}, "local_search_resources": snapshot["local_search_resources"]}
         assert search(project, changed, query="authorized")["search_status"] == "stale"
         assert search(project, snapshot, query="forbidden-secret-token")["results"] == []
@@ -46,11 +50,19 @@ def main() -> int:
         allowed = first / "allowed"
         allowed.mkdir()
         (allowed / "guide.md").write_text("MCP snapshot authorized search", encoding="utf-8")
+        external_docs = root / "external-docs"
+        external_docs.mkdir()
+        (external_docs / "external-guide.md").write_text("External knowledge root search proof", encoding="utf-8")
         (root / "outside.md").write_text("traversal-secret-token registry-secret-token", encoding="utf-8")
-        def cli(*args: str) -> None:
+        def cli(*args: str) -> str:
             result = subprocess.run([sys.executable, str(ROOT / "tools" / "processforge.py"), *args], cwd=ROOT, text=True, encoding="utf-8", errors="replace", capture_output=True)
             assert result.returncode == 0, result.stdout + result.stderr
+            return result.stdout
         cli("workplace-init", "--workplace", str(workplace), "--apply")
+        knowledge_roots_path = workplace / "registries" / "knowledge-roots.yaml"
+        knowledge_roots = yaml.safe_load(knowledge_roots_path.read_text(encoding="utf-8"))
+        knowledge_roots["knowledge_roots"].append({"id": "external-docs", "path": str(external_docs), "scope": "workplace", "status": "available"})
+        knowledge_roots_path.write_text(yaml.safe_dump(knowledge_roots, allow_unicode=True, sort_keys=False), encoding="utf-8")
         cli("template-create", "--workplace", str(workplace), "--id", "joomla-plugin-manifest", "--title", "Joomla Plugin Manifest", "--apply")
         registry_path = workplace / "registries" / "templates.yaml"
         registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
@@ -72,19 +84,33 @@ def main() -> int:
         snapshot["local_search_resources"].extend([
             {"id": "allowed", "package_id": "self", "kind": "knowledge", "path_ref": {"package": "self", "relative_path": "allowed"}},
             {"id": "escaped", "package_id": "self", "kind": "knowledge", "path_ref": {"package": "self", "relative_path": "../outside.md"}},
+            {"id": "external", "package_id": "fixture", "kind": "knowledge", "path_ref": {"registry": "knowledge_roots", "id": "external-docs"}},
+            {"id": "external-escaped", "package_id": "fixture", "kind": "knowledge", "path_ref": {"registry": "knowledge_roots", "id": "external-docs", "relative_path": "../outside.md"}},
         ])
         snapshot_path.write_text(yaml.safe_dump(snapshot, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        external_resolution = core.resolve_workspace_path_ref(first, {"registry": "knowledge_roots", "id": "external-docs"}, workplace_manifest=workplace / "workplace.yaml")
+        assert external_resolution == {"status": "resolved", "path": str(external_docs)}
+        escaped_resolution = core.resolve_workspace_path_ref(first, {"registry": "knowledge_roots", "id": "external-docs", "relative_path": "../outside.md"}, workplace_manifest=workplace / "workplace.yaml")
+        assert escaped_resolution["status"] == "unresolved"
+        status_output = cli("search-index", "status", "--project-root", str(first), "--workplace", str(workplace))
+        assert "STATUS: missing" in status_output or "STATUS: stale" in status_output
+        refresh_output = cli("search-index", "refresh", "--project-root", str(first), "--workplace", str(workplace))
+        assert "REFRESHED:" in refresh_output and "DOCUMENTS:" in refresh_output
+        doctor_output = cli("search-index", "doctor", "--project-root", str(first), "--workplace", str(workplace))
+        assert "PASS: SQLite FTS5 available" in doctor_output
         requests = [
             {"jsonrpc": "2.0", "id": 1, "method": "initialize"},
             {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
             {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "authorized"}}},
             {"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "pf.project_initialization.status", "arguments": {"session_id": "smoke-session", "project_root": str(second)}}},
             {"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "traversal-secret-token"}}},
-            {"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "pf.project_initialization.repair", "arguments": {"session_id": "smoke-session"}}},
-            {"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "pf.project_initialization.repair", "arguments": {"session_id": "smoke-session", "apply": True, "reason": "stdio-smoke"}}},
-            {"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": {"name": "pf.project_initialization.initialize", "arguments": {"session_id": "smoke-session", "apply": True, "answers_path": str(root / "outside.md")}}},
-            {"jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "Joomla Plugin Manifest"}}},
-            {"jsonrpc": "2.0", "id": 10, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "registry-secret-token"}}},
+            {"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "External knowledge root"}}},
+            {"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "pf.project_initialization.repair", "arguments": {"session_id": "smoke-session"}}},
+            {"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": {"name": "pf.project_initialization.repair", "arguments": {"session_id": "smoke-session", "apply": True, "reason": "stdio-smoke"}}},
+            {"jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {"name": "pf.project_initialization.initialize", "arguments": {"session_id": "smoke-session", "apply": True, "answers_path": str(root / "outside.md")}}},
+            {"jsonrpc": "2.0", "id": 10, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "Joomla Plugin Manifest"}}},
+            {"jsonrpc": "2.0", "id": 11, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "registry-secret-token"}}},
+            {"jsonrpc": "2.0", "id": 12, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {"session_id": "smoke-session"}}},
         ]
         result = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "mcp_server.py"), "--workplace", str(workplace), "--session", "smoke-session"], cwd=ROOT, text=True, encoding="utf-8", errors="replace", input="\n".join(json.dumps(item) for item in requests) + "\n", capture_output=True)
         assert result.returncode == 0, result.stderr
@@ -98,17 +124,26 @@ def main() -> int:
         assert json.loads(responses[3]["result"]["content"][0]["text"])["error"]["code"] == "session_project_mismatch"
         escaped_result = json.loads(responses[4]["result"]["content"][0]["text"])
         assert escaped_result["results"] == []
-        assert responses[5]["result"]["isError"] is True
-        assert json.loads(responses[5]["result"]["content"][0]["text"])["error"]["code"] == "apply_required"
-        repair_result = json.loads(responses[6]["result"]["content"][0]["text"])
+        external_result = json.loads(responses[5]["result"]["content"][0]["text"])
+        assert external_result["results"], external_result
+        assert external_result["results"][0]["provenance"]["package_id"] == "fixture"
+        assert Path(external_result["results"][0]["local_path"]).is_file()
+        assert responses[6]["result"]["isError"] is True
+        assert json.loads(responses[6]["result"]["content"][0]["text"])["error"]["code"] == "apply_required"
+        repair_result = json.loads(responses[7]["result"]["content"][0]["text"])
         assert repair_result["action"] == "repair" and repair_result["applied"] is True
         assert repair_result["result"]["doctor"]["status"] == "pass"
-        assert responses[7]["result"]["isError"] is True
-        assert json.loads(responses[7]["result"]["content"][0]["text"])["error"]["code"] == "invalid_arguments"
-        template_result = json.loads(responses[8]["result"]["content"][0]["text"])
+        assert responses[8]["result"]["isError"] is True
+        assert json.loads(responses[8]["result"]["content"][0]["text"])["error"]["code"] == "invalid_arguments"
+        template_result = json.loads(responses[9]["result"]["content"][0]["text"])
         assert template_result["results"][0]["provenance"]["kind"] == "template"
         assert Path(template_result["results"][0]["local_path"]).is_file()
-        assert json.loads(responses[9]["result"]["content"][0]["text"])["results"] == []
+        assert json.loads(responses[10]["result"]["content"][0]["text"])["results"] == []
+        session_context = json.loads(responses[11]["result"]["content"][0]["text"])
+        assert session_context["search"]["status"] == "fresh"
+        assert session_context["search"]["generation"]
+        assert (workplace / "runtime" / "search" / "local-resource-search.sqlite").is_file()
+        assert not (first / ".pf" / "runtime" / "local-resource-search" / "search.sqlite").exists()
         public_report = (first / ".pf" / "artifacts" / "project-onboarding-report.md").read_text(encoding="utf-8")
         assert str(first) not in public_report and "full doctor diagnostic is intentionally not copied" in public_report
     print("PASS: snapshot-authorized SQLite FTS5 search smoke")
