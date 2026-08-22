@@ -2,7 +2,7 @@ schema_version: 1
 id: subagent-stabilization-audit
 title: Release Test Stabilization Native Subagent Audit
 process: multi-agent-task-orchestration
-status: in_progress
+status: blocked
 created_at: '2026-07-24T18:16:16Z'
 updated_at: '2026-07-24T18:17:04Z'
 objective: Audit runtime, release, and docs stabilization using scoped PF assignment capsules before final integration.
@@ -13,13 +13,13 @@ tasks:
   -
     id: subagent-release-auditor
     assignment: .pf/assignments/subagent-release-auditor.yaml
-    status: in_progress
+    status: blocked
     order: 1
     blocking: true
   -
     id: subagent-docs-auditor
     assignment: .pf/assignments/subagent-docs-auditor.yaml
-    status: in_progress
+    status: blocked
     order: 2
     blocking: true
 final_artifacts:

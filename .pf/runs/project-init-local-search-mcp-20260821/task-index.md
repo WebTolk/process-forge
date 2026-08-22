@@ -1,11 +1,11 @@
 # Task Index: project-init-local-search-mcp-20260821
 
-Run status: `in_progress`
+Run status: `blocked`
 
 | Order | Task | Status | Assignment |
 | --- | --- | --- | --- |
-| 1 | `project-init-local-search-mcp-orchestration-20260821` | `open` | `.pf/assignments/project-init-local-search-mcp-orchestration-20260821.yaml` |
-| 2 | `project-init-local-search-mcp-sqlite-inventory-20260821` | `open` | `.pf/assignments/project-init-local-search-mcp-sqlite-inventory-20260821.yaml` |
+| 1 | `project-init-local-search-mcp-orchestration-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-orchestration-20260821.yaml` |
+| 2 | `project-init-local-search-mcp-sqlite-inventory-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-sqlite-inventory-20260821.yaml` |
 | 3 | `project-init-local-search-mcp-current-state-audit-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-current-state-audit-20260821.yaml` |
 | 4 | `project-init-local-search-mcp-sqlite-inventory-retry-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-sqlite-inventory-retry-20260821.yaml` |
 | 5 | `project-init-local-search-mcp-current-state-audit-retry-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-current-state-audit-retry-20260821.yaml` |
@@ -21,8 +21,8 @@ Run status: `in_progress`
 | 15 | `project-init-local-search-mcp-lifecycle-remediation-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-lifecycle-remediation-20260821.yaml` |
 | 16 | `project-init-local-search-mcp-stdio-fixture-inventory-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-stdio-fixture-inventory-20260821.yaml` |
 | 17 | `project-init-local-search-mcp-producer-and-stdio-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-producer-and-stdio-20260821.yaml` |
-| 18 | `project-init-local-search-mcp-stdio-preflight-20260821` | `open` | `.pf/assignments/project-init-local-search-mcp-stdio-preflight-20260821.yaml` |
-| 19 | `project-init-local-search-mcp-spark-stdio-review-20260821` | `open` | `.pf/assignments/project-init-local-search-mcp-spark-stdio-review-20260821.yaml` |
+| 18 | `project-init-local-search-mcp-stdio-preflight-20260821` | `cancelled` | `.pf/assignments/project-init-local-search-mcp-stdio-preflight-20260821.yaml` |
+| 19 | `project-init-local-search-mcp-spark-stdio-review-20260821` | `cancelled` | `.pf/assignments/project-init-local-search-mcp-spark-stdio-review-20260821.yaml` |
 | 20 | `project-init-local-search-mcp-high-stdio-review-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-high-stdio-review-20260821.yaml` |
 | 21 | `project-init-local-search-mcp-private-bridge-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-private-bridge-20260821.yaml` |
 | 21 | `project-init-local-search-mcp-high-review-remediation-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-high-review-remediation-20260821.yaml` |
@@ -37,7 +37,7 @@ Run status: `in_progress`
 | 30 | `project-init-local-search-mcp-template-navigation-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-template-navigation-20260821.yaml` |
 | 31 | `project-init-local-search-mcp-template-navigation-review-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-template-navigation-review-20260821.yaml` |
 | 32 | `project-init-local-search-mcp-template-navigation-rereview-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-template-navigation-rereview-20260821.yaml` |
-| 33 | `project-init-local-search-mcp-final-acceptance-review-20260821` | `in_progress` | `.pf/assignments/project-init-local-search-mcp-final-acceptance-review-20260821.yaml` |
+| 33 | `project-init-local-search-mcp-final-acceptance-review-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-final-acceptance-review-20260821.yaml` |
 | 35 | `project-init-local-search-mcp-acceptance-fixtures-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-acceptance-fixtures-20260821.yaml` |
 | 36 | `project-init-local-search-mcp-live-mcp-evidence-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-live-mcp-evidence-20260821.yaml` |
 | 37 | `project-init-local-search-mcp-acceptance-fixtures-remediation-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-acceptance-fixtures-remediation-20260821.yaml` |
@@ -49,7 +49,7 @@ Run status: `in_progress`
 | 43 | `project-init-local-search-mcp-post-remediation-review-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-post-remediation-review-20260821.yaml` |
 | 44 | `project-init-local-search-mcp-release-smoke-registration-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-release-smoke-registration-20260821.yaml` |
 | 45 | `project-init-local-search-mcp-release-gate-audit-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-release-gate-audit-20260821.yaml` |
-| 46 | `project-init-local-search-mcp-release-archive-validation-20260821` | `in_progress` | `.pf/assignments/project-init-local-search-mcp-release-archive-validation-20260821.yaml` |
+| 46 | `project-init-local-search-mcp-release-archive-validation-20260821` | `blocked` | `.pf/assignments/project-init-local-search-mcp-release-archive-validation-20260821.yaml` |
 | 47 | `project-init-local-search-mcp-public-doc-path-remediation-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-public-doc-path-remediation-20260821.yaml` |
 | 48 | `project-init-local-search-mcp-fixture-neutrality-remediation-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-fixture-neutrality-remediation-20260821.yaml` |
 | 49 | `project-init-local-search-mcp-release-checksum-refresh-20260821` | `done` | `.pf/assignments/project-init-local-search-mcp-release-checksum-refresh-20260821.yaml` |

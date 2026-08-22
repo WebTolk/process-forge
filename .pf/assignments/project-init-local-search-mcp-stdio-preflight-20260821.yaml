@@ -3,7 +3,7 @@ id: project-init-local-search-mcp-stdio-preflight-20260821
 title: Spark preflight for stdio MCP smoke execution
 run_id: project-init-local-search-mcp-20260821
 process: software-feature-development
-status: open
+status: cancelled
 created_at: '2026-08-21T14:11:26Z'
 updated_at: '2026-08-21T14:11:26Z'
 objective: Independently verify the existing stdio fixture recipe against the current parser/Runtime source and report exact commands or blockers. No product edits.
@@ -19,8 +19,8 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: cancelled
+  summary: Superseded by later producer, high review, and remediation tasks.
   artifacts:
     []
 stage: code-assurance

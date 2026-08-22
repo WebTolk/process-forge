@@ -2,9 +2,9 @@ schema_version: 1
 id: project-init-local-search-mcp-20260821
 title: Project initialization and snapshot-bound local MCP search
 process: software-feature-development
-status: in_progress
+status: blocked
 created_at: '2026-08-21T12:52:55Z'
-updated_at: '2026-08-21T18:01:43Z'
+updated_at: '2026-08-22T12:46:00Z'
 objective: Deliver safe PF-owned project initialization and SQLite FTS5 search over fresh snapshot-authorized local resources.
 platform: ""
 selected_specializations:
@@ -16,13 +16,13 @@ tasks:
   -
     id: project-init-local-search-mcp-orchestration-20260821
     assignment: .pf/assignments/project-init-local-search-mcp-orchestration-20260821.yaml
-    status: open
+    status: done
     order: 1
     blocking: true
   -
     id: project-init-local-search-mcp-sqlite-inventory-20260821
     assignment: .pf/assignments/project-init-local-search-mcp-sqlite-inventory-20260821.yaml
-    status: open
+    status: done
     order: 2
     blocking: true
   -
@@ -118,13 +118,13 @@ tasks:
   -
     id: project-init-local-search-mcp-stdio-preflight-20260821
     assignment: .pf/assignments/project-init-local-search-mcp-stdio-preflight-20260821.yaml
-    status: open
+    status: cancelled
     order: 18
     blocking: true
   -
     id: project-init-local-search-mcp-spark-stdio-review-20260821
     assignment: .pf/assignments/project-init-local-search-mcp-spark-stdio-review-20260821.yaml
-    status: open
+    status: cancelled
     order: 19
     blocking: true
   -
@@ -214,7 +214,7 @@ tasks:
   -
     id: project-init-local-search-mcp-final-acceptance-review-20260821
     assignment: .pf/assignments/project-init-local-search-mcp-final-acceptance-review-20260821.yaml
-    status: in_progress
+    status: done
     order: 33
     blocking: true
   -
@@ -286,7 +286,7 @@ tasks:
   -
     id: project-init-local-search-mcp-release-archive-validation-20260821
     assignment: .pf/assignments/project-init-local-search-mcp-release-archive-validation-20260821.yaml
-    status: in_progress
+    status: blocked
     order: 46
     blocking: true
   -

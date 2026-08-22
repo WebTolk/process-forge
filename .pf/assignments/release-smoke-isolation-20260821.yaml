@@ -3,7 +3,7 @@ id: release-smoke-isolation-20260821
 title: Isolate official-pack release smoke from host workplace activation
 run_id: distribution-release-docs-sync-20260821
 process: task-batch-execution
-status: in_progress
+status: blocked
 created_at: '2026-08-21T07:47:48Z'
 updated_at: '2026-08-21T07:48:00Z'
 objective: Make the public official-pack availability smoke assert inactive-by-default against an explicitly initialized neutral temporary workplace, not the linked checkout workplace.
@@ -19,8 +19,8 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: blocked
+  summary: Ownership overlap with release-docs-correction-20260821 prevents a safe retry; no closure artifact exists.
   artifacts:
     []
 stage: task-execution-loop

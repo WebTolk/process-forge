@@ -3,7 +3,7 @@ id: subagent-docs-auditor
 title: Documentation stabilization audit
 run_id: subagent-stabilization-audit
 process: testing
-status: in_progress
+status: blocked
 created_at: '2026-07-24T18:16:38Z'
 updated_at: '2026-07-24T18:17:04Z'
 objective: ""
@@ -16,8 +16,8 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: blocked
+  summary: Historic audit has no durable report or release-readiness evidence; reopen only with fresh scope.
   artifacts:
     []
 allowed_read_files:

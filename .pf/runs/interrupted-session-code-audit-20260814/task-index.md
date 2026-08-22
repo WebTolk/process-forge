@@ -1,7 +1,7 @@
 # Task Index: interrupted-session-code-audit-20260814
 
-Run status: `in_progress`
+Run status: `blocked`
 
 | Order | Task | Status | Assignment |
 | --- | --- | --- | --- |
-| 1 | `runtime-readonly-review` | `open` | `.pf/assignments/runtime-readonly-review.yaml` |
+| 1 | `runtime-readonly-review` | `blocked` | `.pf/assignments/runtime-readonly-review.yaml` |
