@@ -12,6 +12,18 @@ Risks: `project-context-refresh` printed `STATUS: fresh` but returned code 1 onc
 Next steps: Implement resource-oriented indexing and release-boundary reports.
 Handoff: none.
 
+## 2026-08-23 07:54 - codex-main
+
+Task: Resume interrupted full archive gate and fix the actual failing acceptance smoke.
+Files changed: `src/processforge_core/local_resource_search.py`, `tools/smoke_project_init_acceptance.py`, `checksums/processforge.sha256`.
+Artifacts changed: runtime projection snapshots refreshed.
+Templates used: release-delivery follow-up after interrupted full public gate.
+Tools used: orphan process inspection/cleanup, standalone `smoke_long_lived_runtime.py`, direct `release-test --public`, focused `smoke_project_init_acceptance.py`, checksum validator.
+Decisions: The interrupted process was not blocked in long-lived runtime; standalone and full-run evidence showed that smoke progresses. The real failing public check was `smoke_project_init_acceptance.py`, which still expected query-time search rebuild instead of maintenance-owned refresh.
+Risks: Root-level `release-test --public` still reports tracked `dist/*` artifacts as stale; use extracted archive validation for release proof because `dist/` is not part of the release archive.
+Next steps: Commit the source-fix, rebuild the resource-indexing archive from the new clean source commit, and rerun full extracted archive validation.
+Handoff: none.
+
 ## 2026-08-22 22:15 - codex-main
 
 Task: Implement declarative indexing and resource-owned search index.

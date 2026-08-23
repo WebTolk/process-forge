@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from processforge_core.local_resource_search import LocalSearchError, search
+from processforge_core.local_resource_search import maintenance_tick, search
 import processforge as core
 from pf_runtime.session_read import session_context_payload
 
@@ -80,19 +80,15 @@ def assert_fts_lifecycle(project: Path) -> None:
         "snapshot": {"id": "current"},
         "local_search_resources": [{"id": "current", "package_id": "fixture", "kind": "knowledge", "content_roots": [str(current_root)]}],
     }
-    # The existing empty index belongs to another snapshot, therefore the
-    # first switch is intentionally stale and rebuilds before becoming fresh.
-    assert search(project, current_snapshot, query="lifecycle")["search_status"] == "stale"
+    # Queries report index state only; maintenance owns refresh/rebuild work.
+    assert search(project, current_snapshot, query="lifecycle")["search_status"] == "missing"
+    assert maintenance_tick(project, current_snapshot)["after"]["status"] == "fresh"
     assert search(project, current_snapshot, query="lifecycle")["search_status"] == "fresh"
     stale_snapshot = {**current_snapshot, "snapshot": {"id": "stale"}}
     assert search(project, stale_snapshot, query="lifecycle")["search_status"] == "stale"
     with patch("processforge_core.local_resource_search.sqlite3.connect", side_effect=sqlite3.OperationalError("fixture unavailable")):
-        try:
-            search(project, stale_snapshot, query="lifecycle")
-        except LocalSearchError as exc:
-            assert exc.code == "search_unavailable"
-        else:
-            raise AssertionError("unavailable SQLite index was accepted")
+        unavailable = search(project, stale_snapshot, query="lifecycle")
+        assert unavailable["search_status"] == "degraded", unavailable
 
 
 def main() -> int:

@@ -402,9 +402,12 @@ def index_path(project_root: Path, workplace_root: Path | None = None) -> Path:
 
 
 def sqlite_fts5_capability() -> dict[str, Any]:
-    db = sqlite3.connect(":memory:")
+    version = sqlite3.sqlite_version
     try:
-        version = sqlite3.sqlite_version
+        db = sqlite3.connect(":memory:")
+    except sqlite3.Error as exc:
+        return {"sqlite_version": version, "fts5_available": False, "error": _error_code(exc) or "sqlite_unavailable"}
+    try:
         try:
             db.execute("CREATE VIRTUAL TABLE fts5_probe USING fts5(content)")
             fts5_available = True
