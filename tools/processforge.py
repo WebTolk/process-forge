@@ -6744,6 +6744,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_resource_versioning_modes", [sys.executable, str(root / "tools" / "smoke_resource_versioning_modes.py")], 120),
         ReleaseCommand("smoke_project_context_snapshot_lock_model", [sys.executable, str(root / "tools" / "smoke_project_context_snapshot_lock_model.py")], 120),
         ReleaseCommand("smoke_project_context_freshness_policies", [sys.executable, str(root / "tools" / "smoke_project_context_freshness_policies.py")], 120),
+        ReleaseCommand("smoke_context_freshness_vs_execution_readiness", [sys.executable, str(root / "tools" / "smoke_context_freshness_vs_execution_readiness.py")], 180),
         ReleaseCommand("smoke_project_init_local_search_mcp", [sys.executable, str(root / "tools" / "smoke_project_init_local_search_mcp.py")], 180),
         ReleaseCommand("smoke_resource_indexing_policy_acceptance", [sys.executable, str(root / "tools" / "smoke_resource_indexing_policy_acceptance.py")], 180),
         ReleaseCommand("smoke_project_init_acceptance", [sys.executable, str(root / "tools" / "smoke_project_init_acceptance.py")], 180),
@@ -7811,27 +7812,37 @@ def values_from_registry_entry(entry: Any) -> list[str]:
     return values
 
 
-def load_registry_capability_providers(project_root: Path) -> dict[str, str]:
+def load_registry_capability_providers(project_root: Path, workplace_manifest: Path | None = None) -> dict[str, str]:
     providers: dict[str, str] = {}
-    registry_root = locate_flow_root(project_root)
-    for rel_path, collection_key in [
-        ("registries/tools.yaml", "tools"),
-        ("registries/mcp.yaml", "mcp_servers"),
-    ]:
-        path = registry_root / rel_path
-        if not path.is_file():
-            continue
-        try:
-            data = load_answers(path)
-        except SystemExit:
-            continue
-        entries = data.get(collection_key) if isinstance(data, dict) else None
-        if not isinstance(entries, list):
-            continue
-        for entry in entries:
-            provider_id = str(entry.get("id", rel_path)) if isinstance(entry, dict) else rel_path
-            for capability in values_from_registry_entry(entry):
-                providers[capability] = provider_id
+
+    def collect(registry_root: Path, scope: str) -> None:
+        for rel_path, collection_key in [
+            ("registries/tools.yaml", "tools"),
+            ("registries/mcp.yaml", "mcp_servers"),
+        ]:
+            path = registry_root / rel_path
+            if not path.is_file():
+                continue
+            try:
+                data = load_answers(path)
+            except SystemExit:
+                continue
+            entries = data.get(collection_key) if isinstance(data, dict) else None
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                if str(entry.get("status") or "available") in {"disabled", "missing"}:
+                    continue
+                provider_id = str(entry.get("id", rel_path))
+                provider_ref = provider_id if scope == "project" else f"{scope}:{provider_id}"
+                for capability in values_from_registry_entry(entry):
+                    providers[capability] = provider_ref
+
+    if workplace_manifest and workplace_manifest.is_file():
+        collect(workplace_manifest.parent, "workplace")
+    collect(locate_flow_root(project_root), "project")
     return providers
 
 
@@ -9672,6 +9683,97 @@ def project_context_policy_action(status: str, policy: dict[str, Any]) -> str:
     return "block"
 
 
+def execution_readiness_payload(
+    required_records: list[dict[str, Any]],
+    capability_resolution: dict[str, Any] | None = None,
+    *,
+    coordination_blocked: bool = False,
+) -> dict[str, Any]:
+    missing_capabilities: list[dict[str, Any]] = []
+    blockers: list[dict[str, Any]] = []
+    seen_capabilities: set[tuple[str, str]] = set()
+
+    for item in required_records:
+        if not isinstance(item, dict) or item.get("status") != "missing":
+            continue
+        capability = str(item.get("id") or "")
+        if not capability:
+            continue
+        key = (capability, "project.required_capabilities")
+        if key in seen_capabilities:
+            continue
+        seen_capabilities.add(key)
+        missing = {
+            "capability": capability,
+            "required_by": "project.required_capabilities",
+            "availability": "missing",
+            "reason": "no active project registry provider declared the required capability",
+            "expected_provider_scope": "project or workplace tool/MCP registry",
+        }
+        missing_capabilities.append(missing)
+        blockers.append({"type": "capability_missing", **missing})
+
+    resolution = capability_resolution if isinstance(capability_resolution, dict) else {}
+    for item in resolution.get("unsatisfied", []) if isinstance(resolution.get("unsatisfied"), list) else []:
+        if not isinstance(item, dict):
+            continue
+        capability = str(item.get("capability") or "")
+        required_by = str(item.get("required_by") or "execution_route")
+        if not capability:
+            continue
+        key = (capability, required_by)
+        if key in seen_capabilities:
+            continue
+        seen_capabilities.add(key)
+        missing = {
+            "capability": capability,
+            "required_by": required_by,
+            "availability": "missing",
+            "reason": str(item.get("reason") or "selected execution resources do not provide the capability"),
+            "expected_provider_scope": "specialization resource profile, active process pack, or workplace registry",
+        }
+        missing_capabilities.append(missing)
+        blockers.append({"type": "capability_missing", **missing})
+
+    if coordination_blocked:
+        blockers.append(
+            {
+                "type": "coordination_unavailable",
+                "reason": "organized coordination is selected but the workplace Director is unavailable",
+                "required_by": "project.coordination",
+            }
+        )
+
+    return {
+        "status": "blocked" if blockers else "ready",
+        "missing_capabilities": missing_capabilities,
+        "blockers": blockers,
+    }
+
+
+def resource_readiness_payload(
+    *,
+    platform_resolution: dict[str, Any],
+    required_resource_missing: list[str],
+    specialization_conflicts: list[dict[str, Any]],
+    parameter_conflicts: list[dict[str, Any]],
+) -> dict[str, Any]:
+    blockers: list[dict[str, Any]] = []
+    for item in platform_resolution.get("missing_required_contracts", []):
+        blockers.append({"type": "platform_contract_missing", "id": str(item)})
+    for item in platform_resolution.get("circular_platforms", []):
+        blockers.append({"type": "platform_contract_cycle", "id": str(item)})
+    for item in required_resource_missing:
+        blockers.append({"type": "required_resource_missing", "id": str(item)})
+    for item in specialization_conflicts:
+        if isinstance(item, dict):
+            blockers.append({"type": "specialization_conflict", **item})
+    for item in parameter_conflicts:
+        if isinstance(item, dict):
+            blockers.append({"type": "parameter_conflict", **item})
+    return {"status": "blocked" if blockers else "fresh", "blockers": blockers}
+
+
 def resolved_resource_key(resource: dict[str, Any]) -> tuple[str, str, str]:
     return (str(resource.get("package_id") or ""), str(resource.get("id") or ""), str(resource.get("instance_id") or ""))
 
@@ -9750,6 +9852,20 @@ def project_context_check_result(project_root: Path, *, explicit_workplace: str 
         reasons.append(f"source removed: {source_id}")
 
     current = build_project_context_snapshot(project_root, explicit_workplace=explicit_workplace)
+    execution_readiness = current.get("execution_readiness") if isinstance(current.get("execution_readiness"), dict) else {}
+    resource_readiness = current.get("resource_readiness") if isinstance(current.get("resource_readiness"), dict) else {}
+    readiness = current.get("readiness") if isinstance(current.get("readiness"), dict) else {}
+    health = current.get("snapshot", {}).get("health") if isinstance(current.get("snapshot"), dict) and isinstance(current.get("snapshot", {}).get("health"), dict) else {}
+    if str(resource_readiness.get("status") or "") == "blocked":
+        for item in resource_readiness.get("blockers", []) if isinstance(resource_readiness.get("blockers"), list) else []:
+            if isinstance(item, dict):
+                broken_refs.append(
+                    {
+                        "id": item.get("id") or item.get("target") or "resource_readiness",
+                        "reason": item.get("reason") or item.get("type") or "resource readiness blocked",
+                        "type": item.get("type") or "resource_readiness_blocked",
+                    }
+                )
     old_classification = snapshot.get("project_classification")
     current_classification = current.get("project_classification")
     if json.dumps(old_classification or {}, ensure_ascii=False, sort_keys=True) != json.dumps(
@@ -9788,10 +9904,6 @@ def project_context_check_result(project_root: Path, *, explicit_workplace: str 
             current_fingerprint = str(current_resource.get("fingerprint", {}).get("value") or "")
             if old_generation != current_generation or old_fingerprint != current_fingerprint:
                 stale_resources.append({"id": old.get("id"), "snapshot_generation": old_generation, "current_generation": current_generation, "reason": f"{mode} resource generation changed"})
-    required = current.get("capabilities", {}).get("required", []) if isinstance(current.get("capabilities"), dict) else []
-    for item in required:
-        if isinstance(item, dict) and item.get("status") == "missing":
-            broken_refs.append({"id": item.get("id"), "reason": "required capability missing"})
     if broken_refs:
         status = "broken"
     elif stale_resources or reasons:
@@ -9801,6 +9913,7 @@ def project_context_check_result(project_root: Path, *, explicit_workplace: str 
     else:
         status = "fresh"
     policy = snapshot.get("context_policy") if isinstance(snapshot.get("context_policy"), dict) else default_context_policy({})
+    policy_action = project_context_policy_action(status, policy)
     return {
         "snapshot_id": snapshot_id,
         "snapshot_sha256": "sha256:" + sha256_file(snapshot_yaml),
@@ -9812,7 +9925,12 @@ def project_context_check_result(project_root: Path, *, explicit_workplace: str 
         "stale_resources": stale_resources + [{"reason": reason} for reason in reasons],
         "broken_refs": broken_refs,
         "recommended_action": "project-context-refresh" if status in {"stale", "broken"} else "continue",
-        "policy_action": project_context_policy_action(status, policy),
+        "policy_action": policy_action,
+        "policy": {"action": policy_action},
+        "health": health,
+        "readiness": readiness,
+        "resource_readiness": resource_readiness,
+        "execution_readiness": execution_readiness,
     }
 
 
@@ -9824,10 +9942,20 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     manifest_data = load_yaml_document(manifest)
     manifest_text = manifest.read_text(encoding="utf-8", errors="replace")
     sources = collect_project_snapshot_sources(project_root)
-    providers = load_registry_capability_providers(project_root)
-    required = sorted(set(yaml_list_values(manifest_text, "required_capabilities")))
-    optional = sorted(set(yaml_list_values(manifest_text, "optional_capabilities")))
-    required_records, optional_records = capability_records(required, optional, providers)
+    required = sorted(
+        set(yaml_list_values(manifest_text, "required_capabilities")).union(
+            str(item)
+            for item in as_list(manifest_data.get("required_capabilities"))
+            if str(item)
+        )
+    )
+    optional = sorted(
+        set(yaml_list_values(manifest_text, "optional_capabilities")).union(
+            str(item)
+            for item in as_list(manifest_data.get("optional_capabilities"))
+            if str(item)
+        )
+    )
     generated_at = now_utc()
     valid_until = (datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=max_age_days)).isoformat().replace("+00:00", "Z")
     project = manifest_data.get("project", {}) if isinstance(manifest_data.get("project"), dict) else {}
@@ -9846,6 +9974,8 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             distribution_root = resolve_distribution_path(workplace_manifest_path, "processforge")
     elif isinstance(manifest_data.get("workplace"), dict) and manifest_data["workplace"].get("reference") == "auto":
         distribution_root = project_root
+    providers = load_registry_capability_providers(project_root, workplace_manifest_path)
+    required_records, optional_records = capability_records(required, optional, providers)
     classification = classify_project(project_root, workplace_manifest_path)
     manifest_platform_contracts = manifest_data.get("platform_contracts") if isinstance(manifest_data.get("platform_contracts"), list) else []
     manifest_platform_ids = [
@@ -9983,6 +10113,17 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         not coordination_status["workplace_director_enabled"] or not coordination_status["director_office_exists"]
     )
     health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] or platform_resolution["circular_platforms"] or required_resource_missing or specialization_context["conflicts"] or parameter_resolution["conflicts"] or coordination_blocked else ("warn" if any(item["severity"] == "warn" for item in optional_records) or recommended_resource_missing else "pass")
+    execution_readiness = execution_readiness_payload(
+        required_records,
+        specialization_context.get("capability_resolution") if isinstance(specialization_context.get("capability_resolution"), dict) else {},
+        coordination_blocked=coordination_blocked,
+    )
+    resource_readiness = resource_readiness_payload(
+        platform_resolution=platform_resolution,
+        required_resource_missing=required_resource_missing,
+        specialization_conflicts=specialization_context["conflicts"],
+        parameter_conflicts=parameter_resolution["conflicts"],
+    )
     snapshot_id = f"ctx-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
     requirements = requirements_fingerprints(flow_root, project_root)
     source_fingerprints = {
@@ -10091,6 +10232,13 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "update_available": [],
             "broken_refs": [],
         },
+        "readiness": {
+            "context": {"status": "fresh"},
+            "resources": resource_readiness,
+            "execution": execution_readiness,
+        },
+        "resource_readiness": resource_readiness,
+        "execution_readiness": execution_readiness,
         "reproducibility": reproducibility,
         "source_fingerprints": source_fingerprints,
         "knowledge_stack": manifest_data.get("knowledge_stack", [{"id": "processforge.core", "version": "1.0.0", "source": "distribution"}]),
@@ -11667,7 +11815,8 @@ def command_project_context_refresh(args: argparse.Namespace) -> int:
     if maintenance:
         print_search_index_maintenance_summary(maintenance)
     print(f"TELEMETRY: {rel(telemetry_path, project_root)}")
-    return 1 if health == "blocked" else 0
+    resource_readiness = snapshot.get("resource_readiness") if isinstance(snapshot.get("resource_readiness"), dict) else {}
+    return 1 if resource_readiness.get("status") == "blocked" else 0
 
 
 def command_project_context_check(args: argparse.Namespace) -> int:
@@ -11702,6 +11851,14 @@ def command_project_context_check(args: argparse.Namespace) -> int:
             "## Broken References",
             "",
             dump_yaml(result.get("broken_refs", [])),
+            "",
+            "## Resource Readiness",
+            "",
+            dump_yaml(result.get("resource_readiness", {})),
+            "",
+            "## Execution Readiness",
+            "",
+            dump_yaml(result.get("execution_readiness", {})),
         ]
         report_path.write_text("\n".join(lines), encoding="utf-8")
         result["report"] = rel(report_path, project_root)
@@ -11718,6 +11875,15 @@ def command_project_context_check(args: argparse.Namespace) -> int:
             print(f"STALE: {item.get('id', 'project-context')}: {item.get('reason')}")
         for item in result.get("broken_refs", []):
             print(f"BROKEN: {item.get('id', 'project-context')}: {item.get('reason')}")
+        resource_readiness = result.get("resource_readiness") if isinstance(result.get("resource_readiness"), dict) else {}
+        execution_readiness = result.get("execution_readiness") if isinstance(result.get("execution_readiness"), dict) else {}
+        if resource_readiness:
+            print(f"RESOURCE_READINESS: {resource_readiness.get('status')}")
+        if execution_readiness:
+            print(f"EXECUTION_READINESS: {execution_readiness.get('status')}")
+            for item in execution_readiness.get("missing_capabilities", []) if isinstance(execution_readiness.get("missing_capabilities"), list) else []:
+                if isinstance(item, dict):
+                    print(f"CAPABILITY_MISSING: {item.get('capability')} required_by={item.get('required_by')}")
     if result.get("status") == "broken":
         return 1
     if getattr(args, "strict", False) and result.get("status") != "fresh":
@@ -12306,7 +12472,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     assn_id = safe_id(str(metadata.get("id", assignment.stem)), "assignment")
     required = [str(item) for item in metadata.get("required_capabilities", [])] if isinstance(metadata.get("required_capabilities"), list) else []
     optional = [str(item) for item in metadata.get("optional_capabilities", [])] if isinstance(metadata.get("optional_capabilities"), list) else []
-    providers = load_registry_capability_providers(project_root)
+    providers = load_registry_capability_providers(project_root, resolve_project_workplace_manifest(project_root))
     required_records, optional_records = capability_records(required, optional, providers)
     missing_required = [item["id"] for item in required_records if item.get("status") == "missing"]
     if missing_required:

@@ -102,6 +102,10 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
     if name == "pf.work_state":
         return host.work_state_payload(workplace, core, session=supplied_session)
     if name == "pf.resolve":
+        if str(arguments.get("resource_id") or ""):
+            context = core.project_context_check_result(bound_project, explicit_workplace=str(workplace))
+            if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+                raise session_read.SessionReadError("snapshot_not_fresh")
         return host.resolve_payload(workplace, core, session=supplied_session, resource_id=str(arguments.get("resource_id") or "") or None)
     if name == "pf.search":
         from processforge_core.local_resource_search import LocalSearchError, search

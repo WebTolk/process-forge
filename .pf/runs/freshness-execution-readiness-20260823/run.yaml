@@ -1,0 +1,31 @@
+schema_version: 1
+id: freshness-execution-readiness-20260823
+title: Freshness vs execution readiness release blocker
+process: software-feature-development
+status: completed
+created_at: '2026-08-23T12:37:37Z'
+updated_at: '2026-08-23T13:44:41Z'
+objective: Separate context/resource freshness from execution readiness so read-only MCP search/resolve can use fresh authorized resources even when current execution capabilities are missing.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: freshness-execution-readiness-main
+    assignment: .pf/assignments/freshness-execution-readiness-main.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/freshness-execution-readiness-20260823/summary.md
+  - .pf/handoffs/runs/freshness-execution-readiness-20260823-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

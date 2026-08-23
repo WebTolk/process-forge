@@ -130,6 +130,8 @@ def session_context_payload(
         if str(item.get("task_status") or "") == "blocked"
     ]
     health = context.get("health") if isinstance(context.get("health"), dict) else {}
+    resource_readiness = context.get("resource_readiness") if isinstance(context.get("resource_readiness"), dict) else {}
+    execution_readiness = context.get("execution_readiness") if isinstance(context.get("execution_readiness"), dict) else {}
     obligations_projection = host.stage_obligations_payload(project_root, core)
     obligations = obligations_projection.get("obligations") if isinstance(obligations_projection.get("obligations"), list) else []
     active_obligation = next((item for item in obligations if isinstance(item, dict) and str(item.get("task_id") or "") == str(active.get("task_id") or "")), {})
@@ -156,8 +158,16 @@ def session_context_payload(
             }
         except Exception:
             search_projection = {"status": "degraded", "generation": None, "stale": True}
-    if str(context.get("status") or "") not in {"fresh", "ok"}:
+    if str(context.get("status") or "") not in {"fresh", "fresh_with_updates", "ok"}:
         blockers.append({"kind": "context", "status": context.get("status"), "health": health.get("status")})
+    if str(execution_readiness.get("status") or "") == "blocked":
+        blockers.append(
+            {
+                "kind": "execution",
+                "status": "blocked",
+                "missing_capabilities": execution_readiness.get("missing_capabilities", []),
+            }
+        )
     return {
         "schema_version": 1,
         "kind": "pf.session_context",
@@ -195,6 +205,9 @@ def session_context_payload(
             "policy_action": (context.get("policy") or {}).get("action") if isinstance(context.get("policy"), dict) else None,
             "health": health.get("status"),
         },
+        "resource_readiness": resource_readiness,
+        "execution_readiness": execution_readiness,
+        "missing_capabilities": execution_readiness.get("missing_capabilities", []),
         "search": search_projection,
         # Context is authorized by the session, but must describe current
         # project work even when a durable fact was emitted by another active

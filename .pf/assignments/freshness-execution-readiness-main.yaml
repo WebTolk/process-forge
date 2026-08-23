@@ -1,0 +1,176 @@
+schema_version: 1
+id: freshness-execution-readiness-main
+title: Freshness and execution readiness release blocker
+run_id: freshness-execution-readiness-20260823
+process: software-feature-development
+status: done
+created_at: '2026-08-23T12:37:58Z'
+updated_at: '2026-08-23T13:44:40Z'
+objective: 'Complete задания/process-forge-freshness-execution-readiness-release-blocker-master-prompt.md: audit, model, implementation, MCP/Joomla acceptance, docs, reviews, validation.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Separated resource freshness from execution readiness; MCP session_context/search/resolve now expose and honor the split; Joomla acceptance and focused release blocker validation passed.
+  artifacts:
+    - .pf/artifacts/freshness-execution-readiness/context-freshness-readiness-audit.md
+    - .pf/artifacts/freshness-execution-readiness/context-readiness-model.md
+    - .pf/artifacts/freshness-execution-readiness/capability-provider-audit.md
+    - .pf/artifacts/freshness-execution-readiness/freshness-readiness-implementation-report.md
+    - .pf/artifacts/freshness-execution-readiness/joomla-live-acceptance-report.md
+    - .pf/reviews/freshness-execution-readiness/independent-architecture-review.md
+    - .pf/reviews/freshness-execution-readiness/independent-code-review.md
+    - .pf/artifacts/freshness-execution-readiness/release-blocker-validation.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/contexts/project-context.snapshot.yaml
+    role: input
+    required: true
+    mutable_by_worker: false
+allowed_files:
+  - tools/processforge.py
+  - tools/pf_runtime/mcp_server.py
+  - .pf/logs/freshness-execution-readiness-20260823.md
+  - .pf/assignments/freshness-execution-readiness-main.yaml
+  - .pf/contexts/assignment-capsules/freshness-execution-readiness-main.capsule.yaml
+  - tools/smoke_*.py
+  - docs/**
+  - schemas/**
+  - packages/**
+  - processes/**
+  - templates/**
+  - prompts/**
+  - examples/**
+  - updates/**
+  - .pf/artifacts/freshness-execution-readiness/**
+  - .pf/reviews/freshness-execution-readiness/**
+  - .pf/runs/freshness-execution-readiness-20260823/**
+allowed_read_files:
+  - задания/process-forge-freshness-execution-readiness-release-blocker-master-prompt.md
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/pf_runtime/mcp_server.py
+    - .pf/logs/freshness-execution-readiness-20260823.md
+    - .pf/assignments/freshness-execution-readiness-main.yaml
+    - .pf/contexts/assignment-capsules/freshness-execution-readiness-main.capsule.yaml
+    - tools/smoke_*.py
+    - docs/**
+    - schemas/**
+    - packages/**
+    - processes/**
+    - templates/**
+    - prompts/**
+    - examples/**
+    - updates/**
+    - .pf/artifacts/freshness-execution-readiness/**
+    - .pf/reviews/freshness-execution-readiness/**
+    - .pf/runs/freshness-execution-readiness-20260823/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/pf_runtime/mcp_server.py
+    - .pf/logs/freshness-execution-readiness-20260823.md
+    - .pf/assignments/freshness-execution-readiness-main.yaml
+    - .pf/contexts/assignment-capsules/freshness-execution-readiness-main.capsule.yaml
+    - tools/smoke_*.py
+    - docs/**
+    - schemas/**
+    - packages/**
+    - processes/**
+    - templates/**
+    - prompts/**
+    - examples/**
+    - updates/**
+    - .pf/artifacts/freshness-execution-readiness/**
+    - .pf/reviews/freshness-execution-readiness/**
+    - .pf/runs/freshness-execution-readiness-20260823/**
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: freshness-execution-readiness-main
+        current_scope: tools/smoke_*.py
+        other_assignment: release-smoke-isolation-20260821
+        other_scope: tools/smoke_official_software_process_available.py
+        reason: glob_matches_file
+required_outputs:
+  -
+    id: context-freshness-readiness-audit
+    path: .pf/artifacts/freshness-execution-readiness/context-freshness-readiness-audit.md
+    type: unspecified
+    required: true
+  -
+    id: context-readiness-model
+    path: .pf/artifacts/freshness-execution-readiness/context-readiness-model.md
+    type: unspecified
+    required: true
+  -
+    id: capability-provider-audit
+    path: .pf/artifacts/freshness-execution-readiness/capability-provider-audit.md
+    type: unspecified
+    required: true
+  -
+    id: implementation-report
+    path: .pf/artifacts/freshness-execution-readiness/freshness-readiness-implementation-report.md
+    type: unspecified
+    required: true
+  -
+    id: joomla-live-acceptance
+    path: .pf/artifacts/freshness-execution-readiness/joomla-live-acceptance-report.md
+    type: unspecified
+    required: true
+  -
+    id: architecture-review
+    path: .pf/reviews/freshness-execution-readiness/independent-architecture-review.md
+    type: unspecified
+    required: true
+  -
+    id: code-review
+    path: .pf/reviews/freshness-execution-readiness/independent-code-review.md
+    type: unspecified
+    required: true
+  -
+    id: release-blocker-validation
+    path: .pf/artifacts/freshness-execution-readiness/release-blocker-validation.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/freshness-execution-readiness/release-blocker-validation.md
+  format: concise_markdown
+  include:
+    - context-freshness-readiness-audit
+    - context-readiness-model
+    - capability-provider-audit
+    - implementation-report
+    - joomla-live-acceptance
+    - architecture-review
+    - code-review
+    - release-blocker-validation

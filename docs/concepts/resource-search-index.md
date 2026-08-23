@@ -95,9 +95,27 @@ external file changes are detected by fingerprint verification during `tick`.
 or degraded, the result carries that `search_status` and returns no matches
 until maintenance refreshes the derived DB.
 
+`pf.search` requires a valid Ledger session, a project binding, fresh resource
+resolution, fresh index state, and authorized resources. It does not require
+write access, browser automation, CI, deployment, or any other capability that
+is unrelated to the read-only query. For example:
+
+```text
+Joomla resources fresh
+filesystem.write missing
+-> pf.search works
+-> write-dependent action remains blocked
+```
+
 `pf.session_context` exposes compact readiness:
 
 ```yaml
+context_freshness:
+  status: fresh
+resource_readiness:
+  status: fresh
+execution_readiness:
+  status: blocked
 search:
   status: fresh
   generation: <index-generation>

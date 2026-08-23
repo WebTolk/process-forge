@@ -3,7 +3,8 @@
 ProcessForge exposes three read-only MCP tools for the active Codex session:
 
 - `pf.session_context` returns a bounded projection of project, work, blockers,
-  active agents, context freshness and normalized session activity.
+  active agents, context freshness, resource readiness, execution readiness and
+  normalized session activity.
 - `pf.session_chat` returns the private, redacted PF transcript for that same
   session. It accepts `limit` (1--100), `before`/`cursor`, and an optional
   `roles` array.
@@ -16,6 +17,13 @@ optional `project_root` is only a consistency assertion. A mismatch fails
 closed with `session_project_mismatch`. Stable tool error objects contain only
 an error code, such as `missing_session`, `unknown_session`, `session_mismatch`,
 `session_not_routed`, or `invalid_cursor`.
+
+Read-only session tools keep context validity separate from execution blockers.
+When a project snapshot is fresh but the current work lacks a capability,
+`pf.session_context` still returns the session projection and reports the
+capability under `execution_readiness.missing_capabilities`. `pf.search` and
+`pf.resolve` may still read authorized fresh resources; actions that actually
+need the missing capability remain blocked.
 
 ## Conversation capture
 
