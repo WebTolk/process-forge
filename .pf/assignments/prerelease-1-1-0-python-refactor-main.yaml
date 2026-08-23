@@ -1,0 +1,232 @@
+schema_version: 1
+id: prerelease-1-1-0-python-refactor-main
+title: 1.1.0 prerelease qualification and bounded Python refactor
+run_id: prerelease-1-1-0-python-refactor-20260823
+process: software-feature-development
+status: open
+created_at: '2026-08-23T17:13:41Z'
+updated_at: '2026-08-23T17:13:41Z'
+objective: Prepare ProcessForge 1.1.0 release evidence and perform only safe behavior-preserving Python core refactor after baseline gates.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - VERSION
+  - CHANGELOG.md
+  - README.md
+  - README.ru.md
+  - QUICKSTART.md
+  - QUICKSTART.ru.md
+  - .pf/process-forge.yaml
+  - .pf/assignments/prerelease-1-1-0-python-refactor-main.yaml
+  - .pf/contexts/assignment-capsules/prerelease-1-1-0-python-refactor-main.capsule.yaml
+  - .pf/logs/prerelease-1-1-0-python-refactor-20260823.md
+  - docs/**
+  - src/**
+  - tools/**
+  - schemas/**
+  - checksums/**
+  - packs/**
+  - processes/**
+  - templates/**
+  - updates/**
+  - dist/**
+  - .pf/artifacts/project-context-refresh-report.md
+  - .pf/artifacts/projections/**
+  - .pf/contexts/project-context.snapshot.md
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/contexts/project-context.snapshots/**
+  - .pf/artifacts/prerelease-1-1-0-python-refactor/**
+  - .pf/reviews/prerelease-1-1-0-python-refactor/**
+  - .pf/runs/prerelease-1-1-0-python-refactor-20260823/**
+allowed_read_files:
+  - задания/process-forge-1.1.0-prerelease-python-refactor-master-prompt.md
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - VERSION
+    - CHANGELOG.md
+    - README.md
+    - README.ru.md
+    - QUICKSTART.md
+    - QUICKSTART.ru.md
+    - .pf/process-forge.yaml
+    - .pf/assignments/prerelease-1-1-0-python-refactor-main.yaml
+    - .pf/contexts/assignment-capsules/prerelease-1-1-0-python-refactor-main.capsule.yaml
+    - .pf/logs/prerelease-1-1-0-python-refactor-20260823.md
+    - docs/**
+    - src/**
+    - tools/**
+    - schemas/**
+    - checksums/**
+    - packs/**
+    - processes/**
+    - templates/**
+    - updates/**
+    - dist/**
+    - .pf/artifacts/project-context-refresh-report.md
+    - .pf/artifacts/projections/**
+    - .pf/contexts/project-context.snapshot.md
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/contexts/project-context.snapshots/**
+    - .pf/artifacts/prerelease-1-1-0-python-refactor/**
+    - .pf/reviews/prerelease-1-1-0-python-refactor/**
+    - .pf/runs/prerelease-1-1-0-python-refactor-20260823/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - VERSION
+    - CHANGELOG.md
+    - README.md
+    - README.ru.md
+    - QUICKSTART.md
+    - QUICKSTART.ru.md
+    - .pf/process-forge.yaml
+    - .pf/assignments/prerelease-1-1-0-python-refactor-main.yaml
+    - .pf/contexts/assignment-capsules/prerelease-1-1-0-python-refactor-main.capsule.yaml
+    - .pf/logs/prerelease-1-1-0-python-refactor-20260823.md
+    - docs/**
+    - src/**
+    - tools/**
+    - schemas/**
+    - checksums/**
+    - packs/**
+    - processes/**
+    - templates/**
+    - updates/**
+    - dist/**
+    - .pf/artifacts/project-context-refresh-report.md
+    - .pf/artifacts/projections/**
+    - .pf/contexts/project-context.snapshot.md
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/contexts/project-context.snapshots/**
+    - .pf/artifacts/prerelease-1-1-0-python-refactor/**
+    - .pf/reviews/prerelease-1-1-0-python-refactor/**
+    - .pf/runs/prerelease-1-1-0-python-refactor-20260823/**
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: prerelease-1-1-0-python-refactor-main
+        current_scope: dist/**
+        other_assignment: project-init-local-search-mcp-release-archive-validation-20260821
+        other_scope: dist/processforge-project-init-local-search-mcp-validation-20260821.zip
+        reason: glob_matches_file
+      -
+        current_assignment: prerelease-1-1-0-python-refactor-main
+        current_scope: dist/**
+        other_assignment: project-init-local-search-mcp-release-archive-validation-20260821
+        other_scope: dist/processforge-project-init-local-search-mcp-validation-20260821.manifest.json
+        reason: glob_matches_file
+      -
+        current_assignment: prerelease-1-1-0-python-refactor-main
+        current_scope: tools/**
+        other_assignment: release-smoke-isolation-20260821
+        other_scope: tools/smoke_official_software_process_available.py
+        reason: glob_matches_file
+required_outputs:
+  -
+    id: release-1.1.0-scope-freeze
+    path: .pf/artifacts/prerelease-1-1-0-python-refactor/release-1.1.0-scope-freeze.md
+    type: unspecified
+    required: true
+  -
+    id: release-1.1.0-current-state-audit
+    path: .pf/artifacts/prerelease-1-1-0-python-refactor/release-1.1.0-current-state-audit.md
+    type: unspecified
+    required: true
+  -
+    id: changelog-source-audit
+    path: .pf/artifacts/prerelease-1-1-0-python-refactor/changelog-source-audit.md
+    type: unspecified
+    required: true
+  -
+    id: python-refactor-candidate-audit
+    path: .pf/artifacts/prerelease-1-1-0-python-refactor/python-refactor-candidate-audit.md
+    type: unspecified
+    required: true
+  -
+    id: python-refactor-report
+    path: .pf/artifacts/prerelease-1-1-0-python-refactor/python-refactor-report.md
+    type: unspecified
+    required: true
+  -
+    id: clean-install-acceptance-report
+    path: .pf/artifacts/prerelease-1-1-0-python-refactor/clean-install-acceptance-report.md
+    type: unspecified
+    required: true
+  -
+    id: in-place-update-acceptance-report
+    path: .pf/artifacts/prerelease-1-1-0-python-refactor/in-place-update-acceptance-report.md
+    type: unspecified
+    required: true
+  -
+    id: mcp-search-live-acceptance-report
+    path: .pf/artifacts/prerelease-1-1-0-python-refactor/mcp-search-live-acceptance-report.md
+    type: unspecified
+    required: true
+  -
+    id: release-1.1.0-qualification-report
+    path: .pf/artifacts/prerelease-1-1-0-python-refactor/release-1.1.0-qualification-report.md
+    type: unspecified
+    required: true
+  -
+    id: independent-code-review
+    path: .pf/reviews/prerelease-1-1-0-python-refactor/independent-code-review.md
+    type: unspecified
+    required: true
+  -
+    id: independent-release-review
+    path: .pf/reviews/prerelease-1-1-0-python-refactor/independent-release-review.md
+    type: unspecified
+    required: true
+  -
+    id: final-validation
+    path: .pf/artifacts/prerelease-1-1-0-python-refactor/final-validation.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/prerelease-1-1-0-python-refactor/final-validation.md
+  format: concise_markdown
+  include:
+    - release-1.1.0-scope-freeze
+    - release-1.1.0-current-state-audit
+    - changelog-source-audit
+    - python-refactor-candidate-audit
+    - python-refactor-report
+    - clean-install-acceptance-report
+    - in-place-update-acceptance-report
+    - mcp-search-live-acceptance-report
+    - release-1.1.0-qualification-report
+    - independent-code-review
+    - independent-release-review
+    - final-validation

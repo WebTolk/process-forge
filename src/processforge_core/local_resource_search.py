@@ -54,6 +54,49 @@ class AuthorizedResource:
     sources: tuple[IndexSource, ...]
 
 
+@dataclass(frozen=True)
+class ResourceSearchIndex:
+    """Stateful application service for one project's local resource index."""
+
+    project_root: Path
+    snapshot: dict[str, Any] | None = None
+    workplace_root: Path | None = None
+
+    def status(self, *, verify_files: bool = False) -> dict[str, Any]:
+        return index_status(self.project_root, self.snapshot, workplace_root=self.workplace_root, verify_files=verify_files)
+
+    def refresh(self) -> dict[str, Any]:
+        if self.snapshot is None:
+            raise LocalSearchError("snapshot_required")
+        return build_index(self.project_root, self.snapshot, workplace_root=self.workplace_root)
+
+    def rebuild(self) -> dict[str, Any]:
+        if self.snapshot is None:
+            raise LocalSearchError("snapshot_required")
+        return rebuild_index(self.project_root, self.snapshot, workplace_root=self.workplace_root)
+
+    def mark_dirty(self, *, reason: str = "dirty") -> dict[str, Any]:
+        return mark_index_dirty(self.project_root, self.snapshot, workplace_root=self.workplace_root, reason=reason)
+
+    def maintenance_tick(self, *, verify_files: bool = True) -> dict[str, Any]:
+        if self.snapshot is None:
+            raise LocalSearchError("snapshot_required")
+        return maintenance_tick(self.project_root, self.snapshot, workplace_root=self.workplace_root, verify_files=verify_files)
+
+    def search(self, *, query: Any, limit: Any = None, limitstart: Any = None, offset: Any = None) -> dict[str, Any]:
+        if self.snapshot is None:
+            raise LocalSearchError("snapshot_required")
+        return search(
+            self.project_root,
+            self.snapshot,
+            query=query,
+            limit=limit,
+            limitstart=limitstart,
+            offset=offset,
+            workplace_root=self.workplace_root,
+        )
+
+
 def _snapshot_checksum(snapshot: dict[str, Any]) -> str:
     value = snapshot.get("snapshot") if isinstance(snapshot.get("snapshot"), dict) else {}
     return str(value.get("checksum") or value.get("sha256") or value.get("id") or "")

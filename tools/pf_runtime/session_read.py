@@ -138,7 +138,7 @@ def session_context_payload(
     search_projection = {"status": "unavailable", "generation": None, "stale": True}
     if str(context.get("status") or "") in {"fresh", "fresh_with_updates", "ok"}:
         try:
-            from processforge_core.local_resource_search import index_status
+            from processforge_core.local_resource_search import ResourceSearchIndex
 
             snapshot_path, _snapshot_md = core.project_context_snapshot_paths(project_root)
             snapshot = core.load_yaml_document(snapshot_path)
@@ -150,7 +150,7 @@ def session_context_payload(
                 resolution = core.resolve_workspace_path_ref(project_root, resource["path_ref"], workplace_manifest=workplace_root / "workplace.yaml")
                 if resolution.get("status") == "resolved" and resolution.get("path"):
                     resource["content_roots"] = [str(resolution["path"])]
-            search_status = index_status(project_root, runtime_snapshot, workplace_root=workplace_root)
+            search_status = ResourceSearchIndex(project_root, runtime_snapshot, workplace_root).status()
             search_projection = {
                 "status": search_status.get("status"),
                 "generation": search_status.get("generation"),

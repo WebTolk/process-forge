@@ -2,7 +2,7 @@ schema_version: 1
 
 product:
   id: processforge
-  current_version: "1.0.2"
+  current_version: "1.1.0"
 
 update_sites:
   - id: processforge-official
@@ -26,7 +26,7 @@ update_sites:
 
 channels:
   stable:
-    latest: "1.0.2"
+    latest: "1.1.0"
 
 versions:
   - version: "0.1.0"
@@ -121,3 +121,36 @@ versions:
       - schemas/update-source-registry.schema.json
       - docs/concepts/update-sites.md
       - docs/ru/concepts/update-sites.md
+
+  - version: "1.1.0"
+    channel: stable
+    released_at: "2026-08-23"
+    compatibility:
+      min_project_schema: 1
+      max_project_schema: 1
+    migration:
+      required: false
+      guide: updates/migrations/1.1.0-prerelease-hardening.md
+    changes:
+      - type: runtime
+        summary: "Runtime, MCP session reads, Codex event capture, local resource search, and project initialization were hardened for the 1.1.0 release line."
+        breaking: false
+      - type: search
+        summary: "Snapshot-authorized local search now maintains explicit fulltext, metadata, and none indexing policies with maintenance-owned refresh semantics."
+        breaking: false
+      - type: updates
+        summary: "Manifest-based core update planning, apply, incomplete-update detection, and repair reporting were strengthened."
+        breaking: false
+      - type: validation
+        summary: "Release, checksum, archive provenance, public-cleanliness, and extracted-archive validation gates were expanded."
+        breaking: false
+    affected_files:
+      - tools/processforge.py
+      - tools/pf_runtime/session_read.py
+      - tools/pf_runtime/mcp_server.py
+      - src/processforge_core/core_update.py
+      - src/processforge_core/local_resource_search.py
+      - src/processforge_core/project_initialization.py
+      - docs/concepts/context-freshness.md
+      - docs/concepts/resource-search-index.md
+      - CHANGELOG.md

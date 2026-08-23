@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-08-22T17:34:17Z
-- valid_until: 2026-08-29T17:34:17Z
+- generated_at: 2026-08-23T17:40:18Z
+- valid_until: 2026-08-30T17:40:18Z
 
 ## Freshness
 
@@ -20,7 +20,7 @@ fresh
 
 ## Linked ProcessForge
 
-- version: 1.0.2
+- version: 1.1.0
 - constraint: ^1.0
 - install_mode: linked
 - distribution: processforge (available)
@@ -74,14 +74,14 @@ fresh
 
 ## Execution Route
 
-- process: knowledge-package-improvement
-- required_capabilities: process_governance, repository_write, research, review
+- process:
+- required_capabilities: None.
 - required_evidence: None.
 
 ## Capability Resolution
 
-- satisfied: 2
-- unsatisfied: 4
+- satisfied: 0
+- unsatisfied: 0
 
 ## Applied Project Overrides
 
@@ -95,10 +95,7 @@ fresh
 
 ## Resolution Conflicts
 
-- research
-- process_governance
-- research
-- process_governance
+- None.
 
 ## Required Knowledge Resources
 
@@ -148,7 +145,7 @@ fresh
 
 - browser_verification (missing, warn)
 - official_documentation_lookup (missing, warn)
-- repository_symbol_analysis (missing, warn)
+- repository_symbol_analysis (available, info)
 
 ## Required Tools
 

@@ -2,6 +2,55 @@
 
 ## Unreleased
 
+## 1.1.0 - 2026-08-23
+
+### Added
+
+- Added read-only MCP session tools for current context, chat transcript, and
+  activity facts, with session/project authorization checks.
+- Added snapshot-authorized local resource search for project knowledge,
+  templates, and resource metadata, including fulltext, metadata-only, and
+  non-indexed resource policies.
+- Added Runtime support for Codex event capture, replay, projection rebuilding,
+  long-lived runtime health checks, and local MCP/search acceptance flows.
+- Added manifest-based ProcessForge core update planning, apply, incomplete
+  update detection, and repair reporting.
+
+### Changed
+
+- Project initialization now reports bounded initialization status, deterministic
+  repair options, and local search readiness instead of relying only on file
+  presence.
+- Resource search refresh is maintenance-owned: query calls report missing,
+  stale, fresh, or degraded index state, while maintenance ticks perform rebuilds.
+- Context freshness and execution readiness are now reported separately, so fresh
+  knowledge resources remain searchable when a write/test/browser capability is
+  missing.
+- Release packaging and archive validation now require clean Git provenance,
+  checksum alignment, public-cleanliness gates, and extracted archive tests.
+
+### Fixed
+
+- Fixed stale search-index behavior so changed or damaged resource snapshots do
+  not appear fresh.
+- Fixed local SQLite/FTS capability handling so unavailable FTS reports degraded
+  search readiness instead of leaking uncontrolled exceptions through status
+  paths.
+- Fixed core-update recovery semantics so locally modified files are not
+  overwritten silently and incomplete updates can be classified for repair.
+- Fixed stale public distribution artifacts in `dist/` from blocking release
+  qualification.
+
+### Internal
+
+- Moved more project initialization, local resource search, core update, process
+  catalog, and runtime read logic into `processforge_core` / `tools/pf_runtime`
+  modules while keeping CLI and MCP behavior stable.
+- Added `ResourceSearchIndex` as the local-search application service used by
+  CLI, MCP, and session read adapters.
+- Expanded smoke coverage for Runtime, MCP, local search, update manifests,
+  freshness/readiness, release provenance, and extracted archive validation.
+
 ## 1.0.2 - 2026-08-05
 
 ### Changed

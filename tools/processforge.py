@@ -61,11 +61,11 @@ from processforge_core import project_initialization
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
 PROJECT_FLOW_ROOT = ".pf"
-PROCESSFORGE_VERSION = "1.0.2"
+PROCESSFORGE_VERSION = "1.1.0"
 PROCESSFORGE_SPEC_VERSION = "1.0"
 PROCESSFORGE_SCHEMA_BUNDLE_VERSION = "1.0"
 RELEASE_NAME = "processforge"
-RELEASE_ARCHIVE_VERSION = "1.0.2"
+RELEASE_ARCHIVE_VERSION = "1.1.0"
 PROCESSFORGE_CORE_PROJECT_TYPES = {"processforge-development", "processforge-core-development"}
 META_PROJECT_TYPES = {"agent-workspace", "brownfield-workspace", "meta-workspace"}
 DEFAULT_SCAN_POLICY = {
@@ -6745,6 +6745,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_project_context_snapshot_lock_model", [sys.executable, str(root / "tools" / "smoke_project_context_snapshot_lock_model.py")], 120),
         ReleaseCommand("smoke_project_context_freshness_policies", [sys.executable, str(root / "tools" / "smoke_project_context_freshness_policies.py")], 120),
         ReleaseCommand("smoke_context_freshness_vs_execution_readiness", [sys.executable, str(root / "tools" / "smoke_context_freshness_vs_execution_readiness.py")], 180),
+        ReleaseCommand("smoke_process_catalog_not_implicit_execution_route", [sys.executable, str(root / "tools" / "smoke_process_catalog_not_implicit_execution_route.py")], 180),
         ReleaseCommand("smoke_project_init_local_search_mcp", [sys.executable, str(root / "tools" / "smoke_project_init_local_search_mcp.py")], 180),
         ReleaseCommand("smoke_resource_indexing_policy_acceptance", [sys.executable, str(root / "tools" / "smoke_resource_indexing_policy_acceptance.py")], 180),
         ReleaseCommand("smoke_project_init_acceptance", [sys.executable, str(root / "tools" / "smoke_project_init_acceptance.py")], 180),
@@ -9011,9 +9012,9 @@ def mark_search_index_dirty_after_resource_event(workplace_root: Path, event: di
     if status in {"dry_run", "skipped", "passed", "failed"}:
         return
     try:
-        from processforge_core.local_resource_search import mark_index_dirty
+        from processforge_core.local_resource_search import ResourceSearchIndex
 
-        mark_index_dirty(workplace_root, workplace_root=workplace_root, reason=str(event.get("event_type") or "resource_event"))
+        ResourceSearchIndex(workplace_root, workplace_root=workplace_root).mark_dirty(reason=str(event.get("event_type") or "resource_event"))
     except Exception:
         return
 
@@ -10002,8 +10003,6 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     process_refs = manifest_data.get("processes") if isinstance(manifest_data.get("processes"), list) else []
     package_refs = manifest_data.get("packages") if isinstance(manifest_data.get("packages"), list) else []
     process_id_for_resolution = str(manifest_data.get("process") or "")
-    if not process_id_for_resolution:
-        process_id_for_resolution = next((str(item.get("id")) for item in process_refs if isinstance(item, dict) and item.get("id")), "")
     manifest_specializations = [str(item) for item in as_list(manifest_data.get("specializations")) if str(item)]
     specialization_context = resolve_specialization_context(
         project_root,
@@ -22756,7 +22755,7 @@ def search_index_maintenance_for_known_projects(
     therefore only tick known projects with fresh snapshots; stale projects must
     refresh their context before ProcessForge can safely rebuild their search index.
     """
-    from processforge_core.local_resource_search import maintenance_tick
+    from processforge_core.local_resource_search import ResourceSearchIndex
 
     raw_projects = project_roots if project_roots is not None else project_roots_under_workplace(workplace_root)
     projects: list[Path] = []
@@ -22800,7 +22799,7 @@ def search_index_maintenance_for_known_projects(
                 )
                 results.append(row)
                 continue
-            tick = maintenance_tick(project_root, snapshot, workplace_root=workplace_root, verify_files=verify_files)
+            tick = ResourceSearchIndex(project_root, snapshot, workplace_root).maintenance_tick(verify_files=verify_files)
             after = tick.get("after") if isinstance(tick.get("after"), dict) else {}
             row.update(
                 {
@@ -22890,18 +22889,18 @@ def print_search_index_status(payload: dict[str, Any]) -> None:
 
 
 def command_search_index_status(args: argparse.Namespace) -> int:
-    from processforge_core.local_resource_search import index_status
+    from processforge_core.local_resource_search import ResourceSearchIndex
 
     project_root = Path(args.project_root).expanduser().resolve()
     workplace_root = Path(args.workplace).expanduser().resolve()
     _context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
-    status = index_status(project_root, snapshot, workplace_root=workplace_root, verify_files=bool(getattr(args, "verify_files", False)))
+    status = ResourceSearchIndex(project_root, snapshot, workplace_root).status(verify_files=bool(getattr(args, "verify_files", False)))
     print_search_index_status(status)
     return 1 if status.get("status") == "degraded" else 0
 
 
 def command_search_index_refresh(args: argparse.Namespace) -> int:
-    from processforge_core.local_resource_search import build_index
+    from processforge_core.local_resource_search import ResourceSearchIndex
 
     project_root = Path(args.project_root).expanduser().resolve()
     workplace_root = Path(args.workplace).expanduser().resolve()
@@ -22909,7 +22908,7 @@ def command_search_index_refresh(args: argparse.Namespace) -> int:
     if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
         print(f"FAIL: project context is not fresh: {context.get('status')}")
         return 1
-    result = build_index(project_root, snapshot, workplace_root=workplace_root)
+    result = ResourceSearchIndex(project_root, snapshot, workplace_root).refresh()
     print(f"REFRESHED: {result.get('generation')}")
     print(f"RESOURCES: {result.get('resources')}")
     print(f"DOCUMENTS: {result.get('indexed')}")
@@ -22917,7 +22916,7 @@ def command_search_index_refresh(args: argparse.Namespace) -> int:
 
 
 def command_search_index_rebuild(args: argparse.Namespace) -> int:
-    from processforge_core.local_resource_search import rebuild_index
+    from processforge_core.local_resource_search import ResourceSearchIndex
 
     project_root = Path(args.project_root).expanduser().resolve()
     workplace_root = Path(args.workplace).expanduser().resolve()
@@ -22925,7 +22924,7 @@ def command_search_index_rebuild(args: argparse.Namespace) -> int:
     if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
         print(f"FAIL: project context is not fresh: {context.get('status')}")
         return 1
-    result = rebuild_index(project_root, snapshot, workplace_root=workplace_root)
+    result = ResourceSearchIndex(project_root, snapshot, workplace_root).rebuild()
     print(f"REBUILT: {result.get('generation')}")
     print(f"RESOURCES: {result.get('resources')}")
     print(f"DOCUMENTS: {result.get('indexed')}")
@@ -22933,12 +22932,12 @@ def command_search_index_rebuild(args: argparse.Namespace) -> int:
 
 
 def command_search_index_doctor(args: argparse.Namespace) -> int:
-    from processforge_core.local_resource_search import index_status
+    from processforge_core.local_resource_search import ResourceSearchIndex
 
     project_root = Path(args.project_root).expanduser().resolve()
     workplace_root = Path(args.workplace).expanduser().resolve()
     context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
-    status = index_status(project_root, snapshot, workplace_root=workplace_root)
+    status = ResourceSearchIndex(project_root, snapshot, workplace_root).status()
     sqlite_info = status.get("sqlite") if isinstance(status.get("sqlite"), dict) else {}
     checks = [
         check("PASS" if sqlite_info.get("fts5_available") else "FAIL", "SQLite FTS5 available"),
@@ -22951,7 +22950,7 @@ def command_search_index_doctor(args: argparse.Namespace) -> int:
 
 
 def command_search_index_tick(args: argparse.Namespace) -> int:
-    from processforge_core.local_resource_search import maintenance_tick
+    from processforge_core.local_resource_search import ResourceSearchIndex
 
     project_root = Path(args.project_root).expanduser().resolve()
     workplace_root = Path(args.workplace).expanduser().resolve()
@@ -22959,7 +22958,7 @@ def command_search_index_tick(args: argparse.Namespace) -> int:
     if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
         print(f"FAIL: project context is not fresh: {context.get('status')}")
         return 1
-    payload = maintenance_tick(project_root, snapshot, workplace_root=workplace_root, verify_files=not bool(getattr(args, "skip_file_verify", False)))
+    payload = ResourceSearchIndex(project_root, snapshot, workplace_root).maintenance_tick(verify_files=not bool(getattr(args, "skip_file_verify", False)))
     print(f"ACTION: {payload.get('action')}")
     after = payload.get("after") if isinstance(payload.get("after"), dict) else {}
     print(f"STATUS: {after.get('status')}")

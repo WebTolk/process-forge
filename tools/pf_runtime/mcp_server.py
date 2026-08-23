@@ -108,7 +108,7 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
                 raise session_read.SessionReadError("snapshot_not_fresh")
         return host.resolve_payload(workplace, core, session=supplied_session, resource_id=str(arguments.get("resource_id") or "") or None)
     if name == "pf.search":
-        from processforge_core.local_resource_search import LocalSearchError, search
+        from processforge_core.local_resource_search import LocalSearchError, ResourceSearchIndex
 
         context = core.project_context_check_result(bound_project, explicit_workplace=str(workplace))
         if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
@@ -126,7 +126,7 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
                 # It is never persisted in the public snapshot or returned.
                 resource["content_roots"] = [str(resolution["path"])]
         try:
-            payload = search(bound_project, runtime_snapshot, query=arguments.get("query"), limit=arguments.get("limit"), limitstart=arguments.get("limitstart"), offset=arguments.get("offset"), workplace_root=workplace)
+            payload = ResourceSearchIndex(bound_project, runtime_snapshot, workplace).search(query=arguments.get("query"), limit=arguments.get("limit"), limitstart=arguments.get("limitstart"), offset=arguments.get("offset"))
         except LocalSearchError as exc:
             raise session_read.SessionReadError(exc.code) from exc
         by_id = {str(item.get("id") or item.get("resource_id") or ""): item for item in resources if isinstance(item, dict)}

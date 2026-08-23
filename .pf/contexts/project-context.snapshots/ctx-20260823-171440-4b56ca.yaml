@@ -1,10 +1,10 @@
 schema_version: 1
-id: ctx-20260823-174027-b6cf66
-generated_at: '2026-08-23T17:40:18Z'
+id: ctx-20260823-171440-4b56ca
+generated_at: '2026-08-23T17:14:35Z'
 snapshot:
-  id: ctx-20260823-174027-b6cf66
-  generated_at: '2026-08-23T17:40:18Z'
-  valid_until: '2026-08-30T17:40:18Z'
+  id: ctx-20260823-171440-4b56ca
+  generated_at: '2026-08-23T17:14:35Z'
+  valid_until: '2026-08-30T17:14:35Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -12,7 +12,7 @@ snapshot:
     refresh_when_package_versions_change: true
     refresh_when_required_tools_change: true
   health:
-    status: warn
+    status: blocked
 project:
   id: process-forge
   name: ProcessForge
@@ -42,7 +42,7 @@ flow:
   manifest: .pf/process-forge.yaml
   local_config: .pf/process-forge.local.yaml
 process_forge:
-  version: 1.1.0
+  version: 1.0.2
   version_constraint: ^1.0
   install_mode: linked
   distribution:
@@ -90,7 +90,7 @@ sources:
       id: project_manifest
       path: .pf/process-forge.yaml
       kind: manifest
-      checksum: c1e19cb225376f80d79044da09d68d5043db8c1d9f2e0cd68066512a95014456
+      checksum: 48656046c01873c4d4ff8238e7bedc505c11dc09eed8327eb6b1f3fbb5d1e0b6
     -
       id: local_config
       path: .pf/process-forge.local.yaml
@@ -354,7 +354,7 @@ sources:
       kind: registry
       checksum: c20aab44c3aa379b4776a3e6cde74d2fae180c326335c3cca6cea8bf7449db61
 requirements_fingerprint:
-  process_forge_yaml: 'sha256:c1e19cb225376f80d79044da09d68d5043db8c1d9f2e0cd68066512a95014456'
+  process_forge_yaml: 'sha256:48656046c01873c4d4ff8238e7bedc505c11dc09eed8327eb6b1f3fbb5d1e0b6'
   process_forge_local_yaml: 'sha256:1a2991b658ac8d8ed5d52740fc63e50815736950dc380310a125de34231b532d'
 context_requirements:
   knowledge_packages:
@@ -482,9 +482,28 @@ resolved_context:
       source: processforge.official.software-development
       reason: active official process pack knowledge packages merged
   conflicts:
-    []
-  status: resolved
-  process: ""
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+  status: needs_resources
+  process: knowledge-package-improvement
   active_resource_profile:
     selected_platform:
       []
@@ -569,15 +588,83 @@ resolved_context:
         source: processforge.official.software-development
         reason: active official process pack knowledge packages merged
     conflicts:
-      []
+      -
+        id: research
+        kind: capability
+        source: 'process:knowledge-package-improvement'
+        reason: selected resource profile does not provide required capability
+      -
+        id: process_governance
+        kind: capability
+        source: 'process:knowledge-package-improvement'
+        reason: selected resource profile does not provide required capability
+      -
+        id: research
+        kind: capability
+        source: 'knowledge-package-improvement:propose'
+        reason: selected resource profile does not provide required capability
+      -
+        id: process_governance
+        kind: capability
+        source: 'knowledge-package-improvement:assess'
+        reason: selected resource profile does not provide required capability
   execution_route:
-    process: ""
+    process: knowledge-package-improvement
     stages:
-      []
+      -
+        id: propose
+        required_capabilities:
+          - research
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - proposal-complete
+      -
+        id: assess
+        required_capabilities:
+          - process_governance
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - compatibility-reviewed
+      -
+        id: integrate
+        required_capabilities:
+          - repository_write
+        required_artifacts:
+          []
+        required_evidence:
+          []
+        exit_gates:
+          - package-updated
     required_capabilities:
-      []
+      - process_governance
+      - repository_write
+      - research
+      - review
     capability_requirements:
-      []
+      -
+        capability: research
+        required_by: 'process:knowledge-package-improvement'
+      -
+        capability: process_governance
+        required_by: 'process:knowledge-package-improvement'
+      -
+        capability: review
+        required_by: 'process:knowledge-package-improvement'
+      -
+        capability: research
+        required_by: 'knowledge-package-improvement:propose'
+      -
+        capability: process_governance
+        required_by: 'knowledge-package-improvement:assess'
+      -
+        capability: repository_write
+        required_by: 'knowledge-package-improvement:integrate'
     required_artifacts:
       []
     required_evidence:
@@ -586,9 +673,55 @@ resolved_context:
       []
   capability_resolution:
     satisfied:
-      []
+      -
+        capability: review
+        required_by: 'process:knowledge-package-improvement'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
+      -
+        capability: repository_write
+        required_by: 'knowledge-package-improvement:integrate'
+        satisfied_by:
+          provider: active_process_pack
+          process_pack: processforge.official.software-development
+          knowledge_packages:
+            []
+          tools:
+            []
+          mcp:
+            []
+          templates:
+            []
     unsatisfied:
-      []
+      -
+        capability: research
+        required_by: 'process:knowledge-package-improvement'
+        reason: selected resource profile does not provide required capability
+        suggested_fix: select or update a specialization/platform binding that provides this capability
+      -
+        capability: process_governance
+        required_by: 'process:knowledge-package-improvement'
+        reason: selected resource profile does not provide required capability
+        suggested_fix: select or update a specialization/platform binding that provides this capability
+      -
+        capability: research
+        required_by: 'knowledge-package-improvement:propose'
+        reason: selected resource profile does not provide required capability
+        suggested_fix: select or update a specialization/platform binding that provides this capability
+      -
+        capability: process_governance
+        required_by: 'knowledge-package-improvement:assess'
+        reason: selected resource profile does not provide required capability
+        suggested_fix: select or update a specialization/platform binding that provides this capability
 active_resource_profile:
   selected_platform:
     []
@@ -673,15 +806,83 @@ active_resource_profile:
       source: processforge.official.software-development
       reason: active official process pack knowledge packages merged
   conflicts:
-    []
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
 execution_route:
-  process: ""
+  process: knowledge-package-improvement
   stages:
-    []
+    -
+      id: propose
+      required_capabilities:
+        - research
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - proposal-complete
+    -
+      id: assess
+      required_capabilities:
+        - process_governance
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - compatibility-reviewed
+    -
+      id: integrate
+      required_capabilities:
+        - repository_write
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - package-updated
   required_capabilities:
-    []
+    - process_governance
+    - repository_write
+    - research
+    - review
   capability_requirements:
-    []
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
   required_artifacts:
     []
   required_evidence:
@@ -690,9 +891,55 @@ execution_route:
     []
 capability_resolution:
   satisfied:
-    []
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
   unsatisfied:
-    []
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
 selected_specializations:
   []
 applied_project_overrides:
@@ -704,7 +951,26 @@ resolution_reasons:
     source: processforge.official.software-development
     reason: active official process pack knowledge packages merged
 conflicts:
-  []
+  -
+    id: research
+    kind: capability
+    source: 'process:knowledge-package-improvement'
+    reason: selected resource profile does not provide required capability
+  -
+    id: process_governance
+    kind: capability
+    source: 'process:knowledge-package-improvement'
+    reason: selected resource profile does not provide required capability
+  -
+    id: research
+    kind: capability
+    source: 'knowledge-package-improvement:propose'
+    reason: selected resource profile does not provide required capability
+  -
+    id: process_governance
+    kind: capability
+    source: 'knowledge-package-improvement:assess'
+    reason: selected resource profile does not provide required capability
 resolved:
   knowledge_packages:
     -
@@ -907,7 +1173,7 @@ local_search_resources:
           role: reference
 freshness:
   status: fresh
-  checked_at: '2026-08-23T17:40:18Z'
+  checked_at: '2026-08-23T17:14:35Z'
   stale_reasons:
     []
   update_available:
@@ -918,25 +1184,171 @@ readiness:
   context:
     status: fresh
   resources:
-    status: fresh
+    status: blocked
     blockers:
-      []
+      -
+        type: specialization_conflict
+        id: research
+        kind: capability
+        source: 'process:knowledge-package-improvement'
+        reason: selected resource profile does not provide required capability
+      -
+        type: specialization_conflict
+        id: process_governance
+        kind: capability
+        source: 'process:knowledge-package-improvement'
+        reason: selected resource profile does not provide required capability
+      -
+        type: specialization_conflict
+        id: research
+        kind: capability
+        source: 'knowledge-package-improvement:propose'
+        reason: selected resource profile does not provide required capability
+      -
+        type: specialization_conflict
+        id: process_governance
+        kind: capability
+        source: 'knowledge-package-improvement:assess'
+        reason: selected resource profile does not provide required capability
   execution:
-    status: ready
+    status: blocked
     missing_capabilities:
-      []
+      -
+        capability: research
+        required_by: 'process:knowledge-package-improvement'
+        availability: missing
+        reason: selected resource profile does not provide required capability
+        expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+      -
+        capability: process_governance
+        required_by: 'process:knowledge-package-improvement'
+        availability: missing
+        reason: selected resource profile does not provide required capability
+        expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+      -
+        capability: research
+        required_by: 'knowledge-package-improvement:propose'
+        availability: missing
+        reason: selected resource profile does not provide required capability
+        expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+      -
+        capability: process_governance
+        required_by: 'knowledge-package-improvement:assess'
+        availability: missing
+        reason: selected resource profile does not provide required capability
+        expected_provider_scope: specialization resource profile, active process pack, or workplace registry
     blockers:
-      []
+      -
+        type: capability_missing
+        capability: research
+        required_by: 'process:knowledge-package-improvement'
+        availability: missing
+        reason: selected resource profile does not provide required capability
+        expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+      -
+        type: capability_missing
+        capability: process_governance
+        required_by: 'process:knowledge-package-improvement'
+        availability: missing
+        reason: selected resource profile does not provide required capability
+        expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+      -
+        type: capability_missing
+        capability: research
+        required_by: 'knowledge-package-improvement:propose'
+        availability: missing
+        reason: selected resource profile does not provide required capability
+        expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+      -
+        type: capability_missing
+        capability: process_governance
+        required_by: 'knowledge-package-improvement:assess'
+        availability: missing
+        reason: selected resource profile does not provide required capability
+        expected_provider_scope: specialization resource profile, active process pack, or workplace registry
 resource_readiness:
-  status: fresh
+  status: blocked
   blockers:
-    []
+    -
+      type: specialization_conflict
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      type: specialization_conflict
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      type: specialization_conflict
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      type: specialization_conflict
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
 execution_readiness:
-  status: ready
+  status: blocked
   missing_capabilities:
-    []
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      availability: missing
+      reason: selected resource profile does not provide required capability
+      expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      availability: missing
+      reason: selected resource profile does not provide required capability
+      expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      availability: missing
+      reason: selected resource profile does not provide required capability
+      expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      availability: missing
+      reason: selected resource profile does not provide required capability
+      expected_provider_scope: specialization resource profile, active process pack, or workplace registry
   blockers:
-    []
+    -
+      type: capability_missing
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      availability: missing
+      reason: selected resource profile does not provide required capability
+      expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+    -
+      type: capability_missing
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      availability: missing
+      reason: selected resource profile does not provide required capability
+      expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+    -
+      type: capability_missing
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      availability: missing
+      reason: selected resource profile does not provide required capability
+      expected_provider_scope: specialization resource profile, active process pack, or workplace registry
+    -
+      type: capability_missing
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      availability: missing
+      reason: selected resource profile does not provide required capability
+      expected_provider_scope: specialization resource profile, active process pack, or workplace registry
 reproducibility:
   level: best_effort
   reasons:
@@ -957,7 +1369,7 @@ knowledge_stack:
     distribution: processforge
   -
     id: project.process-forge
-    version: 1.1.0
+    version: 1.0.2
     source: project
 resolved_policies:
   hard:
