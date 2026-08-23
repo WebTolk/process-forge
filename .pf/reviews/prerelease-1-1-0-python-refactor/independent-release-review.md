@@ -29,12 +29,18 @@ Mode: read-only
 
 ## Required Closure
 
-- Build refreshed `dist/processforge.zip` and `dist/processforge.manifest.json`
-  for 1.1.0.
-- Run clean-source public `release-test`.
-- Run quick and full extracted archive tests.
-- Run clean-install acceptance against the final archive.
-- Run in-place update acceptance from a prior install to 1.1.0.
-- Record Runtime/MCP proof or an explicit external live-host blocker.
-- Finish with clean Git state, commit, push, and branch parity with
+- CLOSED: refreshed `dist/processforge.zip` and
+  `dist/processforge.manifest.json` for 1.1.0.
+- CLOSED: clean-source public `release-test` passed.
+- CLOSED: quick and full extracted archive tests passed.
+- CLOSED: clean-install acceptance passed against the final archive.
+- CLOSED: in-place update acceptance passed from installed 1.0.2 to 1.1.0 with
+  a documented 1.0.2 self-update compatibility note.
+- CLOSED: Runtime/MCP proof passed for installed RC through stdio JSON-RPC;
+  live Codex host trust/approval remains an external host-policy path.
+- CLOSED FOR RELEASE: `dist/**` overlap was a stale assignment overlap already
+  forced with handoff at task creation; no active parallel writer touched
+  `dist/` in this run. The final artifact commit is the owner of the refreshed
+  archive pair.
+- PENDING UNTIL FINAL STEP: clean Git state, push, and branch parity with
   `origin/dev`.

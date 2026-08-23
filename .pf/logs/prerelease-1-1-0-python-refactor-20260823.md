@@ -19,6 +19,25 @@ Run post-edit validation, refresh checksums, execute reviews, build/test archive
 Handoff:
 None.
 
+## 2026-08-23 22:39 - codex-main
+
+Task:
+Close release archive, install, update, and MCP acceptance gates.
+Files changed:
+`dist/processforge.zip`, `dist/processforge.manifest.json`, `.pf/artifacts/prerelease-1-1-0-python-refactor/**`, `.pf/reviews/prerelease-1-1-0-python-refactor/**`.
+Artifacts changed:
+Updated clean-install, in-place update, MCP/search, qualification, final-validation, and release-review closure reports.
+Tools used:
+Full public `release-test`, `release-pack`, quick/full `release-archive-test`, temp clean install, temp in-place update, installed RC MCP JSON-RPC calls.
+Results:
+Full public release-test PASS in 943.73s. Archive built with 869 files, size 1280633 bytes, SHA256 `fd4c9948de1270a2b836c19796b6882ab994ec61dde854a44403f949661f43dc`. Quick and full extracted archive tests PASS; full extracted inner release-test elapsed 868.49s. Clean install PASS. In-place update from installed 1.0.2 to 1.1.0 PASS using the current manifest-based updater. Installed RC MCP `pf.session_context`, `pf.search`, and `pf.resolve` PASS for `docs.joomla:joomla-docs`.
+Risks:
+The old 1.0.2 archive does not contain `core-update` or `processforge-core.manifest.json`; self-apply by the old CLI is not available. Real Codex-host MCP trust/approval was not exercised locally and remains host-policy dependent.
+Next steps:
+Commit final archive/report state, tag 1.1.0, push branch and tag, verify `HEAD == origin/dev`.
+Handoff:
+None.
+
 ## 2026-08-23 21:40 - codex-main
 
 Task:

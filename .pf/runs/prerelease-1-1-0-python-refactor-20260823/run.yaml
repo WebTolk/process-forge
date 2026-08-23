@@ -2,7 +2,7 @@ schema_version: 1
 id: prerelease-1-1-0-python-refactor-20260823
 title: ProcessForge 1.1.0 prerelease and Python refactor
 process: software-feature-development
-status: in_progress
+status: completed
 created_at: '2026-08-23T17:13:12Z'
 updated_at: '2026-08-23T17:13:55Z'
 objective: 'Execute задания/process-forge-1.1.0-prerelease-python-refactor-master-prompt.md: freeze 1.1.0 scope, audit actual release contents, update CHANGELOG/VERSION, run release/install/update/MCP/search qualification, then perform at most 1-2 behavior-preserving Python core refactor slices.'
@@ -16,13 +16,18 @@ tasks:
   -
     id: prerelease-1-1-0-python-refactor-main
     assignment: .pf/assignments/prerelease-1-1-0-python-refactor-main.yaml
-    status: open
+    status: done
     order: 1
     blocking: true
 final_artifacts:
-  []
+  - .pf/artifacts/prerelease-1-1-0-python-refactor/final-validation.md
+  - .pf/artifacts/prerelease-1-1-0-python-refactor/release-1.1.0-qualification-report.md
+  - dist/processforge.zip
+  - dist/processforge.manifest.json
 events:
   emitted:
     - run.created
+    - task.completed
+    - run.completed
 privacy:
   public_safe: true

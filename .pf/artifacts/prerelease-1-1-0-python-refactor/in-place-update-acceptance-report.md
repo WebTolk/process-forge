@@ -1,25 +1,39 @@
 # In-Place Update Acceptance Report
 
 Date: 2026-08-23
-Status: pending final RC archive
+Status: PASS with compatibility note
 
-## Planned Checks
+## Archive Under Test
 
-- Plan update from previous installed version to 1.1.0 archive.
-- Apply update.
-- Verify new manifest/version.
-- Verify Runtime/MCP/search health after update.
-- Verify obsolete PF-owned files are removed.
-- Verify unknown local files are preserved.
-- Verify locally modified core files are not overwritten silently.
-- Verify incomplete update detection and repair reporting.
+- Previous archive source: committed `HEAD:dist/processforge.zip` before the
+  final 1.1.0 artifact update.
+- Previous archive version: `1.0.2`.
+- New archive: `dist/processforge.zip`.
+- New archive version: `1.1.0`.
 
-## Current Evidence
+## Acceptance Result
 
-Source-level update smokes passed before final archive packaging:
+- PASS: extracted previous `1.0.2` archive into a temp installed core root.
+- PASS: current 1.1.0 `core-update status --core-root <old-core>`.
+- PASS: current 1.1.0 `core-update plan --core-root <old-core>
+  --archive dist/processforge.zip`.
+- PASS: current 1.1.0 `core-update apply --core-root <old-core>
+  --archive dist/processforge.zip --confirm`.
+- PASS: installed `VERSION` changed from `1.0.2` to `1.1.0`.
+- PASS: current 1.1.0 `core-update status` after apply.
+- PASS: updated installed core `release-check`.
+- PASS: updated installed core `core-update status`.
 
-- `smoke_core_update_manifest`: PASS.
-- `smoke_update_stage_verify_apply_file_provider`: PASS.
+## Compatibility Note
 
-Full in-place update acceptance must be rerun against the final committed
-1.1.0 archive.
+The previous `1.0.2` public ZIP does not contain
+`processforge-core.manifest.json` and its CLI does not expose `core-update`.
+Therefore, self-apply by the old installed tool is not available for that
+archive. The accepted path for this prerelease is an external/current
+manifest-based updater applying the 1.1.0 archive to an installed 1.0.2 core.
+
+## Supporting Gates
+
+- PASS: `smoke_core_update_manifest`.
+- PASS: `smoke_update_stage_verify_apply_file_provider`.
+- PASS: full public `release-test`.

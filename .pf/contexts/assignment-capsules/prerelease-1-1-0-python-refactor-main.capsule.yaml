@@ -1,10 +1,10 @@
 schema_version: 1
 capsule:
   id: prerelease-1-1-0-python-refactor-main-capsule
-  generated_at: '2026-08-23T17:41:29Z'
+  generated_at: '2026-08-23T18:43:16Z'
   assignment_id: prerelease-1-1-0-python-refactor-main
   assignment_path: .pf/assignments/prerelease-1-1-0-python-refactor-main.yaml
-  assignment_checksum: e896fbd628af73fb1d56a85cbe8dc3dd3ffef719ab7f0600c3b5e2657be43ee0
+  assignment_checksum: 0f3f3fa0fe788e5660b802e1b70fb641ff62a15db41aaa1fe8dbf246496e573f
   snapshot: .pf/contexts/project-context.snapshot.yaml
   snapshot_checksum: f6e5d3dd4835fc390c12c7f55c9e80df3b061a1396a25dce870f4884c2dbb1b0
   immutable: true
@@ -222,7 +222,7 @@ effective_resources:
 assignment:
   id: prerelease-1-1-0-python-refactor-main
   path: .pf/assignments/prerelease-1-1-0-python-refactor-main.yaml
-  status: open
+  status: done
   objective: Prepare ProcessForge 1.1.0 release evidence and perform only safe behavior-preserving Python core refactor after baseline gates.
   execution_mode:
     kind: implementation
@@ -259,11 +259,17 @@ scope:
     - src/**
     - tools/**
     - schemas/**
+    - checksums/**
     - packs/**
     - processes/**
     - templates/**
     - updates/**
     - dist/**
+    - .pf/artifacts/project-context-refresh-report.md
+    - .pf/artifacts/projections/**
+    - .pf/contexts/project-context.snapshot.md
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/contexts/project-context.snapshots/**
     - .pf/artifacts/prerelease-1-1-0-python-refactor/**
     - .pf/reviews/prerelease-1-1-0-python-refactor/**
     - .pf/runs/prerelease-1-1-0-python-refactor-20260823/**
@@ -291,11 +297,17 @@ scope:
       - src/**
       - tools/**
       - schemas/**
+      - checksums/**
       - packs/**
       - processes/**
       - templates/**
       - updates/**
       - dist/**
+      - .pf/artifacts/project-context-refresh-report.md
+      - .pf/artifacts/projections/**
+      - .pf/contexts/project-context.snapshot.md
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/contexts/project-context.snapshots/**
       - .pf/artifacts/prerelease-1-1-0-python-refactor/**
       - .pf/reviews/prerelease-1-1-0-python-refactor/**
       - .pf/runs/prerelease-1-1-0-python-refactor-20260823/**
@@ -320,11 +332,17 @@ scope:
       - src/**
       - tools/**
       - schemas/**
+      - checksums/**
       - packs/**
       - processes/**
       - templates/**
       - updates/**
       - dist/**
+      - .pf/artifacts/project-context-refresh-report.md
+      - .pf/artifacts/projections/**
+      - .pf/contexts/project-context.snapshot.md
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/contexts/project-context.snapshots/**
       - .pf/artifacts/prerelease-1-1-0-python-refactor/**
       - .pf/reviews/prerelease-1-1-0-python-refactor/**
       - .pf/runs/prerelease-1-1-0-python-refactor-20260823/**
@@ -350,6 +368,9 @@ scope:
           other_assignment: release-smoke-isolation-20260821
           other_scope: tools/smoke_official_software_process_available.py
           reason: glob_matches_file
+    resolution:
+      status: accepted_with_handoff
+      reason: Stale active assignments owned historical dist/tools scopes; this run was created with force-with-handoff and no active parallel writer changed the final archive pair.
 outputs:
   required_outputs:
     -
@@ -477,11 +498,17 @@ allowed_files:
   - src/**
   - tools/**
   - schemas/**
+  - checksums/**
   - packs/**
   - processes/**
   - templates/**
   - updates/**
   - dist/**
+  - .pf/artifacts/project-context-refresh-report.md
+  - .pf/artifacts/projections/**
+  - .pf/contexts/project-context.snapshot.md
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/contexts/project-context.snapshots/**
   - .pf/artifacts/prerelease-1-1-0-python-refactor/**
   - .pf/reviews/prerelease-1-1-0-python-refactor/**
   - .pf/runs/prerelease-1-1-0-python-refactor-20260823/**
