@@ -2,7 +2,7 @@
 
 ## Current Qualification
 
-Qualified for the resource-indexing release boundary with one unrelated full public release-test blocker.
+Qualified for the resource-indexing release boundary.
 
 ## Passed
 
@@ -15,6 +15,7 @@ Qualified for the resource-indexing release boundary with one unrelated full pub
 - privacy sanitizer smokes
 - clean-source `release-pack`
 - release archive contract/freshness quick validation
+- full extracted archive public validation
 - extracted archive resource-indexing policy acceptance smoke
 - extracted archive project-init/local-search MCP smoke
 
@@ -23,13 +24,14 @@ Qualified for the resource-indexing release boundary with one unrelated full pub
 - Archive: `dist/processforge-1.0.2-resource-indexing-20260822.zip`
 - Manifest: `dist/processforge-1.0.2-resource-indexing-20260822.manifest.json`
 - Entries: `865`
-- SHA-256: `186655fb07bba13ca09fdfd7300fbdd712e34878ea5d28ff5ce47f1eca532d1d`
+- SHA-256: `61400bd0f267bf3c3abb9e74fec210be34cee1418da7769d9d91404661c23f50`
+- Source commit: `47e87756138b0fd662caf3a790402e9557414e03`
 
-## Remaining Blocker
+## Full Gate Resolution
 
-- Full extracted `release-archive-test --extracted-test full --timeout-scale 2` was interrupted after several minutes while running public release-test long-lived runtime coverage.
-- Process evidence pointed to `smoke_long_lived_runtime.py` / `runtime project-state`; after Ctrl+C, orphan children were stopped.
-- This is not classified as a blocker for the resource-indexing archive contract because quick extracted archive validation and targeted extracted resource-indexing/MCP smokes passed.
+- Full extracted `release-archive-test --extracted-test full --timeout-scale 2` completed with `RESULT: PASS` in `969.61` seconds.
+- The resumed investigation found the earlier interruption was premature. `smoke_long_lived_runtime.py` passed standalone and inside the full public suite.
+- The actual public-suite defect was stale `smoke_project_init_acceptance.py` expectations for query-time search rebuild; the smoke now follows maintenance-owned refresh and degraded SQLite capability semantics.
 
 ## Release Boundary
 

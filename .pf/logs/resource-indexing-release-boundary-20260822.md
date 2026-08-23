@@ -24,6 +24,18 @@ Risks: Root-level `release-test --public` still reports tracked `dist/*` artifac
 Next steps: Commit the source-fix, rebuild the resource-indexing archive from the new clean source commit, and rerun full extracted archive validation.
 Handoff: none.
 
+## 2026-08-23 08:12 - codex-main
+
+Task: Rebuild and fully validate the resource-indexing release archive after the resumed gate fix.
+Files changed: `dist/processforge-1.0.2-resource-indexing-20260822.zip`, `dist/processforge-1.0.2-resource-indexing-20260822.manifest.json`, final validation and qualification reports.
+Artifacts changed: release archive rebuilt from source commit `47e87756138b0fd662caf3a790402e9557414e03`.
+Templates used: release-delivery follow-up after source-fix commit.
+Tools used: `release-pack`, `release-archive-test --extracted-test full --timeout-scale 2`.
+Decisions: Remove the full-gate blocker classification; the full extracted public suite completed successfully after fixing project-init acceptance search lifecycle expectations.
+Risks: Root-level `release-test --public` still reports tracked historical `dist/*` archives as stale; extracted archive validation is the release proof for this artifact.
+Next steps: Commit rebuilt archive/report/projection state and push.
+Handoff: none.
+
 ## 2026-08-22 22:15 - codex-main
 
 Task: Implement declarative indexing and resource-owned search index.

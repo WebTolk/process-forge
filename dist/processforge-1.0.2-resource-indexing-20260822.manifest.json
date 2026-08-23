@@ -3,13 +3,13 @@
     "entry_count": 865,
     "filename": "processforge-1.0.2-resource-indexing-20260822.zip",
     "format": "zip",
-    "sha256": "186655fb07bba13ca09fdfd7300fbdd712e34878ea5d28ff5ce47f1eca532d1d",
-    "size": 1271258
+    "sha256": "61400bd0f267bf3c3abb9e74fec210be34cee1418da7769d9d91404661c23f50",
+    "size": 1271214
   },
   "build": {
     "deterministic": true,
-    "generated_at": "2026-08-22T18:19:12Z",
-    "source_date_epoch": 1787422752
+    "generated_at": "2026-08-23T03:55:15Z",
+    "source_date_epoch": 1787457315
   },
   "files": [
     {
@@ -99,7 +99,7 @@
     },
     {
       "path": "checksums/processforge.sha256",
-      "sha256": "e2f71089ad82ca448aedf329a8b4fa1452eb58b7bd27b515da4ae4a0c011a424",
+      "sha256": "61f9fecf0bc9040b1705a9e635256a01ba88f037a8e514022c76b33a7011342e",
       "size": 95186
     },
     {
@@ -2089,7 +2089,7 @@
     },
     {
       "path": "processforge-core.manifest.json",
-      "sha256": "13c94a4eaeff3cc19b8ff62643777a8a1cdeebdb4959c31d0dc24abdcb16eb47",
+      "sha256": "8de447cb0bc4b6900800678571878d94a553105bd1ae9f45f6dd13da1d3544f0",
       "size": 160128
     },
     {
@@ -2819,8 +2819,8 @@
     },
     {
       "path": "src/processforge_core/local_resource_search.py",
-      "sha256": "968c8b89faaeb65579158041f0ae25d7ee959deacf5267cb2adfd4121039ee55",
-      "size": 34945
+      "sha256": "ca3ced6a25312b27c6c41844c78d32e6fdb21804000686cf1cbdb7aa11ae7863",
+      "size": 35106
     },
     {
       "path": "src/processforge_core/process_catalog/__init__.py",
@@ -3904,8 +3904,8 @@
     },
     {
       "path": "tools/smoke_project_init_acceptance.py",
-      "sha256": "7288ca4d857121a6a654cb1904a8ba00420cfb6fb51847413e74f69e80ea428d",
-      "size": 10385
+      "sha256": "64e6613500d3bd08d4f23751f217d2f0915c677dfddcbebc5f9130964ace2bff",
+      "size": 10286
     },
     {
       "path": "tools/smoke_project_init_local_search_mcp.py",
@@ -4363,9 +4363,9 @@
   "schema_bundle_version": "1.0",
   "schema_version": 1,
   "source": {
-    "commit": "4e754fe36b5b969d4b1dc4cc152d8e81d0172e7b",
+    "commit": "47e87756138b0fd662caf3a790402e9557414e03",
     "dirty": false,
-    "tree": "97f43dd6d649f327fec22397e47a71f59f102a0a",
+    "tree": "122f0168d828c641c824af8fc32d3f4411281123",
     "vcs": "git"
   },
   "version": "1.0.2"

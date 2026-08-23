@@ -1,6 +1,6 @@
 # Final Validation
 
-Status: complete_with_full_public_gate_blocker
+Status: complete
 
 ## Passed
 
@@ -16,6 +16,7 @@ Status: complete_with_full_public_gate_blocker
 - `python tools/processforge.py release-check --root .`
 - `python tools/processforge.py release-pack --root . --output dist/processforge-1.0.2-resource-indexing-20260822.zip`
 - `python tools/processforge.py release-archive-test --archive dist/processforge-1.0.2-resource-indexing-20260822.zip --root . --extracted-test quick`
+- `python tools/processforge.py release-archive-test --archive dist/processforge-1.0.2-resource-indexing-20260822.zip --root . --extracted-test full --timeout-scale 2`
 - Extracted archive `tools/smoke_resource_indexing_policy_acceptance.py`
 - Extracted archive `tools/smoke_project_init_local_search_mcp.py`
 
@@ -23,12 +24,13 @@ Status: complete_with_full_public_gate_blocker
 
 - Archive: `dist/processforge-1.0.2-resource-indexing-20260822.zip`
 - Manifest: `dist/processforge-1.0.2-resource-indexing-20260822.manifest.json`
-- ZIP size: `1271258` bytes
+- ZIP size: `1271214` bytes
 - ZIP entries: `865`
-- ZIP sha256: `186655fb07bba13ca09fdfd7300fbdd712e34878ea5d28ff5ce47f1eca532d1d`
+- ZIP sha256: `61400bd0f267bf3c3abb9e74fec210be34cee1418da7769d9d91404661c23f50`
+- Source commit: `47e87756138b0fd662caf3a790402e9557414e03`
 
-## Blocked Full Gate
+## Full Gate Resolution
 
-- `python tools/processforge.py release-archive-test --archive dist/processforge-1.0.2-resource-indexing-20260822.zip --root . --extracted-test full --timeout-scale 2` was interrupted after several minutes with no failure output.
-- Process inspection showed the extracted public release-test was in `smoke_long_lived_runtime.py` / `runtime project-state`, then orphaned into subsequent long-running smoke processes after Ctrl+C.
-- This is classified as a full public release-test harness/runtime blocker, not a resource-indexing archive-contract failure. Quick archive validation and targeted extracted resource-indexing/MCP smokes passed.
+- The previously interrupted full gate was resumed and allowed to finish. Standalone and full-run evidence showed `smoke_long_lived_runtime.py` progresses normally on this machine.
+- The actual failing public check was stale `tools/smoke_project_init_acceptance.py` search lifecycle expectations. The smoke now uses maintenance-owned refresh and SQLite capability degradation semantics.
+- Full extracted archive validation completed with `RESULT: PASS` in `969.61` seconds.
