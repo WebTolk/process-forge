@@ -4,7 +4,7 @@
 
 **Фреймворк для создания ИИ-процессов, независимый от конкретных платформ и поставщиков ИИ.**
 
-[![Версия](https://img.shields.io/badge/version-1.0.2-2F6FED?style=for-the-badge)](VERSION)
+[![Версия](https://img.shields.io/badge/version-1.1.0-2F6FED?style=for-the-badge)](VERSION)
 [![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](requirements.txt)
 [![Лицензия](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
 [![Файловый режим](https://img.shields.io/badge/runtime-file--first-2E7D32?style=for-the-badge)](docs/ru/concepts/runtime-model.md)
@@ -67,6 +67,8 @@ ProcessForge превращает повторяемую ИИ-работу в я
 один проект и один активный процесс/запуск (process/run). Основной агент
 выполняет работу, запускает проверки, ведёт артефакты и завершает её сводкой
 (summary) или передачей результата (handoff).
+Режим гаража не требует PF Runtime, Codex hooks или ручного создания Ledger
+session.
 
 ### Режим Кузницы / Фабрики
 
@@ -75,6 +77,8 @@ ProcessForge превращает повторяемую ИИ-работу в я
 или координирует рабочие сессии (worker sessions), собирает их результаты
 (outputs) и интегрирует итог через передачи результата (handoffs) и проверки
 (reviews).
+Runtime, host telemetry и worker orchestration подключаются для этого режима
+опционально.
 
 ## Быстрый старт
 
@@ -113,8 +117,8 @@ ProcessForge превращает повторяемую ИИ-работу в я
 Подключи этот проект к существующему рабочему месту ProcessForge (workplace).
 
 Сначала изучи проект, выбери консервативный тип проекта (project type), создай
-проектный слой .pf, прочитай .pf/START_AGENT_HERE.md, запусти проверки
-(doctor checks) и кратко опиши, что ProcessForge теперь знает о проекте.
+проектный слой .pf, прочитай .pf/START_AGENT_HERE.md, получи актуальный контекст
+через ProcessForge и кратко опиши, что ProcessForge теперь знает о проекте.
 
 Глобальные ресурсы держи в рабочем месте (workplace). Не копируй тяжёлую
 документацию, зеркала исходного кода, инструментальные цепочки (toolchains) или

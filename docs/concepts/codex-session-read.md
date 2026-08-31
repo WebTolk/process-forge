@@ -61,8 +61,16 @@ with `/hooks` after restarting or reloading Codex.
 ## MCP host configuration
 
 PF registry metadata and Codex MCP host configuration are deliberately
-separate. Register the stdio server with an explicit installed-distribution
-path and workplace, for example:
+separate. ProcessForge can manage the Codex stdio MCP registration explicitly:
+
+```powershell
+python bin/pf.py codex-mcp status --workplace <processforge-workplace>
+python bin/pf.py codex-mcp install --workplace <processforge-workplace> --apply
+python bin/pf.py codex-mcp remove --workplace <processforge-workplace> --apply
+```
+
+The equivalent manual registration uses an explicit installed-distribution path
+and workplace, for example:
 
 ```powershell
 codex mcp add processforge -- py -3 "<processforge-install>/tools/pf_runtime/mcp_server.py" --workplace "<processforge-workplace>"
@@ -81,3 +89,7 @@ avoids a second session-to-project table.
 MCP setup is opt-in and must be verified separately from hook registration:
 run `codex mcp list` (and `/mcp` in an active client) for the server, and
 `/hooks` for trusted matching hook handlers.
+
+The stdio MCP process is host-owned. It is not a Windows autostart target and is
+not a detached Runtime service. Restart or reload Codex after changing the host
+registration so a fresh session starts a connected MCP process.

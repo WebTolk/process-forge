@@ -104,9 +104,26 @@ def deterministic_derived_key(
     ).hexdigest()
 
 
+def _strip_windows_extended_prefix(value: str) -> str:
+    """Return a normal spelling for an equivalent Win32 extended path."""
+
+    if value.startswith("\\\\?\\UNC\\"):
+        return "\\\\" + value[8:]
+    if value.startswith("\\\\?\\"):
+        return value[4:]
+    return value
+
+
+def _resolved_for_containment(path: Path | str) -> Path:
+    resolved = Path(path).resolve(strict=False)
+    if os.name == "nt":
+        return Path(_strip_windows_extended_prefix(str(resolved)))
+    return resolved
+
+
 def contained_path(root: Path | str, *parts: str) -> Path:
-    root_path = Path(root).resolve(strict=False)
-    candidate = root_path.joinpath(*parts).resolve(strict=False)
+    root_path = _resolved_for_containment(root)
+    candidate = _resolved_for_containment(root_path.joinpath(*parts))
     try:
         candidate.relative_to(root_path)
     except ValueError as exc:

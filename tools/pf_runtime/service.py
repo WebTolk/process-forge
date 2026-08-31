@@ -52,6 +52,35 @@ def operator_log_path(workplace_root: Path) -> Path:
     return runtime_root(workplace_root) / "logs" / "operator.log"
 
 
+def last_json_object(path: Path, *, chunk_size: int = 8192) -> dict[str, Any] | None:
+    """Read the newest valid JSON object without scanning an entire journal."""
+    try:
+        with path.open("rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            position = handle.tell()
+            pending = b""
+            while position > 0:
+                size = min(chunk_size, position)
+                position -= size
+                handle.seek(position)
+                pending = handle.read(size) + pending
+                parts = pending.split(b"\n")
+                candidates = parts if position == 0 else parts[1:]
+                for raw in reversed(candidates):
+                    if not raw.strip():
+                        continue
+                    try:
+                        item = json.loads(raw.decode("utf-8"))
+                    except (UnicodeDecodeError, json.JSONDecodeError):
+                        continue
+                    if isinstance(item, dict):
+                        return item
+                pending = parts[0] if position > 0 else b""
+    except OSError:
+        return None
+    return None
+
+
 def read_json(path: Path) -> dict[str, Any]:
     if not path.is_file():
         return {}
@@ -274,12 +303,12 @@ class RuntimeProcess:
 
     def status_payload(self) -> dict[str, Any]:
         roots = self.known_project_roots()
-        runtime_host = host.status_payload(self.workplace_root, roots, self.core)
+        runtime_host = host.load_state(self.workplace_root)
         with self.state_lock:
             payload = dict(self.state)
         payload["health"] = "ready" if self.state.get("status") == "ready" else self.state.get("health", self.state.get("status"))
         payload["known_projects"] = runtime_host.get("projects", [])
-        payload["active_agent_sessions"] = runtime_host.get("ledger_sessions", 0)
+        payload["active_agent_sessions"] = len(self.core.iter_agent_presence(self.workplace_root))
         payload["active_workers"] = self.active_worker_count(roots)
         payload["pending_runtime_jobs"] = 0
         payload["last_event"] = self.last_event(roots)
@@ -302,15 +331,9 @@ class RuntimeProcess:
             events_path, _outbox = self.core.event_runtime_paths(project_root)
             if not events_path.is_file():
                 continue
-            for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
-                if not line.strip():
-                    continue
-                try:
-                    item = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if isinstance(item, dict):
-                    latest = {"project_id": self.core.project_id(project_root), "event_id": item.get("event_id"), "event_type": item.get("event_type"), "time": item.get("time")}
+            item = last_json_object(events_path)
+            if item is not None:
+                latest = {"project_id": self.core.project_id(project_root), "event_id": item.get("event_id"), "event_type": item.get("event_type"), "time": item.get("time")}
         return latest
 
     def assert_session_project_scope(self, payload: dict[str, Any]) -> None:
@@ -601,27 +624,40 @@ def command_restart(args: argparse.Namespace, core: Any) -> int:
     return command_start(args, core)
 
 
+def add_runtime_truth(payload: dict[str, Any], core: Any, *, running: bool) -> dict[str, Any]:
+    runtime_version = str(payload.get("runtime_version") or RUNTIME_VERSION)
+    status = str(payload.get("status") or "")
+    payload["installed_pf"] = {"version": str(getattr(core, "PROCESSFORGE_VERSION", ""))}
+    payload["runtime"] = {"running": bool(running), "status": status, "health": str(payload.get("health") or status)}
+    if runtime_version:
+        instance_status = "current" if running else ("historical" if status not in {"", "not_running"} else "not_available")
+        payload["last_runtime_instance"] = {"version": runtime_version, "status": instance_status}
+    else:
+        payload["last_runtime_instance"] = {"version": "", "status": "not_available"}
+    return payload
+
+
 def status_payload(workplace_root: Path, core: Any) -> dict[str, Any]:
     active, state = active_service(workplace_root, core)
     if not active and state:
         state = dict(state)
         if state.get("status") == "stopped":
             state["health"] = "stopped"
-            return state
+            return add_runtime_truth(state, core, running=False)
         state["status"] = "stale"
         state["health"] = "stale"
-        return state
+        return add_runtime_truth(state, core, running=False)
     if not active:
-        return {"schema_version": 1, "status": "not_running", "health": "stopped", "workplace_root": str(workplace_root)}
+        return add_runtime_truth({"schema_version": 1, "status": "not_running", "health": "stopped", "workplace_root": str(workplace_root)}, core, running=False)
     token = load_token(workplace_root)
     endpoint = str(state.get("endpoint") or "")
     code, body = http_json("GET", endpoint.rstrip("/") + "/status", token=token, timeout=2.0)
     if code == 200:
-        return body
+        return add_runtime_truth(body, core, running=True)
     state = dict(state)
     state["health"] = "degraded"
     state["last_status_error"] = body
-    return state
+    return add_runtime_truth(state, core, running=True)
 
 
 def command_status(args: argparse.Namespace, core: Any) -> int:

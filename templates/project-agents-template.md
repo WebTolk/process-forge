@@ -4,15 +4,15 @@ This project uses ProcessForge.
 
 ## Start Order
 
-1. Read `.pf/process-forge.yaml`.
-2. Read `.pf/contexts/project-context.snapshot.md`.
-3. If the snapshot is missing or stale, run/request project context refresh.
-4. Read the current assignment from `.pf/assignments/` if assigned.
-5. Read latest `.pf/artifacts/session-status-report.md` if present.
-6. Read latest relevant logs/reviews/handoffs.
-7. Use only tools/templates listed in snapshot or assignment.
-8. Write session telemetry to `.pf/runtime/telemetry/`.
-9. Let ProcessForge commands emit flow events to `.pf/runtime/events/`.
+1. Read `.pf/START_AGENT_HERE.md` and `.pf/process-forge.yaml`.
+2. Call `pf.context` with this project root. If MCP is unavailable, read the
+   current snapshot as the file-only fallback.
+3. Use `pf.search` when project-authorized knowledge is needed.
+4. Use `pf.resolve` before opening a ProcessForge-managed resource root.
+5. Call `pf.work.start` with the high-level objective when work becomes
+   substantive.
+6. Follow the selected assignment and immutable capsule; write its durable
+   artifacts, review, log, and handoff.
 
 ## Important Rules
 
@@ -22,5 +22,7 @@ This project uses ProcessForge.
 - Do not commit `.pf/runtime/`.
 - Use project-local templates before global templates when allowed.
 - Record template usage.
-- Record tool/MCP usage in session telemetry.
 - Do not commit `.pf/runtime/events/` or webhook outbox payloads.
+- During ordinary project work, do not install, start, or repair PF Runtime,
+  MCP, host hooks, or Agent Ledger. Use available PF tools and report an
+  operator-level infrastructure blocker when PF requires operator action.

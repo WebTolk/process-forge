@@ -79,6 +79,10 @@ Agent Ledger есть во всех режимах, но это файловый
 управляют CLI-команды, а не отдельный агент. Agents отмечаются в начале сессии,
 отправляют heartbeat во время долгой работы и делают checkout перед уходом.
 
+Garage tools `pf.context`, `pf.search`, `pf.resolve` и `pf.work.start` не
+требуют manual Ledger session. Команды сессии ниже предназначены для Forge и
+operator diagnostics, а не для обычного старта Garage.
+
 Agent Director не нужен в single-agent mode. Process Supervisor / Execution
 Inspector не нужен, пока процесс не запускает внешних runtime workers.
 
@@ -105,7 +109,7 @@ Project-local ссылка на текущую сессию хранится з�
 
 Эти файлы среды выполнения приватные и не входят в публичный релизный архив.
 
-## Session commands
+## Forge и operator session commands
 
 Можно использовать ledger command names или простые aliases:
 

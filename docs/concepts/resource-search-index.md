@@ -95,10 +95,19 @@ external file changes are detected by fingerprint verification during `tick`.
 or degraded, the result carries that `search_status` and returns no matches
 until maintenance refreshes the derived DB.
 
-`pf.search` requires a valid Ledger session, a project binding, fresh resource
-resolution, fresh index state, and authorized resources. It does not require
-write access, browser automation, CI, deployment, or any other capability that
-is unrelated to the read-only query. For example:
+Index freshness is not the same as semantic corpus readiness. A project can
+have a fresh SQLite/FTS index with zero authorized resources or zero indexed
+documents. Garage readiness checks should therefore show both infrastructure
+state and corpus state: snapshot freshness, SQLite/FTS availability, index
+freshness, authorized resource count, and indexed document count.
+
+`pf.search` requires a project root, fresh resource resolution, fresh index
+state, and resources authorized by that project's snapshot. It does not require
+a Ledger session, hooks, daemon, write access, browser automation, CI,
+deployment, or any other capability that is unrelated to the read-only query.
+When a session id is supplied, MCP verifies that the session is bound to the
+same project and then treats the session as an enhancement, not as the
+authorization source. For example:
 
 ```text
 Joomla resources fresh

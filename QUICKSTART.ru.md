@@ -4,6 +4,34 @@
 Полный набор команд агент должен брать из
 [docs/ru/getting-started/agent-prompts.md](docs/ru/getting-started/agent-prompts.md).
 
+## Одноразовая настройка машины
+
+Один раз зарегистрируйте ProcessForge MCP для пользователя/host Codex:
+
+```bash
+python <processforge-root>/bin/pf.py codex-mcp install --workplace <workplace-root> --apply
+```
+
+После этого Codex сам запускает отдельный подключённый stdio MCP child process
+для каждого host connection. MCP не нужно запускать вручную. Для Forge на
+Windows один раз установите Runtime task для workplace:
+
+```powershell
+python <processforge-root>/bin/pf.py runtime autostart install --workplace <workplace-root> --apply
+```
+
+Garage не требует Runtime autostart. Обычная ежедневная работа после настройки:
+`cd <project-root>` и запуск Codex.
+
+| | Garage | Forge |
+|---|---|---|
+| Runtime daemon | не обязателен | обязателен, когда его требует coordination |
+| MCP | запускается host | запускается host |
+| Ledger session | не нужна для context/search/resolve/work.start | используется orchestration |
+| hooks | optional host telemetry | optional host-specific telemetry |
+| Director | нет | да, когда его требует coordination |
+| Runtime autostart | не нужен | рекомендуется/требуется |
+
 ## 1. Подготовить инструмент
 
 ```text
@@ -94,26 +122,13 @@ platform doctor и затем обнови снимок project context.
 ## 7. Начать run
 
 ```text
-Создай ProcessForge run для моего текущего запроса.
+Погрузись в проект по .pf и выполни задачу из task.md.
 
-Используй стандартную single-agent session model: один оператор, одна primary
-agent session, один проект и один active process/run. Начни сессию через
-session-start или agent-checkin, выполняй процесс последовательно, используй CLI
-checks и gates как проверку и сделай checkout перед завершением. Не предполагай,
-что Agent Director или Supervisor доступны, если process явно не использует
-multi-agent, handoff или external runtime-worker mechanics.
-
-Если workplace поддерживает Director, сначала проверь effective mode проекта:
-
-Команды для агента:
-
-- python bin/pf.py project-mode status --project-root <project-root> --workplace <workplace-root>
-- python bin/pf.py project-mode set --project-root <project-root> --mode simple
-- python bin/pf.py project-mode set --project-root <project-root> --mode organized --init-office
-
-Используй task-batch execution. Разбей работу на задачи, фиксируй итерации по
-ходу работы, записывай артефакты, проверки и handoffs там, где этого требует
-процесс, и заверши run-summary и run-doctor.
+Используй обычный путь ProcessForge: pf.context, затем pf.search и pf.resolve,
+когда нужны разрешённые проектом знания, затем pf.work.start для существенной
+работы. Следуй выбранным assignment/capsule и заверши артефакты, review,
+проверки и handoff. Не устанавливай и не ремонтируй Runtime, MCP, hooks или
+Ledger; сообщи operator-level blocker, если PF требует инфраструктурного действия.
 ```
 
 ### Режим гаража с инструментами

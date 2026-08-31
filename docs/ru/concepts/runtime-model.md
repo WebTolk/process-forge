@@ -2,69 +2,101 @@
 
 ![Lifecycle run/task/iteration](../../assets/processforge-run-lifecycle.svg)
 
-ProcessForge работает через короткие CLI-команды. Команда читает файлы workplace
-и project, записывает нужный артефакт или запись среды выполнения, отправляет
-события и завершается.
+По умолчанию ProcessForge использует короткоживущие CLI-команды. Команда читает
+project и workplace files, пишет нужный artifact или runtime record и
+завершается. Optional Runtime host и MCP facade являются адаптерами вокруг
+общего Python Core; `tools/processforge.py` остается legacy CLI-adapter
+boundary.
 
-Основные файлы среды выполнения:
+File layout является runtime contract:
 
-- `.pf/process-forge.yaml`;
-- `.pf/contexts/`;
-- `.pf/runs/`;
-- `.pf/assignments/`;
-- `.pf/artifacts/`;
-- `.pf/reviews/`;
-- `.pf/handoffs/`;
-- `.pf/runtime/events/events.ndjson`.
+- `.pf/process-forge.yaml` хранит project manifest.
+- `.pf/contexts/` хранит refreshed context snapshots.
+- `.pf/runs/` хранит run records.
+- `.pf/assignments/` хранит task и iteration records.
+- `.pf/artifacts/`, `.pf/reviews/` и `.pf/handoffs/` хранят evidence и delivery material.
+- `.pf/runtime/events/events.ndjson` хранит event envelopes.
+- `.pf/runtime/agent-runs/` хранит optional worker process state.
+- `.pf/runtime/supervisor/` хранит optional supervisor loop state.
 
-Долгоживущий watcher или runner может появиться отдельным слоем позже, но ядро
-среды выполнения не требует демона.
+## Workplace raw ingress
 
-## Центральный raw ingress workplace
+Agent-native payloads сначала пишутся в приватный workplace Raw Event Journal
+`<workplace>/runtime/agent-events/`, а не напрямую в project event file. Там
+хранятся raw shards, dedupe/index state, quarantine и replay checkpoints. Agent
+Ledger и Runtime service state/logs также являются workplace-scoped. Project
+records остаются локальными для `.pf/runtime/`.
 
-Нативный payload агента сначала записывается в приватный Raw Event Journal
-workplace: `<workplace>/runtime/agent-events/`, а не прямо в project event.
-Там находятся raw shards, dedupe/index state, quarantine и replay checkpoints.
-Agent Ledger и Runtime service state/logs также относятся к workplace;
-проектные records остаются в `.pf/runtime/`.
+Release archive включает `src/processforge_core`, `tools/processforge.py` и
+`tools/pf_runtime/*`, но не включает workplace raw journals, chat transcripts,
+quarantine data, event indexes или replay checkpoints.
 
-В архив входят `src/processforge_core`, `tools/processforge.py` и
-`tools/pf_runtime/*`, но не raw journals, chat transcripts, quarantine,
-event indexes и replay checkpoints.
+Core CLI runtime не требует daemon. Optional Runtime Host helpers могут
+запускаться как короткие file-first ticks, а optional PF Runtime service может
+работать как long-lived workplace process, если его явно запустили или
+установили Windows autostart.
 
-## Требования к среде выполнения
+Runtime drivers и process supervisor являются optional runtime helpers. См.
+[Runtime drivers](runtime-drivers.md) и [Process supervisor](process-supervisor.md).
 
-Для среды выполнения рекомендуется Python 3.11+. Python 3.10+ допустим только
-когда текущие тесты подтверждают совместимость. Также нужны зависимости
-Python-пакетов из `requirements.txt`, включая `PyYAML`, файловая система с
-UTF-8 и доступ на чтение и запись к дистрибутиву ProcessForge, workplace и
-папкам проекта.
+## Distribution Root Versus Linked Project
 
-Обычное использование не требует PowerShell, Git, демона или фонового процесса.
-Git нужен только для интеграции с системой контроля версий или для проверок
-разработки и релиза.
-# Runtime, Ledger и интерфейсы только для чтения
+Из корня дистрибутива:
 
-PF Runtime — локальный workplace-scoped host жизненного цикла, scheduler и IPC,
-а не второй PF Core. Каноническая привязка `session -> project` принадлежит
-Agent Ledger; карты Runtime являются только восстанавливаемым кэшем. После
-удаления кэша маршрут восстанавливается из Ledger, а запрос к другому проекту
-для той же session отклоняется.
+```bash
+python bin/pf.py release-test --root .
+```
 
-Тонкий адаптер Codex передаёт наблюдаемые факты в существующий путь событий PF.
-Read-only MCP предоставляет `pf.project_state`, `pf.work_state`, `pf.resolve`
-и `pf.workplace_state` только для уже привязанной Ledger session.
+Внутри подключенного проекта:
+
+```bash
+python .pf/runtime/bin/pf.py doctor-project --project-root .
+```
+
+## Runtime Requirements
+
+Для runtime usage рекомендуется Python 3.11+. Python 3.10+ допустим только
+когда текущие tests подтверждают compatibility. Также нужны зависимости из
+`requirements.txt`, включая `PyYAML`, UTF-8 capable filesystem и read/write
+access к ProcessForge distribution, workplace и project folders.
+
+Default Runtime usage не требует PowerShell, Git, daemon или background process.
+Git нужен только для version-control integration или development/release checks.
+Optional PF Runtime service startup описан в
+[Автозапуск Runtime и запуск Codex MCP](../getting-started/runtime-autostart.md).
+
+## Runtime, Ledger и MCP interfaces
+
+PF Runtime — workplace-scoped local lifecycle host, scheduler и IPC transport.
+Это не второй PF Core. Agent Ledger владеет canonical session-to-project
+binding; project и session maps Runtime являются только rebuildable caches.
+
+Routed session восстанавливается из Ledger record `project_id` и `project_root`.
+Request или event с другим project отклоняется. Это сохраняет recovery после
+удаления Runtime cache и cross-project isolation независимо от daemon.
+
+Codex hooks — тонкие fact adapters. Они нормализуют documented lifecycle или
+tool facts, добавляют existing PF events и делегируют check-in, heartbeat и
+checkout в Core. Stdio MCP facade в основном bounded/read-oriented, но также
+предоставляет governed mutation tools для project initialization, repair и work
+bootstrap. Эти mutating tools ограничены и требуют guard inputs, например
+`apply: true`.
+
+Stdio MCP process принадлежит MCP host, а не PF Runtime autostart. Codex
+запускает его из host MCP configuration для каждой connected session. См.
+[PF Runtime MCP facade](runtime-mcp.md) и
+[Автозапуск Runtime и запуск Codex MCP](../getting-started/runtime-autostart.md).
 
 ## Декларативные технические проекции
 
-Process definition может объявить у стадии `technical_obligations`. Runtime Host
-читает эту декларацию и записывает только отдельный generated-файл в
-`.pf/artifacts/projections/`; stage business logic не переносится в Runtime, а
-semantic reports, handoffs и body выходных артефактов не переписываются.
+Process definition может объявить у stage `technical_obligations`. Runtime Host
+читает эту декларацию и пишет только отдельный generated file в
+`.pf/artifacts/projections/`; он не содержит stage business rules и не
+редактирует semantic reports, handoffs или output bodies.
 
-Первый projector `required-output-readiness` привязан к стадии `collect`
-`process-supervisor`. Он использует assignment, состояние worker из Inspector и
-fingerprint required outputs. Состояние бывает `current`, `stale`, `missing` или
-`invalid`; projection rebuild выполняется через `runtime-host
-rebuild-projections`, а CLI-проверка без daemon — через `runtime-host
-projection-doctor`.
+Первый projector, `required-output-readiness`, привязан к stage `collect`
+процесса `process-supervisor`. Он выводит текущую stage obligation из
+assignment, Inspector worker state и required-output fingerprints. View может
+быть `current`, `stale`, `missing` или `invalid`. Его можно пересобрать через
+`runtime-host rebuild-projections` и проверить без daemon через
+`runtime-host projection-doctor`.

@@ -8,14 +8,15 @@ Use ProcessForge as a file-first process system. Work through assignments, execu
 
 1. Read this file.
 2. Read `.pf/process-forge.yaml`.
-3. Identify the active assignment.
-4. Read or create the assignment's Execution Context Package.
-5. Check allowed files and forbidden files before editing.
-6. Load required packages, templates, tools, and MCP capabilities from the manifest and assignment.
-7. Execute the task.
-8. Save durable outputs.
-9. Update `.pf/logs/`.
-10. Create a review request or handoff.
+3. Call `pf.context` with the project root, or read the current snapshot only
+   when MCP is unavailable.
+4. Use `pf.search` for authorized project knowledge and `pf.resolve` before
+   opening ProcessForge-managed resource roots.
+5. Call `pf.work.start` with the objective when work becomes substantive.
+6. Read the selected assignment and immutable Execution Context Package.
+7. Check allowed and forbidden files before editing.
+8. Execute the task and save durable outputs.
+9. Update the assignment log and create the required review or handoff.
 
 ## Core Rules
 
@@ -32,6 +33,11 @@ Use ProcessForge as a file-first process system. Work through assignments, execu
 - Create every repository-local temporary directory under `.pf/tmp/`; never create temporary worker, debug, staging, or scratch directories at the repository root.
 - In particular, do not create root directories named `.pf-worker-shell-*` or similar runner sandboxes. Clean `.pf/tmp/` outputs after use unless they are declared durable evidence.
 - System temporary directories are allowed only for isolated tests that never write a temporary directory into the repository.
+- During ordinary project work, do not install, start, restart, or repair PF
+  Runtime, MCP, host hooks, or Agent Ledger. Use available PF tools. If PF
+  returns an operator-level infrastructure blocker, report it to the operator.
+- Current `pf.context`/snapshot state outranks historical generated reports.
+  Do not treat a report marked `stale` or `historical` as current truth.
 
 ## Standard Statuses
 

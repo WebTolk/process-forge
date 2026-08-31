@@ -31,8 +31,10 @@ The release archive includes `src/processforge_core`, `tools/processforge.py`
 and `tools/pf_runtime/*` source, but never workplace raw journals, chat
 transcripts, quarantine data, event indexes or replay checkpoints.
 
-The optional future watcher or runner can observe these files, but the core
-runtime does not require a daemon.
+The core CLI runtime does not require a daemon. Optional Runtime Host helpers
+can run as short-lived file-first ticks, and the optional PF Runtime service can
+run as a long-lived workplace process when explicitly started or installed for
+Windows autostart.
 
 Runtime drivers and the process supervisor are optional runtime helpers. See
 [Runtime drivers](runtime-drivers.md) and
@@ -56,8 +58,13 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 
 Runtime usage expects Python 3.11+ recommended, Python 3.10+ only when the current tests confirm compatibility, Python package dependencies from `requirements.txt` including `PyYAML`, a UTF-8 capable filesystem, and read/write access to the ProcessForge distribution, workplace, and project folders.
 
-Runtime usage does not require PowerShell, Git, a daemon, or a background process. Git is only needed when the user wants version-control integration or when development/release checks are being run.
-# Runtime, Ledger, and read-only interfaces
+Default Runtime usage does not require PowerShell, Git, a daemon, or a
+background process. Git is only needed when the user wants version-control
+integration or when development/release checks are being run. Optional PF
+Runtime service startup is documented in
+[Runtime Autostart And Codex MCP Startup](../getting-started/runtime-autostart.md).
+
+## Runtime, Ledger, and MCP interfaces
 
 PF Runtime is a workplace-scoped local lifecycle host, scheduler, and IPC
 transport. It is not a second PF Core. Agent Ledger owns agent/session
@@ -71,9 +78,15 @@ independent of the daemon.
 
 Codex hooks are thin fact adapters. They normalize documented lifecycle or tool
 facts, append existing PF events, and delegate check-in, heartbeat, and
-checkout to Core. The stdio MCP facade is read-only and exposes
-`pf.project_state`, `pf.work_state`, `pf.resolve`, and `pf.workplace_state` for
-an already Ledger-bound session.
+checkout to Core. The stdio MCP facade is mostly bounded/read-oriented, but it
+also exposes governed mutation tools for project initialization, repair, and
+work bootstrap. Those mutating tools are explicit, limited, and require their
+documented guard inputs such as `apply: true`.
+
+The stdio MCP process is owned by the MCP host, not by PF Runtime autostart.
+Codex starts it from host MCP configuration for each connected session. See
+[PF Runtime MCP facade](runtime-mcp.md) and
+[Runtime Autostart And Codex MCP Startup](../getting-started/runtime-autostart.md).
 
 ## Declaration-driven technical projections
 

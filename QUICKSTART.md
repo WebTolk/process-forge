@@ -4,6 +4,34 @@ This quickstart is for people. Copy one prompt into your AI agent. The agent
 should use the complete command runbook in
 [docs/getting-started/agent-prompts.md](docs/getting-started/agent-prompts.md).
 
+## One-time workstation setup
+
+Register ProcessForge MCP once for the Codex host/user:
+
+```bash
+python <processforge-root>/bin/pf.py codex-mcp install --workplace <workplace-root> --apply
+```
+
+Codex then owns and starts one connected stdio MCP child for each host
+connection. Do not start MCP manually. For Forge on Windows, also install the
+one-per-workplace Runtime task once:
+
+```powershell
+python <processforge-root>/bin/pf.py runtime autostart install --workplace <workplace-root> --apply
+```
+
+Garage does not need Runtime autostart. After setup, everyday use is simply
+`cd <project-root>` and start Codex.
+
+| | Garage | Forge |
+|---|---|---|
+| Runtime daemon | Not required | Required when coordination uses it |
+| MCP | Started by the host | Started by the host |
+| Ledger session | Not needed for context/search/resolve/work.start | Used for orchestration |
+| Hooks | Optional host telemetry | Optional host-specific telemetry |
+| Director | No | Yes when coordination requires it |
+| Runtime autostart | Not needed | Recommended/required |
+
 ## 1. Prepare The Tool
 
 ```text
@@ -91,25 +119,13 @@ platform doctor and then refresh the project context snapshot.
 ## 7. Start A Run
 
 ```text
-Create a ProcessForge run for my current request.
+Immerse yourself in this project using .pf and complete the task in task.md.
 
-Use the default single-agent session model: one operator, one primary agent
-session, one project, and one active process/run. Start the session with
-session-start or agent-checkin, execute the process sequentially, use CLI
-checks and gates for inspection, and check out before ending. Do not assume an
-Agent Director or Supervisor is present unless the process explicitly uses
-multi-agent, handoff, or external runtime-worker mechanics.
-
-If the workplace supports Director, check the project effective mode before
-using Director mechanics. Relevant commands for the agent:
-
-- python bin/pf.py project-mode status --project-root <project-root> --workplace <workplace-root>
-- python bin/pf.py project-mode set --project-root <project-root> --mode simple
-- python bin/pf.py project-mode set --project-root <project-root> --mode organized --init-office
-
-Use task-batch execution. Split the work into tasks, record iterations as work
-progresses, write artifacts/reviews/handoffs when the process calls for them,
-and close with run-summary and run-doctor.
+Use the normal ProcessForge path: pf.context, then pf.search and pf.resolve
+when authorized knowledge is needed, then pf.work.start for substantive work.
+Follow the selected assignment/capsule and complete its artifacts, review,
+checks, and handoff. Do not install or repair Runtime, MCP, hooks, or Ledger;
+report an operator-level blocker if PF requires infrastructure action.
 ```
 
 ## 8. Create A Custom Process

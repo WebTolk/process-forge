@@ -40,6 +40,8 @@ def status(project_root: Path, core: Any, *, workplace: str | None = None) -> di
     snapshot = core.load_yaml_document(snapshot_path) if snapshot_path.is_file() else {}
     resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
     missing_artifacts = [item for item in _DETERMINISTIC_ARTIFACTS if not (flow / item).is_file()] if flow.is_dir() else list(_DETERMINISTIC_ARTIFACTS)
+    codex = dict(core.project_codex_integration_status(project_root)) if hasattr(core, "project_codex_integration_status") else {"status": "unsupported"}
+    codex.update({"required": False, "severity": "info", "purpose": "optional_host_telemetry"})
     if not flow.is_dir() or not snapshot_path.is_file():
         state = "incomplete"
     elif str(health.get("status") or "") == "blocked":
@@ -65,7 +67,7 @@ def status(project_root: Path, core: Any, *, workplace: str | None = None) -> di
         repair_plan.append("refresh_context")
         if missing_artifacts:
             repair_plan.append("restore_deterministic_artifacts")
-    return {"schema_version": 1, "kind": "pf.project_initialization.status", "state": state, "snapshot": {"status": context.get("status"), "health": health.get("status")}, "snapshot_health": health.get("status"), "workplace": workplace_state, "resources": {"knowledge": _resource_state(resolved.get("knowledge_resources")), "tools": _resource_state(resolved.get("tools")), "mcp": _resource_state(mcp_rows), "templates": _resource_state(resolved.get("templates"))}, "mcp": "active_in_snapshot" if mcp_rows else "not_configured", "missing_deterministic_artifacts": missing_artifacts, "repair_plan": repair_plan or ["none"], "public_safety": "no_private_paths"}
+    return {"schema_version": 1, "kind": "pf.project_initialization.status", "state": state, "snapshot": {"status": context.get("status"), "health": health.get("status")}, "snapshot_health": health.get("status"), "workplace": workplace_state, "resources": {"knowledge": _resource_state(resolved.get("knowledge_resources")), "tools": _resource_state(resolved.get("tools")), "mcp": _resource_state(mcp_rows), "templates": _resource_state(resolved.get("templates"))}, "mcp": "active_in_snapshot" if mcp_rows else "not_configured", "codex_integration": codex, "missing_deterministic_artifacts": missing_artifacts, "repair_plan": repair_plan or ["none"], "public_safety": "no_private_paths"}
 
 
 def apply(action: str, *, apply_requested: Any, execute: Callable[[], dict[str, Any]]) -> dict[str, Any]:
@@ -149,7 +151,7 @@ def repair_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
     if not project_root.is_dir() or not (project_root / ".pf").is_dir():
         raise ProjectInitializationError("project_not_initialized")
     action = str(request.get("repair_action") or "refresh_context")
-    if action not in {"refresh_context", "restore_deterministic_artifacts"}:
+    if action not in {"refresh_context", "restore_deterministic_artifacts", "install_codex_hooks"}:
         raise ProjectInitializationError("unsupported_repair_action")
     workplace = request.get("workplace")
     before = status(project_root, core, workplace=str(workplace) if workplace else None)
@@ -166,6 +168,10 @@ def repair_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
             files = core.build_project_files(project_root, Path(str(workplace)).expanduser().resolve() / "workplace.yaml" if workplace and Path(str(workplace)).is_dir() else Path(str(workplace)).expanduser().resolve() if workplace else core.resolve_workplace_manifest(project_root / ".pf" / "process-forge.local.yaml"), answers)
             return core.execute_project_initialization({"project_root": project_root, "project_type": project_answers.get("type"), "force": False, "command": "project-init-repair"}, files)
         return apply("repair", apply_requested=True, execute=restore)
+    if action == "install_codex_hooks":
+        if not hasattr(core, "execute_project_codex_integration_repair"):
+            raise ProjectInitializationError("codex_integration_unsupported")
+        return apply("repair", apply_requested=True, execute=lambda: core.execute_project_codex_integration_repair(project_root))
     return apply("repair", apply_requested=True, execute=lambda: core.execute_project_repair(project_root, workplace=str(workplace) if workplace else None, reason=str(request.get("reason") or "manual")))
 
 

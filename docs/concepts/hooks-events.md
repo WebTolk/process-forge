@@ -41,4 +41,6 @@ Project outbox routing is configured in `.pf/hooks.yaml`; it is distinct from ho
 python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type assignment.completed --dry-run
 ```
 
-The file-first runtime does not require a daemon or network delivery.
+The file-first runtime does not require a daemon or network delivery. Optional
+PF Runtime service startup and Windows autostart are separate from project
+outbox routing.

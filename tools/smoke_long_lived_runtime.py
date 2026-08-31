@@ -18,6 +18,7 @@ import urllib.request
 from pathlib import Path
 
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
+from pf_runtime.raw_ingress_kernel import _strip_windows_extended_prefix
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -141,6 +142,14 @@ def assert_runtime_ready(workplace: Path) -> dict[str, object]:
 
 
 def main() -> int:
+    # public-cleanliness: allow-private-path-fixture
+    extended_drive = r"\\?\C:\fixture\runtime"
+    # public-cleanliness: allow-private-path-fixture
+    normal_drive = r"C:\fixture\runtime"
+    if _strip_windows_extended_prefix(extended_drive) != normal_drive:
+        raise AssertionError("Win32 extended drive path normalization failed")
+    if _strip_windows_extended_prefix(r"\\?\UNC\server\share\runtime") != r"\\server\share\runtime":
+        raise AssertionError("Win32 extended UNC path normalization failed")
     with tempfile.TemporaryDirectory(prefix="pf-long-lived-runtime-", ignore_cleanup_errors=True) as temp:
         root = Path(temp)
         workplace = root / "workplace"

@@ -52,6 +52,10 @@ Agent Ledger exists in all modes, but it is a CLI-managed file ledger, not a
 separate watchman agent. Agents check in at session start, heartbeat during long
 work, and check out before leaving.
 
+Garage `pf.context`, `pf.search`, `pf.resolve`, and `pf.work.start` do not
+require a manual Ledger session. Session commands below are Forge/operator
+tools, not the ordinary Garage start path.
+
 Agent Director is not required in single-agent mode. Process Supervisor /
 Execution Inspector is not required unless the process launches external
 runtime workers.
@@ -80,7 +84,7 @@ Project-local current session reference is stored under:
 
 These runtime files are private and are not part of the public release archive.
 
-## Session Commands
+## Forge And Operator Session Commands
 
 Use either the ledger command names or the simple session aliases:
 

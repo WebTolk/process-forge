@@ -4,7 +4,7 @@
 
 **A platform-neutral, AI-provider-neutral framework for creating and running AI-assisted processes.**
 
-[![Version](https://img.shields.io/badge/version-1.0.2-2F6FED?style=for-the-badge)](VERSION)
+[![Version](https://img.shields.io/badge/version-1.1.0-2F6FED?style=for-the-badge)](VERSION)
 [![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](requirements.txt)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge)](LICENSE)
 [![File First](https://img.shields.io/badge/runtime-file--first-2E7D32?style=for-the-badge)](docs/concepts/runtime-model.md)
@@ -55,12 +55,16 @@ specific product platform.
 Use this for normal work: one human operator, one primary agent session, one
 project, and one active process/run. The primary agent performs the work, runs
 checks, writes artifacts, and finishes with a summary or handoff.
+Garage mode does not require PF Runtime, Codex hooks, or a manually created
+Ledger session.
 
 ### Forge / Factory Mode
 
 Use this when work must be split into independent branches. An orchestrator can
 create bounded assignments and capsules, launch or coordinate worker sessions,
 collect their outputs, and integrate the result through handoffs and reviews.
+Runtime, host telemetry, and worker orchestration are opt-in infrastructure for
+this mode.
 
 ## Quick Start
 
@@ -97,15 +101,18 @@ After the workplace is ready, connect a project:
 Connect this project to my existing ProcessForge workplace.
 
 Inspect the project first, choose a conservative project type, create the
-project-local .pf layer, read .pf/START_AGENT_HERE.md, run doctor checks, and
-summarize what ProcessForge now knows about the project.
+project-local .pf layer, read .pf/START_AGENT_HERE.md, inspect the current
+context through ProcessForge, and summarize what ProcessForge now knows about
+the project.
 
 Keep global resources in the workplace. Do not copy heavy documentation,
 source mirrors, toolchains, or the ProcessForge repository into this project.
 ```
 
 Inside an onboarded project, start each ProcessForge-backed session from
-`.pf/START_AGENT_HERE.md`.
+`.pf/START_AGENT_HERE.md`. The normal agent path is `pf.context`, optional
+`pf.search`/`pf.resolve`, then `pf.work.start`; Runtime and host integration are
+operator concerns.
 
 More starter prompts are in [QUICKSTART.md](QUICKSTART.md).
 

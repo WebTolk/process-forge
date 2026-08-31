@@ -1,18 +1,75 @@
-# MCP facade PF Runtime
+# PF Runtime MCP facade
 
-`tools/pf_runtime/mcp_server.py` — минимальный read-only stdio MCP-сервер. Он
-требует уже существующую identity session из Agent Ledger (`--session` либо
-`PF_MCP_SESSION_ID`) и не создаёт отдельную привязку MCP к проекту.
+`tools/pf_runtime/mcp_server.py` — минимальный stdio MCP-сервер. Процессом
+владеет host: Codex запускает Python-процесс из своей MCP-конфигурации и владеет
+stdin/stdout pipes. Этот сервер не регистрируется как Windows scheduled task или
+detached background service.
 
-Доступны `pf.project_state`, `pf.work_state`, `pf.resolve` и
-`pf.workplace_state`. `pf.resolve` читает метаданные выбранного ресурса из
-resolved context текущего проекта, не заставляя агента искать workplace вручную.
+Garage read tools принимают явный `project_root` и не требуют session identity,
+hooks, daemon, Ledger event, Director process или chat transcript. Session и
+Forge tools по-прежнему требуют session identity (`--session`,
+`PF_MCP_SESSION_ID` или `session_id`), которая уже существует в Agent Ledger.
 
-`pf.work_state` также возвращает summary декларативных technical projections
+Обычная инициализация проекта не зависит от host и не устанавливает Codex
+hooks, а также не запускает Runtime infrastructure. Телеметрия Codex hooks —
+опциональная host-интеграция, которую оператор включает явно, если нужен сбор
+Forge sessions.
+
+Доступные tools: `pf.context`, `pf.project_state`,
+`pf.project_initialization.status`, `pf.project_initialization.initialize`,
+`pf.project_initialization.repair`, `pf.work_state`, `pf.work.start`,
+`pf.resolve`, `pf.search`, `pf.workplace_state`, `pf.session_context`,
+`pf.session_chat` и `pf.session_activity`.
+
+`pf.context`, `pf.project_state`, `pf.project_initialization.status`,
+`pf.work_state`, `pf.resolve` и `pf.search` являются Garage read-операциями и
+могут работать от `project_root`. `pf.work.start` является Garage-scoped
+governed mutation и также может работать от `project_root`. Три `pf.session_*`
+tools дают ограниченные Ledger-authorized views и не читают raw provider
+payloads.
+
+`pf.resolve` читает metadata выбранного ресурса из resolved context текущего
+проекта, а не заставляет агента искать workplace или угадывать приватные пути.
+`pf.search` ищет только по fresh snapshot-authorized local corpus и не
+переходит к workspace или web scan.
+
+`pf.project_initialization.initialize` и `pf.project_initialization.repair` —
+governed maintenance actions. Они используют тот же Core service, что CLI
+onboarding/repair, и требуют точное JSON-значение `apply: true`; иначе
+возвращается `apply_required`.
+
+`pf.work.start` — предпочтительный переход от Garage-понимания к governed work.
+Агент передает непустой `objective` и опционально `preferred_stage`; ProcessForge
+проверяет process definition, выбирает или создает run и assignment,
+предотвращает дубли и возвращает obligations/gates. Session id может связать
+telemetry, но сам факт session не меняет `mode: garage` на `mode: forge`.
+
+Session-scoped failures возвращают стабильные machine-readable error codes. Для
+`missing_session` payload также содержит ограниченный remediation object:
+использовать Garage tools, если операция не требует Ledger session, либо
+попросить оператора проверить настроенную host-интеграцию перед повторным
+вызовом Forge-only tool. Обычный проектный агент не должен устанавливать hooks
+или запускать Runtime как способ исправления. Ручной `session-start` остаётся
+операторской диагностикой и не должен создавать вымышленные production session
+ids.
+
+Для разрешенного результата `pf.search` поле `local_path` является приватным
+runtime navigation value. Оно не записывается в public snapshot, capsules,
+reports или registries. Значение выдается только после snapshot authorization,
+fresh-snapshot validation, path-ref containment и проверки, что файл принадлежит
+authorized root результата.
+
+`pf.work_state` также возвращает summary declarative technical projections для
 Ledger-bound проекта. Это read-only view generated-артефакта
-`stage-obligations`: MCP не создаёт вторую project binding и не записывает
-projection state.
+`stage-obligations`; MCP не создает вторую project binding и не пишет projection
+state.
 
-MCP не является API raw ingress и не раскрывает raw payload workplace или body
-приватного диалога. Граница адаптера и replay описана в
+MCP не является raw-ingress API и не раскрывает workplace raw payloads.
+`pf.session_chat` показывает только trusted redacted private transcript для той
+же Ledger session. См. [Codex Session Read Layer](../../concepts/codex-session-read.md) и
 [Hooks и события](hooks-events.md).
+
+Codex host registration можно проверить, установить или удалить командами
+`python bin/pf.py codex-mcp status|install|remove --workplace <workplace>`.
+Install и remove по умолчанию dry-run и требуют `--apply` для изменения Codex
+configuration. После изменения регистрации перезапустите или reload Codex.

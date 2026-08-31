@@ -54,6 +54,63 @@ def codex_executable() -> str:
     return found
 
 
+def codex_config_args(*, effort: str, memories: str) -> list[str]:
+    """Build non-interactive Codex overrides for a governed PF worker."""
+    args: list[str] = []
+    if effort:
+        args.extend(["-c", f'model_reasoning_effort="{effort}"'])
+    if memories == "false":
+        args.extend(["-c", "features.memories=false"])
+    # ProcessForge is a local, assignment-scoped control plane. Without this
+    # override Codex discovers pf.* tools but cannot call them under the
+    # non-interactive `never` approval policy used by shell workers.
+    args.extend(["-c", 'mcp_servers.processforge.default_tools_approval_mode="approve"'])
+    return args
+
+
+def managed_hook_trust_args(project_root: Path) -> list[str]:
+    """Trust hooks only when the project config contains PF handlers exclusively."""
+    target = project_root / ".codex" / "hooks.json"
+    adapter = Path(__file__).resolve().parent / "pf_runtime" / "codex_hooks.py"
+    expected_command = f'py -3 "{adapter}"'
+    required_events = {
+        "SessionStart",
+        "SessionEnd",
+        "PostToolUse",
+        "UserPromptSubmit",
+        "PreCompact",
+        "PostCompact",
+        "Stop",
+        "SubagentStop",
+    }
+    try:
+        payload = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    hooks = payload.get("hooks") if isinstance(payload, dict) else None
+    if not isinstance(hooks, dict) or not required_events.issubset(hooks):
+        return []
+    found_events: set[str] = set()
+    for event, groups in hooks.items():
+        if not isinstance(groups, list):
+            return []
+        for group in groups:
+            handlers = group.get("hooks") if isinstance(group, dict) else None
+            if not isinstance(handlers, list):
+                return []
+            for handler in handlers:
+                if not isinstance(handler, dict) or handler.get("type") != "command":
+                    return []
+                if str(handler.get("command") or "") != expected_command:
+                    return []
+                if str(handler.get("commandWindows") or "") != expected_command:
+                    return []
+                found_events.add(str(event))
+    if not required_events.issubset(found_events):
+        return []
+    return ["--dangerously-bypass-hook-trust"]
+
+
 def prompt_payload(worker_prompt: Path, capsule: Path, workspace_access: Path) -> str:
     return "\n".join(
         [
@@ -195,6 +252,9 @@ def main() -> int:
         raise SystemExit("FAIL: Codex model is not configured; set PF_AGENT_MODEL through the orchestrator or PF_CODEX_MODEL")
     effort = os.environ.get("PF_CODEX_REASONING_EFFORT") or ""
     sandbox = os.environ.get("PF_CODEX_SANDBOX") or "read-only"
+    memories = (os.environ.get("PF_CODEX_MEMORIES") or "false").strip().lower()
+    if memories not in {"true", "false"}:
+        raise SystemExit("FAIL: PF_CODEX_MEMORIES must be true or false")
     project_root = os.environ.get("PF_PROJECT_ROOT") or str(Path.cwd())
     add_dirs = resolved_workspace_dirs(workspace_access)
     extra_read_dir = os.environ.get("PF_CODEX_EXTRA_READ_DIR")
@@ -203,18 +263,18 @@ def main() -> int:
         if extra.exists():
             add_dirs.append(extra)
 
-    command = [
-        codex_executable(),
-        "exec",
+    project_path = Path(project_root).expanduser().resolve()
+    command = [codex_executable(), *managed_hook_trust_args(project_path), "exec"]
+    command.extend([
         "-m",
         model,
         "--sandbox",
         sandbox,
         "--cd",
         project_root,
-    ]
-    if effort:
-        command[4:4] = ["-c", f'model_reasoning_effort="{effort}"']
+    ])
+    config_args = codex_config_args(effort=effort, memories=memories)
+    command.extend(config_args)
     for path in add_dirs:
         command.extend(["--add-dir", str(path)])
     command.extend(["-o", str(output), "-"])

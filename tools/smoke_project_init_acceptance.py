@@ -129,6 +129,8 @@ def main() -> int:
         assert specialization_source["path"] == "<private-source-ref>"
         status = json.loads(cli("project-init-status", "--project-root", str(project), "--workplace", str(workplace), "--json").stdout)
         assert status["state"] == "complete", status
+        assert not (project / ".codex" / "hooks.json").exists()
+        assert status["codex_integration"]["required"] is False
 
         # Simulate a partial initialization: restore only a missing PF-owned
         # artifact and prove that a semantic user file stays untouched.

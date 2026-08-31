@@ -1202,19 +1202,15 @@ def command_resolve(args: argparse.Namespace, core: Any) -> int:
 
 
 def resolve_payload(workplace_root: Path, core: Any, *, session: str | None = None, project_root_ref: str | None = None, resource_id: str | None = None) -> dict[str, Any]:
+    from processforge_core.garage import ResourceResolveService
+
     project_root = project_for_session(argparse.Namespace(session=session, project_root=project_root_ref), workplace_root, core)
     handle = route_project(str(project_root), workplace_root, core)
+    resolved_payload = ResourceResolveService(project_root, workplace_root, core).resolve(resource_id=resource_id)
     payload: dict[str, Any] = {"workplace_root": str(workplace_root), "project": handle, "session": session or ""}
     if not resource_id:
         return payload
-    snapshot_path, _snapshot_md = core.project_context_snapshot_paths(project_root)
-    snapshot = core.load_yaml_document(snapshot_path)
-    resolved = snapshot.get("resolved", {}) if isinstance(snapshot, dict) else {}
-    resources = resolved.get("available_knowledge_resources", []) if isinstance(resolved, dict) else []
-    selected = next((item for item in resources if isinstance(item, dict) and str(item.get("id") or "") == resource_id), None)
-    if not selected:
-        return {**payload, "resource": {"id": resource_id, "status": "missing", "scope": "project_context", "registry_source": "project-context.snapshot"}}
-    return {**payload, "resource": {"id": resource_id, "status": "available", "scope": "project_context", "registry_source": "project-context.snapshot", "reference": selected.get("path_ref") or selected.get("path") or "", "application": selected.get("application") or {"package_id": selected.get("package_id"), "kind": selected.get("kind")}}}
+    return {**payload, "resource": resolved_payload.get("resource", {})}
 
 
 def workplace_state_payload(workplace_root: Path, core: Any) -> dict[str, Any]:

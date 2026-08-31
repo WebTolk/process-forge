@@ -3,6 +3,21 @@
 ProcessForge starts with files, not services. A project flow lives under `.pf/`.
 Python CLI is the canonical runtime.
 
+## Garage and Forge
+
+| | Garage | Forge |
+|---|---|---|
+| Runtime daemon | Not required | Required when coordination uses it |
+| MCP | Host-owned stdio process | Host-owned stdio process |
+| Ledger session | Not needed for `pf.context/search/resolve/work.start` | Used for orchestration |
+| Hooks | Optional telemetry | Optional host-specific telemetry |
+| Director | No | Yes when required by coordination |
+| Runtime autostart | Not needed | Recommended/required |
+
+The normal project-agent path is `pf.context -> pf.search -> pf.resolve ->
+pf.work.start`. Current context outranks historical generated reports. Runtime,
+MCP, hook, Ledger, and index maintenance are operator/advanced paths.
+
 ## Initialize A Workplace
 
 ```bash
@@ -53,16 +68,17 @@ The refresh command writes:
 .pf/runtime/cache/workplace-context.snapshot.yaml
 ```
 
-## Start A Session
+## Advanced: Start A Ledger Session
 
 ```bash
 python bin/pf.py session-start --mode resume --project-root <project-root> --report-only
 ```
 
-Session start reads the snapshot, reports freshness, writes private telemetry,
-and emits `session.started` / `session.ended` events under `.pf/runtime/`.
+This is a Forge/operator diagnostic path. Garage does not require a manual
+session. Session start reads the snapshot, reports freshness, writes private
+telemetry, and emits events under `.pf/runtime/`.
 
-## Run An Assignment
+## Advanced: Run An Assignment Directly
 
 Assignments use YAML front matter or assignment YAML for machine-readable
 metadata. Markdown body text is human-readable context.

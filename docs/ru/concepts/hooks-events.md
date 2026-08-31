@@ -1,28 +1,64 @@
 # Hooks и события
 
-ProcessForge различает нативное наблюдение агента, нормализованное событие PF и видимую проекту запись чата.
+ProcessForge разделяет native agent observations, ProcessForge events и
+project-visible chat records.
 
 ```text
-нативный hook/event агента
-  -> адаптер провайдера
-  -> приватный центральный raw ingress workplace
-  -> нормализация и проверка project scope
-  -> project event, запись диалога, эффект Ledger либо отсутствие производного эффекта
+native agent hook/event
+  -> provider adapter
+  -> workplace private raw ingress
+  -> normalization and project-scope validation
+  -> project event, conversation record, Ledger effect, or no derived effect
 ```
 
-## Термины и хранение
+## Terms and storage boundary
 
-- **Сырое нативное событие** — payload провайдера. Сырой журнал событий (Raw Event Journal) хранится приватно в `<workplace>/runtime/agent-events/`.
-- **Нормализованное событие PF** — производный platform-neutral факт.
-- **Событие проекта** — приватная запись в `.pf/runtime/events/events.ndjson`, но не полный журнал hook-активности.
-- **Сообщение чата** — приватная строка transcript. Событие `chat.message.recorded` по умолчанию содержит только метаданные.
+- **Raw native event** — provider payload. Raw Event Journal является private
+  workplace-scoped storage в `<workplace>/runtime/agent-events/`.
+- **Normalized PF event** — provider-neutral derived fact.
+- **Project event** — private project record в `.pf/runtime/events/events.ndjson`;
+  это не полный hook journal.
+- **Chat message** — private transcript record. Сопутствующий
+  `chat.message.recorded` event по умолчанию содержит только metadata.
+- **Delivery attempt** — outbox work. **Operator log** — отдельный process
+  artifact, а не замена event.
 
-Сырой журнал использует часовые shards, индексы дедупликации, quarantine и checkpoints replay. Он может содержать чувствительные данные и не входит в релизный архив.
+Raw storage использует hourly shards, deduplication indexes, quarantine records
+и replay checkpoints. Он может содержать sensitive provider payloads и исключен
+из release archive.
 
-## Адаптер Codex и регистрация hooks
+## Codex adapter and registration
 
-`tools/pf_runtime/codex_hooks.py` нормализует `SessionStart`, `SessionEnd` и `PostToolUse`. `UserPromptSubmit` принимается raw-first и записывает пользовательский prompt в приватный transcript только при известных session и project.
+`tools/pf_runtime/codex_hooks.py` — тонкий adapter. Normalized mappings включают
+session lifecycle, compaction и tool facts. Каждый зарегистрированный event
+принимается raw-first. `UserPromptSubmit` записывает user prompt, `Stop`
+записывает `last_assistant_message`, а `SubagentStop` записывает subagent final
+message, когда их Ledger session и project binding валидны.
 
-Возможность адаптера не доказывает регистрацию всех hooks в окружении. Данный дистрибутив не устанавливает `.codex/hooks.json`; приём raw payload, mapping, capture диалога и фактическая регистрация — разные факты. Неизвестное событие может остаться только в сыром журнале.
+Эта возможность не доказывает, что все Codex hooks зарегистрированы в
+environment. Distribution не устанавливает host `.codex/hooks.json`. Adapter
+acceptance, normalized mapping, conversation mapping и фактическая host
+registration являются разными фактами. Unknown native events могут остаться
+raw-only.
 
-Общий захват ответов assistant и сообщений host subagent пока не реализован. Project outbox rules живут в `.pf/hooks.yaml`; это не конфигурация нативных hooks Codex.
+Generic interactive Codex assistant responses и host subagent responses
+captured only where Codex предоставляет `last_assistant_message`; interim
+streaming output и unavailable provider fields остаются raw-only или absent.
+
+Используйте `tools/pf_runtime/codex_integration.py` только как explicit opt-in
+для merge project-local registration. Он не доказывает, что Codex реально
+загрузил или trusted hooks; проверяйте `/hooks` в целевом Codex client. См.
+[Codex Session Read Layer](../../concepts/codex-session-read.md).
+
+## Project hooks
+
+Project outbox routing настраивается в `.pf/hooks.yaml`; это отдельно от
+host-native hook registration. Проверить matching project hooks из linked
+project:
+
+```bash
+python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type assignment.completed --dry-run
+```
+
+File-first runtime не требует daemon или network delivery. Optional PF Runtime
+service startup и Windows autostart отделены от project outbox routing.

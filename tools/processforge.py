@@ -8,6 +8,7 @@ import copy
 import contextlib
 import fnmatch
 import hashlib
+import importlib.util
 import io
 import json
 import os
@@ -85,6 +86,7 @@ DEFAULT_SCAN_POLICY = {
 }
 
 PROJECT_PRIVATE_GITIGNORE = [
+    ".codex/hooks.json",
     ".pf/process-forge.local.yaml",
     ".pf/runtime/",
     ".pf/private-notes/",
@@ -182,14 +184,14 @@ Rules:
 1. Do not load all knowledge from this file.
 2. Read the project flow entrypoint: `.pf/AGENTS.md`.
 3. Read `.pf/process-forge.yaml`.
-4. Prefer `.pf/contexts/project-context.snapshot.md` if it exists.
-5. If the snapshot is missing or stale, run/request project context refresh.
-6. Read the workplace manifest and terms registry from `.pf/process-forge.local.yaml` when local config exists.
-7. Use `terms.yaml` to resolve phrases such as "локальная база знаний", "проектная база знаний",
-   "платформенные знания", "глобальные шаблоны", "глобальные инструменты", and "MCP".
-8. Never write secrets or local absolute paths to public files.
-9. Follow assignment boundaries.
-10. Write session telemetry when working inside ProcessForge.
+4. Call `pf.context` with the project root; use the current snapshot only as a
+   file-only fallback when MCP is unavailable.
+5. Use `pf.search`, `pf.resolve`, and `pf.work.start` as the normal high-level
+   project path.
+6. Never write secrets or local absolute paths to public files.
+7. Follow assignment and immutable-capsule boundaries.
+8. Do not install, start, or repair PF Runtime, MCP, host hooks, or Agent Ledger
+   during ordinary project work; report operator-level infrastructure blockers.
 {GLOBAL_AGENT_SECTION_END}
 """
 
@@ -1475,6 +1477,130 @@ def append_gitignore_entries(path: Path, entries: list[str], *, force: bool = Fa
     return WriteResult(path, "written", path)
 
 
+def _codex_integration_module() -> Any:
+    module_name = "pf_runtime_codex_integration"
+    existing = sys.modules.get(module_name)
+    if existing is not None:
+        return existing
+    module_path = ROOT / "tools" / "pf_runtime" / "codex_integration.py"
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    if spec is None or spec.loader is None:
+        raise SystemExit(f"FAIL: could not load Codex integration module: {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _codex_hook_adapter_path() -> Path:
+    return ROOT / "tools" / "pf_runtime" / "codex_hooks.py"
+
+
+def _repo_relative(path: Path, root: Path) -> str:
+    try:
+        return path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return path.name
+
+
+def _codex_registered_events(config: dict[str, Any], adapter: Path, integration: Any) -> list[str]:
+    installed: list[str] = []
+    hooks = config.get("hooks") if isinstance(config.get("hooks"), dict) else {}
+    for event, groups in hooks.items():
+        if not isinstance(groups, list):
+            continue
+        for group in groups:
+            handlers = group.get("hooks") if isinstance(group, dict) else None
+            if isinstance(handlers, list) and any(integration.is_managed(item, adapter) for item in handlers):
+                installed.append(str(event))
+                break
+    return sorted(set(installed))
+
+
+def project_codex_integration_status(project_root: Path) -> dict[str, Any]:
+    project_root = Path(project_root).expanduser().resolve()
+    target = project_root / ".codex" / "hooks.json"
+    adapter = _codex_hook_adapter_path().resolve()
+    payload: dict[str, Any] = {
+        "status": "missing",
+        "target": ".codex/hooks.json",
+        "adapter": _repo_relative(adapter, ROOT),
+        "event_types": [],
+        "registered_events": [],
+        "missing_events": [],
+        "global_hooks": {"exists": (Path.home() / ".codex" / "hooks.json").is_file(), "managed": False},
+        "restart_required": True,
+        "scope": "project-local",
+    }
+    if not adapter.is_file():
+        payload.update({"status": "unavailable", "error": "adapter_missing", "restart_required": False})
+        return payload
+    integration = _codex_integration_module()
+    events = sorted(str(item) for item in integration.EVENTS)
+    payload["event_types"] = events
+    try:
+        current = integration.load_config(target)
+    except SystemExit as exc:
+        payload.update({"status": "invalid", "error": str(exc), "missing_events": events})
+        return payload
+    registered = _codex_registered_events(current, adapter, integration)
+    missing = [event for event in events if event not in registered]
+    payload["registered_events"] = registered
+    payload["missing_events"] = missing
+    if not target.is_file():
+        payload["status"] = "missing"
+    elif missing:
+        payload["status"] = "stale"
+    else:
+        payload["status"] = "installed"
+        payload["restart_required"] = False
+    return payload
+
+
+def project_codex_integration_install(project_root: Path) -> dict[str, Any]:
+    project_root = Path(project_root).expanduser().resolve()
+    target = project_root / ".codex" / "hooks.json"
+    adapter = _codex_hook_adapter_path().resolve()
+    if not adapter.is_file():
+        raise SystemExit("FAIL: Codex hook adapter path does not exist")
+    integration = _codex_integration_module()
+    current = integration.load_config(target)
+    payload, changed = integration.install_payload(current, adapter)
+    result: dict[str, Any] = {
+        "status": "installed",
+        "target": ".codex/hooks.json",
+        "adapter": _repo_relative(adapter, ROOT),
+        "changed_events": sorted(changed),
+        "restart_required": bool(changed),
+    }
+    if changed:
+        backup = integration.write_atomic(target, payload)
+        result["backup"] = rel(backup, project_root) if str(backup) else None
+    result["after"] = project_codex_integration_status(project_root)
+    return result
+
+
+def execute_project_codex_integration_repair(project_root: Path) -> dict[str, Any]:
+    result = project_codex_integration_install(project_root)
+    emit_process_event(
+        project_root,
+        "project.codex_hooks.installed",
+        process_id="project-initialization",
+        process_version="1.0.0",
+        payload={
+            "target": result.get("target"),
+            "changed_events": result.get("changed_events", []),
+            "restart_required": result.get("restart_required"),
+        },
+    )
+    return {
+        "status": "complete",
+        "repair_action": "install_codex_hooks",
+        "codex_integration": result,
+        "next_action": "restart_codex_session" if result.get("restart_required") else "continue",
+    }
+
+
 def upsert_bounded_section(existing: str, section: str) -> str:
     section = ensure_trailing_newline(section).rstrip()
     pattern = re.compile(
@@ -1691,7 +1817,8 @@ def default_runtime_driver_documents() -> dict[str, dict[str, Any]]:
                 "inherit": True,
                 "variables": {
                     "PF_CODEX_REASONING_EFFORT": "{agent_reasoning_effort}",
-                    "PF_CODEX_SANDBOX": "read-only",
+                    "PF_CODEX_SANDBOX": "{agent_sandbox}",
+                    "PF_CODEX_MEMORIES": "false",
                 },
             },
             "io": {
@@ -5138,15 +5265,15 @@ This project uses ProcessForge.
 
 ## Start Order
 
-1. Read `.pf/process-forge.yaml`.
-2. Read `.pf/contexts/project-context.snapshot.md`.
-3. If the snapshot is missing or stale, run/request project context refresh.
-4. Read the current assignment from `.pf/assignments/` if assigned.
-5. Read latest `.pf/artifacts/session-status-report.md` if present.
-6. Read latest relevant logs/reviews/handoffs.
-7. Use only tools/templates listed in snapshot or assignment.
-8. Write session telemetry to `.pf/runtime/telemetry/`.
-9. Let ProcessForge commands emit flow events to `.pf/runtime/events/`.
+1. Read `.pf/START_AGENT_HERE.md` and `.pf/process-forge.yaml`.
+2. Call `pf.context` with this project root. If MCP is unavailable, read the
+   current snapshot as the file-only fallback.
+3. Use `pf.search` when project, platform, process, template, or tool knowledge
+   is needed.
+4. Use `pf.resolve` before opening a ProcessForge-managed resource root.
+5. Call `pf.work.start` with the high-level objective when work becomes
+   substantive, then follow the selected assignment and capsule.
+6. Write durable artifacts, reviews, logs, and handoffs required by the work.
 
 ## Important Rules
 
@@ -5156,8 +5283,10 @@ This project uses ProcessForge.
 - Do not commit `.pf/runtime/`.
 - Use project-local templates before global templates when allowed.
 - Record template usage.
-- Record tool/MCP usage in session telemetry.
 - Do not commit `.pf/runtime/events/` or webhook outbox payloads.
+- During ordinary project work, do not install, start, or repair PF Runtime,
+  MCP, host hooks, or Agent Ledger. Use available PF tools; report an explicit
+  operator-level infrastructure blocker when PF says operator action is needed.
 """
 
     classification_report = f"""# Project Classification Report
@@ -5514,9 +5643,9 @@ Run doctor after apply mode.
         "result": {"status": "pending", "summary": "", "artifacts": []},
         "tasks": [
             "Read .pf/AGENTS.md",
-            "Read .pf/contexts/project-context.snapshot.yaml",
-            "Run doctor-project",
-            "Review .pf/hooks.yaml",
+            "Inspect the current project through pf.context",
+            "Use pf.search or pf.resolve when project knowledge is needed",
+            "Use pf.work.start for substantive governed work",
             "Confirm the first working process for this project",
             "Create .pf/artifacts/first-assignment-readiness-note.md",
         ],
@@ -5529,40 +5658,40 @@ Run doctor after apply mode.
 
 You are working inside a ProcessForge-enabled project.
 
-## First Steps
+## Preferred Path
 
 1. Read `.pf/AGENTS.md`.
-2. Read `.pf/contexts/project-context.snapshot.yaml`.
-3. Read the active assignment in `.pf/assignments/`.
-4. Run:
+2. Call `pf.context` with this project root. If MCP is unavailable, read
+   `.pf/contexts/project-context.snapshot.yaml` as the file-only fallback.
+3. Use `pf.search` when project-authorized knowledge is needed.
+4. Use `pf.resolve` before opening a ProcessForge-managed resource root.
+5. Perform local read-only analysis.
+6. Call `pf.work.start` with the high-level objective when work becomes
+   substantive.
+7. Read the assignment and immutable capsule selected or created by PF, then
+   complete the required artifacts, review, log, and handoff.
 
-```bash
-python .pf/runtime/bin/pf.py doctor-project --project-root .
-```
+## Infrastructure Boundary
 
-If `pf` is available in PATH, this short form is also acceptable:
+During ordinary project work, do not install, start, restart, or repair PF
+Runtime, MCP, host hooks, or Agent Ledger. Use available PF tools. If a Forge or
+host integration is unavailable and PF returns an operator-level blocker,
+report it concisely to the operator. Garage context, search, resolve, and work
+bootstrap do not require a Runtime daemon, hooks, or a manual Ledger session.
 
-```bash
-pf doctor-project --project-root .
-```
-
-5. If doctor fails, report the failures and propose safe fixes.
-6. Do not expose local absolute paths from `.pf/process-forge.local.yaml`.
-7. Use ProcessForge artifacts, reviews, and handoffs for outputs.
-8. Do not call a distribution-local CLI path from this project root unless this project is the ProcessForge distribution itself.
+Do not expose local absolute paths from `.pf/process-forge.local.yaml`. Do not
+call a distribution-local CLI path from this project root unless this project
+is the ProcessForge distribution itself.
 
 ## Current Assignment
 
 - File: `.pf/assignments/first-assignment.yaml`
 - Goal: Verify ProcessForge project onboarding for `{defaults["id"]}`.
 
-## Useful Commands
+## Operator Diagnostics
 
-```bash
-python .pf/runtime/bin/pf.py project-context-refresh --project-root .
-python .pf/runtime/bin/pf.py assignment-capsule --project-root . --assignment .pf/assignments/first-assignment.yaml
-python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type project.onboarding.completed --dry-run
-```
+Low-level doctor, context refresh, hook, Runtime, Ledger, and index commands are
+operator/advanced diagnostics, not the normal agent start path.
 """
 
     onboarding_report = f"""# Project Onboarding Report
@@ -5796,6 +5925,8 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
     emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": request.get("command", "project-onboard")})
     results = [write_file(path, content, force=force) for path, content in files.items()]
     results.append(append_gitignore_entries(project_root / ".gitignore", PROJECT_PRIVATE_GITIGNORE, force=force))
+    codex_integration = project_codex_integration_status(project_root)
+    codex_integration.update({"required": False, "severity": "info", "purpose": "optional_host_telemetry"})
     emit_process_event(project_root, "project.flow_root.created", process_id="project-onboarding", process_version="1.0.0", payload={"flow_root": PROJECT_FLOW_ROOT})
     emit_process_event(project_root, "project.platform.detected", process_id="project-onboarding", process_version="1.0.0", payload={"project_type": project_type or "auto"})
     snapshot_status, snapshot_paths, _snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root)
@@ -5825,6 +5956,7 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
         "status": "complete" if doctor_status == 0 else "blocked",
         "project": {"id": project_id(project_root)},
         "created_or_reused": [{"path": rel(result.target, project_root), "status": result.status} for result in results],
+        "codex_integration": codex_integration,
         "snapshot": {"status": snapshot_status, "id": _snapshot.get("snapshot", {}).get("id") if isinstance(_snapshot.get("snapshot"), dict) else None},
         "search_index": search_index,
         "doctor": {"status": "pass" if doctor_status == 0 else "fail"},
@@ -5862,6 +5994,7 @@ def _project_initialization_error(exc: project_initialization.ProjectInitializat
         "workplace_manifest_required": "Initialize the workplace first, or explicitly allow a missing workplace where that is safe.",
         "project_root_missing": "Create the project root before a dry run, or use --apply for greenfield onboarding.",
         "project_not_initialized": "Use project-onboard for a new project; repair only accepts an existing .pf project.",
+        "codex_integration_unsupported": "Use a ProcessForge distribution that includes the Codex hook integration service.",
     }
     return SystemExit(f"FAIL: {exc.code}. {hints.get(exc.code, 'Check the initialization request.')}")
 
@@ -5908,7 +6041,32 @@ def command_project_init_repair(args: argparse.Namespace) -> int:
         raise _project_initialization_error(exc) from exc
     print(dump_yaml(result), end="")
     payload = result.get("result") if isinstance(result.get("result"), dict) else {}
-    return 0 if result.get("applied") is not True or payload.get("doctor", {}).get("status") == "pass" else 1
+    if result.get("applied") is not True:
+        return 0
+    if payload.get("doctor") is None:
+        return 0 if payload.get("status") == "complete" else 1
+    return 0 if payload.get("doctor", {}).get("status") == "pass" else 1
+
+
+def gitignore_effectively_protects(project_root: Path, entry: str) -> bool | None:
+    if not (project_root / ".git").exists():
+        return None
+    probe = entry.rstrip("/")
+    if not probe:
+        return None
+    result = subprocess.run(
+        ["git", "check-ignore", "--quiet", "--", probe],
+        cwd=project_root,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return True
+    if result.returncode == 1:
+        return False
+    return None
 
 
 def default_start_agent_here(project_root: Path) -> str:
@@ -5919,27 +6077,27 @@ def default_start_agent_here(project_root: Path) -> str:
 
 You are working inside a ProcessForge-enabled project.
 
-## First Steps
+## Preferred Path
 
 1. Read `.pf/AGENTS.md`.
-2. Read `.pf/contexts/project-context.snapshot.yaml`.
-3. Read the active assignment in `.pf/assignments/`.
-4. Run:
+2. Call `pf.context` with this project root; use the current snapshot only as a
+   file-only fallback when MCP is unavailable.
+3. Use `pf.search` and `pf.resolve` for project-authorized resources.
+4. Perform local read-only analysis.
+5. Call `pf.work.start` with the high-level objective when work becomes
+   substantive, then follow the selected assignment and capsule.
+6. Use ProcessForge artifacts, reviews, logs, and handoffs for durable outputs.
 
-```bash
-python .pf/runtime/bin/pf.py doctor-project --project-root .
-```
+## Infrastructure Boundary
 
-If `pf` is available in PATH, this short form is also acceptable:
+During ordinary project work, do not install, start, restart, or repair PF
+Runtime, MCP, host hooks, or Agent Ledger. Report an operator-level blocker if
+Forge infrastructure is required but unavailable. Garage work does not require
+Runtime, hooks, or a manually created Ledger session.
 
-```bash
-pf doctor-project --project-root .
-```
-
-5. If doctor fails, report the failures and propose safe fixes.
-6. Do not expose local absolute paths from `.pf/process-forge.local.yaml`.
-7. Use ProcessForge artifacts, reviews, and handoffs for outputs.
-8. Do not call a distribution-local CLI path from this project root unless this project is the ProcessForge distribution itself.
+Do not expose local absolute paths from `.pf/process-forge.local.yaml`. Do not
+call a distribution-local CLI path from this project root unless this project
+is the ProcessForge distribution itself.
 
 ## Current Assignment
 
@@ -6693,8 +6851,12 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_first_run", [sys.executable, str(root / "tools" / "smoke_first_run.py")], 120),
         ReleaseCommand("smoke_runtime_driver_registry", [sys.executable, str(root / "tools" / "smoke_runtime_driver_registry.py")], 120),
         ReleaseCommand("smoke_worker_run_shell", [sys.executable, str(root / "tools" / "smoke_worker_run_shell.py")], 180),
+        ReleaseCommand("smoke_worker_environment_secret_redaction", [sys.executable, str(root / "tools" / "smoke_worker_environment_secret_redaction.py")], 120),
         ReleaseCommand("smoke_worker_workspace_access", [sys.executable, str(root / "tools" / "smoke_worker_workspace_access.py")], 180),
         ReleaseCommand("smoke_codex_exec_worker", [sys.executable, str(root / "tools" / "smoke_codex_exec_worker.py")], 180),
+        ReleaseCommand("smoke_codex_worker_governance", [sys.executable, str(root / "tools" / "smoke_codex_worker_governance.py")], 120),
+        ReleaseCommand("smoke_mcp_codex_contract", [sys.executable, str(root / "tools" / "smoke_mcp_codex_contract.py")], 120),
+        ReleaseCommand("smoke_runtime_mcp_autostart", [sys.executable, str(root / "tools" / "smoke_runtime_mcp_autostart.py")], 120),
         ReleaseCommand("smoke_central_event_replay", [sys.executable, str(root / "tools" / "smoke_central_event_replay.py")], 180),
         ReleaseCommand("smoke_conversation_completeness", [sys.executable, str(root / "tools" / "smoke_conversation_completeness.py")], 180),
         ReleaseCommand("smoke_process_supervisor_tick", [sys.executable, str(root / "tools" / "smoke_process_supervisor_tick.py")], 180),
@@ -6749,6 +6911,29 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_project_init_local_search_mcp", [sys.executable, str(root / "tools" / "smoke_project_init_local_search_mcp.py")], 180),
         ReleaseCommand("smoke_resource_indexing_policy_acceptance", [sys.executable, str(root / "tools" / "smoke_resource_indexing_policy_acceptance.py")], 180),
         ReleaseCommand("smoke_project_init_acceptance", [sys.executable, str(root / "tools" / "smoke_project_init_acceptance.py")], 180),
+        ReleaseCommand("smoke_project_init_codex_integration", [sys.executable, str(root / "tools" / "smoke_project_init_codex_integration.py")], 180),
+        ReleaseCommand("smoke_no_production_example_update_urls", [sys.executable, str(root / "tools" / "smoke_no_production_example_update_urls.py")], 120),
+        ReleaseCommand("smoke_docs_garage_no_runtime_required", [sys.executable, str(root / "tools" / "smoke_docs_garage_no_runtime_required.py")], 120),
+        ReleaseCommand("smoke_docs_mcp_host_owned_stdio", [sys.executable, str(root / "tools" / "smoke_docs_mcp_host_owned_stdio.py")], 120),
+        ReleaseCommand("smoke_docs_agent_no_manual_infra", [sys.executable, str(root / "tools" / "smoke_docs_agent_no_manual_infra.py")], 120),
+        ReleaseCommand("smoke_docs_codex_hooks_optional", [sys.executable, str(root / "tools" / "smoke_docs_codex_hooks_optional.py")], 120),
+        ReleaseCommand("smoke_doctor_gitignore_effective_protection", [sys.executable, str(root / "tools" / "smoke_doctor_gitignore_effective_protection.py")], 180),
+        ReleaseCommand("smoke_mcp_missing_session_diagnostics", [sys.executable, str(root / "tools" / "smoke_mcp_missing_session_diagnostics.py")], 120),
+        ReleaseCommand("smoke_session_projection_expiry", [sys.executable, str(root / "tools" / "smoke_session_projection_expiry.py")], 180),
+        ReleaseCommand("smoke_fulltext_article_indexing", [sys.executable, str(root / "tools" / "smoke_fulltext_article_indexing.py")], 120),
+        ReleaseCommand("smoke_garage_no_hooks_sessionless", [sys.executable, str(root / "tools" / "smoke_garage_no_hooks_sessionless.py")], 180),
+        ReleaseCommand("smoke_garage_session_enhanced", [sys.executable, str(root / "tools" / "smoke_garage_session_enhanced.py")], 180),
+        ReleaseCommand("smoke_garage_cross_project_security", [sys.executable, str(root / "tools" / "smoke_garage_cross_project_security.py")], 180),
+        ReleaseCommand("smoke_garage_real_joomla_search", [sys.executable, str(root / "tools" / "smoke_garage_real_joomla_search.py")], 180),
+        ReleaseCommand("smoke_garage_mode_not_promoted_by_session", [sys.executable, str(root / "tools" / "smoke_garage_mode_not_promoted_by_session.py")], 180),
+        ReleaseCommand("smoke_garage_work_start_sessionless", [sys.executable, str(root / "tools" / "smoke_garage_work_start_sessionless.py")], 180),
+        ReleaseCommand("smoke_garage_work_start_session_bound", [sys.executable, str(root / "tools" / "smoke_garage_work_start_session_bound.py")], 180),
+        ReleaseCommand("smoke_governed_work_stage_resolution", [sys.executable, str(root / "tools" / "smoke_governed_work_stage_resolution.py")], 180),
+        ReleaseCommand("smoke_governed_work_duplicate_prevention", [sys.executable, str(root / "tools" / "smoke_governed_work_duplicate_prevention.py")], 180),
+        ReleaseCommand("smoke_current_work_ignores_bootstrap_placeholder", [sys.executable, str(root / "tools" / "smoke_current_work_ignores_bootstrap_placeholder.py")], 180),
+        ReleaseCommand("smoke_derived_report_stale_marking", [sys.executable, str(root / "tools" / "smoke_derived_report_stale_marking.py")], 180),
+        ReleaseCommand("smoke_runtime_status_version_truth", [sys.executable, str(root / "tools" / "smoke_runtime_status_version_truth.py")], 180),
+        ReleaseCommand("smoke_user_like_garage_path", [sys.executable, str(root / "tools" / "smoke_user_like_garage_path.py")], 180),
         ReleaseCommand("smoke_parameter_cascade_resolution", [sys.executable, str(root / "tools" / "smoke_parameter_cascade_resolution.py")], 120),
         ReleaseCommand("smoke_parameter_freshness", [sys.executable, str(root / "tools" / "smoke_parameter_freshness.py")], 120),
         ReleaseCommand("smoke_parameter_assignment_capsule", [sys.executable, str(root / "tools" / "smoke_parameter_assignment_capsule.py")], 120),
@@ -12075,6 +12260,15 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
         if out_path is None:
             if output_id in waiver_map:
                 checks.append(check("WARN", f"required output without path waived: {output_id} ({waiver_map[output_id]})"))
+            elif entry == ".codex/hooks.json" and not (project_root / entry).exists():
+                checks.append(
+                    check_with_hint(
+                        "WARN",
+                        ".gitignore does not predeclare optional .codex/hooks.json",
+                        "Codex hooks are optional host telemetry and are not installed for a generic project.",
+                        "add .codex/hooks.json only when opting into the project-local Codex integration",
+                    )
+                )
             else:
                 checks.append(check("FAIL", f"required output has no path: {output_id}"))
             continue
@@ -16570,6 +16764,12 @@ def update_stale_agent_presence(workplace_root: Path) -> None:
             presence["status"] = "stale"
             presence["updated_at"] = now_utc()
             json_write(path, presence)
+            project_ref = str(presence.get("project_root") or "")
+            if project_ref:
+                try:
+                    write_current_session_refs(workplace_root, Path(project_ref).expanduser().resolve(), presence)
+                except OSError:
+                    pass
             append_agent_ledger_event(
                 workplace_root,
                 {
@@ -17454,6 +17654,7 @@ RUNTIME_DRIVER_PLACEHOLDERS = {
     "exit_path",
     "agent_model",
     "agent_reasoning_effort",
+    "agent_sandbox",
 }
 
 AGENT_RUN_STATUSES = {
@@ -17638,7 +17839,9 @@ def minimal_platform_environment() -> dict[str, str]:
 def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) -> tuple[dict[str, str], bool]:
     env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
     inherit = bool(env_spec.get("inherit", True))
-    env = os.environ.copy() if inherit else minimal_platform_environment()
+    # Persist only PF-owned and explicitly configured values. Inherited host
+    # environment may contain credentials and is materialized only at launch.
+    env = {} if inherit else minimal_platform_environment()
     env.update(
         {
             "PF_RUN_ID": variables["run_id"],
@@ -17662,6 +17865,14 @@ def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) 
     expanded = expand_runtime_value(explicit, variables)
     env.update({str(key): str(value) for key, value in expanded.items()})
     return env, inherit
+
+
+def materialize_worker_launch_environment(command_spec: dict[str, Any]) -> dict[str, str]:
+    inherit = bool(command_spec.get("environment_inherit", False))
+    env = os.environ.copy() if inherit else minimal_platform_environment()
+    persisted = command_spec.get("environment") if isinstance(command_spec.get("environment"), dict) else {}
+    env.update({str(key): str(value) for key, value in persisted.items()})
+    return env
 
 
 def runtime_driver_start_readiness_checks(driver: dict[str, Any], executable_override: str | None = None) -> list[Check]:
@@ -17937,6 +18148,16 @@ def normalize_agent_reasoning_effort(value: Any) -> str:
     return text
 
 
+def worker_sandbox_for_task(task: dict[str, Any]) -> str:
+    execution = task.get("execution_mode") if isinstance(task.get("execution_mode"), dict) else {}
+    ownership = task.get("ownership") if isinstance(task.get("ownership"), dict) else {}
+    writable = ownership.get("writer") is True and (
+        execution.get("code_changes_allowed") is True
+        or execution.get("artifact_changes_allowed") is True
+    )
+    return "workspace-write" if writable else "read-only"
+
+
 def build_worker_process_command(
     project_root: Path,
     task: dict[str, Any],
@@ -17971,6 +18192,7 @@ def build_worker_process_command(
         "exit_path": str(paths["exit"]),
         "agent_model": normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
         "agent_reasoning_effort": normalize_agent_reasoning_effort(task.get("agent_reasoning_effort") or task.get("reasoning_effort") or ""),
+        "agent_sandbox": worker_sandbox_for_task(task),
     }
     io = driver.get("io") if isinstance(driver.get("io"), dict) else {}
     stdout_path = Path(str(expand_runtime_value(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
@@ -18306,8 +18528,9 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
             print(f"FAIL: empty command argv for {task_id}")
             return 1
         timeout_seconds = int((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30)
-        env = {str(key): str(value) for key, value in (command.get("command", {}).get("environment") or {}).items()}
-        cwd = command.get("command", {}).get("working_directory") or str(project_root)
+        command_spec = command.get("command") if isinstance(command.get("command"), dict) else {}
+        env = materialize_worker_launch_environment(command_spec)
+        cwd = command_spec.get("working_directory") or str(project_root)
         paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
         paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
         started_at = now_utc()
@@ -18890,6 +19113,42 @@ def command_runtime_tick(args: argparse.Namespace) -> int:
     return runtime_service.command_tick(args, sys.modules[__name__])
 
 
+def command_runtime_autostart_status(args: argparse.Namespace) -> int:
+    from pf_runtime import windows_autostart
+
+    return windows_autostart.command_status(args, sys.modules[__name__])
+
+
+def command_runtime_autostart_install(args: argparse.Namespace) -> int:
+    from pf_runtime import windows_autostart
+
+    return windows_autostart.command_install(args, sys.modules[__name__])
+
+
+def command_runtime_autostart_remove(args: argparse.Namespace) -> int:
+    from pf_runtime import windows_autostart
+
+    return windows_autostart.command_remove(args, sys.modules[__name__])
+
+
+def command_codex_mcp_status(args: argparse.Namespace) -> int:
+    from pf_runtime import codex_mcp
+
+    return codex_mcp.command_status(args, sys.modules[__name__])
+
+
+def command_codex_mcp_install(args: argparse.Namespace) -> int:
+    from pf_runtime import codex_mcp
+
+    return codex_mcp.command_install(args, sys.modules[__name__])
+
+
+def command_codex_mcp_remove(args: argparse.Namespace) -> int:
+    from pf_runtime import codex_mcp
+
+    return codex_mcp.command_remove(args, sys.modules[__name__])
+
+
 def command_runtime_host_init(args: argparse.Namespace) -> int:
     from pf_runtime import host as runtime_host
 
@@ -19185,6 +19444,14 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
     required_outputs = normalize_required_outputs(task.get("required_outputs"))
     expected_report = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
     subagent_policy = normalize_subagent_policy(task.get("subagent_policy"))
+    pf_first_instructions: list[str] = []
+    if requested_workspace_access["knowledge_resources"]:
+        pf_first_instructions = [
+            "This assignment has governed workplace knowledge grants.",
+            "Before any shell command, project file read, global memory lookup, or broad search, use the ProcessForge MCP control plane in this order: `pf.context`, `pf.work.start`, `pf.resolve`, then `pf.search`.",
+            "Use `pf.resolve` and `pf.search` results as the primary route to knowledge paths and articles; open resolved files only after PF returns them.",
+            "If the ProcessForge MCP tools are unavailable or fail, stop and return a blocked report. Do not silently fall back to filesystem discovery.",
+        ]
     lines = [
         "# Worker Launch Prompt",
         "",
@@ -19202,6 +19469,7 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
         "Stop and report if scope is insufficient.",
         "Invoke subagents only when subagent_policy.allow is true.",
         "When subagent reports are required, write them only under subagent_policy.reports_dir.",
+        *pf_first_instructions,
         "",
         "## Assignment",
         "",
@@ -20545,17 +20813,29 @@ def command_doctor_project(args: argparse.Namespace) -> int:
 
     if gitignore.is_file():
         ignore_text = gitignore.read_text(encoding="utf-8", errors="replace")
-        for entry in [".pf/process-forge.local.yaml", ".pf/runtime/", ".pf/cache/"]:
-            checks.append(
-                check("PASS", f".gitignore contains {entry}")
-                if entry in ignore_text
-                else check_with_hint(
-                    "FAIL",
-                    f".gitignore missing {entry}",
-                    "Private local config and runtime data must stay out of public project files.",
-                    f"add {entry} to .gitignore",
+        for entry in [".codex/hooks.json", ".pf/process-forge.local.yaml", ".pf/runtime/", ".pf/cache/"]:
+            exact = entry in ignore_text
+            effective = exact or gitignore_effectively_protects(project_root, entry) is True
+            if effective:
+                checks.append(check("PASS", f".gitignore protects {entry}"))
+                if not exact:
+                    checks.append(
+                        check_with_hint(
+                            "WARN",
+                            f".gitignore missing recommended explicit entry {entry}",
+                            "Git effective ignore rules protect the private path, but the policy line is not explicit.",
+                            f"optionally add {entry} to .gitignore for readability",
+                        )
+                    )
+            else:
+                checks.append(
+                    check_with_hint(
+                        "FAIL",
+                        f".gitignore missing {entry}",
+                        "Private local config and runtime data must stay out of public project files.",
+                        f"add {entry} to .gitignore",
+                    )
                 )
-            )
     else:
         checks.append(check("FAIL", ".gitignore missing"))
 
@@ -22713,17 +22993,17 @@ def command_path_resolve(args: argparse.Namespace) -> int:
 
 
 def local_search_runtime_snapshot(project_root: Path, workplace_root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    from processforge_core.garage import snapshot_with_resolved_search_roots
+
     context = project_context_check_result(project_root, explicit_workplace=str(workplace_root))
     snapshot_path, _snapshot_md = project_context_snapshot_paths(project_root)
     snapshot = load_yaml_document(snapshot_path) if snapshot_path.is_file() else {}
-    runtime_snapshot = copy.deepcopy(snapshot if isinstance(snapshot, dict) else {})
-    resources = runtime_snapshot.get("local_search_resources") if isinstance(runtime_snapshot.get("local_search_resources"), list) else []
-    for resource in resources:
-        if not isinstance(resource, dict) or not isinstance(resource.get("path_ref"), dict):
-            continue
-        resolution = resolve_workspace_path_ref(project_root, resource["path_ref"], workplace_manifest=workplace_root / "workplace.yaml")
-        if resolution.get("status") == "resolved" and resolution.get("path"):
-            resource["content_roots"] = [str(resolution["path"])]
+    runtime_snapshot = snapshot_with_resolved_search_roots(
+        project_root,
+        snapshot if isinstance(snapshot, dict) else {},
+        workplace_root,
+        sys.modules[__name__],
+    )
     return context, runtime_snapshot
 
 
@@ -25321,7 +25601,7 @@ def build_parser() -> argparse.ArgumentParser:
     project_init_repair = sub.add_parser("project-init-repair", help="Repair deterministic project initialization state.")
     project_init_repair.add_argument("--project-root", required=True, help="Existing PF project root path.")
     project_init_repair.add_argument("--workplace", help="Optional workplace root or manifest for context resolution.")
-    project_init_repair.add_argument("--repair-action", default="refresh_context", choices=["refresh_context", "restore_deterministic_artifacts"], help="Deterministic repair action.")
+    project_init_repair.add_argument("--repair-action", default="refresh_context", choices=["refresh_context", "restore_deterministic_artifacts", "install_codex_hooks"], help="Deterministic repair action.")
     project_init_repair.add_argument("--reason", default="manual", help="Repair reason recorded in the event journal.")
     project_init_repair.add_argument("--apply", action="store_true", help="Perform the repair; omission is a non-mutating plan.")
     project_init_repair.set_defaults(func=command_project_init_repair)
@@ -26347,6 +26627,57 @@ def build_parser() -> argparse.ArgumentParser:
     runtime_tick.add_argument("--inspector", action="store_true", help="Run hosted Execution Inspector tick.")
     runtime_tick.add_argument("--json", action="store_true", help="Print JSON.")
     runtime_tick.set_defaults(func=command_runtime_tick)
+
+    runtime_autostart = runtime_sub.add_parser("autostart", help="Manage Windows Task Scheduler autostart for PF Runtime.")
+    runtime_autostart_sub = runtime_autostart.add_subparsers(dest="runtime_autostart_command", required=True)
+
+    def add_runtime_autostart_common(parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+        parser.add_argument("--distribution-root", help="Installed ProcessForge distribution root. Defaults to this CLI distribution.")
+        parser.add_argument("--python", help="Python executable stored in the scheduled task. Defaults to the current interpreter.")
+        parser.add_argument("--port", type=int, default=0, help="Runtime loopback port, or 0 for an ephemeral port.")
+        parser.add_argument("--interval", type=float, default=2.0, help="Runtime scheduler tick interval in seconds.")
+        parser.add_argument("--json", action="store_true", help="Print JSON.")
+
+    runtime_autostart_status = runtime_autostart_sub.add_parser("status", help="Inspect the workplace Runtime scheduled task.")
+    add_runtime_autostart_common(runtime_autostart_status)
+    runtime_autostart_status.set_defaults(func=command_runtime_autostart_status)
+    runtime_autostart_install = runtime_autostart_sub.add_parser("install", help="Plan or install the workplace Runtime scheduled task.")
+    add_runtime_autostart_common(runtime_autostart_install)
+    runtime_autostart_install.add_argument("--delay-seconds", type=int, default=10, help="Delay after interactive logon.")
+    runtime_autostart_install.add_argument("--replace", action="store_true", help="Replace a drifted task with the deterministic ProcessForge definition.")
+    runtime_autostart_install.add_argument("--apply", action="store_true", help="Create the task; otherwise show a dry run.")
+    runtime_autostart_install.set_defaults(func=command_runtime_autostart_install)
+    runtime_autostart_remove = runtime_autostart_sub.add_parser("remove", help="Plan or remove the workplace Runtime scheduled task.")
+    add_runtime_autostart_common(runtime_autostart_remove)
+    runtime_autostart_remove.add_argument("--force", action="store_true", help="Remove a drifted task with the deterministic ProcessForge name.")
+    runtime_autostart_remove.add_argument("--apply", action="store_true", help="Delete the task; otherwise show a dry run.")
+    runtime_autostart_remove.set_defaults(func=command_runtime_autostart_remove)
+
+    codex_mcp = sub.add_parser("codex-mcp", help="Manage the host-owned ProcessForge stdio MCP registration in Codex.")
+    codex_mcp_sub = codex_mcp.add_subparsers(dest="codex_mcp_command", required=True)
+
+    def add_codex_mcp_common(parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+        parser.add_argument("--distribution-root", help="Installed ProcessForge distribution root. Defaults to this CLI distribution.")
+        parser.add_argument("--name", default="processforge", help="Codex MCP server name.")
+        parser.add_argument("--python", help="Python command used by Codex. Defaults to the current interpreter.")
+        parser.add_argument("--codex", help="Codex executable. Defaults to the executable on PATH.")
+        parser.add_argument("--json", action="store_true", help="Print JSON.")
+
+    codex_mcp_status = codex_mcp_sub.add_parser("status", help="Inspect the Codex ProcessForge MCP registration.")
+    add_codex_mcp_common(codex_mcp_status)
+    codex_mcp_status.set_defaults(func=command_codex_mcp_status)
+    codex_mcp_install = codex_mcp_sub.add_parser("install", help="Plan or install the Codex ProcessForge MCP registration.")
+    add_codex_mcp_common(codex_mcp_install)
+    codex_mcp_install.add_argument("--replace", action="store_true", help="Replace a drifted registration.")
+    codex_mcp_install.add_argument("--apply", action="store_true", help="Write Codex configuration; otherwise show a dry run.")
+    codex_mcp_install.set_defaults(func=command_codex_mcp_install)
+    codex_mcp_remove = codex_mcp_sub.add_parser("remove", help="Plan or remove the Codex ProcessForge MCP registration.")
+    add_codex_mcp_common(codex_mcp_remove)
+    codex_mcp_remove.add_argument("--force", action="store_true", help="Remove a drifted registration with this name.")
+    codex_mcp_remove.add_argument("--apply", action="store_true", help="Write Codex configuration; otherwise show a dry run.")
+    codex_mcp_remove.set_defaults(func=command_codex_mcp_remove)
 
     runtime_host = sub.add_parser("runtime-host", help="Host existing PF Core runtime passes through a lazy local Runtime PoC.")
     runtime_host_sub = runtime_host.add_subparsers(dest="runtime_host_command", required=True)

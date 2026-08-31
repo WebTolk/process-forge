@@ -22,7 +22,8 @@ environment:
   inherit: true
   variables:
     PF_CODEX_REASONING_EFFORT: "{agent_reasoning_effort}"
-    PF_CODEX_SANDBOX: read-only
+    PF_CODEX_SANDBOX: "{agent_sandbox}"
+    PF_CODEX_MEMORIES: "false"
 io:
   stdin: none
   stdout: .pf/runtime/agent-runs/{run_id}/{task_id}/stdout.log

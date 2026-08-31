@@ -1,9 +1,8 @@
-"""Small read-only stdio MCP facade over existing PF Runtime/Core readers."""
+"""Small read-oriented stdio MCP facade over PF Runtime/Core services."""
 
 from __future__ import annotations
 
 import argparse
-import copy
 import importlib.util
 import json
 import os
@@ -14,17 +13,25 @@ from typing import Any
 _RUNTIME_BOOTSTRAP: Any | None = None
 
 TOOLS = {
+    "pf.context": "Read Garage context for a ProcessForge project without requiring a Ledger session.",
     "pf.project_state": "Read the current routed ProcessForge project state.",
-    "pf.project_initialization.status": "Read bounded project initialization status for the Ledger-bound project.",
+    "pf.project_initialization.status": "Read bounded project initialization status for a ProcessForge project.",
     "pf.project_initialization.initialize": "With apply: true only, initialize deterministic PF project state for the Ledger-bound project.",
     "pf.project_initialization.repair": "With apply: true only, repair deterministic PF snapshot state for the Ledger-bound project.",
     "pf.work_state": "Read current ProcessForge work state.",
+    "pf.work.start": "Start or continue governed ProcessForge work from a high-level objective.",
     "pf.resolve": "Resolve a ProcessForge project or selected knowledge resource.",
     "pf.search": "Search only fresh snapshot-authorized local resources before using broader search.",
     "pf.workplace_state": "Read derived workplace ledger state.",
     "pf.session_context": "Read a bounded current-context projection for the Ledger-bound session.",
     "pf.session_chat": "Read paginated private transcript messages for the Ledger-bound session.",
     "pf.session_activity": "Read bounded normalized activity facts for the Ledger-bound session.",
+}
+
+MUTATING_TOOLS = {
+    "pf.project_initialization.initialize",
+    "pf.project_initialization.repair",
+    "pf.work.start",
 }
 
 
@@ -50,6 +57,8 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
     host = runtime.host
     core = runtime.core
     from pf_runtime import session_read
+    from processforge_core.local_resource_search import LocalSearchError
+    from processforge_core.garage import GovernedWorkBootstrapService, ProjectContextService, ResourceResolveService, ResourceSearchService
 
     configured_session = str(session_id or "")
     requested_session = str(arguments.get("session_id") or "")
@@ -57,12 +66,87 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
         raise session_read.SessionReadError("session_mismatch")
     supplied_session = configured_session or requested_session
     project_root = arguments.get("project_root")
+
+    def resolve_garage_project() -> Path:
+        if project_root:
+            candidate = host.resolve_project(str(project_root), core)
+            if supplied_session:
+                bound = host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, core)
+                if core.project_id(bound) != core.project_id(candidate):
+                    raise session_read.SessionReadError("session_project_mismatch")
+            return candidate
+        if supplied_session:
+            return host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, core)
+        raise session_read.SessionReadError("missing_project_root")
+
     if name == "pf.session_context":
         return session_read.session_context_payload(workplace, core, session_id=supplied_session, project_root_ref=project_root)
     if name == "pf.session_chat":
         return session_read.session_chat_payload(workplace, core, session_id=supplied_session, project_root_ref=project_root, limit=arguments.get("limit"), before=arguments.get("before"), cursor=arguments.get("cursor"), roles=arguments.get("roles"))
     if name == "pf.session_activity":
         return session_read.session_activity_payload(workplace, core, session_id=supplied_session, project_root_ref=project_root, limit=arguments.get("limit"))
+    if name == "pf.context":
+        bound_project = resolve_garage_project()
+        service = ProjectContextService(bound_project, workplace, core)
+        context = service.context(session_id=supplied_session)
+        snapshot = service.snapshot()
+        knowledge = snapshot.get("knowledge_resources") if isinstance(snapshot.get("knowledge_resources"), dict) else {}
+        selected = knowledge.get("selected") if isinstance(knowledge.get("selected"), list) else []
+        active_work = context.get("work", {}).get("active_work", []) if isinstance(context.get("work"), dict) else []
+        # Keep the MCP bootstrap response bounded. Full assignment objectives
+        # can be large and are already available through the governed capsule.
+        return {
+            "schema_version": 1,
+            "kind": "pf.context",
+            "mode": context.get("mode"),
+            "project": context.get("project", {}),
+            "context": context.get("context", {}),
+            "process": context.get("process", {}),
+            "resources": {
+                **(context.get("resources", {}) if isinstance(context.get("resources"), dict) else {}),
+                "authorized_knowledge_ids": [str(item.get("id")) for item in selected if isinstance(item, dict) and item.get("id")],
+            },
+            "work": {
+                "governed": bool(context.get("work", {}).get("governed")) if isinstance(context.get("work"), dict) else False,
+                "active_runs": context.get("work", {}).get("active_runs", []) if isinstance(context.get("work"), dict) else [],
+                "active_work": [
+                    {key: item.get(key) for key in ("run_id", "assignment_id", "run_status", "status", "state", "stage", "process")}
+                    for item in active_work
+                    if isinstance(item, dict)
+                ],
+                "recommendation": context.get("work", {}).get("recommendation") if isinstance(context.get("work"), dict) else None,
+            },
+            "session": context.get("session", {}),
+            "derived_reports": context.get("derived_reports", {}),
+            "diagnostics": context.get("diagnostics", []),
+        }
+    if name == "pf.project_state":
+        bound_project = resolve_garage_project()
+        return host.project_state_payload(workplace, core, session=supplied_session, project_root_ref=str(bound_project))
+    if name == "pf.project_initialization.status":
+        from processforge_core import project_initialization
+
+        bound_project = resolve_garage_project()
+        return project_initialization.status(bound_project, core, workplace=str(workplace))
+    if name == "pf.work_state":
+        bound_project = resolve_garage_project()
+        context = ProjectContextService(bound_project, workplace, core).context(session_id=supplied_session)
+        return {"project": context["project"], "work": context["work"], "context": context["context"], "session": context.get("session", {})}
+    if name == "pf.work.start":
+        bound_project = resolve_garage_project()
+        return GovernedWorkBootstrapService(bound_project, workplace, core).start(objective=str(arguments.get("objective") or ""), preferred_stage=str(arguments.get("preferred_stage") or ""), session_id=supplied_session)
+    if name == "pf.resolve":
+        bound_project = resolve_garage_project()
+        context = core.project_context_check_result(bound_project, explicit_workplace=str(workplace))
+        if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+            raise session_read.SessionReadError("snapshot_not_fresh")
+        return ResourceResolveService(bound_project, workplace, core).resolve(resource_id=str(arguments.get("resource_id") or "") or None)
+    if name == "pf.search":
+        bound_project = resolve_garage_project()
+        try:
+            return ResourceSearchService(bound_project, workplace, core).search(query=arguments.get("query"), limit=arguments.get("limit"), limitstart=arguments.get("limitstart"), offset=arguments.get("offset"))
+        except LocalSearchError as exc:
+            raise session_read.SessionReadError(exc.code) from exc
     if not supplied_session:
         raise session_read.SessionReadError("missing_session")
     # A stdio MCP server has no HTTP handler to enforce this for us.  Bind the
@@ -72,12 +156,6 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
         requested_project = host.resolve_project(str(project_root), core)
         if core.project_id(bound_project) != core.project_id(requested_project):
             raise session_read.SessionReadError("session_project_mismatch")
-    if name == "pf.project_state":
-        return host.project_state_payload(workplace, core, session=supplied_session)
-    if name == "pf.project_initialization.status":
-        from processforge_core import project_initialization
-
-        return project_initialization.status(bound_project, core, workplace=str(workplace))
     if name in {"pf.project_initialization.initialize", "pf.project_initialization.repair"}:
         from processforge_core import project_initialization
 
@@ -99,54 +177,6 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
             return project_initialization.repair_project(request, core)
         except project_initialization.ProjectInitializationError as exc:
             raise session_read.SessionReadError(exc.code) from exc
-    if name == "pf.work_state":
-        return host.work_state_payload(workplace, core, session=supplied_session)
-    if name == "pf.resolve":
-        if str(arguments.get("resource_id") or ""):
-            context = core.project_context_check_result(bound_project, explicit_workplace=str(workplace))
-            if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
-                raise session_read.SessionReadError("snapshot_not_fresh")
-        return host.resolve_payload(workplace, core, session=supplied_session, resource_id=str(arguments.get("resource_id") or "") or None)
-    if name == "pf.search":
-        from processforge_core.local_resource_search import LocalSearchError, ResourceSearchIndex
-
-        context = core.project_context_check_result(bound_project, explicit_workplace=str(workplace))
-        if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
-            raise LocalSearchError("snapshot_not_fresh")
-        snapshot_path, _snapshot_md = core.project_context_snapshot_paths(bound_project)
-        snapshot = core.load_yaml_document(snapshot_path)
-        runtime_snapshot = copy.deepcopy(snapshot)
-        resources = runtime_snapshot.get("local_search_resources") if isinstance(runtime_snapshot.get("local_search_resources"), list) else []
-        for resource in resources:
-            if not isinstance(resource, dict) or not isinstance(resource.get("path_ref"), dict):
-                continue
-            resolution = core.resolve_workspace_path_ref(bound_project, resource["path_ref"], workplace_manifest=workplace / "workplace.yaml")
-            if resolution.get("status") == "resolved" and resolution.get("path"):
-                # This physical root exists only in the request-local copy.
-                # It is never persisted in the public snapshot or returned.
-                resource["content_roots"] = [str(resolution["path"])]
-        try:
-            payload = ResourceSearchIndex(bound_project, runtime_snapshot, workplace).search(query=arguments.get("query"), limit=arguments.get("limit"), limitstart=arguments.get("limitstart"), offset=arguments.get("offset"))
-        except LocalSearchError as exc:
-            raise session_read.SessionReadError(exc.code) from exc
-        by_id = {str(item.get("id") or item.get("resource_id") or ""): item for item in resources if isinstance(item, dict)}
-        for match in payload.get("results", []):
-            if not isinstance(match, dict):
-                continue
-            resource = by_id.get(str(match.get("resource_id") or ""))
-            roots = resource.get("content_roots") if isinstance(resource, dict) and isinstance(resource.get("content_roots"), list) else []
-            for raw_root in roots:
-                root = Path(str(raw_root)).resolve()
-                candidate = (root / str(match.get("canonical_path") or "")).resolve() if root.is_dir() else root
-                try:
-                    candidate.relative_to(root if root.is_dir() else candidate)
-                except ValueError:
-                    continue
-                if candidate.is_file():
-                    match["local_path"] = str(candidate)
-                    match["navigation"] = "private_runtime_authorized"
-                    break
-        return payload
     if name == "pf.workplace_state":
         return host.workplace_state_payload(workplace, core)
     raise session_read.SessionReadError("unknown_tool")
@@ -158,10 +188,12 @@ def tool_schema(name: str) -> dict[str, Any]:
         properties["resource_id"] = {"type": "string"}
     if name == "pf.search":
         properties.update({"query": {"type": "string", "minLength": 1}, "limit": {"type": "integer", "minimum": 1, "maximum": 100}, "limitstart": {"type": "integer", "minimum": 0}, "offset": {"type": "integer", "minimum": 0}})
+    if name == "pf.work.start":
+        properties.update({"objective": {"type": "string", "minLength": 1}, "preferred_stage": {"type": "string"}})
     if name == "pf.project_initialization.initialize":
         properties.update({"apply": {"type": "boolean"}, "answers": {"type": "object"}, "project_type": {"type": "string"}, "coordination_mode": {"type": "string", "enum": ["inherit", "simple", "organized"]}, "platforms": {"type": "array", "items": {"type": "string"}}, "specializations": {"type": "array", "items": {"type": "string"}}, "process": {"type": "string"}, "force": {"type": "boolean"}, "allow_missing_workplace": {"type": "boolean"}})
     if name == "pf.project_initialization.repair":
-        properties.update({"apply": {"type": "boolean"}, "repair_action": {"type": "string", "enum": ["refresh_context", "restore_deterministic_artifacts"]}, "reason": {"type": "string"}})
+        properties.update({"apply": {"type": "boolean"}, "repair_action": {"type": "string", "enum": ["refresh_context", "restore_deterministic_artifacts", "install_codex_hooks"]}, "reason": {"type": "string"}})
     if name in {"pf.session_chat", "pf.session_activity"}:
         properties["limit"] = {"type": "integer", "minimum": 1, "maximum": 100}
     if name == "pf.session_chat":
@@ -169,11 +201,50 @@ def tool_schema(name: str) -> dict[str, Any]:
     return {"type": "object", "properties": properties}
 
 
+def tool_annotations(name: str) -> dict[str, bool]:
+    mutating = name in MUTATING_TOOLS
+    return {
+        "readOnlyHint": not mutating,
+        "destructiveHint": False,
+        "idempotentHint": not mutating,
+        "openWorldHint": False,
+    }
+
+
 def safe_tool_error(exc: Exception) -> str:
     from pf_runtime import session_read
 
     code = getattr(exc, "code", "read_failed")
-    return json.dumps({"error": {"code": code}}, ensure_ascii=False, sort_keys=True)
+    error: dict[str, Any] = {"code": code}
+    if code == "missing_session":
+        error["remediation"] = {
+            "kind": "ledger_session_required",
+            "summary": "This Forge-only MCP tool requires a real Ledger-bound host session id.",
+            "checks": [
+                "Use pf.context, pf.project_state, pf.work_state, pf.resolve, pf.search, or pf.work.start when the operation can stay in Garage mode.",
+                "Ask the operator to verify the configured host session integration and Agent Ledger route when a Forge-only view is required.",
+                "After the operator resolves host integration, retry from a fresh host session.",
+            ],
+            "repair_actions": [],
+            "operator_action": "verify_host_session_integration",
+            "manual_fallback": "Use session-start only for controlled local diagnostics; do not invent production session ids.",
+        }
+    elif code in {"unknown_session", "session_not_routed", "session_project_mismatch"}:
+        error["remediation"] = {
+            "kind": "ledger_session_binding_invalid",
+            "summary": "The supplied session id is not bound to the requested project in Ledger.",
+            "checks": [
+                "Use the current session id recorded by Codex hook ingress.",
+                "Verify the session project root matches the MCP request project_root.",
+            ],
+        }
+    elif code == "missing_project_root":
+        error["remediation"] = {
+            "kind": "project_root_required",
+            "summary": "Garage read-only tools can run without a Ledger session, but need project_root when no session is supplied.",
+            "checks": ["Call pf.context, pf.search, pf.resolve, or pf.work.start with project_root set to a valid ProcessForge project."],
+        }
+    return json.dumps({"error": error}, ensure_ascii=False, sort_keys=True)
 
 
 def respond(request: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
@@ -185,7 +256,7 @@ def respond(request: dict[str, Any], workplace: Path, session_id: str, runtime: 
     if method == "initialize":
         return {"jsonrpc": "2.0", "id": request_id, "result": {"protocolVersion": "2024-11-05", "serverInfo": {"name": "processforge", "version": str(getattr(core, "PROCESSFORGE_VERSION", "1"))}, "capabilities": {"tools": {}}}}
     if method == "tools/list":
-        tools = [{"name": name, "description": description, "inputSchema": tool_schema(name)} for name, description in TOOLS.items()]
+        tools = [{"name": name, "description": description, "inputSchema": tool_schema(name), "annotations": tool_annotations(name)} for name, description in TOOLS.items()]
         return {"jsonrpc": "2.0", "id": request_id, "result": {"tools": tools}}
     if method == "tools/call":
         params = request.get("params") if isinstance(request.get("params"), dict) else {}

@@ -164,7 +164,10 @@ def main() -> int:
         assert Path(template_result["results"][0]["local_path"]).is_file()
         assert json.loads(responses[11]["result"]["content"][0]["text"])["results"] == []
         session_context = json.loads(responses[12]["result"]["content"][0]["text"])
-        assert session_context["search"]["status"] == "fresh"
+        assert session_context["search"]["status"] == "fresh", {
+            "repair": repair_result.get("result", {}).get("search_index"),
+            "search": session_context["search"],
+        }
         assert session_context["search"]["generation"]
         assert (workplace / "runtime" / "search" / "local-resource-search.sqlite").is_file()
         assert not (first / ".pf" / "runtime" / "local-resource-search" / "search.sqlite").exists()

@@ -7,7 +7,6 @@ the existing ProcessForge Core files.
 
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -138,18 +137,17 @@ def session_context_payload(
     search_projection = {"status": "unavailable", "generation": None, "stale": True}
     if str(context.get("status") or "") in {"fresh", "fresh_with_updates", "ok"}:
         try:
+            from processforge_core.garage import snapshot_with_resolved_search_roots
             from processforge_core.local_resource_search import ResourceSearchIndex
 
             snapshot_path, _snapshot_md = core.project_context_snapshot_paths(project_root)
             snapshot = core.load_yaml_document(snapshot_path)
-            runtime_snapshot = copy.deepcopy(snapshot if isinstance(snapshot, dict) else {})
-            resources = runtime_snapshot.get("local_search_resources") if isinstance(runtime_snapshot.get("local_search_resources"), list) else []
-            for resource in resources:
-                if not isinstance(resource, dict) or not isinstance(resource.get("path_ref"), dict):
-                    continue
-                resolution = core.resolve_workspace_path_ref(project_root, resource["path_ref"], workplace_manifest=workplace_root / "workplace.yaml")
-                if resolution.get("status") == "resolved" and resolution.get("path"):
-                    resource["content_roots"] = [str(resolution["path"])]
+            runtime_snapshot = snapshot_with_resolved_search_roots(
+                project_root,
+                snapshot if isinstance(snapshot, dict) else {},
+                workplace_root,
+                core,
+            )
             search_status = ResourceSearchIndex(project_root, runtime_snapshot, workplace_root).status()
             search_projection = {
                 "status": search_status.get("status"),

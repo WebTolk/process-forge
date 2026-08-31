@@ -25,14 +25,11 @@ python bin/pf.py agent-start-prompt --project-root ../my-project
 
 Внутри подключенного проекта:
 
-```bash
-cd ../my-project
-python .pf/runtime/bin/pf.py doctor-project --project-root .
-python .pf/runtime/bin/pf.py project-context-refresh --project-root .
-```
-
-Агент должен начинать с `.pf/START_AGENT_HERE.md`. Этот файл объясняет, какие
-локальные правила и snapshot нужно читать перед работой.
+Агент начинает с `.pf/START_AGENT_HERE.md` и использует `pf.context`, при
+необходимости `pf.search`, затем `pf.resolve` и `pf.work.start` для существенной
+работы. Generic onboarding не устанавливает host-specific Codex hooks и не
+требует Runtime, MCP или manual Ledger session. Doctor и context refresh
+остаются operator/advanced diagnostics.
 
 ## Coordination mode
 

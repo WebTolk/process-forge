@@ -12,9 +12,12 @@ Rules:
 1. Do not load all knowledge from this file.
 2. Read the project flow entrypoint: `.pf/AGENTS.md`.
 3. Read `.pf/process-forge.yaml`.
-4. Prefer `.pf/contexts/project-context.snapshot.md` if it exists.
-5. If the snapshot is missing or stale, run/request project context refresh.
+4. Call `pf.context` with the project root; use the current snapshot only as a
+   file-only fallback when MCP is unavailable.
+5. Use `pf.search`, `pf.resolve`, and `pf.work.start` as the normal high-level
+   project path.
 6. Never write secrets or local absolute paths to public files.
-7. Follow assignment boundaries.
-8. Write session telemetry when working inside ProcessForge.
+7. Follow assignment and immutable-capsule boundaries.
+8. Do not install, start, or repair PF Runtime, MCP, host hooks, or Agent Ledger
+   during ordinary project work; report operator-level infrastructure blockers.
 <!-- PROCESSFORGE:END -->

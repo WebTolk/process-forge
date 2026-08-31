@@ -100,21 +100,21 @@ def main() -> int:
         missing_server = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "mcp_server.py"), "--workplace", str(workplace)], input=missing_request, text=True, capture_output=True, cwd=ROOT, check=True)
         missing_response = json.loads(missing_server.stdout)
         missing_error = json.loads(missing_response["result"]["content"][0]["text"])
-        if missing_error != {"error": {"code": "missing_session"}}:
+        if missing_error.get("error", {}).get("code") != "missing_session" or str(root) in json.dumps(missing_error):
             raise AssertionError("MCP session error leaked details or used an unstable code")
 
         mismatch_request = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {"project_root": str(second)}}}) + "\n"
         mismatch_server = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "mcp_server.py"), "--workplace", str(workplace), "--session", "sess-a"], input=mismatch_request, text=True, capture_output=True, cwd=ROOT, check=True)
         mismatch_response = json.loads(mismatch_server.stdout)
         mismatch_error = json.loads(mismatch_response["result"]["content"][0]["text"])
-        if mismatch_error != {"error": {"code": "session_project_mismatch"}}:
+        if mismatch_error.get("error", {}).get("code") != "session_project_mismatch" or str(root) in json.dumps(mismatch_error):
             raise AssertionError("MCP session context did not fail closed on project mismatch")
 
         switch_request = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {"session_id": "sess-b"}}}) + "\n"
         switch_server = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "mcp_server.py"), "--workplace", str(workplace), "--session", "sess-a"], input=switch_request, text=True, capture_output=True, cwd=ROOT, check=True)
         switch_response = json.loads(switch_server.stdout)
         switch_error = json.loads(switch_response["result"]["content"][0]["text"])
-        if switch_error != {"error": {"code": "session_mismatch"}}:
+        if switch_error.get("error", {}).get("code") != "session_mismatch" or str(root) in json.dumps(switch_error):
             raise AssertionError("MCP process allowed its configured session to be overridden")
 
         pf("runtime", "start", "--workplace", str(workplace), "--timeout", "10")

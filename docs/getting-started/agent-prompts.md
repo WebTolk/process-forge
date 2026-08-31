@@ -39,14 +39,14 @@ archive names, and reports.
 - `--interactive` is accepted by first-run initialization commands for UX
   compatibility; current commands remain file-first and do not require terminal
   prompting.
-- For ordinary project work, start from the single-agent `1-1-1-1` model:
-  one operator, one primary agent session, one project, and one active
-  process/run. Check in with `session-start` or `agent-checkin`, run the
-  process sequentially, use CLI checks and gates as inspection, and check out
-  with `session-end` or `agent-checkout`.
-- At session start, surface `project-context-check --session-start --json`.
-  Continue on `fresh`, notify on `fresh_with_updates`, follow project policy on
-  `stale`, and block on `broken`.
+- For ordinary project work, use `pf.context`, conditional `pf.search`,
+  `pf.resolve`, and `pf.work.start`. A current context/snapshot outranks
+  historical generated reports.
+- Do not install, start, restart, or repair PF Runtime, MCP, host hooks, Agent
+  Ledger, or search indexes during ordinary project work. Use available PF
+  tools and report an operator-level blocker when PF requires operator action.
+- Manual session/check-in, doctor, index maintenance, hook dispatch, and
+  low-level run/task commands are advanced Forge/operator paths.
 - Create assignment capsules from the current project context snapshot. Capsules
   pin snapshot id/checksum and must not use `latest` resource references.
 - For `software-feature-development`, treat the process as a full software
@@ -183,7 +183,7 @@ python .pf/runtime/bin/pf.py process-list --project-root .
 python .pf/runtime/bin/pf.py process-describe --project-root . --process <process-id>
 ```
 
-## Task Batch Run
+## Advanced Task Batch Run
 
 ```bash
 python .pf/runtime/bin/pf.py session-start --project-root . --agent primary-agent --process task-batch-execution
@@ -259,8 +259,9 @@ Initialize ProcessForge in fully automatic mode. It is located at
 
 ```text
 Use ProcessForge for this task. Read .pf/START_AGENT_HERE.md first, create or
-reuse a run, split the request into tasks, record iterations, keep artifacts in
-.pf, run the relevant checks, and finish with a concise evidence-based handoff.
+reuse governed work through pf.work.start, use pf.search and pf.resolve for
+authorized resources, keep artifacts in .pf, run the relevant checks, and
+finish with a concise evidence-based handoff. Do not maintain PF infrastructure.
 ```
 
 ## Subagent Prompt: Documentation Specialist

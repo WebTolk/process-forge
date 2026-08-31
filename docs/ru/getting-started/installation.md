@@ -1,7 +1,7 @@
 # Установка
 
-Установите ProcessForge один раз как инструмент: склонируйте репозиторий или
-распакуйте релизный архив.
+Установите ProcessForge один раз как Python-инструмент: склонируйте repository
+или распакуйте release archive.
 
 ```bash
 git clone <processforge-repo> process-forge
@@ -14,22 +14,22 @@ python bin/pf.py release-test --root .
 
 Из корня дистрибутива используйте `python bin/pf.py`.
 
-Храните изменяемые workplace и проекты за пределами заменяемого каталога
+Храните изменяемые workplace и projects за пределами заменяемого каталога
 дистрибутива. После `cd process-forge` указывайте соседние или другие внешние
 пути, например `../pf-workplace` и `../my-project`.
 
-Для рабочего профиля разработки ПО сначала явно инициализируйте workplace, а
-затем подключите проект:
+Для production software-development profile сначала явно инициализируйте
+workplace, затем подключите project:
 
 ```bash
 python bin/pf.py workplace-init --workplace ../pf-workplace --profile software-development --apply
 python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-workplace --type generic-software-project --apply
 ```
 
-У команды `first-run` нет параметра `--profile`. Если нужен поставляемый
-профиль workplace, используйте две отдельные команды выше.
+Команда `first-run` не принимает `--profile`; когда нужен bundled workplace
+profile, используйте двухкомандный flow выше.
 
-Внутри подключенного проекта используйте project-local launcher:
+После подключения проекта используйте project runtime launcher внутри проекта:
 
 ```bash
 cd ../my-project
@@ -37,8 +37,8 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 ```
 
 Не копируйте весь ProcessForge в `.codex`, `.claude`, `.agents` или похожие
-папки конфигурации агентов. В конфигурации агента достаточно короткой
-инструкции: где установлен ProcessForge и что проектные инструкции находятся в
+папки конфигурации агентов. Конфигурации агента достаточно короткой инструкции:
+где установлен ProcessForge и что project instructions находятся в
 `.pf/START_AGENT_HERE.md`.
 
 ## Проверка
@@ -47,29 +47,48 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 python tools/validate-public-cleanliness.py --root .
 python tools/validate-process-forge-checksums.py --root . --check
 python bin/pf.py release-test --root .
+python bin/pf.py release-test --root . --trace-smokes
 ```
+
+`--trace-smokes` пишет `.pf/runtime/release-test/latest-trace.ndjson` с current
+smoke name, elapsed time, timeout budget и timeout reason.
 
 ## Требования
 
-Требования к среде выполнения:
+Runtime requirements:
 
 - Рекомендуется Python 3.11+.
-- Python 3.10+ допустим только если текущие тесты подтверждают совместимость.
-- Зависимости Python-пакетов описаны в `requirements.txt`, сейчас это `PyYAML`.
-- Нужна файловая система с UTF-8.
-- Нужен доступ на чтение и запись к дистрибутиву ProcessForge, workplace и
-  папкам проекта.
-- PowerShell для обычного использования не требуется.
-- ProcessForge не требует демона или фонового процесса.
+- Python 3.10+ допустим только если текущие tests подтверждают compatibility.
+- Python package dependencies описаны в `requirements.txt`, сейчас это `PyYAML`.
+- Нужна UTF-8 capable filesystem.
+- Нужен read/write access к ProcessForge distribution, workplace и project folders.
+- PowerShell для обычного runtime usage не требуется.
+- Default ProcessForge CLI usage не требует daemon или background process.
+  Optional PF Runtime lifecycle и Windows autostart описаны в
+  [Автозапуск Runtime и запуск Codex MCP](runtime-autostart.md).
 
-Требования к разработке и проверкам релиза:
+## Windows PowerShell UTF-8
+
+PowerShell может неверно отображать русский UTF-8 text, если console encoding не
+UTF-8. Файлы остаются UTF-8; это проблема отображения консоли.
+
+```powershell
+chcp 65001
+$OutputEncoding = [System.Text.UTF8Encoding]::new()
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new()
+```
+
+Identifiers и YAML остаются ASCII-safe; docs используют UTF-8.
+
+Development и release-check requirements:
 
 - Python 3.11+.
-- Зависимости Python-пакетов из `requirements.txt`.
-- Git для установки из исходников и проверок релиза, например `git diff --check`.
-- Возможность запускать дочерние процессы и создавать временные каталоги.
-- Поддержка ZIP из стандартной библиотеки Python.
+- Python package dependencies из `requirements.txt`.
+- Git для source installation и release checks, например `git diff --check`.
+- Возможность запускать subprocesses и создавать temporary directories.
+- ZIP support из Python standard library.
 
-Git рекомендуется для установки из исходников и нужен для проверок разработки и
-релиза. Обычное использование из релизного архива не требует Git, если
-пользователь не включает интеграцию с системой контроля версий.
+Git рекомендуется для установки из исходников и нужен для development/release
+checks. Normal runtime usage из release archive не требует Git, если
+version-control integration не нужна.

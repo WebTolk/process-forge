@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 1.1.0 - 2026-08-23
+## 1.1.0 - 2026-08-31
 
 ### Added
 
@@ -15,12 +15,23 @@
   long-lived runtime health checks, and local MCP/search acceptance flows.
 - Added manifest-based ProcessForge core update planning, apply, incomplete
   update detection, and repair reporting.
+- Added the sessionless Garage entry layer with PF-first context, governed work
+  bootstrap, snapshot-authorized search, and resource resolution through MCP.
+- Added governed project initialization and repair tools with bounded status and
+  explicit mutation guards.
+- Added opt-in Windows Task Scheduler autostart for PF Runtime and Codex-owned
+  stdio MCP registration lifecycle commands.
+- Added Codex hook ingestion for session lifecycle, prompts, assistant stop
+  messages, subagent final messages, tool activity, telemetry, and private chat
+  projections.
 
 ### Changed
 
 - Project initialization now reports bounded initialization status, deterministic
   repair options, and local search readiness instead of relying only on file
   presence.
+- Generic project onboarding no longer installs Codex hooks; optional host
+  telemetry remains available through an explicit operator action.
 - Resource search refresh is maintenance-owned: query calls report missing,
   stale, fresh, or degraded index state, while maintenance ticks perform rebuilds.
 - Context freshness and execution readiness are now reported separately, so fresh
@@ -28,6 +39,11 @@
   missing.
 - Release packaging and archive validation now require clean Git provenance,
   checksum alignment, public-cleanliness gates, and extracted archive tests.
+- PF-managed Codex workers now load immutable PF context and authorized
+  resources before filesystem discovery, select sandbox mode from assignment
+  ownership, and keep inherited host secrets out of durable command state.
+- Runtime, MCP, and local search now share one authorized resource resolver so
+  Garage and Ledger-bound reads use the same snapshot boundary.
 
 ### Fixed
 
@@ -40,6 +56,12 @@
   overwritten silently and incomplete updates can be classified for repair.
 - Fixed stale public distribution artifacts in `dist/` from blocking release
   qualification.
+- Fixed Runtime status lock contention and full-journal scans so status remains
+  responsive while scheduler jobs are active.
+- Fixed Codex MCP tool annotations, explicit Python command drift detection,
+  missing-session diagnostics, and bounded PF context responses.
+- Fixed derived-report freshness, governed-work duplicate prevention, session
+  expiry projections, and project initialization/search recovery diagnostics.
 
 ### Internal
 

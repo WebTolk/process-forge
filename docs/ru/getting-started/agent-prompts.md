@@ -42,11 +42,14 @@
 - `--interactive` принимается first-run initialization commands ради
   совместимости пользовательского опыта; текущие команды остаются файловыми и
   не требуют вопросов в терминале.
-- Для обычной проектной работы начинайте с single-agent `1-1-1-1` model: один
-  оператор, одна primary agent session, один проект и один active process/run.
-  Сделайте check-in через `session-start` или `agent-checkin`, выполняйте
-  процесс последовательно, используйте CLI checks и gates как проверку, затем
-  сделайте checkout через `session-end` или `agent-checkout`.
+- Для обычной проектной работы используйте `pf.context`, при необходимости
+  `pf.search`, затем `pf.resolve` и `pf.work.start`. Текущий context/snapshot
+  важнее historical generated reports.
+- Во время обычной работы не устанавливайте, не запускайте и не ремонтируйте PF
+  Runtime, MCP, host hooks, Agent Ledger или search indexes. Используйте
+  доступные PF tools и сообщайте operator-level blocker.
+- Manual session/check-in, doctor, index maintenance, hook dispatch и
+  низкоуровневые run/task команды относятся к advanced Forge/operator path.
 - Не предполагайте Agent Director, explicit leases или Supervisor / Execution
   Inspector для простой работы. Используйте их только когда выбранный process
   требует multi-agent coordination, process handoffs или external runtime
@@ -177,7 +180,7 @@ python .pf/runtime/bin/pf.py process-list --project-root .
 python .pf/runtime/bin/pf.py process-describe --project-root . --process <process-id>
 ```
 
-## Task batch run
+## Advanced task batch run
 
 ```bash
 python .pf/runtime/bin/pf.py session-start --project-root . --agent primary-agent --process task-batch-execution
@@ -255,9 +258,10 @@ tools, MCP providers, processes, coding standards и capabilities уже
 
 ```text
 Используй ProcessForge для этой задачи. Сначала прочитай
-.pf/START_AGENT_HERE.md, создай или переиспользуй run, разбей запрос на задачи,
-фиксируй итерации, сохраняй артефакты в .pf, запусти нужные проверки и заверши
-кратким handoff с фактическими свидетельствами.
+.pf/START_AGENT_HERE.md, создай или переиспользуй governed work через
+pf.work.start, используй pf.search и pf.resolve для разрешённых ресурсов,
+сохраняй артефакты в .pf, выполни проверки и заверши кратким handoff. Не
+обслуживай инфраструктуру PF.
 ```
 
 ## Subagent prompt: documentation specialist

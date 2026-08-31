@@ -111,8 +111,14 @@ def main() -> int:
         start_text = (project / ".pf" / "START_AGENT_HERE.md").read_text(encoding="utf-8", errors="replace")
         if "python tools/processforge.py" in start_text:
             raise AssertionError("START_AGENT_HERE contains broken linked-project command")
-        if "python .pf/runtime/bin/pf.py doctor-project --project-root ." not in start_text:
-            raise AssertionError("START_AGENT_HERE does not document the project runtime launcher fallback")
+        for marker in ["pf.context", "pf.search", "pf.resolve", "pf.work.start", "## Infrastructure Boundary"]:
+            if marker not in start_text:
+                raise AssertionError(f"START_AGENT_HERE is missing Garage-first marker: {marker}")
+        preferred_path = start_text.split("## Infrastructure Boundary", 1)[0]
+        if "doctor-project" in preferred_path or "session-start" in preferred_path or "install" in preferred_path:
+            raise AssertionError("START_AGENT_HERE mixes operator infrastructure into the preferred Garage path")
+        if (project / ".codex" / "hooks.json").exists():
+            raise AssertionError("generic first run unexpectedly installed Codex hooks")
 
         prompt = run_command("agent-start-prompt", "--project-root", str(project)).stdout
         if "Start Agent Here" not in prompt:

@@ -31,8 +31,7 @@ missing greenfield project root.
 
 ```bash
 python bin/pf.py project-onboard --project-root ./my-project --workplace ./pf-workplace --type generic-software-project --apply
-python bin/pf.py project-context-check --project-root ./my-project --session-start --json
-python bin/pf.py doctor-project --project-root ./my-project
+python bin/pf.py agent-start-prompt --project-root ./my-project
 ```
 
 The public manifest declares `context_requirements` and `context_policy`.
@@ -59,7 +58,12 @@ into the project.
 
 The project-local launcher reads private `.pf/process-forge.local.yaml` or `PROCESSFORGE_HOME` to find the ProcessForge distribution. Public files such as `.pf/START_AGENT_HERE.md` do not reveal the resolved distribution path.
 
-Inside the linked project:
+Generic onboarding does not install host-specific Codex hooks and does not
+require Runtime, MCP, or a Ledger session. Inside the linked project, the agent
+follows `.pf/START_AGENT_HERE.md`: `pf.context`, conditional `pf.search`,
+`pf.resolve`, then `pf.work.start` for substantive work.
+
+Operator diagnostics remain available when needed:
 
 ```bash
 pf doctor-project --project-root .

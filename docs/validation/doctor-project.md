@@ -18,7 +18,9 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 
 - `.pf/process-forge.yaml` exists.
 - `.pf/process-forge.local.yaml` exists when local workplace wiring is required.
-- `.gitignore` excludes private local config and runtime paths.
+- `.gitignore` excludes private local config and runtime paths. Effective Git
+  protection passes even when a broader rule such as `.pf/` covers the private
+  files; missing exact policy lines are reported as `WARN`.
 - Public manifest does not contain local absolute paths.
 - Workplace manifest referenced by local config exists when configured.
 - ProcessForge distribution roots are used as projects only with explicit
@@ -38,7 +40,9 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 
 ```text
 PASS: .pf/process-forge.yaml found
-PASS: .gitignore contains .pf/runtime/
+PASS: .gitignore protects .codex/hooks.json
+PASS: .gitignore protects .pf/runtime/
+WARN: .gitignore missing recommended explicit entry .pf/runtime/
 FAIL: workplace manifest is missing
 ```
 
