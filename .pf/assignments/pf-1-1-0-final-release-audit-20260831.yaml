@@ -1,0 +1,87 @@
+schema_version: 1
+id: pf-1-1-0-final-release-audit-20260831
+title: Audit and design final 1.1.0 release surface
+run_id: processforge-1-1-0-final-release-20260831
+process: software-feature-development
+status: done
+created_at: '2026-08-31T03:47:30Z'
+updated_at: '2026-08-31T03:55:26Z'
+objective: Audit release metadata, updater discovery, agent and human documentation, Codex hook optionality, Runtime/MCP lifecycle, and define the bounded final release design.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Audited updater, release provenance, agent/human documentation, Runtime/MCP lifecycle, and Codex hook coupling; recorded bounded two-phase release design.
+  artifacts:
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/release-update-manifest-design.md
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/runtime-mcp-lifecycle-audit.md
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/agent-instruction-release-audit.md
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/human-documentation-release-audit.md
+stage: architecture-plan
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-1.1.0-final-release-update-manifests-docs-master-prompt.md
+allowed_files:
+  - .pf/logs/processforge-1.1.0-final-release-20260831-audit.md
+  - .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: orchestrator
+  writer: true
+  owned_files:
+    - .pf/logs/processforge-1.1.0-final-release-20260831-audit.md
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/logs/processforge-1.1.0-final-release-20260831-audit.md
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: release_update_manifest_design
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/release-update-manifest-design.md
+    type: unspecified
+    required: true
+  -
+    id: runtime_mcp_lifecycle_audit
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/runtime-mcp-lifecycle-audit.md
+    type: unspecified
+    required: true
+  -
+    id: agent_instruction_release_audit
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/agent-instruction-release-audit.md
+    type: unspecified
+    required: true
+  -
+    id: human_documentation_release_audit
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/human-documentation-release-audit.md
+    type: unspecified
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/processforge-1-1-0-final-release-20260831/audit/release-update-manifest-design.md
+  format: concise_markdown
+  include:
+    - release_update_manifest_design
+    - runtime_mcp_lifecycle_audit
+    - agent_instruction_release_audit
+    - human_documentation_release_audit

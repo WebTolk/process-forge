@@ -1,0 +1,83 @@
+schema_version: 1
+id: pf-1-1-0-final-release-assurance-20260831
+title: Assure final 1.1.0 release contracts
+run_id: processforge-1-1-0-final-release-20260831
+process: software-feature-development
+status: done
+created_at: '2026-08-31T03:48:07Z'
+updated_at: '2026-08-31T04:32:50Z'
+objective: Verify update discovery, documentation invariants, generic project readiness, hosted MCP path, Forge boundary, public cleanliness, and report findings without modifying product files.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Completed source assurance: 183/185 checks passed; remaining failures are clean-Git/stale-dist release-delivery gates, with hosted MCP proof explicitly external.'
+  artifacts:
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/assurance/update-discovery-acceptance.md
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/assurance/hosted-codex-mcp-acceptance.md
+    - .pf/reviews/processforge-1-1-0-final-release-20260831/independent-release-review.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-1.1.0-final-release-update-manifests-docs-master-prompt.md
+allowed_files:
+  - .pf/logs/processforge-1.1.0-final-release-20260831-assurance.md
+  - .pf/artifacts/processforge-1-1-0-final-release-20260831/assurance/**
+  - .pf/reviews/processforge-1-1-0-final-release-20260831/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/logs/processforge-1.1.0-final-release-20260831-assurance.md
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/assurance/**
+    - .pf/reviews/processforge-1-1-0-final-release-20260831/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/logs/processforge-1.1.0-final-release-20260831-assurance.md
+    - .pf/artifacts/processforge-1.1.0-final-release-20260831/assurance/**
+    - .pf/reviews/processforge-1-1-0-final-release-20260831/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: update_discovery_acceptance
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/assurance/update-discovery-acceptance.md
+    type: unspecified
+    required: true
+  -
+    id: hosted_codex_mcp_acceptance
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/assurance/hosted-codex-mcp-acceptance.md
+    type: unspecified
+    required: true
+  -
+    id: independent_release_review
+    path: .pf/reviews/processforge-1-1-0-final-release-20260831/independent-release-review.md
+    type: unspecified
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/reviews/processforge-1-1-0-final-release-20260831/independent-release-review.md
+  format: concise_markdown
+  include:
+    - update_discovery_acceptance
+    - hosted_codex_mcp_acceptance
+    - independent_release_review

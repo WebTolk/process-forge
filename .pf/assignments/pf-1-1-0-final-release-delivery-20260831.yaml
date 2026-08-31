@@ -1,0 +1,85 @@
+schema_version: 1
+id: pf-1-1-0-final-release-delivery-20260831
+title: Build and qualify final ProcessForge 1.1.0
+run_id: processforge-1-1-0-final-release-20260831
+process: software-feature-development
+status: done
+created_at: '2026-08-31T03:48:22Z'
+updated_at: '2026-08-31T06:01:15Z'
+objective: Create exact-tag 1.1.0 release archive, historical sidecar and stable channel metadata; verify 1.0.2 upgrade, extracted archive, provenance, public cleanliness, and final Git parity.
+platform: ""
+selected_specializations:
+  []
+order: 4
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Published final v1.1.0 tag and GitHub Release; source/archive/update/provenance qualification passed, with hosted Codex MCP explicitly retained as an external host-session blocker.
+  artifacts:
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/release-provenance-final-report.md
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/final-release-qualification.md
+stage: release-delivery
+execution_mode:
+  kind: release_delivery
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-1.1.0-final-release-update-manifests-docs-master-prompt.md
+allowed_files:
+  - .pf/logs/processforge-1.1.0-final-release-20260831-delivery.md
+  - dist/**
+  - release/**
+  - .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/**
+  - .pf/handoffs/runs/processforge-1-1-0-final-release-20260831-handoff.md
+  - .pf/runs/processforge-1-1-0-final-release-20260831/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: release-manager
+  writer: true
+  owned_files:
+    - .pf/logs/processforge-1.1.0-final-release-20260831-delivery.md
+    - dist/**
+    - release/**
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/**
+    - .pf/handoffs/runs/processforge-1-1-0-final-release-20260831-handoff.md
+    - .pf/runs/processforge-1-1-0-final-release-20260831/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/logs/processforge-1.1.0-final-release-20260831-delivery.md
+    - dist/**
+    - release/**
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/**
+    - .pf/handoffs/runs/processforge-1-1-0-final-release-20260831-handoff.md
+    - .pf/runs/processforge-1-1-0-final-release-20260831/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: release_provenance_final_report
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/release-provenance-final-report.md
+    type: unspecified
+    required: true
+  -
+    id: final_release_qualification
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/final-release-qualification.md
+    type: unspecified
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/final-release-qualification.md
+  format: concise_markdown
+  include:
+    - release_provenance_final_report
+    - final_release_qualification
