@@ -7026,7 +7026,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
     ]
     if clean_first:
         commands.insert(1, ReleaseCommand("clean release artifacts", [sys.executable, str(root / "tools" / "processforge.py"), "clean", "--root", str(root), "--release"], 60))
-        commands.insert(2, ReleaseCommand("release package", [sys.executable, str(root / "tools" / "processforge.py"), "release-pack", "--root", str(root), "--output", str(root / "dist" / f"{RELEASE_NAME}-{RELEASE_ARCHIVE_VERSION}.zip")], 120))
+        commands.append(ReleaseCommand("release package", [sys.executable, str(root / "tools" / "processforge.py"), "release-pack", "--root", str(root), "--output", str(root / "dist" / f"{RELEASE_NAME}-{RELEASE_ARCHIVE_VERSION}.zip")], 120))
     if public:
         commands = [item for item in commands if item.public_gate]
     return commands
