@@ -13543,7 +13543,9 @@ def run_summary_path(project_root: Path, run_id: str) -> Path:
 
 
 def run_handoff_path(project_root: Path, run_id: str) -> Path:
-    return locate_flow_root(project_root) / "handoffs" / "runs" / f"{safe_id(run_id, 'run')}-handoff.md"
+    candidate = str(run_id or "").strip()
+    normalized = candidate if re.fullmatch(r"[a-z0-9]+(?:-+[a-z0-9]+)*", candidate) else safe_id(candidate, "run")
+    return locate_flow_root(project_root) / "handoffs" / "runs" / f"{normalized}-handoff.md"
 
 
 def render_run_summary(project_root: Path, run: dict[str, Any]) -> str:
@@ -20341,7 +20343,7 @@ def command_run_status(args: argparse.Namespace) -> int:
 
 def command_run_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    run_id = safe_id(args.run, "run")
+    run_id = str(args.run or "").strip()
     with registry_file_lock(run_yaml_path(project_root, run_id)):
         checks = validate_run_consistency(project_root, run_id, include_runtime_events=bool(getattr(args, "runtime_events", False)))
     result = print_checks(checks)
