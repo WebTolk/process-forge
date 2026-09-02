@@ -38,7 +38,7 @@ def attestation_does_not_replace_artifact() -> None:
                 "notes": "Attestation must not satisfy artifact",
             },
         )
-        if "artifact_evidence_missing" not in {item.get("code") for item in result.get("blockers", [])}:
+        if result.get("action") != "incomplete" or "artifact_evidence_missing" not in {item.get("code") for item in result.get("incomplete", [])}:
             raise AssertionError(result)
 
 
@@ -56,7 +56,7 @@ def final_blocker_preserves_state() -> None:
             {"project_root": str(project), "outcome": "completed", "evidence": stage_evidence("report", "verify-ready"), "notes": "Final attempt"},
         )
         task = assignment(project, started)
-        if "blocking_assignment_incomplete" not in {item.get("code") for item in result.get("blockers", [])}:
+        if result.get("action") != "incomplete" or "blocking_assignment_incomplete" not in {item.get("code") for item in result.get("incomplete", [])}:
             raise AssertionError(result)
         if len(task.get("stage_history", [])) != 2 or not task.get("stage_execution", {}).get("evidence"):
             raise AssertionError(task)

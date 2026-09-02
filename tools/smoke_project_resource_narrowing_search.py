@@ -74,6 +74,22 @@ def smoke_platform_version_compatibility_resolution() -> None:
     assert report["provenance"][0]["status"] == "selected"
 
 
+def smoke_explicit_resource_mismatch_stays_unresolved() -> None:
+    resources = [resource("knowledge.platform-core", "6.1.2")]
+    constrained, constrained_report = PF.select_resolved_knowledge_resources(
+        resources,
+        {"knowledge_resources": [{"id": "root", "constraint": ">=6.2 <6.3", "required": True}]},
+    )
+    preferred, preferred_report = PF.select_resolved_knowledge_resources(
+        resources,
+        {"knowledge_resources": [{"id": "root", "preferred_version": "6.2.0", "required": True}]},
+    )
+    assert not constrained and constrained_report["status"] == "unresolved", constrained_report
+    assert constrained_report["provenance"] == [{"selector": {"id": "root", "constraint": ">=6.2 <6.3", "required": True}, "status": "unresolved"}]
+    assert not preferred and preferred_report["status"] == "unresolved", preferred_report
+    assert preferred_report["provenance"] == [{"selector": {"id": "root", "preferred_version": "6.2.0", "required": True}, "status": "unresolved"}]
+
+
 def smoke_real_project_fulltext_docs_selected() -> None:
     with tempfile.TemporaryDirectory(prefix="pf-real-project-resource-") as raw:
         root = Path(raw)
@@ -156,6 +172,7 @@ def main() -> int:
         smoke_project_selects_current_platform_resources,
         smoke_project_does_not_select_all_platform_versions,
         smoke_platform_version_compatibility_resolution,
+        smoke_explicit_resource_mismatch_stays_unresolved,
         smoke_real_project_fulltext_docs_selected,
         smoke_source_tree_metadata_only,
         smoke_search_returns_current_platform_source,

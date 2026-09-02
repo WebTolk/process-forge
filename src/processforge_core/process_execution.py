@@ -262,19 +262,30 @@ class ProcessExecutionService:
             for gate_id in self._string_list(stage.get("exit_gates"))
         ]
         obligations = self._automation_states(process, stage, assignment)
-        blockers = self._stage_blockers(required_inputs, artifacts, required_evidence, entry_gates + exit_gates, obligations)
+        incomplete = self._stage_requirements(required_inputs, artifacts, required_evidence, entry_gates + exit_gates, obligations)
         completion = stage.get("stage_completion") if isinstance(stage.get("stage_completion"), dict) else process.get("stage_completion") if isinstance(process.get("stage_completion"), dict) else {}
         if completion.get("evidence_required") is True and not current_evidence:
-            blockers.append({"code": "stage_evidence_required", "stage_id": stage_id})
+            incomplete.append({"code": "stage_evidence_required", "stage_id": stage_id})
         stage_execution = assignment.get("stage_execution") if isinstance(assignment.get("stage_execution"), dict) else {}
         if completion.get("handoff_note_required") is True and not str(stage_execution.get("notes") or "").strip():
-            blockers.append({"code": "handoff_note_required", "stage_id": stage_id})
+            incomplete.append({"code": "handoff_note_required", "stage_id": stage_id})
         try:
             outcomes = normalized_outcomes(process, stage_id)
         except ValueError as exc:
             outcomes = []
-            blockers.append({"code": "invalid_process_definition", "message": str(exc), "stage_id": stage_id})
-        action = "run_completed" if str(run.get("status") or "") == "completed" else ("work_ready" if not blockers else "work_blocked")
+            incomplete.append({"code": "invalid_process_definition", "message": str(exc), "stage_id": stage_id})
+        stored_blockers = stage_execution.get("blockers") if isinstance(stage_execution.get("blockers"), list) else []
+        blockers = [copy.deepcopy(item) for item in stored_blockers if isinstance(item, dict)]
+        if str(assignment.get("stage_status") or "") == "blocked" and not blockers:
+            blockers.append({"code": "stage_marked_blocked", "stage_id": stage_id})
+        if str(run.get("status") or "") == "completed":
+            action = "run_completed"
+        elif blockers:
+            action = "work_blocked"
+        elif incomplete:
+            action = "work_incomplete"
+        else:
+            action = "work_ready"
         return {
             "schema_version": 1,
             "kind": "pf.work.state",
@@ -296,6 +307,8 @@ class ProcessExecutionService:
             "gates": {"entry": entry_gates, "exit": exit_gates},
             "allowed_outcomes": outcomes,
             "blockers": blockers,
+            "incomplete": incomplete,
+            "completion": {"status": "complete" if not incomplete else "incomplete", "requirements": incomplete},
             "evidence": current_evidence,
         }
 
@@ -344,6 +357,7 @@ class ProcessExecutionService:
             self._atomic_yaml(self._assignment_path(str(assignment["id"])), assignment)
             preview = self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
             preview_blockers = list(preview.get("blockers") or [])
+            preview_incomplete = list(preview.get("incomplete") or [])
             outcomes = {str(item.get("id")): item for item in preview.get("allowed_outcomes", []) if isinstance(item, dict)}
             if outcome not in outcomes:
                 preview_blockers.append({"code": "outcome_not_allowed", "outcome": outcome, "allowed": sorted(outcomes)})
@@ -355,7 +369,7 @@ class ProcessExecutionService:
                 for gate_id in self._string_list(next_stage.get("entry_gates")):
                     gate = self._gate_state(process, gate_id, accumulated, phase="entry")
                     if not gate["satisfied"] and gate.get("blocking", True):
-                        preview_blockers.append({"code": "entry_gate_evidence_missing", "gate_id": gate_id, "stage_id": next_stage_id})
+                        preview_incomplete.append({"code": "entry_gate_evidence_missing", "gate_id": gate_id, "stage_id": next_stage_id})
             if preview_blockers:
                 now = self.core.now_utc()
                 assignment["stage_status"] = "blocked"
@@ -368,19 +382,17 @@ class ProcessExecutionService:
                 self._emit("process.stage.blocked", run, assignment, stage_id, outcome=outcome, previous_stage_id=stage_id, next_stage_id=next_stage_id, blockers=preview_blockers)
                 return {**blocked_state, "action": "blocked", "reason": "stage_transition_blocked", "blockers": preview_blockers}
 
+            if preview_incomplete:
+                incomplete_state = self.state(run_id=str(run["id"]), assignment_id=str(assignment["id"]), session_id=session_id)
+                self._write_projection(incomplete_state)
+                return {**incomplete_state, "action": "incomplete", "reason": "stage_requirements_incomplete", "incomplete": preview_incomplete}
+
             if not next_stage_id:
                 completion_blockers = self._run_completion_blockers(process, run, assignment)
                 if completion_blockers:
-                    now = self.core.now_utc()
-                    assignment["stage_status"] = "blocked"
-                    assignment["updated_at"] = now
-                    assignment["stage_execution"]["blocked_at"] = now
-                    assignment["stage_execution"]["blockers"] = completion_blockers
-                    self._atomic_yaml(self._assignment_path(str(assignment["id"])), assignment)
-                    blocked_state = self.state(run_id=str(run["id"]), assignment_id=str(assignment["id"]), session_id=session_id)
-                    self._write_projection(blocked_state)
-                    self._emit("process.stage.blocked", run, assignment, stage_id, outcome=outcome, previous_stage_id=stage_id, next_stage_id="", blockers=completion_blockers)
-                    return {**blocked_state, "action": "blocked", "reason": "run_completion_blocked", "blockers": completion_blockers}
+                    incomplete_state = self.state(run_id=str(run["id"]), assignment_id=str(assignment["id"]), session_id=session_id)
+                    self._write_projection(incomplete_state)
+                    return {**incomplete_state, "action": "incomplete", "reason": "run_completion_incomplete", "incomplete": completion_blockers}
 
             now = self.core.now_utc()
             history = assignment.get("stage_history") if isinstance(assignment.get("stage_history"), list) else []
@@ -436,7 +448,7 @@ class ProcessExecutionService:
         outcomes = normalized_outcomes(process, stage_id)
         final = any(not str(item.get("next_stage") or "") for item in outcomes)
         state = self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
-        blockers = list(state.get("blockers") or [])
+        blockers = [*list(state.get("blockers") or []), *list(state.get("incomplete") or [])]
         if pin_status != "pinned":
             blockers.append({"code": "process_not_pinned"})
         if not final:
@@ -660,14 +672,14 @@ class ProcessExecutionService:
             states.append({"id": str(binding.get("id") or projector or "obligation"), "projector": projector, "gate": str(binding.get("gate") or ""), "status": status, **details})
         return states
 
-    def _stage_blockers(self, inputs: list[dict[str, Any]], artifacts: list[dict[str, Any]], required_evidence: list[dict[str, Any]], gates: list[dict[str, Any]], obligations: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        blockers: list[dict[str, Any]] = []
-        blockers.extend({"code": "required_input_missing", "input_id": item["id"]} for item in inputs if not item["satisfied"])
-        blockers.extend({"code": "artifact_evidence_missing", "artifact_id": item["id"]} for item in artifacts if not item["satisfied"])
-        blockers.extend({"code": "required_evidence_missing", "evidence_id": item["id"]} for item in required_evidence if not item["satisfied"])
-        blockers.extend({"code": "gate_evidence_missing", "gate_id": item["id"]} for item in gates if item["required"] and item["blocking"] and not item["satisfied"])
-        blockers.extend({"code": "automation_not_ready", "obligation_id": item["id"], "status": item["status"]} for item in obligations if item["status"] != "ready")
-        return blockers
+    def _stage_requirements(self, inputs: list[dict[str, Any]], artifacts: list[dict[str, Any]], required_evidence: list[dict[str, Any]], gates: list[dict[str, Any]], obligations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        requirements: list[dict[str, Any]] = []
+        requirements.extend({"code": "required_input_missing", "input_id": item["id"]} for item in inputs if not item["satisfied"])
+        requirements.extend({"code": "artifact_evidence_missing", "artifact_id": item["id"]} for item in artifacts if not item["satisfied"])
+        requirements.extend({"code": "required_evidence_missing", "evidence_id": item["id"]} for item in required_evidence if not item["satisfied"])
+        requirements.extend({"code": "gate_evidence_missing", "gate_id": item["id"]} for item in gates if item["required"] and item["blocking"] and not item["satisfied"])
+        requirements.extend({"code": "automation_not_ready", "obligation_id": item["id"], "status": item["status"]} for item in obligations if item["status"] != "ready")
+        return requirements
 
     def _normalize_evidence(self, evidence: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         values = evidence if isinstance(evidence, list) else ([] if evidence is None or evidence == "" else [evidence])

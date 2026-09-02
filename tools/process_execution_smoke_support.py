@@ -143,6 +143,20 @@ def scenario(name: str) -> None:
             return
 
         current = state(workplace, project)
+        if name == "state_incomplete_not_blocked":
+            if current.get("action") != "work_incomplete" or current.get("blockers") or "artifact_evidence_missing" not in {item.get("code") for item in current.get("incomplete", [])}:
+                raise AssertionError(current)
+            return
+        if name == "blocked_state_is_distinct":
+            path = project / ".pf" / "assignments" / f"{started['assignment_id']}.yaml"
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+            data["stage_status"] = "blocked"
+            data["stage_execution"]["blockers"] = [{"code": "operator_input_required"}]
+            path.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+            blocked = state(workplace, project)
+            if blocked.get("action") != "work_blocked" or blocked.get("incomplete") is None or {item.get("code") for item in blocked.get("blockers", [])} != {"operator_input_required"}:
+                raise AssertionError(blocked)
+            return
         if name == "state_current_stage":
             required = {"process", "run", "assignment", "stage", "required_inputs", "obligations", "artifacts", "gates", "allowed_outcomes"}
             if current.get("stage", {}).get("id") != "prepare" or not required.issubset(current):
@@ -159,8 +173,10 @@ def scenario(name: str) -> None:
                     "evidence": [{"kind": "artifact", "artifact_id": "brief", "status": "ready"}],
                 },
             )
-            if blocked.get("action") != "blocked" or "gate_evidence_missing" not in {item.get("code") for item in blocked.get("blockers", [])}:
+            if blocked.get("action") != "incomplete" or blocked.get("reason") != "stage_requirements_incomplete" or "gate_evidence_missing" not in {item.get("code") for item in blocked.get("incomplete", [])}:
                 raise AssertionError(blocked)
+            if assignment(project, started).get("stage_status") != "in_progress":
+                raise AssertionError(assignment(project, started))
             return
 
         first = transition(workplace, project, "brief", "prepare-ready")

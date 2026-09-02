@@ -9196,9 +9196,9 @@ def select_resolved_knowledge_resources(
         preferred = str(requirement.get("preferred_version") or "")
         constraint = str(requirement.get("constraint") or "")
         if preferred:
-            candidates = [resource for resource in candidates if str(resource.get("version") or "") == preferred] or candidates
+            candidates = [resource for resource in candidates if str(resource.get("version") or "") == preferred]
         if constraint:
-            candidates = [resource for resource in candidates if version_satisfies_simple_constraint(str(resource.get("version") or ""), constraint)] or candidates
+            candidates = [resource for resource in candidates if version_satisfies_simple_constraint(str(resource.get("version") or ""), constraint)]
         candidates.sort(key=lambda resource: semantic_version_key(str(resource.get("version") or resource_generation(resource) or "")))
         if candidates:
             selected = candidates[-1]
@@ -9225,6 +9225,7 @@ def select_resolved_knowledge_resources(
             provenance.append({"selector": {key: value for key, value in requirement.items() if key in {"id", "preferred_version", "constraint", "required", "selection_reason"}}, "status": "unresolved"})
     return resolved, {
         "mode": mode,
+        "status": "unresolved" if any(item.get("status") == "unresolved" and item.get("selector", {}).get("required", True) is not False for item in provenance) else "resolved",
         "target_versions": inferred_platform_versions(direct_package_ids or [], selection),
         "selected_count": len(resolved),
         "available_count": len(package_resources),
