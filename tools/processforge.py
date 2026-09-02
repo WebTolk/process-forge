@@ -12981,7 +12981,11 @@ ITERATION_STATUSES = {"planned", "in_progress", "completed", "passed", "failed",
 
 
 def run_root(project_root: Path, run_id: str) -> Path:
-    return locate_flow_root(project_root) / "runs" / safe_id(run_id, "run")
+    candidate = str(run_id or "").strip()
+    # ProcessExecutionService may append a collision suffix to a truncated id,
+    # leaving a valid repeated hyphen such as `review--2`. Preserve that ID.
+    normalized = candidate if re.fullmatch(r"[a-z0-9]+(?:-+[a-z0-9]+)*", candidate) else safe_id(candidate, "run")
+    return locate_flow_root(project_root) / "runs" / normalized
 
 
 def run_yaml_path(project_root: Path, run_id: str) -> Path:
