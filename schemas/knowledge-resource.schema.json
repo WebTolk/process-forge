@@ -39,6 +39,7 @@
     "versioning": { "$ref": "#/$defs/versioning" },
     "retention": { "$ref": "#/$defs/retention" },
     "snapshot_behavior": { "$ref": "#/$defs/snapshotBehavior" },
+    "selection": { "$ref": "#/$defs/selection" },
     "generation": { "type": "string" },
     "fingerprint": { "type": "object", "additionalProperties": true }
   },
@@ -67,6 +68,17 @@
         "on_current_generation_changed": { "enum": ["mark_stale", "notify_only"] },
         "on_instance_missing": { "enum": ["broken"] },
         "reproducibility": { "enum": ["exact", "best_effort", "non_reproducible"] }
+      },
+      "additionalProperties": true
+    },
+    "selection": {
+      "type": "object",
+      "description": "Data-driven resource eligibility metadata used by project context selection.",
+      "properties": {
+        "platform": { "type": "string" },
+        "version_constraint": { "type": "string" },
+        "role": { "type": "string" },
+        "priority": { "type": "integer" }
       },
       "additionalProperties": true
     }

@@ -61,6 +61,7 @@ class ProjectContextService:
                 "resource_count": search.get("resource_count"),
                 "document_count": search.get("document_count"),
                 "search": search,
+                "selection": resource_selection_summary(snapshot),
             },
             "work": CurrentWorkService(self.project_root, self.core).summary(),
             "derived_reports": DerivedReportLifecycleService(self.project_root, self.core).status(snapshot=snapshot),
@@ -349,7 +350,7 @@ def resolve_garage_path_ref(project_root: Path, path_ref: dict[str, Any], workpl
 def selected_resource(snapshot: dict[str, Any], resource_id: str) -> dict[str, Any]:
     candidates: list[Any] = []
     resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
-    for key in ("available_knowledge_resources", "knowledge_resources"):
+    for key in ("knowledge_resources",):
         if isinstance(resolved.get(key), list):
             candidates.extend(resolved[key])
     if isinstance(snapshot.get("local_search_resources"), list):
@@ -361,6 +362,29 @@ def selected_resource(snapshot: dict[str, Any], resource_id: str) -> dict[str, A
         if resource_id in ids:
             return item
     return {}
+
+
+def resource_selection_summary(snapshot: dict[str, Any]) -> dict[str, Any]:
+    selection = snapshot.get("resource_selection") if isinstance(snapshot.get("resource_selection"), dict) else {}
+    resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
+    selected = resolved.get("knowledge_resources") if isinstance(resolved.get("knowledge_resources"), list) else []
+    preferred = [
+        {
+            "id": str(item.get("id") or ""),
+            "kind": str(item.get("kind") or ""),
+            "version": str(item.get("resolved_version") or item.get("resolved_generation") or ""),
+            "reason": str((item.get("selection") or {}).get("reason") or ""),
+        }
+        for item in selected
+        if isinstance(item, dict)
+    ]
+    return {
+        "mode": str(selection.get("mode") or "snapshot"),
+        "available_count": int(selection.get("available_count") or len(resolved.get("available_knowledge_resources") or [])),
+        "selected_count": int(selection.get("selected_count") or len(preferred)),
+        "target_versions": selection.get("target_versions") if isinstance(selection.get("target_versions"), list) else [],
+        "preferred": preferred,
+    }
 
 
 def add_private_navigation(payload: dict[str, Any], runtime_snapshot: dict[str, Any]) -> None:

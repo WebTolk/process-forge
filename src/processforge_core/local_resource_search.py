@@ -153,13 +153,16 @@ def _policy_hash(policy: dict[str, Any]) -> str:
 
 def _resource_records(snapshot: dict[str, Any]) -> Iterable[dict[str, Any]]:
     resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
-    for key in ("available_knowledge_resources", "knowledge_resources", "templates", "template_resources"):
-        rows = resolved.get(key) if isinstance(resolved, dict) else []
-        if isinstance(rows, list):
-            yield from (row for row in rows if isinstance(row, dict))
     rows = snapshot.get("local_search_resources")
     if isinstance(rows, list):
         yield from (row for row in rows if isinstance(row, dict))
+        return
+    # Pre-selection snapshots have no local search grant. Keep compatibility
+    # with their resolved resources, never with the diagnostic available list.
+    for key in ("knowledge_resources", "templates", "template_resources"):
+        rows = resolved.get(key) if isinstance(resolved, dict) else []
+        if isinstance(rows, list):
+            yield from (row for row in rows if isinstance(row, dict))
 
 
 def _fingerprint_value(row: dict[str, Any]) -> str:
@@ -207,7 +210,7 @@ def normalize_indexing_policy(row: dict[str, Any]) -> dict[str, Any]:
         legacy = str(row.get("index_policy") or "").strip()
         if legacy in {"none", "never", "disabled"}:
             raw = {"enabled": False, "mode": "none"}
-        elif legacy in {"metadata", "metadata_first", "index_only"}:
+        elif legacy in {"metadata", "metadata_first", "index_only", "source_tree", "symbols"}:
             raw = {"enabled": True, "mode": "metadata", "fields": ["title", "description", "tags", "path"]}
         elif legacy in {"fulltext", "always_index", "snapshot_authorized"}:
             raw = {
@@ -770,7 +773,7 @@ def search(project_root: Path, snapshot: dict[str, Any], *, query: Any, limit: A
         try:
             total = int(db.execute(f"SELECT count(*) FROM documents_fts WHERE documents_fts MATCH ? AND resource_id IN ({placeholders})", args).fetchone()[0])
             rows = db.execute(
-                f"SELECT d.resource_id, d.package_id, d.kind, d.relative_path, d.metadata, bm25(documents_fts) FROM documents_fts JOIN documents d ON d.id = documents_fts.document_id WHERE documents_fts MATCH ? AND documents_fts.resource_id IN ({placeholders}) ORDER BY bm25(documents_fts), d.resource_id, d.relative_path LIMIT ? OFFSET ?",
+                f"SELECT d.id, d.resource_id, d.package_id, d.kind, d.relative_path, d.metadata, bm25(documents_fts) FROM documents_fts JOIN documents d ON d.id = documents_fts.document_id WHERE documents_fts MATCH ? AND documents_fts.resource_id IN ({placeholders}) ORDER BY bm25(documents_fts), d.resource_id, d.relative_path LIMIT ? OFFSET ?",
                 [*args, page_limit, start],
             ).fetchall()
         except sqlite3.OperationalError as exc:
@@ -778,20 +781,24 @@ def search(project_root: Path, snapshot: dict[str, Any], *, query: Any, limit: A
     finally:
         db.close()
     expected = _snapshot_checksum(snapshot)
-    items = [
-        {
-            "resource_id": row[0],
-            "resource_type": row[2],
-            "title": row[3],
-            "provenance": {"package_id": row[1], "kind": row[2], "snapshot_checksum": expected},
-            "canonical_path": row[3],
-            "relative_path": row[3],
-            "path_ref": f"{row[0]}:{row[3]}",
-            "metadata": json.loads(row[4] or "{}"),
-            "match": {"fields": ["title", "content"], "rank": row[5], "reason": "FTS5 title/content match"},
-        }
-        for row in rows
-    ]
+    items: list[dict[str, Any]] = []
+    for row in rows:
+        metadata = json.loads(row[5] or "{}")
+        items.append(
+            {
+                "document_id": row[0],
+                "resource_id": row[1],
+                "resource_type": row[3],
+                "title": row[4],
+                "provenance": {"package_id": row[2], "kind": row[3], "snapshot_checksum": expected},
+                "canonical_path": row[4],
+                "relative_path": row[4],
+                "path_ref": f"{row[1]}:{row[4]}",
+                "metadata": metadata,
+                "match_reason": "content" if metadata.get("mode") == "fulltext" else "metadata",
+                "match": {"fields": ["title", "content"], "rank": row[6], "reason": "FTS5 title/content match"},
+            }
+        )
     return {
         "schema_version": 1,
         "kind": "pf.search",

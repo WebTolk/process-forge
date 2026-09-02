@@ -76,6 +76,21 @@ resource manifests explicitly select a small fulltext subset. Search never
 falls back to workspace-wide file scanning, private home directories, web
 search, or unselected workplace resources.
 
+Project context separates the diagnostic `available_knowledge_resources`
+catalog from the selected resource set. Only selected resources are copied to
+`local_search_resources`, may be resolved by `pf.resolve`, and may contribute
+to `pf.search`. A snapshot records `resource_selection` with the selection
+mode, target platform versions, counts, and selector provenance.
+
+Use `context_requirements.resource_selection.platform_versions` for a
+data-driven platform target and explicit `knowledge_resources` selectors for
+an override. A selector may use `id`, `preferred_version`, and `constraint`.
+Older manifests without selectors use the narrow migration mode: direct
+platform packages plus the newest compatible version of each logical resource.
+For that migration only, selected documentation with a legacy metadata policy
+is indexed as bounded text documentation; source-tree and symbol policies stay
+metadata-only.
+
 ## Agent Path
 
 The default agent path is:

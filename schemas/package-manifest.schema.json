@@ -73,6 +73,7 @@
         "versioning": { "type": "object", "additionalProperties": true },
         "retention": { "type": "object", "additionalProperties": true },
         "snapshot_behavior": { "type": "object", "additionalProperties": true },
+        "selection": { "type": "object", "additionalProperties": true },
         "generation": { "type": "string" },
         "fingerprint": { "type": "object", "additionalProperties": true }
       },

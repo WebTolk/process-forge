@@ -44,6 +44,7 @@
       "properties": {
         "knowledge_packages": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
         "knowledge_resources": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "resource_selection": { "type": "object", "additionalProperties": true },
         "template_packages": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
         "templates": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
         "tools": { "type": "array", "items": { "type": "object", "additionalProperties": true } },

@@ -8592,7 +8592,7 @@ def resource_record_from_package(package_id: str, resource: dict[str, Any], requ
                 record["path_ref"] = {"registry": "package_roots", "id": package_root_id, "relative_path": f"{package_id}/{raw_path}"}
             else:
                 record["path_ref"] = {"package": package_id, "relative_path": raw_path}
-    for key in ["version", "description", "versioning", "retention", "snapshot_behavior", "generation", "fingerprint", "instance_id", "current_marker_path_ref"]:
+    for key in ["version", "description", "versioning", "retention", "snapshot_behavior", "generation", "fingerprint", "instance_id", "current_marker_path_ref", "indexing", "selection"]:
         if key in resource:
             record[key] = resource[key]
     return record
@@ -9036,6 +9036,9 @@ def resolved_resource_instance(resource: dict[str, Any]) -> dict[str, Any]:
         result["current_marker_path_ref"] = resource.get("current_marker_path_ref") or resource.get("path_ref")
     if reproducibility != "exact":
         result["reproducibility"]["reason"] = f"resource retention policy is {retention['policy']}"
+    for key in ("resource_id", "title", "description", "load_policy", "index_policy", "indexing", "selection"):
+        if key in resource:
+            result[key] = copy.deepcopy(resource[key])
     return result
 
 
@@ -9044,6 +9047,7 @@ def context_requirements_from_manifest(manifest_data: dict[str, Any]) -> dict[st
     return {
         "knowledge_packages": requirements.get("knowledge_packages", []) if isinstance(requirements.get("knowledge_packages"), list) else [],
         "knowledge_resources": requirements.get("knowledge_resources", []) if isinstance(requirements.get("knowledge_resources"), list) else [],
+        "resource_selection": requirements.get("resource_selection", {}) if isinstance(requirements.get("resource_selection"), dict) else {},
         "template_packages": requirements.get("template_packages", []) if isinstance(requirements.get("template_packages"), list) else [],
         "templates": requirements.get("templates", []) if isinstance(requirements.get("templates"), list) else [],
         "tools": requirements.get("tools", []) if isinstance(requirements.get("tools"), list) else [],
@@ -9088,15 +9092,89 @@ def version_satisfies_simple_constraint(version: str, constraint: str) -> bool:
     return True
 
 
-def select_resolved_knowledge_resources(package_resources: list[dict[str, Any]], requirements: dict[str, Any]) -> list[dict[str, Any]]:
+def version_prefix(version: str) -> str:
+    key = semantic_version_key(version)
+    if key[0] != 0 or not isinstance(key[1], tuple) or len(key[1]) < 2:
+        return ""
+    return f"{key[1][0]}.{key[1][1]}"
+
+
+def inferred_platform_versions(package_ids: list[str], selection: dict[str, Any]) -> list[str]:
+    configured = selection.get("platform_versions") if isinstance(selection.get("platform_versions"), dict) else {}
+    versions = [str(value).strip() for value in configured.values() if str(value).strip()]
+    if versions:
+        return sorted(set(versions))
+    inferred: list[str] = []
+    for package_id in package_ids:
+        match = re.search(r"(?:^|[-_.])v?(\d+)[-_.](\d+)(?:$|[-_.])", package_id)
+        if match:
+            inferred.append(f"{match.group(1)}.{match.group(2)}")
+    return sorted(set(inferred))
+
+
+def legacy_resource_requirements(
+    package_resources: list[dict[str, Any]],
+    *,
+    direct_package_ids: list[str],
+    selection: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Derive a narrow migration set for manifests created before selectors existed."""
+
+    direct = set(direct_package_ids)
+    target_versions = inferred_platform_versions(direct_package_ids, selection)
+    requirements: list[dict[str, Any]] = []
+    compatible: dict[str, dict[str, Any]] = {}
+    for resource in package_resources:
+        package_id = str(resource.get("package") or resource.get("package_id") or "")
+        resource_id = str(resource.get("id") or resource.get("resource_id") or "")
+        version = str(resource.get("version") or resource.get("generation") or "")
+        if package_id in direct or package_id.startswith("project."):
+            requirements.append({"id": resource_id, "preferred_version": version, "required": True, "selection_reason": "legacy_direct_package"})
+            continue
+        if target_versions and version_prefix(version) in target_versions:
+            logical_id = str(resource.get("resource_id") or resource_id)
+            previous = compatible.get(logical_id)
+            if previous is None or semantic_version_key(version) > semantic_version_key(str(previous.get("version") or previous.get("generation") or "")):
+                compatible[logical_id] = resource
+    for resource in compatible.values():
+        requirements.append(
+            {
+                "id": str(resource.get("id") or resource.get("resource_id") or ""),
+                "preferred_version": str(resource.get("version") or resource.get("generation") or ""),
+                "required": True,
+                "selection_reason": "legacy_compatible_version",
+            }
+        )
+    return requirements
+
+
+def select_resolved_knowledge_resources(
+    package_resources: list[dict[str, Any]],
+    requirements: dict[str, Any],
+    *,
+    direct_package_ids: list[str] | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     resource_requirements = [item for item in requirements.get("knowledge_resources", []) if isinstance(item, dict)]
+    selection = requirements.get("resource_selection") if isinstance(requirements.get("resource_selection"), dict) else {}
     if not resource_requirements:
-        return [resolved_resource_instance(resource) for resource in package_resources]
+        resource_requirements = legacy_resource_requirements(
+            package_resources,
+            direct_package_ids=direct_package_ids or [],
+            selection=selection,
+        )
+        mode = "legacy_narrow"
+    else:
+        mode = "explicit"
     resolved: list[dict[str, Any]] = []
     used_keys: set[tuple[str, str]] = set()
+    provenance: list[dict[str, Any]] = []
     for requirement in resource_requirements:
         resource_id = str(requirement.get("id") or "")
-        candidates = [resource for resource in package_resources if str(resource.get("resource_id") or resource.get("id") or "") == resource_id]
+        candidates = [
+            resource
+            for resource in package_resources
+            if resource_id in {str(resource.get("resource_id") or ""), str(resource.get("id") or "")}
+        ]
         preferred = str(requirement.get("preferred_version") or "")
         constraint = str(requirement.get("constraint") or "")
         if preferred:
@@ -9109,9 +9187,51 @@ def select_resolved_knowledge_resources(package_resources: list[dict[str, Any]],
             selected = dict(selected)
             selected["requirement"] = "required" if bool(requirement.get("required", True)) else "recommended"
             instance = resolved_resource_instance(selected)
-            resolved.append(instance)
-            used_keys.add((instance["id"], instance["instance_id"]))
-    return resolved
+            key = (instance["id"], instance["instance_id"])
+            if key not in used_keys:
+                instance["selection"] = {
+                    "mode": mode,
+                    "reason": str(requirement.get("selection_reason") or "explicit_selector"),
+                    "preferred_version": preferred or None,
+                    "constraint": constraint or None,
+                }
+                resolved.append(instance)
+                used_keys.add(key)
+            provenance.append({
+                "selector": {key: value for key, value in requirement.items() if key in {"id", "preferred_version", "constraint", "required", "selection_reason"}},
+                "resource_id": instance["id"],
+                "instance_id": instance["instance_id"],
+                "status": "selected",
+            })
+        else:
+            provenance.append({"selector": {key: value for key, value in requirement.items() if key in {"id", "preferred_version", "constraint", "required", "selection_reason"}}, "status": "unresolved"})
+    return resolved, {
+        "mode": mode,
+        "target_versions": inferred_platform_versions(direct_package_ids or [], selection),
+        "selected_count": len(resolved),
+        "available_count": len(package_resources),
+        "provenance": provenance,
+    }
+
+
+def selected_resource_indexing(resource: dict[str, Any], selection: dict[str, Any]) -> dict[str, Any]:
+    indexing = resource.get("indexing") if isinstance(resource.get("indexing"), dict) else {}
+    if indexing:
+        return copy.deepcopy(indexing)
+    if str(selection.get("mode") or "") == "legacy_narrow" and str(resource.get("kind") or "") == "documentation":
+        return {
+            "enabled": True,
+            "mode": "fulltext",
+            "fields": ["title", "description", "version", "path"],
+            "sources": [{"path": ".", "mode": "fulltext", "include": ["**/*.md", "**/*.txt", "**/*.rst"], "role": "documentation"}],
+            "migration": "legacy_documentation_fulltext",
+        }
+    return {
+        "enabled": True,
+        "mode": "metadata",
+        "fields": ["title", "description", "version", "path"],
+        "sources": [{"path": ".", "mode": "metadata", "role": str(resource.get("kind") or "knowledge")}],
+    }
 
 
 def aggregate_reproducibility(resources: list[dict[str, Any]]) -> dict[str, Any]:
@@ -10241,7 +10361,23 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     )
     context_requirements = context_requirements_from_manifest(manifest_data)
     context_policy = default_context_policy(manifest_data)
-    resolved_knowledge_resources = select_resolved_knowledge_resources(package_resources, context_requirements)
+    direct_platform_package_ids = sorted(
+        {
+            str(package_id)
+            for contract in platform_resolution.get("contracts", [])
+            if isinstance(contract, dict)
+            for package_id in [
+                *(contract.get("required", {}).get("knowledge_packages", []) if isinstance(contract.get("required"), dict) else []),
+                *(contract.get("recommended", {}).get("knowledge_packages", []) if isinstance(contract.get("recommended"), dict) else []),
+            ]
+            if str(package_id)
+        }
+    )
+    resolved_knowledge_resources, resource_selection = select_resolved_knowledge_resources(
+        package_resources,
+        context_requirements,
+        direct_package_ids=direct_platform_package_ids,
+    )
     available_knowledge_resources = [resolved_resource_instance(resource) for resource in package_resources]
     local_search_resources = [
         {
@@ -10256,14 +10392,9 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "path_ref": item.get("path_ref") if isinstance(item.get("path_ref"), dict) else {},
             "status": str(item.get("status") or "available"),
             "load_policy": "snapshot_authorized",
-            "indexing": item.get("indexing") if isinstance(item.get("indexing"), dict) else {
-                "enabled": True,
-                "mode": "metadata",
-                "fields": ["title", "description", "version", "path"],
-                "sources": [{"path": ".", "mode": "metadata", "role": str(item.get("kind") or "knowledge")}],
-            },
+            "indexing": selected_resource_indexing(item, resource_selection),
         }
-        for item in available_knowledge_resources
+        for item in resolved_knowledge_resources
         if str(item.get("id") or "")
     ]
     template_ids = {str(item) for item in specialization_context.get("activated_templates", []) if str(item)}
@@ -10426,6 +10557,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "process_packages": selected_packages,
         },
         "local_search_resources": local_search_resources,
+        "resource_selection": resource_selection,
         "freshness": {
             "status": "fresh",
             "checked_at": generated_at,
@@ -10458,9 +10590,10 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         },
         "capabilities": {"required": required_records, "optional": optional_records},
         "knowledge_resources": {
-            "selected": package_resources,
-            "required": [item for item in package_resources if item.get("requirement") == "required"],
-            "recommended": [item for item in package_resources if item.get("requirement") == "recommended"],
+            "selected": resolved_knowledge_resources,
+            "available": available_knowledge_resources,
+            "required": [item for item in resolved_knowledge_resources if item.get("requirement") == "required"],
+            "recommended": [item for item in resolved_knowledge_resources if item.get("requirement") == "recommended"],
             "missing_required": required_resource_missing,
             "missing_recommended": recommended_resource_missing,
         },

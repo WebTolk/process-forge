@@ -17,6 +17,11 @@ identities and fingerprints in the snapshot. The private derived DB lives under:
 other projects, home directories, Context7, the web, or a hidden `rg` pass over
 large source trees.
 
+Each result contains a stable `document_id`, `resource_id`, canonical relative
+locator, provenance, and `match_reason` (`content` or `metadata`). The locator
+is meaningful only while its snapshot remains current; agents use `pf.resolve`
+for authorized private navigation rather than reconstructing resource roots.
+
 ## Indexing Policy
 
 Resources use one reusable contract:
