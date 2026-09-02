@@ -227,4 +227,4 @@ process_execution:
   snapshot_id: ctx-20260902-065419-56a2ec
   snapshot_checksum: 'sha256:96bcfda36126cd0109b121aac50b5a2a1c92495eb31602b8d53c52ba3598ddb9'
   assignment_capsule: .pf/contexts/assignment-capsules/narrow-project-resource-selection-and-make-authorized-knowledge-search-u.capsule.yaml
-  assignment_capsule_checksum: 'sha256:b2a6cef3526ec21a659ac4e5e9bfcdba103657a880955a9871daa98dbd397d7b'
+  assignment_capsule_checksum: 'sha256:fca372ca38f3a70349499f70d3085c7836c493ea0eff5e116eebd0354deaf14c'

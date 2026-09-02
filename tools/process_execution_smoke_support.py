@@ -137,6 +137,9 @@ def scenario(name: str) -> None:
             capsule = project / ".pf" / "contexts" / "assignment-capsules" / f"{started['assignment_id']}.capsule.yaml"
             if not capsule.is_file():
                 raise AssertionError("start did not create a pinned assignment capsule")
+            capsule_data = yaml.safe_load(capsule.read_text(encoding="utf-8"))
+            if not isinstance(capsule_data.get("context"), dict) or capsule_data["context"].get("snapshot_id") != capsule_data.get("context_snapshot", {}).get("id"):
+                raise AssertionError("start did not create a schema-valid context capsule")
             return
 
         current = state(workplace, project)

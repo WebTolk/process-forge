@@ -794,6 +794,14 @@ class ProcessExecutionService:
             "schema_version": 1,
             "capsule": {"id": f"{assignment['id']}-capsule", "generated_at": self.core.now_utc(), "assignment_id": assignment["id"], "assignment_path": f".pf/assignments/{assignment['id']}.yaml", "immutable": True, "worker_may_rebuild_context": False},
             "context_snapshot": {"id": pin["snapshot_id"], "sha256": pin["snapshot_checksum"], "freshness_at_creation": "fresh"},
+            "context": {
+                "snapshot_id": pin["snapshot_id"],
+                "freshness": "fresh",
+                "required_sources": [],
+                "context_artifacts": [],
+                "selected_specializations": [],
+                "applied_project_overrides": [],
+            },
             "assignment": {"id": assignment["id"], "run_id": run["id"], "objective": assignment["objective"], "stage": assignment["stage"]},
             "process_execution": copy.deepcopy(pin),
         }

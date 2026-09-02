@@ -10,6 +10,17 @@ context_snapshot:
   id: ctx-20260902-065419-56a2ec
   sha256: 'sha256:96bcfda36126cd0109b121aac50b5a2a1c92495eb31602b8d53c52ba3598ddb9'
   freshness_at_creation: fresh
+context:
+  snapshot_id: ctx-20260902-065419-56a2ec
+  freshness: fresh
+  required_sources:
+    []
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
 assignment:
   id: narrow-project-resource-selection-and-make-authorized-knowledge-search-u
   run_id: garage-narrow-project-resource-selection-and-make-authorized-knowledge-s
