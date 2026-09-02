@@ -329,7 +329,15 @@ def authorized_roots(project_root: Path, snapshot: dict[str, Any]) -> list[Autho
 
 
 def _matches_any(path: str, patterns: tuple[str, ...]) -> bool:
-    return any(fnmatch.fnmatch(path, pattern) or fnmatch.fnmatch("/" + path, pattern) for pattern in patterns)
+    normalized_path = path.lstrip("/")
+    for pattern in patterns:
+        normalized_pattern = pattern.lstrip("/")
+        candidates = [normalized_pattern]
+        if normalized_pattern.startswith("**/"):
+            candidates.append(normalized_pattern[3:])
+        if any(fnmatch.fnmatch(normalized_path, candidate) for candidate in candidates):
+            return True
+    return False
 
 
 def _iter_source_files(root: Path, source: IndexSource) -> Iterable[tuple[Path, str]]:

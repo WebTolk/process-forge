@@ -130,6 +130,9 @@ def main() -> int:
         manifest.setdefault("context_requirements", {}).setdefault("knowledge_packages", []).append(
             {"id": "docs.example-domain", "constraint": "*", "required": True}
         )
+        manifest.setdefault("context_requirements", {}).setdefault("knowledge_resources", []).append(
+            {"id": "example-domain", "constraint": "*", "required": True}
+        )
         manifest_path.write_text(yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False), encoding="utf-8")
 
         run_cli(
@@ -185,7 +188,7 @@ def main() -> int:
                     "method": "tools/call",
                     "params": {
                         "name": "pf.search",
-                        "arguments": {"session_id": "readiness-session", "query": "example-domain", "limit": 5},
+                        "arguments": {"session_id": "readiness-session", "query": "Platform", "limit": 5},
                     },
                 },
                 {
@@ -206,6 +209,7 @@ def main() -> int:
         search_result = json.loads(responses[2]["result"]["content"][0]["text"])
         assert search_result["search_status"] == "fresh", search_result
         assert search_result["results"], search_result
+        assert search_result["results"][0]["resource_id"] == "docs.example-domain:example-domain", search_result
         resolve_result = json.loads(responses[3]["result"]["content"][0]["text"])
         assert resolve_result["resource"]["status"] == "available", resolve_result
 
