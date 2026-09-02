@@ -7327,6 +7327,24 @@ def release_zip_datetime(source_epoch: int) -> tuple[int, int, int, int, int, in
     return (moment.year, moment.month, moment.day, moment.hour, moment.minute, moment.second)
 
 
+def release_file_content(source_path: Path) -> bytes:
+    """Canonicalize text line endings so archives do not depend on checkout settings."""
+    content = source_path.read_bytes()
+    return content if b"\0" in content else content.replace(b"\r\n", b"\n")
+
+
+def release_core_manifest(files: list[tuple[str, Path]], *, version: str, source: dict[str, Any] | None, generated_at: str | None = None) -> dict[str, Any]:
+    from processforge_core.core_update import CORE_MANIFEST_NAME, make_core_manifest
+
+    entries = []
+    for archive_path, source_path in files:
+        if archive_path == CORE_MANIFEST_NAME:
+            continue
+        content = release_file_content(source_path)
+        entries.append({"relative_path": archive_path, "size": len(content), "sha256": hashlib.sha256(content).hexdigest()})
+    return make_core_manifest(version=version, source=source, files=entries, generated_at=generated_at)
+
+
 def write_release_zip(output: Path, files: list[tuple[str, Path]], source_epoch: int, extra_entries: list[tuple[str, bytes]] | None = None) -> list[dict[str, Any]]:
     manifest_files: list[dict[str, Any]] = []
     zip_datetime = release_zip_datetime(source_epoch)
@@ -7334,7 +7352,7 @@ def write_release_zip(output: Path, files: list[tuple[str, Path]], source_epoch:
     entries.extend((archive_path, None, content) for archive_path, content in extra_entries or [])
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for archive_path, source_path, generated_content in sorted(entries, key=lambda item: item[0]):
-            content = source_path.read_bytes() if source_path is not None else generated_content
+            content = release_file_content(source_path) if source_path is not None else generated_content
             if content is None:
                 raise SystemExit(f"FAIL: release-pack entry has no content: {archive_path}")
             info = zipfile.ZipInfo(archive_path, date_time=zip_datetime)
@@ -7418,9 +7436,9 @@ def command_release_pack(args: argparse.Namespace) -> int:
             print(f"... {len(files) - 50} more files")
         return 0
     provenance = release_git_provenance(root)
-    from processforge_core.core_update import CORE_MANIFEST_NAME, make_core_manifest_from_release_files, manifest_bytes
+    from processforge_core.core_update import CORE_MANIFEST_NAME, manifest_bytes
 
-    core_manifest = make_core_manifest_from_release_files(files, version=RELEASE_ARCHIVE_VERSION, source=provenance["source"], generated_at=provenance["generated_at"])
+    core_manifest = release_core_manifest(files, version=RELEASE_ARCHIVE_VERSION, source=provenance["source"], generated_at=provenance["generated_at"])
     output.parent.mkdir(parents=True, exist_ok=True)
     manifest_files = write_release_zip(output, files, int(provenance["source_date_epoch"]), extra_entries=[(CORE_MANIFEST_NAME, manifest_bytes(core_manifest))])
     manifest = release_manifest_payload(root, output, manifest_files, provenance)
@@ -7614,13 +7632,13 @@ def expected_release_files_from_root(root: Path) -> list[tuple[str, Path]]:
 
 def expected_release_manifest_from_root(root: Path, manifest_data: dict[str, Any] | None = None) -> dict[str, str]:
     expected_files = expected_release_files_from_root(root)
-    expected = {archive_path: sha256_file(source_path) for archive_path, source_path in expected_files}
+    expected = {archive_path: hashlib.sha256(release_file_content(source_path)).hexdigest() for archive_path, source_path in expected_files}
     if manifest_data:
-        from processforge_core.core_update import CORE_MANIFEST_NAME, make_core_manifest_from_release_files, manifest_bytes
+        from processforge_core.core_update import CORE_MANIFEST_NAME, manifest_bytes
 
         build = manifest_data.get("build") if isinstance(manifest_data.get("build"), dict) else {}
         source = manifest_data.get("source") if isinstance(manifest_data.get("source"), dict) else None
-        core_manifest = make_core_manifest_from_release_files(
+        core_manifest = release_core_manifest(
             expected_files,
             version=str(manifest_data.get("version") or RELEASE_ARCHIVE_VERSION),
             source=source,

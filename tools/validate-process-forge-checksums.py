@@ -31,12 +31,14 @@ SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 SKIP_SUFFIXES = {".pyc", ".pyo"}
 
 
+def released_content(path: Path) -> bytes:
+    """Return the deterministic text representation used by release-pack."""
+    content = path.read_bytes()
+    return content if b"\0" in content else content.replace(b"\r\n", b"\n")
+
+
 def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(65536), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    return hashlib.sha256(released_content(path)).hexdigest()
 
 
 def public_file_entries(root_path: Path) -> list[tuple[str, Path]]:
