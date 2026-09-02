@@ -58,6 +58,7 @@ from processforge_core.process_catalog import (
     require_official_process_active as catalog_require_official_process_active,
     resolve_process_definition as catalog_resolve_process_definition,
 )
+from processforge_core.process_execution import ProcessExecutionService
 from processforge_core import project_initialization
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
@@ -224,6 +225,10 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "process.completed",
     "stage.started",
     "stage.completed",
+    "process.stage.started",
+    "process.stage.completed",
+    "process.stage.blocked",
+    "process.stage.transitioned",
     "assignment.created",
     "assignment.started",
     "assignment.completed",
@@ -6931,6 +6936,18 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_governed_work_stage_resolution", [sys.executable, str(root / "tools" / "smoke_governed_work_stage_resolution.py")], 180),
         ReleaseCommand("smoke_governed_work_duplicate_prevention", [sys.executable, str(root / "tools" / "smoke_governed_work_duplicate_prevention.py")], 180),
         ReleaseCommand("smoke_current_work_ignores_bootstrap_placeholder", [sys.executable, str(root / "tools" / "smoke_current_work_ignores_bootstrap_placeholder.py")], 180),
+        ReleaseCommand("smoke_process_execution_initial_stage", [sys.executable, str(root / "tools" / "smoke_process_execution_initial_stage.py")], 180),
+        ReleaseCommand("smoke_work_start_no_stage_guessing", [sys.executable, str(root / "tools" / "smoke_work_start_no_stage_guessing.py")], 180),
+        ReleaseCommand("smoke_work_state_current_stage", [sys.executable, str(root / "tools" / "smoke_work_state_current_stage.py")], 180),
+        ReleaseCommand("smoke_work_transition_linear", [sys.executable, str(root / "tools" / "smoke_work_transition_linear.py")], 180),
+        ReleaseCommand("smoke_work_transition_blocks_missing_gate", [sys.executable, str(root / "tools" / "smoke_work_transition_blocks_missing_gate.py")], 180),
+        ReleaseCommand("smoke_work_transition_records_evidence", [sys.executable, str(root / "tools" / "smoke_work_transition_records_evidence.py")], 180),
+        ReleaseCommand("smoke_work_transition_updates_assignment_stage", [sys.executable, str(root / "tools" / "smoke_work_transition_updates_assignment_stage.py")], 180),
+        ReleaseCommand("smoke_work_transition_emits_stage_events", [sys.executable, str(root / "tools" / "smoke_work_transition_emits_stage_events.py")], 180),
+        ReleaseCommand("smoke_work_transition_final_stage_completes_run", [sys.executable, str(root / "tools" / "smoke_work_transition_final_stage_completes_run.py")], 180),
+        ReleaseCommand("smoke_work_transition_snapshot_pinned_process", [sys.executable, str(root / "tools" / "smoke_work_transition_snapshot_pinned_process.py")], 180),
+        ReleaseCommand("smoke_work_transition_branching_if_supported", [sys.executable, str(root / "tools" / "smoke_work_transition_branching_if_supported.py")], 180),
+        ReleaseCommand("smoke_process_execution_integrity", [sys.executable, str(root / "tools" / "smoke_process_execution_integrity.py")], 240),
         ReleaseCommand("smoke_derived_report_stale_marking", [sys.executable, str(root / "tools" / "smoke_derived_report_stale_marking.py")], 180),
         ReleaseCommand("smoke_runtime_status_version_truth", [sys.executable, str(root / "tools" / "smoke_runtime_status_version_truth.py")], 180),
         ReleaseCommand("smoke_user_like_garage_path", [sys.executable, str(root / "tools" / "smoke_user_like_garage_path.py")], 180),
@@ -12846,6 +12863,13 @@ def write_yaml_file_atomic(path: Path, data: dict[str, Any]) -> None:
     os.replace(temporary, path)
 
 
+def write_text_file_atomic(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    temporary.write_text(text, encoding="utf-8")
+    os.replace(temporary, path)
+
+
 @contextlib.contextmanager
 def registry_file_lock(path: Path, *, timeout_seconds: float = 30.0, stale_after_seconds: float = 300.0) -> Any:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -13357,9 +13381,47 @@ def render_task_index(project_root: Path, run: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def run_summary_path(project_root: Path, run_id: str) -> Path:
+    return run_root(project_root, run_id) / "summary.md"
+
+
+def run_handoff_path(project_root: Path, run_id: str) -> Path:
+    return locate_flow_root(project_root) / "handoffs" / "runs" / f"{safe_id(run_id, 'run')}-handoff.md"
+
+
+def render_run_summary(project_root: Path, run: dict[str, Any]) -> str:
+    run_id = str(run.get("id", "run"))
+    lines = [f"# Run Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", f"- status: `{run.get('status')}`", "", "## Tasks", ""]
+    for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
+        if isinstance(item, dict):
+            task = load_yaml_document(assignment_yaml_path(project_root, str(item.get("id", ""))))
+            result = task.get("result") if isinstance(task.get("result"), dict) else {}
+            lines.append(f"- `{item.get('id')}`: `{item.get('status')}` - {result.get('summary', task.get('title', ''))}")
+    if len(lines) == 7:
+        lines.append("- No tasks recorded.")
+    return "\n".join(lines) + "\n"
+
+
+def render_run_handoff(project_root: Path, run: dict[str, Any]) -> str:
+    run_id = str(run.get("id", "run"))
+    summary = run_summary_path(project_root, run_id)
+    return f"# Run Handoff: {run_id}\n\nStatus: `{run.get('status')}`\n\nSummary: `{rel(summary, project_root)}`\n"
+
+
+def write_run_artifact_bundle(project_root: Path, run: dict[str, Any], *, include_summary_handoff: bool = False) -> None:
+    """Persist one Run state and its derived documents while the caller holds its lock."""
+    run_id = str(run.get("id", "run"))
+    root = run_root(project_root, run_id)
+    if include_summary_handoff:
+        write_text_file_atomic(run_summary_path(project_root, run_id), render_run_summary(project_root, run))
+        write_text_file_atomic(run_handoff_path(project_root, run_id), render_run_handoff(project_root, run))
+    write_text_file_atomic(root / "task-index.md", render_task_index(project_root, run))
+    write_yaml_file_atomic(run_yaml_path(project_root, run_id), run)
+
+
 def write_task_index(project_root: Path, run: dict[str, Any]) -> None:
     run_id = str(run.get("id", "run"))
-    (run_root(project_root, run_id) / "task-index.md").write_text(render_task_index(project_root, run), encoding="utf-8")
+    write_text_file_atomic(run_root(project_root, run_id) / "task-index.md", render_task_index(project_root, run))
 
 
 def load_run(project_root: Path, run_id: str) -> dict[str, Any]:
@@ -13370,9 +13432,14 @@ def load_run(project_root: Path, run_id: str) -> dict[str, Any]:
 
 
 def save_run(project_root: Path, run: dict[str, Any]) -> None:
+    run_id = str(run.get("id", "run"))
+    with registry_file_lock(run_yaml_path(project_root, run_id)):
+        save_run_locked(project_root, run)
+
+
+def save_run_locked(project_root: Path, run: dict[str, Any], *, include_summary_handoff: bool = False) -> None:
     run["updated_at"] = now_utc()
-    write_yaml_file(run_yaml_path(project_root, str(run.get("id", "run"))), run)
-    write_task_index(project_root, run)
+    write_run_artifact_bundle(project_root, run, include_summary_handoff=include_summary_handoff)
 
 
 def load_task(project_root: Path, task_id: str) -> dict[str, Any]:
@@ -13388,6 +13455,12 @@ def save_task(project_root: Path, task: dict[str, Any]) -> None:
 
 
 def update_run_task_status(project_root: Path, run_id: str, task_id: str, status: str) -> None:
+    safe_run_id = safe_id(run_id, "run")
+    with registry_file_lock(run_yaml_path(project_root, safe_run_id)):
+        update_run_task_status_locked(project_root, safe_run_id, task_id, status)
+
+
+def update_run_task_status_locked(project_root: Path, run_id: str, task_id: str, status: str) -> None:
     run = load_run(project_root, run_id)
     changed = False
     for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
@@ -13395,7 +13468,7 @@ def update_run_task_status(project_root: Path, run_id: str, task_id: str, status
             item["status"] = status
             changed = True
     if changed:
-        save_run(project_root, run)
+        save_run_locked(project_root, run)
 
 
 def public_yaml_has_private_path(data: dict[str, Any]) -> bool:
@@ -13416,6 +13489,25 @@ def validate_run_consistency(project_root: Path, run_id: str, include_runtime_ev
         checks.append(check("PASS" if key in run else "FAIL", f"run.{key} present"))
     status = str(run.get("status", ""))
     checks.append(check("PASS" if status in RUN_STATUSES else "FAIL", f"run status valid: {status or 'missing'}"))
+    artifact_paths = {
+        "summary": run_summary_path(project_root, str(run.get("id", run_id))),
+        "task index": run_root(project_root, str(run.get("id", run_id))) / "task-index.md",
+        "handoff": run_handoff_path(project_root, str(run.get("id", run_id))),
+    }
+    status_patterns = {
+        "summary": r"^- status: `([^`]+)`$",
+        "task index": r"^Run status: `([^`]+)`$",
+        "handoff": r"^Status: `([^`]+)`$",
+    }
+    for label, artifact_path in artifact_paths.items():
+        required = label == "task index" or status == "completed"
+        if not artifact_path.is_file():
+            checks.append(check("FAIL" if required else "PASS", f"{label} artifact {'exists' if required else 'not yet required'}: {rel(artifact_path, project_root)}"))
+            continue
+        text = artifact_path.read_text(encoding="utf-8", errors="replace")
+        match = re.search(status_patterns[label], text, flags=re.MULTILINE)
+        artifact_status = match.group(1) if match else ""
+        checks.append(check("PASS" if artifact_status == status else "FAIL", f"{label} status matches run: {artifact_status or 'missing'}"))
     process_id = str(run.get("process", ""))
     checks.append(check("PASS" if process_definition_exists(project_root, process_id) else "FAIL", f"process exists: {process_id or 'missing'}"))
     checks.append(check("PASS" if not public_yaml_has_private_path(run) else "FAIL", f"{rel(path, project_root)} has no private absolute paths"))
@@ -13442,8 +13534,8 @@ def validate_run_consistency(project_root: Path, run_id: str, include_runtime_ev
     if status == "completed":
         incomplete = [str(item.get("id")) for item in tasks if isinstance(item, dict) and item.get("blocking", True) is not False and str(item.get("status")) != "done"]
         checks.append(check("PASS" if not incomplete else "FAIL", "completed run has all blocking tasks done" + (f": {', '.join(incomplete)}" if incomplete else "")))
-        summary = run_root(project_root, str(run.get("id", run_id))) / "summary.md"
-        handoff = flow_root / "handoffs" / "runs" / f"{safe_id(str(run.get('id', run_id)), 'run')}-handoff.md"
+        summary = artifact_paths["summary"]
+        handoff = artifact_paths["handoff"]
         checks.append(check("PASS" if summary.is_file() else "FAIL", f"{rel(summary, project_root)} exists"))
         checks.append(check("PASS" if handoff.is_file() else "FAIL", f"{rel(handoff, project_root)} exists"))
     if include_runtime_events:
@@ -14322,35 +14414,32 @@ def command_process_authoring_review(args: argparse.Namespace) -> int:
 
 def render_process_agent_prompt(process: dict[str, Any]) -> str:
     process_id = str(process.get("id", "process"))
-    stages = [item for item in as_list(process.get("stages")) if isinstance(item, dict)]
     coordination = process_coordination_requirements(process)
     lines = [
         f"# {process.get('name', title_from_id(process_id))} Agent",
         "",
         f"Process id: `{process_id}`",
         "",
-        "Use the canonical Python launcher:",
+        "Use the governed high-level workflow:",
         "",
         "```bash",
-        f"python bin/pf.py process-doctor --project-root <project-root> --process {process_id}",
-        f"python bin/pf.py run-create --project-root <project-root> --id <run-id> --title \"<title>\" --process {process_id} --apply",
+        "pf.context",
+        "pf.work.start(objective)",
+        "pf.work.state()",
+        "pf.work.transition(outcome, evidence, notes)",
+        "# Repeat state/transition until action=run_completed.",
         "```",
         "",
         "Rules:",
         "",
-        "- Read the process definition before starting work.",
+        "- Treat pf.work.state as the source of truth for the current stage and allowed outcomes.",
         f"- Execution mode: `{process.get('execution_mode', 'single_agent')}`.",
         f"- Coordination requirement: `{coordination.get('mode', 'simple_allowed')}`.",
         "- Record durable artifacts for every blocking gate.",
         "- Run review before handoff when the process defines a review stage.",
         "- Keep public files portable and free of secrets.",
-        "- Use run, task, iteration, review, and handoff files for traceable work.",
-        "",
-        "Stages:",
-        "",
+        "- Do not choose the next stage or create Run/Assignment records manually during normal work.",
     ]
-    for stage in stages:
-        lines.append(f"- `{stage.get('id')}`: {stage.get('title', '')}")
     return "\n".join(lines) + "\n"
 
 
@@ -19812,16 +19901,17 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         if status:
             print(output, end="")
             return status
-    run_doc = load_run(project_root, run_id)
     if runtime:
-        run_doc["runtime"] = {
-            "default_driver": default_driver,
-            "supervisor_profile": str(runtime.get("supervisor_profile") or "default"),
-            "start_policy": str(runtime.get("start_policy") or "manual"),
-        }
-        if "max_parallel_workers" in runtime:
-            run_doc["runtime"]["max_parallel_workers"] = int(runtime.get("max_parallel_workers") or 1)
-        save_run(project_root, run_doc)
+        with registry_file_lock(run_yaml_path(project_root, run_id)):
+            run_doc = load_run(project_root, run_id)
+            run_doc["runtime"] = {
+                "default_driver": default_driver,
+                "supervisor_profile": str(runtime.get("supervisor_profile") or "default"),
+                "start_policy": str(runtime.get("start_policy") or "manual"),
+            }
+            if "max_parallel_workers" in runtime:
+                run_doc["runtime"]["max_parallel_workers"] = int(runtime.get("max_parallel_workers") or 1)
+            save_run_locked(project_root, run_doc)
     write_yaml_file(orchestrator_plan_path(project_root, run_id), plan)
     for order, worker in enumerate(workers, start=1):
         if not isinstance(worker, dict):
@@ -19963,6 +20053,59 @@ def command_orchestrator_plan_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def process_execution_service(project_root: Path, explicit_workplace: str | None = None) -> ProcessExecutionService:
+    manifest = resolve_project_workplace_manifest(project_root, explicit_workplace)
+    workplace_root = manifest.parent if manifest is not None else None
+    return ProcessExecutionService(project_root, workplace_root, sys.modules[__name__])
+
+
+def print_process_execution_result(payload: dict[str, Any], *, as_json: bool = False) -> None:
+    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if as_json else dump_yaml(payload))
+
+
+def command_work_start(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    payload = process_execution_service(project_root, getattr(args, "workplace", None)).start(objective=args.objective)
+    print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
+    return 0 if payload.get("action") in {"created_new", "continue_existing"} else 1
+
+
+def command_work_state(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    payload = process_execution_service(project_root, getattr(args, "workplace", None)).state(
+        run_id=str(getattr(args, "run", None) or ""),
+        assignment_id=str(getattr(args, "assignment", None) or ""),
+    )
+    print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
+    return 0
+
+
+def command_work_transition(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    evidence: list[Any] = []
+    evidence_file = str(getattr(args, "evidence_file", None) or "").strip()
+    if evidence_file:
+        loaded = json.loads(Path(evidence_file).expanduser().read_text(encoding="utf-8"))
+        evidence.extend(loaded if isinstance(loaded, list) else [loaded])
+    for raw in getattr(args, "evidence", None) or []:
+        try:
+            evidence.append(json.loads(raw))
+        except json.JSONDecodeError:
+            evidence.append(raw)
+    payload = process_execution_service(project_root, getattr(args, "workplace", None)).transition(
+        outcome=args.outcome,
+        evidence=evidence,
+        notes=str(getattr(args, "notes", None) or ""),
+        run_id=str(getattr(args, "run", None) or ""),
+        assignment_id=str(getattr(args, "assignment", None) or ""),
+    )
+    print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
+    return 0 if payload.get("action") in {"stage_transitioned", "run_completed"} else 1
+
+
 def command_run_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
@@ -19995,9 +20138,8 @@ def command_run_create(args: argparse.Namespace) -> int:
         return 0
     root = run_root(project_root, run_id)
     root.mkdir(parents=True, exist_ok=True)
-    write_yaml_file(path, run)
+    save_run(project_root, run)
     (root / "plan.md").write_text(f"# Run Plan: {args.title}\n\nObjective: {args.objective or 'TBD'}\n", encoding="utf-8")
-    write_task_index(project_root, run)
     emit_process_event(project_root, "run.created", process_id=run["process"], subject=run_id, payload={"run_id": run_id, "path": rel(path, project_root)}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(path, project_root)}")
     return 0
@@ -20042,40 +20184,36 @@ def command_run_status(args: argparse.Namespace) -> int:
 
 def command_run_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    checks = validate_run_consistency(project_root, args.run, include_runtime_events=bool(getattr(args, "runtime_events", False)))
-    result = print_checks(checks)
     run_id = safe_id(args.run, "run")
+    with registry_file_lock(run_yaml_path(project_root, run_id)):
+        checks = validate_run_consistency(project_root, run_id, include_runtime_events=bool(getattr(args, "runtime_events", False)))
+    result = print_checks(checks)
     emit_process_event(project_root, "run.doctor.failed" if result else "run.doctor.passed", severity="error" if result else "info", subject=run_id, payload={"run_id": run_id, "result": "fail" if result else "pass"}, correlation_id=f"run-{run_id}")
     return result
 
 
 def command_run_summary(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
+    run_id = safe_id(args.run, "run")
+    with registry_file_lock(run_root(project_root, run_id) / "run.yaml"):
+        return _command_run_summary_locked(args)
+
+
+def _command_run_summary_locked(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
     run = load_run(project_root, args.run)
     run_id = str(run.get("id", safe_id(args.run, "run")))
-    summary = run_root(project_root, run_id) / "summary.md"
-    handoff = locate_flow_root(project_root) / "handoffs" / "runs" / f"{run_id}-handoff.md"
-    lines = [f"# Run Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", f"- status: `{run.get('status')}`", "", "## Tasks", ""]
-    for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
-        if isinstance(item, dict):
-            task = load_yaml_document(assignment_yaml_path(project_root, str(item.get("id", ""))))
-            result = task.get("result") if isinstance(task.get("result"), dict) else {}
-            lines.append(f"- `{item.get('id')}`: `{item.get('status')}` - {result.get('summary', task.get('title', ''))}")
-    if len(lines) == 7:
-        lines.append("- No tasks recorded.")
-    handoff_text = f"# Run Handoff: {run_id}\n\nStatus: `{run.get('status')}`\n\nSummary: `{rel(summary, project_root)}`\n"
+    summary = run_summary_path(project_root, run_id)
+    handoff = run_handoff_path(project_root, run_id)
     if getattr(args, "dry_run", False):
         print_plan("run-summary dry run", [summary, handoff], project_root)
         return 0
-    summary.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    handoff.parent.mkdir(parents=True, exist_ok=True)
-    handoff.write_text(handoff_text, encoding="utf-8")
     artifacts = [rel(summary, project_root), rel(handoff, project_root)]
     run["final_artifacts"] = artifacts
     emitted = run.setdefault("events", {}).setdefault("emitted", []) if isinstance(run.setdefault("events", {}), dict) else []
     if isinstance(emitted, list) and "run.summary.created" not in emitted:
         emitted.append("run.summary.created")
-    save_run(project_root, run)
+    save_run_locked(project_root, run, include_summary_handoff=True)
     emit_process_event(project_root, "run.summary.created", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id, "artifacts": artifacts}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(summary, project_root)}")
     print(f"WROTE: {rel(handoff, project_root)}")
@@ -20083,6 +20221,13 @@ def command_run_summary(args: argparse.Namespace) -> int:
 
 
 def command_run_complete(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    run_id = safe_id(args.run, "run")
+    with registry_file_lock(run_root(project_root, run_id) / "run.yaml"):
+        return _command_run_complete_locked(args)
+
+
+def _command_run_complete_locked(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     run = load_run(project_root, args.run)
     run_id = str(run.get("id", safe_id(args.run, "run")))
@@ -20097,14 +20242,27 @@ def command_run_complete(args: argparse.Namespace) -> int:
     emitted = run.setdefault("events", {}).setdefault("emitted", []) if isinstance(run.setdefault("events", {}), dict) else []
     if isinstance(emitted, list) and "run.completed" not in emitted:
         emitted.append("run.completed")
-    save_run(project_root, run)
+    summary = run_summary_path(project_root, run_id)
+    handoff = run_handoff_path(project_root, run_id)
+    artifacts = [rel(summary, project_root), rel(handoff, project_root)]
+    run["final_artifacts"] = artifacts
+    if isinstance(emitted, list) and "run.summary.created" not in emitted:
+        emitted.append("run.summary.created")
+    save_run_locked(project_root, run, include_summary_handoff=True)
     emit_process_event(project_root, "run.completed", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id}, correlation_id=f"run-{run_id}")
-    command_run_summary(argparse.Namespace(project_root=str(project_root), run=run_id, dry_run=False))
+    emit_process_event(project_root, "run.summary.created", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id, "artifacts": artifacts}, correlation_id=f"run-{run_id}")
     print(f"COMPLETED: {run_id}")
     return 0
 
 
 def command_task_create(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    run_id = safe_id(args.run, "run")
+    with registry_file_lock(run_yaml_path(project_root, run_id)):
+        return _command_task_create_locked(args)
+
+
+def _command_task_create_locked(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     run = load_run(project_root, args.run)
     run_id = str(run.get("id", safe_id(args.run, "run")))
@@ -20234,7 +20392,7 @@ def command_task_create(args: argparse.Namespace) -> int:
     write_yaml_file(path, task)
     tasks.append({"id": task_id, "assignment": rel(path, project_root), "status": "open", "order": order, "blocking": True})
     run["tasks"] = tasks
-    save_run(project_root, run)
+    save_run_locked(project_root, run)
     for event_type in ["task.created", "assignment.created"]:
         emit_process_event(project_root, event_type, process_id=task["process"], subject=task_id, assignment_id_value=task_id, assignment_path=rel(path, project_root), payload={"run_id": run_id, "task_id": task_id, "path": rel(path, project_root)}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(path, project_root)}")
@@ -20253,10 +20411,19 @@ def command_task_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    with registry_file_lock(run_yaml_path(project_root, run_id)):
+        return _command_task_start_locked(args)
+
+
+def _command_task_start_locked(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
     require_official_process_active(project_root, task_process_id(task))
     task["status"] = "in_progress"
     save_task(project_root, task)
-    update_run_task_status(project_root, str(task.get("run_id", "")), task_id, "in_progress")
+    update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "in_progress")
     for event_type in ["task.started", "assignment.started"]:
         emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id}, correlation_id=f"run-{task.get('run_id')}")
     print(f"STARTED: {task_id}")
@@ -20264,6 +20431,15 @@ def command_task_start(args: argparse.Namespace) -> int:
 
 
 def command_task_complete(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    with registry_file_lock(run_root(project_root, run_id) / "run.yaml"):
+        return _command_task_complete_locked(args)
+
+
+def _command_task_complete_locked(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
@@ -20280,7 +20456,7 @@ def command_task_complete(args: argparse.Namespace) -> int:
     if waivers:
         task["result"]["waivers"] = waivers
     save_task(project_root, task)
-    update_run_task_status(project_root, str(task.get("run_id", "")), task_id, "done")
+    update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "done")
     for event_type in ["task.completed", "assignment.completed"]:
         emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "summary": args.summary}, correlation_id=f"run-{task.get('run_id')}")
     print(f"DONE: {task_id}")
@@ -27083,6 +27259,33 @@ def build_parser() -> argparse.ArgumentParser:
             else:
                 shell_plan.add_argument("--write-normalized", help="Optional normalized plan YAML output path.")
         shell_plan.set_defaults(func=func, shell_plan=alias_name.endswith("apply"))
+
+    work_start = sub.add_parser("work-start", help="Start or continue declarative governed work.")
+    work_start.add_argument("--project-root", required=True, help="Project root path.")
+    work_start.add_argument("--workplace", help="Workplace root override.")
+    work_start.add_argument("--objective", required=True, help="High-level work objective.")
+    work_start.add_argument("--json", action="store_true", help="Print JSON.")
+    work_start.set_defaults(func=command_work_start)
+
+    work_state = sub.add_parser("work-state", help="Read current declarative governed work state.")
+    work_state.add_argument("--project-root", required=True, help="Project root path.")
+    work_state.add_argument("--workplace", help="Workplace root override.")
+    work_state.add_argument("--run", help="Explicit Run id.")
+    work_state.add_argument("--assignment", help="Explicit Assignment id.")
+    work_state.add_argument("--json", action="store_true", help="Print JSON.")
+    work_state.set_defaults(func=command_work_state)
+
+    work_transition = sub.add_parser("work-transition", help="Advance declarative governed work using outcome and evidence.")
+    work_transition.add_argument("--project-root", required=True, help="Project root path.")
+    work_transition.add_argument("--workplace", help="Workplace root override.")
+    work_transition.add_argument("--run", help="Explicit Run id.")
+    work_transition.add_argument("--assignment", help="Explicit Assignment id.")
+    work_transition.add_argument("--outcome", required=True, help="Declared stage outcome.")
+    work_transition.add_argument("--evidence", action="append", default=[], help="Evidence JSON object or attestation text. Repeatable.")
+    work_transition.add_argument("--evidence-file", help="JSON file containing one evidence object or an array.")
+    work_transition.add_argument("--notes", help="Optional transition notes.")
+    work_transition.add_argument("--json", action="store_true", help="Print JSON.")
+    work_transition.set_defaults(func=command_work_transition)
 
     run_create = sub.add_parser("run-create", help="Create a project run/work session.")
     run_create.add_argument("--project-root", required=True, help="Project root path.")

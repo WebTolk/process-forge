@@ -21,6 +21,7 @@
     "id": { "$ref": "#/$defs/id" },
     "name": { "type": "string", "minLength": 1 },
     "version": { "type": "string", "minLength": 1 },
+    "initial_stage": { "$ref": "#/$defs/id" },
     "status": { "enum": ["draft", "active", "experimental", "internal", "deprecated", "archived"] },
     "kind": { "type": "string" },
     "scope": { "type": "string" },
@@ -273,6 +274,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "title": { "type": "string" },
+        "executable": { "type": "boolean" },
         "goal": { "type": "string" },
         "description": { "type": "string" },
         "actor": { "enum": ["primary_agent", "director_agent", "worker_agent", "cli_tool", "operator"] },
@@ -286,6 +288,44 @@
         "allowed_tools": { "type": "array", "items": { "type": "string" } },
         "entry_gates": { "type": "array", "items": { "type": "string" } },
         "exit_gates": { "type": "array", "items": { "type": "string" } },
+        "outcomes": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  { "$ref": "#/$defs/id" },
+                  {
+                    "type": "object",
+                    "required": ["id"],
+                    "properties": {
+                      "id": { "$ref": "#/$defs/id" },
+                      "title": { "type": "string" },
+                      "next_stage": { "$ref": "#/$defs/id" }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "oneOf": [
+                  { "$ref": "#/$defs/id" },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "title": { "type": "string" },
+                      "next_stage": { "$ref": "#/$defs/id" }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          ]
+        },
         "hooks": { "$ref": "#/$defs/stageHooks" },
         "automation_bindings": {
           "type": "array",

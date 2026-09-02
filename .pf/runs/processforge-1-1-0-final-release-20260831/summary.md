@@ -1,7 +1,7 @@
 # Run Summary: ProcessForge 1.1.0 final release manifests and documentation
 
 - run_id: `processforge-1-1-0-final-release-20260831`
-- status: `completed`
+- status: `blocked`
 
 ## Tasks
 
@@ -11,3 +11,4 @@
 - `pf-1-1-0-final-release-delivery-20260831`: `done` - Published final v1.1.0 tag and GitHub Release; source/archive/update/provenance qualification passed, with hosted Codex MCP explicitly retained as an external host-session blocker.
 - `pf-1-1-0-final-release-mcp-remediation-20260831`: `done` - Aligned missing-session diagnostics with Garage-first and operator-owned host integration.
 - `pf-1-1-0-final-release-windows-containment-20260831`: `done` - Windows raw-ingress containment normalized equivalent extended-length paths; deterministic focused and full clean release tests pass.
+- `pf-1-1-0-final-release-run-artifact-consistency-remediation-20260831`: `done` - Run artifact race remediated; all current Run writer paths are serialized and concurrent/stale-artifact regression coverage passed. Public release still requires requalification.

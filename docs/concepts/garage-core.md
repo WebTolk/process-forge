@@ -19,9 +19,14 @@ Level 1, Garage essentials:
 Level 2, governed work:
 
 - `pf.work.start` starts or continues governed work from a high-level
-  objective. The agent provides meaning; ProcessForge selects or validates the
-  process stage, run id, task id, assignment id, timestamps, and technical
-  links.
+  objective. ProcessForge selects the initial stage and pins the effective
+  Process definition, version, fingerprint, context snapshot, and assignment
+  capsule.
+- `pf.work.state` returns the current stage, required inputs, obligations,
+  artifacts, gates, blockers, and allowed outcomes.
+- `pf.work.transition` accepts an outcome and evidence. ProcessForge resolves
+  the next stage from YAML, updates the Assignment, emits stage events, and
+  completes the Run after the final stage.
 - run, task, assignment, capsule, artifact, review, log, and handoff files define
   durable work.
 - agents start or continue governed work after they understand context and need
@@ -83,4 +88,6 @@ The default agent path is:
 4. use `pf.resolve` before opening a resource root;
 5. perform local read-only analysis;
 6. call `pf.work.start` with the substantive objective;
-7. complete work through ProcessForge artifacts, reviews, logs, and handoffs.
+7. call `pf.work.state`, satisfy the current obligations, and call
+   `pf.work.transition` with outcome and evidence;
+8. repeat until `action: run_completed`.

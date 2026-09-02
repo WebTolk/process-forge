@@ -1153,6 +1153,8 @@ def command_work_state(args: argparse.Namespace, core: Any) -> int:
 
 
 def work_state_payload(workplace_root: Path, core: Any, *, session: str | None = None, project_root_ref: str | None = None) -> dict[str, Any]:
+    from processforge_core.process_execution import ProcessExecutionService
+
     project_root = project_for_session(argparse.Namespace(session=session, project_root=project_root_ref), workplace_root, core)
     handle = route_project(str(project_root), workplace_root, core)
     events_path, _outbox = core.event_runtime_paths(project_root)
@@ -1182,6 +1184,24 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
         "freshness": projection.get("status"),
         "last_relevant_activity": str(event_rows[-1].get("time") or "") if event_rows else "",
     }
+    declarative_state = ProcessExecutionService(project_root, workplace_root, core).state(session_id=str(session or ""))
+    if declarative_state.get("action") != "start_recommended":
+        current_work_state.update(
+            {
+                "active_process": str(declarative_state.get("process", {}).get("id") or current_work_state["active_process"]),
+                "active_stage": str(declarative_state.get("stage", {}).get("id") or current_work_state["active_stage"]),
+                "run": str(declarative_state.get("run", {}).get("id") or current_work_state["run"]),
+                "task": str(declarative_state.get("assignment", {}).get("id") or current_work_state["task"]),
+                "assignment": str(declarative_state.get("assignment", {}).get("id") or current_work_state["assignment"]),
+                "stage_contract": {
+                    "entry_gates": declarative_state.get("gates", {}).get("entry", []),
+                    "exit_gates": declarative_state.get("gates", {}).get("exit", []),
+                },
+                "automation_bindings": declarative_state.get("obligations", []),
+                "freshness": "pinned",
+                "process_execution": declarative_state,
+            }
+        )
     return {
         "project": handle,
         "current_session": core.read_current_project_session(project_root),

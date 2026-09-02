@@ -2,17 +2,16 @@
 
 Process id: `<process-id>`
 
-Use the canonical Python launcher:
+Use the high-level ProcessForge workflow:
 
-```bash
-python bin/pf.py process-doctor --project-root <project-root> --process <process-id>
-python bin/pf.py run-create --project-root <project-root> --id <run-id> --title "<title>" --process <process-id> --apply
-```
+`pf.context -> pf.work.start(objective) -> pf.work.state -> work ->
+pf.work.transition(outcome, evidence) -> pf.work.state`
 
 Rules:
 
-- Read the process definition before starting work.
-- Record durable artifacts for every blocking gate.
+- Let ProcessForge select stages from the pinned Process definition.
+- Record durable evidence for every blocking gate and produced artifact.
+- Provide an outcome and evidence; never provide `next_stage`.
 - Run review before handoff when the process defines a review stage.
 - Keep public files portable and free of secrets.
-- Use run, task, iteration, review, and handoff files for traceable work.
+- Continue until ProcessForge returns `action: run_completed`.

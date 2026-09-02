@@ -1,0 +1,199 @@
+schema_version: 1
+id: declarative-process-execution-implementation-20260902
+title: Implement declarative process execution
+run_id: declarative-process-execution-20260902
+process: software-feature-development
+status: done
+created_at: '2026-09-02T06:56:49Z'
+updated_at: '2026-09-02T09:11:54Z'
+objective: Audit, design, implement, verify, review, and document universal declarative stage execution
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Implemented and externally accepted declarative Process execution; public release remains blocked by repository release gates.
+  artifacts:
+    - .pf/artifacts/declarative-process-execution-20260902/process-execution-current-state-audit.md
+    - .pf/artifacts/declarative-process-execution-20260902/process-yaml-execution-capability-map.md
+    - .pf/artifacts/declarative-process-execution-20260902/process-execution-service-design.md
+    - .pf/artifacts/declarative-process-execution-20260902/stage-transition-contract.md
+    - .pf/artifacts/declarative-process-execution-20260902/stage-events-and-projectors-report.md
+    - .pf/artifacts/declarative-process-execution-20260902/agent-workflow-simplification-report.md
+    - .pf/artifacts/declarative-process-execution-20260902/real-project-stage-transition-acceptance.md
+    - .pf/artifacts/declarative-process-execution-20260902/independent-architecture-review.md
+    - .pf/artifacts/declarative-process-execution-20260902/independent-code-review.md
+    - .pf/artifacts/declarative-process-execution-20260902/final-validation.md
+stage: orchestration
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - .pf/AGENTS.md
+  - .pf/START_AGENT_HERE.md
+  - .pf/logs/declarative-process-execution-20260902.md
+  - src/processforge_core/**
+  - tools/pf_runtime/**
+  - tools/smoke_*.py
+  - tests/**
+  - schemas/**
+  - processes/**
+  - packs/**
+  - docs/**
+  - .pf/templates/**
+  - .pf/artifacts/declarative-process-execution-20260902/**
+  - .pf/handoffs/runs/declarative-process-execution-20260902*
+ownership:
+  owner_id: codex
+  owner_label: worker-codex
+  role: developer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - .pf/AGENTS.md
+    - .pf/START_AGENT_HERE.md
+    - .pf/logs/declarative-process-execution-20260902.md
+    - src/processforge_core/**
+    - tools/pf_runtime/**
+    - tools/smoke_*.py
+    - tests/**
+    - schemas/**
+    - processes/**
+    - packs/**
+    - docs/**
+    - .pf/templates/**
+    - .pf/artifacts/declarative-process-execution-20260902/**
+    - .pf/handoffs/runs/declarative-process-execution-20260902*
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - .pf/AGENTS.md
+    - .pf/START_AGENT_HERE.md
+    - .pf/logs/declarative-process-execution-20260902.md
+    - src/processforge_core/**
+    - tools/pf_runtime/**
+    - tools/smoke_*.py
+    - tests/**
+    - schemas/**
+    - processes/**
+    - packs/**
+    - docs/**
+    - .pf/templates/**
+    - .pf/artifacts/declarative-process-execution-20260902/**
+    - .pf/handoffs/runs/declarative-process-execution-20260902*
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: declarative-process-execution-implementation-20260902
+        current_scope: tools/processforge.py
+        other_assignment: pf-1-1-0-final-release-run-artifact-consistency-remediation-20260831
+        other_scope: tools/processforge.py
+        reason: same_file
+      -
+        current_assignment: declarative-process-execution-implementation-20260902
+        current_scope: tools/smoke_*.py
+        other_assignment: pf-1-1-0-final-release-run-artifact-consistency-remediation-20260831
+        other_scope: tools/smoke_process_run_task_batch.py
+        reason: glob_matches_file
+      -
+        current_assignment: declarative-process-execution-implementation-20260902
+        current_scope: tools/smoke_*.py
+        other_assignment: pf-1-1-0-final-release-run-artifact-consistency-remediation-20260831
+        other_scope: tools/smoke_*.py
+        reason: same_glob
+      -
+        current_assignment: declarative-process-execution-implementation-20260902
+        current_scope: tests/**
+        other_assignment: pf-1-1-0-final-release-run-artifact-consistency-remediation-20260831
+        other_scope: tests/**
+        reason: same_glob
+      -
+        current_assignment: declarative-process-execution-implementation-20260902
+        current_scope: tools/smoke_*.py
+        other_assignment: release-smoke-isolation-20260821
+        other_scope: tools/smoke_official_software_process_available.py
+        reason: glob_matches_file
+required_outputs:
+  -
+    id: process-execution-current-state-audit
+    path: .pf/artifacts/declarative-process-execution-20260902/process-execution-current-state-audit.md
+    type: unspecified
+    required: true
+  -
+    id: process-yaml-execution-capability-map
+    path: .pf/artifacts/declarative-process-execution-20260902/process-yaml-execution-capability-map.md
+    type: unspecified
+    required: true
+  -
+    id: process-execution-service-design
+    path: .pf/artifacts/declarative-process-execution-20260902/process-execution-service-design.md
+    type: unspecified
+    required: true
+  -
+    id: stage-transition-contract
+    path: .pf/artifacts/declarative-process-execution-20260902/stage-transition-contract.md
+    type: unspecified
+    required: true
+  -
+    id: stage-events-and-projectors-report
+    path: .pf/artifacts/declarative-process-execution-20260902/stage-events-and-projectors-report.md
+    type: unspecified
+    required: true
+  -
+    id: agent-workflow-simplification-report
+    path: .pf/artifacts/declarative-process-execution-20260902/agent-workflow-simplification-report.md
+    type: unspecified
+    required: true
+  -
+    id: real-project-stage-transition-acceptance
+    path: .pf/artifacts/declarative-process-execution-20260902/real-project-stage-transition-acceptance.md
+    type: unspecified
+    required: true
+  -
+    id: independent-architecture-review
+    path: .pf/artifacts/declarative-process-execution-20260902/independent-architecture-review.md
+    type: unspecified
+    required: true
+  -
+    id: independent-code-review
+    path: .pf/artifacts/declarative-process-execution-20260902/independent-code-review.md
+    type: unspecified
+    required: true
+  -
+    id: final-validation
+    path: .pf/artifacts/declarative-process-execution-20260902/final-validation.md
+    type: unspecified
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/declarative-process-execution-20260902/final-validation.md
+  format: concise_markdown
+  include:
+    - process-execution-current-state-audit
+    - process-yaml-execution-capability-map
+    - process-execution-service-design
+    - stage-transition-contract
+    - stage-events-and-projectors-report
+    - agent-workflow-simplification-report
+    - real-project-stage-transition-acceptance
+    - independent-architecture-review
+    - independent-code-review
+    - final-validation

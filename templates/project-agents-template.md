@@ -11,8 +11,11 @@ This project uses ProcessForge.
 4. Use `pf.resolve` before opening a ProcessForge-managed resource root.
 5. Call `pf.work.start` with the high-level objective when work becomes
    substantive.
-6. Follow the selected assignment and immutable capsule; write its durable
-   artifacts, review, log, and handoff.
+6. Call `pf.work.state` and follow the selected assignment and immutable
+   capsule.
+7. Satisfy the current stage obligations, then call `pf.work.transition` with
+   an outcome and evidence. Never supply the next stage.
+8. Repeat until PF returns `action: run_completed`.
 
 ## Important Rules
 
@@ -22,6 +25,8 @@ This project uses ProcessForge.
 - Do not commit `.pf/runtime/`.
 - Use project-local templates before global templates when allowed.
 - Record template usage.
+- Use low-level Run/Task lifecycle commands only for compatibility or
+  diagnostics, not for the ordinary agent path.
 - Do not commit `.pf/runtime/events/` or webhook outbox payloads.
 - During ordinary project work, do not install, start, or repair PF Runtime,
   MCP, host hooks, or Agent Ledger. Use available PF tools and report an

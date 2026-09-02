@@ -16,12 +16,13 @@ explicit host integration for operators who need Forge session capture.
 
 Available tools are `pf.context`, `pf.project_state`, `pf.project_initialization.status`,
 `pf.project_initialization.initialize`, `pf.project_initialization.repair`,
-`pf.work_state`, `pf.work.start`, `pf.resolve`, `pf.search`,
+`pf.work_state`, `pf.work.state`, `pf.work.start`, `pf.work.transition`, `pf.resolve`, `pf.search`,
 `pf.workplace_state`, `pf.session_context`, `pf.session_chat`, and
 `pf.session_activity`. `pf.context`, `pf.project_state`,
-`pf.project_initialization.status`, `pf.work_state`, `pf.resolve`, and
-`pf.search` are Garage reads and can run from `project_root`. `pf.work.start` is
-a Garage-scoped governed mutation that can also run from `project_root`. The
+`pf.project_initialization.status`, `pf.work_state`, `pf.work.state`, `pf.resolve`, and
+`pf.search` are Garage reads and can run from `project_root`. `pf.work.start`
+and `pf.work.transition` are Garage-scoped governed mutations that can also run
+from `project_root`. The
 three `pf.session_*` tools are bounded, Ledger-authorized views; they do not read raw
 provider payloads. `pf.resolve` reads the selected resource metadata from
 the current project's resolved context rather than asking an agent to search
@@ -35,10 +36,11 @@ private filesystem paths; `pf.search` navigation is described separately
 below.
 
 `pf.work.start` is the preferred transition from Garage understanding to
-governed work. The agent supplies a non-empty `objective` and optionally
-`preferred_stage`;
-ProcessForge validates the process definition, selects or creates the run and
-assignment, prevents duplicates, and returns obligations/gates. A session id may
+governed work. The agent supplies only a non-empty `objective`. ProcessForge
+validates and pins the process definition, selects its declared initial stage,
+creates or reuses the Run and Assignment, and returns the current work state.
+The agent then uses `pf.work.state` and `pf.work.transition(outcome, evidence)`;
+the next stage is never a caller input. A session id may
 link telemetry, but session availability does not change `mode: garage` to
 `mode: forge`.
 
@@ -60,10 +62,9 @@ snapshot, capsules, reports, or registries. It is emitted only after
 project-snapshot authorization, fresh-snapshot validation, path-ref containment,
 and confirmation that the file belongs to the result's authorized root.
 
-`pf.work_state` also returns the declared technical-projection summary for the
-Ledger-bound project. It is a read-only view of the generated
-`stage-obligations` artifact; MCP does not create a second project binding or
-write projection state.
+`pf.work_state` is retained as a compatibility alias for `pf.work.state`.
+The state is derived from canonical Run and Assignment files plus the pinned
+Process definition; technical projector facts remain declaration-driven.
 
 MCP is not a raw-ingress API and does not expose workplace raw payloads. The
 session-chat view exposes only the trusted, redacted private transcript for the

@@ -18,8 +18,10 @@ TOOLS = {
     "pf.project_initialization.status": "Read bounded project initialization status for a ProcessForge project.",
     "pf.project_initialization.initialize": "With apply: true only, initialize deterministic PF project state for the Ledger-bound project.",
     "pf.project_initialization.repair": "With apply: true only, repair deterministic PF snapshot state for the Ledger-bound project.",
-    "pf.work_state": "Read current ProcessForge work state.",
+    "pf.work_state": "Compatibility alias for the current declarative work state.",
+    "pf.work.state": "Read the current declarative ProcessForge work state.",
     "pf.work.start": "Start or continue governed ProcessForge work from a high-level objective.",
+    "pf.work.transition": "Advance governed work using a declared outcome and evidence.",
     "pf.resolve": "Resolve a ProcessForge project or selected knowledge resource.",
     "pf.search": "Search only fresh snapshot-authorized local resources before using broader search.",
     "pf.workplace_state": "Read derived workplace ledger state.",
@@ -32,6 +34,7 @@ MUTATING_TOOLS = {
     "pf.project_initialization.initialize",
     "pf.project_initialization.repair",
     "pf.work.start",
+    "pf.work.transition",
 }
 
 
@@ -59,6 +62,7 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
     from pf_runtime import session_read
     from processforge_core.local_resource_search import LocalSearchError
     from processforge_core.garage import GovernedWorkBootstrapService, ProjectContextService, ResourceResolveService, ResourceSearchService
+    from processforge_core.process_execution import ProcessExecutionService
 
     configured_session = str(session_id or "")
     requested_session = str(arguments.get("session_id") or "")
@@ -93,6 +97,7 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
         knowledge = snapshot.get("knowledge_resources") if isinstance(snapshot.get("knowledge_resources"), dict) else {}
         selected = knowledge.get("selected") if isinstance(knowledge.get("selected"), list) else []
         active_work = context.get("work", {}).get("active_work", []) if isinstance(context.get("work"), dict) else []
+        current_work = ProcessExecutionService(bound_project, workplace, core).state(session_id=supplied_session)
         # Keep the MCP bootstrap response bounded. Full assignment objectives
         # can be large and are already available through the governed capsule.
         return {
@@ -115,6 +120,7 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
                     if isinstance(item, dict)
                 ],
                 "recommendation": context.get("work", {}).get("recommendation") if isinstance(context.get("work"), dict) else None,
+                "current": current_work if current_work.get("action") != "start_recommended" else {"action": "start_recommended"},
             },
             "session": context.get("session", {}),
             "derived_reports": context.get("derived_reports", {}),
@@ -132,9 +138,22 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
         bound_project = resolve_garage_project()
         context = ProjectContextService(bound_project, workplace, core).context(session_id=supplied_session)
         return {"project": context["project"], "work": context["work"], "context": context["context"], "session": context.get("session", {})}
-    if name == "pf.work.start":
+    if name == "pf.work.state":
         bound_project = resolve_garage_project()
-        return GovernedWorkBootstrapService(bound_project, workplace, core).start(objective=str(arguments.get("objective") or ""), preferred_stage=str(arguments.get("preferred_stage") or ""), session_id=supplied_session)
+        return ProcessExecutionService(bound_project, workplace, core).state(session_id=supplied_session)
+    if name == "pf.work.start":
+        if set(arguments) - {"session_id", "project_root", "objective"}:
+            raise session_read.SessionReadError("invalid_arguments")
+        bound_project = resolve_garage_project()
+        return GovernedWorkBootstrapService(bound_project, workplace, core).start(objective=str(arguments.get("objective") or ""), session_id=supplied_session)
+    if name == "pf.work.transition":
+        bound_project = resolve_garage_project()
+        return ProcessExecutionService(bound_project, workplace, core).transition(
+            outcome=str(arguments.get("outcome") or ""),
+            evidence=arguments.get("evidence"),
+            notes=str(arguments.get("notes") or ""),
+            session_id=supplied_session,
+        )
     if name == "pf.resolve":
         bound_project = resolve_garage_project()
         context = core.project_context_check_result(bound_project, explicit_workplace=str(workplace))
@@ -184,12 +203,26 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
 
 def tool_schema(name: str) -> dict[str, Any]:
     properties: dict[str, Any] = {"session_id": {"type": "string"}, "project_root": {"type": "string"}}
+    required: list[str] = []
     if name == "pf.resolve":
         properties["resource_id"] = {"type": "string"}
     if name == "pf.search":
         properties.update({"query": {"type": "string", "minLength": 1}, "limit": {"type": "integer", "minimum": 1, "maximum": 100}, "limitstart": {"type": "integer", "minimum": 0}, "offset": {"type": "integer", "minimum": 0}})
     if name == "pf.work.start":
-        properties.update({"objective": {"type": "string", "minLength": 1}, "preferred_stage": {"type": "string"}})
+        properties.update({"objective": {"type": "string", "minLength": 1}})
+        required.append("objective")
+    if name == "pf.work.transition":
+        properties.update(
+            {
+                "outcome": {"type": "string", "minLength": 1},
+                "evidence": {
+                    "type": "array",
+                    "items": {"oneOf": [{"type": "string"}, {"type": "object", "additionalProperties": True}]},
+                },
+                "notes": {"type": "string"},
+            }
+        )
+        required.append("outcome")
     if name == "pf.project_initialization.initialize":
         properties.update({"apply": {"type": "boolean"}, "answers": {"type": "object"}, "project_type": {"type": "string"}, "coordination_mode": {"type": "string", "enum": ["inherit", "simple", "organized"]}, "platforms": {"type": "array", "items": {"type": "string"}}, "specializations": {"type": "array", "items": {"type": "string"}}, "process": {"type": "string"}, "force": {"type": "boolean"}, "allow_missing_workplace": {"type": "boolean"}})
     if name == "pf.project_initialization.repair":
@@ -198,7 +231,10 @@ def tool_schema(name: str) -> dict[str, Any]:
         properties["limit"] = {"type": "integer", "minimum": 1, "maximum": 100}
     if name == "pf.session_chat":
         properties.update({"before": {"type": "string"}, "cursor": {"type": "string"}, "roles": {"type": "array", "items": {"type": "string", "enum": ["user", "assistant", "system"]}}})
-    return {"type": "object", "properties": properties}
+    schema: dict[str, Any] = {"type": "object", "properties": properties, "additionalProperties": False}
+    if required:
+        schema["required"] = required
+    return schema
 
 
 def tool_annotations(name: str) -> dict[str, bool]:

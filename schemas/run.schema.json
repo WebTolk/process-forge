@@ -22,10 +22,27 @@
     },
     "final_artifacts": { "type": "array", "items": { "type": "string" } },
     "events": { "type": "object", "additionalProperties": true },
-    "privacy": { "type": "object", "additionalProperties": true }
+    "privacy": { "type": "object", "additionalProperties": true },
+    "process_execution": { "$ref": "#/$defs/process_execution" }
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$" },
+    "process_execution": {
+      "type": "object",
+      "required": ["process_id", "process_version", "process_fingerprint", "snapshot_id", "snapshot_checksum", "definition"],
+      "properties": {
+        "process_id": { "$ref": "#/$defs/id" },
+        "process_version": { "type": "string", "minLength": 1 },
+        "process_fingerprint": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "process_source": { "type": "string" },
+        "snapshot_id": { "type": "string", "minLength": 1 },
+        "snapshot_checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "definition": { "type": "object" },
+        "assignment_capsule": { "type": "string" },
+        "assignment_capsule_checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      },
+      "additionalProperties": false
+    },
     "task_ref": {
       "type": "object",
       "required": ["id", "assignment", "status", "order"],

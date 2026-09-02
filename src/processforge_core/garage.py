@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .local_resource_search import LocalSearchError, ResourceSearchIndex
+from .process_execution import ProcessExecutionService
 
 
 @dataclass(frozen=True)
@@ -218,118 +219,13 @@ class GovernedWorkBootstrapService:
         }
 
     def start(self, *, objective: str, preferred_stage: str = "", session_id: str = "") -> dict[str, Any]:
-        objective = str(objective or "").strip()
-        if not objective:
-            return {"schema_version": 1, "kind": "pf.work.start", "action": "blocked", "reason": "objective_required"}
-        check = self.core.project_context_check_result(self.project_root, explicit_workplace=str(self.workplace_root))
-        if str(check.get("status") or "") not in {"fresh", "fresh_with_updates"}:
-            return {"schema_version": 1, "kind": "pf.work.start", "action": "blocked", "reason": "snapshot_not_fresh", "context": {"status": check.get("status"), "recommended_action": check.get("recommended_action")}}
-        current = CurrentWorkService(self.project_root, self.core)
-        duplicate = current.find_by_objective(objective)
-        if duplicate.get("active"):
-            active = duplicate["active"]
-            return {
-                "schema_version": 1,
-                "kind": "pf.work.start",
-                "action": "continue_existing",
-                "project": {"id": self.core.project_id(self.project_root)},
-                "run_id": active.get("run_id"),
-                "assignment_id": active.get("assignment_id"),
-                "stage": active.get("stage", ""),
-                "session": {"status": "bound", "id": session_id} if session_id else {"status": "absent"},
-                "work": current.summary(),
-            }
-        if duplicate.get("historical"):
-            return {
-                "schema_version": 1,
-                "kind": "pf.work.start",
-                "action": "operator_choice_required",
-                "reason": "completed_historical_work_matches_objective",
-                "historical": duplicate["historical"][:5],
-            }
-        process_id = selected_process_id(self.project_root, self.core)
-        process = resolve_process(self.project_root, process_id, self.core)
-        stages = valid_stages(process)
-        stage_id = str(preferred_stage or "").strip()
-        if stage_id and stage_id not in stages:
-            return {"schema_version": 1, "kind": "pf.work.start", "action": "operator_choice_required", "reason": "invalid_preferred_stage", "valid_stages": stages}
-        if not stage_id:
-            stage_id = stages[0] if stages else ""
-        run = self._create_run(objective=objective, process_id=process_id)
-        task = self._create_task(run=run, objective=objective, process_id=process_id, stage_id=stage_id, session_id=session_id)
-        return {
-            "schema_version": 1,
-            "kind": "pf.work.start",
-            "action": "created_new",
-            "project": {"id": self.core.project_id(self.project_root)},
-            "run_id": run["id"],
-            "assignment_id": task["id"],
-            "stage": stage_id,
-            "valid_stages": stages,
-            "stage_selection": "preferred" if preferred_stage else "process_initial_stage",
-            "session": {"status": "bound", "id": session_id} if session_id else {"status": "absent"},
-            "obligations": stage_obligations(process, stage_id),
-            "gates": [str(item.get("id") or item) for item in process.get("gates", [])] if isinstance(process.get("gates"), list) else [],
-        }
-
-    def _create_run(self, *, objective: str, process_id: str) -> dict[str, Any]:
-        flow_root = self.core.locate_flow_root(self.project_root)
-        run_id = unique_id(flow_root / "runs", "garage-" + self.core.safe_id(objective, "work"))
-        now = self.core.now_utc()
-        run = {
-            "schema_version": 1,
-            "id": run_id,
-            "title": objective[:80],
-            "process": process_id,
-            "status": "in_progress",
-            "created_at": now,
-            "updated_at": now,
-            "objective": objective,
-            "platform": "",
-            "selected_specializations": [],
-            "scope": {"type": "project", "project_root": "."},
-            "tasks": [],
-            "final_artifacts": [],
-            "events": {"emitted": ["run.created"]},
-            "privacy": {"public_safe": True},
-        }
-        root = flow_root / "runs" / run_id
-        root.mkdir(parents=True, exist_ok=True)
-        self.core.write_yaml_file(root / "run.yaml", run)
-        (root / "plan.md").write_text(f"# Run Plan: {objective[:80]}\n\nObjective: {objective}\n", encoding="utf-8")
-        return run
-
-    def _create_task(self, *, run: dict[str, Any], objective: str, process_id: str, stage_id: str, session_id: str) -> dict[str, Any]:
-        flow_root = self.core.locate_flow_root(self.project_root)
-        task_id = unique_id(flow_root / "assignments", self.core.safe_id(objective, "task"))
-        now = self.core.now_utc()
-        task = {
-            "schema_version": 1,
-            "id": task_id,
-            "title": objective[:80],
-            "run_id": run["id"],
-            "process": process_id,
-            "status": "in_progress",
-            "created_at": now,
-            "updated_at": now,
-            "objective": objective,
-            "platform": "",
-            "selected_specializations": [],
-            "order": 1,
-            "dependencies": {"blocked_by": [], "blocks": []},
-            "iterations": [],
-            "result": {"status": "pending", "summary": "", "artifacts": []},
-            "execution_mode": {"kind": "implementation", "code_changes_allowed": True, "artifact_changes_allowed": True, "requires_review": True},
-            "stage": stage_id,
-        }
-        if session_id:
-            task["session"] = {"status": "bound", "id": session_id}
-        assignment_path = flow_root / "assignments" / f"{task_id}.yaml"
-        self.core.write_yaml_file(assignment_path, task)
-        run["tasks"] = [{"id": task_id, "assignment": f".pf/assignments/{task_id}.yaml", "status": "in_progress", "order": 1, "blocking": True}]
-        run["updated_at"] = now
-        self.core.write_yaml_file(flow_root / "runs" / str(run["id"]) / "run.yaml", run)
-        return task
+        # preferred_stage is retained only as a compatibility-only advanced
+        # override. The public MCP schema no longer advertises it.
+        return ProcessExecutionService(self.project_root, self.workplace_root, self.core).start(
+            objective=objective,
+            session_id=session_id,
+            stage_override=str(preferred_stage or "").strip(),
+        )
 
 
 @dataclass(frozen=True)

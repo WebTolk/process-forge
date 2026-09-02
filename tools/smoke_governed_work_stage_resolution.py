@@ -17,10 +17,14 @@ def main() -> int:
         payload = call_mcp(workplace, "pf.work.start", {"project_root": str(project), "objective": "Resolve stage automatically"})
         if payload.get("stage") != "run-intake" or payload.get("stage_selection") != "process_initial_stage":
             raise AssertionError(payload)
-        invalid = call_mcp(workplace, "pf.work.start", {"project_root": str(project), "objective": "Invalid stage path", "preferred_stage": "not-a-stage"})
-        if invalid.get("action") != "operator_choice_required" or "run-intake" not in invalid.get("valid_stages", []):
-            raise AssertionError(invalid)
-    print("PASS: pf.work.start validates and selects process stages")
+        try:
+            call_mcp(workplace, "pf.work.start", {"project_root": str(project), "objective": "Invalid stage path", "preferred_stage": "not-a-stage"})
+        except AssertionError as exc:
+            if "invalid_arguments" not in str(exc):
+                raise
+        else:
+            raise AssertionError("public pf.work.start accepted preferred_stage")
+    print("PASS: pf.work.start selects process stages and rejects caller-selected stages")
     return 0
 
 

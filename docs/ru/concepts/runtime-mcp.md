@@ -17,14 +17,16 @@ Forge sessions.
 
 Доступные tools: `pf.context`, `pf.project_state`,
 `pf.project_initialization.status`, `pf.project_initialization.initialize`,
-`pf.project_initialization.repair`, `pf.work_state`, `pf.work.start`,
+`pf.project_initialization.repair`, `pf.work_state`, `pf.work.state`,
+`pf.work.start`, `pf.work.transition`,
 `pf.resolve`, `pf.search`, `pf.workplace_state`, `pf.session_context`,
 `pf.session_chat` и `pf.session_activity`.
 
 `pf.context`, `pf.project_state`, `pf.project_initialization.status`,
-`pf.work_state`, `pf.resolve` и `pf.search` являются Garage read-операциями и
-могут работать от `project_root`. `pf.work.start` является Garage-scoped
-governed mutation и также может работать от `project_root`. Три `pf.session_*`
+`pf.work_state`, `pf.work.state`, `pf.resolve` и `pf.search` являются Garage
+read-операциями и могут работать от `project_root`. `pf.work.start` и
+`pf.work.transition` являются Garage-scoped governed mutations и также могут
+работать от `project_root`. Три `pf.session_*`
 tools дают ограниченные Ledger-authorized views и не читают raw provider
 payloads.
 
@@ -39,9 +41,11 @@ onboarding/repair, и требуют точное JSON-значение `apply: 
 возвращается `apply_required`.
 
 `pf.work.start` — предпочтительный переход от Garage-понимания к governed work.
-Агент передает непустой `objective` и опционально `preferred_stage`; ProcessForge
-проверяет process definition, выбирает или создает run и assignment,
-предотвращает дубли и возвращает obligations/gates. Session id может связать
+Агент передает только непустой `objective`; ProcessForge проверяет и закрепляет
+process definition, выбирает объявленную initial stage, создает или повторно
+использует Run и Assignment. Далее агент вызывает `pf.work.state` и
+`pf.work.transition(outcome, evidence)`. Следующая stage не является входом
+агента. Session id может связать
 telemetry, но сам факт session не меняет `mode: garage` на `mode: forge`.
 
 Session-scoped failures возвращают стабильные machine-readable error codes. Для
@@ -59,10 +63,9 @@ reports или registries. Значение выдается только пос
 fresh-snapshot validation, path-ref containment и проверки, что файл принадлежит
 authorized root результата.
 
-`pf.work_state` также возвращает summary declarative technical projections для
-Ledger-bound проекта. Это read-only view generated-артефакта
-`stage-obligations`; MCP не создает вторую project binding и не пишет projection
-state.
+`pf.work_state` сохранён как compatibility alias для `pf.work.state`. Состояние
+выводится из канонических Run и Assignment и закреплённого Process definition;
+technical projectors остаются declaration-driven.
 
 MCP не является raw-ingress API и не раскрывает workplace raw payloads.
 `pf.session_chat` показывает только trusted redacted private transcript для той

@@ -13,10 +13,12 @@ Use ProcessForge as a file-first process system. Work through assignments, execu
 4. Use `pf.search` for authorized project knowledge and `pf.resolve` before
    opening ProcessForge-managed resource roots.
 5. Call `pf.work.start` with the objective when work becomes substantive.
-6. Read the selected assignment and immutable Execution Context Package.
+6. Call `pf.work.state` and read the selected assignment and immutable
+   Execution Context Package.
 7. Check allowed and forbidden files before editing.
-8. Execute the task and save durable outputs.
-9. Update the assignment log and create the required review or handoff.
+8. Satisfy the current stage obligations, then call `pf.work.transition` with
+   a declared outcome and evidence. Never choose `next_stage` directly.
+9. Repeat state, work, and transition until PF returns `action: run_completed`.
 
 ## Core Rules
 
@@ -27,6 +29,8 @@ Use ProcessForge as a file-first process system. Work through assignments, execu
 - Approved artifacts are protected.
 - Execution Context Packages are immutable snapshots.
 - Process versions are immutable.
+- ProcessForge selects the initial stage and every next stage from the pinned
+  Process definition. Agents provide outcomes and evidence, not stage ids.
 - Runner and backend support are optional future modes, not requirements.
 - Public product files must not include private paths, secrets, machine names, or temporary private notes.
 - Use stable machine-readable ids for statuses, processes, artifacts, assignments, templates, and packages.
@@ -38,6 +42,8 @@ Use ProcessForge as a file-first process system. Work through assignments, execu
   returns an operator-level infrastructure blocker, report it to the operator.
 - Current `pf.context`/snapshot state outranks historical generated reports.
   Do not treat a report marked `stale` or `historical` as current truth.
+- `run-create`, `task-create`, `task-complete`, and `run-complete` are
+  compatibility and diagnostic commands, not the ordinary agent workflow.
 
 ## Standard Statuses
 
