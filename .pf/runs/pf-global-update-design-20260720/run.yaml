@@ -4,7 +4,7 @@ title: Global ProcessForge update mechanism design
 process: process-version-upgrade
 status: completed
 created_at: '2026-07-20T07:32:03Z'
-updated_at: '2026-07-20T07:43:07Z'
+updated_at: '2026-08-22T12:46:02Z'
 objective: Design the global ProcessForge distribution update mechanism with URL-based update sources, source priorities, release discovery, notification flow, and Joomla updater references. Planning only; no code changes.
 scope:
   type: project

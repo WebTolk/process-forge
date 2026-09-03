@@ -21,6 +21,7 @@
     "id": { "$ref": "#/$defs/id" },
     "name": { "type": "string", "minLength": 1 },
     "version": { "type": "string", "minLength": 1 },
+    "initial_stage": { "$ref": "#/$defs/id" },
     "status": { "enum": ["draft", "active", "experimental", "internal", "deprecated", "archived"] },
     "kind": { "type": "string" },
     "scope": { "type": "string" },
@@ -107,7 +108,7 @@
     "responsibility_boundaries": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
     "run_model": { "type": "object", "additionalProperties": true },
     "expected_artifacts": { "type": "array", "items": { "anyOf": [{ "type": "string" }, { "type": "object", "additionalProperties": true }] } },
-    "process_transitions": { "type": ["array", "object"], "additionalProperties": true },
+    "process_transitions": { "type": "array", "items": { "$ref": "#/$defs/processTransition" } },
     "agent_requirements": { "type": "object", "additionalProperties": true },
     "subagent_policy": { "type": "object", "additionalProperties": true },
     "runtime_requirements": { "type": "object", "additionalProperties": true },
@@ -156,6 +157,10 @@
     "artifact_definitions": {
       "type": "array",
       "items": { "$ref": "#/$defs/artifactType" }
+    },
+    "evidence_definitions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidenceType" }
     },
     "gates": {
       "type": "array",
@@ -269,6 +274,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "title": { "type": "string" },
+        "executable": { "type": "boolean" },
         "goal": { "type": "string" },
         "description": { "type": "string" },
         "actor": { "enum": ["primary_agent", "director_agent", "worker_agent", "cli_tool", "operator"] },
@@ -282,7 +288,75 @@
         "allowed_tools": { "type": "array", "items": { "type": "string" } },
         "entry_gates": { "type": "array", "items": { "type": "string" } },
         "exit_gates": { "type": "array", "items": { "type": "string" } },
+        "outcomes": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  { "$ref": "#/$defs/id" },
+                  {
+                    "type": "object",
+                    "required": ["id"],
+                    "properties": {
+                      "id": { "$ref": "#/$defs/id" },
+                      "title": { "type": "string" },
+                      "next_stage": { "$ref": "#/$defs/id" }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "oneOf": [
+                  { "$ref": "#/$defs/id" },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "title": { "type": "string" },
+                      "next_stage": { "$ref": "#/$defs/id" }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          ]
+        },
         "hooks": { "$ref": "#/$defs/stageHooks" },
+        "automation_bindings": {
+          "type": "array",
+          "description": "Runtime automation bindings. They observe declared checks but do not define new Stage requirements.",
+          "items": {
+            "type": "object",
+            "required": ["id", "projector", "artifact"],
+            "properties": {
+              "id": { "$ref": "#/$defs/id" },
+              "projector": { "enum": ["required-output-readiness", "verification-state"] },
+              "artifact": { "$ref": "#/$defs/id" },
+              "gate": { "$ref": "#/$defs/id" },
+              "source": { "type": "string", "minLength": 1 },
+              "verification": {
+                "type": "object",
+                "required": ["passed_event", "failed_event"],
+                "properties": {
+                  "passed_event": { "type": "string", "minLength": 1 },
+                  "failed_event": { "type": "string", "minLength": 1 }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "technical_obligations": {
+          "type": "array",
+          "description": "Deprecated compatibility alias for automation_bindings.",
+          "items": { "type": "object", "additionalProperties": true }
+        },
         "gates": { "type": "array", "items": { "type": "string" } },
         "handoff_required": { "type": "boolean", "deprecated": true }
       },
@@ -300,6 +374,34 @@
         "template": { "type": "string" },
         "path_hint": { "type": "string" },
         "lifecycle": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "evidenceType": {
+      "type": "object",
+      "required": ["id", "title"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string" },
+        "kind": { "enum": ["artifact", "event", "check", "attestation", "external"] },
+        "artifact": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "processTransition": {
+      "type": "object",
+      "required": ["id", "from_process", "to_process", "mode"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "from_process": { "$ref": "#/$defs/id" },
+        "to_process": { "$ref": "#/$defs/id" },
+        "mode": { "enum": ["wait_for_result", "delegate_and_continue", "consultation", "final_transfer", "fork", "return_required"] },
+        "requires_agent": { "type": "object", "additionalProperties": true },
+        "input_contract": { "type": "object", "additionalProperties": true },
+        "output_contract": { "type": "object", "additionalProperties": true },
+        "return": { "type": "object", "additionalProperties": true },
+        "route_id": { "$ref": "#/$defs/id" }
       },
       "additionalProperties": true
     },

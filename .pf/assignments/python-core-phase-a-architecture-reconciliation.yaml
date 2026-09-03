@@ -1,0 +1,63 @@
+schema_version: 1
+id: python-core-phase-a-architecture-reconciliation
+title: Reconcile shared Process Definition API migration order
+run_id: python-core-refactor-phase-a-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T12:27:10Z'
+updated_at: '2026-08-14T12:31:11Z'
+objective: 'Resolve the documented conflict between target architecture and refactor plan over when Runtime/MCP/hooks must use the shared Process Definition API. Produce a precise Phase B/C/next-slice decision addendum: what remains adapter-only, what must switch in the first vertical slice, the required gates, and what stays deferred. Preserve behavior and do not change code or rewrite existing reports.'
+platform: ""
+selected_specializations:
+  []
+order: 13
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-a-20260814/architecture-reconciliation.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - задания/process-forge-python-core-refactoring-master-prompt.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-refactor-plan.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/independent-architecture-review.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/final-architecture-review.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/migration-report.md
+  - tools/processforge.py
+  - tools/pf_runtime/**
+ownership:
+  owner_id: python-core-phase-a-architecture-reconciliation
+  owner_label: worker-python-core-phase-a-architecture-reconciliation
+  role: architecture-reconciliation
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: architecture-reconciliation
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-a-20260814/architecture-reconciliation.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/architecture-reconciliation.md
+  format: concise_markdown
+  include:
+    - architecture-reconciliation
+agent_model: gpt-5.4

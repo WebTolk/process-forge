@@ -1,0 +1,340 @@
+schema_version: 1
+capsule:
+  id: pf-isolated-update-matrix-20260829-capsule
+  generated_at: '2026-08-29T08:11:32Z'
+  assignment_id: pf-isolated-update-matrix-20260829
+  assignment_path: .pf/assignments/pf-isolated-update-matrix-20260829.yaml
+  assignment_checksum: 6d43337fe9c082352bedc5bd987ed2e7dba37575c9754c42908c2a44e13383c2
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: e1482757d2c210886d6d7d3efc59fbb843bc344f0c2dcbf741b9ce844f1cce2b
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260824-083958-50e142
+  sha256: 'sha256:e1482757d2c210886d6d7d3efc59fbb843bc344f0c2dcbf741b9ce844f1cce2b'
+  generated_at: '2026-08-24T08:39:53Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  -
+    id: 'project.process-forge:project-profile'
+    kind: note_collection
+    package_id: project.process-forge
+    requirement: recommended
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-profile@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts/project-profile.md
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:33c8f9edf949d6d99e3287d47c440a1341c1445fdd5361a4038e546d1f422ef0'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+  -
+    id: 'project.process-forge:project-artifacts'
+    kind: reference
+    package_id: project.process-forge
+    requirement: recommended
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-artifacts@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:66f3079b7370d98d92f0fec9594cec7fe61fe44aab9cc97ae7b4ee74d4a73aa6'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    []
+execution_route_summary:
+  process: ""
+  stages:
+    []
+  required_capabilities:
+    []
+  capability_requirements:
+    []
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    []
+  unsatisfied:
+    []
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: pf-isolated-update-matrix-20260829
+  path: .pf/assignments/pf-isolated-update-matrix-20260829.yaml
+  status: in_progress
+  objective: 'Exercise D:/Dev/process-forge/dist/processforge.zip (1.1.0, SHA-256 fd4c9948de1270a2b836c19796b6882ab994ec61dde854a44403f949661f43dc) to C:/Users/musst/AppData/Local/Temp/pf-machine-acceptance-20260829-release/processforge-1.2.1.zip (SHA-256 fc79ce7f1fb21ac1fa80acf21e2dc673847510b86aa719d1fda09a965384a767) and back in isolated installations under .pf/tmp/pf-machine-acceptance-20260829. Prove plan is non-mutating, apply requires --confirm, normal upgrade succeeds, local modification blocks apply unless explicitly forced, corrupted archive is rejected, repair classifies interrupted/incomplete state, rollback by applying the 1.1.0 archive succeeds, and final PF-owned file hashes match the original extracted 1.1.0 baseline. Do not modify product source files or either archive.'
+  execution_mode:
+    kind: assurance
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260824-083958-50e142
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/pf-isolated-update-matrix-20260829.yaml
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - .pf/artifacts/pf-machine-acceptance-20260829/isolated-update-matrix.md
+    - .pf/tmp/pf-machine-acceptance-20260829/**
+  allowed_read_files:
+    - dist/processforge.zip
+    - .pf/artifacts/pf-machine-acceptance-20260829/hardening-report.md
+  forbidden_files:
+    []
+  ownership:
+    owner_id: shell-worker-update-matrix
+    owner_label: worker-shell-worker-update-matrix
+    role: reviewer
+    writer: true
+    owned_files:
+      - .pf/artifacts/pf-machine-acceptance-20260829/isolated-update-matrix.md
+      - .pf/tmp/pf-machine-acceptance-20260829/**
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/artifacts/pf-machine-acceptance-20260829/isolated-update-matrix.md
+      - .pf/tmp/pf-machine-acceptance-20260829/**
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: update-matrix
+      path: .pf/artifacts/pf-machine-acceptance-20260829/isolated-update-matrix.md
+      type: unspecified
+      required: true
+  expected_report:
+    language: ru
+    artifact: .pf/artifacts/pf-machine-acceptance-20260829/isolated-update-matrix.md
+    format: concise_markdown
+    include:
+      - update-matrix
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.3-codex-spark
+agent_reasoning_effort: low
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/pf-isolated-update-matrix-20260829.ndjson
+  event_correlation_id: assignment-pf-isolated-update-matrix-20260829
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/pf-isolated-update-matrix-20260829.yaml
+allowed_files:
+  - .pf/artifacts/pf-machine-acceptance-20260829/isolated-update-matrix.md
+  - .pf/tmp/pf-machine-acceptance-20260829/**
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: update-matrix
+    path: .pf/artifacts/pf-machine-acceptance-20260829/isolated-update-matrix.md
+    type: unspecified
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-pf-isolated-update-matrix-20260829

@@ -1,0 +1,89 @@
+schema_version: 1
+id: core-updater-manifest-first-slice-20260822
+title: Implement manifest-based core updater first slice
+run_id: core-updater-manifest-implementation-20260822
+process: software-feature-development
+status: done
+created_at: '2026-08-22T13:52:57Z'
+updated_at: '2026-08-22T13:59:00Z'
+objective: Implement safe manifest-based core update status/plan/apply/repair for explicit archive/core-root, integrate release archive manifest, add smoke/docs/report.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'First manifest-based core updater implementation slice completed: core manifest service, release archive manifest inclusion, core-update status/plan/apply/repair CLI, docs and smoke.'
+  artifacts:
+    - .pf/artifacts/core-updater-manifest-20260822/core-updater-implementation-report.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - src/processforge_core/core_update.py
+  - tools/processforge.py
+  - tools/smoke_core_update_manifest.py
+  - docs/concepts/core-update-manifest.md
+  - docs/ru/concepts/core-update-manifest.md
+  - .pf/artifacts/core-updater-manifest-20260822/core-manifest-design.md
+  - .pf/artifacts/core-updater-manifest-20260822/core-update-transaction-design.md
+  - .pf/artifacts/core-updater-manifest-20260822/core-updater-implementation-report.md
+  - .pf/logs/core-updater-manifest-implementation-20260822.md
+allowed_read_files:
+  - .pf/artifacts/core-updater-manifest-20260822/core-updater-current-state-audit.md
+  - задания/process-forge-core-updater-manifest-master-prompt.md
+ownership:
+  owner_id: root
+  owner_label: worker-root
+  role: lead-implementer
+  writer: true
+  owned_files:
+    - src/processforge_core/core_update.py
+    - tools/processforge.py
+    - tools/smoke_core_update_manifest.py
+    - docs/concepts/core-update-manifest.md
+    - docs/ru/concepts/core-update-manifest.md
+    - .pf/artifacts/core-updater-manifest-20260822/core-manifest-design.md
+    - .pf/artifacts/core-updater-manifest-20260822/core-update-transaction-design.md
+    - .pf/artifacts/core-updater-manifest-20260822/core-updater-implementation-report.md
+    - .pf/logs/core-updater-manifest-implementation-20260822.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/core_update.py
+    - tools/processforge.py
+    - tools/smoke_core_update_manifest.py
+    - docs/concepts/core-update-manifest.md
+    - docs/ru/concepts/core-update-manifest.md
+    - .pf/artifacts/core-updater-manifest-20260822/core-manifest-design.md
+    - .pf/artifacts/core-updater-manifest-20260822/core-update-transaction-design.md
+    - .pf/artifacts/core-updater-manifest-20260822/core-updater-implementation-report.md
+    - .pf/logs/core-updater-manifest-implementation-20260822.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: core-updater-implementation-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/core-updater-manifest-20260822/core-updater-implementation-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/artifacts/core-updater-manifest-20260822/core-updater-implementation-report.md
+  format: concise_markdown
+  include:
+    - core-updater-implementation-report

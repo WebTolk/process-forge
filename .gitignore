@@ -16,6 +16,7 @@ __pycache__/
 .pf/process-forge.local.yaml
 .pf/runtime/
 .pf/tmp/
+/.pf-worker-shell-*/
 .pf/artifacts/subagents/
 .pf/private-notes/
 .pf/cache/
@@ -25,6 +26,10 @@ runtime/sessions/
 runtime/telemetry/
 runtime/events/events.ndjson
 runtime/events/outbox/
+/runtime/pf-runtime/
+/runtime/pf-runtime-host/
 /private-notes/
 /.secrets/
+/.codex/hooks.json
+/.codex/hooks.json.pf-backup-*
 /задания

@@ -1,6 +1,6 @@
 # Task Index: runtime-supervisor-audit-fix-shell-agents
 
-Run status: `in_progress`
+Run status: `completed`
 
 | Order | Task | Status | Assignment |
 | --- | --- | --- | --- |

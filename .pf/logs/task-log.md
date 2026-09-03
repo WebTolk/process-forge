@@ -325,6 +325,35 @@ Inspect existing CLI generation/validation paths, schemas, templates, and proces
 Handoff:
 None.
 
+## 2026-09-03 12:45 - issue-2-platform-selection-remediation
+
+Task:
+Correct Issue #2 so a generic parent project type cannot implicitly activate
+all derived platform contracts available in a workplace.
+Files changed:
+`tools/processforge.py`, `tools/smoke_project_onboard_platform_selection.py`,
+and the platform-selection documentation.
+Artifacts changed:
+This append-only task log; release checksum refresh remains pending.
+Templates used:
+Project `.pf/AGENTS.md` logging format.
+Tools used:
+ProcessForge Garage context/work-start attempts, targeted `rg`, `apply_patch`,
+`py_compile`, focused platform smokes, schema validation, and public-cleanliness
+validation.
+Decisions:
+An inherited parent type hint selects only the parent. A derived contract is
+selected by a child-specific type, explicit project input, classifier evidence,
+or a concrete contract detection rule.
+Risks:
+The independent dogfooding inheritance smoke has the same missing stack-report
+failure on the untouched RC baseline; it is not introduced by this change.
+Next steps:
+Refresh checksums, review the complete diff, and run the release qualification
+from a clean detached worktree.
+Handoff:
+None.
+
 ## 2026-07-24 11:33 +04:00 - codex-doc-auditor
 
 Task:

@@ -1,0 +1,69 @@
+schema_version: 1
+id: verification-runtime-lifecycle-investigation
+title: Diagnose stale Runtime PID and session ingress mismatch
+run_id: verification-current-work-state-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T08:52:17Z'
+updated_at: '2026-08-14T08:53:26Z'
+objective: 'Read-only diagnose the reproducible Runtime lifecycle failure from live-runtime-mcp-proof: runtime start leaves stale persisted status/PID, runtime session-register reports not running, and runtime stop does not stop the observed PID. Identify exact code path, state files, and smallest safe remediation; do not edit source or run destructive cleanup.'
+platform: ""
+selected_specializations:
+  []
+order: 8
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-investigation.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-investigation.md
+allowed_read_files:
+  - .pf/artifacts/verification-current-work-state-20260814/live-runtime-mcp-proof.md
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - tools/smoke_long_lived_runtime.py
+  - tools/smoke_runtime_ledger_hooks_mcp.py
+  - .pf/runtime/pf-runtime/status.json
+ownership:
+  owner_id: verification-current-work-state-coordinator
+  owner_label: worker-verification-current-work-state-coordinator
+  role: runtime-diagnostician
+  writer: true
+  owned_files:
+    - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-investigation.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-investigation.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-lifecycle-investigation
+    type: unspecified
+    required: true
+    path: .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-investigation.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-investigation.md
+  format: concise_markdown
+  include:
+    - runtime-lifecycle-investigation
+agent_model: gpt-5.3-codex-spark

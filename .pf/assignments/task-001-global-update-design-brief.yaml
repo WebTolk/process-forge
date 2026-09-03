@@ -3,9 +3,9 @@ id: task-001-global-update-design-brief
 title: Design global ProcessForge update sources
 run_id: pf-global-update-design-20260720
 process: process-version-upgrade
-status: in_progress
+status: done
 created_at: '2026-07-20T07:32:12Z'
-updated_at: '2026-07-20T07:42:52Z'
+updated_at: '2026-08-22T12:46:02Z'
 objective: Plan URL-based global ProcessForge update sources and checks using Joomla updater as reference. Produce a planning assignment and collect a subagent report. No code edits.
 order: 1
 dependencies:
@@ -33,7 +33,7 @@ iterations:
       - .pf/artifacts/runs/pf-global-update-design-20260720/task-001-global-update-design-brief/work-log.md
     completed_at: '2026-07-20T07:42:52Z'
 result:
-  status: pending
-  summary: ""
+  status: done
+  summary: 'Completed historic planning brief: both recorded research and review iterations are complete.'
   artifacts:
-    []
+    - .pf/artifacts/runs/pf-global-update-design-20260720/task-001-global-update-design-brief/work-log.md

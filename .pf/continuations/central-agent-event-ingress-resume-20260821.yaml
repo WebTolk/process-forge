@@ -1,0 +1,17 @@
+schema_version: 1
+id: central-agent-event-ingress-resume-20260821
+agent_id: ""
+previous_session_id: ""
+waiting_for:
+  handoff_id: central-agent-event-ingress-20260814-handoff
+  expected_artifacts:
+    - .pf/runs/central-agent-event-ingress-20260814/summary.md
+    - .pf/handoffs/runs/central-agent-event-ingress-20260814-handoff.md
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-3-20260820.md
+resume:
+  process: ""
+  run_id: central-agent-event-ingress-20260814
+  stage: ""
+  instruction: Resume the existing run. First read the run summary, handoff, and final conversation-completeness rereview; do not redo that completed corrective slice. Reconcile the remaining open legacy tasks against current code and then proceed only with the next still-relevant task through Process Forge.
+status: waiting
+created_at: '2026-08-20T18:21:01Z'

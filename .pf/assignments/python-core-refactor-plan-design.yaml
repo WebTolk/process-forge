@@ -1,0 +1,65 @@
+schema_version: 1
+id: python-core-refactor-plan-design
+title: Python Core phased refactor plan
+run_id: python-core-refactor-phase-a-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T12:18:42Z'
+updated_at: '2026-08-14T12:22:44Z'
+objective: Create the required staged refactor plan for Process Forge Python Core. Incorporate the independent review's five blocking conditions, characterize tests before each extraction, package/import/Windows checks, per-slice behavior classification, removal of duplicate logic, and review gates. Start with bootstrap plus the common CLI/Runtime/MCP Process Definition API; do not change code.
+platform: ""
+selected_specializations:
+  []
+order: 10
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-refactor-plan.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - задания/process-forge-python-core-refactoring-master-prompt.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-refactor-audit.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-dependency-map.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-compatibility-cleanup.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/independent-architecture-review.md
+  - tools/processforge.py
+  - tools/pf_runtime/**
+  - bin/pf.py
+  - .processforge-releaseignore
+ownership:
+  owner_id: python-core-refactor-plan-design
+  owner_label: worker-python-core-refactor-plan-design
+  role: refactor-planning
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: python-core-refactor-plan
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-refactor-plan.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-refactor-plan.md
+  format: concise_markdown
+  include:
+    - python-core-refactor-plan
+agent_model: gpt-5.4

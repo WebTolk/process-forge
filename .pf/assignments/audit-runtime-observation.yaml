@@ -1,0 +1,70 @@
+schema_version: 1
+id: audit-runtime-observation
+title: Audit Runtime, worker and event observation
+run_id: codebase-audit-spark-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T06:37:37Z'
+updated_at: '2026-08-14T06:43:35Z'
+objective: Read only Runtime Host/service, Codex worker/adapter, agent-run state, and related smoke coverage. Find concrete correctness, isolation, durability, timeout, or lifecycle defects. Produce concise Russian report with severity, exact file/line or command evidence, reproduction/preconditions, and state PASS if no confirmed defect. Do not edit product files or run destructive commands.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/codebase-audit-20260814/runtime-observation-report.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/codebase-audit-20260814/runtime-observation-report.md
+allowed_read_files:
+  - tools/pf_runtime/**
+  - tools/codex_exec_worker.py
+  - tools/processforge.py
+  - tools/smoke_runtime_ledger_hooks_mcp.py
+  - tools/smoke_codex_exec_worker.py
+  - schemas/agent-run-state.schema.json
+  - schemas/pf-runtime-agent-event.schema.json
+ownership:
+  owner_id: pf-audit-runtime
+  owner_label: worker-pf-audit-runtime
+  role: assurance-reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/codebase-audit-20260814/runtime-observation-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/codebase-audit-20260814/runtime-observation-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-observation-report
+    path: .pf/artifacts/codebase-audit-20260814/runtime-observation-report.md
+    type: markdown
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/codebase-audit-20260814/runtime-observation-report.md
+  format: concise_markdown
+  include:
+    - runtime-observation-report
+agent_model: gpt-5.3-codex-spark

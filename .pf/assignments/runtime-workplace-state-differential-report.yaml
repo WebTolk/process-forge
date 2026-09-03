@@ -1,0 +1,66 @@
+schema_version: 1
+id: runtime-workplace-state-differential-report
+title: Record verified Runtime workplace differential
+run_id: runtime-lifecycle-clean-repro-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T09:28:29Z'
+updated_at: '2026-08-14T09:29:17Z'
+objective: Record the primary agent verified read-only differential between the clean Runtime trace and the current checkout runtime state; distinguish it from shell-worker observations of another workplace.
+platform: ""
+selected_specializations:
+  []
+order: 6
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Verified that the current checkout contains stale residual Runtime metadata: ready service state with no lock and a dead PID. Clean lifecycle passes, so no Runtime remediation is justified.'
+  artifacts:
+    - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential.md
+allowed_read_files:
+  - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-lifecycle-clean-repro.md
+  - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential-worker.md
+  - runtime/pf-runtime/service.json
+  - tools/pf_runtime/service.py
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: runtime-state-verifier
+  writer: true
+  owned_files:
+    - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-workplace-state-differential
+    type: unspecified
+    required: true
+    path: .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential.md
+  format: concise_markdown
+  include:
+    - runtime-workplace-state-differential

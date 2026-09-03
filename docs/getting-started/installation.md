@@ -64,7 +64,9 @@ Runtime requirements:
 - Use a UTF-8 capable filesystem.
 - Read/write access is required for the ProcessForge distribution, workplace, and project folders.
 - PowerShell is not required for runtime usage.
-- ProcessForge v0.1 does not require a daemon or background process.
+- Default ProcessForge CLI usage does not require a daemon or background
+  process. Optional PF Runtime lifecycle and Windows autostart are documented in
+  [Runtime Autostart And Codex MCP Startup](runtime-autostart.md).
 
 ## Windows PowerShell UTF-8
 

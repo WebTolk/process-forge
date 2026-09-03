@@ -1,0 +1,69 @@
+schema_version: 1
+id: runtime-director-ledger-poc-20260813
+title: PF Runtime Director Ledger PoC
+run_id: pf-runtime-director-ledger-20260813
+process: process-supervisor
+status: done
+created_at: '2026-08-13T16:05:00Z'
+updated_at: '2026-08-13T16:42:00Z'
+objective: Implement the narrow PF Runtime PoC approved by the runtime/director/ledger master prompt without moving PF Core business logic into Runtime.
+iterations: []
+result:
+  status: done
+  summary: Lazy runtime-host PoC implemented and validated with focused smokes; full checksum gate remains blocked by pre-existing stale release inventory.
+  artifacts:
+    - .pf/artifacts/pf-runtime-director-ledger-20260813/poc-report.md
+    - tools/smoke_runtime_host_poc.py
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+allowed_files:
+  - tools/pf_runtime/**
+  - tools/processforge.py
+  - tools/smoke_runtime_host_poc.py
+  - schemas/pf-runtime-agent-event.schema.json
+  - .pf/artifacts/pf-runtime-director-ledger-20260813/**
+  - .pf/logs/pf-runtime-director-ledger-20260813.md
+  - .pf/handoffs/pf-runtime-director-ledger-20260813-handoff.md
+  - .pf/assignments/runtime-director-ledger-poc-20260813.yaml
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/contexts/project-context.snapshot.yaml
+  - задания/process-forge-runtime-director-ledger-master-prompt.md
+  - tools/**
+  - docs/**
+  - processes/**
+  - schemas/**
+  - templates/**
+  - .pf/artifacts/**
+  - .pf/logs/**
+  - .pf/handoffs/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/**
+    - tools/processforge.py
+    - tools/smoke_runtime_host_poc.py
+    - schemas/pf-runtime-agent-event.schema.json
+    - .pf/artifacts/pf-runtime-director-ledger-20260813/**
+    - .pf/logs/pf-runtime-director-ledger-20260813.md
+    - .pf/handoffs/pf-runtime-director-ledger-20260813-handoff.md
+    - .pf/assignments/runtime-director-ledger-poc-20260813.yaml
+required_outputs:
+  - id: poc-report
+    type: markdown
+    required: true
+    path: .pf/artifacts/pf-runtime-director-ledger-20260813/poc-report.md
+  - id: poc-smoke
+    type: smoke
+    required: true
+    path: tools/smoke_runtime_host_poc.py
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-runtime-director-ledger-20260813/poc-report.md
+  format: concise_markdown

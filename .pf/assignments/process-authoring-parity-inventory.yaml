@@ -1,0 +1,70 @@
+schema_version: 1
+id: process-authoring-parity-inventory
+title: Inventory Process Authoring public-contract parity
+run_id: process-stage-contract-normalization-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T10:12:42Z'
+updated_at: '2026-08-14T10:21:03Z'
+objective: Read-only compare public Process Definition fields across schema, template, process-authoring answers/materializer/prompt, doctor, docs, and examples. Report concrete parity gaps with file evidence; do not implement.
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Worker report independently spot-checked: authoring materializer/schema parity gaps and absent requested concept document are confirmed; worker-run record was stale and was cancelled after process exit.'
+  artifacts:
+    - .pf/artifacts/process-stage-contract-normalization-20260814/process-authoring-parity-inventory.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/process-stage-contract-normalization-20260814/process-authoring-parity-inventory.md
+allowed_read_files:
+  - schemas/process-definition.schema.json
+  - templates/process-definition-template.yaml
+  - tools/processforge.py
+  - processes/core/process-authoring.yaml
+  - docs/concepts/process-authoring.md
+  - docs/authoring/process-authoring.md
+  - задания/process-forge-process-stage-contract-normalization-master-prompt.md
+ownership:
+  owner_id: process-authoring-parity-worker
+  owner_label: worker-process-authoring-parity-worker
+  role: authoring-parity-inventory
+  writer: true
+  owned_files:
+    - .pf/artifacts/process-stage-contract-normalization-20260814/process-authoring-parity-inventory.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/process-stage-contract-normalization-20260814/process-authoring-parity-inventory.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: process-authoring-parity-inventory
+    type: unspecified
+    required: true
+    path: .pf/artifacts/process-stage-contract-normalization-20260814/process-authoring-parity-inventory.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/process-stage-contract-normalization-20260814/process-authoring-parity-inventory.md
+  format: concise_markdown
+  include:
+    - process-authoring-parity-inventory
+agent_model: gpt-5.3-codex-spark

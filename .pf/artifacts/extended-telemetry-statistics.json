@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-24T10:00:00Z",
+  "run_id": "garage-stabilization-after-new-project-20260824",
+  "tasks": {
+    "created": 3,
+    "completed": 3,
+    "in_progress": 0
+  },
+  "artifacts": {
+    "baseline_audits": 7,
+    "implementation_reports": 1,
+    "acceptance_reports": 8,
+    "combined_reports": 1
+  },
+  "code_changes": {
+    "modified_files": 4,
+    "new_smoke_files": 3
+  },
+  "validation": {
+    "py_compile": "pass",
+    "direct_new_smokes": "pass",
+    "selected_release_test": "pass",
+    "doctor_project": "pass_with_existing_warn",
+    "events_validate": "pass",
+    "git_diff_check": "pass_with_crlf_warnings"
+  },
+  "residual_gates": [
+    "fresh_real_codex_sessionstart",
+    "codex_mcp_host_registration",
+    "runtime_product_version_renaming",
+    "derived_report_lifecycle_automation",
+    "governed_work_bootstrap_api"
+  ]
+}

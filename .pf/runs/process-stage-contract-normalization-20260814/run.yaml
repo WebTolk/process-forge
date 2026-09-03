@@ -1,0 +1,61 @@
+schema_version: 1
+id: process-stage-contract-normalization-20260814
+title: Process and Stage contract normalization
+process: process-authoring
+status: completed
+created_at: '2026-08-14T10:10:41Z'
+updated_at: '2026-08-14T10:43:36Z'
+objective: Normalize public Process/Stage/Gate/Evidence/automation contracts and prove generic execution of user and official processes without process-specific Core logic.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: process-contract-static-inventory
+    assignment: .pf/assignments/process-contract-static-inventory.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: process-authoring-parity-inventory
+    assignment: .pf/assignments/process-authoring-parity-inventory.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: process-transition-route-inventory
+    assignment: .pf/assignments/process-transition-route-inventory.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: process-contract-normalization-audit
+    assignment: .pf/assignments/process-contract-normalization-audit.yaml
+    status: done
+    order: 4
+    blocking: true
+  -
+    id: process-contract-normalization-implementation
+    assignment: .pf/assignments/process-contract-normalization-implementation.yaml
+    status: done
+    order: 5
+    blocking: true
+  -
+    id: process-contract-normalization-review
+    assignment: .pf/assignments/process-contract-normalization-review.yaml
+    status: done
+    order: 6
+    blocking: true
+final_artifacts:
+  - .pf/runs/process-stage-contract-normalization-20260814/summary.md
+  - .pf/handoffs/runs/process-stage-contract-normalization-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true

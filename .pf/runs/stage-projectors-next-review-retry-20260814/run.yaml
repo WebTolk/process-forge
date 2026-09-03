@@ -1,0 +1,31 @@
+schema_version: 1
+id: stage-projectors-next-review-retry-20260814
+title: Independent stage projector review retry
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T06:07:27Z'
+updated_at: '2026-08-14T06:19:28Z'
+objective: Repeat independent review after preserving prepared worker drivers.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: stage-projectors-next-independent-review-retry
+    assignment: .pf/assignments/stage-projectors-next-independent-review-retry.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/stage-projectors-next-review-retry-20260814/summary.md
+  - .pf/handoffs/runs/stage-projectors-next-review-retry-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

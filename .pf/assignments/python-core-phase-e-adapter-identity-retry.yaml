@@ -1,0 +1,73 @@
+schema_version: 1
+id: python-core-phase-e-adapter-identity-retry
+title: Phase E adapter identity corrective retry
+run_id: python-core-refactor-phase-e-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T15:45:25Z'
+updated_at: '2026-08-14T15:47:04Z'
+objective: 'Correct only the accepted Phase E characterization gap: verify package-root import and runtime identity for exactly official_process_definition_refs, process_root_candidates and process_root_yaml_files; verify no direct CLI service-module import remains. Include exact commands and concise Russian result. Do not edit product files.'
+platform: ""
+selected_specializations:
+  []
+order: 7
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-identity-retry.md
+stage: task-result-fixation
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/artifacts/python-core-refactor-phase-e-20260814/postchange-characterization.md
+    role: input
+    required: true
+    mutable_by_worker: false
+allowed_files:
+  - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-identity-retry.md
+allowed_read_files:
+  - tools/processforge.py
+  - src/processforge_core/process_catalog/__init__.py
+  - src/processforge_core/process_catalog/service.py
+ownership:
+  owner_id: shell-worker-spark
+  owner_label: worker-shell-worker-spark
+  role: corrective-characterization-engineer
+  writer: true
+  owned_files:
+    - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-identity-retry.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-identity-retry.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: adapter-identity-retry
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-identity-retry.md
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-identity-retry.md
+  format: concise_markdown
+  include:
+    - adapter-identity-retry
+agent_model: gpt-5.3-codex-spark

@@ -1,0 +1,73 @@
+schema_version: 1
+id: stage-projectors-next-independent-review
+title: Review stage projector implementation
+run_id: stage-projectors-next-review-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T06:04:08Z'
+updated_at: '2026-08-14T06:17:29Z'
+objective: Review only the completed declaration-driven stage projector slice. Inspect host, service, CLI, process schema, focused smoke, and implementation artifacts. Write concise Russian findings; do not edit product files. Mark PASS only if no material defect is found, otherwise name exact file and proof.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'SKIPPED: pre-remediation driver timeout; canonical retry review is separate.'
+  artifacts:
+    - .pf/reviews/stage-projectors-next-20260814-review.md
+  waivers:
+    independent-review: pre-remediation-driver-timeout
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/stage-projectors-next-20260814-review.md
+allowed_read_files:
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/service.py
+  - tools/processforge.py
+  - tools/smoke_stage_projectors.py
+  - processes/core/process-supervisor.yaml
+  - schemas/process-definition.schema.json
+  - .pf/artifacts/stage-projectors-next-20260814/implementation-report.md
+  - .pf/artifacts/stage-projectors-next-20260814/live-validation.md
+ownership:
+  owner_id: pf-stage-projector-review
+  owner_label: worker-pf-stage-projector-review
+  role: independent-reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/stage-projectors-next-20260814-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/stage-projectors-next-20260814-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: independent-review
+    path: .pf/reviews/stage-projectors-next-20260814-review.md
+    type: markdown
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/reviews/stage-projectors-next-20260814-review.md
+  format: concise_markdown
+  include:
+    - independent-review
+agent_model: gpt-5.3-codex-spark

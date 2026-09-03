@@ -1,0 +1,91 @@
+schema_version: 1
+id: pf-runtime-mcp-autostart-docs-20260829
+title: Runtime and MCP documentation audit and Windows autostart
+process: software-feature-development
+status: completed
+created_at: '2026-08-29T11:11:49Z'
+updated_at: '2026-08-29T12:05:52Z'
+objective: Audit ProcessForge Runtime/MCP documentation and implement a governed Windows autostart lifecycle with real machine verification.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: pf-runtime-mcp-docs-audit-20260829
+    assignment: .pf/assignments/pf-runtime-mcp-docs-audit-20260829.yaml
+    status: done
+    order: 10
+    blocking: true
+  -
+    id: pf-runtime-mcp-autostart-architecture-20260829
+    assignment: .pf/assignments/pf-runtime-mcp-autostart-architecture-20260829.yaml
+    status: done
+    order: 20
+    blocking: true
+  -
+    id: pf-runtime-mcp-docs-audit-retry-20260829
+    assignment: .pf/assignments/pf-runtime-mcp-docs-audit-retry-20260829.yaml
+    status: done
+    order: 11
+    blocking: true
+  -
+    id: pf-runtime-mcp-autostart-implementation-20260829
+    assignment: .pf/assignments/pf-runtime-mcp-autostart-implementation-20260829.yaml
+    status: done
+    order: 30
+    blocking: true
+  -
+    id: pf-runtime-mcp-docs-remediation-20260829
+    assignment: .pf/assignments/pf-runtime-mcp-docs-remediation-20260829.yaml
+    status: done
+    order: 40
+    blocking: true
+  -
+    id: pf-runtime-mcp-docs-audit-fixes-20260829
+    assignment: .pf/assignments/pf-runtime-mcp-docs-audit-fixes-20260829.yaml
+    status: done
+    order: 6
+    blocking: true
+  -
+    id: pf-runtime-mcp-doc-link-fix-20260829
+    assignment: .pf/assignments/pf-runtime-mcp-doc-link-fix-20260829.yaml
+    status: done
+    order: 7
+    blocking: true
+  -
+    id: pf-runtime-mcp-autostart-assurance-20260829
+    assignment: .pf/assignments/pf-runtime-mcp-autostart-assurance-20260829.yaml
+    status: done
+    order: 8
+    blocking: true
+  -
+    id: pf-runtime-mcp-autostart-review-fix-20260829
+    assignment: .pf/assignments/pf-runtime-mcp-autostart-review-fix-20260829.yaml
+    status: done
+    order: 9
+    blocking: true
+  -
+    id: pf-runtime-mcp-autostart-delivery-20260829
+    assignment: .pf/assignments/pf-runtime-mcp-autostart-delivery-20260829.yaml
+    status: done
+    order: 10
+    blocking: true
+  -
+    id: pf-runtime-mcp-autostart-assurance-followup-20260829
+    assignment: .pf/assignments/pf-runtime-mcp-autostart-assurance-followup-20260829.yaml
+    status: done
+    order: 11
+    blocking: true
+final_artifacts:
+  - .pf/runs/pf-runtime-mcp-autostart-docs-20260829/summary.md
+  - .pf/handoffs/runs/pf-runtime-mcp-autostart-docs-20260829-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true

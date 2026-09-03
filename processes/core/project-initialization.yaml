@@ -22,6 +22,8 @@ hooks:
     required: true
   - event: gate.failed
     required: true
+  - event: search.index.maintenance.completed
+    required: false
   - event: chat.message.recorded
     required: false
   subscriptions:
@@ -258,6 +260,26 @@ stages:
   actor: primary_agent
   gates:
   - doctor-complete
+- id: search-index-maintenance
+  title: Search Index Maintenance
+  description: Run bounded local search index maintenance for the fresh project context snapshot.
+  required_inputs:
+  - project-files
+  produced_artifacts:
+  - search-index-maintenance-report
+  required_role: orchestrator
+  required_capabilities:
+  - validation
+  allowed_tools:
+  - processforge-search-index
+  entry_gates:
+  - project-files-written
+  exit_gates:
+  - search-index-maintenance-recorded
+  goal: Ensure project-scoped MCP/resource search is ready or report why the project context must be refreshed first.
+  actor: primary_agent
+  gates:
+  - search-index-maintenance-recorded
 artifact_definitions:
 - id: project-init-answers
   title: Project Init Answers
@@ -413,6 +435,16 @@ artifact_definitions:
   - draft
   - ready_for_review
   - approved
+- id: search-index-maintenance-report
+  title: Search Index Maintenance Report
+  owner_role: orchestrator
+  type: yaml
+  required: false
+  template: artifact-template
+  path_hint: .pf/runtime/search/latest-maintenance.yaml
+  lifecycle:
+  - generated
+  - refreshed
 gates:
 - id: inputs-provided
   description: Project root and workplace manifest were provided.
@@ -464,6 +496,11 @@ gates:
   blocking: true
   type: checklist
   required: true
+- id: search-index-maintenance-recorded
+  description: Local search index maintenance was run or explicitly skipped with a reason.
+  blocking: false
+  type: checklist
+  required: false
 required_packages:
 - process-forge-core
 required_templates:
@@ -473,6 +510,7 @@ required_templates:
 allowed_tools:
 - processforge-init
 - processforge-doctor
+- processforge-search-index
 forbidden_actions:
 - scan_outside_project_root
 - overwrite_brownfield_files_without_force

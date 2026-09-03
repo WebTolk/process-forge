@@ -25,41 +25,44 @@ review before staging or applying.
 Do not unpack a ProcessForge release into a project `.pf` directory. Update the
 installed ProcessForge distribution; workplaces and projects stay separate.
 
-Recommended manual flow:
+### First managed update from 1.0.2 to 1.1.0
 
-1. Extract `processforge.zip` to a new versioned directory outside the project,
-   for example `<processforge-root-1.0.2>`.
-2. Verify the new distribution:
+The public 1.0.2 distribution does not contain the manifest-based core updater.
+For this one transition, extract the 1.1.0 archive to a temporary staging
+directory and run the new updater from that directory against the stable
+installed Core path.
 
-   ```powershell
-   python <processforge-root-1.0.2>/bin/pf.py version
-   python <processforge-root-1.0.2>/bin/pf.py release-test --root <processforge-root-1.0.2> --public
-   ```
-
-3. Update `<workplace>/registries/distributions.yaml` so the `processforge`
-   entry points to the new directory and version.
-4. Validate the workplace:
+1. Back up the installed Core and stop its optional long-lived PF Runtime.
+2. Extract `processforge-1.1.0.zip` to `<staged-processforge-1.1.0>`.
+3. Verify the staged distribution:
 
    ```powershell
-   python <processforge-root-1.0.2>/bin/pf.py doctor-workplace --workplace <workplace>
+   python <staged-processforge-1.1.0>/bin/pf.py version
+   python <staged-processforge-1.1.0>/bin/pf.py release-test --root <staged-processforge-1.1.0> --public
    ```
 
-5. For each linked project, assess and refresh the project context:
+4. Plan and explicitly apply the update to the stable installed directory:
 
    ```powershell
-   python <processforge-root-1.0.2>/bin/pf.py project-upgrade-check --project-root <project>
-   python <processforge-root-1.0.2>/bin/pf.py project-context-refresh --project-root <project>
-   python <processforge-root-1.0.2>/bin/pf.py project-context-check --project-root <project>
-   python <processforge-root-1.0.2>/bin/pf.py doctor-project --project-root <project>
+   python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip>
+   python <staged-processforge-1.1.0>/bin/pf.py core-update apply --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --confirm
    ```
 
-Keep the previous distribution directory until validation passes. To roll back,
-repoint `registries/distributions.yaml` to the previous version and rerun the
-workplace and project doctors.
+5. Validate the installed Core and workplace, then restart PF Runtime when it is
+   configured:
 
-Overlaying the new archive on top of the old directory is only a manual
-recovery option after a backup. It can leave files that were removed from the
-new release.
+   ```powershell
+   python <installed-processforge>/bin/pf.py version
+   python <installed-processforge>/bin/pf.py core-update status --core-root <installed-processforge>
+   python <installed-processforge>/bin/pf.py doctor-workplace --root <workplace>
+   ```
+
+6. For each linked project, run `project-upgrade-check`, refresh the context,
+   and run `doctor-project` with the installed 1.1.0 CLI.
+
+The updater writes backups and an operation journal before replacing managed
+files. Use `core-update status` and `core-update repair` if an interrupted update
+is reported. Future releases can use the updater already installed by 1.1.0.
 
 ## Updating Project `.pf`
 
@@ -87,7 +90,6 @@ After the assessment:
    the relevant ProcessForge process or CLI command, then rerun the context and
    project doctors.
 
-For ProcessForge `1.0.2`, no project `.pf` migration is required. Existing
-assignments and capsules remain valid; new shell-agent flows may use
-`workspace_access` to grant workplace knowledge, templates, tools, and MCP
-through a private runtime access file.
+For ProcessForge `1.1.0`, no mandatory project `.pf` migration is required.
+Existing assignments and capsules remain valid. Refresh project context and
+search indexes so Garage, MCP, and Runtime use current resource snapshots.

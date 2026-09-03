@@ -1,0 +1,61 @@
+schema_version: 1
+id: project-init-local-search-mcp-release-launcher-lifecycle-review-20260821
+title: Review self-contained release launcher lifecycle remediation
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T17:58:51Z'
+updated_at: '2026-08-21T18:01:43Z'
+objective: Review the self-contained ProcessForge distribution exception for missing runtime launcher. Confirm ordinary linked projects retain a hard failure, the exception is appropriately bounded, and the release cleanup to doctor lifecycle is evidenced. Do not edit product code.
+platform: ""
+selected_specializations:
+  []
+order: 60
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Independent review accepted the narrowly bounded self-contained launcher exception.
+  artifacts:
+    - .pf/reviews/project-init-local-search-mcp-release-launcher-lifecycle-review-20260821.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/project-init-local-search-mcp-release-launcher-lifecycle-review-20260821.md
+allowed_read_files:
+  - tools/processforge.py
+  - .pf/reviews/project-init-local-search-mcp-release-launcher-lifecycle-audit-20260821.md
+  - .pf/artifacts/project-init-local-search-mcp-20260821
+ownership:
+  owner_id: shell-launcher-reviewer
+  owner_label: worker-shell-launcher-reviewer
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/project-init-local-search-mcp-release-launcher-lifecycle-review-20260821.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/project-init-local-search-mcp-release-launcher-lifecycle-review-20260821.md
+  rule: Do not edit files owned by active parallel tasks.
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/reviews/project-init-local-search-mcp-release-launcher-lifecycle-review-20260821.md
+  format: concise_markdown
+  include:
+    []
+agent_model: gpt-5.5

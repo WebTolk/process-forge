@@ -5,10 +5,12 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import hashlib
 import importlib.util
 import io
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 from types import ModuleType
 
@@ -123,6 +125,25 @@ def validate_stale_detection(validator: ModuleType, fixture: Path) -> None:
         fail("changed shipped root file did not invalidate checksum inventory")
 
 
+def validate_line_ending_canonicalization(validator: ModuleType, release: ModuleType, fixture: Path) -> None:
+    fixture.mkdir(parents=True, exist_ok=True)
+    lf = fixture / "lf.md"
+    crlf = fixture / "crlf.md"
+    lf.write_bytes(b"one\ntwo\n")
+    crlf.write_bytes(b"one\r\ntwo\r\n")
+    if validator.sha256(lf) != validator.sha256(crlf):
+        fail("checksum inventory differs for LF and CRLF text")
+
+    archive_path = fixture / "line-endings.zip"
+    manifest = release.write_release_zip(archive_path, [("guide.md", crlf)], 315532800)
+    with zipfile.ZipFile(archive_path) as archive:
+        archived = archive.read("guide.md")
+    if archived != lf.read_bytes():
+        fail("release-pack did not canonicalize CRLF text to LF")
+    if manifest[0]["sha256"] != hashlib.sha256(archived).hexdigest():
+        fail("release manifest does not hash canonicalized text")
+
+
 def validate_current_release_parity(root: Path, validator: ModuleType) -> None:
     release = load_release_module(root)
     patterns = release.release_ignore_patterns(root)
@@ -152,6 +173,7 @@ def main() -> int:
     args = parser.parse_args()
     root = Path(args.root).expanduser().resolve()
     validator = load_validator(root)
+    release = load_release_module(root)
     validate_current_release_parity(root, validator)
 
     with tempfile.TemporaryDirectory(prefix="processforge-checksum-smoke-") as temp_dir:
@@ -159,6 +181,7 @@ def main() -> int:
         validate_layout(validator, temp_root / "source-layout", root_agents=False)
         validate_layout(validator, temp_root / "archive-layout", root_agents=True)
         validate_stale_detection(validator, temp_root / "stale-detection")
+        validate_line_ending_canonicalization(validator, release, temp_root / "line-endings")
 
     print("PASS: shipped checksum surface covers root aliases, public directories, and stale-file detection.")
     return 0

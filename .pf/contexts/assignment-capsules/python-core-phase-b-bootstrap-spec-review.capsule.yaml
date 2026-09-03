@@ -1,0 +1,412 @@
+schema_version: 1
+capsule:
+  id: python-core-phase-b-bootstrap-spec-review-capsule
+  generated_at: '2026-08-14T12:59:48Z'
+  assignment_id: python-core-phase-b-bootstrap-spec-review
+  assignment_path: .pf/assignments/python-core-phase-b-bootstrap-spec-review.yaml
+  assignment_checksum: 916421bda452383fa75a34d9ee93e3a2c1c579549a2a40057ff5ec6cabdbd389
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: f2550284ffe6462a978065dbae78b7c32b8e2b7a6cec6bfa0707807801c4048c
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260814-114832-7a3ab8
+  sha256: 'sha256:f2550284ffe6462a978065dbae78b7c32b8e2b7a6cec6bfa0707807801c4048c'
+  generated_at: '2026-08-14T11:48:29Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  []
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+execution_route_summary:
+  process: knowledge-package-improvement
+  stages:
+    -
+      id: propose
+      required_capabilities:
+        - research
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - proposal-complete
+    -
+      id: assess
+      required_capabilities:
+        - process_governance
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - compatibility-reviewed
+    -
+      id: integrate
+      required_capabilities:
+        - repository_write
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - package-updated
+  required_capabilities:
+    - process_governance
+    - repository_write
+    - research
+    - review
+  capability_requirements:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+  unsatisfied:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: python-core-phase-b-bootstrap-spec-review
+  path: .pf/assignments/python-core-phase-b-bootstrap-spec-review.yaml
+  status: open
+  objective: Independently review the Phase B bootstrap specification for actual direct-script reachability on Windows and package/import correctness. In particular, determine how tools/pf_runtime/mcp_server.py and codex_hooks.py can load src/processforge_core/bootstrap.py before src is on sys.path, without retaining duplicated file-local path hacks. Verify the proposed stable-module loading does not create a second legacy core module or break host/service package imports. Return a concrete corrected recommendation and verdict. Do not modify code or other artifacts.
+  execution_mode:
+    kind: read_only
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260814-114832-7a3ab8
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/python-core-phase-b-bootstrap-spec-review.yaml
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    []
+  allowed_read_files:
+    - .pf/AGENTS.md
+    - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec.md
+    - tools/processforge.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/pf_runtime/codex_hooks.py
+    - tools/pf_runtime/host.py
+    - tools/pf_runtime/service.py
+    - bin/pf.py
+  forbidden_files:
+    []
+  ownership:
+    owner_id: python-core-phase-b-bootstrap-spec-review
+    owner_label: worker-python-core-phase-b-bootstrap-spec-review
+    role: python-import-architecture-reviewer
+    writer: false
+    owned_files:
+      []
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      []
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: bootstrap-spec-review
+      type: unspecified
+      required: true
+      path: .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec-review.md
+  expected_report:
+    language: ru
+    artifact: .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec-review.md
+    format: concise_markdown
+    include:
+      - bootstrap-spec-review
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.4
+agent_reasoning_effort: high
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/python-core-phase-b-bootstrap-spec-review.ndjson
+  event_correlation_id: assignment-python-core-phase-b-bootstrap-spec-review
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/python-core-phase-b-bootstrap-spec-review.yaml
+allowed_files:
+  []
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: bootstrap-spec-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec-review.md
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-python-core-phase-b-bootstrap-spec-review

@@ -1,0 +1,90 @@
+schema_version: 1
+id: python-core-phase-b-package-bootstrap-retry
+title: Implement reviewed package and import bootstrap foundation after ownership release
+run_id: python-core-refactor-phase-b-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T13:16:00Z'
+updated_at: '2026-08-14T13:19:43Z'
+objective: Implement the reviewed Phase B foundation behavior-preservingly. Add src/processforge_core package shell and stdlib-only bootstrap module. Replace duplicated local runtime/core bootstrap in tools/pf_runtime/mcp_server.py and tools/pf_runtime/codex_hooks.py with the smallest necessary first-load shim that loads bootstrap.py, then use bootstrap_runtime(__file__). Bootstrap must centralize tools importability, load and reuse exactly one legacy tools/processforge.py module object, protect processforge module identity, and load pf_runtime.host/service only as normal package modules. Add a focused executable smoke check. Do not modify tools/processforge.py, bin/pf.py, host.py, service.py, compatibility logic, Process Definition semantics, event/work-state, transport, or worker lifecycle. Run characterization checks and provide a separate report.
+platform: ""
+selected_specializations:
+  []
+order: 5
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-retry-report.md
+stage: task-execution-loop
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - src/processforge_core/__init__.py
+  - src/processforge_core/bootstrap.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/smoke_processforge_core_package_bootstrap.py
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-retry-report.md
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec-review.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/bootstrap-baseline.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-report.md
+  - tools/processforge.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/service.py
+  - bin/pf.py
+ownership:
+  owner_id: python-core-phase-b-package-bootstrap-retry
+  owner_label: worker-python-core-phase-b-package-bootstrap-retry
+  role: python-core-foundation-implementer
+  writer: true
+  owned_files:
+    - src/processforge_core/__init__.py
+    - src/processforge_core/bootstrap.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/pf_runtime/codex_hooks.py
+    - tools/smoke_processforge_core_package_bootstrap.py
+    - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-retry-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/__init__.py
+    - src/processforge_core/bootstrap.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/pf_runtime/codex_hooks.py
+    - tools/smoke_processforge_core_package_bootstrap.py
+    - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-retry-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: package-bootstrap-implementation-retry
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-retry-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-retry-report.md
+  format: concise_markdown
+  include:
+    - package-bootstrap-implementation-retry
+agent_model: gpt-5.4

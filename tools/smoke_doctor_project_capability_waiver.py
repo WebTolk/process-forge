@@ -58,13 +58,13 @@ def main() -> None:
         init = run_pf("project-init", "--project-root", str(project), "--workplace", str(workplace), "--answers", str(answers), "--apply")
         if not (project / ".pf" / "artifacts" / "global-resource-matching-report.md").is_file():
             raise AssertionError(init.stdout + init.stderr)
-        if "registry declarations are missing" not in init.stdout:
+        if "status: blocked" not in init.stdout or "doctor:\n  status: fail" not in init.stdout:
             raise AssertionError(init.stdout + init.stderr)
 
         before = run_pf("doctor-project", "--project-root", str(project))
         if before.returncode == 0:
             raise AssertionError(before.stdout + before.stderr)
-        if "registry declarations are missing" not in before.stdout:
+        if "capability registry declarations are missing" not in before.stdout:
             raise AssertionError(before.stdout + before.stderr)
 
         waiver_path = project / ".pf" / "artifacts" / "capability-waivers.yaml"

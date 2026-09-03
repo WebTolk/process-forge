@@ -1,0 +1,31 @@
+schema_version: 1
+id: stage-projectors-live-proof-20260814
+title: Stage projector live proof
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T05:57:55Z'
+updated_at: '2026-08-14T06:03:52Z'
+objective: Live hook, Runtime, projector, and MCP proof
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: stage-projectors-live-hook-output
+    assignment: .pf/assignments/stage-projectors-live-hook-output.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/stage-projectors-live-proof-20260814/summary.md
+  - .pf/handoffs/runs/stage-projectors-live-proof-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

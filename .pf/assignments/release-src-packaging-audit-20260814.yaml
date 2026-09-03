@@ -1,0 +1,58 @@
+schema_version: 1
+id: release-src-packaging-audit-20260814
+title: Audit release inclusion for ProcessForge Core package
+run_id: manual-dev-package-update-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T16:12:23Z'
+updated_at: '2026-08-14T16:16:31Z'
+objective: 'Read only: diagnose why release-archive-test cannot import processforge_core after extraction and name the smallest correct release-surface fix plus required regression evidence. Do not edit files.'
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Independent audit correctly identified missing src/ from the release surface; the minimal include-src correction was applied to the isolated dev package and checked by extracted-archive execution.
+  artifacts:
+    - .pf/artifacts/manual-dev-package-update-20260814/release-src-packaging-audit.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - tools/processforge.py
+  - .processforge-releaseignore
+  - src
+  - tools/smoke_processforge_core_package_bootstrap.py
+ownership:
+  owner_id: shell-review
+  owner_label: worker-shell-review
+  role: release-package-reviewer
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: release-src-packaging-audit
+    type: unspecified
+    required: true
+    path: .pf/artifacts/manual-dev-package-update-20260814/release-src-packaging-audit.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/manual-dev-package-update-20260814/release-src-packaging-audit.md
+  format: concise_markdown
+  include:
+    - release-src-packaging-audit
+agent_model: gpt-5.4

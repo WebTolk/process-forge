@@ -8,6 +8,7 @@ import copy
 import contextlib
 import fnmatch
 import hashlib
+import importlib.util
 import io
 import json
 import os
@@ -15,6 +16,7 @@ import platform
 import re
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -29,16 +31,43 @@ from typing import Any
 from urllib.parse import urlparse
 from urllib.request import url2pathname, urlopen
 
+def _bootstrap_repo_src() -> Path:
+    repo_root = Path(__file__).resolve().parents[1]
+    src_root = repo_root / "src"
+    src_value = str(src_root)
+    if src_value not in sys.path:
+        first_entry = Path(sys.path[0] or ".").resolve() if sys.path else None
+        tools_root = (repo_root / "tools").resolve()
+        sys.path.insert(1 if first_entry == tools_root else 0, src_value)
+    return repo_root
+
+
+ROOT = _bootstrap_repo_src()
+
+from processforge_core.process_catalog import (
+    PROCESS_CATALOG_CLASSIFICATIONS as CATALOG_PROCESS_CATALOG_CLASSIFICATIONS,
+    ProcessCatalogContext,
+    ProcessDefinitionRef,
+    official_process_definition_refs as catalog_official_process_definition_refs,
+    process_catalog_metadata as catalog_process_catalog_metadata,
+    process_catalog_entries as catalog_process_catalog_entries,
+    process_catalog_role as catalog_process_catalog_role,
+    process_definition_exists as catalog_process_definition_exists,
+    process_root_candidates as catalog_process_root_candidates,
+    process_root_yaml_files as catalog_process_root_yaml_files,
+    require_official_process_active as catalog_require_official_process_active,
+    resolve_process_definition as catalog_resolve_process_definition,
+)
+from processforge_core.process_execution import ProcessExecutionService, project_process_selection, project_specialization_selection
+from processforge_core import project_initialization
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
-
-ROOT = Path(__file__).resolve().parents[1]
 PROJECT_FLOW_ROOT = ".pf"
-PROCESSFORGE_VERSION = "1.0.2"
+PROCESSFORGE_VERSION = "1.1.0"
 PROCESSFORGE_SPEC_VERSION = "1.0"
 PROCESSFORGE_SCHEMA_BUNDLE_VERSION = "1.0"
 RELEASE_NAME = "processforge"
-RELEASE_ARCHIVE_VERSION = "1.0.2"
+RELEASE_ARCHIVE_VERSION = "1.1.0"
 PROCESSFORGE_CORE_PROJECT_TYPES = {"processforge-development", "processforge-core-development"}
 META_PROJECT_TYPES = {"agent-workspace", "brownfield-workspace", "meta-workspace"}
 DEFAULT_SCAN_POLICY = {
@@ -58,6 +87,7 @@ DEFAULT_SCAN_POLICY = {
 }
 
 PROJECT_PRIVATE_GITIGNORE = [
+    ".codex/hooks.json",
     ".pf/process-forge.local.yaml",
     ".pf/runtime/",
     ".pf/private-notes/",
@@ -135,6 +165,7 @@ RESERVED_WORKER_ENV_KEYS = {
     "PF_WORKSPACE_ACCESS_FILE",
     "PF_WORKER_RUN_ID",
     "PF_WORKER_TASK_ID",
+    "PF_WORKER_ATTEMPT",
 }
 
 GLOBAL_AGENT_SECTION_START = "<!-- PROCESSFORGE:START -->"
@@ -154,14 +185,14 @@ Rules:
 1. Do not load all knowledge from this file.
 2. Read the project flow entrypoint: `.pf/AGENTS.md`.
 3. Read `.pf/process-forge.yaml`.
-4. Prefer `.pf/contexts/project-context.snapshot.md` if it exists.
-5. If the snapshot is missing or stale, run/request project context refresh.
-6. Read the workplace manifest and terms registry from `.pf/process-forge.local.yaml` when local config exists.
-7. Use `terms.yaml` to resolve phrases such as "локальная база знаний", "проектная база знаний",
-   "платформенные знания", "глобальные шаблоны", "глобальные инструменты", and "MCP".
-8. Never write secrets or local absolute paths to public files.
-9. Follow assignment boundaries.
-10. Write session telemetry when working inside ProcessForge.
+4. Call `pf.context` with the project root; use the current snapshot only as a
+   file-only fallback when MCP is unavailable.
+5. Use `pf.search`, `pf.resolve`, and `pf.work.start` as the normal high-level
+   project path.
+6. Never write secrets or local absolute paths to public files.
+7. Follow assignment and immutable-capsule boundaries.
+8. Do not install, start, or repair PF Runtime, MCP, host hooks, or Agent Ledger
+   during ordinary project work; report operator-level infrastructure blockers.
 {GLOBAL_AGENT_SECTION_END}
 """
 
@@ -194,6 +225,10 @@ REQUIRED_PROCESSFORGE_EVENT_TYPES = [
     "process.completed",
     "stage.started",
     "stage.completed",
+    "process.stage.started",
+    "process.stage.completed",
+    "process.stage.blocked",
+    "process.stage.transitioned",
     "assignment.created",
     "assignment.started",
     "assignment.completed",
@@ -1050,21 +1085,6 @@ class PackageRootResolution:
     entry: dict[str, Any] | None = None
 
 
-@dataclass
-class ProcessDefinitionRef:
-    process_id: str
-    path: Path
-    process: dict[str, Any]
-    origin: str
-    root: Path
-    catalog_role: str
-    warnings: list[str]
-    pack_id: str = ""
-    active: bool = True
-    available: bool = True
-    production_ready: bool = False
-
-
 def safe_id(value: str, default: str = "project") -> str:
     cleaned = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
     return cleaned or default
@@ -1462,6 +1482,130 @@ def append_gitignore_entries(path: Path, entries: list[str], *, force: bool = Fa
     return WriteResult(path, "written", path)
 
 
+def _codex_integration_module() -> Any:
+    module_name = "pf_runtime_codex_integration"
+    existing = sys.modules.get(module_name)
+    if existing is not None:
+        return existing
+    module_path = ROOT / "tools" / "pf_runtime" / "codex_integration.py"
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    if spec is None or spec.loader is None:
+        raise SystemExit(f"FAIL: could not load Codex integration module: {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _codex_hook_adapter_path() -> Path:
+    return ROOT / "tools" / "pf_runtime" / "codex_hooks.py"
+
+
+def _repo_relative(path: Path, root: Path) -> str:
+    try:
+        return path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return path.name
+
+
+def _codex_registered_events(config: dict[str, Any], adapter: Path, integration: Any) -> list[str]:
+    installed: list[str] = []
+    hooks = config.get("hooks") if isinstance(config.get("hooks"), dict) else {}
+    for event, groups in hooks.items():
+        if not isinstance(groups, list):
+            continue
+        for group in groups:
+            handlers = group.get("hooks") if isinstance(group, dict) else None
+            if isinstance(handlers, list) and any(integration.is_managed(item, adapter) for item in handlers):
+                installed.append(str(event))
+                break
+    return sorted(set(installed))
+
+
+def project_codex_integration_status(project_root: Path) -> dict[str, Any]:
+    project_root = Path(project_root).expanduser().resolve()
+    target = project_root / ".codex" / "hooks.json"
+    adapter = _codex_hook_adapter_path().resolve()
+    payload: dict[str, Any] = {
+        "status": "missing",
+        "target": ".codex/hooks.json",
+        "adapter": _repo_relative(adapter, ROOT),
+        "event_types": [],
+        "registered_events": [],
+        "missing_events": [],
+        "global_hooks": {"exists": (Path.home() / ".codex" / "hooks.json").is_file(), "managed": False},
+        "restart_required": True,
+        "scope": "project-local",
+    }
+    if not adapter.is_file():
+        payload.update({"status": "unavailable", "error": "adapter_missing", "restart_required": False})
+        return payload
+    integration = _codex_integration_module()
+    events = sorted(str(item) for item in integration.EVENTS)
+    payload["event_types"] = events
+    try:
+        current = integration.load_config(target)
+    except SystemExit as exc:
+        payload.update({"status": "invalid", "error": str(exc), "missing_events": events})
+        return payload
+    registered = _codex_registered_events(current, adapter, integration)
+    missing = [event for event in events if event not in registered]
+    payload["registered_events"] = registered
+    payload["missing_events"] = missing
+    if not target.is_file():
+        payload["status"] = "missing"
+    elif missing:
+        payload["status"] = "stale"
+    else:
+        payload["status"] = "installed"
+        payload["restart_required"] = False
+    return payload
+
+
+def project_codex_integration_install(project_root: Path) -> dict[str, Any]:
+    project_root = Path(project_root).expanduser().resolve()
+    target = project_root / ".codex" / "hooks.json"
+    adapter = _codex_hook_adapter_path().resolve()
+    if not adapter.is_file():
+        raise SystemExit("FAIL: Codex hook adapter path does not exist")
+    integration = _codex_integration_module()
+    current = integration.load_config(target)
+    payload, changed = integration.install_payload(current, adapter)
+    result: dict[str, Any] = {
+        "status": "installed",
+        "target": ".codex/hooks.json",
+        "adapter": _repo_relative(adapter, ROOT),
+        "changed_events": sorted(changed),
+        "restart_required": bool(changed),
+    }
+    if changed:
+        backup = integration.write_atomic(target, payload)
+        result["backup"] = rel(backup, project_root) if str(backup) else None
+    result["after"] = project_codex_integration_status(project_root)
+    return result
+
+
+def execute_project_codex_integration_repair(project_root: Path) -> dict[str, Any]:
+    result = project_codex_integration_install(project_root)
+    emit_process_event(
+        project_root,
+        "project.codex_hooks.installed",
+        process_id="project-initialization",
+        process_version="1.0.0",
+        payload={
+            "target": result.get("target"),
+            "changed_events": result.get("changed_events", []),
+            "restart_required": result.get("restart_required"),
+        },
+    )
+    return {
+        "status": "complete",
+        "repair_action": "install_codex_hooks",
+        "codex_integration": result,
+        "next_action": "restart_codex_session" if result.get("restart_required") else "continue",
+    }
+
+
 def upsert_bounded_section(existing: str, section: str) -> str:
     section = ensure_trailing_newline(section).rstrip()
     pattern = re.compile(
@@ -1678,7 +1822,8 @@ def default_runtime_driver_documents() -> dict[str, dict[str, Any]]:
                 "inherit": True,
                 "variables": {
                     "PF_CODEX_REASONING_EFFORT": "{agent_reasoning_effort}",
-                    "PF_CODEX_SANDBOX": "read-only",
+                    "PF_CODEX_SANDBOX": "{agent_sandbox}",
+                    "PF_CODEX_MEMORIES": "false",
                 },
             },
             "io": {
@@ -2257,7 +2402,9 @@ def command_init_workplace(args: argparse.Namespace) -> int:
         "workplace.doctor.passed" if doctor_status == 0 else "workplace.doctor.failed",
         payload={"status": "pass" if doctor_status == 0 else "fail"},
     )
+    maintenance = search_index_maintenance_for_known_projects(root, reason="workplace-init")
     append_workplace_event(root, "workplace.initialization.completed", payload={"files": [rel(result.target, root) for result in results], "doctor_status": doctor_status})
+    print_search_index_maintenance_summary(maintenance)
     for result in results:
         print(f"{result.status.upper()}: {rel(result.target, root)}")
     return doctor_status
@@ -3585,19 +3732,12 @@ def normalize_hint(value: str) -> str:
 
 def selected_project_platforms(detected: dict[str, Any], answers: dict[str, Any], project_type: str, workplace_manifest: Path | None, project_root: Path) -> list[str]:
     project_answers = answers.get("project", {}) if isinstance(answers.get("project"), dict) else {}
-    intake = answers.get("intake", {})
-    hints = [project_type]
-    for key in ["type", "type_hint", "platform", "platform_hint", "kind"]:
-        value = project_answers.get(key)
-        if value:
-            hints.extend(answer_strings(value))
-    if intake:
-        hints.extend(answer_strings(intake))
     selected = set(str(item) for item in detected.get("platforms", []) if item)
     for key in ["platform", "platforms", "platform_contract", "platform_contracts"]:
         value = project_answers.get(key)
         if value:
             selected.update(platform_contract_id(item).removeprefix("platform.") for item in answer_strings(value))
+    selected.update(platform_ids_from_detection_rules(workplace_manifest, project_root))
     selected.update(workplace_platform_ids_for_project_type(workplace_manifest, project_type, project_root))
     return sorted(selected)
 
@@ -3621,10 +3761,47 @@ def hint_matches(candidate: str, hints: list[str]) -> bool:
     return False
 
 
+def platform_contract_parent_type_hints(
+    contract: dict[str, Any],
+    contracts: dict[str, dict[str, Any]],
+    visited: set[str] | None = None,
+) -> list[str]:
+    """Return project type hints declared by a contract's parent graph."""
+    seen = set() if visited is None else set(visited)
+    hints: set[str] = set()
+    parent_refs = [*contract_extends(contract), *contract_required_platforms(contract)]
+    for ref in parent_refs:
+        parent_id = ref["id"]
+        if parent_id in seen:
+            continue
+        seen.add(parent_id)
+        parent_entry = contracts.get(parent_id)
+        if not isinstance(parent_entry, dict):
+            continue
+        parent_contract = parent_entry.get("contract")
+        if not isinstance(parent_contract, dict):
+            continue
+        hints.update(platform_contract_project_type_hints(parent_contract))
+        hints.update(platform_contract_parent_type_hints(parent_contract, contracts, seen))
+    return sorted(hints)
+
+
 def workplace_platform_ids_for_project_type(workplace_manifest: Path | None, project_type: str, project_root: Path | None = None) -> list[str]:
+    """Return contracts selected by project type without promoting descendants.
+
+    A derived contract may declare a specific project type, which is valid
+    selection evidence. A type hint inherited from its parent, however, makes
+    it only a candidate: select it through explicit input, project-classifier
+    evidence, or its own concrete detection rules.
+    """
     matched: list[str] = []
-    for contract_id, entry in platform_contract_manifest_index(workplace_manifest, project_root).items():
-        if hint_matches(project_type, platform_contract_project_type_hints(entry["contract"])):
+    contracts = platform_contract_manifest_index(workplace_manifest, project_root)
+    for contract_id, entry in contracts.items():
+        contract = entry["contract"]
+        parent_hints = platform_contract_parent_type_hints(contract, contracts)
+        if parent_hints and hint_matches(project_type, parent_hints):
+            continue
+        if hint_matches(project_type, platform_contract_project_type_hints(contract)):
             matched.append(contract_id.removeprefix("platform."))
     return sorted(set(item for item in matched if item))
 
@@ -4839,7 +5016,13 @@ def resolve_specialization_context(
             {
                 "id": specialization_id,
                 "source": str(spec.get("__source") or "workplace"),
-                "path": rel(spec.get("__manifest_path"), project_root) if isinstance(spec.get("__manifest_path"), Path) and path_is_relative_to(spec["__manifest_path"], project_root) else str(spec.get("__manifest_path") or ""),
+                # A selected workplace specialization is a private resolution
+                # input.  Its absolute manifest path must never escape into a
+                # public project-context snapshot; Runtime resolves it again
+                # through the authorized workplace registry when needed.
+                "path": rel(spec.get("__manifest_path"), project_root)
+                if isinstance(spec.get("__manifest_path"), Path) and path_is_relative_to(spec["__manifest_path"], project_root)
+                else "<private-specialization-ref>",
                 "matched_bindings": [
                     {
                         "platforms": list_value(binding.get("platforms")),
@@ -5039,6 +5222,8 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
         },
         "workplace": {"reference": "local_file", "local_config": f"{PROJECT_FLOW_ROOT}/process-forge.local.yaml"},
         "coordination": project_coordination,
+        "process": str(answers.get("process") or ""),
+        "specializations": [str(item) for item in as_list(answers.get("specializations")) if str(item)],
         "detected": {
             "status": detected["status"],
             "languages": detected["languages"],
@@ -5115,15 +5300,15 @@ This project uses ProcessForge.
 
 ## Start Order
 
-1. Read `.pf/process-forge.yaml`.
-2. Read `.pf/contexts/project-context.snapshot.md`.
-3. If the snapshot is missing or stale, run/request project context refresh.
-4. Read the current assignment from `.pf/assignments/` if assigned.
-5. Read latest `.pf/artifacts/session-status-report.md` if present.
-6. Read latest relevant logs/reviews/handoffs.
-7. Use only tools/templates listed in snapshot or assignment.
-8. Write session telemetry to `.pf/runtime/telemetry/`.
-9. Let ProcessForge commands emit flow events to `.pf/runtime/events/`.
+1. Read `.pf/START_AGENT_HERE.md` and `.pf/process-forge.yaml`.
+2. Call `pf.context` with this project root. If MCP is unavailable, read the
+   current snapshot as the file-only fallback.
+3. Use `pf.search` when project, platform, process, template, or tool knowledge
+   is needed.
+4. Use `pf.resolve` before opening a ProcessForge-managed resource root.
+5. Call `pf.work.start` with the high-level objective when work becomes
+   substantive, then follow the selected assignment and capsule.
+6. Write durable artifacts, reviews, logs, and handoffs required by the work.
 
 ## Important Rules
 
@@ -5133,8 +5318,10 @@ This project uses ProcessForge.
 - Do not commit `.pf/runtime/`.
 - Use project-local templates before global templates when allowed.
 - Record template usage.
-- Record tool/MCP usage in session telemetry.
 - Do not commit `.pf/runtime/events/` or webhook outbox payloads.
+- During ordinary project work, do not install, start, or repair PF Runtime,
+  MCP, host hooks, or Agent Ledger. Use available PF tools; report an explicit
+  operator-level infrastructure blocker when PF says operator action is needed.
 """
 
     classification_report = f"""# Project Classification Report
@@ -5483,14 +5670,17 @@ Run doctor after apply mode.
         "schema_version": 1,
         "id": "first-assignment",
         "title": "Verify ProcessForge project onboarding",
+        "run_id": f"project-onboarding-{defaults['id']}",
         "process": "project-onboarding",
         "status": "open",
         "objective": "Verify that this project is connected to ProcessForge and ready for future assignment work.",
+        "iterations": [],
+        "result": {"status": "pending", "summary": "", "artifacts": []},
         "tasks": [
             "Read .pf/AGENTS.md",
-            "Read .pf/contexts/project-context.snapshot.yaml",
-            "Run doctor-project",
-            "Review .pf/hooks.yaml",
+            "Inspect the current project through pf.context",
+            "Use pf.search or pf.resolve when project knowledge is needed",
+            "Use pf.work.start for substantive governed work",
             "Confirm the first working process for this project",
             "Create .pf/artifacts/first-assignment-readiness-note.md",
         ],
@@ -5503,40 +5693,40 @@ Run doctor after apply mode.
 
 You are working inside a ProcessForge-enabled project.
 
-## First Steps
+## Preferred Path
 
 1. Read `.pf/AGENTS.md`.
-2. Read `.pf/contexts/project-context.snapshot.yaml`.
-3. Read the active assignment in `.pf/assignments/`.
-4. Run:
+2. Call `pf.context` with this project root. If MCP is unavailable, read
+   `.pf/contexts/project-context.snapshot.yaml` as the file-only fallback.
+3. Use `pf.search` when project-authorized knowledge is needed.
+4. Use `pf.resolve` before opening a ProcessForge-managed resource root.
+5. Perform local read-only analysis.
+6. Call `pf.work.start` with the high-level objective when work becomes
+   substantive.
+7. Read the assignment and immutable capsule selected or created by PF, then
+   complete the required artifacts, review, log, and handoff.
 
-```bash
-python .pf/runtime/bin/pf.py doctor-project --project-root .
-```
+## Infrastructure Boundary
 
-If `pf` is available in PATH, this short form is also acceptable:
+During ordinary project work, do not install, start, restart, or repair PF
+Runtime, MCP, host hooks, or Agent Ledger. Use available PF tools. If a Forge or
+host integration is unavailable and PF returns an operator-level blocker,
+report it concisely to the operator. Garage context, search, resolve, and work
+bootstrap do not require a Runtime daemon, hooks, or a manual Ledger session.
 
-```bash
-pf doctor-project --project-root .
-```
-
-5. If doctor fails, report the failures and propose safe fixes.
-6. Do not expose local absolute paths from `.pf/process-forge.local.yaml`.
-7. Use ProcessForge artifacts, reviews, and handoffs for outputs.
-8. Do not call a distribution-local CLI path from this project root unless this project is the ProcessForge distribution itself.
+Do not expose local absolute paths from `.pf/process-forge.local.yaml`. Do not
+call a distribution-local CLI path from this project root unless this project
+is the ProcessForge distribution itself.
 
 ## Current Assignment
 
 - File: `.pf/assignments/first-assignment.yaml`
 - Goal: Verify ProcessForge project onboarding for `{defaults["id"]}`.
 
-## Useful Commands
+## Operator Diagnostics
 
-```bash
-python .pf/runtime/bin/pf.py project-context-refresh --project-root .
-python .pf/runtime/bin/pf.py assignment-capsule --project-root . --assignment .pf/assignments/first-assignment.yaml
-python .pf/runtime/bin/pf.py hooks-dispatch --project-root . --event-type project.onboarding.completed --dry-run
-```
+Low-level doctor, context refresh, hook, Runtime, Ledger, and index commands are
+operator/advanced diagnostics, not the normal agent start path.
 """
 
     onboarding_report = f"""# Project Onboarding Report
@@ -5747,62 +5937,31 @@ def finalize_project_onboarding_doctor_artifacts(project_root: Path, status: int
 
 ## Doctor Output
 
-```text
-{output.rstrip()}
-```
+The full doctor diagnostic is intentionally not copied into this public
+artifact. Run `pf doctor-project --project-root .` locally for the current
+diagnostic output.
 
 ## Fix Hints
 
-{"- None required." if status == 0 else "- Resolve the FAIL lines above, then rerun `pf doctor-project --project-root .`."}
+{"- None required." if status == 0 else "- Rerun `pf doctor-project --project-root .`, resolve its FAIL lines, then rerun deterministic repair."}
 """
     write_file(report, content, force=True)
 
 
-def command_init_project(args: argparse.Namespace) -> int:
-    project_root = Path(args.project_root).expanduser().resolve()
-    workplace = Path(args.workplace).expanduser().resolve()
-    if workplace.is_dir():
-        workplace = workplace / "workplace.yaml"
-    answers = load_answers(Path(args.answers).expanduser().resolve() if args.answers else None)
-    project_type = getattr(args, "project_type", None)
-    if project_type:
-        project_answers = answers.get("project") if isinstance(answers.get("project"), dict) else {}
-        project_answers["type"] = project_type
-        answers["project"] = project_answers
-    coordination_mode = getattr(args, "coordination_mode", None)
-    if coordination_mode:
-        coordination_answers = answers.get("coordination") if isinstance(answers.get("coordination"), dict) else {}
-        coordination_answers["mode"] = coordination_mode
-        answers["coordination"] = coordination_answers
-    if args.apply and not workplace.is_file() and not args.allow_missing_workplace:
-        raise SystemExit(
-            f"""FAIL: workplace manifest is required before project onboarding.
-
-Why:
-  Project onboarding links a project to an existing ProcessForge workplace.
-
-Fix:
-  python bin/pf.py workplace-init --workplace {workplace.parent} --apply
-  python bin/pf.py project-onboard --project-root {project_root} --workplace {workplace.parent} --type {project_type or '<project-type>'} --apply"""
-        )
-    if not project_root.exists() and args.apply:
-        project_root.mkdir(parents=True)
-    if not project_root.exists() and args.apply:
-        raise SystemExit(f"FAIL: project root not found: {project_root}")
-    files = build_project_files(project_root, workplace, answers)
+def execute_project_initialization(request: dict[str, Any], files: dict[Path, str]) -> dict[str, Any]:
+    """CLI writer adapter used only by project_initialization.initialize_project()."""
+    project_root = request["project_root"]
+    project_root.mkdir(parents=True, exist_ok=True)
+    project_type = request.get("project_type")
+    force = bool(request.get("force", False))
     flow_root = project_root / PROJECT_FLOW_ROOT
-    planned_paths = list(files) + [flow_root / item for item in PROJECT_FLOW_DIRS] + [project_root / ".gitignore"]
-    if not args.apply:
-        print_plan("project init dry run", planned_paths, project_root)
-        mode = project_mode(project_root, answers)
-        print(f"MODE: {mode}")
-        return 0
-
     for dirname in PROJECT_FLOW_DIRS:
         (flow_root / dirname).mkdir(parents=True, exist_ok=True)
-    emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": getattr(args, "command", "init-project")})
-    results = [write_file(path, content, force=args.force) for path, content in files.items()]
-    results.append(append_gitignore_entries(project_root / ".gitignore", PROJECT_PRIVATE_GITIGNORE, force=args.force))
+    emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": request.get("command", "project-onboard")})
+    results = [write_file(path, content, force=force) for path, content in files.items()]
+    results.append(append_gitignore_entries(project_root / ".gitignore", PROJECT_PRIVATE_GITIGNORE, force=force))
+    codex_integration = project_codex_integration_status(project_root)
+    codex_integration.update({"required": False, "severity": "info", "purpose": "optional_host_telemetry"})
     emit_process_event(project_root, "project.flow_root.created", process_id="project-onboarding", process_version="1.0.0", payload={"flow_root": PROJECT_FLOW_ROOT})
     emit_process_event(project_root, "project.platform.detected", process_id="project-onboarding", process_version="1.0.0", payload={"project_type": project_type or "auto"})
     snapshot_status, snapshot_paths, _snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root)
@@ -5811,7 +5970,6 @@ Fix:
     emit_process_event(project_root, "agent.start_prompt.generated", process_id="project-onboarding", process_version="1.0.0", payload={"path": ".pf/START_AGENT_HERE.md"})
     emit_process_event(project_root, "assignment.created", process_id="project-onboarding", process_version="1.0.0", assignment_id_value="first-assignment", assignment_path=".pf/assignments/first-assignment.yaml", payload={"path": ".pf/assignments/first-assignment.yaml"})
     doctor_status, doctor_output = run_command_capture(command_doctor_project, argparse.Namespace(project_root=str(project_root)))
-    print(doctor_output, end="")
     finalize_project_onboarding_doctor_artifacts(project_root, doctor_status, doctor_output)
     emit_process_event(
         project_root,
@@ -5820,12 +5978,130 @@ Fix:
         process_version="1.0.0",
         payload={"status": "pass" if doctor_status == 0 else "fail"},
     )
+    search_index: dict[str, Any] | None = None
+    workplace_manifest = resolve_project_workplace_manifest(project_root, request.get("workplace"))
+    if workplace_manifest:
+        search_index = search_index_maintenance_for_known_projects(
+            workplace_manifest.parent,
+            reason="project-onboarding",
+            project_roots=[project_root],
+        )
     emit_process_event(project_root, "project.onboarding.completed", process_id="project-onboarding", process_version="1.0.0", payload={"files": [rel(result.target, project_root) for result in results], "doctor_status": doctor_status})
-    for result in results:
-        print(f"{result.status.upper()}: {rel(result.target, project_root)}")
-    for path in snapshot_paths.values():
-        print(f"WROTE: {rel(path, project_root)}")
-    return doctor_status
+    return {
+        "status": "complete" if doctor_status == 0 else "blocked",
+        "project": {"id": project_id(project_root)},
+        "created_or_reused": [{"path": rel(result.target, project_root), "status": result.status} for result in results],
+        "codex_integration": codex_integration,
+        "snapshot": {"status": snapshot_status, "id": _snapshot.get("snapshot", {}).get("id") if isinstance(_snapshot.get("snapshot"), dict) else None},
+        "search_index": search_index,
+        "doctor": {"status": "pass" if doctor_status == 0 else "fail"},
+        "next_action": "continue" if doctor_status == 0 else "resolve_doctor_failures",
+    }
+
+
+def execute_project_repair(project_root: Path, *, workplace: str | None, reason: str) -> dict[str, Any]:
+    """Deterministic refresh-only repair adapter; semantic artifacts are untouched."""
+    status, paths, snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root, explicit_workplace=workplace)
+    doctor_status, doctor_output = run_command_capture(command_doctor_project, argparse.Namespace(project_root=str(project_root)))
+    finalize_project_onboarding_doctor_artifacts(project_root, doctor_status, doctor_output)
+    emit_process_event(project_root, "context.snapshot.refreshed", process_id="project-initialization", process_version="1.0.0", payload={"status": status, "reason": reason, "paths": {key: rel(path, project_root) for key, path in paths.items()}})
+    search_index: dict[str, Any] | None = None
+    workplace_manifest = resolve_project_workplace_manifest(project_root, workplace)
+    if workplace_manifest:
+        search_index = search_index_maintenance_for_known_projects(
+            workplace_manifest.parent,
+            reason="project-repair",
+            project_roots=[project_root],
+        )
+    return {
+        "status": "complete" if doctor_status == 0 else "blocked",
+        "repair_action": "refresh_context",
+        "snapshot": {"status": status, "id": snapshot.get("snapshot", {}).get("id") if isinstance(snapshot.get("snapshot"), dict) else None},
+        "search_index": search_index,
+        "doctor": {"status": "pass" if doctor_status == 0 else "fail"},
+        "next_action": "continue" if doctor_status == 0 else "resolve_doctor_failures",
+    }
+
+
+def _project_initialization_error(exc: project_initialization.ProjectInitializationError) -> SystemExit:
+    hints = {
+        "apply_required": "Rerun with --apply (or MCP apply: true).",
+        "workplace_manifest_required": "Initialize the workplace first, or explicitly allow a missing workplace where that is safe.",
+        "project_root_missing": "Create the project root before a dry run, or use --apply for greenfield onboarding.",
+        "project_not_initialized": "Use project-onboard for a new project; repair only accepts an existing .pf project.",
+        "codex_integration_unsupported": "Use a ProcessForge distribution that includes the Codex hook integration service.",
+    }
+    return SystemExit(f"FAIL: {exc.code}. {hints.get(exc.code, 'Check the initialization request.')}")
+
+
+def command_init_project(args: argparse.Namespace) -> int:
+    request = {
+        "project_root": args.project_root,
+        "workplace": args.workplace,
+        "answers_path": args.answers,
+        "project_type": getattr(args, "project_type", None),
+        "coordination_mode": getattr(args, "coordination_mode", None),
+        "platforms": list(getattr(args, "platform", []) or []),
+        "specializations": list(getattr(args, "specialization", []) or []),
+        "process": getattr(args, "process", None),
+        "force": bool(args.force),
+        "allow_missing_workplace": bool(args.allow_missing_workplace),
+        "apply": args.apply is True,
+        "command": getattr(args, "command", "project-onboard"),
+    }
+    try:
+        result = project_initialization.initialize_project(request, sys.modules[__name__])
+    except project_initialization.ProjectInitializationError as exc:
+        raise _project_initialization_error(exc) from exc
+    if result.get("applied") is not True:
+        print(dump_yaml(result), end="")
+        return 0
+    payload = result.get("result") if isinstance(result.get("result"), dict) else {}
+    print(dump_yaml(payload), end="")
+    return 0 if payload.get("doctor", {}).get("status") == "pass" else 1
+
+
+def command_project_init_status(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    payload = project_initialization.status(project_root, sys.modules[__name__], workplace=getattr(args, "workplace", None))
+    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else dump_yaml(payload))
+    return 0
+
+
+def command_project_init_repair(args: argparse.Namespace) -> int:
+    request = {"project_root": args.project_root, "workplace": getattr(args, "workplace", None), "repair_action": args.repair_action, "reason": args.reason, "apply": args.apply is True}
+    try:
+        result = project_initialization.repair_project(request, sys.modules[__name__])
+    except project_initialization.ProjectInitializationError as exc:
+        raise _project_initialization_error(exc) from exc
+    print(dump_yaml(result), end="")
+    payload = result.get("result") if isinstance(result.get("result"), dict) else {}
+    if result.get("applied") is not True:
+        return 0
+    if payload.get("doctor") is None:
+        return 0 if payload.get("status") == "complete" else 1
+    return 0 if payload.get("doctor", {}).get("status") == "pass" else 1
+
+
+def gitignore_effectively_protects(project_root: Path, entry: str) -> bool | None:
+    if not (project_root / ".git").exists():
+        return None
+    probe = entry.rstrip("/")
+    if not probe:
+        return None
+    result = subprocess.run(
+        ["git", "check-ignore", "--quiet", "--", probe],
+        cwd=project_root,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return True
+    if result.returncode == 1:
+        return False
+    return None
 
 
 def default_start_agent_here(project_root: Path) -> str:
@@ -5836,27 +6112,27 @@ def default_start_agent_here(project_root: Path) -> str:
 
 You are working inside a ProcessForge-enabled project.
 
-## First Steps
+## Preferred Path
 
 1. Read `.pf/AGENTS.md`.
-2. Read `.pf/contexts/project-context.snapshot.yaml`.
-3. Read the active assignment in `.pf/assignments/`.
-4. Run:
+2. Call `pf.context` with this project root; use the current snapshot only as a
+   file-only fallback when MCP is unavailable.
+3. Use `pf.search` and `pf.resolve` for project-authorized resources.
+4. Perform local read-only analysis.
+5. Call `pf.work.start` with the high-level objective when work becomes
+   substantive, then follow the selected assignment and capsule.
+6. Use ProcessForge artifacts, reviews, logs, and handoffs for durable outputs.
 
-```bash
-python .pf/runtime/bin/pf.py doctor-project --project-root .
-```
+## Infrastructure Boundary
 
-If `pf` is available in PATH, this short form is also acceptable:
+During ordinary project work, do not install, start, restart, or repair PF
+Runtime, MCP, host hooks, or Agent Ledger. Report an operator-level blocker if
+Forge infrastructure is required but unavailable. Garage work does not require
+Runtime, hooks, or a manually created Ledger session.
 
-```bash
-pf doctor-project --project-root .
-```
-
-5. If doctor fails, report the failures and propose safe fixes.
-6. Do not expose local absolute paths from `.pf/process-forge.local.yaml`.
-7. Use ProcessForge artifacts, reviews, and handoffs for outputs.
-8. Do not call a distribution-local CLI path from this project root unless this project is the ProcessForge distribution itself.
+Do not expose local absolute paths from `.pf/process-forge.local.yaml`. Do not
+call a distribution-local CLI path from this project root unless this project
+is the ProcessForge distribution itself.
 
 ## Current Assignment
 
@@ -5959,7 +6235,7 @@ def command_first_run(args: argparse.Namespace) -> int:
     return command_init_project(project_args)
 
 
-RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "tools", "updates", "checksums"]
+RELEASE_DIRS = ["docs", "schemas", "processes", "packages", "packs", "templates", "prompts", "examples", "policies", "seeds", "bin", "src", "tools", "updates", "checksums"]
 RELEASE_ROOT_FILES = ["README.md", "README.ru.md", "QUICKSTART.md", "QUICKSTART.ru.md", "CHANGELOG.md", "LICENSE", "NOTICE", "VERSION", "requirements.txt", ".gitignore", ".processforge-releaseignore"]
 RELEASE_PF_PUBLIC_FILES = [".pf/AGENTS.md", ".pf/process-forge.yaml", ".pf/hooks.yaml"]
 RELEASE_REQUIRED_PATHS = [
@@ -5981,6 +6257,7 @@ RELEASE_REQUIRED_PATHS = [
     "bin/pf.py",
     "bin/pf",
     "bin/pf.bat",
+    "src/processforge_core",
     "tools",
     "schemas",
     "templates",
@@ -6019,6 +6296,10 @@ RELEASE_FORBIDDEN_PF_PREFIXES = (
 RELEASE_FORBIDDEN_SUFFIXES = {".pyc", ".pyo", ".ps1", ".zip"}
 RELEASE_GENERATED_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 RELEASE_GENERATED_SUFFIXES = {".pyc", ".pyo"}
+RELEASE_ALLOWED_PROJECTION_DIRTY_PATHS = {
+    ".pf/artifacts/projections/command-history.md",
+    ".pf/artifacts/projections/stage-obligations.json",
+}
 
 
 def release_ignore_patterns(root: Path) -> list[str]:
@@ -6098,6 +6379,17 @@ def release_path_is_forbidden(rel_path: str) -> str | None:
     if "runtime/chat/transcripts" in rel_path or "chat/transcripts" in rel_path:
         return "local chat transcript"
     return None
+
+
+def release_git_dirty_path(status_line: str) -> tuple[str, str]:
+    status = status_line[:2]
+    path = status_line[3:].replace("\\", "/") if len(status_line) > 3 else ""
+    return status, path
+
+
+def release_git_dirty_is_allowed_projection(status_line: str) -> bool:
+    status, path = release_git_dirty_path(status_line)
+    return status in {" M", "M ", "MM"} and path in RELEASE_ALLOWED_PROJECTION_DIRTY_PATHS
 
 
 def forbidden_powershell_reference(text: str) -> bool:
@@ -6404,6 +6696,19 @@ def command_release_check(args: argparse.Namespace) -> int:
 
 
 def safe_remove_generated_path(path: Path, root: Path) -> bool:
+    def retry_readonly_removal(func: Any, target: str, _exc_info: Any) -> None:
+        """Retry an approved generated-file removal after clearing Windows ReadOnly.
+
+        Git object files copied into a temporary release stage can retain the
+        Windows ReadOnly attribute.  ``shutil.rmtree`` otherwise aborts the
+        entire release cleanup even though the enclosing path has already
+        passed this function's generated-path containment checks.
+        """
+
+        target_path = Path(target)
+        target_path.chmod(target_path.stat().st_mode | stat.S_IWRITE)
+        func(target)
+
     resolved_root = root.resolve()
     resolved_path = path.resolve()
     try:
@@ -6411,13 +6716,17 @@ def safe_remove_generated_path(path: Path, root: Path) -> bool:
     except ValueError:
         return False
     if path.is_dir() and resolved_path == (resolved_root / ".pf" / "runtime"):
-        shutil.rmtree(path)
+        shutil.rmtree(path, onerror=retry_readonly_removal)
         return True
     if path.is_dir() and path.name in RELEASE_GENERATED_DIRS:
-        shutil.rmtree(path)
+        shutil.rmtree(path, onerror=retry_readonly_removal)
         return True
     if path.is_file() and path.suffix.lower() in RELEASE_GENERATED_SUFFIXES:
-        path.unlink()
+        try:
+            path.unlink()
+        except PermissionError:
+            path.chmod(path.stat().st_mode | stat.S_IWRITE)
+            path.unlink()
         return True
     return False
 
@@ -6551,9 +6860,13 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py"), str(root / "tools" / "specialization_smoke_helpers.py"), str(root / "tools" / "codex_exec_worker.py")], 30),
         ReleaseCommand("schema validation", [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)], 60),
         ReleaseCommand("public cleanliness", [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)], 60),
+        ReleaseCommand("smoke_public_cleanliness", [sys.executable, str(root / "tools" / "smoke_public_cleanliness.py")], 60),
+        ReleaseCommand("smoke_processforge_core_package_bootstrap", [sys.executable, str(root / "tools" / "smoke_processforge_core_package_bootstrap.py")], 120),
+        ReleaseCommand("smoke_central_event_ingress", [sys.executable, str(root / "tools" / "smoke_central_event_ingress.py")], 180),
         ReleaseCommand("smoke_core_has_no_domain_knowledge_seeds", [sys.executable, str(root / "tools" / "smoke_core_has_no_domain_knowledge_seeds.py")], 120),
         ReleaseCommand("smoke_empty_workplace_has_no_domain_resources", [sys.executable, str(root / "tools" / "smoke_empty_workplace_has_no_domain_resources.py")], 120),
         ReleaseCommand("smoke_project_classification_data_driven", [sys.executable, str(root / "tools" / "smoke_project_classification_data_driven.py")], 120),
+        ReleaseCommand("smoke_project_onboard_platform_selection", [sys.executable, str(root / "tools" / "smoke_project_onboard_platform_selection.py")], 120),
         ReleaseCommand("smoke_no_hardcoded_file_project_detection", [sys.executable, str(root / "tools" / "smoke_no_hardcoded_file_project_detection.py")], 120),
         ReleaseCommand("smoke_optional_domain_pack_not_default", [sys.executable, str(root / "tools" / "smoke_optional_domain_pack_not_default.py")], 120),
         ReleaseCommand("smoke_domain_pack_can_classify_after_install", [sys.executable, str(root / "tools" / "smoke_domain_pack_can_classify_after_install.py")], 120),
@@ -6574,14 +6887,22 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_first_run", [sys.executable, str(root / "tools" / "smoke_first_run.py")], 120),
         ReleaseCommand("smoke_runtime_driver_registry", [sys.executable, str(root / "tools" / "smoke_runtime_driver_registry.py")], 120),
         ReleaseCommand("smoke_worker_run_shell", [sys.executable, str(root / "tools" / "smoke_worker_run_shell.py")], 180),
+        ReleaseCommand("smoke_worker_environment_secret_redaction", [sys.executable, str(root / "tools" / "smoke_worker_environment_secret_redaction.py")], 120),
         ReleaseCommand("smoke_worker_workspace_access", [sys.executable, str(root / "tools" / "smoke_worker_workspace_access.py")], 180),
         ReleaseCommand("smoke_codex_exec_worker", [sys.executable, str(root / "tools" / "smoke_codex_exec_worker.py")], 180),
+        ReleaseCommand("smoke_codex_worker_governance", [sys.executable, str(root / "tools" / "smoke_codex_worker_governance.py")], 120),
+        ReleaseCommand("smoke_mcp_codex_contract", [sys.executable, str(root / "tools" / "smoke_mcp_codex_contract.py")], 120),
+        ReleaseCommand("smoke_runtime_mcp_autostart", [sys.executable, str(root / "tools" / "smoke_runtime_mcp_autostart.py")], 120),
+        ReleaseCommand("smoke_central_event_replay", [sys.executable, str(root / "tools" / "smoke_central_event_replay.py")], 180),
+        ReleaseCommand("smoke_conversation_completeness", [sys.executable, str(root / "tools" / "smoke_conversation_completeness.py")], 180),
         ReleaseCommand("smoke_process_supervisor_tick", [sys.executable, str(root / "tools" / "smoke_process_supervisor_tick.py")], 180),
         ReleaseCommand("smoke_director_inspector_boundary", [sys.executable, str(root / "tools" / "smoke_director_inspector_boundary.py")], 180),
         ReleaseCommand("smoke_process_run_task_batch", [sys.executable, str(root / "tools" / "smoke_process_run_task_batch.py")], 180),
         ReleaseCommand("smoke_agent_ledger", [sys.executable, str(root / "tools" / "smoke_agent_ledger.py")], 120),
         ReleaseCommand("smoke_single_agent_session_flow", [sys.executable, str(root / "tools" / "smoke_single_agent_session_flow.py")], 180),
         ReleaseCommand("smoke_multi_project_agent_sessions", [sys.executable, str(root / "tools" / "smoke_multi_project_agent_sessions.py")], 180),
+        ReleaseCommand("smoke_runtime_host_poc", [sys.executable, str(root / "tools" / "smoke_runtime_host_poc.py")], 180),
+        ReleaseCommand("smoke_long_lived_runtime", [sys.executable, str(root / "tools" / "smoke_long_lived_runtime.py")], 240),
         ReleaseCommand("smoke_multi_agent_as_composed_sessions", [sys.executable, str(root / "tools" / "smoke_multi_agent_as_composed_sessions.py")], 180),
         ReleaseCommand("smoke_project_coordination_modes", [sys.executable, str(root / "tools" / "smoke_project_coordination_modes.py")], 180),
         ReleaseCommand("smoke_mixed_workplace_projects", [sys.executable, str(root / "tools" / "smoke_mixed_workplace_projects.py")], 180),
@@ -6608,6 +6929,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_agent_workspace_platform_availability_snapshot", [sys.executable, str(root / "tools" / "smoke_agent_workspace_platform_availability_snapshot.py")], 120),
         ReleaseCommand("smoke_platform_create_include_levels", [sys.executable, str(root / "tools" / "smoke_platform_create_include_levels.py")], 120),
         ReleaseCommand("smoke_release_test_trace_timeout_reporting", [sys.executable, str(root / "tools" / "smoke_release_test_trace_timeout_reporting.py")], 120),
+        ReleaseCommand("smoke_release_test_extracted_archive", [sys.executable, str(root / "tools" / "smoke_release_test_extracted_archive.py")], 120),
         ReleaseCommand("smoke_windows_utf8_docs", [sys.executable, str(root / "tools" / "smoke_windows_utf8_docs.py")], 120),
         ReleaseCommand("smoke_pf_project_process_refs_follow_layout", [sys.executable, str(root / "tools" / "smoke_pf_project_process_refs_follow_layout.py")], 120),
         ReleaseCommand("smoke_no_removed_process_refs", [sys.executable, str(root / "tools" / "smoke_no_removed_process_refs.py")], 120),
@@ -6615,11 +6937,54 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_update_candidate_discovery", [sys.executable, str(root / "tools" / "smoke_update_candidate_discovery.py")], 120),
         ReleaseCommand("smoke_update_notifications", [sys.executable, str(root / "tools" / "smoke_update_notifications.py")], 120),
         ReleaseCommand("smoke_update_stage_verify_apply_file_provider", [sys.executable, str(root / "tools" / "smoke_update_stage_verify_apply_file_provider.py")], 120),
+        ReleaseCommand("smoke_core_update_manifest", [sys.executable, str(root / "tools" / "smoke_core_update_manifest.py")], 120),
         ReleaseCommand("smoke_project_pf_upgrade_assessment_boundary", [sys.executable, str(root / "tools" / "smoke_project_pf_upgrade_assessment_boundary.py")], 120),
         ReleaseCommand("smoke_tool_update_policy", [sys.executable, str(root / "tools" / "smoke_tool_update_policy.py")], 120),
         ReleaseCommand("smoke_resource_versioning_modes", [sys.executable, str(root / "tools" / "smoke_resource_versioning_modes.py")], 120),
         ReleaseCommand("smoke_project_context_snapshot_lock_model", [sys.executable, str(root / "tools" / "smoke_project_context_snapshot_lock_model.py")], 120),
         ReleaseCommand("smoke_project_context_freshness_policies", [sys.executable, str(root / "tools" / "smoke_project_context_freshness_policies.py")], 120),
+        ReleaseCommand("smoke_context_freshness_vs_execution_readiness", [sys.executable, str(root / "tools" / "smoke_context_freshness_vs_execution_readiness.py")], 180),
+        ReleaseCommand("smoke_process_catalog_not_implicit_execution_route", [sys.executable, str(root / "tools" / "smoke_process_catalog_not_implicit_execution_route.py")], 180),
+        ReleaseCommand("smoke_project_init_local_search_mcp", [sys.executable, str(root / "tools" / "smoke_project_init_local_search_mcp.py")], 180),
+        ReleaseCommand("smoke_resource_indexing_policy_acceptance", [sys.executable, str(root / "tools" / "smoke_resource_indexing_policy_acceptance.py")], 180),
+        ReleaseCommand("smoke_project_init_acceptance", [sys.executable, str(root / "tools" / "smoke_project_init_acceptance.py")], 180),
+        ReleaseCommand("smoke_project_init_codex_integration", [sys.executable, str(root / "tools" / "smoke_project_init_codex_integration.py")], 180),
+        ReleaseCommand("smoke_no_production_example_update_urls", [sys.executable, str(root / "tools" / "smoke_no_production_example_update_urls.py")], 120),
+        ReleaseCommand("smoke_docs_garage_no_runtime_required", [sys.executable, str(root / "tools" / "smoke_docs_garage_no_runtime_required.py")], 120),
+        ReleaseCommand("smoke_docs_mcp_host_owned_stdio", [sys.executable, str(root / "tools" / "smoke_docs_mcp_host_owned_stdio.py")], 120),
+        ReleaseCommand("smoke_docs_agent_no_manual_infra", [sys.executable, str(root / "tools" / "smoke_docs_agent_no_manual_infra.py")], 120),
+        ReleaseCommand("smoke_docs_codex_hooks_optional", [sys.executable, str(root / "tools" / "smoke_docs_codex_hooks_optional.py")], 120),
+        ReleaseCommand("smoke_doctor_gitignore_effective_protection", [sys.executable, str(root / "tools" / "smoke_doctor_gitignore_effective_protection.py")], 180),
+        ReleaseCommand("smoke_mcp_missing_session_diagnostics", [sys.executable, str(root / "tools" / "smoke_mcp_missing_session_diagnostics.py")], 120),
+        ReleaseCommand("smoke_session_projection_expiry", [sys.executable, str(root / "tools" / "smoke_session_projection_expiry.py")], 180),
+        ReleaseCommand("smoke_fulltext_article_indexing", [sys.executable, str(root / "tools" / "smoke_fulltext_article_indexing.py")], 120),
+        ReleaseCommand("smoke_garage_no_hooks_sessionless", [sys.executable, str(root / "tools" / "smoke_garage_no_hooks_sessionless.py")], 180),
+        ReleaseCommand("smoke_garage_session_enhanced", [sys.executable, str(root / "tools" / "smoke_garage_session_enhanced.py")], 180),
+        ReleaseCommand("smoke_garage_cross_project_security", [sys.executable, str(root / "tools" / "smoke_garage_cross_project_security.py")], 180),
+        ReleaseCommand("smoke_garage_real_joomla_search", [sys.executable, str(root / "tools" / "smoke_garage_real_joomla_search.py")], 180),
+        ReleaseCommand("smoke_garage_mode_not_promoted_by_session", [sys.executable, str(root / "tools" / "smoke_garage_mode_not_promoted_by_session.py")], 180),
+        ReleaseCommand("smoke_garage_work_start_sessionless", [sys.executable, str(root / "tools" / "smoke_garage_work_start_sessionless.py")], 180),
+        ReleaseCommand("smoke_garage_work_start_session_bound", [sys.executable, str(root / "tools" / "smoke_garage_work_start_session_bound.py")], 180),
+        ReleaseCommand("smoke_multi_process_work_capsule", [sys.executable, str(root / "tools" / "smoke_multi_process_work_capsule.py")], 180),
+        ReleaseCommand("smoke_governed_work_stage_resolution", [sys.executable, str(root / "tools" / "smoke_governed_work_stage_resolution.py")], 180),
+        ReleaseCommand("smoke_governed_work_duplicate_prevention", [sys.executable, str(root / "tools" / "smoke_governed_work_duplicate_prevention.py")], 180),
+        ReleaseCommand("smoke_current_work_ignores_bootstrap_placeholder", [sys.executable, str(root / "tools" / "smoke_current_work_ignores_bootstrap_placeholder.py")], 180),
+        ReleaseCommand("smoke_process_execution_initial_stage", [sys.executable, str(root / "tools" / "smoke_process_execution_initial_stage.py")], 180),
+        ReleaseCommand("smoke_work_start_no_stage_guessing", [sys.executable, str(root / "tools" / "smoke_work_start_no_stage_guessing.py")], 180),
+        ReleaseCommand("smoke_work_state_current_stage", [sys.executable, str(root / "tools" / "smoke_work_state_current_stage.py")], 180),
+        ReleaseCommand("smoke_work_transition_linear", [sys.executable, str(root / "tools" / "smoke_work_transition_linear.py")], 180),
+        ReleaseCommand("smoke_work_transition_blocks_missing_gate", [sys.executable, str(root / "tools" / "smoke_work_transition_blocks_missing_gate.py")], 180),
+        ReleaseCommand("smoke_work_transition_recovers_after_invalid_evidence", [sys.executable, str(root / "tools" / "smoke_work_transition_recovers_after_invalid_evidence.py")], 180),
+        ReleaseCommand("smoke_work_transition_records_evidence", [sys.executable, str(root / "tools" / "smoke_work_transition_records_evidence.py")], 180),
+        ReleaseCommand("smoke_work_transition_updates_assignment_stage", [sys.executable, str(root / "tools" / "smoke_work_transition_updates_assignment_stage.py")], 180),
+        ReleaseCommand("smoke_work_transition_emits_stage_events", [sys.executable, str(root / "tools" / "smoke_work_transition_emits_stage_events.py")], 180),
+        ReleaseCommand("smoke_work_transition_final_stage_completes_run", [sys.executable, str(root / "tools" / "smoke_work_transition_final_stage_completes_run.py")], 180),
+        ReleaseCommand("smoke_work_transition_snapshot_pinned_process", [sys.executable, str(root / "tools" / "smoke_work_transition_snapshot_pinned_process.py")], 180),
+        ReleaseCommand("smoke_work_transition_branching_if_supported", [sys.executable, str(root / "tools" / "smoke_work_transition_branching_if_supported.py")], 180),
+        ReleaseCommand("smoke_process_execution_integrity", [sys.executable, str(root / "tools" / "smoke_process_execution_integrity.py")], 240),
+        ReleaseCommand("smoke_derived_report_stale_marking", [sys.executable, str(root / "tools" / "smoke_derived_report_stale_marking.py")], 180),
+        ReleaseCommand("smoke_runtime_status_version_truth", [sys.executable, str(root / "tools" / "smoke_runtime_status_version_truth.py")], 180),
+        ReleaseCommand("smoke_user_like_garage_path", [sys.executable, str(root / "tools" / "smoke_user_like_garage_path.py")], 180),
         ReleaseCommand("smoke_parameter_cascade_resolution", [sys.executable, str(root / "tools" / "smoke_parameter_cascade_resolution.py")], 120),
         ReleaseCommand("smoke_parameter_freshness", [sys.executable, str(root / "tools" / "smoke_parameter_freshness.py")], 120),
         ReleaseCommand("smoke_parameter_assignment_capsule", [sys.executable, str(root / "tools" / "smoke_parameter_assignment_capsule.py")], 120),
@@ -6695,6 +7060,8 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
     ]
     if clean_first:
         commands.insert(1, ReleaseCommand("clean release artifacts", [sys.executable, str(root / "tools" / "processforge.py"), "clean", "--root", str(root), "--release"], 60))
+        if (root / ".git").exists():
+            commands.append(ReleaseCommand("release package", [sys.executable, str(root / "tools" / "processforge.py"), "release-pack", "--root", str(root), "--output", str(root / "dist" / f"{RELEASE_NAME}-{RELEASE_ARCHIVE_VERSION}.zip")], 120))
     if public:
         commands = [item for item in commands if item.public_gate]
     return commands
@@ -6927,16 +7294,17 @@ def git_release_output(root: Path, *args: str) -> str:
     if result.returncode != 0:
         detail = (result.stderr or result.stdout or "").strip()
         raise SystemExit(f"FAIL: git {' '.join(args)} failed: {detail}")
-    return result.stdout.strip()
+    return result.stdout.rstrip("\r\n")
 
 
 def release_git_provenance(root: Path) -> dict[str, Any]:
     if not (root / ".git").exists():
         raise SystemExit("FAIL: release-pack requires a Git source checkout for release manifest provenance")
     dirty = git_release_output(root, "status", "--porcelain=v1", "--untracked-files=all").splitlines()
-    if dirty:
-        sample = ", ".join(line.strip() for line in dirty[:20])
-        suffix = f"; +{len(dirty) - 20} more" if len(dirty) > 20 else ""
+    blocking_dirty = [line for line in dirty if not release_git_dirty_is_allowed_projection(line)]
+    if blocking_dirty:
+        sample = ", ".join(line.strip() for line in blocking_dirty[:20])
+        suffix = f"; +{len(blocking_dirty) - 20} more" if len(blocking_dirty) > 20 else ""
         raise SystemExit(f"FAIL: release-pack requires clean git source before publishing: {sample}{suffix}")
     commit = git_release_output(root, "rev-parse", "HEAD")
     tree = git_release_output(root, "rev-parse", "HEAD^{tree}")
@@ -6995,12 +7363,34 @@ def release_zip_datetime(source_epoch: int) -> tuple[int, int, int, int, int, in
     return (moment.year, moment.month, moment.day, moment.hour, moment.minute, moment.second)
 
 
-def write_release_zip(output: Path, files: list[tuple[str, Path]], source_epoch: int) -> list[dict[str, Any]]:
+def release_file_content(source_path: Path) -> bytes:
+    """Canonicalize text line endings so archives do not depend on checkout settings."""
+    content = source_path.read_bytes()
+    return content if b"\0" in content else content.replace(b"\r\n", b"\n")
+
+
+def release_core_manifest(files: list[tuple[str, Path]], *, version: str, source: dict[str, Any] | None, generated_at: str | None = None) -> dict[str, Any]:
+    from processforge_core.core_update import CORE_MANIFEST_NAME, make_core_manifest
+
+    entries = []
+    for archive_path, source_path in files:
+        if archive_path == CORE_MANIFEST_NAME:
+            continue
+        content = release_file_content(source_path)
+        entries.append({"relative_path": archive_path, "size": len(content), "sha256": hashlib.sha256(content).hexdigest()})
+    return make_core_manifest(version=version, source=source, files=entries, generated_at=generated_at)
+
+
+def write_release_zip(output: Path, files: list[tuple[str, Path]], source_epoch: int, extra_entries: list[tuple[str, bytes]] | None = None) -> list[dict[str, Any]]:
     manifest_files: list[dict[str, Any]] = []
     zip_datetime = release_zip_datetime(source_epoch)
+    entries: list[tuple[str, Path | None, bytes | None]] = [(archive_path, source_path, None) for archive_path, source_path in files]
+    entries.extend((archive_path, None, content) for archive_path, content in extra_entries or [])
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-        for archive_path, source_path in files:
-            content = source_path.read_bytes()
+        for archive_path, source_path, generated_content in sorted(entries, key=lambda item: item[0]):
+            content = release_file_content(source_path) if source_path is not None else generated_content
+            if content is None:
+                raise SystemExit(f"FAIL: release-pack entry has no content: {archive_path}")
             info = zipfile.ZipInfo(archive_path, date_time=zip_datetime)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o100644 << 16
@@ -7057,20 +7447,36 @@ def command_release_pack(args: argparse.Namespace) -> int:
         for item in failures:
             print(f"FAIL: {item.message}")
         return 1
+    for label, script in [
+        ("public cleanliness", root / "tools" / "validate-public-cleanliness.py"),
+        ("checksum inventory", root / "tools" / "validate-process-forge-checksums.py"),
+    ]:
+        command = [sys.executable, str(script), "--root", str(root)]
+        if label == "checksum inventory":
+            command.append("--check")
+        result = subprocess.run(command, cwd=root, text=True, encoding="utf-8", errors="replace", capture_output=True, check=False)
+        if result.returncode != 0:
+            print(f"FAIL: release-pack preflight {label}")
+            print((result.stdout or result.stderr).strip())
+            return 1
     patterns = release_ignore_patterns(root)
     files = [(archive_path, path) for archive_path, path in release_source_files(root) if not release_ignore_match(archive_path, patterns) and not release_path_is_forbidden(archive_path)]
     if args.dry_run:
         print(f"DRY-RUN: would write {output}")
         print(f"DRY-RUN: would write {manifest_path}")
-        print(f"FILES: {len(files)}")
+        print(f"FILES: {len(files) + 1}")
+        print("INCLUDE: processforge-core.manifest.json [generated]")
         for archive_path, _path in files[:50]:
             print(f"INCLUDE: {archive_path}")
         if len(files) > 50:
             print(f"... {len(files) - 50} more files")
         return 0
     provenance = release_git_provenance(root)
+    from processforge_core.core_update import CORE_MANIFEST_NAME, manifest_bytes
+
+    core_manifest = release_core_manifest(files, version=RELEASE_ARCHIVE_VERSION, source=provenance["source"], generated_at=provenance["generated_at"])
     output.parent.mkdir(parents=True, exist_ok=True)
-    manifest_files = write_release_zip(output, files, int(provenance["source_date_epoch"]))
+    manifest_files = write_release_zip(output, files, int(provenance["source_date_epoch"]), extra_entries=[(CORE_MANIFEST_NAME, manifest_bytes(core_manifest))])
     manifest = release_manifest_payload(root, output, manifest_files, provenance)
     manifest_path.write_text(ensure_trailing_newline(json.dumps(manifest, indent=2, sort_keys=True)), encoding="utf-8")
     consumer_checks = inspect_release_archive(output, manifest_path)
@@ -7081,7 +7487,7 @@ def command_release_pack(args: argparse.Namespace) -> int:
         return 1
     print(f"WROTE: {rel(output, root)}")
     print(f"WROTE: {rel(manifest_path, root)}")
-    print(f"FILES: {len(files)}")
+    print(f"FILES: {len(manifest_files)}")
     return 0
 
 
@@ -7248,21 +7654,43 @@ def inspect_release_archive(archive_path: Path, manifest_path: Path | None = Non
     return checks
 
 
-def expected_release_manifest_from_root(root: Path) -> dict[str, str]:
+def expected_release_files_from_root(root: Path) -> list[tuple[str, Path]]:
     patterns = release_ignore_patterns(root)
-    expected: dict[str, str] = {}
+    expected: list[tuple[str, Path]] = []
     for archive_path, source_path in release_source_files(root):
         if release_ignore_match(archive_path, patterns):
             continue
         if release_path_is_forbidden(archive_path):
             continue
-        expected[archive_path] = sha256_file(source_path)
+        expected.append((archive_path, source_path))
+    return expected
+
+
+def expected_release_manifest_from_root(root: Path, manifest_data: dict[str, Any] | None = None) -> dict[str, str]:
+    expected_files = expected_release_files_from_root(root)
+    expected = {archive_path: hashlib.sha256(release_file_content(source_path)).hexdigest() for archive_path, source_path in expected_files}
+    if manifest_data:
+        from processforge_core.core_update import CORE_MANIFEST_NAME, manifest_bytes
+
+        build = manifest_data.get("build") if isinstance(manifest_data.get("build"), dict) else {}
+        source = manifest_data.get("source") if isinstance(manifest_data.get("source"), dict) else None
+        core_manifest = release_core_manifest(
+            expected_files,
+            version=str(manifest_data.get("version") or RELEASE_ARCHIVE_VERSION),
+            source=source,
+            generated_at=str(build.get("generated_at") or ""),
+        )
+        expected[CORE_MANIFEST_NAME] = hashlib.sha256(manifest_bytes(core_manifest)).hexdigest()
     return expected
 
 
 def archive_manifest_freshness_checks(root: Path, archive_path: Path, manifest_path: Path) -> list[Check]:
     checks: list[Check] = []
-    expected = expected_release_manifest_from_root(root)
+    manifest_data: dict[str, Any] | None = None
+    if manifest_path.is_file():
+        loaded_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest_data = loaded_manifest if isinstance(loaded_manifest, dict) else None
+    expected = expected_release_manifest_from_root(root, manifest_data)
     if not archive_path.is_file():
         return [check("FAIL", f"archive exists for root freshness check: {archive_path}")]
     with zipfile.ZipFile(archive_path) as archive:
@@ -7283,9 +7711,8 @@ def archive_manifest_freshness_checks(root: Path, archive_path: Path, manifest_p
             checks.append(check("FAIL", f"stale archive entry hash: {name}"))
     else:
         checks.append(check("PASS", "archive file hashes match current root"))
-    if manifest_path.is_file():
-        data = json.loads(manifest_path.read_text(encoding="utf-8"))
-        manifest_files = data.get("files") if isinstance(data, dict) else None
+    if manifest_data:
+        manifest_files = manifest_data.get("files")
         manifest_hashes = {str(item.get("path")): str(item.get("sha256")) for item in manifest_files if isinstance(item, dict) and item.get("path")} if isinstance(manifest_files, list) else {}
         checks.append(check("PASS" if manifest_hashes == expected else "FAIL", "manifest hashes match current root release file set"))
     return checks
@@ -7317,9 +7744,24 @@ def command_release_archive_test(args: argparse.Namespace) -> int:
         if not cli.is_file():
             print(f"FAIL: extracted archive has no CLI: {cli}")
             return 1
+        for label, target in [("bin/pf.py --help", extract_root / "bin" / "pf.py"), ("tools/processforge.py --help", cli)]:
+            result = run_release_command(label, [sys.executable, str(target), "--help"], extract_root, timeout=30)
+            print_release_command_output(result)
+            if result.status != "PASS":
+                print("RESULT: FAIL")
+                return 1
         command = [sys.executable, str(cli), "release-test", "--root", str(extract_root)]
         if extracted_test == "quick":
-            command.extend(["--only", "py_compile", "--only", "schema validation", "--only", "public cleanliness", "--only", "checksum"])
+            command.extend([
+                "--only", "py_compile",
+                "--only", "schema validation",
+                "--only", "public cleanliness",
+                "--only", "checksum",
+                "--only", "smoke_processforge_core_package_bootstrap",
+                "--only", "smoke_central_event_ingress",
+                "--only", "smoke_conversation_completeness",
+                "--only", "smoke_central_event_replay",
+            ])
         else:
             command.append("--public")
         result = run_release_command(
@@ -7627,27 +8069,37 @@ def values_from_registry_entry(entry: Any) -> list[str]:
     return values
 
 
-def load_registry_capability_providers(project_root: Path) -> dict[str, str]:
+def load_registry_capability_providers(project_root: Path, workplace_manifest: Path | None = None) -> dict[str, str]:
     providers: dict[str, str] = {}
-    registry_root = locate_flow_root(project_root)
-    for rel_path, collection_key in [
-        ("registries/tools.yaml", "tools"),
-        ("registries/mcp.yaml", "mcp_servers"),
-    ]:
-        path = registry_root / rel_path
-        if not path.is_file():
-            continue
-        try:
-            data = load_answers(path)
-        except SystemExit:
-            continue
-        entries = data.get(collection_key) if isinstance(data, dict) else None
-        if not isinstance(entries, list):
-            continue
-        for entry in entries:
-            provider_id = str(entry.get("id", rel_path)) if isinstance(entry, dict) else rel_path
-            for capability in values_from_registry_entry(entry):
-                providers[capability] = provider_id
+
+    def collect(registry_root: Path, scope: str) -> None:
+        for rel_path, collection_key in [
+            ("registries/tools.yaml", "tools"),
+            ("registries/mcp.yaml", "mcp_servers"),
+        ]:
+            path = registry_root / rel_path
+            if not path.is_file():
+                continue
+            try:
+                data = load_answers(path)
+            except SystemExit:
+                continue
+            entries = data.get(collection_key) if isinstance(data, dict) else None
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                if str(entry.get("status") or "available") in {"disabled", "missing"}:
+                    continue
+                provider_id = str(entry.get("id", rel_path))
+                provider_ref = provider_id if scope == "project" else f"{scope}:{provider_id}"
+                for capability in values_from_registry_entry(entry):
+                    providers[capability] = provider_ref
+
+    if workplace_manifest and workplace_manifest.is_file():
+        collect(workplace_manifest.parent, "workplace")
+    collect(locate_flow_root(project_root), "project")
     return providers
 
 
@@ -8194,7 +8646,7 @@ def resource_record_from_package(package_id: str, resource: dict[str, Any], requ
                 record["path_ref"] = {"registry": "package_roots", "id": package_root_id, "relative_path": f"{package_id}/{raw_path}"}
             else:
                 record["path_ref"] = {"package": package_id, "relative_path": raw_path}
-    for key in ["version", "description", "versioning", "retention", "snapshot_behavior", "generation", "fingerprint", "instance_id", "current_marker_path_ref"]:
+    for key in ["version", "description", "versioning", "retention", "snapshot_behavior", "generation", "fingerprint", "instance_id", "current_marker_path_ref", "indexing", "selection"]:
         if key in resource:
             record[key] = resource[key]
     return record
@@ -8313,7 +8765,16 @@ def parameter_source_record(source_id: str, layer: str, parameters: dict[str, An
         "private": private,
     }
     if path:
-        record["path"] = display_path or (rel(path, project_root) if project_root and path_is_relative_to(path, project_root) else str(path))
+        # Private workplace sources may contribute metadata to a public
+        # snapshot, but never their absolute filesystem location. Callers can
+        # supply a more specific stable marker through `display_path`.
+        record["path"] = display_path or (
+            rel(path, project_root)
+            if project_root and path_is_relative_to(path, project_root)
+            else "<private-source-ref>"
+            if private
+            else str(path)
+        )
         record["checksum"] = "sha256:" + sha256_file(path) if path.is_file() else "missing"
     return record
 
@@ -8629,6 +9090,9 @@ def resolved_resource_instance(resource: dict[str, Any]) -> dict[str, Any]:
         result["current_marker_path_ref"] = resource.get("current_marker_path_ref") or resource.get("path_ref")
     if reproducibility != "exact":
         result["reproducibility"]["reason"] = f"resource retention policy is {retention['policy']}"
+    for key in ("resource_id", "title", "description", "load_policy", "index_policy", "indexing", "selection"):
+        if key in resource:
+            result[key] = copy.deepcopy(resource[key])
     return result
 
 
@@ -8637,7 +9101,9 @@ def context_requirements_from_manifest(manifest_data: dict[str, Any]) -> dict[st
     return {
         "knowledge_packages": requirements.get("knowledge_packages", []) if isinstance(requirements.get("knowledge_packages"), list) else [],
         "knowledge_resources": requirements.get("knowledge_resources", []) if isinstance(requirements.get("knowledge_resources"), list) else [],
+        "resource_selection": requirements.get("resource_selection", {}) if isinstance(requirements.get("resource_selection"), dict) else {},
         "template_packages": requirements.get("template_packages", []) if isinstance(requirements.get("template_packages"), list) else [],
+        "templates": requirements.get("templates", []) if isinstance(requirements.get("templates"), list) else [],
         "tools": requirements.get("tools", []) if isinstance(requirements.get("tools"), list) else [],
         "platform_contracts": requirements.get("platform_contracts", []) if isinstance(requirements.get("platform_contracts"), list) else [],
     }
@@ -8680,30 +9146,147 @@ def version_satisfies_simple_constraint(version: str, constraint: str) -> bool:
     return True
 
 
-def select_resolved_knowledge_resources(package_resources: list[dict[str, Any]], requirements: dict[str, Any]) -> list[dict[str, Any]]:
+def version_prefix(version: str) -> str:
+    key = semantic_version_key(version)
+    if key[0] != 0 or not isinstance(key[1], tuple) or len(key[1]) < 2:
+        return ""
+    return f"{key[1][0]}.{key[1][1]}"
+
+
+def inferred_platform_versions(package_ids: list[str], selection: dict[str, Any]) -> list[str]:
+    configured = selection.get("platform_versions") if isinstance(selection.get("platform_versions"), dict) else {}
+    versions = [str(value).strip() for value in configured.values() if str(value).strip()]
+    if versions:
+        return sorted(set(versions))
+    inferred: list[str] = []
+    for package_id in package_ids:
+        match = re.search(r"(?:^|[-_.])v?(\d+)[-_.](\d+)(?:$|[-_.])", package_id)
+        if match:
+            inferred.append(f"{match.group(1)}.{match.group(2)}")
+    return sorted(set(inferred))
+
+
+def legacy_resource_requirements(
+    package_resources: list[dict[str, Any]],
+    *,
+    direct_package_ids: list[str],
+    selection: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Derive a narrow migration set for manifests created before selectors existed."""
+
+    direct = set(direct_package_ids)
+    target_versions = inferred_platform_versions(direct_package_ids, selection)
+    requirements: list[dict[str, Any]] = []
+    compatible: dict[str, dict[str, Any]] = {}
+    for resource in package_resources:
+        package_id = str(resource.get("package") or resource.get("package_id") or "")
+        resource_id = str(resource.get("id") or resource.get("resource_id") or "")
+        version = str(resource.get("version") or resource.get("generation") or "")
+        if package_id in direct or package_id.startswith("project."):
+            requirements.append({"id": resource_id, "preferred_version": version, "required": True, "selection_reason": "legacy_direct_package"})
+            continue
+        if target_versions and version_prefix(version) in target_versions:
+            logical_id = str(resource.get("resource_id") or resource_id)
+            previous = compatible.get(logical_id)
+            if previous is None or semantic_version_key(version) > semantic_version_key(str(previous.get("version") or previous.get("generation") or "")):
+                compatible[logical_id] = resource
+    for resource in compatible.values():
+        requirements.append(
+            {
+                "id": str(resource.get("id") or resource.get("resource_id") or ""),
+                "preferred_version": str(resource.get("version") or resource.get("generation") or ""),
+                "required": True,
+                "selection_reason": "legacy_compatible_version",
+            }
+        )
+    return requirements
+
+
+def select_resolved_knowledge_resources(
+    package_resources: list[dict[str, Any]],
+    requirements: dict[str, Any],
+    *,
+    direct_package_ids: list[str] | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     resource_requirements = [item for item in requirements.get("knowledge_resources", []) if isinstance(item, dict)]
+    selection = requirements.get("resource_selection") if isinstance(requirements.get("resource_selection"), dict) else {}
     if not resource_requirements:
-        return [resolved_resource_instance(resource) for resource in package_resources]
+        resource_requirements = legacy_resource_requirements(
+            package_resources,
+            direct_package_ids=direct_package_ids or [],
+            selection=selection,
+        )
+        mode = "legacy_narrow"
+    else:
+        mode = "explicit"
     resolved: list[dict[str, Any]] = []
     used_keys: set[tuple[str, str]] = set()
+    provenance: list[dict[str, Any]] = []
     for requirement in resource_requirements:
         resource_id = str(requirement.get("id") or "")
-        candidates = [resource for resource in package_resources if str(resource.get("resource_id") or resource.get("id") or "") == resource_id]
+        candidates = [
+            resource
+            for resource in package_resources
+            if resource_id in {str(resource.get("resource_id") or ""), str(resource.get("id") or "")}
+        ]
         preferred = str(requirement.get("preferred_version") or "")
         constraint = str(requirement.get("constraint") or "")
         if preferred:
-            candidates = [resource for resource in candidates if str(resource.get("version") or "") == preferred] or candidates
+            candidates = [resource for resource in candidates if str(resource.get("version") or "") == preferred]
         if constraint:
-            candidates = [resource for resource in candidates if version_satisfies_simple_constraint(str(resource.get("version") or ""), constraint)] or candidates
+            candidates = [resource for resource in candidates if version_satisfies_simple_constraint(str(resource.get("version") or ""), constraint)]
         candidates.sort(key=lambda resource: semantic_version_key(str(resource.get("version") or resource_generation(resource) or "")))
         if candidates:
             selected = candidates[-1]
             selected = dict(selected)
             selected["requirement"] = "required" if bool(requirement.get("required", True)) else "recommended"
             instance = resolved_resource_instance(selected)
-            resolved.append(instance)
-            used_keys.add((instance["id"], instance["instance_id"]))
-    return resolved
+            key = (instance["id"], instance["instance_id"])
+            if key not in used_keys:
+                instance["selection"] = {
+                    "mode": mode,
+                    "reason": str(requirement.get("selection_reason") or "explicit_selector"),
+                    "preferred_version": preferred or None,
+                    "constraint": constraint or None,
+                }
+                resolved.append(instance)
+                used_keys.add(key)
+            provenance.append({
+                "selector": {key: value for key, value in requirement.items() if key in {"id", "preferred_version", "constraint", "required", "selection_reason"}},
+                "resource_id": instance["id"],
+                "instance_id": instance["instance_id"],
+                "status": "selected",
+            })
+        else:
+            provenance.append({"selector": {key: value for key, value in requirement.items() if key in {"id", "preferred_version", "constraint", "required", "selection_reason"}}, "status": "unresolved"})
+    return resolved, {
+        "mode": mode,
+        "status": "unresolved" if any(item.get("status") == "unresolved" and item.get("selector", {}).get("required", True) is not False for item in provenance) else "resolved",
+        "target_versions": inferred_platform_versions(direct_package_ids or [], selection),
+        "selected_count": len(resolved),
+        "available_count": len(package_resources),
+        "provenance": provenance,
+    }
+
+
+def selected_resource_indexing(resource: dict[str, Any], selection: dict[str, Any]) -> dict[str, Any]:
+    indexing = resource.get("indexing") if isinstance(resource.get("indexing"), dict) else {}
+    if indexing:
+        return copy.deepcopy(indexing)
+    if str(selection.get("mode") or "") == "legacy_narrow" and str(resource.get("kind") or "") == "documentation":
+        return {
+            "enabled": True,
+            "mode": "fulltext",
+            "fields": ["title", "description", "version", "path"],
+            "sources": [{"path": ".", "mode": "fulltext", "include": ["**/*.md", "**/*.txt", "**/*.rst"], "role": "documentation"}],
+            "migration": "legacy_documentation_fulltext",
+        }
+    return {
+        "enabled": True,
+        "mode": "metadata",
+        "fields": ["title", "description", "version", "path"],
+        "sources": [{"path": ".", "mode": "metadata", "role": str(resource.get("kind") or "knowledge")}],
+    }
 
 
 def aggregate_reproducibility(resources: list[dict[str, Any]]) -> dict[str, Any]:
@@ -8796,7 +9379,21 @@ def append_workplace_resource_event(workplace_root: Path, event: dict[str, Any])
         + "\n",
         encoding="utf-8",
     )
+    mark_search_index_dirty_after_resource_event(workplace_root, event)
     return target
+
+
+def mark_search_index_dirty_after_resource_event(workplace_root: Path, event: dict[str, Any]) -> None:
+    result = event.get("result") if isinstance(event.get("result"), dict) else {}
+    status = str(result.get("status") or "")
+    if status in {"dry_run", "skipped", "passed", "failed"}:
+        return
+    try:
+        from processforge_core.local_resource_search import ResourceSearchIndex
+
+        ResourceSearchIndex(workplace_root, workplace_root=workplace_root).mark_dirty(reason=str(event.get("event_type") or "resource_event"))
+    except Exception:
+        return
 
 
 def default_load_policy(kind: str, requested: str | None = None) -> str:
@@ -9062,7 +9659,7 @@ def resource_path_ref_missing(workplace_root: Path, resource: dict[str, Any]) ->
     known = {
         "knowledge_roots": ("knowledge-roots.yaml", "knowledge_roots"),
         "package_roots": ("package-roots.yaml", "package_roots"),
-        "templates": ("templates.yaml", "template_roots"),
+        "templates": ("templates.yaml", "templates"),
         "tools": ("tools.yaml", "tools"),
         "mcp": ("mcp.yaml", "mcp_servers"),
         "private_resource_paths": ("private-resource-paths.yaml", "private_resource_paths"),
@@ -9081,7 +9678,7 @@ def workspace_registry_specs() -> dict[str, tuple[str, str, str]]:
     return {
         "knowledge_roots": ("knowledge_roots", "knowledge-roots.yaml", "knowledge_roots"),
         "template_roots": ("template_roots", "templates.yaml", "template_roots"),
-        "templates": ("template_roots", "templates.yaml", "template_roots"),
+        "templates": ("templates", "templates.yaml", "templates"),
         "package_roots": ("package_roots", "package-roots.yaml", "package_roots"),
         "tools": ("tools", "tools.yaml", "tools"),
         "mcp": ("mcp", "mcp.yaml", "mcp_servers"),
@@ -9120,7 +9717,12 @@ def resolve_workspace_path_ref(project_root: Path, path_ref: dict[str, Any], *, 
                 if manifest_path:
                     bases.append(manifest_path.parent)
         for base in bases:
-            candidate = (base / relative_path).resolve() if relative_path else base.resolve()
+            resolved_base = base.resolve()
+            candidate = (resolved_base / relative_path).resolve() if relative_path else resolved_base
+            try:
+                candidate.relative_to(resolved_base)
+            except ValueError:
+                return {"status": "unresolved", "reason": "invalid_path_ref: relative_path escapes declared package root"}
             if candidate.exists():
                 return {"status": "resolved", "path": str(candidate)}
         return {"status": "unresolved", "reason": f"package path not found: {package_id}/{relative_path}".rstrip("/")}
@@ -9141,8 +9743,22 @@ def resolve_workspace_path_ref(project_root: Path, path_ref: dict[str, Any], *, 
     root_resolution = workplace_path_resolution(workplace_root, str(raw_path))
     if root_resolution.get("errors"):
         return {"status": "unresolved", "reason": "; ".join(str(item) for item in root_resolution.get("errors", []))}
-    base = path_resolution_to_path(root_resolution)
-    candidate = (base / relative_path).resolve() if relative_path else base.resolve()
+    base = path_resolution_to_path(root_resolution).resolve()
+    # A knowledge root is an explicit workplace trust boundary.  Local heavy
+    # documentation is intentionally allowed to live outside the workplace
+    # directory (for example, in a shared device documentation root); deny
+    # every other registry path outside the workplace unless it is the
+    # dedicated private-resource mechanism.
+    if registry not in {"private_resource_paths", "knowledge_roots"}:
+        try:
+            base.relative_to(workplace_root.resolve())
+        except ValueError:
+            return {"status": "unresolved", "reason": "invalid_path_ref: registry path escapes workplace root"}
+    candidate = (base / relative_path).resolve() if relative_path else base
+    try:
+        candidate.relative_to(base)
+    except ValueError:
+        return {"status": "unresolved", "reason": "invalid_path_ref: relative_path escapes declared registry root"}
     return {"status": "resolved" if candidate.exists() else "missing", "path": str(candidate)}
 
 
@@ -9445,6 +10061,97 @@ def project_context_policy_action(status: str, policy: dict[str, Any]) -> str:
     return "block"
 
 
+def execution_readiness_payload(
+    required_records: list[dict[str, Any]],
+    capability_resolution: dict[str, Any] | None = None,
+    *,
+    coordination_blocked: bool = False,
+) -> dict[str, Any]:
+    missing_capabilities: list[dict[str, Any]] = []
+    blockers: list[dict[str, Any]] = []
+    seen_capabilities: set[tuple[str, str]] = set()
+
+    for item in required_records:
+        if not isinstance(item, dict) or item.get("status") != "missing":
+            continue
+        capability = str(item.get("id") or "")
+        if not capability:
+            continue
+        key = (capability, "project.required_capabilities")
+        if key in seen_capabilities:
+            continue
+        seen_capabilities.add(key)
+        missing = {
+            "capability": capability,
+            "required_by": "project.required_capabilities",
+            "availability": "missing",
+            "reason": "no active project registry provider declared the required capability",
+            "expected_provider_scope": "project or workplace tool/MCP registry",
+        }
+        missing_capabilities.append(missing)
+        blockers.append({"type": "capability_missing", **missing})
+
+    resolution = capability_resolution if isinstance(capability_resolution, dict) else {}
+    for item in resolution.get("unsatisfied", []) if isinstance(resolution.get("unsatisfied"), list) else []:
+        if not isinstance(item, dict):
+            continue
+        capability = str(item.get("capability") or "")
+        required_by = str(item.get("required_by") or "execution_route")
+        if not capability:
+            continue
+        key = (capability, required_by)
+        if key in seen_capabilities:
+            continue
+        seen_capabilities.add(key)
+        missing = {
+            "capability": capability,
+            "required_by": required_by,
+            "availability": "missing",
+            "reason": str(item.get("reason") or "selected execution resources do not provide the capability"),
+            "expected_provider_scope": "specialization resource profile, active process pack, or workplace registry",
+        }
+        missing_capabilities.append(missing)
+        blockers.append({"type": "capability_missing", **missing})
+
+    if coordination_blocked:
+        blockers.append(
+            {
+                "type": "coordination_unavailable",
+                "reason": "organized coordination is selected but the workplace Director is unavailable",
+                "required_by": "project.coordination",
+            }
+        )
+
+    return {
+        "status": "blocked" if blockers else "ready",
+        "missing_capabilities": missing_capabilities,
+        "blockers": blockers,
+    }
+
+
+def resource_readiness_payload(
+    *,
+    platform_resolution: dict[str, Any],
+    required_resource_missing: list[str],
+    specialization_conflicts: list[dict[str, Any]],
+    parameter_conflicts: list[dict[str, Any]],
+) -> dict[str, Any]:
+    blockers: list[dict[str, Any]] = []
+    for item in platform_resolution.get("missing_required_contracts", []):
+        blockers.append({"type": "platform_contract_missing", "id": str(item)})
+    for item in platform_resolution.get("circular_platforms", []):
+        blockers.append({"type": "platform_contract_cycle", "id": str(item)})
+    for item in required_resource_missing:
+        blockers.append({"type": "required_resource_missing", "id": str(item)})
+    for item in specialization_conflicts:
+        if isinstance(item, dict):
+            blockers.append({"type": "specialization_conflict", **item})
+    for item in parameter_conflicts:
+        if isinstance(item, dict):
+            blockers.append({"type": "parameter_conflict", **item})
+    return {"status": "blocked" if blockers else "fresh", "blockers": blockers}
+
+
 def resolved_resource_key(resource: dict[str, Any]) -> tuple[str, str, str]:
     return (str(resource.get("package_id") or ""), str(resource.get("id") or ""), str(resource.get("instance_id") or ""))
 
@@ -9523,6 +10230,20 @@ def project_context_check_result(project_root: Path, *, explicit_workplace: str 
         reasons.append(f"source removed: {source_id}")
 
     current = build_project_context_snapshot(project_root, explicit_workplace=explicit_workplace)
+    execution_readiness = current.get("execution_readiness") if isinstance(current.get("execution_readiness"), dict) else {}
+    resource_readiness = current.get("resource_readiness") if isinstance(current.get("resource_readiness"), dict) else {}
+    readiness = current.get("readiness") if isinstance(current.get("readiness"), dict) else {}
+    health = current.get("snapshot", {}).get("health") if isinstance(current.get("snapshot"), dict) and isinstance(current.get("snapshot", {}).get("health"), dict) else {}
+    if str(resource_readiness.get("status") or "") == "blocked":
+        for item in resource_readiness.get("blockers", []) if isinstance(resource_readiness.get("blockers"), list) else []:
+            if isinstance(item, dict):
+                broken_refs.append(
+                    {
+                        "id": item.get("id") or item.get("target") or "resource_readiness",
+                        "reason": item.get("reason") or item.get("type") or "resource readiness blocked",
+                        "type": item.get("type") or "resource_readiness_blocked",
+                    }
+                )
     old_classification = snapshot.get("project_classification")
     current_classification = current.get("project_classification")
     if json.dumps(old_classification or {}, ensure_ascii=False, sort_keys=True) != json.dumps(
@@ -9561,10 +10282,6 @@ def project_context_check_result(project_root: Path, *, explicit_workplace: str 
             current_fingerprint = str(current_resource.get("fingerprint", {}).get("value") or "")
             if old_generation != current_generation or old_fingerprint != current_fingerprint:
                 stale_resources.append({"id": old.get("id"), "snapshot_generation": old_generation, "current_generation": current_generation, "reason": f"{mode} resource generation changed"})
-    required = current.get("capabilities", {}).get("required", []) if isinstance(current.get("capabilities"), dict) else []
-    for item in required:
-        if isinstance(item, dict) and item.get("status") == "missing":
-            broken_refs.append({"id": item.get("id"), "reason": "required capability missing"})
     if broken_refs:
         status = "broken"
     elif stale_resources or reasons:
@@ -9574,6 +10291,7 @@ def project_context_check_result(project_root: Path, *, explicit_workplace: str 
     else:
         status = "fresh"
     policy = snapshot.get("context_policy") if isinstance(snapshot.get("context_policy"), dict) else default_context_policy({})
+    policy_action = project_context_policy_action(status, policy)
     return {
         "snapshot_id": snapshot_id,
         "snapshot_sha256": "sha256:" + sha256_file(snapshot_yaml),
@@ -9585,7 +10303,12 @@ def project_context_check_result(project_root: Path, *, explicit_workplace: str 
         "stale_resources": stale_resources + [{"reason": reason} for reason in reasons],
         "broken_refs": broken_refs,
         "recommended_action": "project-context-refresh" if status in {"stale", "broken"} else "continue",
-        "policy_action": project_context_policy_action(status, policy),
+        "policy_action": policy_action,
+        "policy": {"action": policy_action},
+        "health": health,
+        "readiness": readiness,
+        "resource_readiness": resource_readiness,
+        "execution_readiness": execution_readiness,
     }
 
 
@@ -9597,10 +10320,20 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     manifest_data = load_yaml_document(manifest)
     manifest_text = manifest.read_text(encoding="utf-8", errors="replace")
     sources = collect_project_snapshot_sources(project_root)
-    providers = load_registry_capability_providers(project_root)
-    required = sorted(set(yaml_list_values(manifest_text, "required_capabilities")))
-    optional = sorted(set(yaml_list_values(manifest_text, "optional_capabilities")))
-    required_records, optional_records = capability_records(required, optional, providers)
+    required = sorted(
+        set(yaml_list_values(manifest_text, "required_capabilities")).union(
+            str(item)
+            for item in as_list(manifest_data.get("required_capabilities"))
+            if str(item)
+        )
+    )
+    optional = sorted(
+        set(yaml_list_values(manifest_text, "optional_capabilities")).union(
+            str(item)
+            for item in as_list(manifest_data.get("optional_capabilities"))
+            if str(item)
+        )
+    )
     generated_at = now_utc()
     valid_until = (datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=max_age_days)).isoformat().replace("+00:00", "Z")
     project = manifest_data.get("project", {}) if isinstance(manifest_data.get("project"), dict) else {}
@@ -9619,6 +10352,8 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             distribution_root = resolve_distribution_path(workplace_manifest_path, "processforge")
     elif isinstance(manifest_data.get("workplace"), dict) and manifest_data["workplace"].get("reference") == "auto":
         distribution_root = project_root
+    providers = load_registry_capability_providers(project_root, workplace_manifest_path)
+    required_records, optional_records = capability_records(required, optional, providers)
     classification = classify_project(project_root, workplace_manifest_path)
     manifest_platform_contracts = manifest_data.get("platform_contracts") if isinstance(manifest_data.get("platform_contracts"), list) else []
     manifest_platform_ids = [
@@ -9643,11 +10378,17 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     package_index_ids = set(package_manifest_index(project_root, distribution_root, workplace_manifest_path))
     required_resource_missing, recommended_resource_missing = platform_resource_findings(workplace_manifest_path, platform_resolution, package_index_ids)
     process_refs = manifest_data.get("processes") if isinstance(manifest_data.get("processes"), list) else []
+    process_selection = project_process_selection(manifest_data)
     package_refs = manifest_data.get("packages") if isinstance(manifest_data.get("packages"), list) else []
-    process_id_for_resolution = str(manifest_data.get("process") or "")
-    if not process_id_for_resolution:
-        process_id_for_resolution = next((str(item.get("id")) for item in process_refs if isinstance(item, dict) and item.get("id")), "")
-    manifest_specializations = [str(item) for item in as_list(manifest_data.get("specializations")) if str(item)]
+    # An implicit task-batch fallback is a work-start default, not a project
+    # resource-profile selection. Preserve the legacy generic-project snapshot
+    # until a project explicitly declares a process or multi-process mapping.
+    process_id_for_resolution = str(
+        manifest_data.get("process")
+        or (process_selection.get("default") if isinstance(manifest_data.get("processes"), dict) else "")
+        or ""
+    )
+    manifest_specializations = project_specialization_selection(manifest_data, {})["active"]
     specialization_context = resolve_specialization_context(
         project_root,
         workplace_manifest_path,
@@ -9683,8 +10424,74 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     )
     context_requirements = context_requirements_from_manifest(manifest_data)
     context_policy = default_context_policy(manifest_data)
-    resolved_knowledge_resources = select_resolved_knowledge_resources(package_resources, context_requirements)
+    direct_platform_package_ids = sorted(
+        {
+            str(package_id)
+            for contract in platform_resolution.get("contracts", [])
+            if isinstance(contract, dict)
+            for package_id in [
+                *(contract.get("required", {}).get("knowledge_packages", []) if isinstance(contract.get("required"), dict) else []),
+                *(contract.get("recommended", {}).get("knowledge_packages", []) if isinstance(contract.get("recommended"), dict) else []),
+            ]
+            if str(package_id)
+        }
+    )
+    resolved_knowledge_resources, resource_selection = select_resolved_knowledge_resources(
+        package_resources,
+        context_requirements,
+        direct_package_ids=direct_platform_package_ids,
+    )
     available_knowledge_resources = [resolved_resource_instance(resource) for resource in package_resources]
+    local_search_resources = [
+        {
+            "id": str(item.get("id") or ""),
+            "resource_id": str(item.get("id") or ""),
+            "package_id": str(item.get("package_id") or ""),
+            "kind": str(item.get("kind") or "knowledge"),
+            "title": str(item.get("title") or item.get("id") or ""),
+            "description": str(item.get("description") or ""),
+            "version": str(item.get("version") or item.get("generation") or ""),
+            "fingerprint": item.get("fingerprint") if isinstance(item.get("fingerprint"), dict) else {},
+            "path_ref": item.get("path_ref") if isinstance(item.get("path_ref"), dict) else {},
+            "status": str(item.get("status") or "available"),
+            "load_policy": "snapshot_authorized",
+            "indexing": selected_resource_indexing(item, resource_selection),
+        }
+        for item in resolved_knowledge_resources
+        if str(item.get("id") or "")
+    ]
+    template_ids = {str(item) for item in specialization_context.get("activated_templates", []) if str(item)}
+    template_ids.update(
+        str(item.get("id") or "")
+        for item in context_requirements.get("templates", [])
+        if isinstance(item, dict) and str(item.get("id") or "")
+    )
+    for template_id in sorted(template_ids):
+        entry = workplace_registry_entry(workplace_manifest_path, "templates", template_id)
+        if entry and str(entry.get("status") or "available") not in {"missing", "disabled"}:
+            local_search_resources.append(
+                {
+                    "id": template_id,
+                    "resource_id": template_id,
+                    "package_id": str(entry.get("template_root") or ""),
+                    "kind": "template",
+                    "title": str(entry.get("title") or template_id),
+                    "description": str(entry.get("description") or ""),
+                    "version": str(entry.get("version") or ""),
+                    "path_ref": {"registry": "templates", "id": template_id},
+                    "status": str(entry.get("status") or "available"),
+                    "load_policy": "snapshot_authorized",
+                    "indexing": entry.get("indexing") if isinstance(entry.get("indexing"), dict) else {
+                        "enabled": True,
+                        "mode": "metadata",
+                        "fields": ["title", "description", "version", "path"],
+                        "sources": [
+                            {"path": "README.md", "mode": "fulltext", "include": ["README.md"], "role": "description"},
+                            {"path": ".", "mode": "metadata", "role": "template_root"},
+                        ],
+                    },
+                }
+            )
     reproducibility = aggregate_reproducibility(resolved_knowledge_resources)
     parameter_resolution = resolve_project_parameters(
         project_root,
@@ -9701,6 +10508,17 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         not coordination_status["workplace_director_enabled"] or not coordination_status["director_office_exists"]
     )
     health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] or platform_resolution["circular_platforms"] or required_resource_missing or specialization_context["conflicts"] or parameter_resolution["conflicts"] or coordination_blocked else ("warn" if any(item["severity"] == "warn" for item in optional_records) or recommended_resource_missing else "pass")
+    execution_readiness = execution_readiness_payload(
+        required_records,
+        specialization_context.get("capability_resolution") if isinstance(specialization_context.get("capability_resolution"), dict) else {},
+        coordination_blocked=coordination_blocked,
+    )
+    resource_readiness = resource_readiness_payload(
+        platform_resolution=platform_resolution,
+        required_resource_missing=required_resource_missing,
+        specialization_conflicts=specialization_context["conflicts"],
+        parameter_conflicts=parameter_resolution["conflicts"],
+    )
     snapshot_id = f"ctx-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
     requirements = requirements_fingerprints(flow_root, project_root)
     source_fingerprints = {
@@ -9801,6 +10619,8 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "platform_contracts": context_requirements.get("platform_contracts", []),
             "process_packages": selected_packages,
         },
+        "local_search_resources": local_search_resources,
+        "resource_selection": resource_selection,
         "freshness": {
             "status": "fresh",
             "checked_at": generated_at,
@@ -9808,6 +10628,13 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "update_available": [],
             "broken_refs": [],
         },
+        "readiness": {
+            "context": {"status": "fresh"},
+            "resources": resource_readiness,
+            "execution": execution_readiness,
+        },
+        "resource_readiness": resource_readiness,
+        "execution_readiness": execution_readiness,
         "reproducibility": reproducibility,
         "source_fingerprints": source_fingerprints,
         "knowledge_stack": manifest_data.get("knowledge_stack", [{"id": "processforge.core", "version": "1.0.0", "source": "distribution"}]),
@@ -9826,9 +10653,10 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         },
         "capabilities": {"required": required_records, "optional": optional_records},
         "knowledge_resources": {
-            "selected": package_resources,
-            "required": [item for item in package_resources if item.get("requirement") == "required"],
-            "recommended": [item for item in package_resources if item.get("requirement") == "recommended"],
+            "selected": resolved_knowledge_resources,
+            "available": available_knowledge_resources,
+            "required": [item for item in resolved_knowledge_resources if item.get("requirement") == "required"],
+            "recommended": [item for item in resolved_knowledge_resources if item.get("requirement") == "recommended"],
             "missing_required": required_resource_missing,
             "missing_recommended": recommended_resource_missing,
         },
@@ -9842,7 +10670,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "excluded": specialization_context["excluded_templates"],
             "source": "workplace-registry",
         },
-        "processes": {"enabled": enabled_processes},
+        "processes": {"enabled": enabled_processes, "selection": process_selection},
         "packages": {"selected": selected_packages},
         "workplace_coordination": {
             "project_mode": coordination_status["project_mode"],
@@ -9982,7 +10810,7 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
             "",
             "## Execution Route",
             "",
-            f"- process: {execution_route.get('process', '')}",
+            f"- process: {execution_route.get('process') or 'None.'}",
             f"- required_capabilities: {', '.join(execution_route.get('required_capabilities', [])) if isinstance(execution_route.get('required_capabilities'), list) and execution_route.get('required_capabilities') else 'None.'}",
             f"- required_evidence: {', '.join(execution_route.get('required_evidence', [])) if isinstance(execution_route.get('required_evidence'), list) and execution_route.get('required_evidence') else 'None.'}",
             "",
@@ -10526,16 +11354,52 @@ def append_chat_message(
     stage_id: str | None = None,
     assignment_id_value: str | None = None,
     include_event_content: bool = False,
+    message_id: str | None = None,
+    event_id: str | None = None,
 ) -> tuple[Path, dict[str, Any], dict[str, Any]]:
     transcript = chat_transcript_path(project_root, session_id)
     transcript.parent.mkdir(parents=True, exist_ok=True)
-    existing_lines = transcript.read_text(encoding="utf-8", errors="replace").splitlines() if transcript.is_file() else []
-    line_number = len([line for line in existing_lines if line.strip()]) + 1
+    requested_message_id = message_id or f"msg_{uuid.uuid4().hex}"
     redacted_content, redaction = redact_chat_content(content)
-    message_id = f"msg_{uuid.uuid4().hex}"
-    record = {
+    lock = transcript.with_suffix(transcript.suffix + ".lock")
+    deadline = time.monotonic() + 20.0
+    descriptor: int | None = None
+    while descriptor is None:
+        try:
+            descriptor = os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            if time.monotonic() >= deadline:
+                raise SystemExit(f"FAIL: timed out waiting for chat transcript lock: {lock.name}")
+            time.sleep(0.05)
+    try:
+        existing_lines = transcript.read_text(encoding="utf-8", errors="replace").splitlines() if transcript.is_file() else []
+        for line in existing_lines:
+            try:
+                existing = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(existing, dict) and str(existing.get("message_id") or "") == requested_message_id:
+                if event_id:
+                    body = existing.get("message") if isinstance(existing.get("message"), dict) else {}
+                    existing_participant = existing.get("participant") if isinstance(existing.get("participant"), dict) else {}
+                    core_data = {
+                        "session_id": session_id,
+                        "message_id": requested_message_id,
+                        "participant": existing_participant,
+                        "message": {
+                            "role": body.get("role"),
+                            "content_hash": body.get("content_hash"),
+                            "redaction": body.get("redaction", "none"),
+                            "content_ref": {"path": rel(transcript, project_root), "line": 0, "message_id": requested_message_id},
+                            "content_mode": "metadata_only",
+                        },
+                    }
+                    emit_process_event(project_root, "chat.message.recorded", session_id=session_id, assignment_id_value=assignment_id_value, process_id=process_id, stage=stage_id, subject=f"chat/{session_id}/{requested_message_id}", data=core_data, privacy="private", correlation_id=session_id, event_id=event_id)
+                return transcript, existing, {}
+        line_number = len([line for line in existing_lines if line.strip()]) + 1
+        record = {
         "schema_version": 1,
-        "message_id": message_id,
+        "message_id": requested_message_id,
         "session_id": session_id,
         "turn_id": turn_id or f"turn_{line_number}",
         "parent_message_id": parent_message_id,
@@ -10551,13 +11415,13 @@ def append_chat_message(
         "source": {"kind": source_kind, "hook_event": None, "transcript_path": rel(transcript, project_root)},
         "process": {"id": process_id, "stage_id": stage_id},
         "assignment": {"id": assignment_id_value},
-    }
-    with transcript.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
-    content_ref = {"path": rel(transcript, project_root), "line": line_number, "message_id": message_id}
-    event_data: dict[str, Any] = {
+        }
+        with transcript.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+        content_ref = {"path": rel(transcript, project_root), "line": line_number, "message_id": requested_message_id}
+        event_data: dict[str, Any] = {
         "session_id": session_id,
-        "message_id": message_id,
+        "message_id": requested_message_id,
         "participant": record["participant"],
         "message": {
             "role": message_role,
@@ -10565,25 +11429,30 @@ def append_chat_message(
             "redaction": redaction,
             "content_ref": content_ref,
         },
-    }
-    if include_event_content:
-        event_data["message"]["content"] = redacted_content
-        event_data["message"]["content_mode"] = "full" if redaction == "none" else redaction
-    else:
-        event_data["message"]["content_mode"] = "metadata_only"
-    event = emit_process_event(
+        }
+        if include_event_content:
+            event_data["message"]["content"] = redacted_content
+            event_data["message"]["content_mode"] = "full" if redaction == "none" else redaction
+        else:
+            event_data["message"]["content_mode"] = "metadata_only"
+        event = emit_process_event(
         project_root,
         "chat.message.recorded",
         session_id=session_id,
         assignment_id_value=assignment_id_value,
         process_id=process_id,
         stage=stage_id,
-        subject=f"chat/{session_id}/{message_id}",
+        subject=f"chat/{session_id}/{requested_message_id}",
         data=event_data,
         privacy="private",
         correlation_id=session_id,
-    )
-    return transcript, record, event
+        event_id=event_id,
+        )
+        return transcript, record, event
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        lock.unlink(missing_ok=True)
 
 
 def load_chat_messages(project_root: Path, session_id: str) -> list[dict[str, Any]]:
@@ -11329,11 +12198,22 @@ def command_project_context_refresh(args: argparse.Namespace) -> int:
         payload={"status": status, "health": health, "paths": {key: rel(path, project_root) for key, path in paths.items()}},
         correlation_id=session_id,
     )
+    workplace_manifest = resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))
+    maintenance: dict[str, Any] | None = None
+    if workplace_manifest:
+        maintenance = search_index_maintenance_for_known_projects(
+            workplace_manifest.parent,
+            reason="project-context-refresh",
+            project_roots=[project_root],
+        )
     print(f"STATUS: {status}")
     for path in paths.values():
         print(f"WROTE: {rel(path, project_root)}")
+    if maintenance:
+        print_search_index_maintenance_summary(maintenance)
     print(f"TELEMETRY: {rel(telemetry_path, project_root)}")
-    return 1 if health == "blocked" else 0
+    resource_readiness = snapshot.get("resource_readiness") if isinstance(snapshot.get("resource_readiness"), dict) else {}
+    return 1 if resource_readiness.get("status") == "blocked" else 0
 
 
 def command_project_context_check(args: argparse.Namespace) -> int:
@@ -11368,6 +12248,14 @@ def command_project_context_check(args: argparse.Namespace) -> int:
             "## Broken References",
             "",
             dump_yaml(result.get("broken_refs", [])),
+            "",
+            "## Resource Readiness",
+            "",
+            dump_yaml(result.get("resource_readiness", {})),
+            "",
+            "## Execution Readiness",
+            "",
+            dump_yaml(result.get("execution_readiness", {})),
         ]
         report_path.write_text("\n".join(lines), encoding="utf-8")
         result["report"] = rel(report_path, project_root)
@@ -11384,6 +12272,15 @@ def command_project_context_check(args: argparse.Namespace) -> int:
             print(f"STALE: {item.get('id', 'project-context')}: {item.get('reason')}")
         for item in result.get("broken_refs", []):
             print(f"BROKEN: {item.get('id', 'project-context')}: {item.get('reason')}")
+        resource_readiness = result.get("resource_readiness") if isinstance(result.get("resource_readiness"), dict) else {}
+        execution_readiness = result.get("execution_readiness") if isinstance(result.get("execution_readiness"), dict) else {}
+        if resource_readiness:
+            print(f"RESOURCE_READINESS: {resource_readiness.get('status')}")
+        if execution_readiness:
+            print(f"EXECUTION_READINESS: {execution_readiness.get('status')}")
+            for item in execution_readiness.get("missing_capabilities", []) if isinstance(execution_readiness.get("missing_capabilities"), list) else []:
+                if isinstance(item, dict):
+                    print(f"CAPABILITY_MISSING: {item.get('capability')} required_by={item.get('required_by')}")
     if result.get("status") == "broken":
         return 1
     if getattr(args, "strict", False) and result.get("status") != "fresh":
@@ -11574,7 +12471,19 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
             continue
         out_path = task_output_path(project_root, output)
         if out_path is None:
-            checks.append(check("FAIL", f"required output has no path: {output_id}"))
+            if output_id in waiver_map:
+                checks.append(check("WARN", f"required output without path waived: {output_id} ({waiver_map[output_id]})"))
+            elif entry == ".codex/hooks.json" and not (project_root / entry).exists():
+                checks.append(
+                    check_with_hint(
+                        "WARN",
+                        ".gitignore does not predeclare optional .codex/hooks.json",
+                        "Codex hooks are optional host telemetry and are not installed for a generic project.",
+                        "add .codex/hooks.json only when opting into the project-local Codex integration",
+                    )
+                )
+            else:
+                checks.append(check("FAIL", f"required output has no path: {output_id}"))
             continue
         output_rel = normalize_assignment_path(str(output.get("path") or ""))
         if out_path.is_file():
@@ -11591,8 +12500,9 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
         expected_path = project_root / expected_artifact
         if expected_path.is_file():
             checks.append(check("PASS", f"expected report exists: {expected_artifact}"))
-        elif "expected_report" in waiver_map:
-            checks.append(check("WARN", f"expected report waived: {expected_artifact} ({waiver_map['expected_report']})"))
+        elif "expected-report" in waiver_map or "expected_report" in waiver_map:
+            waiver_reason = waiver_map.get("expected-report") or waiver_map["expected_report"]
+            checks.append(check("WARN", f"expected report waived: {expected_artifact} ({waiver_reason})"))
         elif not enforce_missing:
             checks.append(check("WARN", f"expected report pending: {expected_artifact}"))
         else:
@@ -11968,7 +12878,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     assn_id = safe_id(str(metadata.get("id", assignment.stem)), "assignment")
     required = [str(item) for item in metadata.get("required_capabilities", [])] if isinstance(metadata.get("required_capabilities"), list) else []
     optional = [str(item) for item in metadata.get("optional_capabilities", [])] if isinstance(metadata.get("optional_capabilities"), list) else []
-    providers = load_registry_capability_providers(project_root)
+    providers = load_registry_capability_providers(project_root, resolve_project_workplace_manifest(project_root))
     required_records, optional_records = capability_records(required, optional, providers)
     missing_required = [item["id"] for item in required_records if item.get("status") == "missing"]
     if missing_required:
@@ -12114,7 +13024,11 @@ ITERATION_STATUSES = {"planned", "in_progress", "completed", "passed", "failed",
 
 
 def run_root(project_root: Path, run_id: str) -> Path:
-    return locate_flow_root(project_root) / "runs" / safe_id(run_id, "run")
+    candidate = str(run_id or "").strip()
+    # ProcessExecutionService may append a collision suffix to a truncated id,
+    # leaving a valid repeated hyphen such as `review--2`. Preserve that ID.
+    normalized = candidate if re.fullmatch(r"[a-z0-9]+(?:-+[a-z0-9]+)*", candidate) else safe_id(candidate, "run")
+    return locate_flow_root(project_root) / "runs" / normalized
 
 
 def run_yaml_path(project_root: Path, run_id: str) -> Path:
@@ -12146,6 +13060,13 @@ def write_yaml_file_atomic(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
     temporary.write_text(ensure_trailing_newline(dump_yaml(data)), encoding="utf-8")
+    os.replace(temporary, path)
+
+
+def write_text_file_atomic(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    temporary.write_text(text, encoding="utf-8")
     os.replace(temporary, path)
 
 
@@ -12444,17 +13365,25 @@ def validate_process_against_project_mode(process_data: dict[str, Any], project_
     return [check("PASS", f"process coordination requirements match effective {effective_mode} mode")]
 
 
+def _process_catalog_context(
+    project_root: Path,
+    *,
+    workplace_manifest: Path | None = None,
+) -> ProcessCatalogContext:
+    resolved_project_root = project_root.expanduser().resolve()
+    effective_workplace_manifest = workplace_manifest
+    if effective_workplace_manifest is None:
+        effective_workplace_manifest = resolve_project_workplace_manifest(resolved_project_root)
+    return ProcessCatalogContext(
+        project_root=resolved_project_root,
+        flow_root=locate_flow_root(resolved_project_root),
+        distribution_root=ROOT.resolve(),
+        active_official_pack_ids=frozenset(active_process_pack_ids(effective_workplace_manifest)),
+    )
+
+
 def process_catalog_role(process: dict[str, Any]) -> str:
-    catalog = process.get("catalog") if isinstance(process.get("catalog"), dict) else {}
-    role = str(catalog.get("role") or "").strip()
-    if role:
-        return safe_id(role, "canonical")
-    meta = process_catalog_metadata(process)
-    if meta["classification"] == "INTERNAL_MAINTENANCE":
-        return "internal"
-    if meta["classification"] == "DEPRECATED":
-        return "legacy_alias"
-    return "canonical"
+    return catalog_process_catalog_role(process)
 
 
 def process_override_declared(process: dict[str, Any], overridden_process_id: str) -> bool:
@@ -12549,76 +13478,19 @@ def official_process_definition_refs(
     include_available: bool = False,
     workplace_manifest: Path | None = None,
 ) -> list[ProcessDefinitionRef]:
-    if workplace_manifest is None:
-        workplace_manifest = resolve_project_workplace_manifest(project_root)
-    active_ids = active_process_pack_ids(workplace_manifest)
-    entries: list[ProcessDefinitionRef] = []
-    for manifest_path, manifest in official_pack_manifest_records():
-        pack_id = str(manifest.get("id") or "")
-        active = pack_id in active_ids
-        if not active and not include_available:
-            continue
-        process_root = manifest_path.parent / "processes"
-        provided = manifest.get("provides") if isinstance(manifest.get("provides"), dict) else {}
-        declared = {str(item) for item in as_list(provided.get("processes")) if str(item)}
-        for path in sorted(process_root.glob("*.yaml")):
-            data = load_yaml_document(path)
-            if yaml_error(data) or not isinstance(data, dict):
-                continue
-            process_id = str(data.get("id") or path.stem)
-            if declared and process_id not in declared:
-                continue
-            entries.append(
-                ProcessDefinitionRef(
-                    process_id=process_id,
-                    path=path,
-                    process=data,
-                    origin="official",
-                    root=manifest_path.parent,
-                    catalog_role=process_catalog_role(data),
-                    warnings=[],
-                    pack_id=pack_id,
-                    active=active,
-                    available=True,
-                    production_ready=bool(manifest.get("production_ready")),
-                )
-            )
-    return entries
+    context = _process_catalog_context(project_root, workplace_manifest=workplace_manifest)
+    return catalog_official_process_definition_refs(
+        context,
+        include_available=include_available,
+    )
 
 
 def process_root_candidates(project_root: Path) -> list[tuple[Path, str, bool]]:
-    flow_root = locate_flow_root(project_root)
-    candidates = [
-        (flow_root / "processes" / "user", "user", False),
-        (flow_root / "processes" / "custom", "custom", False),
-        (project_root / "processes" / "user", "user", False),
-        (project_root / "processes" / "custom", "custom", False),
-        (ROOT / "processes" / "user", "user", False),
-        (ROOT / "processes" / "custom", "custom", False),
-        (project_root / "processes" / "core", "core", False),
-        (ROOT / "processes" / "core", "core", False),
-        (flow_root / "processes", "legacy_flat", True),
-        (project_root / "processes", "legacy_flat", True),
-        (ROOT / "processes", "legacy_flat", True),
-    ]
-    seen: set[Path] = set()
-    unique: list[tuple[Path, str, bool]] = []
-    for path, origin, legacy in candidates:
-        resolved = path.resolve()
-        key = resolved
-        if key in seen:
-            continue
-        seen.add(key)
-        unique.append((path, origin, legacy))
-    return unique
+    return catalog_process_root_candidates(_process_catalog_context(project_root))
 
 
 def process_root_yaml_files(root: Path, *, legacy_flat: bool) -> list[Path]:
-    if not root.is_dir():
-        return []
-    if legacy_flat:
-        return sorted([*root.glob("*.yaml"), *root.glob("*.yml")])
-    return sorted([path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in {".yaml", ".yml"}])
+    return catalog_process_root_yaml_files(root, legacy_flat=legacy_flat)
 
 
 def process_catalog_entries(
@@ -12628,64 +13500,12 @@ def process_catalog_entries(
     include_available_official: bool = False,
     workplace_manifest: Path | None = None,
 ) -> list[ProcessDefinitionRef]:
-    selected: dict[str, ProcessDefinitionRef] = {}
-    order: list[str] = []
-    duplicate_messages: dict[str, list[str]] = {}
-
-    def register(entry: ProcessDefinitionRef) -> None:
-        process_id = entry.process_id
-        if process_id not in selected:
-            selected[process_id] = entry
-            order.append(process_id)
-            return
-        current = selected[process_id]
-        message = (
-            f"duplicate process_id {process_id}: {rel(current.path, project_root)} "
-            f"wins over {rel(entry.path, project_root)}"
-        )
-        if (
-            current.origin in {"user", "custom"}
-            and entry.origin in {"core", "official"}
-            and not process_override_declared(current.process, process_id)
-        ):
-            message += f"; user/custom override of {entry.origin} process requires process_override.reason"
-        duplicate_messages.setdefault(process_id, []).append(message)
-        if strict:
-            current.warnings.append("STRICT: " + message)
-
-    official_added = False
-    for root, origin, legacy_flat in process_root_candidates(project_root):
-        if origin == "core" and not official_added:
-            for official_entry in official_process_definition_refs(
-                project_root,
-                include_available=include_available_official,
-                workplace_manifest=workplace_manifest,
-            ):
-                register(official_entry)
-            official_added = True
-        for path in process_root_yaml_files(root, legacy_flat=legacy_flat):
-            data = load_yaml_document(path)
-            if yaml_error(data) or not isinstance(data, dict):
-                continue
-            process_id = str(data.get("id") or path.stem)
-            warnings: list[str] = []
-            if legacy_flat:
-                warnings.append(
-                    f"Legacy flat process path detected: {rel(path, project_root)}. Move built-ins to processes/core/ and user processes to processes/user/."
-                )
-            entry = ProcessDefinitionRef(
-                process_id=process_id,
-                path=path,
-                process=data,
-                origin=origin,
-                root=root,
-                catalog_role=process_catalog_role(data),
-                warnings=warnings,
-            )
-            register(entry)
-    for process_id, messages in duplicate_messages.items():
-        selected[process_id].warnings.extend(messages)
-    return [selected[process_id] for process_id in order]
+    context = _process_catalog_context(project_root, workplace_manifest=workplace_manifest)
+    return catalog_process_catalog_entries(
+        context,
+        strict=strict,
+        include_available_official=include_available_official,
+    )
 
 
 def resolve_process_definition(
@@ -12695,82 +13515,20 @@ def resolve_process_definition(
     include_available_official: bool = False,
     workplace_manifest: Path | None = None,
 ) -> ProcessDefinitionRef:
-    candidate = Path(process_or_path)
-    if candidate.suffix in {".yaml", ".yml"}:
-        path = candidate if candidate.is_absolute() else project_root / candidate
-        if path.is_file():
-            for official_entry in official_process_definition_refs(
-                project_root,
-                include_available=True,
-                workplace_manifest=workplace_manifest,
-            ):
-                if official_entry.path.resolve() == path.resolve():
-                    return official_entry
-            data = read_yaml_file(path)
-            process_id = str(data.get("id") or path.stem) if isinstance(data, dict) else path.stem
-            origin = "legacy_flat"
-            root = path.parent
-            parts = path.parts
-            if "processes" in parts:
-                try:
-                    index = parts.index("processes")
-                    if len(parts) > index + 1 and parts[index + 1] in {"core", "user", "custom"}:
-                        origin = parts[index + 1]
-                        root = Path(*parts[: index + 2])
-                except ValueError:
-                    pass
-            return ProcessDefinitionRef(process_id, path, data, origin, root, process_catalog_role(data) if isinstance(data, dict) else "canonical", [])
-    process_id = safe_id(process_or_path, "process")
-    for entry in process_catalog_entries(
-        project_root,
+    context = _process_catalog_context(project_root, workplace_manifest=workplace_manifest)
+    return catalog_resolve_process_definition(
+        context,
+        process_or_path,
         include_available_official=include_available_official,
-        workplace_manifest=workplace_manifest,
-    ):
-        if entry.process_id == process_id:
-            return entry
-    for entry in official_process_definition_refs(
-        project_root,
-        include_available=True,
-        workplace_manifest=workplace_manifest,
-    ):
-        if entry.process_id == process_id and not entry.active:
-            raise SystemExit(
-                f"FAIL: process {process_id} is available in official pack {entry.pack_id} "
-                "but is not active in this workplace.\n"
-                "Fix: run "
-                f"python bin/pf.py pack-activate --id {entry.pack_id} --workplace <path> --apply"
-            )
-    raise SystemExit(f"FAIL: process not found: {process_id}")
+    )
 
 
 def require_official_process_active(project_root: Path, process_id: str) -> None:
-    normalized = safe_id(process_id, "process")
-    effective = next(
-        (
-            entry
-            for entry in process_catalog_entries(
-                project_root,
-                include_available_official=True,
-            )
-            if entry.process_id == normalized
-        ),
-        None,
-    )
-    if effective is not None and effective.origin == "official" and not effective.active:
-        raise SystemExit(
-            f"FAIL: process {normalized} is available in official pack {effective.pack_id} "
-            "but is not active in this workplace.\n"
-            "Fix: run "
-            f"python bin/pf.py pack-activate --id {effective.pack_id} --workplace <path> --apply"
-        )
+    catalog_require_official_process_active(_process_catalog_context(project_root), process_id)
 
 
 def process_definition_exists(project_root: Path, process_id: str) -> bool:
-    try:
-        resolve_process_definition(project_root, process_id)
-        return True
-    except SystemExit:
-        return False
+    return catalog_process_definition_exists(_process_catalog_context(project_root), process_id)
 
 
 def active_run_ids(project_root: Path) -> list[str]:
@@ -12823,9 +13581,49 @@ def render_task_index(project_root: Path, run: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def run_summary_path(project_root: Path, run_id: str) -> Path:
+    return run_root(project_root, run_id) / "summary.md"
+
+
+def run_handoff_path(project_root: Path, run_id: str) -> Path:
+    candidate = str(run_id or "").strip()
+    normalized = candidate if re.fullmatch(r"[a-z0-9]+(?:-+[a-z0-9]+)*", candidate) else safe_id(candidate, "run")
+    return locate_flow_root(project_root) / "handoffs" / "runs" / f"{normalized}-handoff.md"
+
+
+def render_run_summary(project_root: Path, run: dict[str, Any]) -> str:
+    run_id = str(run.get("id", "run"))
+    lines = [f"# Run Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", f"- status: `{run.get('status')}`", "", "## Tasks", ""]
+    for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
+        if isinstance(item, dict):
+            task = load_yaml_document(assignment_yaml_path(project_root, str(item.get("id", ""))))
+            result = task.get("result") if isinstance(task.get("result"), dict) else {}
+            lines.append(f"- `{item.get('id')}`: `{item.get('status')}` - {result.get('summary', task.get('title', ''))}")
+    if len(lines) == 7:
+        lines.append("- No tasks recorded.")
+    return "\n".join(lines) + "\n"
+
+
+def render_run_handoff(project_root: Path, run: dict[str, Any]) -> str:
+    run_id = str(run.get("id", "run"))
+    summary = run_summary_path(project_root, run_id)
+    return f"# Run Handoff: {run_id}\n\nStatus: `{run.get('status')}`\n\nSummary: `{rel(summary, project_root)}`\n"
+
+
+def write_run_artifact_bundle(project_root: Path, run: dict[str, Any], *, include_summary_handoff: bool = False) -> None:
+    """Persist one Run state and its derived documents while the caller holds its lock."""
+    run_id = str(run.get("id", "run"))
+    root = run_root(project_root, run_id)
+    if include_summary_handoff:
+        write_text_file_atomic(run_summary_path(project_root, run_id), render_run_summary(project_root, run))
+        write_text_file_atomic(run_handoff_path(project_root, run_id), render_run_handoff(project_root, run))
+    write_text_file_atomic(root / "task-index.md", render_task_index(project_root, run))
+    write_yaml_file_atomic(run_yaml_path(project_root, run_id), run)
+
+
 def write_task_index(project_root: Path, run: dict[str, Any]) -> None:
     run_id = str(run.get("id", "run"))
-    (run_root(project_root, run_id) / "task-index.md").write_text(render_task_index(project_root, run), encoding="utf-8")
+    write_text_file_atomic(run_root(project_root, run_id) / "task-index.md", render_task_index(project_root, run))
 
 
 def load_run(project_root: Path, run_id: str) -> dict[str, Any]:
@@ -12836,9 +13634,14 @@ def load_run(project_root: Path, run_id: str) -> dict[str, Any]:
 
 
 def save_run(project_root: Path, run: dict[str, Any]) -> None:
+    run_id = str(run.get("id", "run"))
+    with registry_file_lock(run_yaml_path(project_root, run_id)):
+        save_run_locked(project_root, run)
+
+
+def save_run_locked(project_root: Path, run: dict[str, Any], *, include_summary_handoff: bool = False) -> None:
     run["updated_at"] = now_utc()
-    write_yaml_file(run_yaml_path(project_root, str(run.get("id", "run"))), run)
-    write_task_index(project_root, run)
+    write_run_artifact_bundle(project_root, run, include_summary_handoff=include_summary_handoff)
 
 
 def load_task(project_root: Path, task_id: str) -> dict[str, Any]:
@@ -12854,6 +13657,12 @@ def save_task(project_root: Path, task: dict[str, Any]) -> None:
 
 
 def update_run_task_status(project_root: Path, run_id: str, task_id: str, status: str) -> None:
+    safe_run_id = safe_id(run_id, "run")
+    with registry_file_lock(run_yaml_path(project_root, safe_run_id)):
+        update_run_task_status_locked(project_root, safe_run_id, task_id, status)
+
+
+def update_run_task_status_locked(project_root: Path, run_id: str, task_id: str, status: str) -> None:
     run = load_run(project_root, run_id)
     changed = False
     for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
@@ -12861,7 +13670,7 @@ def update_run_task_status(project_root: Path, run_id: str, task_id: str, status
             item["status"] = status
             changed = True
     if changed:
-        save_run(project_root, run)
+        save_run_locked(project_root, run)
 
 
 def public_yaml_has_private_path(data: dict[str, Any]) -> bool:
@@ -12882,6 +13691,25 @@ def validate_run_consistency(project_root: Path, run_id: str, include_runtime_ev
         checks.append(check("PASS" if key in run else "FAIL", f"run.{key} present"))
     status = str(run.get("status", ""))
     checks.append(check("PASS" if status in RUN_STATUSES else "FAIL", f"run status valid: {status or 'missing'}"))
+    artifact_paths = {
+        "summary": run_summary_path(project_root, str(run.get("id", run_id))),
+        "task index": run_root(project_root, str(run.get("id", run_id))) / "task-index.md",
+        "handoff": run_handoff_path(project_root, str(run.get("id", run_id))),
+    }
+    status_patterns = {
+        "summary": r"^- status: `([^`]+)`$",
+        "task index": r"^Run status: `([^`]+)`$",
+        "handoff": r"^Status: `([^`]+)`$",
+    }
+    for label, artifact_path in artifact_paths.items():
+        required = label == "task index" or status == "completed"
+        if not artifact_path.is_file():
+            checks.append(check("FAIL" if required else "PASS", f"{label} artifact {'exists' if required else 'not yet required'}: {rel(artifact_path, project_root)}"))
+            continue
+        text = artifact_path.read_text(encoding="utf-8", errors="replace")
+        match = re.search(status_patterns[label], text, flags=re.MULTILINE)
+        artifact_status = match.group(1) if match else ""
+        checks.append(check("PASS" if artifact_status == status else "FAIL", f"{label} status matches run: {artifact_status or 'missing'}"))
     process_id = str(run.get("process", ""))
     checks.append(check("PASS" if process_definition_exists(project_root, process_id) else "FAIL", f"process exists: {process_id or 'missing'}"))
     checks.append(check("PASS" if not public_yaml_has_private_path(run) else "FAIL", f"{rel(path, project_root)} has no private absolute paths"))
@@ -12908,8 +13736,8 @@ def validate_run_consistency(project_root: Path, run_id: str, include_runtime_ev
     if status == "completed":
         incomplete = [str(item.get("id")) for item in tasks if isinstance(item, dict) and item.get("blocking", True) is not False and str(item.get("status")) != "done"]
         checks.append(check("PASS" if not incomplete else "FAIL", "completed run has all blocking tasks done" + (f": {', '.join(incomplete)}" if incomplete else "")))
-        summary = run_root(project_root, str(run.get("id", run_id))) / "summary.md"
-        handoff = flow_root / "handoffs" / "runs" / f"{safe_id(str(run.get('id', run_id)), 'run')}-handoff.md"
+        summary = artifact_paths["summary"]
+        handoff = artifact_paths["handoff"]
         checks.append(check("PASS" if summary.is_file() else "FAIL", f"{rel(summary, project_root)} exists"))
         checks.append(check("PASS" if handoff.is_file() else "FAIL", f"{rel(handoff, project_root)} exists"))
     if include_runtime_events:
@@ -13232,6 +14060,9 @@ def default_process_authoring_answers(process_id: str, title: str, description: 
             {"id": "review-notes", "title": "Review Notes", "owner_role": "reviewer", "template": "review-template"},
             {"id": "handoff", "title": "Handoff", "owner_role": "author", "template": "handoff-template"},
         ],
+        "evidence_definitions": [
+            {"id": "review-attestation", "title": "Review attestation", "kind": "attestation"},
+        ],
         "gates": [
             {"id": "brief-approved", "description": "Brief is explicit enough to start work.", "blocking": True, "required_artifact": "brief"},
             {"id": "work-ready-for-review", "description": "Work output exists and is ready for review.", "blocking": True, "required_artifact": "work-output"},
@@ -13275,6 +14106,7 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
         "stages",
         "artifacts",
         "artifact_definitions",
+        "evidence_definitions",
         "gates",
         "hooks",
         "evolve",
@@ -13285,6 +14117,7 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
         "responsibility_boundaries",
         "subagent_policy",
         "runtime_requirements",
+        "runtime_execution_boundary",
         "stage_completion",
         "run_completion",
         "metadata",
@@ -13297,7 +14130,45 @@ def normalize_process_authoring_answers(raw: dict[str, Any], fallback_id: str = 
     for key in ["required_capabilities", "required_packages", "required_templates", "allowed_tools", "forbidden_actions"]:
         if key in raw:
             base[key] = string_list(raw[key])
+    base["process_transitions"] = normalize_process_transitions(base.get("process_transitions"), process_id)
     return base
+
+
+def normalize_process_transitions(value: Any, source_process: str) -> list[dict[str, Any]]:
+    """Materialize legacy authoring-route shorthand as schema-valid transitions."""
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, dict)]
+    if not isinstance(value, dict):
+        return []
+
+    shared_return = {
+        key: value[key]
+        for key in ["offline_agent_policy", "continuation_capsule_required", "post_handoff_run_owner"]
+        if key in value
+    }
+    transitions: list[dict[str, Any]] = []
+    for route in as_list(value.get("routes")):
+        if not isinstance(route, dict):
+            continue
+        target_process = safe_id(str(route.get("to_process") or route.get("target_process") or ""), "")
+        if not target_process:
+            continue
+        transition: dict[str, Any] = {
+            "id": safe_id(str(route.get("id") or f"{source_process}-to-{target_process}"), "transition"),
+            "from_process": source_process,
+            "to_process": target_process,
+            "mode": str(route.get("mode") or "wait_for_result"),
+        }
+        if route.get("required_role"):
+            transition["requires_agent"] = {"required_role": str(route["required_role"])}
+        if route.get("input_artifacts"):
+            transition["input_contract"] = {"artifacts": string_list(route["input_artifacts"])}
+        if route.get("expected_output_artifacts"):
+            transition["output_contract"] = {"artifacts": string_list(route["expected_output_artifacts"])}
+        if shared_return:
+            transition["return"] = shared_return
+        transitions.append(transition)
+    return transitions
 
 
 def materialize_process_responsibility_boundaries(value: Any) -> dict[str, list[str]]:
@@ -13418,7 +14289,7 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         if isinstance(item, dict):
             stage_id = safe_id(str(item.get("id") or item.get("title") or "stage"), "stage")
             produced = [safe_id(value, "artifact") for value in string_list(item.get("produced_artifacts"))]
-            exits = [safe_id(value, "gate") for value in string_list(item.get("exit_gates"))]
+            exits = [safe_id(value, "gate") for value in string_list(item.get("exit_gates") or item.get("gates"))]
             if not produced and artifact_ids:
                 produced = [sorted(artifact_ids)[0]]
             if not exits and gate_ids:
@@ -13437,12 +14308,15 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
                     "actor": str(item.get("actor") or "primary_agent"),
                     "required_inputs": [safe_id(value, "artifact") for value in string_list(item.get("required_inputs"))],
                     "produced_artifacts": produced,
+                    "required_artifacts": [safe_id(value, "artifact") for value in string_list(item.get("required_artifacts"))],
+                    "required_evidence": [safe_id(value, "evidence") for value in string_list(item.get("required_evidence"))],
                     "required_role": role_id,
                     "required_capabilities": string_list(item.get("required_capabilities")),
+                    "parameters": item.get("parameters") if isinstance(item.get("parameters"), dict) else {},
                     "allowed_tools": string_list(item.get("allowed_tools")),
                     "entry_gates": [safe_id(value, "gate") for value in string_list(item.get("entry_gates"))],
                     "exit_gates": exits,
-                    "gates": [safe_id(value, "gate") for value in string_list(item.get("gates"))] or exits,
+                    "automation_bindings": as_list(item.get("automation_bindings")) or as_list(item.get("technical_obligations")),
                 }
             )
     if not artifacts:
@@ -13498,6 +14372,17 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         "roles": roles,
         "stages": stages,
         "artifact_definitions": artifacts,
+        "evidence_definitions": [
+            {
+                "id": safe_id(str(item.get("id") or item.get("title") or "evidence"), "evidence"),
+                "title": str(item.get("title") or title_from_id(safe_id(str(item.get("id") or "evidence"), "evidence"))),
+                "kind": str(item.get("kind") or "attestation"),
+                **({"artifact": safe_id(str(item.get("artifact")), "artifact")} if item.get("artifact") else {}),
+                **({"description": str(item.get("description"))} if item.get("description") else {}),
+            }
+            for item in as_list(answers.get("evidence_definitions"))
+            if isinstance(item, dict)
+        ],
         "gates": gates,
         "required_packages": string_list(answers.get("required_packages")) or ["process-forge-core"],
         "required_templates": string_list(answers.get("required_templates")) or ["artifact-template"],
@@ -13519,6 +14404,7 @@ def process_from_authoring_answers(answers: dict[str, Any]) -> dict[str, Any]:
         "agent_requirements",
         "subagent_policy",
         "runtime_requirements",
+        "runtime_execution_boundary",
         "metadata",
     ]:
         if key in answers:
@@ -13610,6 +14496,7 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
     roles = [item for item in as_list(process.get("roles")) if isinstance(item, dict)]
     stages = [item for item in as_list(process.get("stages")) if isinstance(item, dict)]
     artifacts = [item for item in as_list(process.get("artifact_definitions")) if isinstance(item, dict)]
+    evidence = [item for item in as_list(process.get("evidence_definitions")) if isinstance(item, dict)]
     gates = [item for item in as_list(process.get("gates")) if isinstance(item, dict)]
 
     def id_values(items: list[dict[str, Any]], label: str) -> set[str]:
@@ -13620,6 +14507,8 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
 
     role_ids = id_values(roles, "role")
     artifact_ids = id_values(artifacts, "artifact")
+    declared_artifact_ids = declared_process_artifact_ids(process)
+    evidence_ids = id_values(evidence, "evidence") if evidence else set()
     gate_ids = id_values(gates, "gate")
     stage_ids = id_values(stages, "stage")
     checks.append(check("PASS" if stage_ids else "FAIL", "at least one stage exists"))
@@ -13631,10 +14520,29 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
         stage_id = safe_id(str(stage.get("id", "")), "stage")
         role_id = safe_id(str(stage.get("required_role", "")), "role")
         checks.append(check("PASS" if role_id in role_ids else "FAIL", f"stage {stage_id} references existing role"))
-        for artifact_id in [safe_id(value, "artifact") for value in string_list(stage.get("produced_artifacts"))]:
-            checks.append(check("PASS" if artifact_id in artifact_ids else "FAIL", f"stage {stage_id} produces known artifact {artifact_id}"))
+        for field in ["required_inputs", "produced_artifacts", "required_artifacts"]:
+            for artifact_id in [safe_id(value, "artifact") for value in string_list(stage.get(field))]:
+                checks.append(check("PASS" if artifact_id in declared_artifact_ids else "FAIL", f"stage {stage_id} {field} references known artifact {artifact_id}"))
+        for evidence_id in [safe_id(value, "evidence") for value in string_list(stage.get("required_evidence"))]:
+            checks.append(check("PASS" if evidence_id in evidence_ids else "FAIL", f"stage {stage_id} references known evidence {evidence_id}"))
         for gate_id in [safe_id(value, "gate") for value in string_list(stage.get("entry_gates")) + string_list(stage.get("exit_gates"))]:
             checks.append(check("PASS" if gate_id in gate_ids else "FAIL", f"stage {stage_id} references known gate {gate_id}"))
+        if stage.get("gates"):
+            checks.append(check("WARN", f"stage {stage_id} uses deprecated gates alias; use exit_gates"))
+        if stage.get("technical_obligations"):
+            checks.append(check("WARN", f"stage {stage_id} uses deprecated technical_obligations; use automation_bindings"))
+        for binding in as_list(stage.get("automation_bindings")):
+            if not isinstance(binding, dict):
+                checks.append(check("FAIL", f"stage {stage_id} automation binding is an object"))
+                continue
+            binding_id = safe_id(str(binding.get("id") or ""), "binding")
+            checks.append(check("PASS" if binding.get("projector") else "FAIL", f"stage {stage_id} automation binding {binding_id} projector declared"))
+            if binding.get("artifact"):
+                artifact_id = safe_id(str(binding.get("artifact")), "artifact")
+                checks.append(check("PASS" if artifact_id in declared_artifact_ids else "FAIL", f"automation binding {binding_id} artifact exists: {artifact_id}"))
+            if binding.get("gate"):
+                gate_id = safe_id(str(binding.get("gate")), "gate")
+                checks.append(check("PASS" if gate_id in gate_ids else "FAIL", f"automation binding {binding_id} gate exists: {gate_id}"))
     for artifact in artifacts:
         owner = safe_id(str(artifact.get("owner_role", "")), "role")
         checks.append(check("PASS" if owner in role_ids else "FAIL", f"artifact {artifact.get('id', '')} owner role exists"))
@@ -13644,10 +14552,6 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
         if required_artifact:
             artifact_id = safe_id(str(required_artifact), "artifact")
             checks.append(check("PASS" if artifact_id in artifact_ids else "FAIL", f"gate {gate_id} required artifact exists: {artifact_id}"))
-    review_index = next((index for index, item in enumerate(stages) if "review" in safe_id(str(item.get("id", "")), "stage")), -1)
-    for index, stage in enumerate(stages):
-        if bool(stage.get("handoff_required")) and (review_index < 0 or review_index > index):
-            checks.append(check("WARN", f"handoff stage {stage.get('id', '')} appears before review"))
     run_model = process.get("run_model") if isinstance(process.get("run_model"), dict) else {}
     task_loop = run_model.get("default_task_loop") if isinstance(run_model.get("default_task_loop"), dict) else {}
     if run_model.get("supports_multiple_tasks") is True:
@@ -13712,35 +14616,32 @@ def command_process_authoring_review(args: argparse.Namespace) -> int:
 
 def render_process_agent_prompt(process: dict[str, Any]) -> str:
     process_id = str(process.get("id", "process"))
-    stages = [item for item in as_list(process.get("stages")) if isinstance(item, dict)]
     coordination = process_coordination_requirements(process)
     lines = [
         f"# {process.get('name', title_from_id(process_id))} Agent",
         "",
         f"Process id: `{process_id}`",
         "",
-        "Use the canonical Python launcher:",
+        "Use the governed high-level workflow:",
         "",
         "```bash",
-        f"python bin/pf.py process-doctor --project-root <project-root> --process {process_id}",
-        f"python bin/pf.py run-create --project-root <project-root> --id <run-id> --title \"<title>\" --process {process_id} --apply",
+        "pf.context",
+        "pf.work.start(objective)",
+        "pf.work.state()",
+        "pf.work.transition(outcome, evidence, notes)",
+        "# Repeat state/transition until action=run_completed.",
         "```",
         "",
         "Rules:",
         "",
-        "- Read the process definition before starting work.",
+        "- Treat pf.work.state as the source of truth for the current stage and allowed outcomes.",
         f"- Execution mode: `{process.get('execution_mode', 'single_agent')}`.",
         f"- Coordination requirement: `{coordination.get('mode', 'simple_allowed')}`.",
         "- Record durable artifacts for every blocking gate.",
         "- Run review before handoff when the process defines a review stage.",
         "- Keep public files portable and free of secrets.",
-        "- Use run, task, iteration, review, and handoff files for traceable work.",
-        "",
-        "Stages:",
-        "",
+        "- Do not choose the next stage or create Run/Assignment records manually during normal work.",
     ]
-    for stage in stages:
-        lines.append(f"- `{stage.get('id')}`: {stage.get('title', '')}")
     return "\n".join(lines) + "\n"
 
 
@@ -14150,32 +15051,11 @@ def validate_process_definition_files(
     return checks
 
 
-PROCESS_CATALOG_CLASSIFICATIONS = {
-    "PUBLIC_STABLE",
-    "PUBLIC_EXPERIMENTAL",
-    "INTERNAL_MAINTENANCE",
-    "EXAMPLE_ONLY",
-    "DEPRECATED",
-}
+PROCESS_CATALOG_CLASSIFICATIONS = CATALOG_PROCESS_CATALOG_CLASSIFICATIONS
 
 
 def process_catalog_metadata(process: dict[str, Any]) -> dict[str, Any]:
-    catalog = process.get("catalog") if isinstance(process.get("catalog"), dict) else {}
-    status = str(process.get("status") or "draft")
-    classification = str(catalog.get("classification") or "").upper()
-    if classification not in PROCESS_CATALOG_CLASSIFICATIONS:
-        if status == "active":
-            classification = "PUBLIC_STABLE"
-        elif status == "experimental":
-            classification = "PUBLIC_EXPERIMENTAL"
-        elif status == "internal":
-            classification = "INTERNAL_MAINTENANCE"
-        elif status == "deprecated":
-            classification = "DEPRECATED"
-        else:
-            classification = "PUBLIC_EXPERIMENTAL"
-    public_surface = catalog.get("public_surface", process.get("public_surface", classification != "INTERNAL_MAINTENANCE"))
-    return {"classification": classification, "public_surface": bool(public_surface), "status": status}
+    return catalog_process_catalog_metadata(process)
 
 
 def process_is_public_stable(process: dict[str, Any]) -> bool:
@@ -14259,22 +15139,77 @@ def validate_process_contract(
         checks.append(check("PASS" if string_list(responsibilities) else ("FAIL" if hard else "WARN"), f"{label} responsibilities declared"))
 
     defined_artifacts = declared_process_artifact_ids(process)
+    evidence_ids = {str(item.get("id")) for item in as_list(process.get("evidence_definitions")) if isinstance(item, dict) and item.get("id")}
     produced = produced_process_artifact_ids(process)
     missing = sorted(produced - defined_artifacts)
     checks.append(check("PASS" if not missing else ("FAIL" if hard else "WARN"), f"{process_id} produced artifacts declared: {', '.join(missing) if missing else 'all'}"))
     gate_ids = {str(item.get("id")) for item in as_list(process.get("gates")) if isinstance(item, dict) and item.get("id")}
+    for gate in as_list(process.get("gates")):
+        if isinstance(gate, dict) and gate.get("required_artifact"):
+            artifact_id = str(gate.get("required_artifact"))
+            checks.append(check("PASS" if artifact_id in defined_artifacts else ("FAIL" if hard else "WARN"), f"{process_id} gate {gate.get('id', '')} required artifact declared: {artifact_id}"))
     for stage in as_list(process.get("stages")):
         if not isinstance(stage, dict):
             continue
         stage_id = str(stage.get("id") or "stage")
         checks.append(check("PASS" if stage.get("actor") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} actor declared"))
         checks.append(check("PASS" if stage.get("goal") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} goal declared"))
-        unknown_gates = sorted(set(string_list(stage.get("gates")) + string_list(stage.get("exit_gates"))) - gate_ids)
+        unknown_gates = sorted(set(string_list(stage.get("entry_gates")) + string_list(stage.get("gates")) + string_list(stage.get("exit_gates"))) - gate_ids)
         checks.append(check("PASS" if not unknown_gates else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} gates valid: {', '.join(unknown_gates) if unknown_gates else 'all'}"))
+        for field in ["required_inputs", "produced_artifacts", "required_artifacts"]:
+            unknown_artifacts = sorted(set(string_list(stage.get(field))) - defined_artifacts)
+            checks.append(check("PASS" if not unknown_artifacts else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} {field} valid: {', '.join(unknown_artifacts) if unknown_artifacts else 'all'}"))
+        unknown_evidence = sorted(set(string_list(stage.get("required_evidence"))) - evidence_ids)
+        checks.append(check("PASS" if not unknown_evidence else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} evidence valid: {', '.join(unknown_evidence) if unknown_evidence else 'all'}"))
+        if stage.get("gates"):
+            checks.append(check("WARN", f"{process_id}.{stage_id} uses deprecated gates alias"))
+        if stage.get("technical_obligations"):
+            checks.append(check("WARN", f"{process_id}.{stage_id} uses deprecated technical_obligations alias"))
+        for binding in as_list(stage.get("automation_bindings")):
+            if not isinstance(binding, dict):
+                checks.append(check("FAIL" if hard else "WARN", f"{process_id}.{stage_id} automation binding is object"))
+                continue
+            binding_id = str(binding.get("id") or "binding")
+            checks.append(check("PASS" if binding.get("projector") else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} projector declared"))
+            if binding.get("artifact"):
+                checks.append(check("PASS" if str(binding.get("artifact")) in defined_artifacts else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} artifact valid"))
+            if binding.get("gate"):
+                checks.append(check("PASS" if str(binding.get("gate")) in gate_ids else ("FAIL" if hard else "WARN"), f"{process_id}.{stage_id} automation binding {binding_id} gate valid"))
         if "handoff_required" in stage:
             checks.append(check("FAIL" if hard else "WARN", f"{process_id}.{stage_id} deprecated handoff_required used without explicit semantics"))
     if "handoff_required" in process:
         checks.append(check("FAIL" if hard else "WARN", f"{process_id} deprecated handoff_required used without explicit semantics"))
+    transitions = as_list(process.get("process_transitions"))
+    route_file = process_routes_path(project_root)
+    route_map = load_process_route_map(project_root) if route_file.is_file() else {"routes": []}
+    routes_by_id = {
+        str(route.get("id") or ""): route
+        for route in as_list(route_map.get("routes"))
+        if isinstance(route, dict) and route.get("id")
+    }
+    transition_ids: set[str] = set()
+    for transition in transitions:
+        if not isinstance(transition, dict):
+            checks.append(check("FAIL" if hard else "WARN", f"{process_id} transition is an object"))
+            continue
+        transition_id = str(transition.get("id") or "")
+        checks.append(check("PASS" if transition_id and transition_id not in transition_ids else ("FAIL" if hard else "WARN"), f"{process_id} transition id unique: {transition_id or 'missing'}"))
+        transition_ids.add(transition_id)
+        checks.append(check("PASS" if str(transition.get("from_process") or "") == process_id else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} starts from declaring process"))
+        checks.append(check("PASS" if transition.get("to_process") else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} target declared"))
+        checks.append(check("PASS" if str(transition.get("mode") or "") in HANDOFF_MODES else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} mode valid"))
+        route_id = str(transition.get("route_id") or "")
+        if route_id:
+            checks.append(check("PASS" if route_file.is_file() else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route map exists"))
+            route = routes_by_id.get(route_id)
+            checks.append(check("PASS" if route is not None else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route exists: {route_id}"))
+            if route is not None:
+                same_contract = (
+                    str(route.get("from_process") or "") == process_id
+                    and str(route.get("to_process") or "") == str(transition.get("to_process") or "")
+                    and str(route.get("mode") or "") == str(transition.get("mode") or "")
+                )
+                checks.append(check("PASS" if same_contract else ("FAIL" if hard else "WARN"), f"{process_id} transition {transition_id or 'missing'} route contract matches: {route_id}"))
 
     companions = process_companion_paths(companion_root or project_root, process_id)
     pack = process.get("process_pack") if isinstance(process.get("process_pack"), dict) else {}
@@ -15320,6 +16255,7 @@ PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
     "roles",
     "stages",
     "artifact_definitions",
+    "evidence_definitions",
     "gates",
     "required_packages",
     "required_templates",
@@ -15332,6 +16268,7 @@ PROCESS_AUTHORING_SUPPORTED_TOP_LEVEL = {
     "responsibility_boundaries",
     "subagent_policy",
     "runtime_requirements",
+    "runtime_execution_boundary",
     "stage_completion",
     "run_completion",
     "metadata",
@@ -15385,6 +16322,7 @@ def process_to_authoring_answers(process: dict[str, Any]) -> dict[str, Any]:
         "roles": as_list(process.get("roles")),
         "stages": as_list(process.get("stages")),
         "artifacts": as_list(process.get("artifact_definitions")),
+        "evidence_definitions": as_list(process.get("evidence_definitions")),
         "gates": as_list(process.get("gates")),
         "required_capabilities": string_list(process.get("required_capabilities")),
         "required_packages": string_list(process.get("required_packages")),
@@ -15401,6 +16339,7 @@ def process_to_authoring_answers(process: dict[str, Any]) -> dict[str, Any]:
         "responsibility_boundaries",
         "subagent_policy",
         "runtime_requirements",
+        "runtime_execution_boundary",
         "stage_completion",
         "run_completion",
         "metadata",
@@ -15537,8 +16476,9 @@ def process_semantics(process: dict[str, Any]) -> dict[str, Any]:
         "purpose": str(process.get("purpose") or process.get("description") or ""),
         "run_model": process.get("run_model") if isinstance(process.get("run_model"), dict) else {},
         "roles": object_by_id(process.get("roles"), ["title", "responsibility"]),
-        "stages": object_by_id(process.get("stages"), ["title", "required_role", "required_inputs", "produced_artifacts", "entry_gates", "exit_gates", "handoff_required"]),
+        "stages": object_by_id(process.get("stages"), ["title", "required_role", "required_inputs", "produced_artifacts", "required_artifacts", "required_evidence", "entry_gates", "exit_gates", "automation_bindings", "handoff_required"]),
         "artifact_definitions": object_by_id(process.get("artifact_definitions"), ["title", "owner_role", "template", "lifecycle"]),
+        "evidence_definitions": object_by_id(process.get("evidence_definitions"), ["title", "kind", "artifact"]),
         "gates": object_by_id(process.get("gates"), ["description", "blocking", "required_artifact", "stage", "stage_id"]),
         "events": {"emits": event_emits(process)},
         "requirements": {
@@ -16115,6 +17055,12 @@ def update_stale_agent_presence(workplace_root: Path) -> None:
             presence["status"] = "stale"
             presence["updated_at"] = now_utc()
             json_write(path, presence)
+            project_ref = str(presence.get("project_root") or "")
+            if project_ref:
+                try:
+                    write_current_session_refs(workplace_root, Path(project_ref).expanduser().resolve(), presence)
+                except OSError:
+                    pass
             append_agent_ledger_event(
                 workplace_root,
                 {
@@ -16202,6 +17148,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
         "supports_specializations": supported_specializations,
         "project_id": project_id,
         "project_root_ref": "project-root" if project_root else "",
+        "project_root": str(project_root) if project_root else "",
         "process_id": args.process or "",
         "run_id": args.run or "",
         "task_id": args.task or "",
@@ -16219,6 +17166,7 @@ def command_agent_checkin(args: argparse.Namespace) -> int:
             "session_id": session_id,
             "project_id": project_id,
             "project_root_ref": "project-root" if project_root else "",
+            "project_root": str(project_root) if project_root else "",
             "process_id": args.process or "",
             "run_id": args.run or "",
             "task_id": args.task or "",
@@ -16491,6 +17439,7 @@ def validate_process_route_map(project_root: Path) -> list[Check]:
     data = load_process_route_map(project_root)
     routes = data.get("routes") if isinstance(data.get("routes"), list) else []
     checks = [check("PASS" if data.get("schema_version") else "FAIL", "process route map schema_version present")]
+    append_json_schema_checks(checks, data, "process-route-map.schema.json", "process route map")
     seen: set[str] = set()
     for route in routes:
         if not isinstance(route, dict):
@@ -16996,6 +17945,7 @@ RUNTIME_DRIVER_PLACEHOLDERS = {
     "exit_path",
     "agent_model",
     "agent_reasoning_effort",
+    "agent_sandbox",
 }
 
 AGENT_RUN_STATUSES = {
@@ -17100,6 +18050,21 @@ def resolve_runtime_driver(driver_ref: str, *, workplace_manifest: Path | None =
     raise SystemExit(f"FAIL: runtime driver not found: {driver_ref}")
 
 
+def runtime_driver_ref_is_direct_path(driver_ref: str) -> bool:
+    direct = Path(driver_ref).expanduser()
+    return direct.suffix in {".yaml", ".yml", ".json"} or direct.is_file()
+
+
+def normalized_runtime_driver_ref(driver_ref: str, project_root: Path) -> str:
+    direct = Path(driver_ref).expanduser()
+    if not direct.is_absolute():
+        direct = (project_root / direct).resolve()
+    try:
+        return direct.relative_to(project_root).as_posix()
+    except ValueError:
+        return str(direct)
+
+
 def runtime_driver_id_list(*, workplace_manifest: Path | None = None, project_root: Path | None = None) -> list[tuple[str, str, str]]:
     found: dict[str, tuple[str, str, str]] = {}
     for registry_path in runtime_driver_registry_paths(workplace_manifest, project_root):
@@ -17165,7 +18130,9 @@ def minimal_platform_environment() -> dict[str, str]:
 def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) -> tuple[dict[str, str], bool]:
     env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
     inherit = bool(env_spec.get("inherit", True))
-    env = os.environ.copy() if inherit else minimal_platform_environment()
+    # Persist only PF-owned and explicitly configured values. Inherited host
+    # environment may contain credentials and is materialized only at launch.
+    env = {} if inherit else minimal_platform_environment()
     env.update(
         {
             "PF_RUN_ID": variables["run_id"],
@@ -17179,6 +18146,7 @@ def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) 
             "PF_WORKSPACE_ACCESS_FILE": variables["workspace_access_path"],
             "PF_WORKER_RUN_ID": variables["run_id"],
             "PF_WORKER_TASK_ID": variables["task_id"],
+            "PF_WORKER_ATTEMPT": variables["attempt"],
         }
     )
     explicit = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
@@ -17188,6 +18156,14 @@ def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) 
     expanded = expand_runtime_value(explicit, variables)
     env.update({str(key): str(value) for key, value in expanded.items()})
     return env, inherit
+
+
+def materialize_worker_launch_environment(command_spec: dict[str, Any]) -> dict[str, str]:
+    inherit = bool(command_spec.get("environment_inherit", False))
+    env = os.environ.copy() if inherit else minimal_platform_environment()
+    persisted = command_spec.get("environment") if isinstance(command_spec.get("environment"), dict) else {}
+    env.update({str(key): str(value) for key, value in persisted.items()})
+    return env
 
 
 def runtime_driver_start_readiness_checks(driver: dict[str, Any], executable_override: str | None = None) -> list[Check]:
@@ -17323,6 +18299,30 @@ def worker_run_paths(project_root: Path, run_id: str, task_id: str) -> dict[str,
 DETACHED_WORKER_PROCESSES: dict[tuple[str, str, str], subprocess.Popen[bytes]] = {}
 
 
+@contextlib.contextmanager
+def worker_run_lifecycle_lock(project_root: Path, run_id: str, task_id: str) -> Any:
+    root = agent_run_root(project_root, run_id, task_id)
+    root.mkdir(parents=True, exist_ok=True)
+    lock_path = root / ".lifecycle.lock"
+    deadline = time.time() + 30.0
+    fd: int | None = None
+    while fd is None:
+        try:
+            fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            if time.time() >= deadline:
+                raise SystemExit(f"FAIL: worker run lifecycle lock unavailable for {run_id}/{task_id}")
+            time.sleep(0.05)
+    try:
+        payload = {"schema_version": 1, "pid": os.getpid(), "created_at": now_utc()}
+        os.write(fd, json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8"))
+        yield
+    finally:
+        if fd is not None:
+            os.close(fd)
+        lock_path.unlink(missing_ok=True)
+
+
 def expand_runtime_value(value: Any, variables: dict[str, str]) -> Any:
     if isinstance(value, str):
         def replace(match: re.Match[str]) -> str:
@@ -17343,10 +18343,78 @@ def runtime_driver_for_task(project_root: Path, task: dict[str, Any], driver_arg
     driver_id = driver_arg or str(task.get("runtime_driver") or "manual")
     workplace_manifest = project_workplace_manifest(project_root)
     driver = resolve_runtime_driver(driver_id, workplace_manifest=workplace_manifest, project_root=project_root)
+    if driver_arg and runtime_driver_ref_is_direct_path(driver_arg):
+        driver = copy.deepcopy(driver)
+        driver["_driver_ref"] = normalized_runtime_driver_ref(driver_arg, project_root)
     failures = [item.message for item in validate_runtime_driver_document(driver) if item.level == "FAIL"]
     if failures:
         raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(failures))
     return driver
+
+
+def runtime_driver_for_worker_state(project_root: Path, task: dict[str, Any], state: dict[str, Any], fallback_driver_ref: str | None = None) -> dict[str, Any]:
+    task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
+    run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
+    command = json_read(worker_run_paths(project_root, run_id, task_id)["command"])
+    driver_ref = command.get("driver_ref")
+    if isinstance(driver_ref, str) and driver_ref.strip():
+        try:
+            return runtime_driver_for_task(project_root, task, driver_ref.strip())
+        except SystemExit as exc:
+            raise SystemExit(f"FAIL: saved runtime driver_ref invalid for {run_id}/{task_id}: {driver_ref}: {exc}") from exc
+    driver_id = str(state.get("driver_id") or fallback_driver_ref or task.get("runtime_driver") or "manual")
+    return runtime_driver_for_task(project_root, task, driver_id)
+
+
+def worker_run_state_requires_reconciliation(project_root: Path, run_id: str, task_id: str, state: dict[str, Any]) -> bool:
+    if str(state.get("status") or "") != "running":
+        return False
+    paths = worker_run_paths(project_root, run_id, task_id)
+    if paths["exit"].is_file():
+        return True
+    pid = state.get("pid")
+    if not isinstance(pid, int):
+        return True
+    command = json_read(paths["command"])
+    started_at = str(state.get("started_at") or "")
+    started_dt = parse_runtime_timestamp(started_at)
+    timeout_seconds = int(state.get("timeout_seconds") or ((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30))
+    if started_dt and datetime.now(timezone.utc) > started_dt + timedelta(seconds=timeout_seconds):
+        return True
+    proc = DETACHED_WORKER_PROCESSES.get(worker_process_key(project_root, run_id, task_id))
+    if proc is not None:
+        return proc.poll() is not None
+    return not process_pid_running(pid)
+
+
+def existing_running_worker_run(project_root: Path, task: dict[str, Any], fallback_driver_ref: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]] | None:
+    task_id = safe_id(str(task.get("id") or "task"), "task")
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    paths = worker_run_paths(project_root, run_id, task_id)
+    state = load_agent_run_state(project_root, run_id, task_id)
+    if str(state.get("status") or "") != "running":
+        return None
+    driver = runtime_driver_for_worker_state(project_root, task, state, fallback_driver_ref)
+    observed = observe_worker_run(project_root, task, driver, state) if worker_run_state_requires_reconciliation(project_root, run_id, task_id, state) else state
+    if str(observed.get("status") or "") == "running":
+        return observed, driver, paths
+    return None
+
+
+def emit_worker_run_skip(project_root: Path, task: dict[str, Any], driver: dict[str, Any], state: dict[str, Any], event_type: str) -> None:
+    task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
+    run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
+    pid = state.get("pid")
+    emit_process_event(
+        project_root,
+        event_type,
+        process_id=task_process_id(task),
+        subject=task_id,
+        assignment_id_value=task_id,
+        assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root),
+        payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": pid if isinstance(pid, int) else None, "reason": "already running"},
+        correlation_id=f"run-{run_id}",
+    )
 
 
 def normalize_agent_model(value: Any) -> str:
@@ -17371,7 +18439,24 @@ def normalize_agent_reasoning_effort(value: Any) -> str:
     return text
 
 
-def build_worker_process_command(project_root: Path, task: dict[str, Any], driver: dict[str, Any], executable_override: str | None = None) -> tuple[dict[str, Any], dict[str, Path]]:
+def worker_sandbox_for_task(task: dict[str, Any]) -> str:
+    execution = task.get("execution_mode") if isinstance(task.get("execution_mode"), dict) else {}
+    ownership = task.get("ownership") if isinstance(task.get("ownership"), dict) else {}
+    writable = ownership.get("writer") is True and (
+        execution.get("code_changes_allowed") is True
+        or execution.get("artifact_changes_allowed") is True
+    )
+    return "workspace-write" if writable else "read-only"
+
+
+def build_worker_process_command(
+    project_root: Path,
+    task: dict[str, Any],
+    driver: dict[str, Any],
+    executable_override: str | None = None,
+    *,
+    attempt: int = 1,
+) -> tuple[dict[str, Any], dict[str, Path]]:
     task_id = safe_id(str(task.get("id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     paths = worker_run_paths(project_root, run_id, task_id)
@@ -17383,6 +18468,7 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "processforge_root": str(ROOT),
         "run_id": run_id,
         "task_id": task_id,
+        "attempt": str(attempt),
         "agent_run_dir": str(paths["root"]),
         "driver_id": str(driver.get("id") or "manual"),
         "capsule_path": str(capsule_path),
@@ -17397,6 +18483,7 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "exit_path": str(paths["exit"]),
         "agent_model": normalize_agent_model(task.get("agent_model") or task.get("model") or ""),
         "agent_reasoning_effort": normalize_agent_reasoning_effort(task.get("agent_reasoning_effort") or task.get("reasoning_effort") or ""),
+        "agent_sandbox": worker_sandbox_for_task(task),
     }
     io = driver.get("io") if isinstance(driver.get("io"), dict) else {}
     stdout_path = Path(str(expand_runtime_value(io.get("stdout") or rel(paths["stdout"], project_root), variables)))
@@ -17434,6 +18521,7 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "schema_version": 1,
         "run_id": run_id,
         "task_id": task_id,
+        "attempt": str(attempt),
         "driver_id": str(driver.get("id") or "manual"),
         "agent_model": variables["agent_model"],
         "agent_reasoning_effort": variables["agent_reasoning_effort"],
@@ -17450,16 +18538,39 @@ def build_worker_process_command(project_root: Path, task: dict[str, Any], drive
         "paths": {key: rel(path, project_root) for key, path in paths.items() if key != "root"},
         "limits": parse_runtime_driver_limits(driver)[0],
     }
+    driver_ref = driver.get("_driver_ref")
+    if isinstance(driver_ref, str) and driver_ref.strip():
+        command["driver_ref"] = driver_ref.strip()
     return command, paths
 
 
-def write_agent_run_state(project_root: Path, task: dict[str, Any], driver: dict[str, Any], status: str, *, pid: int | None = None, started_at: str | None = None, finished_at: str | None = None, exit_code: int | None = None, failure_reason: str | None = None, command: dict[str, Any] | None = None, paths: dict[str, Path] | None = None) -> dict[str, Any]:
+def write_agent_run_state(
+    project_root: Path,
+    task: dict[str, Any],
+    driver: dict[str, Any],
+    status: str,
+    *,
+    pid: int | None = None,
+    started_at: str | None = None,
+    finished_at: str | None = None,
+    exit_code: int | None = None,
+    failure_reason: str | None = None,
+    command: dict[str, Any] | None = None,
+    paths: dict[str, Path] | None = None,
+    attempt: int | None = None,
+) -> dict[str, Any]:
     task_id = safe_id(str(task.get("id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     paths = paths or worker_run_paths(project_root, run_id, task_id)
     driver_limits, limit_errors = parse_runtime_driver_limits(driver)
     if limit_errors:
         raise SystemExit("FAIL: runtime driver invalid: " + "; ".join(limit_errors))
+    previous_state = json_read(paths["status"])
+    if attempt is None:
+        try:
+            attempt = max(1, int(previous_state.get("attempt") or 1))
+        except (TypeError, ValueError):
+            attempt = 1
     state = {
         "schema_version": 1,
         "run_id": run_id,
@@ -17472,7 +18583,7 @@ def write_agent_run_state(project_root: Path, task: dict[str, Any], driver: dict
         "finished_at": finished_at,
         "exit_code": exit_code,
         "timeout_seconds": driver_limits["timeout_seconds"],
-        "attempt": 1,
+        "attempt": attempt,
         "max_retries": driver_limits["max_retries"],
         "capsule_path": rel(locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml", project_root),
         "worker_prompt_path": rel(worker_prompt_path(project_root, run_id, task_id), project_root),
@@ -17536,7 +18647,7 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
     task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
     if isinstance(driver, str):
-        driver = runtime_driver_for_task(project_root, task, driver)
+        driver = runtime_driver_for_worker_state(project_root, task, state, driver)
     paths = worker_run_paths(project_root, run_id, task_id)
     status = str(state.get("status") or "")
     if status != "running":
@@ -17645,11 +18756,21 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     ]
     if start_failures:
         raise SystemExit("FAIL: runtime driver is not start-ready: " + "; ".join(start_failures))
-    command, paths = build_worker_process_command(project_root, task, driver, executable_override)
+    paths = worker_run_paths(project_root, run_id, task_id)
+    previous_state = json_read(paths["status"])
+    try:
+        attempt = max(1, int(previous_state.get("attempt") or 0) + 1)
+    except (TypeError, ValueError):
+        attempt = 1
+    command, paths = build_worker_process_command(project_root, task, driver, executable_override, attempt=attempt)
     state_status = "manual_required" if str(driver.get("kind")) == "manual" else "ready"
     paths["root"].mkdir(parents=True, exist_ok=True)
-    write_agent_run_state(project_root, task, driver, state_status, command=command, paths=paths)
-    emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status}, correlation_id=f"run-{run_id}")
+    # A deliberate prepare is a new attempt.  An old durable exit contract
+    # belongs to the preceding attempt and must not be observed as the result
+    # of a newly launched process.
+    paths["exit"].unlink(missing_ok=True)
+    write_agent_run_state(project_root, task, driver, state_status, command=command, paths=paths, attempt=attempt)
+    emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status, "attempt": attempt}, correlation_id=f"run-{run_id}")
     return task, driver, paths
 
 
@@ -17657,7 +18778,16 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
+    task = load_task(project_root, task_id)
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        running = existing_running_worker_run(project_root, task, getattr(args, "driver", None))
+        if running:
+            state, driver, paths = running
+            emit_worker_run_skip(project_root, task, driver, state, "worker.run.prepare_skipped")
+            print(f"SKIPPED: {task_id} already running pid={state.get('pid')}")
+            return 0
+        task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
     print(f"PREPARED: {task_id} driver={driver.get('id')} status={json_read(paths['status']).get('status')}")
     return 0
 
@@ -17666,52 +18796,64 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     task_id = safe_id(args.task, "task")
-    task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
+    task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    if str(driver.get("kind")) == "manual":
-        print(f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}")
-        return 0
-    command = json_read(paths["command"])
-    argv = command.get("command", {}).get("argv") if isinstance(command.get("command"), dict) else []
-    if not argv:
-        write_agent_run_state(project_root, task, driver, "failed", failure_reason="empty argv", command=command, paths=paths)
-        print(f"FAIL: empty command argv for {task_id}")
-        return 1
-    timeout_seconds = int((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30)
-    env = {str(key): str(value) for key, value in (command.get("command", {}).get("environment") or {}).items()}
-    cwd = command.get("command", {}).get("working_directory") or str(project_root)
-    paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
-    paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
-    started_at = now_utc()
     detach = bool(getattr(args, "detach", False))
-    with paths["stdout"].open("wb") as stdout, paths["stderr"].open("wb") as stderr:
-        try:
-            proc = subprocess.Popen([str(item) for item in argv], cwd=str(cwd), env=env, stdout=stdout, stderr=stderr, shell=False)
-            write_agent_run_state(project_root, task, driver, "running", pid=proc.pid, started_at=started_at, command=command, paths=paths)
-            json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
-            if detach:
-                DETACHED_WORKER_PROCESSES[worker_process_key(project_root, run_id, task_id)] = proc
-                emit_process_event(project_root, "worker.run.started", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
-                print(f"RUNNING: {task_id} pid={proc.pid}")
-                return 0
-            try:
-                exit_code = proc.wait(timeout=timeout_seconds)
-                finished_at = now_utc()
-                final_status = "completed" if exit_code == 0 else "failed"
-                write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
-                json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                exit_code = -1
-                final_status = "timed_out"
-                finished_at = now_utc()
-                write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason="timeout", command=command, paths=paths)
-                json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
-        except OSError as exc:
-            finished_at = now_utc()
-            write_agent_run_state(project_root, task, driver, "failed", started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=str(exc), command=command, paths=paths)
-            print(f"FAIL: start failed for {task_id}: {exc}")
+    proc: subprocess.Popen[bytes] | None = None
+    with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        running = existing_running_worker_run(project_root, task, getattr(args, "driver", None))
+        if running:
+            state, driver, paths = running
+            emit_worker_run_skip(project_root, task, driver, state, "worker.run.start_skipped")
+            print(f"SKIPPED: {task_id} already running pid={state.get('pid')}")
+            return 0
+        task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
+        run_id = safe_id(str(task.get("run_id") or "run"), "run")
+        if str(driver.get("kind")) == "manual":
+            print(f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}")
+            return 0
+        command = json_read(paths["command"])
+        argv = command.get("command", {}).get("argv") if isinstance(command.get("command"), dict) else []
+        if not argv:
+            write_agent_run_state(project_root, task, driver, "failed", failure_reason="empty argv", command=command, paths=paths)
+            print(f"FAIL: empty command argv for {task_id}")
             return 1
+        timeout_seconds = int((command.get("limits") if isinstance(command.get("limits"), dict) else {}).get("timeout_seconds") or 30)
+        command_spec = command.get("command") if isinstance(command.get("command"), dict) else {}
+        env = materialize_worker_launch_environment(command_spec)
+        cwd = command_spec.get("working_directory") or str(project_root)
+        paths["stdout"].parent.mkdir(parents=True, exist_ok=True)
+        paths["stderr"].parent.mkdir(parents=True, exist_ok=True)
+        started_at = now_utc()
+        with paths["stdout"].open("wb") as stdout, paths["stderr"].open("wb") as stderr:
+            try:
+                proc = subprocess.Popen([str(item) for item in argv], cwd=str(cwd), env=env, stdout=stdout, stderr=stderr, shell=False)
+            except OSError as exc:
+                finished_at = now_utc()
+                write_agent_run_state(project_root, task, driver, "failed", started_at=started_at, finished_at=finished_at, exit_code=None, failure_reason=str(exc), command=command, paths=paths)
+                print(f"FAIL: start failed for {task_id}: {exc}")
+                return 1
+        write_agent_run_state(project_root, task, driver, "running", pid=proc.pid, started_at=started_at, command=command, paths=paths)
+        json_write(paths["process"], {"schema_version": 1, "pid": proc.pid, "started_at": started_at, "argv": argv})
+        if detach:
+            DETACHED_WORKER_PROCESSES[worker_process_key(project_root, run_id, task_id)] = proc
+            emit_process_event(project_root, "worker.run.started", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": "running", "pid": proc.pid}, correlation_id=f"run-{run_id}")
+            print(f"RUNNING: {task_id} pid={proc.pid}")
+            return 0
+    assert proc is not None
+    try:
+        exit_code = proc.wait(timeout=timeout_seconds)
+        finished_at = now_utc()
+        final_status = "completed" if exit_code == 0 else "failed"
+        write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, command=command, paths=paths)
+        json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        exit_code = -1
+        final_status = "timed_out"
+        finished_at = now_utc()
+        write_agent_run_state(project_root, task, driver, final_status, pid=proc.pid, started_at=started_at, finished_at=finished_at, exit_code=exit_code, failure_reason="timeout", command=command, paths=paths)
+        json_write(paths["exit"], {"schema_version": 1, "exit_code": exit_code, "finished_at": finished_at, "status": final_status})
     emit_process_event(project_root, "worker.run.finished", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": final_status, "exit_code": exit_code}, correlation_id=f"run-{run_id}")
     print(f"{final_status.upper()}: {task_id} exit_code={exit_code}")
     return 0 if final_status == "completed" else 1
@@ -17723,7 +18865,11 @@ def command_worker_run_status(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    state = load_agent_run_state(project_root, run_id, task_id)
+    with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        state = load_agent_run_state(project_root, run_id, task_id)
+        if state and worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
+            driver = runtime_driver_for_worker_state(project_root, task, state)
+            state = observe_worker_run(project_root, task, driver, state)
     if not state:
         print(f"STATUS: not-prepared {task_id}")
         return 1
@@ -17747,7 +18893,7 @@ def command_worker_run_stop(args: argparse.Namespace) -> int:
             subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
             os.kill(int(pid), signal.SIGTERM)
-    driver = runtime_driver_for_task(project_root, task, str(state.get("driver_id") or task.get("runtime_driver") or "manual"))
+    driver = runtime_driver_for_worker_state(project_root, task, state)
     paths = worker_run_paths(project_root, run_id, task_id)
     if state.get("status") in {"completed", "failed", "timed_out", "unknown_exit", "lost", "cancelled"}:
         print(f"STATUS: already-terminal {task_id} status={state.get('status')}")
@@ -17763,7 +18909,11 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    state = load_agent_run_state(project_root, run_id, task_id)
+    with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        state = load_agent_run_state(project_root, run_id, task_id)
+        if state and worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
+            driver = runtime_driver_for_worker_state(project_root, task, state)
+            state = observe_worker_run(project_root, task, driver, state)
     if not state:
         print(f"FAIL: worker run is not prepared: {task_id}")
         return 1
@@ -17797,7 +18947,7 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
         lines.append(f"- subagent_policy_failure: `{item}`")
     paths["collection"].write_text("\n".join(lines) + "\n", encoding="utf-8")
     if missing or subagent_failures:
-        driver = runtime_driver_for_task(project_root, task, str(state.get("driver_id") or task.get("runtime_driver") or "manual"))
+        driver = runtime_driver_for_worker_state(project_root, task, state)
         reasons = []
         if missing:
             reasons.append("missing outputs: " + ", ".join(missing))
@@ -17805,6 +18955,44 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
             reasons.append("subagent policy failures: " + "; ".join(subagent_failures))
         write_agent_run_state(project_root, task, driver, "failed", failure_reason="; ".join(reasons), paths=paths)
         print("FAIL: " + "; ".join(reasons))
+        return 1
+    report_content = report_path.read_text(encoding="utf-8", errors="replace")
+    report_hash = sha256_text(report_content)
+    attempt = str(state.get("attempt") or 1)
+    expected_report = rel(report_path, project_root)
+    session_id = f"pf-worker:{run_id}:{task_id}:attempt:{attempt}"
+    envelope = {
+        "provider": "processforge",
+        "adapter": "pf-codex-exec-worker",
+        "native_event_type": "WorkerExpectedReportCaptured",
+        "native_event_id": f"worker-output:{run_id}:{task_id}:attempt:{attempt}:{report_hash}",
+        "native_id_scope": "project",
+        "native_event_id_stable": True,
+        "source_session_id": session_id,
+        "source_project_ref": str(project_root),
+        "payload_version": "1",
+        "raw_payload": {
+            "run_id": run_id,
+            "task_id": task_id,
+            "attempt": attempt,
+            "expected_report": expected_report,
+            "report_content": report_content,
+            "report_hash": report_hash,
+        },
+        "derived_conversation_messages": [{
+            "message_role": "assistant",
+            "participant": {"id": str(task.get("ownership", {}).get("owner_id") or "worker"), "type": "agent", "role": "worker"},
+            "session_id": session_id,
+            "turn_id": f"worker-turn:{run_id}:{task_id}:attempt:{attempt}",
+            "content": report_content,
+            "content_source": {"kind": "pf_codex_exec_output", "provider": "processforge", "adapter": "pf-codex-exec-worker", "native_event_type": "WorkerExpectedReportCaptured", "content_provenance": "pf_owned_output_file"},
+            "delivery": {"state": "complete", "sequence": 1, "final": True},
+        }],
+    }
+    from pf_runtime import host as runtime_host
+    capture = runtime_host.ingest_event(envelope, None, sys.modules[__name__])
+    if not capture.get("accepted") or len(capture.get("chat_message_ids") or []) != 1:
+        print("FAIL: collectible expected report was not captured as exactly one assistant transcript message")
         return 1
     status, output = run_command_capture(command_task_complete, argparse.Namespace(project_root=str(project_root), task=task_id, summary=f"Collected worker run output from {state.get('driver_id')}", artifact=[expected_report_artifact(task)], dry_run=False))
     print(output, end="")
@@ -17821,7 +19009,9 @@ def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state
     failure_reason = str(state.get("failure_reason") or runtime_status)
     task["status"] = "failed"
     task["result"] = {
-        "status": runtime_status,
+        # Assignment result is a semantic delivery outcome; the more granular
+        # Inspector runtime status belongs in its durable agent-run record.
+        "status": "failed",
         "summary": f"Worker runtime ended with {runtime_status}: {failure_reason}",
         "artifacts": [],
     }
@@ -17963,9 +19153,13 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
             task_id = safe_id(str(item.get("id") or "task"), "task")
             task = load_task(project_root, task_id)
             worker = workers.get(task_id)
-            driver_id = str((worker or {}).get("runtime_driver") or task.get("runtime_driver") or default_driver)
-            task_rows.append((task_id, task, worker, driver_id))
             state = load_agent_run_state(project_root, run_id, task_id)
+            # A prepared run records the concrete driver as durable Inspector
+            # state.  A supervisor must observe that driver, not fall back to
+            # its run default (commonly `manual`), otherwise it can rewrite a
+            # shell worker's timeout and lifecycle while the process is live.
+            driver_id = str(state.get("driver_id") or (worker or {}).get("runtime_driver") or task.get("runtime_driver") or default_driver)
+            task_rows.append((task_id, task, worker, driver_id))
             if state.get("status") == "running":
                 observed_state = observe_worker_run(project_root, task, driver_id, state)
                 observed.append(task_id)
@@ -18136,6 +19330,168 @@ def command_supervisor_stop(args: argparse.Namespace) -> int:
         write_supervisor_state(project_root, state)
     print(f"STOP REQUESTED: {rel(stop_file, project_root)}")
     return 0
+
+
+def command_runtime_serve(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_serve(args, sys.modules[__name__])
+
+
+def command_runtime_start(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_start(args, sys.modules[__name__])
+
+
+def command_runtime_stop(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_stop(args, sys.modules[__name__])
+
+
+def command_runtime_restart(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_restart(args, sys.modules[__name__])
+
+
+def command_runtime_status(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_status(args, sys.modules[__name__])
+
+
+def command_runtime_doctor(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_doctor(args, sys.modules[__name__])
+
+
+def command_runtime_event(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_event(args, sys.modules[__name__])
+
+
+def command_runtime_session_register(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_session_register(args, sys.modules[__name__])
+
+
+def command_runtime_project_state(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_project_state(args, sys.modules[__name__])
+
+
+def command_runtime_work_state(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_work_state(args, sys.modules[__name__])
+
+
+def command_runtime_resolve(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_resolve(args, sys.modules[__name__])
+
+
+def command_runtime_tick(args: argparse.Namespace) -> int:
+    from pf_runtime import service as runtime_service
+
+    return runtime_service.command_tick(args, sys.modules[__name__])
+
+
+def command_runtime_autostart_status(args: argparse.Namespace) -> int:
+    from pf_runtime import windows_autostart
+
+    return windows_autostart.command_status(args, sys.modules[__name__])
+
+
+def command_runtime_autostart_install(args: argparse.Namespace) -> int:
+    from pf_runtime import windows_autostart
+
+    return windows_autostart.command_install(args, sys.modules[__name__])
+
+
+def command_runtime_autostart_remove(args: argparse.Namespace) -> int:
+    from pf_runtime import windows_autostart
+
+    return windows_autostart.command_remove(args, sys.modules[__name__])
+
+
+def command_codex_mcp_status(args: argparse.Namespace) -> int:
+    from pf_runtime import codex_mcp
+
+    return codex_mcp.command_status(args, sys.modules[__name__])
+
+
+def command_codex_mcp_install(args: argparse.Namespace) -> int:
+    from pf_runtime import codex_mcp
+
+    return codex_mcp.command_install(args, sys.modules[__name__])
+
+
+def command_codex_mcp_remove(args: argparse.Namespace) -> int:
+    from pf_runtime import codex_mcp
+
+    return codex_mcp.command_remove(args, sys.modules[__name__])
+
+
+def command_runtime_host_init(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_init(args, sys.modules[__name__])
+
+
+def command_runtime_host_event(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_event(args, sys.modules[__name__])
+
+
+def command_runtime_host_status(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_status(args, sys.modules[__name__])
+
+
+def command_runtime_host_project_state(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_project_state(args, sys.modules[__name__])
+
+
+def command_runtime_host_work_state(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_work_state(args, sys.modules[__name__])
+
+
+def command_runtime_host_resolve(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_resolve(args, sys.modules[__name__])
+
+
+def command_runtime_host_tick(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_tick(args, sys.modules[__name__])
+
+
+def command_runtime_host_rebuild_projections(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_rebuild_projections(args, sys.modules[__name__])
+
+
+def command_runtime_host_projection_doctor(args: argparse.Namespace) -> int:
+    from pf_runtime import host as runtime_host
+
+    return runtime_host.command_projection_doctor(args, sys.modules[__name__])
 
 
 def load_orchestrator_plan(project_root: Path, plan_arg: str | None = None, run_arg: str | None = None) -> dict[str, Any]:
@@ -18379,6 +19735,14 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
     required_outputs = normalize_required_outputs(task.get("required_outputs"))
     expected_report = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
     subagent_policy = normalize_subagent_policy(task.get("subagent_policy"))
+    pf_first_instructions: list[str] = []
+    if requested_workspace_access["knowledge_resources"]:
+        pf_first_instructions = [
+            "This assignment has governed workplace knowledge grants.",
+            "Before any shell command, project file read, global memory lookup, or broad search, use the ProcessForge MCP control plane in this order: `pf.context`, `pf.work.start`, `pf.resolve`, then `pf.search`.",
+            "Use `pf.resolve` and `pf.search` results as the primary route to knowledge paths and articles; open resolved files only after PF returns them.",
+            "If the ProcessForge MCP tools are unavailable or fail, stop and return a blocked report. Do not silently fall back to filesystem discovery.",
+        ]
     lines = [
         "# Worker Launch Prompt",
         "",
@@ -18396,6 +19760,7 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
         "Stop and report if scope is insufficient.",
         "Invoke subagents only when subagent_policy.allow is true.",
         "When subagent reports are required, write them only under subagent_policy.reports_dir.",
+        *pf_first_instructions,
         "",
         "## Assignment",
         "",
@@ -18738,16 +20103,17 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
         if status:
             print(output, end="")
             return status
-    run_doc = load_run(project_root, run_id)
     if runtime:
-        run_doc["runtime"] = {
-            "default_driver": default_driver,
-            "supervisor_profile": str(runtime.get("supervisor_profile") or "default"),
-            "start_policy": str(runtime.get("start_policy") or "manual"),
-        }
-        if "max_parallel_workers" in runtime:
-            run_doc["runtime"]["max_parallel_workers"] = int(runtime.get("max_parallel_workers") or 1)
-        save_run(project_root, run_doc)
+        with registry_file_lock(run_yaml_path(project_root, run_id)):
+            run_doc = load_run(project_root, run_id)
+            run_doc["runtime"] = {
+                "default_driver": default_driver,
+                "supervisor_profile": str(runtime.get("supervisor_profile") or "default"),
+                "start_policy": str(runtime.get("start_policy") or "manual"),
+            }
+            if "max_parallel_workers" in runtime:
+                run_doc["runtime"]["max_parallel_workers"] = int(runtime.get("max_parallel_workers") or 1)
+            save_run_locked(project_root, run_doc)
     write_yaml_file(orchestrator_plan_path(project_root, run_id), plan)
     for order, worker in enumerate(workers, start=1):
         if not isinstance(worker, dict):
@@ -18889,6 +20255,59 @@ def command_orchestrator_plan_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def process_execution_service(project_root: Path, explicit_workplace: str | None = None) -> ProcessExecutionService:
+    manifest = resolve_project_workplace_manifest(project_root, explicit_workplace)
+    workplace_root = manifest.parent if manifest is not None else None
+    return ProcessExecutionService(project_root, workplace_root, sys.modules[__name__])
+
+
+def print_process_execution_result(payload: dict[str, Any], *, as_json: bool = False) -> None:
+    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if as_json else dump_yaml(payload))
+
+
+def command_work_start(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    payload = process_execution_service(project_root, getattr(args, "workplace", None)).start(objective=args.objective, process_id=str(getattr(args, "process_id", None) or ""))
+    print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
+    return 0 if payload.get("action") in {"created_new", "continue_existing"} else 1
+
+
+def command_work_state(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    payload = process_execution_service(project_root, getattr(args, "workplace", None)).state(
+        run_id=str(getattr(args, "run", None) or ""),
+        assignment_id=str(getattr(args, "assignment", None) or ""),
+    )
+    print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
+    return 0
+
+
+def command_work_transition(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    evidence: list[Any] = []
+    evidence_file = str(getattr(args, "evidence_file", None) or "").strip()
+    if evidence_file:
+        loaded = json.loads(Path(evidence_file).expanduser().read_text(encoding="utf-8"))
+        evidence.extend(loaded if isinstance(loaded, list) else [loaded])
+    for raw in getattr(args, "evidence", None) or []:
+        try:
+            evidence.append(json.loads(raw))
+        except json.JSONDecodeError:
+            evidence.append(raw)
+    payload = process_execution_service(project_root, getattr(args, "workplace", None)).transition(
+        outcome=args.outcome,
+        evidence=evidence,
+        notes=str(getattr(args, "notes", None) or ""),
+        run_id=str(getattr(args, "run", None) or ""),
+        assignment_id=str(getattr(args, "assignment", None) or ""),
+    )
+    print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
+    return 0 if payload.get("action") in {"stage_transitioned", "run_completed"} else 1
+
+
 def command_run_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
@@ -18921,9 +20340,8 @@ def command_run_create(args: argparse.Namespace) -> int:
         return 0
     root = run_root(project_root, run_id)
     root.mkdir(parents=True, exist_ok=True)
-    write_yaml_file(path, run)
+    save_run(project_root, run)
     (root / "plan.md").write_text(f"# Run Plan: {args.title}\n\nObjective: {args.objective or 'TBD'}\n", encoding="utf-8")
-    write_task_index(project_root, run)
     emit_process_event(project_root, "run.created", process_id=run["process"], subject=run_id, payload={"run_id": run_id, "path": rel(path, project_root)}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(path, project_root)}")
     return 0
@@ -18968,40 +20386,36 @@ def command_run_status(args: argparse.Namespace) -> int:
 
 def command_run_doctor(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
-    checks = validate_run_consistency(project_root, args.run, include_runtime_events=bool(getattr(args, "runtime_events", False)))
+    run_id = str(args.run or "").strip()
+    with registry_file_lock(run_yaml_path(project_root, run_id)):
+        checks = validate_run_consistency(project_root, run_id, include_runtime_events=bool(getattr(args, "runtime_events", False)))
     result = print_checks(checks)
-    run_id = safe_id(args.run, "run")
     emit_process_event(project_root, "run.doctor.failed" if result else "run.doctor.passed", severity="error" if result else "info", subject=run_id, payload={"run_id": run_id, "result": "fail" if result else "pass"}, correlation_id=f"run-{run_id}")
     return result
 
 
 def command_run_summary(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
+    run_id = safe_id(args.run, "run")
+    with registry_file_lock(run_root(project_root, run_id) / "run.yaml"):
+        return _command_run_summary_locked(args)
+
+
+def _command_run_summary_locked(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
     run = load_run(project_root, args.run)
     run_id = str(run.get("id", safe_id(args.run, "run")))
-    summary = run_root(project_root, run_id) / "summary.md"
-    handoff = locate_flow_root(project_root) / "handoffs" / "runs" / f"{run_id}-handoff.md"
-    lines = [f"# Run Summary: {run.get('title', run_id)}", "", f"- run_id: `{run_id}`", f"- status: `{run.get('status')}`", "", "## Tasks", ""]
-    for item in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
-        if isinstance(item, dict):
-            task = load_yaml_document(assignment_yaml_path(project_root, str(item.get("id", ""))))
-            result = task.get("result") if isinstance(task.get("result"), dict) else {}
-            lines.append(f"- `{item.get('id')}`: `{item.get('status')}` - {result.get('summary', task.get('title', ''))}")
-    if len(lines) == 7:
-        lines.append("- No tasks recorded.")
-    handoff_text = f"# Run Handoff: {run_id}\n\nStatus: `{run.get('status')}`\n\nSummary: `{rel(summary, project_root)}`\n"
+    summary = run_summary_path(project_root, run_id)
+    handoff = run_handoff_path(project_root, run_id)
     if getattr(args, "dry_run", False):
         print_plan("run-summary dry run", [summary, handoff], project_root)
         return 0
-    summary.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    handoff.parent.mkdir(parents=True, exist_ok=True)
-    handoff.write_text(handoff_text, encoding="utf-8")
     artifacts = [rel(summary, project_root), rel(handoff, project_root)]
     run["final_artifacts"] = artifacts
     emitted = run.setdefault("events", {}).setdefault("emitted", []) if isinstance(run.setdefault("events", {}), dict) else []
     if isinstance(emitted, list) and "run.summary.created" not in emitted:
         emitted.append("run.summary.created")
-    save_run(project_root, run)
+    save_run_locked(project_root, run, include_summary_handoff=True)
     emit_process_event(project_root, "run.summary.created", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id, "artifacts": artifacts}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(summary, project_root)}")
     print(f"WROTE: {rel(handoff, project_root)}")
@@ -19009,6 +20423,13 @@ def command_run_summary(args: argparse.Namespace) -> int:
 
 
 def command_run_complete(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    run_id = safe_id(args.run, "run")
+    with registry_file_lock(run_root(project_root, run_id) / "run.yaml"):
+        return _command_run_complete_locked(args)
+
+
+def _command_run_complete_locked(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     run = load_run(project_root, args.run)
     run_id = str(run.get("id", safe_id(args.run, "run")))
@@ -19023,20 +20444,39 @@ def command_run_complete(args: argparse.Namespace) -> int:
     emitted = run.setdefault("events", {}).setdefault("emitted", []) if isinstance(run.setdefault("events", {}), dict) else []
     if isinstance(emitted, list) and "run.completed" not in emitted:
         emitted.append("run.completed")
-    save_run(project_root, run)
+    summary = run_summary_path(project_root, run_id)
+    handoff = run_handoff_path(project_root, run_id)
+    artifacts = [rel(summary, project_root), rel(handoff, project_root)]
+    run["final_artifacts"] = artifacts
+    if isinstance(emitted, list) and "run.summary.created" not in emitted:
+        emitted.append("run.summary.created")
+    save_run_locked(project_root, run, include_summary_handoff=True)
     emit_process_event(project_root, "run.completed", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id}, correlation_id=f"run-{run_id}")
-    command_run_summary(argparse.Namespace(project_root=str(project_root), run=run_id, dry_run=False))
+    emit_process_event(project_root, "run.summary.created", process_id=str(run.get("process", "")), subject=run_id, payload={"run_id": run_id, "artifacts": artifacts}, correlation_id=f"run-{run_id}")
     print(f"COMPLETED: {run_id}")
     return 0
 
 
 def command_task_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
+    run_id = safe_id(args.run, "run")
+    with registry_file_lock(run_yaml_path(project_root, run_id)):
+        return _command_task_create_locked(args)
+
+
+def _command_task_create_locked(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
     run = load_run(project_root, args.run)
     run_id = str(run.get("id", safe_id(args.run, "run")))
     task_id = safe_id(args.id, "task")
     process_id = safe_id(args.process, "task")
     require_official_process_active(project_root, process_id)
+    stage_id = safe_id(str(getattr(args, "stage", "") or ""), "stage") if getattr(args, "stage", None) else ""
+    if stage_id:
+        definition = resolve_process_definition(project_root, process_id)
+        declared_stages = {str(item.get("id") or "") for item in as_list(definition.process.get("stages")) if isinstance(item, dict)}
+        if stage_id not in declared_stages:
+            raise SystemExit(f"FAIL: stage {stage_id} is not declared by process {process_id}")
     path = assignment_yaml_path(project_root, task_id)
     if path.exists():
         raise SystemExit(f"FAIL: task already exists: {rel(path, project_root)}")
@@ -19061,6 +20501,8 @@ def command_task_create(args: argparse.Namespace) -> int:
         "iterations": [],
         "result": {"status": "pending", "summary": "", "artifacts": []},
     }
+    if stage_id:
+        task["stage"] = stage_id
     allowed_files = assignment_scope_items([*as_list(getattr(args, "allowed_file", [])), *as_list(getattr(args, "allowed_glob", []))])
     allowed_read_files = assignment_scope_items([*as_list(getattr(args, "read_file", [])), *as_list(getattr(args, "allowed_read_file", []))])
     context_artifacts = normalize_context_artifacts(getattr(args, "context_artifact", []))
@@ -19123,6 +20565,13 @@ def command_task_create(args: argparse.Namespace) -> int:
         expected_report["artifact"] = normalize_assignment_path(args.expected_report_artifact)
         if len(required_outputs) == 1:
             required_outputs[0].setdefault("path", expected_report["artifact"])
+    missing_output_paths = [str(item.get("id") or "output") for item in required_outputs if not str(item.get("path") or "").strip()]
+    if missing_output_paths:
+        raise SystemExit(
+            "FAIL: every required output needs a path; use "
+            "--required-output id=<id>,path=<repository-relative-path>. Missing: "
+            + ", ".join(missing_output_paths)
+        )
     if expected_report:
         expected_report.setdefault("format", "concise_markdown")
         expected_report.setdefault("include", [item["id"] for item in required_outputs])
@@ -19145,7 +20594,7 @@ def command_task_create(args: argparse.Namespace) -> int:
     write_yaml_file(path, task)
     tasks.append({"id": task_id, "assignment": rel(path, project_root), "status": "open", "order": order, "blocking": True})
     run["tasks"] = tasks
-    save_run(project_root, run)
+    save_run_locked(project_root, run)
     for event_type in ["task.created", "assignment.created"]:
         emit_process_event(project_root, event_type, process_id=task["process"], subject=task_id, assignment_id_value=task_id, assignment_path=rel(path, project_root), payload={"run_id": run_id, "task_id": task_id, "path": rel(path, project_root)}, correlation_id=f"run-{run_id}")
     print(f"WROTE: {rel(path, project_root)}")
@@ -19164,10 +20613,19 @@ def command_task_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    with registry_file_lock(run_yaml_path(project_root, run_id)):
+        return _command_task_start_locked(args)
+
+
+def _command_task_start_locked(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
     require_official_process_active(project_root, task_process_id(task))
     task["status"] = "in_progress"
     save_task(project_root, task)
-    update_run_task_status(project_root, str(task.get("run_id", "")), task_id, "in_progress")
+    update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "in_progress")
     for event_type in ["task.started", "assignment.started"]:
         emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id}, correlation_id=f"run-{task.get('run_id')}")
     print(f"STARTED: {task_id}")
@@ -19175,6 +20633,15 @@ def command_task_start(args: argparse.Namespace) -> int:
 
 
 def command_task_complete(args: argparse.Namespace) -> int:
+    project_root = Path(args.project_root).expanduser().resolve()
+    task_id = safe_id(args.task, "task")
+    task = load_task(project_root, task_id)
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    with registry_file_lock(run_root(project_root, run_id) / "run.yaml"):
+        return _command_task_complete_locked(args)
+
+
+def _command_task_complete_locked(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
@@ -19191,11 +20658,34 @@ def command_task_complete(args: argparse.Namespace) -> int:
     if waivers:
         task["result"]["waivers"] = waivers
     save_task(project_root, task)
-    update_run_task_status(project_root, str(task.get("run_id", "")), task_id, "done")
+    update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "done")
     for event_type in ["task.completed", "assignment.completed"]:
         emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "summary": args.summary}, correlation_id=f"run-{task.get('run_id')}")
     print(f"DONE: {task_id}")
     return 0
+
+
+def task_verification_fingerprint(project_root: Path, task: dict[str, Any]) -> str:
+    """Fingerprint the task declaration and its declared verification inputs."""
+    inputs: list[dict[str, Any]] = []
+    for output in normalize_required_outputs(task.get("required_outputs")):
+        if not bool(output.get("required", True)):
+            continue
+        path = task_output_path(project_root, output)
+        item = {"id": str(output.get("id") or "output"), "path": rel(path, project_root) if path else "", "status": "missing"}
+        if path and path.is_file():
+            item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
+        inputs.append(item)
+    expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
+    expected_path = str(expected.get("artifact") or "")
+    if expected_path:
+        path = project_root / normalize_assignment_path(expected_path)
+        item = {"id": "expected-report", "path": normalize_assignment_path(expected_path), "status": "missing"}
+        if path.is_file():
+            item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
+        inputs.append(item)
+    payload = {"assignment": task, "inputs": inputs}
+    return "sha256:" + hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
 def command_task_doctor(args: argparse.Namespace) -> int:
@@ -19203,7 +20693,8 @@ def command_task_doctor(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     checks = validate_task_consistency(project_root, task_id)
     result = print_checks(checks)
-    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass"})
+    task = load_task(project_root, task_id)
+    emit_process_event(project_root, "task.doctor.failed" if result else "task.doctor.passed", severity="error" if result else "info", subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"task_id": task_id, "result": "fail" if result else "pass", "verification_fingerprint": task_verification_fingerprint(project_root, task)})
     return result
 
 
@@ -19700,17 +21191,29 @@ def command_doctor_project(args: argparse.Namespace) -> int:
 
     if gitignore.is_file():
         ignore_text = gitignore.read_text(encoding="utf-8", errors="replace")
-        for entry in [".pf/process-forge.local.yaml", ".pf/runtime/", ".pf/cache/"]:
-            checks.append(
-                check("PASS", f".gitignore contains {entry}")
-                if entry in ignore_text
-                else check_with_hint(
-                    "FAIL",
-                    f".gitignore missing {entry}",
-                    "Private local config and runtime data must stay out of public project files.",
-                    f"add {entry} to .gitignore",
+        for entry in [".codex/hooks.json", ".pf/process-forge.local.yaml", ".pf/runtime/", ".pf/cache/"]:
+            exact = entry in ignore_text
+            effective = exact or gitignore_effectively_protects(project_root, entry) is True
+            if effective:
+                checks.append(check("PASS", f".gitignore protects {entry}"))
+                if not exact:
+                    checks.append(
+                        check_with_hint(
+                            "WARN",
+                            f".gitignore missing recommended explicit entry {entry}",
+                            "Git effective ignore rules protect the private path, but the policy line is not explicit.",
+                            f"optionally add {entry} to .gitignore for readability",
+                        )
+                    )
+            else:
+                checks.append(
+                    check_with_hint(
+                        "FAIL",
+                        f".gitignore missing {entry}",
+                        "Private local config and runtime data must stay out of public project files.",
+                        f"add {entry} to .gitignore",
+                    )
                 )
-            )
     else:
         checks.append(check("FAIL", ".gitignore missing"))
 
@@ -19778,14 +21281,22 @@ Fix:
         elif auto_workplace_mode:
             checks.append(check("WARN", f"{rel(path, project_root)} missing"))
         elif rel_path == "runtime/bin/pf.py":
-            checks.append(
-                check_with_hint(
-                    "FAIL",
-                    f"{rel(path, project_root)} missing",
-                    "A linked project needs its local Python launcher because it does not contain ProcessForge core tools.",
-                    "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic --apply",
+            if looks_like_processforge_distribution(project_root):
+                checks.append(
+                    check(
+                        "WARN",
+                        f"{rel(path, project_root)} missing for self-contained ProcessForge distribution",
+                    )
                 )
-            )
+            else:
+                checks.append(
+                    check_with_hint(
+                        "FAIL",
+                        f"{rel(path, project_root)} missing",
+                        "A linked project needs its local Python launcher because it does not contain ProcessForge core tools.",
+                        "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic --apply",
+                    )
+                )
         elif rel_path.startswith("contexts/project-context.snapshot"):
             checks.append(
                 check_with_hint(
@@ -21780,6 +23291,7 @@ def command_update_apply(args: argparse.Namespace) -> int:
     print(f"BACKUP: {rel(backup_dir, workplace_root)}")
     if marked:
         print("SNAPSHOTS_MARKED_STALE: " + ", ".join(rel(path, workplace_root) for path in marked))
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="update-apply"))
     return 0
 
 
@@ -21823,6 +23335,7 @@ def command_update_rollback(args: argparse.Namespace) -> int:
     print(f"RESTORE_PATH: {rel(restore_path, workplace_root)}")
     if marked:
         print("SNAPSHOTS_MARKED_STALE: " + ", ".join(rel(path, workplace_root) for path in marked))
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="update-rollback"))
     return 0
 
 
@@ -21855,6 +23368,313 @@ def command_path_resolve(args: argparse.Namespace) -> int:
         print("errors: " + ", ".join(resolution["errors"]))
         return 1
     return 0
+
+
+def local_search_runtime_snapshot(project_root: Path, workplace_root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    from processforge_core.garage import snapshot_with_resolved_search_roots
+
+    context = project_context_check_result(project_root, explicit_workplace=str(workplace_root))
+    snapshot_path, _snapshot_md = project_context_snapshot_paths(project_root)
+    snapshot = load_yaml_document(snapshot_path) if snapshot_path.is_file() else {}
+    runtime_snapshot = snapshot_with_resolved_search_roots(
+        project_root,
+        snapshot if isinstance(snapshot, dict) else {},
+        workplace_root,
+        sys.modules[__name__],
+    )
+    return context, runtime_snapshot
+
+
+def search_index_project_label(project_root: Path, workplace_root: Path) -> str:
+    try:
+        return rel(project_root, workplace_root)
+    except ValueError:
+        return project_root.name or str(project_root)
+
+
+def write_search_index_maintenance_runtime_report(workplace_root: Path, payload: dict[str, Any]) -> Path:
+    report_path = workplace_root / "runtime" / "search" / "latest-maintenance.yaml"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(ensure_trailing_newline(dump_yaml(payload)), encoding="utf-8")
+    return report_path
+
+
+def search_index_maintenance_for_known_projects(
+    workplace_root: Path,
+    *,
+    reason: str,
+    project_roots: list[Path] | None = None,
+    verify_files: bool = True,
+) -> dict[str, Any]:
+    """Run bounded local-search maintenance for projects that already selected resources.
+
+    The search index is project-scoped: the project context snapshot decides which
+    knowledge/resources/templates are visible. A workplace-wide resource change can
+    therefore only tick known projects with fresh snapshots; stale projects must
+    refresh their context before ProcessForge can safely rebuild their search index.
+    """
+    from processforge_core.local_resource_search import ResourceSearchIndex
+
+    raw_projects = project_roots if project_roots is not None else project_roots_under_workplace(workplace_root)
+    projects: list[Path] = []
+    seen: set[str] = set()
+    for project in raw_projects:
+        candidate = project.expanduser().resolve()
+        key = str(candidate).lower() if os.name == "nt" else str(candidate)
+        if key not in seen:
+            seen.add(key)
+            projects.append(candidate)
+    payload: dict[str, Any] = {
+        "schema_version": 1,
+        "kind": "pf.search_index.maintenance",
+        "created_at": now_utc(),
+        "reason": reason,
+        "project_count": len(projects),
+        "results": [],
+    }
+    results = payload["results"]
+    assert isinstance(results, list)
+    for project_root in projects:
+        row: dict[str, Any] = {
+            "project": search_index_project_label(project_root, workplace_root),
+            "status": "pending",
+        }
+        try:
+            if not (project_root / ".pf" / "process-forge.yaml").is_file():
+                row.update({"status": "skipped", "reason": "not_processforge_project"})
+                results.append(row)
+                continue
+            context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+            context_status = str(context.get("status") or "unknown")
+            row["context_status"] = context_status
+            if context_status not in {"fresh", "fresh_with_updates"}:
+                row.update(
+                    {
+                        "status": "skipped",
+                        "reason": "project_context_not_fresh",
+                        "recommended_action": context.get("recommended_action") or "project-context-refresh",
+                    }
+                )
+                results.append(row)
+                continue
+            tick = ResourceSearchIndex(project_root, snapshot, workplace_root).maintenance_tick(verify_files=verify_files)
+            after = tick.get("after") if isinstance(tick.get("after"), dict) else {}
+            row.update(
+                {
+                    "status": "ok" if after.get("status") == "fresh" else "degraded",
+                    "action": tick.get("action"),
+                    "search_status": after.get("status"),
+                    "generation": after.get("generation"),
+                    "document_count": after.get("document_count"),
+                    "stale_resource_count": after.get("stale_resource_count"),
+                    "failed_file_count": after.get("failed_file_count"),
+                }
+            )
+            if after.get("error"):
+                row["error"] = after.get("error")
+            emit_process_event(
+                project_root,
+                "search.index.maintenance.completed",
+                payload={
+                    "reason": reason,
+                    "action": row.get("action"),
+                    "status": row.get("search_status"),
+                    "generation": row.get("generation"),
+                },
+            )
+        except Exception as exc:  # pragma: no cover - defensive CLI boundary.
+            row.update({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
+        results.append(row)
+    report_path = write_search_index_maintenance_runtime_report(workplace_root, payload)
+    payload["report"] = rel(report_path, workplace_root)
+    try:
+        append_workplace_event(
+            workplace_root,
+            "search.index.maintenance.completed",
+            payload={
+                "reason": reason,
+                "project_count": payload["project_count"],
+                "report": payload["report"],
+                "statuses": [row.get("status") for row in results if isinstance(row, dict)],
+            },
+        )
+    except Exception:
+        pass
+    return payload
+
+
+def print_search_index_maintenance_summary(payload: dict[str, Any]) -> None:
+    print(f"SEARCH_INDEX_PROJECTS: {payload.get('project_count', 0)}")
+    if payload.get("report"):
+        print(f"SEARCH_INDEX_REPORT: {payload.get('report')}")
+    results = payload.get("results") if isinstance(payload.get("results"), list) else []
+    for row in results:
+        if not isinstance(row, dict):
+            continue
+        project = row.get("project")
+        if row.get("status") in {"ok", "degraded"}:
+            print(
+                "SEARCH_INDEX: "
+                f"{project} action={row.get('action')} status={row.get('search_status')} "
+                f"generation={row.get('generation') or 'none'} documents={row.get('document_count')}"
+            )
+        elif row.get("status") == "skipped":
+            print(
+                "SEARCH_INDEX_SKIPPED: "
+                f"{project} reason={row.get('reason')} context={row.get('context_status') or 'unknown'} "
+                f"next={row.get('recommended_action') or 'none'}"
+            )
+        elif row.get("status") == "error":
+            print(f"SEARCH_INDEX_ERROR: {project} error={row.get('error')}")
+
+
+def print_search_index_status(payload: dict[str, Any]) -> None:
+    sqlite_info = payload.get("sqlite") if isinstance(payload.get("sqlite"), dict) else {}
+    print(f"STATUS: {payload.get('status')}")
+    print(f"GENERATION: {payload.get('generation') or 'none'}")
+    print(f"SQLITE_VERSION: {sqlite_info.get('sqlite_version') or 'unknown'}")
+    print(f"FTS5: {'available' if sqlite_info.get('fts5_available') else 'unavailable'}")
+    print(f"RESOURCES: {payload.get('resource_count')}")
+    print(f"DOCUMENTS: {payload.get('document_count')}")
+    print(f"STALE_RESOURCES: {payload.get('stale_resource_count')}")
+    print(f"FAILED_FILES: {payload.get('failed_file_count')}")
+    print(f"LAST_SUCCESSFUL_REFRESH: {payload.get('last_successful_refresh') or 'none'}")
+    print(f"LAST_FULL_RECONCILIATION: {payload.get('last_full_reconciliation') or 'none'}")
+    if payload.get("error"):
+        print(f"ERROR: {payload.get('error')}")
+    if payload.get("path"):
+        print(f"INDEX: {payload.get('path')}")
+
+
+def command_search_index_status(args: argparse.Namespace) -> int:
+    from processforge_core.local_resource_search import ResourceSearchIndex
+
+    project_root = Path(args.project_root).expanduser().resolve()
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    _context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+    status = ResourceSearchIndex(project_root, snapshot, workplace_root).status(verify_files=bool(getattr(args, "verify_files", False)))
+    print_search_index_status(status)
+    return 1 if status.get("status") == "degraded" else 0
+
+
+def command_search_index_refresh(args: argparse.Namespace) -> int:
+    from processforge_core.local_resource_search import ResourceSearchIndex
+
+    project_root = Path(args.project_root).expanduser().resolve()
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+    if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+        print(f"FAIL: project context is not fresh: {context.get('status')}")
+        return 1
+    result = ResourceSearchIndex(project_root, snapshot, workplace_root).refresh()
+    print(f"REFRESHED: {result.get('generation')}")
+    print(f"RESOURCES: {result.get('resources')}")
+    print(f"DOCUMENTS: {result.get('indexed')}")
+    return 0
+
+
+def command_search_index_rebuild(args: argparse.Namespace) -> int:
+    from processforge_core.local_resource_search import ResourceSearchIndex
+
+    project_root = Path(args.project_root).expanduser().resolve()
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+    if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+        print(f"FAIL: project context is not fresh: {context.get('status')}")
+        return 1
+    result = ResourceSearchIndex(project_root, snapshot, workplace_root).rebuild()
+    print(f"REBUILT: {result.get('generation')}")
+    print(f"RESOURCES: {result.get('resources')}")
+    print(f"DOCUMENTS: {result.get('indexed')}")
+    return 0
+
+
+def command_search_index_doctor(args: argparse.Namespace) -> int:
+    from processforge_core.local_resource_search import ResourceSearchIndex
+
+    project_root = Path(args.project_root).expanduser().resolve()
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+    status = ResourceSearchIndex(project_root, snapshot, workplace_root).status()
+    sqlite_info = status.get("sqlite") if isinstance(status.get("sqlite"), dict) else {}
+    checks = [
+        check("PASS" if sqlite_info.get("fts5_available") else "FAIL", "SQLite FTS5 available"),
+        check("PASS" if status.get("status") != "degraded" else "FAIL", "search index readable"),
+        check("PASS" if str(context.get("status") or "") in {"fresh", "fresh_with_updates"} else "WARN", f"project context freshness: {context.get('status')}"),
+        check("PASS" if status.get("status") == "fresh" else "WARN", f"search index status: {status.get('status')}"),
+        check("PASS" if int(status.get("failed_file_count") or 0) == 0 else "WARN", "failed file count is zero"),
+    ]
+    return print_checks(checks)
+
+
+def command_search_index_tick(args: argparse.Namespace) -> int:
+    from processforge_core.local_resource_search import ResourceSearchIndex
+
+    project_root = Path(args.project_root).expanduser().resolve()
+    workplace_root = Path(args.workplace).expanduser().resolve()
+    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
+    if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+        print(f"FAIL: project context is not fresh: {context.get('status')}")
+        return 1
+    payload = ResourceSearchIndex(project_root, snapshot, workplace_root).maintenance_tick(verify_files=not bool(getattr(args, "skip_file_verify", False)))
+    print(f"ACTION: {payload.get('action')}")
+    after = payload.get("after") if isinstance(payload.get("after"), dict) else {}
+    print(f"STATUS: {after.get('status')}")
+    print(f"GENERATION: {after.get('generation') or 'none'}")
+    print(f"DOCUMENTS: {after.get('document_count')}")
+    if after.get("error"):
+        print(f"ERROR: {after.get('error')}")
+    return 0 if after.get("status") == "fresh" else 1
+
+
+def command_core_update_status(args: argparse.Namespace) -> int:
+    from processforge_core.core_update import CoreUpdateError, core_status
+
+    try:
+        payload = core_status(Path(args.core_root).expanduser().resolve())
+    except CoreUpdateError as exc:
+        print(json.dumps({"error": {"code": exc.code, "message": exc.message}}, indent=2, sort_keys=True))
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def command_core_update_plan(args: argparse.Namespace) -> int:
+    from processforge_core.core_update import CoreUpdateError, build_plan
+
+    try:
+        payload = build_plan(Path(args.core_root).expanduser().resolve(), Path(args.archive).expanduser().resolve())
+    except CoreUpdateError as exc:
+        print(json.dumps({"error": {"code": exc.code, "message": exc.message}}, indent=2, sort_keys=True))
+        return 1
+    printable = {key: value for key, value in payload.items() if key != "new_manifest"}
+    print(json.dumps(printable, indent=2, sort_keys=True))
+    return 0 if payload.get("status") != "blocked" else 2
+
+
+def command_core_update_apply(args: argparse.Namespace) -> int:
+    from processforge_core.core_update import CoreUpdateError, apply_update
+
+    try:
+        payload = apply_update(
+            Path(args.core_root).expanduser().resolve(),
+            Path(args.archive).expanduser().resolve(),
+            confirm=bool(args.confirm),
+            force_local_modifications=bool(args.force_local_modifications),
+        )
+    except CoreUpdateError as exc:
+        print(json.dumps({"error": {"code": exc.code, "message": exc.message}}, indent=2, sort_keys=True))
+        return 1
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def command_core_update_repair(args: argparse.Namespace) -> int:
+    from processforge_core.core_update import repair_status
+
+    payload = repair_status(Path(args.core_root).expanduser().resolve())
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if payload.get("status") != "manual_repair_required" else 2
 
 
 def write_resource_proposal(workplace_root: Path, command: str, object_id: str, payload: dict[str, Any], slug: str | None = None) -> tuple[str, Path]:
@@ -22318,6 +24138,7 @@ def command_knowledge_add_url(args: argparse.Namespace) -> int:
     print(f"PACKAGE_ROOT: {package_root.root_id}")
     print(f"MANIFEST: {rel(manifest_path, workplace_root)}")
     print(f"INDEX: {rel(index_path, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="knowledge-add-url"))
     return 0
 
 
@@ -22346,6 +24167,7 @@ def command_knowledge_add_resource(args: argparse.Namespace) -> int:
     print(f"PACKAGE_ROOT: {package_root.root_id}")
     print(f"MANIFEST: {rel(manifest_path, workplace_root)}")
     print(f"INDEX: {rel(index_path, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="knowledge-add-resource"))
     return 0
 
 
@@ -22389,6 +24211,7 @@ def command_knowledge_index_refresh(args: argparse.Namespace) -> int:
     print(f"PACKAGE_ROOT: {package_root.root_id}")
     print(f"INDEX: {rel(index_path, workplace_root)}")
     print(f"REPORT: {rel(report, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="knowledge-index-refresh"))
     return 0
 
 
@@ -22854,7 +24677,7 @@ def command_template_add(args: argparse.Namespace) -> int:
             message="template add proposal created",
         ),
     )
-    if args.dry_run:
+    if args.dry_run or args.apply is not True:
         print(f"PROPOSAL: {rel(proposal_path, workplace_root)}")
         return 0
     if not source.is_dir():
@@ -22993,6 +24816,7 @@ def command_template_create(args: argparse.Namespace) -> int:
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.doctor.passed" if doctor_status == 0 else "template.doctor.failed", target={"template_id": template_id}, status="passed" if doctor_status == 0 else "failed", message="template doctor completed"))
     append_workplace_resource_event(workplace_root, resource_management_event(scope="workplace", command="template-create", event_type="template.authoring.completed", target={"template_id": template_id}, status="completed", message="template authoring completed"))
     print(f"TEMPLATE: {rel(target, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="template-create"))
     return doctor_status
 
 
@@ -23165,6 +24989,7 @@ def command_tool_register(args: argparse.Namespace) -> int:
     report = write_resource_management_report(workplace_root, slug, "Tool Register Report", [f"- tool: {tool_id}", f"- status: {result}"])
     print(f"{result.upper()}: {tool_id}")
     print(f"REPORT: {rel(report, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="tool-register"))
     return 0
 
 
@@ -23201,6 +25026,7 @@ def command_mcp_register(args: argparse.Namespace) -> int:
     report = write_resource_management_report(workplace_root, slug, "MCP Register Report", [f"- mcp: {mcp_id}", f"- status: {result}"])
     print(f"{result.upper()}: {mcp_id}")
     print(f"REPORT: {rel(report, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="mcp-register"))
     return 0
 
 
@@ -23949,6 +25775,7 @@ def command_platform_create(args: argparse.Namespace) -> int:
         return 0
     execute_authoring_plan(plan)
     print(f"PLATFORM: {rel(contract_path, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="platform-create"))
     return 0
 
 
@@ -24004,6 +25831,7 @@ def command_platform_contract_install(args: argparse.Namespace) -> int:
         return 0
     execute_authoring_plan(plan)
     print(f"CONTRACT: {rel(contract_path, workplace_root)}")
+    print_search_index_maintenance_summary(search_index_maintenance_for_known_projects(workplace_root, reason="platform-contract-install"))
     return 0
 
 
@@ -24099,6 +25927,9 @@ def build_parser() -> argparse.ArgumentParser:
     init_project.add_argument("--workplace", required=True, help="Path to workplace.yaml.")
     init_project.add_argument("--type", dest="project_type", help="Project type override.")
     init_project.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
+    init_project.add_argument("--platform", action="append", default=[], help="Explicit platform contract id. Repeatable.")
+    init_project.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
+    init_project.add_argument("--process", help="Explicit active process id.")
     init_project.add_argument("--answers", help="Optional project answers YAML.")
     init_project.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     init_project.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
@@ -24112,6 +25943,9 @@ def build_parser() -> argparse.ArgumentParser:
     project_init.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
     project_init.add_argument("--type", dest="project_type", help="Project type override.")
     project_init.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
+    project_init.add_argument("--platform", action="append", default=[], help="Explicit platform contract id. Repeatable.")
+    project_init.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
+    project_init.add_argument("--process", help="Explicit active process id.")
     project_init.add_argument("--answers", help="Optional project answers YAML.")
     project_init.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     project_init.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
@@ -24125,6 +25959,9 @@ def build_parser() -> argparse.ArgumentParser:
     project_onboard.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
     project_onboard.add_argument("--type", dest="project_type", required=True, help="Explicit project type, for example generic or fixture.project-type.a.")
     project_onboard.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
+    project_onboard.add_argument("--platform", action="append", default=[], help="Explicit platform contract id. Repeatable.")
+    project_onboard.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
+    project_onboard.add_argument("--process", help="Explicit active process id.")
     project_onboard.add_argument("--answers", help="Optional project answers YAML.")
     project_onboard.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     project_onboard.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
@@ -24132,6 +25969,20 @@ def build_parser() -> argparse.ArgumentParser:
     project_onboard.add_argument("--force", action="store_true", help="Overwrite existing files.")
     project_onboard.add_argument("--allow-missing-workplace", action="store_true", help="Allow apply mode with a missing workplace manifest.")
     project_onboard.set_defaults(func=command_init_project)
+
+    project_init_status = sub.add_parser("project-init-status", help="Read the bounded project initialization status.")
+    project_init_status.add_argument("--project-root", required=True, help="Project root path.")
+    project_init_status.add_argument("--workplace", help="Optional workplace root or manifest for context resolution.")
+    project_init_status.add_argument("--json", action="store_true", help="Print JSON.")
+    project_init_status.set_defaults(func=command_project_init_status)
+
+    project_init_repair = sub.add_parser("project-init-repair", help="Repair deterministic project initialization state.")
+    project_init_repair.add_argument("--project-root", required=True, help="Existing PF project root path.")
+    project_init_repair.add_argument("--workplace", help="Optional workplace root or manifest for context resolution.")
+    project_init_repair.add_argument("--repair-action", default="refresh_context", choices=["refresh_context", "restore_deterministic_artifacts", "install_codex_hooks"], help="Deterministic repair action.")
+    project_init_repair.add_argument("--reason", default="manual", help="Repair reason recorded in the event journal.")
+    project_init_repair.add_argument("--apply", action="store_true", help="Perform the repair; omission is a non-mutating plan.")
+    project_init_repair.set_defaults(func=command_project_init_repair)
 
     doctor_project = sub.add_parser("doctor-project", help="Validate a ProcessForge project layer.")
     doctor_project.add_argument("--project-root", required=True, help="Project root path.")
@@ -24272,6 +26123,50 @@ def build_parser() -> argparse.ArgumentParser:
     path_resolve.add_argument("--workplace", required=True, help="Workplace root path.")
     path_resolve.add_argument("--path", required=True, help="Raw path with optional ${CONST}.")
     path_resolve.set_defaults(func=command_path_resolve)
+
+    search_index = sub.add_parser("search-index", help="Inspect and maintain the derived workplace local resource search index.")
+    search_index_sub = search_index.add_subparsers(dest="search_index_command", required=True)
+    search_index_status = search_index_sub.add_parser("status", help="Show search index readiness for a project snapshot.")
+    search_index_status.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_status.add_argument("--workplace", required=True, help="Workplace root path.")
+    search_index_status.add_argument("--verify-files", action="store_true", help="Read authorized files and mark the scope stale when fingerprints changed.")
+    search_index_status.set_defaults(func=command_search_index_status)
+    search_index_refresh = search_index_sub.add_parser("refresh", help="Refresh the project snapshot scope in the workplace search index.")
+    search_index_refresh.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_refresh.add_argument("--workplace", required=True, help="Workplace root path.")
+    search_index_refresh.set_defaults(func=command_search_index_refresh)
+    search_index_rebuild = search_index_sub.add_parser("rebuild", help="Rebuild the derived workplace search index for the project snapshot scope.")
+    search_index_rebuild.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_rebuild.add_argument("--workplace", required=True, help="Workplace root path.")
+    search_index_rebuild.set_defaults(func=command_search_index_rebuild)
+    search_index_doctor = search_index_sub.add_parser("doctor", help="Validate search index capabilities and readiness.")
+    search_index_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
+    search_index_doctor.set_defaults(func=command_search_index_doctor)
+    search_index_tick = search_index_sub.add_parser("tick", help="Run one bounded maintenance pass for the project snapshot search scope.")
+    search_index_tick.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_tick.add_argument("--workplace", required=True, help="Workplace root path.")
+    search_index_tick.add_argument("--skip-file-verify", action="store_true", help="Skip file fingerprint verification and only refresh missing/stale metadata state.")
+    search_index_tick.set_defaults(func=command_search_index_tick)
+
+    core_update = sub.add_parser("core-update", help="Plan and apply manifest-based ProcessForge core archive updates.")
+    core_update_sub = core_update.add_subparsers(dest="core_update_command", required=True)
+    core_update_status = core_update_sub.add_parser("status", help="Read installed core manifest and incomplete update state.")
+    core_update_status.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+    core_update_status.set_defaults(func=command_core_update_status)
+    core_update_plan = core_update_sub.add_parser("plan", help="Validate an archive and print add/change/remove plan without modifying files.")
+    core_update_plan.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+    core_update_plan.add_argument("--archive", required=True, help="ProcessForge release archive containing processforge-core.manifest.json.")
+    core_update_plan.set_defaults(func=command_core_update_plan)
+    core_update_apply = core_update_sub.add_parser("apply", help="Apply a manifest-based core update from an explicit archive.")
+    core_update_apply.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+    core_update_apply.add_argument("--archive", required=True, help="ProcessForge release archive containing processforge-core.manifest.json.")
+    core_update_apply.add_argument("--confirm", action="store_true", help="Required confirmation for file changes.")
+    core_update_apply.add_argument("--force-local-modifications", action="store_true", help="Allow replacing locally modified PF-owned files after backup.")
+    core_update_apply.set_defaults(func=command_core_update_apply)
+    core_update_repair = core_update_sub.add_parser("repair", help="Inspect incomplete core update repair state.")
+    core_update_repair.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+    core_update_repair.set_defaults(func=command_core_update_repair)
 
     knowledge_add_url = sub.add_parser("knowledge-add-url", help="Create or apply a proposal to add a URL-backed knowledge resource.")
     knowledge_add_url.add_argument("--workplace", required=True, help="Workplace root path.")
@@ -25026,6 +26921,206 @@ def build_parser() -> argparse.ArgumentParser:
     execution_inspector_stop_alias.add_argument("--project-root", required=True, help="Project root path.")
     execution_inspector_stop_alias.set_defaults(func=command_supervisor_stop)
 
+    runtime = sub.add_parser("runtime", help="Run and control the long-lived local PF Runtime process.")
+    runtime_sub = runtime.add_subparsers(dest="runtime_command", required=True)
+
+    runtime_serve = runtime_sub.add_parser("serve", help="Run PF Runtime in the foreground for one workplace.")
+    runtime_serve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_serve.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
+    runtime_serve.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")
+    runtime_serve.set_defaults(func=command_runtime_serve)
+
+    runtime_start = runtime_sub.add_parser("start", help="Start PF Runtime in the background for one workplace.")
+    runtime_start.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_start.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
+    runtime_start.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")
+    runtime_start.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for readiness.")
+    runtime_start.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_start.set_defaults(func=command_runtime_start)
+
+    runtime_stop = runtime_sub.add_parser("stop", help="Stop PF Runtime for one workplace.")
+    runtime_stop.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_stop.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for graceful shutdown.")
+    runtime_stop.set_defaults(func=command_runtime_stop)
+
+    runtime_restart = runtime_sub.add_parser("restart", help="Restart PF Runtime for one workplace.")
+    runtime_restart.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_restart.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
+    runtime_restart.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")
+    runtime_restart.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for stop/start.")
+    runtime_restart.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_restart.set_defaults(func=command_runtime_restart)
+
+    runtime_status = runtime_sub.add_parser("status", help="Print PF Runtime process and projection status.")
+    runtime_status.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_status.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_status.set_defaults(func=command_runtime_status)
+
+    runtime_doctor = runtime_sub.add_parser("doctor", help="Check PF Runtime state, singleton, auth, and protocol compatibility.")
+    runtime_doctor.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_doctor.set_defaults(func=command_runtime_doctor)
+
+    runtime_event = runtime_sub.add_parser("event", help="Send one normalized agent event through the long-lived runtime.")
+    runtime_event.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_event.add_argument("--project-root", help="Project root path override.")
+    runtime_event.add_argument("--input", default="-", help="JSON input path or '-' for stdin.")
+    runtime_event.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_event.set_defaults(func=command_runtime_event)
+
+    runtime_session = runtime_sub.add_parser("session-register", help="Bind a Codex/runtime session id to one project.")
+    runtime_session.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_session.add_argument("--session", required=True, help="Runtime/agent session id.")
+    runtime_session.add_argument("--agent", help="Agent id.")
+    runtime_session.add_argument("--project-root", help="Project root path.")
+    runtime_session.add_argument("--cwd", help="Working directory fallback used by hook adapters.")
+    runtime_session.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_session.set_defaults(func=command_runtime_session_register)
+
+    runtime_project_state = runtime_sub.add_parser("project-state", help="Read project state for a routed Runtime session.")
+    runtime_project_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_project_state.add_argument("--session", help="Runtime/agent session id.")
+    runtime_project_state.add_argument("--project-root", help="Project root path fallback.")
+    runtime_project_state.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_project_state.set_defaults(func=command_runtime_project_state)
+
+    runtime_work_state = runtime_sub.add_parser("work-state", help="Read current work state for a routed Runtime session.")
+    runtime_work_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_work_state.add_argument("--session", help="Runtime/agent session id.")
+    runtime_work_state.add_argument("--project-root", help="Project root path fallback.")
+    runtime_work_state.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_work_state.set_defaults(func=command_runtime_work_state)
+
+    runtime_resolve = runtime_sub.add_parser("resolve", help="Resolve the project handle for a Runtime session.")
+    runtime_resolve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_resolve.add_argument("--session", help="Runtime/agent session id.")
+    runtime_resolve.add_argument("--project-root", help="Project root path fallback.")
+    runtime_resolve.add_argument("--resource", help="Resolved knowledge resource id.")
+    runtime_resolve.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_resolve.set_defaults(func=command_runtime_resolve)
+
+    runtime_tick = runtime_sub.add_parser("tick", help="Request one Runtime scheduler pass for known or explicit projects.")
+    runtime_tick.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_tick.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
+    runtime_tick.add_argument("--director", action="store_true", help="Run hosted Agent Director tick for organized projects.")
+    runtime_tick.add_argument("--inspector", action="store_true", help="Run hosted Execution Inspector tick.")
+    runtime_tick.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_tick.set_defaults(func=command_runtime_tick)
+
+    runtime_autostart = runtime_sub.add_parser("autostart", help="Manage Windows Task Scheduler autostart for PF Runtime.")
+    runtime_autostart_sub = runtime_autostart.add_subparsers(dest="runtime_autostart_command", required=True)
+
+    def add_runtime_autostart_common(parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+        parser.add_argument("--distribution-root", help="Installed ProcessForge distribution root. Defaults to this CLI distribution.")
+        parser.add_argument("--python", help="Python executable stored in the scheduled task. Defaults to the current interpreter.")
+        parser.add_argument("--port", type=int, default=0, help="Runtime loopback port, or 0 for an ephemeral port.")
+        parser.add_argument("--interval", type=float, default=2.0, help="Runtime scheduler tick interval in seconds.")
+        parser.add_argument("--json", action="store_true", help="Print JSON.")
+
+    runtime_autostart_status = runtime_autostart_sub.add_parser("status", help="Inspect the workplace Runtime scheduled task.")
+    add_runtime_autostart_common(runtime_autostart_status)
+    runtime_autostart_status.set_defaults(func=command_runtime_autostart_status)
+    runtime_autostart_install = runtime_autostart_sub.add_parser("install", help="Plan or install the workplace Runtime scheduled task.")
+    add_runtime_autostart_common(runtime_autostart_install)
+    runtime_autostart_install.add_argument("--delay-seconds", type=int, default=10, help="Delay after interactive logon.")
+    runtime_autostart_install.add_argument("--replace", action="store_true", help="Replace a drifted task with the deterministic ProcessForge definition.")
+    runtime_autostart_install.add_argument("--apply", action="store_true", help="Create the task; otherwise show a dry run.")
+    runtime_autostart_install.set_defaults(func=command_runtime_autostart_install)
+    runtime_autostart_remove = runtime_autostart_sub.add_parser("remove", help="Plan or remove the workplace Runtime scheduled task.")
+    add_runtime_autostart_common(runtime_autostart_remove)
+    runtime_autostart_remove.add_argument("--force", action="store_true", help="Remove a drifted task with the deterministic ProcessForge name.")
+    runtime_autostart_remove.add_argument("--apply", action="store_true", help="Delete the task; otherwise show a dry run.")
+    runtime_autostart_remove.set_defaults(func=command_runtime_autostart_remove)
+
+    codex_mcp = sub.add_parser("codex-mcp", help="Manage the host-owned ProcessForge stdio MCP registration in Codex.")
+    codex_mcp_sub = codex_mcp.add_subparsers(dest="codex_mcp_command", required=True)
+
+    def add_codex_mcp_common(parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+        parser.add_argument("--distribution-root", help="Installed ProcessForge distribution root. Defaults to this CLI distribution.")
+        parser.add_argument("--name", default="processforge", help="Codex MCP server name.")
+        parser.add_argument("--python", help="Python command used by Codex. Defaults to the current interpreter.")
+        parser.add_argument("--codex", help="Codex executable. Defaults to the executable on PATH.")
+        parser.add_argument("--json", action="store_true", help="Print JSON.")
+
+    codex_mcp_status = codex_mcp_sub.add_parser("status", help="Inspect the Codex ProcessForge MCP registration.")
+    add_codex_mcp_common(codex_mcp_status)
+    codex_mcp_status.set_defaults(func=command_codex_mcp_status)
+    codex_mcp_install = codex_mcp_sub.add_parser("install", help="Plan or install the Codex ProcessForge MCP registration.")
+    add_codex_mcp_common(codex_mcp_install)
+    codex_mcp_install.add_argument("--replace", action="store_true", help="Replace a drifted registration.")
+    codex_mcp_install.add_argument("--apply", action="store_true", help="Write Codex configuration; otherwise show a dry run.")
+    codex_mcp_install.set_defaults(func=command_codex_mcp_install)
+    codex_mcp_remove = codex_mcp_sub.add_parser("remove", help="Plan or remove the Codex ProcessForge MCP registration.")
+    add_codex_mcp_common(codex_mcp_remove)
+    codex_mcp_remove.add_argument("--force", action="store_true", help="Remove a drifted registration with this name.")
+    codex_mcp_remove.add_argument("--apply", action="store_true", help="Write Codex configuration; otherwise show a dry run.")
+    codex_mcp_remove.set_defaults(func=command_codex_mcp_remove)
+
+    runtime_host = sub.add_parser("runtime-host", help="Host existing PF Core runtime passes through a lazy local Runtime PoC.")
+    runtime_host_sub = runtime_host.add_subparsers(dest="runtime_host_command", required=True)
+
+    runtime_host_init = runtime_host_sub.add_parser("init", help="Initialize or refresh Runtime project handles.")
+    runtime_host_init.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_init.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
+    runtime_host_init.set_defaults(func=command_runtime_host_init)
+
+    runtime_host_event = runtime_host_sub.add_parser("event", help="Accept one normalized agent event and append a PF event envelope.")
+    runtime_host_event.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
+    runtime_host_event.add_argument("--project-root", help="Project root path override.")
+    runtime_host_event.add_argument("--input", default="-", help="JSON input path or '-' for stdin.")
+    runtime_host_event.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_event.set_defaults(func=command_runtime_host_event)
+
+    runtime_host_status = runtime_host_sub.add_parser("status", help="Print Runtime host status.")
+    runtime_host_status.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_status.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
+    runtime_host_status.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_status.set_defaults(func=command_runtime_host_status)
+
+    runtime_host_project_state = runtime_host_sub.add_parser("project-state", help="MCP-like read-only project state for a routed Runtime session.")
+    runtime_host_project_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_project_state.add_argument("--session", help="Runtime/agent session id.")
+    runtime_host_project_state.add_argument("--project-root", help="Project root path fallback.")
+    runtime_host_project_state.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_project_state.set_defaults(func=command_runtime_host_project_state)
+
+    runtime_host_work_state = runtime_host_sub.add_parser("work-state", help="MCP-like read-only work state for a routed Runtime session.")
+    runtime_host_work_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_work_state.add_argument("--session", help="Runtime/agent session id.")
+    runtime_host_work_state.add_argument("--project-root", help="Project root path fallback.")
+    runtime_host_work_state.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_work_state.set_defaults(func=command_runtime_host_work_state)
+
+    runtime_host_resolve = runtime_host_sub.add_parser("resolve", help="Resolve the project handle for a Runtime session.")
+    runtime_host_resolve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_resolve.add_argument("--session", help="Runtime/agent session id.")
+    runtime_host_resolve.add_argument("--project-root", help="Project root path fallback.")
+    runtime_host_resolve.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_resolve.set_defaults(func=command_runtime_host_resolve)
+
+    runtime_host_tick = runtime_host_sub.add_parser("tick", help="Run hosted Ledger maintenance plus optional Director/Inspector ticks.")
+    runtime_host_tick.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+    runtime_host_tick.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
+    runtime_host_tick.add_argument("--director", action="store_true", help="Host existing agent-director-tick for organized projects.")
+    runtime_host_tick.add_argument("--inspector", action="store_true", help="Host existing execution inspector tick.")
+    runtime_host_tick.add_argument("--run", help="Run id for inspector tick.")
+    runtime_host_tick.add_argument("--profile", help="Supervisor/inspector profile.")
+    runtime_host_tick.add_argument("--driver", help="Runtime driver override.")
+    runtime_host_tick.add_argument("--wait-ttl", type=int, default=3600, help="Director wait TTL seconds.")
+    runtime_host_tick.add_argument("--lease-ttl", type=int, default=3600, help="Director lease TTL seconds.")
+    runtime_host_tick.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_tick.set_defaults(func=command_runtime_host_tick)
+
+    runtime_host_rebuild = runtime_host_sub.add_parser("rebuild-projections", help="Rebuild Runtime projections from durable project event journals.")
+    runtime_host_rebuild.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
+    runtime_host_rebuild.add_argument("--json", action="store_true", help="Print JSON.")
+    runtime_host_rebuild.set_defaults(func=command_runtime_host_rebuild_projections)
+
+    runtime_host_projection_doctor = runtime_host_sub.add_parser("projection-doctor", help="Validate declaration-driven technical projection freshness and readiness.")
+    runtime_host_projection_doctor.add_argument("--project-root", action="append", required=True, help="Project root path. Repeatable.")
+    runtime_host_projection_doctor.set_defaults(func=command_runtime_host_projection_doctor)
+
     orchestrator_plan = sub.add_parser("orchestrator-plan", help="Create, validate, apply, or inspect a multi-agent orchestration plan.")
     orchestrator_plan_sub = orchestrator_plan.add_subparsers(dest="orchestrator_plan_command", required=True)
     orchestrator_plan_create = orchestrator_plan_sub.add_parser("create", help="Create an orchestrator task plan.")
@@ -25367,6 +27462,34 @@ def build_parser() -> argparse.ArgumentParser:
                 shell_plan.add_argument("--write-normalized", help="Optional normalized plan YAML output path.")
         shell_plan.set_defaults(func=func, shell_plan=alias_name.endswith("apply"))
 
+    work_start = sub.add_parser("work-start", help="Start or continue declarative governed work.")
+    work_start.add_argument("--project-root", required=True, help="Project root path.")
+    work_start.add_argument("--workplace", help="Workplace root override.")
+    work_start.add_argument("--objective", required=True, help="High-level work objective.")
+    work_start.add_argument("--process-id", help="Optional allowed process id for the new governed work.")
+    work_start.add_argument("--json", action="store_true", help="Print JSON.")
+    work_start.set_defaults(func=command_work_start)
+
+    work_state = sub.add_parser("work-state", help="Read current declarative governed work state.")
+    work_state.add_argument("--project-root", required=True, help="Project root path.")
+    work_state.add_argument("--workplace", help="Workplace root override.")
+    work_state.add_argument("--run", help="Explicit Run id.")
+    work_state.add_argument("--assignment", help="Explicit Assignment id.")
+    work_state.add_argument("--json", action="store_true", help="Print JSON.")
+    work_state.set_defaults(func=command_work_state)
+
+    work_transition = sub.add_parser("work-transition", help="Advance declarative governed work using outcome and evidence.")
+    work_transition.add_argument("--project-root", required=True, help="Project root path.")
+    work_transition.add_argument("--workplace", help="Workplace root override.")
+    work_transition.add_argument("--run", help="Explicit Run id.")
+    work_transition.add_argument("--assignment", help="Explicit Assignment id.")
+    work_transition.add_argument("--outcome", required=True, help="Declared stage outcome.")
+    work_transition.add_argument("--evidence", action="append", default=[], help="Evidence JSON object or attestation text. Repeatable.")
+    work_transition.add_argument("--evidence-file", help="JSON file containing one evidence object or an array.")
+    work_transition.add_argument("--notes", help="Optional transition notes.")
+    work_transition.add_argument("--json", action="store_true", help="Print JSON.")
+    work_transition.set_defaults(func=command_work_transition)
+
     run_create = sub.add_parser("run-create", help="Create a project run/work session.")
     run_create.add_argument("--project-root", required=True, help="Project root path.")
     run_create.add_argument("--id", required=True, help="Run id.")
@@ -25412,6 +27535,7 @@ def build_parser() -> argparse.ArgumentParser:
     task_create.add_argument("--id", required=True, help="Task id.")
     task_create.add_argument("--title", required=True, help="Task title.")
     task_create.add_argument("--process", required=True, help="Task process id.")
+    task_create.add_argument("--stage", help="Declared Process Stage for this assignment; must exist in the selected Process.")
     task_create.add_argument("--platform", help="Selected platform id for this task.")
     task_create.add_argument("--specialization", action="append", default=[], help="Selected specialization id. Repeatable.")
     task_create.add_argument("--objective", help="Task objective.")

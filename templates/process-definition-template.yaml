@@ -102,6 +102,7 @@ stages:
     entry_gates: []
     exit_gates:
       - scope-recorded
+    automation_bindings: []
 artifact_definitions:
   - id: brief
     title: Brief
@@ -114,6 +115,10 @@ artifact_definitions:
       - draft
       - ready_for_review
       - approved
+evidence_definitions:
+  - id: scope-attestation
+    title: Scope attestation
+    kind: attestation
 gates:
   - id: scope-recorded
     type: checklist

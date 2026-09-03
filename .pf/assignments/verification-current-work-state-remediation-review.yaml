@@ -1,0 +1,68 @@
+schema_version: 1
+id: verification-current-work-state-remediation-review
+title: Review H1/M1 remediation
+run_id: verification-current-work-state-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T08:40:03Z'
+updated_at: '2026-08-14T08:42:52Z'
+objective: Read-only verify that H1 rebuild-stable freshness and M1 no-full-rescan read-path findings are remediated. Write PASS/FAIL only for these findings.
+platform: ""
+selected_specializations:
+  []
+order: 5
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/reviews/verification-current-work-state-20260814-remediation-review.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/verification-current-work-state-20260814-remediation-review.md
+allowed_read_files:
+  - tools/pf_runtime/host.py
+  - tools/processforge.py
+  - tools/smoke_verification_current_work_state.py
+  - .pf/reviews/verification-current-work-state-20260814-review.md
+  - .pf/artifacts/verification-current-work-state-20260814/**
+ownership:
+  owner_id: codex-spark-remediation-reviewer
+  owner_label: worker-codex-spark-remediation-reviewer
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/verification-current-work-state-20260814-remediation-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/verification-current-work-state-20260814-remediation-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: remediation-review
+    type: unspecified
+    required: true
+    path: .pf/reviews/verification-current-work-state-20260814-remediation-review.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/reviews/verification-current-work-state-20260814-remediation-review.md
+  format: concise_markdown
+  include:
+    - remediation-review
+agent_model: gpt-5.3-codex-spark

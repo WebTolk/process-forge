@@ -322,6 +322,10 @@ artifact_definitions:
   - draft
   - ready_for_review
   - approved
+input_definitions:
+  assignment:
+    title: Assignment
+    description: The selected assignment that scopes ECP and context-capsule generation.
 gates:
 - id: sources-discovered
   description: Required source list exists.

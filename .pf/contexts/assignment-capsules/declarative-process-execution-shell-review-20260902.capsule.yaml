@@ -1,0 +1,345 @@
+schema_version: 1
+capsule:
+  id: declarative-process-execution-shell-review-20260902-capsule
+  generated_at: '2026-09-02T07:50:21Z'
+  assignment_id: declarative-process-execution-shell-review-20260902
+  assignment_path: .pf/assignments/declarative-process-execution-shell-review-20260902.yaml
+  assignment_checksum: f10c4f6e870ac5171a039b0b78bcf06a6d2cc55f525824dc24eb5a9ca678ada9
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 96bcfda36126cd0109b121aac50b5a2a1c92495eb31602b8d53c52ba3598ddb9
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260902-065419-56a2ec
+  sha256: 'sha256:96bcfda36126cd0109b121aac50b5a2a1c92495eb31602b8d53c52ba3598ddb9'
+  generated_at: '2026-09-02T06:54:10Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  -
+    id: 'project.process-forge:project-profile'
+    kind: note_collection
+    package_id: project.process-forge
+    requirement: recommended
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-profile@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts/project-profile.md
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:33c8f9edf949d6d99e3287d47c440a1341c1445fdd5361a4038e546d1f422ef0'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+  -
+    id: 'project.process-forge:project-artifacts'
+    kind: reference
+    package_id: project.process-forge
+    requirement: recommended
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-artifacts@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:66f3079b7370d98d92f0fec9594cec7fe61fe44aab9cc97ae7b4ee74d4a73aa6'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    []
+execution_route_summary:
+  process: ""
+  stages:
+    []
+  required_capabilities:
+    []
+  capability_requirements:
+    []
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    []
+  unsatisfied:
+    []
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: declarative-process-execution-shell-review-20260902
+  path: .pf/assignments/declarative-process-execution-shell-review-20260902.yaml
+  status: in_progress
+  objective: Independently review the declarative Process execution implementation against the master prompt. Do not modify source code. Run focused read-only checks as useful and write a concise Russian report with findings ordered by severity, evidence, and residual risks.
+  execution_mode:
+    kind: assurance
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260902-065419-56a2ec
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/declarative-process-execution-shell-review-20260902.yaml
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - .pf/reviews/declarative-process-execution-shell-agent.md
+  allowed_read_files:
+    - задания/process-forge-declarative-process-execution-master-prompt.md
+    - src/processforge_core/process_execution.py
+    - src/processforge_core/garage.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/pf_runtime/host.py
+    - tools/processforge.py
+    - schemas/process-definition.schema.json
+    - schemas/process-event.schema.json
+    - tools/process_execution_smoke_support.py
+    - tools/smoke_work_transition_*.py
+    - tools/smoke_work_start_no_stage_guessing.py
+  forbidden_files:
+    []
+  ownership:
+    owner_id: pf-shell-reviewer
+    owner_label: worker-pf-shell-reviewer
+    role: reviewer
+    writer: true
+    owned_files:
+      - .pf/reviews/declarative-process-execution-shell-agent.md
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/reviews/declarative-process-execution-shell-agent.md
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: shell-agent-review
+      type: unspecified
+      required: true
+      path: .pf/reviews/declarative-process-execution-shell-agent.md
+  expected_report:
+    language: ru
+    artifact: .pf/reviews/declarative-process-execution-shell-agent.md
+    format: concise_markdown
+    include:
+      - shell-agent-review
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.4
+agent_reasoning_effort: high
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/declarative-process-execution-shell-review-20260902.ndjson
+  event_correlation_id: assignment-declarative-process-execution-shell-review-20260902
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/declarative-process-execution-shell-review-20260902.yaml
+allowed_files:
+  - .pf/reviews/declarative-process-execution-shell-agent.md
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: shell-agent-review
+    type: unspecified
+    required: true
+    path: .pf/reviews/declarative-process-execution-shell-agent.md
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-declarative-process-execution-shell-review-20260902

@@ -1,0 +1,216 @@
+schema_version: 1
+id: multi-process-assurance-delivery
+title: Validate review and hand off the multi-process slice
+run_id: garage-stabilize-processforge-1-1-0-multi-process-project-selection-and
+process: task-batch-execution
+status: in_progress
+created_at: '2026-09-03T07:01:36Z'
+updated_at: '2026-09-03T09:40:43Z'
+objective: Create required acceptance artifacts, independent reviews, validation evidence, and a durable handoff after implementation.
+platform: ""
+selected_specializations:
+  []
+order: 5
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+stage: run-summary
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/logs/multi-process-work-capsule-stability-20260903.md
+  - .pf/artifacts/multi-process-work-capsule-stability-20260903/garage-context-contamination-audit.md
+  - .pf/artifacts/multi-process-work-capsule-stability-20260903/legacy-single-process-compatibility.md
+  - .pf/artifacts/multi-process-work-capsule-stability-20260903/real-project-multi-process-acceptance.md
+  - .pf/artifacts/multi-process-work-capsule-stability-20260903/same-session-continuation-acceptance.md
+  - .pf/artifacts/multi-process-work-capsule-stability-20260903/fresh-session-continuation-acceptance.md
+  - .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+  - .pf/reviews/multi-process-work-capsule-stability-20260903/independent-architecture-review.md
+  - .pf/reviews/multi-process-work-capsule-stability-20260903/independent-code-review.md
+  - .pf/handoffs/multi-process-work-capsule-stability-20260903-handoff.md
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/logs/multi-process-work-capsule-stability-20260903.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/garage-context-contamination-audit.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/legacy-single-process-compatibility.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/real-project-multi-process-acceptance.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/same-session-continuation-acceptance.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/fresh-session-continuation-acceptance.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+    - .pf/reviews/multi-process-work-capsule-stability-20260903/independent-architecture-review.md
+    - .pf/reviews/multi-process-work-capsule-stability-20260903/independent-code-review.md
+    - .pf/handoffs/multi-process-work-capsule-stability-20260903-handoff.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/logs/multi-process-work-capsule-stability-20260903.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/garage-context-contamination-audit.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/legacy-single-process-compatibility.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/real-project-multi-process-acceptance.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/same-session-continuation-acceptance.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/fresh-session-continuation-acceptance.md
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+    - .pf/reviews/multi-process-work-capsule-stability-20260903/independent-architecture-review.md
+    - .pf/reviews/multi-process-work-capsule-stability-20260903/independent-code-review.md
+    - .pf/handoffs/multi-process-work-capsule-stability-20260903-handoff.md
+  rule: Do not edit files owned by active parallel tasks.
+stage_execution:
+  started_at: '2026-09-03T08:43:27Z'
+  evidence:
+    -
+      kind: attestation
+      id: attestation-1
+      status: ready
+      summary: '{kind:artifact,artifact_id:run-summary,status:ready,path:.pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md}'
+      recorded_at: '2026-09-03T09:40:17Z'
+    -
+      kind: attestation
+      id: attestation-2
+      status: ready
+      summary: '{kind:artifact,artifact_id:run-handoff,status:ready,path:.pf/handoffs/multi-process-work-capsule-stability-20260903-handoff.md}'
+      recorded_at: '2026-09-03T09:40:17Z'
+    -
+      kind: attestation
+      id: attestation-3
+      status: ready
+      summary: '{kind:gate,gate_id:run-summary-created,status:passed,path:.pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md}'
+      recorded_at: '2026-09-03T09:40:17Z'
+    -
+      kind: artifact
+      artifact_id: run-summary
+      status: ready
+      path: .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+      recorded_at: '2026-09-03T09:40:43Z'
+      sha256: 'sha256:498f5c75e722f0359c6e6204fed3253f13b538e581fe0653cde0d0d933878104'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      status: ready
+      path: .pf/handoffs/multi-process-work-capsule-stability-20260903-handoff.md
+      recorded_at: '2026-09-03T09:40:43Z'
+      sha256: 'sha256:94af4191df5e54878813498f8defbc7988d420c5b18be2a17f040438bd43fce5'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      path: .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+      recorded_at: '2026-09-03T09:40:43Z'
+      sha256: 'sha256:498f5c75e722f0359c6e6204fed3253f13b538e581fe0653cde0d0d933878104'
+  notes: Focused multi-process scope is complete. System summary and run handoff are generated by the declared final transition; full public release qualification is delegated to the new final-release work.
+stage_status: in_progress
+stage_history:
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-03T07:01:36Z'
+    completed_at: '2026-09-03T08:42:05Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: input
+        input_id: task-index
+        status: ready
+        path: .pf/runs/garage-stabilize-processforge-1-1-0-multi-process-project-selection-and/task-index.md
+        recorded_at: '2026-09-03T07:32:17Z'
+        sha256: 'sha256:d8d1cbaf52083c55186fb5e622b5e7c9112b0ec0c836a40b2e8e2b4045b01273'
+      -
+        kind: artifact
+        artifact_id: task-iteration-log
+        status: ready
+        path: .pf/logs/multi-process-work-capsule-stability-20260903.md
+        recorded_at: '2026-09-03T07:32:17Z'
+        sha256: 'sha256:cbb3ea662d9290ef7b545c699f15f68d643bbeb479def621111793490345b51b'
+      -
+        kind: gate
+        gate_id: run-has-tasks
+        status: passed
+        path: .pf/runs/garage-stabilize-processforge-1-1-0-multi-process-project-selection-and/task-index.md
+        recorded_at: '2026-09-03T07:32:17Z'
+        sha256: 'sha256:d8d1cbaf52083c55186fb5e622b5e7c9112b0ec0c836a40b2e8e2b4045b01273'
+      -
+        kind: gate
+        gate_id: task-results-recorded
+        status: passed
+        path: .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+        recorded_at: '2026-09-03T07:32:17Z'
+        sha256: 'sha256:498f5c75e722f0359c6e6204fed3253f13b538e581fe0653cde0d0d933878104'
+    notes: Recovered from the prior invalid evidence reference through the validated transition path.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-03T08:42:05Z'
+    completed_at: '2026-09-03T08:42:54Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: attestation
+        id: attestation-1
+        status: ready
+        summary: '{kind:artifact,artifact_id:task-result,status:ready,path:.pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md}'
+        recorded_at: '2026-09-03T08:42:30Z'
+      -
+        kind: attestation
+        id: attestation-2
+        status: ready
+        summary: '{kind:gate,gate_id:all-blocking-tasks-completed,status:passed,path:.pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md}'
+        recorded_at: '2026-09-03T08:42:30Z'
+      -
+        kind: artifact
+        artifact_id: task-result
+        status: ready
+        path: .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+        recorded_at: '2026-09-03T08:42:52Z'
+        sha256: 'sha256:498f5c75e722f0359c6e6204fed3253f13b538e581fe0653cde0d0d933878104'
+      -
+        kind: gate
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        path: .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+        recorded_at: '2026-09-03T08:42:52Z'
+        sha256: 'sha256:498f5c75e722f0359c6e6204fed3253f13b538e581fe0653cde0d0d933878104'
+    notes: Focused validation, review evidence, and task result are recorded; all other blocking tasks are complete.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-03T08:42:54Z'
+    completed_at: '2026-09-03T08:43:27Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-review
+        status: ready
+        path: .pf/reviews/multi-process-work-capsule-stability-20260903/independent-code-review.md
+        recorded_at: '2026-09-03T08:43:23Z'
+        sha256: 'sha256:411a81426ed02c017a33e890e74f0e509bcb5344688c29d354d6a70abbaee235'
+      -
+        kind: gate
+        gate_id: run-doctor-passed
+        status: passed
+        path: .pf/artifacts/multi-process-work-capsule-stability-20260903/final-validation.md
+        recorded_at: '2026-09-03T08:43:23Z'
+        sha256: 'sha256:498f5c75e722f0359c6e6204fed3253f13b538e581fe0653cde0d0d933878104'
+    notes: Independent code and architecture reviews plus run-doctor passed.

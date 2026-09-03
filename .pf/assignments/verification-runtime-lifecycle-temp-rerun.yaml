@@ -1,0 +1,69 @@
+schema_version: 1
+id: verification-runtime-lifecycle-temp-rerun
+title: Rerun Runtime lifecycle smoke with a project-owned temporary directory
+run_id: verification-current-work-state-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T08:56:01Z'
+updated_at: '2026-08-14T08:58:44Z'
+objective: Sequentially rerun the official long-lived Runtime and runtime ledger/MCP smoke scripts after setting TEMP and TMP to a newly created project runtime subdirectory .pf/runtime/verification-temp. This is an execution-environment workaround only; do not change source, do not delete any pre-existing directory, and report exact commands/results.
+platform: ""
+selected_specializations:
+  []
+order: 10
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-temp-rerun.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-temp-rerun.md
+  - .pf/runtime/verification-temp/**
+allowed_read_files:
+  - tools/smoke_long_lived_runtime.py
+  - tools/smoke_runtime_ledger_hooks_mcp.py
+  - tools/pf_runtime/service.py
+ownership:
+  owner_id: verification-current-work-state-coordinator
+  owner_label: worker-verification-current-work-state-coordinator
+  role: runtime-temp-assurance
+  writer: true
+  owned_files:
+    - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-temp-rerun.md
+    - .pf/runtime/verification-temp/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-temp-rerun.md
+    - .pf/runtime/verification-temp/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-lifecycle-temp-rerun
+    type: unspecified
+    required: true
+    path: .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-temp-rerun.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/verification-current-work-state-20260814/runtime-lifecycle-temp-rerun.md
+  format: concise_markdown
+  include:
+    - runtime-lifecycle-temp-rerun
+agent_model: gpt-5.3-codex-spark

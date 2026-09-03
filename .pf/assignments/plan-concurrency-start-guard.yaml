@@ -1,0 +1,70 @@
+schema_version: 1
+id: plan-concurrency-start-guard
+title: Specify duplicate worker-run start guard
+run_id: audit-remediation-plan-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T00:00:00Z'
+updated_at: '2026-08-14T07:07:03Z'
+objective: Read only the worker-run lifecycle. Propose the smallest compatible start-idempotency guard for a running task, including exact symbols, state transitions, races still possible, exit semantics, and a deterministic regression-test design. Do not edit product code.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/codebase-audit-20260814/plan-concurrency-start-guard-report.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/codebase-audit-20260814/plan-concurrency-start-guard-report.md
+allowed_read_files:
+  - tools/processforge.py
+  - tools/codex_exec_worker.py
+  - tools/smoke_codex_exec_worker.py
+  - schemas/agent-run-state.schema.json
+  - .pf/artifacts/codebase-audit-20260814/findings-validation.md
+ownership:
+  owner_id: pf-plan-concurrency
+  owner_label: worker-pf-plan-concurrency
+  role: planning-reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/codebase-audit-20260814/plan-concurrency-start-guard-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/codebase-audit-20260814/plan-concurrency-start-guard-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: plan-concurrency-start-guard-report
+    path: .pf/artifacts/codebase-audit-20260814/plan-concurrency-start-guard-report.md
+    type: markdown
+    required: true
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/codebase-audit-20260814/plan-concurrency-start-guard-report.md
+  format: concise_markdown
+  include:
+    - implementation_points
+    - state_transition
+    - regression_design
+agent_model: gpt-5.3-codex-spark

@@ -1,0 +1,155 @@
+schema_version: 1
+id: verification-current-work-state-implementation
+title: Implement declaration-driven verification state and compact work state
+run_id: verification-current-work-state-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T08:23:15Z'
+updated_at: '2026-08-14T08:31:41Z'
+objective: Implement exactly verification-state/current-work-state from the approved audit and design. Preserve the existing uncommitted required-output-readiness slice; do not redesign Runtime, Ledger, MCP write surfaces, platform resolution, or worker lifecycle. Add focused regression coverage and write an implementation report.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  -
+    id: iter-001
+    kind: debug
+    status: failed
+    started_at: '2026-08-14T08:24:04Z'
+    summary: 'PF codex-exec implementation worker could not be prepared: worker-run re-validates the legacy pre-release broad scope and ignores the documented --force-with-handoff overlap.'
+    artifacts:
+      - .pf/artifacts/runs/verification-current-work-state-20260814/verification-current-work-state-implementation/debug-log.md
+    completed_at: '2026-08-14T08:24:04Z'
+  -
+    id: iter-002
+    kind: work
+    status: in_progress
+    started_at: '2026-08-14T08:24:04Z'
+    summary: Main coordinator takes the tightly coupled bounded code slice under the explicit scope handoff; independent shell-worker review remains required after implementation.
+    artifacts:
+      - .pf/artifacts/runs/verification-current-work-state-20260814/verification-current-work-state-implementation/work-log.md
+result:
+  status: done
+  summary: Implemented declaration-driven verification-state and compact current_work_state; focused schema and smoke checks pass. Independent review and live Runtime proof remain pending.
+  artifacts:
+    - .pf/artifacts/verification-current-work-state-20260814/implementation-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/verification-current-work-state-20260814/verification-current-work-state-audit.md
+  - .pf/artifacts/verification-current-work-state-20260814/verification-state-design.md
+allowed_files:
+  - tools/pf_runtime/host.py
+  - schemas/process-definition.schema.json
+  - processes/core/process-supervisor.yaml
+  - tools/smoke_stage_projectors.py
+  - tools/smoke_verification_current_work_state.py
+  - .pf/artifacts/verification-current-work-state-20260814/implementation-report.md
+allowed_read_files:
+  - .pf/artifacts/verification-current-work-state-20260814/verification-current-work-state-audit.md
+  - .pf/artifacts/verification-current-work-state-20260814/verification-state-design.md
+  - .pf/artifacts/verification-current-work-state-20260814/authoritative-facts-inventory.md
+  - задания/process-forge-verification-current-work-state-detailed-master-prompt.md
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - tools/processforge.py
+  - tools/pf_runtime/**
+  - tools/smoke_stage_projectors.py
+  - tools/smoke_runtime*.py
+  - tools/smoke_worker*.py
+  - schemas/**
+  - processes/core/**
+ownership:
+  owner_id: codex-implementation-worker
+  owner_label: worker-codex-implementation-worker
+  role: task-worker
+  writer: true
+  owned_files:
+    - tools/pf_runtime/host.py
+    - schemas/process-definition.schema.json
+    - processes/core/process-supervisor.yaml
+    - tools/smoke_stage_projectors.py
+    - tools/smoke_verification_current_work_state.py
+    - .pf/artifacts/verification-current-work-state-20260814/implementation-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/pf_runtime/host.py
+    - schemas/process-definition.schema.json
+    - processes/core/process-supervisor.yaml
+    - tools/smoke_stage_projectors.py
+    - tools/smoke_verification_current_work_state.py
+    - .pf/artifacts/verification-current-work-state-20260814/implementation-report.md
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: verification-current-work-state-implementation
+        current_scope: tools/pf_runtime/host.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+      -
+        current_assignment: verification-current-work-state-implementation
+        current_scope: schemas/process-definition.schema.json
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: schemas/**
+        reason: file_matches_glob
+      -
+        current_assignment: verification-current-work-state-implementation
+        current_scope: processes/core/process-supervisor.yaml
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: processes/**
+        reason: file_matches_glob
+      -
+        current_assignment: verification-current-work-state-implementation
+        current_scope: tools/smoke_stage_projectors.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/smoke_*.py
+        reason: file_matches_glob
+      -
+        current_assignment: verification-current-work-state-implementation
+        current_scope: tools/smoke_stage_projectors.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+      -
+        current_assignment: verification-current-work-state-implementation
+        current_scope: tools/smoke_verification_current_work_state.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/smoke_*.py
+        reason: file_matches_glob
+      -
+        current_assignment: verification-current-work-state-implementation
+        current_scope: tools/smoke_verification_current_work_state.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+required_outputs:
+  -
+    id: implementation-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/verification-current-work-state-20260814/implementation-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/verification-current-work-state-20260814/implementation-report.md
+  format: concise_markdown
+  include:
+    - implementation-report
+agent_model: gpt-5.4

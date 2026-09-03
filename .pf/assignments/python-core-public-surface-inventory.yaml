@@ -1,0 +1,99 @@
+schema_version: 1
+id: python-core-public-surface-inventory
+title: Public surface and assurance inventory
+run_id: python-core-refactor-phase-a-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T11:48:28Z'
+updated_at: '2026-08-14T11:53:53Z'
+objective: Inventory documented and released Python/CLI surface, package/archive inclusion rules, direct-script import behavior, existing smoke suites, and compatibility cleanup candidates. Distinguish verified public contracts from internal code; do not modify files.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-a-20260814/public-surface-inventory.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/contexts/project-context.snapshot.yaml
+  - README.md
+  - README.ru.md
+  - QUICKSTART.md
+  - QUICKSTART.ru.md
+  - docs/**
+  - bin/pf.py
+  - tools/processforge.py
+  - tools/release_archive_test.py
+  - tools/smoke_*.py
+  - tools/validate-public-cleanliness.py
+  - dist/**
+  - packages/**
+  - checksums/**
+  - .processforge-releaseignore
+  - requirements.txt
+  - VERSION
+forbidden_files:
+  - .pf/runtime/**
+ownership:
+  owner_id: python-core-public-surface-inventory
+  owner_label: worker-python-core-public-surface-inventory
+  role: release-assurance-inventory
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    []
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: public-surface-inventory
+    path: .pf/artifacts/python-core-refactor-phase-a-20260814/public-surface-inventory.md
+    type: markdown
+    required: true
+agent_model: gpt-5.3-codex-spark
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/public-surface-inventory.md
+  format: concise_markdown
+  include:
+    - public-surface-inventory
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+agent_reasoning_effort: low

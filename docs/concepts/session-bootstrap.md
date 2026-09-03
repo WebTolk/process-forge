@@ -1,5 +1,9 @@
 # Session Bootstrap
 
+> Advanced Forge/operator interface. Normal Garage work begins with
+> `pf.context`, optional `pf.search`/`pf.resolve`, and `pf.work.start`; it does
+> not require manual session creation.
+
 Session bootstrap turns a short launch request into a formal ProcessForge
 session. The new default uses a project context snapshot instead of recompiling
 every package, process, template, and Markdown note on each start.

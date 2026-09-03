@@ -1,0 +1,37 @@
+schema_version: 1
+id: manual-dev-package-update-20260814
+title: Manual 1.1.0-dev package update
+process: processforge-update-check
+status: completed
+created_at: '2026-08-14T16:08:16Z'
+updated_at: '2026-08-14T16:16:31Z'
+objective: Build, validate, and manually stage ProcessForge 1.1.0-dev from current dev commit with rollback evidence.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: update-package-source-audit-20260814
+    assignment: .pf/assignments/update-package-source-audit-20260814.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: release-src-packaging-audit-20260814
+    assignment: .pf/assignments/release-src-packaging-audit-20260814.yaml
+    status: done
+    order: 2
+    blocking: true
+final_artifacts:
+  - .pf/runs/manual-dev-package-update-20260814/summary.md
+  - .pf/handoffs/runs/manual-dev-package-update-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

@@ -1,0 +1,87 @@
+schema_version: 1
+id: pf-1-1-0-final-release-run-artifact-consistency-remediation-20260831
+title: Fix ProcessForge run artifact consistency race before final 1.1.0 release
+run_id: processforge-1-1-0-final-release-20260831
+process: software-feature-development
+status: done
+created_at: '2026-08-31T11:55:00Z'
+updated_at: '2026-09-02T10:50:53Z'
+objective: Prevent concurrent run-summary/run-complete writers from reverting completed run artifacts and make run-doctor detect derived artifact status drift.
+platform: ""
+selected_specializations:
+  []
+order: 5
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Run artifact race remediated; all current Run writer paths are serialized and concurrent/stale-artifact regression coverage passed. Public release still requires requalification.
+  artifacts:
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/run-artifact-consistency-release-blocker.md
+stage: assurance
+execution_mode:
+  kind: remediation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - External dogfooding report from wt-image-resize-and-convert-joomla-plugin run run-image-media-api-plugin-20260831.
+allowed_files:
+  - tools/processforge.py
+  - tools/smoke_process_run_task_batch.py
+  - tools/smoke_*.py
+  - tests/**
+  - .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/run-artifact-consistency-release-blocker.md
+  - .pf/logs/processforge-1.1.0-final-release-20260831-delivery.md
+  - .pf/handoffs/runs/processforge-1-1-0-final-release-20260831-handoff.md
+  - .pf/runs/processforge-1-1-0-final-release-20260831/**
+ownership:
+  owner_id: codex-next
+  owner_label: next-session-remediation-owner
+  role: release-remediation-engineer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/smoke_process_run_task_batch.py
+    - tools/smoke_*.py
+    - tests/**
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/run-artifact-consistency-release-blocker.md
+    - .pf/logs/processforge-1.1.0-final-release-20260831-delivery.md
+    - .pf/handoffs/runs/processforge-1-1-0-final-release-20260831-handoff.md
+    - .pf/runs/processforge-1-1-0-final-release-20260831/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/smoke_process_run_task_batch.py
+    - tools/smoke_*.py
+    - tests/**
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/run-artifact-consistency-release-blocker.md
+    - .pf/logs/processforge-1.1.0-final-release-20260831-delivery.md
+    - .pf/handoffs/runs/processforge-1-1-0-final-release-20260831-handoff.md
+    - .pf/runs/processforge-1-1-0-final-release-20260831/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: run_artifact_consistency_release_blocker
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/run-artifact-consistency-release-blocker.md
+    type: release_blocker_report
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/run-artifact-consistency-release-blocker.md
+  format: concise_markdown
+  include:
+    - confirmed_reproduction
+    - release_impact
+    - required_fix
+    - required_regression_tests

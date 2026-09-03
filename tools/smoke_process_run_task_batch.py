@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -176,12 +177,48 @@ def required_output_workflow(root: Path) -> None:
         raise AssertionError("run-create created deprecated run-local reviews directory")
 
 
+def concurrent_artifact_workflow(root: Path) -> None:
+    project = make_project(root, "artifact-consistency")
+    run_id = "artifact-consistency-run"
+    task_id = "artifact-consistency-task"
+    pf("run-create", "--project-root", str(project), "--id", run_id, "--title", "Artifact consistency", "--process", "task-batch-execution", "--apply")
+    pf("task-create", "--project-root", str(project), "--run", run_id, "--id", task_id, "--title", "Complete the run", "--process", "task-batch-execution", "--apply")
+    pf("task-complete", "--project-root", str(project), "--task", task_id, "--summary", "Task complete.", "--apply")
+
+    commands = [
+        [sys.executable, str(CLI), "run-summary", "--project-root", str(project), "--run", run_id, "--apply"],
+        [sys.executable, str(CLI), "run-complete", "--project-root", str(project), "--run", run_id, "--apply"],
+    ]
+    processes = [subprocess.Popen(command, cwd=str(ROOT), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) for command in commands]
+    for command, process in zip(commands, processes):
+        stdout, stderr = process.communicate(timeout=DEFAULT_TIMEOUT)
+        if process.returncode != 0:
+            raise AssertionError(f"concurrent command failed ({process.returncode}): {' '.join(command)}\nstdout:\n{stdout}\nstderr:\n{stderr}")
+
+    artifacts = [
+        project / ".pf" / "runs" / run_id / "run.yaml",
+        project / ".pf" / "runs" / run_id / "summary.md",
+        project / ".pf" / "runs" / run_id / "task-index.md",
+        project / ".pf" / "handoffs" / "runs" / f"{run_id}-handoff.md",
+    ]
+    for artifact in artifacts:
+        assert_contains(artifact, "completed")
+    pf("run-doctor", "--project-root", str(project), "--run", run_id)
+
+    summary = project / ".pf" / "runs" / run_id / "summary.md"
+    summary.write_text(summary.read_text(encoding="utf-8").replace("- status: `completed`", "- status: `in_progress`"), encoding="utf-8")
+    pf("run-doctor", "--project-root", str(project), "--run", run_id, expect=1)
+    pf("run-summary", "--project-root", str(project), "--run", run_id, "--apply")
+    pf("run-doctor", "--project-root", str(project), "--run", run_id)
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-run-task-smoke-") as temp:
         root = Path(temp)
         positive_workflow(root)
         negative_workflow(root)
         required_output_workflow(root)
+        concurrent_artifact_workflow(root)
     print("PASS: smoke_process_run_task_batch")
     return 0
 

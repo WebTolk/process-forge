@@ -1,0 +1,75 @@
+schema_version: 1
+id: python-core-phase-e-adapter-patch-design
+title: Phase E catalog adapter exact patch design
+run_id: python-core-refactor-phase-e-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T15:33:58Z'
+updated_at: '2026-08-14T15:37:23Z'
+objective: 'Prepare a complete minimal unified diff accepted by Phase E design review: public wrappers/exports for exactly official_process_definition_refs, process_root_candidates and process_root_yaml_files; migrate legacy CLI wrappers to package-root imports; remove the direct service module import. Preserve existing signatures, context ownership, ordering, official-pack, duplicate and file-walk behavior. Do not alter product files; write Russian patch design only.'
+platform: ""
+selected_specializations:
+  []
+order: 4
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-patch-design.md
+stage: task-planning
+execution_mode:
+  kind: docs_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-design-review.md
+    role: input
+    required: true
+    mutable_by_worker: false
+allowed_files:
+  - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-patch-design.md
+allowed_read_files:
+  - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-design.md
+  - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-design-review.md
+  - tools/processforge.py
+  - src/processforge_core/process_catalog/__init__.py
+  - src/processforge_core/process_catalog/service.py
+ownership:
+  owner_id: shell-worker-gpt54
+  owner_label: worker-shell-worker-gpt54
+  role: patch-designer
+  writer: true
+  owned_files:
+    - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-patch-design.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-patch-design.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: adapter-patch-design
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-patch-design.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-e-20260814/adapter-patch-design.md
+  format: concise_markdown
+  include:
+    - adapter-patch-design
+agent_model: gpt-5.4

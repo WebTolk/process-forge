@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-09-03T10:23:42Z",
+  "kind": "stage-obligations",
+  "obligations": [],
+  "project_id": "process-forge",
+  "schema_version": 1,
+  "source": {
+    "authority": "process-definitions+durable-assignments+inspector-state",
+    "event_journal": ".pf/runtime/events/events.ndjson"
+  }
+}

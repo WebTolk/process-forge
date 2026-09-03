@@ -52,6 +52,7 @@ workplace; каждый репозиторий хранит только про�
 - [Этапы встроенных процессов](processes/built-in-processes.md)
 - [Multi-agent orchestration](getting-started/multi-agent-orchestration.md)
 - [Runtime driver and supervisor](getting-started/runtime-driver-supervisor.md)
+- [Автозапуск Runtime и запуск Codex MCP](getting-started/runtime-autostart.md)
 
 ## Авторинг
 
@@ -66,6 +67,7 @@ workplace; каждый репозиторий хранит только про�
 
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Модель среды выполнения](concepts/runtime-model.md)
+- [PF Runtime MCP facade](concepts/runtime-mcp.md)
 - [Модель агентской сессии](concepts/agent-session-model.md)
 - [Режимы координации проекта](concepts/project-coordination-modes.md)
 - [Runtime drivers](concepts/runtime-drivers.md)
@@ -103,5 +105,6 @@ Platform contracts являются композиционными манифе�
 
 ## Релизы
 
+- [Публикация релиза](../maintainers/release-publishing.md)
 - [Initial release notes](releases/initial-release.md)
 - [Ограничения](known-limitations.md)

@@ -1,0 +1,37 @@
+schema_version: 1
+id: final-garage-stabilization-20260824
+title: Final Garage stabilization
+process: multi-agent-task-orchestration
+status: completed
+created_at: '2026-08-24T13:09:59Z'
+updated_at: '2026-08-24T13:25:35Z'
+objective: 'Execute final Garage stabilization after Core Simplification: correct Garage/Forge mode semantics, implement pf.work.start, close UX and acceptance gaps.'
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: final-garage-stabilization-audit-20260824
+    assignment: .pf/assignments/final-garage-stabilization-audit-20260824.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: final-garage-stabilization-implementation-20260824
+    assignment: .pf/assignments/final-garage-stabilization-implementation-20260824.yaml
+    status: done
+    order: 2
+    blocking: true
+final_artifacts:
+  - .pf/runs/final-garage-stabilization-20260824/summary.md
+  - .pf/handoffs/runs/final-garage-stabilization-20260824-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

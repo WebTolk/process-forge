@@ -1,0 +1,72 @@
+schema_version: 1
+id: remove-legacy-worker-run-regression
+title: Remove unnecessary legacy worker-run regression
+run_id: worker-run-remediation-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T00:00:00Z'
+updated_at: '2026-08-14T07:25:26Z'
+objective: Per operator direction, remove only the legacy-state/fallback regression scenario from tools/smoke_worker_run_shell.py. Keep direct-path driver Inspector recovery and the duplicate-start/prepare regressions. Do not edit tools/processforge.py or broaden compatibility behaviour. Run py_compile and the focused smoke if it is ready; report exact removed test coverage.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from remediation-codex-exec-write
+  artifacts:
+    - .pf/artifacts/codebase-audit-20260814/remove-legacy-worker-run-regression-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/smoke_worker_run_shell.py
+  - .pf/artifacts/codebase-audit-20260814/remove-legacy-worker-run-regression-report.md
+allowed_read_files:
+  - tools/smoke_worker_run_shell.py
+  - tools/processforge.py
+  - .pf/artifacts/codebase-audit-20260814/remediation-plan.md
+ownership:
+  owner_id: pf-remove-legacy-worker-run-regression
+  owner_label: worker-pf-remove-legacy-worker-run-regression
+  role: implementation-worker
+  writer: true
+  owned_files:
+    - tools/smoke_worker_run_shell.py
+    - .pf/artifacts/codebase-audit-20260814/remove-legacy-worker-run-regression-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: allow_write_scope_overlap
+  active_parallel_tasks:
+    - id: pre-release-remediation-implementation-20260730
+      owner: remediation-orchestrator
+      note: Scoped handoff covers only tools/smoke_worker_run_shell.py.
+  current_write_scope:
+    - tools/smoke_worker_run_shell.py
+    - .pf/artifacts/codebase-audit-20260814/remove-legacy-worker-run-regression-report.md
+  rule: Scoped handoff from stale pre-release-remediation-implementation-20260730 is recorded in .pf/handoffs/worker-run-remediation-20260814-pre-release-scope-handoff.md; do not edit any file outside the listed owned_files.
+required_outputs:
+  -
+    id: remove-legacy-worker-run-regression-report
+    path: .pf/artifacts/codebase-audit-20260814/remove-legacy-worker-run-regression-report.md
+    type: markdown
+    required: true
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/codebase-audit-20260814/remove-legacy-worker-run-regression-report.md
+  format: concise_markdown
+  include:
+    - removed_coverage
+    - tests_run
+agent_model: gpt-5.3-codex-spark

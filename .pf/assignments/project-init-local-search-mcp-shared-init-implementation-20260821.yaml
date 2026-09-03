@@ -1,0 +1,83 @@
+schema_version: 1
+id: project-init-local-search-mcp-shared-init-implementation-20260821
+title: Implement shared project initialize and repair service
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T14:47:40Z'
+updated_at: '2026-08-21T15:00:20Z'
+objective: Route CLI onboarding/repair and controlled Ledger-bound MCP project initialization through one adapter-backed Core application service with explicit apply acknowledgement, deterministic repair, and fixture proof.
+platform: ""
+selected_specializations:
+  []
+order: 24
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Implemented shared Core initialization/repair service and controlled MCP operations; review remediation applied and re-review pending.
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/shared-init-implementation-report.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - src/processforge_core/project_initialization.py
+  - tools/processforge.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/smoke_project_init_local_search_mcp.py
+  - docs/authoring/project-initialization.md
+  - docs/concepts/runtime-mcp.md
+  - .pf/artifacts/project-init-local-search-mcp-20260821/shared-init-implementation-report.md
+allowed_read_files:
+  - tools/pf_runtime/host.py
+  - .pf/reviews/project-init-local-search-mcp-shared-init-audit-20260821.md
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: developer
+  writer: true
+  owned_files:
+    - src/processforge_core/project_initialization.py
+    - tools/processforge.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/smoke_project_init_local_search_mcp.py
+    - docs/authoring/project-initialization.md
+    - docs/concepts/runtime-mcp.md
+    - .pf/artifacts/project-init-local-search-mcp-20260821/shared-init-implementation-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/project_initialization.py
+    - tools/processforge.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/smoke_project_init_local_search_mcp.py
+    - docs/authoring/project-initialization.md
+    - docs/concepts/runtime-mcp.md
+    - .pf/artifacts/project-init-local-search-mcp-20260821/shared-init-implementation-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: shared-init-implementation-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/shared-init-implementation-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/shared-init-implementation-report.md
+  format: concise_markdown
+  include:
+    - shared-init-implementation-report

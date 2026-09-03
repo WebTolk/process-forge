@@ -1,0 +1,100 @@
+schema_version: 1
+id: active-pf-work-audit-20260822
+title: Audit active and blocked ProcessForge work
+run_id: active-pf-work-audit-closure-20260822
+process: task-batch-execution
+status: done
+created_at: '2026-08-22T12:38:20Z'
+updated_at: '2026-08-22T12:44:26Z'
+objective: Audit the listed active or blocked runs and their assignments. Classify each as completed-but-open, superseded, actively evidenced, blocked, or indeterminate. For each closure recommendation, cite current task, artifact, run, and Git evidence. Do not modify project code or ProcessForge run/task state.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/active-pf-work-audit-closure-20260822/audit-report.md
+stage: task-execution-loop
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/active-pf-work-audit-closure-20260822/audit-report.md
+allowed_read_files:
+  - .pf/runs/codex-message-capture-remediation-implementation-20260822/run.yaml
+  - .pf/runs/codex-message-capture-remediation-implementation-20260822/task-index.md
+  - .pf/runs/distribution-release-docs-sync-20260821/run.yaml
+  - .pf/runs/distribution-release-docs-sync-20260821/task-index.md
+  - .pf/runs/project-init-local-search-mcp-20260821/run.yaml
+  - .pf/runs/project-init-local-search-mcp-20260821/task-index.md
+  - .pf/runs/subagent-stabilization-audit/run.yaml
+  - .pf/runs/subagent-stabilization-audit/task-index.md
+  - .pf/runs/interrupted-session-code-audit-20260814/run.yaml
+  - .pf/runs/interrupted-session-code-audit-20260814/task-index.md
+  - .pf/assignments/codex-capture-remediation-code-review-20260822.yaml
+  - .pf/assignments/codex-capture-remediation-verification-20260822.yaml
+  - .pf/assignments/first-assignment.yaml
+  - .pf/assignments/project-init-local-search-mcp-final-acceptance-review-20260821.yaml
+  - .pf/assignments/project-init-local-search-mcp-orchestration-20260821.yaml
+  - .pf/assignments/project-init-local-search-mcp-release-archive-validation-20260821.yaml
+  - .pf/assignments/project-init-local-search-mcp-spark-stdio-review-20260821.yaml
+  - .pf/assignments/project-init-local-search-mcp-sqlite-inventory-20260821.yaml
+  - .pf/assignments/project-init-local-search-mcp-stdio-preflight-20260821.yaml
+  - .pf/assignments/release-smoke-isolation-20260821.yaml
+  - .pf/assignments/runtime-readonly-review.yaml
+  - .pf/assignments/subagent-docs-auditor.yaml
+  - .pf/assignments/subagent-runtime-auditor.yaml
+  - .pf/assignments/subagent-release-auditor.yaml
+  - .pf/assignments/task-001-global-update-design-brief.yaml
+  - .pf/artifacts/codex-message-capture-remediation-execution-20260822/orchestrator-integration-report.md
+  - .pf/artifacts/project-init-local-search-mcp-20260821/final-acceptance-report.md
+  - .pf/artifacts/distribution-release-docs-sync-20260821/closure-report.md
+  - .pf/artifacts/subagent-stabilization-audit/release-readiness.md
+forbidden_files:
+  - tools/**
+  - src/**
+  - schemas/**
+  - docs/**
+  - .pf/runs/**
+  - .pf/assignments/**
+ownership:
+  owner_id: active-pf-work-audit-20260822
+  owner_label: worker-active-pf-work-audit-20260822
+  role: process-auditor
+  writer: true
+  owned_files:
+    - .pf/artifacts/active-pf-work-audit-closure-20260822/audit-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/active-pf-work-audit-closure-20260822/audit-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: audit-report
+    path: .pf/artifacts/active-pf-work-audit-closure-20260822/audit-report.md
+    type: markdown
+    required: true
+agent_reasoning_effort: high
+agent_model: gpt-5.5
+expected_report:
+  language: en
+  artifact: .pf/artifacts/active-pf-work-audit-closure-20260822/audit-report.md
+  format: concise_markdown
+  include:
+    - audit-report

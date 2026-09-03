@@ -1,0 +1,121 @@
+schema_version: 1
+id: pf-machine-acceptance-20260829
+title: ProcessForge full machine acceptance
+process: software-feature-development
+status: completed
+created_at: '2026-08-29T06:52:02Z'
+updated_at: '2026-08-29T11:05:52Z'
+objective: Qualify the post-1.1.0 ProcessForge state, build a local 1.2.1 candidate, verify real core update and rollback, prove hosted MCP-first Joomla agent work, and validate telemetry, chat, hooks, Runtime, and final 1.1.0 restoration on this machine.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: pf-machine-baseline-audit-20260829
+    assignment: .pf/assignments/pf-machine-baseline-audit-20260829.yaml
+    status: done
+    order: 10
+    blocking: true
+  -
+    id: pf-release-surface-audit-20260829
+    assignment: .pf/assignments/pf-release-surface-audit-20260829.yaml
+    status: done
+    order: 20
+    blocking: true
+  -
+    id: pf-release-candidate-hardening-20260829
+    assignment: .pf/assignments/pf-release-candidate-hardening-20260829.yaml
+    status: done
+    order: 30
+    blocking: true
+  -
+    id: pf-isolated-update-matrix-20260829
+    assignment: .pf/assignments/pf-isolated-update-matrix-20260829.yaml
+    status: done
+    order: 40
+    blocking: true
+  -
+    id: pf-installed-upgrade-acceptance-20260829
+    assignment: .pf/assignments/pf-installed-upgrade-acceptance-20260829.yaml
+    status: done
+    order: 50
+    blocking: true
+  -
+    id: pf-telemetry-evidence-review-20260829
+    assignment: .pf/assignments/pf-telemetry-evidence-review-20260829.yaml
+    status: done
+    order: 70
+    blocking: true
+  -
+    id: pf-final-restoration-review-20260829
+    assignment: .pf/assignments/pf-final-restoration-review-20260829.yaml
+    status: done
+    order: 80
+    blocking: true
+  -
+    id: pf-worker-env-secret-redaction-20260829
+    assignment: .pf/assignments/pf-worker-env-secret-redaction-20260829.yaml
+    status: done
+    order: 25
+    blocking: true
+  -
+    id: pf-machine-orchestration-20260829
+    assignment: .pf/assignments/pf-machine-orchestration-20260829.yaml
+    status: done
+    order: 5
+    blocking: true
+  -
+    id: pf-public-cleanliness-remediation-20260829
+    assignment: .pf/assignments/pf-public-cleanliness-remediation-20260829.yaml
+    status: done
+    order: 28
+    blocking: true
+  -
+    id: pf-search-resolver-consistency-20260829
+    assignment: .pf/assignments/pf-search-resolver-consistency-20260829.yaml
+    status: done
+    order: 29
+    blocking: true
+  -
+    id: pf-target-updater-review-20260829
+    assignment: .pf/assignments/pf-target-updater-review-20260829.yaml
+    status: done
+    order: 41
+    blocking: true
+  -
+    id: pf-runtime-status-timeout-remediation-20260829
+    assignment: .pf/assignments/pf-runtime-status-timeout-remediation-20260829.yaml
+    status: done
+    order: 45
+    blocking: true
+  -
+    id: pf-joomla-agent-acceptance-20260829
+    assignment: .pf/assignments/pf-joomla-agent-acceptance-20260829.yaml
+    status: done
+    order: 60
+    blocking: true
+  -
+    id: pf-codex-worker-governance-remediation-20260829
+    assignment: .pf/assignments/pf-codex-worker-governance-remediation-20260829.yaml
+    status: done
+    order: 46
+    blocking: true
+  -
+    id: pf-mcp-codex-contract-remediation-20260829
+    assignment: .pf/assignments/pf-mcp-codex-contract-remediation-20260829.yaml
+    status: done
+    order: 47
+    blocking: true
+final_artifacts:
+  - .pf/runs/pf-machine-acceptance-20260829/summary.md
+  - .pf/handoffs/runs/pf-machine-acceptance-20260829-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

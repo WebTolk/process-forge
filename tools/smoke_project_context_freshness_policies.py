@@ -11,6 +11,8 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-context-policy-") as raw:
         simple = make_project(Path(raw) / "simple")
         refresh(simple)
+        snapshot_markdown = (simple / ".pf" / "contexts" / "project-context.snapshot.md").read_text(encoding="utf-8")
+        assert all(not line.rstrip("\r\n").endswith((" ", "\t")) for line in snapshot_markdown.splitlines(keepends=True))
         write_package(simple, core_versions=["5.4.5"], articles_generation="B")
         simple_result = check_json(simple)
         assert simple_result["status"] == "stale"

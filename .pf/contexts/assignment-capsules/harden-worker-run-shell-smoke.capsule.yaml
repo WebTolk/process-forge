@@ -1,0 +1,430 @@
+schema_version: 1
+capsule:
+  id: harden-worker-run-shell-smoke-capsule
+  generated_at: '2026-08-14T07:34:38Z'
+  assignment_id: harden-worker-run-shell-smoke
+  assignment_path: .pf/assignments/harden-worker-run-shell-smoke.yaml
+  assignment_checksum: 615e8bb282f87055780df711f0afea470db1cfb8f729742d7b52b039a9a33a69
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: d04eec798f2426a73974e9aea879b47c0577cdf57248902116359d756703c08f
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260814-055814-d917ad
+  sha256: 'sha256:d04eec798f2426a73974e9aea879b47c0577cdf57248902116359d756703c08f'
+  generated_at: '2026-08-14T05:58:11Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  []
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+execution_route_summary:
+  process: knowledge-package-improvement
+  stages:
+    -
+      id: propose
+      required_capabilities:
+        - research
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - proposal-complete
+    -
+      id: assess
+      required_capabilities:
+        - process_governance
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - compatibility-reviewed
+    -
+      id: integrate
+      required_capabilities:
+        - repository_write
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - package-updated
+  required_capabilities:
+    - process_governance
+    - repository_write
+    - research
+    - review
+  capability_requirements:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+  unsatisfied:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: harden-worker-run-shell-smoke
+  path: .pf/assignments/harden-worker-run-shell-smoke.yaml
+  status: in_progress
+  objective: Correct only two final-review weaknesses in tools/smoke_worker_run_shell.py. First, make environment-isolation execute a non-detached worker and successfully collect it before the stale-capsule check. Second, make duplicate-start-parallel issue two genuinely concurrent start commands using a barrier, capture both outcomes, and assert exactly one RUNNING, exactly one SKIPPED, and one marker. Keep all direct-path and prepare-running coverage; do not add legacy scenarios or edit tools/processforge.py. Run full focused smoke.
+  execution_mode:
+    kind: implementation
+    code_changes_allowed: true
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260814-055814-d917ad
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/harden-worker-run-shell-smoke.yaml
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - tools/smoke_worker_run_shell.py
+    - .pf/artifacts/codebase-audit-20260814/harden-worker-run-shell-smoke-report.md
+  allowed_read_files:
+    - tools/smoke_worker_run_shell.py
+    - tools/processforge.py
+    - .pf/artifacts/codebase-audit-20260814/remediation-plan.md
+  forbidden_files:
+    []
+  ownership:
+    owner_id: pf-harden-worker-run-shell-smoke
+    owner_label: worker-pf-harden-worker-run-shell-smoke
+    role: implementation-worker
+    writer: true
+    owned_files:
+      - tools/smoke_worker_run_shell.py
+      - .pf/artifacts/codebase-audit-20260814/harden-worker-run-shell-smoke-report.md
+    owned_globs:
+      []
+  non_overlap:
+    policy: allow_write_scope_overlap
+    active_parallel_tasks:
+      -
+        id: pre-release-remediation-implementation-20260730
+        write_scope:
+          []
+    current_write_scope:
+      - tools/smoke_worker_run_shell.py
+      - .pf/artifacts/codebase-audit-20260814/harden-worker-run-shell-smoke-report.md
+    rule: Scoped handoff from stale pre-release-remediation-implementation-20260730 is recorded in .pf/handoffs/worker-run-remediation-20260814-pre-release-scope-handoff.md; do not edit any file outside the listed owned_files.
+    overlap_check:
+      status: allowed
+      conflicts:
+        -
+          current_assignment: harden-worker-run-shell-smoke
+          current_scope: tools/smoke_worker_run_shell.py
+          other_assignment: pre-release-remediation-implementation-20260730
+          other_scope: tools/smoke_*.py
+          reason: file_matches_glob
+        -
+          current_assignment: harden-worker-run-shell-smoke
+          current_scope: tools/smoke_worker_run_shell.py
+          other_assignment: pre-release-remediation-implementation-20260730
+          other_scope: tools/**
+          reason: file_matches_glob
+      policy: allow
+      source: plan.allow_write_scope_overlap
+      behavior: write scope overlap allowed by resolved plan policy
+outputs:
+  required_outputs:
+    -
+      id: harden-worker-run-shell-smoke-report
+      path: .pf/artifacts/codebase-audit-20260814/harden-worker-run-shell-smoke-report.md
+      type: markdown
+      required: true
+  expected_report:
+    language: ru
+    artifact: .pf/artifacts/codebase-audit-20260814/harden-worker-run-shell-smoke-report.md
+    format: concise_markdown
+    include:
+      - corrections
+      - focused_smoke_result
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.3-codex-spark
+agent_reasoning_effort: low
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/harden-worker-run-shell-smoke.ndjson
+  event_correlation_id: assignment-harden-worker-run-shell-smoke
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/harden-worker-run-shell-smoke.yaml
+allowed_files:
+  - tools/smoke_worker_run_shell.py
+  - .pf/artifacts/codebase-audit-20260814/harden-worker-run-shell-smoke-report.md
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: harden-worker-run-shell-smoke-report
+    path: .pf/artifacts/codebase-audit-20260814/harden-worker-run-shell-smoke-report.md
+    type: markdown
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-harden-worker-run-shell-smoke

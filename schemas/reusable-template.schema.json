@@ -13,6 +13,7 @@
     "version": { "type": "string", "minLength": 1 },
     "source_package": { "$ref": "#/$defs/id" },
     "description": { "type": "string" },
+    "indexing": { "$ref": "resource-indexing.schema.json" },
     "inputs": { "type": "array", "items": { "$ref": "#/$defs/input" } },
     "outputs": { "type": "array", "items": { "$ref": "#/$defs/output" } },
     "files": { "type": "array", "items": { "$ref": "#/$defs/file" } },

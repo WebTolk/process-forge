@@ -1,0 +1,230 @@
+schema_version: 1
+id: narrow-project-resource-selection-and-make-authorized-knowledge-search-u
+title: Narrow project resource selection and make authorized knowledge search useful
+run_id: garage-narrow-project-resource-selection-and-make-authorized-knowledge-s
+process: task-batch-execution
+status: done
+created_at: '2026-09-02T12:50:41Z'
+updated_at: '2026-09-02T13:22:41Z'
+objective: Narrow project resource selection and make authorized knowledge search useful
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Final run summary and handoff generated after passed review.
+  artifacts:
+    - .pf/artifacts/project-resource-narrowing-20260902/run-record.md
+    - .pf/artifacts/project-resource-narrowing-20260902/run-review.md
+    - .pf/artifacts/project-resource-narrowing-20260902/task-index.md
+    - .pf/artifacts/project-resource-narrowing-20260902/task-iteration-log.md
+    - .pf/artifacts/project-resource-narrowing-20260902/task-result.md
+    - .pf/handoffs/runs/garage-narrow-project-resource-selection-and-make-authorized-knowledge-s-handoff.md
+    - .pf/runs/garage-narrow-project-resource-selection-and-make-authorized-knowledge-s/summary.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-02T13:21:51Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: run-summary
+      path: .pf/runs/garage-narrow-project-resource-selection-and-make-authorized-knowledge-s/summary.md
+      status: ready
+      recorded_at: '2026-09-02T13:22:38Z'
+      sha256: 'sha256:ce692b5331deaa27226f5a0c298c24d95e282cef43dd9ee3184fc9afed39ebc0'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      path: .pf/handoffs/runs/garage-narrow-project-resource-selection-and-make-authorized-knowledge-s-handoff.md
+      status: ready
+      recorded_at: '2026-09-02T13:22:38Z'
+      sha256: 'sha256:5577ec6f79f912d3ddf09142c012f7aaa280c4988774c712d6bfd9d57eec6039'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      evidence:
+        - .pf/runs/garage-narrow-project-resource-selection-and-make-authorized-knowledge-s/summary.md
+        - .pf/handoffs/runs/garage-narrow-project-resource-selection-and-make-authorized-knowledge-s-handoff.md
+      recorded_at: '2026-09-02T13:22:38Z'
+  notes: Final run summary and handoff generated after passed review.
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-02T12:50:41Z'
+    completed_at: '2026-09-02T13:01:18Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: attestation
+        id: attestation-1
+        status: ready
+        summary: '{artifact_id:run-record,path:.pf/artifacts/project-resource-narrowing-20260902/run-record.md,status:draft}'
+        recorded_at: '2026-09-02T13:00:16Z'
+      -
+        kind: attestation
+        id: attestation-2
+        status: ready
+        summary: '{gate_id:run-has-context,status:pass,snapshot_id:ctx-20260902-065419-56a2ec}'
+        recorded_at: '2026-09-02T13:00:16Z'
+      -
+        kind: artifact
+        artifact_id: run-record
+        path: .pf/artifacts/project-resource-narrowing-20260902/run-record.md
+        status: ready
+        recorded_at: '2026-09-02T13:01:14Z'
+        sha256: 'sha256:6335d6b52faf07046ad8d88ca4f832a8dfc37821b456f27e20a85317dfb079e5'
+      -
+        kind: gate
+        gate_id: run-has-context
+        status: passed
+        snapshot_id: ctx-20260902-065419-56a2ec
+        recorded_at: '2026-09-02T13:01:14Z'
+    notes: Run record and read-only real-project context audit created.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-02T13:01:18Z'
+    completed_at: '2026-09-02T13:02:13Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-index
+        path: .pf/artifacts/project-resource-narrowing-20260902/task-index.md
+        status: ready
+        recorded_at: '2026-09-02T13:02:10Z'
+        sha256: 'sha256:48144d20caea0822ec415f6bfc6d99ce6dd2eefe14d28ae919d2ebae776a3df7'
+      -
+        kind: gate
+        gate_id: run-has-tasks
+        status: passed
+        assignment_id: narrow-project-resource-selection-and-make-authorized-knowledge-search-u
+        recorded_at: '2026-09-02T13:02:10Z'
+    notes: Single assignment registered with generic selection, search, migration, and review scope.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-02T13:02:13Z'
+    completed_at: '2026-09-02T13:15:26Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-iteration-log
+        path: .pf/artifacts/project-resource-narrowing-20260902/task-iteration-log.md
+        status: ready
+        recorded_at: '2026-09-02T13:15:24Z'
+        sha256: 'sha256:20a5c9908134ceab4cc554318938095a8809834d25eef193532fee8060cf1f9a'
+      -
+        kind: gate
+        gate_id: task-results-recorded
+        status: passed
+        evidence:
+          - .pf/artifacts/project-resource-narrowing-20260902/final-validation.md
+        recorded_at: '2026-09-02T13:15:24Z'
+    notes: Audit, implementation, real-project-shaped acceptance, and regression checks recorded.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-02T13:15:26Z'
+    completed_at: '2026-09-02T13:18:06Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-result
+        path: .pf/artifacts/project-resource-narrowing-20260902/task-result.md
+        status: ready
+        recorded_at: '2026-09-02T13:18:04Z'
+        sha256: 'sha256:b4b88ff9dcc0ac757ec8a78038cb6fca998f15847cf701c4b9a23bbe4dad8fdc'
+      -
+        kind: gate
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        evidence:
+          - .pf/artifacts/project-resource-narrowing-20260902/task-result.md
+        recorded_at: '2026-09-02T13:18:04Z'
+    notes: Implementation result and validation evidence fixed for review.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-02T13:18:06Z'
+    completed_at: '2026-09-02T13:21:51Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-review
+        path: .pf/artifacts/project-resource-narrowing-20260902/run-review.md
+        status: ready
+        recorded_at: '2026-09-02T13:21:49Z'
+        sha256: 'sha256:c2f652aedfbfce5deb2ef3f27ebe616dfa4131c151b00c39d4094bff266cc0ad'
+      -
+        kind: gate
+        gate_id: run-doctor-passed
+        status: passed
+        evidence:
+          - .pf/artifacts/project-resource-narrowing-20260902/independent-code-review.md
+          - .pf/artifacts/project-resource-narrowing-20260902/final-validation.md
+        recorded_at: '2026-09-02T13:21:49Z'
+    notes: Run and task doctor passed; architecture, code, and acceptance reviews recorded.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-02T13:21:51Z'
+    completed_at: '2026-09-02T13:22:41Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-summary
+        path: .pf/runs/garage-narrow-project-resource-selection-and-make-authorized-knowledge-s/summary.md
+        status: ready
+        recorded_at: '2026-09-02T13:22:38Z'
+        sha256: 'sha256:ce692b5331deaa27226f5a0c298c24d95e282cef43dd9ee3184fc9afed39ebc0'
+      -
+        kind: artifact
+        artifact_id: run-handoff
+        path: .pf/handoffs/runs/garage-narrow-project-resource-selection-and-make-authorized-knowledge-s-handoff.md
+        status: ready
+        recorded_at: '2026-09-02T13:22:38Z'
+        sha256: 'sha256:5577ec6f79f912d3ddf09142c012f7aaa280c4988774c712d6bfd9d57eec6039'
+      -
+        kind: gate
+        gate_id: run-summary-created
+        status: passed
+        evidence:
+          - .pf/runs/garage-narrow-project-resource-selection-and-make-authorized-knowledge-s/summary.md
+          - .pf/handoffs/runs/garage-narrow-project-resource-selection-and-make-authorized-knowledge-s-handoff.md
+        recorded_at: '2026-09-02T13:22:38Z'
+    notes: Final run summary and handoff generated after passed review.
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260902-065419-56a2ec
+  snapshot_checksum: 'sha256:96bcfda36126cd0109b121aac50b5a2a1c92495eb31602b8d53c52ba3598ddb9'
+  assignment_capsule: .pf/contexts/assignment-capsules/narrow-project-resource-selection-and-make-authorized-knowledge-search-u.capsule.yaml
+  assignment_capsule_checksum: 'sha256:fca372ca38f3a70349499f70d3085c7836c493ea0eff5e116eebd0354deaf14c'

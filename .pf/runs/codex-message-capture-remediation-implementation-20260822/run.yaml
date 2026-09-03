@@ -1,0 +1,45 @@
+schema_version: 1
+id: codex-message-capture-remediation-implementation-20260822
+title: Codex message capture remediation implementation
+process: multi-agent-task-orchestration
+status: cancelled
+created_at: '2026-08-22T11:35:10Z'
+updated_at: '2026-08-22T11:40:57Z'
+objective: Implement and independently verify durable Codex user-message capture ordering, conditional assistant-final fallback, and Ledger-bound MCP transcript evidence.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: codex-capture-remediation-implement-20260822
+    assignment: .pf/assignments/codex-capture-remediation-implement-20260822.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: codex-capture-remediation-code-review-20260822
+    assignment: .pf/assignments/codex-capture-remediation-code-review-20260822.yaml
+    status: cancelled
+    order: 2
+    blocking: true
+  -
+    id: codex-capture-remediation-verification-20260822
+    assignment: .pf/assignments/codex-capture-remediation-verification-20260822.yaml
+    status: cancelled
+    order: 3
+    blocking: true
+final_artifacts:
+  []
+events:
+  emitted:
+    - run.created
+privacy:
+  public_safe: true
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: supervisor
+  max_parallel_workers: 1

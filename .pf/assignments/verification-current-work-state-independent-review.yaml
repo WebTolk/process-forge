@@ -1,0 +1,73 @@
+schema_version: 1
+id: verification-current-work-state-independent-review
+title: Independent read-only review of verification state slice
+run_id: verification-current-work-state-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T08:31:42Z'
+updated_at: '2026-08-14T08:38:59Z'
+objective: Independently review the implemented verification-state/current-work-state slice for false PASS/current, stale gate bypass, prose/heartbeat/exit misuse, stage hardcode, semantic overwrite, cross-project leakage, and rebuild/read-path regressions. Do not edit code; write only the review report.
+platform: ""
+selected_specializations:
+  []
+order: 4
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/reviews/verification-current-work-state-20260814-review.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/verification-current-work-state-20260814/implementation-report.md
+allowed_files:
+  - .pf/reviews/verification-current-work-state-20260814-review.md
+allowed_read_files:
+  - .pf/artifacts/verification-current-work-state-20260814/**
+  - tools/pf_runtime/host.py
+  - tools/processforge.py
+  - tools/smoke_stage_projectors.py
+  - tools/smoke_verification_current_work_state.py
+  - schemas/process-definition.schema.json
+  - processes/core/process-supervisor.yaml
+  - задания/process-forge-verification-current-work-state-detailed-master-prompt.md
+ownership:
+  owner_id: codex-independent-reviewer
+  owner_label: worker-codex-independent-reviewer
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/verification-current-work-state-20260814-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/verification-current-work-state-20260814-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: independent-review
+    type: unspecified
+    required: true
+    path: .pf/reviews/verification-current-work-state-20260814-review.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/reviews/verification-current-work-state-20260814-review.md
+  format: concise_markdown
+  include:
+    - independent-review
+agent_model: gpt-5.4

@@ -1,0 +1,31 @@
+schema_version: 1
+id: codex-mcp-session-read-20260821
+title: Codex MCP session read layer
+process: software-feature-development
+status: completed
+created_at: '2026-08-21T09:03:05Z'
+updated_at: '2026-08-21T09:23:43Z'
+objective: Deliver read-only Codex MCP session context, chat, and activity layer with safe hook capture and documentation.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: codex-mcp-session-read-implementation-20260821
+    assignment: .pf/assignments/codex-mcp-session-read-implementation-20260821.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/codex-mcp-session-read-20260821/summary.md
+  - .pf/handoffs/runs/codex-mcp-session-read-20260821-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

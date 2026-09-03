@@ -1,0 +1,70 @@
+schema_version: 1
+id: project-init-local-search-mcp-assurance-audit-20260821
+title: Map snapshot search lifecycle and MCP protocol assurance
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T13:42:28Z'
+updated_at: '2026-08-21T13:48:06Z'
+objective: 'Audit exact source insertion points and a minimal reproducible fixture plan for: snapshot local_search_resources producer, FTS5 current/stale/unavailable lifecycle, and Ledger-bound stdio MCP handshake/tools-list/mismatch smoke. No product edits.'
+platform: ""
+selected_specializations:
+  []
+order: 14
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/assurance-audit.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/project-init-local-search-mcp-20260821/assurance-audit.md
+allowed_read_files:
+  - tools/processforge.py
+  - src/processforge_core/local_resource_search.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/session_read.py
+  - tools/smoke_project_init_local_search_mcp.py
+  - .pf/artifacts/project-init-local-search-mcp-20260821/review-remediation-report.md
+ownership:
+  owner_id: shell-architect
+  owner_label: worker-shell-architect
+  role: architect
+  writer: true
+  owned_files:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/assurance-audit.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/assurance-audit.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: assurance-audit
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/assurance-audit.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+agent_model: gpt-5.5
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/assurance-audit.md
+  format: concise_markdown
+  include:
+    - assurance-audit

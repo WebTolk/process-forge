@@ -1,0 +1,146 @@
+schema_version: 1
+process_forge:
+  version: 1.0.0
+  version_constraint: ^1.0
+  mode: file_only
+  install_mode: linked
+  distribution:
+    id: processforge
+    source: workplace
+  runner_required: false
+  backend_required: false
+project:
+  id: process-forge
+  name: process-forge
+  type: generic
+flow:
+  root: .pf
+  manifest: .pf/process-forge.yaml
+  local_config: .pf/process-forge.local.yaml
+workplace:
+  reference: local_file
+  local_config: .pf/process-forge.local.yaml
+coordination:
+  mode: inherit
+  director:
+    use_workplace_director: true
+    inbox_submit_required: false
+process: ""
+specializations:
+  []
+detected:
+  status: classified
+  languages:
+    []
+  platforms:
+    []
+  project_kind:
+    - software.python
+  tags:
+    - software
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+platform_contracts:
+  []
+platform_stack:
+  []
+paths:
+  processes: processes
+  packages: packages
+  templates: templates
+  assignments: assignments
+  artifacts: artifacts
+  contexts: contexts
+  logs: logs
+  handoffs: handoffs
+  reviews: reviews
+  adr: adr
+  schemas: schemas
+  registries: registries
+  runtime: runtime
+  hooks: hooks.yaml
+knowledge_stack:
+  -
+    id: processforge.core
+    version: ^1.0
+    source: distribution
+    distribution: processforge
+  -
+    id: project.process-forge
+    version: 1.0.0
+    source: project
+parameters:
+  {}
+context_requirements:
+  knowledge_packages:
+    -
+      id: processforge.core
+      constraint: ^1.0
+      required: true
+    -
+      id: project.process-forge
+      constraint: 1.0.0
+      required: true
+  knowledge_resources:
+    []
+  template_packages:
+    []
+  templates:
+    []
+  tools:
+    []
+  platform_contracts:
+    []
+context_policy:
+  on_session_start:
+    check_freshness: true
+    check_update_candidates: if_due
+    if_fresh: continue
+    if_fresh_with_updates: notify
+    if_stale: ask_operator
+    if_broken: block
+  auto_refresh:
+    enabled: false
+    allow_patch: true
+    allow_minor: false
+    allow_major: false
+    allow_rolling_resources: false
+  active_run_behavior:
+    existing_capsules: pin_existing
+    new_capsules: require_fresh_snapshot
+  organized_mode:
+    stale_snapshot_action: needs_operator
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_resources:
+  required:
+    knowledge_packages:
+      []
+    tools:
+      []
+    mcp:
+      []
+    templates:
+      []
+  recommended:
+    knowledge_packages:
+      []
+    tools:
+      []
+    mcp:
+      []
+    templates:
+      []
+policies:
+  one_writer_per_file_scope: true
+  approved_artifacts_are_protected: true
+  execution_context_is_immutable: true
+  public_files_must_not_contain_local_absolute_paths: true

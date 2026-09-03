@@ -1,0 +1,69 @@
+schema_version: 1
+id: python-core-phase-a-architecture-sync
+title: Synchronize target architecture with Phase B/C decision
+run_id: python-core-refactor-phase-a-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T12:36:24Z'
+updated_at: '2026-08-14T12:39:04Z'
+objective: 'Update only the stated migration-order wording in the target architecture artifact so it agrees with the approved reconciliation: Phase B stabilizes package/import paths without moving process semantics; Phase C is the first shared Process Definition API for CLI, runtime host, MCP facade, and hooks; event/projection/work-state transport stays deferred. Preserve all other content and do not change product code. Report exactly what changed and cite the relevant artifact sections.'
+platform: ""
+selected_specializations:
+  []
+order: 15
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+execution_mode:
+  kind: docs_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+allowed_read_files:
+  - .pf/AGENTS.md
+  - задания/process-forge-python-core-refactoring-master-prompt.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/architecture-reconciliation.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-refactor-plan.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/reconciliation-review.md
+ownership:
+  owner_id: python-core-phase-a-architecture-sync
+  owner_label: worker-python-core-phase-a-architecture-sync
+  role: architecture-artifact-editor
+  writer: true
+  owned_files:
+    - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: target-architecture-synced
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+  format: concise_markdown
+  include:
+    - target-architecture-synced
+agent_model: gpt-5.4

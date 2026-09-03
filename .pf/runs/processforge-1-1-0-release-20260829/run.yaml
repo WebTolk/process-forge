@@ -1,0 +1,61 @@
+schema_version: 1
+id: processforge-1-1-0-release-20260829
+title: ProcessForge 1.1.0 release candidate build
+process: software-feature-development
+status: completed
+created_at: '2026-08-29T12:11:56Z'
+updated_at: '2026-08-29T13:07:38Z'
+objective: Build and validate ProcessForge 1.1.0 as the next public release after official 1.0.2 without modifying or committing unrelated working-tree state.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: pf-1-1-0-release-surface-audit-20260829
+    assignment: .pf/assignments/pf-1-1-0-release-surface-audit-20260829.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: pf-1-1-0-release-metadata-20260829
+    assignment: .pf/assignments/pf-1-1-0-release-metadata-20260829.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: pf-1-1-0-release-build-20260829
+    assignment: .pf/assignments/pf-1-1-0-release-build-20260829.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: pf-1-1-0-release-checksum-provenance-20260829
+    assignment: .pf/assignments/pf-1-1-0-release-checksum-provenance-20260829.yaml
+    status: done
+    order: 4
+    blocking: true
+  -
+    id: pf-1-1-0-release-independent-review-20260829
+    assignment: .pf/assignments/pf-1-1-0-release-independent-review-20260829.yaml
+    status: done
+    order: 5
+    blocking: true
+  -
+    id: pf-1-1-0-release-finalization-20260829
+    assignment: .pf/assignments/pf-1-1-0-release-finalization-20260829.yaml
+    status: done
+    order: 6
+    blocking: true
+final_artifacts:
+  - .pf/runs/processforge-1-1-0-release-20260829/summary.md
+  - .pf/handoffs/runs/processforge-1-1-0-release-20260829-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true

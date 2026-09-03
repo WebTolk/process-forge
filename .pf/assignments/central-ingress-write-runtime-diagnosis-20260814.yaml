@@ -1,0 +1,67 @@
+schema_version: 1
+id: central-ingress-write-runtime-diagnosis-20260814
+title: Diagnose stalled workspace-write worker runtime
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T17:59:42Z'
+updated_at: '2026-08-21T04:54:11Z'
+objective: 'Read-only narrow diagnosis: create .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md. Inspect only the project-local workspace-write wrapper, generic-shell driver command records and the three stopped worker stderr/status files. Determine with evidence why workers reached analysis but made no source writes or heartbeat updates. Recommend the smallest safe ProcessForge execution change, distinguishing project-local workaround from installed-distribution change. Do not modify code or run a write worker.'
+platform: ""
+selected_specializations:
+  []
+order: 22
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Reconciled: diagnosis artifact exists; the issue was addressed by the later worker lifecycle and direct-driver remediation.'
+  artifacts:
+    []
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+allowed_read_files:
+  - .pf/tmp/codex_workspace_write_worker.py
+  - .pf/tmp/codex_workspace_write_worker.cmd
+  - .pf/runtime/agent-runs/central-agent-event-ingress-20260814
+  - .pf/assignments/central-ingress-first-slice-implementation-20260814.yaml
+ownership:
+  owner_id: shell-spark
+  owner_label: worker-shell-spark
+  role: runtime-diagnostics-auditor
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: write-worker-runtime-diagnosis
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/write-worker-runtime-diagnosis.md
+  format: concise_markdown
+  include:
+    - write-worker-runtime-diagnosis
+agent_model: gpt-5.3-codex-spark

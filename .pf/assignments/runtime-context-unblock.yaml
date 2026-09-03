@@ -1,0 +1,86 @@
+schema_version: 1
+id: runtime-context-unblock
+title: Restore project context and capability providers
+run_id: runtime-context-unblock-20260814
+process: context-resolution
+status: done
+created_at: '2026-08-14T03:51:29Z'
+updated_at: '2026-08-14T03:53:03Z'
+objective: Bind this dogfooding project to its installed local workplace through the ignored local config, declare actually available project capability providers, refresh context, and prove capsule preparation can proceed.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Restored fresh project context, resolved required capability providers, and proved immutable assignment capsule generation.
+  artifacts:
+    - .pf/artifacts/runtime-context-unblock-20260814/context-unblock-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/process-forge.local.yaml
+  - .pf/registries/tools.yaml
+  - .pf/contexts/**
+  - .pf/artifacts/project-context-refresh-report.md
+  - .pf/artifacts/runtime-context-unblock-20260814/**
+  - .pf/logs/runtime-context-unblock-20260814.md
+  - .pf/handoffs/runtime-context-unblock-20260814-handoff.md
+  - .pf/assignments/runtime-context-unblock.yaml
+allowed_read_files:
+  - 'D:/.agents/processforge-workplace/**'
+  - tools/processforge.py
+  - .pf/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - .pf/process-forge.local.yaml
+    - .pf/registries/tools.yaml
+    - .pf/contexts/**
+    - .pf/artifacts/project-context-refresh-report.md
+    - .pf/artifacts/runtime-context-unblock-20260814/**
+    - .pf/logs/runtime-context-unblock-20260814.md
+    - .pf/handoffs/runtime-context-unblock-20260814-handoff.md
+    - .pf/assignments/runtime-context-unblock.yaml
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/process-forge.local.yaml
+    - .pf/registries/tools.yaml
+    - .pf/contexts/**
+    - .pf/artifacts/project-context-refresh-report.md
+    - .pf/artifacts/runtime-context-unblock-20260814/**
+    - .pf/logs/runtime-context-unblock-20260814.md
+    - .pf/handoffs/runtime-context-unblock-20260814-handoff.md
+    - .pf/assignments/runtime-context-unblock.yaml
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: context-unblock-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/runtime-context-unblock-20260814/context-unblock-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/runtime-context-unblock-20260814/context-unblock-report.md
+  format: concise_markdown
+  include:
+    - context-unblock-report

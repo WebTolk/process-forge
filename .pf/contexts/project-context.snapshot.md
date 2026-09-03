@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-07-29T15:02:54Z
-- valid_until: 2026-08-05T15:02:54Z
+- generated_at: 2026-09-03T09:44:03Z
+- valid_until: 2026-09-10T09:44:03Z
 
 ## Freshness
 
@@ -20,7 +20,7 @@ fresh
 
 ## Linked ProcessForge
 
-- version: 1.0.0
+- version: 1.1.0
 - constraint: ^1.0
 - install_mode: linked
 - distribution: processforge (available)
@@ -52,39 +52,55 @@ fresh
 
 ## Effective Resources
 
-- None.
+- docs.php (activated, None)
+- docs.web.accessibility (activated, None)
+- docs.web.css (activated, None)
+- docs.web.html (activated, None)
+- docs.web.javascript (activated, None)
+- docs.web.performance (activated, None)
 
 ## Provided Capabilities
 
-- None.
+- architecture
+- investigation
+- process_coordination
+- reporting
+- repository_read
+- repository_write
+- review
+- test_execution
+- test_planning
+- test_running
 
 ## Execution Route
 
-- process: knowledge-package-improvement
-- required_capabilities: process_governance, repository_write, research, review
+- process: None.
+- required_capabilities: None.
 - required_evidence: None.
 
 ## Capability Resolution
 
 - satisfied: 0
-- unsatisfied: 6
+- unsatisfied: 0
 
 ## Applied Project Overrides
 
 - None.
 
+## Resolved Parameters
+
+- namespaces: None.
+- sources: 0
+- conflicts: 0
+
 ## Resolution Conflicts
 
-- research
-- process_governance
-- review
-- research
-- process_governance
-- repository_write
+- None.
 
 ## Required Knowledge Resources
 
-- None.
+- project.process-forge:project-profile
+- project.process-forge:project-artifacts
 
 ## Recommended Knowledge Resources
 
@@ -121,15 +137,15 @@ fresh
 
 ## Required Capabilities
 
-- markdown_editing (missing, fail)
-- repository_read (missing, fail)
-- schema_validation (missing, fail)
+- markdown_editing (available, info)
+- repository_read (available, info)
+- schema_validation (available, info)
 
 ## Optional Capabilities
 
 - browser_verification (missing, warn)
 - official_documentation_lookup (missing, warn)
-- repository_symbol_analysis (missing, warn)
+- repository_symbol_analysis (available, info)
 
 ## Required Tools
 
@@ -151,7 +167,7 @@ fresh
 
 - public.no_local_absolute_paths
 - files.one_writer_per_scope
-- secrets.do_not_store
+- secrets.public_exports_sanitized
 - runtime.private
 - markdown.not_machine_merge_source
 

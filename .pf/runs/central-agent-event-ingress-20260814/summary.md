@@ -1,0 +1,63 @@
+# Run Summary: Central Agent Event Ingress
+
+- run_id: `central-agent-event-ingress-20260814`
+- status: `completed`
+
+## Tasks
+
+- `central-ingress-current-state-audit-20260814`: `done` - Принят после независимой статической проверки ingress_event, normalize_event, stable_event_id, ledger_from_event и project events journal. Зафиксированы normalization-first, project-local dedupe и немедленная projection rebuild как текущие ограничения.
+- `central-ingress-chat-schema-inventory-20260814`: `done` - Chat inventory accepted together with independently quality-corrected schema reconciliation. The original inventory remains limited to observed transcript flow; schema authority is the gpt-5.4 corrected report.
+- `central-ingress-provider-capabilities-20260814`: `done` - Accepted only as reconciled: local matrix was rewritten using the separate official-contract audit and now distinguishes actual implementation, official surface, and target.
+- `central-ingress-architecture-design-20260814`: `done` - Reconciled: superseded by the accepted evidence-bound v2 architecture and its independent review.
+- `central-ingress-characterization-plan-20260814`: `done` - Characterization plan delivered with B1 conflict-index and atomic checkpoint/index requirements. Pending independent review before source-code implementation.
+- `central-ingress-schema-reconciliation-retry-20260814`: `done` - Superseded by accepted gpt-5.4 quality reconciliation after Spark draft was found to conflate append and validation. Final artifact is cited here.
+- `central-ingress-provider-official-contracts-20260814`: `done` - Принят после проверки доступности всех четырёх официальных URLs и сопоставления с локальным Codex adapter. Источники отделены от локальных выводов; Claude и Gemini не выданы за реализованные adapters.
+- `central-ingress-schema-quality-reconciliation-20260814`: `done` - Accepted after independent comparison with processforge writers, host ingress, schema validator, and concepts docs. Report makes writer/validator/dead-schema boundary explicit.
+- `central-ingress-provider-matrix-reconciliation-20260814`: `done` - Accepted after checking exact Codex adapter coverage and source URL reachability; matrix no longer claims unimplemented adapters.
+- `central-ingress-test-inventory-20260814`: `done` - Superseded as planning evidence after independent review found unsupported Codex mappings and overclaimed test coverage. Retained only as trace artifact; use current-event-test-inventory-review.md.
+- `central-ingress-test-inventory-quality-20260814`: `done` - Administrative closure: launch was blocked by overlapping completed assignment scope; no worker output was accepted. Independent review task central-ingress-test-inventory-review-20260814 supplied the required correction.
+- `central-ingress-test-inventory-review-20260814`: `done` - Accepted as authoritative correction. It traced actual Codex mappings, ingress smokes, session routing, and separated events-validate from the standalone JSON-schema validator.
+- `central-ingress-architecture-corrected-20260814`: `done` - Reconciled: accepted architecture v2 was reviewed and subsequently delivered through the raw ingress and replay work.
+- `central-ingress-architecture-review-20260814`: `done` - Accepted as conditional architecture review. B1 idempotency/replay-key contract is a blocking finding; no implementation may start until an evidence-bound correction and follow-up review pass.
+- `central-ingress-idempotency-contract-20260814`: `done` - Planning contract delivered; pending independent B1 review before it can unblock implementation.
+- `central-ingress-idempotency-review-20260814`: `done` - Accepted as conditional pass. B1 is resolved at design level; first implementation must include a native-identity conflict index excluding payload hash and interprocess-atomic index/checkpoint writes.
+- `central-ingress-characterization-review-20260814`: `done` - Conditional review accepted. Implementation task must include the five mandatory gates: unknown SessionStart source baseline, pre/post expectation split, native-identity conflict index, raw fidelity semantics, and archive inspection with private fixtures.
+- `central-ingress-first-slice-implementation-20260814`: `done` - Main-contour raw-first ingress first slice implemented and self-validated; worker residue rejected.
+- `central-ingress-core-storage-implementation-20260814`: `done` - Reconciled: isolated storage work was superseded by the delivered raw ingress kernel and later integrated replay implementation.
+- `central-ingress-raw-kernel-implementation-20260814`: `done` - Reconciled: raw_ingress_kernel.py was delivered and governed by later review, replay, and release-registration evidence.
+- `central-ingress-raw-kernel-patch-proposal-20260814`: `done` - Reconciled: patch proposal exists and was superseded by the subsequently delivered implementation and review sequence.
+- `central-ingress-write-runtime-diagnosis-20260814`: `done` - Reconciled: diagnosis artifact exists; the issue was addressed by the later worker lifecycle and direct-driver remediation.
+- `central-ingress-raw-kernel-code-review-20260814`: `done` - Review accepted as a failing quality gate. All seven findings were routed to the corrective patch; it is not evidence of acceptance for host/service wiring.
+- `central-ingress-raw-kernel-re-review-20260814`: `done` - Reconciled: standalone rereview was superseded by later accepted raw-kernel, session-replay, and conversation-completeness reviews.
+- `central-ingress-raw-kernel-fast-qa-20260815`: `done` - Reconciled: fast QA was superseded by the later focused release-test and conversation-completeness smoke coverage.
+- `central-ingress-replay-gap-audit-20260815`: `done` - Collected worker run output from codex-exec
+- `central-ingress-chat-capture-readiness-20260815`: `done` - Collected worker run output from codex-exec
+- `central-ingress-raw-kernel-rereview-main-20260815`: `done` - Reconciled: superseded by the accepted session-replay review chain and later conversation-completeness final rereview.
+- `central-ingress-session-replay-design-20260815`: `done` - Collected worker run output from codex-exec
+- `central-ingress-session-replay-test-contract-20260815`: `done` - Collected worker run output from codex-exec
+- `central-ingress-session-replay-implementation-20260815`: `done` - Collected worker run output from generic-shell
+- `central-ingress-session-replay-code-review-20260815`: `done` - Collected worker run output from codex-exec
+- `central-ingress-session-replay-smoke-correction-20260815`: `done` - Collected worker run output from generic-shell
+- `central-ingress-session-replay-rereview-20260815`: `done` - Collected worker run output from codex-exec
+- `central-ingress-session-replay-test-convention-audit-20260815`: `done` - Independent Spark audit report recovered after detached worker state failed to reconcile; report established the real release-registration gap.
+- `central-ingress-session-replay-release-registration-20260815`: `done` - Spark worker added the one-command release registration; orchestrator independently accepted the exact diff, py_compile, selected release-test, and diff check.
+- `central-ingress-chat-capture-slice-design-20260815`: `done` - Reconciled: design artifact exists and was superseded by the accepted 20260820 conversation-completeness design gate and implementation.
+- `central-ingress-assistant-response-capture-design-20260815`: `done` - Reconciled: design artifact exists and was implemented within the accepted PF-owned expected-report capture boundary.
+- `central-ingress-conversation-telemetry-boundary-20260815`: `done` - Reconciled: design artifact exists and was superseded by the accepted 20260820 conversation-completeness contract and implementation.
+- `central-ingress-conversation-completeness-correction-20260815`: `done` - Reconciled: correction artifact exists and was superseded by the accepted 20260820 design gate and implementation.
+- `central-ingress-conversation-completeness-security-review-20260815`: `done` - Reconciled: security review artifact exists; its blockers were addressed by the accepted 20260820 security rereview and corrections.
+- `central-ingress-conversation-completeness-security-correction-20260815`: `done` - Reconciled: correction artifact exists and was delivered through the accepted 20260820 implementation and final rereview sequence.
+- `central-ingress-conversation-completeness-security-rereview-20260820`: `done` - Independent review failed: current code does not yet implement the corrected conversation-capture contract; report records required implementation gaps.
+- `central-ingress-conversation-completeness-design-gate-20260820`: `done` - Independent design gate passed: the corrected contract is complete and safely bounded for implementation.
+- `central-ingress-conversation-completeness-test-contract-20260820`: `done` - Focused conversation-capture test contract completed and checked against the approved design gate.
+- `central-ingress-conversation-completeness-implementation-20260820`: `done` - Implemented bounded privacy-safe conversation capture with focused smoke and selected release-test coverage.
+- `central-ingress-conversation-completeness-code-review-20260820`: `done` - Independent review failed and routed two verified security/recovery findings to corrective implementation.
+- `central-ingress-conversation-completeness-rereview-20260820`: `done` - Re-review failed, identifying durable worker-state/report provenance as a blocker; a corrective patch was applied afterward and requires a fresh independent re-review.
+- `central-ingress-conversation-completeness-expanded-smoke-20260820`: `done` - Collected worker run output from codex-exec
+- `central-ingress-worker-lifecycle-reconciliation-20260820`: `done` - Reconciled detached worker exit contracts during status and collection; added focused shell regression coverage.
+- `central-ingress-conversation-collection-correction-20260820`: `done` - Corrected false privacy rejection of safe marker vocabulary and collected the completed worker report as one assistant message.
+- `central-ingress-conversation-completeness-final-rereview-20260820`: `done` - Independent rereview completed with FAIL: worker input content lacks a durable PF-owned canonical binding; a correction is required.
+- `central-ingress-worker-input-provenance-correction-20260820`: `done` - Bound worker input summaries to an atomic PF-owned payload contract and added forged-safe-summary regression coverage.
+- `central-ingress-conversation-completeness-final-rereview-2-20260820`: `done` - Independent rereview completed with FAIL: worker input/output native event identifiers remain forgeable and can create logical duplicates.
+- `central-ingress-worker-event-id-correction-20260820`: `done` - Required canonical PF worker input and output native event identifiers and added alternate-id negative coverage.
+- `central-ingress-conversation-completeness-final-rereview-3-20260820`: `done` - Collected worker run output from codex-exec

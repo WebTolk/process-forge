@@ -1,0 +1,66 @@
+schema_version: 1
+id: central-ingress-raw-kernel-patch-proposal-20260814
+title: Draft reviewable raw ingress kernel patch
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T17:59:38Z'
+updated_at: '2026-08-21T04:54:11Z'
+objective: 'Read-only code-authoring task: create .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-patch-proposal.md containing one complete unified diff that adds only tools/pf_runtime/raw_ingress_kernel.py. Do not write source files. The module must be pure stdlib and implement the accepted raw identity/storage contract: canonical JSON/NFC, raw event identity, stable native-identity key without payload hash, path containment, hourly shard selection, interprocess-safe append, raw/native indexes written atomically, duplicate/poison decision, deterministic derived key and atomic JSON write. Keep the API compact, documented, and testable. Include a short explanation and a precise syntax-check command after the diff. Do not integrate host/service/Codex yet.'
+platform: ""
+selected_specializations:
+  []
+order: 21
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Reconciled: patch proposal exists and was superseded by the subsequently delivered implementation and review sequence.'
+  artifacts:
+    []
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-patch-proposal.md
+allowed_read_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-contract.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-review.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout-v2.md
+ownership:
+  owner_id: shell-gpt55
+  owner_label: worker-shell-gpt55
+  role: raw-kernel-patch-author
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-patch-proposal.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-patch-proposal.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: raw-kernel-patch-proposal
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-patch-proposal.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-patch-proposal.md
+  format: concise_markdown
+  include:
+    - raw-kernel-patch-proposal
+agent_model: gpt-5.5

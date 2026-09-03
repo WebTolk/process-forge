@@ -1,0 +1,28 @@
+schema_version: 1
+id: resource-indexing-release-boundary-20260822
+title: Resource indexing release boundary 1.0.2
+process: software-feature-development
+status: in_progress
+created_at: '2026-08-22T17:35:22Z'
+updated_at: '2026-08-22T18:32:53Z'
+objective: Implement declarative workplace resource indexing boundary, validate release blockers, and freeze ProcessForge 1.0.2 scope.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: resource-indexing-release-boundary-main
+    assignment: .pf/assignments/resource-indexing-release-boundary-main.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  []
+events:
+  emitted:
+    - run.created
+privacy:
+  public_safe: true

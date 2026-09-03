@@ -1,0 +1,83 @@
+schema_version: 1
+id: central-ingress-conversation-completeness-implementation-20260820
+title: Implement privacy-safe complete conversation capture
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-20T11:58:09Z'
+updated_at: '2026-08-20T12:07:34Z'
+objective: 'Implement the approved bounded conversation-capture slice exactly per the security correction, design gate and test contract: fail-closed PF worker input capture at the canonical pre-exec boundary; private safe-summary and expected-report assistant envelopes; provider-neutral separate Host conversation sink; deterministic atomic transcript/event idempotency; Codex UserPromptSubmit only; and focused smoke. No public API, no generic assistant hook capture, and no telemetry-to-conversation conversion.'
+platform: ""
+selected_specializations:
+  []
+order: 46
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Implemented bounded privacy-safe conversation capture with focused smoke and selected release-test coverage.
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-implementation-report-20260820.md
+stage: task-execution-loop
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/codex_exec_worker.py
+  - tools/pf_runtime/host.py
+  - tools/processforge.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/smoke_conversation_completeness.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-implementation-report-20260820.md
+allowed_read_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-security-correction.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-design-gate-20260820.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-test-contract-20260820.md
+  - tools/pf_runtime/raw_ingress_kernel.py
+  - tools/smoke_central_event_ingress.py
+ownership:
+  owner_id: main-orchestrator
+  owner_label: worker-main-orchestrator
+  role: conversation-completeness-implementer
+  writer: true
+  owned_files:
+    - tools/codex_exec_worker.py
+    - tools/pf_runtime/host.py
+    - tools/processforge.py
+    - tools/pf_runtime/codex_hooks.py
+    - tools/smoke_conversation_completeness.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-implementation-report-20260820.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/codex_exec_worker.py
+    - tools/pf_runtime/host.py
+    - tools/processforge.py
+    - tools/pf_runtime/codex_hooks.py
+    - tools/smoke_conversation_completeness.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-implementation-report-20260820.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: conversation-completeness-implementation-report-20260820
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-implementation-report-20260820.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-implementation-report-20260820.md
+  format: concise_markdown
+  include:
+    - conversation-completeness-implementation-report-20260820

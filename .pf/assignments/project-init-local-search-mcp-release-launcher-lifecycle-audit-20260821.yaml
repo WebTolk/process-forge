@@ -1,0 +1,62 @@
+schema_version: 1
+id: project-init-local-search-mcp-release-launcher-lifecycle-audit-20260821
+title: Audit linked-project launcher lifecycle across release cleanup
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T17:54:38Z'
+updated_at: '2026-08-21T17:57:12Z'
+objective: Audit why doctor-project requires .pf/runtime/bin/pf.py while release cleanup may remove it. Reproduce only with documented commands if possible, identify the exact code boundary, and recommend the smallest safe remediation. Do not edit product code.
+platform: ""
+selected_specializations:
+  []
+order: 58
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Confirmed the release cleanup and doctor lifecycle inconsistency and identified the narrow self-contained checkout exception.
+  artifacts:
+    - .pf/reviews/project-init-local-search-mcp-release-launcher-lifecycle-audit-20260821.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/project-init-local-search-mcp-release-launcher-lifecycle-audit-20260821.md
+allowed_read_files:
+  - tools/processforge.py
+  - .pf/process-forge.yaml
+  - .pf/process-forge.local.yaml
+  - .pf/.gitignore
+ownership:
+  owner_id: shell-launcher-auditor
+  owner_label: worker-shell-launcher-auditor
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/project-init-local-search-mcp-release-launcher-lifecycle-audit-20260821.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/project-init-local-search-mcp-release-launcher-lifecycle-audit-20260821.md
+  rule: Do not edit files owned by active parallel tasks.
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/reviews/project-init-local-search-mcp-release-launcher-lifecycle-audit-20260821.md
+  format: concise_markdown
+  include:
+    []
+agent_model: gpt-5.5

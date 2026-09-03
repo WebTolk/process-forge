@@ -1,0 +1,67 @@
+schema_version: 1
+id: python-core-refactor-phase-d-20260814
+title: Python Core refactor Phase D classification metadata convergence
+process: task-batch-execution
+status: completed
+created_at: '2026-08-14T14:57:03Z'
+updated_at: '2026-08-14T15:15:51Z'
+objective: Converge the remaining Process Definition catalog classification and metadata logic on the shared Core API without expanding into validation/authoring, runtime state/event, MCP or hooks.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: python-core-phase-d-classification-inventory
+    assignment: .pf/assignments/python-core-phase-d-classification-inventory.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: python-core-phase-d-classification-design
+    assignment: .pf/assignments/python-core-phase-d-classification-design.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: python-core-phase-d-classification-design-review
+    assignment: .pf/assignments/python-core-phase-d-classification-design-review.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: python-core-phase-d-classification-patch-design
+    assignment: .pf/assignments/python-core-phase-d-classification-patch-design.yaml
+    status: done
+    order: 4
+    blocking: true
+  -
+    id: python-core-phase-d-classification-code-review
+    assignment: .pf/assignments/python-core-phase-d-classification-code-review.yaml
+    status: done
+    order: 5
+    blocking: true
+  -
+    id: python-core-phase-d-postchange-characterization
+    assignment: .pf/assignments/python-core-phase-d-postchange-characterization.yaml
+    status: done
+    order: 6
+    blocking: true
+  -
+    id: python-core-phase-d-review-adjudication
+    assignment: .pf/assignments/python-core-phase-d-review-adjudication.yaml
+    status: done
+    order: 7
+    blocking: true
+final_artifacts:
+  - .pf/runs/python-core-refactor-phase-d-20260814/summary.md
+  - .pf/handoffs/runs/python-core-refactor-phase-d-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true

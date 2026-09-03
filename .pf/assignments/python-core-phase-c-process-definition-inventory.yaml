@@ -1,0 +1,66 @@
+schema_version: 1
+id: python-core-phase-c-process-definition-inventory
+title: Inventory minimal Process Definition extraction seam
+run_id: python-core-refactor-phase-c-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T13:58:40Z'
+updated_at: '2026-08-14T14:02:48Z'
+objective: Read-only inventory of the smallest behavior-preserving Phase C extraction slice. Trace resolve_process_definition and its direct helpers/callers, including CLI commands, runtime host, MCP/hooks reachability, schemas, file I/O, and current tests/smokes. Recommend a minimal first set of symbols/files for a shared API and explicitly exclude validation/authoring/route/handoff logic unless directly necessary. Cite repository-relative symbols and do not edit code.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-c-20260814/process-definition-inventory.md
+stage: task-planning
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/phase-a-integration.md
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/phase-b-integration.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-refactor-plan.md
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/codex_hooks.py
+  - schemas/process-definition.schema.json
+  - processes/core/**
+ownership:
+  owner_id: python-core-phase-c-process-definition-inventory
+  owner_label: worker-python-core-phase-c-process-definition-inventory
+  role: static-inventory-engineer
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: process-definition-inventory
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-c-20260814/process-definition-inventory.md
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-c-20260814/process-definition-inventory.md
+  format: concise_markdown
+  include:
+    - process-definition-inventory
+agent_model: gpt-5.3-codex-spark

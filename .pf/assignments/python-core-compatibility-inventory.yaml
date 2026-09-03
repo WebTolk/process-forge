@@ -1,0 +1,67 @@
+schema_version: 1
+id: python-core-compatibility-inventory
+title: Python Core compatibility cleanup inventory
+run_id: python-core-refactor-phase-a-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T12:00:51Z'
+updated_at: '2026-08-14T12:08:14Z'
+objective: Inventory documented public contracts versus internal transitional APIs for the upcoming Python Core extraction. Identify concrete aliases, duplicate paths, and dead compatibility branches only when supported by usage searches across docs, examples, CLI, and release rules. Classify each candidate with migration impact; do not change code.
+platform: ""
+selected_specializations:
+  []
+order: 6
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-compatibility-cleanup.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - задания/process-forge-python-core-refactoring-master-prompt.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/public-surface-inventory-redacted.md
+  - README.md
+  - README.ru.md
+  - QUICKSTART.md
+  - QUICKSTART.ru.md
+  - docs/**
+  - examples/**
+  - bin/pf.py
+  - tools/processforge.py
+  - tools/pf_runtime/**
+  - .processforge-releaseignore
+ownership:
+  owner_id: python-core-compatibility-inventory
+  owner_label: worker-python-core-compatibility-inventory
+  role: compatibility-analysis
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: python-core-compatibility-cleanup
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-compatibility-cleanup.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-compatibility-cleanup.md
+  format: concise_markdown
+  include:
+    - python-core-compatibility-cleanup
+agent_model: gpt-5.4

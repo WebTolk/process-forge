@@ -6,7 +6,7 @@ artifacts.
 - File-only mode is the supported operating mode.
 - There is no live AI session interception.
 - Hooks are observational and outbox-only.
-- There is no daemon or watch-events service.
+- There is no required daemon or watch-events service.
 - Command hook execution is not implemented.
 - Process `hooks.subscriptions` entries are declarative/future semantics unless
   a command explicitly implements the action; they do not create handoffs or
@@ -14,7 +14,9 @@ artifacts.
 - Manual multi-agent assignment/capsule flows and optional shell worker
   execution are supported. Multi-agent claim and lease coordination is not
   implemented.
-- A bounded file-first supervisor MVP exists. A background daemon, network API,
+- A bounded file-first supervisor MVP exists. The optional PF Runtime service
+  exists as a local loopback PoC/MVP, including manual background start and
+  Windows Task Scheduler autostart. A watch-events service, public network API,
   web UI, database-backed scheduler, and built-in real ecosystem drivers are
   not implemented.
 - WTAICC integration is not implemented.
@@ -28,10 +30,23 @@ artifacts.
 
 - ProcessForge core is a short-lived Python CLI.
 - It does not start background daemons by default.
+- The optional PF Runtime service is an explicit workplace lifecycle host, not
+  a requirement for default file-first CLI usage.
+- Windows autostart is supported only for PF Runtime through a per-user Task
+  Scheduler logon task; the stdio MCP server is not a Task Scheduler target.
+- Codex MCP registration is host-owned: Codex starts the connected stdio MCP
+  process from its configuration for each fresh host session.
+- Managed Linux `systemd --user` Runtime autostart is not provided in 1.1.0.
+- Codex hooks are optional host-specific telemetry and are not a generic project
+  readiness requirement.
+- Hosted MCP behavior depends on the selected agent host supporting stdio MCP.
+- TUF metadata and key management are not implemented in 1.1.0; update trust is
+  based on HTTPS, SHA-256, immutable release assets, and Git provenance.
 - `release-test` and smoke commands use per-command process-tree timeouts; a hung child process should fail with command, cwd, timeout, stdout tail, and stderr tail diagnostics instead of hanging silently.
 - `release-test --trace-smokes` writes per-smoke elapsed and timeout diagnostics
   under `.pf/runtime/release-test/`.
-- A long-running watcher or runner is a future optional layer, not part of the core runtime.
+- A long-running watcher is a future optional layer, not part of the core
+  runtime.
 - Runtime driver execution is opt-in. Built-in neutral drivers are limited to
   `manual`, `generic-shell`, `codex-exec`, `test-echo-worker`, and
   `test-shell-agent`.
@@ -42,6 +57,17 @@ artifacts.
   host AI environment may launch its own subagents with ProcessForge
   assignment/capsule scope, but ProcessForge does not install or impersonate
   those host agents.
+- Codex hook registration is environment-owned: the shipped adapter does not
+  prove that all host hooks are registered.
+- Current automatic conversation coverage is limited to attributed
+  `UserPromptSubmit` prompts and PF-owned worker records; generic assistant and
+  subagent responses are not captured.
+- Session replay repairs supported normalized Codex-derived project events; it
+  does not reconstruct a complete generic conversation transcript.
+- Raw ingress rejects canonical payloads larger than 1,048,576 bytes. There is
+  no oversized-payload blob spill or receipt yet.
+- Raw indexes are file-per-event and recovery may scan raw shards; scaling
+  improvements require measurement and a separate storage decision.
 - Future watcher/runner work must stay bounded: streaming reads, offsets or checkpoints, bounded queues, subprocess timeouts, and no full-project in-memory cache by default.
 - Platform-specific shell scripts are not required for release validation and are not part of the release surface.
 

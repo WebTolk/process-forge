@@ -1,0 +1,69 @@
+schema_version: 1
+id: runtime-lifecycle-clean-smoke
+title: Run isolated long-lived Runtime lifecycle smoke
+run_id: runtime-lifecycle-clean-repro-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T09:19:16Z'
+updated_at: '2026-08-14T09:20:43Z'
+objective: Run the unchanged long-lived Runtime smoke in a clean temporary workplace and report the first lifecycle outcome with command evidence. Do not modify code, smoke scripts, or runtime state outside the generated test workspace.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-lifecycle-clean-smoke-worker.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+allowed_files:
+  - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-lifecycle-clean-smoke-worker.md
+allowed_read_files:
+  - задания/process-forge-runtime-lifecycle-clean-repro-master-prompt.md
+  - tools/smoke_long_lived_runtime.py
+  - tools/pf_runtime/service.py
+  - tools/processforge.py
+ownership:
+  owner_id: runtime-lifecycle-smoke-worker
+  owner_label: worker-runtime-lifecycle-smoke-worker
+  role: runtime-smoke-operator
+  writer: true
+  owned_files:
+    - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-lifecycle-clean-smoke-worker.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-lifecycle-clean-smoke-worker.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-lifecycle-clean-smoke-worker
+    type: unspecified
+    required: true
+    path: .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-lifecycle-clean-smoke-worker.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-lifecycle-clean-smoke-worker.md
+  format: concise_markdown
+  include:
+    - runtime-lifecycle-clean-smoke-worker
+agent_model: gpt-5.3-codex-spark

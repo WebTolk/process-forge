@@ -11,6 +11,7 @@
     "command": { "type": "string", "minLength": 1 },
     "scope": { "type": "string" },
     "status": { "enum": ["configured", "optional", "missing", "disabled"] },
+    "indexing": { "$ref": "resource-indexing.schema.json" },
     "update_sites": { "type": "array", "items": { "$ref": "#/$defs/updateSite" } },
     "update_policy": { "type": "object", "additionalProperties": true },
     "healthcheck": { "type": "object", "additionalProperties": true }

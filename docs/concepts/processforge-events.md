@@ -1,13 +1,8 @@
 # ProcessForge Events
 
-This page is kept as a compatibility pointer. The canonical event model is now
-documented in `docs/concepts/process-events.md`.
+This compatibility page points to the current event model:
 
-Current event streams live under:
+- [Process Events](process-events.md) documents derived project events.
+- [Hooks And Events](hooks-events.md) documents native raw ingress, provider adapters, conversation capture and replay boundaries.
 
-```text
-.pf/runtime/events/events.ndjson
-```
-
-Events use the envelope in `schemas/event-envelope.schema.json` and the process
-taxonomy in `schemas/process-event.schema.json`.
+Do not treat `.pf/runtime/events/events.ndjson` as the complete journal of native hook activity. Raw native events remain private workplace records.

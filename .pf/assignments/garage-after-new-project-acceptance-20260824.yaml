@@ -1,0 +1,97 @@
+schema_version: 1
+id: garage-after-new-project-acceptance-20260824
+title: After-new-project acceptance and combined report
+run_id: garage-stabilization-after-new-project-20260824
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-08-24T09:54:23Z'
+updated_at: '2026-08-24T09:57:51Z'
+objective: Validate the second stabilization slice and write the combined report file for both runs.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Acceptance artifacts, telemetry, reviews, handoff, final validation, and combined report file completed with host-level Codex/MCP gates remaining.
+  artifacts:
+    - .pf/artifacts/final-validation-after-new-project.md
+    - .pf/artifacts/garage-stabilization-combined-report-20260824.md
+    - .pf/handoffs/runs/garage-stabilization-after-new-project-20260824-handoff.md
+stage: integration-review
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/governed-work-bootstrap-design.md
+  - .pf/artifacts/agent-instructions-update-report.md
+  - .pf/artifacts/fresh-git-project-acceptance.md
+  - .pf/artifacts/extended-telemetry-report.md
+  - .pf/artifacts/extended-telemetry-statistics.json
+  - .pf/artifacts/extended-telemetry-timeline.csv
+  - .pf/artifacts/independent-architecture-review-after-new-project.md
+  - .pf/artifacts/independent-code-review-after-new-project.md
+  - .pf/artifacts/final-validation-after-new-project.md
+  - .pf/artifacts/garage-stabilization-combined-report-20260824.md
+  - .pf/handoffs/runs/garage-stabilization-after-new-project-20260824-handoff.md
+  - .pf/logs/garage-stabilization-after-new-project.md
+allowed_read_files:
+  - задания/process-forge-garage-stabilization-after-new-project-test-master-prompt.md
+  - .pf/artifacts/stabilization-implementation-report.md
+  - .pf/artifacts/stabilization-implementation-report-after-new-project.md
+forbidden_files:
+  - dist/**
+  - .pf/runtime/**
+ownership:
+  owner_id: garage-after-new-project-acceptance-20260824
+  owner_label: worker-garage-after-new-project-acceptance-20260824
+  role: ""
+  writer: true
+  owned_files:
+    - .pf/artifacts/governed-work-bootstrap-design.md
+    - .pf/artifacts/agent-instructions-update-report.md
+    - .pf/artifacts/fresh-git-project-acceptance.md
+    - .pf/artifacts/extended-telemetry-report.md
+    - .pf/artifacts/extended-telemetry-statistics.json
+    - .pf/artifacts/extended-telemetry-timeline.csv
+    - .pf/artifacts/independent-architecture-review-after-new-project.md
+    - .pf/artifacts/independent-code-review-after-new-project.md
+    - .pf/artifacts/final-validation-after-new-project.md
+    - .pf/artifacts/garage-stabilization-combined-report-20260824.md
+    - .pf/handoffs/runs/garage-stabilization-after-new-project-20260824-handoff.md
+    - .pf/logs/garage-stabilization-after-new-project.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/governed-work-bootstrap-design.md
+    - .pf/artifacts/agent-instructions-update-report.md
+    - .pf/artifacts/fresh-git-project-acceptance.md
+    - .pf/artifacts/extended-telemetry-report.md
+    - .pf/artifacts/extended-telemetry-statistics.json
+    - .pf/artifacts/extended-telemetry-timeline.csv
+    - .pf/artifacts/independent-architecture-review-after-new-project.md
+    - .pf/artifacts/independent-code-review-after-new-project.md
+    - .pf/artifacts/final-validation-after-new-project.md
+    - .pf/artifacts/garage-stabilization-combined-report-20260824.md
+    - .pf/handoffs/runs/garage-stabilization-after-new-project-20260824-handoff.md
+    - .pf/logs/garage-stabilization-after-new-project.md
+  rule: Do not edit files owned by active parallel tasks.
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/garage-stabilization-combined-report-20260824.md
+  format: concise_markdown
+  include:
+    []

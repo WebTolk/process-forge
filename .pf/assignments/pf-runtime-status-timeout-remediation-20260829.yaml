@@ -1,0 +1,68 @@
+schema_version: 1
+id: pf-runtime-status-timeout-remediation-20260829
+title: Fix Runtime status timeout under real ledger load
+run_id: pf-machine-acceptance-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T08:29:11Z'
+updated_at: '2026-08-29T08:44:12Z'
+objective: Make installed Runtime status reliable when host status generation exceeds the former two-second client deadline, with a focused regression test.
+platform: ""
+selected_specializations:
+  []
+order: 45
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Fixed real Runtime status starvation and full-journal scan; focused and long-lived smokes pass, final 1.2.1 archive rebuilt, installed, and returns ready under scheduler load.
+  artifacts:
+    - .pf/artifacts/pf-machine-acceptance-20260829/runtime-status-timeout-remediation.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/pf_runtime/service.py
+  - tools/smoke_runtime_status_timeout.py
+  - .pf/artifacts/pf-machine-acceptance-20260829/runtime-status-timeout-remediation.md
+ownership:
+  owner_id: orchestrator-main
+  owner_label: worker-orchestrator-main
+  role: developer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/service.py
+    - tools/smoke_runtime_status_timeout.py
+    - .pf/artifacts/pf-machine-acceptance-20260829/runtime-status-timeout-remediation.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/pf_runtime/service.py
+    - tools/smoke_runtime_status_timeout.py
+    - .pf/artifacts/pf-machine-acceptance-20260829/runtime-status-timeout-remediation.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-status-timeout-remediation
+    type: unspecified
+    required: true
+    path: .pf/artifacts/pf-machine-acceptance-20260829/runtime-status-timeout-remediation.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-machine-acceptance-20260829/runtime-status-timeout-remediation.md
+  format: concise_markdown
+  include:
+    - runtime-status-timeout-remediation

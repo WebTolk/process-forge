@@ -1,0 +1,62 @@
+schema_version: 1
+id: pf-target-updater-review-20260829
+title: Review target-side updater behavior
+run_id: pf-machine-acceptance-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T08:18:33Z'
+updated_at: '2026-08-29T08:25:00Z'
+objective: Independently verify the 1.2.1 updater against a 1.1.0 installation copy, treating the 1.1.0 updater only as transition evidence.
+platform: ""
+selected_specializations:
+  []
+order: 41
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Target-side 1.2.1 updater passed isolated update, local-modification blocking, forced rollback, corrupt archive, repair classification, and exact 1.1.0 checksum restoration.
+  artifacts:
+    - .pf/artifacts/pf-machine-acceptance-20260829/target-updater-review.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/pf-machine-acceptance-20260829/target-updater-review.md
+ownership:
+  owner_id: orchestrator-main
+  owner_label: worker-orchestrator-main
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/pf-machine-acceptance-20260829/target-updater-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/pf-machine-acceptance-20260829/target-updater-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: target-updater-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/pf-machine-acceptance-20260829/target-updater-review.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-machine-acceptance-20260829/target-updater-review.md
+  format: concise_markdown
+  include:
+    - target-updater-review

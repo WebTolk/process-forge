@@ -40,21 +40,25 @@ def main() -> None:
     assert PROCESS_ID in shown, shown
     assert PACK_ID in shown, shown
     assert "origin" in shown.lower() and "official" in shown.lower(), shown
-    direct = run_pf(
-        "process-show",
-        "packs/official/software-development/processes/software-feature-development.yaml",
-    )
-    assert "ORIGIN: official" in direct, direct
-    assert f"PACK_ID: {PACK_ID}" in direct, direct
-    assert "ACTIVE: false" in direct, direct
-    assert "PRODUCTION_READY: true" in direct, direct
-
     kernel = run_pf("process-list", "--origin", "kernel")
     assert "\tkernel\t" in kernel, kernel
     assert "\tcore\t" not in kernel, kernel
 
     with tempfile.TemporaryDirectory(prefix="pf-official-show-workplace-") as tmp:
-        workplace = Path(tmp) / "workplace"
+        neutral_workplace = Path(tmp) / "neutral-workplace"
+        run_pf("workplace-init", "--workplace", str(neutral_workplace), "--apply")
+        direct = run_pf(
+            "process-show",
+            "packs/official/software-development/processes/software-feature-development.yaml",
+            "--workplace",
+            str(neutral_workplace),
+        )
+        assert "ORIGIN: official" in direct, direct
+        assert f"PACK_ID: {PACK_ID}" in direct, direct
+        assert "ACTIVE: false" in direct, direct
+        assert "PRODUCTION_READY: true" in direct, direct
+
+        workplace = Path(tmp) / "software-workplace"
         run_pf(
             "workplace-init",
             "--profile",

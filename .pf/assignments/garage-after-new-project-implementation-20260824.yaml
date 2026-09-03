@@ -1,0 +1,84 @@
+schema_version: 1
+id: garage-after-new-project-implementation-20260824
+title: After-new-project stabilization implementation
+run_id: garage-stabilization-after-new-project-20260824
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-08-24T09:49:46Z'
+updated_at: '2026-08-24T09:54:06Z'
+objective: Implement scoped Runtime/Garage fixes and smokes for after-new-project stabilization.
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Implemented MCP diagnostics/schema, stale current-session projection sync, fulltext article fixture, docs, and release-test registrations.
+  artifacts:
+    - .pf/artifacts/stabilization-implementation-report-after-new-project.md
+stage: worker-execution
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/smoke_session_projection_expiry.py
+  - tools/smoke_fulltext_article_indexing.py
+  - tools/smoke_mcp_missing_session_diagnostics.py
+  - docs/concepts/runtime-mcp.md
+  - docs/concepts/resource-search-index.md
+  - .pf/artifacts/stabilization-implementation-report-after-new-project.md
+  - .pf/logs/garage-stabilization-after-new-project.md
+allowed_read_files:
+  - задания/process-forge-garage-stabilization-after-new-project-test-master-prompt.md
+forbidden_files:
+  - dist/**
+  - .pf/runtime/**
+ownership:
+  owner_id: garage-after-new-project-implementation-20260824
+  owner_label: worker-garage-after-new-project-implementation-20260824
+  role: ""
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/smoke_session_projection_expiry.py
+    - tools/smoke_fulltext_article_indexing.py
+    - tools/smoke_mcp_missing_session_diagnostics.py
+    - docs/concepts/runtime-mcp.md
+    - docs/concepts/resource-search-index.md
+    - .pf/artifacts/stabilization-implementation-report-after-new-project.md
+    - .pf/logs/garage-stabilization-after-new-project.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/smoke_session_projection_expiry.py
+    - tools/smoke_fulltext_article_indexing.py
+    - tools/smoke_mcp_missing_session_diagnostics.py
+    - docs/concepts/runtime-mcp.md
+    - docs/concepts/resource-search-index.md
+    - .pf/artifacts/stabilization-implementation-report-after-new-project.md
+    - .pf/logs/garage-stabilization-after-new-project.md
+  rule: Do not edit files owned by active parallel tasks.
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/stabilization-implementation-report-after-new-project.md
+  format: concise_markdown
+  include:
+    []

@@ -48,9 +48,20 @@
     },
     "merge": { "type": "object" },
     "policies": { "type": "object" },
+    "process": { "oneOf": [{ "$ref": "#/$defs/id" }, { "const": "" }] },
     "processes": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/idPathRef" }
+      "oneOf": [
+        { "type": "array", "items": { "$ref": "#/$defs/idPathRef" } },
+        {
+          "type": "object",
+          "required": ["allowed"],
+          "properties": {
+            "default": { "$ref": "#/$defs/id" },
+            "allowed": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/id" } }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "packages": {
       "type": "array",

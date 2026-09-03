@@ -28,43 +28,44 @@ HTTPS, `sha256` и ручное подтверждение оператора п
 Не распаковывайте новый релиз в проектную `.pf`. Обновляется установленный
 дистрибутив ProcessForge, а рабочие места и проекты остаются отдельно.
 
-Рекомендуемый ручной порядок:
+### Первый управляемый переход с 1.0.2 на 1.1.0
 
-1. Распакуйте `processforge.zip` в новую версионную папку вне проекта,
-   например `<processforge-root-1.0.2>`.
-2. Проверьте новый дистрибутив:
+В публичном дистрибутиве 1.0.2 ещё нет manifest-based core updater. Для этого
+единственного перехода распакуйте архив 1.1.0 во временную staging-папку и
+запустите новый updater оттуда против стабильного пути установленного Core.
 
-   ```powershell
-   python <processforge-root-1.0.2>/bin/pf.py version
-   python <processforge-root-1.0.2>/bin/pf.py release-test --root <processforge-root-1.0.2> --public
-   ```
-
-3. В `<workplace>/registries/distributions.yaml` обновите запись
-   `processforge`: путь должен указывать на новую папку, версия - на новую
-   версию релиза.
-4. Проверьте рабочее место:
+1. Сделайте резервную копию установленного Core и остановите optional
+   long-lived PF Runtime.
+2. Распакуйте `processforge-1.1.0.zip` в `<staged-processforge-1.1.0>`.
+3. Проверьте staging-дистрибутив:
 
    ```powershell
-   python <processforge-root-1.0.2>/bin/pf.py doctor-workplace --workplace <workplace>
+   python <staged-processforge-1.1.0>/bin/pf.py version
+   python <staged-processforge-1.1.0>/bin/pf.py release-test --root <staged-processforge-1.1.0> --public
    ```
 
-5. Для каждого связанного проекта выполните проверку и обновление снимка
-   контекста:
+4. Постройте план и явно примените обновление к стабильной установленной папке:
 
    ```powershell
-   python <processforge-root-1.0.2>/bin/pf.py project-upgrade-check --project-root <project>
-   python <processforge-root-1.0.2>/bin/pf.py project-context-refresh --project-root <project>
-   python <processforge-root-1.0.2>/bin/pf.py project-context-check --project-root <project>
-   python <processforge-root-1.0.2>/bin/pf.py doctor-project --project-root <project>
+   python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip>
+   python <staged-processforge-1.1.0>/bin/pf.py core-update apply --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --confirm
    ```
 
-Старую папку дистрибутива держите до успешной проверки. Для отката верните путь
-в `registries/distributions.yaml` на предыдущую версию и снова выполните
-`doctor-workplace` и проверки проектов.
+5. Проверьте установленный Core и workplace, затем перезапустите PF Runtime,
+   если он настроен:
 
-Распаковка поверх старой папки допустима только как ручной аварийный вариант
-после резервной копии. Она хуже контролируется: файлы, удалённые из нового
-релиза, могут остаться от старой версии.
+   ```powershell
+   python <installed-processforge>/bin/pf.py version
+   python <installed-processforge>/bin/pf.py core-update status --core-root <installed-processforge>
+   python <installed-processforge>/bin/pf.py doctor-workplace --root <workplace>
+   ```
+
+6. Для каждого связанного проекта выполните `project-upgrade-check`, обновите
+   context и запустите `doctor-project` через установленный CLI 1.1.0.
+
+Updater заранее пишет backups и operation journal. При прерванном обновлении
+используйте `core-update status` и `core-update repair`. Следующие релизы смогут
+использовать updater, уже установленный в составе 1.1.0.
 
 ## Как обновлять проектную `.pf`
 
@@ -91,7 +92,7 @@ python bin/pf.py project-upgrade-check --project-root <project>
    соответствующий процесс или команду ProcessForge, затем снова выполните
    `project-context-refresh`, `project-context-check` и `doctor-project`.
 
-Для ProcessForge `1.0.2` миграция проектных `.pf` не требуется. Старые
-assignments и capsules остаются валидными; новые shell-agent flows могут
-использовать `workspace_access`, чтобы получать общие знания, шаблоны,
-инструменты и MCP через приватный runtime-файл.
+Для ProcessForge `1.1.0` обязательная миграция проектных `.pf` не требуется.
+Существующие assignments и capsules остаются валидными. Обновите project
+context и search indexes, чтобы Garage, MCP и Runtime использовали актуальные
+resource snapshots.

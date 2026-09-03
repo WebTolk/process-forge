@@ -1,0 +1,67 @@
+schema_version: 1
+id: central-ingress-test-inventory-review-20260814
+title: Review runtime event test inventory against executable paths
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T17:04:17Z'
+updated_at: '2026-08-14T17:09:04Z'
+objective: 'Read-only independent review: create only .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory-review.md. Audit every claim in current-event-test-inventory.md against exact executable code. Record corrections, direct vs indirect coverage, and untested gaps. In particular establish the precise current Codex event mappings in tools/pf_runtime/codex_hooks.py. Do not modify sources or the original Spark report.'
+platform: ""
+selected_specializations:
+  []
+order: 12
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Accepted as authoritative correction. It traced actual Codex mappings, ingress smokes, session routing, and separated events-validate from the standalone JSON-schema validator.
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory-review.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory-review.md
+allowed_read_files:
+  - tools
+  - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory.md
+ownership:
+  owner_id: shell-gpt54
+  owner_label: worker-shell-gpt54
+  role: test-inventory-reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: current-event-test-inventory-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory-review.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory-review.md
+  format: concise_markdown
+  include:
+    - current-event-test-inventory-review
+agent_model: gpt-5.4

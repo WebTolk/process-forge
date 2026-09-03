@@ -3,7 +3,7 @@ id: subagent-runtime-auditor
 title: Runtime supervisor stabilization audit
 run_id: subagent-stabilization-audit
 process: testing
-status: in_progress
+status: blocked
 created_at: '2026-07-24T18:16:30Z'
 updated_at: '2026-07-24T18:17:04Z'
 objective: ""
@@ -16,8 +16,8 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: failed
+  summary: Historic audit is absent from the run task index and has no durable report; reconcile only in a new audit run.
   artifacts:
     []
 allowed_read_files:

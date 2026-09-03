@@ -2,13 +2,13 @@ schema_version: 1
 
 product:
   id: processforge
-  current_version: "1.0.2"
+  current_version: "1.1.0"
 
 update_sites:
   - id: processforge-official
     enabled: true
-    manifest_url: "https://example.com/processforge/update.json"
-    changelog_url: "https://example.com/processforge/changelog.md"
+    manifest_url: "https://raw.githubusercontent.com/WebTolk/process-forge/dev/release/updates/processforge-stable.json"
+    changelog_url: "https://github.com/WebTolk/process-forge/releases/tag/v1.1.0"
     channel: stable
     priority: 10
     trust:
@@ -26,7 +26,7 @@ update_sites:
 
 channels:
   stable:
-    latest: "1.0.2"
+    latest: "1.1.0"
 
 versions:
   - version: "0.1.0"
@@ -121,3 +121,50 @@ versions:
       - schemas/update-source-registry.schema.json
       - docs/concepts/update-sites.md
       - docs/ru/concepts/update-sites.md
+
+  - version: "1.1.0"
+    channel: stable
+    released_at: "2026-08-31"
+    compatibility:
+      min_project_schema: 1
+      max_project_schema: 1
+    migration:
+      required: false
+      guide: updates/migrations/1.1.0-stable-release.md
+    changes:
+      - type: runtime
+        summary: "Runtime, MCP session reads, Codex event capture, local resource search, and project initialization were hardened for the 1.1.0 release line."
+        breaking: false
+      - type: search
+        summary: "Snapshot-authorized local search now maintains explicit fulltext, metadata, and none indexing policies with maintenance-owned refresh semantics."
+        breaking: false
+      - type: updates
+        summary: "Manifest-based core update planning, apply, incomplete-update detection, and repair reporting were strengthened."
+        breaking: false
+      - type: validation
+        summary: "Release, checksum, archive provenance, public-cleanliness, and extracted-archive validation gates were expanded."
+        breaking: false
+      - type: garage
+        summary: "PF-first Garage context, governed work bootstrap, authorized search, and resource resolution are available without a pre-existing Ledger session."
+        breaking: false
+      - type: integration
+        summary: "Codex hook telemetry, PF-managed worker governance, Windows Runtime autostart, and host-owned MCP registration were added."
+        breaking: false
+      - type: security
+        summary: "Worker environment persistence, MCP mutation boundaries, session authorization, and public release cleanliness were hardened."
+        breaking: false
+    affected_files:
+      - tools/processforge.py
+      - tools/pf_runtime/session_read.py
+      - tools/pf_runtime/mcp_server.py
+      - src/processforge_core/core_update.py
+      - src/processforge_core/local_resource_search.py
+      - src/processforge_core/project_initialization.py
+      - src/processforge_core/garage.py
+      - tools/pf_runtime/codex_mcp.py
+      - tools/pf_runtime/windows_autostart.py
+      - docs/concepts/context-freshness.md
+      - docs/concepts/resource-search-index.md
+      - docs/concepts/garage-core.md
+      - docs/getting-started/runtime-autostart.md
+      - CHANGELOG.md

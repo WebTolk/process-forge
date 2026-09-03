@@ -1,0 +1,97 @@
+schema_version: 1
+id: codex-capture-remediation-code-review-20260822
+title: Review Codex capture remediation for correctness and isolation
+run_id: codex-message-capture-remediation-implementation-20260822
+process: task-batch-execution
+status: cancelled
+created_at: '2026-08-22T11:36:31Z'
+updated_at: '2026-08-22T11:36:37Z'
+objective: Review Codex capture remediation for correctness and isolation
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    - codex-capture-remediation-implement-20260822
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: cancelled
+  summary: Superseded by the accepted retry, remediation, and release-review chain in codex-message-capture-remediation-execution-20260822.
+  artifacts:
+    - .pf/reviews/codex-message-capture-remediation-release-review-20260822.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/artifacts/codex-message-capture-remediation-implementation-20260822/implementation-report.md
+allowed_files:
+  - .pf/reviews/codex-message-capture-remediation-implementation-20260822.md
+allowed_read_files:
+  - .pf/artifacts/codex-message-capture-remediation-implementation-20260822/implementation-report.md
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/pf_runtime/raw_ingress_kernel.py
+  - tools/pf_runtime/session_replay.py
+  - tools/pf_runtime/session_read.py
+  - tools/smoke_conversation_completeness.py
+  - tools/smoke_runtime_ledger_hooks_mcp.py
+forbidden_files:
+  - tools/**
+  - src/**
+  - schemas/**
+  - .codex/hooks.json
+ownership:
+  owner_id: codex-capture-remediation-code-review-20260822
+  owner_label: worker-codex-capture-remediation-code-review-20260822
+  role: independent-reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/codex-message-capture-remediation-implementation-20260822.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/codex-message-capture-remediation-implementation-20260822.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: code-review
+    path: .pf/reviews/codex-message-capture-remediation-implementation-20260822.md
+    type: markdown
+    required: true
+agent_model: gpt-5.3-codex-spark
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/reviews/codex-message-capture-remediation-implementation-20260822.md
+  format: concise_markdown
+  include:
+    - code-review
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""

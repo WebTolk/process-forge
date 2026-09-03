@@ -1,0 +1,71 @@
+schema_version: 1
+id: central-ingress-conversation-completeness-final-rereview-3-20260820
+title: Independently verify canonical worker event identifiers
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-20T13:03:21Z'
+updated_at: '2026-08-20T13:07:14Z'
+objective: 'Independently verify that the canonical worker event identifier correction closes every previously reported conversation-completeness blocker: durable worker lifecycle reconciliation, collectible report ordering, privacy filtering, PF-owned input/output provenance, strict canonical native IDs and logical idempotency. Read-only review; return PASS, PASS_WITH_CONDITIONS, or FAIL with concrete evidence.'
+platform: ""
+selected_specializations:
+  []
+order: 56
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-3-20260820.md
+stage: task-execution-loop
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-3-20260820.md
+allowed_read_files:
+  - tools/codex_exec_worker.py
+  - tools/pf_runtime/host.py
+  - tools/processforge.py
+  - tools/smoke_conversation_completeness.py
+  - tools/smoke_worker_run_shell.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-2-20260820.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/worker-event-id-correction-report-20260820.md
+ownership:
+  owner_id: shell-gpt55
+  owner_label: worker-shell-gpt55
+  role: independent-conversation-rereviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-3-20260820.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-3-20260820.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: conversation-completeness-final-rereview-3-20260820
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-3-20260820.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/conversation-completeness-final-rereview-3-20260820.md
+  format: concise_markdown
+  include:
+    - conversation-completeness-final-rereview-3-20260820
+agent_model: gpt-5.5

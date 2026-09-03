@@ -1,0 +1,70 @@
+schema_version: 1
+id: process-contract-normalization-audit
+title: Write process/stage contract normalization audit
+run_id: process-stage-contract-normalization-20260814
+process: process-authoring
+status: done
+created_at: '2026-08-14T10:23:10Z'
+updated_at: '2026-08-14T10:24:35Z'
+objective: Synthesize independently verified source evidence and delegated inventories into the mandatory audit and normalized contract decision. No product code changes.
+platform: ""
+selected_specializations:
+  []
+order: 4
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Mandatory audit completed with canonical/legacy classification, normalized contract decision, runtime defect evidence, and implementation plan.
+  artifacts:
+    - .pf/artifacts/process-stage-contract-normalization-20260814/process-contract-normalization-audit.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/process-stage-contract-normalization-20260814/process-contract-normalization-audit.md
+allowed_read_files:
+  - .pf/artifacts/process-stage-contract-normalization-20260814/process-contract-static-inventory.md
+  - .pf/artifacts/process-stage-contract-normalization-20260814/process-authoring-parity-inventory.md
+  - .pf/artifacts/process-stage-contract-normalization-20260814/process-transition-route-inventory.md
+  - schemas/process-definition.schema.json
+  - schemas/process-transition.schema.json
+  - schemas/process-route-map.schema.json
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - processes/core/process-supervisor.yaml
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: process-contract-architect
+  writer: true
+  owned_files:
+    - .pf/artifacts/process-stage-contract-normalization-20260814/process-contract-normalization-audit.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/process-stage-contract-normalization-20260814/process-contract-normalization-audit.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: process-contract-normalization-audit
+    type: unspecified
+    required: true
+    path: .pf/artifacts/process-stage-contract-normalization-20260814/process-contract-normalization-audit.md
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/process-stage-contract-normalization-20260814/process-contract-normalization-audit.md
+  format: concise_markdown
+  include:
+    - process-contract-normalization-audit

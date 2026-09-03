@@ -1,0 +1,71 @@
+schema_version: 1
+id: runtime-final-independent-review
+title: Final independent Runtime correctness review
+run_id: runtime-final-independent-review-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T04:01:57Z'
+updated_at: '2026-08-14T04:05:55Z'
+objective: 'Read-only independent review. Return ONLY the complete Russian Markdown report itself (no preface). Begin with verdict PASS, WARN, or FAIL. For every non-pass finding include: severity; exact file, function and line range; minimal reproduction; impact; direct evidence from inspected code or a stated test command. If no confirmed defect exists, say PASS and list files and scenarios examined. Do not infer. Do not edit files.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Independent gpt-5.3-codex-spark review completed with exit code 0; its stdout was preserved unchanged after the output-parent delivery defect was repaired.
+  artifacts:
+    - .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+allowed_read_files:
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/service.py
+  - tools/processforge.py
+  - tools/smoke_runtime_host_poc.py
+  - tools/smoke_long_lived_runtime.py
+  - tools/smoke_codex_exec_worker.py
+  - .pf/artifacts/runtime-general-line-20260814/runtime-correctness-report.md
+  - задания/process-forge-runtime-general-line-master-prompt.md
+ownership:
+  owner_id: shell-worker-runtime-final-review
+  owner_label: worker-shell-worker-runtime-final-review
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-final-independent-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+agent_model: gpt-5.3-codex-spark
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+  format: concise_markdown
+  include:
+    - runtime-final-independent-review

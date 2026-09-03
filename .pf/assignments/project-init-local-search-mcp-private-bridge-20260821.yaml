@@ -1,0 +1,68 @@
+schema_version: 1
+id: project-init-local-search-mcp-private-bridge-20260821
+title: Implement private path-ref bridge for MCP local search
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T14:28:15Z'
+updated_at: '2026-08-21T14:29:01Z'
+objective: Resolve only snapshot-authorized metadata path_ref values into transient content roots inside the Ledger-bound MCP search call. Do not persist raw paths or expose them in responses; verify static and focused FTS smoke.
+platform: ""
+selected_specializations:
+  []
+order: 21
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Implemented transient private path-ref resolution for Ledger-bound MCP search without public path persistence or response leakage.
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/private-bridge-implementation-report.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - tools/pf_runtime/mcp_server.py
+  - .pf/artifacts/project-init-local-search-mcp-20260821/private-bridge-implementation-report.md
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: developer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/pf_runtime/mcp_server.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/private-bridge-implementation-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/pf_runtime/mcp_server.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/private-bridge-implementation-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: private-bridge-report
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/private-bridge-implementation-report.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/private-bridge-implementation-report.md
+  format: concise_markdown
+  include:
+    - private-bridge-report

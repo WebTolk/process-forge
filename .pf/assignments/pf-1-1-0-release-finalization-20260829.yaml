@@ -1,0 +1,74 @@
+schema_version: 1
+id: pf-1-1-0-release-finalization-20260829
+title: Finalize 1.1.0 test-package handoff
+run_id: processforge-1-1-0-release-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T13:06:04Z'
+updated_at: '2026-08-29T13:07:36Z'
+objective: Disposition independent-review observations, record release process log and final test-package handoff, verify durable package facts, and close the PF run without publishing tag or GitHub release.
+platform: ""
+selected_specializations:
+  []
+order: 6
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Dispositioned independent-review observations, recorded the final test-package handoff and release log, and reverified version, hash, entry count, clean provenance, and release eligibility.
+  artifacts:
+    - .pf/reviews/processforge-1.1.0-release-20260829-disposition.md
+    - .pf/artifacts/processforge-1-1-0-release-20260829/final-package-handoff.md
+stage: release-delivery
+execution_mode:
+  kind: release_delivery
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/processforge-1.1.0-release-20260829-disposition.md
+  - .pf/logs/processforge-1.1.0-release-20260829.md
+  - .pf/artifacts/processforge-1-1-0-release-20260829/final-package-handoff.md
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: release-manager
+  writer: true
+  owned_files:
+    - .pf/reviews/processforge-1.1.0-release-20260829-disposition.md
+    - .pf/logs/processforge-1.1.0-release-20260829.md
+    - .pf/artifacts/processforge-1-1-0-release-20260829/final-package-handoff.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/processforge-1.1.0-release-20260829-disposition.md
+    - .pf/logs/processforge-1.1.0-release-20260829.md
+    - .pf/artifacts/processforge-1-1-0-release-20260829/final-package-handoff.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: review_disposition
+    path: .pf/reviews/processforge-1.1.0-release-20260829-disposition.md
+    type: unspecified
+    required: true
+  -
+    id: final_package_handoff
+    path: .pf/artifacts/processforge-1-1-0-release-20260829/final-package-handoff.md
+    type: unspecified
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/processforge-1-1-0-release-20260829/final-package-handoff.md
+  format: concise_markdown
+  include:
+    - review_disposition
+    - final_package_handoff

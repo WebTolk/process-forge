@@ -53,6 +53,7 @@
         "required_sources": { "type": "array", "items": { "type": "string" } },
         "context_artifacts": { "type": "array", "items": { "$ref": "#/$defs/context_artifact" } },
         "selected_specializations": { "type": "array", "items": { "type": "string" } },
+        "selected_resource_ids": { "type": "array", "items": { "type": "string" } },
         "applied_project_overrides": { "type": "array", "items": { "type": "string" } }
       },
       "additionalProperties": true

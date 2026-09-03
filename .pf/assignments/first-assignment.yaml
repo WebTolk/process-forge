@@ -1,0 +1,24 @@
+schema_version: 1
+id: first-assignment
+title: Verify ProcessForge project onboarding
+run_id: project-onboarding-process-forge
+process: project-onboarding
+status: done
+objective: Verify that this project is connected to ProcessForge and ready for future assignment work.
+iterations:
+  []
+result:
+  status: done
+  summary: 'Superseded onboarding residue: later ProcessForge project runs provide the working project context.'
+  artifacts:
+    []
+tasks:
+  - Read .pf/AGENTS.md
+  - Read .pf/contexts/project-context.snapshot.yaml
+  - Run doctor-project
+  - Review .pf/hooks.yaml
+  - Confirm the first working process for this project
+  - Create .pf/artifacts/first-assignment-readiness-note.md
+expected_artifacts:
+  - .pf/artifacts/first-assignment-readiness-note.md
+updated_at: '2026-08-22T12:46:01Z'

@@ -1,0 +1,408 @@
+schema_version: 1
+capsule:
+  id: central-ingress-raw-kernel-rereview-main-20260815-capsule
+  generated_at: '2026-08-15T04:03:05Z'
+  assignment_id: central-ingress-raw-kernel-rereview-main-20260815
+  assignment_path: .pf/assignments/central-ingress-raw-kernel-rereview-main-20260815.yaml
+  assignment_checksum: 4793ac35a6eb0c9481aef8c36c3d1a4fb4edef5c4f34d839dd6fa57459bacfbf
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 27f7d6d487e6e0609c3f9f01d0b099105ac25fd36b6de371e2590e8cbac430d1
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260815-040219-397a78
+  sha256: 'sha256:27f7d6d487e6e0609c3f9f01d0b099105ac25fd36b6de371e2590e8cbac430d1'
+  generated_at: '2026-08-15T04:02:14Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  []
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+execution_route_summary:
+  process: knowledge-package-improvement
+  stages:
+    -
+      id: propose
+      required_capabilities:
+        - research
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - proposal-complete
+    -
+      id: assess
+      required_capabilities:
+        - process_governance
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - compatibility-reviewed
+    -
+      id: integrate
+      required_capabilities:
+        - repository_write
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - package-updated
+  required_capabilities:
+    - process_governance
+    - repository_write
+    - research
+    - review
+  capability_requirements:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+  unsatisfied:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: central-ingress-raw-kernel-rereview-main-20260815
+  path: .pf/assignments/central-ingress-raw-kernel-rereview-main-20260815.yaml
+  status: open
+  objective: 'Read only: review only the current raw_ingress_kernel.py and its smoke test against native identity, containment, atomicity, Windows locking, duplicate/quarantine and privacy. Return PASS/FAIL with exact line-level findings; do not change code.'
+  execution_mode:
+    kind: read_only
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260815-040219-397a78
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/central-ingress-raw-kernel-rereview-main-20260815.yaml
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+  allowed_read_files:
+    - tools/pf_runtime/raw_ingress_kernel.py
+    - tools/smoke_central_event_ingress_kernel.py
+    - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-contract.md
+  forbidden_files:
+    []
+  ownership:
+    owner_id: shell-spark
+    owner_label: worker-shell-spark
+    role: raw-kernel-reviewer
+    writer: true
+    owned_files:
+      - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: raw-kernel-rereview-main
+      type: unspecified
+      required: true
+      path: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+  expected_report:
+    language: ru
+    artifact: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+    format: concise_markdown
+    include:
+      - raw-kernel-rereview-main
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.3-codex-spark
+agent_reasoning_effort: minimal
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/central-ingress-raw-kernel-rereview-main-20260815.ndjson
+  event_correlation_id: assignment-central-ingress-raw-kernel-rereview-main-20260815
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/central-ingress-raw-kernel-rereview-main-20260815.yaml
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: raw-kernel-rereview-main
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-central-ingress-raw-kernel-rereview-main-20260815

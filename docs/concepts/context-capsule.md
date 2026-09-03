@@ -5,6 +5,15 @@ A context capsule is the small launch package for a worker-agent. In the active
 It records the assignment path, assignment checksum, project snapshot checksum,
 scope, outputs, capability records, and context rebuild policy.
 
+For governed Work, the same capsule is also the narrow effective context: it
+pins one active process definition, active specialization ids, and selected
+resource identities. It must not include definitions for every process or
+specialization merely authorized by the project snapshot.
+
+Selected resource identities remain an auditable snapshot pin in 1.1.0. They
+do not claim process- or specialization-specific re-resolution of the project
+resource universe; that narrower authorization remains a separate future step.
+
 In [multi-agent orchestration](multi-agent-orchestration.md), each worker launch
 prompt points to one assignment capsule. The capsule keeps the worker bounded to
 its assignment, required sources, allowed scopes, forbidden files, required

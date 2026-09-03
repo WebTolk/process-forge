@@ -1,0 +1,66 @@
+schema_version: 1
+id: python-core-public-surface-redaction
+title: Public surface report redaction and fact correction
+run_id: python-core-refactor-phase-a-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T11:55:38Z'
+updated_at: '2026-08-14T11:57:50Z'
+objective: Produce a replacement public-surface inventory using only repository-relative paths. Remove any unsupported claims about releaseignore or smoke discovery; every packaging assertion must cite an exact file and function/constant. Do not edit product code or the prior report.
+platform: ""
+selected_specializations:
+  []
+order: 4
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-a-20260814/public-surface-inventory-redacted.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/public-surface-inventory.md
+  - README.md
+  - README.ru.md
+  - QUICKSTART.md
+  - QUICKSTART.ru.md
+  - docs/release-checklist.md
+  - bin/pf.py
+  - tools/processforge.py
+  - .processforge-releaseignore
+  - requirements.txt
+  - VERSION
+ownership:
+  owner_id: python-core-public-surface-redaction
+  owner_label: worker-python-core-public-surface-redaction
+  role: evidence-redaction
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: public-surface-inventory-redacted
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-a-20260814/public-surface-inventory-redacted.md
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/public-surface-inventory-redacted.md
+  format: concise_markdown
+  include:
+    - public-surface-inventory-redacted
+agent_model: gpt-5.3-codex-spark

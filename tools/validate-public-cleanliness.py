@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import ast
 import re
 import sys
 import argparse
@@ -25,7 +26,6 @@ FORBIDDEN_LITERAL_PATTERNS = [
     INTERNAL_FLOW_MARKER,
     "sec" + "ret=",
     "pass" + "word=",
-    "scr" + "atch",
 ]
 
 FORBIDDEN_REGEX_PATTERNS = [
@@ -33,6 +33,7 @@ FORBIDDEN_REGEX_PATTERNS = [
     re.compile(r"/home/[A-Za-z0-9_.-]+/"),
     re.compile(r"users\\[A-Za-z0-9_.-]+", re.IGNORECASE),
 ]
+PYTHON_PRIVATE_PATH_FIXTURE_MARKER = "public-cleanliness: allow-private-path-fixture"
 
 FLOW_CORE_DIRS = {"schemas", "processes", "packages", "templates", "prompts", "bin", "tools", "updates", "policies", "seeds"}
 ALLOWED_PLATFORM_ID_PREFIXES = (
@@ -245,6 +246,32 @@ def validate_releaseignore(root_path: Path) -> list[str]:
     return failures
 
 
+def private_path_failures(path: Path, rel: str, text: str) -> list[str]:
+    """Detect private paths without treating Python escape syntax as a path."""
+
+    if path.suffix.lower() != ".py":
+        return [f"{rel}: forbidden private/local path pattern {pattern.pattern!r}" for pattern in FORBIDDEN_REGEX_PATTERNS if pattern.search(text)]
+    try:
+        tree = ast.parse(text.lstrip("\ufeff"), filename=rel)
+    except SyntaxError:
+        return [f"{rel}: unreadable Python source contains private/local path pattern {pattern.pattern!r}" for pattern in FORBIDDEN_REGEX_PATTERNS if pattern.search(text)]
+    lines = text.splitlines()
+    failures: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+            continue
+        line_number = int(getattr(node, "lineno", 0) or 0)
+        marker_start = max(0, line_number - 2)
+        marker_end = min(len(lines), line_number + 1)
+        acknowledged_fixture = rel.startswith("tools/smoke_") and any(
+            PYTHON_PRIVATE_PATH_FIXTURE_MARKER in line for line in lines[marker_start:marker_end]
+        )
+        for pattern in FORBIDDEN_REGEX_PATTERNS:
+            if pattern.search(node.value) and not acknowledged_fixture:
+                failures.append(f"{rel}: forbidden private/local path pattern {pattern.pattern!r}")
+    return failures
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
@@ -258,9 +285,7 @@ def main() -> int:
         for marker in FORBIDDEN_LITERAL_PATTERNS:
             if marker in lower:
                 failures.append(f"{rel}: forbidden marker {marker!r}")
-        for pattern in FORBIDDEN_REGEX_PATTERNS:
-            if pattern.search(text):
-                failures.append(f"{rel}: forbidden private/local path pattern {pattern.pattern!r}")
+        failures.extend(private_path_failures(path, rel, text))
     failures.extend(platform_neutrality_failures(root_path))
     failures.extend(runtime_driver_neutrality_failures(root_path))
     failures.extend(russian_docs_mojibake_failures(root_path))

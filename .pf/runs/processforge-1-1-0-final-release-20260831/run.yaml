@@ -1,0 +1,67 @@
+schema_version: 1
+id: processforge-1-1-0-final-release-20260831
+title: ProcessForge 1.1.0 final release manifests and documentation
+process: software-feature-development
+status: blocked
+created_at: '2026-08-31T03:47:28Z'
+updated_at: '2026-09-02T10:50:55Z'
+objective: Execute задания/process-forge-1.1.0-final-release-update-manifests-docs-master-prompt.md and prepare the public 1.1.0 release without treating 1.2.0 or 1.2.1 as releases.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: pf-1-1-0-final-release-audit-20260831
+    assignment: .pf/assignments/pf-1-1-0-final-release-audit-20260831.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: pf-1-1-0-final-release-implementation-20260831
+    assignment: .pf/assignments/pf-1-1-0-final-release-implementation-20260831.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: pf-1-1-0-final-release-assurance-20260831
+    assignment: .pf/assignments/pf-1-1-0-final-release-assurance-20260831.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: pf-1-1-0-final-release-delivery-20260831
+    assignment: .pf/assignments/pf-1-1-0-final-release-delivery-20260831.yaml
+    status: done
+    order: 4
+    blocking: true
+  -
+    id: pf-1-1-0-final-release-mcp-remediation-20260831
+    assignment: .pf/assignments/pf-1-1-0-final-release-mcp-remediation-20260831.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: pf-1-1-0-final-release-windows-containment-20260831
+    assignment: .pf/assignments/pf-1-1-0-final-release-windows-containment-20260831.yaml
+    status: done
+    order: 4
+    blocking: true
+  -
+    id: pf-1-1-0-final-release-run-artifact-consistency-remediation-20260831
+    assignment: .pf/assignments/pf-1-1-0-final-release-run-artifact-consistency-remediation-20260831.yaml
+    status: done
+    order: 5
+    blocking: true
+final_artifacts:
+  - .pf/runs/processforge-1-1-0-final-release-20260831/summary.md
+  - .pf/handoffs/runs/processforge-1-1-0-final-release-20260831-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

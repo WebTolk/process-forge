@@ -1,0 +1,40 @@
+schema_version: 1
+id: garage-stabilization-after-new-project-20260824
+title: Garage stabilization after new-project test
+process: multi-agent-task-orchestration
+status: in_progress
+created_at: '2026-08-24T09:41:25Z'
+updated_at: '2026-08-24T09:57:51Z'
+objective: Execute the after-new-project Garage stabilization master prompt with scoped fixes, evidence artifacts, and a combined report covering this and the previous stabilization work.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: garage-after-new-project-baseline-20260824
+    assignment: .pf/assignments/garage-after-new-project-baseline-20260824.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: garage-after-new-project-implementation-20260824
+    assignment: .pf/assignments/garage-after-new-project-implementation-20260824.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: garage-after-new-project-acceptance-20260824
+    assignment: .pf/assignments/garage-after-new-project-acceptance-20260824.yaml
+    status: done
+    order: 3
+    blocking: true
+final_artifacts:
+  []
+events:
+  emitted:
+    - run.created
+privacy:
+  public_safe: true

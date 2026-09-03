@@ -1,0 +1,415 @@
+schema_version: 1
+capsule:
+  id: project-init-local-search-mcp-spark-review-20260821-capsule
+  generated_at: '2026-08-21T13:38:56Z'
+  assignment_id: project-init-local-search-mcp-spark-review-20260821
+  assignment_path: .pf/assignments/project-init-local-search-mcp-spark-review-20260821.yaml
+  assignment_checksum: 0a50d8d13f077a5640bf6ec59e41fb518f3f2507dd48512ded3ad7ec9843a576
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: e622e9ce19ca275987c424566bd82b54cc3caf7192ba531c73badbd3f4e62a64
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260821-090357-958422
+  sha256: 'sha256:e622e9ce19ca275987c424566bd82b54cc3caf7192ba531c73badbd3f4e62a64'
+  generated_at: '2026-08-21T09:03:53Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  []
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    -
+      id: research
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+    -
+      id: research
+      kind: capability
+      source: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+    -
+      id: process_governance
+      kind: capability
+      source: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+execution_route_summary:
+  process: knowledge-package-improvement
+  stages:
+    -
+      id: propose
+      required_capabilities:
+        - research
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - proposal-complete
+    -
+      id: assess
+      required_capabilities:
+        - process_governance
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - compatibility-reviewed
+    -
+      id: integrate
+      required_capabilities:
+        - repository_write
+      required_artifacts:
+        []
+      required_evidence:
+        []
+      exit_gates:
+        - package-updated
+  required_capabilities:
+    - process_governance
+    - repository_write
+    - research
+    - review
+  capability_requirements:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    -
+      capability: review
+      required_by: 'process:knowledge-package-improvement'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+    -
+      capability: repository_write
+      required_by: 'knowledge-package-improvement:integrate'
+      satisfied_by:
+        provider: active_process_pack
+        process_pack: processforge.official.software-development
+        knowledge_packages:
+          []
+        tools:
+          []
+        mcp:
+          []
+        templates:
+          []
+  unsatisfied:
+    -
+      capability: research
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'process:knowledge-package-improvement'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: research
+      required_by: 'knowledge-package-improvement:propose'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+    -
+      capability: process_governance
+      required_by: 'knowledge-package-improvement:assess'
+      reason: selected resource profile does not provide required capability
+      suggested_fix: select or update a specialization/platform binding that provides this capability
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: project-init-local-search-mcp-spark-review-20260821
+  path: .pf/assignments/project-init-local-search-mcp-spark-review-20260821.yaml
+  status: open
+  objective: Independently review the delivered initialization/local-search CLI and MCP slice against its contract. Check exact apply semantics, Ledger/snapshot containment, response privacy, syntax/CLI/smoke evidence, and identify only reproducible defects. Do not edit product code.
+  execution_mode:
+    kind: assurance
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260821-090357-958422
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/project-init-local-search-mcp-spark-review-20260821.yaml
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+  allowed_read_files:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/project-initialization-contract.md
+    - .pf/artifacts/project-init-local-search-mcp-20260821/cli-integration-implementation-report.md
+    - src/processforge_core/project_initialization.py
+    - src/processforge_core/local_resource_search.py
+    - tools/processforge.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/pf_runtime/session_read.py
+    - tools/smoke_project_init_local_search_mcp.py
+    - docs/authoring/project-initialization.md
+    - docs/concepts/runtime-mcp.md
+  forbidden_files:
+    []
+  ownership:
+    owner_id: shell-spark
+    owner_label: worker-shell-spark
+    role: reviewer
+    writer: true
+    owned_files:
+      - .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: spark-review
+      path: .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+      type: unspecified
+      required: true
+  expected_report:
+    language: ru
+    artifact: .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+    format: concise_markdown
+    include:
+      - spark-review
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.3-codex-spark
+agent_reasoning_effort: medium
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/project-init-local-search-mcp-spark-review-20260821.ndjson
+  event_correlation_id: assignment-project-init-local-search-mcp-spark-review-20260821
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/project-init-local-search-mcp-spark-review-20260821.yaml
+allowed_files:
+  - .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+forbidden_files:
+  []
+required_outputs:
+  -
+    id: spark-review
+    path: .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+    type: unspecified
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-project-init-local-search-mcp-spark-review-20260821

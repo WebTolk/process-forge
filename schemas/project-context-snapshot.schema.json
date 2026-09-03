@@ -120,12 +120,28 @@
     "knowledge_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "platform_stack": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "knowledge_resources": { "type": "object", "additionalProperties": true },
+    "resource_selection": { "type": "object", "additionalProperties": true },
     "resolved_policies": { "type": "object", "additionalProperties": true },
     "capabilities": { "type": "object", "additionalProperties": true },
     "tools": { "type": "object", "additionalProperties": true },
     "mcp": { "type": "object", "additionalProperties": true },
     "templates": { "type": "object", "additionalProperties": true },
-    "processes": { "type": "object", "additionalProperties": true },
+    "processes": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "selection": {
+          "type": "object",
+          "properties": {
+            "default": { "type": "string" },
+            "allowed": { "type": "array", "items": { "type": "string" } },
+            "source": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "packages": { "type": "object", "additionalProperties": true },
     "workplace_coordination": {
       "type": "object",

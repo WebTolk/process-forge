@@ -1,0 +1,89 @@
+schema_version: 1
+id: long-lived-runtime-20260813
+title: PF Long-Lived Runtime
+run_id: pf-long-lived-runtime-20260813
+process: process-supervisor
+status: done
+created_at: "2026-08-13T18:00:00Z"
+updated_at: "2026-08-13T18:45:00Z"
+objective: Promote the lazy PF Runtime Host PoC into a workplace-scoped, user-mode, long-lived local runtime process without duplicating PF Core business logic.
+iterations:
+  - id: iter-001
+    kind: research
+    status: completed
+    summary: Loaded project-local PF instructions, the long-lived runtime master prompt, and prior Codex events reference.
+    artifacts:
+      - .pf/artifacts/pf-runtime-director-ledger-20260813/codex-events-reference.md
+  - id: iter-002
+    kind: work
+    status: completed
+    summary: Added runtime service lifecycle, singleton state, bearer-token loopback IPC, session routing, and Core delegation wrappers.
+    artifacts:
+      - tools/pf_runtime/service.py
+      - tools/pf_runtime/host.py
+      - tools/processforge.py
+  - id: iter-003
+    kind: test
+    status: passed
+    summary: Added and passed a long-lived runtime smoke covering start/stop, singleton, stale recovery, crash/restart, auth, session isolation, duplicate events, scheduler delegation, and fallback.
+    artifacts:
+      - tools/smoke_long_lived_runtime.py
+result:
+  status: done
+  summary: Long-lived PF Runtime implemented and validated with focused smokes; full release checksum inventory remains a separate pre-existing release artifact concern.
+  artifacts:
+    - .pf/artifacts/pf-long-lived-runtime-20260813/report.md
+    - .pf/artifacts/pf-long-lived-runtime-20260813/adapter-contract.md
+    - .pf/handoffs/pf-long-lived-runtime-20260813-handoff.md
+    - tools/smoke_long_lived_runtime.py
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+allowed_files:
+  - tools/pf_runtime/**
+  - tools/processforge.py
+  - tools/smoke_long_lived_runtime.py
+  - .pf/artifacts/pf-long-lived-runtime-20260813/**
+  - .pf/logs/pf-long-lived-runtime-20260813.md
+  - .pf/handoffs/pf-long-lived-runtime-20260813-handoff.md
+  - .pf/assignments/long-lived-runtime-20260813.yaml
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/artifacts/pf-runtime-director-ledger-20260813/**
+  - задания/process-forge-long-lived-runtime-master-prompt.md
+  - tools/**
+  - schemas/**
+  - processes/**
+  - templates/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/**
+    - tools/processforge.py
+    - tools/smoke_long_lived_runtime.py
+    - .pf/artifacts/pf-long-lived-runtime-20260813/**
+    - .pf/logs/pf-long-lived-runtime-20260813.md
+    - .pf/handoffs/pf-long-lived-runtime-20260813-handoff.md
+    - .pf/assignments/long-lived-runtime-20260813.yaml
+required_outputs:
+  - id: implementation-report
+    type: markdown
+    required: true
+    path: .pf/artifacts/pf-long-lived-runtime-20260813/report.md
+  - id: adapter-contract
+    type: markdown
+    required: true
+    path: .pf/artifacts/pf-long-lived-runtime-20260813/adapter-contract.md
+  - id: long-lived-runtime-smoke
+    type: smoke
+    required: true
+    path: tools/smoke_long_lived_runtime.py
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-long-lived-runtime-20260813/report.md
+  format: concise_markdown

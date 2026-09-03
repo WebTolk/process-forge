@@ -1,0 +1,75 @@
+schema_version: 1
+id: declarative-process-execution-shell-review-20260902
+title: PF shell-agent declarative execution review
+run_id: declarative-process-execution-20260902
+process: software-feature-development
+status: done
+created_at: '2026-09-02T07:44:49Z'
+updated_at: '2026-09-02T09:11:28Z'
+objective: Independently review the declarative Process execution implementation against the master prompt. Do not modify source code. Run focused read-only checks as useful and write a concise Russian report with findings ordered by severity, evidence, and residual risks.
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Independent PF shell-agent review collected and remediated.
+  artifacts:
+    - .pf/reviews/declarative-process-execution-shell-agent.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/declarative-process-execution-shell-agent.md
+allowed_read_files:
+  - задания/process-forge-declarative-process-execution-master-prompt.md
+  - src/processforge_core/process_execution.py
+  - src/processforge_core/garage.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/host.py
+  - tools/processforge.py
+  - schemas/process-definition.schema.json
+  - schemas/process-event.schema.json
+  - tools/process_execution_smoke_support.py
+  - tools/smoke_work_transition_*.py
+  - tools/smoke_work_start_no_stage_guessing.py
+ownership:
+  owner_id: pf-shell-reviewer
+  owner_label: worker-pf-shell-reviewer
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/declarative-process-execution-shell-agent.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/declarative-process-execution-shell-agent.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: shell-agent-review
+    type: unspecified
+    required: true
+    path: .pf/reviews/declarative-process-execution-shell-agent.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/reviews/declarative-process-execution-shell-agent.md
+  format: concise_markdown
+  include:
+    - shell-agent-review
+agent_model: gpt-5.4

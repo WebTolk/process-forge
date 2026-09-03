@@ -1,0 +1,91 @@
+schema_version: 1
+id: release-smoke-isolation-20260821
+title: Isolate official-pack release smoke from host workplace activation
+run_id: distribution-release-docs-sync-20260821
+process: task-batch-execution
+status: blocked
+created_at: '2026-08-21T07:47:48Z'
+updated_at: '2026-08-21T07:48:00Z'
+objective: Make the public official-pack availability smoke assert inactive-by-default against an explicitly initialized neutral temporary workplace, not the linked checkout workplace.
+platform: ""
+selected_specializations:
+  []
+order: 4
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: failed
+  summary: Ownership overlap with release-docs-correction-20260821 prevents a safe retry; no closure artifact exists.
+  artifacts:
+    []
+stage: task-execution-loop
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/smoke_official_software_process_available.py
+  - .pf/logs/distribution-release-docs-sync-20260821.md
+  - .pf/assignments/release-smoke-isolation-20260821.yaml
+  - .pf/contexts/assignment-capsules/release-smoke-isolation-20260821.capsule.yaml
+  - .pf/artifacts/distribution-release-docs-sync-20260821/**
+  - .pf/runs/distribution-release-docs-sync-20260821/**
+ownership:
+  owner_id: codex
+  owner_label: worker-codex
+  role: release-sync-implementer
+  writer: true
+  owned_files:
+    - tools/smoke_official_software_process_available.py
+    - .pf/logs/distribution-release-docs-sync-20260821.md
+    - .pf/assignments/release-smoke-isolation-20260821.yaml
+    - .pf/contexts/assignment-capsules/release-smoke-isolation-20260821.capsule.yaml
+    - .pf/artifacts/distribution-release-docs-sync-20260821/**
+    - .pf/runs/distribution-release-docs-sync-20260821/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/smoke_official_software_process_available.py
+    - .pf/logs/distribution-release-docs-sync-20260821.md
+    - .pf/assignments/release-smoke-isolation-20260821.yaml
+    - .pf/contexts/assignment-capsules/release-smoke-isolation-20260821.capsule.yaml
+    - .pf/artifacts/distribution-release-docs-sync-20260821/**
+    - .pf/runs/distribution-release-docs-sync-20260821/**
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: release-smoke-isolation-20260821
+        current_scope: .pf/logs/distribution-release-docs-sync-20260821.md
+        other_assignment: release-docs-correction-20260821
+        other_scope: .pf/logs/distribution-release-docs-sync-20260821.md
+        reason: same_file
+      -
+        current_assignment: release-smoke-isolation-20260821
+        current_scope: .pf/artifacts/distribution-release-docs-sync-20260821/**
+        other_assignment: release-docs-correction-20260821
+        other_scope: .pf/artifacts/distribution-release-docs-sync-20260821/**
+        reason: same_glob
+      -
+        current_assignment: release-smoke-isolation-20260821
+        current_scope: .pf/runs/distribution-release-docs-sync-20260821/**
+        other_assignment: release-docs-correction-20260821
+        other_scope: .pf/runs/distribution-release-docs-sync-20260821/**
+        reason: same_glob
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/distribution-release-docs-sync-20260821/release-smoke-isolation-report.md
+  format: concise_markdown
+  include:
+    []

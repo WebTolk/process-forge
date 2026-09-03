@@ -1,0 +1,74 @@
+schema_version: 1
+id: project-init-local-search-mcp-spark-review-20260821
+title: Independent Spark review of initialization and local-search integration
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T13:38:37Z'
+updated_at: '2026-08-21T13:41:13Z'
+objective: Independently review the delivered initialization/local-search CLI and MCP slice against its contract. Check exact apply semantics, Ledger/snapshot containment, response privacy, syntax/CLI/smoke evidence, and identify only reproducible defects. Do not edit product code.
+platform: ""
+selected_specializations:
+  []
+order: 12
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Spark review completed and found reproducible rework; primary accepted the report and applied the two high-severity corrections.
+  artifacts:
+    - .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+allowed_read_files:
+  - .pf/artifacts/project-init-local-search-mcp-20260821/project-initialization-contract.md
+  - .pf/artifacts/project-init-local-search-mcp-20260821/cli-integration-implementation-report.md
+  - src/processforge_core/project_initialization.py
+  - src/processforge_core/local_resource_search.py
+  - tools/processforge.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/session_read.py
+  - tools/smoke_project_init_local_search_mcp.py
+  - docs/authoring/project-initialization.md
+  - docs/concepts/runtime-mcp.md
+ownership:
+  owner_id: shell-spark
+  owner_label: worker-shell-spark
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: spark-review
+    path: .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: medium
+agent_model: gpt-5.3-codex-spark
+expected_report:
+  language: ru
+  artifact: .pf/reviews/project-init-local-search-mcp-spark-review-20260821.md
+  format: concise_markdown
+  include:
+    - spark-review

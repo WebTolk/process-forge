@@ -1,0 +1,318 @@
+{
+  "schema_version": 1,
+  "cwd": "D:\\Dev\\process-forge",
+  "temp": "C:\\Users\\musst\\AppData\\Local\\Temp",
+  "tmp": "C:\\Users\\musst\\AppData\\Local\\Temp",
+  "roots": [
+    {
+      "label": "system_temp",
+      "root": "C:\\Users\\musst\\AppData\\Local\\Temp",
+      "root_prepare": "pass",
+      "methods": {
+        "temporary_directory": {
+          "path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-runtime-matrix-xp1xohm0",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "mkdtemp": {
+          "path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-runtime-matrix-tfmbdxky",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "os_makedirs": {
+          "path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-runtime-matrix-c7ccb2c66a8f4dd7a528772587eb6596",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "path_mkdir": {
+          "path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-runtime-matrix-f7fb7e0708f7446f8911a289e8e0e92b",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "powershell_new_item": {
+          "path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-runtime-matrix-be4594dc49464d18906613a12f0bea9d",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        }
+      }
+    },
+    {
+      "label": "repo_runtime_test_temp",
+      "root": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp",
+      "root_prepare": "pass",
+      "methods": {
+        "temporary_directory": {
+          "path": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp\\pf-runtime-matrix-x2oanm5p",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "mkdtemp": {
+          "path": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp\\pf-runtime-matrix-yfl4p9wn",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "os_makedirs": {
+          "path": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp\\pf-runtime-matrix-f277b33fe26c4f4e94fcd55a9ed0ae04",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "path_mkdir": {
+          "path": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp\\pf-runtime-matrix-0d8c176e496347d38ec68157843cd33d",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "powershell_new_item": {
+          "path": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp\\pf-runtime-matrix-3d578631e7d64236b052ff336b1213ff",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        }
+      }
+    },
+    {
+      "label": "repo_dot_tmp",
+      "root": "D:\\Dev\\process-forge\\.tmp",
+      "root_prepare": "pass",
+      "methods": {
+        "temporary_directory": {
+          "path": "D:\\Dev\\process-forge\\.tmp\\pf-runtime-matrix-_4ts5n9w",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "mkdtemp": {
+          "path": "D:\\Dev\\process-forge\\.tmp\\pf-runtime-matrix-ou1e6688",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "os_makedirs": {
+          "path": "D:\\Dev\\process-forge\\.tmp\\pf-runtime-matrix-551ca886991a47d4b9a059a44e5ac1cd",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "path_mkdir": {
+          "path": "D:\\Dev\\process-forge\\.tmp\\pf-runtime-matrix-cd1171897eed47ce820dabc6a111c26b",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "powershell_new_item": {
+          "path": "D:\\Dev\\process-forge\\.tmp\\pf-runtime-matrix-7d1432f4a0294ab6beff5672c6869ed4",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        }
+      }
+    },
+    {
+      "label": "user_writable_localappdata",
+      "root": "C:\\Users\\musst\\AppData\\Local\\ProcessForgeTempMatrix",
+      "root_prepare": "pass",
+      "methods": {
+        "temporary_directory": {
+          "path": "C:\\Users\\musst\\AppData\\Local\\ProcessForgeTempMatrix\\pf-runtime-matrix-cbghb_ir",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "mkdtemp": {
+          "path": "C:\\Users\\musst\\AppData\\Local\\ProcessForgeTempMatrix\\pf-runtime-matrix-iu63h60c",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "os_makedirs": {
+          "path": "C:\\Users\\musst\\AppData\\Local\\ProcessForgeTempMatrix\\pf-runtime-matrix-2292e68aff7e413dbeca281e299d1e1a",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "path_mkdir": {
+          "path": "C:\\Users\\musst\\AppData\\Local\\ProcessForgeTempMatrix\\pf-runtime-matrix-ada5cfa94c7040228d54b673ba440ad0",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "powershell_new_item": {
+          "path": "C:\\Users\\musst\\AppData\\Local\\ProcessForgeTempMatrix\\pf-runtime-matrix-3d81a279fb304cb9817929720bb921a2",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        }
+      }
+    },
+    {
+      "label": "explicit_d_dev",
+      "root": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp-explicit",
+      "root_prepare": "pass",
+      "methods": {
+        "temporary_directory": {
+          "path": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp-explicit\\pf-runtime-matrix-eikpiz3w",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "mkdtemp": {
+          "path": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp-explicit\\pf-runtime-matrix-mjthe83h",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "os_makedirs": {
+          "path": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp-explicit\\pf-runtime-matrix-9be295bbec3d40f88ae6f0d5b5519c0f",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "path_mkdir": {
+          "path": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp-explicit\\pf-runtime-matrix-5e9f3ba270d04b4fb0866570155b593a",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        },
+        "powershell_new_item": {
+          "path": "D:\\Dev\\process-forge\\.pf\\runtime\\test-temp-explicit\\pf-runtime-matrix-f15095aafa254d149735ecf062c8304b",
+          "operations": {
+            "child_mkdir": "pass",
+            "file_write": "pass",
+            "file_read": "pass",
+            "rename": "pass",
+            "delete": "pass"
+          },
+          "status": "pass"
+        }
+      }
+    }
+  ]
+}

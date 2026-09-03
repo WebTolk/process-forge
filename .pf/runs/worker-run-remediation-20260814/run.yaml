@@ -1,0 +1,61 @@
+schema_version: 1
+id: worker-run-remediation-20260814
+title: Remediate worker-run lifecycle and ad-hoc driver recovery
+process: orchestrator-shell-agents-supervision
+status: completed
+created_at: '2026-08-14T00:00:00Z'
+updated_at: '2026-08-14T07:46:32Z'
+objective: Implement and independently review the approved worker-run remediation plan without touching unrelated dirty worktree changes.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: implement-worker-run-lifecycle
+    assignment: .pf/assignments/implement-worker-run-lifecycle.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: implement-worker-run-shell-regressions
+    assignment: .pf/assignments/implement-worker-run-shell-regressions.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: remove-legacy-worker-run-regression
+    assignment: .pf/assignments/remove-legacy-worker-run-regression.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: correct-worker-run-shell-smoke
+    assignment: .pf/assignments/correct-worker-run-shell-smoke.yaml
+    status: done
+    order: 4
+    blocking: true
+  -
+    id: harden-worker-run-shell-smoke
+    assignment: .pf/assignments/harden-worker-run-shell-smoke.yaml
+    status: done
+    order: 5
+    blocking: true
+  -
+    id: review-worker-run-remediation
+    assignment: .pf/assignments/review-worker-run-remediation.yaml
+    status: done
+    order: 6
+    blocking: true
+final_artifacts:
+  - .pf/runs/worker-run-remediation-20260814/summary.md
+  - .pf/handoffs/runs/worker-run-remediation-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

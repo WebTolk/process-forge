@@ -1,0 +1,31 @@
+schema_version: 1
+id: pf-runtime-mcp-20260813
+title: PF Runtime and MCP architecture
+process: process-supervisor
+status: completed
+created_at: '2026-08-13T15:33:13Z'
+updated_at: '2026-08-13T15:39:40Z'
+objective: Audit and design a minimal local ProcessForge Runtime service with agent events and a unified MCP interface before implementation.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: runtime-mcp-architecture-report
+    assignment: .pf/assignments/runtime-mcp-architecture-report.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/pf-runtime-mcp-20260813/summary.md
+  - .pf/handoffs/runs/pf-runtime-mcp-20260813-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

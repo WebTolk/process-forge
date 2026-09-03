@@ -1,0 +1,71 @@
+schema_version: 1
+id: project-init-local-search-mcp-sqlite-inventory-retry-20260821
+title: Inventory SQLite FTS5 and snapshot resource search inputs with granted source scope
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T12:55:30Z'
+updated_at: '2026-08-21T13:00:51Z'
+objective: ""
+platform: ""
+selected_specializations:
+  []
+order: 4
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/sqlite-fts5-resource-inventory-retry.md
+stage: investigation
+execution_mode:
+  kind: docs_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/project-init-local-search-mcp-20260821/sqlite-fts5-resource-inventory-retry.md
+allowed_read_files:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/project-init-local-search-mcp-sqlite-inventory-retry-20260821.yaml
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/mcp_server.py
+  - docs/authoring/project-initialization.md
+  - docs/concepts/runtime-mcp.md
+ownership:
+  owner_id: shell-spark
+  owner_label: worker-shell-spark
+  role: developer
+  writer: true
+  owned_files:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/sqlite-fts5-resource-inventory-retry.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/sqlite-fts5-resource-inventory-retry.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: sqlite-fts5-resource-inventory-retry
+    type: unspecified
+    required: true
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/sqlite-fts5-resource-inventory-retry.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/sqlite-fts5-resource-inventory-retry.md
+  format: concise_markdown
+  include:
+    - sqlite-fts5-resource-inventory-retry
+agent_model: gpt-5.3-codex-spark

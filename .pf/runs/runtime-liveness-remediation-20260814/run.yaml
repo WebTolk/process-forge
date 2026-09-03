@@ -1,0 +1,31 @@
+schema_version: 1
+id: runtime-liveness-remediation-20260814
+title: Runtime liveness remediation
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T04:06:11Z'
+updated_at: '2026-08-14T04:12:29Z'
+objective: Repair independently reviewed Runtime startup and stop liveness defects without adding PF Core business logic, and prove them through deterministic long-lived Runtime regressions.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: runtime-liveness-remediation
+    assignment: .pf/assignments/runtime-liveness-remediation.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/runtime-liveness-remediation-20260814/summary.md
+  - .pf/handoffs/runs/runtime-liveness-remediation-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

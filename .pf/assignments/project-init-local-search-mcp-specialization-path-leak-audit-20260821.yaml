@@ -1,0 +1,76 @@
+schema_version: 1
+id: project-init-local-search-mcp-specialization-path-leak-audit-20260821
+title: Audit public snapshot specialization path leak
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T15:56:47Z'
+updated_at: '2026-08-21T16:11:31Z'
+objective: Read-only audit the reproduced absolute workplace path leak in public project-context snapshot when a specialization is explicitly selected. Identify exact producer function and a minimal platform-neutral remediation, including a targeted regression assertion. Write a factual report only; do not change code.
+platform: ""
+selected_specializations:
+  []
+order: 38
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-audit.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+context_artifacts:
+  -
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/acceptance-fixtures-report.md
+    role: input
+    required: true
+    mutable_by_worker: false
+allowed_files:
+  - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-audit.md
+  - .pf/logs/project-init-local-search-mcp-specialization-path-leak-audit-20260821.md
+allowed_read_files:
+  - tools/processforge.py
+  - src/processforge_core/project_initialization.py
+  - schemas/project-context-snapshot.schema.json
+ownership:
+  owner_id: shell-worker
+  owner_label: worker-shell-worker
+  role: security-reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-audit.md
+    - .pf/logs/project-init-local-search-mcp-specialization-path-leak-audit-20260821.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-audit.md
+    - .pf/logs/project-init-local-search-mcp-specialization-path-leak-audit-20260821.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: specialization-path-leak-audit
+    type: unspecified
+    required: true
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-audit.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/specialization-path-leak-audit.md
+  format: concise_markdown
+  include:
+    - specialization-path-leak-audit
+agent_model: gpt-5.5

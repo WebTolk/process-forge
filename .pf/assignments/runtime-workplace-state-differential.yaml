@@ -1,0 +1,70 @@
+schema_version: 1
+id: runtime-workplace-state-differential
+title: Compare live and clean Runtime workplace state
+run_id: runtime-lifecycle-clean-repro-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T09:25:57Z'
+updated_at: '2026-08-14T09:30:45Z'
+objective: Read-only compare the current live workplace Runtime metadata with the clean passing trace. Do not start, stop, clean, or mutate the live Runtime; identify only factual state differences relevant to the historical symptom.
+platform: ""
+selected_specializations:
+  []
+order: 5
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential-worker.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential-worker.md
+allowed_read_files:
+  - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-lifecycle-clean-repro.md
+  - .pf/runtime/pf-runtime/service.json
+  - .pf/runtime/pf-runtime/runtime.lock
+  - .pf/runtime/pf-runtime/logs/runtime.stdout.log
+  - .pf/runtime/pf-runtime/logs/runtime.stderr.log
+  - tools/pf_runtime/service.py
+  - задания/process-forge-runtime-lifecycle-clean-repro-master-prompt.md
+ownership:
+  owner_id: runtime-workplace-differential-worker
+  owner_label: worker-runtime-workplace-differential-worker
+  role: runtime-state-auditor
+  writer: true
+  owned_files:
+    - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential-worker.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential-worker.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-workplace-state-differential-worker
+    type: unspecified
+    required: true
+    path: .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential-worker.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/runtime-lifecycle-clean-repro-20260814/runtime-workplace-state-differential-worker.md
+  format: concise_markdown
+  include:
+    - runtime-workplace-state-differential-worker
+agent_model: gpt-5.3-codex-spark

@@ -28,6 +28,7 @@ def main() -> None:
         flow = project / ".pf"
         (flow / "registries").mkdir(parents=True)
         (flow / "project-classifiers").mkdir()
+        (flow / "platform-contracts").mkdir()
         (flow / "process-forge.yaml").write_text(
             """schema_version: 1
 process_forge:
@@ -46,6 +47,27 @@ optional_capabilities: []
         )
         classifier_target = flow / "project-classifiers" / classifier.name
         classifier_target.write_text(classifier.read_text(encoding="utf-8"), encoding="utf-8")
+        (flow / "platform-contracts" / "fixture-a.yaml").write_text(
+            """schema_version: 1
+id: platform.example.fixture-a
+type: platform_contract
+version: "1.0.0"
+applies_to:
+  platforms:
+    - example.fixture-a
+requires:
+  capabilities: []
+  tools: []
+  mcp: []
+  templates: []
+includes:
+  knowledge_packages: []
+  tools: []
+  mcp: []
+  templates: []
+""",
+            encoding="utf-8",
+        )
         (flow / "registries" / "project-classifiers.yaml").write_text(
             f"""schema_version: 1
 project_classifiers:

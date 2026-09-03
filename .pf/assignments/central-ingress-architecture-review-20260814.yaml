@@ -1,0 +1,75 @@
+schema_version: 1
+id: central-ingress-architecture-review-20260814
+title: Independently review corrected central ingress architecture
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T17:13:10Z'
+updated_at: '2026-08-14T17:16:58Z'
+objective: Planning-only independent architecture review. Read the v2 design, storage, routing and accepted audits. Produce .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-review.md with pass/fail/conditional findings on raw-first durability, actual host/Runtime/Codex behavior preservation, workplace versus project boundary, schema compatibility, Ledger routing, idempotency/concurrency/replay, unknown-event behavior, chat privacy, offline fallback equivalence, release-private boundary, and minimal-slice scope. Cite exact evidence. Identify any blocker before implementation; do not modify code or design artifacts.
+platform: ""
+selected_specializations:
+  []
+order: 14
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Accepted as conditional architecture review. B1 idempotency/replay-key contract is a blocking finding; no implementation may start until an evidence-bound correction and follow-up review pass.
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-review.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-review.md
+allowed_read_files:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-v2.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout-v2.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-routing-policy-v2.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-current-state-audit.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-schema-reconciliation.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/current-event-test-inventory-review.md
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/processforge.py
+ownership:
+  owner_id: shell-gpt55-review
+  owner_label: worker-shell-gpt55-review
+  role: architecture-reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: central-event-ingress-design-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-review.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design-review.md
+  format: concise_markdown
+  include:
+    - central-event-ingress-design-review
+agent_model: gpt-5.5

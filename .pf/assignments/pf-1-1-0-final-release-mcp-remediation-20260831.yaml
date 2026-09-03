@@ -1,0 +1,72 @@
+schema_version: 1
+id: pf-1-1-0-final-release-mcp-remediation-20260831
+title: Align MCP missing-session remediation
+run_id: processforge-1-1-0-final-release-20260831
+process: software-feature-development
+status: done
+created_at: '2026-08-31T04:13:50Z'
+updated_at: '2026-08-31T04:14:48Z'
+objective: Remove ordinary-agent hook installation advice from missing-session diagnostics while preserving explicit operator integration actions.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Aligned missing-session diagnostics with Garage-first and operator-owned host integration.
+  artifacts:
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/mcp-remediation/mcp-remediation-report.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-1.1.0-final-release-update-manifests-docs-master-prompt.md
+allowed_files:
+  - tools/pf_runtime/mcp_server.py
+  - tools/smoke_mcp_missing_session_diagnostics.py
+  - .pf/logs/processforge-1.1.0-final-release-20260831-mcp-remediation.md
+  - .pf/artifacts/processforge-1-1-0-final-release-20260831/mcp-remediation/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: developer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/mcp_server.py
+    - tools/smoke_mcp_missing_session_diagnostics.py
+    - .pf/logs/processforge-1.1.0-final-release-20260831-mcp-remediation.md
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/mcp-remediation/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/pf_runtime/mcp_server.py
+    - tools/smoke_mcp_missing_session_diagnostics.py
+    - .pf/logs/processforge-1.1.0-final-release-20260831-mcp-remediation.md
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/mcp-remediation/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: mcp_remediation_report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/mcp-remediation/mcp-remediation-report.md
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/processforge-1-1-0-final-release-20260831/mcp-remediation/mcp-remediation-report.md
+  format: concise_markdown
+  include:
+    - mcp_remediation_report

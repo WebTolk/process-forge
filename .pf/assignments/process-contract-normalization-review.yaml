@@ -1,0 +1,73 @@
+schema_version: 1
+id: process-contract-normalization-review
+title: Review normalized Process and Stage contract slice
+run_id: process-stage-contract-normalization-20260814
+process: software-feature-development
+status: done
+created_at: '2026-08-14T10:36:35Z'
+updated_at: '2026-08-14T10:39:34Z'
+objective: Review the completed contract normalization diff for semantic regressions, generic hardcodes, schema/authoring/runtime inconsistencies, and test gaps. Do not modify product code.
+platform: ""
+selected_specializations:
+  []
+order: 6
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Review report accepted after source verification. Accepted: add opt-in Transition-to-route integrity and negative evidence proof. Rejected: require a project route map for every declarative Process Transition.'
+  artifacts:
+    - .pf/reviews/process-stage-contract-normalization-review.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/process-stage-contract-normalization-review.md
+allowed_read_files:
+  - schemas/process-definition.schema.json
+  - schemas/process-transition.schema.json
+  - schemas/process-route-map.schema.json
+  - templates/process-definition-template.yaml
+  - processes/core/process-supervisor.yaml
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - docs/authoring/process-authoring.md
+  - tools/smoke_process_stage_contract_normalization.py
+  - .pf/artifacts/process-stage-contract-normalization-20260814/process-contract-normalization-audit.md
+ownership:
+  owner_id: process-contract-normalization-reviewer
+  owner_label: worker-process-contract-normalization-reviewer
+  role: assurance-reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/process-stage-contract-normalization-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/process-stage-contract-normalization-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: process-contract-normalization-review
+    type: unspecified
+    required: true
+    path: .pf/reviews/process-stage-contract-normalization-review.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/reviews/process-stage-contract-normalization-review.md
+  format: concise_markdown
+  include:
+    - process-contract-normalization-review
+agent_model: gpt-5.3-codex-spark

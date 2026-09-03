@@ -44,6 +44,8 @@ hooks:
     required: true
   - event: workplace.doctor.failed
     required: true
+  - event: search.index.maintenance.completed
+    required: false
   - event: workplace.initialization.completed
     required: true
   - event: process.started
@@ -324,6 +326,26 @@ stages:
   actor: primary_agent
   gates:
   - doctor-complete
+- id: search-index-maintenance
+  title: Search Index Maintenance
+  description: Initialize private search runtime state and tick any known onboarded projects.
+  required_inputs:
+  - workplace-files
+  produced_artifacts:
+  - search-index-maintenance-report
+  required_role: orchestrator
+  required_capabilities:
+  - validation
+  allowed_tools:
+  - processforge-search-index
+  entry_gates:
+  - workplace-files-written
+  exit_gates:
+  - search-index-maintenance-recorded
+  goal: Prepare the workplace-local derived search index state without building a global workplace index.
+  actor: primary_agent
+  gates:
+  - search-index-maintenance-recorded
 artifact_definitions:
 - id: workplace-init-answers
   title: Workplace Init Answers
@@ -479,6 +501,16 @@ artifact_definitions:
   - draft
   - ready_for_review
   - approved
+- id: search-index-maintenance-report
+  title: Search Index Maintenance Report
+  owner_role: orchestrator
+  type: yaml
+  required: false
+  template: artifact-template
+  path_hint: runtime/search/latest-maintenance.yaml
+  lifecycle:
+  - generated
+  - refreshed
 gates:
 - id: root-provided
   description: A workplace root was provided by the user.
@@ -535,6 +567,11 @@ gates:
   blocking: true
   type: checklist
   required: true
+- id: search-index-maintenance-recorded
+  description: Search index maintenance was run for known projects or recorded as empty.
+  blocking: false
+  type: checklist
+  required: false
 required_packages:
 - process-forge-core
 required_templates:
@@ -544,6 +581,7 @@ required_templates:
 allowed_tools:
 - processforge-init
 - processforge-doctor
+- processforge-search-index
 forbidden_actions:
 - invent_root_path
 - store_secret_values

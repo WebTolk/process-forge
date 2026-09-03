@@ -1,0 +1,73 @@
+schema_version: 1
+id: python-core-refactor-phase-b-20260814
+title: Python Core refactor Phase B package-import foundation
+process: task-batch-execution
+status: completed
+created_at: '2026-08-14T12:50:27Z'
+updated_at: '2026-08-14T13:41:34Z'
+objective: 'Implement and verify only the behavior-preserving package/import foundation approved by Phase A: establish processforge_core package shell, standardize direct-script bootstrap seams, and add characterization checks. Do not extract Process Definition semantics, compatibility aliases, event/projection/work-state, runtime transport, or worker lifecycle.'
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: python-core-phase-b-bootstrap-spec
+    assignment: .pf/assignments/python-core-phase-b-bootstrap-spec.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: python-core-phase-b-bootstrap-spec-review
+    assignment: .pf/assignments/python-core-phase-b-bootstrap-spec-review.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: python-core-phase-b-bootstrap-baseline
+    assignment: .pf/assignments/python-core-phase-b-bootstrap-baseline.yaml
+    status: done
+    order: 3
+    blocking: true
+  -
+    id: python-core-phase-b-package-bootstrap
+    assignment: .pf/assignments/python-core-phase-b-package-bootstrap.yaml
+    status: done
+    order: 4
+    blocking: true
+  -
+    id: python-core-phase-b-package-bootstrap-retry
+    assignment: .pf/assignments/python-core-phase-b-package-bootstrap-retry.yaml
+    status: done
+    order: 5
+    blocking: true
+  -
+    id: python-core-phase-b-bootstrap-patch-design
+    assignment: .pf/assignments/python-core-phase-b-bootstrap-patch-design.yaml
+    status: done
+    order: 6
+    blocking: true
+  -
+    id: python-core-phase-b-bootstrap-review
+    assignment: .pf/assignments/python-core-phase-b-bootstrap-review.yaml
+    status: done
+    order: 7
+    blocking: true
+  -
+    id: python-core-phase-b-postchange-characterization
+    assignment: .pf/assignments/python-core-phase-b-postchange-characterization.yaml
+    status: done
+    order: 8
+    blocking: true
+final_artifacts:
+  - .pf/runs/python-core-refactor-phase-b-20260814/summary.md
+  - .pf/handoffs/runs/python-core-refactor-phase-b-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true

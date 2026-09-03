@@ -46,6 +46,7 @@ provides explicit paths and choices.
 - [Built-in process stages](processes/built-in-processes.md)
 - [Multi-agent orchestration](getting-started/multi-agent-orchestration.md)
 - [Runtime driver and supervisor quickstart](getting-started/runtime-driver-supervisor.md)
+- [Runtime autostart and Codex MCP startup](getting-started/runtime-autostart.md)
 - [Quick getting started path](getting-started.md)
 - [Russian documentation](ru/index.md)
 
@@ -74,6 +75,7 @@ provides explicit paths and choices.
 - [Hooks and events](concepts/processforge-events.md)
 - [Hooks and events overview](concepts/hooks-events.md)
 - [Runtime model](concepts/runtime-model.md)
+- [PF Runtime MCP facade](concepts/runtime-mcp.md)
 - [Agent session model](concepts/agent-session-model.md)
 - [Project coordination modes](concepts/project-coordination-modes.md)
 - [Runtime drivers](concepts/runtime-drivers.md)
@@ -102,5 +104,6 @@ Process definitions remain platform-agnostic process mechanics.
 ## Release And Validation
 
 - [Release checklist](release-checklist.md)
+- [Release publishing](maintainers/release-publishing.md)
 - [Initial release notes](releases/initial-release.md)
 - [Validation](validation/validation.md)

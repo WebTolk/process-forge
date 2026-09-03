@@ -22,6 +22,10 @@
     "required_specializations": { "type": "array", "items": { "type": "string" } },
     "run_id": { "$ref": "#/$defs/id" },
     "stage": { "$ref": "#/$defs/id" },
+    "stage_status": { "enum": ["in_progress", "blocked", "completed"] },
+    "stage_execution": { "$ref": "#/$defs/stage_execution" },
+    "stage_history": { "type": "array", "items": { "$ref": "#/$defs/stage_history" } },
+    "process_execution": { "$ref": "#/$defs/process_execution" },
     "goal": { "type": "string" },
     "objective": { "type": "string" },
     "order": { "type": "integer", "minimum": 1 },
@@ -53,6 +57,60 @@
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$|^[0-9]{4}-[0-9]{2}-[0-9]{2}[a-z0-9-]*$" },
+    "evidence": {
+      "type": "object",
+      "required": ["kind", "status", "recorded_at"],
+      "properties": {
+        "kind": { "enum": ["artifact", "gate", "input", "evidence", "attestation"] },
+        "status": { "type": "string", "minLength": 1 },
+        "recorded_at": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "stage_execution": {
+      "type": "object",
+      "required": ["started_at", "evidence", "notes"],
+      "properties": {
+        "started_at": { "type": "string", "minLength": 1 },
+        "blocked_at": { "type": "string" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "notes": { "type": "string" },
+        "blockers": { "type": "array", "items": { "type": "object" } }
+      },
+      "additionalProperties": false
+    },
+    "stage_history": {
+      "type": "object",
+      "required": ["stage_id", "status", "started_at", "completed_at", "outcome", "next_stage_id", "evidence", "notes"],
+      "properties": {
+        "stage_id": { "$ref": "#/$defs/id" },
+        "status": { "const": "completed" },
+        "started_at": { "type": "string", "minLength": 1 },
+        "completed_at": { "type": "string", "minLength": 1 },
+        "outcome": { "type": "string", "minLength": 1 },
+        "next_stage_id": { "type": "string" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "process_execution": {
+      "type": "object",
+      "required": ["process_id", "process_version", "process_fingerprint", "snapshot_id", "snapshot_checksum", "assignment_capsule", "assignment_capsule_checksum"],
+      "properties": {
+        "process_id": { "$ref": "#/$defs/id" },
+        "process_version": { "type": "string", "minLength": 1 },
+        "process_fingerprint": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "snapshot_id": { "type": "string", "minLength": 1 },
+        "snapshot_checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "assignment_capsule": { "type": "string", "minLength": 1 },
+        "assignment_capsule_checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "active_specializations": { "type": "array", "items": { "type": "string" } },
+        "selected_resource_ids": { "type": "array", "items": { "type": "string" } },
+        "allowed_processes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
     "context_artifact": {
       "type": ["object", "string"],
       "properties": {
@@ -67,7 +125,7 @@
     "execution_mode": {
       "type": "object",
       "properties": {
-        "kind": { "enum": ["read_only", "planning_only", "docs_only", "implementation", "assurance", "release_delivery"] },
+        "kind": { "enum": ["read_only", "planning_only", "docs_only", "implementation", "assurance", "release_delivery", "remediation"] },
         "code_changes_allowed": { "type": "boolean" },
         "artifact_changes_allowed": { "type": "boolean" },
         "requires_review": { "type": "boolean" }
@@ -150,7 +208,7 @@
     "result": {
       "type": "object",
       "properties": {
-        "status": { "enum": ["pending", "done", "failed", "cancelled"] },
+        "status": { "enum": ["pending", "blocked", "done", "failed", "cancelled"] },
         "summary": { "type": "string" },
         "artifacts": { "type": "array", "items": { "type": "string" } },
         "waivers": { "type": "object", "additionalProperties": { "type": "string" } }

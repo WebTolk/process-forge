@@ -1,0 +1,79 @@
+schema_version: 1
+id: runtime-mcp-architecture-report
+title: Runtime MCP architecture report
+run_id: pf-runtime-mcp-20260813
+process: process-supervisor
+status: done
+created_at: '2026-08-13T15:33:28Z'
+updated_at: '2026-08-13T15:39:17Z'
+objective: Produce the architecture report required by the local PF Runtime/MCP master prompt before implementation.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Architecture report completed before PoC implementation; no product code changed.
+  artifacts:
+    - .pf/artifacts/pf-runtime-mcp-20260813/architecture-report.md
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/logs/pf-runtime-mcp-20260813.md
+  - .pf/handoffs/pf-runtime-mcp-20260813-handoff.md
+  - .pf/artifacts/pf-runtime-mcp-20260813/**
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/contexts/project-context.snapshot.yaml
+  - задания/Мастер-промпт_ локальная служба Process Forge, события агентов и единый MCP-интерфейс.md
+  - tools/**
+  - processes/**
+  - schemas/**
+  - templates/**
+  - .pf/artifacts/**
+  - .pf/logs/**
+  - .pf/handoffs/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: architect
+  writer: true
+  owned_files:
+    - .pf/logs/pf-runtime-mcp-20260813.md
+    - .pf/handoffs/pf-runtime-mcp-20260813-handoff.md
+    - .pf/artifacts/pf-runtime-mcp-20260813/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/logs/pf-runtime-mcp-20260813.md
+    - .pf/handoffs/pf-runtime-mcp-20260813-handoff.md
+    - .pf/artifacts/pf-runtime-mcp-20260813/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-mcp-architecture-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/pf-runtime-mcp-20260813/architecture-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-runtime-mcp-20260813/architecture-report.md
+  format: concise_markdown
+  include:
+    - runtime-mcp-architecture-report

@@ -22,3 +22,7 @@ outputs. Director читает ledger state для координации, а Ex
 читает task/runtime state для проверки исполнения. См.
 [Модель агентской сессии](agent-session-model.md) и
 [Граница Director, Ledger, Inspector и Worker](director-ledger-inspector-boundary.md).
+
+Ledger относится к workplace, но не заменяет Raw Event Journal. Raw ingress
+может создать производный session/telemetry effect только после проверки scope;
+Ledger не хранит копию каждого raw payload.

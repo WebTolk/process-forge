@@ -1,0 +1,97 @@
+schema_version: 1
+id: python-core-adapter-runtime-inventory
+title: Runtime and adapter inventory
+run_id: python-core-refactor-phase-a-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T11:48:26Z'
+updated_at: '2026-08-14T11:53:51Z'
+objective: Inventory runtime, CLI, MCP, worker lifecycle, Inspector, Agent Ledger, Agent Director, projectors, current-work-state, events, routes and runtime drivers. Identify current dependencies on tools/processforge.py and candidate Core-facing seams; report facts only, without changes.
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-a-20260814/adapter-runtime-inventory.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/artifacts/process-stage-contract-normalization-20260814/**
+  - tools/processforge.py
+  - tools/pf_runtime/**
+  - tools/smoke_runtime*.py
+  - tools/smoke_worker*.py
+  - tools/smoke_agent*.py
+  - tools/smoke_current*.py
+  - tools/smoke_stage*.py
+  - bin/pf.py
+  - templates/registries/runtime-drivers.yaml
+  - schemas/*runtime*.json
+  - schemas/*worker*.json
+  - schemas/*agent*.json
+forbidden_files:
+  - docs/**
+  - dist/**
+ownership:
+  owner_id: python-core-adapter-runtime-inventory
+  owner_label: worker-python-core-adapter-runtime-inventory
+  role: architecture-inventory
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    []
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: adapter-runtime-inventory
+    path: .pf/artifacts/python-core-refactor-phase-a-20260814/adapter-runtime-inventory.md
+    type: markdown
+    required: true
+agent_model: gpt-5.3-codex-spark
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/adapter-runtime-inventory.md
+  format: concise_markdown
+  include:
+    - adapter-runtime-inventory
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+agent_reasoning_effort: low

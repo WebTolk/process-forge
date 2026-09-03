@@ -1,0 +1,79 @@
+schema_version: 1
+id: multi-process-core-implementation
+title: Implement process selection and Work Capsule isolation
+run_id: garage-stabilize-processforge-1-1-0-multi-process-project-selection-and
+process: task-batch-execution
+status: done
+created_at: '2026-09-03T06:52:31Z'
+updated_at: '2026-09-03T07:05:31Z'
+objective: Implement the compatible multi-process project model, explicit selection, pinning, compact context, continuation contract, and deterministic smoke coverage.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Implemented the multi-process selector, active Work Capsule pins, compact context, MCP/CLI contract, schemas, and focused regression repair.
+  artifacts:
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/multi-process-implementation-report.md
+stage: task-execution-loop
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - src/processforge_core/garage.py
+  - src/processforge_core/process_execution.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/processforge.py
+  - schemas/project-context-snapshot.schema.json
+  - schemas/context-capsule.schema.json
+  - schemas/run.schema.json
+  - schemas/assignment.schema.json
+  - processes/core/architecture-analysis.yaml
+  - tests/**
+  - tools/**test*
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: task-worker
+  writer: true
+  owned_files:
+    - src/processforge_core/garage.py
+    - src/processforge_core/process_execution.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/processforge.py
+    - schemas/project-context-snapshot.schema.json
+    - schemas/context-capsule.schema.json
+    - schemas/run.schema.json
+    - schemas/assignment.schema.json
+    - processes/core/architecture-analysis.yaml
+    - tests/**
+    - tools/**test*
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/garage.py
+    - src/processforge_core/process_execution.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/processforge.py
+    - schemas/project-context-snapshot.schema.json
+    - schemas/context-capsule.schema.json
+    - schemas/run.schema.json
+    - schemas/assignment.schema.json
+    - processes/core/architecture-analysis.yaml
+    - tests/**
+    - tools/**test*
+  rule: Do not edit files owned by active parallel tasks.

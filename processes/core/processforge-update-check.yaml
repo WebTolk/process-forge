@@ -33,9 +33,9 @@ stages:
   description: Resolve the project manifest, local config, workplace registry, and distribution update index.
   required_role: update-assessor
   required_inputs:
-  - .pf/process-forge.yaml
-  - .pf/process-forge.local.yaml or explicit no-local mode
-  - updates/processforge-update-index.yaml
+  - processforge-manifest
+  - local-config-or-no-local-mode
+  - distribution-update-index
   produced_artifacts:
   - update-assessment
   exit_gates:
@@ -68,6 +68,16 @@ artifact_definitions:
   type: markdown
   required: true
   path_hint: .pf/artifacts/update-assessment.md
+input_definitions:
+  processforge-manifest:
+    title: ProcessForge project manifest
+    description: .pf/process-forge.yaml for the assessed project.
+  local-config-or-no-local-mode:
+    title: Local configuration or explicit no-local mode
+    description: .pf/process-forge.local.yaml when present, otherwise the explicit no-local operating mode.
+  distribution-update-index:
+    title: Distribution update index
+    description: updates/processforge-update-index.yaml from the selected ProcessForge distribution.
 gates:
 - id: update-index-readable
   description: The update index is present and parseable.

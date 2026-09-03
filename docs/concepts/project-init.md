@@ -17,6 +17,7 @@ the target directory. Apply mode can create a missing greenfield project root.
 ```bash
 python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --dry-run
 python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic-software-project --apply
+python bin/pf.py project-init-status --project-root <project-root>
 python bin/pf.py doctor-project --project-root <project-root>
 python bin/pf.py agent-start-prompt --project-root <project-root>
 ```
@@ -62,6 +63,7 @@ New projects use `.pf/` as the project flow root. `build_project_files()` and
 
 The onboarding command also refreshes the project context snapshot under
 `.pf/contexts/` and writes runtime launcher files under `.pf/runtime/bin/`.
+Generic onboarding is agent-host agnostic and does not install Codex hooks.
 
 Root project `AGENTS.md` is not created by default.
 
@@ -73,9 +75,18 @@ Root project `AGENTS.md` is not created by default.
 ```
 
 The local file stores local paths and tool preferences. `.gitignore` is updated
-so `.pf/process-forge.local.yaml`, `.pf/runtime/`, `.pf/private-notes/`, and
-`.pf/cache/` are ignored. Cache and private-notes are reserved/ignored project
-areas, not normal onboarding output payloads.
+so `.codex/hooks.json`, `.pf/process-forge.local.yaml`, `.pf/runtime/`,
+`.pf/private-notes/`, and `.pf/cache/` are ignored. Cache and private-notes are
+reserved/ignored project areas, not normal onboarding output payloads.
+
+Codex hooks are an optional host telemetry integration. Explicit opt-in safely
+merges managed ProcessForge handlers into `.codex/hooks.json`, backs up an
+existing file, and does not edit global Codex configuration. The file is ignored
+because its hook command contains the local adapter path. `project-init-status`
+reports informational `codex_integration.status` values, but missing, stale, or
+unavailable hooks do not make a generic project incomplete or repairable.
+Operators can still use `project-init-repair --repair-action
+install_codex_hooks --apply` when they intentionally choose this integration.
 
 ## Detection
 

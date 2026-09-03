@@ -1,0 +1,83 @@
+schema_version: 1
+id: stable-mcp-resource-index-maintenance-tick-20260822
+title: Implement search index maintenance tick
+run_id: stable-mcp-resource-index-maintenance-20260822
+process: software-feature-development
+status: done
+created_at: '2026-08-22T14:05:00Z'
+updated_at: '2026-08-22T14:11:14Z'
+objective: Implement search-index tick with optional file verification, refresh stale/missing scope, update smoke/docs/report.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Search index maintenance tick completed: verify-files stale detection and bounded tick refresh added with smoke/docs/report.'
+  artifacts:
+    - .pf/artifacts/stable-mcp-resource-index-20260822/runtime-index-maintenance-report.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - src/processforge_core/local_resource_search.py
+  - tools/processforge.py
+  - tools/smoke_project_init_local_search_mcp.py
+  - docs/concepts/resource-search-index.md
+  - docs/ru/concepts/resource-search-index.md
+  - .pf/artifacts/stable-mcp-resource-index-20260822/runtime-index-maintenance-report.md
+  - .pf/logs/stable-mcp-resource-index-maintenance-20260822.md
+allowed_read_files:
+  - .pf/artifacts/stable-mcp-resource-index-20260822/resource-index-implementation-report.md
+  - задания/process-forge-stable-mcp-resource-index-master-prompt.md
+ownership:
+  owner_id: root
+  owner_label: worker-root
+  role: lead-implementer
+  writer: true
+  owned_files:
+    - src/processforge_core/local_resource_search.py
+    - tools/processforge.py
+    - tools/smoke_project_init_local_search_mcp.py
+    - docs/concepts/resource-search-index.md
+    - docs/ru/concepts/resource-search-index.md
+    - .pf/artifacts/stable-mcp-resource-index-20260822/runtime-index-maintenance-report.md
+    - .pf/logs/stable-mcp-resource-index-maintenance-20260822.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/local_resource_search.py
+    - tools/processforge.py
+    - tools/smoke_project_init_local_search_mcp.py
+    - docs/concepts/resource-search-index.md
+    - docs/ru/concepts/resource-search-index.md
+    - .pf/artifacts/stable-mcp-resource-index-20260822/runtime-index-maintenance-report.md
+    - .pf/logs/stable-mcp-resource-index-maintenance-20260822.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-index-maintenance-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/stable-mcp-resource-index-20260822/runtime-index-maintenance-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/artifacts/stable-mcp-resource-index-20260822/runtime-index-maintenance-report.md
+  format: concise_markdown
+  include:
+    - runtime-index-maintenance-report

@@ -1,0 +1,68 @@
+schema_version: 1
+id: project-init-local-search-mcp-release-smoke-registration-20260821
+title: Register project initialization and search smokes in release validation
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T16:36:58Z'
+updated_at: '2026-08-21T16:39:06Z'
+objective: Add both existing project-init/local-search MCP smoke scripts to the standard release-test command registry with an appropriate timeout. Preserve public-release neutrality and write a concise implementation report.
+platform: ""
+selected_specializations:
+  []
+order: 44
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Both new public smokes are registered and passed through standard release-test.
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/release-smoke-registration.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - .pf/artifacts/project-init-local-search-mcp-20260821/release-smoke-registration.md
+allowed_read_files:
+  - tools/smoke_project_init_local_search_mcp.py
+  - tools/smoke_project_init_acceptance.py
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: release-integration-engineer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/release-smoke-registration.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/release-smoke-registration.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: release-smoke-registration
+    type: unspecified
+    required: true
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/release-smoke-registration.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/release-smoke-registration.md
+  format: concise_markdown
+  include:
+    - release-smoke-registration

@@ -1,0 +1,31 @@
+schema_version: 1
+id: codex-exit-contract-remediation-20260814
+title: Codex worker exit contract remediation
+process: process-supervisor
+status: completed
+created_at: '2026-08-14T06:13:07Z'
+updated_at: '2026-08-14T06:17:03Z'
+objective: Make detached codex-exec workers publish their durable exit contract.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: codex-exit-contract-remediation
+    assignment: .pf/assignments/codex-exit-contract-remediation.yaml
+    status: done
+    order: 1
+    blocking: true
+final_artifacts:
+  - .pf/runs/codex-exit-contract-remediation-20260814/summary.md
+  - .pf/handoffs/runs/codex-exit-contract-remediation-20260814-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

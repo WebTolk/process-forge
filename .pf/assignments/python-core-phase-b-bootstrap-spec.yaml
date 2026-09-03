@@ -1,0 +1,76 @@
+schema_version: 1
+id: python-core-phase-b-bootstrap-spec
+title: Design Phase B package-import implementation specification
+run_id: python-core-refactor-phase-b-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T12:51:25Z'
+updated_at: '2026-08-14T12:58:44Z'
+objective: 'Produce an implementation-ready, behavior-preserving Phase B specification without modifying product code. Analyze the current direct-script import paths in tools/processforge.py, bin/pf.py, pf_runtime/mcp_server.py, pf_runtime/codex_hooks.py, and host/service. Specify the smallest explicit package/import foundation consistent with Phase A: package shell, one bootstrap seam, exact API contract, changed-file ownership, characterization checks, Windows/direct-script considerations, and strict non-goals. Account for the current active legacy assignment that owns tools/**: this task must write only its separate report.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec.md
+stage: task-planning
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec.md
+allowed_read_files:
+  - .pf/AGENTS.md
+  - задания/process-forge-python-core-refactoring-master-prompt.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/phase-a-integration.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-refactor-plan.md
+  - .pf/assignments/pre-release-remediation-implementation-20260730.yaml
+  - tools/processforge.py
+  - bin/pf.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/codex_hooks.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/service.py
+ownership:
+  owner_id: python-core-phase-b-bootstrap-spec
+  owner_label: worker-python-core-phase-b-bootstrap-spec
+  role: python-core-foundation-architect
+  writer: true
+  owned_files:
+    - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: package-bootstrap-spec
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-b-20260814/package-bootstrap-spec.md
+  format: concise_markdown
+  include:
+    - package-bootstrap-spec
+agent_model: gpt-5.4

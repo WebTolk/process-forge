@@ -8,14 +8,20 @@ Use ProcessForge as a file-first process system. Work through assignments, execu
 
 1. Read this file.
 2. Read `.pf/process-forge.yaml`.
-3. Identify the active assignment.
-4. Read or create the assignment's Execution Context Package.
-5. Check allowed files and forbidden files before editing.
-6. Load required packages, templates, tools, and MCP capabilities from the manifest and assignment.
-7. Execute the task.
-8. Save durable outputs.
-9. Update `.pf/logs/`.
-10. Create a review request or handoff.
+3. Call `pf.context` with the project root, or read the current snapshot only
+   when MCP is unavailable.
+4. Use `pf.search` for authorized project knowledge and `pf.resolve` before
+   opening ProcessForge-managed resource roots.
+5. Call `pf.work.start` with the objective when work becomes substantive. If it
+   returns `process_choice_required`, choose an offered process and call it
+   again with `process_id`; do not infer from `default` when multiple processes
+   are allowed.
+6. Call `pf.work.state` and read the selected assignment and immutable
+   Execution Context Package.
+7. Check allowed and forbidden files before editing.
+8. Satisfy the current stage obligations, then call `pf.work.transition` with
+   a declared outcome and evidence. Never choose `next_stage` directly.
+9. Repeat state, work, and transition until PF returns `action: run_completed`.
 
 ## Core Rules
 
@@ -26,9 +32,24 @@ Use ProcessForge as a file-first process system. Work through assignments, execu
 - Approved artifacts are protected.
 - Execution Context Packages are immutable snapshots.
 - Process versions are immutable.
+- ProcessForge selects the initial stage and every next stage from the pinned
+  Process definition. Agents provide outcomes and evidence, not stage ids.
 - Runner and backend support are optional future modes, not requirements.
 - Public product files must not include private paths, secrets, machine names, or temporary private notes.
 - Use stable machine-readable ids for statuses, processes, artifacts, assignments, templates, and packages.
+- Create every repository-local temporary directory under `.pf/tmp/`; never create temporary worker, debug, staging, or scratch directories at the repository root.
+- In particular, do not create root directories named `.pf-worker-shell-*` or similar runner sandboxes. Clean `.pf/tmp/` outputs after use unless they are declared durable evidence.
+- System temporary directories are allowed only for isolated tests that never write a temporary directory into the repository.
+- During ordinary project work, do not install, start, restart, or repair PF
+  Runtime, MCP, host hooks, or Agent Ledger. Use available PF tools. If PF
+  returns an operator-level infrastructure blocker, report it to the operator.
+- Current `pf.context`/snapshot state outranks historical generated reports.
+  Do not treat a report marked `stale` or `historical` as current truth.
+- A completed Work can offer a compact fresh-session handoff through
+  `pf.context`; it is advisory and must not cause Runtime, MCP, Ledger, or
+  external-session lifecycle actions.
+- `run-create`, `task-create`, `task-complete`, and `run-complete` are
+  compatibility and diagnostic commands, not the ordinary agent workflow.
 
 ## Standard Statuses
 

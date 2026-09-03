@@ -1,0 +1,69 @@
+schema_version: 1
+id: central-ingress-raw-kernel-rereview-main-20260815
+title: Re-review corrected raw ingress kernel
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-15T03:57:24Z'
+updated_at: '2026-08-21T04:55:35Z'
+objective: 'Read only: review only the current raw_ingress_kernel.py and its smoke test against native identity, containment, atomicity, Windows locking, duplicate/quarantine and privacy. Return PASS/FAIL with exact line-level findings; do not change code.'
+platform: ""
+selected_specializations:
+  []
+order: 28
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Reconciled: superseded by the accepted session-replay review chain and later conversation-completeness final rereview.'
+  artifacts:
+    []
+  waivers:
+    raw-kernel-rereview-main: Superseded before a standalone rereview artifact was written; later independent review evidence is authoritative.
+    expected-report: Superseded before a standalone rereview artifact was written; later independent review evidence is authoritative.
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+allowed_read_files:
+  - tools/pf_runtime/raw_ingress_kernel.py
+  - tools/smoke_central_event_ingress_kernel.py
+  - .pf/artifacts/central-agent-event-ingress-20260814/idempotency-and-replay-contract.md
+ownership:
+  owner_id: shell-spark
+  owner_label: worker-shell-spark
+  role: raw-kernel-reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: raw-kernel-rereview-main
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/raw-kernel-rereview-main.md
+  format: concise_markdown
+  include:
+    - raw-kernel-rereview-main
+agent_model: gpt-5.3-codex-spark

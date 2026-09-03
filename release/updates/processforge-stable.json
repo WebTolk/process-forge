@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "product": {
+    "id": "processforge",
+    "name": "ProcessForge"
+  },
+  "generated_at": "2026-08-31T05:04:33Z",
+  "channels": {
+    "stable": {
+      "latest": "1.1.0"
+    }
+  },
+  "subjects": [
+    {
+      "type": "processforge_core",
+      "id": "processforge",
+      "name": "ProcessForge",
+      "versions": [
+        {
+          "version": "1.1.0",
+          "channels": [
+            "stable"
+          ],
+          "stability": "stable",
+          "prerelease": false,
+          "released_at": "2026-08-31",
+          "yanked": false,
+          "source": {
+            "repository": "https://github.com/WebTolk/process-forge",
+            "tag": "v1.1.0",
+            "commit": "07b1fb68011f5928be824f0c7343322992cf809a"
+          },
+          "release": {
+            "changelog_url": "https://github.com/WebTolk/process-forge/releases/tag/v1.1.0"
+          },
+          "compatibility": {
+            "min_project_schema": 1,
+            "max_project_schema": 1
+          },
+          "dependencies": [],
+          "artifacts": [
+            {
+              "type": "distribution",
+              "format": "zip",
+              "url": "https://github.com/WebTolk/process-forge/releases/download/v1.1.0/processforge-1.1.0.zip",
+              "size": 1351354,
+              "sha256": "81c3c6708efc3c2a68882d16e716dc49749734c81d44f598767fdbd36a32d8be",
+              "provenance_url": "https://github.com/WebTolk/process-forge/releases/download/v1.1.0/processforge-1.1.0.manifest.json"
+            }
+          ],
+          "changes": [
+            {
+              "area": "garage",
+              "summary": "Sessionless context, search, resolve, and work.start path"
+            },
+            {
+              "area": "integration",
+              "summary": "Host-owned stdio MCP and optional host hooks"
+            },
+            {
+              "area": "runtime",
+              "summary": "Long-lived Forge runtime with Windows autostart support"
+            },
+            {
+              "area": "update",
+              "summary": "Managed Core updates, stable discovery, and release provenance"
+            }
+          ],
+          "migration": {
+            "required": false,
+            "guide": "https://raw.githubusercontent.com/WebTolk/process-forge/dev/updates/migrations/1.1.0-stable-release.md"
+          }
+        }
+      ]
+    }
+  ]
+}

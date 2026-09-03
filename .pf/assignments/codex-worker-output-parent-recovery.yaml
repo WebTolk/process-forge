@@ -1,0 +1,110 @@
+schema_version: 1
+id: codex-worker-output-parent-recovery
+title: Create codex-exec output parent and recover review
+run_id: codex-worker-output-parent-recovery-20260814
+process: process-supervisor
+status: done
+created_at: '2026-08-14T04:04:31Z'
+updated_at: '2026-08-14T04:05:46Z'
+objective: Create the output parent before codex exec runs, add a regression that proves the fake CLI receives a creatable output path, and copy the already completed final Runtime review stdout into its required artifact unchanged.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Created codex-exec output parent before launch, covered it in the smoke, and recovered the completed final review stdout unchanged.
+  artifacts:
+    - .pf/artifacts/codex-worker-output-parent-recovery-20260814/output-parent-recovery-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/codex_exec_worker.py
+  - tools/smoke_codex_exec_worker.py
+  - .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+  - .pf/artifacts/codex-worker-output-parent-recovery-20260814/output-parent-recovery-report.md
+  - .pf/logs/codex-worker-output-parent-recovery-20260814.md
+  - .pf/handoffs/codex-worker-output-parent-recovery-20260814-handoff.md
+  - .pf/assignments/codex-worker-output-parent-recovery.yaml
+allowed_read_files:
+  - .pf/runtime/agent-runs/runtime-final-independent-review-20260814/runtime-final-independent-review/stdout.log
+  - tools/codex_exec_worker.py
+  - tools/smoke_codex_exec_worker.py
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - tools/codex_exec_worker.py
+    - tools/smoke_codex_exec_worker.py
+    - .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+    - .pf/artifacts/codex-worker-output-parent-recovery-20260814/output-parent-recovery-report.md
+    - .pf/logs/codex-worker-output-parent-recovery-20260814.md
+    - .pf/handoffs/codex-worker-output-parent-recovery-20260814-handoff.md
+    - .pf/assignments/codex-worker-output-parent-recovery.yaml
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/codex_exec_worker.py
+    - tools/smoke_codex_exec_worker.py
+    - .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+    - .pf/artifacts/codex-worker-output-parent-recovery-20260814/output-parent-recovery-report.md
+    - .pf/logs/codex-worker-output-parent-recovery-20260814.md
+    - .pf/handoffs/codex-worker-output-parent-recovery-20260814-handoff.md
+    - .pf/assignments/codex-worker-output-parent-recovery.yaml
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: codex-worker-output-parent-recovery
+        current_scope: tools/codex_exec_worker.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+      -
+        current_assignment: codex-worker-output-parent-recovery
+        current_scope: tools/smoke_codex_exec_worker.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/smoke_*.py
+        reason: file_matches_glob
+      -
+        current_assignment: codex-worker-output-parent-recovery
+        current_scope: tools/smoke_codex_exec_worker.py
+        other_assignment: pre-release-remediation-implementation-20260730
+        other_scope: tools/**
+        reason: file_matches_glob
+      -
+        current_assignment: codex-worker-output-parent-recovery
+        current_scope: .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+        other_assignment: runtime-final-independent-review
+        other_scope: .pf/artifacts/runtime-final-independent-review-20260814/runtime-final-independent-review.md
+        reason: same_file
+required_outputs:
+  -
+    id: output-parent-recovery-report
+    type: unspecified
+    required: true
+    path: .pf/artifacts/codex-worker-output-parent-recovery-20260814/output-parent-recovery-report.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/codex-worker-output-parent-recovery-20260814/output-parent-recovery-report.md
+  format: concise_markdown
+  include:
+    - output-parent-recovery-report

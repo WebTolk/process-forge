@@ -1,70 +1,15 @@
 # Process Events
 
-ProcessForge events are private runtime records by default. They describe flow
-facts that processes, hooks, review gates, and future managed consumers can
-observe without making a backend mandatory.
+ProcessForge project events are private runtime records. They are derived facts for processes, hooks and review gates; they are not a full journal of all agent-hook activity.
 
-Canonical stream:
+Canonical project stream:
 
 ```text
 .pf/runtime/events/events.ndjson
 ```
 
-Each line is a JSON event envelope with:
+The envelope is defined by `schemas/event-envelope.schema.json`. A record has an event id/type, source, subject, time, correlation/causation ids, project, process, assignment, actor and data. `chat.message.recorded` contains message metadata and a content hash/reference by default, never the full raw body.
 
-- `event_id`
-- `event_type`
-- `source`
-- `subject`
-- `time`
-- `correlation_id`
-- `causation_id`
-- `project`
-- `process`
-- `assignment`
-- `actor`
-- `data`
+Native agent payloads first enter the private workplace Raw Event Journal at `<workplace>/runtime/agent-events/`. Provider adapters may derive normalized facts from them only after project-scope validation. The project stream can therefore be incomplete by design: a raw event may be unsupported, denied, quarantined or have no project-side effect.
 
-The schema is `schemas/event-envelope.schema.json`. The process taxonomy is
-described by `schemas/process-event.schema.json`.
-
-Common event categories include:
-
-- `session.started`
-- `session.ended`
-- `session.message.recorded`
-- `chat.message.recorded`
-- `process.started`
-- `process.completed`
-- `stage.started`
-- `stage.completed`
-- `assignment.created`
-- `assignment.started`
-- `assignment.completed`
-- `artifact.created`
-- `artifact.updated`
-- `review.requested`
-- `review.completed`
-- `gate.passed`
-- `gate.failed`
-- `tool.invoked`
-- `tool.failed`
-- `mcp.invoked`
-- `mcp.failed`
-- `hook.dispatched`
-- `hook.failed`
-- `context.snapshot.refreshed`
-- `context.snapshot.stale`
-- `capability.missing`
-
-This is a readable core subset, not the complete enum. The code-level source of
-truth for the current accepted event types is `REQUIRED_PROCESSFORGE_EVENT_TYPES`
-in `tools/processforge.py`; event envelope structure is validated by
-`schemas/event-envelope.schema.json`.
-
-Process definitions declare the events they require or subscribe to. Runtime hook
-delivery is configured separately in `.pf/hooks.yaml`.
-
-Events must not contain raw secrets. Chat events are metadata-only by default and
-carry `content_hash` plus a local `content_ref` unless content capture is
-explicitly enabled.
+See [Hooks And Events](hooks-events.md) for raw storage, provider mappings, privacy and registration limits.

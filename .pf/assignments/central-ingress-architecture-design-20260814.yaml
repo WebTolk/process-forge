@@ -1,0 +1,70 @@
+schema_version: 1
+id: central-ingress-architecture-design-20260814
+title: Design central ingress and first implementation slice
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T16:45:48Z'
+updated_at: '2026-08-21T04:54:08Z'
+objective: After the three audit artifacts are accepted, define provider-neutral Core APIs, storage, routing, dedupe, replay, security and a minimal first slice. No implementation before independent architecture review.
+platform: ""
+selected_specializations:
+  []
+order: 4
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Reconciled: superseded by the accepted evidence-bound v2 architecture and its independent review.'
+  artifacts:
+    []
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout.md
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-routing-policy.md
+ownership:
+  owner_id: orchestrator
+  owner_label: worker-orchestrator
+  role: architecture-owner
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design.md
+    - .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout.md
+    - .pf/artifacts/central-agent-event-ingress-20260814/event-routing-policy.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design.md
+    - .pf/artifacts/central-agent-event-ingress-20260814/event-storage-layout.md
+    - .pf/artifacts/central-agent-event-ingress-20260814/event-routing-policy.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: central-event-ingress-design
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/central-event-ingress-design.md
+  format: concise_markdown
+  include:
+    - central-event-ingress-design
+agent_model: gpt-5.5

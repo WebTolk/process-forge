@@ -1,0 +1,65 @@
+schema_version: 1
+id: python-core-phase-a-plan-review
+title: Final Phase A architecture and plan review
+run_id: python-core-refactor-phase-a-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T12:23:14Z'
+updated_at: '2026-08-14T12:27:08Z'
+objective: Review the completed Phase A target architecture, independent review, phased refactor plan, and migration report. Verify that all five independent-review conditions are converted into explicit gates or deliverables, that no unsupported implementation-complete claim exists, and that the first slice remains behavior-preserving, shared by CLI and Runtime/MCP, and package/import-safe. Return pass, pass_with_conditions, warn, or fail with repository-relative evidence. Do not change code.
+platform: ""
+selected_specializations:
+  []
+order: 12
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/python-core-refactor-phase-a-20260814/final-architecture-review.md
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_read_files:
+  - .pf/AGENTS.md
+  - задания/process-forge-python-core-refactoring-master-prompt.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-dependency-map.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-target-architecture.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-compatibility-cleanup.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/independent-architecture-review.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/python-core-refactor-plan.md
+  - .pf/artifacts/python-core-refactor-phase-a-20260814/migration-report.md
+  - tools/processforge.py
+  - tools/pf_runtime/**
+  - bin/pf.py
+ownership:
+  owner_id: python-core-phase-a-plan-review
+  owner_label: worker-python-core-phase-a-plan-review
+  role: final-architecture-reviewer
+  writer: false
+  owned_files:
+    []
+  owned_globs:
+    []
+required_outputs:
+  -
+    id: final-architecture-review
+    type: unspecified
+    required: true
+    path: .pf/artifacts/python-core-refactor-phase-a-20260814/final-architecture-review.md
+agent_reasoning_effort: medium
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/python-core-refactor-phase-a-20260814/final-architecture-review.md
+  format: concise_markdown
+  include:
+    - final-architecture-review
+agent_model: gpt-5.4

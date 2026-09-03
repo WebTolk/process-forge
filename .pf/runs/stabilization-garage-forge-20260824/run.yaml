@@ -1,0 +1,42 @@
+schema_version: 1
+id: stabilization-garage-forge-20260824
+title: Garage/Forge stabilization
+process: multi-agent-task-orchestration
+status: in_progress
+created_at: '2026-08-24T08:24:58Z'
+updated_at: '2026-08-24T08:43:26Z'
+objective: Execute the Garage/Forge stabilization master prompt with current-state audit, scoped implementation, acceptance artifacts, and validation.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: stabilization-baseline-audit-20260824
+    assignment: .pf/assignments/stabilization-baseline-audit-20260824.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: stabilization-implementation-20260824
+    assignment: .pf/assignments/stabilization-implementation-20260824.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: stabilization-acceptance-20260824
+    assignment: .pf/assignments/stabilization-acceptance-20260824.yaml
+    status: done
+    order: 3
+    blocking: true
+final_artifacts:
+  - .pf/runs/stabilization-garage-forge-20260824/summary.md
+  - .pf/handoffs/runs/stabilization-garage-forge-20260824-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+privacy:
+  public_safe: true

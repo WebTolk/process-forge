@@ -1,0 +1,70 @@
+schema_version: 1
+id: central-ingress-schema-quality-reconciliation-20260814
+title: Reconcile event schema classifications with executable consumers
+run_id: central-agent-event-ingress-20260814
+process: task-batch-execution
+status: done
+created_at: '2026-08-14T16:56:27Z'
+updated_at: '2026-08-14T17:05:37Z'
+objective: 'Read-only quality correction: replace only .pf/artifacts/central-agent-event-ingress-20260814/event-schema-reconciliation.md with an evidence-led reconciliation of every schema required by the central-agent-event-ingress master prompt. For each classification choose only canonical/reuse/extend/adapter-specific/outbound-only/duplicate/legacy, distinguish runtime writer/validator, schema validator, docs-only, and dead schema evidence. Cite exact function/file consumer and avoid claiming that an event is validated at append time unless code proves it. Include a short list of decisions that constrain the later ingress architecture; no source-code changes.'
+platform: ""
+selected_specializations:
+  []
+order: 8
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Accepted after independent comparison with processforge writers, host ingress, schema validator, and concepts docs. Report makes writer/validator/dead-schema boundary explicit.
+  artifacts:
+    - .pf/artifacts/central-agent-event-ingress-20260814/event-schema-reconciliation.md
+execution_mode:
+  kind: read_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-central-agent-event-ingress-master-prompt.md
+allowed_files:
+  - .pf/artifacts/central-agent-event-ingress-20260814/event-schema-reconciliation.md
+allowed_read_files:
+  - schemas
+  - tools/processforge.py
+  - tools/pf_runtime
+  - tools/validate-process-forge-schemas.py
+  - docs/concepts
+ownership:
+  owner_id: shell-gpt54
+  owner_label: worker-shell-gpt54
+  role: schema-quality-auditor
+  writer: true
+  owned_files:
+    - .pf/artifacts/central-agent-event-ingress-20260814/event-schema-reconciliation.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/central-agent-event-ingress-20260814/event-schema-reconciliation.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: event-schema-reconciliation
+    type: unspecified
+    required: true
+    path: .pf/artifacts/central-agent-event-ingress-20260814/event-schema-reconciliation.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/central-agent-event-ingress-20260814/event-schema-reconciliation.md
+  format: concise_markdown
+  include:
+    - event-schema-reconciliation
+agent_model: gpt-5.4

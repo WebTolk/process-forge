@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/resource-indexing.schema.json",
+  "title": "ProcessForge Resource Indexing Policy",
+  "type": "object",
+  "required": ["enabled", "mode"],
+  "properties": {
+    "enabled": { "type": "boolean" },
+    "mode": { "enum": ["fulltext", "metadata", "none"] },
+    "fields": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "notes": { "type": "string" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "enabled": { "const": false }
+        },
+        "required": ["enabled"]
+      },
+      "then": {
+        "properties": {
+          "mode": { "const": "none" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "source": {
+      "type": "object",
+      "required": ["path", "mode"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "mode": { "enum": ["fulltext", "metadata", "none"] },
+        "role": { "type": "string", "minLength": 1 },
+        "include": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

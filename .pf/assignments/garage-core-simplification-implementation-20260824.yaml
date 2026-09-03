@@ -1,0 +1,102 @@
+schema_version: 1
+id: garage-core-simplification-implementation-20260824
+title: Garage core implementation
+run_id: garage-core-simplification-20260824
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-08-24T10:50:10Z'
+updated_at: '2026-08-24T11:01:07Z'
+objective: Implement sessionless Garage MCP context/search/resolve and supporting Core services with focused smokes.
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Garage Core sessionless context/search/resolve implemented with docs and smoke tests.
+  artifacts:
+    - .pf/artifacts/garage-core-simplification/garage-simplification-implementation-report.md
+stage: worker-execution
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - src/processforge_core/garage.py
+  - src/processforge_core/local_resource_search.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/host.py
+  - tools/processforge.py
+  - tools/smoke_garage_no_hooks_sessionless.py
+  - tools/smoke_garage_session_enhanced.py
+  - tools/smoke_garage_cross_project_security.py
+  - tools/smoke_garage_real_joomla_search.py
+  - docs/concepts/runtime-mcp.md
+  - docs/concepts/resource-search-index.md
+  - docs/concepts/garage-core.md
+  - .pf/START_AGENT_HERE.md
+  - .pf/logs/garage-core-simplification.md
+  - .pf/artifacts/garage-core-simplification/garage-simplification-implementation-report.md
+allowed_read_files:
+  - задания/process-forge-garage-core-simplification-master-prompt.md
+forbidden_files:
+  - dist/**
+  - .pf/runtime/**
+ownership:
+  owner_id: garage-core-simplification-implementation-20260824
+  owner_label: worker-garage-core-simplification-implementation-20260824
+  role: ""
+  writer: true
+  owned_files:
+    - src/processforge_core/garage.py
+    - src/processforge_core/local_resource_search.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/pf_runtime/host.py
+    - tools/processforge.py
+    - tools/smoke_garage_no_hooks_sessionless.py
+    - tools/smoke_garage_session_enhanced.py
+    - tools/smoke_garage_cross_project_security.py
+    - tools/smoke_garage_real_joomla_search.py
+    - docs/concepts/runtime-mcp.md
+    - docs/concepts/resource-search-index.md
+    - docs/concepts/garage-core.md
+    - .pf/START_AGENT_HERE.md
+    - .pf/logs/garage-core-simplification.md
+    - .pf/artifacts/garage-core-simplification/garage-simplification-implementation-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/garage.py
+    - src/processforge_core/local_resource_search.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/pf_runtime/host.py
+    - tools/processforge.py
+    - tools/smoke_garage_no_hooks_sessionless.py
+    - tools/smoke_garage_session_enhanced.py
+    - tools/smoke_garage_cross_project_security.py
+    - tools/smoke_garage_real_joomla_search.py
+    - docs/concepts/runtime-mcp.md
+    - docs/concepts/resource-search-index.md
+    - docs/concepts/garage-core.md
+    - .pf/START_AGENT_HERE.md
+    - .pf/logs/garage-core-simplification.md
+    - .pf/artifacts/garage-core-simplification/garage-simplification-implementation-report.md
+  rule: Do not edit files owned by active parallel tasks.
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/garage-core-simplification/garage-simplification-implementation-report.md
+  format: concise_markdown
+  include:
+    []

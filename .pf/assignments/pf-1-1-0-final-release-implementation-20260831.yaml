@@ -1,0 +1,250 @@
+schema_version: 1
+id: pf-1-1-0-final-release-implementation-20260831
+title: Implement final 1.1.0 release surface
+run_id: processforge-1-1-0-final-release-20260831
+process: software-feature-development
+status: done
+created_at: '2026-08-31T03:47:37Z'
+updated_at: '2026-08-31T04:13:37Z'
+objective: Implement stable update metadata, generic host-agnostic project readiness, Garage-first agent instructions, human documentation reconciliation, release smokes, and public cleanup without architectural expansion.
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Implemented stable 1.1.0 update metadata contract, Garage-first docs/instructions, optional Codex hooks, and focused release smokes.
+  artifacts:
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/implementation/release-update-manifest-implementation-report.md
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/implementation/codex-hooks-optional-integration-report.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - задания/process-forge-1.1.0-final-release-update-manifests-docs-master-prompt.md
+allowed_files:
+  - README.md
+  - README.ru.md
+  - QUICKSTART.md
+  - QUICKSTART.ru.md
+  - .pf/AGENTS.md
+  - .pf/START_AGENT_HERE.md
+  - .processforge-releaseignore
+  - CHANGELOG.md
+  - .pf/logs/processforge-1.1.0-final-release-20260831-implementation.md
+  - src/processforge_core/project_initialization.py
+  - tools/processforge.py
+  - tools/validate-process-forge-schemas.py
+  - tools/smoke_project_init_codex_integration.py
+  - tools/smoke_project_init_acceptance.py
+  - tools/smoke_first_run.py
+  - tools/smoke_mcp_missing_session_diagnostics.py
+  - tools/release_metadata_contract.py
+  - tools/smoke_release_manifest_repository_surface.py
+  - tools/smoke_release_manifest_not_inside_archive.py
+  - tools/smoke_stable_update_manifest_schema.py
+  - tools/smoke_stable_update_manifest_points_to_release.py
+  - tools/smoke_no_production_example_update_urls.py
+  - tools/smoke_release_tag_commit_provenance.py
+  - tools/smoke_docs_garage_no_runtime_required.py
+  - tools/smoke_docs_mcp_host_owned_stdio.py
+  - tools/smoke_docs_agent_no_manual_infra.py
+  - tools/smoke_docs_codex_hooks_optional.py
+  - templates/project-agents-template.md
+  - templates/global-agents-processforge-section.md
+  - docs/getting-started.md
+  - docs/index.md
+  - docs/ru/index.md
+  - docs/maintainers/release-publishing.md
+  - docs/getting-started/agent-prompts.md
+  - docs/ru/getting-started/agent-prompts.md
+  - docs/getting-started/installation.md
+  - docs/ru/getting-started/installation.md
+  - docs/getting-started/project-onboarding.md
+  - docs/ru/getting-started/project-onboarding.md
+  - docs/getting-started/runtime-autostart.md
+  - docs/ru/getting-started/runtime-autostart.md
+  - docs/getting-started/update-system.md
+  - docs/ru/getting-started/update-system.md
+  - docs/concepts/garage-core.md
+  - docs/concepts/runtime-mcp.md
+  - docs/ru/concepts/runtime-mcp.md
+  - docs/concepts/runtime-model.md
+  - docs/ru/concepts/runtime-model.md
+  - docs/concepts/project-init.md
+  - docs/concepts/hooks-events.md
+  - docs/ru/concepts/hooks-events.md
+  - docs/concepts/session-bootstrap.md
+  - docs/concepts/agent-session-model.md
+  - docs/ru/concepts/agent-session-model.md
+  - docs/known-limitations.md
+  - docs/ru/known-limitations.md
+  - updates/processforge-update-index.yaml
+  - updates/migrations/1.1.0-prerelease-hardening.md
+  - updates/migrations/1.1.0-stable-release.md
+  - checksums/processforge.sha256
+  - .pf/artifacts/processforge-1-1-0-final-release-20260831/implementation/**
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: developer
+  writer: true
+  owned_files:
+    - README.md
+    - README.ru.md
+    - QUICKSTART.md
+    - QUICKSTART.ru.md
+    - .pf/AGENTS.md
+    - .pf/START_AGENT_HERE.md
+    - .processforge-releaseignore
+    - CHANGELOG.md
+    - .pf/logs/processforge-1.1.0-final-release-20260831-implementation.md
+    - src/processforge_core/project_initialization.py
+    - tools/processforge.py
+    - tools/validate-process-forge-schemas.py
+    - tools/smoke_project_init_codex_integration.py
+    - tools/smoke_project_init_acceptance.py
+    - tools/smoke_first_run.py
+    - tools/smoke_mcp_missing_session_diagnostics.py
+    - tools/release_metadata_contract.py
+    - tools/smoke_release_manifest_repository_surface.py
+    - tools/smoke_release_manifest_not_inside_archive.py
+    - tools/smoke_stable_update_manifest_schema.py
+    - tools/smoke_stable_update_manifest_points_to_release.py
+    - tools/smoke_no_production_example_update_urls.py
+    - tools/smoke_release_tag_commit_provenance.py
+    - tools/smoke_docs_garage_no_runtime_required.py
+    - tools/smoke_docs_mcp_host_owned_stdio.py
+    - tools/smoke_docs_agent_no_manual_infra.py
+    - tools/smoke_docs_codex_hooks_optional.py
+    - templates/project-agents-template.md
+    - templates/global-agents-processforge-section.md
+    - docs/getting-started.md
+    - docs/index.md
+    - docs/ru/index.md
+    - docs/maintainers/release-publishing.md
+    - docs/getting-started/agent-prompts.md
+    - docs/ru/getting-started/agent-prompts.md
+    - docs/getting-started/installation.md
+    - docs/ru/getting-started/installation.md
+    - docs/getting-started/project-onboarding.md
+    - docs/ru/getting-started/project-onboarding.md
+    - docs/getting-started/runtime-autostart.md
+    - docs/ru/getting-started/runtime-autostart.md
+    - docs/getting-started/update-system.md
+    - docs/ru/getting-started/update-system.md
+    - docs/concepts/garage-core.md
+    - docs/concepts/runtime-mcp.md
+    - docs/ru/concepts/runtime-mcp.md
+    - docs/concepts/runtime-model.md
+    - docs/ru/concepts/runtime-model.md
+    - docs/concepts/project-init.md
+    - docs/concepts/hooks-events.md
+    - docs/ru/concepts/hooks-events.md
+    - docs/concepts/session-bootstrap.md
+    - docs/concepts/agent-session-model.md
+    - docs/ru/concepts/agent-session-model.md
+    - docs/known-limitations.md
+    - docs/ru/known-limitations.md
+    - updates/processforge-update-index.yaml
+    - updates/migrations/1.1.0-prerelease-hardening.md
+    - updates/migrations/1.1.0-stable-release.md
+    - checksums/processforge.sha256
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/implementation/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - README.md
+    - README.ru.md
+    - QUICKSTART.md
+    - QUICKSTART.ru.md
+    - .pf/AGENTS.md
+    - .pf/START_AGENT_HERE.md
+    - .processforge-releaseignore
+    - CHANGELOG.md
+    - .pf/logs/processforge-1.1.0-final-release-20260831-implementation.md
+    - src/processforge_core/project_initialization.py
+    - tools/processforge.py
+    - tools/validate-process-forge-schemas.py
+    - tools/smoke_project_init_codex_integration.py
+    - tools/smoke_project_init_acceptance.py
+    - tools/smoke_first_run.py
+    - tools/smoke_mcp_missing_session_diagnostics.py
+    - tools/release_metadata_contract.py
+    - tools/smoke_release_manifest_repository_surface.py
+    - tools/smoke_release_manifest_not_inside_archive.py
+    - tools/smoke_stable_update_manifest_schema.py
+    - tools/smoke_stable_update_manifest_points_to_release.py
+    - tools/smoke_no_production_example_update_urls.py
+    - tools/smoke_release_tag_commit_provenance.py
+    - tools/smoke_docs_garage_no_runtime_required.py
+    - tools/smoke_docs_mcp_host_owned_stdio.py
+    - tools/smoke_docs_agent_no_manual_infra.py
+    - tools/smoke_docs_codex_hooks_optional.py
+    - templates/project-agents-template.md
+    - templates/global-agents-processforge-section.md
+    - docs/getting-started.md
+    - docs/index.md
+    - docs/ru/index.md
+    - docs/maintainers/release-publishing.md
+    - docs/getting-started/agent-prompts.md
+    - docs/ru/getting-started/agent-prompts.md
+    - docs/getting-started/installation.md
+    - docs/ru/getting-started/installation.md
+    - docs/getting-started/project-onboarding.md
+    - docs/ru/getting-started/project-onboarding.md
+    - docs/getting-started/runtime-autostart.md
+    - docs/ru/getting-started/runtime-autostart.md
+    - docs/getting-started/update-system.md
+    - docs/ru/getting-started/update-system.md
+    - docs/concepts/garage-core.md
+    - docs/concepts/runtime-mcp.md
+    - docs/ru/concepts/runtime-mcp.md
+    - docs/concepts/runtime-model.md
+    - docs/ru/concepts/runtime-model.md
+    - docs/concepts/project-init.md
+    - docs/concepts/hooks-events.md
+    - docs/ru/concepts/hooks-events.md
+    - docs/concepts/session-bootstrap.md
+    - docs/concepts/agent-session-model.md
+    - docs/ru/concepts/agent-session-model.md
+    - docs/known-limitations.md
+    - docs/ru/known-limitations.md
+    - updates/processforge-update-index.yaml
+    - updates/migrations/1.1.0-prerelease-hardening.md
+    - updates/migrations/1.1.0-stable-release.md
+    - checksums/processforge.sha256
+    - .pf/artifacts/processforge-1-1-0-final-release-20260831/implementation/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: implementation_report
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/implementation/release-update-manifest-implementation-report.md
+    type: unspecified
+    required: true
+  -
+    id: codex_hooks_optional_report
+    path: .pf/artifacts/processforge-1-1-0-final-release-20260831/implementation/codex-hooks-optional-integration-report.md
+    type: unspecified
+    required: true
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/processforge-1-1-0-final-release-20260831/implementation/release-update-manifest-implementation-report.md
+  format: concise_markdown
+  include:
+    - implementation_report
+    - codex_hooks_optional_report

@@ -1,0 +1,71 @@
+schema_version: 1
+id: pf-mcp-codex-contract-remediation-20260829
+title: Make PF MCP usable by noninteractive Codex workers
+run_id: pf-machine-acceptance-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T09:13:10Z'
+updated_at: '2026-08-29T10:58:10Z'
+objective: Expose a bounded PF context with authorized knowledge ids, declare MCP tool safety semantics, align error regression checks, and prove the Codex-compatible stdio contract.
+platform: ""
+selected_specializations:
+  []
+order: 47
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Delivered bounded Codex-compatible MCP context and real stdio contract coverage.
+  artifacts:
+    - .pf/artifacts/pf-machine-acceptance-20260829/mcp-codex-contract-remediation.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/pf_runtime/mcp_server.py
+  - tools/smoke_runtime_ledger_hooks_mcp.py
+  - tools/smoke_mcp_codex_contract.py
+  - .pf/artifacts/pf-machine-acceptance-20260829/mcp-codex-contract-remediation.md
+ownership:
+  owner_id: orchestrator-main
+  owner_label: worker-orchestrator-main
+  role: developer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/mcp_server.py
+    - tools/smoke_runtime_ledger_hooks_mcp.py
+    - tools/smoke_mcp_codex_contract.py
+    - .pf/artifacts/pf-machine-acceptance-20260829/mcp-codex-contract-remediation.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/pf_runtime/mcp_server.py
+    - tools/smoke_runtime_ledger_hooks_mcp.py
+    - tools/smoke_mcp_codex_contract.py
+    - .pf/artifacts/pf-machine-acceptance-20260829/mcp-codex-contract-remediation.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: mcp-codex-contract-remediation
+    type: unspecified
+    required: true
+    path: .pf/artifacts/pf-machine-acceptance-20260829/mcp-codex-contract-remediation.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-machine-acceptance-20260829/mcp-codex-contract-remediation.md
+  format: concise_markdown
+  include:
+    - mcp-codex-contract-remediation

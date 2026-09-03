@@ -1,0 +1,115 @@
+schema_version: 1
+id: distribution-audit-evidence-20260821
+title: Record evidence-backed distribution audit
+run_id: distribution-release-docs-sync-20260821
+process: task-batch-execution
+status: done
+created_at: '2026-08-21T07:28:27Z'
+updated_at: '2026-08-21T07:31:41Z'
+objective: Write durable audit reports and a project log for the completed read-only release/docs investigation; do not edit product files.
+platform: ""
+selected_specializations:
+  []
+order: 2
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  -
+    id: iter-001
+    kind: work
+    status: passed
+    started_at: '2026-08-21T07:31:31Z'
+    summary: Wrote the durable audit reports, log, and continuation handoff without touching product files.
+    artifacts:
+      - .pf/artifacts/runs/distribution-release-docs-sync-20260821/distribution-audit-evidence-20260821/work-log.md
+    completed_at: '2026-08-21T07:31:31Z'
+result:
+  status: done
+  summary: Audit reports, log, and handoff written. Product correction is awaiting a clean baseline and write-scope handoff.
+  artifacts:
+    - .pf/artifacts/distribution-release-docs-sync-20260821/distribution-consistency-audit.md
+    - .pf/artifacts/distribution-release-docs-sync-20260821/public-cleanliness-false-positive-audit.md
+    - .pf/artifacts/distribution-release-docs-sync-20260821/codex-hook-registration-audit.md
+    - .pf/artifacts/distribution-release-docs-sync-20260821/event-docs-sync-audit.md
+    - .pf/artifacts/distribution-release-docs-sync-20260821/event-storage-scaling-risk.md
+  waivers:
+    distribution-consistency-audit: artifact path recorded in task result
+    public-cleanliness-false-positive-audit: artifact path recorded in task result
+    codex-hook-registration-audit: artifact path recorded in task result
+    event-docs-sync-audit: artifact path recorded in task result
+    event-storage-scaling-risk: artifact path recorded in task result
+stage: task-result-fixation
+execution_mode:
+  kind: docs_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/logs/distribution-release-docs-sync-20260821.md
+  - .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
+  - .pf/artifacts/distribution-release-docs-sync-20260821/**
+forbidden_files:
+  - README.md
+  - README.ru.md
+  - tools/**
+  - docs/**
+  - checksums/**
+  - src/**
+ownership:
+  owner_id: codex
+  owner_label: worker-codex
+  role: run-coordinator
+  writer: true
+  owned_files:
+    - .pf/logs/distribution-release-docs-sync-20260821.md
+    - .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
+    - .pf/artifacts/distribution-release-docs-sync-20260821/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/logs/distribution-release-docs-sync-20260821.md
+    - .pf/handoffs/distribution-release-docs-sync-20260821-handoff.md
+    - .pf/artifacts/distribution-release-docs-sync-20260821/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: distribution-consistency-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/distribution-consistency-audit.md
+    type: unspecified
+    required: true
+  -
+    id: public-cleanliness-false-positive-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/public-cleanliness-false-positive-audit.md
+    type: unspecified
+    required: true
+  -
+    id: codex-hook-registration-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/codex-hook-registration-audit.md
+    type: unspecified
+    required: true
+  -
+    id: event-docs-sync-audit
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/event-docs-sync-audit.md
+    type: unspecified
+    required: true
+  -
+    id: event-storage-scaling-risk
+    path: .pf/artifacts/distribution-release-docs-sync-20260821/event-storage-scaling-risk.md
+    type: unspecified
+    required: true
+expected_report:
+  language: ru
+  format: concise_markdown
+  include:
+    - distribution-consistency-audit
+    - public-cleanliness-false-positive-audit
+    - codex-hook-registration-audit
+    - event-docs-sync-audit
+    - event-storage-scaling-risk

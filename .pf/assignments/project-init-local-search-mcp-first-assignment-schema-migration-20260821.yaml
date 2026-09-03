@@ -1,0 +1,82 @@
+schema_version: 1
+id: project-init-local-search-mcp-first-assignment-schema-migration-20260821
+title: Migrate first-assignment onboarding output to task schema
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T16:52:21Z'
+updated_at: '2026-08-21T17:48:17Z'
+objective: Bring the generated and current onboarding first-assignment record into the validated task schema without losing its onboarding intent, then prove schema validation.
+platform: ""
+selected_specializations:
+  []
+order: 52
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Migrated current and generated onboarding first-assignment records to task schema and passed validation.
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/first-assignment-schema-migration.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - .pf/assignments/first-assignment.yaml
+  - .pf/artifacts/project-init-local-search-mcp-20260821/first-assignment-schema-migration.md
+ownership:
+  owner_id: primary
+  owner_label: worker-primary
+  role: implementation
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - .pf/assignments/first-assignment.yaml
+    - .pf/artifacts/project-init-local-search-mcp-20260821/first-assignment-schema-migration.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - .pf/assignments/first-assignment.yaml
+    - .pf/artifacts/project-init-local-search-mcp-20260821/first-assignment-schema-migration.md
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: project-init-local-search-mcp-first-assignment-schema-migration-20260821
+        current_scope: tools/processforge.py
+        other_assignment: project-init-local-search-mcp-windows-release-cleanup-remediation-20260821
+        other_scope: tools/processforge.py
+        reason: same_file
+required_outputs:
+  -
+    id: migration
+    type: unspecified
+    required: true
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/first-assignment-schema-migration.md
+  -
+    id: schema_validation
+    type: unspecified
+    required: true
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/first-assignment-schema-migration.md
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/first-assignment-schema-migration.md
+  format: concise_markdown
+  include:
+    - migration
+    - schema_validation

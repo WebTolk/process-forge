@@ -1,0 +1,62 @@
+schema_version: 1
+id: pf-final-restoration-review-20260829
+title: Final restoration and independent acceptance review
+run_id: pf-machine-acceptance-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T06:54:32Z'
+updated_at: '2026-08-29T11:05:29Z'
+objective: Verify exact final 1.1.0 restoration, no live 1.2.1 process, preserved workplace/project state, and classify every acceptance gate.
+platform: ""
+selected_specializations:
+  []
+order: 80
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Exact 1.1.0 restoration verified; Runtime and standalone MCP restarted; acceptance passed with documented conditions.
+  artifacts:
+    - .pf/reviews/pf-machine-acceptance-20260829-final-review.md
+stage: release-delivery
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/pf-machine-acceptance-20260829-final-review.md
+ownership:
+  owner_id: shell-worker-final-review
+  owner_label: worker-shell-worker-final-review
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/pf-machine-acceptance-20260829-final-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/pf-machine-acceptance-20260829-final-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: final-review
+    path: .pf/reviews/pf-machine-acceptance-20260829-final-review.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/reviews/pf-machine-acceptance-20260829-final-review.md
+  format: concise_markdown
+  include:
+    - final-review

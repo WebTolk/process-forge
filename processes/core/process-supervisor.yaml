@@ -69,8 +69,6 @@ stages:
   - worker-run-ready
   goal: Create assignment capsule, worker launch prompt, command.json, and status.json for the selected runtime driver.
   actor: cli_tool
-  gates:
-  - worker-run-ready
 - id: start
   title: Start worker run
   description: Start a shell runtime driver with an explicit executable and write process, stdout, stderr, heartbeat, and
@@ -92,8 +90,6 @@ stages:
   - worker-run-finished
   goal: Start a shell runtime driver with an explicit executable and write process, stdout, stderr, heartbeat, and exit records.
   actor: cli_tool
-  gates:
-  - worker-run-finished
 - id: collect
   title: Collect worker outputs
   description: Verify required outputs and expected report, then mark the task complete.
@@ -113,8 +109,20 @@ stages:
   - required-outputs-present
   goal: Verify required outputs and expected report, then mark the task complete.
   actor: cli_tool
-  gates:
-  - required-outputs-present
+  automation_bindings:
+  - id: required-output-readiness
+    projector: required-output-readiness
+    artifact: stage-obligations
+    gate: required-outputs-present
+    source: assignment-required-outputs-and-inspector-state
+  - id: task-doctor-verification
+    projector: verification-state
+    artifact: stage-obligations
+    gate: task-doctor-passed
+    source: task-doctor-event-and-required-output-digests
+    verification:
+      passed_event: task.doctor.passed
+      failed_event: task.doctor.failed
 artifact_definitions:
 - id: agent-run-state
   title: Agent Run State
@@ -181,6 +189,23 @@ artifact_definitions:
   type: markdown
   required: true
   path_hint: .pf/artifacts/collection-report.md
+- id: stage-obligations
+  title: Stage Obligation State
+  owner_role: execution-inspector
+  lifecycle:
+  - draft
+  - active
+  - archived
+  type: json
+  required: false
+  path_hint: .pf/artifacts/projections/stage-obligations.json
+input_definitions:
+  assignment:
+    title: Assignment
+  runtime-driver:
+    title: Runtime Driver
+  worker-outputs:
+    title: Worker Outputs
 gates:
 - id: assignment-ready
   description: Assignment, run, capsule inputs, and context snapshot exist.
@@ -196,6 +221,10 @@ gates:
   type: checklist
 - id: required-outputs-present
   description: Required outputs and expected report are present before collection succeeds.
+  required: true
+  type: checklist
+- id: task-doctor-passed
+  description: The declared task doctor has a current durable PASS event for the active task inputs.
   required: true
   type: checklist
 evolve:
@@ -282,6 +311,18 @@ subagent_policy:
 runtime_requirements:
   supervisor_required: true
   runtime_driver_required: true
+runtime_execution_boundary:
+  stage_by_worker_status:
+    pending: prepare
+    ready: prepare
+    running: start
+    completed: collect
+    failed: collect
+    timed_out: collect
+    unknown_exit: collect
+    lost: collect
+    cancelled: collect
+    manual_required: collect
 process_transitions: []
 stage_completion:
   handoff_note_required: false

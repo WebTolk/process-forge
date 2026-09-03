@@ -52,6 +52,10 @@ Agent Ledger exists in all modes, but it is a CLI-managed file ledger, not a
 separate watchman agent. Agents check in at session start, heartbeat during long
 work, and check out before leaving.
 
+Garage `pf.context`, `pf.search`, `pf.resolve`, and `pf.work.start` do not
+require a manual Ledger session. Session commands below are Forge/operator
+tools, not the ordinary Garage start path.
+
 Agent Director is not required in single-agent mode. Process Supervisor /
 Execution Inspector is not required unless the process launches external
 runtime workers.
@@ -80,7 +84,7 @@ Project-local current session reference is stored under:
 
 These runtime files are private and are not part of the public release archive.
 
-## Session Commands
+## Forge And Operator Session Commands
 
 Use either the ledger command names or the simple session aliases:
 
@@ -93,3 +97,11 @@ python bin/pf.py session-end --project-root <project>
 
 The aliases are thin wrappers over `agent-checkin`, `agent-heartbeat`,
 `agent-status`, and `agent-checkout`.
+
+## Conversation capture limit
+
+For the current Codex adapter, a `UserPromptSubmit` can record the operator
+prompt when project and session attribution are present. PF-owned codex-exec
+worker input summaries and collectible expected reports can also be recorded
+with explicit provenance checks. Generic interactive assistant responses and
+host subagent messages are not currently captured automatically.

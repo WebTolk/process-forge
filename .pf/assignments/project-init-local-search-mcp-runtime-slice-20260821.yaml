@@ -1,0 +1,89 @@
+schema_version: 1
+id: project-init-local-search-mcp-runtime-slice-20260821
+title: Implement isolated Core and MCP search runtime slice
+run_id: project-init-local-search-mcp-20260821
+process: software-feature-development
+status: done
+created_at: '2026-08-21T13:12:34Z'
+updated_at: '2026-08-21T13:14:52Z'
+objective: 'Implement only the non-overlapping runtime slice of the accepted contract: a domain-neutral Core SQLite FTS5 snapshot-authorized local search module, a thin Ledger-bound pf.search MCP adapter, and enriched session-context read shape plus self-contained fixture smoke. Do not edit tools/processforge.py or docs; CLI status/initialize/repair integration waits for the active foreign assignment holding that file. SQLite FTS5 only, fail closed, no workspace scans or web console.'
+platform: ""
+selected_specializations:
+  []
+order: 8
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Shell implementation worker was sandboxed read-only and produced a blocked report without changing product code. Its audit is retained as evidence; primary agent takes over the non-overlapping implementation slice under a new owned task.
+  artifacts:
+    - .pf/artifacts/project-init-local-search-mcp-20260821/runtime-slice-implementation-report.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - src/processforge_core/local_resource_search.py
+  - src/processforge_core/project_initialization.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/session_read.py
+  - tools/smoke_project_init_local_search_mcp.py
+  - .pf/artifacts/project-init-local-search-mcp-20260821/runtime-slice-implementation-report.md
+allowed_read_files:
+  - .pf/AGENTS.md
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/artifacts/project-init-local-search-mcp-20260821/project-initialization-contract.md
+  - .pf/artifacts/project-init-local-search-mcp-20260821/local-resource-search-design.md
+  - .pf/artifacts/project-init-local-search-mcp-20260821/mcp-patterns-for-processforge.md
+  - tools/processforge.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/host.py
+  - tools/pf_runtime/session_read.py
+  - src/processforge_core/bootstrap.py
+ownership:
+  owner_id: shell-implementer
+  owner_label: worker-shell-implementer
+  role: developer
+  writer: true
+  owned_files:
+    - src/processforge_core/local_resource_search.py
+    - src/processforge_core/project_initialization.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/pf_runtime/session_read.py
+    - tools/smoke_project_init_local_search_mcp.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/runtime-slice-implementation-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - src/processforge_core/local_resource_search.py
+    - src/processforge_core/project_initialization.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/pf_runtime/session_read.py
+    - tools/smoke_project_init_local_search_mcp.py
+    - .pf/artifacts/project-init-local-search-mcp-20260821/runtime-slice-implementation-report.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: runtime-slice-implementation-report
+    path: .pf/artifacts/project-init-local-search-mcp-20260821/runtime-slice-implementation-report.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+agent_model: gpt-5.5
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/project-init-local-search-mcp-20260821/runtime-slice-implementation-report.md
+  format: concise_markdown
+  include:
+    - runtime-slice-implementation-report

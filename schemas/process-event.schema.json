@@ -18,6 +18,10 @@
         "process.completed",
         "stage.started",
         "stage.completed",
+        "process.stage.started",
+        "process.stage.completed",
+        "process.stage.blocked",
+        "process.stage.transitioned",
         "assignment.created",
         "assignment.started",
         "assignment.completed",
@@ -88,5 +92,25 @@
     "severity": { "type": "string", "enum": ["info", "warn", "error"] },
     "privacy": { "type": "string", "enum": ["public", "private", "sanitized"] }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "enum": ["process.stage.started", "process.stage.completed", "process.stage.blocked", "process.stage.transitioned"]
+          }
+        },
+        "required": ["event_type"]
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": ["run_id", "assignment_id", "process_id", "stage_id", "previous_stage_id", "next_stage_id", "outcome", "blockers"]
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": true
 }
