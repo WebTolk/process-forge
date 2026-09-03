@@ -31,6 +31,14 @@ coordination:
     use_workplace_director: true
     inbox_submit_required: false
 
+# Legacy projects may keep `process: <id>`. New multi-process projects use
+# this selection object; it does not replace the process-definition catalog.
+# processes:
+#   default: primary-process
+#   allowed:
+#     - primary-process
+#     - verification-process
+
 detected:
   languages: []
   platforms: []

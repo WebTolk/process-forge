@@ -1,0 +1,72 @@
+schema_version: 1
+id: pf-1-1-0-release-surface-audit-20260829
+title: Audit 1.1.0 release surface
+run_id: processforge-1-1-0-release-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T12:11:58Z'
+updated_at: '2026-08-29T12:15:31Z'
+objective: Audit version coherence, public release documentation, package inputs, dirty-tree constraints, and likely release blockers for a 1.1.0 archive. Do not edit product files; write a concise findings-first report.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/processforge-1-1-0-release-20260829/release-surface-audit.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/processforge-1-1-0-release-20260829/release-surface-audit.md
+allowed_read_files:
+  - VERSION
+  - README.md
+  - CHANGELOG.md
+  - updates/processforge-update-index.yaml
+  - updates/migrations/1.1.0-prerelease-hardening.md
+  - docs/release-checklist.md
+  - tools/processforge.py
+  - checksums/processforge.sha256
+ownership:
+  owner_id: shell-release-auditor
+  owner_label: worker-shell-release-auditor
+  role: release-auditor
+  writer: true
+  owned_files:
+    - .pf/artifacts/processforge-1-1-0-release-20260829/release-surface-audit.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/processforge-1-1-0-release-20260829/release-surface-audit.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: release_surface_audit
+    path: .pf/artifacts/processforge-1-1-0-release-20260829/release-surface-audit.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/processforge-1-1-0-release-20260829/release-surface-audit.md
+  format: concise_markdown
+  include:
+    - release_surface_audit
+agent_model: gpt-5.3-codex-spark

@@ -1,0 +1,47 @@
+schema_version: 1
+id: rebuild-current-processforge-package-for-external-audit
+title: Rebuild current ProcessForge package for external audit
+run_id: garage-rebuild-current-processforge-package-for-external-audit
+process: task-batch-execution
+status: in_progress
+created_at: '2026-09-03T07:35:32Z'
+updated_at: '2026-09-03T07:35:32Z'
+objective: Rebuild current ProcessForge package for external audit
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: pending
+  summary: ""
+  artifacts:
+    []
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-intake
+stage_status: in_progress
+stage_execution:
+  started_at: '2026-09-03T07:35:32Z'
+  evidence:
+    []
+  notes: ""
+stage_history:
+  []
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260902-065419-56a2ec
+  snapshot_checksum: 'sha256:96bcfda36126cd0109b121aac50b5a2a1c92495eb31602b8d53c52ba3598ddb9'
+  assignment_capsule: .pf/contexts/assignment-capsules/rebuild-current-processforge-package-for-external-audit.capsule.yaml
+  assignment_capsule_checksum: 'sha256:9408852f9780f92ed80df613d3ef19b7a220949d6c5a5a9b610ec00bc64586c9'

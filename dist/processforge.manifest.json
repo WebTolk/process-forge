@@ -3,13 +3,13 @@
     "entry_count": 910,
     "filename": "processforge.zip",
     "format": "zip",
-    "sha256": "81c3c6708efc3c2a68882d16e716dc49749734c81d44f598767fdbd36a32d8be",
-    "size": 1351354
+    "sha256": "66a3733b116cfba5d7736adb92a49785fa1dcf059fbefc273a1d94ed5aac01eb",
+    "size": 1351447
   },
   "build": {
     "deterministic": true,
-    "generated_at": "2026-08-31T05:04:33Z",
-    "source_date_epoch": 1788152673
+    "generated_at": "2026-08-31T06:04:38Z",
+    "source_date_epoch": 1788156278
   },
   "files": [
     {
@@ -99,8 +99,8 @@
     },
     {
       "path": "checksums/processforge.sha256",
-      "sha256": "79d72732006f9211e3d8dfe6aa7f267a0c64a2478ef8240952343568d7c16c85",
-      "size": 99275
+      "sha256": "94cce24e12f521a7622401bcb8ecd7fa52a2870332d9ef813c9482362d3f4a93",
+      "size": 100183
     },
     {
       "path": "docs/assets/processforge-architecture.svg",
@@ -2114,8 +2114,8 @@
     },
     {
       "path": "processforge-core.manifest.json",
-      "sha256": "04d91b98fee3d43bc2f660e95fa6fe4d75b16e5fec219d306e4c36a48e773bae",
-      "size": 168494
+      "sha256": "6ed444707f2f10629785c56bf53ee9ba5a5272992963a169b0504cc9ce93f589",
+      "size": 168495
     },
     {
       "path": "prompts/agent-director-supervision-agent.md",
@@ -4588,9 +4588,9 @@
   "schema_bundle_version": "1.0",
   "schema_version": 1,
   "source": {
-    "commit": "07b1fb68011f5928be824f0c7343322992cf809a",
+    "commit": "c10423a79cda4204a730bbed042c5e232a0f530e",
     "dirty": false,
-    "tree": "6a401826a4184191ee0d85d19efb74046def3790",
+    "tree": "a0ab53ae3e38d0f2ac52b14110b0fb4dfe809051",
     "vcs": "git"
   },
   "version": "1.1.0"

@@ -1,0 +1,83 @@
+schema_version: 1
+id: pf-runtime-mcp-autostart-assurance-20260829
+title: Independent assurance for Runtime and MCP autostart
+run_id: pf-runtime-mcp-autostart-docs-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T11:47:08Z'
+updated_at: '2026-08-29T11:55:59Z'
+objective: Review Windows Runtime autostart, Codex-owned MCP registration, documentation accuracy, security boundaries, and test evidence. Report findings first with severity and file/line references; do not edit product files.
+platform: ""
+selected_specializations:
+  []
+order: 8
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Independent review completed with one medium finding in explicit Python command drift detection; review artifact is present, while worker-run collect failed on transcript cardinality.
+  artifacts:
+    - .pf/reviews/pf-runtime-mcp-autostart-20260829-review.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/pf-runtime-mcp-autostart-20260829-review.md
+allowed_read_files:
+  - tools/pf_runtime/windows_autostart.py
+  - tools/pf_runtime/codex_mcp.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/processforge.py
+  - tools/smoke_runtime_mcp_autostart.py
+  - docs/getting-started/runtime-autostart.md
+  - docs/ru/getting-started/runtime-autostart.md
+  - docs/concepts/runtime-mcp.md
+  - docs/ru/concepts/runtime-mcp.md
+  - docs/concepts/runtime-model.md
+  - docs/ru/concepts/runtime-model.md
+  - docs/known-limitations.md
+  - docs/ru/known-limitations.md
+  - docs/concepts/runs-tasks-iterations.md
+  - .pf/adr/runtime-mcp-windows-autostart.md
+  - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/implementation-report.md
+  - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/documentation-audit-retry.md
+  - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/documentation-remediation.md
+  - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/documentation-final-fixes.md
+ownership:
+  owner_id: shell-reviewer
+  owner_label: worker-shell-reviewer
+  role: code-reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/pf-runtime-mcp-autostart-20260829-review.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/pf-runtime-mcp-autostart-20260829-review.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: assurance_review
+    type: unspecified
+    required: true
+    path: .pf/reviews/pf-runtime-mcp-autostart-20260829-review.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/reviews/pf-runtime-mcp-autostart-20260829-review.md
+  format: concise_markdown
+  include:
+    - assurance_review
+agent_model: gpt-5.5

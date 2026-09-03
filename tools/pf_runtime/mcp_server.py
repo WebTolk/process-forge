@@ -100,7 +100,7 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
         current_work = ProcessExecutionService(bound_project, workplace, core).state(session_id=supplied_session)
         # Keep the MCP bootstrap response bounded. Full assignment objectives
         # can be large and are already available through the governed capsule.
-        return {
+        payload = {
             "schema_version": 1,
             "kind": "pf.context",
             "mode": context.get("mode"),
@@ -126,6 +126,9 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
             "derived_reports": context.get("derived_reports", {}),
             "diagnostics": context.get("diagnostics", []),
         }
+        if isinstance(context.get("continuation"), dict):
+            payload["continuation"] = context["continuation"]
+        return payload
     if name == "pf.project_state":
         bound_project = resolve_garage_project()
         return host.project_state_payload(workplace, core, session=supplied_session, project_root_ref=str(bound_project))
@@ -142,10 +145,10 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
         bound_project = resolve_garage_project()
         return ProcessExecutionService(bound_project, workplace, core).state(session_id=supplied_session)
     if name == "pf.work.start":
-        if set(arguments) - {"session_id", "project_root", "objective"}:
+        if set(arguments) - {"session_id", "project_root", "objective", "process_id"}:
             raise session_read.SessionReadError("invalid_arguments")
         bound_project = resolve_garage_project()
-        return GovernedWorkBootstrapService(bound_project, workplace, core).start(objective=str(arguments.get("objective") or ""), session_id=supplied_session)
+        return GovernedWorkBootstrapService(bound_project, workplace, core).start(objective=str(arguments.get("objective") or ""), process_id=str(arguments.get("process_id") or ""), session_id=supplied_session)
     if name == "pf.work.transition":
         bound_project = resolve_garage_project()
         return ProcessExecutionService(bound_project, workplace, core).transition(
@@ -210,6 +213,7 @@ def tool_schema(name: str) -> dict[str, Any]:
         properties.update({"query": {"type": "string", "minLength": 1}, "limit": {"type": "integer", "minimum": 1, "maximum": 100}, "limitstart": {"type": "integer", "minimum": 0}, "offset": {"type": "integer", "minimum": 0}})
     if name == "pf.work.start":
         properties.update({"objective": {"type": "string", "minLength": 1}})
+        properties["process_id"] = {"type": "string", "minLength": 1}
         required.append("objective")
     if name == "pf.work.transition":
         properties.update(

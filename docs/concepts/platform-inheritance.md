@@ -34,6 +34,11 @@ Documentation and generated reports should prefer the full form.
 
 `requires.platforms` means dependency. The platform cannot be valid unless the required platform is available. For the MVP, `extends` implies a required parent.
 
+A derived platform is never selected only because it repeats a project type
+hint declared by its parent. Select it with a child-specific type hint, explicit
+project input, classifier evidence, or a concrete detection rule declared by
+that derived contract.
+
 Base languages and web technologies should not become parent platforms. Model
 them as knowledge packages and capabilities. A platform contract can include
 those packages directly, and a child platform inherits them only when its parent

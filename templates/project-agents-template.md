@@ -10,7 +10,8 @@ This project uses ProcessForge.
 3. Use `pf.search` when project-authorized knowledge is needed.
 4. Use `pf.resolve` before opening a ProcessForge-managed resource root.
 5. Call `pf.work.start` with the high-level objective when work becomes
-   substantive.
+   substantive. If it returns `process_choice_required`, select one offered
+   process and call it again with `process_id`.
 6. Call `pf.work.state` and follow the selected assignment and immutable
    capsule.
 7. Satisfy the current stage obligations, then call `pf.work.transition` with
@@ -31,3 +32,6 @@ This project uses ProcessForge.
 - During ordinary project work, do not install, start, or repair PF Runtime,
   MCP, host hooks, or Agent Ledger. Use available PF tools and report an
   operator-level infrastructure blocker when PF requires operator action.
+- A Work has one active process and its pinned active specializations. Follow a
+  completed Work's handoff/next-work recommendation; do not combine process
+  definitions into the current session context.

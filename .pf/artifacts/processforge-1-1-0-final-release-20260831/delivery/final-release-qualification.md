@@ -39,3 +39,19 @@ blocker.
 Релизный source/tag и metadata-срез коммитятся адресно. В основной рабочей
 копии сохранены посторонние незакоммиченные `.pf`-материалы предыдущих работ;
 они не попали ни в source commit, ни в ZIP, ни в release metadata commit.
+
+## Post-qualification update: 2026-08-31T11:55:00Z
+
+Current readiness: `blocked`
+
+After publication and local-device update, dogfooding confirmed a PF run artifact
+consistency race. Concurrent `run-summary --apply` and `run-complete --apply`
+can leave `run.yaml`, `summary.md`, `task-index.md`, and run handoff statuses
+out of sync while `run-doctor` still reports PASS.
+
+This does not invalidate the recorded ZIP/source/update provenance below, but
+it does block treating 1.1.0 as final release-ready until remediation and
+regression coverage are complete.
+
+Authoritative blocker artifact:
+`.pf/artifacts/processforge-1-1-0-final-release-20260831/delivery/run-artifact-consistency-release-blocker.md`

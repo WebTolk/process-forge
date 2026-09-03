@@ -1,0 +1,81 @@
+schema_version: 1
+id: pf-runtime-mcp-docs-audit-retry-20260829
+title: Audit Runtime and MCP documentation with explicit read scope
+run_id: pf-runtime-mcp-autostart-docs-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T11:20:09Z'
+updated_at: '2026-08-29T11:28:21Z'
+objective: Inventory Runtime/MCP documentation claims, executable lifecycle behavior, contradictions and Windows autostart requirements using only the granted files.
+platform: ""
+selected_specializations:
+  []
+order: 11
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/documentation-audit-retry.md
+stage: investigation
+execution_mode:
+  kind: docs_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/documentation-audit-retry.md
+allowed_read_files:
+  - docs/concepts/runtime-mcp.md
+  - docs/ru/concepts/runtime-mcp.md
+  - docs/concepts/runtime-model.md
+  - docs/ru/concepts/runtime-model.md
+  - docs/concepts/codex-session-read.md
+  - docs/concepts/hooks-events.md
+  - docs/ru/concepts/hooks-events.md
+  - docs/known-limitations.md
+  - docs/ru/known-limitations.md
+  - docs/getting-started/installation.md
+  - docs/index.md
+  - docs/ru/index.md
+  - tools/pf_runtime/service.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/codex_integration.py
+  - tools/processforge.py
+  - bin/pf.py
+ownership:
+  owner_id: shell-worker-doc-audit-retry
+  owner_label: worker-shell-worker-doc-audit-retry
+  role: reviewer
+  writer: true
+  owned_files:
+    - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/documentation-audit-retry.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/documentation-audit-retry.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: documentation-audit
+    type: unspecified
+    required: true
+    path: .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/documentation-audit-retry.md
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/documentation-audit-retry.md
+  format: concise_markdown
+  include:
+    - documentation-audit
+agent_model: gpt-5.5

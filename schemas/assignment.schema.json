@@ -104,7 +104,10 @@
         "snapshot_id": { "type": "string", "minLength": 1 },
         "snapshot_checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
         "assignment_capsule": { "type": "string", "minLength": 1 },
-        "assignment_capsule_checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+        "assignment_capsule_checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "active_specializations": { "type": "array", "items": { "type": "string" } },
+        "selected_resource_ids": { "type": "array", "items": { "type": "string" } },
+        "allowed_processes": { "type": "array", "items": { "type": "string" } }
       },
       "additionalProperties": false
     },

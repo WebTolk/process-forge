@@ -1,0 +1,30 @@
+# Assurance review: Runtime MCP/autostart
+
+## Findings
+
+### Medium: `codex-mcp status` принимает неверную Python-команду как точную установленную регистрацию
+
+- Ссылки: `tools/pf_runtime/codex_mcp.py:46`, `tools/pf_runtime/codex_mcp.py:50`, `tools/pf_runtime/codex_mcp.py:81`, `tools/pf_runtime/codex_mcp.py:96`, `tools/pf_runtime/codex_mcp.py:121`, `tools/pf_runtime/codex_mcp.py:163`, `tools/smoke_runtime_mcp_autostart.py:77`, `tools/smoke_runtime_mcp_autostart.py:81`, `tools/smoke_runtime_mcp_autostart.py:94`, `docs/getting-started/runtime-autostart.md:93`, `docs/getting-started/runtime-autostart.md:95`, `.pf/adr/runtime-mcp-windows-autostart.md:44`.
+- Проблема: `status_payload()` строит ожидаемый transport с переданным `python_executable`, но `transport_drift()` считает совместимой любую команду `python`, `python.exe`, `py` или `py.exe` и не сравнивает ее с ожидаемой командой. Поэтому явный pinned `--python <non-default executable>` может вернуть `status=installed`, даже если сохраненная Codex MCP registration фактически запускает обычный `python` из host PATH.
+- Repro evidence: mocked payload от `codex mcp get` с expected command `<pinned-python>` и actual command `python` вернул `{"status": "installed", "drift": []}`.
+- Impact: `--replace` не срабатывает для такого drift, поэтому пользователь не может полагаться на `codex-mcp status --python ...` как на проверку executable, который реально запустит Codex. Это ослабляет документированный контракт non-default executable/install path и может запустить MCP server под другим interpreter/environment.
+- Рекомендация: сравнивать `actual["command"]` с `expected["command"]` теми же normalized path правилами, что используются для Task Scheduler, когда expected command является path-like или был явно передан. Если принятие generic `python` остается intentional behavior, нужно явно задокументировать, что `--python` не является exact pin, и скорректировать smoke-тест под оба режима.
+
+## Checks Without Findings
+
+- Windows Runtime autostart ownership соответствует ADR и документации: Task Scheduler запускает `runtime serve`, а не `runtime start` или `mcp_server.py`; install/remove по умолчанию dry-run и требуют `--apply`; drifted/invalid state требует `--replace` или `--force` перед overwrite/removal. Relevant code: `tools/pf_runtime/windows_autostart.py:44`, `tools/pf_runtime/windows_autostart.py:77`, `tools/pf_runtime/windows_autostart.py:154`, `tools/pf_runtime/windows_autostart.py:216`, `tools/pf_runtime/windows_autostart.py:242`, `tools/pf_runtime/windows_autostart.py:264`, `tools/pf_runtime/windows_autostart.py:289`.
+- Security boundaries scheduled task явные и local-user scoped: logon trigger, текущий interactive user, `InteractiveToken`, `LeastPrivilege`, отсутствие stored password в generated XML и deterministic per-workplace task name. Relevant code: `tools/pf_runtime/windows_autostart.py:32`, `tools/pf_runtime/windows_autostart.py:38`, `tools/pf_runtime/windows_autostart.py:85`, `tools/pf_runtime/windows_autostart.py:88`, `tools/pf_runtime/windows_autostart.py:92`, `tools/pf_runtime/windows_autostart.py:93`.
+- Codex MCP lifecycle является host-owned, а не system autostart: registration управляется через `codex mcp`, возвращает `system_autostart: false`, требует явный `--apply` и выставляет `restart_required` только после изменения registration. Relevant code: `tools/pf_runtime/codex_mcp.py:96`, `tools/pf_runtime/codex_mcp.py:102`, `tools/pf_runtime/codex_mcp.py:132`, `tools/pf_runtime/codex_mcp.py:155`, `tools/pf_runtime/codex_mcp.py:163`, `tools/pf_runtime/codex_mcp.py:174`, `tools/pf_runtime/codex_mcp.py:178`, `tools/pf_runtime/codex_mcp.py:201`.
+- MCP facade documentation описывает ключевую security boundary: mostly bounded/read-oriented facade, explicit governed mutation tools, Ledger-bound session checks, отсутствие raw-ingress exposure и private `local_path` handling для authorized search navigation. Relevant docs/code: `docs/concepts/runtime-mcp.md:13`, `docs/concepts/runtime-mcp.md:20`, `docs/concepts/runtime-mcp.md:41`, `docs/concepts/runtime-mcp.md:52`, `docs/concepts/runtime-mcp.md:63`, `tools/pf_runtime/mcp_server.py:31`, `tools/pf_runtime/mcp_server.py:65`, `tools/pf_runtime/mcp_server.py:150`, `tools/pf_runtime/mcp_server.py:162`, `tools/pf_runtime/mcp_server.py:180`, `tools/pf_runtime/mcp_server.py:204`.
+- CLI wiring присутствует для обеих command groups и указывает на новые adapter modules. Relevant code: `tools/processforge.py:19110`, `tools/processforge.py:19116`, `tools/processforge.py:19122`, `tools/processforge.py:19128`, `tools/processforge.py:19134`, `tools/processforge.py:19140`, `tools/processforge.py:26625`, `tools/processforge.py:26651`.
+- EN/RU documentation синхронизирована по reviewed Runtime/autostart/MCP ownership model. Relevant docs: `docs/getting-started/runtime-autostart.md:3`, `docs/getting-started/runtime-autostart.md:31`, `docs/getting-started/runtime-autostart.md:80`, `docs/ru/getting-started/runtime-autostart.md:3`, `docs/ru/getting-started/runtime-autostart.md:30`, `docs/ru/getting-started/runtime-autostart.md:80`, `docs/known-limitations.md:35`, `docs/ru/known-limitations.md:40`, `docs/concepts/runtime-model.md:34`, `docs/ru/concepts/runtime-model.md:34`.
+
+## Verification
+
+- Attempted: `python -B tools/smoke_runtime_mcp_autostart.py`.
+- Result: blocked by execution sandbox, потому что Python `tempfile` resolved to `C:\Users\musst\AppData\Local\Temp`, где у worker не было write permission. Это environment/sandbox limitation, а не product assertion.
+- Completed: mocked no-write Codex MCP drift check, описанный в finding выше.
+
+## Residual Risk
+
+- Real Windows Task Scheduler registration/removal и real Codex config writes не выполнялись в этом assurance pass, потому что product-side side effects были вне review scope.

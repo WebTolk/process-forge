@@ -1,0 +1,79 @@
+schema_version: 1
+id: pf-runtime-mcp-autostart-assurance-followup-20260829
+title: Verify Codex MCP drift remediation
+run_id: pf-runtime-mcp-autostart-docs-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T12:02:23Z'
+updated_at: '2026-08-29T12:05:22Z'
+objective: Verify only that the medium explicit --python drift finding is fixed without regressing default compatible launcher behavior. Write a concise pass/fail review; do not edit product files.
+platform: ""
+selected_specializations:
+  []
+order: 11
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Collected worker run output from codex-exec
+  artifacts:
+    - .pf/reviews/pf-runtime-mcp-autostart-20260829-followup.md
+stage: code-assurance
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/reviews/pf-runtime-mcp-autostart-20260829-followup.md
+allowed_read_files:
+  - tools/pf_runtime/codex_mcp.py
+  - tools/smoke_runtime_mcp_autostart.py
+  - docs/getting-started/runtime-autostart.md
+  - docs/ru/getting-started/runtime-autostart.md
+  - .pf/reviews/pf-runtime-mcp-autostart-20260829-review.md
+  - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/assurance-remediation.md
+ownership:
+  owner_id: shell-reviewer-spark
+  owner_label: worker-shell-reviewer-spark
+  role: code-reviewer
+  writer: true
+  owned_files:
+    - .pf/reviews/pf-runtime-mcp-autostart-20260829-followup.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/reviews/pf-runtime-mcp-autostart-20260829-followup.md
+  rule: Do not edit files owned by active parallel tasks.
+  overlap_check:
+    status: fail
+    conflicts:
+      -
+        current_assignment: pf-runtime-mcp-autostart-assurance-followup-20260829
+        current_scope: .pf/reviews/pf-runtime-mcp-autostart-20260829-followup.md
+        other_assignment: pf-runtime-mcp-autostart-delivery-20260829
+        other_scope: .pf/reviews/pf-runtime-mcp-autostart-20260829-followup.md
+        reason: same_file
+required_outputs:
+  -
+    id: assurance_followup
+    path: .pf/reviews/pf-runtime-mcp-autostart-20260829-followup.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: low
+expected_report:
+  language: ru
+  artifact: .pf/reviews/pf-runtime-mcp-autostart-20260829-followup.md
+  format: concise_markdown
+  include:
+    - assurance_followup
+agent_model: gpt-5.3-codex-spark

@@ -58,7 +58,7 @@ from processforge_core.process_catalog import (
     require_official_process_active as catalog_require_official_process_active,
     resolve_process_definition as catalog_resolve_process_definition,
 )
-from processforge_core.process_execution import ProcessExecutionService
+from processforge_core.process_execution import ProcessExecutionService, project_process_selection, project_specialization_selection
 from processforge_core import project_initialization
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
@@ -3732,19 +3732,12 @@ def normalize_hint(value: str) -> str:
 
 def selected_project_platforms(detected: dict[str, Any], answers: dict[str, Any], project_type: str, workplace_manifest: Path | None, project_root: Path) -> list[str]:
     project_answers = answers.get("project", {}) if isinstance(answers.get("project"), dict) else {}
-    intake = answers.get("intake", {})
-    hints = [project_type]
-    for key in ["type", "type_hint", "platform", "platform_hint", "kind"]:
-        value = project_answers.get(key)
-        if value:
-            hints.extend(answer_strings(value))
-    if intake:
-        hints.extend(answer_strings(intake))
     selected = set(str(item) for item in detected.get("platforms", []) if item)
     for key in ["platform", "platforms", "platform_contract", "platform_contracts"]:
         value = project_answers.get(key)
         if value:
             selected.update(platform_contract_id(item).removeprefix("platform.") for item in answer_strings(value))
+    selected.update(platform_ids_from_detection_rules(workplace_manifest, project_root))
     selected.update(workplace_platform_ids_for_project_type(workplace_manifest, project_type, project_root))
     return sorted(selected)
 
@@ -3768,10 +3761,47 @@ def hint_matches(candidate: str, hints: list[str]) -> bool:
     return False
 
 
+def platform_contract_parent_type_hints(
+    contract: dict[str, Any],
+    contracts: dict[str, dict[str, Any]],
+    visited: set[str] | None = None,
+) -> list[str]:
+    """Return project type hints declared by a contract's parent graph."""
+    seen = set() if visited is None else set(visited)
+    hints: set[str] = set()
+    parent_refs = [*contract_extends(contract), *contract_required_platforms(contract)]
+    for ref in parent_refs:
+        parent_id = ref["id"]
+        if parent_id in seen:
+            continue
+        seen.add(parent_id)
+        parent_entry = contracts.get(parent_id)
+        if not isinstance(parent_entry, dict):
+            continue
+        parent_contract = parent_entry.get("contract")
+        if not isinstance(parent_contract, dict):
+            continue
+        hints.update(platform_contract_project_type_hints(parent_contract))
+        hints.update(platform_contract_parent_type_hints(parent_contract, contracts, seen))
+    return sorted(hints)
+
+
 def workplace_platform_ids_for_project_type(workplace_manifest: Path | None, project_type: str, project_root: Path | None = None) -> list[str]:
+    """Return contracts selected by project type without promoting descendants.
+
+    A derived contract may declare a specific project type, which is valid
+    selection evidence. A type hint inherited from its parent, however, makes
+    it only a candidate: select it through explicit input, project-classifier
+    evidence, or its own concrete detection rules.
+    """
     matched: list[str] = []
-    for contract_id, entry in platform_contract_manifest_index(workplace_manifest, project_root).items():
-        if hint_matches(project_type, platform_contract_project_type_hints(entry["contract"])):
+    contracts = platform_contract_manifest_index(workplace_manifest, project_root)
+    for contract_id, entry in contracts.items():
+        contract = entry["contract"]
+        parent_hints = platform_contract_parent_type_hints(contract, contracts)
+        if parent_hints and hint_matches(project_type, parent_hints):
+            continue
+        if hint_matches(project_type, platform_contract_project_type_hints(contract)):
             matched.append(contract_id.removeprefix("platform."))
     return sorted(set(item for item in matched if item))
 
@@ -6836,6 +6866,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_core_has_no_domain_knowledge_seeds", [sys.executable, str(root / "tools" / "smoke_core_has_no_domain_knowledge_seeds.py")], 120),
         ReleaseCommand("smoke_empty_workplace_has_no_domain_resources", [sys.executable, str(root / "tools" / "smoke_empty_workplace_has_no_domain_resources.py")], 120),
         ReleaseCommand("smoke_project_classification_data_driven", [sys.executable, str(root / "tools" / "smoke_project_classification_data_driven.py")], 120),
+        ReleaseCommand("smoke_project_onboard_platform_selection", [sys.executable, str(root / "tools" / "smoke_project_onboard_platform_selection.py")], 120),
         ReleaseCommand("smoke_no_hardcoded_file_project_detection", [sys.executable, str(root / "tools" / "smoke_no_hardcoded_file_project_detection.py")], 120),
         ReleaseCommand("smoke_optional_domain_pack_not_default", [sys.executable, str(root / "tools" / "smoke_optional_domain_pack_not_default.py")], 120),
         ReleaseCommand("smoke_domain_pack_can_classify_after_install", [sys.executable, str(root / "tools" / "smoke_domain_pack_can_classify_after_install.py")], 120),
@@ -6898,6 +6929,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_agent_workspace_platform_availability_snapshot", [sys.executable, str(root / "tools" / "smoke_agent_workspace_platform_availability_snapshot.py")], 120),
         ReleaseCommand("smoke_platform_create_include_levels", [sys.executable, str(root / "tools" / "smoke_platform_create_include_levels.py")], 120),
         ReleaseCommand("smoke_release_test_trace_timeout_reporting", [sys.executable, str(root / "tools" / "smoke_release_test_trace_timeout_reporting.py")], 120),
+        ReleaseCommand("smoke_release_test_extracted_archive", [sys.executable, str(root / "tools" / "smoke_release_test_extracted_archive.py")], 120),
         ReleaseCommand("smoke_windows_utf8_docs", [sys.executable, str(root / "tools" / "smoke_windows_utf8_docs.py")], 120),
         ReleaseCommand("smoke_pf_project_process_refs_follow_layout", [sys.executable, str(root / "tools" / "smoke_pf_project_process_refs_follow_layout.py")], 120),
         ReleaseCommand("smoke_no_removed_process_refs", [sys.executable, str(root / "tools" / "smoke_no_removed_process_refs.py")], 120),
@@ -6933,6 +6965,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_garage_mode_not_promoted_by_session", [sys.executable, str(root / "tools" / "smoke_garage_mode_not_promoted_by_session.py")], 180),
         ReleaseCommand("smoke_garage_work_start_sessionless", [sys.executable, str(root / "tools" / "smoke_garage_work_start_sessionless.py")], 180),
         ReleaseCommand("smoke_garage_work_start_session_bound", [sys.executable, str(root / "tools" / "smoke_garage_work_start_session_bound.py")], 180),
+        ReleaseCommand("smoke_multi_process_work_capsule", [sys.executable, str(root / "tools" / "smoke_multi_process_work_capsule.py")], 180),
         ReleaseCommand("smoke_governed_work_stage_resolution", [sys.executable, str(root / "tools" / "smoke_governed_work_stage_resolution.py")], 180),
         ReleaseCommand("smoke_governed_work_duplicate_prevention", [sys.executable, str(root / "tools" / "smoke_governed_work_duplicate_prevention.py")], 180),
         ReleaseCommand("smoke_current_work_ignores_bootstrap_placeholder", [sys.executable, str(root / "tools" / "smoke_current_work_ignores_bootstrap_placeholder.py")], 180),
@@ -6941,6 +6974,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_work_state_current_stage", [sys.executable, str(root / "tools" / "smoke_work_state_current_stage.py")], 180),
         ReleaseCommand("smoke_work_transition_linear", [sys.executable, str(root / "tools" / "smoke_work_transition_linear.py")], 180),
         ReleaseCommand("smoke_work_transition_blocks_missing_gate", [sys.executable, str(root / "tools" / "smoke_work_transition_blocks_missing_gate.py")], 180),
+        ReleaseCommand("smoke_work_transition_recovers_after_invalid_evidence", [sys.executable, str(root / "tools" / "smoke_work_transition_recovers_after_invalid_evidence.py")], 180),
         ReleaseCommand("smoke_work_transition_records_evidence", [sys.executable, str(root / "tools" / "smoke_work_transition_records_evidence.py")], 180),
         ReleaseCommand("smoke_work_transition_updates_assignment_stage", [sys.executable, str(root / "tools" / "smoke_work_transition_updates_assignment_stage.py")], 180),
         ReleaseCommand("smoke_work_transition_emits_stage_events", [sys.executable, str(root / "tools" / "smoke_work_transition_emits_stage_events.py")], 180),
@@ -7026,7 +7060,8 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
     ]
     if clean_first:
         commands.insert(1, ReleaseCommand("clean release artifacts", [sys.executable, str(root / "tools" / "processforge.py"), "clean", "--root", str(root), "--release"], 60))
-        commands.append(ReleaseCommand("release package", [sys.executable, str(root / "tools" / "processforge.py"), "release-pack", "--root", str(root), "--output", str(root / "dist" / f"{RELEASE_NAME}-{RELEASE_ARCHIVE_VERSION}.zip")], 120))
+        if (root / ".git").exists():
+            commands.append(ReleaseCommand("release package", [sys.executable, str(root / "tools" / "processforge.py"), "release-pack", "--root", str(root), "--output", str(root / "dist" / f"{RELEASE_NAME}-{RELEASE_ARCHIVE_VERSION}.zip")], 120))
     if public:
         commands = [item for item in commands if item.public_gate]
     return commands
@@ -10343,9 +10378,17 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     package_index_ids = set(package_manifest_index(project_root, distribution_root, workplace_manifest_path))
     required_resource_missing, recommended_resource_missing = platform_resource_findings(workplace_manifest_path, platform_resolution, package_index_ids)
     process_refs = manifest_data.get("processes") if isinstance(manifest_data.get("processes"), list) else []
+    process_selection = project_process_selection(manifest_data)
     package_refs = manifest_data.get("packages") if isinstance(manifest_data.get("packages"), list) else []
-    process_id_for_resolution = str(manifest_data.get("process") or "")
-    manifest_specializations = [str(item) for item in as_list(manifest_data.get("specializations")) if str(item)]
+    # An implicit task-batch fallback is a work-start default, not a project
+    # resource-profile selection. Preserve the legacy generic-project snapshot
+    # until a project explicitly declares a process or multi-process mapping.
+    process_id_for_resolution = str(
+        manifest_data.get("process")
+        or (process_selection.get("default") if isinstance(manifest_data.get("processes"), dict) else "")
+        or ""
+    )
+    manifest_specializations = project_specialization_selection(manifest_data, {})["active"]
     specialization_context = resolve_specialization_context(
         project_root,
         workplace_manifest_path,
@@ -10627,7 +10670,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "excluded": specialization_context["excluded_templates"],
             "source": "workplace-registry",
         },
-        "processes": {"enabled": enabled_processes},
+        "processes": {"enabled": enabled_processes, "selection": process_selection},
         "packages": {"selected": selected_packages},
         "workplace_coordination": {
             "project_mode": coordination_status["project_mode"],
@@ -10767,7 +10810,7 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
             "",
             "## Execution Route",
             "",
-            f"- process: {execution_route.get('process', '')}",
+            f"- process: {execution_route.get('process') or 'None.'}",
             f"- required_capabilities: {', '.join(execution_route.get('required_capabilities', [])) if isinstance(execution_route.get('required_capabilities'), list) and execution_route.get('required_capabilities') else 'None.'}",
             f"- required_evidence: {', '.join(execution_route.get('required_evidence', [])) if isinstance(execution_route.get('required_evidence'), list) and execution_route.get('required_evidence') else 'None.'}",
             "",
@@ -20225,7 +20268,7 @@ def print_process_execution_result(payload: dict[str, Any], *, as_json: bool = F
 def command_work_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    payload = process_execution_service(project_root, getattr(args, "workplace", None)).start(objective=args.objective)
+    payload = process_execution_service(project_root, getattr(args, "workplace", None)).start(objective=args.objective, process_id=str(getattr(args, "process_id", None) or ""))
     print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
     return 0 if payload.get("action") in {"created_new", "continue_existing"} else 1
 
@@ -27423,6 +27466,7 @@ def build_parser() -> argparse.ArgumentParser:
     work_start.add_argument("--project-root", required=True, help="Project root path.")
     work_start.add_argument("--workplace", help="Workplace root override.")
     work_start.add_argument("--objective", required=True, help="High-level work objective.")
+    work_start.add_argument("--process-id", help="Optional allowed process id for the new governed work.")
     work_start.add_argument("--json", action="store_true", help="Print JSON.")
     work_start.set_defaults(func=command_work_start)
 

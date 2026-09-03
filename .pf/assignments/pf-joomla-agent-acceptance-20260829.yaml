@@ -1,0 +1,62 @@
+schema_version: 1
+id: pf-joomla-agent-acceptance-20260829
+title: Prove MCP-first Joomla agent delivery
+run_id: pf-machine-acceptance-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T08:44:26Z'
+updated_at: '2026-08-29T10:58:14Z'
+objective: Create and deliver a real Joomla content plugin project through installed ProcessForge, proving that a fresh Spark agent uses PF MCP knowledge before filesystem discovery and that the plugin works on Joomla 6.1.2.
+platform: platform.joomla
+selected_specializations:
+  - specialization.joomla-fullstack
+order: 60
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Governed agent delivered and independently verified a real Joomla 6 plugin and frontend behavior.
+  artifacts:
+    - .pf/artifacts/pf-machine-acceptance-20260829/joomla-agent-acceptance.md
+stage: release-delivery
+execution_mode:
+  kind: release_delivery
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/pf-machine-acceptance-20260829/joomla-agent-acceptance.md
+ownership:
+  owner_id: orchestrator-main
+  owner_label: worker-orchestrator-main
+  role: orchestrator
+  writer: true
+  owned_files:
+    - .pf/artifacts/pf-machine-acceptance-20260829/joomla-agent-acceptance.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/pf-machine-acceptance-20260829/joomla-agent-acceptance.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: joomla-agent-acceptance
+    type: unspecified
+    required: true
+    path: .pf/artifacts/pf-machine-acceptance-20260829/joomla-agent-acceptance.md
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-machine-acceptance-20260829/joomla-agent-acceptance.md
+  format: concise_markdown
+  include:
+    - joomla-agent-acceptance

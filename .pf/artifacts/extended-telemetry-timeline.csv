@@ -1,0 +1,8 @@
+timestamp_utc,event,details
+2026-08-24T09:30:00Z,run_created,garage-stabilization-after-new-project-20260824
+2026-08-24T09:35:00Z,baseline_completed,seven current-state audit artifacts created
+2026-08-24T09:53:16Z,targeted_release_test_pass,new MCP/session/search smokes passed
+2026-08-24T09:55:44Z,combined_release_test_started,previous and new Garage smokes selected
+2026-08-24T09:56:01Z,combined_release_test_pass,five selected smokes passed
+2026-08-24T09:56:30Z,events_validate_pass,runtime events and chat transcripts validate
+2026-08-24T09:56:40Z,diff_check_pass,git diff check emitted only CRLF warnings

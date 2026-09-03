@@ -2,8 +2,8 @@
 
 ## Generated
 
-- generated_at: 2026-08-23T17:40:18Z
-- valid_until: 2026-08-30T17:40:18Z
+- generated_at: 2026-09-03T09:44:03Z
+- valid_until: 2026-09-10T09:44:03Z
 
 ## Freshness
 
@@ -74,7 +74,7 @@ fresh
 
 ## Execution Route
 
-- process:
+- process: None.
 - required_capabilities: None.
 - required_evidence: None.
 
@@ -99,12 +99,12 @@ fresh
 
 ## Required Knowledge Resources
 
-- None.
+- project.process-forge:project-profile
+- project.process-forge:project-artifacts
 
 ## Recommended Knowledge Resources
 
-- project.process-forge:project-profile (indexed, None)
-- project.process-forge:project-artifacts (indexed, None)
+- None.
 
 ## Enabled Processes
 

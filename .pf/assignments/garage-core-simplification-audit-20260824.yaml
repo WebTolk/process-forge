@@ -1,0 +1,83 @@
+schema_version: 1
+id: garage-core-simplification-audit-20260824
+title: Garage simplification audit and contract
+run_id: garage-core-simplification-20260824
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-08-24T10:47:57Z'
+updated_at: '2026-08-24T10:49:58Z'
+objective: Audit current Garage prerequisites and define the sessionless Garage core contract.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Garage prerequisite audit and core contract created; implementation can proceed on sessionless read-only MCP paths.
+  artifacts:
+    - .pf/artifacts/garage-core-simplification/garage-simplification-current-state-audit.md
+    - .pf/artifacts/garage-core-simplification/mcp-prerequisite-audit.md
+    - .pf/artifacts/garage-core-simplification/garage-core-contract.md
+    - .pf/artifacts/garage-core-simplification/project-context-service-design.md
+    - .pf/artifacts/garage-core-simplification/search-without-session-design.md
+    - .pf/artifacts/garage-core-simplification/resolve-without-session-design.md
+stage: plan
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/garage-core-simplification/garage-simplification-current-state-audit.md
+  - .pf/artifacts/garage-core-simplification/mcp-prerequisite-audit.md
+  - .pf/artifacts/garage-core-simplification/garage-core-contract.md
+  - .pf/artifacts/garage-core-simplification/project-context-service-design.md
+  - .pf/artifacts/garage-core-simplification/search-without-session-design.md
+  - .pf/artifacts/garage-core-simplification/resolve-without-session-design.md
+  - .pf/logs/garage-core-simplification.md
+allowed_read_files:
+  - задания/process-forge-garage-core-simplification-master-prompt.md
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/host.py
+  - src/processforge_core/local_resource_search.py
+ownership:
+  owner_id: garage-core-simplification-audit-20260824
+  owner_label: worker-garage-core-simplification-audit-20260824
+  role: ""
+  writer: true
+  owned_files:
+    - .pf/artifacts/garage-core-simplification/garage-simplification-current-state-audit.md
+    - .pf/artifacts/garage-core-simplification/mcp-prerequisite-audit.md
+    - .pf/artifacts/garage-core-simplification/garage-core-contract.md
+    - .pf/artifacts/garage-core-simplification/project-context-service-design.md
+    - .pf/artifacts/garage-core-simplification/search-without-session-design.md
+    - .pf/artifacts/garage-core-simplification/resolve-without-session-design.md
+    - .pf/logs/garage-core-simplification.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/garage-core-simplification/garage-simplification-current-state-audit.md
+    - .pf/artifacts/garage-core-simplification/mcp-prerequisite-audit.md
+    - .pf/artifacts/garage-core-simplification/garage-core-contract.md
+    - .pf/artifacts/garage-core-simplification/project-context-service-design.md
+    - .pf/artifacts/garage-core-simplification/search-without-session-design.md
+    - .pf/artifacts/garage-core-simplification/resolve-without-session-design.md
+    - .pf/logs/garage-core-simplification.md
+  rule: Do not edit files owned by active parallel tasks.
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/garage-core-simplification/garage-simplification-current-state-audit.md
+  format: concise_markdown
+  include:
+    []

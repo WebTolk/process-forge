@@ -1,0 +1,102 @@
+schema_version: 1
+id: garage-core-simplification-acceptance-20260824
+title: Garage core acceptance and reviews
+run_id: garage-core-simplification-20260824
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-08-24T11:01:54Z'
+updated_at: '2026-08-24T11:08:16Z'
+objective: Produce Garage Core Reset acceptance evidence, independent reviews, final validation, and handoff.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Garage Core acceptance, reviews, final validation, and handoff produced with local stdio MCP proof; hosted Codex MCP acceptance remains a condition.
+  artifacts:
+    - .pf/artifacts/garage-core-simplification/agent-instruction-simplification-report.md
+    - .pf/artifacts/garage-core-simplification/real-joomla-fulltext-acceptance.md
+    - .pf/artifacts/garage-core-simplification/garage-no-hooks-acceptance.md
+    - .pf/artifacts/garage-core-simplification/garage-session-enhanced-acceptance.md
+    - .pf/artifacts/garage-core-simplification/cross-project-security-acceptance.md
+    - .pf/artifacts/garage-core-simplification/agent-behavior-acceptance.md
+    - .pf/artifacts/garage-core-simplification/independent-architecture-review.md
+    - .pf/artifacts/garage-core-simplification/independent-code-review.md
+    - .pf/artifacts/garage-core-simplification/final-validation.md
+    - .pf/handoffs/runs/garage-core-simplification-20260824-handoff.md
+stage: integration-review
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/garage-core-simplification/agent-instruction-simplification-report.md
+  - .pf/artifacts/garage-core-simplification/real-joomla-fulltext-acceptance.md
+  - .pf/artifacts/garage-core-simplification/garage-no-hooks-acceptance.md
+  - .pf/artifacts/garage-core-simplification/garage-session-enhanced-acceptance.md
+  - .pf/artifacts/garage-core-simplification/cross-project-security-acceptance.md
+  - .pf/artifacts/garage-core-simplification/agent-behavior-acceptance.md
+  - .pf/artifacts/garage-core-simplification/independent-architecture-review.md
+  - .pf/artifacts/garage-core-simplification/independent-code-review.md
+  - .pf/artifacts/garage-core-simplification/final-validation.md
+  - .pf/handoffs/runs/garage-core-simplification-20260824-handoff.md
+  - .pf/logs/garage-core-simplification.md
+allowed_read_files:
+  - .pf/artifacts/garage-core-simplification/garage-simplification-implementation-report.md
+  - src/processforge_core/garage.py
+  - tools/pf_runtime/mcp_server.py
+  - tools/pf_runtime/host.py
+forbidden_files:
+  - dist/**
+  - .pf/runtime/**
+ownership:
+  owner_id: garage-core-simplification-acceptance-20260824
+  owner_label: worker-garage-core-simplification-acceptance-20260824
+  role: ""
+  writer: true
+  owned_files:
+    - .pf/artifacts/garage-core-simplification/agent-instruction-simplification-report.md
+    - .pf/artifacts/garage-core-simplification/real-joomla-fulltext-acceptance.md
+    - .pf/artifacts/garage-core-simplification/garage-no-hooks-acceptance.md
+    - .pf/artifacts/garage-core-simplification/garage-session-enhanced-acceptance.md
+    - .pf/artifacts/garage-core-simplification/cross-project-security-acceptance.md
+    - .pf/artifacts/garage-core-simplification/agent-behavior-acceptance.md
+    - .pf/artifacts/garage-core-simplification/independent-architecture-review.md
+    - .pf/artifacts/garage-core-simplification/independent-code-review.md
+    - .pf/artifacts/garage-core-simplification/final-validation.md
+    - .pf/handoffs/runs/garage-core-simplification-20260824-handoff.md
+    - .pf/logs/garage-core-simplification.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/garage-core-simplification/agent-instruction-simplification-report.md
+    - .pf/artifacts/garage-core-simplification/real-joomla-fulltext-acceptance.md
+    - .pf/artifacts/garage-core-simplification/garage-no-hooks-acceptance.md
+    - .pf/artifacts/garage-core-simplification/garage-session-enhanced-acceptance.md
+    - .pf/artifacts/garage-core-simplification/cross-project-security-acceptance.md
+    - .pf/artifacts/garage-core-simplification/agent-behavior-acceptance.md
+    - .pf/artifacts/garage-core-simplification/independent-architecture-review.md
+    - .pf/artifacts/garage-core-simplification/independent-code-review.md
+    - .pf/artifacts/garage-core-simplification/final-validation.md
+    - .pf/handoffs/runs/garage-core-simplification-20260824-handoff.md
+    - .pf/logs/garage-core-simplification.md
+  rule: Do not edit files owned by active parallel tasks.
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/garage-core-simplification/final-validation.md
+  format: concise_markdown
+  include:
+    []

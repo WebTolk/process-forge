@@ -12,7 +12,10 @@ Use ProcessForge as a file-first process system. Work through assignments, execu
    when MCP is unavailable.
 4. Use `pf.search` for authorized project knowledge and `pf.resolve` before
    opening ProcessForge-managed resource roots.
-5. Call `pf.work.start` with the objective when work becomes substantive.
+5. Call `pf.work.start` with the objective when work becomes substantive. If it
+   returns `process_choice_required`, choose an offered process and call it
+   again with `process_id`; do not infer from `default` when multiple processes
+   are allowed.
 6. Call `pf.work.state` and read the selected assignment and immutable
    Execution Context Package.
 7. Check allowed and forbidden files before editing.
@@ -42,6 +45,9 @@ Use ProcessForge as a file-first process system. Work through assignments, execu
   returns an operator-level infrastructure blocker, report it to the operator.
 - Current `pf.context`/snapshot state outranks historical generated reports.
   Do not treat a report marked `stale` or `historical` as current truth.
+- A completed Work can offer a compact fresh-session handoff through
+  `pf.context`; it is advisory and must not cause Runtime, MCP, Ledger, or
+  external-session lifecycle actions.
 - `run-create`, `task-create`, `task-complete`, and `run-complete` are
   compatibility and diagnostic commands, not the ordinary agent workflow.
 

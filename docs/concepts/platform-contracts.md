@@ -38,6 +38,13 @@ platform contract root. `project_type_hints` is the bridge to `project-onboard`:
 matching hints add the platform to the project snapshot together with linked
 knowledge packages and templates.
 
+A type hint inherited from a parent contract selects only that parent. A
+contract that `extends` or `requires.platforms` is a derived platform: select
+it through a child-specific type hint, explicit operator input,
+project-classifier evidence, or its own concrete `detection` rule. Availability
+of a derived contract in the workplace is not evidence that it applies to every
+project using its parent platform.
+
 Missing required platform capabilities block strict automation. Missing
 optional capabilities produce warnings.
 # Resource Management Contract Use

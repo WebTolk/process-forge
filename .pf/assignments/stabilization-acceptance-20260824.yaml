@@ -1,0 +1,105 @@
+schema_version: 1
+id: stabilization-acceptance-20260824
+title: Garage/Forge stabilization acceptance artifacts
+run_id: stabilization-garage-forge-20260824
+process: multi-agent-task-orchestration
+status: done
+created_at: '2026-08-24T08:39:18Z'
+updated_at: '2026-08-24T08:43:14Z'
+objective: Write acceptance, review, telemetry, and final validation artifacts for the delivered Garage/Forge stabilization slice.
+platform: ""
+selected_specializations:
+  []
+order: 3
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Acceptance artifacts written; validations passed for delivered slice; full Codex fresh-session, MCP bootstrap/search_readiness, and Forge Runtime acceptance remain explicit residual gaps.
+  artifacts:
+    - .pf/artifacts/final-validation.md
+stage: integration-review
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/garage-forge-runtime-contract.md
+  - .pf/artifacts/codex-integration-audit.md
+  - .pf/artifacts/session-bootstrap-design.md
+  - .pf/artifacts/context-reconciliation-design.md
+  - .pf/artifacts/search-readiness-audit.md
+  - .pf/artifacts/capability-provider-audit.md
+  - .pf/artifacts/projection-consistency-audit.md
+  - .pf/artifacts/agent-instructions-audit.md
+  - .pf/artifacts/garage-clean-project-acceptance.md
+  - .pf/artifacts/garage-no-daemon-acceptance.md
+  - .pf/artifacts/forge-runtime-acceptance.md
+  - .pf/artifacts/upgrade-stale-context-acceptance.md
+  - .pf/artifacts/telemetry-summary.md
+  - .pf/artifacts/independent-architecture-review.md
+  - .pf/artifacts/independent-code-review.md
+  - .pf/artifacts/final-validation.md
+  - .pf/logs/stabilization-garage-forge.md
+forbidden_files:
+  - dist/**
+  - .pf/runtime/**
+ownership:
+  owner_id: stabilization-acceptance-20260824
+  owner_label: worker-stabilization-acceptance-20260824
+  role: ""
+  writer: true
+  owned_files:
+    - .pf/artifacts/garage-forge-runtime-contract.md
+    - .pf/artifacts/codex-integration-audit.md
+    - .pf/artifacts/session-bootstrap-design.md
+    - .pf/artifacts/context-reconciliation-design.md
+    - .pf/artifacts/search-readiness-audit.md
+    - .pf/artifacts/capability-provider-audit.md
+    - .pf/artifacts/projection-consistency-audit.md
+    - .pf/artifacts/agent-instructions-audit.md
+    - .pf/artifacts/garage-clean-project-acceptance.md
+    - .pf/artifacts/garage-no-daemon-acceptance.md
+    - .pf/artifacts/forge-runtime-acceptance.md
+    - .pf/artifacts/upgrade-stale-context-acceptance.md
+    - .pf/artifacts/telemetry-summary.md
+    - .pf/artifacts/independent-architecture-review.md
+    - .pf/artifacts/independent-code-review.md
+    - .pf/artifacts/final-validation.md
+    - .pf/logs/stabilization-garage-forge.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/garage-forge-runtime-contract.md
+    - .pf/artifacts/codex-integration-audit.md
+    - .pf/artifacts/session-bootstrap-design.md
+    - .pf/artifacts/context-reconciliation-design.md
+    - .pf/artifacts/search-readiness-audit.md
+    - .pf/artifacts/capability-provider-audit.md
+    - .pf/artifacts/projection-consistency-audit.md
+    - .pf/artifacts/agent-instructions-audit.md
+    - .pf/artifacts/garage-clean-project-acceptance.md
+    - .pf/artifacts/garage-no-daemon-acceptance.md
+    - .pf/artifacts/forge-runtime-acceptance.md
+    - .pf/artifacts/upgrade-stale-context-acceptance.md
+    - .pf/artifacts/telemetry-summary.md
+    - .pf/artifacts/independent-architecture-review.md
+    - .pf/artifacts/independent-code-review.md
+    - .pf/artifacts/final-validation.md
+    - .pf/logs/stabilization-garage-forge.md
+  rule: Do not edit files owned by active parallel tasks.
+expected_report:
+  artifact: .pf/artifacts/final-validation.md
+  format: concise_markdown
+  include:
+    []

@@ -28,6 +28,14 @@ required artifacts, or required evidence. Processes own those fields and express
 abstract capability requirements. The resolver verifies whether the selected
 specialization and platform binding provide those capabilities.
 
+Project-allowed specializations are authorization, not an instruction to load
+them all. A Work pins only its active specialization set; switching that set
+requires a new Work/process boundary.
+
+In 1.1.0 Work capsules pin the active process and active specialization set.
+Resource authorization remains bounded by the project snapshot; further
+process/specialization-specific resource narrowing is planned separately.
+
 Capabilities are opaque ids from data. ProcessForge core does not ship a
 software, web, content, media, legal, or other domain capability catalog, and it
 does not satisfy specialization/process requirements with a built-in provider.

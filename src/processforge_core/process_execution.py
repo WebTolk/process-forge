@@ -18,6 +18,50 @@ TERMINAL_RUN_STATUSES = {"completed", "cancelled", "failed"}
 SAFE_ID_RE = re.compile(r"^(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])$")
 
 
+def _stable_ids(value: Any) -> list[str]:
+    values = value if isinstance(value, list) else ([] if value is None or value == "" else [value])
+    result: list[str] = []
+    for item in values:
+        candidate = str(item.get("id") if isinstance(item, dict) else item or "").strip()
+        if candidate and candidate not in result:
+            result.append(candidate)
+    return result
+
+
+def project_process_selection(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Normalize legacy `process` and additive multi-process selection input."""
+    legacy = str(manifest.get("process") or "").strip()
+    declared = manifest.get("processes")
+    if isinstance(declared, dict):
+        allowed = _stable_ids(declared.get("allowed"))
+        default = str(declared.get("default") or legacy or "").strip()
+        return {"default": default, "allowed": allowed or ([legacy] if legacy else ["task-batch-execution"]), "source": "processes"}
+    selected = legacy or "task-batch-execution"
+    return {"default": selected, "allowed": [selected], "source": "legacy_process" if legacy else "fallback"}
+
+
+def project_specialization_selection(manifest: dict[str, Any], process: dict[str, Any]) -> dict[str, list[str]]:
+    """Keep project authorization distinct from the active Work specialization set."""
+    declared = manifest.get("specializations")
+    if isinstance(declared, dict):
+        allowed = _stable_ids(declared.get("allowed"))
+        active = _stable_ids(declared.get("active") or declared.get("default"))
+        policy = process.get("specialization_policy") if isinstance(process.get("specialization_policy"), dict) else {}
+        if not active:
+            # A process may constrain an explicitly selected project profile,
+            # but it must not invent a profile from ad-hoc legacy fields.
+            active = _stable_ids(policy.get("default"))
+        policy_allowed = _stable_ids(policy.get("allowed"))
+        forbidden = set(_stable_ids(policy.get("forbidden")))
+        return {
+            "allowed": allowed,
+            "active": [item for item in active if item in allowed and item not in forbidden and (not policy_allowed or item in policy_allowed)],
+        }
+    legacy = _stable_ids(declared)
+    # A legacy list was the already-selected profile. Preserve that behaviour.
+    return {"allowed": legacy, "active": legacy}
+
+
 def canonical_fingerprint(value: Any) -> str:
     encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return "sha256:" + hashlib.sha256(encoded.encode("utf-8")).hexdigest()
@@ -79,11 +123,11 @@ class ProcessExecutionService:
     workplace_root: Path | None
     core: Any
 
-    def start(self, *, objective: str, session_id: str = "", stage_override: str = "") -> dict[str, Any]:
+    def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "") -> dict[str, Any]:
         with self._start_lock():
-            return self._start_locked(objective=objective, session_id=session_id, stage_override=stage_override)
+            return self._start_locked(objective=objective, process_id=process_id, session_id=session_id, stage_override=stage_override)
 
-    def _start_locked(self, *, objective: str, session_id: str = "", stage_override: str = "") -> dict[str, Any]:
+    def _start_locked(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "") -> dict[str, Any]:
         objective = str(objective or "").strip()
         if not objective:
             return self._blocked("objective_required")
@@ -118,12 +162,19 @@ class ProcessExecutionService:
                 historical=duplicate["historical"][:5],
             )
 
-        process_id = self._selected_process_id()
-        definition = self.core.resolve_process_definition(self.project_root, process_id)
+        selection = self._project_process_selection()
+        requested_process = str(process_id or "").strip()
+        selected_process, selection_result = self._select_process(selection, requested_process)
+        if not selected_process:
+            return selection_result
+        try:
+            definition = self.core.resolve_process_definition(self.project_root, selected_process)
+        except (OSError, SystemExit, ValueError):
+            return self._blocked("process_definition_unavailable", process_id=selected_process)
         process = copy.deepcopy(definition.process)
         stages = executable_stages(process)
         if not stages:
-            return self._blocked("process_has_no_executable_stages", process_id=process_id)
+            return self._blocked("process_has_no_executable_stages", process_id=selected_process)
         try:
             stage_id = initial_stage_id(process)
             if stage_override:
@@ -138,24 +189,27 @@ class ProcessExecutionService:
             for stage in stages:
                 normalized_outcomes(process, str(stage.get("id")))
         except ValueError as exc:
-            return self._blocked("invalid_process_definition", message=str(exc), process_id=process_id)
+            return self._blocked("invalid_process_definition", message=str(exc), process_id=selected_process)
 
         now = self.core.now_utc()
         flow_root = self._flow_root()
         run_id = self._unique_id(flow_root / "runs", "garage-" + self.core.safe_id(objective, "work"))
         assignment_id = self._unique_id(flow_root / "assignments", self.core.safe_id(objective, "task"))
-        pin = self._process_pin(process, definition.path)
+        specialization_selection = project_specialization_selection(self._manifest(), process)
+        active_specializations = specialization_selection["active"]
+        selected_resource_ids = self._selected_resource_ids()
+        pin = self._process_pin(process, definition.path, active_specializations=active_specializations, selected_resource_ids=selected_resource_ids, allowed_processes=selection["allowed"])
         run = {
             "schema_version": 1,
             "id": run_id,
             "title": objective[:80],
-            "process": process_id,
+            "process": selected_process,
             "status": "in_progress",
             "created_at": now,
             "updated_at": now,
             "objective": objective,
             "platform": "",
-            "selected_specializations": [],
+            "selected_specializations": active_specializations,
             "scope": {"type": "project", "project_root": "."},
             "tasks": [{"id": assignment_id, "assignment": f".pf/assignments/{assignment_id}.yaml", "status": "in_progress", "order": 1, "blocking": True}],
             "final_artifacts": [],
@@ -168,13 +222,13 @@ class ProcessExecutionService:
             "id": assignment_id,
             "title": objective[:80],
             "run_id": run_id,
-            "process": process_id,
+            "process": selected_process,
             "status": "in_progress",
             "created_at": now,
             "updated_at": now,
             "objective": objective,
             "platform": "",
-            "selected_specializations": [],
+            "selected_specializations": active_specializations,
             "order": 1,
             "dependencies": {"blocked_by": [], "blocks": []},
             "iterations": [],
@@ -297,6 +351,10 @@ class ProcessExecutionService:
                 "fingerprint": str((run.get("process_execution") or {}).get("process_fingerprint") or canonical_fingerprint(process)),
                 "pin_status": pin_status,
             },
+            "work": {
+                "active_specializations": _stable_ids(assignment.get("selected_specializations") or run.get("selected_specializations")),
+                "selected_resource_ids": _stable_ids((run.get("process_execution") or {}).get("selected_resource_ids")),
+            },
             "run": {"id": str(run.get("id") or ""), "status": str(run.get("status") or "")},
             "assignment": {"id": str(assignment.get("id") or ""), "status": str(assignment.get("status") or "")},
             "stage": {"id": stage_id, "title": str(stage.get("title") or stage_id), "status": str(assignment.get("stage_status") or "in_progress")},
@@ -350,7 +408,44 @@ class ProcessExecutionService:
                 return self._blocked("process_pin_invalid", run_id=run.get("id"), assignment_id=assignment.get("id"), pin_status=pin_status)
             stage_id = str(assignment.get("stage") or "")
             normalized_evidence, evidence_blockers = self._normalize_evidence(evidence)
+            if evidence_blockers:
+                return self._transition_rejected(
+                    run=run,
+                    assignment=assignment,
+                    session_id=session_id,
+                    reason="invalid_evidence",
+                    blockers=evidence_blockers,
+                )
+            try:
+                allowed_outcomes = {str(item.get("id")): item for item in normalized_outcomes(process, stage_id) if isinstance(item, dict)}
+            except ValueError as exc:
+                return self._transition_rejected(
+                    run=run,
+                    assignment=assignment,
+                    session_id=session_id,
+                    reason="invalid_process_definition",
+                    blockers=[{"code": "invalid_process_definition", "message": str(exc), "stage_id": stage_id}],
+                )
+            if outcome not in allowed_outcomes:
+                return self._transition_rejected(
+                    run=run,
+                    assignment=assignment,
+                    session_id=session_id,
+                    reason="outcome_not_allowed",
+                    blockers=[{"code": "outcome_not_allowed", "outcome": outcome, "allowed": sorted(allowed_outcomes)}],
+                )
             stage_execution = assignment.get("stage_execution") if isinstance(assignment.get("stage_execution"), dict) else {}
+            stored_blockers = stage_execution.get("blockers") if isinstance(stage_execution.get("blockers"), list) else []
+            if stored_blockers:
+                if not all(self._is_recoverable_transition_rejection(item) for item in stored_blockers if isinstance(item, dict)):
+                    return self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
+                # Older releases persisted request-validation failures as a
+                # stage block. A valid retry is the recovery operation; do not
+                # require users to repair assignment YAML by hand.
+                stage_execution.pop("blockers", None)
+                stage_execution.pop("blocked_at", None)
+                if str(assignment.get("stage_status") or "") == "blocked":
+                    assignment["stage_status"] = "in_progress"
             stage_execution = {**stage_execution, "evidence": self._merge_evidence(stage_execution.get("evidence"), normalized_evidence), "notes": str(notes or stage_execution.get("notes") or "")}
             assignment["stage_execution"] = stage_execution
             assignment["updated_at"] = self.core.now_utc()
@@ -359,9 +454,6 @@ class ProcessExecutionService:
             preview_blockers = list(preview.get("blockers") or [])
             preview_incomplete = list(preview.get("incomplete") or [])
             outcomes = {str(item.get("id")): item for item in preview.get("allowed_outcomes", []) if isinstance(item, dict)}
-            if outcome not in outcomes:
-                preview_blockers.append({"code": "outcome_not_allowed", "outcome": outcome, "allowed": sorted(outcomes)})
-            preview_blockers.extend(evidence_blockers)
             next_stage_id = str(outcomes.get(outcome, {}).get("next_stage") or "")
             if next_stage_id:
                 next_stage = self._stage(process, next_stage_id)
@@ -371,16 +463,13 @@ class ProcessExecutionService:
                     if not gate["satisfied"] and gate.get("blocking", True):
                         preview_incomplete.append({"code": "entry_gate_evidence_missing", "gate_id": gate_id, "stage_id": next_stage_id})
             if preview_blockers:
-                now = self.core.now_utc()
-                assignment["stage_status"] = "blocked"
-                assignment["updated_at"] = now
-                assignment["stage_execution"]["blocked_at"] = now
-                assignment["stage_execution"]["blockers"] = preview_blockers
-                self._atomic_yaml(self._assignment_path(str(assignment["id"])), assignment)
-                blocked_state = self.state(run_id=str(run["id"]), assignment_id=str(assignment["id"]), session_id=session_id)
-                self._write_projection(blocked_state)
-                self._emit("process.stage.blocked", run, assignment, stage_id, outcome=outcome, previous_stage_id=stage_id, next_stage_id=next_stage_id, blockers=preview_blockers)
-                return {**blocked_state, "action": "blocked", "reason": "stage_transition_blocked", "blockers": preview_blockers}
+                return self._transition_rejected(
+                    run=run,
+                    assignment=assignment,
+                    session_id=session_id,
+                    reason="stage_transition_rejected",
+                    blockers=preview_blockers,
+                )
 
             if preview_incomplete:
                 incomplete_state = self.state(run_id=str(run["id"]), assignment_id=str(assignment["id"]), session_id=session_id)
@@ -436,7 +525,10 @@ class ProcessExecutionService:
                 self._emit("assignment.completed", run, assignment, previous_stage_id, outcome=outcome)
                 self._emit("run.completed", run, assignment, previous_stage_id, outcome=outcome)
                 self._emit("run.summary.created", run, assignment, previous_stage_id, outcome=outcome)
-            return {**result_state, "action": action, "previous_stage_id": previous_stage_id, "next_stage_id": next_stage_id}
+            result = {**result_state, "action": action, "previous_stage_id": previous_stage_id, "next_stage_id": next_stage_id}
+            if action == "run_completed":
+                result.update(self._next_work_advisory(process, run))
+            return result
 
     def can_complete(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
         selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
@@ -468,11 +560,68 @@ class ProcessExecutionService:
             explicit = str(self.workplace_root)
         return self.core.project_context_check_result(self.project_root, explicit_workplace=explicit or None)
 
-    def _selected_process_id(self) -> str:
-        manifest = self.core.load_yaml_document(self._flow_root() / "process-forge.yaml")
-        return str(manifest.get("process") or "task-batch-execution").strip()
+    def _manifest(self) -> dict[str, Any]:
+        return self.core.load_yaml_document(self._flow_root() / "process-forge.yaml")
 
-    def _process_pin(self, process: dict[str, Any], source_path: Path) -> dict[str, Any]:
+    def _project_process_selection(self) -> dict[str, Any]:
+        return project_process_selection(self._manifest())
+
+    def _select_process(self, selection: dict[str, Any], requested: str) -> tuple[str, dict[str, Any]]:
+        allowed = _stable_ids(selection.get("allowed"))
+        if requested:
+            if requested not in allowed:
+                try:
+                    self.core.resolve_process_definition(self.project_root, requested)
+                except (OSError, SystemExit, ValueError):
+                    return "", self._blocked("process_not_found", process_id=requested)
+                return "", self._blocked("process_not_allowed", process_id=requested, allowed_processes=allowed)
+            return requested, {}
+        if len(allowed) == 1:
+            return allowed[0], {}
+        default = str(selection.get("default") or "").strip()
+        return "", self._blocked(
+            "process_choice_required",
+            action="process_choice_required",
+            default_process=default if default in allowed else "",
+            candidates=self._process_candidates(allowed, default=default),
+        )
+
+    def _process_candidates(self, process_ids: list[str], *, default: str = "") -> list[dict[str, Any]]:
+        candidates: list[dict[str, Any]] = []
+        for process_id in process_ids:
+            try:
+                process = self.core.resolve_process_definition(self.project_root, process_id).process
+            except (OSError, SystemExit, ValueError):
+                candidates.append({"id": process_id, "title": process_id, "purpose": "Process definition unavailable.", "expected_result": "", "default": process_id == default})
+                continue
+            candidates.append(
+                {
+                    "id": str(process.get("id") or process_id),
+                    "title": str(process.get("name") or process_id),
+                    "purpose": str(process.get("purpose") or process.get("description") or ""),
+                    "expected_result": str(process.get("expected_result") or ""),
+                    "default": str(process.get("id") or process_id) == default,
+                }
+            )
+        return candidates
+
+    @staticmethod
+    def _is_recoverable_transition_rejection(blocker: Any) -> bool:
+        if not isinstance(blocker, dict):
+            return False
+        return str(blocker.get("code") or "") in {
+            "invalid_evidence",
+            "not_applicable_evidence_incomplete",
+            "artifact_path_missing",
+            "outcome_not_allowed",
+            "invalid_process_definition",
+        }
+
+    def _transition_rejected(self, *, run: dict[str, Any], assignment: dict[str, Any], session_id: str, reason: str, blockers: list[dict[str, Any]]) -> dict[str, Any]:
+        state = self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
+        return {**state, "action": "transition_rejected", "reason": reason, "blockers": blockers}
+
+    def _process_pin(self, process: dict[str, Any], source_path: Path, *, active_specializations: list[str], selected_resource_ids: list[str], allowed_processes: list[str]) -> dict[str, Any]:
         snapshot_path = self._flow_root() / "contexts" / "project-context.snapshot.yaml"
         snapshot = self.core.load_yaml_document(snapshot_path)
         meta = snapshot.get("snapshot") if isinstance(snapshot.get("snapshot"), dict) else {}
@@ -490,7 +639,38 @@ class ProcessExecutionService:
             "snapshot_id": str(meta.get("id") or ""),
             "snapshot_checksum": snapshot_checksum,
             "definition": normalized,
+            "active_specializations": active_specializations,
+            "selected_resource_ids": selected_resource_ids,
+            "allowed_processes": allowed_processes,
         }
+
+    def _selected_resource_ids(self) -> list[str]:
+        snapshot = self.core.load_yaml_document(self._flow_root() / "contexts" / "project-context.snapshot.yaml")
+        resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
+        return _stable_ids(resolved.get("knowledge_resources"))
+
+    def _next_work_advisory(self, process: dict[str, Any], run: dict[str, Any]) -> dict[str, Any]:
+        pin = run.get("process_execution") if isinstance(run.get("process_execution"), dict) else {}
+        current = str(run.get("process") or "")
+        available = [item for item in _stable_ids(pin.get("allowed_processes")) if item != current]
+        declared = process.get("process_transitions") if isinstance(process.get("process_transitions"), list) else []
+        routed = [str(item.get("to_process") or item.get("target_process") or "") for item in declared if isinstance(item, dict)]
+        route_path = self._flow_root() / "process-routes.yaml"
+        routes = self.core.load_yaml_document(route_path).get("routes", []) if route_path.exists() else []
+        routed.extend(
+            str(item.get("to_process") or item.get("target_process") or "")
+            for item in routes
+            if isinstance(item, dict) and str(item.get("from_process") or "") == current
+        )
+        recommended = next((item for item in routed if item in available), "")
+        next_work: dict[str, Any] = {"available_processes": available}
+        if recommended:
+            next_work["recommended_process"] = recommended
+        result: dict[str, Any] = {"next": next_work, "session_continuity": {"recommendation": "auto", "reason": "process_boundary"}}
+        handoff = next((str(path) for path in _stable_ids(run.get("final_artifacts")) if path.endswith("-handoff.md")), "")
+        if handoff:
+            result["handoff"] = {"path": handoff}
+        return result
 
     def _effective_process(self, run: dict[str, Any]) -> tuple[dict[str, Any], str]:
         pin = run.get("process_execution") if isinstance(run.get("process_execution"), dict) else {}
@@ -811,8 +991,9 @@ class ProcessExecutionService:
                 "freshness": "fresh",
                 "required_sources": [],
                 "context_artifacts": [],
-                "selected_specializations": [],
+                "selected_specializations": _stable_ids(assignment.get("selected_specializations")),
                 "applied_project_overrides": [],
+                "selected_resource_ids": _stable_ids(pin.get("selected_resource_ids")),
             },
             "assignment": {"id": assignment["id"], "run_id": run["id"], "objective": assignment["objective"], "stage": assignment["stage"]},
             "process_execution": copy.deepcopy(pin),

@@ -1,0 +1,49 @@
+schema_version: 1
+id: multi-process-implementation-evidence
+title: Record multi-process implementation evidence
+run_id: garage-stabilize-processforge-1-1-0-multi-process-project-selection-and
+process: task-batch-execution
+status: done
+created_at: '2026-09-03T07:04:55Z'
+updated_at: '2026-09-03T07:05:30Z'
+objective: Record the source implementation result and initial focused verification without changing the product scope.
+platform: ""
+selected_specializations:
+  []
+order: 6
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Recorded the implementation scope and focused passing checks.
+  artifacts:
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/multi-process-implementation-report.md
+stage: task-execution-loop
+execution_mode:
+  kind: assurance
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/multi-process-work-capsule-stability-20260903/multi-process-implementation-report.md
+ownership:
+  owner_id: primary-agent
+  owner_label: worker-primary-agent
+  role: task-worker
+  writer: true
+  owned_files:
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/multi-process-implementation-report.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/multi-process-work-capsule-stability-20260903/multi-process-implementation-report.md
+  rule: Do not edit files owned by active parallel tasks.

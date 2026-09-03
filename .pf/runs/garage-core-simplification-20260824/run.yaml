@@ -1,0 +1,43 @@
+schema_version: 1
+id: garage-core-simplification-20260824
+title: Garage core simplification
+process: multi-agent-task-orchestration
+status: completed
+created_at: '2026-08-24T10:47:46Z'
+updated_at: '2026-08-24T11:08:27Z'
+objective: Execute the Garage Core Reset master prompt with sessionless context/search/resolve, simplified agent path, and focused acceptance evidence.
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: garage-core-simplification-audit-20260824
+    assignment: .pf/assignments/garage-core-simplification-audit-20260824.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: garage-core-simplification-implementation-20260824
+    assignment: .pf/assignments/garage-core-simplification-implementation-20260824.yaml
+    status: done
+    order: 2
+    blocking: true
+  -
+    id: garage-core-simplification-acceptance-20260824
+    assignment: .pf/assignments/garage-core-simplification-acceptance-20260824.yaml
+    status: done
+    order: 3
+    blocking: true
+final_artifacts:
+  - .pf/runs/garage-core-simplification-20260824/summary.md
+  - .pf/handoffs/runs/garage-core-simplification-20260824-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.completed
+    - run.summary.created
+privacy:
+  public_safe: true

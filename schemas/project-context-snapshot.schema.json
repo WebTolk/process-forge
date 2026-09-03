@@ -126,7 +126,22 @@
     "tools": { "type": "object", "additionalProperties": true },
     "mcp": { "type": "object", "additionalProperties": true },
     "templates": { "type": "object", "additionalProperties": true },
-    "processes": { "type": "object", "additionalProperties": true },
+    "processes": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "selection": {
+          "type": "object",
+          "properties": {
+            "default": { "type": "string" },
+            "allowed": { "type": "array", "items": { "type": "string" } },
+            "source": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "packages": { "type": "object", "additionalProperties": true },
     "workplace_coordination": {
       "type": "object",

@@ -1,0 +1,77 @@
+schema_version: 1
+id: pf-public-cleanliness-remediation-20260829
+title: Neutralize Garage release smokes
+run_id: pf-machine-acceptance-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T07:07:27Z'
+updated_at: '2026-08-29T07:09:55Z'
+objective: Remove machine-local paths, domain-specific resource ids, and validator false positives from public Garage smokes while preserving real machine Joomla acceptance as a separate governed test.
+platform: ""
+selected_specializations:
+  []
+order: 28
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Removed machine-local and platform-specific data from public Garage smokes; all affected smokes and public cleanliness now pass.
+  artifacts:
+    - .pf/artifacts/pf-machine-acceptance-20260829/public-cleanliness-remediation.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/processforge.py
+  - tools/smoke_garage_real_joomla_search.py
+  - tools/smoke_garage_cross_project_security.py
+  - tools/smoke_garage_no_hooks_sessionless.py
+  - tools/smoke_garage_session_enhanced.py
+  - .pf/artifacts/pf-machine-acceptance-20260829/public-cleanliness-remediation.md
+ownership:
+  owner_id: orchestrator-main
+  owner_label: worker-orchestrator-main
+  role: developer
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/smoke_garage_real_joomla_search.py
+    - tools/smoke_garage_cross_project_security.py
+    - tools/smoke_garage_no_hooks_sessionless.py
+    - tools/smoke_garage_session_enhanced.py
+    - .pf/artifacts/pf-machine-acceptance-20260829/public-cleanliness-remediation.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/smoke_garage_real_joomla_search.py
+    - tools/smoke_garage_cross_project_security.py
+    - tools/smoke_garage_no_hooks_sessionless.py
+    - tools/smoke_garage_session_enhanced.py
+    - .pf/artifacts/pf-machine-acceptance-20260829/public-cleanliness-remediation.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: public-cleanliness-report
+    path: .pf/artifacts/pf-machine-acceptance-20260829/public-cleanliness-remediation.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-machine-acceptance-20260829/public-cleanliness-remediation.md
+  format: concise_markdown
+  include:
+    - public-cleanliness-report

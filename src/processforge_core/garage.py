@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .local_resource_search import LocalSearchError, ResourceSearchIndex
-from .process_execution import ProcessExecutionService
+from .process_execution import ProcessExecutionService, project_process_selection
 
 
 @dataclass(frozen=True)
@@ -37,6 +37,7 @@ class ProjectContextService:
         manifest = self.core.load_yaml_document(self.core.locate_flow_root(self.project_root) / "process-forge.yaml")
         search = ResourceSearchService(self.project_root, self.workplace_root, self.core).readiness(snapshot=snapshot, check=check)
         mode = GarageModeService(self.project_root, self.workplace_root, self.core).status(snapshot=snapshot, session_id=session_id)
+        work = CurrentWorkService(self.project_root, self.core).summary()
         payload: dict[str, Any] = {
             "schema_version": 1,
             "kind": "pf.context",
@@ -51,10 +52,7 @@ class ProjectContextService:
                 "policy_action": check.get("policy_action"),
                 "recommended_action": check.get("recommended_action"),
             },
-            "process": {
-                "id": str(manifest.get("process") or ""),
-                "available": process_summary(snapshot),
-            },
+            "process": process_summary(snapshot, manifest, project_root=self.project_root, core=self.core),
             "resources": {
                 "search_status": search.get("status"),
                 "reason": search.get("reason"),
@@ -63,11 +61,15 @@ class ProjectContextService:
                 "search": search,
                 "selection": resource_selection_summary(snapshot),
             },
-            "work": CurrentWorkService(self.project_root, self.core).summary(),
+            "work": work,
             "derived_reports": DerivedReportLifecycleService(self.project_root, self.core).status(snapshot=snapshot),
             "session": mode["session"],
             "diagnostics": diagnostics_from_check(check, search, mode),
         }
+        continuation = fresh_session_continuation(self.project_root, self.core, work)
+        if continuation:
+            payload["work"]["recommendation"] = "continue_from_handoff"
+            payload["continuation"] = continuation
         return payload
 
 
@@ -219,11 +221,12 @@ class GovernedWorkBootstrapService:
             "recommendation": "continue_governed_work" if summary.get("governed") else "start_work",
         }
 
-    def start(self, *, objective: str, preferred_stage: str = "", session_id: str = "") -> dict[str, Any]:
+    def start(self, *, objective: str, process_id: str = "", preferred_stage: str = "", session_id: str = "") -> dict[str, Any]:
         # preferred_stage is retained only as a compatibility-only advanced
         # override. The public MCP schema no longer advertises it.
         return ProcessExecutionService(self.project_root, self.workplace_root, self.core).start(
             objective=objective,
+            process_id=str(process_id or "").strip(),
             session_id=session_id,
             stage_override=str(preferred_stage or "").strip(),
         )
@@ -408,10 +411,76 @@ def add_private_navigation(payload: dict[str, Any], runtime_snapshot: dict[str, 
                 break
 
 
-def process_summary(snapshot: dict[str, Any]) -> dict[str, Any]:
+def process_summary(snapshot: dict[str, Any], manifest: dict[str, Any] | None = None, *, project_root: Path | None = None, core: Any = None) -> dict[str, Any]:
     processes = snapshot.get("processes") if isinstance(snapshot.get("processes"), dict) else {}
     current = processes.get("current") if isinstance(processes.get("current"), dict) else {}
-    return {"id": str(current.get("id") or ""), "stage_count": len(current.get("stages") or []) if isinstance(current.get("stages"), list) else 0}
+    selection = processes.get("selection") if isinstance(processes.get("selection"), dict) else project_process_selection(manifest or {})
+    allowed = selection.get("allowed") if isinstance(selection.get("allowed"), list) else []
+    candidates = []
+    for process_id in allowed:
+        item = {"id": str(process_id), "title": str(process_id), "purpose": ""}
+        if project_root is not None and core is not None:
+            try:
+                process = core.resolve_process_definition(project_root, str(process_id)).process
+                item["title"] = str(process.get("name") or process_id)
+                item["purpose"] = str(process.get("purpose") or process.get("description") or "")
+            except (OSError, ValueError, SystemExit):
+                pass
+        candidates.append(item)
+    return {
+        "id": str(current.get("id") or ""),
+        "stage_count": len(current.get("stages") or []) if isinstance(current.get("stages"), list) else 0,
+        "default": str(selection.get("default") or ""),
+        "allowed": candidates,
+    }
+
+
+def fresh_session_continuation(project_root: Path, core: Any, work: dict[str, Any]) -> dict[str, Any]:
+    """Return the newest usable completed Work boundary, never an older one."""
+    if work.get("governed"):
+        return {}
+    flow_root = core.locate_flow_root(project_root)
+    candidates: list[tuple[str, dict[str, Any], Path]] = []
+    for run_path in (flow_root / "runs").glob("*/run.yaml"):
+        run = core.load_yaml_document(run_path)
+        if str(run.get("status") or "") != "completed":
+            continue
+        artifacts = run.get("final_artifacts") if isinstance(run.get("final_artifacts"), list) else []
+        handoff = next((str(item) for item in artifacts if str(item).endswith("-handoff.md")), "")
+        if not handoff or not (project_root / handoff).is_file():
+            continue
+        candidates.append((str(run.get("updated_at") or run.get("created_at") or ""), run, project_root / handoff))
+    if not candidates:
+        return {}
+    _timestamp, run, handoff_path = max(candidates, key=lambda item: item[0])
+    pin = run.get("process_execution") if isinstance(run.get("process_execution"), dict) else {}
+    previous_process = str(run.get("process") or "")
+    allowed_processes = pin.get("allowed_processes") if isinstance(pin.get("allowed_processes"), list) else []
+    available = []
+    for value in allowed_processes:
+        process_id = str(value or "").strip()
+        if process_id and process_id != previous_process and process_id not in available:
+            available.append(process_id)
+    definition = pin.get("definition") if isinstance(pin.get("definition"), dict) else {}
+    routed = [str(item.get("to_process") or item.get("target_process") or "") for item in definition.get("process_transitions", []) if isinstance(item, dict)]
+    routes_path = flow_root / "process-routes.yaml"
+    if routes_path.is_file():
+        routes = core.load_yaml_document(routes_path).get("routes", [])
+        routed.extend(str(item.get("to_process") or item.get("target_process") or "") for item in routes if isinstance(item, dict) and str(item.get("from_process") or "") == previous_process)
+    recommended = next((item for item in routed if item in available), "")
+    # The newest completed boundary is authoritative. If it has no route, do
+    # not resurrect an older handoff merely because that one had a suggestion.
+    if not recommended:
+        return {}
+    summary = next((str(item) for item in run.get("final_artifacts", []) if str(item).endswith("summary.md")), "")
+    return {
+        "previous_run_id": str(run.get("id") or ""),
+        "previous_process_id": previous_process,
+        "handoff_path": core.rel(handoff_path, project_root),
+        "summary_path": summary,
+        "next": {"recommended_process": recommended, "available_processes": available},
+        "session_continuity": {"recommendation": "fresh", "reason": "process_boundary"},
+    }
 
 
 def governed_work_summary(project_root: Path, core: Any) -> dict[str, Any]:

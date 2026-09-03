@@ -1,0 +1,73 @@
+schema_version: 1
+id: pf-runtime-mcp-autostart-review-fix-20260829
+title: Fix explicit Codex MCP Python drift detection
+run_id: pf-runtime-mcp-autostart-docs-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T11:56:20Z'
+updated_at: '2026-08-29T11:57:25Z'
+objective: Resolve the assurance finding so an explicit --python value is verified exactly while default registrations retain compatible Python launcher handling.
+platform: ""
+selected_specializations:
+  []
+order: 9
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Fixed explicit Codex MCP Python command drift detection and added regression coverage plus EN/RU documentation.
+  artifacts:
+    - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/assurance-remediation.md
+stage: implementation
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - tools/pf_runtime/codex_mcp.py
+  - tools/smoke_runtime_mcp_autostart.py
+  - docs/getting-started/runtime-autostart.md
+  - docs/ru/getting-started/runtime-autostart.md
+  - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/assurance-remediation.md
+ownership:
+  owner_id: codex-main
+  owner_label: worker-codex-main
+  role: implementer
+  writer: true
+  owned_files:
+    - tools/pf_runtime/codex_mcp.py
+    - tools/smoke_runtime_mcp_autostart.py
+    - docs/getting-started/runtime-autostart.md
+    - docs/ru/getting-started/runtime-autostart.md
+    - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/assurance-remediation.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/pf_runtime/codex_mcp.py
+    - tools/smoke_runtime_mcp_autostart.py
+    - docs/getting-started/runtime-autostart.md
+    - docs/ru/getting-started/runtime-autostart.md
+    - .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/assurance-remediation.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: assurance_remediation
+    type: unspecified
+    required: true
+    path: .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/assurance-remediation.md
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-runtime-mcp-autostart-docs-20260829/assurance-remediation.md
+  format: concise_markdown
+  include:
+    - assurance_remediation

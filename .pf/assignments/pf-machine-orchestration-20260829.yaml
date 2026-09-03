@@ -1,0 +1,69 @@
+schema_version: 1
+id: pf-machine-orchestration-20260829
+title: Acceptance orchestration and durable journal
+run_id: pf-machine-acceptance-20260829
+process: software-feature-development
+status: done
+created_at: '2026-08-29T07:02:58Z'
+updated_at: '2026-08-29T11:05:35Z'
+objective: Maintain the machine acceptance plan, append-only execution journal, final handoff, and cross-task evidence map without owning product implementation files.
+platform: ""
+selected_specializations:
+  []
+order: 5
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Machine acceptance matrix, append-only journal and final handoff completed.
+  artifacts:
+    - .pf/artifacts/pf-machine-acceptance-20260829/acceptance-matrix.md
+    - .pf/handoffs/runs/pf-machine-acceptance-20260829-handoff.md
+stage: orchestration
+execution_mode:
+  kind: docs_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+allowed_files:
+  - .pf/artifacts/pf-machine-acceptance-20260829/acceptance-matrix.md
+  - .pf/logs/pf-machine-acceptance-20260829.md
+  - .pf/handoffs/runs/pf-machine-acceptance-20260829-handoff.md
+ownership:
+  owner_id: orchestrator-main
+  owner_label: worker-orchestrator-main
+  role: orchestrator
+  writer: true
+  owned_files:
+    - .pf/artifacts/pf-machine-acceptance-20260829/acceptance-matrix.md
+    - .pf/logs/pf-machine-acceptance-20260829.md
+    - .pf/handoffs/runs/pf-machine-acceptance-20260829-handoff.md
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/pf-machine-acceptance-20260829/acceptance-matrix.md
+    - .pf/logs/pf-machine-acceptance-20260829.md
+    - .pf/handoffs/runs/pf-machine-acceptance-20260829-handoff.md
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: acceptance-matrix
+    path: .pf/artifacts/pf-machine-acceptance-20260829/acceptance-matrix.md
+    type: unspecified
+    required: true
+agent_reasoning_effort: high
+expected_report:
+  language: ru
+  artifact: .pf/artifacts/pf-machine-acceptance-20260829/acceptance-matrix.md
+  format: concise_markdown
+  include:
+    - acceptance-matrix

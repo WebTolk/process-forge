@@ -19,9 +19,12 @@ Level 1, Garage essentials:
 Level 2, governed work:
 
 - `pf.work.start` starts or continues governed work from a high-level
-  objective. ProcessForge selects the initial stage and pins the effective
-  Process definition, version, fingerprint, context snapshot, and assignment
-  capsule.
+  objective, optionally with `process_id`. A project may authorize several
+  processes, but the selected Work pins exactly one effective Process
+  definition, version, fingerprint, active specialization set, selected
+  resource identities, context snapshot, and assignment capsule. If selection
+  is ambiguous, it returns compact `process_choice_required` candidates rather
+  than inferring a process from the objective.
 - `pf.work.state` returns the current stage, required inputs, obligations,
   artifacts, gates, blockers, and allowed outcomes.
 - `pf.work.transition` accepts an outcome and evidence. ProcessForge resolves
@@ -106,3 +109,11 @@ The default agent path is:
 7. call `pf.work.state`, satisfy the current obligations, and call
    `pf.work.transition` with outcome and evidence;
 8. repeat until `action: run_completed`.
+
+For a multi-process project, call `pf.work.start` with an offered `process_id`
+after `process_choice_required`. `default` is a recommendation only: when more
+than one process is allowed, it never silently chooses the Work process.
+Completion can contain a handoff, next-work recommendation and an advisory
+session-continuity recommendation. With no active Work, a fresh `pf.context`
+can expose the latest relevant compact handoff continuation. Garage never
+creates or restarts an external session, Runtime, MCP, or Ledger session.
