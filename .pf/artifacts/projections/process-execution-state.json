@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-03T10:10:54Z",
+  "generated_at": "2026-09-07T08:49:27Z",
   "kind": "process-execution-state",
   "schema_version": 1,
   "source": {
@@ -19,9 +19,9 @@
         "evidence": {
           "artifact_id": "run-summary",
           "kind": "artifact",
-          "path": ".pf/artifacts/processforge-1-1-0-final-release-qualification-20260903/processforge-1.1.0-final-release-qualification.md",
-          "recorded_at": "2026-09-03T10:10:49Z",
-          "sha256": "sha256:994c19ecd987eb81228f07d970c87d9fc32da70843381740f63848ea5de87f26",
+          "path": ".pf/artifacts/external-audit-package-20260903/external-audit-package-report.md",
+          "recorded_at": "2026-09-07T08:49:19Z",
+          "sha256": "sha256:81b9aabf5ffa307a6b7bafabf2875c50b3e3bb6ea32f47116b5e41e8a5ec380b",
           "status": "ready"
         },
         "id": "run-summary",
@@ -32,9 +32,9 @@
         "evidence": {
           "artifact_id": "run-handoff",
           "kind": "artifact",
-          "path": ".pf/logs/processforge-1.1.0-final-release-qualification-20260903.md",
-          "recorded_at": "2026-09-03T10:10:49Z",
-          "sha256": "sha256:0e5c55a2cc9017bf94d586e5418c51192d79f239b7c75af3a2f3d0e635e3c767",
+          "path": ".pf/handoffs/external-audit-package-20260903-handoff.md",
+          "recorded_at": "2026-09-07T08:49:19Z",
+          "sha256": "sha256:39f1239e04659103718d020bbd471986f2a28ab70752b06c7e9d7170d4d14f76",
           "status": "ready"
         },
         "id": "run-handoff",
@@ -43,7 +43,7 @@
       }
     ],
     "assignment": {
-      "id": "perform-final-processforge-1-1-0-release-qualification-and-freeze-accord",
+      "id": "rebuild-current-processforge-package-for-external-audit",
       "status": "done"
     },
     "blockers": [],
@@ -55,25 +55,25 @@
       {
         "artifact_id": "run-summary",
         "kind": "artifact",
-        "path": ".pf/artifacts/processforge-1-1-0-final-release-qualification-20260903/processforge-1.1.0-final-release-qualification.md",
-        "recorded_at": "2026-09-03T10:10:49Z",
-        "sha256": "sha256:994c19ecd987eb81228f07d970c87d9fc32da70843381740f63848ea5de87f26",
+        "path": ".pf/artifacts/external-audit-package-20260903/external-audit-package-report.md",
+        "recorded_at": "2026-09-07T08:49:19Z",
+        "sha256": "sha256:81b9aabf5ffa307a6b7bafabf2875c50b3e3bb6ea32f47116b5e41e8a5ec380b",
         "status": "ready"
       },
       {
         "artifact_id": "run-handoff",
         "kind": "artifact",
-        "path": ".pf/logs/processforge-1.1.0-final-release-qualification-20260903.md",
-        "recorded_at": "2026-09-03T10:10:49Z",
-        "sha256": "sha256:0e5c55a2cc9017bf94d586e5418c51192d79f239b7c75af3a2f3d0e635e3c767",
+        "path": ".pf/handoffs/external-audit-package-20260903-handoff.md",
+        "recorded_at": "2026-09-07T08:49:19Z",
+        "sha256": "sha256:39f1239e04659103718d020bbd471986f2a28ab70752b06c7e9d7170d4d14f76",
         "status": "ready"
       },
       {
         "gate_id": "run-summary-created",
         "kind": "gate",
-        "path": ".pf/artifacts/processforge-1-1-0-final-release-qualification-20260903/processforge-1.1.0-final-release-qualification.md",
-        "recorded_at": "2026-09-03T10:10:49Z",
-        "sha256": "sha256:994c19ecd987eb81228f07d970c87d9fc32da70843381740f63848ea5de87f26",
+        "path": ".pf/reviews/external-audit-package-20260903-review.md",
+        "recorded_at": "2026-09-07T08:49:19Z",
+        "sha256": "sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c",
         "status": "passed"
       }
     ],
@@ -84,9 +84,9 @@
           "evidence": {
             "gate_id": "run-doctor-passed",
             "kind": "gate",
-            "path": ".pf/artifacts/processforge-1-1-0-final-release-qualification-20260903/processforge-1.1.0-final-release-qualification.md",
-            "recorded_at": "2026-09-03T10:10:35Z",
-            "sha256": "sha256:994c19ecd987eb81228f07d970c87d9fc32da70843381740f63848ea5de87f26",
+            "path": ".pf/reviews/external-audit-package-20260903-review.md",
+            "recorded_at": "2026-09-07T08:49:08Z",
+            "sha256": "sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c",
             "status": "passed"
           },
           "id": "run-doctor-passed",
@@ -102,9 +102,9 @@
           "evidence": {
             "gate_id": "run-summary-created",
             "kind": "gate",
-            "path": ".pf/artifacts/processforge-1-1-0-final-release-qualification-20260903/processforge-1.1.0-final-release-qualification.md",
-            "recorded_at": "2026-09-03T10:10:49Z",
-            "sha256": "sha256:994c19ecd987eb81228f07d970c87d9fc32da70843381740f63848ea5de87f26",
+            "path": ".pf/reviews/external-audit-package-20260903-review.md",
+            "recorded_at": "2026-09-07T08:49:19Z",
+            "sha256": "sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c",
             "status": "passed"
           },
           "id": "run-summary-created",
@@ -133,9 +133,9 @@
         "evidence": {
           "artifact_id": "run-review",
           "kind": "artifact",
-          "path": ".pf/artifacts/processforge-1-1-0-final-release-qualification-20260903/independent-release-code-review.md",
-          "recorded_at": "2026-09-03T10:10:35Z",
-          "sha256": "sha256:5152e073d6ee983023a7eae96a9905ce5ce9f52684ec1c8eef6789f18a4f5403",
+          "path": ".pf/reviews/external-audit-package-20260903-review.md",
+          "recorded_at": "2026-09-07T08:49:08Z",
+          "sha256": "sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c",
           "status": "ready"
         },
         "id": "run-review",
@@ -144,7 +144,7 @@
       }
     ],
     "run": {
-      "id": "garage-perform-final-processforge-1-1-0-release-qualification-and-freeze",
+      "id": "garage-rebuild-current-processforge-package-for-external-audit",
       "status": "completed"
     },
     "schema_version": 1,

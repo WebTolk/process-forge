@@ -47,7 +47,7 @@ source_fingerprints:
   .pf/AGENTS.md: c339983b18e3ea4deb270157b42864f8fbee7ae9af7574c07461bd2768571dfe
   .pf/process-forge.yaml: c1e19cb225376f80d79044da09d68d5043db8c1d9f2e0cd68066512a95014456
   .pf/process-forge.local.yaml: 1a2991b658ac8d8ed5d52740fc63e50815736950dc380310a125de34231b532d
-  tools/processforge.py: 326a63c0d14d3ce424dfc2bc4fdc08a9ba85927121b5e17a1c22d41e261ebd91
+  tools/processforge.py: 387606af134c2f1dc610c92bb2aa4e91672d500a429126f37c24208bdbac95b6
   processes/core/knowledge-package-improvement.yaml: f3b902a7f683199661e9b44283a9459e53628b7b425057109393bc8f4fe319d6
   processes/core/process-version-upgrade.yaml: 1e3f843c6a87d18278a11ae2433c3771c7d70c7ff5b65eb028ac714004b37aa2
   processes/core/workplace-initialization.yaml: b9ba5e8b251e2ee0df8112edc7b2510123d0f073e0fffa1aa8e980c4953275f2

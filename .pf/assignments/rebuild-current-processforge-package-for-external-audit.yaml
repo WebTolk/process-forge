@@ -3,9 +3,9 @@ id: rebuild-current-processforge-package-for-external-audit
 title: Rebuild current ProcessForge package for external audit
 run_id: garage-rebuild-current-processforge-package-for-external-audit
 process: task-batch-execution
-status: in_progress
+status: done
 created_at: '2026-09-03T07:35:32Z'
-updated_at: '2026-09-03T07:35:32Z'
+updated_at: '2026-09-07T08:49:23Z'
 objective: Rebuild current ProcessForge package for external audit
 platform: ""
 selected_specializations:
@@ -19,24 +19,193 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: done
+  summary: Completed the analysis-only external-audit run. Generated summary and handoff are final PF artifacts; no publication or public-release approval is implied.
   artifacts:
-    []
+    - .pf/artifacts/external-audit-package-20260903/external-audit-package-report.md
+    - .pf/artifacts/external-audit-package-20260903/run-record.md
+    - .pf/handoffs/external-audit-package-20260903-handoff.md
+    - .pf/logs/external-audit-package-20260903.md
+    - .pf/reviews/external-audit-package-20260903-review.md
+    - .pf/runs/garage-rebuild-current-processforge-package-for-external-audit/task-index.md
 execution_mode:
   kind: implementation
   code_changes_allowed: true
   artifact_changes_allowed: true
   requires_review: true
-stage: run-intake
-stage_status: in_progress
+stage: run-summary
+stage_status: completed
 stage_execution:
-  started_at: '2026-09-03T07:35:32Z'
+  started_at: '2026-09-07T08:49:10Z'
   evidence:
-    []
-  notes: ""
+    -
+      kind: artifact
+      artifact_id: run-summary
+      status: ready
+      path: .pf/artifacts/external-audit-package-20260903/external-audit-package-report.md
+      recorded_at: '2026-09-07T08:49:19Z'
+      sha256: 'sha256:81b9aabf5ffa307a6b7bafabf2875c50b3e3bb6ea32f47116b5e41e8a5ec380b'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      status: ready
+      path: .pf/handoffs/external-audit-package-20260903-handoff.md
+      recorded_at: '2026-09-07T08:49:19Z'
+      sha256: 'sha256:39f1239e04659103718d020bbd471986f2a28ab70752b06c7e9d7170d4d14f76'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      path: .pf/reviews/external-audit-package-20260903-review.md
+      recorded_at: '2026-09-07T08:49:19Z'
+      sha256: 'sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c'
+  notes: Completed the analysis-only external-audit run. Generated summary and handoff are final PF artifacts; no publication or public-release approval is implied.
 stage_history:
-  []
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-03T07:35:32Z'
+    completed_at: '2026-09-07T08:48:18Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-record
+        status: ready
+        path: .pf/artifacts/external-audit-package-20260903/run-record.md
+        recorded_at: '2026-09-07T08:48:14Z'
+        sha256: 'sha256:649acb9e5c60f53d067f8e6d6abc0ab6e0e93c14e4f081a6e8c5e71dbdbc8dfe'
+      -
+        kind: gate
+        gate_id: run-has-context
+        status: passed
+        path: .pf/artifacts/external-audit-package-20260903/run-record.md
+        recorded_at: '2026-09-07T08:48:14Z'
+        sha256: 'sha256:649acb9e5c60f53d067f8e6d6abc0ab6e0e93c14e4f081a6e8c5e71dbdbc8dfe'
+    notes: Confirmed the existing audit run record and its public-safe scope before continuing the retained audit delivery.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-07T08:48:18Z'
+    completed_at: '2026-09-07T08:48:26Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-index
+        status: ready
+        path: .pf/runs/garage-rebuild-current-processforge-package-for-external-audit/task-index.md
+        recorded_at: '2026-09-07T08:48:24Z'
+        sha256: 'sha256:627dd450417d4a2931e732febc000ac9ceb2d968ed81c9ff138851117d53500a'
+      -
+        kind: gate
+        gate_id: run-has-tasks
+        status: passed
+        path: .pf/runs/garage-rebuild-current-processforge-package-for-external-audit/task-index.md
+        recorded_at: '2026-09-07T08:48:24Z'
+        sha256: 'sha256:627dd450417d4a2931e732febc000ac9ceb2d968ed81c9ff138851117d53500a'
+    notes: Confirmed the single assignment-backed task index already created for the external audit package.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-07T08:48:26Z'
+    completed_at: '2026-09-07T08:48:38Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-iteration-log
+        status: ready
+        path: .pf/logs/external-audit-package-20260903.md
+        recorded_at: '2026-09-07T08:48:35Z'
+        sha256: 'sha256:a8e279545817ac67af1e767ae55ac3e9351c89de31e9324c160fe36264c6e155'
+      -
+        kind: gate
+        gate_id: task-results-recorded
+        status: passed
+        path: .pf/artifacts/external-audit-package-20260903/external-audit-package-report.md
+        recorded_at: '2026-09-07T08:48:35Z'
+        sha256: 'sha256:81b9aabf5ffa307a6b7bafabf2875c50b3e3bb6ea32f47116b5e41e8a5ec380b'
+    notes: Recorded the current package hash verification and retained the existing audit report as task execution evidence.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-07T08:48:38Z'
+    completed_at: '2026-09-07T08:48:59Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-result
+        status: ready
+        path: .pf/artifacts/external-audit-package-20260903/external-audit-package-report.md
+        recorded_at: '2026-09-07T08:48:56Z'
+        sha256: 'sha256:81b9aabf5ffa307a6b7bafabf2875c50b3e3bb6ea32f47116b5e41e8a5ec380b'
+      -
+        kind: gate
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        path: .pf/artifacts/external-audit-package-20260903/external-audit-package-report.md
+        recorded_at: '2026-09-07T08:48:56Z'
+        sha256: 'sha256:81b9aabf5ffa307a6b7bafabf2875c50b3e3bb6ea32f47116b5e41e8a5ec380b'
+    notes: Accepted the analysis-only audit package report as the result of the single blocking assignment.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-07T08:48:59Z'
+    completed_at: '2026-09-07T08:49:10Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-review
+        status: ready
+        path: .pf/reviews/external-audit-package-20260903-review.md
+        recorded_at: '2026-09-07T08:49:08Z'
+        sha256: 'sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c'
+      -
+        kind: gate
+        gate_id: run-doctor-passed
+        status: passed
+        path: .pf/reviews/external-audit-package-20260903-review.md
+        recorded_at: '2026-09-07T08:49:08Z'
+        sha256: 'sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c'
+    notes: Recorded the current retained-package review and the successful run-doctor result; public release qualification remains explicitly excluded.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-07T08:49:10Z'
+    completed_at: '2026-09-07T08:49:23Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-summary
+        status: ready
+        path: .pf/artifacts/external-audit-package-20260903/external-audit-package-report.md
+        recorded_at: '2026-09-07T08:49:19Z'
+        sha256: 'sha256:81b9aabf5ffa307a6b7bafabf2875c50b3e3bb6ea32f47116b5e41e8a5ec380b'
+      -
+        kind: artifact
+        artifact_id: run-handoff
+        status: ready
+        path: .pf/handoffs/external-audit-package-20260903-handoff.md
+        recorded_at: '2026-09-07T08:49:19Z'
+        sha256: 'sha256:39f1239e04659103718d020bbd471986f2a28ab70752b06c7e9d7170d4d14f76'
+      -
+        kind: gate
+        gate_id: run-summary-created
+        status: passed
+        path: .pf/reviews/external-audit-package-20260903-review.md
+        recorded_at: '2026-09-07T08:49:19Z'
+        sha256: 'sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c'
+    notes: Completed the analysis-only external-audit run. Generated summary and handoff are final PF artifacts; no publication or public-release approval is implied.
 process_execution:
   process_id: task-batch-execution
   process_version: 1.0.0
