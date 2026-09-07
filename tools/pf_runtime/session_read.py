@@ -137,18 +137,12 @@ def session_context_payload(
     search_projection = {"status": "unavailable", "generation": None, "stale": True}
     if str(context.get("status") or "") in {"fresh", "fresh_with_updates", "ok"}:
         try:
-            from processforge_core.garage import snapshot_with_resolved_search_roots
             from processforge_core.local_resource_search import ResourceSearchIndex
 
-            snapshot_path, _snapshot_md = core.project_context_snapshot_paths(project_root)
-            snapshot = core.load_yaml_document(snapshot_path)
-            runtime_snapshot = snapshot_with_resolved_search_roots(
-                project_root,
-                snapshot if isinstance(snapshot, dict) else {},
-                workplace_root,
-                core,
-            )
-            search_status = ResourceSearchIndex(project_root, runtime_snapshot, workplace_root).status()
+            # The shared Workplace index has no project-snapshot state.  The
+            # snapshot remains an authorization filter for pf.search only.
+            index_snapshot = core.workplace_search_runtime_snapshot(workplace_root)
+            search_status = ResourceSearchIndex(workplace_root, index_snapshot, workplace_root).status()
             search_projection = {
                 "status": search_status.get("status"),
                 "generation": search_status.get("generation"),

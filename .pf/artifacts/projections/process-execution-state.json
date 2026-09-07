@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-07T08:49:27Z",
+  "generated_at": "2026-09-07T10:06:49Z",
   "kind": "process-execution-state",
   "schema_version": 1,
   "source": {
@@ -19,10 +19,11 @@
         "evidence": {
           "artifact_id": "run-summary",
           "kind": "artifact",
-          "path": ".pf/artifacts/external-audit-package-20260903/external-audit-package-report.md",
-          "recorded_at": "2026-09-07T08:49:19Z",
-          "sha256": "sha256:81b9aabf5ffa307a6b7bafabf2875c50b3e3bb6ea32f47116b5e41e8a5ec380b",
-          "status": "ready"
+          "path": ".pf/runs/garage-resolve-github-issue-4-add-compatible-workplace-migration-to-the/summary.md",
+          "recorded_at": "2026-09-07T10:06:42Z",
+          "sha256": "sha256:c668c17293b7fbfe2f8cc5a3cd9b53b509decac47e466d0e77367e2e10d2827e",
+          "status": "ready",
+          "summary": "Final Issue #4 run summary."
         },
         "id": "run-summary",
         "kind": "artifact",
@@ -32,10 +33,11 @@
         "evidence": {
           "artifact_id": "run-handoff",
           "kind": "artifact",
-          "path": ".pf/handoffs/external-audit-package-20260903-handoff.md",
-          "recorded_at": "2026-09-07T08:49:19Z",
-          "sha256": "sha256:39f1239e04659103718d020bbd471986f2a28ab70752b06c7e9d7170d4d14f76",
-          "status": "ready"
+          "path": ".pf/handoffs/runs/garage-resolve-github-issue-4-add-compatible-workplace-migration-to-the-handoff.md",
+          "recorded_at": "2026-09-07T10:06:42Z",
+          "sha256": "sha256:9b5956c5ffc48ba2f5382a2549ac0408ad2537a5199fd84807f79cb942177d2b",
+          "status": "ready",
+          "summary": "Operator handoff including the public release boundary."
         },
         "id": "run-handoff",
         "kind": "artifact",
@@ -43,7 +45,7 @@
       }
     ],
     "assignment": {
-      "id": "rebuild-current-processforge-package-for-external-audit",
+      "id": "resolve-github-issue-4-add-compatible-workplace-migration-to-the-process",
       "status": "done"
     },
     "blockers": [],
@@ -55,26 +57,27 @@
       {
         "artifact_id": "run-summary",
         "kind": "artifact",
-        "path": ".pf/artifacts/external-audit-package-20260903/external-audit-package-report.md",
-        "recorded_at": "2026-09-07T08:49:19Z",
-        "sha256": "sha256:81b9aabf5ffa307a6b7bafabf2875c50b3e3bb6ea32f47116b5e41e8a5ec380b",
-        "status": "ready"
+        "path": ".pf/runs/garage-resolve-github-issue-4-add-compatible-workplace-migration-to-the/summary.md",
+        "recorded_at": "2026-09-07T10:06:42Z",
+        "sha256": "sha256:c668c17293b7fbfe2f8cc5a3cd9b53b509decac47e466d0e77367e2e10d2827e",
+        "status": "ready",
+        "summary": "Final Issue #4 run summary."
       },
       {
         "artifact_id": "run-handoff",
         "kind": "artifact",
-        "path": ".pf/handoffs/external-audit-package-20260903-handoff.md",
-        "recorded_at": "2026-09-07T08:49:19Z",
-        "sha256": "sha256:39f1239e04659103718d020bbd471986f2a28ab70752b06c7e9d7170d4d14f76",
-        "status": "ready"
+        "path": ".pf/handoffs/runs/garage-resolve-github-issue-4-add-compatible-workplace-migration-to-the-handoff.md",
+        "recorded_at": "2026-09-07T10:06:42Z",
+        "sha256": "sha256:9b5956c5ffc48ba2f5382a2549ac0408ad2537a5199fd84807f79cb942177d2b",
+        "status": "ready",
+        "summary": "Operator handoff including the public release boundary."
       },
       {
         "gate_id": "run-summary-created",
         "kind": "gate",
-        "path": ".pf/reviews/external-audit-package-20260903-review.md",
-        "recorded_at": "2026-09-07T08:49:19Z",
-        "sha256": "sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c",
-        "status": "passed"
+        "recorded_at": "2026-09-07T10:06:42Z",
+        "status": "passed",
+        "summary": "Run summary and handoff are present."
       }
     ],
     "gates": {
@@ -84,10 +87,9 @@
           "evidence": {
             "gate_id": "run-doctor-passed",
             "kind": "gate",
-            "path": ".pf/reviews/external-audit-package-20260903-review.md",
-            "recorded_at": "2026-09-07T08:49:08Z",
-            "sha256": "sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c",
-            "status": "passed"
+            "recorded_at": "2026-09-07T10:06:06Z",
+            "status": "passed",
+            "summary": "run-doctor, task-doctor, and events-validate passed for the active Issue #4 run."
           },
           "id": "run-doctor-passed",
           "phase": "entry",
@@ -102,10 +104,9 @@
           "evidence": {
             "gate_id": "run-summary-created",
             "kind": "gate",
-            "path": ".pf/reviews/external-audit-package-20260903-review.md",
-            "recorded_at": "2026-09-07T08:49:19Z",
-            "sha256": "sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c",
-            "status": "passed"
+            "recorded_at": "2026-09-07T10:06:42Z",
+            "status": "passed",
+            "summary": "Run summary and handoff are present."
           },
           "id": "run-summary-created",
           "phase": "exit",
@@ -133,10 +134,11 @@
         "evidence": {
           "artifact_id": "run-review",
           "kind": "artifact",
-          "path": ".pf/reviews/external-audit-package-20260903-review.md",
-          "recorded_at": "2026-09-07T08:49:08Z",
-          "sha256": "sha256:f9dfc2dabccd3f4e288bda25cace588efc1ee2f61251207fee4d8d122f594a5c",
-          "status": "ready"
+          "path": ".pf/reviews/github-issue-4-20260907-review.md",
+          "recorded_at": "2026-09-07T10:06:06Z",
+          "sha256": "sha256:aae73587504302bb117b140d7460b11cf2b6d0a57681c04c2598e7b70cd9f97f",
+          "status": "ready",
+          "summary": "Review passed with the recorded public-release condition."
         },
         "id": "run-review",
         "kind": "input",
@@ -144,7 +146,7 @@
       }
     ],
     "run": {
-      "id": "garage-rebuild-current-processforge-package-for-external-audit",
+      "id": "garage-resolve-github-issue-4-add-compatible-workplace-migration-to-the",
       "status": "completed"
     },
     "schema_version": 1,
@@ -152,13 +154,6 @@
       "id": "run-summary",
       "status": "completed",
       "title": "Create final run summary and handoff"
-    },
-    "work": {
-      "active_specializations": [],
-      "selected_resource_ids": [
-        "project.process-forge:project-profile",
-        "project.process-forge:project-artifacts"
-      ]
     }
   }
 }

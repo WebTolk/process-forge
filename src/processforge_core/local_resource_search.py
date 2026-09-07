@@ -56,7 +56,12 @@ class AuthorizedResource:
 
 @dataclass(frozen=True)
 class ResourceSearchIndex:
-    """Stateful application service for one project's local resource index."""
+    """Stateful application service for the workplace local resource index.
+
+    A project snapshot may be supplied for backward-compatible scoped
+    maintenance and for query authorization.  A workplace maintenance snapshot
+    uses ``search_index_scope: workplace`` and owns the one physical index.
+    """
 
     project_root: Path
     snapshot: dict[str, Any] | None = None
@@ -103,6 +108,8 @@ def _snapshot_checksum(snapshot: dict[str, Any]) -> str:
 
 
 def _scope_key(snapshot: dict[str, Any]) -> str:
+    if str(snapshot.get("search_index_scope") or "") == "workplace":
+        return "workplace"
     checksum = _snapshot_checksum(snapshot)
     return checksum or "snapshot-unknown"
 
@@ -575,6 +582,15 @@ def build_index(project_root: Path, snapshot: dict[str, Any], *, workplace_root:
     db = sqlite3.connect(path)
     try:
         _ensure_schema(db)
+        # A Workplace refresh is an authoritative reconciliation of its
+        # registered catalogue.  Retaining a removed package here would allow
+        # an old project snapshot to query an orphaned document from the shared
+        # DB, so remove every no-longer-registered resource before upserting.
+        if _scope_key(snapshot) == "workplace":
+            stored_ids = [str(row[0]) for row in db.execute("SELECT resource_id FROM resources").fetchall()]
+            for resource_id in stored_ids:
+                if resource_id not in resource_ids:
+                    _delete_resource(db, resource_id)
         for resource in resources:
             _delete_resource(db, resource.resource_id)
             db.execute(
@@ -740,7 +756,11 @@ def search(project_root: Path, snapshot: dict[str, Any], *, query: Any, limit: A
     path = index_path(project_root, workplace_root)
     scope_key = _scope_key(snapshot)
     resource_ids = indexable_resource_ids(authorized_roots(project_root, snapshot))
-    state = index_status(project_root, snapshot, workplace_root=workplace_root, verify_files=False)
+    # The physical database is maintained from the Workplace resource
+    # catalogue.  A project snapshot is deliberately only an authorization
+    # filter for the query and must not make a fresh Workplace index appear
+    # stale merely because another project has a different checksum.
+    state = index_status(project_root, None if workplace_root is not None else snapshot, workplace_root=workplace_root, verify_files=False)
     if state.get("status") != "fresh":
         return {
             "schema_version": 1,

@@ -41,12 +41,17 @@ installed Core path.
    python <staged-processforge-1.1.0>/bin/pf.py release-test --root <staged-processforge-1.1.0> --public
    ```
 
-4. Plan and explicitly apply the update to the stable installed directory:
+4. Plan and explicitly apply the Core and compatible Workplace migration to the
+   stable installed directories:
 
    ```powershell
-   python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip>
-   python <staged-processforge-1.1.0>/bin/pf.py core-update apply --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --confirm
+   python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace>
+   python <staged-processforge-1.1.0>/bin/pf.py core-update apply --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace> --confirm
    ```
+
+   The 1.1.0 archive adds only missing PF-owned Workplace defaults (including
+   `codex-exec`) and preserves existing Workplace configuration. Do not use
+   `workplace-init` as an updater: it is for first-time initialization.
 
 5. Validate the installed Core and workplace, then restart PF Runtime when it is
    configured:

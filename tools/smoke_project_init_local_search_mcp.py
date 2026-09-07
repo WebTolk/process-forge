@@ -22,7 +22,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as raw:
         project = Path(raw)
         allowed = project / "allowed"
-        allowed.mkdir()
+        allowed.mkdir(parents=True)
         (allowed / "guide.md").write_text("ProcessForge snapshot authorized local search", encoding="utf-8")
         outside = project / "outside.md"
         outside.write_text("forbidden-secret-token", encoding="utf-8")
@@ -53,8 +53,8 @@ def main() -> int:
         workplace, first, second = root / "workplace", root / "first", root / "second"
         first.mkdir()
         second.mkdir()
-        allowed = first / "allowed"
-        allowed.mkdir()
+        allowed = workplace / "packages" / "fixture" / "guide"
+        allowed.mkdir(parents=True)
         (allowed / "guide.md").write_text("MCP snapshot authorized search", encoding="utf-8")
         external_docs = root / "external-docs"
         external_docs.mkdir()
@@ -69,6 +69,23 @@ def main() -> int:
         knowledge_roots = yaml.safe_load(knowledge_roots_path.read_text(encoding="utf-8"))
         knowledge_roots["knowledge_roots"].append({"id": "external-docs", "path": str(external_docs), "scope": "workplace", "status": "available"})
         knowledge_roots_path.write_text(yaml.safe_dump(knowledge_roots, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        fixture_package = workplace / "packages" / "fixture"
+        fixture_package.mkdir(parents=True, exist_ok=True)
+        (fixture_package / "package.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "schema_version": 1,
+                    "id": "fixture",
+                    "resources": [
+                        {"id": "guide", "kind": "documentation", "path": "guide", "indexing": {"mode": "fulltext", "sources": [{"path": ".", "mode": "fulltext", "include": ["**/*.md"]}]}},
+                        {"id": "external", "kind": "documentation", "path_ref": {"registry": "knowledge_roots", "id": "external-docs"}, "indexing": {"mode": "fulltext", "sources": [{"path": ".", "mode": "fulltext", "include": ["**/*.md"]}]}},
+                    ],
+                },
+                allow_unicode=True,
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
         cli("template-create", "--workplace", str(workplace), "--id", "joomla-plugin-manifest", "--title", "Joomla Plugin Manifest", "--apply")
         registry_path = workplace / "registries" / "templates.yaml"
         registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
@@ -88,9 +105,9 @@ def main() -> int:
         assert str(workplace) not in snapshot_path.read_text(encoding="utf-8")
         assert all(not set(item).intersection({"content_roots", "local_path", "resolved_path"}) for item in snapshot["local_search_resources"] if isinstance(item, dict))
         snapshot["local_search_resources"].extend([
-            {"id": "allowed", "package_id": "self", "kind": "knowledge", "path_ref": {"package": "self", "relative_path": "allowed"}},
+            {"id": "fixture:guide", "package_id": "fixture", "kind": "knowledge", "path_ref": {"package": "fixture", "relative_path": "guide"}},
             {"id": "escaped", "package_id": "self", "kind": "knowledge", "path_ref": {"package": "self", "relative_path": "../outside.md"}},
-            {"id": "external", "package_id": "fixture", "kind": "knowledge", "path_ref": {"registry": "knowledge_roots", "id": "external-docs"}},
+            {"id": "fixture:external", "package_id": "fixture", "kind": "knowledge", "path_ref": {"registry": "knowledge_roots", "id": "external-docs"}},
             {"id": "external-escaped", "package_id": "fixture", "kind": "knowledge", "path_ref": {"registry": "knowledge_roots", "id": "external-docs", "relative_path": "../outside.md"}},
         ])
         snapshot_path.write_text(yaml.safe_dump(snapshot, allow_unicode=True, sort_keys=False), encoding="utf-8")
@@ -98,19 +115,19 @@ def main() -> int:
         assert external_resolution == {"status": "resolved", "path": str(external_docs)}
         escaped_resolution = core.resolve_workspace_path_ref(first, {"registry": "knowledge_roots", "id": "external-docs", "relative_path": "../outside.md"}, workplace_manifest=workplace / "workplace.yaml")
         assert escaped_resolution["status"] == "unresolved"
-        status_output = cli("search-index", "status", "--project-root", str(first), "--workplace", str(workplace))
-        assert "STATUS: stale" in status_output
+        status_output = cli("search-index", "status", "--workplace", str(workplace))
+        assert "STATUS: fresh" in status_output
         assert (workplace / "runtime" / "search" / "latest-maintenance.yaml").is_file()
-        refresh_output = cli("search-index", "refresh", "--project-root", str(first), "--workplace", str(workplace))
+        refresh_output = cli("search-index", "refresh", "--workplace", str(workplace))
         assert "REFRESHED:" in refresh_output and "DOCUMENTS:" in refresh_output
-        doctor_output = cli("search-index", "doctor", "--project-root", str(first), "--workplace", str(workplace))
+        doctor_output = cli("search-index", "doctor", "--workplace", str(workplace))
         assert "PASS: SQLite FTS5 available" in doctor_output
-        noop_tick = cli("search-index", "tick", "--project-root", str(first), "--workplace", str(workplace))
+        noop_tick = cli("search-index", "tick", "--workplace", str(workplace))
         assert "ACTION: none" in noop_tick
         (allowed / "guide.md").write_text("MCP snapshot authorized search maintenancetoken", encoding="utf-8")
-        verified_status = cli("search-index", "status", "--project-root", str(first), "--workplace", str(workplace), "--verify-files")
+        verified_status = cli("search-index", "status", "--workplace", str(workplace), "--verify-files")
         assert "STATUS: stale" in verified_status and "document_fingerprint_changed" in verified_status
-        refresh_tick = cli("search-index", "tick", "--project-root", str(first), "--workplace", str(workplace))
+        refresh_tick = cli("search-index", "tick", "--workplace", str(workplace))
         assert "ACTION: refresh" in refresh_tick and "STATUS: fresh" in refresh_tick
         requests = [
             {"jsonrpc": "2.0", "id": 1, "method": "initialize"},
@@ -136,7 +153,7 @@ def main() -> int:
         first_match = search_result["results"][0]
         assert first_match["canonical_path"] == "guide.md"
         assert first_match["relative_path"] == "guide.md"
-        assert first_match["path_ref"] == "allowed:guide.md"
+        assert first_match["path_ref"] == "fixture:guide:guide.md"
         assert str(allowed) not in first_match["canonical_path"]
         assert str(allowed) not in first_match["path_ref"]
         assert str(allowed) not in json.dumps(first_match["provenance"], ensure_ascii=False)

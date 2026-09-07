@@ -112,8 +112,8 @@ class ResourceSearchService:
         check = check or self.core.project_context_check_result(self.project_root, explicit_workplace=str(self.workplace_root))
         if str(check.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             return {"status": "blocked", "reason": "snapshot_not_fresh", "resource_count": 0, "document_count": 0}
-        runtime_snapshot = snapshot_with_resolved_search_roots(self.project_root, snapshot or load_snapshot(self.project_root, self.core), self.workplace_root, self.core)
-        index = ResourceSearchIndex(self.project_root, runtime_snapshot, self.workplace_root)
+        index_snapshot = self.core.workplace_search_runtime_snapshot(self.workplace_root)
+        index = ResourceSearchIndex(self.workplace_root, index_snapshot, self.workplace_root)
         try:
             before = index.status(verify_files=True)
             if before.get("status") in {"missing", "stale"}:
@@ -136,7 +136,8 @@ class ResourceSearchService:
         if str(check.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             raise LocalSearchError("snapshot_not_fresh")
         runtime_snapshot = snapshot_with_resolved_search_roots(self.project_root, load_snapshot(self.project_root, self.core), self.workplace_root, self.core)
-        index = ResourceSearchIndex(self.project_root, runtime_snapshot, self.workplace_root)
+        index_snapshot = self.core.workplace_search_runtime_snapshot(self.workplace_root)
+        index = ResourceSearchIndex(self.workplace_root, index_snapshot, self.workplace_root)
         state = index.status(verify_files=True)
         if state.get("status") in {"missing", "stale"}:
             state = index.maintenance_tick().get("after", {})

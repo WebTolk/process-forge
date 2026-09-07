@@ -71,30 +71,32 @@ index_state
 `indexing_policy_hash`, `root_ref`, and refresh status. `documents` tracks
 `resource_id`, `relative_path`, `kind`, `title`, hashes, and JSON metadata.
 `documents_fts` stores searchable fulltext fields. `index_state` stores the
-current project snapshot authorization state without duplicating documents per
-project.
+current Workplace resource-catalogue state. Project snapshots never create
+index state or duplicate documents: they authorize resource ids per query.
 
 ## CLI
 
 ```bash
-python bin/pf.py search-index status --project-root <project> --workplace <workplace>
-python bin/pf.py search-index refresh --project-root <project> --workplace <workplace>
-python bin/pf.py search-index rebuild --project-root <project> --workplace <workplace>
-python bin/pf.py search-index doctor --project-root <project> --workplace <workplace>
-python bin/pf.py search-index tick --project-root <project> --workplace <workplace>
+python bin/pf.py search-index status --workplace <workplace>
+python bin/pf.py search-index refresh --workplace <workplace>
+python bin/pf.py search-index rebuild --workplace <workplace>
+python bin/pf.py search-index doctor --workplace <workplace>
+python bin/pf.py search-index tick --workplace <workplace>
 ```
 
 `status` is read-only. `status --verify-files` performs explicit fingerprint
-reconciliation and reports stale state when authorized resource content changed.
-`refresh` updates indexable resources for the current fresh snapshot. `rebuild`
+reconciliation and reports stale state when registered Workplace resource
+content changed. `refresh` indexes every registered Workplace package/resource
+once, respecting `indexing.mode`; it does not read a project snapshot. `rebuild`
 deletes the derived DB and builds it again. `tick` is the bounded maintenance
 unit for operators and Runtime scheduling.
 
 ## Runtime And MCP
 
-Runtime maintenance should periodically run `tick` for known projects with
-fresh snapshots. PF-owned resource mutations mark existing index state stale;
-external file changes are detected by fingerprint verification during `tick`.
+Runtime maintenance may run `tick` for the Workplace. It does not enumerate
+projects or depend on Runtime, Ledger, or active sessions. PF-owned resource
+mutations mark existing index state stale; external file changes are detected
+by fingerprint verification during `tick`.
 
 `pf.search` never reports stale data as `fresh`. If the index is missing, stale,
 or degraded, the result carries that `search_status` and returns no matches

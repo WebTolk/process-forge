@@ -2,9 +2,9 @@ schema_version: 1
 id: beta-release-qualification-20260822
 title: Beta release qualification
 process: software-feature-development
-status: in_progress
+status: completed
 created_at: '2026-08-22T03:28:44Z'
-updated_at: '2026-08-22T03:28:56Z'
+updated_at: '2026-09-07T09:03:01Z'
 objective: Build, install, and qualify the ProcessForge beta on this machine.
 platform: ""
 selected_specializations:
@@ -16,25 +16,28 @@ tasks:
   -
     id: beta-baseline-audit-20260822
     assignment: .pf/assignments/beta-baseline-audit-20260822.yaml
-    status: open
+    status: done
     order: 1
     blocking: true
   -
     id: beta-mcp-security-matrix-20260822
     assignment: .pf/assignments/beta-mcp-security-matrix-20260822.yaml
-    status: open
+    status: done
     order: 2
     blocking: true
   -
     id: beta-installation-contract-audit-20260822
     assignment: .pf/assignments/beta-installation-contract-audit-20260822.yaml
-    status: open
+    status: done
     order: 3
     blocking: true
 final_artifacts:
-  []
+  - .pf/runs/beta-release-qualification-20260822/summary.md
+  - .pf/handoffs/runs/beta-release-qualification-20260822-handoff.md
 events:
   emitted:
     - run.created
+    - run.completed
+    - run.summary.created
 privacy:
   public_safe: true

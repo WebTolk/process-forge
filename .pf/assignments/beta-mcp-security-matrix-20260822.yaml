@@ -3,9 +3,9 @@ id: beta-mcp-security-matrix-20260822
 title: Design beta MCP and security test matrix
 run_id: beta-release-qualification-20260822
 process: software-feature-development
-status: open
+status: done
 created_at: '2026-08-22T03:28:50Z'
-updated_at: '2026-08-22T03:29:10Z'
+updated_at: '2026-09-07T09:02:53Z'
 objective: Read current MCP/search/init/session contracts and create an executable beta test matrix with positive, negative, and real Codex evidence cases. Do not edit code.
 platform: ""
 selected_specializations:
@@ -19,10 +19,12 @@ dependencies:
 iterations:
   []
 result:
-  status: pending
-  summary: ""
+  status: done
+  summary: 'Closed without execution: this beta MCP/security matrix is superseded by later release and machine-acceptance evidence.'
   artifacts:
     []
+  waivers:
+    expected-report: Superseded by published 1.1.0 and later release qualification; no beta matrix was executed.
 stage: code-assurance
 execution_mode:
   kind: assurance

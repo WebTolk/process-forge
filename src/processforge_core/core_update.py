@@ -20,6 +20,7 @@ from typing import Any, Iterable
 
 CORE_MANIFEST_NAME = "processforge-core.manifest.json"
 CORE_MANIFEST_SCHEMA_VERSION = 1
+WORKPLACE_MIGRATION_KIND = "processforge.workplace_migration"
 
 
 @dataclass(frozen=True)
@@ -184,12 +185,166 @@ def validate_archive_payload(archive_path: Path, manifest: dict[str, Any]) -> No
         raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
 
 
+def load_yaml_bytes(content: bytes, *, source: str) -> dict[str, Any]:
+    try:
+        import yaml  # type: ignore
+    except ModuleNotFoundError as exc:
+        raise CoreUpdateError("yaml_support_missing", "PyYAML is required for Workplace migration") from exc
+    try:
+        data = yaml.safe_load(content.decode("utf-8"))
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:  # type: ignore[attr-defined]
+        raise CoreUpdateError("workplace_migration_invalid", f"invalid YAML in {source}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise CoreUpdateError("workplace_migration_invalid", f"migration document must be a mapping: {source}")
+    return data
+
+
+def dump_yaml_bytes(data: dict[str, Any]) -> bytes:
+    try:
+        import yaml  # type: ignore
+    except ModuleNotFoundError as exc:
+        raise CoreUpdateError("yaml_support_missing", "PyYAML is required for Workplace migration") from exc
+    return yaml.safe_dump(data, allow_unicode=True, sort_keys=False).encode("utf-8")
+
+
+def load_archive_workplace_migration(archive_path: Path, *, installed_version: str | None, target_version: str) -> tuple[str | None, dict[str, Any] | None]:
+    """Select the one declared Workplace migration applicable to this Core plan."""
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            for name in sorted(archive.namelist()):
+                if not name.startswith("updates/migrations/") or not name.endswith((".yaml", ".yml")):
+                    continue
+                migration = load_yaml_bytes(archive.read(name), source=name)
+                if migration.get("kind") != WORKPLACE_MIGRATION_KIND:
+                    continue
+                if str(migration.get("to_version") or "") != target_version:
+                    continue
+                versions = migration.get("from_versions")
+                allowed = {str(value) for value in versions} if isinstance(versions, list) else set()
+                if installed_version not in allowed and not (installed_version is None and migration.get("allow_unmanaged_installed_core") is True):
+                    continue
+                return name, migration
+    except zipfile.BadZipFile as exc:
+        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
+    return None, None
+
+
+def workplace_target(workplace_root: Path, relative_path: str) -> Path:
+    return ensure_inside(workplace_root, safe_relative_path(relative_path))
+
+
+def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_version: str | None, target_version: str, workplace_root: Path | None) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "status": "not_requested",
+        "workplace_root": str(workplace_root.resolve()) if workplace_root else None,
+        "migration": None,
+        "operations": [],
+        "preserved": [],
+        "blockers": [],
+    }
+    if workplace_root is None:
+        return result
+    workplace_root = workplace_root.resolve()
+    if not (workplace_root / "workplace.yaml").is_file():
+        result.update({"status": "blocked", "blockers": [{"code": "workplace_manifest_missing", "path": str(workplace_root / "workplace.yaml")} ]})
+        return result
+    source_path, migration = load_archive_workplace_migration(
+        archive_path, installed_version=installed_version, target_version=target_version
+    )
+    if migration is None:
+        result["status"] = "not_applicable"
+        return result
+    migration_id = str(migration.get("id") or "")
+    operations = migration.get("operations")
+    if not migration_id or not isinstance(operations, list):
+        raise CoreUpdateError("workplace_migration_invalid", f"migration {source_path} requires id and operations")
+    result.update({"status": "planned", "migration": {"id": migration_id, "source": source_path}})
+    for item in operations:
+        if not isinstance(item, dict):
+            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} contains a non-object operation")
+        operation_id = str(item.get("id") or "")
+        operation_type = str(item.get("type") or "")
+        target_path = str(item.get("target") or "")
+        if not operation_id or not target_path:
+            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} operation requires id and target")
+        target = workplace_target(workplace_root, target_path)
+        if operation_type == "copy_if_missing":
+            source = safe_relative_path(item.get("source"))
+            if target.exists():
+                result["preserved"].append({"id": operation_id, "path": target_path, "reason": "existing_file"})
+            else:
+                result["operations"].append({"id": operation_id, "type": operation_type, "source": source, "target": target_path})
+            continue
+        if operation_type == "append_registry_entry_if_missing":
+            list_key = str(item.get("list_key") or "")
+            match_key = str(item.get("match_key") or "id")
+            entry = item.get("entry")
+            if not list_key or not isinstance(entry, dict) or not entry.get(match_key):
+                raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} registry operation {operation_id} is invalid")
+            data = load_yaml_bytes(target.read_bytes(), source=target_path) if target.is_file() else {"schema_version": 1}
+            current = data.get(list_key)
+            if current is None:
+                current = []
+            if not isinstance(current, list):
+                raise CoreUpdateError("workplace_migration_invalid", f"registry list is invalid: {target_path}:{list_key}")
+            if any(isinstance(row, dict) and row.get(match_key) == entry[match_key] for row in current):
+                result["preserved"].append({"id": operation_id, "path": target_path, "reason": "existing_registry_entry", "value": entry[match_key]})
+            else:
+                result["operations"].append({"id": operation_id, "type": operation_type, "target": target_path, "list_key": list_key, "entry": entry})
+            continue
+        raise CoreUpdateError("workplace_migration_invalid", f"unsupported migration operation: {operation_type}")
+    return result
+
+
+def backup_workplace_target(workplace_root: Path, backup_dir: Path, relative_path: str) -> dict[str, Any]:
+    source = workplace_target(workplace_root, relative_path)
+    record: dict[str, Any] = {"path": relative_path, "existed": source.is_file()}
+    if source.is_file():
+        target = backup_dir / "workplace" / "files" / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        record["backup"] = str(target.relative_to(backup_dir).as_posix())
+    return record
+
+
+def apply_workplace_migration(archive_path: Path, workplace_root: Path, migration_plan: dict[str, Any], backup_dir: Path) -> dict[str, Any]:
+    operations = migration_plan.get("operations") if isinstance(migration_plan.get("operations"), list) else []
+    backed_up: list[dict[str, Any]] = []
+    with zipfile.ZipFile(archive_path) as archive:
+        for operation in operations:
+            if not isinstance(operation, dict):
+                continue
+            target_path = str(operation["target"])
+            backed_up.append(backup_workplace_target(workplace_root, backup_dir, target_path))
+            target = workplace_target(workplace_root, target_path)
+            if operation["type"] == "copy_if_missing":
+                atomic_write(target, archive.read(str(operation["source"])))
+            elif operation["type"] == "append_registry_entry_if_missing":
+                data = load_yaml_bytes(target.read_bytes(), source=target_path) if target.is_file() else {"schema_version": 1}
+                values = data.get(str(operation["list_key"]))
+                if not isinstance(values, list):
+                    values = []
+                    data[str(operation["list_key"])] = values
+                values.append(operation["entry"])
+                atomic_write(target, dump_yaml_bytes(data))
+    record = {
+        "schema_version": 1,
+        "migration": migration_plan.get("migration"),
+        "applied_at": now_utc(),
+        "operations": operations,
+        "preserved": migration_plan.get("preserved", []),
+        "backed_up": backed_up,
+    }
+    write_json(backup_dir / "workplace-migration.json", record)
+    return record
+
+
 def installed_manifest(core_root: Path) -> dict[str, Any] | None:
     path = manifest_path(core_root)
     return read_manifest(path) if path.is_file() else None
 
 
-def build_plan(core_root: Path, archive_path: Path) -> dict[str, Any]:
+def build_plan(core_root: Path, archive_path: Path, *, workplace_root: Path | None = None) -> dict[str, Any]:
     core_root = core_root.resolve()
     archive_path = archive_path.resolve()
     new_manifest = read_archive_manifest(archive_path)
@@ -219,6 +374,14 @@ def build_plan(core_root: Path, archive_path: Path) -> dict[str, Any]:
     incomplete = (runtime_root(core_root) / "in-progress.json").is_file()
     if incomplete:
         blockers.append({"code": "incomplete_update", "path": str(runtime_root(core_root) / "in-progress.json")})
+    migration = workplace_migration_plan(
+        core_root,
+        archive_path,
+        installed_version=old_manifest.get("version") if old_manifest else None,
+        target_version=str(new_manifest.get("version") or ""),
+        workplace_root=workplace_root,
+    )
+    blockers.extend(migration.get("blockers", []))
     return {
         "schema_version": 1,
         "kind": "processforge.core_update.plan",
@@ -236,6 +399,7 @@ def build_plan(core_root: Path, archive_path: Path) -> dict[str, Any]:
         "locally_modified": locally_modified,
         "missing_owned": missing_owned,
         "blockers": blockers,
+        "workplace_migration": migration,
         "new_manifest": new_manifest,
     }
 
@@ -301,10 +465,17 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def apply_update(core_root: Path, archive_path: Path, *, confirm: bool = False, force_local_modifications: bool = False) -> dict[str, Any]:
+def apply_update(
+    core_root: Path,
+    archive_path: Path,
+    *,
+    confirm: bool = False,
+    force_local_modifications: bool = False,
+    workplace_root: Path | None = None,
+) -> dict[str, Any]:
     if not confirm:
         raise CoreUpdateError("confirm_required", "core update apply requires explicit confirmation")
-    plan = build_plan(core_root, archive_path)
+    plan = build_plan(core_root, archive_path, workplace_root=workplace_root)
     blockers = [item for item in plan["blockers"] if item.get("code") != "locally_modified" or not force_local_modifications]
     if blockers:
         raise CoreUpdateError("plan_blocked", "core update plan has blockers")
@@ -322,6 +493,9 @@ def apply_update(core_root: Path, archive_path: Path, *, confirm: bool = False, 
         pending_operations.append({"op": "delete", "path": relative_path})
     for relative_path in sorted(set(plan["added"]).union(plan["changed"])):
         pending_operations.append({"op": "write", "path": relative_path})
+    migration = plan.get("workplace_migration") if isinstance(plan.get("workplace_migration"), dict) else {}
+    if migration.get("status") == "planned" and migration.get("operations"):
+        pending_operations.append({"op": "workplace_migration", "path": str(migration.get("migration", {}).get("id") or "workplace")})
     pending_operations.append({"op": "write_manifest", "path": CORE_MANIFEST_NAME})
     progress = {
         "schema_version": 1,
@@ -355,8 +529,15 @@ def apply_update(core_root: Path, archive_path: Path, *, confirm: bool = False, 
     if old_manifest:
         write_json(backup_dir / "control" / "old-manifest.json", old_manifest)
     write_json(backup_dir / "control" / "new-manifest.json", plan["new_manifest"])
+    write_json(backup_dir / "control" / "plan.json", {key: value for key, value in plan.items() if key != "new_manifest"})
     write_json(in_progress_path, progress)
     try:
+        migration_record = None
+        if migration.get("status") == "planned" and migration.get("operations"):
+            if workplace_root is None:
+                raise CoreUpdateError("workplace_root_missing", "Workplace migration was planned without a Workplace root")
+            migration_record = apply_workplace_migration(archive_path, workplace_root.resolve(), migration, backup_dir)
+            complete_operation("workplace_migration", str(migration.get("migration", {}).get("id") or "workplace"))
         for relative_path in sorted(set(plan["removed"]).union(plan["changed"])):
             backed_up[relative_path] = backup_file(core_root, backup_dir, relative_path)
             complete_operation("backup", relative_path)
@@ -373,7 +554,7 @@ def apply_update(core_root: Path, archive_path: Path, *, confirm: bool = False, 
                 complete_operation("write", relative_path)
         atomic_write(manifest_path(core_root), manifest_bytes(plan["new_manifest"]))
         complete_operation("write_manifest", CORE_MANIFEST_NAME)
-        record = {"schema_version": 1, "update_id": update_id, "status": "applied", "applied_at": now_utc(), "available_version": plan["available_version"], "backup_dir": str(backup_dir), "backed_up": backed_up, "counts": plan["counts"]}
+        record = {"schema_version": 1, "update_id": update_id, "status": "applied", "applied_at": now_utc(), "available_version": plan["available_version"], "backup_dir": str(backup_dir), "backed_up": backed_up, "counts": plan["counts"], "workplace_migration": migration_record}
         last_apply = work_root / "last-apply.json"
         write_json(last_apply, record)
         in_progress_path.unlink(missing_ok=True)

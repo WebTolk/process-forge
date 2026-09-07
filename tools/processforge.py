@@ -23385,6 +23385,106 @@ def local_search_runtime_snapshot(project_root: Path, workplace_root: Path) -> t
     return context, runtime_snapshot
 
 
+def workplace_search_package_manifest_index(workplace_root: Path) -> dict[str, dict[str, Any]]:
+    """Return one deterministic manifest record for every registered package.
+
+    This deliberately starts at Workplace registries rather than a project
+    flow root.  Project manifests select resources at query time; they are not
+    an input to physical Workplace index maintenance.
+    """
+
+    workplace_manifest = workplace_root / "workplace.yaml"
+    candidates: list[Path] = []
+    roots = workplace_package_roots(workplace_manifest)
+    if not roots:
+        roots = [resolve_package_root(workplace_root, None, mode="read")]
+    for root in roots:
+        if root.warnings or not root.resolved_path.is_dir():
+            continue
+        candidates.extend(sorted(root.resolved_path.glob("*.yaml")))
+        candidates.extend(sorted(root.resolved_path.glob("*.yml")))
+        candidates.extend(sorted(root.resolved_path.glob("*/package.yaml")))
+        candidates.extend(sorted(root.resolved_path.glob("*/package.yml")))
+    for process_pack_path, process_pack in active_official_pack_records(workplace_manifest):
+        provided = process_pack.get("provides") if isinstance(process_pack.get("provides"), dict) else {}
+        for package_id in as_list(provided.get("knowledge_packages")):
+            package_path = process_pack_path.parent / "knowledge-packages" / f"{package_id}.yaml"
+            if package_path.is_file():
+                candidates.append(package_path)
+    index: dict[str, dict[str, Any]] = {}
+    for path in candidates:
+        data = load_yaml_document(path)
+        if not isinstance(data, dict) or yaml_error(data) or not data.get("id"):
+            continue
+        package_id = str(data["id"])
+        # The first registered manifest wins deterministically.  A duplicate
+        # does not create a second physical copy of a package's resources.
+        if package_id in index:
+            continue
+        record = dict(data)
+        record["__manifest_path"] = path
+        for root in roots:
+            try:
+                path.relative_to(root.resolved_path)
+                record["__package_root_id"] = root.root_id
+                break
+            except ValueError:
+                continue
+        index[package_id] = record
+    return index
+
+
+def workplace_search_runtime_snapshot(workplace_root: Path) -> dict[str, Any]:
+    """Resolve the source catalogue for the single Workplace search index."""
+
+    from processforge_core.garage import snapshot_with_resolved_search_roots
+
+    manifest = workplace_root / "workplace.yaml"
+    package_index = workplace_search_package_manifest_index(workplace_root)
+    resources: list[dict[str, Any]] = []
+    for package_id in sorted(package_index):
+        package = package_index[package_id]
+        for resource in package.get("resources", []) if isinstance(package.get("resources"), list) else []:
+            if isinstance(resource, dict):
+                resources.append(resource_record_from_package(package_id, resource, "registered", package.get("__package_root_id")))
+    templates = load_workplace_registry(manifest, "templates", "templates.yaml") if manifest.is_file() else {}
+    for entry in templates.get("templates", []) if isinstance(templates, dict) else []:
+        if not isinstance(entry, dict) or not entry.get("id") or str(entry.get("status") or "available") in {"missing", "disabled"}:
+            continue
+        template_id = str(entry["id"])
+        resources.append(
+            {
+                "id": template_id,
+                "resource_id": template_id,
+                "package_id": str(entry.get("template_root") or ""),
+                "kind": "template",
+                "title": str(entry.get("title") or template_id),
+                "description": str(entry.get("description") or ""),
+                "version": str(entry.get("version") or ""),
+                "path_ref": {"registry": "templates", "id": template_id},
+                "status": str(entry.get("status") or "available"),
+                "indexing": entry.get("indexing") if isinstance(entry.get("indexing"), dict) else {
+                    "enabled": True,
+                    "mode": "metadata",
+                    "fields": ["title", "description", "version", "path"],
+                    "sources": [
+                        {"path": "README.md", "mode": "fulltext", "include": ["README.md"], "role": "description"},
+                        {"path": ".", "mode": "metadata", "role": "template_root"},
+                    ],
+                },
+            }
+        )
+    fingerprint = hashlib.sha256(json.dumps(resources, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    snapshot = {
+        "search_index_scope": "workplace",
+        "snapshot": {"id": "workplace-resource-catalogue", "checksum": f"sha256:{fingerprint}"},
+        "local_search_resources": resources,
+    }
+    # Use the Workplace root only as the path-ref resolver's neutral anchor;
+    # no project context, Runtime, Ledger, or session participates here.
+    return snapshot_with_resolved_search_roots(workplace_root, snapshot, workplace_root, sys.modules[__name__])
+
+
 def search_index_project_label(project_root: Path, workplace_root: Path) -> str:
     try:
         return rel(project_root, workplace_root)
@@ -23406,85 +23506,47 @@ def search_index_maintenance_for_known_projects(
     project_roots: list[Path] | None = None,
     verify_files: bool = True,
 ) -> dict[str, Any]:
-    """Run bounded local-search maintenance for projects that already selected resources.
+    """Maintain the one Workplace index without consulting project Runtime state.
 
-    The search index is project-scoped: the project context snapshot decides which
-    knowledge/resources/templates are visible. A workplace-wide resource change can
-    therefore only tick known projects with fresh snapshots; stale projects must
-    refresh their context before ProcessForge can safely rebuild their search index.
+    The retained name is a compatibility shim for existing resource-management
+    call sites.  ``project_roots`` is intentionally ignored: selection is a
+    query-time project-snapshot concern, never an index-maintenance concern.
     """
     from processforge_core.local_resource_search import ResourceSearchIndex
 
-    raw_projects = project_roots if project_roots is not None else project_roots_under_workplace(workplace_root)
-    projects: list[Path] = []
-    seen: set[str] = set()
-    for project in raw_projects:
-        candidate = project.expanduser().resolve()
-        key = str(candidate).lower() if os.name == "nt" else str(candidate)
-        if key not in seen:
-            seen.add(key)
-            projects.append(candidate)
+    del project_roots
     payload: dict[str, Any] = {
         "schema_version": 1,
         "kind": "pf.search_index.maintenance",
         "created_at": now_utc(),
         "reason": reason,
-        "project_count": len(projects),
+        "scope": "workplace",
+        "project_count": 0,
         "results": [],
     }
     results = payload["results"]
     assert isinstance(results, list)
-    for project_root in projects:
-        row: dict[str, Any] = {
-            "project": search_index_project_label(project_root, workplace_root),
-            "status": "pending",
-        }
-        try:
-            if not (project_root / ".pf" / "process-forge.yaml").is_file():
-                row.update({"status": "skipped", "reason": "not_processforge_project"})
-                results.append(row)
-                continue
-            context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
-            context_status = str(context.get("status") or "unknown")
-            row["context_status"] = context_status
-            if context_status not in {"fresh", "fresh_with_updates"}:
-                row.update(
-                    {
-                        "status": "skipped",
-                        "reason": "project_context_not_fresh",
-                        "recommended_action": context.get("recommended_action") or "project-context-refresh",
-                    }
-                )
-                results.append(row)
-                continue
-            tick = ResourceSearchIndex(project_root, snapshot, workplace_root).maintenance_tick(verify_files=verify_files)
-            after = tick.get("after") if isinstance(tick.get("after"), dict) else {}
-            row.update(
-                {
-                    "status": "ok" if after.get("status") == "fresh" else "degraded",
-                    "action": tick.get("action"),
-                    "search_status": after.get("status"),
-                    "generation": after.get("generation"),
-                    "document_count": after.get("document_count"),
-                    "stale_resource_count": after.get("stale_resource_count"),
-                    "failed_file_count": after.get("failed_file_count"),
-                }
-            )
-            if after.get("error"):
-                row["error"] = after.get("error")
-            emit_process_event(
-                project_root,
-                "search.index.maintenance.completed",
-                payload={
-                    "reason": reason,
-                    "action": row.get("action"),
-                    "status": row.get("search_status"),
-                    "generation": row.get("generation"),
-                },
-            )
-        except Exception as exc:  # pragma: no cover - defensive CLI boundary.
-            row.update({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
-        results.append(row)
+    row: dict[str, Any] = {"scope": "workplace", "status": "pending"}
+    try:
+        snapshot = workplace_search_runtime_snapshot(workplace_root)
+        tick = ResourceSearchIndex(workplace_root, snapshot, workplace_root).maintenance_tick(verify_files=verify_files)
+        after = tick.get("after") if isinstance(tick.get("after"), dict) else {}
+        row.update(
+            {
+                "status": "ok" if after.get("status") == "fresh" else "degraded",
+                "action": tick.get("action"),
+                "search_status": after.get("status"),
+                "generation": after.get("generation"),
+                "document_count": after.get("document_count"),
+                "stale_resource_count": after.get("stale_resource_count"),
+                "failed_file_count": after.get("failed_file_count"),
+            }
+        )
+        if after.get("error"):
+            row["error"] = after.get("error")
+    except Exception as exc:  # pragma: no cover - defensive CLI boundary.
+        row.update({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
+    results.append(row)
     report_path = write_search_index_maintenance_runtime_report(workplace_root, payload)
     payload["report"] = rel(report_path, workplace_root)
     try:
@@ -23504,14 +23566,14 @@ def search_index_maintenance_for_known_projects(
 
 
 def print_search_index_maintenance_summary(payload: dict[str, Any]) -> None:
-    print(f"SEARCH_INDEX_PROJECTS: {payload.get('project_count', 0)}")
+    print(f"SEARCH_INDEX_SCOPE: {payload.get('scope') or 'workplace'}")
     if payload.get("report"):
         print(f"SEARCH_INDEX_REPORT: {payload.get('report')}")
     results = payload.get("results") if isinstance(payload.get("results"), list) else []
     for row in results:
         if not isinstance(row, dict):
             continue
-        project = row.get("project")
+        project = row.get("project") or row.get("scope")
         if row.get("status") in {"ok", "degraded"}:
             print(
                 "SEARCH_INDEX: "
@@ -23549,10 +23611,9 @@ def print_search_index_status(payload: dict[str, Any]) -> None:
 def command_search_index_status(args: argparse.Namespace) -> int:
     from processforge_core.local_resource_search import ResourceSearchIndex
 
-    project_root = Path(args.project_root).expanduser().resolve()
     workplace_root = Path(args.workplace).expanduser().resolve()
-    _context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
-    status = ResourceSearchIndex(project_root, snapshot, workplace_root).status(verify_files=bool(getattr(args, "verify_files", False)))
+    snapshot = workplace_search_runtime_snapshot(workplace_root)
+    status = ResourceSearchIndex(workplace_root, snapshot, workplace_root).status(verify_files=bool(getattr(args, "verify_files", False)))
     print_search_index_status(status)
     return 1 if status.get("status") == "degraded" else 0
 
@@ -23560,13 +23621,9 @@ def command_search_index_status(args: argparse.Namespace) -> int:
 def command_search_index_refresh(args: argparse.Namespace) -> int:
     from processforge_core.local_resource_search import ResourceSearchIndex
 
-    project_root = Path(args.project_root).expanduser().resolve()
     workplace_root = Path(args.workplace).expanduser().resolve()
-    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
-    if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
-        print(f"FAIL: project context is not fresh: {context.get('status')}")
-        return 1
-    result = ResourceSearchIndex(project_root, snapshot, workplace_root).refresh()
+    snapshot = workplace_search_runtime_snapshot(workplace_root)
+    result = ResourceSearchIndex(workplace_root, snapshot, workplace_root).refresh()
     print(f"REFRESHED: {result.get('generation')}")
     print(f"RESOURCES: {result.get('resources')}")
     print(f"DOCUMENTS: {result.get('indexed')}")
@@ -23576,13 +23633,9 @@ def command_search_index_refresh(args: argparse.Namespace) -> int:
 def command_search_index_rebuild(args: argparse.Namespace) -> int:
     from processforge_core.local_resource_search import ResourceSearchIndex
 
-    project_root = Path(args.project_root).expanduser().resolve()
     workplace_root = Path(args.workplace).expanduser().resolve()
-    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
-    if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
-        print(f"FAIL: project context is not fresh: {context.get('status')}")
-        return 1
-    result = ResourceSearchIndex(project_root, snapshot, workplace_root).rebuild()
+    snapshot = workplace_search_runtime_snapshot(workplace_root)
+    result = ResourceSearchIndex(workplace_root, snapshot, workplace_root).rebuild()
     print(f"REBUILT: {result.get('generation')}")
     print(f"RESOURCES: {result.get('resources')}")
     print(f"DOCUMENTS: {result.get('indexed')}")
@@ -23592,15 +23645,14 @@ def command_search_index_rebuild(args: argparse.Namespace) -> int:
 def command_search_index_doctor(args: argparse.Namespace) -> int:
     from processforge_core.local_resource_search import ResourceSearchIndex
 
-    project_root = Path(args.project_root).expanduser().resolve()
     workplace_root = Path(args.workplace).expanduser().resolve()
-    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
-    status = ResourceSearchIndex(project_root, snapshot, workplace_root).status()
+    snapshot = workplace_search_runtime_snapshot(workplace_root)
+    status = ResourceSearchIndex(workplace_root, snapshot, workplace_root).status()
     sqlite_info = status.get("sqlite") if isinstance(status.get("sqlite"), dict) else {}
     checks = [
         check("PASS" if sqlite_info.get("fts5_available") else "FAIL", "SQLite FTS5 available"),
         check("PASS" if status.get("status") != "degraded" else "FAIL", "search index readable"),
-        check("PASS" if str(context.get("status") or "") in {"fresh", "fresh_with_updates"} else "WARN", f"project context freshness: {context.get('status')}"),
+        check("PASS", "workplace resource catalogue resolved without project context"),
         check("PASS" if status.get("status") == "fresh" else "WARN", f"search index status: {status.get('status')}"),
         check("PASS" if int(status.get("failed_file_count") or 0) == 0 else "WARN", "failed file count is zero"),
     ]
@@ -23610,13 +23662,9 @@ def command_search_index_doctor(args: argparse.Namespace) -> int:
 def command_search_index_tick(args: argparse.Namespace) -> int:
     from processforge_core.local_resource_search import ResourceSearchIndex
 
-    project_root = Path(args.project_root).expanduser().resolve()
     workplace_root = Path(args.workplace).expanduser().resolve()
-    context, snapshot = local_search_runtime_snapshot(project_root, workplace_root)
-    if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
-        print(f"FAIL: project context is not fresh: {context.get('status')}")
-        return 1
-    payload = ResourceSearchIndex(project_root, snapshot, workplace_root).maintenance_tick(verify_files=not bool(getattr(args, "skip_file_verify", False)))
+    snapshot = workplace_search_runtime_snapshot(workplace_root)
+    payload = ResourceSearchIndex(workplace_root, snapshot, workplace_root).maintenance_tick(verify_files=not bool(getattr(args, "skip_file_verify", False)))
     print(f"ACTION: {payload.get('action')}")
     after = payload.get("after") if isinstance(payload.get("after"), dict) else {}
     print(f"STATUS: {after.get('status')}")
@@ -23643,7 +23691,11 @@ def command_core_update_plan(args: argparse.Namespace) -> int:
     from processforge_core.core_update import CoreUpdateError, build_plan
 
     try:
-        payload = build_plan(Path(args.core_root).expanduser().resolve(), Path(args.archive).expanduser().resolve())
+        payload = build_plan(
+            Path(args.core_root).expanduser().resolve(),
+            Path(args.archive).expanduser().resolve(),
+            workplace_root=Path(args.workplace_root).expanduser().resolve() if args.workplace_root else None,
+        )
     except CoreUpdateError as exc:
         print(json.dumps({"error": {"code": exc.code, "message": exc.message}}, indent=2, sort_keys=True))
         return 1
@@ -23661,12 +23713,27 @@ def command_core_update_apply(args: argparse.Namespace) -> int:
             Path(args.archive).expanduser().resolve(),
             confirm=bool(args.confirm),
             force_local_modifications=bool(args.force_local_modifications),
+            workplace_root=Path(args.workplace_root).expanduser().resolve() if args.workplace_root else None,
         )
     except CoreUpdateError as exc:
         print(json.dumps({"error": {"code": exc.code, "message": exc.message}}, indent=2, sort_keys=True))
         return 1
+    if args.workplace_root:
+        core_root = Path(args.core_root).expanduser().resolve()
+        command = [sys.executable, str(core_root / "bin" / "pf.py"), "doctor-workplace", "--root", str(Path(args.workplace_root).expanduser().resolve())]
+        try:
+            completed = subprocess.run(command, text=True, encoding="utf-8", errors="replace", capture_output=True, timeout=90)
+            doctor = {"status": "pass" if completed.returncode == 0 else "fail", "command": command, "output": completed.stdout + completed.stderr}
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            doctor = {"status": "fail", "command": command, "output": str(exc)}
+        payload["post_update_doctor"] = doctor
+        last_apply_path = core_root / "runtime" / "core-update" / "last-apply.json"
+        if last_apply_path.is_file():
+            last_apply = json.loads(last_apply_path.read_text(encoding="utf-8"))
+            last_apply["post_update_doctor"] = doctor
+            last_apply_path.write_text(json.dumps(last_apply, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(payload, indent=2, sort_keys=True))
-    return 0
+    return 0 if not args.workplace_root or payload["post_update_doctor"]["status"] == "pass" else 2
 
 
 def command_core_update_repair(args: argparse.Namespace) -> int:
@@ -26126,27 +26193,22 @@ def build_parser() -> argparse.ArgumentParser:
 
     search_index = sub.add_parser("search-index", help="Inspect and maintain the derived workplace local resource search index.")
     search_index_sub = search_index.add_subparsers(dest="search_index_command", required=True)
-    search_index_status = search_index_sub.add_parser("status", help="Show search index readiness for a project snapshot.")
-    search_index_status.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_status = search_index_sub.add_parser("status", help="Show readiness of the shared Workplace search index.")
     search_index_status.add_argument("--workplace", required=True, help="Workplace root path.")
-    search_index_status.add_argument("--verify-files", action="store_true", help="Read authorized files and mark the scope stale when fingerprints changed.")
+    search_index_status.add_argument("--verify-files", action="store_true", help="Read registered Workplace files and mark the index stale when fingerprints changed.")
     search_index_status.set_defaults(func=command_search_index_status)
-    search_index_refresh = search_index_sub.add_parser("refresh", help="Refresh the project snapshot scope in the workplace search index.")
-    search_index_refresh.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_refresh = search_index_sub.add_parser("refresh", help="Refresh all registered Workplace resources in the shared search index.")
     search_index_refresh.add_argument("--workplace", required=True, help="Workplace root path.")
     search_index_refresh.set_defaults(func=command_search_index_refresh)
-    search_index_rebuild = search_index_sub.add_parser("rebuild", help="Rebuild the derived workplace search index for the project snapshot scope.")
-    search_index_rebuild.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_rebuild = search_index_sub.add_parser("rebuild", help="Rebuild the derived shared Workplace search index.")
     search_index_rebuild.add_argument("--workplace", required=True, help="Workplace root path.")
     search_index_rebuild.set_defaults(func=command_search_index_rebuild)
-    search_index_doctor = search_index_sub.add_parser("doctor", help="Validate search index capabilities and readiness.")
-    search_index_doctor.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_doctor = search_index_sub.add_parser("doctor", help="Validate shared Workplace search index capabilities and readiness.")
     search_index_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
     search_index_doctor.set_defaults(func=command_search_index_doctor)
-    search_index_tick = search_index_sub.add_parser("tick", help="Run one bounded maintenance pass for the project snapshot search scope.")
-    search_index_tick.add_argument("--project-root", required=True, help="Project root path.")
+    search_index_tick = search_index_sub.add_parser("tick", help="Run one bounded maintenance pass for the shared Workplace index.")
     search_index_tick.add_argument("--workplace", required=True, help="Workplace root path.")
-    search_index_tick.add_argument("--skip-file-verify", action="store_true", help="Skip file fingerprint verification and only refresh missing/stale metadata state.")
+    search_index_tick.add_argument("--skip-file-verify", action="store_true", help="Skip registered-file fingerprint verification and only refresh missing/stale metadata state.")
     search_index_tick.set_defaults(func=command_search_index_tick)
 
     core_update = sub.add_parser("core-update", help="Plan and apply manifest-based ProcessForge core archive updates.")
@@ -26157,10 +26219,12 @@ def build_parser() -> argparse.ArgumentParser:
     core_update_plan = core_update_sub.add_parser("plan", help="Validate an archive and print add/change/remove plan without modifying files.")
     core_update_plan.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
     core_update_plan.add_argument("--archive", required=True, help="ProcessForge release archive containing processforge-core.manifest.json.")
+    core_update_plan.add_argument("--workplace-root", help="Existing Workplace to assess for compatible archive-declared migration.")
     core_update_plan.set_defaults(func=command_core_update_plan)
     core_update_apply = core_update_sub.add_parser("apply", help="Apply a manifest-based core update from an explicit archive.")
     core_update_apply.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
     core_update_apply.add_argument("--archive", required=True, help="ProcessForge release archive containing processforge-core.manifest.json.")
+    core_update_apply.add_argument("--workplace-root", help="Existing Workplace to migrate with the Core update.")
     core_update_apply.add_argument("--confirm", action="store_true", help="Required confirmation for file changes.")
     core_update_apply.add_argument("--force-local-modifications", action="store_true", help="Allow replacing locally modified PF-owned files after backup.")
     core_update_apply.set_defaults(func=command_core_update_apply)

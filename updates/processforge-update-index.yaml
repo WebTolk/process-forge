@@ -129,7 +129,7 @@ versions:
       min_project_schema: 1
       max_project_schema: 1
     migration:
-      required: false
+      required: true
       guide: updates/migrations/1.1.0-stable-release.md
     changes:
       - type: runtime

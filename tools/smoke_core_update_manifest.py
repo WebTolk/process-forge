@@ -147,6 +147,123 @@ def main() -> int:
         assert status["in_progress"]["error"]["code"] == "file_operation_failed"
         assert repair_status(core)["status"] == "safe_to_rollback"
 
+    migration_yaml = """schema_version: 1
+kind: processforge.workplace_migration
+id: fixture-workplace-1.0.2-to-1.1.0
+from_versions:
+  - 1.0.0
+  - 1.0.1
+  - 1.0.2
+allow_unmanaged_installed_core: true
+to_version: 1.1.0
+operations:
+  - id: install-codex-exec-driver
+    type: copy_if_missing
+    source: templates/runtime-drivers/codex-exec.yaml
+    target: runtime-drivers/codex-exec.yaml
+  - id: register-codex-exec-driver
+    type: append_registry_entry_if_missing
+    target: registries/runtime-drivers.yaml
+    list_key: runtime_drivers
+    match_key: id
+    entry:
+      id: codex-exec
+      path: ../runtime-drivers/codex-exec.yaml
+      status: available
+      builtin: true
+"""
+    driver_yaml = "schema_version: 1\nid: codex-exec\nkind: shell\n"
+    registry_yaml = "schema_version: 1\nruntime_drivers:\n  - id: manual\n    path: ../runtime-drivers/manual.yaml\ncustom_registry_setting: preserve\n"
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-workplace-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        workplace = root / "workplace"
+        (workplace / "registries").mkdir(parents=True)
+        (workplace / "workplace.yaml").write_text("schema_version: 1\ncustom_setting: preserve\n", encoding="utf-8")
+        (workplace / "registries" / "runtime-drivers.yaml").write_text(registry_yaml, encoding="utf-8")
+        archive = root / "processforge-1.1.0.zip"
+        write_archive(
+            archive,
+            {
+                "dir/b.txt": "new-b",
+                "dir/c.txt": "same-c",
+                "d.txt": "new-d",
+                "updates/migrations/1.1.0-workplace-runtime-drivers.yaml": migration_yaml,
+                "templates/runtime-drivers/codex-exec.yaml": driver_yaml,
+            },
+            version="1.1.0",
+        )
+        plan = core_update.build_plan(core, archive, workplace_root=workplace)
+        assert plan["status"] == "planned", plan
+        assert plan["workplace_migration"]["status"] == "planned", plan
+        assert len(plan["workplace_migration"]["operations"]) == 2, plan
+        record = apply_update(core, archive, confirm=True, workplace_root=workplace)
+        assert record["workplace_migration"]["migration"]["id"] == "fixture-workplace-1.0.2-to-1.1.0", record
+        assert (workplace / "runtime-drivers" / "codex-exec.yaml").read_text(encoding="utf-8") == driver_yaml
+        migrated_registry = (workplace / "registries" / "runtime-drivers.yaml").read_text(encoding="utf-8")
+        assert "custom_registry_setting: preserve" in migrated_registry
+        assert "id: codex-exec" in migrated_registry
+        assert "custom_setting: preserve" in (workplace / "workplace.yaml").read_text(encoding="utf-8")
+        assert (Path(record["backup_dir"]) / "workplace-migration.json").is_file()
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-workplace-failure-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        workplace = root / "workplace"
+        (workplace / "registries").mkdir(parents=True)
+        (workplace / "workplace.yaml").write_text("schema_version: 1\n", encoding="utf-8")
+        (workplace / "registries" / "runtime-drivers.yaml").write_text(registry_yaml, encoding="utf-8")
+        archive = root / "processforge-1.1.0.zip"
+        write_archive(archive, {"updates/migrations/1.1.0-workplace-runtime-drivers.yaml": migration_yaml, "templates/runtime-drivers/codex-exec.yaml": driver_yaml}, version="1.1.0")
+        original_atomic_write = core_update.atomic_write
+
+        def fail_on_workplace_driver(target: Path, content: bytes) -> None:
+            if target.name == "codex-exec.yaml":
+                raise OSError("locked workplace fixture")
+            original_atomic_write(target, content)
+
+        core_update.atomic_write = fail_on_workplace_driver
+        try:
+            try:
+                apply_update(core, archive, confirm=True, workplace_root=workplace)
+            except CoreUpdateError as exc:
+                assert exc.code == "file_operation_failed"
+            else:
+                raise AssertionError("locked Workplace migration was accepted")
+        finally:
+            core_update.atomic_write = original_atomic_write
+        assert repair_status(core)["status"] == "safe_to_rollback"
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-workplace-doctor-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        workplace = root / "workplace"
+        (workplace / "registries").mkdir(parents=True)
+        (workplace / "workplace.yaml").write_text("schema_version: 1\n", encoding="utf-8")
+        (workplace / "registries" / "runtime-drivers.yaml").write_text(registry_yaml, encoding="utf-8")
+        archive = root / "processforge-1.1.0.zip"
+        write_archive(
+            archive,
+            {
+                "bin/pf.py": "import sys\nprint('PASS: fixture doctor')\nraise SystemExit(0)\n",
+                "updates/migrations/1.1.0-workplace-runtime-drivers.yaml": migration_yaml,
+                "templates/runtime-drivers/codex-exec.yaml": driver_yaml,
+            },
+            version="1.1.0",
+        )
+        applied = run_pf("core-update", "apply", "--core-root", str(core), "--archive", str(archive), "--workplace-root", str(workplace), "--confirm")
+        assert applied.returncode == 0, applied.stdout + applied.stderr
+        payload = json.loads(applied.stdout)
+        assert payload["post_update_doctor"]["status"] == "pass", payload
+        assert "PASS: fixture doctor" in payload["post_update_doctor"]["output"]
+
     print("PASS: manifest-based core update smoke")
     return 0
 
