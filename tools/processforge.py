@@ -6869,6 +6869,9 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
     commands: list[ReleaseCommand] = [
         ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py"), str(root / "tools" / "specialization_smoke_helpers.py"), str(root / "tools" / "codex_exec_worker.py")], 30),
         ReleaseCommand("smoke_cli_audit_f0608", [sys.executable, str(root / "tools" / "smoke_cli_audit_f0608.py")], 180),
+        ReleaseCommand("smoke_core_update_missing_owned", [sys.executable, str(root / "tools" / "smoke_core_update_missing_owned.py")], 120),
+        ReleaseCommand("smoke_search_source_integrity", [sys.executable, str(root / "tools" / "smoke_search_source_integrity.py")], 120),
+        ReleaseCommand("smoke_raw_ingress_incremental_recovery", [sys.executable, str(root / "tools" / "smoke_raw_ingress_incremental_recovery.py")], 180),
         ReleaseCommand("schema validation", [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)], 60),
         ReleaseCommand("public cleanliness", [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)], 60),
         ReleaseCommand("smoke_public_cleanliness", [sys.executable, str(root / "tools" / "smoke_public_cleanliness.py")], 60),

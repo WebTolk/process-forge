@@ -21,7 +21,9 @@ MAX_FILE_BYTES = 1_000_000
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
 TEXT_SUFFIXES = {".md", ".txt", ".rst", ".py", ".json", ".yaml", ".yml", ".toml", ".ini", ".csv"}
-SCHEMA_VERSION = 3
+# Version 4 also invalidates derived rows produced before source deduplication
+# and explicit-file filtering, even though the SQL table layout is unchanged.
+SCHEMA_VERSION = 4
 POLICY_MODES = {"fulltext", "metadata", "none"}
 
 
@@ -356,7 +358,15 @@ def _iter_source_files(root: Path, source: IndexSource) -> Iterable[tuple[Path, 
     if base.is_file():
         rel_path = base.relative_to(root.parent if not root.is_dir() else root).as_posix() if root != base else base.name
         if base.suffix.lower() in TEXT_SUFFIXES and base.stat().st_size <= MAX_FILE_BYTES:
-            yield base, rel_path
+            # Treat an explicit file source exactly like a file discovered
+            # beneath a directory source.  In particular, an explicit path
+            # must still satisfy include/exclude authorization patterns.
+            source_rel = base.name
+            if _matches_any(source_rel, source.include) and not (
+                source.exclude
+                and (_matches_any(source_rel, source.exclude) or _matches_any(rel_path, source.exclude))
+            ):
+                yield base, rel_path
         return
     if not base.is_dir():
         return
@@ -392,12 +402,28 @@ def _metadata_content(resource: AuthorizedResource, source: IndexSource | None =
 
 def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
     documents: list[dict[str, Any]] = []
+    positions: dict[tuple[str, str], int] = {}
+
+    def append(document: dict[str, Any]) -> None:
+        # Multiple sources may intentionally overlap (for example, a source
+        # tree and an explicit file).  A logical document is identified by
+        # its resource and canonical relative path, not by the source that
+        # happened to discover it first.
+        identity = (str(document["resource_id"]), str(document["relative_path"]))
+        if identity not in positions:
+            positions[identity] = len(documents)
+            documents.append(document)
+        elif document["metadata"]["mode"] == "fulltext" and documents[positions[identity]]["metadata"]["mode"] != "fulltext":
+            # An explicit fulltext source must not be hidden by a metadata
+            # source for the same path merely because of source ordering.
+            documents[positions[identity]] = document
+
     for resource in resources:
         policy_hash = _policy_hash(resource.indexing)
         if all(source.mode != "fulltext" for source in resource.sources):
             content = _metadata_content(resource, resource.sources[0] if resource.sources else None)
             content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
-            documents.append(
+            append(
                 {
                     "resource_id": resource.resource_id,
                     "package_id": resource.package_id,
@@ -417,7 +443,7 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
             if source.mode == "metadata":
                 content = _metadata_content(resource, source)
                 content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
-                documents.append(
+                append(
                     {
                         "resource_id": resource.resource_id,
                         "package_id": resource.package_id,
@@ -438,7 +464,7 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
                     continue
                 content = _metadata_content(resource, source) + "\n" + text
                 content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
-                documents.append(
+                append(
                     {
                         "resource_id": resource.resource_id,
                         "package_id": resource.package_id,

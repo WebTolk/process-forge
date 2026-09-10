@@ -394,14 +394,22 @@ def build_plan(core_root: Path, archive_path: Path, *, workplace_root: Path | No
     unchanged = sorted(path for path in common if old_files[path]["sha256"] == new_files[path]["sha256"])
     locally_modified = []
     missing_owned = []
+    blockers = []
     for relative_path in sorted(old_paths):
-        target = ensure_inside(core_root, relative_path)
+        target = core_root / relative_path
+        if target.is_symlink() or (os.path.lexists(target) and not target.is_file()):
+            blockers.append({"code": "nonregular_owned_path", "path": relative_path})
+            continue
         if not target.exists():
             missing_owned.append(relative_path)
+            collision = unowned_path_blocker(core_root, relative_path)
+            if collision:
+                blockers.append(collision)
             continue
-        if target.is_file() and sha256_file(target) != old_files[relative_path]["sha256"]:
+        target = ensure_inside(core_root, relative_path)
+        if sha256_file(target) != old_files[relative_path]["sha256"]:
             locally_modified.append(relative_path)
-    blockers = []
+    restored = sorted(set(missing_owned).intersection(unchanged))
     for relative_path in sorted(set(locally_modified).intersection(set(removed).union(changed))):
         blockers.append({"code": "locally_modified", "path": relative_path})
     for relative_path in added:
@@ -428,13 +436,14 @@ def build_plan(core_root: Path, archive_path: Path, *, workplace_root: Path | No
         "installed_manifest": str(manifest_path(core_root)) if old_manifest else None,
         "installed_version": old_manifest.get("version") if old_manifest else None,
         "available_version": new_manifest.get("version"),
-        "counts": {"added": len(added), "removed": len(removed), "changed": len(changed), "unchanged": len(unchanged), "locally_modified": len(locally_modified), "missing_owned": len(missing_owned)},
+        "counts": {"added": len(added), "removed": len(removed), "changed": len(changed), "unchanged": len(unchanged), "locally_modified": len(locally_modified), "missing_owned": len(missing_owned), "restored": len(restored)},
         "added": added,
         "removed": removed,
         "changed": changed,
         "unchanged": unchanged,
         "locally_modified": locally_modified,
         "missing_owned": missing_owned,
+        "restored": restored,
         "blockers": blockers,
         "workplace_migration": migration,
         "new_manifest": new_manifest,
@@ -524,11 +533,14 @@ def apply_update(
     in_progress_path.parent.mkdir(parents=True, exist_ok=True)
     backed_up: dict[str, str | None] = {}
     pending_operations: list[dict[str, str]] = []
-    for relative_path in sorted(set(plan["removed"]).union(plan["changed"])):
+    missing_unchanged = set(plan["restored"])
+    backup_paths = set(plan["removed"]).union(plan["changed"]).union(missing_unchanged)
+    for relative_path in sorted(backup_paths):
         pending_operations.append({"op": "backup", "path": relative_path})
     for relative_path in plan["removed"]:
         pending_operations.append({"op": "delete", "path": relative_path})
-    for relative_path in sorted(set(plan["added"]).union(plan["changed"])):
+    write_paths = set(plan["added"]).union(plan["changed"]).union(missing_unchanged)
+    for relative_path in sorted(write_paths):
         pending_operations.append({"op": "write", "path": relative_path})
     migration = plan.get("workplace_migration") if isinstance(plan.get("workplace_migration"), dict) else {}
     if migration.get("status") == "planned" and migration.get("operations"):
@@ -575,7 +587,7 @@ def apply_update(
                 raise CoreUpdateError("workplace_root_missing", "Workplace migration was planned without a Workplace root")
             migration_record = apply_workplace_migration(archive_path, workplace_root.resolve(), migration, backup_dir)
             complete_operation("workplace_migration", str(migration.get("migration", {}).get("id") or "workplace"))
-        for relative_path in sorted(set(plan["removed"]).union(plan["changed"])):
+        for relative_path in sorted(backup_paths):
             backed_up[relative_path] = backup_file(core_root, backup_dir, relative_path)
             complete_operation("backup", relative_path)
         for relative_path in plan["removed"]:
@@ -585,7 +597,7 @@ def apply_update(
                 prune_empty_parents(core_root, relative_path)
             complete_operation("delete", relative_path)
         with zipfile.ZipFile(archive_path) as archive:
-            for relative_path in sorted(set(plan["added"]).union(plan["changed"])):
+            for relative_path in sorted(write_paths):
                 content = archive.read(relative_path)
                 atomic_write(ensure_inside(core_root, relative_path), content)
                 complete_operation("write", relative_path)
