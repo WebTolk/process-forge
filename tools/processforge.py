@@ -13,6 +13,7 @@ import io
 import json
 import os
 import platform
+import socket
 import re
 import shutil
 import signal
@@ -3147,8 +3148,17 @@ def command_workplace_mode_status(args: argparse.Namespace) -> int:
 
 def active_organized_project_sessions(workplace_root: Path) -> list[dict[str, Any]]:
     active: list[dict[str, Any]] = []
-    for presence_path in (workplace_root / "runtime" / "agent-presence").glob("*/*.json"):
-        data = load_json(presence_path)
+    presence_root = workplace_root / "runtime" / "agent-presence"
+    presence_paths = [*presence_root.glob("*.json"), *presence_root.glob("*/*.json")]
+    for presence_path in sorted(presence_paths):
+        try:
+            data = json_read(presence_path)
+        except (OSError, TypeError, ValueError, json.JSONDecodeError):
+            # Presence is observational. A partially-written or legacy record
+            # must not make workplace-mode inspection unusable.
+            continue
+        if not isinstance(data, dict):
+            continue
         if data.get("status") != "online":
             continue
         project_root_value = data.get("project_root")
@@ -6858,6 +6868,7 @@ def print_release_command_output(result: ReleaseCommandResult) -> None:
 def release_test_commands(root: Path, *, clean_first: bool = True, public: bool = False) -> list[ReleaseCommand]:
     commands: list[ReleaseCommand] = [
         ReleaseCommand("py_compile", [sys.executable, "-m", "py_compile", str(root / "tools" / "processforge.py"), str(root / "bin" / "pf.py"), str(root / "tools" / "specialization_smoke_helpers.py"), str(root / "tools" / "codex_exec_worker.py")], 30),
+        ReleaseCommand("smoke_cli_audit_f0608", [sys.executable, str(root / "tools" / "smoke_cli_audit_f0608.py")], 180),
         ReleaseCommand("schema validation", [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)], 60),
         ReleaseCommand("public cleanliness", [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)], 60),
         ReleaseCommand("smoke_public_cleanliness", [sys.executable, str(root / "tools" / "smoke_public_cleanliness.py")], 60),
@@ -13064,47 +13075,169 @@ def write_text_file_atomic(path: Path, text: str) -> None:
     os.replace(temporary, path)
 
 
+def _registry_lock_try_os_lock(fd: int) -> bool:
+    """Take a non-blocking advisory lock on an open registry lock file."""
+
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            os.lseek(fd, 0, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except (ImportError, OSError):
+        return False
+    return True
+
+
+def _registry_lock_owner_alive(owner: dict[str, Any]) -> bool | None:
+    """Return liveness, or None when ownership cannot be safely assessed."""
+
+    owner_host = str(owner.get("host") or "")
+    if owner_host and owner_host != socket.gethostname():
+        return None
+    try:
+        pid = int(owner["pid"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if pid <= 0:
+        return None
+    if os.name == "nt":
+        try:
+            import ctypes
+
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            from ctypes import wintypes
+            kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+            kernel32.OpenProcess.restype = wintypes.HANDLE
+            kernel32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+            kernel32.GetExitCodeProcess.restype = wintypes.BOOL
+            kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+            kernel32.CloseHandle.restype = wintypes.BOOL
+            handle = kernel32.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+            if not handle:
+                # ERROR_INVALID_PARAMETER means that the PID is gone. Other
+                # failures (notably access denied) remain conservatively live.
+                return ctypes.get_last_error() != 87
+            exit_code = ctypes.c_ulong()
+            try:
+                if not kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+                    return True
+                return exit_code.value == 259  # STILL_ACTIVE
+            finally:
+                kernel32.CloseHandle(handle)
+        except (AttributeError, OSError, TypeError, ValueError):
+            pass
+        try:
+            result = subprocess.run(
+                ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                shell=False,
+                timeout=5,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return True
+        output = result.stdout or ""
+        if str(pid) in output:
+            return True
+        # A failed or access-denied tasklist query is not proof of death.
+        # Only the explicit no-match response permits stale recovery.
+        if result.returncode == 0 and "no tasks are running" in output.lower():
+            return False
+        return True
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return True
+    return True
+
+
+def _registry_lock_stale(owner: dict[str, Any], lock_path: Path, stale_after_seconds: float) -> bool:
+    try:
+        created_at = str(owner["created_at"])
+        created = datetime.fromisoformat(created_at.replace("Z", "+00:00")).timestamp()
+        age = time.time() - created
+    except (KeyError, TypeError, ValueError, OverflowError, OSError):
+        try:
+            age = time.time() - lock_path.stat().st_mtime
+        except OSError:
+            return False
+    return age > stale_after_seconds
+
+
+def _registry_lock_read_owner(lock_path: Path) -> dict[str, Any] | None:
+    try:
+        value = json.loads(lock_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
 @contextlib.contextmanager
 def registry_file_lock(path: Path, *, timeout_seconds: float = 30.0, stale_after_seconds: float = 300.0) -> Any:
     path.parent.mkdir(parents=True, exist_ok=True)
     lock_path = path.with_name(f".{path.name}.lock")
+    # Never unlink this guard: all new writers and stale-owner recovery must
+    # lock the same inode, including across Windows close-before-unlink.
+    guard_path = path.with_name(f".{path.name}.lock.guard")
+    guard_fd = os.open(str(guard_path), os.O_CREAT | os.O_RDWR, 0o600)
     deadline = time.monotonic() + timeout_seconds
-    while True:
-        try:
-            fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            with os.fdopen(fd, "w", encoding="utf-8") as handle:
-                handle.write(
-                    json.dumps(
-                        {
-                            "path": str(path),
-                            "pid": os.getpid(),
-                            "created_at": now_utc(),
-                        },
-                        ensure_ascii=False,
-                        indent=2,
-                        sort_keys=True,
-                    )
-                    + "\n"
-                )
-            break
-        except FileExistsError:
-            try:
-                age = time.time() - lock_path.stat().st_mtime
-                if age > stale_after_seconds:
-                    lock_path.unlink()
-                    continue
-            except OSError:
-                pass
-            if time.monotonic() >= deadline:
-                raise SystemExit(f"FAIL: registry is locked by another writer: {lock_path}")
-            time.sleep(0.1)
+    owner = {"path": str(path), "pid": os.getpid(), "host": socket.gethostname(),
+             "created_at": now_utc(), "token": uuid.uuid4().hex}
+    acquired = False
+
+    def wait_for_owner() -> None:
+        if time.monotonic() >= deadline:
+            raise SystemExit(f"FAIL: registry is locked by another writer: {lock_path}")
+        time.sleep(0.1)
+
     try:
+        while not _registry_lock_try_os_lock(guard_fd):
+            wait_for_owner()
+        while True:
+            try:
+                fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            except FileExistsError:
+                existing = _registry_lock_read_owner(lock_path)
+                if (existing and _registry_lock_stale(existing, lock_path, stale_after_seconds)
+                        and _registry_lock_owner_alive(existing) is False):
+                    # The persistent guard serializes reapers with acquisition
+                    # and release. Unknown/foreign/live legacy owners stay put.
+                    if _registry_lock_read_owner(lock_path) == existing:
+                        try:
+                            lock_path.unlink()
+                        except FileNotFoundError:
+                            pass
+                        continue
+                wait_for_owner()
+                continue
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                    json.dump(owner, handle, ensure_ascii=False, sort_keys=True)
+                    handle.write("\n")
+                    handle.flush()
+                    os.fsync(handle.fileno())
+            except BaseException:
+                lock_path.unlink(missing_ok=True)
+                raise
+            acquired = True
+            break
         yield
     finally:
         try:
-            lock_path.unlink()
-        except FileNotFoundError:
-            pass
+            if acquired and _registry_lock_read_owner(lock_path) == owner:
+                lock_path.unlink(missing_ok=True)
+        finally:
+            os.close(guard_fd)
 
 
 def parse_cli_bool(value: Any, *, name: str = "value") -> bool:
@@ -18271,7 +18404,11 @@ def expected_report_artifact(task: dict[str, Any]) -> str:
     if value:
         return normalize_assignment_path(value)
     task_id = safe_id(str(task.get("id") or "task"), "task")
-    return f".pf/artifacts/{task_id}-report.md"
+    return default_expected_report_artifact(task_id)
+
+
+def default_expected_report_artifact(worker_id: str) -> str:
+    return f".pf/artifacts/{safe_id(worker_id, 'worker')}-report.md"
 
 
 def worker_run_paths(project_root: Path, run_id: str, task_id: str) -> dict[str, Path]:
