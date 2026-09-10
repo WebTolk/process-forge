@@ -6953,6 +6953,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_docs_garage_no_runtime_required", [sys.executable, str(root / "tools" / "smoke_docs_garage_no_runtime_required.py")], 120),
         ReleaseCommand("smoke_docs_mcp_host_owned_stdio", [sys.executable, str(root / "tools" / "smoke_docs_mcp_host_owned_stdio.py")], 120),
         ReleaseCommand("smoke_docs_agent_no_manual_infra", [sys.executable, str(root / "tools" / "smoke_docs_agent_no_manual_infra.py")], 120),
+        ReleaseCommand("smoke_docs_current_code_contract", [sys.executable, str(root / "tools" / "smoke_docs_current_code_contract.py")], 120),
         ReleaseCommand("smoke_docs_codex_hooks_optional", [sys.executable, str(root / "tools" / "smoke_docs_codex_hooks_optional.py")], 120),
         ReleaseCommand("smoke_doctor_gitignore_effective_protection", [sys.executable, str(root / "tools" / "smoke_doctor_gitignore_effective_protection.py")], 180),
         ReleaseCommand("smoke_mcp_missing_session_diagnostics", [sys.executable, str(root / "tools" / "smoke_mcp_missing_session_diagnostics.py")], 120),
@@ -6976,6 +6977,8 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_work_transition_blocks_missing_gate", [sys.executable, str(root / "tools" / "smoke_work_transition_blocks_missing_gate.py")], 180),
         ReleaseCommand("smoke_work_transition_recovers_after_invalid_evidence", [sys.executable, str(root / "tools" / "smoke_work_transition_recovers_after_invalid_evidence.py")], 180),
         ReleaseCommand("smoke_work_transition_records_evidence", [sys.executable, str(root / "tools" / "smoke_work_transition_records_evidence.py")], 180),
+        ReleaseCommand("smoke_work_evidence_freshness", [sys.executable, str(root / "tools" / "smoke_work_evidence_freshness.py")], 360),
+        ReleaseCommand("smoke_work_completion_recovery", [sys.executable, str(root / "tools" / "smoke_work_completion_recovery.py")], 360),
         ReleaseCommand("smoke_work_transition_updates_assignment_stage", [sys.executable, str(root / "tools" / "smoke_work_transition_updates_assignment_stage.py")], 180),
         ReleaseCommand("smoke_work_transition_emits_stage_events", [sys.executable, str(root / "tools" / "smoke_work_transition_emits_stage_events.py")], 180),
         ReleaseCommand("smoke_work_transition_final_stage_completes_run", [sys.executable, str(root / "tools" / "smoke_work_transition_final_stage_completes_run.py")], 180),
@@ -12473,15 +12476,6 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
         if out_path is None:
             if output_id in waiver_map:
                 checks.append(check("WARN", f"required output without path waived: {output_id} ({waiver_map[output_id]})"))
-            elif entry == ".codex/hooks.json" and not (project_root / entry).exists():
-                checks.append(
-                    check_with_hint(
-                        "WARN",
-                        ".gitignore does not predeclare optional .codex/hooks.json",
-                        "Codex hooks are optional host telemetry and are not installed for a generic project.",
-                        "add .codex/hooks.json only when opting into the project-local Codex integration",
-                    )
-                )
             else:
                 checks.append(check("FAIL", f"required output has no path: {output_id}"))
             continue

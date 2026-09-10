@@ -157,7 +157,7 @@ def main() -> int:
         assert check["execution_readiness"]["status"] == "blocked", check
         assert check["execution_readiness"]["missing_capabilities"][0]["capability"] == "filesystem.write", check
 
-        run_cli("search-index", "refresh", "--project-root", str(project), "--workplace", str(workplace))
+        run_cli("search-index", "refresh", "--workplace", str(workplace))
         run_cli(
             "agent-checkin",
             "--workplace",

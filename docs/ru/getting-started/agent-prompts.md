@@ -43,8 +43,14 @@
   совместимости пользовательского опыта; текущие команды остаются файловыми и
   не требуют вопросов в терминале.
 - Для обычной проектной работы используйте `pf.context`, при необходимости
-  `pf.search`, затем `pf.resolve` и `pf.work.start`. Текущий context/snapshot
-  важнее historical generated reports.
+  `pf.search`, затем `pf.resolve`, `pf.work.start`, `pf.work.state` и
+  `pf.work.transition` до ответа `run_completed`. Если получен
+  `process_choice_required`, выберите предложенный `process_id` и повторите
+  start; `default` — рекомендация, а не автоматический выбор. Текущий
+  context/snapshot важнее historical generated reports.
+- Полный цикл и примеры evidence приведены в
+  [декларативном исполнении процесса](../concepts/declarative-process-execution.md)
+  и [Garage Core (EN)](../../concepts/garage-core.md).
 - Во время обычной работы не устанавливайте, не запускайте и не ремонтируйте PF
   Runtime, MCP, host hooks, Agent Ledger или search indexes. Используйте
   доступные PF tools и сообщайте operator-level blocker.
@@ -180,7 +186,10 @@ python .pf/runtime/bin/pf.py process-list --project-root .
 python .pf/runtime/bin/pf.py process-describe --project-root . --process <process-id>
 ```
 
-## Advanced task batch run
+## Advanced task batch run (совместимость)
+
+Этот путь предназначен только для явно запрошенного управления старым
+run/task lifecycle или операторской диагностики, не для обычной Garage-работы.
 
 ```bash
 python .pf/runtime/bin/pf.py session-start --project-root . --agent primary-agent --process task-batch-execution
@@ -260,8 +269,10 @@ tools, MCP providers, processes, coding standards и capabilities уже
 Используй ProcessForge для этой задачи. Сначала прочитай
 .pf/START_AGENT_HERE.md, создай или переиспользуй governed work через
 pf.work.start, используй pf.search и pf.resolve для разрешённых ресурсов,
-сохраняй артефакты в .pf, выполни проверки и заверши кратким handoff. Не
-обслуживай инфраструктуру PF.
+проверяй текущие обязательства через pf.work.state и переходи между стадиями
+через pf.work.transition(outcome, evidence, notes). Продолжай до run_completed.
+Сохраняй артефакты в .pf, выполни проверки и заверши кратким handoff.
+Не обслуживай инфраструктуру PF.
 ```
 
 ## Subagent prompt: documentation specialist

@@ -36,13 +36,16 @@ private filesystem paths; `pf.search` navigation is described separately
 below.
 
 `pf.work.start` is the preferred transition from Garage understanding to
-governed work. The agent supplies only a non-empty `objective`. ProcessForge
-validates and pins the process definition, selects its declared initial stage,
-creates or reuses the Run and Assignment, and returns the current work state.
-The agent then uses `pf.work.state` and `pf.work.transition(outcome, evidence)`;
-the next stage is never a caller input. A session id may
-link telemetry, but session availability does not change `mode: garage` to
-`mode: forge`.
+governed work. The agent supplies a non-empty `objective` and may also supply
+`process_id` when the project authorizes more than one process. If selection is
+ambiguous, ProcessForge returns `process_choice_required` candidates and the
+caller must choose one of them; `default` is a recommendation, not an implicit
+selection. ProcessForge validates and pins the process definition, selects its
+declared initial stage, creates or reuses the Run and Assignment, and returns
+the current work state. The agent then uses `pf.work.state` and
+`pf.work.transition(outcome, evidence)`; the next stage is never a caller
+input. A session id may link telemetry, but session availability does not
+change `mode: garage` to `mode: forge`.
 
 Session-scoped tool failures return stable machine-readable error codes. For
 `missing_session`, the error payload also includes a bounded remediation object:

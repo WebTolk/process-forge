@@ -75,6 +75,8 @@ provides explicit paths and choices.
 - [Hooks and events](concepts/processforge-events.md)
 - [Hooks and events overview](concepts/hooks-events.md)
 - [Runtime model](concepts/runtime-model.md)
+- [Garage Core](concepts/garage-core.md)
+- [Declarative process execution](concepts/declarative-process-execution.md)
 - [PF Runtime MCP facade](concepts/runtime-mcp.md)
 - [Agent session model](concepts/agent-session-model.md)
 - [Project coordination modes](concepts/project-coordination-modes.md)

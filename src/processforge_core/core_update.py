@@ -344,6 +344,39 @@ def installed_manifest(core_root: Path) -> dict[str, Any] | None:
     return read_manifest(path) if path.is_file() else None
 
 
+def unowned_path_blocker(
+    core_root: Path,
+    relative_path: str,
+    *,
+    removable_owned_paths: set[str] | frozenset[str] = frozenset(),
+) -> dict[str, str] | None:
+    """Return a blocker when an added payload would replace an unowned path.
+
+    ``Path.exists()`` does not report broken symlinks, and resolving a path
+    through a non-directory ancestor can defer the failure until apply has
+    already created update state.  Inspect the lexical path first so all
+    existing objects, including symlinks, are protected before any mutation.
+    """
+    target = core_root / relative_path
+    if os.path.lexists(target):
+        return {"code": "unowned_path_collision", "path": relative_path, "conflict_path": relative_path}
+
+    ancestor = target.parent
+    while ancestor != core_root:
+        if os.path.lexists(ancestor) and (ancestor.is_symlink() or not ancestor.is_dir()):
+            conflict_path = ancestor.relative_to(core_root).as_posix()
+            if (
+                conflict_path in removable_owned_paths
+                and ancestor.is_file()
+                and not ancestor.is_symlink()
+            ):
+                ancestor = ancestor.parent
+                continue
+            return {"code": "unowned_path_collision", "path": relative_path, "conflict_path": conflict_path}
+        ancestor = ancestor.parent
+    return None
+
+
 def build_plan(core_root: Path, archive_path: Path, *, workplace_root: Path | None = None) -> dict[str, Any]:
     core_root = core_root.resolve()
     archive_path = archive_path.resolve()
@@ -371,6 +404,10 @@ def build_plan(core_root: Path, archive_path: Path, *, workplace_root: Path | No
     blockers = []
     for relative_path in sorted(set(locally_modified).intersection(set(removed).union(changed))):
         blockers.append({"code": "locally_modified", "path": relative_path})
+    for relative_path in added:
+        collision = unowned_path_blocker(core_root, relative_path, removable_owned_paths=set(removed))
+        if collision is not None:
+            blockers.append(collision)
     incomplete = (runtime_root(core_root) / "in-progress.json").is_file()
     if incomplete:
         blockers.append({"code": "incomplete_update", "path": str(runtime_root(core_root) / "in-progress.json")})

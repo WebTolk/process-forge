@@ -142,10 +142,8 @@ class ResourceSearchService:
         if state.get("status") in {"missing", "stale"}:
             state = index.maintenance_tick().get("after", {})
         readiness = self.readiness(snapshot=runtime_snapshot, check=check)
-        if readiness.get("status") == "empty":
-            payload = index.search(query=query, limit=limit, limitstart=limitstart, offset=offset)
-        else:
-            payload = index.search(query=query, limit=limit, limitstart=limitstart, offset=offset)
+        query_index = ResourceSearchIndex(self.project_root, runtime_snapshot, self.workplace_root)
+        payload = query_index.search(query=query, limit=limit, limitstart=limitstart, offset=offset)
         payload["garage_readiness"] = readiness
         payload["search"] = readiness
         add_private_navigation(payload, runtime_snapshot)

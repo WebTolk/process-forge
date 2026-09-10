@@ -47,9 +47,18 @@ HTTPS, `sha256` и ручное подтверждение оператора п
 4. Постройте план и явно примените обновление к стабильной установленной папке:
 
    ```powershell
-   python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip>
-   python <staged-processforge-1.1.0>/bin/pf.py core-update apply --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --confirm
+   python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace>
+   python <staged-processforge-1.1.0>/bin/pf.py core-update apply --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace> --confirm
    ```
+
+   Архив 1.1.0 добавляет только отсутствующие стандартные настройки Workplace,
+   включая драйвер `codex-exec` и его регистрацию, и сохраняет существующую
+   конфигурацию. Не используйте `workplace-init` как updater: эта команда
+   предназначена для первичной инициализации.
+
+   После успешного apply с `--workplace-root` автоматически выполняется
+   `doctor-workplace`; результат сохраняется в
+   `<core>/runtime/core-update/last-apply.json`.
 
 5. Проверьте установленный Core и workplace, затем перезапустите PF Runtime,
    если он настроен:

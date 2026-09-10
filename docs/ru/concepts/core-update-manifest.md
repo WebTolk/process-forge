@@ -39,6 +39,30 @@ python bin/pf.py core-update repair --core-root <core>
 
 `plan` работает read-only. `apply` требует `--confirm`.
 
+## Совместимая миграция Workplace
+
+Архив может содержать декларативную миграцию Workplace в `updates/migrations/`.
+Чтобы включить её в обновление существующего рабочего места, передайте его
+корень при планировании и применении:
+
+```bash
+python bin/pf.py core-update plan --core-root <core> --archive <processforge.zip> --workplace-root <workplace>
+python bin/pf.py core-update apply --core-root <core> --archive <processforge.zip> --workplace-root <workplace> --confirm
+```
+
+План включает только операции, объявленные в архиве. Миграция 1.0.2 → 1.1.0
+добавляет встроенный драйвер `codex-exec` и запись в его реестре только при
+их отсутствии. Существующие файлы и записи сохраняются. Команда
+`workplace-init` предназначена для первичной инициализации и не вызывается
+при обновлении.
+
+Перед записью updater сохраняет затронутые файлы Workplace в каталоге резервных
+копий обновления Core и регистрирует операцию в журнале. Если миграция не
+завершилась, `core-update repair` показывает состояние восстановления и путь
+к резервным копиям. После успешного apply с `--workplace-root` автоматически
+выполняется короткая проверка `doctor-workplace`; её результат записывается в
+`<core>/runtime/core-update/last-apply.json`.
+
 Updater вычисляет:
 
 ```text

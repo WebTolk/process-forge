@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -55,6 +56,41 @@ def install_old_core(core: Path) -> None:
     (core / CORE_MANIFEST_NAME).write_bytes(manifest_bytes(manifest))
 
 
+def snapshot_object(path: Path):
+    """Capture an object lexically, including directories and symlinks."""
+    if path.is_symlink():
+        if path.is_dir():
+            kind = "symlink-directory"
+        else:
+            kind = "symlink"
+        return (kind, os.readlink(path))
+    if path.is_dir():
+        return ("directory", tuple(sorted((child.name, snapshot_object(child)) for child in path.iterdir())))
+    if path.is_file():
+        return ("file", path.read_bytes())
+    return ("absent",)
+
+
+def snapshot_core_state(core: Path, user_paths: tuple[str, ...] = ()):
+    owned_paths = ("a.txt", "dir/b.txt", "dir/c.txt")
+    return {
+        "owned": {relative_path: (core / relative_path).read_bytes() for relative_path in owned_paths},
+        "manifest": (core / CORE_MANIFEST_NAME).read_bytes(),
+        "user_objects": {relative_path: snapshot_object(core / relative_path) for relative_path in user_paths},
+    }
+
+
+def assert_refused_without_mutation(core: Path, archive: Path, before, *, user_paths: tuple[str, ...], force: bool) -> None:
+    try:
+        apply_update(core, archive, confirm=True, force_local_modifications=force)
+    except CoreUpdateError as exc:
+        assert exc.code == "plan_blocked", exc
+    else:
+        raise AssertionError(f"blocked update accepted with force={force}")
+    assert snapshot_core_state(core, user_paths) == before
+    assert not (core / "runtime" / "core-update").exists()
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-core-update-") as raw:
         root = Path(raw)
@@ -99,6 +135,129 @@ def main() -> int:
         plan = run_pf("core-update", "plan", "--core-root", str(core), "--archive", str(archive))
         assert plan.returncode == 2, plan.stdout + plan.stderr
         assert json.loads(plan.stdout)["blockers"][0]["code"] == "locally_modified"
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-owned-ancestor-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        archive = root / "processforge.zip"
+        write_archive(archive, {"a.txt/child.txt": "new child", "dir/b.txt": "old-b", "dir/c.txt": "same-c"})
+
+        applied = apply_update(core, archive, confirm=True)
+        assert (core / "a.txt" / "child.txt").read_text(encoding="utf-8") == "new child"
+        backup = Path(applied["backup_dir"]) / "files" / "a.txt"
+        assert backup.read_bytes() == b"old-a"
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-owned-ancestor-modified-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        ancestor = core / "a.txt"
+        ancestor.write_text("local-a", encoding="utf-8")
+        archive = root / "processforge.zip"
+        write_archive(archive, {"a.txt/child.txt": "new child", "dir/b.txt": "old-b", "dir/c.txt": "same-c"})
+        before = ancestor.read_bytes()
+
+        plan = core_update.build_plan(core, archive)
+        assert plan["status"] == "blocked", plan
+        assert any(item.get("code") == "locally_modified" and item.get("path") == "a.txt" for item in plan["blockers"]), plan
+        try:
+            apply_update(core, archive, confirm=True)
+        except CoreUpdateError as exc:
+            assert exc.code == "plan_blocked", exc
+        else:
+            raise AssertionError("locally modified owned ancestor was accepted without force")
+        assert ancestor.read_bytes() == before
+
+        forced = apply_update(core, archive, confirm=True, force_local_modifications=True)
+        assert (core / "a.txt" / "child.txt").read_text(encoding="utf-8") == "new child"
+        forced_backup = Path(forced["backup_dir"]) / "files" / "a.txt"
+        assert forced_backup.read_bytes() == before
+
+    def make_directory_collision(core: Path) -> None:
+        collision = core / "user-note.txt"
+        collision.mkdir()
+        (collision / "keep.txt").write_text("DIRECTORY USER DATA", encoding="utf-8")
+
+    for fixture_name, make_collision in (
+        ("file", lambda core: (core / "user-note.txt").write_text("USER OWNED DATA", encoding="utf-8")),
+        ("same-byte-file", lambda core: (core / "user-note.txt").write_text("same-byte", encoding="utf-8")),
+        ("directory", make_directory_collision),
+    ):
+        with tempfile.TemporaryDirectory(prefix=f"pf-core-update-unowned-{fixture_name}-") as raw:
+            root = Path(raw)
+            core = root / "core"
+            core.mkdir()
+            install_old_core(core)
+            make_collision(core)
+            payload = "same-byte" if fixture_name == "same-byte-file" else "NEW CORE PAYLOAD"
+            archive = root / "processforge.zip"
+            write_archive(
+                archive,
+                {"dir/b.txt": "new-b", "dir/c.txt": "same-c", "user-note.txt": payload},
+            )
+            before = snapshot_core_state(core, ("user-note.txt",))
+            plan = core_update.build_plan(core, archive)
+            assert plan["status"] == "blocked", plan
+            assert any(item.get("code") == "unowned_path_collision" and item.get("path") == "user-note.txt" for item in plan["blockers"]), plan
+            for force in (False, True):
+                assert_refused_without_mutation(core, archive, before, user_paths=("user-note.txt",), force=force)
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-unowned-ancestor-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        (core / "user-area").write_text("USER OWNED DATA", encoding="utf-8")
+        archive = root / "processforge.zip"
+        write_archive(archive, {"user-area/new.txt": "NEW CORE PAYLOAD"})
+        plan = core_update.build_plan(core, archive)
+        assert plan["status"] == "blocked", plan
+        assert any(item.get("conflict_path") == "user-area" for item in plan["blockers"]), plan
+        before = snapshot_core_state(core, ("user-area",))
+        for force in (False, True):
+            assert_refused_without_mutation(core, archive, before, user_paths=("user-area",), force=force)
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-unowned-late-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        archive = root / "processforge.zip"
+        write_archive(archive, {"new.txt": "NEW CORE PAYLOAD"})
+        plan = core_update.build_plan(core, archive)
+        assert plan["status"] == "planned", plan
+        (core / "new.txt").write_text("LATE USER DATA", encoding="utf-8")
+        before = snapshot_core_state(core, ("new.txt",))
+        for force in (False, True):
+            assert_refused_without_mutation(core, archive, before, user_paths=("new.txt",), force=force)
+
+    for symlink_name, broken in (("symlink", False), ("broken-symlink", True)):
+        with tempfile.TemporaryDirectory(prefix=f"pf-core-update-unowned-{symlink_name}-") as raw:
+            root = Path(raw)
+            core = root / "core"
+            core.mkdir()
+            install_old_core(core)
+            outside = root / "outside.txt"
+            outside.write_text("OUTSIDE DATA", encoding="utf-8")
+            link = core / "user-link.txt"
+            archive = root / "processforge.zip"
+            write_archive(archive, {"user-link.txt": "NEW CORE PAYLOAD"})
+            try:
+                link.symlink_to(root / "missing-target" if broken else outside)
+            except (OSError, NotImplementedError) as exc:
+                print(f"SKIP: {symlink_name} fixture unavailable: {exc}")
+                continue
+            plan = core_update.build_plan(core, archive)
+            assert plan["status"] == "blocked", plan
+            assert any(item.get("code") == "unowned_path_collision" for item in plan["blockers"]), plan
+            before = snapshot_core_state(core, ("user-link.txt",))
+            for force in (False, True):
+                assert_refused_without_mutation(core, archive, before, user_paths=("user-link.txt",), force=force)
+            assert link.is_symlink()
+            assert outside.read_text(encoding="utf-8") == "OUTSIDE DATA"
 
     with tempfile.TemporaryDirectory(prefix="pf-core-update-malicious-") as raw:
         root = Path(raw)

@@ -41,12 +41,19 @@ onboarding/repair, и требуют точное JSON-значение `apply: 
 возвращается `apply_required`.
 
 `pf.work.start` — предпочтительный переход от Garage-понимания к governed work.
-Агент передает только непустой `objective`; ProcessForge проверяет и закрепляет
-process definition, выбирает объявленную initial stage, создает или повторно
-использует Run и Assignment. Далее агент вызывает `pf.work.state` и
-`pf.work.transition(outcome, evidence)`. Следующая stage не является входом
-агента. Session id может связать
-telemetry, но сам факт session не меняет `mode: garage` на `mode: forge`.
+Агент передаёт непустой `objective` и при необходимости явный `process_id`.
+Если допустим один процесс, PF выбирает его. При нескольких допустимых
+процессах без явного выбора PF возвращает `process_choice_required` с
+кандидатами: выберите предложенный id и повторите start с `process_id`.
+`default` — рекомендация, а не автоматический выбор. Уже начатый Work
+сохраняет закреплённый процесс; повторный start не переключает его.
+
+ProcessForge закрепляет определение процесса, выбирает начальную стадию и
+создаёт или переиспользует Run и Assignment. Далее агент вызывает
+`pf.work.state` и `pf.work.transition(outcome, evidence, notes)` до
+`run_completed`. Следующая стадия не является входным параметром агента.
+Session id может связать telemetry, но сам факт session не меняет
+`mode: garage` на `mode: forge`.
 
 Session-scoped failures возвращают стабильные machine-readable error codes. Для
 `missing_session` payload также содержит ограниченный remediation object:

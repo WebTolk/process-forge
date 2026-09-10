@@ -85,12 +85,13 @@ Runtime, host telemetry и worker orchestration подключаются для 
 ### Разместить ProcessForge
 
 Скачайте релизный архив (release archive)
-[dist/processforge.zip](dist/processforge.zip) и распакуйте его в стабильную
+`processforge.zip` и распакуйте его в стабильную
 папку, доступную ИИ-агентам: например, в общую папку инструментов для агентов.
 Используйте эту папку как `<processforge-root>` в промптах ниже.
 
 Если вы работаете из рабочей копии исходного кода (source checkout), используйте
-корень репозитория как `<processforge-root>`.
+корень репозитория как `<processforge-root>`. Локальная релизная сборка создаёт
+`dist/processforge.zip`; этот результат сборки не входит внутрь самого архива.
 
 ### Стартовый промпт для агента
 

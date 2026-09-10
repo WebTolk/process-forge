@@ -40,8 +40,14 @@ archive names, and reports.
   compatibility; current commands remain file-first and do not require terminal
   prompting.
 - For ordinary project work, use `pf.context`, conditional `pf.search`,
-  `pf.resolve`, and `pf.work.start`. A current context/snapshot outranks
+  `pf.resolve`, `pf.work.start`, `pf.work.state`, and `pf.work.transition`
+  until the work reports `run_completed`. If `pf.work.start` returns
+  `process_choice_required`, choose from the offered process ids instead of
+  assuming `default` is automatic. A current context/snapshot outranks
   historical generated reports.
+- For the current governed loop and a complete transition/evidence example,
+  see [Garage Core](../concepts/garage-core.md) and
+  [Declarative process execution](../concepts/declarative-process-execution.md).
 - Do not install, start, restart, or repair PF Runtime, MCP, host hooks, Agent
   Ledger, or search indexes during ordinary project work. Use available PF
   tools and report an operator-level blocker when PF requires operator action.
@@ -183,7 +189,9 @@ python .pf/runtime/bin/pf.py process-list --project-root .
 python .pf/runtime/bin/pf.py process-describe --project-root . --process <process-id>
 ```
 
-## Advanced Task Batch Run
+## Advanced Task Batch Run (Compatibility)
+
+Use this only when explicit batch lifecycle control is required.
 
 ```bash
 python .pf/runtime/bin/pf.py session-start --project-root . --agent primary-agent --process task-batch-execution
@@ -260,8 +268,11 @@ Initialize ProcessForge in fully automatic mode. It is located at
 ```text
 Use ProcessForge for this task. Read .pf/START_AGENT_HERE.md first, create or
 reuse governed work through pf.work.start, use pf.search and pf.resolve for
-authorized resources, keep artifacts in .pf, run the relevant checks, and
-finish with a concise evidence-based handoff. Do not maintain PF infrastructure.
+authorized resources, inspect the current state with pf.work.state, record
+each step with pf.work.transition(outcome, evidence, notes), continue until
+the work reports run_completed, keep artifacts in .pf, run the relevant checks,
+and finish with a concise evidence-based handoff. Do not maintain PF
+infrastructure.
 ```
 
 ## Subagent Prompt: Documentation Specialist

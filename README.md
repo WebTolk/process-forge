@@ -70,13 +70,14 @@ this mode.
 
 ### Place ProcessForge
 
-Download the release archive, [dist/processforge.zip](dist/processforge.zip),
+Download the release archive, `processforge.zip`,
 and unpack it into a stable folder that your AI agents can access, for example
 a shared agent tools folder. Use that folder as `<processforge-root>` in the
 prompts below.
 
 If you work from a source checkout, use the repository root as
-`<processforge-root>`.
+`<processforge-root>`. Local release builds write the archive to
+`dist/processforge.zip`; that build output is not included inside the archive.
 
 ### Start With An Agent Prompt
 

@@ -67,6 +67,8 @@ workplace; каждый репозиторий хранит только про�
 
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Модель среды выполнения](concepts/runtime-model.md)
+- [Garage Core (EN)](../concepts/garage-core.md)
+- [Declarative process execution](concepts/declarative-process-execution.md)
 - [PF Runtime MCP facade](concepts/runtime-mcp.md)
 - [Модель агентской сессии](concepts/agent-session-model.md)
 - [Режимы координации проекта](concepts/project-coordination-modes.md)

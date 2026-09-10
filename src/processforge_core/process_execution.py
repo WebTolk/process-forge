@@ -401,6 +401,16 @@ class ProcessExecutionService:
         with self._run_lock(str(run.get("id") or "")):
             run = self._load_run(str(run.get("id") or ""))
             assignment = self._load_assignment(str(assignment.get("id") or ""))
+            pending_intent, intent_error = self._load_completion_intent(run, assignment)
+            if pending_intent is not None:
+                return self._replay_completion_intent(pending_intent, session_id=session_id)
+            if intent_error:
+                return self._blocked(
+                    "completion_intent_invalid",
+                    run_id=run.get("id"),
+                    assignment_id=assignment.get("id"),
+                    detail=intent_error,
+                )
             if str(run.get("status") or "") in TERMINAL_RUN_STATUSES or str(assignment.get("status") or "") in TERMINAL_ASSIGNMENT_STATUSES:
                 return self._blocked("work_is_terminal", run_id=run.get("id"), assignment_id=assignment.get("id"), run_status=run.get("status"), assignment_status=assignment.get("status"))
             process, pin_status = self._effective_process(run)
@@ -511,20 +521,27 @@ class ProcessExecutionService:
                 self._write_task_index(run)
                 action = "stage_transitioned"
             else:
-                self._complete_locked(run, assignment, process, outcome=outcome, notes=notes, completed_at=now)
+                intent = self._build_completion_intent(
+                    run,
+                    assignment,
+                    process,
+                    outcome=outcome,
+                    notes=notes,
+                    completed_at=now,
+                )
+                # JSON is valid YAML and preserves multiline payloads exactly;
+                # the generic YAML formatter folds quoted multiline strings.
+                self._atomic_text(self._completion_intent_path(str(run["id"])), json.dumps(intent, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
+                self._replay_completion_intent(intent, session_id=session_id)
                 action = "run_completed"
 
             result_state = self.state(run_id=str(run["id"]), assignment_id=str(assignment["id"]), session_id=session_id)
-            self._write_projection(result_state)
-            self._emit("process.stage.completed", run, assignment, previous_stage_id, outcome=outcome, previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
-            self._emit("process.stage.transitioned", run, assignment, next_stage_id or previous_stage_id, outcome=outcome, previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
-            if next_stage_id:
-                self._emit("process.stage.started", run, assignment, next_stage_id, outcome="started", previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
-            else:
-                self._emit("task.completed", run, assignment, previous_stage_id, outcome=outcome)
-                self._emit("assignment.completed", run, assignment, previous_stage_id, outcome=outcome)
-                self._emit("run.completed", run, assignment, previous_stage_id, outcome=outcome)
-                self._emit("run.summary.created", run, assignment, previous_stage_id, outcome=outcome)
+            if action != "run_completed":
+                self._write_projection(result_state)
+                self._emit("process.stage.completed", run, assignment, previous_stage_id, outcome=outcome, previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
+                self._emit("process.stage.transitioned", run, assignment, next_stage_id or previous_stage_id, outcome=outcome, previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
+                if next_stage_id:
+                    self._emit("process.stage.started", run, assignment, next_stage_id, outcome="started", previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
             result = {**result_state, "action": action, "previous_stage_id": previous_stage_id, "next_stage_id": next_stage_id}
             if action == "run_completed":
                 result.update(self._next_work_advisory(process, run))
@@ -549,6 +566,22 @@ class ProcessExecutionService:
         return {"can_complete": not blockers, "blockers": blockers, "run": state.get("run"), "assignment": state.get("assignment"), "stage": state.get("stage")}
 
     def complete(self, *, outcome: str = "completed", evidence: Any = None, notes: str = "", run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
+        selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        if selected:
+            run, assignment = selected
+            pending, _error = self._load_completion_intent(run, assignment)
+            if pending is not None:
+                # A committed intent is authoritative.  Do not make a retry
+                # depend on mutable evidence or on the caller repeating the
+                # original outcome/notes.
+                return self.transition(
+                    outcome=outcome,
+                    evidence=evidence,
+                    notes=notes,
+                    run_id=run_id,
+                    assignment_id=assignment_id,
+                    session_id=session_id,
+                )
         readiness = self.can_complete(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
         if readiness["blockers"] and not evidence:
             return {"schema_version": 1, "kind": "pf.work.complete", "action": "blocked", **readiness}
@@ -730,7 +763,9 @@ class ProcessExecutionService:
                 if not SAFE_ID_RE.fullmatch(task_id) or str(task.get("run_id") or run_id) != run_id:
                     continue
                 status = str(task.get("status") or entry.get("status") or "")
-                active = status in ACTIVE_ASSIGNMENT_STATUSES and str(run.get("status") or "") in ACTIVE_RUN_STATUSES
+                pending_completion, _intent_error = self._load_completion_intent(run, task)
+                has_pending_completion = pending_completion is not None
+                active = has_pending_completion or (status in ACTIVE_ASSIGNMENT_STATUSES and str(run.get("status") or "") in ACTIVE_RUN_STATUSES)
                 if not active and not include_historical:
                     continue
                 session = task.get("session") if isinstance(task.get("session"), dict) else {}
@@ -746,6 +781,7 @@ class ProcessExecutionService:
                         "session_id": str(session.get("id") or ""),
                         "created_at": str(task.get("created_at") or run.get("created_at") or ""),
                         "updated_at": str(task.get("updated_at") or run.get("updated_at") or ""),
+                        "pending_completion": has_pending_completion,
                     }
                 )
         return records
@@ -793,11 +829,19 @@ class ProcessExecutionService:
                 for item in reversed(evidence)
                 if str(item.get("kind") or "") in accepted_kinds[kind]
                 and any(str(item.get(key) or "") == identifier for key in aliases[kind])
-                and str(item.get("status") or "") in statuses
             ),
             None,
         )
-        return {"id": identifier, "kind": kind, "satisfied": match is not None, "evidence": match or {}}
+        if match is None:
+            return {"id": identifier, "kind": kind, "satisfied": False, "evidence": {}}
+        diagnostic = self._evidence_file_diagnostic(match)
+        status = str(match.get("status") or "")
+        if diagnostic is None and status not in statuses:
+            diagnostic = {"code": "evidence_status_not_acceptable", "status": status or "missing", "id": identifier}
+        result = {"id": identifier, "kind": kind, "satisfied": diagnostic is None, "evidence": copy.deepcopy(match)}
+        if diagnostic is not None:
+            result["diagnostic"] = diagnostic
+        return result
 
     def _gate_state(self, process: dict[str, Any], gate_id: str, evidence: list[dict[str, Any]], *, phase: str) -> dict[str, Any]:
         definitions = process.get("gates") if isinstance(process.get("gates"), list) else []
@@ -808,19 +852,24 @@ class ProcessExecutionService:
                 for item in reversed(evidence)
                 if str(item.get("kind") or "") == "gate"
                 and str(item.get("gate_id") or item.get("id") or "") == gate_id
-                and str(item.get("status") or "") in {"passed", "approved", "not_applicable"}
             ),
             None,
         )
-        return {
+        diagnostic = self._evidence_file_diagnostic(match) if match is not None else None
+        if diagnostic is None and match is not None and str(match.get("status") or "") not in {"passed", "approved", "not_applicable"}:
+            diagnostic = {"code": "evidence_status_not_acceptable", "status": str(match.get("status") or "missing"), "id": gate_id}
+        result = {
             "id": gate_id,
             "phase": phase,
             "type": str(definition.get("type") or "checklist"),
             "blocking": bool(definition.get("blocking", True)),
             "required": bool(definition.get("required", True)),
-            "satisfied": match is not None,
-            "evidence": match or {},
+            "satisfied": match is not None and diagnostic is None,
+            "evidence": copy.deepcopy(match) if match is not None else {},
         }
+        if diagnostic is not None:
+            result["diagnostic"] = diagnostic
+        return result
 
     def _automation_states(self, process: dict[str, Any], stage: dict[str, Any], assignment: dict[str, Any]) -> list[dict[str, Any]]:
         bindings = stage.get("automation_bindings") if isinstance(stage.get("automation_bindings"), list) else []
@@ -854,12 +903,19 @@ class ProcessExecutionService:
 
     def _stage_requirements(self, inputs: list[dict[str, Any]], artifacts: list[dict[str, Any]], required_evidence: list[dict[str, Any]], gates: list[dict[str, Any]], obligations: list[dict[str, Any]]) -> list[dict[str, Any]]:
         requirements: list[dict[str, Any]] = []
-        requirements.extend({"code": "required_input_missing", "input_id": item["id"]} for item in inputs if not item["satisfied"])
-        requirements.extend({"code": "artifact_evidence_missing", "artifact_id": item["id"]} for item in artifacts if not item["satisfied"])
-        requirements.extend({"code": "required_evidence_missing", "evidence_id": item["id"]} for item in required_evidence if not item["satisfied"])
-        requirements.extend({"code": "gate_evidence_missing", "gate_id": item["id"]} for item in gates if item["required"] and item["blocking"] and not item["satisfied"])
+        requirements.extend(self._requirement_blocker("required_input_missing", "input_id", item) for item in inputs if not item["satisfied"])
+        requirements.extend(self._requirement_blocker("artifact_evidence_missing", "artifact_id", item) for item in artifacts if not item["satisfied"])
+        requirements.extend(self._requirement_blocker("required_evidence_missing", "evidence_id", item) for item in required_evidence if not item["satisfied"])
+        requirements.extend(self._requirement_blocker("gate_evidence_missing", "gate_id", item) for item in gates if item["required"] and item["blocking"] and not item["satisfied"])
         requirements.extend({"code": "automation_not_ready", "obligation_id": item["id"], "status": item["status"]} for item in obligations if item["status"] != "ready")
         return requirements
+
+    def _requirement_blocker(self, code: str, identifier_key: str, requirement: dict[str, Any]) -> dict[str, Any]:
+        blocker = {"code": code, identifier_key: requirement["id"]}
+        diagnostic = requirement.get("diagnostic")
+        if isinstance(diagnostic, dict):
+            blocker["diagnostic"] = copy.deepcopy(diagnostic)
+        return blocker
 
     def _normalize_evidence(self, evidence: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         values = evidence if isinstance(evidence, list) else ([] if evidence is None or evidence == "" else [evidence])
@@ -886,33 +942,84 @@ class ProcessExecutionService:
             path_value = str(item.get("path") or "").strip()
             if path_value:
                 safe_path = self._safe_evidence_path(path_value)
-                if safe_path is None or not safe_path.is_file():
+                try:
+                    valid_file = safe_path is not None and safe_path.is_file()
+                except OSError:
+                    valid_file = False
+                if not valid_file:
                     blockers.append({"code": "artifact_path_missing", "index": index, "path": path_value})
                     continue
                 else:
-                    item["path"] = self.core.rel(safe_path, self.project_root)
-                    item["sha256"] = "sha256:" + self._sha256_file(safe_path)
+                    try:
+                        item["path"] = self.core.rel(safe_path, self.project_root)
+                        item["sha256"] = "sha256:" + self._sha256_file(safe_path)
+                    except OSError:
+                        blockers.append({"code": "artifact_path_unreadable", "index": index, "path": path_value})
+                        continue
             normalized.append(item)
         return normalized, blockers
 
     def _safe_evidence_path(self, value: str) -> Path | None:
-        path = Path(value)
-        if path.is_absolute():
+        try:
+            path = Path(value)
+            if path.is_absolute():
+                return None
+            resolved = (self.project_root / path).resolve()
+        except (OSError, RuntimeError, ValueError):
             return None
-        resolved = (self.project_root / path).resolve()
         try:
             resolved.relative_to(self.project_root.resolve())
-        except ValueError:
+        except (OSError, RuntimeError, ValueError):
             return None
         return resolved
 
     def _merge_evidence(self, existing: Any, incoming: list[dict[str, Any]]) -> list[dict[str, Any]]:
         values = [copy.deepcopy(item) for item in existing if isinstance(item, dict)] if isinstance(existing, list) else []
         for item in incoming:
-            marker = (str(item.get("kind") or ""), str(item.get("gate_id") or item.get("artifact_id") or item.get("input_id") or item.get("id") or ""))
-            values = [current for current in values if (str(current.get("kind") or ""), str(current.get("gate_id") or current.get("artifact_id") or current.get("input_id") or current.get("id") or "")) != marker]
+            marker = self._evidence_merge_identity(item)
+            values = [current for current in values if self._evidence_merge_identity(current) != marker]
             values.append(item)
         return values
+
+    def _evidence_merge_identity(self, item: dict[str, Any]) -> tuple[str, str]:
+        kind = str(item.get("kind") or "")
+        if kind == "gate":
+            return ("gate", str(item.get("gate_id") or item.get("id") or ""))
+        if kind in {"input", "artifact"}:
+            # Inputs deliberately accept artifact-shaped evidence. Treat both
+            # forms as one identity so a later alias cannot resurrect an older
+            # positive record.
+            return ("input_or_artifact", str(item.get("input_id") or item.get("artifact_id") or item.get("id") or ""))
+        if kind in {"evidence", "attestation"}:
+            return ("evidence", str(item.get("evidence_id") or item.get("id") or ""))
+        return (kind, str(item.get("id") or ""))
+
+    def _evidence_file_diagnostic(self, evidence: dict[str, Any] | None) -> dict[str, Any] | None:
+        if not isinstance(evidence, dict):
+            return None
+        path_value = str(evidence.get("path") or "").strip()
+        if not path_value:
+            return None
+        safe_path = self._safe_evidence_path(path_value)
+        if safe_path is None:
+            return {"code": "evidence_file_unsafe", "path": path_value}
+        try:
+            if not safe_path.exists():
+                return {"code": "evidence_file_missing", "path": path_value}
+            if not safe_path.is_file():
+                return {"code": "evidence_file_not_regular", "path": path_value}
+        except OSError as exc:
+            return {"code": "evidence_file_unreadable", "path": path_value, "error": str(exc)}
+        stored = str(evidence.get("sha256") or "").strip()
+        if not stored:
+            return {"code": "evidence_digest_missing", "path": path_value}
+        try:
+            actual = "sha256:" + self._sha256_file(safe_path)
+        except OSError as exc:
+            return {"code": "evidence_file_unreadable", "path": path_value, "error": str(exc)}
+        if stored.casefold() != actual.casefold():
+            return {"code": "evidence_file_changed", "path": path_value, "stored_sha256": stored, "actual_sha256": actual}
+        return None
 
     def _latest_assignment_event(self, assignment_id: str, event_types: set[str]) -> dict[str, Any] | None:
         if not event_types or not hasattr(self.core, "event_runtime_paths"):
@@ -937,7 +1044,10 @@ class ProcessExecutionService:
         for gate_id in self._string_list(completion.get("gates")):
             gate = self._gate_state(process, gate_id, evidence, phase="run_completion")
             if gate["required"] and gate["blocking"] and not gate["satisfied"]:
-                blockers.append({"code": "run_completion_gate_missing", "gate_id": gate_id})
+                blocker = {"code": "run_completion_gate_missing", "gate_id": gate_id}
+                if isinstance(gate.get("diagnostic"), dict):
+                    blocker["diagnostic"] = copy.deepcopy(gate["diagnostic"])
+                blockers.append(blocker)
         assignment_id = str(assignment.get("id") or "")
         for task in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
             if not isinstance(task, dict) or str(task.get("id") or "") == assignment_id or task.get("blocking", True) is False:
@@ -945,6 +1055,228 @@ class ProcessExecutionService:
             if str(task.get("status") or "") not in {"done", "completed", "cancelled"}:
                 blockers.append({"code": "blocking_assignment_incomplete", "assignment_id": str(task.get("id") or ""), "status": str(task.get("status") or "")})
         return blockers
+
+    def _completion_intent_path(self, run_id: str) -> Path:
+        return self._run_path(run_id).parent / "completion-intent.yaml"
+
+    def _build_completion_intent(
+        self,
+        run: dict[str, Any],
+        assignment: dict[str, Any],
+        process: dict[str, Any],
+        *,
+        outcome: str,
+        notes: str,
+        completed_at: str,
+    ) -> dict[str, Any]:
+        """Build every terminal payload before the first terminal write.
+
+        The journal is deliberately self-contained.  A retry therefore does
+        not re-run evidence selection, call ``now_utc`` again, or infer a new
+        outcome from partially written records.
+        """
+        run_id = str(run["id"])
+        assignment_id = str(assignment["id"])
+        final_assignment = copy.deepcopy(assignment)
+        final_assignment["stage_status"] = "completed"
+        final_assignment["status"] = "done"
+        final_assignment["updated_at"] = completed_at
+        artifacts = [
+            str(item.get("path"))
+            for item in self._accumulated_evidence(final_assignment)
+            if isinstance(item, dict) and item.get("path")
+        ]
+        final_assignment["result"] = {
+            "status": "done",
+            "summary": str(notes or f"Completed declarative process with outcome {outcome}."),
+            "artifacts": sorted(set(artifacts)),
+        }
+
+        final_run = copy.deepcopy(run)
+        self._set_run_task_status(final_run, assignment_id, "done")
+        final_run["status"] = "completed"
+        final_run["updated_at"] = completed_at
+        summary_path = self._run_path(run_id).parent / "summary.md"
+        handoff_path = self._flow_root() / "handoffs" / "runs" / f"{run_id}-handoff.md"
+        task_index_path = self._run_path(run_id).parent / "task-index.md"
+        projection_path = self._flow_root() / "artifacts" / "projections" / "process-execution-state.json"
+        summary = self._render_summary(final_run, final_assignment)
+        handoff = f"# Run Handoff: {run_id}\n\nStatus: `completed`\n\nSummary: `{self.core.rel(summary_path, self.project_root)}`\n"
+        final_run["final_artifacts"] = [self.core.rel(summary_path, self.project_root), self.core.rel(handoff_path, self.project_root)]
+        emitted = final_run.setdefault("events", {}).setdefault("emitted", []) if isinstance(final_run.setdefault("events", {}), dict) else []
+        for event_type in ["process.stage.completed", "process.stage.transitioned", "task.completed", "assignment.completed", "run.completed", "run.summary.created"]:
+            if isinstance(emitted, list) and event_type not in emitted:
+                emitted.append(event_type)
+        if hasattr(self.core, "render_task_index"):
+            task_index = self.core.render_task_index(self.project_root, final_run)
+        else:
+            lines = [f"# Task Index: {run_id}", ""]
+            lines.extend(f"- `{item.get('id')}`: `{item.get('status')}`" for item in final_run.get("tasks", []) if isinstance(item, dict))
+            task_index = "\n".join(lines) + "\n"
+
+        stage_id = str(assignment.get("stage") or "")
+        intent_seed = f"{run_id}:{assignment_id}:{completed_at}:{outcome}"
+        intent_id = "completion-" + hashlib.sha256(intent_seed.encode("utf-8")).hexdigest()[:32]
+        event_specs = []
+        for event_type, event_stage in [
+            ("process.stage.completed", stage_id),
+            ("process.stage.transitioned", stage_id),
+            ("task.completed", stage_id),
+            ("assignment.completed", stage_id),
+            ("run.completed", stage_id),
+            ("run.summary.created", stage_id),
+        ]:
+            event_specs.append(
+                {
+                    "event_type": event_type,
+                    "event_id": "evt_" + hashlib.sha256(f"{intent_id}:{event_type}".encode("utf-8")).hexdigest()[:32],
+                    "stage_id": event_stage,
+                    "previous_stage_id": stage_id,
+                    "next_stage_id": "",
+                    "outcome": outcome,
+                }
+            )
+        pin = final_run.get("process_execution") if isinstance(final_run.get("process_execution"), dict) else {}
+        expected_run_path = self.core.rel(self._run_path(run_id), self.project_root)
+        expected_assignment_path = self.core.rel(self._assignment_path(assignment_id), self.project_root)
+        expected_journal_path = self.core.rel(self._completion_intent_path(run_id), self.project_root)
+        intent = {
+            "schema_version": 1,
+            "kind": "pf.process.completion-intent",
+            "intent_id": intent_id,
+            "created_at": completed_at,
+            "completed_at": completed_at,
+            "run_id": run_id,
+            "assignment_id": assignment_id,
+            "journal_path": expected_journal_path,
+            "owner": {
+                "project_id": self.core.project_id(self.project_root),
+                "run_path": expected_run_path,
+                "assignment_path": expected_assignment_path,
+            },
+            "process_execution": copy.deepcopy(pin),
+            "final": {
+                "run": final_run,
+                "assignment": final_assignment,
+                "summary": {"path": self.core.rel(summary_path, self.project_root), "content": summary},
+                "handoff": {"path": self.core.rel(handoff_path, self.project_root), "content": handoff},
+                "task_index": {"path": self.core.rel(task_index_path, self.project_root), "content": task_index},
+                "projection": {"path": self.core.rel(projection_path, self.project_root)},
+                "events": event_specs,
+            },
+        }
+        intent["fingerprint"] = canonical_fingerprint(intent)
+        return intent
+
+    def _load_completion_intent(self, run: dict[str, Any], assignment: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+        run_id = str(run.get("id") or "")
+        assignment_id = str(assignment.get("id") or "")
+        if not SAFE_ID_RE.fullmatch(run_id) or not SAFE_ID_RE.fullmatch(assignment_id):
+            return None, None
+        path = self._completion_intent_path(run_id)
+        if not path.is_file():
+            return None, None
+        try:
+            intent = self.core.load_yaml_document(path)
+        except (OSError, ValueError, TypeError) as exc:
+            return None, f"journal unreadable: {exc}"
+        error = self._validate_completion_intent(intent, run, assignment, path)
+        return (intent, None) if error is None else (None, error)
+
+    def _validate_completion_intent(
+        self,
+        intent: Any,
+        run: dict[str, Any],
+        assignment: dict[str, Any],
+        journal_path: Path,
+    ) -> str | None:
+        if not isinstance(intent, dict) or intent.get("kind") != "pf.process.completion-intent":
+            return "journal kind is invalid"
+        content = {key: value for key, value in intent.items() if key != "fingerprint"}
+        try:
+            if intent.get("fingerprint") != canonical_fingerprint(content):
+                return "journal content fingerprint mismatch"
+        except (TypeError, ValueError, RecursionError):
+            return "journal content is invalid"
+        run_id = str(run.get("id") or "")
+        assignment_id = str(assignment.get("id") or "")
+        if intent.get("run_id") != run_id or intent.get("assignment_id") != assignment_id:
+            return "journal identity does not match selected work"
+        final = intent.get("final") if isinstance(intent.get("final"), dict) else {}
+        final_run = final.get("run") if isinstance(final.get("run"), dict) else {}
+        final_assignment = final.get("assignment") if isinstance(final.get("assignment"), dict) else {}
+        if final_run.get("id") != run_id or final_assignment.get("id") != assignment_id or final_assignment.get("run_id") != run_id:
+            return "journal final payload identity is invalid"
+        if final_run.get("status") != "completed" or final_assignment.get("status") not in TERMINAL_ASSIGNMENT_STATUSES:
+            return "journal final payload is not terminal"
+        if final_assignment.get("status") != "done":
+            return "journal final assignment is not done"
+        tasks = final_run.get("tasks") if isinstance(final_run.get("tasks"), list) else []
+        task = next((item for item in tasks if isinstance(item, dict) and str(item.get("id") or "") == assignment_id), None)
+        if not isinstance(task, dict) or task.get("status") not in {"done", "completed"}:
+            return "journal final task status is invalid"
+        if self._effective_process(final_run)[1] != "pinned":
+            return "journal final process pin is invalid"
+        pin = intent.get("process_execution") if isinstance(intent.get("process_execution"), dict) else {}
+        current_pin = run.get("process_execution") if isinstance(run.get("process_execution"), dict) else {}
+        for key in ["process_id", "process_version", "process_fingerprint", "snapshot_id", "snapshot_checksum"]:
+            if str(pin.get(key) or "") != str(current_pin.get(key) or "") or str(pin.get(key) or "") != str((final_run.get("process_execution") or {}).get(key) or ""):
+                return f"journal process pin mismatch: {key}"
+        expected = {
+            "journal_path": self.core.rel(journal_path, self.project_root),
+            "run_path": self.core.rel(self._run_path(run_id), self.project_root),
+            "assignment_path": self.core.rel(self._assignment_path(assignment_id), self.project_root),
+        }
+        if str(intent.get("journal_path") or "") != expected["journal_path"]:
+            return "journal path is not owned by the selected run"
+        owner = intent.get("owner") if isinstance(intent.get("owner"), dict) else {}
+        if owner.get("run_path") != expected["run_path"] or owner.get("assignment_path") != expected["assignment_path"]:
+            return "journal owner paths are invalid"
+        if hasattr(self.core, "project_id") and str(owner.get("project_id") or "") != str(self.core.project_id(self.project_root)):
+            return "journal project owner is invalid"
+        final_paths = {
+            "summary": self.core.rel(self._run_path(run_id).parent / "summary.md", self.project_root),
+            "handoff": self.core.rel(self._flow_root() / "handoffs" / "runs" / f"{run_id}-handoff.md", self.project_root),
+            "task_index": self.core.rel(self._run_path(run_id).parent / "task-index.md", self.project_root),
+            "projection": self.core.rel(self._flow_root() / "artifacts" / "projections" / "process-execution-state.json", self.project_root),
+        }
+        for key, expected_path in final_paths.items():
+            item = final.get(key) if isinstance(final.get(key), dict) else {}
+            if str(item.get("path") or "") != expected_path:
+                return f"journal {key} path is invalid"
+        events = final.get("events")
+        if not isinstance(events, list) or not events or any(not isinstance(item, dict) or not item.get("event_type") or not item.get("event_id") for item in events):
+            return "journal event metadata is invalid"
+        return None
+
+    def _replay_completion_intent(self, intent: dict[str, Any], *, session_id: str = "", remove_intent: bool = True) -> dict[str, Any]:
+        run_id = str(intent["run_id"])
+        assignment_id = str(intent["assignment_id"])
+        final = intent["final"]
+        final_assignment = copy.deepcopy(final["assignment"])
+        final_run = copy.deepcopy(final["run"])
+        self._atomic_yaml(self._assignment_path(assignment_id), final_assignment)
+        self._atomic_yaml(self._run_path(run_id), final_run)
+        self._atomic_text(self._run_path(run_id).parent / "summary.md", str(final["summary"].get("content") or ""))
+        self._atomic_text(self._flow_root() / "handoffs" / "runs" / f"{run_id}-handoff.md", str(final["handoff"].get("content") or ""))
+        self._atomic_text(self._run_path(run_id).parent / "task-index.md", str(final["task_index"].get("content") or ""))
+        result_state = self.state(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        self._write_projection(result_state)
+        stage_id = str(final_assignment.get("stage") or "")
+        for event in final["events"]:
+            self._emit(
+                str(event["event_type"]),
+                final_run,
+                final_assignment,
+                str(event.get("stage_id") or stage_id),
+                outcome=str(event.get("outcome") or "completed"),
+                previous_stage_id=str(event.get("previous_stage_id") or stage_id),
+                next_stage_id=str(event.get("next_stage_id") or ""),
+                event_id=str(event["event_id"]),
+            )
+        if remove_intent:
+            self._completion_intent_path(run_id).unlink(missing_ok=True)
+        return {**result_state, "action": "run_completed", "previous_stage_id": stage_id, "next_stage_id": "", "recovered": True}
 
     def _complete_locked(self, run: dict[str, Any], assignment: dict[str, Any], process: dict[str, Any], *, outcome: str, notes: str, completed_at: str) -> None:
         run_id = str(run["id"])
@@ -1016,7 +1348,7 @@ class ProcessExecutionService:
             text = "\n".join(lines) + "\n"
         self._atomic_text(path, text)
 
-    def _emit(self, event_type: str, run: dict[str, Any], assignment: dict[str, Any], stage_id: str, *, outcome: str, previous_stage_id: str = "", next_stage_id: str = "", blockers: list[dict[str, Any]] | None = None) -> None:
+    def _emit(self, event_type: str, run: dict[str, Any], assignment: dict[str, Any], stage_id: str, *, outcome: str, previous_stage_id: str = "", next_stage_id: str = "", blockers: list[dict[str, Any]] | None = None, event_id: str | None = None) -> None:
         if not hasattr(self.core, "emit_process_event"):
             return
         self.core.emit_process_event(
@@ -1039,6 +1371,7 @@ class ProcessExecutionService:
                 "blockers": blockers or [],
             },
             correlation_id=f"run-{run.get('id')}",
+            event_id=event_id,
         )
 
     @contextlib.contextmanager

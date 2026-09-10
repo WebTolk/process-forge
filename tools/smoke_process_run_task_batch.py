@@ -10,6 +10,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+import processforge as core
+
 from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
 
 
@@ -139,6 +141,87 @@ def negative_workflow(root: Path) -> None:
     pf("run-doctor", "--project-root", str(project), "--run", "negative-run", expect=1)
 
 
+def required_output_check_matrix(root: Path) -> None:
+    existing = root / "existing.md"
+    existing.write_text("# Existing output\n", encoding="utf-8")
+    cases = [
+        ({"id": "report"}, {}, True, "FAIL", "required output has no path: report"),
+        ({"id": "report"}, {}, False, "FAIL", "required output has no path: report"),
+        ({"id": "report", "path": " "}, {}, True, "FAIL", "required output has no path: report"),
+        ({"id": "report", "path": None}, {}, True, "FAIL", "required output has no path: report"),
+        ("report", {}, True, "FAIL", "required output has no path: report"),
+        ("id=report,required=true", {}, True, "FAIL", "required output has no path: report"),
+        ({"id": "report"}, {"report": "accepted"}, True, "WARN", "required output without path waived: report (accepted)"),
+        ({"id": "report", "path": "existing.md"}, {}, True, "PASS", "required output exists: existing.md"),
+        ({"id": "report", "path": "missing.md"}, {}, True, "FAIL", "required output missing: missing.md"),
+        ({"id": "report", "path": "missing.md"}, {}, False, "WARN", "required output pending: missing.md"),
+        ({"id": "report", "path": "missing.md"}, {"report": "accepted"}, True, "WARN", "required output waived: report (accepted)"),
+        ({"id": "report", "required": False}, {}, True, "PASS", "required output optional: report"),
+        ({"id": "report", "path": "missing.md", "required": False}, {}, True, "PASS", "required output optional: report"),
+    ]
+    for output, waivers, enforce_missing, level, message in cases:
+        checks = core.required_output_checks(root, {"required_outputs": [output]}, waivers, enforce_missing)
+        actual = [(item.level, item.message) for item in checks]
+        if actual != [(level, message)]:
+            raise AssertionError(f"unexpected checks for {output!r}: {actual!r}")
+
+    for artifact, waivers, enforce_missing, level, message in [
+        ("existing.md", {}, True, "PASS", "expected report exists: existing.md"),
+        ("missing.md", {}, True, "FAIL", "expected report missing: missing.md"),
+        ("missing.md", {}, False, "WARN", "expected report pending: missing.md"),
+        ("missing.md", {"expected-report": "accepted"}, True, "WARN", "expected report waived: missing.md (accepted)"),
+        ("missing.md", {"expected_report": "accepted"}, True, "WARN", "expected report waived: missing.md (accepted)"),
+    ]:
+        checks = core.required_output_checks(root, {"expected_report": {"artifact": artifact}}, waivers, enforce_missing)
+        actual = [(item.level, item.message) for item in checks]
+        if actual != [(level, message)]:
+            raise AssertionError(f"unexpected expected_report checks: {actual!r}")
+
+
+def missing_path_workflow(project: Path, run_id: str) -> None:
+    task_id = "missing-path-task"
+    pf("task-create", "--project-root", str(project), "--run", run_id, "--id", task_id,
+       "--title", "Missing output path", "--process", "task-batch-execution",
+       "--required-output", "id=report,path=report.md,type=markdown,required=true", "--apply")
+    # task-create rejects missing paths; emulate an existing file-first assignment.
+    task = core.load_task(project, task_id)
+    task["required_outputs"][0].pop("path")
+    core.save_task(project, task)
+    task_path = project / ".pf" / "assignments" / f"{task_id}.yaml"
+    run_path = project / ".pf" / "runs" / run_id / "run.yaml"
+    task_before, run_before = task_path.read_bytes(), run_path.read_bytes()
+    events_before = event_types(project)
+    result = pf("task-complete", "--project-root", str(project), "--task", task_id,
+                "--summary", "Must reject missing path.", "--apply", expect=1)
+    output = result.stdout + result.stderr
+    expected = "FAIL: task required outputs are not complete: required output has no path: report"
+    if expected not in output or "Traceback" in output or "NameError" in output:
+        raise AssertionError(f"expected controlled validation failure:\n{output}")
+    if task_path.read_bytes() != task_before or run_path.read_bytes() != run_before:
+        raise AssertionError("rejected completion mutated assignment or run")
+    if event_types(project) != events_before:
+        raise AssertionError("rejected completion emitted process events")
+
+    result = pf("task-doctor", "--project-root", str(project), "--task", task_id, expect=1)
+    if "FAIL: required output has no path: report" not in result.stdout or "Traceback" in result.stderr:
+        raise AssertionError(diagnostic_text(result))
+    # run-doctor checks run/assignment consistency, not task output completeness.
+    pf("run-doctor", "--project-root", str(project), "--run", run_id)
+
+    pf("task-complete", "--project-root", str(project), "--task", task_id,
+       "--summary", "Missing path explicitly waived.", "--waive-required-output", "report:accepted", "--apply")
+    task = core.load_task(project, task_id)
+    if task["status"] != "done" or task["result"]["waivers"] != {"report": "accepted"}:
+        raise AssertionError(f"waived result was not persisted: {task['result']!r}")
+    run_task = next(item for item in core.load_run(project, run_id)["tasks"] if item["id"] == task_id)
+    if run_task["status"] != "done":
+        raise AssertionError("waived completion did not update the run task status")
+    result = pf("task-doctor", "--project-root", str(project), "--task", task_id)
+    if "WARN: required output without path waived: report (accepted)" not in result.stdout:
+        raise AssertionError(diagnostic_text(result))
+    pf("run-doctor", "--project-root", str(project), "--run", run_id)
+
+
 def required_output_workflow(root: Path) -> None:
     project = make_project(root, "required-output")
     run_id = "required-output-run"
@@ -167,6 +250,7 @@ def required_output_workflow(root: Path) -> None:
     (project / report_rel).write_text("# Required Output Report\n\nPASS\n", encoding="utf-8")
     pf("task-complete", "--project-root", str(project), "--task", "required-output-task", "--summary", "Required output present.", "--artifact", report_rel, "--apply")
     pf("task-doctor", "--project-root", str(project), "--task", "required-output-task")
+    missing_path_workflow(project, run_id)
     pf("run-complete", "--project-root", str(project), "--run", run_id, "--apply")
     pf("run-doctor", "--project-root", str(project), "--run", run_id)
     assert_file(project / ".pf" / "runs" / run_id / "summary.md")
@@ -215,6 +299,7 @@ def concurrent_artifact_workflow(root: Path) -> None:
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-run-task-smoke-") as temp:
         root = Path(temp)
+        required_output_check_matrix(root)
         positive_workflow(root)
         negative_workflow(root)
         required_output_workflow(root)

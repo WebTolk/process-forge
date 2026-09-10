@@ -67,31 +67,34 @@ index_state
 `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
 `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
 `documents_fts` хранит searchable fulltext fields. `index_state` хранит
-authorization state текущего project snapshot без дублирования documents под
-каждый проект.
+текущее состояние каталога ресурсов Workplace. Снапшоты проектов не создают
+состояние индекса и не дублируют документы: они определяют разрешённые
+идентификаторы ресурсов для каждого поискового запроса.
 
 ## CLI
 
 ```bash
-python bin/pf.py search-index status --project-root <project> --workplace <workplace>
-python bin/pf.py search-index refresh --project-root <project> --workplace <workplace>
-python bin/pf.py search-index rebuild --project-root <project> --workplace <workplace>
-python bin/pf.py search-index doctor --project-root <project> --workplace <workplace>
-python bin/pf.py search-index tick --project-root <project> --workplace <workplace>
+python bin/pf.py search-index status --workplace <workplace>
+python bin/pf.py search-index refresh --workplace <workplace>
+python bin/pf.py search-index rebuild --workplace <workplace>
+python bin/pf.py search-index doctor --workplace <workplace>
+python bin/pf.py search-index tick --workplace <workplace>
 ```
 
 `status` работает read-only. `status --verify-files` выполняет явную
 fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
-bounded maintenance unit для оператора и Runtime scheduling.
+ресурса изменилось. `refresh` индексирует каждый зарегистрированный ресурс или пакет
+Workplace один раз, соблюдая `indexing.mode`; снапшот проекта для этого не читается.
+`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
+maintenance unit для оператора и Runtime scheduling.
 
 ## Runtime И MCP
 
-Runtime maintenance должен периодически запускать `tick` для известных проектов
-со свежими snapshots. PF-owned resource mutations помечают существующий index
-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
-во время `tick`.
+Обслуживание индекса выполняется командой `tick` для Workplace, без обхода
+проектов. Сам вызов не требует запущенного Runtime, Ledger или активных сессий.
+
+PF-owned resource mutations помечают существующий index state как stale; внешние
+изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
 
 `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
 или degraded, результат возвращает этот `search_status` и пустые matches до
