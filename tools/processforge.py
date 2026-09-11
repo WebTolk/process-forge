@@ -6694,9 +6694,16 @@ def public_release_checks(root: Path) -> list[Check]:
     checks: list[Check] = []
     dist = root / "dist"
     stale: list[str] = []
+    current_version = (root / "VERSION").read_text(encoding="utf-8").strip() if (root / "VERSION").is_file() else ""
+    generated_current = {
+        "processforge.zip",
+        "processforge.manifest.json",
+        f"processforge-{current_version}.zip",
+        f"processforge-{current_version}.manifest.json",
+    }
     if dist.is_dir():
         for path in sorted(dist.glob("processforge*")):
-            if path.name in {"processforge.zip", "processforge.manifest.json"}:
+            if path.name in generated_current:
                 continue
             if path.suffix.lower() == ".zip" or path.name.endswith(".manifest.json"):
                 stale.append(rel(path, root))
