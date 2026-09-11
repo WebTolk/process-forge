@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    "tools/smoke_work_transition_recovers_after_invalid_evidence.py"
+  ],
+  "started_at": "2026-09-07T14:13:55.630891+00:00",
+  "finished_at": "2026-09-07T14:14:15.158144+00:00",
+  "elapsed_seconds": 19.527,
+  "exit_code": 0,
+  "output": "PASS: work transition recovers after invalid evidence\n"
+}

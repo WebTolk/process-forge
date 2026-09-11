@@ -1,0 +1,24 @@
+ProcessForge release-test
+RUN smoke_cli_audit_f0608:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_cli_audit_f0608.py
+  started_at: 2026-09-10T10:46:20Z
+PASS smoke_cli_audit_f0608
+  finished_at: 2026-09-10T10:46:34Z
+  elapsed_seconds: 13.54
+RUN smoke_process_run_task_batch:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_process_run_task_batch.py
+  started_at: 2026-09-10T10:46:34Z
+PASS smoke_process_run_task_batch
+  finished_at: 2026-09-10T10:48:47Z
+  elapsed_seconds: 133.72
+RUN smoke_orchestrator_shell_agents_with_subagent_policy:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_orchestrator_shell_agents_with_subagent_policy.py
+  started_at: 2026-09-10T10:48:47Z
+PASS smoke_orchestrator_shell_agents_with_subagent_policy
+  finished_at: 2026-09-10T10:49:18Z
+  elapsed_seconds: 30.19
+REPORT: .pf/runtime/release-test/latest-report.json
+REPORT: .pf/runtime/release-test/latest-report.md
+TRACE: .pf/runtime/release-test/latest-trace.ndjson
+ELAPSED: 177.45s
+RESULT: PASS

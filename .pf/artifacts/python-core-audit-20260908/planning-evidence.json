@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "task-index",
+    "status": "ready",
+    "path": ".pf/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci/task-index.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-has-tasks",
+    "status": "passed",
+    "summary": "Scoped audit run and task exist; plan and baseline recorded."
+  }
+]

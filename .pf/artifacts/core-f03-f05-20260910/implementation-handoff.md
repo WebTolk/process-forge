@@ -1,0 +1,8 @@
+# Final implementation handoff to independent assurance
+Status: primary implementation acceptance; independent assurance/review still required. Source frozen.
+F03/F04: f0304-final PASS 199.245s; f0304-final-isolated public PASS 207.276s, original-module F03/F04 negative controls fail separately as expected. Combined final-evidence PASS 278.620s.
+F05: f05-matrix-2 PASS 202.979s. All 18 before/after failure points (run, intent, assignment, summary, handoff, index, projection, event, cleanup), fresh-service transition/complete routes, original time/history, deduplicated events, and malformed journals. Final public-copy proof is final-public-results.json and final-public-* outputs; may still be finishing.
+Ten existing related checks PASS in related-results.json. After final serialization fix: final-terminal PASS 23.944s, final-events PASS 23.299s. Schema/cleanliness passed; checksum refreshed after final source freeze. Preservation PASS.
+Corrections after worker delivery: evidence test fixture/process routing errors, completion test history expectation and missing fault matrix; journal content fingerprint and strict completed/pin checks; journal JSON encoding (valid YAML) avoids generic dumper folding multiline payloads. Independent review should assess actual final source.
+Rejected candidate evidence is retained: f05-worker-attempt, f05-matrix-1, f05-matrix-final and f05-isolated-final are FAILs superseded by f05-matrix-2/final-public. Do not confuse filenames with final authority.
+No full release qualification. F06-F12 and baseline Runtime startup failure remain separate. No installed infrastructure, commit or publication actions.

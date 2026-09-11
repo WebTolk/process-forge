@@ -1,0 +1,21 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_mcp_jsonrpc_validation.py
+
+CWD:
+  D:\Dev\process-forge
+
+Timeout:
+  180s
+
+Exit code:
+  1
+
+STDERR tail:
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_mcp_jsonrpc_validation.py", line 87, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_mcp_jsonrpc_validation.py", line 60, in main
+    assert response.get("error", {}).get("code") == code, response
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'jsonrpc': '2.0', 'id': 'evidence', 'result': {'content': [{'type': 'text', 'text': '{"error": {"code": "missing_project_root", "remediation": {"checks": ["Call pf.context, pf.search, pf.resolve, or pf.work.start with project_root set to a valid ProcessForge project."], "kind": "project_root_required", "summary": "Garage read-only tools can run without a Ledger session, but need project_root when no session is supplied."}}}'}], 'isError': True}}

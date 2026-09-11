@@ -1,0 +1,2905 @@
+OpenAI Codex v0.153.4
+--------
+workdir: D:\Dev\process-forge
+model: gpt-5.6-luna
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a08f3a-5116-7da0-9196-62a1ba51ed23
+--------
+user
+# Worker Launch Prompt
+
+You are a worker agent.
+You are not the orchestrator.
+Use only the assigned task and the provided assignment capsule.
+Do not rebuild full project context unless explicitly allowed.
+Do not edit files outside allowed_files.
+Do not read files outside allowed_read_files unless explicitly allowed.
+Use workspace_access_file for explicitly granted workplace resources.
+Do not copy private paths from workspace_access_file into public project artifacts, assignments, capsules, or reports.
+Respect forbidden_files.
+Produce required_outputs.
+Write expected_report.
+Stop and report if scope is insufficient.
+Invoke subagents only when subagent_policy.allow is true.
+When subagent reports are required, write them only under subagent_policy.reports_dir.
+
+## Assignment
+
+- task_id: `a05-migration`
+- run_id: `core-a01-a11-wave2-20260911`
+- assignment: `.pf/assignments/a05-migration.yaml`
+- capsule: `.pf/contexts/assignment-capsules/a05-migration.capsule.yaml`
+- workspace_access_file: `.pf/runtime/agent-runs/core-a01-a11-wave2-20260911/a05-migration/workspace-access.json`
+- worker_may_rebuild_context: `false`
+
+## workspace_access
+
+- knowledge_resources: `0`
+- templates: `0`
+- tools: `0`
+- mcp: `0`
+
+## allowed_files
+
+- `src/processforge_core/core_update.py`
+- `tools/smoke_core_update_migration_sources.py`
+- `.pf/artifacts/core-a01-a11-20260911/a05-migration/**`
+- `.pf/tmp/a05-migration/**`
+
+## allowed_read_files
+
+- `src/processforge_core/core_update.py`
+- `tools/smoke_core_update_migration_sources.py`
+- `src/processforge_core/**`
+- `tools/pf_runtime/**`
+- `tools/processforge.py`
+- `tools/*smoke*.py`
+- `tools/*helpers*.py`
+- `docs/concepts/**`
+- `.pf/artifacts/core-a01-a11-20260911/**`
+- `.pf/artifacts/codebase-audit-20260910/**`
+- `.pf/AGENTS.md`
+- `.pf/contexts/**`
+
+## forbidden_files
+
+- `VERSION`
+- `CHANGELOG.md`
+- `checksums/**`
+- `.pf/artifacts/codebase-audit-20260910/**`
+- `.pf/process-forge.yaml`
+
+## required_outputs
+
+- `a05-migration-report` -> `.pf/artifacts/core-a01-a11-20260911/a05-migration/report.md`
+
+## expected_report
+
+- `.pf/artifacts/core-a01-a11-20260911/a05-migration/report.md`
+
+## subagent_policy
+
+- allow: `false`
+- max_subagents: `0`
+- require_reports: `false`
+- reports_dir: ``
+
+## Output Delivery Contract
+
+Your final response is captured verbatim as the assignment's expected report artifact.
+Return only the complete report content in the requested format; do not say that you saved it, link to it, or add a conversational preface.
+For a read-only assignment, do not attempt to write the report file yourself.
+
+## Assignment Capsule
+
+schema_version: 1
+capsule:
+  id: a05-migration-capsule
+  generated_at: '2026-09-11T06:48:04Z'
+  assignment_id: a05-migration
+  assignment_path: .pf/assignments/a05-migration.yaml
+  assignment_checksum: 6a182e61d2105f7d7d856c52edb9758b0d314335ef48ed4af55f016c85c20503
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 17e6bea8633b716aeb71b34d80f656967783e6f719ba772ace6f7500676fc914
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260911-064616-687ea9
+  sha256: 'sha256:17e6bea8633b716aeb71b34d80f656967783e6f719ba772ace6f7500676fc914'
+  generated_at: '2026-09-11T06:46:01Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  -
+    id: 'project.process-forge:project-profile'
+    kind: note_collection
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-profile@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts/project-profile.md
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:33c8f9edf949d6d99e3287d47c440a1341c1445fdd5361a4038e546d1f422ef0'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-profile
+    title: Project profile and repository map
+    load_policy: when_relevant
+    index_policy: full_text
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+  -
+    id: 'project.process-forge:project-artifacts'
+    kind: reference
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-artifacts@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:66f3079b7370d98d92f0fec9594cec7fe61fe44aab9cc97ae7b4ee74d4a73aa6'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-artifacts
+    title: Project ProcessForge artifacts
+    load_policy: on_demand
+    index_policy: metadata
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    []
+execution_route_summary:
+  process: ""
+  stages:
+    []
+  required_capabilities:
+    []
+  capability_requirements:
+    []
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    []
+  unsatisfied:
+    []
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: a05-migration
+  path: .pf/assignments/a05-migration.yaml
+  status: open
+  objective: Implement bounded repair brief .pf/artifacts/core-a01-a11-20260911/a05-migration-brief.md
+  execution_mode:
+    kind: implementation
+    code_changes_allowed: true
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260911-064616-687ea9
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/a05-migration.yaml
+    - .pf/artifacts/core-a01-a11-20260911/a05-migration-brief.md
+    - .pf/artifacts/core-a01-a11-20260911/design.md
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - src/processforge_core/core_update.py
+    - tools/smoke_core_update_migration_sources.py
+    - .pf/artifacts/core-a01-a11-20260911/a05-migration/**
+    - .pf/tmp/a05-migration/**
+  allowed_read_files:
+    - src/processforge_core/core_update.py
+    - tools/smoke_core_update_migration_sources.py
+    - src/processforge_core/**
+    - tools/pf_runtime/**
+    - tools/processforge.py
+    - tools/*smoke*.py
+    - tools/*helpers*.py
+    - docs/concepts/**
+    - .pf/artifacts/core-a01-a11-20260911/**
+    - .pf/artifacts/codebase-audit-20260910/**
+    - .pf/AGENTS.md
+    - .pf/contexts/**
+  forbidden_files:
+    - VERSION
+    - CHANGELOG.md
+    - checksums/**
+    - .pf/artifacts/codebase-audit-20260910/**
+    - .pf/process-forge.yaml
+  ownership:
+    owner_id: a05-migration
+    owner_label: worker-a05-migration
+    role: worker
+    writer: true
+    owned_files:
+      - src/processforge_core/core_update.py
+      - tools/smoke_core_update_migration_sources.py
+      - .pf/artifacts/core-a01-a11-20260911/a05-migration/**
+      - .pf/tmp/a05-migration/**
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - src/processforge_core/core_update.py
+      - tools/smoke_core_update_migration_sources.py
+      - .pf/artifacts/core-a01-a11-20260911/a05-migration/**
+      - .pf/tmp/a05-migration/**
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: a05-migration-report
+      path: .pf/artifacts/core-a01-a11-20260911/a05-migration/report.md
+      type: markdown
+      required: true
+  expected_report:
+    language: en
+    artifact: .pf/artifacts/core-a01-a11-20260911/a05-migration/report.md
+    format: concise_markdown
+    include:
+      - a05-migration-report
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: high
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/a05-migration.ndjson
+  event_correlation_id: assignment-a05-migration
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/a05-migration.yaml
+  - .pf/artifacts/core-a01-a11-20260911/a05-migration-brief.md
+  - .pf/artifacts/core-a01-a11-20260911/design.md
+allowed_files:
+  - src/processforge_core/core_update.py
+  - tools/smoke_core_update_migration_sources.py
+  - .pf/artifacts/core-a01-a11-20260911/a05-migration/**
+  - .pf/tmp/a05-migration/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - .pf/artifacts/codebase-audit-20260910/**
+  - .pf/process-forge.yaml
+required_outputs:
+  -
+    id: a05-migration-report
+    path: .pf/artifacts/core-a01-a11-20260911/a05-migration/report.md
+    type: markdown
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-a05-migration
+
+## Workspace Access File
+
+D:\Dev\process-forge\.pf\runtime\agent-runs\core-a01-a11-wave2-20260911\a05-migration\workspace-access.json
+
+warning: `--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation.
+warning: `--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation.
+2026-09-11T06:49:21.575662Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-11T06:49:23.849754Z ERROR codex_models_manager::manager: failed to refresh available models: timeout waiting for child process to exit
+2026-09-11T06:49:23.900034Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-11T06:49:26.960098Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-11T06:49:49.555842Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)")))
+2026-09-11T06:50:19.571810Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)")))
+ERROR: Reconnecting... 2/5
+codex
+I’m reviewing the bounded repair brief, design artifact, and the two owned source files before implementing the migration fix. I’ll keep all changes within the assigned scope and verify them with the available smoke test.
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Raw .pf/AGENTS.md; Write-Output "`n--- brief ---"; Get-Content -Raw .pf/artifacts/core-a01-a11-20260911/a05-migration-brief.md; Write-Output "`n--- design ---"; Get-Content -Raw .pf/artifacts/core-a01-a11-20260911/design.md; Write-Output "`n--- core_update.py ---"; Get-Content -Raw src/processforge_core/core_update.py; Write-Output "`n--- smoke ---"; Get-Content -Raw tools/smoke_core_update_migration_sources.py' in D:\Dev\process-forge
+ exited 1 in 579ms:
+# AGENTS.md
+
+## Mission
+
+Use ProcessForge as a file-first process system. Work through assignments, execution contexts, artifacts, reviews, handoffs, logs, and ADRs.
+
+## Boot Sequence
+
+1. Read this file.
+2. Read `.pf/process-forge.yaml`.
+3. Call `pf.context` with the project root, or read the current snapshot only
+   when MCP is unavailable.
+4. Use `pf.search` for authorized project knowledge and `pf.resolve` before
+   opening ProcessForge-managed resource roots.
+5. Call `pf.work.start` with the objective when work becomes substantive. If it
+   returns `process_choice_required`, choose an offered process and call it
+   again with `process_id`; do not infer from `default` when multiple processes
+   are allowed.
+6. Call `pf.work.state` and read the selected assignment and immutable
+   Execution Context Package.
+7. Check allowed and forbidden files before editing.
+8. Satisfy the current stage obligations, then call `pf.work.transition` with
+   a declared outcome and evidence. Never choose `next_stage` directly.
+9. Repeat state, work, and transition until PF returns `action: run_completed`.
+
+## Core Rules
+
+- File-only mode is the default.
+- One file scope has one responsible writer.
+- Assignments define the work boundary.
+- Do not edit files outside the assignment scope without a handoff.
+- Approved artifacts are protected.
+- Execution Context Packages are immutable snapshots.
+- Process versions are immutable.
+- ProcessForge selects the initial stage and every next stage from the pinned
+  Process definition. Agents provide outcomes and evidence, not stage ids.
+- Runner and backend support are optional future modes, not requirements.
+- Public product files must not include private paths, secrets, machine names, or temporary private notes.
+- Use stable machine-readable ids for statuses, processes, artifacts, assignments, templates, and packages.
+- Create every repository-local temporary directory under `.pf/tmp/`; never create temporary worker, debug, staging, or scratch directories at the repository root.
+- In particular, do not create root directories named `.pf-worker-shell-*` or similar runner sandboxes. Clean `.pf/tmp/` outputs after use unless they are declared durable evidence.
+- System temporary directories are allowed only for isolated tests that never write a temporary directory into the repository.
+- During ordinary project work, do not install, start, restart, or repair PF
+  Runtime, MCP, host hooks, or Agent Ledger. Use available PF tools. If PF
+  returns an operator-level infrastructure blocker, report it to the operator.
+- Current `pf.context`/snapshot state outranks historical generated reports.
+  Do not treat a report marked `stale` or `historical` as current truth.
+- A completed Work can offer a compact fresh-session handoff through
+  `pf.context`; it is advisory and must not cause Runtime, MCP, Ledger, or
+  external-session lifecycle actions.
+- `run-create`, `task-create`, `task-complete`, and `run-complete` are
+  compatibility and diagnostic commands, not the ordinary agent workflow.
+
+## Standard Statuses
+
+Artifact statuses:
+
+```text
+missing
+draft
+ready_for_review
+approved
+rejected
+stale
+superseded
+archived
+```
+
+Review result statuses:
+
+```text
+pass
+pass_with_conditions
+warn
+fail
+skipped
+```
+
+Upgrade assessment results:
+
+```text
+safe
+requires_approval
+requires_migration
+blocked
+```
+
+## Logging Format
+
+Use append-only log entries:
+
+```markdown
+## YYYY-MM-DD HH:MM - <role>
+
+Task:
+Files changed:
+Artifacts changed:
+Templates used:
+Tools used:
+Decisions:
+Risks:
+Next steps:
+Handoff:
+```
+
+## Handoff Format
+
+```markdown
+# Handoff: <from> -> <to>
+
+Objective:
+Current status:
+Input artifacts:
+Files changed:
+Files not to touch:
+Known issues:
+Required checks:
+Next recommended action:
+```
+
+
+--- brief ---
+You are a bounded implementation worker, not an auditor. Follow the primary design and fix only your assigned defects. No subagents, no lifecycle commands, no context refresh, no installs/restarts, no commits, no ACL or sandbox changes. Do not modify checksums, VERSION, release registrations or unrelated files. Primary owns integration and all PF transitions.
+Use targeted rg/AST reads: Serena has no configured languages. Do not dump tools/processforge.py or scan all .pf. Aim for <= 20 focused tool calls; before code edits use at most 8 reads, each <= 180 lines. Write a failing regression from the supplied defect evidence, make the minimal repair, then run focused tests. On the FIRST sandbox PermissionError stop trying environment workarounds; preserve runnable tests and tell primary the exact command. You can still implement and perform static reasoning. No repeated broad exploration. Finish promptly with a concise report (<= 100 lines), exact changed files, actual test results vs unexecuted checks, risks. Use repo-relative paths in the report and describe absolute-path samples in words. Public tests use disposable temp fixtures, neutral names, no this-machine paths. Write report even on blockers.
+
+
+Fix A05. In core_update.py workplace_migration_plan currently accepts copy_if_missing source absent from ZIP; archive.read KeyError in apply leaves journal applying. Validate archive source declarations (missing, directory, invalid path) during planning BEFORE target mutations; keep optional/already-present semantics justified by contract. Apply must fail with structured status and recoverable journal/backup if an archive/read/extraction failure still occurs after planning (test fault at apply boundary). Do not swallow programmer errors broadly. Read audit native-core/audit_core_update_missing_migration_source.py and smoke_core_update_manifest.py, local docs update/migration contract. Real minimal ZIP regression: malformed manifest missing member plan blocked, no target change, positive migration passes and existing target preserved. Test post-plan read fault journal not applying. Do not operate installed distribution/workplace or bump versions.
+
+Governing design: .pf/artifacts/core-a01-a11-20260911/design.md. Audit root: .pf/artifacts/codebase-audit-20260910/.
+
+
+--- design ---
+# РџР»Р°РЅ РёСЃРїСЂР°РІР»РµРЅРёСЏ A01вЂ“A11
+
+Р”Р°С‚Р°: 2026-09-11. РђРІС‚РѕСЂ: primary orchestrator. РћСЃРЅРѕРІР°РЅРёРµ: РїСЂСЏРјРѕР№ Р·Р°РїСЂРѕСЃ
+РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ Р·Р°РїСѓСЃС‚РёС‚СЊ РёСЃРїСЂР°РІР»РµРЅРёСЏ С‡РµСЂРµР· PF shell workers СЃ РєРѕРЅС‚СЂРѕР»РµРј РєР°С‡РµСЃС‚РІР°.
+Baseline: 901d0551773fe7a5b382b89ebe95b212b0747e83; VERSION 1.1.0.
+
+## РћР±Р»Р°СЃС‚СЊ Рё РїСЂРѕС†РµСЃСЃ
+
+РСЃРїСЂР°РІРёС‚СЊ РІСЃРµ 11 РїСЂРёРЅСЏС‚С‹С… РґРµС„РµРєС‚РѕРІ РёР· Р°СѓРґРёС‚Р°, РІС‹РїРѕР»РЅРёС‚СЊ СЂРµРіСЂРµСЃСЃРёРѕРЅРЅС‹Рµ РїСЂРѕРІРµСЂРєРё,
+РЅРµР·Р°РІРёСЃРёРјС‹Р№ review, СЃРѕС…СЂР°РЅРёС‚СЊ РёСЃС…РѕРґРЅРёРєРё Рё PF handoff РґР»СЏ РїРѕСЃР»РµРґСѓСЋС‰РµР№ РґРѕСЃС‚Р°РІРєРё.
+РќРµ РІРєР»СЋС‡Р°С‚СЊ РЅРµРїСЂРёРЅСЏС‚СѓСЋ РіРёРїРѕС‚РµР·Сѓ H01. РЈСЃС‚Р°РЅРѕРІРєР°, РѕР±РЅРѕРІР»РµРЅРёРµ С‚РµРєСѓС‰РµРіРѕ Runtime,
+РєРѕРјРјРёС‚/push Рё РїСѓР±Р»РёРєР°С†РёСЏ РЅРµ РІС…РѕРґСЏС‚ РІ СЌС‚Сѓ РёСЃС…РѕРґРЅСѓСЋ Р»РѕРєР°Р»СЊРЅСѓСЋ СЂР°Р±РѕС‚Сѓ.
+
+Carrier: garage-remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-wo.
+Process: task-batch-execution, РµРґРёРЅСЃС‚РІРµРЅРЅС‹Р№ РїСЂРµРґР»РѕР¶РµРЅРЅС‹Р№ РїСЂРѕРµРєС‚РѕРј РїСЂРѕС†РµСЃСЃ.
+PF source CLI РїРѕРґС‚РІРµСЂРґРёР» fresh/ready Рё СЃРѕР·РґР°Р» РЅРѕРІС‹Р№ Work. Connected MCP start
+РѕС‚РєР°Р·Р°Р» РёР·-Р·Р° СѓР¶Рµ РІРѕСЃРїСЂРѕРёР·РІРµРґС‘РЅРЅРѕРіРѕ A09; РґР°Р»РµРµ MCP РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РґР»СЏ state Рё
+РїРµСЂРµС…РѕРґРѕРІ. РџРѕРґРєР»СЋС‡С‘РЅРЅС‹Р№ СЃРµСЂРІРµСЂ РЅРµ РїРµСЂРµР·Р°РїСѓСЃРєР°РµС‚СЃСЏ Рё РЅРµ РїРѕРґРјРµРЅСЏРµС‚СЃСЏ.
+Р¤РёРєСЃРёСЂРѕРІР°РЅРЅС‹С… platform/toolchain contracts Сѓ РїСЂРѕРµРєС‚Р° РЅРµС‚. Serena symbolic
+overview РЅРµРґРѕСЃС‚СѓРїРµРЅ: Active languages []; РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РѕРіСЂР°РЅРёС‡РµРЅРЅС‹Р№ РїРѕРёСЃРє.
+
+## РРЅРІР°СЂРёР°РЅС‚С‹ Рё СЂРµС€РµРЅРёСЏ РґРѕ СЂРµР°Р»РёР·Р°С†РёРё
+
+1. РђРІС‚РѕСЂРёР·Р°С†РёСЏ СЂРµСЃСѓСЂСЃР°-С„Р°Р№Р»Р° СЂР°Р·СЂРµС€Р°РµС‚ СЃР°Рј РєР°РЅРѕРЅРёС‡РµСЃРєРёР№ С„Р°Р№Р», Р° РЅРµ РІСЃСЋ РїР°РїРєСѓ.
+   РљР°С‚Р°Р»РѕРіРё СЃРѕС…СЂР°РЅСЏСЋС‚ include/exclude Рё РєР°РЅРѕРЅРёС‡РµСЃРєРёР№ containment.
+2. Expected report СЂР°Р·СЂРµС€Р°РµС‚СЃСЏ РІРЅСѓС‚СЂРё РїСЂРѕРµРєС‚Р° РґРѕ С‡С‚РµРЅРёСЏ. РћРґРёРЅ resolver РґР»СЏ
+   collector/required output/host authorization, Р±РµР· РѕСЃР»Р°Р±Р»РµРЅРёСЏ hash/provenance.
+3. РђРІС‚РѕСЂРёР·РѕРІР°РЅРЅС‹Р№ PF-owned report РјРѕР¶РµС‚ СЃРѕРґРµСЂР¶Р°С‚СЊ С‚РµРєСЃС‚ РїСѓС‚РµР№ РїРѕСЃР»Рµ СЃС‚СЂРѕРіРѕР№
+   РїСЂРѕРІРµСЂРєРё identity, attempt, С„Р°Р№Р»Р°, hash Рё secret scanner. РќРµРґРѕРІРµСЂРµРЅРЅС‹Р№ С‚РµРєСЃС‚
+   СЃРѕС…СЂР°РЅСЏРµС‚ С‚РµРєСѓС‰РёРµ РѕРіСЂР°РЅРёС‡РµРЅРёСЏ. Exactly-one Рё recovery derivation СЃРѕС…СЂР°РЅСЏСЋС‚СЃСЏ.
+4. РћС€РёР±РєР° РѕРґРЅРѕРіРѕ РїСЂРѕРµРєС‚Р° РёР»Рё host cache РЅРµ Р·Р°РІРµСЂС€Р°РµС‚ scheduler. Health РѕС‚СЂР°Р¶Р°РµС‚
+   С„Р°РєС‚РёС‡РµСЃРєСѓСЋ РґРµРіСЂР°РґР°С†РёСЋ Рё Р¶РёРІСѓС‡РµСЃС‚СЊ, Р° РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РІРѕР·РІСЂР°С‰Р°РµС‚ РіРѕС‚РѕРІРЅРѕСЃС‚СЊ.
+   KeyboardInterrupt/GeneratorExit Рё С€С‚Р°С‚РЅРѕРµ Р·Р°РІРµСЂС€РµРЅРёРµ РЅРµ РїСЂРѕРіР»Р°С‚С‹РІР°СЋС‚СЃСЏ.
+5. Р–РёРІРѕР№ orphaned owner Р±Р»РѕРєРёСЂСѓРµС‚ singleton takeover; РјС‘СЂС‚РІС‹Р№ owner Рё concurrent
+   СЃС‚Р°СЂС‚ РѕР±СЂР°Р±Р°С‚С‹РІР°СЋС‚СЃСЏ РїРѕ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РµРјСѓ РїСЂРѕС‚РѕРєРѕР»Сѓ Р±РµР· СѓРґР°Р»РµРЅРёСЏ С‡СѓР¶РѕРіРѕ lock.
+6. РСЃС‚РѕС‡РЅРёРє РјРёРіСЂР°С†РёРё РїСЂРѕРІРµСЂСЏРµС‚СЃСЏ РІ Р°СЂС…РёРІРµ РґРѕ РїРµСЂРІРѕРіРѕ РёР·РјРµРЅРµРЅРёСЏ. РћС€РёР±РєР° РїСЂРёРјРµРЅРµРЅРёСЏ
+   РѕСЃС‚Р°РІР»СЏРµС‚ СЃС‚СЂСѓРєС‚СѓСЂРёСЂРѕРІР°РЅРЅРѕРµ recoverable СЃРѕСЃС‚РѕСЏРЅРёРµ Рё СЃРѕС…СЂР°РЅСЏРµС‚ backup.
+7. Session ID вЂ” С‚РѕС‡РЅР°СЏ opaque identity. РЎСѓС‰РµСЃС‚РІСѓСЋС‰РёРµ lowercase records РґРѕР»Р¶РЅС‹
+   СЂР°Р±РѕС‚Р°С‚СЊ; Р±РµР·РѕРїР°СЃРЅРѕРµ РёРјСЏ С„Р°Р№Р»Р° РЅРµ РґРѕР»Р¶РЅРѕ РѕР±СЉРµРґРёРЅСЏС‚СЊ СЂР°Р·РЅС‹Рµ ID. РЎС‚Р°СЂС‹Рµ Р·Р°РїРёСЃРё
+   С‡РёС‚Р°СЋС‚СЃСЏ РїРѕ С‚РѕС‡РЅРѕР№ metadata identity, collision cases РїСЂРѕРІРµСЂСЏСЋС‚СЃСЏ РѕС‚РґРµР»СЊРЅРѕ.
+8. MCP РІР°Р»РёРґРёСЂСѓРµС‚ JSON-RPC РґРѕ dispatch; notification РЅРµ СЃРѕР·РґР°С‘С‚ response;
+   РѕС€РёР±РєРё parse/envelope/params СЂР°Р·Р»РёС‡Р°СЋС‚СЃСЏ. Р’Р°Р»РёРґРЅС‹Рµ РєР»РёРµРЅС‚С‹ СЃРѕС…СЂР°РЅСЏСЋС‚СЃСЏ.
+9. Classification source label СЃС‚Р°Р±РёР»РµРЅ РїСЂРё РїРµСЂРµРЅРѕСЃРµ distribution. РќРµР»СЊР·СЏ РїСЂРѕСЃС‚Рѕ
+   СѓРґР°Р»РёС‚СЊ provenance/fingerprint Рё СЃРєСЂС‹С‚СЊ РёСЃС‚РёРЅРЅРѕРµ РёР·РјРµРЅРµРЅРёРµ classifier.
+   РџСЂРµРґРїРѕС‡С‚РёС‚РµР»СЊРЅРѕ РјРёРЅРёРјР°Р»СЊРЅРѕРµ СЃС‚Р°Р±РёР»СЊРЅРѕРµ РёРјСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ owning distribution
+   РґР»СЏ РµРіРѕ СЂРµСЃСѓСЂСЃРѕРІ, project-relative РёРјСЏ РґР»СЏ Р»РѕРєР°Р»СЊРЅС‹С… СЂРµСЃСѓСЂСЃРѕРІ; СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ
+   РґРµР№СЃС‚РІСѓСЋС‰РµРіРѕ source snapshot РїСЂРѕРІРµСЂСЏРµС‚СЃСЏ РѕС‚РґРµР»СЊРЅРѕ.
+10. Р Р°Р·РЅС‹Рµ lifecycle facts РЅРµ СЃС…Р»РѕРїС‹РІР°СЋС‚СЃСЏ РїРѕ session id. РџРѕРІС‚РѕСЂ РѕРґРЅРѕР№ РґРѕСЃС‚Р°РІРєРё
+    РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РёРґРµРјРїРѕС‚РµРЅС‚РµРЅ; РѕРіСЂР°РЅРёС‡РµРЅРёСЏ provider identity СЏРІРЅРѕ С„РёРєСЃРёСЂСѓСЋС‚СЃСЏ.
+
+## Р’Р»Р°РґРµРЅРёРµ С„Р°Р№Р»Р°РјРё Рё РѕС‡РµСЂРµРґРЅРѕСЃС‚СЊ
+
+РўСЂРё shell-РІРѕСЂРєРµСЂР° РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ РјР°РєСЃРёРјСѓРј. РњРѕРґРµР»СЊ gpt-5.6-luna, high РґР»СЏ СЃР»РѕР¶РЅС‹С…
+РіСЂР°РЅРёС†; narrow briefs Р±РµР· РїРѕРІС‚РѕСЂРЅРѕРіРѕ РѕР±С‰РµРіРѕ Р°СѓРґРёС‚Р°. РљР°Р¶РґС‹Р№ РїРёС€РµС‚ С‚РѕР»СЊРєРѕ СЃРІРѕР№
+РєРѕРґ, СЃРѕР±СЃС‚РІРµРЅРЅС‹Р№ smoke Рё evidence. Р РµРіРёСЃС‚СЂР°С†РёСЏ С‚РµСЃС‚РѕРІ/РєРѕРЅС‚СЂРѕР»СЊРЅС‹Рµ СЃСѓРјРјС‹ вЂ” primary
+РїРѕСЃР»Рµ РѕСЃРІРѕР±РѕР¶РґРµРЅРёСЏ tools/processforge.py. Review Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ РїРѕСЃР»Рµ СЂРµР°Р»РёР·Р°С†РёРё.
+
+- Р’РѕР»РЅР° 1: A09 (tools/processforge.py), A01 (local_resource_search.py),
+  A03/A04/A10 (service.py Рё СЃРѕР±СЃС‚РІРµРЅРЅС‹Рµ smokes).
+- Р’РѕР»РЅР° 2 РїРѕСЃР»Рµ РѕСЃРІРѕР±РѕР¶РґРµРЅРёСЏ С„Р°Р№Р»РѕРІ: A02/A06 (tools/processforge.py + host.py),
+  A05 (core_update.py), A08 (mcp_server.py).
+- Р’РѕР»РЅР° 3: A07 (tools/processforge.py + session_read.py), A11 (codex_hooks.py).
+- Assurance: РЅРµР·Р°РІРёСЃРёРјС‹Рµ read-only reviewers РїРѕ РіСЂСѓРїРїР°Рј РїРѕСЃР»Рµ СЂРµР°Р»РёР·Р°С†РёРё;
+  primary Р·Р°РїСѓСЃРєР°РµС‚ РЅР°СЃС‚РѕСЏС‰РёРµ regressions, РїРѕРІС‚РѕСЂСЏРµС‚ fault probes Рё РёРЅС‚РµРіСЂР°С†РёСЋ.
+
+## РџСЂРѕРІРµСЂРєР° Рё РґРѕСЃС‚Р°РІРєР° РёСЃС…РѕРґРЅРёРєРѕРІ
+
+Baseline audit proof РїРѕРІС‚РѕСЂСЏРµРј РїРѕ СЃРѕРІРїР°РґР°СЋС‰РёРј SHA-256 Рё С‚РµСЃС‚Р°Рј. РљР°Р¶РґС‹Р№ РЅРѕРІС‹Р№
+smoke РґРѕР»Р¶РµРЅ СЂР°Р·Р»РёС‡Р°С‚СЊ СЃР»РѕРјР°РЅРЅС‹Р№ baseline Рё РёСЃРїСЂР°РІР»РµРЅРЅС‹Р№ РєРѕРґ; РЅРµР»СЊР·СЏ СЃС‡РёС‚Р°С‚СЊ
+mock РІРјРµСЃС‚Рѕ СЂРµР°Р»СЊРЅРѕР№ РѕС€РёР±РєРё РґРѕСЃС‚Р°С‚РѕС‡РЅРѕР№ СЂРµРіСЂРµСЃСЃРёРµР№. РџСЂРё sandbox PermissionError
+РІРѕСЂРєРµСЂ СЃРѕС…СЂР°РЅСЏРµС‚ С‚РµСЃС‚ Рё РїСЂРµРєСЂР°С‰Р°РµС‚ РѕР±С…РѕРґС‹ РѕРєСЂСѓР¶РµРЅРёСЏ; primary РІС‹РїРѕР»РЅСЏРµС‚ С‚РµСЃС‚.
+РСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ disposable fixtures, СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅС‹Р№ Workplace РЅРµ РёР·РјРµРЅСЏРµС‚СЃСЏ.
+
+РџРѕСЃР»Рµ targeted/related smokes: schema/public cleanliness/checksum checks,
+СЂРµР»РµРІР°РЅС‚РЅС‹Рµ MCP/Runtime/worker integration, РёС‚РѕРіРѕРІС‹Р№ diff Рё independent review.
+РџРѕР»РЅР°СЏ source release suite Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ, РµСЃР»Рё РёР·РјРµРЅРµРЅРёСЏ Рё РІСЂРµРјСЏ РІС‹РїРѕР»РЅРµРЅРёСЏ
+РїРѕР·РІРѕР»СЏСЋС‚ РїРѕР»СѓС‡РёС‚СЊ С‚РµСЂРјРёРЅР°Р»СЊРЅС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚; РµС‘ СЃР±РѕР№/timeout С„РёРєСЃРёСЂСѓРµС‚СЃСЏ РѕС‚РґРµР»СЊРЅРѕ,
+Р° Р»РѕРєР°Р»СЊРЅР°СЏ РїСЂРёС‘РјРєР° РЅРµ РІС‹РґР°С‘С‚СЃСЏ Р·Р° archive/extracted/public release qualification.
+
+Р’СЃРµ РЅР°Р№РґРµРЅРЅС‹Рµ РІ review РїСЂРѕР±РµР»С‹ РёСЃРїСЂР°РІР»СЏСЋС‚СЃСЏ РІ СЌС‚РѕР№ СЂР°Р±РѕС‚Рµ. РћСЂРёРіРёРЅР°Р»СЊРЅС‹Рµ audit
+Р°СЂС‚РµС„Р°РєС‚С‹, immutable capsules Рё РїРѕСЃС‚РѕСЂРѕРЅРЅРёРµ dirty PF С„Р°Р№Р»С‹ СЃРѕС…СЂР°РЅСЏСЋС‚СЃСЏ.
+
+
+--- core_update.py ---
+"""Manifest-based ProcessForge core update primitives.
+
+The service is intentionally file-system scoped.  It does not discover update
+servers or workplace registries; callers provide an explicit core root and,
+for update operations, an explicit release archive.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import shutil
+import zipfile
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Iterable
+
+
+CORE_MANIFEST_NAME = "processforge-core.manifest.json"
+CORE_MANIFEST_SCHEMA_VERSION = 1
+WORKPLACE_MIGRATION_KIND = "processforge.workplace_migration"
+
+
+@dataclass(frozen=True)
+class CoreUpdateError(Exception):
+    code: str
+    message: str
+
+
+def now_utc() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def sha256_bytes(content: bytes) -> str:
+    return hashlib.sha256(content).hexdigest()
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def safe_relative_path(raw: Any) -> str:
+    if not isinstance(raw, str) or not raw.strip():
+        raise CoreUpdateError("invalid_manifest_path", "manifest path is empty")
+    value = raw.replace("\\", "/")
+    if value != raw:
+        raise CoreUpdateError("invalid_manifest_path", f"manifest path contains backslash: {raw}")
+    if value.startswith("/") or value.startswith("//") or (len(value) > 1 and value[1] == ":"):
+        raise CoreUpdateError("invalid_manifest_path", f"manifest path is absolute: {raw}")
+    parts = value.split("/")
+    if any(part in {"", ".", ".."} for part in parts):
+        raise CoreUpdateError("invalid_manifest_path", f"manifest path escapes or is not normalized: {raw}")
+    if value == CORE_MANIFEST_NAME:
+        raise CoreUpdateError("invalid_manifest_path", f"{CORE_MANIFEST_NAME} is a control file, not an owned payload file")
+    return value
+
+
+def ensure_inside(root: Path, relative_path: str) -> Path:
+    root_resolved = root.resolve()
+    target = (root / relative_path).resolve()
+    if root_resolved != target and root_resolved not in target.parents:
+        raise CoreUpdateError("path_outside_core_root", f"path escapes core root: {relative_path}")
+    return target
+
+
+def manifest_path(core_root: Path) -> Path:
+    return core_root / CORE_MANIFEST_NAME
+
+
+def runtime_root(core_root: Path) -> Path:
+    return core_root / "runtime" / "core-update"
+
+
+def manifest_file_map(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    if manifest.get("schema_version") != CORE_MANIFEST_SCHEMA_VERSION:
+        raise CoreUpdateError("invalid_core_manifest", "core manifest schema_version must be 1")
+    files = manifest.get("files")
+    if not isinstance(files, list):
+        raise CoreUpdateError("invalid_core_manifest", "core manifest files must be a list")
+    result: dict[str, dict[str, Any]] = {}
+    for item in files:
+        if not isinstance(item, dict):
+            raise CoreUpdateError("invalid_core_manifest", "core manifest file entry must be an object")
+        relative_path = safe_relative_path(item.get("relative_path") or item.get("path"))
+        digest = item.get("sha256")
+        if not isinstance(digest, str) or len(digest) != 64 or any(char not in "0123456789abcdefABCDEF" for char in digest):
+            raise CoreUpdateError("invalid_core_manifest", f"invalid sha256 for {relative_path}")
+        result[relative_path] = {**item, "relative_path": relative_path, "sha256": digest.lower()}
+    return result
+
+
+def make_core_manifest(*, version: str, source: dict[str, Any] | None, files: Iterable[dict[str, Any]], generated_at: str | None = None) -> dict[str, Any]:
+    normalized_files = []
+    for item in files:
+        relative_path = safe_relative_path(item.get("relative_path") or item.get("path"))
+        normalized_files.append(
+            {
+                "relative_path": relative_path,
+                "size": int(item.get("size") or 0),
+                "sha256": str(item.get("sha256") or "").lower(),
+            }
+        )
+    normalized_files.sort(key=lambda row: row["relative_path"])
+    manifest = {
+        "schema_version": CORE_MANIFEST_SCHEMA_VERSION,
+        "kind": "processforge.core_manifest",
+        "version": version,
+        "generated_at": generated_at or now_utc(),
+        "source": source or {},
+        "files": normalized_files,
+    }
+    manifest_file_map(manifest)
+    return manifest
+
+
+def make_core_manifest_from_release_files(files: list[tuple[str, Path]], *, version: str, source: dict[str, Any] | None, generated_at: str | None = None) -> dict[str, Any]:
+    entries = []
+    for archive_path, source_path in files:
+        if archive_path == CORE_MANIFEST_NAME:
+            continue
+        entries.append({"relative_path": archive_path, "size": source_path.stat().st_size, "sha256": sha256_file(source_path)})
+    return make_core_manifest(version=version, source=source, files=entries, generated_at=generated_at)
+
+
+def manifest_bytes(manifest: dict[str, Any]) -> bytes:
+    return (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode("utf-8")
+
+
+def read_manifest(path: Path) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise CoreUpdateError("manifest_missing", f"manifest not found: {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise CoreUpdateError("manifest_invalid_json", f"invalid manifest JSON: {path}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise CoreUpdateError("invalid_core_manifest", "core manifest must be an object")
+    manifest_file_map(data)
+    return data
+
+
+def read_archive_manifest(archive_path: Path) -> dict[str, Any]:
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            try:
+                raw = archive.read(CORE_MANIFEST_NAME)
+            except KeyError as exc:
+                raise CoreUpdateError("archive_manifest_missing", f"archive does not contain {CORE_MANIFEST_NAME}") from exc
+    except zipfile.BadZipFile as exc:
+        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
+    try:
+        data = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise CoreUpdateError("archive_manifest_invalid", f"archive manifest is invalid JSON: {exc}") from exc
+    if not isinstance(data, dict):
+        raise CoreUpdateError("invalid_core_manifest", "archive core manifest must be an object")
+    manifest_file_map(data)
+    return data
+
+
+def validate_archive_payload(archive_path: Path, manifest: dict[str, Any]) -> None:
+    new_files = manifest_file_map(manifest)
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            names = set(archive.namelist())
+            for relative_path, entry in new_files.items():
+                if relative_path not in names:
+                    raise CoreUpdateError("archive_file_missing", f"archive file missing: {relative_path}")
+                actual = sha256_bytes(archive.read(relative_path))
+                if actual != entry["sha256"]:
+                    raise CoreUpdateError("archive_checksum_mismatch", f"archive file sha256 mismatch: {relative_path}")
+            for name in names:
+                if name.endswith("/"):
+                    continue
+                if name == CORE_MANIFEST_NAME:
+                    continue
+                safe_relative_path(name)
+    except zipfile.BadZipFile as exc:
+        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
+
+
+def load_yaml_bytes(content: bytes, *, source: str) -> dict[str, Any]:
+    try:
+        import yaml  # type: ignore
+    except ModuleNotFoundError as exc:
+        raise CoreUpdateError("yaml_support_missing", "PyYAML is required for Workplace migration") from exc
+    try:
+        data = yaml.safe_load(content.decode("utf-8"))
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:  # type: ignore[attr-defined]
+        raise CoreUpdateError("workplace_migration_invalid", f"invalid YAML in {source}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise CoreUpdateError("workplace_migration_invalid", f"migration document must be a mapping: {source}")
+""Select the one declared Workplace migration applicable to this Core plan."""
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            for name in sorted(archive.namelist()):
+                if not name.startswith("updates/migrations/") or not name.endswith((".yaml", ".yml")):
+                    continue
+                migration = load_yaml_bytes(archive.read(name), source=name)
+                if migration.get("kind") != WORKPLACE_MIGRATION_KIND:
+                    continue
+         lative_path))
+
+
+def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_version: str | None, target_version: str, workplace_root: Path | None) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "status": "not_requested",
+        "workplace_root": str(workplace_root.resolve()) if workplace_root else None,
+        "migration": None,
+        "operations": [],
+        "preserved": [],
+        "blockers": [],
+    }
+    if workplace_root is None:
+        return result
+    workplace_root = workplace_root.resolve()
+    if not (workplace_root / "workplace.yaml").is_file():
+        result.update({"status": "blocked", "blockers": [{"code": "workplace_manifest_missing", "path": str(workplace_root / "workplace.yaml")} ]})
+        return result
+    source_path, migration = load_archive_workplace_migration(
+        archive_path, installed_version=installed_version, target_version=target_version
+    )
+    if migration is None:
+        result["status"] = "not_applicable"
+        return result
+    migration_id = str(migration.get("id") or "")
+    operations = migration.get("operations")
+    if not migration_id or not isinstance(operations, list):
+        raise CoreUpdateError("workplace_migration_invalid", f"migration {source_path} requires id and operations")
+    result.update({"status": "planned", "migration": {"id": migration_id, "source": source_path}})
+    for item in operations:
+        if not isinstance(item, dict):
+            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} contains a non-object operation")
+        operation_id = str(item.get("id") or "")
+        operation_type = str(item.get("type") or "")
+        target_path = str(item.get("target") or "")
+        if not operation_id or not target_path:
+            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} operation requires id and target")
+        target = workplace_target(workplace_root, target_path)
+        if operation_type == "copy_if_missing":
+            source = safe_relative_path(item.get("source"))
+            if target.exists():
+                result["preserved"].append({"id": operation_id, "path": target_path, "reason": "existing_file"})
+            else:
+                result["operations"].append({"id": operation_id, "type": operation_type, "source": source, "target": target_path})
+            continue
+        if operation_type == "append_registry_entry_if_missing":
+            list_key = str(item.get("list_key") or "")
+            match_key = str(item.get("match_key") or "id")
+            entry = item.get("entry")
+            if not list_key or not isinstance(entry, dict) or not entry.get(match_key):
+                raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} registry operation {operation_id} is invalid")
+            data = load_yaml_bytes(target.read_bytes(), source=target_path) if target.is_file() else {"schema_version": 1}
+            current = data.get(list_key)
+            if current is None:
+                current = []
+            if not isinstance(current, list):
+                raise CoreUpdateError("workplace_migration_invalid", f"registry list is invalid: {target_path}:{list_key}")
+            if any(isinstance(row, dict) and row.get(match_key) == entry[match_key] for row in current):
+                result["preserved"].append({"id": operation_id, "path": target_path, "reason": "existing_registry_entry", "value": entry[match_key]})
+            else:
+                result["operations"].append({"id": operation_id, "type": operation_type, "target": target_path, "list_key": list_key, "entry": entry})
+            continue
+        raise CoreUpdateError("workplace_migration_invalid", f"unsupported migration operation: {operation_type}")
+    return result
+
+
+def backup_workplace_target(workplace_root: Path, backup_dir: Path, relative_path: str) -> dict[str, Any]:
+    source = workplace_target(workplace_root, relative_path)
+    record: dict[str, Any] = {"path": relative_path, "existed": source.is_file()}
+    if source.is_file():
+        target = backup_dir / "workplace" / "files" / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        record["backup"] = str(target.relative_to(backup_dir).as_posix())
+    return record
+
+
+def apply_workplace_migration(archive_path: Path, workplace_root: Path, migration_plan: dict[str, Any], backup_dir: Path) -> dict[str, Any]:
+    operations = migration_plan.get("operations") if isinstance(migration_plan.get("operations"), list) else []
+    backed_up: list[dict[str, Any]] = []
+    with zipfile.ZipFile(archive_path) as archive:
+        for operation in operations:
+            if not isinstance(operation, dict):
+                continue
+            target_path = str(operation["target"])
+            backed_up.append(backup_workplace_target(workplace_root, backup_dir, target_path))
+            target = workplace_target(workplace_root, target_path)
+            if operation["type"] == "copy_if_missing":
+                atomic_write(target, archive.read(str(operation["source"])))
+            elif operation["type"] == "append_registry_entry_if_missing":
+                data = load_yaml_bytes(target.read_bytes(), source=target_path) if target.is_file() else {"schema_version": 1}
+                values = data.get(str(operation["list_key"]))
+                if not isinstance(values, list):
+                    values = []
+                    data[str(operation["list_key"])] = values
+                values.append(operation["entry"])
+                atomic_write(target, dump_yaml_bytes(data))
+    record = {
+        "schema_version": 1,
+        "migration": migration_plan.get("migration"),
+        "applied_at": now_utc(),
+        "operations": operations,
+        "preserved": migration_plan.get("preserved", []),
+        "backed_up": backed_up,
+    }
+    write_json(backup_dir / "workplace-migration.json", record)
+    return record
+
+
+def installed_manifest(core_root: Path) -> dict[str, Any] | None:
+    path = manifest_path(core_root)
+    return read_manifest(path) if path.is_file() else None
+
+
+def unowned_path_blocker(
+    core_root: Path,
+    relative_path: str,
+    *,
+    removable_owned_paths: set[str] | frozenset[str] = frozenset(),
+) -> dict[str, str] | None:
+    """Return a blocker when an added payload would replace an unowned path.
+
+    ``Path.exists()`` does not report broken symlinks, and resolving a path
+    through a non-directory ancestor can defer the failure until apply has
+    already created update state.  Inspect the lexical path first so all
+    existing objects, including symlinks, are protected before any mutation.
+    """
+    target = core_root / relative_path
+    if os.path.lexists(target):
+        return {"code": "unowned_path_collision", "path": relative_path, "conflict_path": relative_path}
+
+    ancestor = target.parent
+    while ancestor != core_root:
+        if os.path.lexists(ancestor) and (ancestor.is_symlink() or not ancestor.is_dir()):
+            conflict_path = ancestor.relative_to(core_root).as_posix()
+            if (
+                conflict_path in removable_owned_paths
+                and ancestor.is_file()
+                and not ancestor.is_symlink()
+            ):
+                ancestor = ancestor.parent
+                continue
+            return {"code": "unowned_path_collision", "path": relative_path, "conflict_path": conflict_path}
+        ancestor = ancestor.parent
+    return None
+
+
+def build_plan(core_root: Path, archive_path: Path, *, workplace_root: Path | None = None) -> dict[str, Any]:
+    core_root = core_root.resolve()
+    archive_path = archive_path.resolve()
+    new_manifest = read_archive_manifest(archive_path)
+    validate_archive_payload(archive_path, new_manifest)
+    old_manifest = installed_manifest(core_root)
+    old_files = manifest_file_map(old_manifest) if old_manifest else {}
+    new_files = manifest_file_map(new_manifest)
+    old_paths = set(old_files)
+    new_paths = set(new_files)
+    added = sorted(new_paths - old_paths)
+    removed = sorted(old_paths - new_paths)
+    common = old_paths & new_paths
+    changed = sorted(path for path in common if old_files[path]["sha256"] != new_files[path]["sha256"])
+    unchanged = sorted(path for path in common if old_files[path]["sha256"] == new_files[path]["sha256"])
+    locally_modified = []
+    missing_owned = []
+    blockers = []
+    for relative_path in sorted(old_paths):
+        target = core_root / relative_path
+        if target.is_symlink() or (os.path.lexists(target) and not target.is_file()):
+            blockers.append({"code": "nonregular_owned_path", "path": relative_path})
+            continue
+        if not target.exists():
+            missing_owned.append(relative_path)
+            collision = unowned_path_blocker(core_root, relative_path)
+            if collision:
+                blockers.append(collision)
+            continue
+        target = ensure_inside(core_root, relative_path)
+        if sha256_file(target) != old_files[relative_path]["sha256"]:
+            locally_modified.append(relative_path)
+    restored = sorted(set(missing_owned).intersection(unchanged))
+    for relative_path in sorted(set(locally_modified).intersection(set(removed).union(changed))):
+        blockers.append({"code": "locally_modified", "path": relative_path})
+    for relative_path in added:
+        collision = unowned_path_blocker(core_root, relative_path, removable_owned_paths=set(removed))
+        if collision is not None:
+            blockers.append(collision)
+    incomplete = (runtime_root(core_root) / "in-progress.json").is_file()
+    if incomplete:
+        blockers.append({"code": "incomplete_update", "path": str(runtime_root(core_root) / "in-progress.json")})
+    migration = workplace_migration_plan(
+        core_root,
+        archive_path,
+        installed_version=old_manifest.get("version") if old_manifest else None,
+        target_version=str(new_manifest.get("version") or ""),
+        workplace_root=workplace_root,
+    )
+    blockers.extend(migration.get("blockers", []))
+    return {
+        "schema_version": 1,
+        "kind": "processforge.core_update.plan",
+        "status": "blocked" if blockers else "planned",
+        "core_root": str(core_root),
+        "archive": str(archive_path),
+        "installed_manifest": str(manifest_path(core_root)) if old_manifest else None,
+        "installed_version": old_manifest.get("version") if old_manifest else None,
+        "available_version": new_manifest.get("version"),
+        "counts": {"added": len(added), "removed": len(removed), "changed": len(changed), "unchanged": len(unchanged), "locally_modified": len(locally_modified), "missing_owned": len(missing_owned), "restored": len(restored)},
+        "added": added,
+        "removed": removed,
+        "changed": changed,
+        "unchanged": unchanged,
+        "locally_modified": locally_modified,
+        "missing_owned": missing_owned,
+        "restored": restored,
+        "blockers": blockers,
+        "workplace_migration": migration,
+        "new_manifest": new_manifest,
+    }
+
+
+def core_status(core_root: Path) -> dict[str, Any]:
+    core_root = core_root.resolve()
+    manifest = installed_manifest(core_root)
+    incomplete_path = runtime_root(core_root) / "in-progress.json"
+    payload = {
+        "schema_version": 1,
+        "kind": "processforge.core_update.status",
+        "core_root": str(core_root),
+        "status": "installed" if manifest else "not_installed",
+        "manifest": str(manifest_path(core_root)),
+        "version": manifest.get("version") if manifest else None,
+        "file_count": len(manifest_file_map(manifest)) if manifest else 0,
+        "incomplete_update": incomplete_path.is_file(),
+    }
+    if incomplete_path.is_file():
+        try:
+            payload["in_progress"] = json.loads(incomplete_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            payload["in_progress"] = {"status": "unreadable"}
+    return payload
+
+
+def backup_file(core_root: Path, backup_dir: Path, relative_path: str) -> str | None:
+    source = ensure_inside(core_root, relative_path)
+    if not source.is_file():
+        return None
+    target = backup_dir / "files" / relative_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, target)
+    return str(target.relative_to(backup_dir).as_posix())
+
+
+def prune_empty_parents(core_root: Path, relative_path: str) -> None:
+    root = core_root.resolve()
+    parent = ensure_inside(root, relative_path).parent
+    while parent != root and root in parent.parents:
+        try:
+            parent.rmdir()
+        except OSError:
+            break
+        parent = parent.parent
+
+
+def atomic_write(target: Path, content: bytes) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_name(target.name + ".pf-update-tmp")
+    with temporary.open("wb") as handle:
+        handle.write(content)
+        handle.flush()
+        try:
+            os.fsync(handle.fileno())
+        except OSError:
+            pass
+    os.replace(temporary, target)
+
+
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def apply_update(
+    core_root: Path,
+    archive_path: Path,
+    *,
+    confirm: bool = False,
+    force_local_modifications: bool = False,
+    workplace_root: Path | None = None,
+) -> dict[str, Any]:
+    if not confirm:
+        raise CoreUpdateError("confirm_required", "core update apply requires explicit confirmation")
+    plan = build_plan(core_root, archive_path, workplace_root=workplace_root)
+    blockers = [item for item in plan["blockers"] if item.get("code") != "locally_modified" or not force_local_modifications]
+    if blockers:
+        raise CoreUpdateError("plan_blocked", "core update plan has blockers")
+    update_id = "core-update-" + now_utc().replace(":", "").replace("-", "")
+    work_root = runtime_root(core_root)
+    backup_dir = work_root / "backups" / update_id
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    in_progress_path = work_root / "in-progress.json"
+    in_progress_path.parent.mkdir(parents=True, exist_ok=True)
+    backed_up: dict[str, str | None] = {}
+    pending_operations: list[dict[str, str]] = []
+    missing_unchanged = set(plan["restored"])
+    backup_paths = set(plan["removed"]).union(plan["changed"]).union(missing_unchanged)
+    for relative_path in sorted(backup_paths):
+        pending_operations.append({"op": "backup", "path": relative_path})
+    for relative_path in plan["removed"]:
+        pending_operations.append({"op": "delete", "path": relative_path})
+    write_paths = set(plan["added"]).union(plan["changed"]).union(missing_unchanged)
+    for relative_path in sorted(write_paths):
+        pending_operations.append({"op": "write", "path": relative_path})
+    migration = plan.get("workplace_migration") if isinstance(plan.get("workplace_migration"), dict) else {}
+    if migration.get("status") == "planned" and migration.get("operations"):
+        pending_operations.append({"op": "workplace_migration", "path": str(migration.get("migration", {}).get("id") or "workplace")})
+    pending_operations.append({"op": "write_manifest", "path": CORE_MANIFEST_NAME})
+    progress = {
+        "schema_version": 1,
+        "update_id": update_id,
+        "status": "applying",
+        "started_at": now_utc(),
+        "core_root": str(core_root.resolve()),
+        "archive": str(archive_path.resolve()),
+        "backup_dir": str(backup_dir),
+        "installed_version": plan.get("installed_version"),
+        "target_version": plan.get("available_version"),
+        "counts": plan.get("counts"),
+        "completed_operations": [],
+        "pending_operations": pending_operations,
+        "backed_up": backed_up,
+    }
+
+    def complete_operation(op: str, relative_path: str) -> None:
+        completed = progress["completed_operations"]
+        pending = progress["pending_operations"]
+        assert isinstance(completed, list)
+        assert isinstance(pending, list)
+        completed.append({"op": op, "path": relative_path, "completed_at": now_utc()})
+        for index, item in enumerate(list(pending)):
+            if isinstance(item, dict) and item.get("op") == op and item.get("path") == relative_path:
+                del pending[index]
+                break
+        write_json(in_progress_path, progress)
+
+    old_manifest = installed_manifest(core_root)
+    if old_manifest:
+        write_json(backup_dir / "control" / "old-manifest.json", old_manifest)
+    write_json(backup_dir / "control" / "new-manifest.json", plan["new_manifest"])
+    write_json(backup_dir / "control" / "plan.json", {key: value for key, value in plan.items() if key != "new_manifest"})
+    write_json(in_progress_path, progress)
+    try:
+        migration_record = None
+        if migration.get("status") == "planned" and migration.get("operations"):
+            if workplace_root is None:
+                raise CoreUpdateError("workplace_root_missing", "Workplace migration was planned without a Workplace root")
+            migration_record = apply_workplace_migration(archive_path, workplace_root.resolve(), migration, backup_dir)
+            complete_operation("workplace_migration", str(migration.get("migration", {}).get("id") or "workplace"))
+        for relative_path in sorted(backup_paths):
+            backed_up[relative_path] = backup_file(core_root, backup_dir, relative_path)
+            complete_operation("backup", relative_path)
+        for relative_path in plan["removed"]:
+            target = ensure_inside(core_root, relative_path)
+            if target.exists():
+                target.unlink()
+                prune_empty_parents(core_root, relative_path)
+            complete_operation("delete", relative_path)
+        with zipfile.ZipFile(archive_path) as archive:
+            for relative_path in sorted(write_paths):
+                content = archive.read(relative_path)
+                atomic_write(ensure_inside(core_root, relative_path), content)
+                complete_operation("write", relative_path)
+        atomic_write(manifest_path(core_root), manifest_bytes(plan["new_manifest"]))
+        complete_operation("write_manifest", CORE_MANIFEST_NAME)
+        record = {"schema_version": 1, "update_id": update_id, "status": "applied", "applied_at": now_utc(), "available_version": plan["available_version"], "backup_dir": str(backup_dir), "backed_up": backed_up, "counts": plan["counts"], "workplace_migration": migration_record}
+        last_apply = work_root / "last-apply.json"
+        write_json(last_apply, record)
+        in_progress_path.unlink(missing_ok=True)
+        return record
+    except CoreUpdateError:
+        raise
+    except OSError as exc:
+        try:
+            failure = {
+                **progress,
+                "schema_version": 1,
+                "update_id": update_id,
+                "status": "failed",
+                "failed_at": now_utc(),
+                "backup_dir": str(backup_dir),
+                "error": {"code": "file_operation_failed", "message": str(exc)},
+            }
+            write_json(in_progress_path, failure)
+        except OSError:
+            pass
+        raise CoreUpdateError("file_operation_failed", str(exc)) from exc
+
+
+def recovery_assessment(in_progress: dict[str, Any]) -> str:
+    status = str(in_progress.get("status") or "")
+    if status not in {"failed", "applying"}:
+        return "manual_repair_required"
+    completed = in_progress.get("completed_operations")
+    if not isinstance(completed, list):
+        return "manual_repair_required"
+    manifest_written = any(isinstance(item, dict) and item.get("op") == "write_manifest" for item in completed)
+    if manifest_written:
+        return "manual_repair_required"
+    raw_backup_dir = str(in_progress.get("backup_dir") or "")
+    backup_dir = Path(raw_backup_dir) if raw_backup_dir else None
+    if status == "failed" and backup_dir is not None and backup_dir.is_dir() and (backup_dir / "control" / "old-manifest.json").is_file():
+        return "safe_to_rollback"
+    return "manual_repair_required"
+
+
+def repair_status(core_root: Path) -> dict[str, Any]:
+    status = core_status(core_root)
+    if not status.get("incomplete_update"):
+        return {"schema_version": 1, "kind": "processforge.core_update.repair", "status": "nothing_to_repair", "core_root": str(core_root.resolve())}
+    in_progress = status.get("in_progress") if isinstance(status.get("in_progress"), dict) else {}
+    assessment = recovery_assessment(in_progress)
+    return {
+        "schema_version": 1,
+        "kind": "processforge.core_update.repair",
+        "status": assessment,
+        "core_root": str(core_root.resolve()),
+        "in_progress": in_progress,
+    }
+
+
+--- smoke ---
+Get-Content : Cannot find path 'D:\Dev\process-forge\tools\smoke_core_update_migration_sources.py' because it does not 
+exist.
+At line:2 char:367
++ ... smoke ---"; Get-Content -Raw tools/smoke_core_update_migration_source ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (D:\Dev\process-...tion_sources.py:String) [Get-Content], ItemNotFoundEx 
+   ception
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+ 
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'rg -n "def (safe_relative_path|workplace_target|read_archive_manifest|validate_archive_payload|workplace_migration_plan|apply_workplace_migration|apply_update)|WORKPLACE_MIGRATION|migration" src/processforge_core/core_update.py docs/concepts tools/*smoke*.py tools/*helpers*.py 2>$null' in D:\Dev\process-forge
+ exited 1 in 271ms:
+src/processforge_core/core_update.py:23:WORKPLACE_MIGRATION_KIND = "processforge.workplace_migration"
+src/processforge_core/core_update.py:48:def safe_relative_path(raw: Any) -> str:
+src/processforge_core/core_update.py:148:def read_archive_manifest(archive_path: Path) -> dict[str, Any]:
+src/processforge_core/core_update.py:167:def validate_archive_payload(archive_path: Path, manifest: dict[str, Any]) -> None:
+src/processforge_core/core_update.py:192:        raise CoreUpdateError("yaml_support_missing", "PyYAML is required for Workplace migration") from exc
+src/processforge_core/core_update.py:196:        raise CoreUpdateError("workplace_migration_invalid", f"invalid YAML in {source}: {exc}") from exc
+src/processforge_core/core_update.py:198:        raise CoreUpdateError("workplace_migration_invalid", f"migration document must be a mapping: {source}")
+src/processforge_core/core_update.py:206:        raise CoreUpdateError("yaml_support_missing", "PyYAML is required for Workplace migration") from exc
+src/processforge_core/core_update.py:210:def load_archive_workplace_migration(archive_path: Path, *, installed_version: str | None, target_version: str) -> tuple[str | None, dict[str, Any] | None]:
+src/processforge_core/core_update.py:211:    """Select the one declared Workplace migration applicable to this Core plan."""
+src/processforge_core/core_update.py:215:                if not name.startswith("updates/migrations/") or not name.endswith((".yaml", ".yml")):
+src/processforge_core/core_update.py:217:                migration = load_yaml_bytes(archive.read(name), source=name)
+src/processforge_core/core_update.py:218:                if migration.get("kind") != WORKPLACE_MIGRATION_KIND:
+src/processforge_core/core_update.py:220:                if str(migration.get("to_version") or "") != target_version:
+src/processforge_core/core_update.py:222:                versions = migration.get("from_versions")
+src/processforge_core/core_update.py:224:                if installed_version not in allowed and not (installed_version is None and migration.get("allow_unmanaged_installed_core") is True):
+src/processforge_core/core_update.py:226:                return name, migration
+src/processforge_core/core_update.py:232:def workplace_target(workplace_root: Path, relative_path: str) -> Path:
+src/processforge_core/core_update.py:236:def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_version: str | None, target_version: str, workplace_root: Path | None) -> dict[str, Any]:
+src/processforge_core/core_update.py:240:        "migration": None,
+src/processforge_core/core_update.py:251:    source_path, migration = load_archive_workplace_migration(
+src/processforge_core/core_update.py:254:    if migration is None:
+src/processforge_core/core_update.py:257:    migration_id = str(migration.get("id") or "")
+src/processforge_core/core_update.py:258:    operations = migration.get("operations")
+src/processforge_core/core_update.py:259:    if not migration_id or not isinstance(operations, list):
+src/processforge_core/core_update.py:260:        raise CoreUpdateError("workplace_migration_invalid", f"migration {source_path} requires id and operations")
+src/processforge_core/core_update.py:261:    result.update({"status": "planned", "migration": {"id": migration_id, "source": source_path}})
+src/processforge_core/core_update.py:264:            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} contains a non-object operation")
+src/processforge_core/core_update.py:269:            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} operation requires id and target")
+src/processforge_core/core_update.py:283:                raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} registry operation {operation_id} is invalid")
+src/processforge_core/core_update.py:289:                raise CoreUpdateError("workplace_migration_invalid", f"registry list is invalid: {target_path}:{list_key}")
+src/processforge_core/core_update.py:295:        raise CoreUpdateError("workplace_migration_invalid", f"unsupported migration operation: {operation_type}")
+src/processforge_core/core_update.py:310:def apply_workplace_migration(archive_path: Path, workplace_root: Path, migration_plan: dict[str, Any], backup_dir: Path) -> dict[str, Any]:
+src/processforge_core/core_update.py:311:    operations = migration_plan.get("operations") if isinstance(migration_plan.get("operations"), list) else []
+src/processforge_core/core_update.py:332:        "migration": migration_plan.get("migration"),
+src/processforge_core/core_update.py:335:        "preserved": migration_plan.get("preserved", []),
+src/processforge_core/core_update.py:338:    write_json(backup_dir / "workplace-migration.json", record)
+src/processforge_core/core_update.py:422:    migration = workplace_migration_plan(
+src/processforge_core/core_update.py:429:    blockers.extend(migration.get("blockers", []))
+src/processforge_core/core_update.py:448:        "workplace_migration": migration,
+src/processforge_core/core_update.py:514:def apply_update(
+src/processforge_core/core_update.py:545:    migration = plan.get("workplace_migration") if isinstance(plan.get("workplace_migration"), dict) else {}
+src/processforge_core/core_update.py:546:    if migration.get("status") == "planned" and migration.get("operations"):
+src/processforge_core/core_update.py:547:        pending_operations.append({"op": "workplace_migration", "path": str(migration.get("migration", {}).get("id") or "workplace")})
+src/processforge_core/core_update.py:584:        migration_record = None
+src/processforge_core/core_update.py:585:        if migration.get("status") == "planned" and migration.get("operations"):
+src/processforge_core/core_update.py:587:                raise CoreUpdateError("workplace_root_missing", "Workplace migration was planned without a Workplace root")
+src/processforge_core/core_update.py:588:            migration_record = apply_workplace_migration(archive_path, workplace_root.resolve(), migration, backup_dir)
+src/processforge_core/core_update.py:589:            complete_operation("workplace_migration", str(migration.get("migration", {}).get("id") or "workplace"))
+src/processforge_core/core_update.py:606:        record = {"schema_version": 1, "update_id": update_id, "status": "applied", "applied_at": now_utc(), "available_version": plan["available_version"], "backup_dir": str(backup_dir), "backed_up": backed_up, "counts": plan["counts"], "workplace_migration": migration_record}
+docs/concepts\core-update-manifest.md:44:An archive may carry a declarative Workplace migration under
+docs/concepts\core-update-manifest.md:45:`updates/migrations/`. For an existing Workplace, include its root in the same
+docs/concepts\core-update-manifest.md:53:The plan lists only archive-declared operations. The 1.0.2-to-1.1.0 migration
+docs/concepts\core-update-manifest.md:58:Before a migration write, the updater copies the affected Workplace files into
+docs/concepts\core-update-manifest.md:60:journal. When migration cannot finish, `core-update repair` exposes recoverable
+docs/concepts\garage-core.md:91:Older manifests without selectors use the narrow migration mode: direct
+docs/concepts\garage-core.md:93:For that migration only, selected documentation with a legacy metadata policy
+docs/concepts\process-directory-layout.md:13:The resolver searches user/custom roots before core, keeps `process_id` stable across moves, and reports `origin`, `root`, `path`, and catalog role in `process-list`. Legacy flat files under `processes/*.yaml` are accepted only as a migration fallback and produce warnings.
+docs/concepts\process-directory-layout.md:19:`processes/custom/`. Flat process paths are migration-only.
+docs/concepts\processforge-self-update.md:14:- migration guides live under `updates/migrations/`
+docs/concepts\processforge-self-update.md:20:changes, required migrations, affected files, manual review needs, recommended
+docs/concepts\status-model.md:28:- `requires_migration`
+docs/concepts\wtaicc-future-compatibility.md:22:Future WTAICC can read update metadata, notify projects, schedule migration
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$p='"'src/processforge_core/core_update.py'; "'$lines=Get-Content $p; $lines[1..360]; Write-Output "`n--- docs ---"; $d=Get-Content docs/concepts/core-update-manifest.md; $d[34..72]; Write-Output "`n--- smoke inventory ---"; rg --files tools | rg '"'smoke|helper' | Sort-Object" in D:\Dev\process-forge
+ succeeded in 2632ms:
+
+The service is intentionally file-system scoped.  It does not discover update
+servers or workplace registries; callers provide an explicit core root and,
+for update operations, an explicit release archive.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import shutil
+import zipfile
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Iterable
+
+
+CORE_MANIFEST_NAME = "processforge-core.manifest.json"
+CORE_MANIFEST_SCHEMA_VERSION = 1
+WORKPLACE_MIGRATION_KIND = "processforge.workplace_migration"
+
+
+@dataclass(frozen=True)
+class CoreUpdateError(Exception):
+    code: str
+    message: str
+
+
+def now_utc() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def sha256_bytes(content: bytes) -> str:
+    return hashlib.sha256(content).hexdigest()
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def safe_relative_path(raw: Any) -> str:
+    if not isinstance(raw, str) or not raw.strip():
+        raise CoreUpdateError("invalid_manifest_path", "manifest path is empty")
+    value = raw.replace("\\", "/")
+    if value != raw:
+        raise CoreUpdateError("invalid_manifest_path", f"manifest path contains backslash: {raw}")
+    if value.startswith("/") or value.startswith("//") or (len(value) > 1 and value[1] == ":"):
+        raise CoreUpdateError("invalid_manifest_path", f"manifest path is absolute: {raw}")
+    parts = value.split("/")
+    if any(part in {"", ".", ".."} for part in parts):
+        raise CoreUpdateError("invalid_manifest_path", f"manifest path escapes or is not normalized: {raw}")
+    if value == CORE_MANIFEST_NAME:
+        raise CoreUpdateError("invalid_manifest_path", f"{CORE_MANIFEST_NAME} is a control file, not an owned payload file")
+    return value
+
+
+def ensure_inside(root: Path, relative_path: str) -> Path:
+    root_resolved = root.resolve()
+    target = (root / relative_path).resolve()
+    if root_resolved != target and root_resolved not in target.parents:
+        raise CoreUpdateError("path_outside_core_root", f"path escapes core root: {relative_path}")
+    return target
+
+
+def manifest_path(core_root: Path) -> Path:
+    return core_root / CORE_MANIFEST_NAME
+
+
+def runtime_root(core_root: Path) -> Path:
+    return core_root / "runtime" / "core-update"
+
+
+def manifest_file_map(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    if manifest.get("schema_version") != CORE_MANIFEST_SCHEMA_VERSION:
+        raise CoreUpdateError("invalid_core_manifest", "core manifest schema_version must be 1")
+    files = manifest.get("files")
+    if not isinstance(files, list):
+        raise CoreUpdateError("invalid_core_manifest", "core manifest files must be a list")
+    result: dict[str, dict[str, Any]] = {}
+    for item in files:
+        if not isinstance(item, dict):
+            raise CoreUpdateError("invalid_core_manifest", "core manifest file entry must be an object")
+        relative_path = safe_relative_path(item.get("relative_path") or item.get("path"))
+        digest = item.get("sha256")
+        if not isinstance(digest, str) or len(digest) != 64 or any(char not in "0123456789abcdefABCDEF" for char in digest):
+            raise CoreUpdateError("invalid_core_manifest", f"invalid sha256 for {relative_path}")
+        result[relative_path] = {**item, "relative_path": relative_path, "sha256": digest.lower()}
+    return result
+
+
+def make_core_manifest(*, version: str, source: dict[str, Any] | None, files: Iterable[dict[str, Any]], generated_at: str | None = None) -> dict[str, Any]:
+    normalized_files = []
+    for item in files:
+        relative_path = safe_relative_path(item.get("relative_path") or item.get("path"))
+        normalized_files.append(
+            {
+                "relative_path": relative_path,
+                "size": int(item.get("size") or 0),
+                "sha256": str(item.get("sha256") or "").lower(),
+            }
+        )
+    normalized_files.sort(key=lambda row: row["relative_path"])
+    manifest = {
+        "schema_version": CORE_MANIFEST_SCHEMA_VERSION,
+        "kind": "processforge.core_manifest",
+        "version": version,
+        "generated_at": generated_at or now_utc(),
+        "source": source or {},
+        "files": normalized_files,
+    }
+    manifest_file_map(manifest)
+    return manifest
+
+
+def make_core_manifest_from_release_files(files: list[tuple[str, Path]], *, version: str, source: dict[str, Any] | None, generated_at: str | None = None) -> dict[str, Any]:
+    entries = []
+    for archive_path, source_path in files:
+        if archive_path == CORE_MANIFEST_NAME:
+            continue
+        entries.append({"relative_path": archive_path, "size": source_path.stat().st_size, "sha256": sha256_file(source_path)})
+    return make_core_manifest(version=version, source=source, files=entries, generated_at=generated_at)
+
+
+def manifest_bytes(manifest: dict[str, Any]) -> bytes:
+    return (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode("utf-8")
+
+
+def read_manifest(path: Path) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise CoreUpdateError("manifest_missing", f"manifest not found: {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise CoreUpdateError("manifest_invalid_json", f"invalid manifest JSON: {path}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise CoreUpdateError("invalid_core_manifest", "core manifest must be an object")
+    manifest_file_map(data)
+    return data
+
+
+def read_archive_manifest(archive_path: Path) -> dict[str, Any]:
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            try:
+                raw = archive.read(CORE_MANIFEST_NAME)
+            except KeyError as exc:
+                raise CoreUpdateError("archive_manifest_missing", f"archive does not contain {CORE_MANIFEST_NAME}") from exc
+    except zipfile.BadZipFile as exc:
+        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
+    try:
+        data = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise CoreUpdateError("archive_manifest_invalid", f"archive manifest is invalid JSON: {exc}") from exc
+    if not isinstance(data, dict):
+        raise CoreUpdateError("invalid_core_manifest", "archive core manifest must be an object")
+    manifest_file_map(data)
+    return data
+
+
+def validate_archive_payload(archive_path: Path, manifest: dict[str, Any]) -> None:
+    new_files = manifest_file_map(manifest)
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            names = set(archive.namelist())
+            for relative_path, entry in new_files.items():
+                if relative_path not in names:
+                    raise CoreUpdateError("archive_file_missing", f"archive file missing: {relative_path}")
+                actual = sha256_bytes(archive.read(relative_path))
+                if actual != entry["sha256"]:
+                    raise CoreUpdateError("archive_checksum_mismatch", f"archive file sha256 mismatch: {relative_path}")
+            for name in names:
+                if name.endswith("/"):
+                    continue
+                if name == CORE_MANIFEST_NAME:
+                    continue
+                safe_relative_path(name)
+    except zipfile.BadZipFile as exc:
+        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
+
+
+def load_yaml_bytes(content: bytes, *, source: str) -> dict[str, Any]:
+    try:
+        import yaml  # type: ignore
+    except ModuleNotFoundError as exc:
+        raise CoreUpdateError("yaml_support_missing", "PyYAML is required for Workplace migration") from exc
+    try:
+        data = yaml.safe_load(content.decode("utf-8"))
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:  # type: ignore[attr-defined]
+        raise CoreUpdateError("workplace_migration_invalid", f"invalid YAML in {source}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise CoreUpdateError("workplace_migration_invalid", f"migration document must be a mapping: {source}")
+    return data
+
+
+def dump_yaml_bytes(data: dict[str, Any]) -> bytes:
+    try:
+        import yaml  # type: ignore
+    except ModuleNotFoundError as exc:
+        raise CoreUpdateError("yaml_support_missing", "PyYAML is required for Workplace migration") from exc
+    return yaml.safe_dump(data, allow_unicode=True, sort_keys=False).encode("utf-8")
+
+
+def load_archive_workplace_migration(archive_path: Path, *, installed_version: str | None, target_version: str) -> tuple[str | None, dict[str, Any] | None]:
+    """Select the one declared Workplace migration applicable to this Core plan."""
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            for name in sorted(archive.namelist()):
+                if not name.startswith("updates/migrations/") or not name.endswith((".yaml", ".yml")):
+                    continue
+                migration = load_yaml_bytes(archive.read(name), source=name)
+                if migration.get("kind") != WORKPLACE_MIGRATION_KIND:
+                    continue
+                if str(migration.get("to_version") or "") != target_version:
+                    continue
+                versions = migration.get("from_versions")
+                allowed = {str(value) for value in versions} if isinstance(versions, list) else set()
+                if installed_version not in allowed and not (installed_version is None and migration.get("allow_unmanaged_installed_core") is True):
+                    continue
+                return name, migration
+    except zipfile.BadZipFile as exc:
+        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
+    return None, None
+
+
+def workplace_target(workplace_root: Path, relative_path: str) -> Path:
+    return ensure_inside(workplace_root, safe_relative_path(relative_path))
+
+
+def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_version: str | None, target_version: str, workplace_root: Path | None) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "status": "not_requested",
+        "workplace_root": str(workplace_root.resolve()) if workplace_root else None,
+        "migration": None,
+        "operations": [],
+        "preserved": [],
+        "blockers": [],
+    }
+    if workplace_root is None:
+        return result
+    workplace_root = workplace_root.resolve()
+    if not (workplace_root / "workplace.yaml").is_file():
+        result.update({"status": "blocked", "blockers": [{"code": "workplace_manifest_missing", "path": str(workplace_root / "workplace.yaml")} ]})
+        return result
+    source_path, migration = load_archive_workplace_migration(
+        archive_path, installed_version=installed_version, target_version=target_version
+    )
+    if migration is None:
+        result["status"] = "not_applicable"
+        return result
+    migration_id = str(migration.get("id") or "")
+    operations = migration.get("operations")
+    if not migration_id or not isinstance(operations, list):
+        raise CoreUpdateError("workplace_migration_invalid", f"migration {source_path} requires id and operations")
+    result.update({"status": "planned", "migration": {"id": migration_id, "source": source_path}})
+    for item in operations:
+        if not isinstance(item, dict):
+            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} contains a non-object operation")
+        operation_id = str(item.get("id") or "")
+        operation_type = str(item.get("type") or "")
+        target_path = str(item.get("target") or "")
+        if not operation_id or not target_path:
+            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} operation requires id and target")
+        target = workplace_target(workplace_root, target_path)
+        if operation_type == "copy_if_missing":
+            source = safe_relative_path(item.get("source"))
+            if target.exists():
+                result["preserved"].append({"id": operation_id, "path": target_path, "reason": "existing_file"})
+            else:
+                result["operations"].append({"id": operation_id, "type": operation_type, "source": source, "target": target_path})
+            continue
+        if operation_type == "append_registry_entry_if_missing":
+            list_key = str(item.get("list_key") or "")
+            match_key = str(item.get("match_key") or "id")
+            entry = item.get("entry")
+            if not list_key or not isinstance(entry, dict) or not entry.get(match_key):
+                raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} registry operation {operation_id} is invalid")
+            data = load_yaml_bytes(target.read_bytes(), source=target_path) if target.is_file() else {"schema_version": 1}
+            current = data.get(list_key)
+            if current is None:
+                current = []
+            if not isinstance(current, list):
+                raise CoreUpdateError("workplace_migration_invalid", f"registry list is invalid: {target_path}:{list_key}")
+            if any(isinstance(row, dict) and row.get(match_key) == entry[match_key] for row in current):
+                result["preserved"].append({"id": operation_id, "path": target_path, "reason": "existing_registry_entry", "value": entry[match_key]})
+            else:
+                result["operations"].append({"id": operation_id, "type": operation_type, "target": target_path, "list_key": list_key, "entry": entry})
+            continue
+        raise CoreUpdateError("workplace_migration_invalid", f"unsupported migration operation: {operation_type}")
+    return result
+
+
+def backup_workplace_target(workplace_root: Path, backup_dir: Path, relative_path: str) -> dict[str, Any]:
+    source = workplace_target(workplace_root, relative_path)
+    record: dict[str, Any] = {"path": relative_path, "existed": source.is_file()}
+    if source.is_file():
+        target = backup_dir / "workplace" / "files" / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        record["backup"] = str(target.relative_to(backup_dir).as_posix())
+    return record
+
+
+def apply_workplace_migration(archive_path: Path, workplace_root: Path, migration_plan: dict[str, Any], backup_dir: Path) -> dict[str, Any]:
+    operations = migration_plan.get("operations") if isinstance(migration_plan.get("operations"), list) else []
+    backed_up: list[dict[str, Any]] = []
+    with zipfile.ZipFile(archive_path) as archive:
+        for operation in operations:
+            if not isinstance(operation, dict):
+                continue
+            target_path = str(operation["target"])
+            backed_up.append(backup_workplace_target(workplace_root, backup_dir, target_path))
+            target = workplace_target(workplace_root, target_path)
+            if operation["type"] == "copy_if_missing":
+                atomic_write(target, archive.read(str(operation["source"])))
+            elif operation["type"] == "append_registry_entry_if_missing":
+                data = load_yaml_bytes(target.read_bytes(), source=target_path) if target.is_file() else {"schema_version": 1}
+                values = data.get(str(operation["list_key"]))
+                if not isinstance(values, list):
+                    values = []
+                    data[str(operation["list_key"])] = values
+                values.append(operation["entry"])
+                atomic_write(target, dump_yaml_bytes(data))
+    record = {
+        "schema_version": 1,
+        "migration": migration_plan.get("migration"),
+        "applied_at": now_utc(),
+        "operations": operations,
+        "preserved": migration_plan.get("preserved", []),
+        "backed_up": backed_up,
+    }
+    write_json(backup_dir / "workplace-migration.json", record)
+    return record
+
+
+def installed_manifest(core_root: Path) -> dict[str, Any] | None:
+    path = manifest_path(core_root)
+    return read_manifest(path) if path.is_file() else None
+
+
+def unowned_path_blocker(
+    core_root: Path,
+    relative_path: str,
+    *,
+    removable_owned_paths: set[str] | frozenset[str] = frozenset(),
+) -> dict[str, str] | None:
+    """Return a blocker when an added payload would replace an unowned path.
+
+    ``Path.exists()`` does not report broken symlinks, and resolving a path
+    through a non-directory ancestor can defer the failure until apply has
+    already created update state.  Inspect the lexical path first so all
+    existing objects, including symlinks, are protected before any mutation.
+    """
+    target = core_root / relative_path
+    if os.path.lexists(target):
+
+--- docs ---
+python bin/pf.py core-update plan --core-root <core> --archive <processforge.zip>
+python bin/pf.py core-update apply --core-root <core> --archive <processforge.zip> --confirm
+python bin/pf.py core-update repair --core-root <core>
+```
+
+`plan` is read-only. `apply` requires `--confirm`.
+
+## Compatible Workplace Migration
+
+An archive may carry a declarative Workplace migration under
+`updates/migrations/`. For an existing Workplace, include its root in the same
+Core-update transaction:
+
+```text
+python bin/pf.py core-update plan --core-root <core> --archive <processforge.zip> --workplace-root <workplace>
+python bin/pf.py core-update apply --core-root <core> --archive <processforge.zip> --workplace-root <workplace> --confirm
+```
+
+The plan lists only archive-declared operations. The 1.0.2-to-1.1.0 migration
+adds the built-in `codex-exec` driver and its registry entry only when missing;
+existing files and registry entries are preserved. It does not invoke
+`workplace-init`, which remains a first-time initialization command.
+
+Before a migration write, the updater copies the affected Workplace files into
+the Core update backup directory and records the operation in the update
+journal. When migration cannot finish, `core-update repair` exposes recoverable
+state and the backup location. A successful apply automatically runs the short
+`doctor-workplace` check and stores its result in `last-apply.json`.
+
+The updater computes:
+
+```text
+removed = old_manifest.files - new_manifest.files
+added   = new_manifest.files - old_manifest.files
+changed = common paths with different sha256
+```
+
+Only paths present in the old manifest and absent from the new manifest are deleted. Unknown files are preserved. Directories are removed only when they become empty.
+
+
+--- smoke inventory ---
+tools\context_lock_smoke_helpers.py
+tools\core_boundary_smoke_helpers.py
+tools\evolve_smoke_helpers.py
+tools\garage_search_smoke_support.py
+tools\process_execution_smoke_support.py
+tools\smoke_agent_director_tick.py
+tools\smoke_agent_ledger.py
+tools\smoke_agent_workspace_platform_availability_snapshot.py
+tools\smoke_authoring_crash_recovery.py
+tools\smoke_builtin_process_catalog.py
+tools\smoke_builtin_process_pack_completeness.py
+tools\smoke_builtin_processes_explicit_evolve.py
+tools\smoke_capability_resolution_data_driven_only.py
+tools\smoke_capsule_pins_context_snapshot.py
+tools\smoke_central_event_ingress.py
+tools\smoke_central_event_ingress_kernel.py
+tools\smoke_central_event_replay.py
+tools\smoke_child_platform_not_promoted_to_parent.py
+tools\smoke_classifier_distribution_parity.py
+tools\smoke_cli_audit_f0608.py
+tools\smoke_codex_exec_worker.py
+tools\smoke_codex_integration.py
+tools\smoke_codex_worker_governance.py
+tools\smoke_config_behavior_contracts.py
+tools\smoke_context_freshness_vs_execution_readiness.py
+tools\smoke_conversation_completeness.py
+tools\smoke_core_domain_neutral_still_passes.py
+tools\smoke_core_has_no_domain_knowledge_seeds.py
+tools\smoke_core_process_catalog_domain_neutral.py
+tools\smoke_core_prompts_domain_neutral.py
+tools\smoke_core_update_manifest.py
+tools\smoke_core_update_missing_owned.py
+tools\smoke_current_work_ignores_bootstrap_placeholder.py
+tools\smoke_delivery_profile_not_process.py
+tools\smoke_derived_report_stale_marking.py
+tools\smoke_director_inspector_boundary.py
+tools\smoke_docs_agent_no_manual_infra.py
+tools\smoke_docs_codex_hooks_optional.py
+tools\smoke_docs_current_code_contract.py
+tools\smoke_docs_garage_no_runtime_required.py
+tools\smoke_docs_mcp_host_owned_stdio.py
+tools\smoke_doctor_gitignore_effective_protection.py
+tools\smoke_doctor_project_capability_waiver.py
+tools\smoke_domain_neutral_core_helpers.py
+tools\smoke_domain_neutral_music_video_fixtures.py
+tools\smoke_domain_pack_can_classify_after_install.py
+tools\smoke_empty_workplace_has_no_domain_resources.py
+tools\smoke_error_workflow.py
+tools\smoke_evolve_candidate_export.py
+tools\smoke_evolve_candidate_narrowest_scope.py
+tools\smoke_evolve_candidate_schema.py
+tools\smoke_evolve_candidate_split_guidance.py
+tools\smoke_evolve_candidate_targeting_schema.py
+tools\smoke_evolve_learning_loop_end_to_end.py
+tools\smoke_evolve_privacy_sanitizer.py
+tools\smoke_evolve_process_agnostic_contract.py
+tools\smoke_evolve_targeting_privacy_sanitizer.py
+tools\smoke_examples_do_not_shadow_official_processes.py
+tools\smoke_first_run.py
+tools\smoke_fulltext_article_indexing.py
+tools\smoke_garage_cross_project_security.py
+tools\smoke_garage_mode_not_promoted_by_session.py
+tools\smoke_garage_no_hooks_sessionless.py
+tools\smoke_garage_real_joomla_search.py
+tools\smoke_garage_session_enhanced.py
+tools\smoke_garage_work_start_session_bound.py
+tools\smoke_garage_work_start_sessionless.py
+tools\smoke_generated_processes_include_evolve.py
+tools\smoke_generic_workplace_no_domain_pack_active.py
+tools\smoke_governed_work_duplicate_prevention.py
+tools\smoke_governed_work_stage_resolution.py
+tools\smoke_knowledge_hub_import.py
+tools\smoke_knowledge_hub_routes_by_target.py
+tools\smoke_knowledge_package_build_from_candidates.py
+tools\smoke_knowledge_package_release_update_manifest.py
+tools\smoke_legacy_flat_process_layout_warning.py
+tools\smoke_long_lived_runtime.py
+tools\smoke_mcp_codex_contract.py
+tools\smoke_mcp_missing_session_diagnostics.py
+tools\smoke_mixed_workplace_projects.py
+tools\smoke_multi_agent_as_composed_sessions.py
+tools\smoke_multi_process_work_capsule.py
+tools\smoke_multi_project_agent_sessions.py
+tools\smoke_no_builtin_user_capability_satisfaction.py
+tools\smoke_no_hardcoded_file_project_detection.py
+tools\smoke_no_production_example_update_urls.py
+tools\smoke_no_removed_process_refs.py
+tools\smoke_official_pack_classifier_data_driven.py
+tools\smoke_official_pack_manifest_schema.py
+tools\smoke_official_pack_not_kernel.py
+tools\smoke_official_packs_not_examples.py
+tools\smoke_official_process_can_start_minimal_run.py
+tools\smoke_official_software_process_available.py
+tools\smoke_optional_domain_pack_not_default.py
+tools\smoke_orchestrator_shell_agents_with_subagent_policy.py
+tools\smoke_parameter_assignment_capsule.py
+tools\smoke_parameter_cascade_resolution.py
+tools\smoke_parameter_freshness.py
+tools\smoke_pf_project_process_refs_follow_layout.py
+tools\smoke_platform_create_include_levels.py
+tools\smoke_process_authoring_evolve_questions.py
+tools\smoke_process_authoring_evolve_targeting.py
+tools\smoke_process_authoring_materialization_parity.py
+tools\smoke_process_authoring_materializes_evolve.py
+tools\smoke_process_authoring_writes_user_root.py
+tools\smoke_process_capability_requirement_resolution.py
+tools\smoke_process_catalog_not_implicit_execution_route.py
+tools\smoke_process_definition_schema_contract.py
+tools\smoke_process_directory_layout.py
+tools\smoke_process_execution_initial_stage.py
+tools\smoke_process_execution_integrity.py
+tools\smoke_process_execution_state_semantics.py
+tools\smoke_process_id_stable_after_move.py
+tools\smoke_process_list_origin_filters.py
+tools\smoke_process_owns_acceptance_not_specialization.py
+tools\smoke_process_resolver_multiple_roots.py
+tools\smoke_process_root_collision_policy.py
+tools\smoke_process_run_task_batch.py
+tools\smoke_process_stage_contract_normalization.py
+tools\smoke_process_supervisor_tick.py
+tools\smoke_process_transition_handoff.py
+tools\smoke_processforge_core_package_bootstrap.py
+tools\smoke_processforge_core_project_requires_explicit_type.py
+tools\smoke_project_classification_data_driven.py
+tools\smoke_project_context_freshness_policies.py
+tools\smoke_project_context_snapshot_lock_model.py
+tools\smoke_project_coordination_modes.py
+tools\smoke_project_init_acceptance.py
+tools\smoke_project_init_codex_integration.py
+tools\smoke_project_init_local_search_mcp.py
+tools\smoke_project_local_package_index_detection.py
+tools\smoke_project_onboard_platform_selection.py
+tools\smoke_project_override_does_not_mutate_workspace.py
+tools\smoke_project_overrides_capsule_summary.py
+tools\smoke_project_overrides_freshness.py
+tools\smoke_project_overrides_resolution.py
+tools\smoke_project_overrides_schema.py
+tools\smoke_project_overrides_snapshot_fingerprint.py
+tools\smoke_project_pf_upgrade_assessment_boundary.py
+tools\smoke_project_resource_narrowing_search.py
+tools\smoke_project_scan_excludes_distribution_root.py
+tools\smoke_project_scan_excludes_knowledge_roots.py
+tools\smoke_project_scan_excludes_workplace_root.py
+tools\smoke_project_specialization_override_applies.py
+tools\smoke_public_cleanliness.py
+tools\smoke_raw_ingress_incremental_recovery.py
+tools\smoke_release_manifest_not_inside_archive.py
+tools\smoke_release_manifest_provenance_contract.py
+tools\smoke_release_manifest_repository_surface.py
+tools\smoke_release_pack_excludes_user_processes.py
+tools\smoke_release_tag_commit_provenance.py
+tools\smoke_release_test_extracted_archive.py
+tools\smoke_release_test_trace_timeout_reporting.py
+tools\smoke_remediation_aggregate_gates.py
+tools\smoke_remediation_checksum_surface.py
+tools\smoke_remediation_doctor_contracts.py
+tools\smoke_remediation_generator_schema_alignment.py
+tools\smoke_remediation_knowledge_builder_contract.py
+tools\smoke_remediation_platform_layout_strict.py
+tools\smoke_remediation_process_create_transaction.py
+tools\smoke_remediation_registry_safety.py
+tools\smoke_remediation_schema_inventory.py
+tools\smoke_remediation_security_boundaries.py
+tools\smoke_remediation_transactional_authoring.py
+tools\smoke_resource_indexing_policy_acceptance.py
+tools\smoke_resource_versioning_modes.py
+tools\smoke_run_id_preserves_repeated_hyphens.py
+tools\smoke_runtime_driver_registry.py
+tools\smoke_runtime_host_poc.py
+tools\smoke_runtime_ledger_hooks_mcp.py
+tools\smoke_runtime_mcp_autostart.py
+tools\smoke_runtime_no_domain_capability_constants.py
+tools\smoke_runtime_no_domain_file_patterns.py
+tools\smoke_runtime_scheduler_failure_isolation.py
+tools\smoke_runtime_singleton_orphan.py
+tools\smoke_runtime_status_timeout.py
+tools\smoke_runtime_status_version_truth.py
+tools\smoke_search_file_root_containment.py
+tools\smoke_search_source_integrity.py
+tools\smoke_search_update_operational_hardening.py
+tools\smoke_session_projection_expiry.py
+tools\smoke_session_start_context_check.py
+tools\smoke_single_agent_session_flow.py
+tools\smoke_software_lifecycle_artifacts.py
+tools\smoke_software_lifecycle_compact_mode.py
+tools\smoke_software_lifecycle_description_alignment.py
+tools\smoke_software_lifecycle_process_contract.py
+tools\smoke_software_lifecycle_prompt_alignment.py
+tools\smoke_software_process_uses_common_evolve.py
+tools\smoke_software_profile_activates_official_pack.py
+tools\smoke_specialization_capsule_activation.py
+tools\smoke_specialization_context_resolution.py
+tools\smoke_specialization_create_workplace_resource.py
+tools\smoke_specialization_freshness_tracks_definition_change.py
+tools\smoke_specialization_garage_mode_switch.py
+tools\smoke_specialization_handoff_routing.py
+tools\smoke_specialization_nested_workflow_fields_rejected.py
+tools\smoke_specialization_no_core_id_hardcode.py
+tools\smoke_specialization_no_tool_leakage.py
+tools\smoke_specialization_no_workflow_ownership.py
+tools\smoke_specialization_platform_binding.py
+tools\smoke_specialization_process_policy.py
+tools\smoke_specialization_registry.py
+tools\smoke_specialization_same_platform_different_context.py
+tools\smoke_specialization_schema.py
+tools\smoke_specialization_snapshot_fields.py
+tools\smoke_stable_update_manifest_points_to_release.py
+tools\smoke_stable_update_manifest_schema.py
+tools\smoke_stage_projectors.py
+tools\smoke_tool_update_policy.py
+tools\smoke_update_apply_marks_context_stale.py
+tools\smoke_update_candidate_discovery.py
+tools\smoke_update_notifications.py
+tools\smoke_update_sites_schema.py
+tools\smoke_update_stage_verify_apply_file_provider.py
+tools\smoke_user_like_garage_path.py
+tools\smoke_verification_current_work_state.py
+tools\smoke_windows_utf8_docs.py
+tools\smoke_work_completion_recovery.py
+tools\smoke_work_evidence_freshness.py
+tools\smoke_work_start_no_stage_guessing.py
+tools\smoke_work_state_current_stage.py
+tools\smoke_work_transition_blocks_missing_gate.py
+tools\smoke_work_transition_branching_if_supported.py
+tools\smoke_work_transition_emits_stage_events.py
+tools\smoke_work_transition_final_stage_completes_run.py
+tools\smoke_work_transition_linear.py
+tools\smoke_work_transition_records_evidence.py
+tools\smoke_work_transition_recovers_after_invalid_evidence.py
+tools\smoke_work_transition_snapshot_pinned_process.py
+tools\smoke_work_transition_updates_assignment_stage.py
+tools\smoke_worker_awareness_of_director.py
+tools\smoke_worker_environment_secret_redaction.py
+tools\smoke_worker_run_shell.py
+tools\smoke_worker_workspace_access.py
+tools\smoke_workplace_learning_queue.py
+tools\smoke_workplace_search_index.py
+tools\specialization_smoke_helpers.py
+tools\update_smoke_helpers.py
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$p='"'tools/smoke_core_update_manifest.py'; "'$lines=Get-Content $p; $lines[1..260]; Write-Output "`n--- missing-owned smoke ---"; $p='"'tools/smoke_core_update_missing_owned.py'; "'$lines=Get-Content $p; $lines[1..220]; Write-Output "`n--- project profile hits ---"; rg -n "core_update|workplace_migration|apply_update|archive_file_missing|in-progress|safe_to_rollback" src tools docs .pf/artifacts/core-a01-a11-20260911 -g '"'*.py' -g '*.md' -g '*.yaml' 2>"'$null' in D:\Dev\process-forge
+ succeeded in 3773ms:
+"""Smoke-test manifest-based ProcessForge core update planning and apply."""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import zipfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from processforge_core import core_update
+from processforge_core.core_update import CORE_MANIFEST_NAME, CoreUpdateError, apply_update, core_status, make_core_manifest, manifest_bytes, repair_status
+
+
+def run_pf(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run([sys.executable, str(ROOT / "tools" / "processforge.py"), *args], cwd=ROOT, text=True, encoding="utf-8", errors="replace", capture_output=True)
+
+
+def sha_text(value: str) -> str:
+    import hashlib
+
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def write_archive(path: Path, files: dict[str, str], *, version: str = "2.0.0") -> None:
+    manifest = make_core_manifest(
+        version=version,
+        source={"fixture": True},
+        files=[{"relative_path": item_path, "size": len(content.encode("utf-8")), "sha256": sha_text(content)} for item_path, content in files.items()],
+    )
+    with zipfile.ZipFile(path, "w") as archive:
+        for item_path, content in files.items():
+            archive.writestr(item_path, content)
+        archive.writestr(CORE_MANIFEST_NAME, manifest_bytes(manifest))
+
+
+def install_old_core(core: Path) -> None:
+    old_files = {"a.txt": "old-a", "dir/b.txt": "old-b", "dir/c.txt": "same-c"}
+    for item_path, content in old_files.items():
+        target = core / item_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+    manifest = make_core_manifest(
+        version="1.0.0",
+        source={"fixture": True},
+        files=[{"relative_path": item_path, "size": len(content.encode("utf-8")), "sha256": sha_text(content)} for item_path, content in old_files.items()],
+    )
+    (core / CORE_MANIFEST_NAME).write_bytes(manifest_bytes(manifest))
+
+
+def snapshot_object(path: Path):
+    """Capture an object lexically, including directories and symlinks."""
+    if path.is_symlink():
+        if path.is_dir():
+            kind = "symlink-directory"
+        else:
+            kind = "symlink"
+        return (kind, os.readlink(path))
+    if path.is_dir():
+        return ("directory", tuple(sorted((child.name, snapshot_object(child)) for child in path.iterdir())))
+    if path.is_file():
+        return ("file", path.read_bytes())
+    return ("absent",)
+
+
+def snapshot_core_state(core: Path, user_paths: tuple[str, ...] = ()):
+    owned_paths = ("a.txt", "dir/b.txt", "dir/c.txt")
+    return {
+        "owned": {relative_path: (core / relative_path).read_bytes() for relative_path in owned_paths},
+        "manifest": (core / CORE_MANIFEST_NAME).read_bytes(),
+        "user_objects": {relative_path: snapshot_object(core / relative_path) for relative_path in user_paths},
+    }
+
+
+def assert_refused_without_mutation(core: Path, archive: Path, before, *, user_paths: tuple[str, ...], force: bool) -> None:
+    try:
+        apply_update(core, archive, confirm=True, force_local_modifications=force)
+    except CoreUpdateError as exc:
+        assert exc.code == "plan_blocked", exc
+    else:
+        raise AssertionError(f"blocked update accepted with force={force}")
+    assert snapshot_core_state(core, user_paths) == before
+    assert not (core / "runtime" / "core-update").exists()
+
+
+def main() -> int:
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        (core / "user-note.txt").write_text("must stay", encoding="utf-8")
+        archive = root / "processforge.zip"
+        write_archive(archive, {"dir/b.txt": "new-b", "dir/c.txt": "same-c", "d.txt": "new-d"})
+
+        status = run_pf("core-update", "status", "--core-root", str(core))
+        assert status.returncode == 0, status.stdout + status.stderr
+        assert json.loads(status.stdout)["version"] == "1.0.0"
+
+        plan = run_pf("core-update", "plan", "--core-root", str(core), "--archive", str(archive))
+        assert plan.returncode == 0, plan.stdout + plan.stderr
+        plan_data = json.loads(plan.stdout)
+        assert plan_data["counts"]["removed"] == 1
+        assert plan_data["counts"]["changed"] == 1
+        assert plan_data["counts"]["added"] == 1
+
+        blocked = run_pf("core-update", "apply", "--core-root", str(core), "--archive", str(archive))
+        assert blocked.returncode != 0 and "confirm_required" in blocked.stdout
+
+        applied = run_pf("core-update", "apply", "--core-root", str(core), "--archive", str(archive), "--confirm")
+        assert applied.returncode == 0, applied.stdout + applied.stderr
+        assert not (core / "a.txt").exists()
+        assert (core / "dir" / "b.txt").read_text(encoding="utf-8") == "new-b"
+        assert (core / "dir" / "c.txt").read_text(encoding="utf-8") == "same-c"
+        assert (core / "d.txt").read_text(encoding="utf-8") == "new-d"
+        assert (core / "user-note.txt").read_text(encoding="utf-8") == "must stay"
+        assert json.loads((core / CORE_MANIFEST_NAME).read_text(encoding="utf-8"))["version"] == "2.0.0"
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-local-mod-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        (core / "dir" / "b.txt").write_text("local-change", encoding="utf-8")
+        archive = root / "processforge.zip"
+        write_archive(archive, {"dir/b.txt": "new-b", "dir/c.txt": "same-c", "d.txt": "new-d"})
+        plan = run_pf("core-update", "plan", "--core-root", str(core), "--archive", str(archive))
+        assert plan.returncode == 2, plan.stdout + plan.stderr
+        assert json.loads(plan.stdout)["blockers"][0]["code"] == "locally_modified"
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-owned-ancestor-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        archive = root / "processforge.zip"
+        write_archive(archive, {"a.txt/child.txt": "new child", "dir/b.txt": "old-b", "dir/c.txt": "same-c"})
+
+        applied = apply_update(core, archive, confirm=True)
+        assert (core / "a.txt" / "child.txt").read_text(encoding="utf-8") == "new child"
+        backup = Path(applied["backup_dir"]) / "files" / "a.txt"
+        assert backup.read_bytes() == b"old-a"
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-owned-ancestor-modified-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        ancestor = core / "a.txt"
+        ancestor.write_text("local-a", encoding="utf-8")
+        archive = root / "processforge.zip"
+        write_archive(archive, {"a.txt/child.txt": "new child", "dir/b.txt": "old-b", "dir/c.txt": "same-c"})
+        before = ancestor.read_bytes()
+
+        plan = core_update.build_plan(core, archive)
+        assert plan["status"] == "blocked", plan
+        assert any(item.get("code") == "locally_modified" and item.get("path") == "a.txt" for item in plan["blockers"]), plan
+        try:
+            apply_update(core, archive, confirm=True)
+        except CoreUpdateError as exc:
+            assert exc.code == "plan_blocked", exc
+        else:
+            raise AssertionError("locally modified owned ancestor was accepted without force")
+        assert ancestor.read_bytes() == before
+
+        forced = apply_update(core, archive, confirm=True, force_local_modifications=True)
+        assert (core / "a.txt" / "child.txt").read_text(encoding="utf-8") == "new child"
+        forced_backup = Path(forced["backup_dir"]) / "files" / "a.txt"
+        assert forced_backup.read_bytes() == before
+
+    def make_directory_collision(core: Path) -> None:
+        collision = core / "user-note.txt"
+        collision.mkdir()
+        (collision / "keep.txt").write_text("DIRECTORY USER DATA", encoding="utf-8")
+
+    for fixture_name, make_collision in (
+        ("file", lambda core: (core / "user-note.txt").write_text("USER OWNED DATA", encoding="utf-8")),
+        ("same-byte-file", lambda core: (core / "user-note.txt").write_text("same-byte", encoding="utf-8")),
+        ("directory", make_directory_collision),
+    ):
+        with tempfile.TemporaryDirectory(prefix=f"pf-core-update-unowned-{fixture_name}-") as raw:
+            root = Path(raw)
+            core = root / "core"
+            core.mkdir()
+            install_old_core(core)
+            make_collision(core)
+            payload = "same-byte" if fixture_name == "same-byte-file" else "NEW CORE PAYLOAD"
+            archive = root / "processforge.zip"
+            write_archive(
+                archive,
+                {"dir/b.txt": "new-b", "dir/c.txt": "same-c", "user-note.txt": payload},
+            )
+            before = snapshot_core_state(core, ("user-note.txt",))
+            plan = core_update.build_plan(core, archive)
+            assert plan["status"] == "blocked", plan
+            assert any(item.get("code") == "unowned_path_collision" and item.get("path") == "user-note.txt" for item in plan["blockers"]), plan
+            for force in (False, True):
+                assert_refused_without_mutation(core, archive, before, user_paths=("user-note.txt",), force=force)
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-unowned-ancestor-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        (core / "user-area").write_text("USER OWNED DATA", encoding="utf-8")
+        archive = root / "processforge.zip"
+        write_archive(archive, {"user-area/new.txt": "NEW CORE PAYLOAD"})
+        plan = core_update.build_plan(core, archive)
+        assert plan["status"] == "blocked", plan
+        assert any(item.get("conflict_path") == "user-area" for item in plan["blockers"]), plan
+        before = snapshot_core_state(core, ("user-area",))
+        for force in (False, True):
+            assert_refused_without_mutation(core, archive, before, user_paths=("user-area",), force=force)
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-unowned-late-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        archive = root / "processforge.zip"
+        write_archive(archive, {"new.txt": "NEW CORE PAYLOAD"})
+        plan = core_update.build_plan(core, archive)
+        assert plan["status"] == "planned", plan
+        (core / "new.txt").write_text("LATE USER DATA", encoding="utf-8")
+        before = snapshot_core_state(core, ("new.txt",))
+        for force in (False, True):
+            assert_refused_without_mutation(core, archive, before, user_paths=("new.txt",), force=force)
+
+    for symlink_name, broken in (("symlink", False), ("broken-symlink", True)):
+        with tempfile.TemporaryDirectory(prefix=f"pf-core-update-unowned-{symlink_name}-") as raw:
+            root = Path(raw)
+            core = root / "core"
+            core.mkdir()
+            install_old_core(core)
+            outside = root / "outside.txt"
+            outside.write_text("OUTSIDE DATA", encoding="utf-8")
+            link = core / "user-link.txt"
+            archive = root / "processforge.zip"
+            write_archive(archive, {"user-link.txt": "NEW CORE PAYLOAD"})
+            try:
+                link.symlink_to(root / "missing-target" if broken else outside)
+            except (OSError, NotImplementedError) as exc:
+                print(f"SKIP: {symlink_name} fixture unavailable: {exc}")
+                continue
+            plan = core_update.build_plan(core, archive)
+            assert plan["status"] == "blocked", plan
+            assert any(item.get("code") == "unowned_path_collision" for item in plan["blockers"]), plan
+            before = snapshot_core_state(core, ("user-link.txt",))
+            for force in (False, True):
+                assert_refused_without_mutation(core, archive, before, user_paths=("user-link.txt",), force=force)
+            assert link.is_symlink()
+            assert outside.read_text(encoding="utf-8") == "OUTSIDE DATA"
+
+
+--- missing-owned smoke ---
+"""Regression smoke for restoring missing manifest-owned core files."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import sys
+import tempfile
+import zipfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from processforge_core import core_update
+from processforge_core.core_update import (
+    CORE_MANIFEST_NAME,
+    CoreUpdateError,
+    apply_update,
+    build_plan,
+    core_status,
+    make_core_manifest,
+    manifest_bytes,
+    repair_status,
+)
+
+
+def write_archive(path: Path, files: dict[str, str], *, version: str = "2.0.0") -> None:
+    manifest = make_core_manifest(
+        version=version,
+        source={"fixture": True},
+        files=[
+            {"relative_path": name, "size": len(value.encode()), "sha256": hashlib.sha256(value.encode()).hexdigest()}
+            for name, value in files.items()
+        ],
+    )
+    with zipfile.ZipFile(path, "w") as archive:
+        for name, value in files.items():
+            archive.writestr(name, value)
+        archive.writestr(CORE_MANIFEST_NAME, manifest_bytes(manifest))
+
+
+def install_old(core: Path) -> None:
+    files = {"same.txt": "same", "changed.txt": "old", "removed.txt": "gone"}
+    for name, value in files.items():
+        (core / name).write_text(value, encoding="utf-8")
+    manifest = make_core_manifest(
+        version="1.0.0",
+        source={"fixture": True},
+        files=[
+            {"relative_path": name, "size": len(value.encode()), "sha256": hashlib.sha256(value.encode()).hexdigest()}
+            for name, value in files.items()
+        ],
+    )
+    (core / CORE_MANIFEST_NAME).write_bytes(manifest_bytes(manifest))
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root", default=None, help="Optional temporary fixture parent; defaults to the system temporary directory.")
+    args = parser.parse_args()
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-missing-", dir=args.root) as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old(core)
+        (core / "same.txt").unlink()
+        (core / "changed.txt").unlink()
+        (core / "removed.txt").unlink()
+        (core / "user.txt").write_text("keep", encoding="utf-8")
+        archive = root / "release.zip"
+        write_archive(archive, {"same.txt": "same", "changed.txt": "new"})
+
+        plan = build_plan(core, archive)
+        assert plan["status"] == "planned", plan
+        assert plan["missing_owned"] == ["changed.txt", "removed.txt", "same.txt"], plan
+        assert plan["unchanged"] == ["same.txt"], plan
+        assert plan["restored"] == ["same.txt"], plan
+        assert not (core / "same.txt").exists(), "plan must remain read-only"
+        assert not (core / "runtime").exists(), "plan must not create update state"
+        applied = apply_update(core, archive, confirm=True)
+        assert (core / "same.txt").read_text(encoding="utf-8") == "same"
+        assert (core / "changed.txt").read_text(encoding="utf-8") == "new"
+        assert not (core / "removed.txt").exists()
+        assert (core / "user.txt").read_text(encoding="utf-8") == "keep"
+        assert applied["backed_up"]["same.txt"] is None
+        assert applied["backed_up"]["changed.txt"] is None
+        backup_dir = Path(applied["backup_dir"])
+        assert json.loads((backup_dir / "control" / "plan.json").read_text())["missing_owned"]
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-missing-failure-", dir=args.root) as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old(core)
+        (core / "same.txt").unlink()
+        archive = root / "release.zip"
+        write_archive(archive, {"same.txt": "same", "changed.txt": "old"})
+        original = core_update.atomic_write
+
+        def fail_restore(target: Path, content: bytes) -> None:
+            if target.name == "same.txt":
+                raise OSError("injected restore failure")
+            original(target, content)
+
+        core_update.atomic_write = fail_restore
+        try:
+            try:
+                apply_update(core, archive, confirm=True)
+            except CoreUpdateError as exc:
+                assert exc.code == "file_operation_failed", exc
+            else:
+                raise AssertionError("injected restore failure was accepted")
+        finally:
+            core_update.atomic_write = original
+        progress = core_status(core)["in_progress"]
+        assert progress["status"] == "failed", progress
+        assert progress["backed_up"]["same.txt"] is None, progress
+        assert any(item["op"] == "write" and item["path"] == "same.txt" for item in progress["pending_operations"])
+        assert repair_status(core)["status"] == "safe_to_rollback"
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-nonregular-", dir=args.root) as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old(core)
+        (core / "same.txt").unlink()
+        (core / "same.txt").mkdir()
+        archive = root / "release.zip"
+        write_archive(archive, {"same.txt": "same"})
+        plan = build_plan(core, archive)
+        assert plan["status"] == "blocked", plan
+        assert any(item["code"] == "nonregular_owned_path" for item in plan["blockers"]), plan
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-parent-", dir=args.root) as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        old = make_core_manifest(version="1.0.0", source={"fixture": True}, files=[
+            {"relative_path": "dir/same.txt", "size": 4, "sha256": hashlib.sha256(b"same").hexdigest()},
+        ])
+        (core / CORE_MANIFEST_NAME).write_bytes(manifest_bytes(old))
+        (core / "dir").write_text("user obstruction", encoding="utf-8")
+        archive = root / "release.zip"
+        write_archive(archive, {"dir/same.txt": "same"})
+        assert build_plan(core, archive)["status"] == "blocked"
+        for force in (False, True):
+            try:
+                apply_update(core, archive, confirm=True, force_local_modifications=force)
+            except CoreUpdateError as exc:
+                assert exc.code == "plan_blocked"
+            else:
+                raise AssertionError("missing owned file bypassed its unowned parent")
+        assert (core / "dir").read_text(encoding="utf-8") == "user obstruction"
+        assert not (core / "runtime").exists()
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-manifest-failure-", dir=args.root) as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old(core)
+        (core / "same.txt").unlink()
+        archive = root / "release.zip"
+        write_archive(archive, {"same.txt": "same", "changed.txt": "old", "removed.txt": "gone"})
+        original = core_update.atomic_write
+
+        def fail_manifest(target: Path, content: bytes) -> None:
+            if target.name == CORE_MANIFEST_NAME:
+                raise OSError("injected manifest failure after restored file write")
+            original(target, content)
+
+        core_update.atomic_write = fail_manifest
+        try:
+            try:
+                apply_update(core, archive, confirm=True)
+            except CoreUpdateError as exc:
+                assert exc.code == "file_operation_failed"
+            else:
+                raise AssertionError("expected manifest failure")
+        finally:
+            core_update.atomic_write = original
+        progress = core_status(core)["in_progress"]
+        assert progress["backed_up"]["same.txt"] is None
+        assert any(op["op"] == "write" and op["path"] == "same.txt" for op in progress["completed_operations"])
+        assert (core / "same.txt").read_bytes() == b"same"
+        assert core_status(core)["version"] == "1.0.0"
+        assert repair_status(core)["status"] == "safe_to_rollback"
+
+    print("PASS: missing owned core update smoke")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+--- project profile hits ---
+src\processforge_core\core_update.py:23:WORKPLACE_MIGRATION_KIND = "processforge.workplace_migration"
+src\processforge_core\core_update.py:174:                    raise CoreUpdateError("archive_file_missing", f"archive file missing: {relative_path}")
+src\processforge_core\core_update.py:196:        raise CoreUpdateError("workplace_migration_invalid", f"invalid YAML in {source}: {exc}") from exc
+src\processforge_core\core_update.py:198:        raise CoreUpdateError("workplace_migration_invalid", f"migration document must be a mapping: {source}")
+src\processforge_core\core_update.py:210:def load_archive_workplace_migration(archive_path: Path, *, installed_version: str | None, target_version: str) -> tuple[str | None, dict[str, Any] | None]:
+src\processforge_core\core_update.py:236:def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_version: str | None, target_version: str, workplace_root: Path | None) -> dict[str, Any]:
+src\processforge_core\core_update.py:251:    source_path, migration = load_archive_workplace_migration(
+src\processforge_core\core_update.py:260:        raise CoreUpdateError("workplace_migration_invalid", f"migration {source_path} requires id and operations")
+src\processforge_core\core_update.py:264:            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} contains a non-object operation")
+src\processforge_core\core_update.py:269:            raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} operation requires id and target")
+src\processforge_core\core_update.py:283:                raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} registry operation {operation_id} is invalid")
+src\processforge_core\core_update.py:289:                raise CoreUpdateError("workplace_migration_invalid", f"registry list is invalid: {target_path}:{list_key}")
+src\processforge_core\core_update.py:295:        raise CoreUpdateError("workplace_migration_invalid", f"unsupported migration operation: {operation_type}")
+src\processforge_core\core_update.py:310:def apply_workplace_migration(archive_path: Path, workplace_root: Path, migration_plan: dict[str, Any], backup_dir: Path) -> dict[str, Any]:
+src\processforge_core\core_update.py:419:    incomplete = (runtime_root(core_root) / "in-progress.json").is_file()
+src\processforge_core\core_update.py:421:        blockers.append({"code": "incomplete_update", "path": str(runtime_root(core_root) / "in-progress.json")})
+src\processforge_core\core_update.py:422:    migration = workplace_migration_plan(
+src\processforge_core\core_update.py:432:        "kind": "processforge.core_update.plan",
+src\processforge_core\core_update.py:448:        "workplace_migration": migration,
+src\processforge_core\core_update.py:456:    incomplete_path = runtime_root(core_root) / "in-progress.json"
+src\processforge_core\core_update.py:459:        "kind": "processforge.core_update.status",
+src\processforge_core\core_update.py:514:def apply_update(
+src\processforge_core\core_update.py:532:    in_progress_path = work_root / "in-progress.json"
+src\processforge_core\core_update.py:545:    migration = plan.get("workplace_migration") if isinstance(plan.get("workplace_migration"), dict) else {}
+src\processforge_core\core_update.py:547:        pending_operations.append({"op": "workplace_migration", "path": str(migration.get("migration", {}).get("id") or "workplace")})
+src\processforge_core\core_update.py:588:            migration_record = apply_workplace_migration(archive_path, workplace_root.resolve(), migration, backup_dir)
+src\processforge_core\core_update.py:589:            complete_operation("workplace_migration", str(migration.get("migration", {}).get("id") or "workplace"))
+src\processforge_core\core_update.py:606:        record = {"schema_version": 1, "update_id": update_id, "status": "applied", "applied_at": now_utc(), "available_version": plan["available_version"], "backup_dir": str(backup_dir), "backed_up": backed_up, "counts": plan["counts"], "workplace_migration": migration_record}
+src\processforge_core\core_update.py:643:        return "safe_to_rollback"
+src\processforge_core\core_update.py:650:        return {"schema_version": 1, "kind": "processforge.core_update.repair", "status": "nothing_to_repair", "core_root": str(core_root.resolve())}
+src\processforge_core\core_update.py:655:        "kind": "processforge.core_update.repair",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:93:        "src/processforge_core/core_update.py",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:94:        "tools/smoke_core_update_migration_sources.py",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:99:        "src/processforge_core/core_update.py",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:100:        "tools/smoke_core_update_migration_sources.py",
+.pf/artifacts/core-a01-a11-20260911\a05-migration-brief.md:5:Fix A05. In core_update.py workplace_migration_plan currently accepts copy_if_missing source absent from ZIP; archive.read KeyError in apply leaves journal applying. Validate archive source declarations (missing, directory, invalid path) during planning BEFORE target mutations; keep optional/already-present semantics justified by contract. Apply must fail with structured status and recoverable journal/backup if an archive/read/extraction failure still occurs after planning (test fault at apply boundary). Do not swallow programmer errors broadly. Read audit native-core/audit_core_update_missing_migration_source.py and smoke_core_update_manifest.py, local docs update/migration contract. Real minimal ZIP regression: malformed manifest missing member plan blocked, no target change, positive migration passes and existing target preserved. Test post-plan read fault journal not applying. Do not operate installed distribution/workplace or bump versions.
+.pf/artifacts/core-a01-a11-20260911\prepare_remaining.py:12:    ('a05-migration', ['src/processforge_core/core_update.py', 'tools/smoke_core_update_migration_sources.py'], '''Fix A05. In core_update.py workplace_migration_plan currently accepts copy_if_missing source absent from ZIP; archive.read KeyError in apply leaves journal applying. Validate archive source declarations (missing, directory, invalid path) during planning BEFORE target mutations; keep optional/already-present semantics justified by contract. Apply must fail with structured status and recoverable journal/backup if an archive/read/extraction failure still occurs after planning (test fault at apply boundary). Do not swallow programmer errors broadly. Read audit native-core/audit_core_update_missing_migration_source.py and smoke_core_update_manifest.py, local docs update/migration contract. Real minimal ZIP regression: malformed manifest missing member plan blocked, no target change, positive migration passes and existing target preserved. Test post-plan read fault journal not applying. Do not operate installed distribution/workplace or bump versions.'''),
+.pf/artifacts/core-a01-a11-20260911\design.md:61:  A05 (core_update.py), A08 (mcp_server.py).
+docs\concepts\core-update-manifest.md:88:File operation failures, including locked-file style failures surfaced by the OS, are converted into explicit `file_operation_failed` errors and leave `runtime/core-update/in-progress.json` with `status: failed`.
+docs\concepts\core-update-manifest.md:103:- `safe_to_rollback` when the update failed before manifest write and the old manifest backup is present;
+docs\ru\concepts\core-update-manifest.md:90:File operation failures, включая locked-file style ошибки от ОС, возвращаются как явный `file_operation_failed` и оставляют `runtime/core-update/in-progress.json` со `status: failed`.
+docs\ru\concepts\core-update-manifest.md:106:- `safe_to_rollback`, если update упал до записи manifest и backup старого manifest существует;
+tools\processforge.py:6893:        ReleaseCommand("smoke_core_update_missing_owned", [sys.executable, str(root / "tools" / "smoke_core_update_missing_owned.py")], 120),
+tools\processforge.py:6975:        ReleaseCommand("smoke_core_update_manifest", [sys.executable, str(root / "tools" / "smoke_core_update_manifest.py")], 120),
+tools\processforge.py:7411:    from processforge_core.core_update import CORE_MANIFEST_NAME, make_core_manifest
+tools\processforge.py:7513:    from processforge_core.core_update import CORE_MANIFEST_NAME, manifest_bytes
+tools\processforge.py:7711:        from processforge_core.core_update import CORE_MANIFEST_NAME, manifest_bytes
+tools\processforge.py:23833:def command_core_update_status(args: argparse.Namespace) -> int:
+tools\processforge.py:23834:    from processforge_core.core_update import CoreUpdateError, core_status
+tools\processforge.py:23845:def command_core_update_plan(args: argparse.Namespace) -> int:
+tools\processforge.py:23846:    from processforge_core.core_update import CoreUpdateError, build_plan
+tools\processforge.py:23862:def command_core_update_apply(args: argparse.Namespace) -> int:
+tools\processforge.py:23863:    from processforge_core.core_update import CoreUpdateError, apply_update
+tools\processforge.py:23866:        payload = apply_update(
+tools\processforge.py:23894:def command_core_update_repair(args: argparse.Namespace) -> int:
+tools\processforge.py:23895:    from processforge_core.core_update import repair_status
+tools\processforge.py:26369:    core_update = sub.add_parser("core-update", help="Plan and apply manifest-based ProcessForge core archive updates.")
+tools\processforge.py:26370:    core_update_sub = core_update.add_subparsers(dest="core_update_command", required=True)
+tools\processforge.py:26371:    core_update_status = core_update_sub.add_parser("status", help="Read installed core manifest and incomplete update state.")
+tools\processforge.py:26372:    core_update_status.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+tools\processforge.py:26373:    core_update_status.set_defaults(func=command_core_update_status)
+tools\processforge.py:26374:    core_update_plan = core_update_sub.add_parser("plan", help="Validate an archive and print add/change/remove plan without modifying files.")
+tools\processforge.py:26375:    core_update_plan.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+tools\processforge.py:26376:    core_update_plan.add_argument("--archive", required=True, help="ProcessForge release archive containing processforge-core.manifest.json.")
+tools\processforge.py:26377:    core_update_plan.add_argument("--workplace-root", help="Existing Workplace to assess for compatible archive-declared migration.")
+tools\processforge.py:26378:    core_update_plan.set_defaults(func=command_core_update_plan)
+tools\processforge.py:26379:    core_update_apply = core_update_sub.add_parser("apply", help="Apply a manifest-based core update from an explicit archive.")
+tools\processforge.py:26380:    core_update_apply.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+tools\processforge.py:26381:    core_update_apply.add_argument("--archive", required=True, help="ProcessForge release archive containing processforge-core.manifest.json.")
+tools\processforge.py:26382:    core_update_apply.add_argument("--workplace-root", help="Existing Workplace to migrate with the Core update.")
+tools\processforge.py:26383:    core_update_apply.add_argument("--confirm", action="store_true", help="Required confirmation for file changes.")
+tools\processforge.py:26384:    core_update_apply.add_argument("--force-local-modifications", action="store_true", help="Allow replacing locally modified PF-owned files after backup.")
+tools\processforge.py:26385:    core_update_apply.set_defaults(func=command_core_update_apply)
+tools\processforge.py:26386:    core_update_repair = core_update_sub.add_parser("repair", help="Inspect incomplete core update repair state.")
+tools\processforge.py:26387:    core_update_repair.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
+tools\processforge.py:26388:    core_update_repair.set_defaults(func=command_core_update_repair)
+tools\smoke_core_update_missing_owned.py:19:from processforge_core import core_update
+tools\smoke_core_update_missing_owned.py:20:from processforge_core.core_update import (
+tools\smoke_core_update_missing_owned.py:23:    apply_update,
+tools\smoke_core_update_missing_owned.py:85:        applied = apply_update(core, archive, confirm=True)
+tools\smoke_core_update_missing_owned.py:103:        original = core_update.atomic_write
+tools\smoke_core_update_missing_owned.py:110:        core_update.atomic_write = fail_restore
+tools\smoke_core_update_missing_owned.py:113:                apply_update(core, archive, confirm=True)
+tools\smoke_core_update_missing_owned.py:119:            core_update.atomic_write = original
+tools\smoke_core_update_missing_owned.py:124:        assert repair_status(core)["status"] == "safe_to_rollback"
+tools\smoke_core_update_missing_owned.py:153:                apply_update(core, archive, confirm=True, force_local_modifications=force)
+tools\smoke_core_update_missing_owned.py:169:        original = core_update.atomic_write
+tools\smoke_core_update_missing_owned.py:176:        core_update.atomic_write = fail_manifest
+tools\smoke_core_update_missing_owned.py:179:                apply_update(core, archive, confirm=True)
+tools\smoke_core_update_missing_owned.py:185:            core_update.atomic_write = original
+tools\smoke_core_update_missing_owned.py:191:        assert repair_status(core)["status"] == "safe_to_rollback"
+tools\smoke_core_update_manifest.py:19:from processforge_core import core_update
+tools\smoke_core_update_manifest.py:20:from processforge_core.core_update import CORE_MANIFEST_NAME, CoreUpdateError, apply_update, core_status, make_core_manifest, manifest_bytes, repair_status
+tools\smoke_core_update_manifest.py:85:        apply_update(core, archive, confirm=True, force_local_modifications=force)
+tools\smoke_core_update_manifest.py:147:        applied = apply_update(core, archive, confirm=True)
+tools\smoke_core_update_manifest.py:163:        plan = core_update.build_plan(core, archive)
+tools\smoke_core_update_manifest.py:167:            apply_update(core, archive, confirm=True)
+tools\smoke_core_update_manifest.py:174:        forced = apply_update(core, archive, confirm=True, force_local_modifications=True)
+tools\smoke_core_update_manifest.py:202:            plan = core_update.build_plan(core, archive)
+tools\smoke_core_update_manifest.py:216:        plan = core_update.build_plan(core, archive)
+tools\smoke_core_update_manifest.py:230:        plan = core_update.build_plan(core, archive)
+tools\smoke_core_update_manifest.py:253:            plan = core_update.build_plan(core, archive)
+tools\smoke_core_update_manifest.py:284:        original_atomic_write = core_update.atomic_write
+tools\smoke_core_update_manifest.py:291:        core_update.atomic_write = fail_on_changed_file
+tools\smoke_core_update_manifest.py:294:                apply_update(core, archive, confirm=True)
+tools\smoke_core_update_manifest.py:300:            core_update.atomic_write = original_atomic_write
+tools\smoke_core_update_manifest.py:307:        assert repair_status(core)["status"] == "safe_to_rollback"
+tools\smoke_core_update_manifest.py:310:kind: processforge.workplace_migration
+tools\smoke_core_update_manifest.py:358:        plan = core_update.build_plan(core, archive, workplace_root=workplace)
+tools\smoke_core_update_manifest.py:360:        assert plan["workplace_migration"]["status"] == "planned", plan
+tools\smoke_core_update_manifest.py:361:        assert len(plan["workplace_migration"]["operations"]) == 2, plan
+tools\smoke_core_update_manifest.py:362:        record = apply_update(core, archive, confirm=True, workplace_root=workplace)
+tools\smoke_core_update_manifest.py:363:        assert record["workplace_migration"]["migration"]["id"] == "fixture-workplace-1.0.2-to-1.1.0", record
+tools\smoke_core_update_manifest.py:382:        original_atomic_write = core_update.atomic_write
+tools\smoke_core_update_manifest.py:389:        core_update.atomic_write = fail_on_workplace_driver
+tools\smoke_core_update_manifest.py:392:                apply_update(core, archive, confirm=True, workplace_root=workplace)
+tools\smoke_core_update_manifest.py:398:            core_update.atomic_write = original_atomic_write
+tools\smoke_core_update_manifest.py:399:        assert repair_status(core)["status"] == "safe_to_rollback"
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$p='"'tools/smoke_core_update_manifest.py'; "'$lines=Get-Content $p; $lines[260..430]; Write-Output "`n--- docs failure ---"; $d=Get-Content docs/concepts/core-update-manifest.md; $d[78..112]' in D:\Dev\process-forge
+ succeeded in 2890ms:
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-malicious-") as raw:
+        root = Path(raw)
+        archive = root / "bad.zip"
+        manifest = {
+            "schema_version": 1,
+            "kind": "processforge.core_manifest",
+            "version": "9.9.9",
+            "files": [{"relative_path": "../escape.txt", "size": 1, "sha256": "0" * 64}],
+        }
+        with zipfile.ZipFile(archive, "w") as package:
+            package.writestr("../escape.txt", "x")
+            package.writestr(CORE_MANIFEST_NAME, json.dumps(manifest))
+        plan = run_pf("core-update", "plan", "--core-root", str(root / "core"), "--archive", str(archive))
+        assert plan.returncode != 0 and "invalid_manifest_path" in plan.stdout
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-locked-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        archive = root / "processforge.zip"
+        write_archive(archive, {"dir/b.txt": "new-b", "dir/c.txt": "same-c", "d.txt": "new-d"})
+        original_atomic_write = core_update.atomic_write
+
+        def fail_on_changed_file(target: Path, content: bytes) -> None:
+            if target.name == "b.txt":
+                raise OSError("locked fixture")
+            original_atomic_write(target, content)
+
+        core_update.atomic_write = fail_on_changed_file
+        try:
+            try:
+                apply_update(core, archive, confirm=True)
+            except CoreUpdateError as exc:
+                assert exc.code == "file_operation_failed"
+            else:
+                raise AssertionError("locked file failure was accepted")
+        finally:
+            core_update.atomic_write = original_atomic_write
+        status = core_status(core)
+        assert status["incomplete_update"] is True
+        assert status["in_progress"]["status"] == "failed"
+        assert status["in_progress"]["pending_operations"]
+        assert status["in_progress"]["completed_operations"]
+        assert status["in_progress"]["error"]["code"] == "file_operation_failed"
+        assert repair_status(core)["status"] == "safe_to_rollback"
+
+    migration_yaml = """schema_version: 1
+kind: processforge.workplace_migration
+id: fixture-workplace-1.0.2-to-1.1.0
+from_versions:
+  - 1.0.0
+  - 1.0.1
+  - 1.0.2
+allow_unmanaged_installed_core: true
+to_version: 1.1.0
+operations:
+  - id: install-codex-exec-driver
+    type: copy_if_missing
+    source: templates/runtime-drivers/codex-exec.yaml
+    target: runtime-drivers/codex-exec.yaml
+  - id: register-codex-exec-driver
+    type: append_registry_entry_if_missing
+    target: registries/runtime-drivers.yaml
+    list_key: runtime_drivers
+    match_key: id
+    entry:
+      id: codex-exec
+      path: ../runtime-drivers/codex-exec.yaml
+      status: available
+      builtin: true
+"""
+    driver_yaml = "schema_version: 1\nid: codex-exec\nkind: shell\n"
+    registry_yaml = "schema_version: 1\nruntime_drivers:\n  - id: manual\n    path: ../runtime-drivers/manual.yaml\ncustom_registry_setting: preserve\n"
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-workplace-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        workplace = root / "workplace"
+        (workplace / "registries").mkdir(parents=True)
+        (workplace / "workplace.yaml").write_text("schema_version: 1\ncustom_setting: preserve\n", encoding="utf-8")
+        (workplace / "registries" / "runtime-drivers.yaml").write_text(registry_yaml, encoding="utf-8")
+        archive = root / "processforge-1.1.0.zip"
+        write_archive(
+            archive,
+            {
+                "dir/b.txt": "new-b",
+                "dir/c.txt": "same-c",
+                "d.txt": "new-d",
+                "updates/migrations/1.1.0-workplace-runtime-drivers.yaml": migration_yaml,
+                "templates/runtime-drivers/codex-exec.yaml": driver_yaml,
+            },
+            version="1.1.0",
+        )
+        plan = core_update.build_plan(core, archive, workplace_root=workplace)
+        assert plan["status"] == "planned", plan
+        assert plan["workplace_migration"]["status"] == "planned", plan
+        assert len(plan["workplace_migration"]["operations"]) == 2, plan
+        record = apply_update(core, archive, confirm=True, workplace_root=workplace)
+        assert record["workplace_migration"]["migration"]["id"] == "fixture-workplace-1.0.2-to-1.1.0", record
+        assert (workplace / "runtime-drivers" / "codex-exec.yaml").read_text(encoding="utf-8") == driver_yaml
+        migrated_registry = (workplace / "registries" / "runtime-drivers.yaml").read_text(encoding="utf-8")
+        assert "custom_registry_setting: preserve" in migrated_registry
+        assert "id: codex-exec" in migrated_registry
+        assert "custom_setting: preserve" in (workplace / "workplace.yaml").read_text(encoding="utf-8")
+        assert (Path(record["backup_dir"]) / "workplace-migration.json").is_file()
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-workplace-failure-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        workplace = root / "workplace"
+        (workplace / "registries").mkdir(parents=True)
+        (workplace / "workplace.yaml").write_text("schema_version: 1\n", encoding="utf-8")
+        (workplace / "registries" / "runtime-drivers.yaml").write_text(registry_yaml, encoding="utf-8")
+        archive = root / "processforge-1.1.0.zip"
+        write_archive(archive, {"updates/migrations/1.1.0-workplace-runtime-drivers.yaml": migration_yaml, "templates/runtime-drivers/codex-exec.yaml": driver_yaml}, version="1.1.0")
+        original_atomic_write = core_update.atomic_write
+
+        def fail_on_workplace_driver(target: Path, content: bytes) -> None:
+            if target.name == "codex-exec.yaml":
+                raise OSError("locked workplace fixture")
+            original_atomic_write(target, content)
+
+        core_update.atomic_write = fail_on_workplace_driver
+        try:
+            try:
+                apply_update(core, archive, confirm=True, workplace_root=workplace)
+            except CoreUpdateError as exc:
+                assert exc.code == "file_operation_failed"
+            else:
+                raise AssertionError("locked Workplace migration was accepted")
+        finally:
+            core_update.atomic_write = original_atomic_write
+        assert repair_status(core)["status"] == "safe_to_rollback"
+
+    with tempfile.TemporaryDirectory(prefix="pf-core-update-workplace-doctor-") as raw:
+        root = Path(raw)
+        core = root / "core"
+        core.mkdir()
+        install_old_core(core)
+        workplace = root / "workplace"
+        (workplace / "registries").mkdir(parents=True)
+        (workplace / "workplace.yaml").write_text("schema_version: 1\n", encoding="utf-8")
+        (workplace / "registries" / "runtime-drivers.yaml").write_text(registry_yaml, encoding="utf-8")
+        archive = root / "processforge-1.1.0.zip"
+        write_archive(
+            archive,
+            {
+                "bin/pf.py": "import sys\nprint('PASS: fixture doctor')\nraise SystemExit(0)\n",
+                "updates/migrations/1.1.0-workplace-runtime-drivers.yaml": migration_yaml,
+                "templates/runtime-drivers/codex-exec.yaml": driver_yaml,
+            },
+            version="1.1.0",
+        )
+        applied = run_pf("core-update", "apply", "--core-root", str(core), "--archive", str(archive), "--workplace-root", str(workplace), "--confirm")
+        assert applied.returncode == 0, applied.stdout + applied.stderr
+        payload = json.loads(applied.stdout)
+        assert payload["post_update_doctor"]["status"] == "pass", payload
+        assert "PASS: fixture doctor" in payload["post_update_doctor"]["output"]
+
+    print("PASS: manifest-based core update smoke")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+--- docs failure ---
+
+Apply writes runtime update state under:
+
+```text
+<core>/runtime/core-update/
+```
+
+Backups are written before replacing or removing old PF-owned files. If an update is interrupted or a file operation fails, `core-update status` reports `incomplete_update`, and `core-update repair` reports the incomplete state for operator handling.
+
+File operation failures, including locked-file style failures surfaced by the OS, are converted into explicit `file_operation_failed` errors and leave `runtime/core-update/in-progress.json` with `status: failed`.
+
+The incomplete update journal records:
+
+- installed and target versions;
+- update archive;
+- backup directory;
+- counts;
+- completed operations;
+- pending operations;
+- backed-up files;
+- failure code/message when available.
+
+`core-update repair` classifies incomplete states as:
+
+- `safe_to_rollback` when the update failed before manifest write and the old manifest backup is present;
+- `manual_repair_required` when the manifest was already written, the journal is incomplete, or safety cannot be proven;
+- `nothing_to_repair` when no incomplete update exists.
+
+Automated continue/rollback execution remains intentionally narrower than the
+classification contract and should only be added for states that the journal can
+prove safe.
+
+2026-09-11T06:53:58.050395Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 2/5
+2026-09-11T06:53:58.785068Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 3/5
+2026-09-11T06:53:58.820755Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 403 Forbidden: <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style global>body{font-family:Arial,Helvetica,sans-serif}.container{align-items:center;display:flex;flex-direction:column;height:100%;justify-content:center;width:100%}@keyframes enlarge-appear{0%{opacity:0;transform:scale(75%) rotate(-90deg)}to{opacity:1;transform:scale(100%) rotate(0deg)}}.logo{color:#8e8ea0;padding-bottom:1.5rem}.scale-appear{animation:enlarge-appear .4s ease-out}@media (min-width:768px){.scale-appear{height:48px;width:48px}}.data:empty{display:none}.data{border-radius:5px;color:#8e8ea0;max-width:420px;text-align:center;width:100%}.data ul{list-style:none;padding:0}.blocked-icon{color:#ef4444}.message{align-items:center;display:flex;font-size:1.5rem;gap:1rem;justify-content:center}.explanation{font-size:.9rem;line-height:1.5;max-width:420px;opacity:50%;text-align:center;width:100%}.explanation a{color:#000}@media (prefers-color-scheme:dark){body{background-color:#343541;c..., url: https://chatgpt.com/backend-api/codex/models?client_version=0.153.4, cf-ray: a394c22cf9bbe313-DME
+2026-09-11T06:53:59.781023Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 4/5
+2026-09-11T06:54:01.606396Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 5/5
+2026-09-11T06:54:04.990115Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 403 Forbidden: 19eb
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style global>body{font-family:Arial,Helvetica,sa, url: wss://chatgpt.com/backend-api/codex/responses, cf-ray: a394c2538a6af145-DME
+ERROR: Reconnecting... 1/5
+ERROR: Reconnecting... 2/5
+ERROR: Reconnecting... 3/5
+ERROR: Reconnecting... 4/5
+ERROR: Reconnecting... 5/5
+ERROR: unexpected status 403 Forbidden: <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style global>body{font-family:Arial,Helvetica,sans-serif}.container{align-items:center;display:flex;flex-direction:column;height:100%;justify-content:center;width:100%}@keyframes enlarge-appear{0%{opacity:0;transform:scale(75%) rotate(-90deg)}to{opacity:1;transform:scale(100%) rotate(0deg)}}.logo{color:#8e8ea0;padding-bottom:1.5rem}.scale-appear{animation:enlarge-appear .4s ease-out}@media (min-width:768px){.scale-appear{height:48px;width:48px}}.data:empty{display:none}.data{border-radius:5px;color:#8e8ea0;max-width:420px;text-align:center;width:100%}.data ul{list-style:none;padding:0}.blocked-icon{color:#ef4444}.message{align-items:center;display:flex;font-size:1.5rem;gap:1rem;justify-content:center}.explanation{font-size:.9rem;line-height:1.5;max-width:420px;opacity:50%;text-align:center;width:100%}.explanation a{color:#000}@media (prefers-color-scheme:dark){body{background-color:#343541;c..., url: https://chatgpt.com/backend-api/codex/responses, cf-ray: a394c280dc7fe840-DME
+ERROR: unexpected status 403 Forbidden: <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style global>body{font-family:Arial,Helvetica,sans-serif}.container{align-items:center;display:flex;flex-direction:column;height:100%;justify-content:center;width:100%}@keyframes enlarge-appear{0%{opacity:0;transform:scale(75%) rotate(-90deg)}to{opacity:1;transform:scale(100%) rotate(0deg)}}.logo{color:#8e8ea0;padding-bottom:1.5rem}.scale-appear{animation:enlarge-appear .4s ease-out}@media (min-width:768px){.scale-appear{height:48px;width:48px}}.data:empty{display:none}.data{border-radius:5px;color:#8e8ea0;max-width:420px;text-align:center;width:100%}.data ul{list-style:none;padding:0}.blocked-icon{color:#ef4444}.message{align-items:center;display:flex;font-size:1.5rem;gap:1rem;justify-content:center}.explanation{font-size:.9rem;line-height:1.5;max-width:420px;opacity:50%;text-align:center;width:100%}.explanation a{color:#000}@media (prefers-color-scheme:dark){body{background-color:#343541;c..., url: https://chatgpt.com/backend-api/codex/responses, cf-ray: a394c280dc7fe840-DME
+tokens used
+67 275

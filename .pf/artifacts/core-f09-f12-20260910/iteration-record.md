@@ -1,0 +1,2 @@
+# Immutable accepted iteration record
+2026-09-10: baseline F09-F12 reproduced; three junior PF shell implementations; primary fault/compatibility corrections and actual acceptance; independent bounded review; source release gates; commit/push 901d055; clean archive/extracted verification; installed update and real journal/search/Runtime verification; preservation/final-state PASS. Four shell assignments done, shell run completed. See integration-report.md and final-state.json for final results; original worker reports, failures and audit retained.

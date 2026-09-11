@@ -1,0 +1,10 @@
+{
+  "test": "smoke_search_file_root_containment.py",
+  "mode": "current",
+  "returncode": 0,
+  "seconds": 0.64,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_search_file_root_containment.py"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "test": "smoke_codex_lifecycle_identity.py",
+  "mode": "baseline",
+  "returncode": 1,
+  "seconds": 3.72,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\core-a01-a11-baseline\\tools\\smoke_codex_lifecycle_identity.py"
+  ]
+}

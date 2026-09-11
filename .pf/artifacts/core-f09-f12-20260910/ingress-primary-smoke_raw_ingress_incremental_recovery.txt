@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_raw_ingress_incremental_recovery.py", line 204, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_raw_ingress_incremental_recovery.py", line 200, in main
+    return run(Path(directory))
+  File "D:\Dev\process-forge\tools\smoke_raw_ingress_incremental_recovery.py", line 182, in run
+    results["crash_recovery"] = assert_crash_recovery(root / "crash")
+                                ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "D:\Dev\process-forge\tools\smoke_raw_ingress_incremental_recovery.py", line 95, in assert_crash_recovery
+    assert counts == {"records": 1, "bytes": line_bytes}, counts
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'records': 1, 'bytes': 585}

@@ -1,0 +1,2907 @@
+OpenAI Codex v0.153.4
+--------
+workdir: D:\Dev\process-forge
+model: gpt-5.6-luna
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a08f3a-732c-75e0-9b83-4bb70383d72a
+--------
+user
+# Worker Launch Prompt
+
+You are a worker agent.
+You are not the orchestrator.
+Use only the assigned task and the provided assignment capsule.
+Do not rebuild full project context unless explicitly allowed.
+Do not edit files outside allowed_files.
+Do not read files outside allowed_read_files unless explicitly allowed.
+Use workspace_access_file for explicitly granted workplace resources.
+Do not copy private paths from workspace_access_file into public project artifacts, assignments, capsules, or reports.
+Respect forbidden_files.
+Produce required_outputs.
+Write expected_report.
+Stop and report if scope is insufficient.
+Invoke subagents only when subagent_policy.allow is true.
+When subagent reports are required, write them only under subagent_policy.reports_dir.
+
+## Assignment
+
+- task_id: `a08-jsonrpc`
+- run_id: `core-a01-a11-wave2-20260911`
+- assignment: `.pf/assignments/a08-jsonrpc.yaml`
+- capsule: `.pf/contexts/assignment-capsules/a08-jsonrpc.capsule.yaml`
+- workspace_access_file: `.pf/runtime/agent-runs/core-a01-a11-wave2-20260911/a08-jsonrpc/workspace-access.json`
+- worker_may_rebuild_context: `false`
+
+## workspace_access
+
+- knowledge_resources: `0`
+- templates: `0`
+- tools: `0`
+- mcp: `0`
+
+## allowed_files
+
+- `tools/pf_runtime/mcp_server.py`
+- `tools/smoke_mcp_jsonrpc_validation.py`
+- `.pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/**`
+- `.pf/tmp/a08-jsonrpc/**`
+
+## allowed_read_files
+
+- `tools/pf_runtime/mcp_server.py`
+- `tools/smoke_mcp_jsonrpc_validation.py`
+- `src/processforge_core/**`
+- `tools/pf_runtime/**`
+- `tools/processforge.py`
+- `tools/*smoke*.py`
+- `tools/*helpers*.py`
+- `docs/concepts/**`
+- `.pf/artifacts/core-a01-a11-20260911/**`
+- `.pf/artifacts/codebase-audit-20260910/**`
+- `.pf/AGENTS.md`
+- `.pf/contexts/**`
+
+## forbidden_files
+
+- `VERSION`
+- `CHANGELOG.md`
+- `checksums/**`
+- `.pf/artifacts/codebase-audit-20260910/**`
+- `.pf/process-forge.yaml`
+
+## required_outputs
+
+- `a08-jsonrpc-report` -> `.pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md`
+
+## expected_report
+
+- `.pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md`
+
+## subagent_policy
+
+- allow: `false`
+- max_subagents: `0`
+- require_reports: `false`
+- reports_dir: ``
+
+## Output Delivery Contract
+
+Your final response is captured verbatim as the assignment's expected report artifact.
+Return only the complete report content in the requested format; do not say that you saved it, link to it, or add a conversational preface.
+For a read-only assignment, do not attempt to write the report file yourself.
+
+## Assignment Capsule
+
+schema_version: 1
+capsule:
+  id: a08-jsonrpc-capsule
+  generated_at: '2026-09-11T06:48:47Z'
+  assignment_id: a08-jsonrpc
+  assignment_path: .pf/assignments/a08-jsonrpc.yaml
+  assignment_checksum: d40629e53b78f35a9fdaafc1638285c17f1d56f5cfdddd34792b164d652c7f9c
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 17e6bea8633b716aeb71b34d80f656967783e6f719ba772ace6f7500676fc914
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260911-064616-687ea9
+  sha256: 'sha256:17e6bea8633b716aeb71b34d80f656967783e6f719ba772ace6f7500676fc914'
+  generated_at: '2026-09-11T06:46:01Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  -
+    id: 'project.process-forge:project-profile'
+    kind: note_collection
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-profile@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts/project-profile.md
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:33c8f9edf949d6d99e3287d47c440a1341c1445fdd5361a4038e546d1f422ef0'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-profile
+    title: Project profile and repository map
+    load_policy: when_relevant
+    index_policy: full_text
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+  -
+    id: 'project.process-forge:project-artifacts'
+    kind: reference
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-artifacts@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:66f3079b7370d98d92f0fec9594cec7fe61fe44aab9cc97ae7b4ee74d4a73aa6'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-artifacts
+    title: Project ProcessForge artifacts
+    load_policy: on_demand
+    index_policy: metadata
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    []
+execution_route_summary:
+  process: ""
+  stages:
+    []
+  required_capabilities:
+    []
+  capability_requirements:
+    []
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    []
+  unsatisfied:
+    []
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: a08-jsonrpc
+  path: .pf/assignments/a08-jsonrpc.yaml
+  status: open
+  objective: Implement bounded repair brief .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc-brief.md
+  execution_mode:
+    kind: implementation
+    code_changes_allowed: true
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260911-064616-687ea9
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/a08-jsonrpc.yaml
+    - .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc-brief.md
+    - .pf/artifacts/core-a01-a11-20260911/design.md
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - tools/pf_runtime/mcp_server.py
+    - tools/smoke_mcp_jsonrpc_validation.py
+    - .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/**
+    - .pf/tmp/a08-jsonrpc/**
+  allowed_read_files:
+    - tools/pf_runtime/mcp_server.py
+    - tools/smoke_mcp_jsonrpc_validation.py
+    - src/processforge_core/**
+    - tools/pf_runtime/**
+    - tools/processforge.py
+    - tools/*smoke*.py
+    - tools/*helpers*.py
+    - docs/concepts/**
+    - .pf/artifacts/core-a01-a11-20260911/**
+    - .pf/artifacts/codebase-audit-20260910/**
+    - .pf/AGENTS.md
+    - .pf/contexts/**
+  forbidden_files:
+    - VERSION
+    - CHANGELOG.md
+    - checksums/**
+    - .pf/artifacts/codebase-audit-20260910/**
+    - .pf/process-forge.yaml
+  ownership:
+    owner_id: a08-jsonrpc
+    owner_label: worker-a08-jsonrpc
+    role: worker
+    writer: true
+    owned_files:
+      - tools/pf_runtime/mcp_server.py
+      - tools/smoke_mcp_jsonrpc_validation.py
+      - .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/**
+      - .pf/tmp/a08-jsonrpc/**
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - tools/pf_runtime/mcp_server.py
+      - tools/smoke_mcp_jsonrpc_validation.py
+      - .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/**
+      - .pf/tmp/a08-jsonrpc/**
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: a08-jsonrpc-report
+      path: .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md
+      type: markdown
+      required: true
+  expected_report:
+    language: en
+    artifact: .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md
+    format: concise_markdown
+    include:
+      - a08-jsonrpc-report
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: high
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/a08-jsonrpc.ndjson
+  event_correlation_id: assignment-a08-jsonrpc
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/a08-jsonrpc.yaml
+  - .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc-brief.md
+  - .pf/artifacts/core-a01-a11-20260911/design.md
+allowed_files:
+  - tools/pf_runtime/mcp_server.py
+  - tools/smoke_mcp_jsonrpc_validation.py
+  - .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/**
+  - .pf/tmp/a08-jsonrpc/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - .pf/artifacts/codebase-audit-20260910/**
+  - .pf/process-forge.yaml
+required_outputs:
+  -
+    id: a08-jsonrpc-report
+    path: .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md
+    type: markdown
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-a08-jsonrpc
+
+## Workspace Access File
+
+D:\Dev\process-forge\.pf\runtime\agent-runs\core-a01-a11-wave2-20260911\a08-jsonrpc\workspace-access.json
+
+warning: `--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation.
+warning: `--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation.
+2026-09-11T06:49:30.059225Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-11T06:49:32.379877Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-11T06:49:32.599785Z ERROR codex_models_manager::manager: failed to refresh available models: timeout waiting for child process to exit
+2026-09-11T06:49:35.427476Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-11T06:49:58.056711Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)")))
+2026-09-11T06:50:28.232335Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-11T06:50:30.521571Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-11T06:50:33.568399Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+codex
+I’m inspecting the bounded JSON-RPC repair brief, design context, and the two owned runtime/smoke files, then I’ll implement and run focused validation.
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content -Raw .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc-brief.md; "`n--- DESIGN ---"; Get-Content -Raw .pf/artifacts/core-a01-a11-20260911/design.md; "`n--- MCP SERVER ---"; Get-Content -Raw tools/pf_runtime/mcp_server.py; "`n--- SMOKE ---"; Get-Content -Raw tools/smoke_mcp_jsonrpc_validation.py; "`n--- PF AGENTS ---"; Get-Content -Raw .pf/AGENTS.md' in D:\Dev\process-forge
+ succeeded in 604ms:
+You are a bounded implementation worker, not an auditor. Follow the primary design and fix only your assigned defects. No subagents, no lifecycle commands, no context refresh, no installs/restarts, no commits, no ACL or sandbox changes. Do not modify checksums, VERSION, release registrations or unrelated files. Primary owns integration and all PF transitions.
+Use targeted rg/AST reads: Serena has no configured languages. Do not dump tools/processforge.py or scan all .pf. Aim for <= 20 focused tool calls; before code edits use at most 8 reads, each <= 180 lines. Write a failing regression from the supplied defect evidence, make the minimal repair, then run focused tests. On the FIRST sandbox PermissionError stop trying environment workarounds; preserve runnable tests and tell primary the exact command. You can still implement and perform static reasoning. No repeated broad exploration. Finish promptly with a concise report (<= 100 lines), exact changed files, actual test results vs unexecuted checks, risks. Use repo-relative paths in the report and describe absolute-path samples in words. Public tests use disposable temp fixtures, neutral names, no this-machine paths. Write report even on blockers.
+
+
+Fix A08 in native stdio MCP. Current respond/main accepts jsonrpc 1.0 and coerces list params/arguments to {} and responds to notifications. Validate JSON-RPC 2.0 envelope, method/id types (bool is not numeric ID), params and tools/call arguments using existing advertised tool schema constraints before dispatch. Preserve missing optional args/defaults and valid clients. Errors: parse -32700; invalid envelope -32600; invalid params/schema -32602; unknown method -32601. Valid notifications never emit responses including tools/call errors, but valid mutating notifications retain the chosen spec-compliant dispatch behavior. Distinguish id absent from explicit null. Use local JSONRPC/MCP docs or existing tests, no new third-party dependency. Regression sends real newline-framed requests to source native stdio MCP with disposable workplace, tests malformed JSON recovery, wrong protocol/method/id, params and arguments arrays/scalars, required/type/unknown arguments, valid initialize/list/tool call, notification silence using subsequent sentinel response. A fake runtime can supplement dispatch count but is not sole protocol proof. Do not change business/session logic.
+
+Governing design: .pf/artifacts/core-a01-a11-20260911/design.md. Audit root: .pf/artifacts/codebase-audit-20260910/.
+
+
+--- DESIGN ---
+# РџР»Р°РЅ РёСЃРїСЂР°РІР»РµРЅРёСЏ A01вЂ“A11
+
+Р”Р°С‚Р°: 2026-09-11. РђРІС‚РѕСЂ: primary orchestrator. РћСЃРЅРѕРІР°РЅРёРµ: РїСЂСЏРјРѕР№ Р·Р°РїСЂРѕСЃ
+РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ Р·Р°РїСѓСЃС‚РёС‚СЊ РёСЃРїСЂР°РІР»РµРЅРёСЏ С‡РµСЂРµР· PF shell workers СЃ РєРѕРЅС‚СЂРѕР»РµРј РєР°С‡РµСЃС‚РІР°.
+Baseline: 901d0551773fe7a5b382b89ebe95b212b0747e83; VERSION 1.1.0.
+
+## РћР±Р»Р°СЃС‚СЊ Рё РїСЂРѕС†РµСЃСЃ
+
+РСЃРїСЂР°РІРёС‚СЊ РІСЃРµ 11 РїСЂРёРЅСЏС‚С‹С… РґРµС„РµРєС‚РѕРІ РёР· Р°СѓРґРёС‚Р°, РІС‹РїРѕР»РЅРёС‚СЊ СЂРµРіСЂРµСЃСЃРёРѕРЅРЅС‹Рµ РїСЂРѕРІРµСЂРєРё,
+РЅРµР·Р°РІРёСЃРёРјС‹Р№ review, СЃРѕС…СЂР°РЅРёС‚СЊ РёСЃС…РѕРґРЅРёРєРё Рё PF handoff РґР»СЏ РїРѕСЃР»РµРґСѓСЋС‰РµР№ РґРѕСЃС‚Р°РІРєРё.
+РќРµ РІРєР»СЋС‡Р°С‚СЊ РЅРµРїСЂРёРЅСЏС‚СѓСЋ РіРёРїРѕС‚РµР·Сѓ H01. РЈСЃС‚Р°РЅРѕРІРєР°, РѕР±РЅРѕРІР»РµРЅРёРµ С‚РµРєСѓС‰РµРіРѕ Runtime,
+РєРѕРјРјРёС‚/push Рё РїСѓР±Р»РёРєР°С†РёСЏ РЅРµ РІС…РѕРґСЏС‚ РІ СЌС‚Сѓ РёСЃС…РѕРґРЅСѓСЋ Р»РѕРєР°Р»СЊРЅСѓСЋ СЂР°Р±РѕС‚Сѓ.
+
+Carrier: garage-remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-wo.
+Process: task-batch-execution, РµРґРёРЅСЃС‚РІРµРЅРЅС‹Р№ РїСЂРµРґР»РѕР¶РµРЅРЅС‹Р№ РїСЂРѕРµРєС‚РѕРј РїСЂРѕС†РµСЃСЃ.
+PF source CLI РїРѕРґС‚РІРµСЂРґРёР» fresh/ready Рё СЃРѕР·РґР°Р» РЅРѕРІС‹Р№ Work. Connected MCP start
+РѕС‚РєР°Р·Р°Р» РёР·-Р·Р° СѓР¶Рµ РІРѕСЃРїСЂРѕРёР·РІРµРґС‘РЅРЅРѕРіРѕ A09; РґР°Р»РµРµ MCP РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РґР»СЏ state Рё
+РїРµСЂРµС…РѕРґРѕРІ. РџРѕРґРєР»СЋС‡С‘РЅРЅС‹Р№ СЃРµСЂРІРµСЂ РЅРµ РїРµСЂРµР·Р°РїСѓСЃРєР°РµС‚СЃСЏ Рё РЅРµ РїРѕРґРјРµРЅСЏРµС‚СЃСЏ.
+Р¤РёРєСЃРёСЂРѕРІР°РЅРЅС‹С… platform/toolchain contracts Сѓ РїСЂРѕРµРєС‚Р° РЅРµС‚. Serena symbolic
+overview РЅРµРґРѕСЃС‚СѓРїРµРЅ: Active languages []; РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РѕРіСЂР°РЅРёС‡РµРЅРЅС‹Р№ РїРѕРёСЃРє.
+
+## РРЅРІР°СЂРёР°РЅС‚С‹ Рё СЂРµС€РµРЅРёСЏ РґРѕ СЂРµР°Р»РёР·Р°С†РёРё
+
+1. РђРІС‚РѕСЂРёР·Р°С†РёСЏ СЂРµСЃСѓСЂСЃР°-С„Р°Р№Р»Р° СЂР°Р·СЂРµС€Р°РµС‚ СЃР°Рј РєР°РЅРѕРЅРёС‡РµСЃРєРёР№ С„Р°Р№Р», Р° РЅРµ РІСЃСЋ РїР°РїРєСѓ.
+   РљР°С‚Р°Р»РѕРіРё СЃРѕС…СЂР°РЅСЏСЋС‚ include/exclude Рё РєР°РЅРѕРЅРёС‡РµСЃРєРёР№ containment.
+2. Expected report СЂР°Р·СЂРµС€Р°РµС‚СЃСЏ РІРЅСѓС‚СЂРё РїСЂРѕРµРєС‚Р° РґРѕ С‡С‚РµРЅРёСЏ. РћРґРёРЅ resolver РґР»СЏ
+   collector/required output/host authorization, Р±РµР· РѕСЃР»Р°Р±Р»РµРЅРёСЏ hash/provenance.
+3. РђРІС‚РѕСЂРёР·РѕРІР°РЅРЅС‹Р№ PF-owned report РјРѕР¶РµС‚ СЃРѕРґРµСЂР¶Р°С‚СЊ С‚РµРєСЃС‚ РїСѓС‚РµР№ РїРѕСЃР»Рµ СЃС‚СЂРѕРіРѕР№
+   РїСЂРѕРІРµСЂРєРё identity, attempt, С„Р°Р№Р»Р°, hash Рё secret scanner. РќРµРґРѕРІРµСЂРµРЅРЅС‹Р№ С‚РµРєСЃС‚
+   СЃРѕС…СЂР°РЅСЏРµС‚ С‚РµРєСѓС‰РёРµ РѕРіСЂР°РЅРёС‡РµРЅРёСЏ. Exactly-one Рё recovery derivation СЃРѕС…СЂР°РЅСЏСЋС‚СЃСЏ.
+4. РћС€РёР±РєР° РѕРґРЅРѕРіРѕ РїСЂРѕРµРєС‚Р° РёР»Рё host cache РЅРµ Р·Р°РІРµСЂС€Р°РµС‚ scheduler. Health РѕС‚СЂР°Р¶Р°РµС‚
+   С„Р°РєС‚РёС‡РµСЃРєСѓСЋ РґРµРіСЂР°РґР°С†РёСЋ Рё Р¶РёРІСѓС‡РµСЃС‚СЊ, Р° РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РІРѕР·РІСЂР°С‰Р°РµС‚ РіРѕС‚РѕРІРЅРѕСЃС‚СЊ.
+   KeyboardInterrupt/GeneratorExit Рё С€С‚Р°С‚РЅРѕРµ Р·Р°РІРµСЂС€РµРЅРёРµ РЅРµ РїСЂРѕРіР»Р°С‚С‹РІР°СЋС‚СЃСЏ.
+5. Р–РёРІРѕР№ orphaned owner Р±Р»РѕРєРёСЂСѓРµС‚ singleton takeover; РјС‘СЂС‚РІС‹Р№ owner Рё concurrent
+   СЃС‚Р°СЂС‚ РѕР±СЂР°Р±Р°С‚С‹РІР°СЋС‚СЃСЏ РїРѕ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РµРјСѓ РїСЂРѕС‚РѕРєРѕР»Сѓ Р±РµР· СѓРґР°Р»РµРЅРёСЏ С‡СѓР¶РѕРіРѕ lock.
+6. РСЃС‚РѕС‡РЅРёРє РјРёРіСЂР°С†РёРё РїСЂРѕРІРµСЂСЏРµС‚СЃСЏ РІ Р°СЂС…РёРІРµ РґРѕ РїРµСЂРІРѕРіРѕ РёР·РјРµРЅРµРЅРёСЏ. РћС€РёР±РєР° РїСЂРёРјРµРЅРµРЅРёСЏ
+   РѕСЃС‚Р°РІР»СЏРµС‚ СЃС‚СЂСѓРєС‚СѓСЂРёСЂРѕРІР°РЅРЅРѕРµ recoverable СЃРѕСЃС‚РѕСЏРЅРёРµ Рё СЃРѕС…СЂР°РЅСЏРµС‚ backup.
+7. Session ID вЂ” С‚РѕС‡РЅР°СЏ opaque identity. РЎСѓС‰РµСЃС‚РІСѓСЋС‰РёРµ lowercase records РґРѕР»Р¶РЅС‹
+   СЂР°Р±РѕС‚Р°С‚СЊ; Р±РµР·РѕРїР°СЃРЅРѕРµ РёРјСЏ С„Р°Р№Р»Р° РЅРµ РґРѕР»Р¶РЅРѕ РѕР±СЉРµРґРёРЅСЏС‚СЊ СЂР°Р·РЅС‹Рµ ID. РЎС‚Р°СЂС‹Рµ Р·Р°РїРёСЃРё
+   С‡РёС‚Р°СЋС‚СЃСЏ РїРѕ С‚РѕС‡РЅРѕР№ metadata identity, collision cases РїСЂРѕРІРµСЂСЏСЋС‚СЃСЏ РѕС‚РґРµР»СЊРЅРѕ.
+8. MCP РІР°Р»РёРґРёСЂСѓРµС‚ JSON-RPC РґРѕ dispatch; notification РЅРµ СЃРѕР·РґР°С‘С‚ response;
+   РѕС€РёР±РєРё parse/envelope/params СЂР°Р·Р»РёС‡Р°СЋС‚СЃСЏ. Р’Р°Р»РёРґРЅС‹Рµ РєР»РёРµРЅС‚С‹ СЃРѕС…СЂР°РЅСЏСЋС‚СЃСЏ.
+9. Classification source label СЃС‚Р°Р±РёР»РµРЅ РїСЂРё РїРµСЂРµРЅРѕСЃРµ distribution. РќРµР»СЊР·СЏ РїСЂРѕСЃС‚Рѕ
+   СѓРґР°Р»РёС‚СЊ provenance/fingerprint Рё СЃРєСЂС‹С‚СЊ РёСЃС‚РёРЅРЅРѕРµ РёР·РјРµРЅРµРЅРёРµ classifier.
+   РџСЂРµРґРїРѕС‡С‚РёС‚РµР»СЊРЅРѕ РјРёРЅРёРјР°Р»СЊРЅРѕРµ СЃС‚Р°Р±РёР»СЊРЅРѕРµ РёРјСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ owning distribution
+   РґР»СЏ РµРіРѕ СЂРµСЃСѓСЂСЃРѕРІ, project-relative РёРјСЏ РґР»СЏ Р»РѕРєР°Р»СЊРЅС‹С… СЂРµСЃСѓСЂСЃРѕРІ; СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ
+   РґРµР№СЃС‚РІСѓСЋС‰РµРіРѕ source snapshot РїСЂРѕРІРµСЂСЏРµС‚СЃСЏ РѕС‚РґРµР»СЊРЅРѕ.
+10. Р Р°Р·РЅС‹Рµ lifecycle facts РЅРµ СЃС…Р»РѕРїС‹РІР°СЋС‚СЃСЏ РїРѕ session id. РџРѕРІС‚РѕСЂ РѕРґРЅРѕР№ РґРѕСЃС‚Р°РІРєРё
+    РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РёРґРµРјРїРѕС‚РµРЅС‚РµРЅ; РѕРіСЂР°РЅРёС‡РµРЅРёСЏ provider identity СЏРІРЅРѕ С„РёРєСЃРёСЂСѓСЋС‚СЃСЏ.
+
+## Р’Р»Р°РґРµРЅРёРµ С„Р°Р№Р»Р°РјРё Рё РѕС‡РµСЂРµРґРЅРѕСЃС‚СЊ
+
+РўСЂРё shell-РІРѕСЂРєРµСЂР° РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ РјР°РєСЃРёРјСѓРј. РњРѕРґРµР»СЊ gpt-5.6-luna, high РґР»СЏ СЃР»РѕР¶РЅС‹С…
+РіСЂР°РЅРёС†; narrow briefs Р±РµР· РїРѕРІС‚РѕСЂРЅРѕРіРѕ РѕР±С‰РµРіРѕ Р°СѓРґРёС‚Р°. РљР°Р¶РґС‹Р№ РїРёС€РµС‚ С‚РѕР»СЊРєРѕ СЃРІРѕР№
+РєРѕРґ, СЃРѕР±СЃС‚РІРµРЅРЅС‹Р№ smoke Рё evidence. Р РµРіРёСЃС‚СЂР°С†РёСЏ С‚РµСЃС‚РѕРІ/РєРѕРЅС‚СЂРѕР»СЊРЅС‹Рµ СЃСѓРјРјС‹ вЂ” primary
+РїРѕСЃР»Рµ РѕСЃРІРѕР±РѕР¶РґРµРЅРёСЏ tools/processforge.py. Review Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ РїРѕСЃР»Рµ СЂРµР°Р»РёР·Р°С†РёРё.
+
+- Р’РѕР»РЅР° 1: A09 (tools/processforge.py), A01 (local_resource_search.py),
+  A03/A04/A10 (service.py Рё СЃРѕР±СЃС‚РІРµРЅРЅС‹Рµ smokes).
+- Р’РѕР»РЅР° 2 РїРѕСЃР»Рµ РѕСЃРІРѕР±РѕР¶РґРµРЅРёСЏ С„Р°Р№Р»РѕРІ: A02/A06 (tools/processforge.py + host.py),
+  A05 (core_update.py), A08 (mcp_server.py).
+- Р’РѕР»РЅР° 3: A07 (tools/processforge.py + session_read.py), A11 (codex_hooks.py).
+- Assurance: РЅРµР·Р°РІРёСЃРёРјС‹Рµ read-only reviewers РїРѕ РіСЂСѓРїРїР°Рј РїРѕСЃР»Рµ СЂРµР°Р»РёР·Р°С†РёРё;
+  primary Р·Р°РїСѓСЃРєР°РµС‚ РЅР°СЃС‚РѕСЏС‰РёРµ regressions, РїРѕРІС‚РѕСЂСЏРµС‚ fault probes Рё РёРЅС‚РµРіСЂР°С†РёСЋ.
+
+## РџСЂРѕРІРµСЂРєР° Рё РґРѕСЃС‚Р°РІРєР° РёСЃС…РѕРґРЅРёРєРѕРІ
+
+Baseline audit proof РїРѕРІС‚РѕСЂСЏРµРј РїРѕ СЃРѕРІРїР°РґР°СЋС‰РёРј SHA-256 Рё С‚РµСЃС‚Р°Рј. РљР°Р¶РґС‹Р№ РЅРѕРІС‹Р№
+smoke РґРѕР»Р¶РµРЅ СЂР°Р·Р»РёС‡Р°С‚СЊ СЃР»РѕРјР°РЅРЅС‹Р№ baseline Рё РёСЃРїСЂР°РІР»РµРЅРЅС‹Р№ РєРѕРґ; РЅРµР»СЊР·СЏ СЃС‡РёС‚Р°С‚СЊ
+mock РІРјРµСЃС‚Рѕ СЂРµР°Р»СЊРЅРѕР№ РѕС€РёР±РєРё РґРѕСЃС‚Р°С‚РѕС‡РЅРѕР№ СЂРµРіСЂРµСЃСЃРёРµР№. РџСЂРё sandbox PermissionError
+РІРѕСЂРєРµСЂ СЃРѕС…СЂР°РЅСЏРµС‚ С‚РµСЃС‚ Рё РїСЂРµРєСЂР°С‰Р°РµС‚ РѕР±С…РѕРґС‹ РѕРєСЂСѓР¶РµРЅРёСЏ; primary РІС‹РїРѕР»РЅСЏРµС‚ С‚РµСЃС‚.
+РСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ disposable fixtures, СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅС‹Р№ Workplace РЅРµ РёР·РјРµРЅСЏРµС‚СЃСЏ.
+
+РџРѕСЃР»Рµ targeted/related smokes: schema/public cleanliness/checksum checks,
+СЂРµР»РµРІР°РЅС‚РЅС‹Рµ MCP/Runtime/worker integration, РёС‚РѕРіРѕРІС‹Р№ diff Рё independent review.
+РџРѕР»РЅР°СЏ source release suite Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ, РµСЃР»Рё РёР·РјРµРЅРµРЅРёСЏ Рё РІСЂРµРјСЏ РІС‹РїРѕР»РЅРµРЅРёСЏ
+РїРѕР·РІРѕР»СЏСЋС‚ РїРѕР»СѓС‡РёС‚СЊ С‚РµСЂРјРёРЅР°Р»СЊРЅС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚; РµС‘ СЃР±РѕР№/timeout С„РёРєСЃРёСЂСѓРµС‚СЃСЏ РѕС‚РґРµР»СЊРЅРѕ,
+Р° Р»РѕРєР°Р»СЊРЅР°СЏ РїСЂРёС‘РјРєР° РЅРµ РІС‹РґР°С‘С‚СЃСЏ Р·Р° archive/extracted/public release qualification.
+
+Р’СЃРµ РЅР°Р№РґРµРЅРЅС‹Рµ РІ review РїСЂРѕР±РµР»С‹ РёСЃРїСЂР°РІР»СЏСЋС‚СЃСЏ РІ СЌС‚РѕР№ СЂР°Р±РѕС‚Рµ. РћСЂРёРіРёРЅР°Р»СЊРЅС‹Рµ audit
+Р°СЂС‚РµС„Р°РєС‚С‹, immutable capsules Рё РїРѕСЃС‚РѕСЂРѕРЅРЅРёРµ dirty PF С„Р°Р№Р»С‹ СЃРѕС…СЂР°РЅСЏСЋС‚СЃСЏ.
+
+
+--- MCP SERVER ---
+"""Small read-oriented stdio MCP facade over PF Runtime/Core services."""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import os
+import sys
+from pathlib import Path
+from typing import Any
+
+_RUNTIME_BOOTSTRAP: Any | None = None
+
+TOOLS = {
+    "pf.context": "Read Garage context for a ProcessForge project without requiring a Ledger session.",
+    "pf.project_state": "Read the current routed ProcessForge project state.",
+    "pf.project_initialization.status": "Read bounded project initialization status for a ProcessForge project.",
+    "pf.project_initialization.initialize": "With apply: true only, initialize deterministic PF project state for the Ledger-bound project.",
+    "pf.project_initialization.repair": "With apply: true only, repair deterministic PF snapshot state for the Ledger-bound project.",
+    "pf.work_state": "Compatibility alias for the current declarative work state.",
+    "pf.work.state": "Read the current declarative ProcessForge work state.",
+    "pf.work.start": "Start or continue governed ProcessForge work from a high-level objective.",
+    "pf.work.transition": "Advance governed work using a declared outcome and evidence.",
+    "pf.resolve": "Resolve a ProcessForge project or selected knowledge resource.",
+    "pf.search": "Search only fresh snapshot-authorized local resources before using broader search.",
+    "pf.workplace_state": "Read derived workplace ledger state.",
+    "pf.session_context": "Read a bounded current-context projection for the Ledger-bound session.",
+    "pf.session_chat": "Read paginated private transcript messages for the Ledger-bound session.",
+    "pf.session_activity": "Read bounded normalized activity facts for the Ledger-bound session.",
+}
+
+MUTATING_TOOLS = {
+    "pf.project_initialization.initialize",
+    "pf.project_initialization.repair",
+    "pf.work.start",
+    "pf.work.transition",
+}
+
+
+def runtime_bootstrap() -> Any:
+    global _RUNTIME_BOOTSTRAP
+    if _RUNTIME_BOOTSTRAP is None:
+        repo_root = Path(__file__).resolve().parents[2]
+        module_name = "processforge_core.bootstrap"
+        module = sys.modules.get(module_name)
+        if module is None:
+            bootstrap_path = repo_root / "src" / "processforge_core" / "bootstrap.py"
+            spec = importlib.util.spec_from_file_location(module_name, bootstrap_path)
+            if spec is None or spec.loader is None:
+                raise ImportError(f"could not load bootstrap module: {bootstrap_path}")
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
+        _RUNTIME_BOOTSTRAP = module.bootstrap_runtime(__file__)
+    return _RUNTIME_BOOTSTRAP
+
+
+def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any]:
+    host = runtime.host
+    core = runtime.core
+    from pf_runtime import session_read
+    from processforge_core.local_resource_search import LocalSearchError
+    from processforge_core.garage import GovernedWorkBootstrapService, ProjectContextService, ResourceResolveService, ResourceSearchService
+    from processforge_core.process_execution import ProcessExecutionService
+
+    configured_session = str(session_id or "")
+    requested_session = str(arguments.get("session_id") or "")
+    if configured_session and requested_session and requested_session != configured_session:
+        raise session_read.SessionReadError("session_mismatch")
+    supplied_session = configured_session or requested_session
+    project_root = arguments.get("project_root")
+
+    def resolve_garage_project() -> Path:
+        if project_root:
+            candidate = host.resolve_project(str(project_root), core)
+            if supplied_session:
+                bound = host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, core)
+                if core.project_id(bound) != core.project_id(candidate):
+                    raise session_read.SessionReadError("session_project_mismatch")
+            return candidate
+        if supplied_session:
+            return host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, core)
+        raise session_read.SessionReadError("missing_project_root")
+
+    if name == "pf.session_context":
+        return session_read.session_context_payload(workplace, core, session_id=supplied_session, project_root_ref=project_root)
+    if name == "pf.session_chat":
+        return session_read.session_chat_payload(workplace, core, session_id=supplied_session, project_root_ref=project_root, limit=arguments.get("limit"), before=arguments.get("before"), cursor=arguments.get("cursor"), roles=arguments.get("roles"))
+    if name == "pf.session_activity":
+        return session_read.session_activity_payload(workplace, core, session_id=supplied_session, project_root_ref=project_root, limit=arguments.get("limit"))
+    if name == "pf.context":
+        bound_project = resolve_garage_project()
+        service = ProjectContextService(bound_project, workplace, core)
+        context = service.context(session_id=supplied_session)
+        snapshot = service.snapshot()
+        knowledge = snapshot.get("knowledge_resources") if isinstance(snapshot.get("knowledge_resources"), dict) else {}
+        selected = knowledge.get("selected") if isinstance(knowledge.get("selected"), list) else []
+        active_work = context.get("work", {}).get("active_work", []) if isinstance(context.get("work"), dict) else []
+        current_work = ProcessExecutionService(bound_project, workplace, core).state(session_id=supplied_session)
+        # Keep the MCP bootstrap response bounded. Full assignment objectives
+        # can be large and are already available through the governed capsule.
+        payload = {
+            "schema_version": 1,
+            "kind": "pf.context",
+            "mode": context.get("mode"),
+            "project": context.get("project", {}),
+            "context": context.get("context", {}),
+            "process": context.get("process", {}),
+            "resources": {
+                **(context.get("resources", {}) if isinstance(context.get("resources"), dict) else {}),
+                "authorized_knowledge_ids": [str(item.get("id")) for item in selected if isinstance(item, dict) and item.get("id")],
+            },
+            "work": {
+                "governed": bool(context.get("work", {}).get("governed")) if isinstance(context.get("work"), dict) else False,
+                "active_runs": context.get("work", {}).get("active_runs", []) if isinstance(context.get("work"), dict) else [],
+                "active_work": [
+                    {key: item.get(key) for key in ("run_id", "assignment_id", "run_status", "status", "state", "stage", "process")}
+                    for item in active_work
+                    if isinstance(item, dict)
+                ],
+                "recommendation": context.get("work", {}).get("recommendation") if isinstance(context.get("work"), dict) else None,
+                "current": current_work if current_work.get("action") != "start_recommended" else {"action": "start_recommended"},
+            },
+            "session": context.get("session", {}),
+            "derived_reports": context.get("derived_reports", {}),
+            "diagnostics": context.get("diagnostics", []),
+        }
+        if isinstance(context.get("continuation"), dict):
+            payload["continuation"] = context["continuation"]
+        return payload
+    if name == "pf.project_state":
+        bound_project = resolve_garage_project()
+        return host.project_state_payload(workplace, core, session=supplied_session, project_root_ref=str(bound_project))
+    if name == "pf.project_initialization.status":
+        from processforge_core import project_initialization
+
+        bound_project = resolve_garage_project()
+        return project_initialization.status(bound_project, core, workplace=str(workplace))
+    if name == "pf.work_state":
+        bound_project = resolve_garage_project()
+        context = ProjectContextService(bound_project, workplace, core).context(session_id=supplied_session)
+        return {"project": context["project"], "work": context["work"], "context": context["context"], "session": context.get("session", {})}
+    if name == "pf.work.state":
+        bound_project = resolve_garage_project()
+        return ProcessExecutionService(bound_project, workplace, core).state(session_id=supplied_session)
+    if name == "pf.work.start":
+        if set(arguments) - {"session_id", "project_root", "objective", "process_id"}:
+            raise session_read.SessionReadError("invalid_arguments")
+        bound_project = resolve_garage_project()
+        return GovernedWorkBootstrapService(bound_project, workplace, core).start(objective=str(arguments.get("objective") or ""), process_id=str(arguments.get("process_id") or ""), session_id=supplied_session)
+    if name == "pf.work.transition":
+        bound_project = resolve_garage_project()
+        return ProcessExecutionService(bound_project, workplace, core).transition(
+            outcome=str(arguments.get("outcome") or ""),
+            evidence=arguments.get("evidence"),
+            notes=str(arguments.get("notes") or ""),
+            session_id=supplied_session,
+        )
+    if name == "pf.resolve":
+        bound_project = resolve_garage_project()
+        context = core.project_context_check_result(bound_project, explicit_workplace=str(workplace))
+        if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+            raise session_read.SessionReadError("snapshot_not_fresh")
+        return ResourceResolveService(bound_project, workplace, core).resolve(resource_id=str(arguments.get("resource_id") or "") or None)
+    if name == "pf.search":
+        bound_project = resolve_garage_project()
+        try:
+            return ResourceSearchService(bound_project, workplace, core).search(query=arguments.get("query"), limit=arguments.get("limit"), limitstart=arguments.get("limitstart"), offset=arguments.get("offset"))
+        except LocalSearchError as exc:
+            raise session_read.SessionReadError(exc.code) from exc
+    if not supplied_session:
+        raise session_read.SessionReadError("missing_session")
+    # A stdio MCP server has no HTTP handler to enforce this for us.  Bind the
+    # supplied session to Ledger first and reject every conflicting project.
+    bound_project = host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, core)
+    if project_root:
+        requested_project = host.resolve_project(str(project_root), core)
+        if core.project_id(bound_project) != core.project_id(requested_project):
+            raise session_read.SessionReadError("session_project_mismatch")
+    if name in {"pf.project_initialization.initialize", "pf.project_initialization.repair"}:
+        from processforge_core import project_initialization
+
+        if arguments.get("apply") is not True:
+            raise session_read.SessionReadError("apply_required")
+        allowed = {
+            "pf.project_initialization.initialize": {"session_id", "project_root", "apply", "answers", "project_type", "coordination_mode", "platforms", "specializations", "process", "force", "allow_missing_workplace"},
+            "pf.project_initialization.repair": {"session_id", "project_root", "apply", "repair_action", "reason"},
+        }
+        if set(arguments) - allowed[name]:
+            raise session_read.SessionReadError("invalid_arguments")
+        request = {key: value for key, value in arguments.items() if key in allowed[name]}
+        request["project_root"] = str(bound_project)
+        request["workplace"] = str(workplace)
+        request["command"] = f"mcp:{name}"
+        try:
+            if name.endswith(".initialize"):
+                return project_initialization.initialize_project(request, core)
+            return project_initialization.repair_project(request, core)
+        except project_initialization.ProjectInitializationError as exc:
+            raise session_read.SessionReadError(exc.code) from exc
+    if name == "pf.workplace_state":
+        return host.workplace_state_payload(workplace, core)
+    raise session_read.SessionReadError("unknown_tool")
+
+
+def tool_schema(name: str) -> dict[str, Any]:
+    properties: dict[str, Any] = {"session_id": {"type": "string"}, "project_root": {"type": "string"}}
+    required: list[str] = []
+    if name == "pf.resolve":
+        properties["resource_id"] = {"type": "string"}
+    if name == "pf.search":
+        properties.update({"query": {"type": "string", "minLength": 1}, "limit": {"type": "integer", "minimum": 1, "maximum": 100}, "limitstart": {"type": "integer", "minimum": 0}, "offset": {"type": "integer", "minimum": 0}})
+    if name == "pf.work.start":
+        properties.update({"objective": {"type": "string", "minLength": 1}})
+        properties["process_id"] = {"type": "string", "minLength": 1}
+        required.append("objective")
+    if name == "pf.work.transition":
+        properties.update(
+            {
+                "outcome": {"type": "string", "minLength": 1},
+                "evidence": {
+                    "type": "array",
+                    "items": {"oneOf": [{"type": "string"}, {"type": "object", "additionalProperties": True}]},
+                },
+                "notes": {"type": "string"},
+            }
+        )
+        required.append("outcome")
+    if name == "pf.project_initialization.initialize":
+        properties.update({"apply": {"type": "boolean"}, "answers": {"type": "object"}, "project_type": {"type": "string"}, "coordination_mode": {"type": "string", "enum": ["inherit", "simple", "organized"]}, "platforms": {"type": "array", "items": {"type": "string"}}, "specializations": {"type": "array", "items": {"type": "string"}}, "process": {"type": "string"}, "force": {"type": "boolean"}, "allow_missing_workplace": {"type": "boolean"}})
+    if name == "pf.project_initialization.repair":
+        properties.update({"apply": {"type": "boolean"}, "repair_action": {"type": "string", "enum": ["refresh_context", "restore_deterministic_artifacts", "install_codex_hooks"]}, "reason": {"type": "string"}})
+    if name in {"pf.session_chat", "pf.session_activity"}:
+        properties["limit"] = {"type": "integer", "minimum": 1, "maximum": 100}
+    if name == "pf.session_chat":
+        properties.update({"before": {"type": "string"}, "cursor": {"type": "string"}, "roles": {"type": "array", "items": {"type": "string", "enum": ["user", "assistant", "system"]}}})
+    schema: dict[str, Any] = {"type": "object", "properties": properties, "additionalProperties": False}
+    if required:
+        schema["required"] = required
+    return schema
+
+
+def tool_annotations(name: str) -> dict[str, bool]:
+    mutating = name in MUTATING_TOOLS
+    return {
+        "readOnlyHint": not mutating,
+        "destructiveHint": False,
+        "idempotentHint": not mutating,
+        "openWorldHint": False,
+    }
+
+
+def safe_tool_error(exc: Exception) -> str:
+    from pf_runtime import session_read
+
+    code = getattr(exc, "code", "read_failed")
+    error: dict[str, Any] = {"code": code}
+    if code == "missing_session":
+        error["remediation"] = {
+            "kind": "ledger_session_required",
+            "summary": "This Forge-only MCP tool requires a real Ledger-bound host session id.",
+            "checks": [
+                "Use pf.context, pf.project_state, pf.work_state, pf.resolve, pf.search, or pf.work.start when the operation can stay in Garage mode.",
+                "Ask the operator to verify the configured host session integration and Agent Ledger route when a Forge-only view is required.",
+                "After the operator resolves host integration, retry from a fresh host session.",
+            ],
+            "repair_actions": [],
+            "operator_action": "verify_host_session_integration",
+            "manual_fallback": "Use session-start only for controlled local diagnostics; do not invent production session ids.",
+        }
+    elif code in {"unknown_session", "session_not_routed", "session_project_mismatch"}:
+        error["remediation"] = {
+            "kind": "ledger_session_binding_invalid",
+            "summary": "The supplied session id is not bound to the requested project in Ledger.",
+            "checks": [
+                "Use the current session id recorded by Codex hook ingress.",
+                "Verify the session project root matches the MCP request project_root.",
+            ],
+        }
+    elif code == "missing_project_root":
+        error["remediation"] = {
+            "kind": "project_root_required",
+            "summary": "Garage read-only tools can run without a Ledger session, but need project_root when no session is supplied.",
+            "checks": ["Call pf.context, pf.search, pf.resolve, or pf.work.start with project_root set to a valid ProcessForge project."],
+        }
+    return json.dumps({"error": error}, ensure_ascii=False, sort_keys=True)
+
+
+def respond(request: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
+    core = runtime.core
+    method = str(request.get("method") or "")
+    request_id = request.get("id")
+    if method == "notifications/initialized":
+        return None
+    if method == "initialize":
+        return {"jsonrpc": "2.0", "id": request_id, "result": {"protocolVersion": "2024-11-05", "serverInfo": {"name": "processforge", "version": str(getattr(core, "PROCESSFORGE_VERSION", "1"))}, "capabilities": {"tools": {}}}}
+    if method == "tools/list":
+        tools = [{"name": name, "description": description, "inputSchema": tool_schema(name), "annotations": tool_annotations(name)} for name, description in TOOLS.items()]
+        return {"jsonrpc": "2.0", "id": request_id, "result": {"tools": tools}}
+    if method == "tools/call":
+        params = request.get("params") if isinstance(request.get("params"), dict) else {}
+        try:
+            result = tool_result(str(params.get("name") or ""), params.get("arguments") if isinstance(params.get("arguments"), dict) else {}, workplace, session_id, runtime)
+            return {"jsonrpc": "2.0", "id": request_id, "result": {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False, sort_keys=True)}]}}
+        except (Exception, SystemExit) as exc:
+            return {"jsonrpc": "2.0", "id": request_id, "result": {"content": [{"type": "text", "text": safe_tool_error(exc)}], "isError": True}}
+    return {"jsonrpc": "2.0", "id": request_id, "error": {"code": -32601, "message": "method not found"}}
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--workplace", required=True)
+    parser.add_argument("--session", default=os.environ.get("PF_MCP_SESSION_ID", ""))
+    args = parser.parse_args()
+    runtime = runtime_bootstrap()
+    core = runtime.core
+    workplace = core.resolve_workplace_root(args.workplace)
+    for line in sys.stdin:
+        if not line.strip():
+            continue
+        try:
+            response = respond(json.loads(line), workplace, args.session, runtime)
+            if response is not None:
+                print(json.dumps(response, ensure_ascii=False), flush=True)
+        except Exception:
+            print(json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "invalid request"}}, ensure_ascii=False), flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+
+--- SMOKE ---
+Get-Content : Cannot find path 'D:\Dev\process-forge\tools\smoke_mcp_jsonrpc_validation.py' because it does not exist.
+At line:2 char:252
++ ... SMOKE ---"; Get-Content -Raw tools/smoke_mcp_jsonrpc_validation.py; " ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (D:\Dev\process-...c_validation.py:String) [Get-Content], ItemNotFoundEx 
+   ception
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+ 
+
+--- PF AGENTS ---
+# AGENTS.md
+
+## Mission
+
+Use ProcessForge as a file-first process system. Work through assignments, execution contexts, artifacts, reviews, handoffs, logs, and ADRs.
+
+## Boot Sequence
+
+1. Read this file.
+2. Read `.pf/process-forge.yaml`.
+3. Call `pf.context` with the project root, or read the current snapshot only
+   when MCP is unavailable.
+4. Use `pf.search` for authorized project knowledge and `pf.resolve` before
+   opening ProcessForge-managed resource roots.
+5. Call `pf.work.start` with the objective when work becomes substantive. If it
+   returns `process_choice_required`, choose an offered process and call it
+   again with `process_id`; do not infer from `default` when multiple processes
+   are allowed.
+6. Call `pf.work.state` and read the selected assignment and immutable
+   Execution Context Package.
+7. Check allowed and forbidden files before editing.
+8. Satisfy the current stage obligations, then call `pf.work.transition` with
+   a declared outcome and evidence. Never choose `next_stage` directly.
+9. Repeat state, work, and transition until PF returns `action: run_completed`.
+
+## Core Rules
+
+- File-only mode is the default.
+- One file scope has one responsible writer.
+- Assignments define the work boundary.
+- Do not edit files outside the assignment scope without a handoff.
+- Approved artifacts are protected.
+- Execution Context Packages are immutable snapshots.
+- Process versions are immutable.
+- ProcessForge selects the initial stage and every next stage from the pinned
+  Process definition. Agents provide outcomes and evidence, not stage ids.
+- Runner and backend support are optional future modes, not requirements.
+- Public product files must not include private paths, secrets, machine names, or temporary private notes.
+- Use stable machine-readable ids for statuses, processes, artifacts, assignments, templates, and packages.
+- Create every repository-local temporary directory under `.pf/tmp/`; never create temporary worker, debug, staging, or scratch directories at the repository root.
+- In particular, do not create root directories named `.pf-worker-shell-*` or similar runner sandboxes. Clean `.pf/tmp/` outputs after use unless they are declared durable evidence.
+- System temporary directories are allowed only for isolated tests that never write a temporary directory into the repository.
+- During ordinary project work, do not install, start, restart, or repair PF
+  Runtime, MCP, host hooks, or Agent Ledger. Use available PF tools. If PF
+  returns an operator-level infrastructure blocker, report it to the operator.
+- Current `pf.context`/snapshot state outranks historical generated reports.
+  Do not treat a report marked `stale` or `historical` as current truth.
+- A completed Work can offer a compact fresh-session handoff through
+  `pf.context`; it is advisory and must not cause Runtime, MCP, Ledger, or
+  external-session lifecycle actions.
+- `run-create`, `task-create`, `task-complete`, and `run-complete` are
+  compatibility and diagnostic commands, not the ordinary agent workflow.
+
+## Standard Statuses
+
+Artifact statuses:
+
+```text
+missing
+draft
+ready_for_review
+approved
+rejected
+stale
+superseded
+archived
+```
+
+Review result statuses:
+
+```text
+pass
+pass_with_conditions
+warn
+fail
+skipped
+```
+
+Upgrade assessment results:
+
+```text
+safe
+requires_approval
+requires_migration
+blocked
+```
+
+## Logging Format
+
+Use append-only log entries:
+
+```markdown
+## YYYY-MM-DD HH:MM - <role>
+
+Task:
+Files changed:
+Artifacts changed:
+Templates used:
+Tools used:
+Decisions:
+Risks:
+Next steps:
+Handoff:
+```
+
+## Handoff Format
+
+```markdown
+# Handoff: <from> -> <to>
+
+Objective:
+Current status:
+Input artifacts:
+Files changed:
+Files not to touch:
+Known issues:
+Required checks:
+Next recommended action:
+```
+
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'git status --short; "`n--- relevant files ---"; rg --files tools | rg '"'smoke|mcp|helper'; \""'`n--- MCP references ---"; rg -n "respond'"\\(|tools/call|jsonrpc|inputSchema|smoke_mcp\" tools src docs .pf/artifacts/core-a01-a11-20260911 -g '*.py' -g '*.md' -g '*.yaml'" in D:\Dev\process-forge
+ succeeded in 1296ms:
+warning: could not open directory 'pf-core-update-missing-8qlhyq65/': Permission denied
+ M .pf/artifacts/project-context-refresh-report.md
+ M .pf/artifacts/projections/command-history.md
+ M .pf/artifacts/projections/process-execution-state.json
+ M .pf/artifacts/projections/stage-obligations.json
+ M .pf/contexts/project-context.snapshot.md
+ M .pf/contexts/project-context.snapshot.yaml
+ M src/processforge_core/local_resource_search.py
+ M tools/pf_runtime/service.py
+ M tools/processforge.py
+?? .pf/artifacts/codebase-audit-20260910/
+?? .pf/artifacts/context-collection-20260910/
+?? .pf/artifacts/core-a01-a11-20260911/
+?? .pf/artifacts/core-f01-f02-20260910/
+?? .pf/artifacts/core-f03-f05-20260910/
+?? .pf/artifacts/core-f09-f12-20260910/
+?? .pf/artifacts/docs-audit-1.1.1-evidence/
+?? .pf/artifacts/docs-audit-1.1.1-iteration-20260907.md
+?? .pf/artifacts/docs-audit-1.1.1-plan-20260907.md
+?? .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+?? .pf/artifacts/docs-fix-1.1.1-20260907/
+?? .pf/artifacts/publish-f06-f08-20260910/
+?? .pf/artifacts/python-core-audit-20260908/
+?? .pf/artifacts/required-output-checks-plan-20260907.md
+?? .pf/artifacts/required-output-checks-release-test-20260907.json
+?? .pf/artifacts/required-output-checks-release-test-20260907.md
+?? .pf/artifacts/required-output-checks-result-20260907.md
+?? .pf/assignments/a01-search.yaml
+?? .pf/assignments/a0206-reports.yaml
+?? .pf/assignments/a0310-runtime.yaml
+?? .pf/assignments/a05-migration.yaml
+?? .pf/assignments/a08-jsonrpc.yaml
+?? .pf/assignments/a09-classifier.yaml
+?? .pf/assignments/audit-core.yaml
+?? .pf/assignments/audit-current-processforge-python-core-and-codebase-for-reproducible-cor.yaml
+?? .pf/assignments/audit-hooks.yaml
+?? .pf/assignments/audit-mcp.yaml
+?? .pf/assignments/audit-pf-documentation-against-the-current-codebase-for-1-1-1-prerelease.yaml
+?? .pf/assignments/audit-python-core-mcp-and-background-hooks-with-bounded-junior-shell-wor.yaml
+?? .pf/assignments/context-origin.yaml
+?? .pf/assignments/docs111-mechanical.yaml
+?? .pf/assignments/docs111-review.yaml
+?? .pf/assignments/docs111-tests.yaml
+?? .pf/assignments/docs111-update.yaml
+?? .pf/assignments/docs111-workflow.yaml
+?? .pf/assignments/f01-search.yaml
+?? .pf/assignments/f0102-assurance.yaml
+?? .pf/assignments/f0102-review.yaml
+?? .pf/assignments/f02-owned-ancestor.yaml
+?? .pf/assignments/f02-update.yaml
+?? .pf/assignments/f0304-evidence.yaml
+?? .pf/assignments/f0305-assurance.yaml
+?? .pf/assignments/f0305-review.yaml
+?? .pf/assignments/f05-completion.yaml
+?? .pf/assignments/f0608-cli.yaml
+?? .pf/assignments/f0608-review.yaml
+?? .pf/assignments/f09-update.yaml
+?? .pf/assignments/f0912-review.yaml
+?? .pf/assignments/f1011-search.yaml
+?? .pf/assignments/f12-ingress.yaml
+?? .pf/assignments/fix-required-output-checks-nameerror-per-process-forge-fix-required-outp.yaml
+?? .pf/assignments/orchestrate-bounded-pf-shell-diagnosis-of-mcp-versus-source-context-fres.yaml
+?? .pf/assignments/plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using.yaml
+?? .pf/assignments/publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f08-using.yaml
+?? .pf/assignments/remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-workers-i.yaml
+?? .pf/assignments/remediate-python-core-audit-f01-project-search-authorization-and-f02-uno.yaml
+?? .pf/assignments/remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-recoverab.yaml
+?? .pf/assignments/remediate-python-core-audit-f09-f12-updater-search-and-raw-ingress-with.yaml
+?? .pf/assignments/report-capture.yaml
+?? .pf/contexts/assignment-capsules/a01-search.capsule.yaml
+?? .pf/contexts/assignment-capsules/a0206-reports.capsule.yaml
+?? .pf/contexts/assignment-capsules/a0310-runtime.capsule.yaml
+?? .pf/contexts/assignment-capsules/a05-migration.capsule.yaml
+?? .pf/contexts/assignment-capsules/a08-jsonrpc.capsule.yaml
+?? .pf/contexts/assignment-capsules/a09-classifier.capsule.yaml
+?? .pf/contexts/assignment-capsules/audit-core.capsule.yaml
+?? .pf/contexts/assignment-capsules/audit-current-processforge-python-core-and-codebase-for-reproducible-cor.capsule.yaml
+?? .pf/contexts/assignment-capsules/audit-hooks.capsule.yaml
+?? .pf/contexts/assignment-capsules/audit-mcp.capsule.yaml
+?? .pf/contexts/assignment-capsules/audit-pf-documentation-against-the-current-codebase-for-1-1-1-prerelease.capsule.yaml
+?? .pf/contexts/assignment-capsules/audit-python-core-mcp-and-background-hooks-with-bounded-junior-shell-wor.capsule.yaml
+?? .pf/contexts/assignment-capsules/context-origin.capsule.yaml
+?? .pf/contexts/assignment-capsules/docs111-mechanical.capsule.yaml
+?? .pf/contexts/assignment-capsules/docs111-review.capsule.yaml
+?? .pf/contexts/assignment-capsules/docs111-tests.capsule.yaml
+?? .pf/contexts/assignment-capsules/docs111-update.capsule.yaml
+?? .pf/contexts/assignment-capsules/docs111-workflow.capsule.yaml
+?? .pf/contexts/assignment-capsules/f01-search.capsule.yaml
+?? .pf/contexts/assignment-capsules/f0102-assurance.capsule.yaml
+?? .pf/contexts/assignment-capsules/f0102-review.capsule.yaml
+?? .pf/contexts/assignment-capsules/f02-owned-ancestor.capsule.yaml
+?? .pf/contexts/assignment-capsules/f02-update.capsule.yaml
+?? .pf/contexts/assignment-capsules/f0304-evidence.capsule.yaml
+?? .pf/contexts/assignment-capsules/f0305-assurance.capsule.yaml
+?? .pf/contexts/assignment-capsules/f0305-review.capsule.yaml
+?? .pf/contexts/assignment-capsules/f05-completion.capsule.yaml
+?? .pf/contexts/assignment-capsules/f0608-cli.capsule.yaml
+?? .pf/contexts/assignment-capsules/f0608-review.capsule.yaml
+?? .pf/contexts/assignment-capsules/f09-update.capsule.yaml
+?? .pf/contexts/assignment-capsules/f0912-review.capsule.yaml
+?? .pf/contexts/assignment-capsules/f1011-search.capsule.yaml
+?? .pf/contexts/assignment-capsules/f12-ingress.capsule.yaml
+?? .pf/contexts/assignment-capsules/fix-required-output-checks-nameerror-per-process-forge-fix-required-outp.capsule.yaml
+?? .pf/contexts/assignment-capsules/orchestrate-bounded-pf-shell-diagnosis-of-mcp-versus-source-context-fres.capsule.yaml
+?? .pf/contexts/assignment-capsules/plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using.capsule.yaml
+?? .pf/contexts/assignment-capsules/publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f08-using.capsule.yaml
+?? .pf/contexts/assignment-capsules/remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-workers-i.capsule.yaml
+?? .pf/contexts/assignment-capsules/remediate-python-core-audit-f01-project-search-authorization-and-f02-uno.capsule.yaml
+?? .pf/contexts/assignment-capsules/remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-recoverab.capsule.yaml
+?? .pf/contexts/assignment-capsules/remediate-python-core-audit-f09-f12-updater-search-and-raw-ingress-with.capsule.yaml
+?? .pf/contexts/assignment-capsules/report-capture.capsule.yaml
+?? .pf/contexts/project-context.snapshots/ctx-20260907-130537-9c47b7.yaml
+?? .pf/contexts/project-context.snapshots/ctx-20260908-074925-d05a67.yaml
+?? .pf/contexts/project-context.snapshots/ctx-20260910-044833-2182bf.yaml
+?? .pf/contexts/project-context.snapshots/ctx-20260910-065103-8ec72e.yaml
+?? .pf/contexts/project-context.snapshots/ctx-20260910-101335-c7d963.yaml
+?? .pf/contexts/project-context.snapshots/ctx-20260910-113559-b35a98.yaml
+?? .pf/contexts/project-context.snapshots/ctx-20260910-123129-3fcf45.yaml
+?? .pf/contexts/project-context.snapshots/ctx-20260910-170716-057454.yaml
+?? .pf/contexts/project-context.snapshots/ctx-20260911-062703-2454f1.yaml
+?? .pf/contexts/project-context.snapshots/ctx-20260911-064616-687ea9.yaml
+?? .pf/handoffs/codebase-audit-20260910.md
+?? .pf/handoffs/context-collection-20260911.md
+?? .pf/handoffs/context-collection-running-20260910.md
+?? .pf/handoffs/core-f01-f02-20260910.md
+?? .pf/handoffs/core-f03-f05-20260910.md
+?? .pf/handoffs/core-f09-f12-20260910.md
+?? .pf/handoffs/docs-audit-1.1.1-20260907.md
+?? .pf/handoffs/docs-fix-1.1.1-20260907.md
+?? .pf/handoffs/publish-f06-f08-20260910.md
+?? .pf/handoffs/python-core-audit-20260908.md
+?? .pf/handoffs/required-output-checks-fix-20260907.md
+?? .pf/handoffs/runs/codebase-audit-shell-20260910-handoff.md
+?? .pf/handoffs/runs/codebase-audit-shell-20260910-orchestrator-handoff.md
+?? .pf/handoffs/runs/context-collection-shell-20260910-handoff.md
+?? .pf/handoffs/runs/context-collection-shell-20260910-orchestrator-handoff.md
+?? .pf/handoffs/runs/core-a01-a11-wave1-20260911-orchestrator-handoff.md
+?? .pf/handoffs/runs/core-a01-a11-wave2-20260911-orchestrator-handoff.md
+?? .pf/handoffs/runs/core-f01-f02-shell-20260910-handoff.md
+?? .pf/handoffs/runs/core-f01-f02-shell-20260910-orchestrator-handoff.md
+?? .pf/handoffs/runs/core-f03-f05-shell-20260910-handoff.md
+?? .pf/handoffs/runs/core-f03-f05-shell-20260910-orchestrator-handoff.md
+?? .pf/handoffs/runs/core-f06-f08-shell-20260910-handoff.md
+?? .pf/handoffs/runs/core-f06-f08-shell-20260910-orchestrator-handoff.md
+?? .pf/handoffs/runs/core-f09-f12-shell-20260910-handoff.md
+?? .pf/handoffs/runs/core-f09-f12-shell-20260910-orchestrator-handoff.md
+?? .pf/handoffs/runs/docs-fix-1-1-1-shell-20260907-handoff.md
+?? .pf/handoffs/runs/docs-fix-1-1-1-shell-20260907-orchestrator-handoff.md
+?? .pf/handoffs/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci-handoff.md
+?? .pf/handoffs/runs/garage-audit-pf-documentation-against-the-current-codebase-for-1-1-1-pre-handoff.md
+?? .pf/handoffs/runs/garage-audit-python-core-mcp-and-background-hooks-with-bounded-junior-sh-handoff.md
+?? .pf/handoffs/runs/garage-fix-required-output-checks-nameerror-per-process-forge-fix-requir-handoff.md
+?? .pf/handoffs/runs/garage-orchestrate-bounded-pf-shell-diagnosis-of-mcp-versus-source-conte-handoff.md
+?? .pf/handoffs/runs/garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-handoff.md
+?? .pf/handoffs/runs/garage-publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f0-handoff.md
+?? .pf/handoffs/runs/garage-remediate-python-core-audit-f01-project-search-authorization-and-handoff.md
+?? .pf/handoffs/runs/garage-remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-re-handoff.md
+?? .pf/handoffs/runs/garage-remediate-python-core-audit-f09-f12-updater-search-and-raw-ingres-handoff.md
+?? .pf/logs/codebase-audit-20260910.md
+?? .pf/logs/context-collection-20260910.md
+?? .pf/logs/core-a01-a11-20260911.md
+?? .pf/logs/core-f01-f02-orchestrator-20260910.md
+?? .pf/logs/core-f03-f05-orchestrator-20260910.md
+?? .pf/logs/core-f09-f12-20260910.md
+?? .pf/logs/docs-audit-1.1.1-20260907.md
+?? .pf/logs/docs-fix-1.1.1-orchestrator-20260907.md
+?? .pf/logs/project-context-inspection-20260911.md
+?? .pf/logs/project-status-20260910.md
+?? .pf/logs/publish-f06-f08-20260910.md
+?? .pf/logs/python-core-audit-20260908.md
+?? .pf/logs/python-core-audit-closeout-20260908.md
+?? .pf/logs/required-output-checks-fix-20260907.md
+?? .pf/reviews/docs-audit-1.1.1-review-20260907.md
+?? .pf/reviews/python-core-audit-20260908.md
+?? .pf/reviews/required-output-checks-review-20260907.md
+?? .pf/runs/..process-execution-start.yaml.lock.guard
+?? .pf/runs/codebase-audit-shell-20260910/
+?? .pf/runs/context-collection-shell-20260910/
+?? .pf/runs/core-a01-a11-wave1-20260911/
+?? .pf/runs/core-a01-a11-wave2-20260911/
+?? .pf/runs/core-f01-f02-shell-20260910/
+?? .pf/runs/core-f03-f05-shell-20260910/
+?? .pf/runs/core-f06-f08-shell-20260910/
+?? .pf/runs/core-f09-f12-shell-20260910/
+?? .pf/runs/docs-fix-1-1-1-shell-20260907/
+?? .pf/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci/
+?? .pf/runs/garage-audit-pf-documentation-against-the-current-codebase-for-1-1-1-pre/
+?? .pf/runs/garage-audit-python-core-mcp-and-background-hooks-with-bounded-junior-sh/
+?? .pf/runs/garage-fix-required-output-checks-nameerror-per-process-forge-fix-requir/
+?? .pf/runs/garage-orchestrate-bounded-pf-shell-diagnosis-of-mcp-versus-source-conte/
+?? .pf/runs/garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1/
+?? .pf/runs/garage-publish-validated-fixes-to-dev-remediate-python-core-audit-f06-f0/
+?? .pf/runs/garage-remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-wo/
+?? .pf/runs/garage-remediate-python-core-audit-f01-project-search-authorization-and/
+?? .pf/runs/garage-remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-re/
+?? .pf/runs/garage-remediate-python-core-audit-f09-f12-updater-search-and-raw-ingres/
+?? tools/smoke_classifier_distribution_parity.py
+?? tools/smoke_runtime_scheduler_failure_isolation.py
+?? tools/smoke_runtime_singleton_orphan.py
+?? tools/smoke_search_file_root_containment.py
+
+--- relevant files ---
+tools\context_lock_smoke_helpers.py
+tools\evolve_smoke_helpers.py
+tools\core_boundary_smoke_helpers.py
+tools\garage_search_smoke_support.py
+tools\pf_runtime\mcp_server.py
+tools\pf_runtime\codex_mcp.py
+tools\smoke_config_behavior_contracts.py
+tools\smoke_codex_worker_governance.py
+tools\smoke_codex_integration.py
+tools\smoke_codex_exec_worker.py
+tools\smoke_cli_audit_f0608.py
+tools\smoke_classifier_distribution_parity.py
+tools\smoke_child_platform_not_promoted_to_parent.py
+tools\smoke_central_event_replay.py
+tools\smoke_central_event_ingress_kernel.py
+tools\smoke_central_event_ingress.py
+tools\smoke_capsule_pins_context_snapshot.py
+tools\smoke_capability_resolution_data_driven_only.py
+tools\smoke_builtin_process_pack_completeness.py
+tools\smoke_builtin_process_catalog.py
+tools\smoke_builtin_processes_explicit_evolve.py
+tools\smoke_authoring_crash_recovery.py
+tools\smoke_agent_workspace_platform_availability_snapshot.py
+tools\smoke_agent_ledger.py
+tools\smoke_agent_director_tick.py
+tools\process_execution_smoke_support.py
+tools\smoke_docs_current_code_contract.py
+tools\smoke_docs_codex_hooks_optional.py
+tools\smoke_docs_agent_no_manual_infra.py
+tools\smoke_director_inspector_boundary.py
+tools\smoke_derived_report_stale_marking.py
+tools\smoke_delivery_profile_not_process.py
+tools\smoke_current_work_ignores_bootstrap_placeholder.py
+tools\smoke_core_update_missing_owned.py
+tools\smoke_core_update_manifest.py
+tools\smoke_core_prompts_domain_neutral.py
+tools\smoke_core_process_catalog_domain_neutral.py
+tools\smoke_core_has_no_domain_knowledge_seeds.py
+tools\smoke_core_domain_neutral_still_passes.py
+tools\smoke_conversation_completeness.py
+tools\smoke_context_freshness_vs_execution_readiness.py
+tools\smoke_empty_workplace_has_no_domain_resources.py
+tools\smoke_domain_pack_can_classify_after_install.py
+tools\smoke_domain_neutral_music_video_fixtures.py
+tools\smoke_domain_neutral_core_helpers.py
+tools\smoke_doctor_project_capability_waiver.py
+tools\smoke_doctor_gitignore_effective_protection.py
+tools\smoke_docs_mcp_host_owned_stdio.py
+tools\smoke_docs_garage_no_runtime_required.py
+tools\smoke_evolve_candidate_schema.py
+tools\smoke_evolve_candidate_narrowest_scope.py
+tools\smoke_evolve_candidate_export.py
+tools\smoke_error_workflow.py
+tools\smoke_evolve_candidate_targeting_schema.py
+tools\smoke_evolve_candidate_split_guidance.py
+tools\smoke_evolve_learning_loop_end_to_end.py
+tools\smoke_evolve_privacy_sanitizer.py
+tools\update_smoke_helpers.py
+tools\smoke_no_removed_process_refs.py
+tools\smoke_no_production_example_update_urls.py
+tools\smoke_no_hardcoded_file_project_detection.py
+tools\smoke_no_builtin_user_capability_satisfaction.py
+tools\smoke_multi_project_agent_sessions.py
+tools\smoke_multi_process_work_capsule.py
+tools\smoke_multi_agent_as_composed_sessions.py
+tools\smoke_mixed_workplace_projects.py
+tools\smoke_mcp_missing_session_diagnostics.py
+tools\smoke_mcp_codex_contract.py
+tools\smoke_long_lived_runtime.py
+tools\smoke_legacy_flat_process_layout_warning.py
+tools\smoke_knowledge_package_release_update_manifest.py
+tools\smoke_knowledge_package_build_from_candidates.py
+tools\smoke_knowledge_hub_routes_by_target.py
+tools\smoke_knowledge_hub_import.py
+tools\smoke_governed_work_stage_resolution.py
+tools\smoke_governed_work_duplicate_prevention.py
+tools\smoke_generic_workplace_no_domain_pack_active.py
+tools\smoke_generated_processes_include_evolve.py
+tools\smoke_garage_work_start_session_bound.py
+tools\smoke_garage_work_start_sessionless.py
+tools\smoke_garage_session_enhanced.py
+tools\smoke_garage_real_joomla_search.py
+tools\smoke_garage_no_hooks_sessionless.py
+tools\smoke_garage_mode_not_promoted_by_session.py
+tools\smoke_garage_cross_project_security.py
+tools\smoke_fulltext_article_indexing.py
+tools\smoke_first_run.py
+tools\smoke_examples_do_not_shadow_official_processes.py
+tools\smoke_evolve_targeting_privacy_sanitizer.py
+tools\smoke_evolve_process_agnostic_contract.py
+tools\smoke_process_root_collision_policy.py
+tools\smoke_process_resolver_multiple_roots.py
+tools\smoke_process_owns_acceptance_not_specialization.py
+tools\smoke_process_list_origin_filters.py
+tools\smoke_process_id_stable_after_move.py
+tools\smoke_process_execution_state_semantics.py
+tools\smoke_process_execution_integrity.py
+tools\smoke_process_execution_initial_stage.py
+tools\smoke_process_directory_layout.py
+tools\smoke_process_definition_schema_contract.py
+tools\smoke_process_catalog_not_implicit_execution_route.py
+tools\smoke_process_capability_requirement_resolution.py
+tools\smoke_process_authoring_writes_user_root.py
+tools\smoke_process_authoring_materializes_evolve.py
+tools\smoke_process_authoring_materialization_parity.py
+tools\smoke_process_authoring_evolve_targeting.py
+tools\smoke_process_authoring_evolve_questions.py
+tools\smoke_processforge_core_project_requires_explicit_type.py
+tools\smoke_processforge_core_package_bootstrap.py
+tools\smoke_platform_create_include_levels.py
+tools\smoke_pf_project_process_refs_follow_layout.py
+tools\smoke_parameter_freshness.py
+tools\smoke_parameter_cascade_resolution.py
+tools\smoke_parameter_assignment_capsule.py
+tools\smoke_orchestrator_shell_agents_with_subagent_policy.py
+tools\smoke_optional_domain_pack_not_default.py
+tools\smoke_official_software_process_available.py
+tools\smoke_official_process_can_start_minimal_run.py
+tools\smoke_official_pack_not_kernel.py
+tools\smoke_official_pack_manifest_schema.py
+tools\smoke_official_pack_classifier_data_driven.py
+tools\smoke_official_packs_not_examples.py
+tools\smoke_release_tag_commit_provenance.py
+tools\smoke_release_pack_excludes_user_processes.py
+tools\smoke_release_manifest_repository_surface.py
+tools\smoke_release_manifest_provenance_contract.py
+tools\smoke_release_manifest_not_inside_archive.py
+tools\smoke_raw_ingress_incremental_recovery.py
+tools\smoke_public_cleanliness.py
+tools\smoke_project_specialization_override_applies.py
+tools\smoke_project_scan_excludes_workplace_root.py
+tools\smoke_project_scan_excludes_knowledge_roots.py
+tools\smoke_project_scan_excludes_distribution_root.py
+tools\smoke_project_resource_narrowing_search.py
+tools\smoke_project_pf_upgrade_assessment_boundary.py
+tools\smoke_project_override_does_not_mutate_workspace.py
+tools\smoke_project_overrides_snapshot_fingerprint.py
+tools\smoke_project_overrides_schema.py
+tools\smoke_project_overrides_resolution.py
+tools\smoke_project_overrides_freshness.py
+tools\smoke_project_overrides_capsule_summary.py
+tools\smoke_project_onboard_platform_selection.py
+tools\smoke_project_local_package_index_detection.py
+tools\smoke_project_init_local_search_mcp.py
+tools\smoke_project_init_codex_integration.py
+tools\smoke_project_init_acceptance.py
+tools\smoke_project_coordination_modes.py
+tools\smoke_project_context_snapshot_lock_model.py
+tools\smoke_project_context_freshness_policies.py
+tools\smoke_project_classification_data_driven.py
+tools\smoke_process_transition_handoff.py
+tools\smoke_process_supervisor_tick.py
+tools\smoke_process_stage_contract_normalization.py
+tools\smoke_process_run_task_batch.py
+tools\smoke_single_agent_session_flow.py
+tools\smoke_session_start_context_check.py
+tools\smoke_session_projection_expiry.py
+tools\smoke_search_update_operational_hardening.py
+tools\smoke_search_source_integrity.py
+tools\smoke_search_file_root_containment.py
+tools\smoke_run_id_preserves_repeated_hyphens.py
+tools\smoke_runtime_status_version_truth.py
+tools\smoke_runtime_status_timeout.py
+tools\smoke_runtime_singleton_orphan.py
+tools\smoke_runtime_scheduler_failure_isolation.py
+tools\smoke_runtime_no_domain_file_patterns.py
+tools\smoke_runtime_no_domain_capability_constants.py
+tools\smoke_runtime_mcp_autostart.py
+tools\smoke_runtime_ledger_hooks_mcp.py
+tools\smoke_runtime_host_poc.py
+tools\smoke_runtime_driver_registry.py
+tools\smoke_resource_versioning_modes.py
+tools\smoke_resource_indexing_policy_acceptance.py
+tools\smoke_remediation_transactional_authoring.py
+tools\smoke_remediation_security_boundaries.py
+tools\smoke_remediation_schema_inventory.py
+tools\smoke_remediation_registry_safety.py
+tools\smoke_remediation_process_create_transaction.py
+tools\smoke_remediation_platform_layout_strict.py
+tools\smoke_remediation_knowledge_builder_contract.py
+tools\smoke_remediation_generator_schema_alignment.py
+tools\smoke_remediation_doctor_contracts.py
+tools\smoke_remediation_checksum_surface.py
+tools\smoke_remediation_aggregate_gates.py
+tools\smoke_release_test_trace_timeout_reporting.py
+tools\smoke_release_test_extracted_archive.py
+tools\smoke_update_apply_marks_context_stale.py
+tools\smoke_tool_update_policy.py
+tools\smoke_stage_projectors.py
+tools\smoke_stable_update_manifest_schema.py
+tools\smoke_stable_update_manifest_points_to_release.py
+tools\smoke_specialization_snapshot_fields.py
+tools\smoke_specialization_schema.py
+tools\smoke_specialization_same_platform_different_context.py
+tools\smoke_specialization_registry.py
+tools\smoke_specialization_process_policy.py
+tools\smoke_specialization_platform_binding.py
+tools\smoke_specialization_no_workflow_ownership.py
+tools\smoke_specialization_no_tool_leakage.py
+tools\smoke_specialization_no_core_id_hardcode.py
+tools\smoke_specialization_nested_workflow_fields_rejected.py
+tools\smoke_specialization_handoff_routing.py
+tools\smoke_specialization_garage_mode_switch.py
+tools\smoke_specialization_freshness_tracks_definition_change.py
+tools\smoke_specialization_create_workplace_resource.py
+tools\smoke_specialization_context_resolution.py
+tools\smoke_specialization_capsule_activation.py
+tools\smoke_software_profile_activates_official_pack.py
+tools\smoke_software_process_uses_common_evolve.py
+tools\smoke_software_lifecycle_prompt_alignment.py
+tools\smoke_software_lifecycle_process_contract.py
+tools\smoke_software_lifecycle_description_alignment.py
+tools\smoke_software_lifecycle_compact_mode.py
+tools\smoke_software_lifecycle_artifacts.py
+tools\smoke_work_completion_recovery.py
+tools\smoke_workplace_search_index.py
+tools\smoke_workplace_learning_queue.py
+tools\smoke_worker_workspace_access.py
+tools\smoke_worker_run_shell.py
+tools\smoke_worker_environment_secret_redaction.py
+tools\smoke_worker_awareness_of_director.py
+tools\smoke_windows_utf8_docs.py
+tools\smoke_verification_current_work_state.py
+tools\smoke_user_like_garage_path.py
+tools\smoke_update_stage_verify_apply_file_provider.py
+tools\smoke_update_sites_schema.py
+tools\smoke_update_notifications.py
+tools\smoke_update_candidate_discovery.py
+tools\smoke_work_transition_final_stage_completes_run.py
+tools\smoke_work_transition_emits_stage_events.py
+tools\smoke_work_transition_branching_if_supported.py
+tools\smoke_work_transition_blocks_missing_gate.py
+tools\smoke_work_state_current_stage.py
+tools\smoke_work_start_no_stage_guessing.py
+tools\smoke_work_evidence_freshness.py
+tools\smoke_work_transition_snapshot_pinned_process.py
+tools\smoke_work_transition_recovers_after_invalid_evidence.py
+tools\smoke_work_transition_records_evidence.py
+tools\smoke_work_transition_linear.py
+tools\specialization_smoke_helpers.py
+tools\smoke_work_transition_updates_assignment_stage.py
+
+--- MCP references ---
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:138:      "id": "a08-jsonrpc",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:139:      "title": "a08-jsonrpc",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:142:      "objective": "Implement bounded repair brief .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc-brief.md",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:149:        "tools/smoke_mcp_jsonrpc_validation.py",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:150:        ".pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/**",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:151:        ".pf/tmp/a08-jsonrpc/**"
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:155:        "tools/smoke_mcp_jsonrpc_validation.py",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:175:        ".pf/artifacts/core-a01-a11-20260911/a08-jsonrpc-brief.md",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:180:          "id": "a08-jsonrpc-report",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:181:          "path": ".pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md",
+.pf/artifacts/core-a01-a11-20260911\wave2-plan.yaml:186:      "expected_report_artifact": ".pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md",
+.pf/artifacts/core-a01-a11-20260911\prepare_remaining.py:13:    ('a08-jsonrpc', ['tools/pf_runtime/mcp_server.py', 'tools/smoke_mcp_jsonrpc_validation.py'], '''Fix A08 in native stdio MCP. Current respond/main accepts jsonrpc 1.0 and coerces list params/arguments to {} and responds to notifications. Validate JSON-RPC 2.0 envelope, method/id types (bool is not numeric ID), params and tools/call arguments using existing advertised tool schema constraints before dispatch. Preserve missing optional args/defaults and valid clients. Errors: parse -32700; invalid envelope -32600; invalid params/schema -32602; unknown method -32601. Valid notifications never emit responses including tools/call errors, but valid mutating notifications retain the chosen spec-compliant dispatch behavior. Distinguish id absent from explicit null. Use local JSONRPC/MCP docs or existing tests, no new third-party dependency. Regression sends real newline-framed requests to source native stdio MCP with disposable workplace, tests malformed JSON recovery, wrong protocol/method/id, params and arguments arrays/scalars, required/type/unknown arguments, valid initialize/list/tool call, notification silence using subsequent sentinel response. A fake runtime can supplement dispatch count but is not sole protocol proof. Do not change business/session logic.''')
+.pf/artifacts/core-a01-a11-20260911\a08-jsonrpc-brief.md:5:Fix A08 in native stdio MCP. Current respond/main accepts jsonrpc 1.0 and coerces list params/arguments to {} and responds to notifications. Validate JSON-RPC 2.0 envelope, method/id types (bool is not numeric ID), params and tools/call arguments using existing advertised tool schema constraints before dispatch. Preserve missing optional args/defaults and valid clients. Errors: parse -32700; invalid envelope -32600; invalid params/schema -32602; unknown method -32601. Valid notifications never emit responses including tools/call errors, but valid mutating notifications retain the chosen spec-compliant dispatch behavior. Distinguish id absent from explicit null. Use local JSONRPC/MCP docs or existing tests, no new third-party dependency. Regression sends real newline-framed requests to source native stdio MCP with disposable workplace, tests malformed JSON recovery, wrong protocol/method/id, params and arguments arrays/scalars, required/type/unknown arguments, valid initialize/list/tool call, notification silence using subsequent sentinel response. A fake runtime can supplement dispatch count but is not sole protocol proof. Do not change business/session logic.
+tools\processforge.py:6929:        ReleaseCommand("smoke_mcp_codex_contract", [sys.executable, str(root / "tools" / "smoke_mcp_codex_contract.py")], 120),
+tools\processforge.py:6994:        ReleaseCommand("smoke_mcp_missing_session_diagnostics", [sys.executable, str(root / "tools" / "smoke_mcp_missing_session_diagnostics.py")], 120),
+tools\pf_runtime\mcp_server.py:290:def respond(request: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
+tools\pf_runtime\mcp_server.py:297:        return {"jsonrpc": "2.0", "id": request_id, "result": {"protocolVersion": "2024-11-05", "serverInfo": {"name": "processforge", "version": str(getattr(core, "PROCESSFORGE_VERSION", "1"))}, "capabilities": {"tools": {}}}}
+tools\pf_runtime\mcp_server.py:299:        tools = [{"name": name, "description": description, "inputSchema": tool_schema(name), "annotations": tool_annotations(name)} for name, description in TOOLS.items()]
+tools\pf_runtime\mcp_server.py:300:        return {"jsonrpc": "2.0", "id": request_id, "result": {"tools": tools}}
+tools\pf_runtime\mcp_server.py:301:    if method == "tools/call":
+tools\pf_runtime\mcp_server.py:305:            return {"jsonrpc": "2.0", "id": request_id, "result": {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False, sort_keys=True)}]}}
+tools\pf_runtime\mcp_server.py:307:            return {"jsonrpc": "2.0", "id": request_id, "result": {"content": [{"type": "text", "text": safe_tool_error(exc)}], "isError": True}}
+tools\pf_runtime\mcp_server.py:308:    return {"jsonrpc": "2.0", "id": request_id, "error": {"code": -32601, "message": "method not found"}}
+tools\pf_runtime\mcp_server.py:323:            response = respond(json.loads(line), workplace, args.session, runtime)
+tools\pf_runtime\mcp_server.py:327:            print(json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "invalid request"}}, ensure_ascii=False), flush=True)
+tools\smoke_context_freshness_vs_execution_readiness.py:178:                {"jsonrpc": "2.0", "id": 1, "method": "initialize"},
+tools\smoke_context_freshness_vs_execution_readiness.py:180:                    "jsonrpc": "2.0",
+tools\smoke_context_freshness_vs_execution_readiness.py:182:                    "method": "tools/call",
+tools\smoke_context_freshness_vs_execution_readiness.py:186:                    "jsonrpc": "2.0",
+tools\smoke_context_freshness_vs_execution_readiness.py:188:                    "method": "tools/call",
+tools\smoke_context_freshness_vs_execution_readiness.py:195:                    "jsonrpc": "2.0",
+tools\smoke_context_freshness_vs_execution_readiness.py:197:                    "method": "tools/call",
+tools\smoke_context_freshness_vs_execution_readiness.py:229:                {"jsonrpc": "2.0", "id": 1, "method": "initialize"},
+tools\smoke_context_freshness_vs_execution_readiness.py:231:                    "jsonrpc": "2.0",
+tools\smoke_context_freshness_vs_execution_readiness.py:233:                    "method": "tools/call",
+tools\smoke_garage_session_enhanced.py:28:    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": name, "arguments": arguments}}
+tools\smoke_garage_session_enhanced.py:34:        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"}) + "\n" + json.dumps(request) + "\n",
+tools\smoke_garage_no_hooks_sessionless.py:22:    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": name, "arguments": arguments}}
+tools\smoke_garage_no_hooks_sessionless.py:28:        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"}) + "\n" + json.dumps(request) + "\n",
+tools\smoke_garage_mode_not_promoted_by_session.py:28:    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": name, "arguments": arguments}}
+tools\smoke_garage_mode_not_promoted_by_session.py:34:        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"}) + "\n" + json.dumps(request) + "\n",
+tools\smoke_garage_cross_project_security.py:21:    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": name, "arguments": arguments}}
+tools\smoke_garage_cross_project_security.py:27:        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"}) + "\n" + json.dumps(request) + "\n",
+tools\smoke_processforge_core_package_bootstrap.py:60:    mcp_server = load_module("processforge_core_smoke_mcp_server", REPO_ROOT / "tools" / "pf_runtime" / "mcp_server.py")
+tools\smoke_mcp_codex_contract.py:30:                json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}),
+tools\smoke_mcp_codex_contract.py:31:                json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}),
+tools\smoke_mcp_codex_contract.py:34:                        "jsonrpc": "2.0",
+tools\smoke_mcp_codex_contract.py:36:                        "method": "tools/call",
+tools\smoke_user_like_garage_path.py:18:    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/list"}
+tools\smoke_user_like_garage_path.py:24:        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"}) + "\n" + json.dumps(request) + "\n",
+tools\smoke_project_init_local_search_mcp.py:133:            {"jsonrpc": "2.0", "id": 1, "method": "initialize"},
+tools\smoke_project_init_local_search_mcp.py:134:            {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+tools\smoke_project_init_local_search_mcp.py:135:            {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "authorized"}}},
+tools\smoke_project_init_local_search_mcp.py:136:            {"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "pf.project_initialization.status", "arguments": {"session_id": "smoke-session", "project_root": str(second)}}},
+tools\smoke_project_init_local_search_mcp.py:137:            {"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "traversal-secret-token"}}},
+tools\smoke_project_init_local_search_mcp.py:138:            {"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "External knowledge root"}}},
+tools\smoke_project_init_local_search_mcp.py:139:            {"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "maintenancetoken"}}},
+tools\smoke_project_init_local_search_mcp.py:140:            {"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": {"name": "pf.project_initialization.repair", "arguments": {"session_id": "smoke-session"}}},
+tools\smoke_project_init_local_search_mcp.py:141:            {"jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {"name": "pf.project_initialization.repair", "arguments": {"session_id": "smoke-session", "apply": True, "reason": "stdio-smoke"}}},
+tools\smoke_project_init_local_search_mcp.py:142:            {"jsonrpc": "2.0", "id": 10, "method": "tools/call", "params": {"name": "pf.project_initialization.initialize", "arguments": {"session_id": "smoke-session", "apply": True, "answers_path": str(root / "outside.md")}}},
+tools\smoke_project_init_local_search_mcp.py:143:            {"jsonrpc": "2.0", "id": 11, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "Joomla Plugin Manifest"}}},
+tools\smoke_project_init_local_search_mcp.py:144:            {"jsonrpc": "2.0", "id": 12, "method": "tools/call", "params": {"name": "pf.search", "arguments": {"session_id": "smoke-session", "query": "registry-secret-token"}}},
+tools\smoke_project_init_local_search_mcp.py:145:            {"jsonrpc": "2.0", "id": 13, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {"session_id": "smoke-session"}}},
+tools\smoke_project_init_acceptance.py:44:        {"jsonrpc": "2.0", "id": 1, "method": "initialize"},
+tools\smoke_project_init_acceptance.py:46:            "jsonrpc": "2.0",
+tools\smoke_project_init_acceptance.py:48:            "method": "tools/call",
+tools\smoke_runtime_ledger_hooks_mcp.py:77:            json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}),
+tools\smoke_runtime_ledger_hooks_mcp.py:78:            json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "pf.project_state", "arguments": {}}}),
+tools\smoke_runtime_ledger_hooks_mcp.py:79:            json.dumps({"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {}}}),
+tools\smoke_runtime_ledger_hooks_mcp.py:80:            json.dumps({"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "pf.session_chat", "arguments": {"limit": 5}}}),
+tools\smoke_runtime_ledger_hooks_mcp.py:81:            json.dumps({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "pf.session_activity", "arguments": {"limit": 5}}}),
+tools\smoke_runtime_ledger_hooks_mcp.py:93:        denied_request = "\n".join([json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}), json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "pf.project_state", "arguments": {"project_root": str(second)}}})]) + "\n"
+tools\smoke_runtime_ledger_hooks_mcp.py:99:        missing_request = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {}}}) + "\n"
+tools\smoke_runtime_ledger_hooks_mcp.py:106:        mismatch_request = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {"project_root": str(second)}}}) + "\n"
+tools\smoke_runtime_ledger_hooks_mcp.py:113:        switch_request = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "pf.session_context", "arguments": {"session_id": "sess-b"}}}) + "\n"
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'Get-Content tools/smoke_mcp_codex_contract.py -TotalCount 180; "`n--- garage session smoke ---"; Get-Content tools/smoke_garage_session_enhanced.py -TotalCount 140; "`n--- bootstrap smoke ---"; Get-Content tools/smoke_processforge_core_package_bootstrap.py -TotalCount 120; "`n--- project profile ---"; Get-Content .pf/artifacts/project-profile.md -TotalCount 180' in D:\Dev\process-forge
+ succeeded in 712ms:
+#!/usr/bin/env python3
+"""Smoke test the bounded, Codex-compatible ProcessForge MCP contract."""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+from context_lock_smoke_helpers import make_project, refresh, run_pf
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SERVER = ROOT / "tools" / "pf_runtime" / "mcp_server.py"
+
+
+def main() -> int:
+    with tempfile.TemporaryDirectory(prefix="pf-mcp-codex-contract-") as raw:
+        root = Path(raw)
+        project = make_project(root)
+        workplace = root / "workplace"
+        init = run_pf("workplace-init", "--workplace", str(workplace), "--apply")
+        if init.returncode != 0:
+            raise AssertionError(init.stdout + init.stderr)
+        refresh(project)
+        request = "\n".join(
+            [
+                json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}),
+                json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}),
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 3,
+                        "method": "tools/call",
+                        "params": {"name": "pf.context", "arguments": {"project_root": str(project)}},
+                    }
+                ),
+            ]
+        ) + "\n"
+        result = subprocess.run(
+            [sys.executable, str(SERVER), "--workplace", str(workplace)],
+            input=request,
+            text=True,
+            capture_output=True,
+            cwd=project,
+            timeout=30,
+            check=True,
+        )
+        responses = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
+        tools = {item["name"]: item for item in responses[1]["result"]["tools"]}
+        if tools["pf.context"]["annotations"]["readOnlyHint"] is not True:
+            raise AssertionError(tools["pf.context"])
+        if tools["pf.work.start"]["annotations"]["readOnlyHint"] is not False:
+            raise AssertionError(tools["pf.work.start"])
+        payload_text = responses[2]["result"]["content"][0]["text"]
+        payload = json.loads(payload_text)
+        if payload.get("kind") != "pf.context" or payload.get("context", {}).get("status") not in {"fresh", "fresh_with_updates"}:
+            raise AssertionError(payload)
+        if not isinstance(payload.get("resources", {}).get("authorized_knowledge_ids"), list):
+            raise AssertionError(payload.get("resources"))
+        if "objective" in payload_text or len(payload_text.encode("utf-8")) > 16384:
+            raise AssertionError("pf.context is not a bounded bootstrap projection")
+    print("PASS: bounded Codex-compatible PF MCP contract")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+--- garage session smoke ---
+#!/usr/bin/env python3
+"""Smoke test that a Ledger session enhances Garage without changing authorization."""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+import yaml
+
+
+ROOT = Path(__file__).resolve().parents[1]
+PF = ROOT / "tools" / "processforge.py"
+MCP = ROOT / "tools" / "pf_runtime" / "mcp_server.py"
+
+
+def cli(*args: str) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run([sys.executable, str(PF), *args], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, timeout=120)
+    if result.returncode != 0:
+        raise AssertionError(result.stdout + result.stderr)
+    return result
+
+
+def call_mcp(workplace: Path, name: str, arguments: dict[str, object]) -> dict[str, object]:
+    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": name, "arguments": arguments}}
+    result = subprocess.run(
+        [sys.executable, str(MCP), "--workplace", str(workplace)],
+        cwd=ROOT,
+        text=True,
+        encoding="utf-8",
+        input=json.dumps({"jsonrpc": "2.0", "id": 0, "method": "initialize"}) + "\n" + json.dumps(request) + "\n",
+        capture_output=True,
+        timeout=120,
+    )
+    if result.returncode != 0:
+        raise AssertionError(result.stderr)
+    response = [json.loads(line) for line in result.stdout.splitlines() if line.strip()][-1]
+    text = response["result"]["content"][0]["text"]
+    if response["result"].get("isError"):
+        raise AssertionError(text)
+    return json.loads(text)
+
+
+def add_resource(project: Path) -> str:
+    knowledge_root = project / "knowledge"
+    knowledge_root.mkdir()
+    (knowledge_root / "session.md").write_text("GarageSessionNeedle proves stable authorization.", encoding="utf-8")
+    snapshot_path = project / ".pf" / "contexts" / "project-context.snapshot.yaml"
+    snapshot = yaml.safe_load(snapshot_path.read_text(encoding="utf-8"))
+    resource = {
+        "id": "fixture.docs:session",
+        "resource_id": "fixture.docs:session",
+        "package_id": "fixture.docs",
+        "kind": "knowledge",
+        "content_roots": [str(knowledge_root)],
+        "indexing": {"enabled": True, "mode": "fulltext", "sources": [{"path": ".", "mode": "fulltext", "include": ["*.md"], "exclude": []}]},
+    }
+    snapshot.setdefault("resolved", {}).setdefault("available_knowledge_resources", []).append(resource)
+    snapshot["local_search_resources"] = [resource]
+    snapshot_path.write_text(yaml.safe_dump(snapshot, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    return resource["id"]
+
+
+def main() -> int:
+    with tempfile.TemporaryDirectory(prefix="pf-garage-session-") as raw:
+        root = Path(raw)
+        workplace = root / "workplace"
+        project = root / "project"
+        cli("workplace-init", "--workplace", str(workplace), "--apply")
+        cli("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
+        resource_id = add_resource(project)
+        cli("agent-checkin", "--workplace", str(workplace), "--agent", "fixture-agent", "--session", "fixture-session", "--project-root", str(project))
+
+        base = call_mcp(workplace, "pf.search", {"project_root": str(project), "query": "GarageSessionNeedle"})
+        enhanced = call_mcp(workplace, "pf.search", {"project_root": str(project), "session_id": "fixture-session", "query": "GarageSessionNeedle"})
+        if base.get("total") != enhanced.get("total") or base.get("results", [{}])[0].get("resource_id") != resource_id:
+            raise AssertionError({"base": base, "enhanced": enhanced})
+        context = call_mcp(workplace, "pf.context", {"project_root": str(project), "session_id": "fixture-session"})
+        if context.get("mode") != "garage" or context.get("session", {}).get("status") != "bound" or context.get("session", {}).get("id") != "fixture-session":
+            raise AssertionError(context)
+    print("PASS: Garage session-aware mode preserves resource authorization")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+--- bootstrap smoke ---
+#!/usr/bin/env python3
+"""Smoke-test the packaged bootstrap seam for direct-script runtime adapters."""
+
+from __future__ import annotations
+
+import importlib
+import importlib.util
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def load_module(module_name: str, path: Path) -> Any:
+    module = sys.modules.get(module_name)
+    if module is not None:
+        return module
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not load module: {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def run_python(*args: str, input_text: str | None = None, extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+    env = os.environ.copy()
+    if extra_env:
+        env.update(extra_env)
+    return subprocess.run(
+        [sys.executable, *args],
+        cwd=str(REPO_ROOT),
+        input=input_text,
+        text=True,
+        capture_output=True,
+        env=env,
+        check=False,
+    )
+
+
+def main() -> int:
+    bootstrap = load_module("processforge_core.bootstrap", REPO_ROOT / "src" / "processforge_core" / "bootstrap.py")
+    runtime = bootstrap.bootstrap_runtime(__file__)
+    assert runtime.repo_root == REPO_ROOT
+    assert runtime.core.ROOT == REPO_ROOT
+    assert sys.modules["processforge_core._legacy_processforge"] is runtime.core
+    assert importlib.import_module("processforge") is runtime.core
+    assert runtime.host.__name__ == "pf_runtime.host"
+    assert runtime.service.__name__ == "pf_runtime.service"
+    assert runtime.service.host is runtime.host
+
+    adapter_runtime = bootstrap.bootstrap_runtime(REPO_ROOT / "tools" / "pf_runtime" / "mcp_server.py")
+    assert adapter_runtime.core is runtime.core
+
+    mcp_server = load_module("processforge_core_smoke_mcp_server", REPO_ROOT / "tools" / "pf_runtime" / "mcp_server.py")
+    codex_hooks = load_module("processforge_core_smoke_codex_hooks", REPO_ROOT / "tools" / "pf_runtime" / "codex_hooks.py")
+    assert mcp_server.runtime_bootstrap().core is runtime.core
+    assert mcp_server.runtime_bootstrap().host is runtime.host
+    assert codex_hooks.runtime_bootstrap().core is runtime.core
+    assert codex_hooks.runtime_bootstrap().service is runtime.service
+
+    mcp_help = run_python("tools/pf_runtime/mcp_server.py", "--workplace", str(REPO_ROOT), "--help")
+    assert mcp_help.returncode == 0, mcp_help.stderr
+
+    hook_payload = json.dumps(
+        {
+            "hook_event_name": "SessionStart",
+            "source": "startup",
+            "cwd": "C:/Windows",
+            "session_id": "smoke-session",
+            "turn_id": "t1",
+            "tool_name": "Bash",
+            "tool_use_id": "u1",
+        }
+    )
+    hook_debug = run_python(
+        "tools/pf_runtime/codex_hooks.py",
+        input_text=hook_payload,
+        extra_env={"PF_CODEX_HOOK_DEBUG": "1"},
+    )
+    assert hook_debug.returncode == 0, hook_debug.stderr
+    assert not hook_debug.stdout
+    assert '"status": "ignored"' in hook_debug.stderr
+    assert '"reason": "not_processforge_project"' in hook_debug.stderr
+
+    print("ok")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+--- project profile ---
+# Project Profile
+
+## Status
+
+observed
+
+## Project
+
+- id: process-forge
+- name: ProcessForge
+- type: processforge-development
+
+## Purpose
+
+Unknown until reviewed.
+
+## Platforms
+
+- None.
+
+## Languages
+
+- None.
+
+## Main Directories
+
+- .gitignore
+- .pf
+- .processforge-releaseignore
+- .tmp
+- CHANGELOG.md
+- LICENSE
+- NOTICE
+- QUICKSTART.md
+- QUICKSTART.ru.md
+- README.md
+- README.ru.md
+- VERSION
+- bin
+- checksums
+- dist
+- docs
+- examples
+- logs
+- packages
+- packs
+- policies
+- processes
+- prompts
+- requirements.txt
+- runtime
+- schemas
+- seeds
+- src
+- templates
+- tools
+- updates
+- Р·Р°РґР°РЅРёСЏ
+
+## Public Zones
+
+- .pf/process-forge.yaml
+- .pf/hooks.yaml
+- docs/
+- root product assets
+
+## Private Zones
+
+- .pf/process-forge.local.yaml
+- .pf/runtime/
+- .pf/private-notes/
+- .secrets/
+
+## Suggested Processes
+
+- project-initialization
+
+## Constraints
+
+- Keep local absolute paths out of public files.
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'rg -n "def resolve_workplace_root|def bootstrap_runtime|class .*Runtime|def make_project|workplace-init" src/processforge_core tools/pf_runtime tools/context_lock_smoke_helpers.py | Select-Object -First 120; "`n--- resolver ---"; rg -n -A35 -B8 "def resolve_workplace_root" src/processforge_core tools/pf_runtime; "`n--- helper head ---"; Get-Content tools/context_lock_smoke_helpers.py -TotalCount 150' in D:\Dev\process-forge
+ succeeded in 7764ms:
+src/processforge_core\bootstrap.py:17:class RuntimeBootstrap:
+src/processforge_core\bootstrap.py:70:def bootstrap_runtime(caller_file: str | Path) -> RuntimeBootstrap:
+tools/context_lock_smoke_helpers.py:31:def make_project(root: Path, *, organized: bool = False) -> Path:
+tools/pf_runtime\service.py:347:class RuntimeProcess:
+
+--- resolver ---
+
+--- helper head ---
+#!/usr/bin/env python3
+"""Helpers for project context snapshot lock-model smokes."""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+PF = ROOT / "bin" / "pf.py"
+
+
+def run_pf(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    return subprocess.run([sys.executable, str(PF), *args], cwd=str(cwd or ROOT), text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+
+
+def require_ok(result: subprocess.CompletedProcess[str]) -> str:
+    if result.returncode != 0:
+        raise AssertionError(result.stdout)
+    return result.stdout
+
+
+def write_yaml(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text.strip() + "\n", encoding="utf-8")
+
+
+def make_project(root: Path, *, organized: bool = False) -> Path:
+    project = root / "project"
+    flow = project / ".pf"
+    write_yaml(
+        flow / "process-forge.yaml",
+        f"""
+schema_version: 1
+process_forge:
+  version: "1.0.0"
+  version_constraint: "^1.0"
+  mode: file_only
+  install_mode: linked
+  runner_required: false
+  backend_required: false
+project:
+  id: context-lock-demo
+  name: Context Lock Demo
+coordination:
+  mode: {"organized" if organized else "simple"}
+paths:
+  packages: packages
+  contexts: contexts
+  artifacts: artifacts
+  runtime: runtime
+policies:
+  one_writer_per_file_scope: true
+  approved_artifacts_are_protected: true
+workplace:
+  reference: {"auto" if organized else "none"}
+required_capabilities: []
+optional_capabilities: []
+knowledge_stack:
+  - id: docs-joomla
+    version: "^1.0"
+    source: project
+context_requirements:
+  knowledge_packages:
+    - id: docs-joomla
+      constraint: "^1.0"
+      required: true
+  knowledge_resources:
+    - id: joomla-core
+      constraint: ">=5.0 <6.0"
+      preferred_version: "5.4.5"
+      required: true
+    - id: joomla-development-articles
+      channel: stable
+      required: true
+context_policy:
+  on_session_start:
+    check_freshness: true
+    if_fresh: continue
+    if_fresh_with_updates: notify
+    if_stale: {"notify_director" if organized else "ask_operator"}
+    if_broken: block
+  active_run_behavior:
+    existing_capsules: pin_existing
+    new_capsules: require_fresh_snapshot
+""",
+    )
+    write_yaml(flow / "AGENTS.md", "# AGENTS\n")
+    if organized:
+        write_yaml(
+            project / "workplace.yaml",
+            """
+schema_version: 1
+id: context-lock-workplace
+coordination:
+  director_enabled: true
+  director_office_enabled: true
+  default_project_mode: simple
+  director:
+    process_id: agent-director-supervision
+""",
+        )
+        for relative in [
+            ".pf/director",
+            ".pf/director/inbox",
+            ".pf/director/outbox",
+            ".pf/director/cases",
+            ".pf/director/history",
+        ]:
+            (project / relative).mkdir(parents=True, exist_ok=True)
+    write_package(project, core_versions=["5.4.5"], articles_generation="A")
+    return project
+
+
+def resource_core(version: str) -> str:
+    return f"""
+  - id: joomla-core
+    kind: source_tree
+    title: Joomla Core {version}
+    version: "{version}"
+    path_ref:
+      package: docs-joomla
+      relative_path: joomla-core/{version}
+    load_policy: on_demand
+    index_policy: symbols
+    versioning:
+      mode: multi_version
+      version_field: version
+      instance_id_template: "{{id}}@{{version}}"
+    retention:
+      policy: keep_versions
+      keep_last_n: null
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    fingerprint:
+      type: manifest_sha256
+      value: sha256:{version.replace('.', ''):0<64}
+"""
+
+
+def write_package(project: Path, *, core_versions: list[str], articles_generation: str) -> None:
+    resources = "".join(resource_core(version) for version in core_versions)
+    resources += f"""
+  - id: joomla-development-articles
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'rg -n "resolve_workplace_root|workplace_root" tools/pf_runtime src/processforge_core | Select-Object -First 120; Get-Content src/processforge_core/bootstrap.py -TotalCount 130; Get-Content tools/pf_runtime/host.py -TotalCount 100' in D:\Dev\process-forge
+ succeeded in 883ms:
+tools/pf_runtime\codex_hooks.py:160:    workplace_root = core.resolve_workplace_root(None, project_root=project_root)
+tools/pf_runtime\codex_hooks.py:164:                argparse.Namespace(workplace=str(workplace_root), json=True),
+tools/pf_runtime\codex_mcp.py:28:    workplace_root: Path,
+tools/pf_runtime\codex_mcp.py:38:        "args": [str(server), "--workplace", str(resolved_root(workplace_root))],
+tools/pf_runtime\codex_mcp.py:106:    workplace_root: Path,
+tools/pf_runtime\codex_mcp.py:117:        workplace_root,
+tools/pf_runtime\codex_mcp.py:158:    workplace_root: Path,
+tools/pf_runtime\codex_mcp.py:170:        workplace_root,
+tools/pf_runtime\codex_mcp.py:206:    workplace_root: Path,
+tools/pf_runtime\codex_mcp.py:218:        workplace_root,
+tools/pf_runtime\codex_mcp.py:254:    workplace = core.resolve_workplace_root(args.workplace)
+tools/pf_runtime\codex_mcp.py:267:    workplace = core.resolve_workplace_root(args.workplace)
+tools/pf_runtime\codex_mcp.py:282:    workplace = core.resolve_workplace_root(args.workplace)
+src/processforge_core\core_update.py:232:def workplace_target(workplace_root: Path, relative_path: str) -> Path:
+src/processforge_core\core_update.py:233:    return ensure_inside(workplace_root, safe_relative_path(relative_path))
+src/processforge_core\core_update.py:236:def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_version: str | None, target_version: str, workplace_root: Path | None) -> dict[str, Any]:
+src/processforge_core\core_update.py:239:        "workplace_root": str(workplace_root.resolve()) if workplace_root else None,
+src/processforge_core\core_update.py:245:    if workplace_root is None:
+src/processforge_core\core_update.py:247:    workplace_root = workplace_root.resolve()
+src/processforge_core\core_update.py:248:    if not (workplace_root / "workplace.yaml").is_file():
+src/processforge_core\core_update.py:249:        result.update({"status": "blocked", "blockers": [{"code": "workplace_manifest_missing", "path": str(workplace_root / "workplace.yaml")} ]})
+src/processforge_core\core_update.py:270:        target = workplace_target(workplace_root, target_path)
+src/processforge_core\core_update.py:299:def backup_workplace_target(workplace_root: Path, backup_dir: Path, relative_path: str) -> dict[str, Any]:
+src/processforge_core\core_update.py:300:    source = workplace_target(workplace_root, relative_path)
+src/processforge_core\core_update.py:310:def apply_workplace_migration(archive_path: Path, workplace_root: Path, migration_plan: dict[str, Any], backup_dir: Path) -> dict[str, Any]:
+src/processforge_core\core_update.py:318:            backed_up.append(backup_workplace_target(workplace_root, backup_dir, target_path))
+src/processforge_core\core_update.py:319:            target = workplace_target(workplace_root, target_path)
+src/processforge_core\core_update.py:380:def build_plan(core_root: Path, archive_path: Path, *, workplace_root: Path | None = None) -> dict[str, Any]:
+src/processforge_core\core_update.py:427:        workplace_root=workplace_root,
+src/processforge_core\core_update.py:520:    workplace_root: Path | None = None,
+src/processforge_core\core_update.py:524:    plan = build_plan(core_root, archive_path, workplace_root=workplace_root)
+src/processforge_core\core_update.py:586:            if workplace_root is None:
+src/processforge_core\core_update.py:587:                raise CoreUpdateError("workplace_root_missing", "Workplace migration was planned without a Workplace root")
+src/processforge_core\core_update.py:588:            migration_record = apply_workplace_migration(archive_path, workplace_root.resolve(), migration, backup_dir)
+tools/pf_runtime\windows_autostart.py:32:def task_name(workplace_root: Path) -> str:
+tools/pf_runtime\windows_autostart.py:33:    identity = str(resolved_root(workplace_root)).replace("\\", "/").casefold()
+tools/pf_runtime\windows_autostart.py:46:    workplace_root: Path,
+tools/pf_runtime\windows_autostart.py:53:    workplace_root = resolved_root(workplace_root)
+tools/pf_runtime\windows_autostart.py:63:            str(workplace_root),
+tools/pf_runtime\windows_autostart.py:170:    workplace_root: Path,
+tools/pf_runtime\windows_autostart.py:179:    name = task_name(workplace_root)
+tools/pf_runtime\windows_autostart.py:182:        workplace_root,
+tools/pf_runtime\windows_autostart.py:218:    workplace_root: Path,
+tools/pf_runtime\windows_autostart.py:231:        workplace_root,
+tools/pf_runtime\windows_autostart.py:266:    workplace_root: Path,
+tools/pf_runtime\windows_autostart.py:278:        workplace_root,
+tools/pf_runtime\windows_autostart.py:316:    workplace = core.resolve_workplace_root(args.workplace)
+tools/pf_runtime\windows_autostart.py:328:    workplace = core.resolve_workplace_root(args.workplace)
+tools/pf_runtime\windows_autostart.py:343:    workplace = core.resolve_workplace_root(args.workplace)
+tools/pf_runtime\session_replay.py:26:    workplace_root: Path,
+tools/pf_runtime\session_replay.py:42:    root = RawIngressKernel(workplace_root).root
+tools/pf_runtime\session_replay.py:67:            workplace_root=Path(workplace_root),
+tools/pf_runtime\session_replay.py:94:def checkpoint_path(workplace_root: Path, session_id: str) -> Path:
+tools/pf_runtime\session_replay.py:95:    root = RawIngressKernel(workplace_root).root
+tools/pf_runtime\session_replay.py:133:    workplace_root: Path,
+tools/pf_runtime\session_replay.py:151:        workplace_root,
+tools/pf_runtime\session_replay.py:172:        routed = _ingest_derived_event(derived, workplace_root, core, project_ref=str(project_root))
+tools/pf_runtime\session_read.py:44:    workplace_root: Path, core: Any, session_id: str, project_root_ref: Any = None
+tools/pf_runtime\session_read.py:50:    presence = core.find_agent_presence(workplace_root, session_id=session_id)
+tools/pf_runtime\session_read.py:72:def _project_summary(project_root: Path, workplace_root: Path, core: Any) -> dict[str, Any]:
+tools/pf_runtime\session_read.py:73:    handle = host.route_project(str(project_root), workplace_root, core)
+tools/pf_runtime\session_read.py:108:    workplace_root: Path, core: Any, *, session_id: str, project_root_ref: Any = None
+tools/pf_runtime\session_read.py:110:    project_root, presence = _authorized_project(workplace_root, core, session_id, project_root_ref)
+tools/pf_runtime\session_read.py:113:    context = core.project_context_check_result(project_root, explicit_workplace=str(workplace_root))
+tools/pf_runtime\session_read.py:123:        for item in core.iter_agent_presence(workplace_root)
+tools/pf_runtime\session_read.py:144:            index_snapshot = core.workplace_search_runtime_snapshot(workplace_root)
+tools/pf_runtime\session_read.py:145:            search_status = ResourceSearchIndex(workplace_root, index_snapshot, workplace_root).status()
+tools/pf_runtime\session_read.py:172:        "project": _project_summary(project_root, workplace_root, core),
+tools/pf_runtime\session_read.py:212:    workplace_root: Path,
+tools/pf_runtime\session_read.py:222:    project_root, _presence = _authorized_project(workplace_root, core, session_id, project_root_ref)
+tools/pf_runtime\session_read.py:255:    workplace_root: Path, core: Any, *, session_id: str, project_root_ref: Any = None, limit: Any = None
+tools/pf_runtime\session_read.py:257:    project_root, _presence = _authorized_project(workplace_root, core, session_id, project_root_ref)
+tools/pf_runtime\service.py:36:def runtime_root(workplace_root: Path) -> Path:
+tools/pf_runtime\service.py:37:    return workplace_root / "runtime" / "pf-runtime"
+tools/pf_runtime\service.py:40:def service_path(workplace_root: Path) -> Path:
+tools/pf_runtime\service.py:41:    return runtime_root(workplace_root) / "service.json"
+tools/pf_runtime\service.py:44:def token_path(workplace_root: Path) -> Path:
+tools/pf_runtime\service.py:45:    return runtime_root(workplace_root) / "token.json"
+tools/pf_runtime\service.py:48:def lock_path(workplace_root: Path) -> Path:
+tools/pf_runtime\service.py:49:    return runtime_root(workplace_root) / "runtime.lock"
+tools/pf_runtime\service.py:52:def operator_log_path(workplace_root: Path) -> Path:
+tools/pf_runtime\service.py:53:    return runtime_root(workplace_root) / "logs" / "operator.log"
+tools/pf_runtime\service.py:102:def append_operator_log(workplace_root: Path, core: Any, event: str, **payload: Any) -> None:
+tools/pf_runtime\service.py:103:    path = operator_log_path(workplace_root)
+tools/pf_runtime\service.py:111:def load_token(workplace_root: Path) -> str:
+tools/pf_runtime\service.py:112:    payload = read_json(token_path(workplace_root))
+tools/pf_runtime\service.py:117:    write_json_atomic(token_path(workplace_root), {"schema_version": 1, "token": token})
+tools/pf_runtime\service.py:127:def base_state(workplace_root: Path, core: Any, *, status: str, endpoint: str = "", pid: int | None = None, instance_id: str = "") -> dict[str, Any]:
+tools/pf_runtime\service.py:138:        "workplace_root": str(workplace_root),
+tools/pf_runtime\service.py:139:        "workplace_id": workplace_root.name,
+tools/pf_runtime\service.py:142:        "token_ref": str(token_path(workplace_root)),
+tools/pf_runtime\service.py:154:def save_service_state(workplace_root: Path, core: Any, state: dict[str, Any]) -> None:
+tools/pf_runtime\service.py:156:    write_json_atomic(service_path(workplace_root), state)
+tools/pf_runtime\service.py:182:def inspect_lifecycle(workplace_root: Path, core: Any) -> dict[str, Any]:
+tools/pf_runtime\service.py:184:    state = read_json(service_path(workplace_root))
+tools/pf_runtime\service.py:185:    lock = read_json(lock_path(workplace_root))
+tools/pf_runtime\service.py:186:    lock_exists = lock_path(workplace_root).exists()
+tools/pf_runtime\service.py:224:def active_service(workplace_root: Path, core: Any) -> tuple[bool, dict[str, Any]]:
+tools/pf_runtime\service.py:225:    inspection = inspect_lifecycle(workplace_root, core)
+tools/pf_runtime\service.py:229:def wait_for_ready_service(workplace_root: Path, core: Any, timeout: float) -> tuple[bool, dict[str, Any]]:
+tools/pf_runtime\service.py:232:        inspection = inspect_lifecycle(workplace_root, core)
+tools/pf_runtime\service.py:240:def cleanup_stale_runtime(workplace_root: Path, core: Any) -> None:
+tools/pf_runtime\service.py:241:    with singleton_critical_section(workplace_root, core):
+tools/pf_runtime\service.py:242:        inspection = inspect_lifecycle(workplace_root, core)
+tools/pf_runtime\service.py:245:        lock_path(workplace_root).unlink(missing_ok=True)
+tools/pf_runtime\service.py:251:            write_json_atomic(service_path(workplace_root), state)
+tools/pf_runtime\service.py:269:def singleton_critical_section(workplace_root: Path, core: Any | None = None) -> Any:
+tools/pf_runtime\service.py:273:        with registry_lock(lock_path(workplace_root), timeout_seconds=10.0, stale_after_seconds=10.0):
+tools/pf_runtime\service.py:279:    path = lock_path(workplace_root)
+tools/pf_runtime\service.py:314:def acquire_singleton(workplace_root: Path, core: Any, instance_id: str) -> int:
+tools/pf_runtime\service.py:315:    runtime_root(workplace_root).mkdir(parents=True, exist_ok=True)
+tools/pf_runtime\service.py:316:    path = lock_path(workplace_root)
+tools/pf_runtime\service.py:317:    with singleton_critical_section(workplace_root, core):
+tools/pf_runtime\service.py:318:        inspection = inspect_lifecycle(workplace_root, core)
+tools/pf_runtime\service.py:329:            inspection = inspect_lifecycle(workplace_root, core)
+tools/pf_runtime\service.py:341:def release_singleton(workplace_root: Path, instance_id: str, core: Any | None = None) -> None:
+tools/pf_runtime\service.py:342:    with singleton_critical_section(workplace_root, core):
+tools/pf_runtime\service.py:343:        if str(read_json(lock_path(workplace_root)).get("instance_id") or "") == instance_id:
+tools/pf_runtime\service.py:344:            lock_path(workplace_root).unlink(missing_ok=True)
+tools/pf_runtime\service.py:348:    def __init__(self, workplace_root: Path, core: Any, *, interval: float) -> None:
+"""Bootstrap direct-script runtime adapters onto the packaged ProcessForge core."""
+
+from __future__ import annotations
+
+import importlib
+import importlib.util
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from types import ModuleType
+
+LEGACY_CORE_MODULE_NAME = "processforge_core._legacy_processforge"
+LEGACY_PUBLIC_MODULE_NAME = "processforge"
+
+
+@dataclass(frozen=True)
+class RuntimeBootstrap:
+    repo_root: Path
+    core: ModuleType
+    host: ModuleType
+    service: ModuleType
+
+
+def _repo_root_from(caller_file: str | Path) -> Path:
+    caller_path = Path(caller_file).resolve()
+    for candidate in (caller_path.parent, *caller_path.parents):
+        if (candidate / "tools" / "processforge.py").is_file():
+            return candidate
+    raise RuntimeError(f"could not resolve repository root from {caller_path}")
+
+
+def _ensure_sys_path(path: Path) -> None:
+    value = str(path)
+    if value not in sys.path:
+        sys.path.insert(0, value)
+
+
+def _cached_legacy_core(script_path: Path) -> ModuleType | None:
+    for name in (LEGACY_CORE_MODULE_NAME, LEGACY_PUBLIC_MODULE_NAME):
+        module = sys.modules.get(name)
+        if isinstance(module, ModuleType) and Path(getattr(module, "__file__", "")).resolve() == script_path:
+            sys.modules[LEGACY_CORE_MODULE_NAME] = module
+            sys.modules[LEGACY_PUBLIC_MODULE_NAME] = module
+            return module
+    return None
+
+
+def _load_legacy_core(repo_root: Path) -> ModuleType:
+    script_path = (repo_root / "tools" / "processforge.py").resolve()
+    cached = _cached_legacy_core(script_path)
+    if cached is not None:
+        return cached
+    spec = importlib.util.spec_from_file_location(LEGACY_CORE_MODULE_NAME, script_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"could not load legacy core module: {script_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[LEGACY_CORE_MODULE_NAME] = module
+    sys.modules[LEGACY_PUBLIC_MODULE_NAME] = module
+    try:
+        spec.loader.exec_module(module)
+    except Exception:
+        if sys.modules.get(LEGACY_CORE_MODULE_NAME) is module:
+            sys.modules.pop(LEGACY_CORE_MODULE_NAME, None)
+        if sys.modules.get(LEGACY_PUBLIC_MODULE_NAME) is module:
+            sys.modules.pop(LEGACY_PUBLIC_MODULE_NAME, None)
+        raise
+    return module
+
+
+def bootstrap_runtime(caller_file: str | Path) -> RuntimeBootstrap:
+    repo_root = _repo_root_from(caller_file)
+    _ensure_sys_path(repo_root / "src")
+    _ensure_sys_path(repo_root / "tools")
+    core = _load_legacy_core(repo_root)
+    host = importlib.import_module("pf_runtime.host")
+    service = importlib.import_module("pf_runtime.service")
+    return RuntimeBootstrap(
+        repo_root=repo_root,
+        core=core,
+        host=host,
+        service=service,
+    )
+"""Lazy local Runtime host PoC built on existing ProcessForge Core functions.
+
+The Runtime host keeps only rebuildable handles and session routing cache in
+workplace runtime state. Durable project facts remain in existing `.pf` files.
+"""
+
+from __future__ import annotations
+
+import argparse
+import contextlib
+import hashlib
+import io
+import json
+import os
+import threading
+import uuid
+from pathlib import Path
+from typing import Any
+
+from . import RUNTIME_PROTOCOL_VERSION
+from .raw_ingress_kernel import NativeAgentEvent, RawIngressKernel, deterministic_derived_key
+
+
+# One Runtime process may serve several concurrent loopback requests.  This
+# lock protects the read-modify-write cache and event-deduplication sequence;
+# durable authority still belongs to the existing PF Core files.
+STATE_LOCK = threading.RLock()
+PROCESS_DEFINITION_CACHE: dict[tuple[str, str], tuple[Path, int, dict[str, Any]]] = {}
+PENDING_CONVERSATION_CAPTURES: dict[tuple[str, str], dict[str, tuple[dict[str, Any], Any]]] = {}
+
+
+def state_lock() -> threading.RLock:
+    return STATE_LOCK
+
+
+def state_path(workplace_root: Path) -> Path:
+    return workplace_root / "runtime" / "pf-runtime-host" / "state.json"
+
+
+def projection_path(project_root: Path, core: Any) -> Path:
+    return core.locate_flow_root(project_root) / "artifacts" / "projections" / "command-history.md"
+
+
+def stage_obligations_path(project_root: Path, core: Any) -> Path:
+    return core.locate_flow_root(project_root) / "artifacts" / "projections" / "stage-obligations.json"
+
+
+def content_hash(payload: Any) -> str:
+    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return "sha256:" + hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def output_fact(project_root: Path, output: dict[str, Any], core: Any) -> dict[str, Any]:
+    output_id = str(output.get("id") or "output")
+    path = core.task_output_path(project_root, output)
+    if path is None:
+        return {"id": output_id, "status": "invalid", "path": "", "reason": "required output has no path"}
+    if not path.is_file():
+        return {"id": output_id, "status": "missing", "path": core.rel(path, project_root)}
+    stat = path.stat()
+    return {
+        "id": output_id,
+        "status": "present",
+        "path": core.rel(path, project_root),
+        "size": stat.st_size,
+        "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(),
+    }
+
+
+def journal_events(project_root: Path, core: Any) -> list[dict[str, Any]]:
+    path, _outbox = core.event_runtime_paths(project_root)
+    if not path.is_file():
+        return []
+    rows: list[dict[str, Any]] = []
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            item = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(item, dict):
+            rows.append(item)
+    return rows
+
+
+def execution_stage(task: dict[str, Any], run_state: dict[str, Any], process: dict[str, Any]) -> str:
+    """Resolve a Stage from durable task/run state and a Process declaration.
+
+    Runtime never invents stage names: an assignment may declare `stage`, and a
+    process may explicitly map durable worker statuses for its own runtime
+    boundary. Unknown or invalid values deliberately remain empty.
+    """
+    if str(task.get("status") or "") in {"done", "completed", "cancelled", "failed"}:
+        return ""
+    stages = process.get("stages") if isinstance(process.get("stages"), list) else []
+    stage_ids = {str(item.get("id") or "") for item in stages if isinstance(item, dict)}
+    declared = str(task.get("stage") or "")
+    if declared in stage_ids:
+        return declared
+    boundary = process.get("runtime_execution_boundary") if isinstance(process.get("runtime_execution_boundary"), dict) else {}
+    by_status = boundary.get("stage_by_worker_status") if isinstance(boundary.get("stage_by_worker_status"), dict) else {}
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command 'rg -n -A30 -B5 "resolve_workplace_root" tools/processforge.py; rg -n "def project_onboard|def workplace_init|workplace-init|project-onboard" tools/processforge.py | Select-Object -First 80' in D:\Dev\process-forge
+ succeeded in 631ms:
+17033-HANDOFF_MODES = {"wait_for_result", "delegate_and_continue", "consultation", "final_transfer", "fork", "return_required"}
+17034-HANDOFF_STATUSES = {"waiting_for_agent", "ready", "accepted", "in_progress", "returned", "finalized", "needs_operator", "cancelled"}
+17035-LEASE_STATUSES = {"active", "released", "revoked", "expired", "stale"}
+17036-
+17037-
+17038:def resolve_workplace_root(value: str | None, *, project_root: Path | None = None) -> Path:
+17039-    if value:
+17040-        path = Path(value).expanduser()
+17041-        if not path.is_absolute() and project_root is not None:
+17042-            path = project_root / path
+17043-        return path.resolve()
+17044-    if project_root is not None:
+17045-        manifest = project_workplace_manifest(project_root)
+17046-        if manifest:
+17047-            return manifest.parent.resolve()
+17048-    raise SystemExit("FAIL: --workplace is required")
+17049-
+17050-
+17051-def workplace_agent_registry_path(workplace_root: Path) -> Path:
+17052-    return workplace_root / "registries" / "agents.yaml"
+17053-
+17054-
+17055-def workplace_agent_ledger_path(workplace_root: Path) -> Path:
+17056-    return workplace_root / "runtime" / "agent-ledger" / "sessions.ndjson"
+17057-
+17058-
+17059-def workplace_agent_presence_dir(workplace_root: Path) -> Path:
+17060-    return workplace_root / "runtime" / "agent-presence"
+17061-
+17062-
+17063-def workplace_agent_leases_dir(workplace_root: Path) -> Path:
+17064-    return workplace_root / "runtime" / "agent-leases"
+17065-
+17066-
+17067-def ensure_agent_workplace_dirs(workplace_root: Path) -> None:
+17068-    for path in [
+--
+17238-        rows.append(item)
+17239-    return rows
+17240-
+17241-
+17242-def command_agent_register(args: argparse.Namespace) -> int:
+17243:    workplace_root = resolve_workplace_root(args.workplace)
+17244-    agent_id = safe_id(args.agent, "agent")
+17245-    registry = load_agent_registry(workplace_root)
+17246-    agents = registry.setdefault("agents", [])
+17247-    if not isinstance(agents, list):
+17248-        agents = []
+17249-        registry["agents"] = agents
+17250-    record = {
+17251-        "id": agent_id,
+17252-        "title": args.title or agent_id,
+17253-        "kind": args.kind,
+17254-        "roles": [str(item) for item in as_list(args.role)],
+17255-        "capabilities": [str(item) for item in as_list(args.capability)],
+17256-        "supports_specializations": [specialization_resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", []))],
+17257-    }
+17258-    existing = next((item for item in agents if isinstance(item, dict) and item.get("id") == agent_id), None)
+17259-    if existing:
+17260-        existing.update(record)
+17261-    else:
+17262-        agents.append(record)
+17263-    save_agent_registry(workplace_root, registry)
+17264-    print(f"REGISTERED: {agent_id}")
+17265-    return 0
+17266-
+17267-
+17268-def command_agent_list(args: argparse.Namespace) -> int:
+17269:    workplace_root = resolve_workplace_root(args.workplace)
+17270-    registry = load_agent_registry(workplace_root)
+17271-    agents = [item for item in registry.get("agents", []) if isinstance(item, dict)]
+17272-    if getattr(args, "json", False):
+17273-        print(json.dumps({"agents": agents}, ensure_ascii=False, indent=2))
+17274-        return 0
+17275-    for item in agents:
+17276-        print(f"{item.get('id')}\t{','.join(str(role) for role in as_list(item.get('roles')))}\t{item.get('kind', '')}")
+17277-    return 0
+17278-
+17279-
+17280-def command_agent_checkin(args: argparse.Namespace) -> int:
+17281-    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+17282:    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
+17283-    agent_id = safe_id(args.agent, "agent")
+17284-    session_id = args.session or agent_session_id(agent_id)
+17285-    project_id = args.project_id or (safe_id(project_root.name, "project") if project_root else "")
+17286-    roles = [str(item) for item in as_list(args.role)]
+17287-    registry = load_agent_registry(workplace_root)
+17288-    profile = next((item for item in registry.get("agents", []) if isinstance(item, dict) and item.get("id") == agent_id), {})
+17289-    capabilities = [str(item) for item in (as_list(getattr(args, "capability", [])) or as_list(profile.get("capabilities")))]
+17290-    supported_specializations = [specialization_resource_id(str(item)) for item in as_list(getattr(args, "supports_specialization", [])) or as_list(profile.get("supports_specializations"))]
+17291-    now = now_utc()
+17292-    presence = {
+17293-        "schema_version": 1,
+17294-        "agent_id": agent_id,
+17295-        "session_id": session_id,
+17296-        "status": "online",
+17297-        "roles": roles,
+17298-        "capabilities": capabilities,
+17299-        "supports_specializations": supported_specializations,
+17300-        "project_id": project_id,
+17301-        "project_root_ref": "project-root" if project_root else "",
+17302-        "project_root": str(project_root) if project_root else "",
+17303-        "process_id": args.process or "",
+17304-        "run_id": args.run or "",
+17305-        "task_id": args.task or "",
+17306-        "started_at": now,
+17307-        "last_seen_at": now,
+17308-        "heartbeat_ttl_seconds": int(args.ttl or 300),
+17309-        "updated_at": now,
+17310-    }
+17311-    write_agent_presence(workplace_root, presence)
+17312-    append_agent_ledger_event(
+--
+17334-    return 0
+17335-
+17336-
+17337-def command_agent_heartbeat(args: argparse.Namespace) -> int:
+17338-    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+17339:    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
+17340-    current = read_current_project_session(project_root) if project_root else {}
+17341-    raw_agent = getattr(args, "agent", None) or str(current.get("agent_id") or "")
+17342-    raw_session = getattr(args, "session", None) or str(current.get("session_id") or "")
+17343-    presence = find_agent_presence(workplace_root, agent_id=raw_agent or None, session_id=raw_session or None)
+17344-    if not presence:
+17345-        print(f"FAIL: agent presence not found: agent={raw_agent or '<unspecified>'} session={raw_session or '<unspecified>'}")
+17346-        return 1
+17347-    if raw_session and str(presence.get("session_id")) != safe_id(raw_session, "session"):
+17348-        print(f"FAIL: session mismatch for {presence.get('agent_id')}")
+17349-        return 1
+17350-    presence["status"] = "online"
+17351-    presence["last_seen_at"] = now_utc()
+17352-    if getattr(args, "task", None):
+17353-        presence["task_id"] = args.task
+17354-    write_agent_presence(workplace_root, presence)
+17355-    write_current_session_refs(workplace_root, project_root, presence)
+17356-    append_agent_ledger_event(workplace_root, {"event": "agent.heartbeat", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "task_id": presence.get("task_id")})
+17357-    print(f"HEARTBEAT: {presence.get('agent_id')} session={presence.get('session_id')}")
+17358-    return 0
+17359-
+17360-
+17361-def command_agent_checkout(args: argparse.Namespace) -> int:
+17362-    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+17363:    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
+17364-    current = read_current_project_session(project_root) if project_root else {}
+17365-    raw_agent = getattr(args, "agent", None) or str(current.get("agent_id") or "")
+17366-    raw_session = getattr(args, "session", None) or str(current.get("session_id") or "")
+17367-    presence = find_agent_presence(workplace_root, agent_id=raw_agent or None, session_id=raw_session or None)
+17368-    if not presence:
+17369-        print(f"FAIL: agent presence not found: agent={raw_agent or '<unspecified>'} session={raw_session or '<unspecified>'}")
+17370-        return 1
+17371-    if raw_session and str(presence.get("session_id")) != safe_id(raw_session, "session"):
+17372-        print(f"FAIL: session mismatch for {presence.get('agent_id')}")
+17373-        return 1
+17374-    presence["status"] = "checked_out"
+17375-    presence["last_seen_at"] = now_utc()
+17376-    presence["updated_at"] = now_utc()
+17377-    presence["finished_at"] = presence["updated_at"]
+17378-    write_agent_presence(workplace_root, presence)
+17379-    write_current_session_refs(workplace_root, project_root, presence)
+17380-    append_agent_ledger_event(workplace_root, {"event": "agent.checked_out", "agent_id": presence.get("agent_id"), "session_id": presence.get("session_id"), "project_id": presence.get("project_id"), "process_id": presence.get("process_id"), "run_id": presence.get("run_id"), "finished_at": now_utc()})
+17381-    print(f"CHECKED_OUT: {presence.get('agent_id')} session={presence.get('session_id')}")
+17382-    return 0
+17383-
+17384-
+17385-def command_agent_status(args: argparse.Namespace) -> int:
+17386-    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+17387:    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
+17388-    update_stale_agent_presence(workplace_root)
+17389-    project_id = getattr(args, "project_id", None) or (safe_id(project_root.name, "project") if project_root else None)
+17390-    rows = []
+17391-    for item in iter_agent_presence(workplace_root):
+17392-        if getattr(args, "agent", None) and str(item.get("agent_id") or "") != safe_id(args.agent, "agent"):
+17393-            continue
+17394-        if getattr(args, "session", None) and str(item.get("session_id") or "") != safe_id(args.session, "session"):
+17395-            continue
+17396-        if project_id and str(item.get("project_id") or "") != project_id:
+17397-            continue
+17398-        rows.append(item)
+17399-    payload: Any = rows[0] if getattr(args, "session", None) and len(rows) == 1 else rows
+17400-    if getattr(args, "json", False):
+17401-        print(json.dumps(payload, ensure_ascii=False, indent=2))
+17402-    else:
+17403-        print(dump_yaml(payload))
+17404-    return 0
+17405-
+17406-
+17407-def command_agent_availability(args: argparse.Namespace) -> int:
+17408-    project_root = Path(args.project_root).expanduser().resolve() if getattr(args, "project_root", None) else None
+17409:    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
+17410-    role = args.role
+17411-    project_id = getattr(args, "project_id", None) or (safe_id(project_root.name, "project") if project_root else None)
+17412-    agents = checked_in_agents(workplace_root, role=role, project_id=project_id)
+17413-    payload = {
+17414-        "available": bool(agents),
+17415-        "role": role,
+17416-        "reason": "available" if agents else "no checked-in agent with required role",
+17417-        "agents": [{"agent_id": item.get("agent_id"), "session_id": item.get("session_id"), "roles": item.get("roles", [])} for item in agents],
+17418-    }
+17419-    if getattr(args, "json", False):
+17420-        print(json.dumps(payload, ensure_ascii=False, indent=2))
+17421-    else:
+17422-        print(("AVAILABLE" if payload["available"] else "UNAVAILABLE") + f": {role} ({payload['reason']})")
+17423-    return 0
+17424-
+17425-
+17426-def command_agent_ledger_doctor(args: argparse.Namespace) -> int:
+17427:    workplace_root = resolve_workplace_root(args.workplace)
+17428-    update_stale_agent_presence(workplace_root)
+17429-    checks: list[Check] = []
+17430-    registry = workplace_agent_registry_path(workplace_root)
+17431-    ledger = workplace_agent_ledger_path(workplace_root)
+17432-    checks.append(check("PASS" if registry.is_file() else "FAIL", "agent registry exists"))
+17433-    checks.append(check("PASS" if ledger.is_file() else "FAIL", "agent session ledger exists"))
+17434-    if ledger.is_file():
+17435-        for index, line in enumerate(ledger.read_text(encoding="utf-8").splitlines(), start=1):
+17436-            if not line.strip():
+17437-                continue
+17438-            try:
+17439-                event = json.loads(line)
+17440-            except json.JSONDecodeError as exc:
+17441-                checks.append(check("FAIL", f"ledger line {index} invalid JSON: {exc}"))
+17442-                continue
+17443-            checks.append(check("PASS" if event.get("event") in {"agent.checked_in", "agent.heartbeat", "agent.checked_out", "agent.session_expired", "agent.session_recovered"} else "FAIL", f"ledger line {index} event valid"))
+17444-    return print_checks(checks)
+17445-
+17446-
+17447-def lease_path(workplace_root: Path, lease_id: str) -> Path:
+17448-    return workplace_agent_leases_dir(workplace_root) / f"{safe_id(lease_id, 'lease')}.yaml"
+17449-
+17450-
+17451-def load_lease(workplace_root: Path, lease_id: str) -> dict[str, Any]:
+17452-    return load_yaml_document(lease_path(workplace_root, lease_id))
+17453-
+17454-
+17455-def save_lease(workplace_root: Path, lease: dict[str, Any]) -> None:
+17456-    ensure_agent_workplace_dirs(workplace_root)
+17457-    write_yaml_file(lease_path(workplace_root, str(lease.get("id") or "lease")), lease)
+17458-
+17459-
+17460-def command_agent_lease_grant(args: argparse.Namespace) -> int:
+17461:    workplace_root = resolve_workplace_root(args.workplace)
+17462-    lease_id = safe_id(args.id or f"lease-{args.agent}-{args.task or args.run or 'work'}", "lease")
+17463-    issued = datetime.now(timezone.utc).replace(microsecond=0)
+17464-    expires = issued + timedelta(seconds=int(args.ttl or 3600))
+17465-    lease = {
+17466-        "schema_version": 1,
+17467-        "id": lease_id,
+17468-        "agent_id": safe_id(args.agent, "agent"),
+17469-        "session_id": args.session or read_agent_presence(workplace_root, args.agent).get("session_id", ""),
+17470-        "status": "active",
+17471-        "scope": {
+17472-            "project_id": args.project_id or "",
+17473-            "process_id": args.process or "",
+17474-            "run_id": args.run or "",
+17475-            "task_id": args.task or "",
+17476-        },
+17477-        "access": {
+17478-            "capsule": normalize_assignment_path(args.capsule or ""),
+17479-            "allowed_files": [normalize_assignment_path(item) for item in as_list(args.allowed_file)],
+17480-            "allowed_read_files": [normalize_assignment_path(item) for item in as_list(args.allowed_read_file)],
+17481-            "forbidden_files": [normalize_assignment_path(item) for item in as_list(args.forbidden_file)],
+17482-        },
+17483-        "issued_at": issued.isoformat().replace("+00:00", "Z"),
+17484-        "expires_at": expires.isoformat().replace("+00:00", "Z"),
+17485-    }
+17486-    save_lease(workplace_root, lease)
+17487-    print(f"LEASE_GRANTED: {lease_id}")
+17488-    return 0
+17489-
+17490-
+17491-def command_agent_lease_update_status(args: argparse.Namespace, status: str) -> int:
+17492:    workplace_root = resolve_workplace_root(args.workplace)
+17493-    lease = load_lease(workplace_root, args.lease)
+17494-    if not lease:
+17495-        print(f"FAIL: lease not found: {args.lease}")
+17496-        return 1
+17497-    lease["status"] = status
+17498-    lease["updated_at"] = now_utc()
+17499-    save_lease(workplace_root, lease)
+17500-    print(f"LEASE_{status.upper()}: {lease.get('id')}")
+17501-    return 0
+17502-
+17503-
+17504-def command_agent_lease_release(args: argparse.Namespace) -> int:
+17505-    return command_agent_lease_update_status(args, "released")
+17506-
+17507-
+17508-def command_agent_lease_revoke(args: argparse.Namespace) -> int:
+17509-    return command_agent_lease_update_status(args, "revoked")
+17510-
+17511-
+17512-def command_agent_lease_list(args: argparse.Namespace) -> int:
+17513:    workplace_root = resolve_workplace_root(args.workplace)
+17514-    rows = [load_yaml_document(path) for path in sorted(workplace_agent_leases_dir(workplace_root).glob("*.yaml"))]
+17515-    if getattr(args, "json", False):
+17516-        print(json.dumps({"leases": rows}, ensure_ascii=False, indent=2))
+17517-    else:
+17518-        for item in rows:
+17519-            print(f"{item.get('id')}\t{item.get('status')}\t{item.get('agent_id')}\t{(item.get('scope') or {}).get('task_id', '')}")
+17520-    return 0
+17521-
+17522-
+17523-def command_agent_lease_doctor(args: argparse.Namespace) -> int:
+17524:    workplace_root = resolve_workplace_root(args.workplace)
+17525-    checks: list[Check] = []
+17526-    for path in sorted(workplace_agent_leases_dir(workplace_root).glob("*.yaml")):
+17527-        lease = load_yaml_document(path)
+17528-        checks.append(check("PASS" if lease.get("id") else "FAIL", f"{path.name} id present"))
+17529-        checks.append(check("PASS" if lease.get("agent_id") else "FAIL", f"{path.name} agent_id present"))
+17530-        checks.append(check("PASS" if lease.get("status") in LEASE_STATUSES else "FAIL", f"{path.name} status valid"))
+17531-        if str(lease.get("status")) == "active":
+17532-            expires = parse_runtime_timestamp(lease.get("expires_at"))
+17533-            checks.append(check("PASS" if expires and expires > datetime.now(timezone.utc) else "WARN", f"{path.name} active lease not expired"))
+17534-    if not checks:
+17535-        checks.append(check("PASS", "no leases present"))
+17536-    return print_checks(checks)
+17537-
+17538-
+17539-def mark_expired_agent_leases(workplace_root: Path) -> int:
+17540-    changed = 0
+17541-    now = datetime.now(timezone.utc)
+17542-    for path in sorted(workplace_agent_leases_dir(workplace_root).glob("*.yaml")):
+17543-        lease = load_yaml_document(path)
+17544-        if str(lease.get("status")) != "active":
+17545-            continue
+17546-        expires = parse_runtime_timestamp(lease.get("expires_at"))
+17547-        if expires and expires <= now:
+17548-            lease["status"] = "stale"
+17549-            lease["updated_at"] = now_utc()
+17550-            write_yaml_file(path, lease)
+17551-            changed += 1
+17552-    return changed
+17553-
+17554-
+--
+17683-    workplace = getattr(args, "workplace", None)
+17684-    if not workplace:
+17685-        return []
+17686-    role = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_role") or "")
+17687-    project_id = getattr(args, "project_id", None)
+17688:    agents = checked_in_agents(resolve_workplace_root(workplace, project_root=project_root), role=role or None, project_id=project_id)
+17689-    required_capabilities = set(str(item) for item in as_list((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_capabilities")))
+17690-    if required_capabilities:
+17691-        agents = [
+17692-            agent for agent in agents
+17693-            if required_capabilities.issubset({str(item) for item in as_list(agent.get("capabilities"))})
+17694-        ]
+17695-    required = set(as_list((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_specializations")))
+17696-    if required:
+17697-        agents = [
+17698-            agent for agent in agents
+17699-            if required.issubset({specialization_resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
+17700-        ]
+17701-    return agents
+17702-
+17703-
+17704-def command_handoff_status(args: argparse.Namespace) -> int:
+17705-    project_root = Path(args.project_root).expanduser().resolve()
+17706-    require_flow_root(project_root)
+17707-    handoff = load_handoff(project_root, args.handoff)
+17708-    agents = handoff_available_agents(args, handoff, project_root)
+17709-    payload = {
+17710-        "handoff": handoff.get("id"),
+17711-        "status": handoff.get("status"),
+17712-        "required_role": (handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_role", ""),
+17713-        "required_capabilities": (handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_capabilities", []),
+17714-        "available_agents": [{"agent_id": item.get("agent_id"), "session_id": item.get("session_id")} for item in agents],
+17715-    }
+17716-    if payload["status"] == "waiting_for_agent" and agents:
+17717-        payload["status"] = "ready"
+17718-    if getattr(args, "json", False):
+--
+17804-
+17805-
+17806-def command_agent_director_tick(args: argparse.Namespace) -> int:
+17807-    project_root = Path(args.project_root).expanduser().resolve()
+17808-    require_flow_root(project_root)
+17809:    workplace_root = resolve_workplace_root(args.workplace, project_root=project_root)
+17810-    changed = mark_expired_agent_leases(workplace_root)
+17811-    for root in sorted((locate_flow_root(project_root) / "handoffs").glob("*")):
+17812-        if not root.is_dir() or not (root / "handoff.yaml").is_file():
+17813-            continue
+17814-        handoff = load_yaml_document(root / "handoff.yaml")
+17815-        if handoff.get("status") != "waiting_for_agent":
+17816-            continue
+17817-        role = str((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_role") or "")
+17818-        agents = checked_in_agents(workplace_root, role=role or None, project_id=getattr(args, "project_id", None))
+17819-        required_capabilities = set(str(item) for item in as_list((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_capabilities")))
+17820-        if required_capabilities:
+17821-            agents = [
+17822-                agent for agent in agents
+17823-                if required_capabilities.issubset({str(item) for item in as_list(agent.get("capabilities"))})
+17824-            ]
+17825-        required_specializations = set(as_list((handoff.get("to") if isinstance(handoff.get("to"), dict) else {}).get("required_specializations")))
+17826-        if required_specializations:
+17827-            agents = [
+17828-                agent for agent in agents
+17829-                if required_specializations.issubset({specialization_resource_id(str(item)) for item in as_list(agent.get("supports_specializations"))})
+17830-            ]
+17831-        if not agents:
+17832-            created = parse_runtime_timestamp(handoff.get("created_at"))
+17833-            if created and datetime.now(timezone.utc) > created + timedelta(seconds=int(args.wait_ttl or 3600)):
+17834-                handoff["status"] = "needs_operator"
+17835-                handoff["director_reason"] = "required agent unavailable past wait ttl"
+17836-                save_handoff(project_root, handoff)
+17837-                changed += 1
+17838-            continue
+17839-        agent = agents[0]
+1299:            "Run `python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type <project-type> --apply` first."
+2149:`workplace-init --apply` runs `doctor-workplace` automatically and updates this report with the doctor result.
+2167:    workplace_handoff = """# Handoff: workplace-initialization -> project-onboarding
+2184:- Project `.pf/` folders; those belong to `project-onboarding`.2193:Run `project-onboard` for a concrete project.
+2257:        root / "logs" / "workplace-init-report.md": report,
+2302:    handoff = f"""# Handoff: workplace-initialization -> project-onboarding
+2320:- Project `.pf/` folders; those belong to `project-onboarding`.
+2329:Run `project-onboard` for a concrete project.
+2351:        "correlation_id": f"workplace-init-{workplace_id}",
+2353:        "process": {"id": "workplace-initialization", "version": "1.0.0", "stage_id": None, "process_run_id": None},
+2406:    maintenance = search_index_maintenance_for_known_projects(root, reason="workplace-init")
+2591:            "run workplace-init internals",
+2595:            "write project-onboard next steps",
+2629:2. Create or update the workplace layer through `workplace-init`.
+2696:- apply plan delegates to `workplace-init` and `doctor-workplace`
+2738:    init_answers_path = session_dir / "workplace-init.answers.yaml"
+2755:- workplace-init internals
+2770:python {machine.get("processforge_root") or "<processforge-root>"}/bin/pf.py project-onboard --project-root <project-root> --workplace {workplace} --type generic --apply
+2969:            "python bin/pf.py workplace-init --workplace <workplace-root> --apply",
+3002:                "python bin/pf.py workplace-init --workplace <workplace-root> --apply",
+3024:                "python bin/pf.py workplace-init --workplace <workplace-root> --apply",
+4039:  Run this launcher from a ProcessForge project root, pass --project-root to the command, or rerun project-onboard."""
+4047:  Set PROCESSFORGE_HOME to the ProcessForge distribution root, or rerun project-onboard from the distribution."""
+4055:  Check PROCESSFORGE_HOME or rerun project-onboard so .pf/process-forge.local.yaml points to a valid distribution."""
+5704:        "run_id": f"project-onboarding-{defaults['id']}",
+5705:        "process": "project-onboarding",
+5784:- .pf/artifacts/project-onboarding-report.md
+5785:- .pf/reviews/project-onboarding-review.md
+5810:    onboarding_handoff = f"""# Handoff: project-onboarding -> first-assignment
+5949:        flow_root / "artifacts" / "project-onboarding-report.md": onboarding_report,
+5951:        flow_root / "reviews" / "project-onboarding-review.md": onboarding_review,
+5961:    report = flow_root / "artifacts" / "project-onboarding-report.md"
+5991:    emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": request.get("command", "project-onboard")})
+5996:    emit_process_event(project_root, "project.flow_root.created", process_id="project-onboarding", process_version="1.0.0", payload={"flow_root": PROJECT_FLOW_ROOT})
+5997:    emit_process_event(project_root, "project.platform.detected", process_id="project-onboarding", process_version="1.0.0", payload={"project_type": project_type or "auto"})
+5999:    emit_process_event(project_root, "project.snapshot.refreshed", process_id="project-onboarding", process_version="1.0.0", payload={"status": snapshot_status, "paths": {key: rel(value, project_root) for key, value in snapshot_paths.items()}})
+6000:    emit_process_event(project_root, "launcher.project_runtime.created", process_id="project-onboarding", process_version="1.0.0", payload={"path": ".pf/runtime/bin/pf.py"})
+6001:    emit_process_event(project_root, "agent.start_prompt.generated", process_id="project-onboarding", process_version="1.0.0", payload={"path": ".pf/START_AGENT_HERE.md"})
+6002:    emit_process_event(project_root, "assignment.created", process_id="project-onboarding", process_version="1.0.0", assignment_id_value="first-assignment", assignment_path=".pf/assignments/first-assignment.yaml", payload={"path": ".pf/assignments/first-assignment.yaml"})
+6008:        process_id="project-onboarding",
+6017:            reason="project-onboarding",
+6020:    emit_process_event(project_root, "project.onboarding.completed", process_id="project-onboarding", process_version="1.0.0", payload={"files": [rel(result.target, project_root) for result in results], "doctor_status": doctor_status})
+6062:        "project_not_initialized": "Use project-onboard for a new project; repair only accepts an existing .pf project.",
+6081:        "command": getattr(args, "command", "project-onboard"),
+6243:        command="workplace-init",
+6252:        command="project-onboard",
+16799:    "workplace-initialization",
+16800:    "project-onboarding",
+21247:                "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic --apply",
+21283:                    "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic --apply",
+21388:                "register the capability provider in the workplace, rerun project-onboard or project-context-refresh, then rerun doctor-project",
+21412:  Register the missing resource in the workplace registry, then rerun project-onboard or project-context-refresh."""))
+21428:        "artifacts/project-onboarding-report.md",
+21430:        "reviews/project-onboarding-review.md",
+21452:                        "python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type generic --apply",
+25761:                f"# Handoff: platform-create -> project-onboarding\n\nPlatform `{contract_id}` is ready for project type matching."
+26074:    workplace_init = sub.add_parser("workplace-init", help="First-run alias for init-workplace.")
+26179:    project_onboard = sub.add_parser("project-onboard", help="Onboard a project into an existing ProcessForge workplace.")
+26260:    first_run = sub.add_parser("first-run", help="Convenience command that runs workplace-init and then project-onboard.")
+
+2026-09-11T06:53:58.055595Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 2/5
+2026-09-11T06:53:58.777770Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 3/5
+2026-09-11T06:53:59.809232Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 4/5
+2026-09-11T06:54:01.681805Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+ERROR: Reconnecting... 5/5
+2026-09-11T06:54:03.314941Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 403 Forbidden: <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style global>body{font-family:Arial,Helvetica,sans-serif}.container{align-items:center;display:flex;flex-direction:column;height:100%;justify-content:center;width:100%}@keyframes enlarge-appear{0%{opacity:0;transform:scale(75%) rotate(-90deg)}to{opacity:1;transform:scale(100%) rotate(0deg)}}.logo{color:#8e8ea0;padding-bottom:1.5rem}.scale-appear{animation:enlarge-appear .4s ease-out}@media (min-width:768px){.scale-appear{height:48px;width:48px}}.data:empty{display:none}.data{border-radius:5px;color:#8e8ea0;max-width:420px;text-align:center;width:100%}.data ul{list-style:none;padding:0}.blocked-icon{color:#ef4444}.message{align-items:center;display:flex;font-size:1.5rem;gap:1rem;justify-content:center}.explanation{font-size:.9rem;line-height:1.5;max-width:420px;opacity:50%;text-align:center;width:100%}.explanation a{color:#000}@media (prefers-color-scheme:dark){body{background-color:#343541;c..., url: https://chatgpt.com/backend-api/codex/models?client_version=0.153.4, cf-ray: a394c2491967e91d-DME
+2026-09-11T06:54:05.173276Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 403 Forbidden, url: wss://chatgpt.com/backend-api/codex/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 403 Forbidden: 19eb
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style global>body{font-family:Arial,Helvetica,san, url: wss://chatgpt.com/backend-api/codex/responses, cf-ray: a394c254a876ec56-DME
+ERROR: Reconnecting... 1/5
+ERROR: Reconnecting... 2/5
+ERROR: Reconnecting... 3/5
+ERROR: Reconnecting... 4/5
+ERROR: Reconnecting... 5/5
+ERROR: unexpected status 403 Forbidden: <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style global>body{font-family:Arial,Helvetica,sans-serif}.container{align-items:center;display:flex;flex-direction:column;height:100%;justify-content:center;width:100%}@keyframes enlarge-appear{0%{opacity:0;transform:scale(75%) rotate(-90deg)}to{opacity:1;transform:scale(100%) rotate(0deg)}}.logo{color:#8e8ea0;padding-bottom:1.5rem}.scale-appear{animation:enlarge-appear .4s ease-out}@media (min-width:768px){.scale-appear{height:48px;width:48px}}.data:empty{display:none}.data{border-radius:5px;color:#8e8ea0;max-width:420px;text-align:center;width:100%}.data ul{list-style:none;padding:0}.blocked-icon{color:#ef4444}.message{align-items:center;display:flex;font-size:1.5rem;gap:1rem;justify-content:center}.explanation{font-size:.9rem;line-height:1.5;max-width:420px;opacity:50%;text-align:center;width:100%}.explanation a{color:#000}@media (prefers-color-scheme:dark){body{background-color:#343541;c..., url: https://chatgpt.com/backend-api/codex/responses, cf-ray: a394c28439239d3f-DME
+ERROR: unexpected status 403 Forbidden: <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style global>body{font-family:Arial,Helvetica,sans-serif}.container{align-items:center;display:flex;flex-direction:column;height:100%;justify-content:center;width:100%}@keyframes enlarge-appear{0%{opacity:0;transform:scale(75%) rotate(-90deg)}to{opacity:1;transform:scale(100%) rotate(0deg)}}.logo{color:#8e8ea0;padding-bottom:1.5rem}.scale-appear{animation:enlarge-appear .4s ease-out}@media (min-width:768px){.scale-appear{height:48px;width:48px}}.data:empty{display:none}.data{border-radius:5px;color:#8e8ea0;max-width:420px;text-align:center;width:100%}.data ul{list-style:none;padding:0}.blocked-icon{color:#ef4444}.message{align-items:center;display:flex;font-size:1.5rem;gap:1rem;justify-content:center}.explanation{font-size:.9rem;line-height:1.5;max-width:420px;opacity:50%;text-align:center;width:100%}.explanation a{color:#000}@media (prefers-color-scheme:dark){body{background-color:#343541;c..., url: https://chatgpt.com/backend-api/codex/responses, cf-ray: a394c28439239d3f-DME
+tokens used
+77 905

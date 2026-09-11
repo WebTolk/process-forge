@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_cli_audit_f0608.py", line 305, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_cli_audit_f0608.py", line 299, in main
+    smoke_plan_default_parity(raw)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "D:\Dev\process-forge\tools\smoke_cli_audit_f0608.py", line 231, in smoke_plan_default_parity
+    assert pf.read_yaml_file(normalized_path)["workers"][0]["expected_report_artifact"] == expected
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+KeyError: 'workers'

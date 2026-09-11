@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "pid": 13996,
+  "started_at": "2026-09-07T13:06:45Z",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge/tools/codex_exec_worker.py",
+    "--worker-prompt",
+    "D:\\Dev\\process-forge\\.pf\\runs\\docs-fix-1-1-1-shell-20260907\\worker-prompts\\docs111-mechanical.md",
+    "--capsule",
+    "D:\\Dev\\process-forge\\.pf\\contexts\\assignment-capsules\\docs111-mechanical.capsule.yaml",
+    "--workspace-access",
+    "D:\\Dev\\process-forge\\.pf\\runtime\\agent-runs\\docs-fix-1-1-1-shell-20260907\\docs111-mechanical\\workspace-access.json",
+    "--output",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\docs-fix-1.1.1-20260907\\docs111-mechanical-report.md",
+    "--heartbeat",
+    "D:\\Dev\\process-forge\\.pf\\runtime\\agent-runs\\docs-fix-1-1-1-shell-20260907\\docs111-mechanical\\heartbeat.json"
+  ]
+}

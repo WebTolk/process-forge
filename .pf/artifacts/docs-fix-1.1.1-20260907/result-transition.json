@@ -1,0 +1,25 @@
+{
+  "command": [
+    "python",
+    "tools/processforge.py",
+    "work-transition",
+    "--project-root",
+    ".",
+    "--run",
+    "garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1",
+    "--assignment",
+    "plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using",
+    "--outcome",
+    "completed",
+    "--evidence-file",
+    ".pf/artifacts/docs-fix-1.1.1-20260907/result-evidence.json",
+    "--notes",
+    "D01-D08 fixed and all five delegated tasks done; independent review passed. Source suite FAIL is documented and reproduced on HEAD; release readiness is not claimed.",
+    "--json"
+  ],
+  "started_at": "2026-09-07T14:16:52.950291+00:00",
+  "finished_at": "2026-09-07T14:17:02.945289+00:00",
+  "elapsed_seconds": 9.995,
+  "exit_code": 0,
+  "output": "{\n  \"action\": \"stage_transitioned\",\n  \"allowed_outcomes\": [\n    {\n      \"id\": \"completed\",\n      \"next_stage\": \"run-summary\",\n      \"title\": \"completed\"\n    }\n  ],\n  \"artifacts\": [\n    {\n      \"evidence\": {},\n      \"id\": \"run-review\",\n      \"kind\": \"artifact\",\n      \"satisfied\": false\n    }\n  ],\n  \"assignment\": {\n    \"id\": \"plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using\",\n    \"status\": \"in_progress\"\n  },\n  \"blockers\": [],\n  \"completion\": {\n    \"requirements\": [\n      {\n        \"artifact_id\": \"run-review\",\n        \"code\": \"artifact_evidence_missing\"\n      },\n      {\n        \"code\": \"gate_evidence_missing\",\n        \"gate_id\": \"run-doctor-passed\"\n      },\n      {\n        \"code\": \"handoff_note_required\",\n        \"stage_id\": \"run-review\"\n      }\n    ],\n    \"status\": \"incomplete\"\n  },\n  \"evidence\": [],\n  \"gates\": {\n    \"entry\": [\n      {\n        \"blocking\": true,\n        \"evidence\": {\n          \"id\": \"all-blocking-tasks-completed\",\n          \"kind\": \"gate\",\n          \"path\": \".pf/artifacts/docs-fix-1.1.1-20260907/integration-report.md\",\n          \"recorded_at\": \"2026-09-07T14:16:55Z\",\n          \"sha256\": \"sha256:9c6ea7059493db1ca78b4d1705a95161cf20a443e11942a932434dffe4f1b25b\",\n          \"status\": \"passed\"\n        },\n        \"id\": \"all-blocking-tasks-completed\",\n        \"phase\": \"entry\",\n        \"required\": true,\n        \"satisfied\": true,\n        \"type\": \"checklist\"\n      }\n    ],\n    \"exit\": [\n      {\n        \"blocking\": true,\n        \"evidence\": {},\n        \"id\": \"run-doctor-passed\",\n        \"phase\": \"exit\",\n        \"required\": true,\n        \"satisfied\": false,\n        \"type\": \"checklist\"\n      }\n    ]\n  },\n  \"incomplete\": [\n    {\n      \"artifact_id\": \"run-review\",\n      \"code\": \"artifact_evidence_missing\"\n    },\n    {\n      \"code\": \"gate_evidence_missing\",\n      \"gate_id\": \"run-doctor-passed\"\n    },\n    {\n      \"code\": \"handoff_note_required\",\n      \"stage_id\": \"run-review\"\n    }\n  ],\n  \"kind\": \"pf.work.state\",\n  \"next_stage_id\": \"run-review\",\n  \"obligations\": [],\n  \"previous_stage_id\": \"task-result-fixation\",\n  \"process\": {\n    \"fingerprint\": \"sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2\",\n    \"id\": \"task-batch-execution\",\n    \"pin_status\": \"pinned\",\n    \"version\": \"1.0.0\"\n  },\n  \"project\": {\n    \"id\": \"process-forge\"\n  },\n  \"required_evidence\": [],\n  \"required_inputs\": [\n    {\n      \"evidence\": {\n        \"id\": \"task-result\",\n        \"kind\": \"artifact\",\n        \"path\": \".pf/artifacts/docs-fix-1.1.1-20260907/integration-report.md\",\n        \"recorded_at\": \"2026-09-07T14:16:55Z\",\n        \"sha256\": \"sha256:9c6ea7059493db1ca78b4d1705a95161cf20a443e11942a932434dffe4f1b25b\",\n        \"status\": \"ready\"\n      },\n      \"id\": \"task-result\",\n      \"kind\": \"input\",\n      \"satisfied\": true\n    }\n  ],\n  \"run\": {\n    \"id\": \"garage-plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1\",\n    \"status\": \"in_progress\"\n  },\n  \"schema_version\": 1,\n  \"stage\": {\n    \"id\": \"run-review\",\n    \"status\": \"in_progress\",\n    \"title\": \"Review run results\"\n  },\n  \"work\": {\n    \"active_specializations\": [],\n    \"selected_resource_ids\": []\n  }\n}\n"
+}

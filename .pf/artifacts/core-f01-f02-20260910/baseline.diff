@@ -1,0 +1,1971 @@
+diff --git a/.pf/artifacts/project-context-refresh-report.md b/.pf/artifacts/project-context-refresh-report.md
+index a8e30f3..616d769 100644
+--- a/.pf/artifacts/project-context-refresh-report.md
++++ b/.pf/artifacts/project-context-refresh-report.md
+@@ -1,9 +1,9 @@
+ # Project Context Refresh Report
+ 
+-- snapshot_id: ctx-20260907-094912-ae667f
++- snapshot_id: ctx-20260908-074925-d05a67
+ - status: fresh
+-- previous_status: stale
+-- generation: .pf/contexts/project-context.snapshots/ctx-20260907-094912-ae667f.yaml
++- previous_status: fresh
++- generation: .pf/contexts/project-context.snapshots/ctx-20260908-074925-d05a67.yaml
+ - current: .pf/contexts/project-context.snapshot.yaml
+ 
+ Existing assignment capsules are immutable and remain pinned to their original snapshot id and checksum.
+diff --git a/.pf/artifacts/projections/command-history.md b/.pf/artifacts/projections/command-history.md
+index 525b5a4..6946511 100644
+--- a/.pf/artifacts/projections/command-history.md
++++ b/.pf/artifacts/projections/command-history.md
+@@ -1,7 +1,7 @@
+ # Runtime Command History
+ 
+ - source: `.pf/runtime/events/events.ndjson`
+-- generated_at: `2026-09-07T10:23:09Z`
++- generated_at: `2026-09-10T04:44:50Z`
+ 
+ | time | event | actor | session | subject | status |
+ | --- | --- | --- | --- | --- | --- |
+@@ -24,3 +24,521 @@
+ | 2026-09-07T10:16:17Z | `agent.session.ended` | `codex` | `01a07afd-4c7c-7630-acc1-ab9b9ee112cd` | `01a07afd-4c7c-7630-acc1-ab9b9ee112cd` | `` |
+ | 2026-09-07T10:22:22Z | `agent.command.completed` | `codex` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `` |
+ | 2026-09-07T10:23:08Z | `agent.command.completed` | `codex` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `` |
++| 2026-09-07T10:23:19Z | `agent.command.completed` | `codex` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `` |
++| 2026-09-07T10:23:26Z | `agent.command.completed` | `codex` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `` |
++| 2026-09-07T10:23:36Z | `agent.tool.completed` | `codex` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `` |
++| 2026-09-07T10:23:40Z | `agent.command.completed` | `codex` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `` |
++| 2026-09-07T10:23:43Z | `agent.command.completed` | `codex` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `` |
++| 2026-09-07T10:23:48Z | `agent.command.completed` | `codex` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `` |
++| 2026-09-07T10:24:03Z | `agent.command.completed` | `codex` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `` |
++| 2026-09-07T10:24:09Z | `agent.command.completed` | `codex` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `` |
++| 2026-09-07T10:24:15Z | `agent.command.completed` | `codex` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `01a07b42-e428-7e63-963e-6bb652ad1918` | `` |
++| 2026-09-07T12:06:54Z | `agent.session.started` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:07:07Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:07:13Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:07:14Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:07:45Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:08:09Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:08:09Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:08:30Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:08:40Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:08:54Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:09:01Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:09:02Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:09:18Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:09:19Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:09:27Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:09:37Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:09:51Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:09:57Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:09:58Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:10:16Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:10:52Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:10:52Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:10:53Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:11:24Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:11:32Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:11:33Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:12:32Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:12:33Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:13:01Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:13:09Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:13:26Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:13:27Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:13:41Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:14:10Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:14:11Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:14:13Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:14:36Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:14:55Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:15:12Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:15:13Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:15:33Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:15:46Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:16:03Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:16:31Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:16:32Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:17:10Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:17:44Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:18:13Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:18:30Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:18:48Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:19:35Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:20:08Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:20:38Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:22:43Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:28:49Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:29:19Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:29:27Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:29:51Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:29:52Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:30:10Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:30:46Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:30:51Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:31:17Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:31:25Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:31:37Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:32:18Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:32:30Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:32:55Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:32:59Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:33:52Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:33:53Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:34:11Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:35:59Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:36:00Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:36:20Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:36:56Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:36:57Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:36:58Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:37:05Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:37:35Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:37:52Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:37:54Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:38:53Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:38:53Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:39:05Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:40:15Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:40:18Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:40:20Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:41:22Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:41:24Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:41:24Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:41:58Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:41:58Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:41:59Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:42:41Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:42:42Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:42:42Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:43:20Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:43:20Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:43:21Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:43:22Z | `agent.session.compaction.started` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:46:51Z | `agent.session.compacted` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:46:57Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:47:05Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:47:13Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:47:25Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:47:51Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:48:21Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:48:25Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:48:41Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:48:53Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:49:04Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:49:21Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:49:22Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:49:54Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:50:05Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:53:04Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:53:30Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:53:32Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:53:58Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:54:01Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:54:52Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:55:01Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:55:24Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:55:27Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:55:40Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:59:32Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T12:59:59Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:00:06Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:00:06Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:00:24Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:00:42Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:00:54Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:01:21Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:01:40Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:03:34Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:03:56Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:04:19Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:04:34Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:04:44Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:04:45Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:05:10Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:05:32Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:05:58Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:06:20Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:06:30Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:06:41Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:06:51Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:07:14Z | `agent.session.started` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:07:18Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:07:19Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:07:24Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:07:26Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:07:57Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:08:01Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:08:02Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:08:04Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:08:06Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:08:08Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:08:54Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:08:55Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:09:16Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:09:17Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:09:27Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:09:29Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:09:33Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:09:59Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:09:59Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:10:00Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:10:01Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:10:03Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:10:06Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:10:48Z | `agent.tool.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:10:49Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:10:50Z | `agent.tool.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:10:51Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:10:55Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:10:57Z | `agent.tool.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:10:58Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:11:36Z | `agent.session.ended` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:11:50Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:11:50Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:12:12Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:12:12Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:12:13Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:12:33Z | `agent.command.completed` | `codex` | `01a07bfa-7edc-7590-b944-23769763437f` | `01a07bfa-7edc-7590-b944-23769763437f` | `` |
++| 2026-09-07T13:12:47Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:12:48Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:12:49Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:13:00Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:13:21Z | `agent.session.started` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:13:35Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:13:39Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:13:41Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:13:43Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:13:44Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:14:06Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:14:09Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:14:12Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:14:39Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:14:51Z | `agent.session.started` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:15:03Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:15:04Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:15:06Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:15:07Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:15:08Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:15:10Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:15:13Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:15:15Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:15:19Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:16:07Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:16:13Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:16:14Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:16:15Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:16:17Z | `agent.tool.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:16:18Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:16:53Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:16:54Z | `agent.tool.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:16:55Z | `agent.tool.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:16:58Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:16:59Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:17:01Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:17:04Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:17:42Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:17:50Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:17:50Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:17:51Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:17:52Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:17:56Z | `agent.session.ended` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:17:58Z | `agent.command.completed` | `codex` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `01a07c01-3787-73d2-95f4-a0f68e025b6b` | `` |
++| 2026-09-07T13:19:11Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:19:11Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:19:12Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:19:50Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:19:51Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:20:03Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:20:10Z | `agent.command.completed` | `codex` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `01a07c00-1ac6-77e0-80ba-827bfe142e65` | `` |
++| 2026-09-07T13:21:09Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:21:16Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:21:18Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:21:24Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:21:26Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:21:47Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:21:50Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:22:32Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:22:34Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:22:47Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:24:18Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:24:19Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:24:20Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:25:58Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:26:00Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:26:52Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:26:52Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:27:13Z | `agent.session.started` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:27:22Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:27:23Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:27:23Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:27:24Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:27:43Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:27:45Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:27:59Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:28:01Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:28:02Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:28:11Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:28:37Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:28:38Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:28:40Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:28:41Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:28:43Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:28:45Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:28:48Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:28:51Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:29:36Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:29:37Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:29:37Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:29:44Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:29:45Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:29:48Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:30:21Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:30:28Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:31:05Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:31:25Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:31:25Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:31:46Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:32:00Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:32:01Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:32:32Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:32:32Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:32:41Z | `agent.tool.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:32:50Z | `agent.tool.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:32:55Z | `agent.tool.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:33:17Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:33:17Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:33:18Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:33:19Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:33:21Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:34:01Z | `agent.tool.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:34:02Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:34:10Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:34:11Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:34:13Z | `agent.tool.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:34:15Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:34:18Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:34:20Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:34:54Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:34:54Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:34:57Z | `agent.tool.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:35:18Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:35:19Z | `agent.tool.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:35:20Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:35:52Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:35:56Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:35:57Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:36:41Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:36:42Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:36:47Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:37:12Z | `agent.session.started` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:37:15Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:37:29Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:37:59Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:38:08Z | `agent.command.completed` | `codex` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `01a07c0c-c4e4-7752-96f0-e13b0ee32368` | `` |
++| 2026-09-07T13:38:15Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:39:10Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:39:20Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:39:25Z | `agent.tool.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:39:46Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:39:57Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:40:26Z | `agent.tool.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:40:38Z | `agent.tool.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:40:49Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:40:49Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:40:52Z | `agent.tool.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:41:21Z | `agent.tool.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:41:27Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:41:33Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:41:34Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:41:35Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:41:36Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:41:37Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:42:18Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:42:18Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:42:24Z | `agent.tool.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:42:49Z | `agent.tool.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:42:54Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:43:00Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:43:14Z | `agent.tool.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:43:19Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:43:20Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:43:34Z | `agent.tool.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:43:53Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:44:00Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:44:00Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:44:01Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:44:15Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:44:20Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:44:41Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:44:47Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:44:48Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:44:50Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:44:51Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:45:23Z | `agent.session.ended` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:45:28Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:45:44Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:46:07Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:46:20Z | `agent.command.completed` | `codex` | `01a07c15-e176-7921-a666-bdf9417902b9` | `01a07c15-e176-7921-a666-bdf9417902b9` | `` |
++| 2026-09-07T13:46:28Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:46:29Z | `agent.session.compaction.started` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:46:30Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:50:26Z | `agent.session.compacted` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:50:36Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:50:50Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:51:04Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:51:10Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:52:08Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:52:38Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:52:50Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:52:51Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:53:14Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:53:15Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:53:49Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:54:05Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:54:14Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:54:49Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:54:51Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:55:12Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:55:14Z | `agent.session.started` | `codex` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `` |
++| 2026-09-07T13:55:22Z | `agent.command.completed` | `codex` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `` |
++| 2026-09-07T13:55:49Z | `agent.command.completed` | `codex` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `` |
++| 2026-09-07T13:55:55Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:55:56Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:55:59Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:56:31Z | `agent.command.completed` | `codex` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `` |
++| 2026-09-07T13:56:58Z | `agent.command.completed` | `codex` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `` |
++| 2026-09-07T13:57:15Z | `agent.session.ended` | `codex` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `01a07c26-6fa9-77b2-b127-d3ace2db5d86` | `` |
++| 2026-09-07T13:57:45Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:58:04Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:58:38Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:58:39Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:58:40Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:59:03Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:59:32Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T13:59:37Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:00:17Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:00:18Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:01:46Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:07:49Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:08:10Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:08:28Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:11:53Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:12:15Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:12:49Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:13:15Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:13:20Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:13:50Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:14:15Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:14:50Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:14:53Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:15:52Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:16:27Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:16:32Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:16:55Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:17:19Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:17:22Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:18:23Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:18:49Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:19:12Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:19:15Z | `agent.command.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:19:42Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-07T14:19:42Z | `agent.tool.completed` | `codex` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `01a07bc1-74d1-70f3-9c34-e41bde31caae` | `` |
++| 2026-09-08T07:47:02Z | `agent.session.started` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:47:10Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:47:26Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:47:28Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:47:30Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:48:00Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:48:15Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:48:35Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:48:35Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:48:36Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:49:05Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:49:06Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:49:30Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:49:43Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:50:00Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:50:01Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:50:15Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:50:17Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:50:42Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:50:51Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:50:52Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:51:28Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:51:28Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:52:06Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:52:23Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:52:24Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:52:25Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:52:50Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:52:57Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:53:07Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:53:22Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:54:20Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:54:22Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:55:32Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:55:45Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:56:10Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:56:17Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:56:42Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:57:56Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:57:57Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:58:58Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:59:15Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:59:33Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:59:34Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:59:35Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T07:59:53Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:00:21Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:00:35Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:01:15Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:01:16Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:01:17Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:01:58Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:02:07Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:07:03Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:07:04Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:07:51Z | `agent.tool.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:07:56Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:08:24Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-08T08:09:12Z | `agent.command.completed` | `codex` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `01a07ff0-2113-74e2-aa10-04cf59f03280` | `` |
++| 2026-09-10T04:37:51Z | `agent.session.started` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:38:00Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:38:07Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:38:10Z | `agent.tool.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:38:20Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:38:40Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:39:01Z | `agent.tool.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:39:30Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:39:42Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:40:00Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:40:24Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:42:27Z | `agent.tool.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:42:28Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:42:44Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:42:59Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:43:14Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:43:27Z | `agent.tool.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:43:54Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:43:55Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
++| 2026-09-10T04:44:06Z | `agent.command.completed` | `codex` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `01a0899b-2451-73a1-9751-ddfc1e9cac04` | `` |
+diff --git a/.pf/artifacts/projections/process-execution-state.json b/.pf/artifacts/projections/process-execution-state.json
+index eb813ce..0c2388f 100644
+--- a/.pf/artifacts/projections/process-execution-state.json
++++ b/.pf/artifacts/projections/process-execution-state.json
+@@ -1,122 +1,78 @@
+ {
+-  "generated_at": "2026-09-07T10:06:49Z",
++  "generated_at": "2026-09-10T04:43:46Z",
+   "kind": "process-execution-state",
+   "schema_version": 1,
+   "source": {
+     "authority": "run+assignment+pinned-process"
+   },
+   "state": {
+-    "action": "run_completed",
++    "action": "work_incomplete",
+     "allowed_outcomes": [
+       {
+         "id": "completed",
+-        "next_stage": "",
++        "next_stage": "task-planning",
+         "title": "completed"
+       }
+     ],
+     "artifacts": [
+       {
+-        "evidence": {
+-          "artifact_id": "run-summary",
+-          "kind": "artifact",
+-          "path": ".pf/runs/garage-resolve-github-issue-4-add-compatible-workplace-migration-to-the/summary.md",
+-          "recorded_at": "2026-09-07T10:06:42Z",
+-          "sha256": "sha256:c668c17293b7fbfe2f8cc5a3cd9b53b509decac47e466d0e77367e2e10d2827e",
+-          "status": "ready",
+-          "summary": "Final Issue #4 run summary."
+-        },
+-        "id": "run-summary",
+-        "kind": "artifact",
+-        "satisfied": true
+-      },
+-      {
+-        "evidence": {
+-          "artifact_id": "run-handoff",
+-          "kind": "artifact",
+-          "path": ".pf/handoffs/runs/garage-resolve-github-issue-4-add-compatible-workplace-migration-to-the-handoff.md",
+-          "recorded_at": "2026-09-07T10:06:42Z",
+-          "sha256": "sha256:9b5956c5ffc48ba2f5382a2549ac0408ad2537a5199fd84807f79cb942177d2b",
+-          "status": "ready",
+-          "summary": "Operator handoff including the public release boundary."
+-        },
+-        "id": "run-handoff",
++        "evidence": {},
++        "id": "run-record",
+         "kind": "artifact",
+-        "satisfied": true
++        "satisfied": false
+       }
+     ],
+     "assignment": {
+-      "id": "resolve-github-issue-4-add-compatible-workplace-migration-to-the-process",
+-      "status": "done"
++      "id": "remediate-python-core-audit-f01-project-search-authorization-and-f02-uno",
++      "status": "in_progress"
+     },
+     "blockers": [],
+     "completion": {
+-      "requirements": [],
+-      "status": "complete"
+-    },
+-    "evidence": [
+-      {
+-        "artifact_id": "run-summary",
+-        "kind": "artifact",
+-        "path": ".pf/runs/garage-resolve-github-issue-4-add-compatible-workplace-migration-to-the/summary.md",
+-        "recorded_at": "2026-09-07T10:06:42Z",
+-        "sha256": "sha256:c668c17293b7fbfe2f8cc5a3cd9b53b509decac47e466d0e77367e2e10d2827e",
+-        "status": "ready",
+-        "summary": "Final Issue #4 run summary."
+-      },
+-      {
+-        "artifact_id": "run-handoff",
+-        "kind": "artifact",
+-        "path": ".pf/handoffs/runs/garage-resolve-github-issue-4-add-compatible-workplace-migration-to-the-handoff.md",
+-        "recorded_at": "2026-09-07T10:06:42Z",
+-        "sha256": "sha256:9b5956c5ffc48ba2f5382a2549ac0408ad2537a5199fd84807f79cb942177d2b",
+-        "status": "ready",
+-        "summary": "Operator handoff including the public release boundary."
+-      },
+-      {
+-        "gate_id": "run-summary-created",
+-        "kind": "gate",
+-        "recorded_at": "2026-09-07T10:06:42Z",
+-        "status": "passed",
+-        "summary": "Run summary and handoff are present."
+-      }
+-    ],
+-    "gates": {
+-      "entry": [
++      "requirements": [
+         {
+-          "blocking": true,
+-          "evidence": {
+-            "gate_id": "run-doctor-passed",
+-            "kind": "gate",
+-            "recorded_at": "2026-09-07T10:06:06Z",
+-            "status": "passed",
+-            "summary": "run-doctor, task-doctor, and events-validate passed for the active Issue #4 run."
+-          },
+-          "id": "run-doctor-passed",
+-          "phase": "entry",
+-          "required": true,
+-          "satisfied": true,
+-          "type": "checklist"
++          "artifact_id": "run-record",
++          "code": "artifact_evidence_missing"
++        },
++        {
++          "code": "gate_evidence_missing",
++          "gate_id": "run-has-context"
++        },
++        {
++          "code": "handoff_note_required",
++          "stage_id": "run-intake"
+         }
+       ],
++      "status": "incomplete"
++    },
++    "evidence": [],
++    "gates": {
++      "entry": [],
+       "exit": [
+         {
+           "blocking": true,
+-          "evidence": {
+-            "gate_id": "run-summary-created",
+-            "kind": "gate",
+-            "recorded_at": "2026-09-07T10:06:42Z",
+-            "status": "passed",
+-            "summary": "Run summary and handoff are present."
+-          },
+-          "id": "run-summary-created",
++          "evidence": {},
++          "id": "run-has-context",
+           "phase": "exit",
+           "required": true,
+-          "satisfied": true,
++          "satisfied": false,
+           "type": "checklist"
+         }
+       ]
+     },
+-    "incomplete": [],
++    "incomplete": [
++      {
++        "artifact_id": "run-record",
++        "code": "artifact_evidence_missing"
++      },
++      {
++        "code": "gate_evidence_missing",
++        "gate_id": "run-has-context"
++      },
++      {
++        "code": "handoff_note_required",
++        "stage_id": "run-intake"
++      }
++    ],
+     "kind": "pf.work.state",
+     "obligations": [],
+     "process": {
+@@ -129,31 +85,23 @@
+       "id": "process-forge"
+     },
+     "required_evidence": [],
+-    "required_inputs": [
+-      {
+-        "evidence": {
+-          "artifact_id": "run-review",
+-          "kind": "artifact",
+-          "path": ".pf/reviews/github-issue-4-20260907-review.md",
+-          "recorded_at": "2026-09-07T10:06:06Z",
+-          "sha256": "sha256:aae73587504302bb117b140d7460b11cf2b6d0a57681c04c2598e7b70cd9f97f",
+-          "status": "ready",
+-          "summary": "Review passed with the recorded public-release condition."
+-        },
+-        "id": "run-review",
+-        "kind": "input",
+-        "satisfied": true
+-      }
+-    ],
++    "required_inputs": [],
+     "run": {
+-      "id": "garage-resolve-github-issue-4-add-compatible-workplace-migration-to-the",
+-      "status": "completed"
++      "id": "garage-remediate-python-core-audit-f01-project-search-authorization-and",
++      "status": "in_progress"
+     },
+     "schema_version": 1,
+     "stage": {
+-      "id": "run-summary",
+-      "status": "completed",
+-      "title": "Create final run summary and handoff"
++      "id": "run-intake",
++      "status": "in_progress",
++      "title": "Create or inspect run"
++    },
++    "work": {
++      "active_specializations": [],
++      "selected_resource_ids": [
++        "project.process-forge:project-profile",
++        "project.process-forge:project-artifacts"
++      ]
+     }
+   }
+ }
+diff --git a/.pf/artifacts/projections/stage-obligations.json b/.pf/artifacts/projections/stage-obligations.json
+index 5a3e61d..b815f2c 100644
+--- a/.pf/artifacts/projections/stage-obligations.json
++++ b/.pf/artifacts/projections/stage-obligations.json
+@@ -1,5 +1,5 @@
+ {
+-  "generated_at": "2026-09-07T10:23:18Z",
++  "generated_at": "2026-09-10T04:45:13Z",
+   "kind": "stage-obligations",
+   "obligations": [],
+   "project_id": "process-forge",
+diff --git a/.pf/contexts/project-context.snapshot.md b/.pf/contexts/project-context.snapshot.md
+index 9a2f68e..b0bcdc6 100644
+--- a/.pf/contexts/project-context.snapshot.md
++++ b/.pf/contexts/project-context.snapshot.md
+@@ -2,8 +2,8 @@
+ 
+ ## Generated
+ 
+-- generated_at: 2026-09-07T09:49:02Z
+-- valid_until: 2026-09-14T09:49:02Z
++- generated_at: 2026-09-08T07:49:13Z
++- valid_until: 2026-09-15T07:49:13Z
+ 
+ ## Freshness
+ 
+@@ -74,7 +74,7 @@ fresh
+ 
+ ## Execution Route
+ 
+-- process:
++- process: None.
+ - required_capabilities: None.
+ - required_evidence: None.
+ 
+diff --git a/.pf/contexts/project-context.snapshot.yaml b/.pf/contexts/project-context.snapshot.yaml
+index 3d4d864..5435810 100644
+--- a/.pf/contexts/project-context.snapshot.yaml
++++ b/.pf/contexts/project-context.snapshot.yaml
+@@ -1,10 +1,10 @@
+ schema_version: 1
+-id: ctx-20260907-094912-ae667f
+-generated_at: '2026-09-07T09:49:02Z'
++id: ctx-20260908-074925-d05a67
++generated_at: '2026-09-08T07:49:13Z'
+ snapshot:
+-  id: ctx-20260907-094912-ae667f
+-  generated_at: '2026-09-07T09:49:02Z'
+-  valid_until: '2026-09-14T09:49:02Z'
++  id: ctx-20260908-074925-d05a67
++  generated_at: '2026-09-08T07:49:13Z'
++  valid_until: '2026-09-15T07:49:13Z'
+   refresh_policy:
+     max_age_days: 7
+     refresh_when_sources_change: true
+@@ -33,7 +33,7 @@ project_classification:
+       classifier: processforge.official.software-web.classifier
+       rule: processforge.official.rule.python-marker
+       confidence: high
+-      source: software-web.yaml
++      source: packs/official/software-development/project-classifiers/software-web.yaml
+   inactive_classifier_hints:
+     []
+ flow:
+@@ -961,7 +961,7 @@ resource_selection:
+       status: selected
+ freshness:
+   status: fresh
+-  checked_at: '2026-09-07T09:49:02Z'
++  checked_at: '2026-09-08T07:49:13Z'
+   stale_reasons:
+     []
+   update_available:
+@@ -1373,6 +1373,11 @@ processes:
+     -
+       id: orchestrator-shell-agents-supervision
+       path: ../processes/core/orchestrator-shell-agents-supervision.yaml
++  selection:
++    default: task-batch-execution
++    allowed:
++      - task-batch-execution
++    source: fallback
+ packages:
+   selected:
+     -
+diff --git a/README.md b/README.md
+index 56c7c23..ea52741 100644
+--- a/README.md
++++ b/README.md
+@@ -70,13 +70,14 @@ this mode.
+ 
+ ### Place ProcessForge
+ 
+-Download the release archive, [dist/processforge.zip](dist/processforge.zip),
++Download the release archive, `processforge.zip`,
+ and unpack it into a stable folder that your AI agents can access, for example
+ a shared agent tools folder. Use that folder as `<processforge-root>` in the
+ prompts below.
+ 
+ If you work from a source checkout, use the repository root as
+-`<processforge-root>`.
++`<processforge-root>`. Local release builds write the archive to
++`dist/processforge.zip`; that build output is not included inside the archive.
+ 
+ ### Start With An Agent Prompt
+ 
+diff --git a/README.ru.md b/README.ru.md
+index 18015d9..292e5b9 100644
+--- a/README.ru.md
++++ b/README.ru.md
+@@ -85,12 +85,13 @@ Runtime, host telemetry и worker orchestration подключаются для
+ ### Разместить ProcessForge
+ 
+ Скачайте релизный архив (release archive)
+-[dist/processforge.zip](dist/processforge.zip) и распакуйте его в стабильную
++`processforge.zip` и распакуйте его в стабильную
+ папку, доступную ИИ-агентам: например, в общую папку инструментов для агентов.
+ Используйте эту папку как `<processforge-root>` в промптах ниже.
+ 
+ Если вы работаете из рабочей копии исходного кода (source checkout), используйте
+-корень репозитория как `<processforge-root>`.
++корень репозитория как `<processforge-root>`. Локальная релизная сборка создаёт
++`dist/processforge.zip`; этот результат сборки не входит внутрь самого архива.
+ 
+ ### Стартовый промпт для агента
+ 
+diff --git a/checksums/processforge.sha256 b/checksums/processforge.sha256
+index d9e4ec7..af4cc1d 100644
+--- a/checksums/processforge.sha256
++++ b/checksums/processforge.sha256
+@@ -9,8 +9,8 @@ c339983b18e3ea4deb270157b42864f8fbee7ae9af7574c07461bd2768571dfe  AGENTS.md
+ 8d226cb8bdf9df953b969c92c3a490f55910a287eff277e0a2894a19fafd7408  NOTICE
+ af75f1c7dc49f4863309916e410a32a78ac5f6fd600bd1950e0f5601f6d663b5  QUICKSTART.md
+ b3756dc3760e4eaa06695d7a6598646d35d4b451fa53b7684c1c22c3f3dc866f  QUICKSTART.ru.md
+-1b22d266f6d84bcad7bbcba8198e9bbd7268e12ea9bc988e540ae092310589bb  README.md
+-039ed806b25449d326fc7b6b77e33f28e90e11eb21d2708450d4771e6942a5df  README.ru.md
++6c316dacfd21318765224d1c315d8361975fcc0960fde763a39d498ae46ee7c7  README.md
++c76d145ecf0c4f7221d374d26f45712d838d282aed0a81859675b09a9efd0091  README.ru.md
+ 1575e1af4a95f12f70b4ee6a6adce8160953d93ea17dc2611b90883ccc3ad3b8  VERSION
+ 8ca62165f47157d6d4d940ddc856e6e4cdf028be574251c13a6a76d8186826f0  bin/pf
+ eace0e4e62555274793297e1b2702bd69df3724e8c25173e9eae1e3d87c98bde  bin/pf.bat
+@@ -34,7 +34,7 @@ dd73177264995508ba234844a1a6485114456c2265f952c7ef1d254290581bea  docs/authoring
+ 19a864062c5f2ade1ed9f6cbcd743696023f75002bc635bf412421c67735bcad  docs/concepts/agent-director.md
+ 915e724b0709865931c1752b05e5afe30006d2bf8b25af3ed4b688d676b62b47  docs/concepts/agent-ledger.md
+ a08360bab38ffbfa7722792dd0a42e2701408a1cf31214d31aa230fffb62561c  docs/concepts/agent-session-model.md
+-2907748e7d49d2ab7b2f9d9f26e7532f53416a8a6ab1da7ba181b32c7abf8c96  docs/concepts/assignment-front-matter.md
++f965e5188c5507f899f8a0065845b3d2a790eb42bddc40e84afbc8ba6f9d476d  docs/concepts/assignment-front-matter.md
+ 91086a2d7a173b664684f32061f5fa1f5dbfabdce4950ffa0d9966c74f8d98f4  docs/concepts/capability-resolution.md
+ a483bb15800a160261956d0c8aeb0c8cfb640c400fcfb4be460b20f88a939c5c  docs/concepts/cascade-merge.md
+ b333f91bedbe5f29912b86a8bfc1035ef80a21c3114512119375ad1aa2d150c7  docs/concepts/chat-relay.md
+@@ -45,7 +45,7 @@ a6a00dd6911e07a103bacca5469d214015eb05dd3d425ad3b4410873d7dcc67c  docs/concepts/
+ 364f9208ec9a49de7e813f88a14395ecee0489ee6e943b6e6b8343fd5a9cdeeb  docs/concepts/context-index.md
+ 8d2470eb7217234d542ebe6fc093604ba847abf2424979dae93cf3304aee5a82  docs/concepts/context-resolution.md
+ 9614d36d4c3b3be7c5a9db7a4f3330e463f1338a8b854434e8d92408b27eb242  docs/concepts/core-update-manifest.md
+-922dcafb9c9a1541b60d06c7bda64049d79f53cfbdc42fbc00f9e11856fe38da  docs/concepts/declarative-process-execution.md
++5919bd2fec1d151af4fe709a405c3b96a9e42dd1d0c043f1faec96d6c0b411f0  docs/concepts/declarative-process-execution.md
+ 1928b1ee1f0bd96d8d5c714db5b508e35c4be0101d9efa227987b6ef20d0b427  docs/concepts/director-ledger-inspector-boundary.md
+ 1beb14f8f807c612f922bb9dbcd0f2509f8c4779544e0db273dcb0cff45cfbce  docs/concepts/documentation-import.md
+ fc12835312e4766f2cbb0ca05fcf6399a95fc31649aef899e13d8b6932c5dc00  docs/concepts/domain-neutral-core.md
+@@ -99,7 +99,7 @@ fb874a7292a5760eb24b77cdac11bdf50218246ac8b966e152b41499d325fff8  docs/concepts/
+ 4d8cb55398e188abe3898a8b1e846b2b6d2efba7f01d0e3b24d636760c8a897c  docs/concepts/reusable-templates.md
+ c0324211032b6c155a99ce52860a4b11a26cebc25d1bba64a913076e1b167d2f  docs/concepts/runs-tasks-iterations.md
+ a4c5b4a0bef54fa179203ae35f227fdbdf3b97907034f34fa3f0e29cae352dd3  docs/concepts/runtime-drivers.md
+-28aa5c4b8bd793f4e4c7284d5bd3f5be7790a0c2072e325a8763f10e7c28c775  docs/concepts/runtime-mcp.md
++ae378730b9af5f093d5f97e8f3988cf2b38779e54e5a0db0d5ca5cd6d782620a  docs/concepts/runtime-mcp.md
+ ac31e239cf4f704aa62a3e6257e9b76fa2e7f1a9eef8ebb9a74aac856ac790a4  docs/concepts/runtime-model.md
+ 08f6bcc331b5d89f66f2ebaa6c1611d5ab17470452254625c192809daedd6ff0  docs/concepts/semantic-parity.md
+ 49dd431cced87cf44c17fa9b731725e34964b8e882cc7bae620f3b4a67f74ff5  docs/concepts/session-bootstrap.md
+@@ -122,7 +122,7 @@ cdbb096303d7c7e8c4435af784e4455f2f0ae6d6907fa150dd178346c0d4d7e2  docs/concepts/
+ 5c69052d5aa0ed4a26b5f49da8c087376636826a00eceae3344f5dfc2e49eb49  docs/examples/README.md
+ aaa87d4d3c32401e36d5ab50f01c8036eeb1eea5b945e7d4a8eab2b25af117d4  docs/getting-started.md
+ bb845ccad0f7f551df28d160cebeed23ec65f407b7778aace44cd32746f6ac99  docs/getting-started/agent-ledger-process-transitions.md
+-b11af2995abf2dfafee60b0c8ee83d5ddf093e589fd45e6f2f7456804e5150cd  docs/getting-started/agent-prompts.md
++09913fb19742a8bfc92a5ecec3925d9917e151b558105cbe3a4b81b5d3302721  docs/getting-started/agent-prompts.md
+ 3f69cc04e400232a46b31caea45d16fa64107d7abe5cd49680c1c7b589a26413  docs/getting-started/create-your-first-process.md
+ e87437dbc242f6fac6d2796ded5729dee0eec0d80a59f546ec4ab6050df75ff0  docs/getting-started/evolve-learning-loop.md
+ c79b528ad08d9dd91a543552e73077e0cfdfbcd72d01ee0b18a117117605a053  docs/getting-started/first-run.md
+@@ -135,10 +135,10 @@ bdb8ab2f821263ac0f35a888601568939d6f6f6d8abecc2b9837a64a5db24031  docs/getting-s
+ dd9f3be007531b7e46f9bfa72eaed0ef6b2bb9ebd8df76c13e433ad2872a0d2c  docs/getting-started/resource-authoring.md
+ d2941217554b8016e8ef01f9ae0733653d46d67d9da8b30f94de0487bd0cae38  docs/getting-started/runtime-autostart.md
+ 5d6bf656c44b75bd275c882fcc430d505f75f88d0d31cc446b28bc00c84fa54d  docs/getting-started/runtime-driver-supervisor.md
+-b55dfcac2637dc66f04d5da5a802b3d115cc366ed9f7c6290ef158d5e0e32504  docs/getting-started/task-batch-workflow.md
++69c21e567eca5c9c3d55424d10ceb310c9820d8902e928760ed5359cd7b5fae3  docs/getting-started/task-batch-workflow.md
+ e39494351b30617652d7cd8abd28b650a7037d0953c7cfc00231a056abc4f767  docs/getting-started/update-system.md
+ 6dc6c6c907b6ac3b31bba6510a910526f75c7cde198d088ff95f5c162ec31c2b  docs/getting-started/workplace-initialization.md
+-6dbad64633f2351d3b32265aff34ad2496777777491157c624b74a9f302b8098  docs/index.md
++4debe80b7bf64a34cc6a5e44671d76188879015b1f9223407efefd7cefdb2f3b  docs/index.md
+ d4712ec65d6a542f19c4fdf9b5e99146b93583bf166d8652acf09e00718f0fb3  docs/known-limitations.md
+ 19c49b51c243715ed0056b822cddb5e2d678413d9d5e5ba9d707cec89c0e296f  docs/maintainers/release-publishing.md
+ 3dbecc59cee71e8cf32341e45ac547c3fd71be00d3fa57de6eb67a6e87e68122  docs/processes/agent-director-supervision.md
+@@ -184,8 +184,8 @@ ba78f3f1e9e351b8699de543c3e751480b3ceddafcce33d264155c3e5315a39b  docs/ru/author
+ b571f52597e63c5ce385d41ec76f5725659024044fa65dd82bd44a68cf8e73de  docs/ru/concepts/context-capsule.md
+ e4311b55003a2c4cc0662252b6db9a04a22e9e803ae52e8d01d194590b3544ba  docs/ru/concepts/context-freshness-readiness.md
+ efd65c9b9647c824302768fffaf9212cf183b20634aa0a501e2b0a5518c0d18a  docs/ru/concepts/context-resolution.md
+-06be8426cea924feb6ce10d4820378c813cce04df800d92450380aae4bd4ac9b  docs/ru/concepts/core-update-manifest.md
+-adc439a82762ab418bc18238d5f825d9dbde6c54392b9d6a99339a6003182007  docs/ru/concepts/declarative-process-execution.md
++5198f81bde1af631fd40f57c8f9d6275821bdd8a9cf8e3e9ddaa1d23b3e6b462  docs/ru/concepts/core-update-manifest.md
++ae276816e6907c4766496268622b1d2f7c3f3be87044fc5eba8b84d7b94530c7  docs/ru/concepts/declarative-process-execution.md
+ 8f0e39d3b16dd74ab5598c01c40276d9c1ff289be7b01fb73a742c2e63a400e1  docs/ru/concepts/director-ledger-inspector-boundary.md
+ 3dea912d1dabf7222ec073d734a6a8239c6eba29359a9d3c8110b843f2de7d85  docs/ru/concepts/domain-neutral-core.md
+ 392b81add9af9fd3da1304e5dd91475d308cbb5ec35c8f6acfe9ee6c8cf6ba48  docs/ru/concepts/evolve-mechanism.md
+@@ -216,10 +216,10 @@ a49fa4b7058cec48bc664e8dd063975a21d2c6aec267c2784adb818338723c69  docs/ru/concep
+ 98eeb80c9c447f8617565ef0fd944ef09610590aef39404904bc33566e29b1bf  docs/ru/concepts/project-overrides.md
+ 16503d19983d56699f388d3b4559a98a59b1807d784a2d43fb5b9dd0165ceb0a  docs/ru/concepts/project-scan-boundaries.md
+ da435433271075e6032e8ff125362e6181cf33258ab586140644fe691a815eb7  docs/ru/concepts/project-snapshot.md
+-137414e2d831a1e773b194fb8e3189c811997eb25f8bf25cee831dd6920e80ae  docs/ru/concepts/resource-search-index.md
++03b9f09865685f2fadabd7c75d63d56e2a641f4ef84a8b2fba0858c79402027f  docs/ru/concepts/resource-search-index.md
+ cce25770f6cfd84df3ddeeae9cbf923d541d8cef2579da3dc91ca905f1cd01c1  docs/ru/concepts/runs-tasks-iterations.md
+ 77b79ed3b96501bc98a5e3aa26c6792cebc23b206b6ed2e93b5276501dc0c4c7  docs/ru/concepts/runtime-drivers.md
+-4ebb887716d6931fe443ed892cb2100c7279f8ef456c41388908ecf5db42bc7e  docs/ru/concepts/runtime-mcp.md
++c17dd5f645140883bcaadeaaa401e658c4febd84378e574ea42bc76e4851598b  docs/ru/concepts/runtime-mcp.md
+ 2fbaedf47f9e6c9fc7555222ade63f24f13a03e774ed409611d423782546dee7  docs/ru/concepts/runtime-model.md
+ 2d0adea436fbf0c9ac3b6c45afcfffed50ce2af7d9f19d0f545b025feec70787  docs/ru/concepts/semantic-parity.md
+ b3c1d6980fcc999d470c1985de2760e5a8de122e031604397e6d85b96f6cd9c0  docs/ru/concepts/shell-agent-subagent-policy.md
+@@ -231,7 +231,7 @@ c6496c332a52afca7d2ef20cd63be25ec5b4d7869eafc4957f007507438e1dba  docs/ru/concep
+ fb03b64be745901aacfaa67d59f549a93d018203c0fe3784f6677ef9080fe519  docs/ru/concepts/workplace-resources.md
+ 28b548f0d1203ca70bf7bbd48842a303de929e1f2590c11913b073d2131ba041  docs/ru/concepts/workplace-vs-project.md
+ 80623246f982a9af7ecb9707c65d4613e1622ad4e925a83b9b7a9325af3e941d  docs/ru/getting-started/agent-ledger-process-transitions.md
+-b7980ce03deceed011c0e6182fa6840bd8514dc2049ffe7ca7d5f828091f3cd7  docs/ru/getting-started/agent-prompts.md
++90a2cfed2744932b6ffd9b6227a88202c11618111d10d2e167e2c16f2d9e0bd3  docs/ru/getting-started/agent-prompts.md
+ aa12aaa276d7353bf5dcec2af7988f915f065d157cd9de52c0ff33513dda60b1  docs/ru/getting-started/create-your-first-process.md
+ cf1d332cc7e65439ebc078914902f8517a9d37943a738de42e8f13025392addf  docs/ru/getting-started/evolve-learning-loop.md
+ 127c103af4c04c17747f3fbc8ef0203ec3d77640e29923dbbdeb1b36de4f8efe  docs/ru/getting-started/first-run.md
+@@ -243,10 +243,10 @@ fb3ef95cacf2e32694f4f0d2ef18d5817b343f4816d7211324a8b47114030bd2  docs/ru/gettin
+ 8b5069d82a08cf178097d63be69f7a6d018b533bcf6e9c8fe8a1f80608a1201c  docs/ru/getting-started/project-onboarding.md
+ c69ab51057ec21e452cd158ba471527dd142ad7b693500b4ce57670613a6de96  docs/ru/getting-started/runtime-autostart.md
+ 09fe24dd61a3b569b50c021fc754ed29bdee499443cc7e708fbfa3cf4a77bb1f  docs/ru/getting-started/runtime-driver-supervisor.md
+-dcb57d32b506561bfffbaa798198c5df64a1f1b22c04b56b60c4bc5f966f395c  docs/ru/getting-started/task-batch-workflow.md
+-56994f46f6a02d144799e5a15823d3ac5693ec567bea46c03cfeb83dbdb2e521  docs/ru/getting-started/update-system.md
++91ca0e810c7961e85eb76b36653a950ebd5735ecdeec11d571b785d23584c628  docs/ru/getting-started/task-batch-workflow.md
++662acd20b40b623fb12e86d441df7eb7c44b831e1ed3a1a830de447624ca472f  docs/ru/getting-started/update-system.md
+ af1a5308b13f2a9c089a94e0f314c48552beb4b0a947c08c667d8503978b8d35  docs/ru/getting-started/workplace-initialization.md
+-2848d4c35d341fbbdacfd99d613228ae818657e9822776092cb91dabed7efb9f  docs/ru/index.md
++9bc27c912cc624789aa127238b15bf8b7ed5e65d5270b21a49d23806dd24d19c  docs/ru/index.md
+ b55d132f5116a8dbf17fcedc2b818f33a2a9e1f2e22b1763bab5bb24106472fd  docs/ru/known-limitations.md
+ 2e33eccc12a618fbbd352e20bd02dfd3ac62ef7aaa5e723a5fdbf8ba4e6562f8  docs/ru/processes/built-in-processes.md
+ 95961df0da24fa6f15bf365a743d8ae78900c41a78c11da691b579a373898ba5  docs/ru/releases/initial-release.md
+@@ -254,7 +254,7 @@ e27a374f8f9e5dd81287f0379ebd4b530e6595afe7a15f9097ac516e87b6f820  docs/runner-pr
+ b78d00c11cd848dac38a499d31dd4e0ef9e6fb99b2ff63b027a3a3b884522719  docs/validation/doctor-context.md
+ 92423686eab06ece6a28ac7456a6726630a923c60c41dd1d22d69bec22b26ebe  docs/validation/doctor-project.md
+ 2b1a33bc6938c1b8c686b16691bc56b2641c464ea45513372eca9e548366b652  docs/validation/doctor-workplace.md
+-2b7218d5eef7e85da0495515dbc68450fcbfd3c6e84ae08c6c20194be6a24765  docs/validation/validation.md
++3749dd3127d61871ee222f3637d19d7e52d6cced66759be721f6e46b3a3f1172  docs/validation/validation.md
+ d6194640f74c290e953e427e5b8118c0fbc3739444f7bb25aeb78d83fbf448f3  examples/api-platforms/example-provider/README.md
+ 5b32c5d18adf4520921163853dc36bb7c06c4f12bfc9c51bad830fcb5936afa8  examples/content-project/assignments/article-assignment.md
+ d474a307575477539b68940e543766ad50d0f44a86a3749c6ad7499e246d6d3a  examples/content-project/process-forge.yaml
+@@ -442,7 +442,7 @@ f6c8dd716c587621bc83c7377f701a758b7d7245dcf8312fd13b661aa04b2ce0  prompts/proces
+ b93acc4bf322485e779dce5ebeb76c9f595ad8d9033d0b328cc428e4bf834e92  prompts/reusable-template-authoring-agent.md
+ 94dc491e1f2df05115a13009297dd9b0e6aa4770b929d0e206007a1d5844dbe9  prompts/runtime-driver-registry-agent.md
+ 2a81d4b3cddb08dde0fd3aa52fc2165e87e48c619c3092767642fbfa2dd65dad  prompts/session-bootstrap-agent.md
+-c71e3dd4484aa78ae38a2a483ec6d00c1a9a93903ba4cce15a6d7d979cfcbed5  prompts/task-batch-execution-agent.md
++b959abc5d7c524f96d19d4dfefc72d636a2452952c59726f6ca7822b4dfd5b67  prompts/task-batch-execution-agent.md
+ 70e9ff89e75bba6ff4841a7b2b896b8bc4f4e27475142aef7f0496181908ede5  prompts/template-add-agent.md
+ f5d96f5d82fd91605c1d70035c23dac0dfb133296edeccd303a7113bb856d8ac  prompts/tool-register-agent.md
+ cf58aa8f5f1f2cfa81a056c8a56ac73989dad7d108be1c58de00a335cc0ceb05  prompts/workplace-initialization-agent.md
+@@ -693,7 +693,7 @@ a1eb272d01c079489c03238dca7bbf613e4566f98b1c678f85210a0b2fc9e611  tools/pf_runti
+ 762bc9a0c8a53d107428bd8c5747e13ffbafb76ce31ef656dc5b1761a85da2e6  tools/pf_runtime/session_replay.py
+ 70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a  tools/pf_runtime/windows_autostart.py
+ f0dddadd196e7dc9e217f940b007837056b518bccb7089f4f6af8adb6bf3ee7f  tools/process_execution_smoke_support.py
+-633ace8f9527292bb698579ec0a7904c2fa54d55704081607d96bafb2b21dfd3  tools/processforge.py
++1772fd78f7853805c3af6910f36d1b79b66082b3b235be22f67ad9cef1b2f448  tools/processforge.py
+ 26f3b9bf8502afeb69ce5245df40aa80ed4cd1a19cab0abc6fb5ddc5d39f424f  tools/processforge_subprocess.py
+ 7ef9cae38fe2e4a17c17d19f9a329c6ded82a47702c4483c3f0a77733c54cd24  tools/release_metadata_contract.py
+ c6906397a9bcb932112165d1b1996d2ad8486447fa2e9f9bbf623fc4e6e68208  tools/smoke_agent_director_tick.py
+@@ -713,7 +713,7 @@ e832225be74d09f9f347495710fa603a789e9f088f4cc0a43313ddb3555ea4e5  tools/smoke_ch
+ b049d0d95cf4663d5055928bcc4f7421598040072c96040f691563b8c7859acc  tools/smoke_codex_integration.py
+ 1f1dc0530b7e170084d73fa0b0978c20ce24e890894b3cee722b300b479146cd  tools/smoke_codex_worker_governance.py
+ 0e8c2aae6481128ca1b2f3fd1f8db663e2774354a49a2ef5c49eb2113c87944f  tools/smoke_config_behavior_contracts.py
+-10f5b97e6f0d9c4e16611c413c726e0ccd8813e1bab766be43e346a99557a073  tools/smoke_context_freshness_vs_execution_readiness.py
++6e7dbc1f6362e22b06a29df3a2725c1912cd171e3598f2dd36b1457a447ef066  tools/smoke_context_freshness_vs_execution_readiness.py
+ 4519211ad5744d2a2c4a80f2ab28a177dcfe97547630e87297ad0b0b82869944  tools/smoke_conversation_completeness.py
+ f8e9b45ea106d2a52bc40bce7ac369266b6e20c9878deb418ed0f541599c848c  tools/smoke_core_domain_neutral_still_passes.py
+ 4ffab3e2a8931373d78bff95026309274c45cb131421b181ae43f46289def413  tools/smoke_core_has_no_domain_knowledge_seeds.py
+@@ -724,11 +724,12 @@ de16c902e954d2495bf3593b2c5ed6d10551afaa14e92736472dd02e14b80067  tools/smoke_co
+ cc2515e364dde4dc5c87b8dc883dd513f66e413bc3193d6fbfc80846d14fc60b  tools/smoke_delivery_profile_not_process.py
+ 18fb000dd539edda1059885a90d86c81443f17fcb6ef8051801d78bbb3f6b746  tools/smoke_derived_report_stale_marking.py
+ 2db1665b38a85fbf3d2281ac0523ee54d6e2f189543a25a4985be322ced572a3  tools/smoke_director_inspector_boundary.py
+-5b410ea97eb6320937ce4985fc94951f0cacba6ac7611c168984eb068edbfa99  tools/smoke_docs_agent_no_manual_infra.py
++489b1c18ec82b92681653ac4dc51314763f4ee9248162d954644af4ca7242311  tools/smoke_docs_agent_no_manual_infra.py
+ c7eed7c6d1bd1afb3deecd6b8b25adabd8e1270f79abff89cba4984243ea92cb  tools/smoke_docs_codex_hooks_optional.py
++36605b0239559be9528a59251eb66eb98021a92d2f5a52a0d0d62dfbde8528ab  tools/smoke_docs_current_code_contract.py
+ 73f68a7a7bd8864a992c05e9ff0a839f7d825bf9893dbb75e11fae5e25f31157  tools/smoke_docs_garage_no_runtime_required.py
+ 90f2da1c718f8ddd596cfc6dac6195b4007286a27fd28249ed4fd74b58ffebaf  tools/smoke_docs_mcp_host_owned_stdio.py
+-6faa61912483eef9231ebb5c2ff58a4e16dd9f55a5a34eb20564466d26482a3f  tools/smoke_doctor_gitignore_effective_protection.py
++b67f4d9d6b80f7e3881d6061574279cb3544917dc2c97bc3019617085da02b54  tools/smoke_doctor_gitignore_effective_protection.py
+ 4f40238164c079019fc66364e9fb88c76452dd6f979f53cb1f3f871379ab7370  tools/smoke_doctor_project_capability_waiver.py
+ 16dedd97b32cdc930661d48bb1a3305886b0a22521eb83d67008a7521f5a5221  tools/smoke_domain_neutral_core_helpers.py
+ 98eca5b20f222865338621132d8f46d1af69a72c07aa65dbf415990cf0394a08  tools/smoke_domain_neutral_music_video_fixtures.py
+@@ -804,7 +805,7 @@ da25baf0c6015665da15a939b98db0066bd997e9da3300eb8b1eea7e4d4a98a2  tools/smoke_pr
+ e93a0e4b6e909fe0f470d2090781d94ad3d01dff3495583bee38f74f17b929a7  tools/smoke_process_owns_acceptance_not_specialization.py
+ 81cbdb26408c7cbdb9eaffed55f6949efd667f3bacf186d0e838b80b1d6e0b81  tools/smoke_process_resolver_multiple_roots.py
+ e63b0add670d11a774a61f337bdab851f9f40265b2fe1d737e15b33cf40f04ab  tools/smoke_process_root_collision_policy.py
+-9bf5411d5ecdc1638e6015e84048935429f8fe14cb8e3025a146762ad674ce18  tools/smoke_process_run_task_batch.py
++1bb9751b3cbd5f816c82da3430930c254eaf51881c10fcb8d91a959f65d85d47  tools/smoke_process_run_task_batch.py
+ 6bdbf00f73958af7b6b28341efbf31e7e488910e6231d0f935a63e7180d702e3  tools/smoke_process_stage_contract_normalization.py
+ 5924f9f55f8e1fbcfe2ae5727f0a8d87f00488b9670d133cc1879697754608a1  tools/smoke_process_supervisor_tick.py
+ d2ae7c02d2404566fc0a1478d6f87d1eb1e2b75037e925ac59dd09020c5ebe9f  tools/smoke_process_transition_handoff.py
+diff --git a/docs/concepts/assignment-front-matter.md b/docs/concepts/assignment-front-matter.md
+index a0b7f6d..ea095c4 100644
+--- a/docs/concepts/assignment-front-matter.md
++++ b/docs/concepts/assignment-front-matter.md
+@@ -23,7 +23,10 @@ allowed_files:
+ forbidden_files:
+   - .pf/runtime/**
+ required_outputs:
+-  - .pf/artifacts/example-report.md
++  - id: example-report
++    path: .pf/artifacts/example-report.md
++    type: markdown
++    required: true
+ hooks:
+   tracking: detailed
+   chat_capture: enabled
+diff --git a/docs/concepts/declarative-process-execution.md b/docs/concepts/declarative-process-execution.md
+index 1021d5f..1ffe0ff 100644
+--- a/docs/concepts/declarative-process-execution.md
++++ b/docs/concepts/declarative-process-execution.md
+@@ -6,13 +6,16 @@ load Python modules, register callbacks, or provide executable plugins.
+ 
+ The ordinary agent workflow is:
+ 
+-`pf.context -> pf.work.start(objective) -> pf.work.state -> work ->
+-pf.work.transition(outcome, evidence) -> pf.work.state`
++`pf.context -> pf.work.start(objective[, process_id]) -> pf.work.state -> work ->
++pf.work.transition(outcome, evidence, notes?) -> pf.work.state -> ... -> run_completed`
+ 
+ `pf.work.start` selects the declared `initial_stage`, or the first executable
+ stage when no explicit initial stage exists. It pins the effective Process
+ definition, version, fingerprint, project context snapshot, and immutable
+ Assignment capsule. A later edit to Process YAML cannot change the active Run.
++If a project authorizes more than one Process, `pf.work.start` can return
++`process_choice_required` candidates; the caller must choose one of the offered
++process ids. `default` is a recommendation only.
+ 
+ `pf.work.state` exposes only the current execution contract: Process, Run,
+ Assignment, stage, required inputs, obligations, produced artifacts, entry and
+@@ -26,10 +29,54 @@ routing.
+ 
+ Evidence is declarative data. ProcessForge checks deterministic facts such as
+ presence, repository-relative paths, hashes, gate attestations, required-output
+-readiness, and verification events. Agents and humans remain responsible for
+-semantic quality judgments.
++readiness, and verification events. A file path proves existence; it does not
++prove that the artifact was semantically reviewed. Agents and humans remain
++responsible for semantic quality judgments.
+ 
+-Each transition updates `Assignment.stage`, appends durable stage history,
+-refreshes the execution projection, and emits `process.stage.*` events. A
+-successful transition from the final stage completes the Assignment and Run
+-and writes the summary and handoff automatically.
++## State, evidence and recovery example
++
++Suppose `pf.work.state` returns this excerpt for `task-result-fixation`:
++
++```json
++{
++  "stage": {"id": "task-result-fixation", "status": "in_progress"},
++  "artifacts": [{"id": "task-result", "kind": "artifact", "satisfied": false}],
++  "gates": {"exit": [{"id": "all-blocking-tasks-completed", "required": true, "satisfied": false}]},
++  "allowed_outcomes": [{"id": "completed", "next_stage": "run-review"}]
++}
++```
++
++First write `.pf/artifacts/result.md`, check the blocking tasks and record the
++actual results. A transition without the required artifact/gate evidence is
++rejected with `transition_rejected` and missing requirements; the stage does
++not advance. Inspect `pf.work.state`, satisfy those requirements, then submit
++this argument object to `pf.work.transition`:
++
++```json
++{
++  "project_root": "<project-root>",
++  "outcome": "completed",
++  "notes": "Task results and blocking-task checks are recorded; ready for run review.",
++  "evidence": [
++    {"kind": "artifact", "id": "task-result", "path": ".pf/artifacts/result.md"},
++    {"kind": "gate", "id": "all-blocking-tasks-completed", "status": "passed", "path": ".pf/artifacts/result.md"}
++  ]
++}
++```
++
++This is an example for these specific obligations, not a universal payload.
++Use IDs and allowed outcomes from your actual state. Gate status accepts
++`passed`, `approved`, or justified `not_applicable`; `pass` does not satisfy it.
++Artifact evidence identifies an existing file; gate evidence is an attestation
++of a check actually performed, not independent proof of semantic quality.
++Never invent checks or use `not_applicable` merely to bypass a required gate.
++
++The successful response is `stage_transitioned` here. Call `pf.work.state` and
++continue through all remaining stages until `action: run_completed`; one
++successful intermediate transition does not complete the work.
++
++Each successful transition updates `Assignment.stage`, appends durable stage
++history, refreshes the execution projection, and emits `process.stage.*`
++events. The final successful transition from the last stage completes the
++Assignment and Run automatically and writes the summary and handoff without a
++separate terminal completion command.
+diff --git a/docs/concepts/runtime-mcp.md b/docs/concepts/runtime-mcp.md
+index 46460cd..82fc19a 100644
+--- a/docs/concepts/runtime-mcp.md
++++ b/docs/concepts/runtime-mcp.md
+@@ -36,13 +36,16 @@ private filesystem paths; `pf.search` navigation is described separately
+ below.
+ 
+ `pf.work.start` is the preferred transition from Garage understanding to
+-governed work. The agent supplies only a non-empty `objective`. ProcessForge
+-validates and pins the process definition, selects its declared initial stage,
+-creates or reuses the Run and Assignment, and returns the current work state.
+-The agent then uses `pf.work.state` and `pf.work.transition(outcome, evidence)`;
+-the next stage is never a caller input. A session id may
+-link telemetry, but session availability does not change `mode: garage` to
+-`mode: forge`.
++governed work. The agent supplies a non-empty `objective` and may also supply
++`process_id` when the project authorizes more than one process. If selection is
++ambiguous, ProcessForge returns `process_choice_required` candidates and the
++caller must choose one of them; `default` is a recommendation, not an implicit
++selection. ProcessForge validates and pins the process definition, selects its
++declared initial stage, creates or reuses the Run and Assignment, and returns
++the current work state. The agent then uses `pf.work.state` and
++`pf.work.transition(outcome, evidence)`; the next stage is never a caller
++input. A session id may link telemetry, but session availability does not
++change `mode: garage` to `mode: forge`.
+ 
+ Session-scoped tool failures return stable machine-readable error codes. For
+ `missing_session`, the error payload also includes a bounded remediation object:
+diff --git a/docs/getting-started/agent-prompts.md b/docs/getting-started/agent-prompts.md
+index a8da212..b5c715c 100644
+--- a/docs/getting-started/agent-prompts.md
++++ b/docs/getting-started/agent-prompts.md
+@@ -40,8 +40,14 @@ archive names, and reports.
+   compatibility; current commands remain file-first and do not require terminal
+   prompting.
+ - For ordinary project work, use `pf.context`, conditional `pf.search`,
+-  `pf.resolve`, and `pf.work.start`. A current context/snapshot outranks
++  `pf.resolve`, `pf.work.start`, `pf.work.state`, and `pf.work.transition`
++  until the work reports `run_completed`. If `pf.work.start` returns
++  `process_choice_required`, choose from the offered process ids instead of
++  assuming `default` is automatic. A current context/snapshot outranks
+   historical generated reports.
++- For the current governed loop and a complete transition/evidence example,
++  see [Garage Core](../concepts/garage-core.md) and
++  [Declarative process execution](../concepts/declarative-process-execution.md).
+ - Do not install, start, restart, or repair PF Runtime, MCP, host hooks, Agent
+   Ledger, or search indexes during ordinary project work. Use available PF
+   tools and report an operator-level blocker when PF requires operator action.
+@@ -183,7 +189,9 @@ python .pf/runtime/bin/pf.py process-list --project-root .
+ python .pf/runtime/bin/pf.py process-describe --project-root . --process <process-id>
+ ```
+ 
+-## Advanced Task Batch Run
++## Advanced Task Batch Run (Compatibility)
++
++Use this only when explicit batch lifecycle control is required.
+ 
+ ```bash
+ python .pf/runtime/bin/pf.py session-start --project-root . --agent primary-agent --process task-batch-execution
+@@ -260,8 +268,11 @@ Initialize ProcessForge in fully automatic mode. It is located at
+ ```text
+ Use ProcessForge for this task. Read .pf/START_AGENT_HERE.md first, create or
+ reuse governed work through pf.work.start, use pf.search and pf.resolve for
+-authorized resources, keep artifacts in .pf, run the relevant checks, and
+-finish with a concise evidence-based handoff. Do not maintain PF infrastructure.
++authorized resources, inspect the current state with pf.work.state, record
++each step with pf.work.transition(outcome, evidence, notes), continue until
++the work reports run_completed, keep artifacts in .pf, run the relevant checks,
++and finish with a concise evidence-based handoff. Do not maintain PF
++infrastructure.
+ ```
+ 
+ ## Subagent Prompt: Documentation Specialist
+diff --git a/docs/getting-started/task-batch-workflow.md b/docs/getting-started/task-batch-workflow.md
+index 50d507e..0c56bb8 100644
+--- a/docs/getting-started/task-batch-workflow.md
++++ b/docs/getting-started/task-batch-workflow.md
+@@ -1,6 +1,18 @@
+ # Task Batch Workflow
+ 
+-Use task batch execution when one work session contains multiple related tasks and each task may need several work/debug/fix iterations.
++Use task batch execution when one work session contains multiple related tasks
++and each task may need several work/debug/fix iterations. For the ordinary
++governed work loop, prefer [Garage Core](../concepts/garage-core.md) and
++[Declarative process execution](../concepts/declarative-process-execution.md);
++the CLI sequence below is a compatibility-oriented batch example.
++
++Prerequisite: the operator has already activated the official
++`processforge.official.software-development` and `processforge.official.verification`
++packs in the Workplace. This example uses their `software-feature-development`
++and `testing` processes, respectively. Confirm they
++are available with `process-list`; if not, request operator setup before using
++this example. Ordinary project work must not activate packs as an implicit
++repair step.
+ 
+ Create a run:
+ 
+@@ -20,17 +32,23 @@ Record iterations:
+ ```bash
+ python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-001-docs --kind work --summary "Updated run docs." --apply
+ python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-001-docs --kind debug --status passed --summary "Docs links checked." --apply
++python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-002-tests --kind work --summary "Ran the test batch." --apply
++python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-002-tests --kind debug --status passed --summary "Tests and logs reviewed." --apply
+ ```
+ 
+ Complete tasks and the run:
+ 
+ ```bash
+ python .pf/runtime/bin/pf.py task-complete --project-root . --task task-001-docs --summary "Docs updated and checked." --apply
++python .pf/runtime/bin/pf.py task-complete --project-root . --task task-002-tests --summary "Tests completed and reviewed." --apply
+ python .pf/runtime/bin/pf.py run-summary --project-root . --run release-prep --apply
+ python .pf/runtime/bin/pf.py run-doctor --project-root . --run release-prep
+ python .pf/runtime/bin/pf.py run-complete --project-root . --run release-prep --apply
+ ```
+ 
++`run-complete` fails while any blocking task remains open, so every blocking
++task must be finished before the run closes.
++
+ Inside an onboarded project, prefer the linked runtime launcher:
+ 
+ ```bash
+diff --git a/docs/index.md b/docs/index.md
+index 0bd321e..91165a8 100644
+--- a/docs/index.md
++++ b/docs/index.md
+@@ -75,6 +75,8 @@ provides explicit paths and choices.
+ - [Hooks and events](concepts/processforge-events.md)
+ - [Hooks and events overview](concepts/hooks-events.md)
+ - [Runtime model](concepts/runtime-model.md)
++- [Garage Core](concepts/garage-core.md)
++- [Declarative process execution](concepts/declarative-process-execution.md)
+ - [PF Runtime MCP facade](concepts/runtime-mcp.md)
+ - [Agent session model](concepts/agent-session-model.md)
+ - [Project coordination modes](concepts/project-coordination-modes.md)
+diff --git a/docs/ru/concepts/core-update-manifest.md b/docs/ru/concepts/core-update-manifest.md
+index ed923c4..2adf7de 100644
+--- a/docs/ru/concepts/core-update-manifest.md
++++ b/docs/ru/concepts/core-update-manifest.md
+@@ -39,6 +39,30 @@ python bin/pf.py core-update repair --core-root <core>
+ 
+ `plan` работает read-only. `apply` требует `--confirm`.
+ 
++## Совместимая миграция Workplace
++
++Архив может содержать декларативную миграцию Workplace в `updates/migrations/`.
++Чтобы включить её в обновление существующего рабочего места, передайте его
++корень при планировании и применении:
++
++```bash
++python bin/pf.py core-update plan --core-root <core> --archive <processforge.zip> --workplace-root <workplace>
++python bin/pf.py core-update apply --core-root <core> --archive <processforge.zip> --workplace-root <workplace> --confirm
++```
++
++План включает только операции, объявленные в архиве. Миграция 1.0.2 → 1.1.0
++добавляет встроенный драйвер `codex-exec` и запись в его реестре только при
++их отсутствии. Существующие файлы и записи сохраняются. Команда
++`workplace-init` предназначена для первичной инициализации и не вызывается
++при обновлении.
++
++Перед записью updater сохраняет затронутые файлы Workplace в каталоге резервных
++копий обновления Core и регистрирует операцию в журнале. Если миграция не
++завершилась, `core-update repair` показывает состояние восстановления и путь
++к резервным копиям. После успешного apply с `--workplace-root` автоматически
++выполняется короткая проверка `doctor-workplace`; её результат записывается в
++`<core>/runtime/core-update/last-apply.json`.
++
+ Updater вычисляет:
+ 
+ ```text
+diff --git a/docs/ru/concepts/declarative-process-execution.md b/docs/ru/concepts/declarative-process-execution.md
+index a1045cd..010f40e 100644
+--- a/docs/ru/concepts/declarative-process-execution.md
++++ b/docs/ru/concepts/declarative-process-execution.md
+@@ -6,13 +6,15 @@ dynamic imports и исполняемого кода.
+ 
+ Обычный путь агента:
+ 
+-`pf.context -> pf.work.start(objective) -> pf.work.state -> работа ->
+-pf.work.transition(outcome, evidence) -> pf.work.state`
++`pf.context -> pf.work.start(objective, process_id?) -> pf.work.state -> работа ->
++pf.work.transition(outcome, evidence, notes?) -> pf.work.state -> ... -> run_completed`
+ 
+ `pf.work.start` выбирает объявленную `initial_stage` либо первую executable
+ stage, а затем закрепляет эффективное Process definition, версию, fingerprint,
+ context snapshot и immutable Assignment capsule. Изменение Process YAML не
+-меняет уже начатый Run.
++меняет уже начатый Run. При нескольких разрешённых процессах без явного выбора
++возвращается `process_choice_required`: выберите предложенный `process_id` и
++повторите start. `default` — рекомендация, а не автоматический выбор.
+ 
+ `pf.work.state` возвращает текущий контракт исполнения: Process, Run,
+ Assignment, stage, required inputs, obligations, artifacts, gates, blockers и
+@@ -23,5 +25,38 @@ allowed outcomes.
+ `outcomes[].next_stage`. Агент никогда не передаёт следующую stage, а
+ `process_transitions` остаются механизмом межпроцессных переходов.
+ 
++## Свидетельства и восстановление после отказа
++
++Например, стадия `task-result-fixation` может требовать артефакт `task-result`
++и gate `all-blocking-tasks-completed`. Сначала создайте файл результата,
++действительно проверьте блокирующие задачи и запишите результат проверки.
++Затем передайте аргументы в `pf.work.transition`:
++
++```json
++{
++  "project_root": "<project-root>",
++  "outcome": "completed",
++  "notes": "Результаты задач и проверки записаны; работа готова к ревью Run.",
++  "evidence": [
++    {"kind": "artifact", "id": "task-result", "path": ".pf/artifacts/result.md"},
++    {"kind": "gate", "id": "all-blocking-tasks-completed", "status": "passed", "path": ".pf/artifacts/result.md"}
++  ]
++}
++```
++
++Это пример конкретной стадии: берите идентификаторы, обязательства и допустимый
++outcome из своего `pf.work.state`. Пути относятся к корню проекта; файлы должны
++существовать. Gate принимает `passed`, `approved` или обоснованный
++`not_applicable`, но не `pass`. Запись gate — подтверждение выполненной проверки,
++а не автоматическое доказательство смыслового качества документа.
++
++Если evidence отсутствует или неверно, `transition_rejected` не продвигает
++стадию. Прочитайте недостающие требования, выполните проверку, исправьте evidence
++и повторите переход. Не обходите отказ ручной правкой YAML. После
++`stage_transitioned` снова вызовите `pf.work.state` и продолжайте до ответа
++`action: run_completed`, а не только до первого успешного перехода.
++
++[Пример структуры state и перехода на английском](../../concepts/declarative-process-execution.md).
++
+ Последний успешный transition завершает Assignment и Run, пишет summary и
+ handoff, обновляет projection и публикует события `process.stage.*`.
+diff --git a/docs/ru/concepts/resource-search-index.md b/docs/ru/concepts/resource-search-index.md
+index ee6f6cc..399c830 100644
+--- a/docs/ru/concepts/resource-search-index.md
++++ b/docs/ru/concepts/resource-search-index.md
+@@ -67,31 +67,34 @@ index_state
+ `indexing_policy_hash`, `root_ref` и refresh status. `documents` хранит
+ `resource_id`, `relative_path`, `kind`, `title`, hashes и JSON metadata.
+ `documents_fts` хранит searchable fulltext fields. `index_state` хранит
+-authorization state текущего project snapshot без дублирования documents под
+-каждый проект.
++текущее состояние каталога ресурсов Workplace. Снапшоты проектов не создают
++состояние индекса и не дублируют документы: они определяют разрешённые
++идентификаторы ресурсов для каждого поискового запроса.
+ 
+ ## CLI
+ 
+ ```bash
+-python bin/pf.py search-index status --project-root <project> --workplace <workplace>
+-python bin/pf.py search-index refresh --project-root <project> --workplace <workplace>
+-python bin/pf.py search-index rebuild --project-root <project> --workplace <workplace>
+-python bin/pf.py search-index doctor --project-root <project> --workplace <workplace>
+-python bin/pf.py search-index tick --project-root <project> --workplace <workplace>
++python bin/pf.py search-index status --workplace <workplace>
++python bin/pf.py search-index refresh --workplace <workplace>
++python bin/pf.py search-index rebuild --workplace <workplace>
++python bin/pf.py search-index doctor --workplace <workplace>
++python bin/pf.py search-index tick --workplace <workplace>
+ ```
+ 
+ `status` работает read-only. `status --verify-files` выполняет явную
+ fingerprint reconciliation и сообщает stale state, если содержимое разрешенного
+-ресурса изменилось. `refresh` обновляет indexable resources для текущего свежего
+-snapshot. `rebuild` удаляет производную DB и строит ее заново. `tick` является
+-bounded maintenance unit для оператора и Runtime scheduling.
++ресурса изменилось. `refresh` индексирует каждый зарегистрированный ресурс или пакет
++Workplace один раз, соблюдая `indexing.mode`; снапшот проекта для этого не читается.
++`rebuild` удаляет производную DB и строит ее заново. `tick` является bounded
++maintenance unit для оператора и Runtime scheduling.
+ 
+ ## Runtime И MCP
+ 
+-Runtime maintenance должен периодически запускать `tick` для известных проектов
+-со свежими snapshots. PF-owned resource mutations помечают существующий index
+-state как stale; внешние изменения файлов обнаруживаются fingerprint-проверкой
+-во время `tick`.
++Обслуживание индекса выполняется командой `tick` для Workplace, без обхода
++проектов. Сам вызов не требует запущенного Runtime, Ledger или активных сессий.
++
++PF-owned resource mutations помечают существующий index state как stale; внешние
++изменения файлов обнаруживаются fingerprint-проверкой во время `tick`.
+ 
+ `pf.search` никогда не выдает stale data как `fresh`. Если индекс missing, stale
+ или degraded, результат возвращает этот `search_status` и пустые matches до
+diff --git a/docs/ru/concepts/runtime-mcp.md b/docs/ru/concepts/runtime-mcp.md
+index c6816f7..e52fe86 100644
+--- a/docs/ru/concepts/runtime-mcp.md
++++ b/docs/ru/concepts/runtime-mcp.md
+@@ -41,12 +41,19 @@ onboarding/repair, и требуют точное JSON-значение `apply:
+ возвращается `apply_required`.
+ 
+ `pf.work.start` — предпочтительный переход от Garage-понимания к governed work.
+-Агент передает только непустой `objective`; ProcessForge проверяет и закрепляет
+-process definition, выбирает объявленную initial stage, создает или повторно
+-использует Run и Assignment. Далее агент вызывает `pf.work.state` и
+-`pf.work.transition(outcome, evidence)`. Следующая stage не является входом
+-агента. Session id может связать
+-telemetry, но сам факт session не меняет `mode: garage` на `mode: forge`.
++Агент передаёт непустой `objective` и при необходимости явный `process_id`.
++Если допустим один процесс, PF выбирает его. При нескольких допустимых
++процессах без явного выбора PF возвращает `process_choice_required` с
++кандидатами: выберите предложенный id и повторите start с `process_id`.
++`default` — рекомендация, а не автоматический выбор. Уже начатый Work
++сохраняет закреплённый процесс; повторный start не переключает его.
++
++ProcessForge закрепляет определение процесса, выбирает начальную стадию и
++создаёт или переиспользует Run и Assignment. Далее агент вызывает
++`pf.work.state` и `pf.work.transition(outcome, evidence, notes)` до
++`run_completed`. Следующая стадия не является входным параметром агента.
++Session id может связать telemetry, но сам факт session не меняет
++`mode: garage` на `mode: forge`.
+ 
+ Session-scoped failures возвращают стабильные machine-readable error codes. Для
+ `missing_session` payload также содержит ограниченный remediation object:
+diff --git a/docs/ru/getting-started/agent-prompts.md b/docs/ru/getting-started/agent-prompts.md
+index 494a410..de0d6bd 100644
+--- a/docs/ru/getting-started/agent-prompts.md
++++ b/docs/ru/getting-started/agent-prompts.md
+@@ -43,8 +43,14 @@
+   совместимости пользовательского опыта; текущие команды остаются файловыми и
+   не требуют вопросов в терминале.
+ - Для обычной проектной работы используйте `pf.context`, при необходимости
+-  `pf.search`, затем `pf.resolve` и `pf.work.start`. Текущий context/snapshot
+-  важнее historical generated reports.
++  `pf.search`, затем `pf.resolve`, `pf.work.start`, `pf.work.state` и
++  `pf.work.transition` до ответа `run_completed`. Если получен
++  `process_choice_required`, выберите предложенный `process_id` и повторите
++  start; `default` — рекомендация, а не автоматический выбор. Текущий
++  context/snapshot важнее historical generated reports.
++- Полный цикл и примеры evidence приведены в
++  [декларативном исполнении процесса](../concepts/declarative-process-execution.md)
++  и [Garage Core (EN)](../../concepts/garage-core.md).
+ - Во время обычной работы не устанавливайте, не запускайте и не ремонтируйте PF
+   Runtime, MCP, host hooks, Agent Ledger или search indexes. Используйте
+   доступные PF tools и сообщайте operator-level blocker.
+@@ -180,7 +186,10 @@ python .pf/runtime/bin/pf.py process-list --project-root .
+ python .pf/runtime/bin/pf.py process-describe --project-root . --process <process-id>
+ ```
+ 
+-## Advanced task batch run
++## Advanced task batch run (совместимость)
++
++Этот путь предназначен только для явно запрошенного управления старым
++run/task lifecycle или операторской диагностики, не для обычной Garage-работы.
+ 
+ ```bash
+ python .pf/runtime/bin/pf.py session-start --project-root . --agent primary-agent --process task-batch-execution
+@@ -260,8 +269,10 @@ tools, MCP providers, processes, coding standards и capabilities уже
+ Используй ProcessForge для этой задачи. Сначала прочитай
+ .pf/START_AGENT_HERE.md, создай или переиспользуй governed work через
+ pf.work.start, используй pf.search и pf.resolve для разрешённых ресурсов,
+-сохраняй артефакты в .pf, выполни проверки и заверши кратким handoff. Не
+-обслуживай инфраструктуру PF.
++проверяй текущие обязательства через pf.work.state и переходи между стадиями
++через pf.work.transition(outcome, evidence, notes). Продолжай до run_completed.
++Сохраняй артефакты в .pf, выполни проверки и заверши кратким handoff.
++Не обслуживай инфраструктуру PF.
+ ```
+ 
+ ## Subagent prompt: documentation specialist
+diff --git a/docs/ru/getting-started/task-batch-workflow.md b/docs/ru/getting-started/task-batch-workflow.md
+index 79471b4..1f3c4b1 100644
+--- a/docs/ru/getting-started/task-batch-workflow.md
++++ b/docs/ru/getting-started/task-batch-workflow.md
+@@ -1,17 +1,57 @@
+-# Task batch workflow
++# Рабочий сценарий task batch
+ 
+-`task-batch-execution` подходит для рабочей сессии, где нужно разбить работу на
+-несколько задач и зафиксировать попытки выполнения.
++Используйте task batch execution, когда одна рабочая сессия содержит несколько
++связанных задач и каждой задаче может понадобиться несколько циклов
++work/debug/fix. Для обычного управляемого цикла работы предпочитайте
++[Garage Core (EN)](../../concepts/garage-core.md) и
++[Declarative process execution](../concepts/declarative-process-execution.md);
++нижеприведённый CLI нужен как совместимый сценарий явного управления run/task.
++
++Предусловие: оператор уже активировал официальные пакеты
++`processforge.official.software-development` и `processforge.official.verification`
++в Workplace. Пример использует их процессы `software-feature-development` и
++`testing` соответственно. Проверьте их наличие
++через `process-list`; если они недоступны, сначала запросите настройку у
++оператора. Обычная проектная работа не должна неявно активировать пакеты для
++устранения такого отказа.
++
++Создайте run:
++
++```bash
++python .pf/runtime/bin/pf.py run-create --project-root . --id release-prep --title "Release preparation" --process task-batch-execution --apply
++```
++
++Создайте задачи:
++
++```bash
++python .pf/runtime/bin/pf.py task-create --project-root . --run release-prep --id task-001-docs --title "Update docs" --process software-feature-development --apply
++python .pf/runtime/bin/pf.py task-create --project-root . --run release-prep --id task-002-tests --title "Run tests" --process testing --apply
++```
++
++Зафиксируйте итерации:
++
++```bash
++python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-001-docs --kind work --summary "Updated run docs." --apply
++python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-001-docs --kind debug --status passed --summary "Docs links checked." --apply
++python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-002-tests --kind work --summary "Ran the test batch." --apply
++python .pf/runtime/bin/pf.py iteration-add --project-root . --task task-002-tests --kind debug --status passed --summary "Tests and logs reviewed." --apply
++```
++
++Завершите задачи и только затем run:
+ 
+ ```bash
+-python .pf/runtime/bin/pf.py run-create --project-root . --id <run-id> --title "<title>" --process task-batch-execution --apply
+-python .pf/runtime/bin/pf.py task-create --project-root . --run <run-id> --id <task-id> --title "<task title>" --process <process-id> --apply
+-python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --kind work --summary "..." --apply
+-python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --kind debug --summary "..." --apply
+-python .pf/runtime/bin/pf.py task-complete --project-root . --task <task-id> --summary "..." --apply
+-python .pf/runtime/bin/pf.py run-summary --project-root . --run <run-id> --apply
+-python .pf/runtime/bin/pf.py run-doctor --project-root . --run <run-id>
++python .pf/runtime/bin/pf.py task-complete --project-root . --task task-001-docs --summary "Docs updated and checked." --apply
++python .pf/runtime/bin/pf.py task-complete --project-root . --task task-002-tests --summary "Tests completed and reviewed." --apply
++python .pf/runtime/bin/pf.py run-summary --project-root . --run release-prep --apply
++python .pf/runtime/bin/pf.py run-doctor --project-root . --run release-prep
++python .pf/runtime/bin/pf.py run-complete --project-root . --run release-prep --apply
+ ```
+ 
+-Используйте iterations для фактической истории: work, debug, fix, review,
+-test, research, handoff или note.
++`run-complete` отклоняется, пока открыта хотя бы одна блокирующая задача, так
++что все blocking tasks нужно закрыть до завершения run.
++
++Внутри подключённого проекта предпочитайте связанный runtime launcher:
++
++```bash
++python .pf/runtime/bin/pf.py run-status --project-root . --run release-prep
++```
+diff --git a/docs/ru/getting-started/update-system.md b/docs/ru/getting-started/update-system.md
+index 3be25d3..35e00af 100644
+--- a/docs/ru/getting-started/update-system.md
++++ b/docs/ru/getting-started/update-system.md
+@@ -47,10 +47,19 @@ HTTPS, `sha256` и ручное подтверждение оператора п
+ 4. Постройте план и явно примените обновление к стабильной установленной папке:
+ 
+    ```powershell
+-   python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip>
+-   python <staged-processforge-1.1.0>/bin/pf.py core-update apply --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --confirm
++   python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace>
++   python <staged-processforge-1.1.0>/bin/pf.py core-update apply --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace> --confirm
+    ```
+ 
++   Архив 1.1.0 добавляет только отсутствующие стандартные настройки Workplace,
++   включая драйвер `codex-exec` и его регистрацию, и сохраняет существующую
++   конфигурацию. Не используйте `workplace-init` как updater: эта команда
++   предназначена для первичной инициализации.
++
++   После успешного apply с `--workplace-root` автоматически выполняется
++   `doctor-workplace`; результат сохраняется в
++   `<core>/runtime/core-update/last-apply.json`.
++
+ 5. Проверьте установленный Core и workplace, затем перезапустите PF Runtime,
+    если он настроен:
+ 
+diff --git a/docs/ru/index.md b/docs/ru/index.md
+index 93a03c8..c23f065 100644
+--- a/docs/ru/index.md
++++ b/docs/ru/index.md
+@@ -67,6 +67,8 @@ workplace; каждый репозиторий хранит только про
+ 
+ - [Workplace vs project](concepts/workplace-vs-project.md)
+ - [Модель среды выполнения](concepts/runtime-model.md)
++- [Garage Core (EN)](../concepts/garage-core.md)
++- [Declarative process execution](concepts/declarative-process-execution.md)
+ - [PF Runtime MCP facade](concepts/runtime-mcp.md)
+ - [Модель агентской сессии](concepts/agent-session-model.md)
+ - [Режимы координации проекта](concepts/project-coordination-modes.md)
+diff --git a/docs/validation/validation.md b/docs/validation/validation.md
+index 36bd4b2..f1bb24d 100644
+--- a/docs/validation/validation.md
++++ b/docs/validation/validation.md
+@@ -16,7 +16,22 @@ Checks required files, JSON schema syntax, seed process fields, manifest referen
+ python tools/validate-process-forge-checksums.py
+ ```
+ 
+-Creates a deterministic SHA-256 inventory for public files and checks immutable context packages for recorded checksum fields.
++Checks the current public files against the existing deterministic SHA-256 inventory.
++
++Run with `--check` (default when `--write` is not set) to validate existing inventory
++files. Run with `--write` to generate/update `checksums/processforge.sha256`.
++
++This command checks only public file inventories. It does not validate context capsules.
++
++Context and capsule checks use explicit doctor commands:
++
++```bash
++python bin/pf.py project-context-check --project-root <project-root> --json
++python bin/pf.py capsule-doctor --project-root <project-root> --capsule <capsule-path>
++```
++
++`project-context-check` validates project context snapshot freshness.
++`capsule-doctor` validates the assignment capsule and its context checksum contract.
+ 
+ ## Public Cleanliness
+ 
+diff --git a/prompts/task-batch-execution-agent.md b/prompts/task-batch-execution-agent.md
+index e90a7f5..4a4dff6 100644
+--- a/prompts/task-batch-execution-agent.md
++++ b/prompts/task-batch-execution-agent.md
+@@ -1,46 +1,44 @@
+ # Task Batch Execution Agent
+ 
+-You are working in a ProcessForge project run.
+-
+-You are the primary agent for this session. Execute the process sequentially in
+-one project/run. You may act as executor, checker, and reporter inside the same
+-session. Use CLI checks and process gates instead of token-heavy manual
+-reasoning. Check in at session start and check out before ending. Do not assume
+-Agent Director or Supervisor is present unless the process explicitly uses
+-multi-agent, handoff, or external runtime-worker mechanics.
+-
+-1. Read `.pf/AGENTS.md`.
+-2. Read `.pf/contexts/project-context.snapshot.yaml`.
+-3. Find the active run in `.pf/runs/`.
+-4. If no run exists, propose:
+-
+-```bash
+-python .pf/runtime/bin/pf.py session-start --project-root . --agent primary-agent --process task-batch-execution
+-python .pf/runtime/bin/pf.py run-create --project-root . --id <run-id> --title "<title>" --process task-batch-execution --apply
+-```
+-
+-For each task:
+-
+-1. Read the task assignment YAML in `.pf/assignments/`.
+-2. Add a work iteration.
+-3. Do the work.
+-4. Add a debug or test iteration.
+-5. If debug fails, add a fix or work iteration.
+-6. Repeat until the task result is ready.
+-7. Write the task result artifact when needed.
+-8. Complete the task:
+-
+-```bash
+-python .pf/runtime/bin/pf.py task-complete --project-root . --task <task-id> --summary "..." --apply
+-```
+-
+-After all tasks:
+-
+-```bash
+-python .pf/runtime/bin/pf.py run-summary --project-root . --run <run-id> --apply
+-python .pf/runtime/bin/pf.py run-doctor --project-root . --run <run-id>
+-python .pf/runtime/bin/pf.py run-complete --project-root . --run <run-id> --apply
+-python .pf/runtime/bin/pf.py session-end --project-root .
+-```
+-
+-Do not create new process definitions during execution. Do not implement multi-agent locks, runner daemons, background watchers, live hook interception, or private absolute paths in public files.
++You are the primary agent in an onboarded ProcessForge project. Execute the
++assigned work through the declared process, preserving bounded scope and evidence.
++
++1. Read `.pf/AGENTS.md` and `.pf/process-forge.yaml`, then call `pf.context`
++   with the project root. Current context outranks stale generated reports.
++2. Use `pf.search` when knowledge is needed and `pf.resolve` before opening
++   selected managed resources.
++3. Call `pf.work.start` with a non-empty `objective`. If it returns
++   `process_choice_required`, choose an offered process and repeat with
++   `process_id`; `default` is a recommendation only. An existing Work keeps
++   its pinned process.
++4. Call `pf.work.state`; read the assigned task and immutable capsule. Check
++   allowed/forbidden files and current inputs, artifacts, gates and outcomes.
++5. Perform the current stage's work and checks. Record work/debug/fix results
++   in the declared artifacts. Review semantic quality before attesting a gate.
++6. Call `pf.work.transition` with a declared `outcome`, real artifact/gate
++   `evidence`, and a handoff `notes` message when required. Never pass a next
++   stage. If rejected, inspect missing obligations, supply the real evidence
++   and retry; do not bypass gates or manually edit lifecycle YAML.
++7. Repeat state, work and transition until PF returns `action: run_completed`.
++   The last successful transition completes Assignment and Run and creates
++   summary/handoff. Deliver the result and remaining risks to the user.
++
++Use [Garage Core](../docs/concepts/garage-core.md) and the concrete
++[transition/evidence example](../docs/concepts/declarative-process-execution.md).
++Gate evidence uses `passed`, `approved` or justified `not_applicable`, not `pass`.
++IDs and paths must match the current state, and referenced files must exist.
++
++Ordinary Garage work needs no manual Ledger session. Do not install, start,
++restart or repair Runtime, MCP, hooks or Agent Ledger to perform this task.
++Report operator-level infrastructure blockers without inventing session ids.
++
++## Compatibility and operator diagnostics
++
++Only use the explicit [compatibility task-batch example](../docs/getting-started/task-batch-workflow.md)
++when that low-level lifecycle is specifically requested. It is not a fallback
++for missing ordinary work: use `pf.work.start` for that. Manual session
++check-in/check-out is an operator diagnostic, not a prerequisite for a batch.
++
++Do not create new process definitions, background watchers or runner daemons
++as part of ordinary task execution. Respect the selected process's delegation
++policy and never put private absolute paths into public files.
+diff --git a/tools/processforge.py b/tools/processforge.py
+index b9bf2fc..1014606 100644
+--- a/tools/processforge.py
++++ b/tools/processforge.py
+@@ -6953,6 +6953,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool
+         ReleaseCommand("smoke_docs_garage_no_runtime_required", [sys.executable, str(root / "tools" / "smoke_docs_garage_no_runtime_required.py")], 120),
+         ReleaseCommand("smoke_docs_mcp_host_owned_stdio", [sys.executable, str(root / "tools" / "smoke_docs_mcp_host_owned_stdio.py")], 120),
+         ReleaseCommand("smoke_docs_agent_no_manual_infra", [sys.executable, str(root / "tools" / "smoke_docs_agent_no_manual_infra.py")], 120),
++        ReleaseCommand("smoke_docs_current_code_contract", [sys.executable, str(root / "tools" / "smoke_docs_current_code_contract.py")], 120),
+         ReleaseCommand("smoke_docs_codex_hooks_optional", [sys.executable, str(root / "tools" / "smoke_docs_codex_hooks_optional.py")], 120),
+         ReleaseCommand("smoke_doctor_gitignore_effective_protection", [sys.executable, str(root / "tools" / "smoke_doctor_gitignore_effective_protection.py")], 180),
+         ReleaseCommand("smoke_mcp_missing_session_diagnostics", [sys.executable, str(root / "tools" / "smoke_mcp_missing_session_diagnostics.py")], 120),
+@@ -12473,15 +12474,6 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
+         if out_path is None:
+             if output_id in waiver_map:
+                 checks.append(check("WARN", f"required output without path waived: {output_id} ({waiver_map[output_id]})"))
+-            elif entry == ".codex/hooks.json" and not (project_root / entry).exists():
+-                checks.append(
+-                    check_with_hint(
+-                        "WARN",
+-                        ".gitignore does not predeclare optional .codex/hooks.json",
+-                        "Codex hooks are optional host telemetry and are not installed for a generic project.",
+-                        "add .codex/hooks.json only when opting into the project-local Codex integration",
+-                    )
+-                )
+             else:
+                 checks.append(check("FAIL", f"required output has no path: {output_id}"))
+             continue
+diff --git a/tools/smoke_context_freshness_vs_execution_readiness.py b/tools/smoke_context_freshness_vs_execution_readiness.py
+index 4768289..572613c 100644
+--- a/tools/smoke_context_freshness_vs_execution_readiness.py
++++ b/tools/smoke_context_freshness_vs_execution_readiness.py
+@@ -157,7 +157,7 @@ def main() -> int:
+         assert check["execution_readiness"]["status"] == "blocked", check
+         assert check["execution_readiness"]["missing_capabilities"][0]["capability"] == "filesystem.write", check
+ 
+-        run_cli("search-index", "refresh", "--project-root", str(project), "--workplace", str(workplace))
++        run_cli("search-index", "refresh", "--workplace", str(workplace))
+         run_cli(
+             "agent-checkin",
+             "--workplace",
+diff --git a/tools/smoke_docs_agent_no_manual_infra.py b/tools/smoke_docs_agent_no_manual_infra.py
+index ff67788..0b6bf0d 100644
+--- a/tools/smoke_docs_agent_no_manual_infra.py
++++ b/tools/smoke_docs_agent_no_manual_infra.py
+@@ -2,6 +2,7 @@
+ """Guard Garage-first agent instructions against manual infrastructure work."""
+ 
+ from pathlib import Path
++import re
+ 
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+@@ -13,14 +14,30 @@ def main() -> int:
+         ROOT / "templates" / "global-agents-processforge-section.md",
+         ROOT / ".pf" / "AGENTS.md",
+         ROOT / "tools" / "processforge.py",
++        ROOT / "prompts" / "task-batch-execution-agent.md",
+     ]
+     for path in files:
+         text = path.read_text(encoding="utf-8")
+         for marker in ["pf.context", "pf.search", "pf.resolve", "pf.work.start"]:
+             if marker not in text:
+                 raise AssertionError(f"{path.relative_to(ROOT)} missing {marker}")
+-        if "do not install" not in text.lower():
++        if not re.search(r"do not (?:install|start|restart|repair)", text.lower()):
+             raise AssertionError(f"{path.relative_to(ROOT)} lacks the infrastructure boundary")
++    task_batch = (ROOT / "prompts" / "task-batch-execution-agent.md").read_text(encoding="utf-8")
++    for marker in [
++        "compatibility task-batch example",
++        "not a fallback",
++        "operator diagnostic",
++        "pf.work.state",
++        "pf.work.transition",
++        "process_choice_required",
++        "run_completed",
++    ]:
++        if marker not in task_batch:
++            raise AssertionError(f"prompts/task-batch-execution-agent.md missing: {marker}")
++    manual_command = re.compile(r"(?im)^\s*(?:python|python3|pwsh|powershell|docker|systemctl|pip)\b.*(?:mcp|ledger|runtime|hook|install|restart|repair)")
++    if manual_command.search(task_batch):
++        raise AssertionError("specialized task-batch prompt contains an executable manual infrastructure command")
+     print("PASS: agent instructions use the high-level Garage path and prohibit manual infrastructure repair")
+     return 0
+ 
+diff --git a/tools/smoke_doctor_gitignore_effective_protection.py b/tools/smoke_doctor_gitignore_effective_protection.py
+index 1102bae..aeb9668 100644
+--- a/tools/smoke_doctor_gitignore_effective_protection.py
++++ b/tools/smoke_doctor_gitignore_effective_protection.py
+@@ -39,7 +39,7 @@ def main() -> int:
+         (project / ".gitignore").write_text(".codex/hooks.json\n.pf/\n", encoding="utf-8")
+         result = cli("doctor-project", "--project-root", str(project), check=False)
+         output = result.stdout + result.stderr
+-        for entry in [".pf/process-forge.local.yaml", ".pf/runtime/", ".pf/cache/"]:
++        for entry in [".codex/hooks.json", ".pf/process-forge.local.yaml", ".pf/runtime/", ".pf/cache/"]:
+             if f"PASS: .gitignore protects {entry}" not in output:
+                 raise AssertionError(f"effective protection was not accepted for {entry}:\n{output}")
+             if f"FAIL: .gitignore missing {entry}" in output:
+diff --git a/tools/smoke_process_run_task_batch.py b/tools/smoke_process_run_task_batch.py
+index 3a46bf1..aad4371 100644
+--- a/tools/smoke_process_run_task_batch.py
++++ b/tools/smoke_process_run_task_batch.py
+@@ -10,6 +10,8 @@ import sys
+ import tempfile
+ from pathlib import Path
+ 
++import processforge as core
++
+ from processforge_subprocess import CommandResult, diagnostic_text, run_command as run_processforge_command
+ 
+ 
+@@ -139,6 +141,87 @@ def negative_workflow(root: Path) -> None:
+     pf("run-doctor", "--project-root", str(project), "--run", "negative-run", expect=1)
+ 
+ 
++def required_output_check_matrix(root: Path) -> None:
++    existing = root / "existing.md"
++    existing.write_text("# Existing output\n", encoding="utf-8")
++    cases = [
++        ({"id": "report"}, {}, True, "FAIL", "required output has no path: report"),
++        ({"id": "report"}, {}, False, "FAIL", "required output has no path: report"),
++        ({"id": "report", "path": " "}, {}, True, "FAIL", "required output has no path: report"),
++        ({"id": "report", "path": None}, {}, True, "FAIL", "required output has no path: report"),
++        ("report", {}, True, "FAIL", "required output has no path: report"),
++        ("id=report,required=true", {}, True, "FAIL", "required output has no path: report"),
++        ({"id": "report"}, {"report": "accepted"}, True, "WARN", "required output without path waived: report (accepted)"),
++        ({"id": "report", "path": "existing.md"}, {}, True, "PASS", "required output exists: existing.md"),
++        ({"id": "report", "path": "missing.md"}, {}, True, "FAIL", "required output missing: missing.md"),
++        ({"id": "report", "path": "missing.md"}, {}, False, "WARN", "required output pending: missing.md"),
++        ({"id": "report", "path": "missing.md"}, {"report": "accepted"}, True, "WARN", "required output waived: report (accepted)"),
++        ({"id": "report", "required": False}, {}, True, "PASS", "required output optional: report"),
++        ({"id": "report", "path": "missing.md", "required": False}, {}, True, "PASS", "required output optional: report"),
++    ]
++    for output, waivers, enforce_missing, level, message in cases:
++        checks = core.required_output_checks(root, {"required_outputs": [output]}, waivers, enforce_missing)
++        actual = [(item.level, item.message) for item in checks]
++        if actual != [(level, message)]:
++            raise AssertionError(f"unexpected checks for {output!r}: {actual!r}")
++
++    for artifact, waivers, enforce_missing, level, message in [
++        ("existing.md", {}, True, "PASS", "expected report exists: existing.md"),
++        ("missing.md", {}, True, "FAIL", "expected report missing: missing.md"),
++        ("missing.md", {}, False, "WARN", "expected report pending: missing.md"),
++        ("missing.md", {"expected-report": "accepted"}, True, "WARN", "expected report waived: missing.md (accepted)"),
++        ("missing.md", {"expected_report": "accepted"}, True, "WARN", "expected report waived: missing.md (accepted)"),
++    ]:
++        checks = core.required_output_checks(root, {"expected_report": {"artifact": artifact}}, waivers, enforce_missing)
++        actual = [(item.level, item.message) for item in checks]
++        if actual != [(level, message)]:
++            raise AssertionError(f"unexpected expected_report checks: {actual!r}")
++
++
++def missing_path_workflow(project: Path, run_id: str) -> None:
++    task_id = "missing-path-task"
++    pf("task-create", "--project-root", str(project), "--run", run_id, "--id", task_id,
++       "--title", "Missing output path", "--process", "task-batch-execution",
++       "--required-output", "id=report,path=report.md,type=markdown,required=true", "--apply")
++    # task-create rejects missing paths; emulate an existing file-first assignment.
++    task = core.load_task(project, task_id)
++    task["required_outputs"][0].pop("path")
++    core.save_task(project, task)
++    task_path = project / ".pf" / "assignments" / f"{task_id}.yaml"
++    run_path = project / ".pf" / "runs" / run_id / "run.yaml"
++    task_before, run_before = task_path.read_bytes(), run_path.read_bytes()
++    events_before = event_types(project)
++    result = pf("task-complete", "--project-root", str(project), "--task", task_id,
++                "--summary", "Must reject missing path.", "--apply", expect=1)
++    output = result.stdout + result.stderr
++    expected = "FAIL: task required outputs are not complete: required output has no path: report"
++    if expected not in output or "Traceback" in output or "NameError" in output:
++        raise AssertionError(f"expected controlled validation failure:\n{output}")
++    if task_path.read_bytes() != task_before or run_path.read_bytes() != run_before:
++        raise AssertionError("rejected completion mutated assignment or run")
++    if event_types(project) != events_before:
++        raise AssertionError("rejected completion emitted process events")
++
++    result = pf("task-doctor", "--project-root", str(project), "--task", task_id, expect=1)
++    if "FAIL: required output has no path: report" not in result.stdout or "Traceback" in result.stderr:
++        raise AssertionError(diagnostic_text(result))
++    # run-doctor checks run/assignment consistency, not task output completeness.
++    pf("run-doctor", "--project-root", str(project), "--run", run_id)
++
++    pf("task-complete", "--project-root", str(project), "--task", task_id,
++       "--summary", "Missing path explicitly waived.", "--waive-required-output", "report:accepted", "--apply")
++    task = core.load_task(project, task_id)
++    if task["status"] != "done" or task["result"]["waivers"] != {"report": "accepted"}:
++        raise AssertionError(f"waived result was not persisted: {task['result']!r}")
++    run_task = next(item for item in core.load_run(project, run_id)["tasks"] if item["id"] == task_id)
++    if run_task["status"] != "done":
++        raise AssertionError("waived completion did not update the run task status")
++    result = pf("task-doctor", "--project-root", str(project), "--task", task_id)
++    if "WARN: required output without path waived: report (accepted)" not in result.stdout:
++        raise AssertionError(diagnostic_text(result))
++    pf("run-doctor", "--project-root", str(project), "--run", run_id)
++
++
+ def required_output_workflow(root: Path) -> None:
+     project = make_project(root, "required-output")
+     run_id = "required-output-run"
+@@ -167,6 +250,7 @@ def required_output_workflow(root: Path) -> None:
+     (project / report_rel).write_text("# Required Output Report\n\nPASS\n", encoding="utf-8")
+     pf("task-complete", "--project-root", str(project), "--task", "required-output-task", "--summary", "Required output present.", "--artifact", report_rel, "--apply")
+     pf("task-doctor", "--project-root", str(project), "--task", "required-output-task")
++    missing_path_workflow(project, run_id)
+     pf("run-complete", "--project-root", str(project), "--run", run_id, "--apply")
+     pf("run-doctor", "--project-root", str(project), "--run", run_id)
+     assert_file(project / ".pf" / "runs" / run_id / "summary.md")
+@@ -215,6 +299,7 @@ def concurrent_artifact_workflow(root: Path) -> None:
+ def main() -> int:
+     with tempfile.TemporaryDirectory(prefix="pf-run-task-smoke-") as temp:
+         root = Path(temp)
++        required_output_check_matrix(root)
+         positive_workflow(root)
+         negative_workflow(root)
+         required_output_workflow(root)

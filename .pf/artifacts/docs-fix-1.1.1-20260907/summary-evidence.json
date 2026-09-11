@@ -1,0 +1,5 @@
+[
+  {"kind":"artifact","id":"run-summary","path":".pf/artifacts/docs-fix-1.1.1-20260907/completion-summary.md"},
+  {"kind":"artifact","id":"run-handoff","path":".pf/handoffs/docs-fix-1.1.1-20260907.md"},
+  {"kind":"gate","id":"run-summary-created","status":"passed","path":".pf/artifacts/docs-fix-1.1.1-20260907/completion-summary.md"}
+]

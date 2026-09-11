@@ -1,0 +1,42 @@
+schema_version: 1
+id: context-collection-shell-20260910
+title: Diagnose context origin mismatch and worker report collection
+process: multi-agent-task-orchestration
+status: completed
+created_at: '2026-09-10T12:30:27Z'
+updated_at: '2026-09-11T03:31:37Z'
+objective: Diagnose context origin mismatch and worker report collection
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: context-origin
+    assignment: .pf/assignments/context-origin.yaml
+    status: done
+    order: 1
+    blocking: true
+  -
+    id: report-capture
+    assignment: .pf/assignments/report-capture.yaml
+    status: done
+    order: 2
+    blocking: true
+final_artifacts:
+  - .pf/runs/context-collection-shell-20260910/summary.md
+  - .pf/handoffs/runs/context-collection-shell-20260910-handoff.md
+events:
+  emitted:
+    - run.created
+    - run.summary.created
+    - run.completed
+privacy:
+  public_safe: true
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 2

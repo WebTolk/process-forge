@@ -1,0 +1,210 @@
+schema_version: 1
+id: remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-workers-i
+title: Remediate audited A01-A11 defects with bounded junior PF shell workers, independ
+run_id: garage-remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-wo
+process: task-batch-execution
+status: done
+created_at: '2026-09-11T06:21:45Z'
+updated_at: '2026-09-11T10:07:12Z'
+objective: Remediate audited A01-A11 defects with bounded junior PF shell workers, independent regression verification, and source-only delivery
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Complete audited A01-A11 remediation with all four reviewer findings resolved. Preserve original worker failures and broad-suite failures. Detailed result and remaining R01-R03 work are in the final handoff; no installed update or release performed.
+  artifacts:
+    - .pf/artifacts/core-a01-a11-20260911/design.md
+    - .pf/artifacts/core-a01-a11-20260911/integration-report.md
+    - .pf/artifacts/core-a01-a11-20260911/run-review.md
+    - .pf/artifacts/core-a01-a11-20260911/task-iteration-log.md
+    - .pf/artifacts/core-a01-a11-20260911/task-result.md
+    - .pf/artifacts/core-a01-a11-20260911/wave1-plan.yaml
+    - .pf/handoffs/core-a01-a11-20260911.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-11T10:06:00Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: run-summary
+      path: .pf/artifacts/core-a01-a11-20260911/integration-report.md
+      status: ready
+      recorded_at: '2026-09-11T10:07:07Z'
+      sha256: 'sha256:e95c4042749ac7bf509de36b7c3f836b6203b091d87c1028111ebe225e653fb0'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      path: .pf/handoffs/core-a01-a11-20260911.md
+      status: ready
+      recorded_at: '2026-09-11T10:07:07Z'
+      sha256: 'sha256:bd782b9b1b085efd7f8062d046026bee41736638dd76aeea08e900b5ee3bdfe9'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      summary: Final integration summary, exact source inventory, task acceptance, worker attribution, validation aggregate and follow-up backlog recorded. A01-A11 accepted; broad source suite remains 216 PASS / 2 explained FAIL; source-only uncommitted delivery.
+      recorded_at: '2026-09-11T10:07:07Z'
+  notes: Complete audited A01-A11 remediation with all four reviewer findings resolved. Preserve original worker failures and broad-suite failures. Detailed result and remaining R01-R03 work are in the final handoff; no installed update or release performed.
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-11T06:21:45Z'
+    completed_at: '2026-09-11T06:24:41Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-record
+        path: .pf/artifacts/core-a01-a11-20260911/design.md
+        status: ready
+        recorded_at: '2026-09-11T06:24:38Z'
+        sha256: 'sha256:630112b41e0e04119849e4480793cc2729bc15c359c3e264fa88a0aaf9ddce4f'
+      -
+        kind: gate
+        gate_id: run-has-context
+        status: passed
+        summary: Explicit user implementation authorization; source context fresh/ready and immutable carrier pinned. Design specifies invariants, disjoint waves and source-only scope; connected MCP bootstrap defect A09 recorded.
+        recorded_at: '2026-09-11T06:24:38Z'
+    notes: Intake complete; handoff to bounded shell task planning, preserving audited baseline and installed infrastructure.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-11T06:24:41Z'
+    completed_at: '2026-09-11T06:31:53Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-index
+        path: .pf/artifacts/core-a01-a11-20260911/wave1-plan.yaml
+        status: ready
+        recorded_at: '2026-09-11T06:31:45Z'
+        sha256: 'sha256:a49a929c95d871f5756c57d4b4f7c9707f531045182c8f489f05f4445fe3f621'
+      -
+        kind: gate
+        gate_id: run-has-tasks
+        status: passed
+        summary: Three disjoint Luna shell assignments materialized and started; subsequent waves defined in design.md.
+        recorded_at: '2026-09-11T06:31:45Z'
+    notes: Wave 1 started. Explicit carrier selector is necessary because attached MCP selected a newer unpinned child assignment.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-11T06:31:53Z'
+    completed_at: '2026-09-11T09:33:58Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-iteration-log
+        path: .pf/artifacts/core-a01-a11-20260911/task-iteration-log.md
+        status: ready
+        recorded_at: '2026-09-11T09:33:52Z'
+        sha256: 'sha256:75c2996c56761165d6bddbeba759ce593889853a5fdd099d500e73bb75642a7a'
+      -
+        kind: gate
+        gate_id: task-results-recorded
+        status: passed
+        summary: All A01-A11 implementation tasks and both independent reviews completed. Four child runs closed; primary acceptance and reviewer dispositions recorded with original failure evidence preserved.
+        recorded_at: '2026-09-11T09:33:52Z'
+    notes: Implementation and focused primary regression acceptance complete. Advance to result fixation; remaining broad source-suite checks continue in assurance.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-11T09:33:58Z'
+    completed_at: '2026-09-11T09:35:04Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-result
+        path: .pf/artifacts/core-a01-a11-20260911/task-result.md
+        status: ready
+        recorded_at: '2026-09-11T09:34:59Z'
+        sha256: 'sha256:fde34a8ecbe899f28178717188e124ae28c5518cbae381b236a3381f472bbfa5'
+      -
+        kind: gate
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        summary: A01-A11 tasks DONE; all four shell child runs completed. Eleven new regressions pass current source and fail baseline; all four independent review findings resolved and reproduced.
+        recorded_at: '2026-09-11T09:34:59Z'
+    notes: Implementation result fixed with task-to-test mapping, worker attribution and limitations. Enter run review for final source-suite disposition and run doctor.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-11T09:35:04Z'
+    completed_at: '2026-09-11T10:06:00Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-review
+        path: .pf/artifacts/core-a01-a11-20260911/run-review.md
+        status: approved
+        recorded_at: '2026-09-11T10:05:56Z'
+        sha256: 'sha256:9a29e3ab7d0d732bee5383cf1b84c45769343fc101a8810a71e3821e722c0006'
+      -
+        kind: gate
+        gate_id: run-doctor-passed
+        status: passed
+        summary: Carrier run doctor PASS; child runs complete. A01-A11 and four reviewer findings accepted. Full registered source coverage is 216 PASS / 2 FAIL, explicitly retained as baseline first-run search failure and clean-Git release qualification boundary.
+        recorded_at: '2026-09-11T10:05:56Z'
+    notes: Approve source-only remediation against audited criteria. Preserve broad-suite FAIL truth and follow-up backlog; proceed to final summary and handoff.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-11T10:06:00Z'
+    completed_at: '2026-09-11T10:07:12Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-summary
+        path: .pf/artifacts/core-a01-a11-20260911/integration-report.md
+        status: ready
+        recorded_at: '2026-09-11T10:07:07Z'
+        sha256: 'sha256:e95c4042749ac7bf509de36b7c3f836b6203b091d87c1028111ebe225e653fb0'
+      -
+        kind: artifact
+        artifact_id: run-handoff
+        path: .pf/handoffs/core-a01-a11-20260911.md
+        status: ready
+        recorded_at: '2026-09-11T10:07:07Z'
+        sha256: 'sha256:bd782b9b1b085efd7f8062d046026bee41736638dd76aeea08e900b5ee3bdfe9'
+      -
+        kind: gate
+        gate_id: run-summary-created
+        status: passed
+        summary: Final integration summary, exact source inventory, task acceptance, worker attribution, validation aggregate and follow-up backlog recorded. A01-A11 accepted; broad source suite remains 216 PASS / 2 explained FAIL; source-only uncommitted delivery.
+        recorded_at: '2026-09-11T10:07:07Z'
+    notes: Complete audited A01-A11 remediation with all four reviewer findings resolved. Preserve original worker failures and broad-suite failures. Detailed result and remaining R01-R03 work are in the final handoff; no installed update or release performed.
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260910-170716-057454
+  snapshot_checksum: 'sha256:8544ec8c2f809ee631da50b573a2b4a8bcd6a590a8d8a4c5cb7c179fe928a8a0'
+  assignment_capsule: .pf/contexts/assignment-capsules/remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-workers-i.capsule.yaml
+  assignment_capsule_checksum: 'sha256:9edf44731b8e3113147e7abcf41f680e83bf6e6463a5b12275c5723ecb2a4e52'

@@ -1,0 +1,213 @@
+schema_version: 1
+id: audit-current-processforge-python-core-and-codebase-for-reproducible-cor
+title: Audit current ProcessForge Python core and codebase for reproducible correctness
+run_id: garage-audit-current-processforge-python-core-and-codebase-for-reproduci
+process: task-batch-execution
+status: done
+created_at: '2026-09-08T07:50:40Z'
+updated_at: '2026-09-08T08:08:13Z'
+objective: Audit current ProcessForge Python core and codebase for reproducible correctness defects and illogical behavior; analysis only, preserve existing changes, record findings and reproductions under .pf.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Audit reviewed and handed off: 12 confirmed defects, 11/12 selected checks pass, no product changes; remediation is separate.'
+  artifacts:
+    - .pf/artifacts/python-core-audit-20260908/report.md
+    - .pf/artifacts/python-core-audit-20260908/run-doctor.txt
+    - .pf/artifacts/python-core-audit-20260908/summary.md
+    - .pf/handoffs/python-core-audit-20260908.md
+    - .pf/logs/python-core-audit-20260908.md
+    - .pf/reviews/python-core-audit-20260908.md
+    - .pf/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci/run.yaml
+    - .pf/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci/task-index.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-08T08:07:57Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: run-summary
+      status: ready
+      path: .pf/artifacts/python-core-audit-20260908/summary.md
+      recorded_at: '2026-09-08T08:08:08Z'
+      sha256: 'sha256:8428d4e4c398a2f0fb96429aba3b6e715f3acbb9804abef7556d297261c0fe64'
+    -
+      kind: artifact
+      artifact_id: run-handoff
+      status: ready
+      path: .pf/handoffs/python-core-audit-20260908.md
+      recorded_at: '2026-09-08T08:08:08Z'
+      sha256: 'sha256:e8960b58d97ad423a9325c17c1e21de84baff6709c2c6e9a2a2a2a06c658f248'
+    -
+      kind: gate
+      gate_id: run-summary-created
+      status: passed
+      summary: Audit summary and remediation handoff exist; all analysis deliverables are complete.
+      recorded_at: '2026-09-08T08:08:08Z'
+  notes: 'Audit reviewed and handed off: 12 confirmed defects, 11/12 selected checks pass, no product changes; remediation is separate.'
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-08T07:50:40Z'
+    completed_at: '2026-09-08T07:51:59Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-record
+        status: ready
+        path: .pf/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci/run.yaml
+        recorded_at: '2026-09-08T07:51:57Z'
+        sha256: 'sha256:46aade4a7c5b9e0444052e42b2e8b562038c994e8c4a162013c3144a096628e7'
+      -
+        kind: gate
+        gate_id: run-has-context
+        status: passed
+        summary: Scoped audit run and task exist; plan and baseline recorded.
+        recorded_at: '2026-09-08T07:51:57Z'
+    notes: Read PF context, assignment, immutable capsule and audit plan; ready for sequential audit.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-08T07:51:59Z'
+    completed_at: '2026-09-08T07:52:10Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-index
+        status: ready
+        path: .pf/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci/task-index.md
+        recorded_at: '2026-09-08T07:52:06Z'
+        sha256: 'sha256:2bc172404ed7f9d3b617902ef11270c2f628fb08dd09c9da7b8265107a463e54'
+      -
+        kind: gate
+        gate_id: run-has-tasks
+        status: passed
+        summary: Scoped audit run and task exist; plan and baseline recorded.
+        recorded_at: '2026-09-08T07:52:06Z'
+    notes: Read PF context, assignment, immutable capsule and audit plan; ready for sequential audit.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-08T07:52:10Z'
+    completed_at: '2026-09-08T08:06:32Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-iteration-log
+        status: ready
+        path: .pf/logs/python-core-audit-20260908.md
+        recorded_at: '2026-09-08T08:06:29Z'
+        sha256: 'sha256:cfb8f05a46e22904dd4879b6bc52bf0118ca0aa029d25a4dc364430e70c9f2a1'
+      -
+        kind: gate
+        gate_id: task-results-recorded
+        status: passed
+        summary: Analysis-only audit finished; 12 findings, reproducible evidence and remediation recommendations recorded; fixes are outside this assignment.
+        recorded_at: '2026-09-08T08:06:29Z'
+    notes: Audit execution and result fixation complete; pass denotes audit deliverables, not absence of product defects.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-08T08:06:32Z'
+    completed_at: '2026-09-08T08:06:42Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-result
+        status: ready
+        path: .pf/artifacts/python-core-audit-20260908/report.md
+        recorded_at: '2026-09-08T08:06:39Z'
+        sha256: 'sha256:43ef5a8b5c560184af0c9dc1d54623c4aee85083eeffba8bffcef6cb45698189'
+      -
+        kind: gate
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        summary: Analysis-only audit finished; 12 findings, reproducible evidence and remediation recommendations recorded; fixes are outside this assignment.
+        recorded_at: '2026-09-08T08:06:39Z'
+    notes: Audit execution and result fixation complete; pass denotes audit deliverables, not absence of product defects.
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-08T08:06:42Z'
+    completed_at: '2026-09-08T08:07:57Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-review
+        status: ready
+        path: .pf/reviews/python-core-audit-20260908.md
+        recorded_at: '2026-09-08T08:07:53Z'
+        sha256: 'sha256:48517ac567d79bdbfb56fa5df618a7a86fe9ff4c62e26d7d3e872bc72e01661e'
+      -
+        kind: gate
+        gate_id: run-doctor-passed
+        status: passed
+        path: .pf/artifacts/python-core-audit-20260908/run-doctor.txt
+        summary: Scoped run-doctor and task-doctor both exit 0; evidence review passed.
+        recorded_at: '2026-09-08T08:07:53Z'
+        sha256: 'sha256:e31d3ee7e0c65909b440e2cf49d23206cb79e152bfc19294c34a3783d2adaaba'
+    notes: 'Audit reviewed and handed off: 12 confirmed defects, 11/12 selected checks pass, no product changes; remediation is separate.'
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-08T08:07:57Z'
+    completed_at: '2026-09-08T08:08:13Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-summary
+        status: ready
+        path: .pf/artifacts/python-core-audit-20260908/summary.md
+        recorded_at: '2026-09-08T08:08:08Z'
+        sha256: 'sha256:8428d4e4c398a2f0fb96429aba3b6e715f3acbb9804abef7556d297261c0fe64'
+      -
+        kind: artifact
+        artifact_id: run-handoff
+        status: ready
+        path: .pf/handoffs/python-core-audit-20260908.md
+        recorded_at: '2026-09-08T08:08:08Z'
+        sha256: 'sha256:e8960b58d97ad423a9325c17c1e21de84baff6709c2c6e9a2a2a2a06c658f248'
+      -
+        kind: gate
+        gate_id: run-summary-created
+        status: passed
+        summary: Audit summary and remediation handoff exist; all analysis deliverables are complete.
+        recorded_at: '2026-09-08T08:08:08Z'
+    notes: 'Audit reviewed and handed off: 12 confirmed defects, 11/12 selected checks pass, no product changes; remediation is separate.'
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260908-074925-d05a67
+  snapshot_checksum: 'sha256:4a2672ff22eb5067fcd66558bbc572342d8d36e21b50377abb89c267000047e8'
+  assignment_capsule: .pf/contexts/assignment-capsules/audit-current-processforge-python-core-and-codebase-for-reproducible-cor.capsule.yaml
+  assignment_capsule_checksum: 'sha256:a9cad540b59d81744cf370cd9eb9fd32bbd3e6cbb7e38a6996428ea5fa53fd9b'

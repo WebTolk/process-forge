@@ -1,0 +1,22 @@
+[
+  {
+    "task_id": "context-origin",
+    "status": "running",
+    "pid": 13420,
+    "agent_model": "gpt-5.6-luna",
+    "driver_id": "codex-exec",
+    "started_at": "2026-09-10T12:34:30Z",
+    "last_heartbeat_at": "2026-09-10T12:34:36Z",
+    "expected_report_path": ".pf/artifacts/context-collection-20260910/context-origin/report.md"
+  },
+  {
+    "task_id": "report-capture",
+    "status": "running",
+    "pid": 15708,
+    "agent_model": "gpt-5.6-luna",
+    "driver_id": "codex-exec",
+    "started_at": "2026-09-10T12:35:00Z",
+    "last_heartbeat_at": null,
+    "expected_report_path": ".pf/artifacts/context-collection-20260910/report-capture/report.md"
+  }
+]

@@ -1,0 +1,1 @@
+PASS: resource indexing policy acceptance smoke

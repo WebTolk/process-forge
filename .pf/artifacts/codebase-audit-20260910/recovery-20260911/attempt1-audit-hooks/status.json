@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "run_id": "codebase-audit-shell-20260910",
+  "task_id": "audit-hooks",
+  "driver_id": "codex-exec",
+  "agent_model": "gpt-5.6-luna",
+  "status": "failed",
+  "pid": 6064,
+  "started_at": "2026-09-10T17:12:09Z",
+  "finished_at": "2026-09-10T17:20:32Z",
+  "exit_code": 1,
+  "timeout_seconds": 3600,
+  "attempt": 1,
+  "max_retries": 0,
+  "capsule_path": ".pf/contexts/assignment-capsules/audit-hooks.capsule.yaml",
+  "worker_prompt_path": ".pf/runs/codebase-audit-shell-20260910/worker-prompts/audit-hooks.md",
+  "expected_report_path": ".pf/artifacts/codebase-audit-20260910/audit-hooks/report.md",
+  "stdout_path": ".pf/runtime/agent-runs/codebase-audit-shell-20260910/audit-hooks/stdout.log",
+  "stderr_path": ".pf/runtime/agent-runs/codebase-audit-shell-20260910/audit-hooks/stderr.log",
+  "heartbeat_path": ".pf/runtime/agent-runs/codebase-audit-shell-20260910/audit-hooks/heartbeat.json",
+  "last_heartbeat_at": "2026-09-10T17:20:32Z",
+  "failure_reason": null
+}

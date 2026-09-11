@@ -1,0 +1,10 @@
+python tools/smoke_core_update_manifest.py
+SKIP: symlink fixture unavailable: [WinError 1314] ...
+SKIP: broken-symlink fixture unavailable: [WinError 1314] ...
+PASS: manifest-based core update smoke
+
+python tools/smoke_search_source_integrity.py
+PASS: local-search source overlap, filtering, refresh repair, and pagination
+
+python -m py_compile audit_core_update_missing_migration_source.py audit_search_file_root_escape.py
+PASS (exit 0)

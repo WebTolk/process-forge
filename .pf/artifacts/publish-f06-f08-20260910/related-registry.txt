@@ -1,0 +1,1 @@
+PASS: registry safety regression smoke completed.

@@ -1,0 +1,10 @@
+{
+  "test": "smoke_expected_report_containment.py",
+  "mode": "current",
+  "returncode": 1,
+  "seconds": 13.86,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_expected_report_containment.py"
+  ]
+}

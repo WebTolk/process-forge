@@ -1,0 +1,103 @@
+schema_version: 1
+plan: .pf/runs/core-f06-f08-shell-20260910/orchestrator-plan.yaml
+resolved:
+  allow_write_scope_overlap:
+    value: false
+    source: default.deny
+    behavior:
+      - assignment.overlap_policy=deny
+      - supervisor.write_scope_overlap=block_conflicts
+  runtime:
+    default_driver: codex-exec
+    supervisor_profile: default
+    start_policy: manual
+    max_parallel_workers: 1
+    model: ""
+    reasoning_effort: ""
+  workers:
+    -
+      id: f0608-cli
+      runtime_driver:
+        value: codex-exec
+        source: 'workers[f0608-cli].runtime_driver'
+        behavior:
+          - worker-run.runtime_driver
+      agent_model:
+        value: gpt-5.6-luna
+        source: 'workers[f0608-cli].model'
+        behavior:
+          - assignment.agent_model
+          - capsule.agent_model
+          - worker-run.PF_AGENT_MODEL
+          - runtime-driver.command.model_args
+      agent_reasoning_effort:
+        value: high
+        source: 'workers[f0608-cli].reasoning_effort'
+        behavior:
+          - assignment.agent_reasoning_effort
+          - capsule.agent_reasoning_effort
+          - worker-run.PF_AGENT_REASONING_EFFORT
+          - codex-exec.PF_CODEX_REASONING_EFFORT
+      subagent_policy:
+        allow: false
+        max_subagents: 0
+        allowed_roles:
+          []
+        require_reports: false
+        reports_dir: ""
+        behavior:
+          - assignment.subagent_policy
+          - capsule.subagent_policy
+          - worker-run.collect.subagent_reports
+      required_outputs:
+        -
+          id: f0608-cli-report
+          path: '.pf\artifacts\publish-f06-f08-20260910/f0608-cli/report.md'
+          type: markdown
+          required: true
+      expected_report_artifact: '.pf\artifacts\publish-f06-f08-20260910/f0608-cli/report.md'
+    -
+      id: f0608-review
+      runtime_driver:
+        value: codex-exec
+        source: 'workers[f0608-review].runtime_driver'
+        behavior:
+          - worker-run.runtime_driver
+      agent_model:
+        value: gpt-5.6-luna
+        source: 'workers[f0608-review].model'
+        behavior:
+          - assignment.agent_model
+          - capsule.agent_model
+          - worker-run.PF_AGENT_MODEL
+          - runtime-driver.command.model_args
+      agent_reasoning_effort:
+        value: high
+        source: 'workers[f0608-review].reasoning_effort'
+        behavior:
+          - assignment.agent_reasoning_effort
+          - capsule.agent_reasoning_effort
+          - worker-run.PF_AGENT_REASONING_EFFORT
+          - codex-exec.PF_CODEX_REASONING_EFFORT
+      subagent_policy:
+        allow: false
+        max_subagents: 0
+        allowed_roles:
+          []
+        require_reports: false
+        reports_dir: ""
+        behavior:
+          - assignment.subagent_policy
+          - capsule.subagent_policy
+          - worker-run.collect.subagent_reports
+      required_outputs:
+        -
+          id: f0608-review-report
+          path: '.pf\artifacts\publish-f06-f08-20260910/f0608-review/report.md'
+          type: markdown
+          required: true
+      expected_report_artifact: '.pf\artifacts\publish-f06-f08-20260910/f0608-review/report.md'
+warnings:
+  []
+unsupported_fields:
+  []

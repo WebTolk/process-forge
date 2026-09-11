@@ -1,0 +1,14 @@
+{
+  "runs": {
+    "core-f01-f02-shell-20260910": "completed",
+    "garage-remediate-python-core-audit-f01-project-search-authorization-and": "completed"
+  },
+  "workers": {
+    "f01-search": "done",
+    "f02-update": "done",
+    "f02-owned-ancestor": "done",
+    "f0102-assurance": "done",
+    "f0102-review": "done"
+  },
+  "carrier_action": "run_completed"
+}

@@ -1,0 +1,24 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_core_update_migration_sources.py
+
+CWD:
+  D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline
+
+Timeout:
+  180s
+
+Exit code:
+  1
+
+STDERR tail:
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_core_update_migration_sources.py", line 195, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_core_update_migration_sources.py", line 118, in main
+    assert_blocked_source("templates/missing.yaml", "workplace_migration_source_missing", temp_root=temp_root)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_core_update_migration_sources.py", line 107, in assert_blocked_source
+    assert plan["status"] == "blocked", plan
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'schema_version': 1, 'kind': 'processforge.core_update.plan', 'status': 'planned', 'core_root': 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-migration-source-p4nwjuw7\\core', 'archive': 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-migration-source-p4nwjuw7\\release.zip', 'installed_manifest': 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-migration-source-p4nwjuw7\\core\\processforge-core.manifest.json', 'installed_version': '1.0.0', 'available_version': '1.1.0', 'counts': {'added': 0, 'removed': 0, 'changed': 0, 'unchanged': 1, 'locally_modified': 0, 'missing_owned': 0, 'restored': 0}, 'added': [], 'removed': [], 'changed': [], 'unchanged': ['a.txt'], 'locally_modified': [], 'missing_owned': [], 'restored': [], 'blockers': [], 'workplace_migration': {'status': 'planned', 'workplace_root': 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-migration-source-p4nwjuw7\\workplace', 'migration': {'id': 'fixture-migration', 'source': 'updates/migrations/fixture.yaml'}, 'operations': [{'id': 'copy-source', 'type': 'copy_if_missing', 'source': 'templates/missing.yaml', 'target': 'runtime-drivers/new.yaml'}], 'preserved': [], 'blockers': []}, 'new_manifest': {'files': [{'relative_path': 'a.txt', 'sha256': '0967115f2813a3541eaef77de9d9d5773f1c0c04314b0bbfe4ff3b3b1c55b5d5', 'size': 4}], 'generated_at': '2026-09-11T08:18:10Z', 'kind': 'processforge.core_manifest', 'schema_version': 1, 'source': {'fixture': True}, 'version': '1.1.0'}}

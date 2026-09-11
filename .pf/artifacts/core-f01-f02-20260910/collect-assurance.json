@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "worker-run",
+    "collect",
+    "--project-root",
+    ".",
+    "--task",
+    "f0102-assurance"
+  ],
+  "started_at": "2026-09-10T05:28:25.743318+00:00",
+  "elapsed_seconds": 5.564,
+  "exit_code": 0,
+  "stdout": "collect-assurance.stdout.txt",
+  "stderr": "collect-assurance.stderr.txt"
+}

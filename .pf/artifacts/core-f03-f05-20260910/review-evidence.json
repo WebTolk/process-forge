@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "run-review",
+    "status": "ready",
+    "path": ".pf/artifacts/core-f03-f05-20260910/final-review.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-doctor-passed",
+    "status": "passed",
+    "summary": "Shell and carrier run doctors exit 0; independent bounded reviews PASS."
+  }
+]

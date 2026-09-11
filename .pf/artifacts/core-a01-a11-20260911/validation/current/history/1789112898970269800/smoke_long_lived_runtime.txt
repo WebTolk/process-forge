@@ -1,0 +1,40 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_long_lived_runtime.py
+
+CWD:
+  D:\Dev\process-forge
+
+Timeout:
+  240s
+
+Exit code:
+  1
+
+STDERR tail:
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_long_lived_runtime.py", line 358, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_long_lived_runtime.py", line 309, in main
+    recovered = start_runtime(workplace)
+  File "D:\Dev\process-forge\tools\smoke_long_lived_runtime.py", line 130, in start_runtime
+    return json.loads(pf("runtime", "start", "--workplace", str(workplace), "--interval", "60", "--json").stdout)
+                      ~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Dev\process-forge\tools\smoke_long_lived_runtime.py", line 33, in pf
+    raise AssertionError(f"expected {expect}, got {result.returncode}: {' '.join(args)}\n{diagnostic_text(result)}")
+AssertionError: expected 0, got 1: runtime start --workplace C:\Users\musst\AppData\Local\Temp\pf-long-lived-runtime-n13_1ma2\workplace --interval 60 --json
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\processforge.py runtime start --workplace C:\Users\musst\AppData\Local\Temp\pf-long-lived-runtime-n13_1ma2\workplace --interval 60 --json
+
+CWD:
+  D:\Dev\process-forge
+
+Timeout:
+  120s
+
+Exit code:
+  1
+
+STDERR tail:
+FAIL: PF Runtime requires stop/recovery before start: state=orphaned pid=23496
+

@@ -1,0 +1,65 @@
+STATUS: fresh
+WROTE: .pf/contexts/project-context.snapshot.yaml
+WROTE: .pf/contexts/project-context.snapshot.md
+WROTE: .pf/contexts/project-context.snapshots/ctx-20260910-123129-3fcf45.yaml
+WROTE: .pf/artifacts/project-context-refresh-report.md
+WROTE: .pf/runtime/cache/workplace-context.snapshot.yaml
+SEARCH_INDEX_SCOPE: workplace
+SEARCH_INDEX_REPORT: runtime/search/latest-maintenance.yaml
+SEARCH_INDEX: workplace action=none status=fresh generation=6725752f76bd6f5d documents=85
+TELEMETRY: .pf/runtime/telemetry/project-context-refresh-20260910T123114z.ndjson
+WROTE: .pf/contexts/assignment-capsules/context-origin.capsule.yaml
+WROTE: .pf/runs/context-collection-shell-20260910/worker-prompts/context-origin.md
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: open
+PASS: referenced run exists: context-collection-shell-20260910
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/context-origin.yaml has no private absolute paths
+WARN: required output pending: .pf/artifacts/context-collection-20260910/context-origin/report.md
+WARN: expected report pending: .pf/artifacts/context-collection-20260910/context-origin/report.md
+WROTE: .pf/contexts/assignment-capsules/report-capture.capsule.yaml
+WROTE: .pf/runs/context-collection-shell-20260910/worker-prompts/report-capture.md
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: open
+PASS: referenced run exists: context-collection-shell-20260910
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/report-capture.yaml has no private absolute paths
+WARN: required output pending: .pf/artifacts/context-collection-20260910/report-capture/report.md
+WARN: expected report pending: .pf/artifacts/context-collection-20260910/report-capture/report.md
+PASS: run.schema_version present
+PASS: run.id present
+PASS: run.title present
+PASS: run.process present
+PASS: run.status present
+PASS: run.created_at present
+PASS: run.updated_at present
+PASS: run.tasks present
+PASS: run status valid: in_progress
+PASS: summary artifact not yet required: .pf/runs/context-collection-shell-20260910/summary.md
+PASS: task index status matches run: in_progress
+PASS: handoff artifact not yet required: .pf/handoffs/runs/context-collection-shell-20260910-handoff.md
+PASS: process exists: multi-agent-task-orchestration
+PASS: .pf/runs/context-collection-shell-20260910/run.yaml has no private absolute paths
+PASS: task id unique: context-origin
+PASS: task status valid for context-origin: open
+PASS: assignment exists for context-origin: .pf/assignments/context-origin.yaml
+PASS: context-origin run_id matches run
+PASS: task id unique: report-capture
+PASS: task status valid for report-capture: open
+PASS: assignment exists for report-capture: .pf/assignments/report-capture.yaml
+PASS: report-capture run_id matches run
+WROTE: .pf/runs/context-collection-shell-20260910/orchestration-summary.md

@@ -1,0 +1,17 @@
+{
+  "command": [
+    "python",
+    "tools/processforge.py",
+    "run-summary",
+    "--project-root",
+    ".",
+    "--run",
+    "docs-fix-1-1-1-shell-20260907",
+    "--apply"
+  ],
+  "started_at": "2026-09-07T14:16:23.273786+00:00",
+  "finished_at": "2026-09-07T14:16:23.996264+00:00",
+  "elapsed_seconds": 0.722,
+  "exit_code": 0,
+  "output": "WROTE: .pf/runs/docs-fix-1-1-1-shell-20260907/summary.md\nWROTE: .pf/handoffs/runs/docs-fix-1-1-1-shell-20260907-handoff.md\n"
+}

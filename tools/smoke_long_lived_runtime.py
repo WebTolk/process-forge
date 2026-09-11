@@ -306,16 +306,26 @@ def main() -> int:
             try:
                 (stale_root / "service.json").write_text(json.dumps({"schema_version": 1, "status": "ready", "health": "ready", "pid": pid_reused.pid, "endpoint": "http://127.0.0.1:9"}, indent=2) + "\n", encoding="utf-8")
                 (stale_root / "runtime.lock").write_text(json.dumps({"pid": pid_reused.pid}) + "\n", encoding="utf-8")
-                recovered = start_runtime(workplace)
-                runtime_started = True
-                if recovered.get("status") != "started":
-                    raise AssertionError(f"runtime did not recover PID-reuse-like stale state: {recovered}")
+                # A live PID with incomplete ownership metadata is not proof
+                # of stale state. Fail closed until that process is gone.
+                lock_before = (stale_root / "runtime.lock").read_bytes()
+                refused = pf("runtime", "start", "--workplace", str(workplace), "--json", expect=1)
+                if "orphaned" not in refused.stderr or pid_reused.poll() is not None:
+                    raise AssertionError(f"unverifiable live owner was not preserved: {refused}")
+                if (stale_root / "runtime.lock").read_bytes() != lock_before:
+                    raise AssertionError("unverifiable live owner lock was changed")
             finally:
                 pid_reused.terminate()
                 try:
                     pid_reused.wait(timeout=5)
                 except subprocess.TimeoutExpired:
                     pid_reused.kill()
+                    pid_reused.wait(timeout=5)
+
+            recovered = start_runtime(workplace)
+            runtime_started = True
+            if recovered.get("status") != "started":
+                raise AssertionError(f"runtime did not recover after unverifiable owner exited: {recovered}")
 
             pid = int(service_state(workplace)["pid"])
             kill_pid(pid)

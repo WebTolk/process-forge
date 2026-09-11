@@ -1,0 +1,31 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_expected_report_containment.py
+
+CWD:
+  D:\Dev\process-forge
+
+Timeout:
+  180s
+
+Exit code:
+  1
+
+STDOUT tail:
+SKIP: symlink creation unavailable
+
+
+STDERR tail:
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_expected_report_containment.py", line 72, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_expected_report_containment.py", line 50, in main
+    assert core.task_verification_fingerprint(project, task).startswith("sha256:")
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Dev\process-forge\tools\processforge.py", line 20912, in task_verification_fingerprint
+    item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
+                                                                           ~~~~~~~~~~~~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_expected_report_containment.py", line 39, in guarded_bytes
+    assert path.resolve() != outside.resolve(), "external report byte read attempted"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: external report byte read attempted

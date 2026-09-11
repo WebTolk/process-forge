@@ -1,0 +1,23 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "work-transition",
+    "--project-root",
+    ".",
+    "--run",
+    "garage-remediate-python-core-audit-f01-project-search-authorization-and",
+    "--outcome",
+    "completed",
+    "--evidence-file",
+    ".pf/artifacts/core-f01-f02-20260910/summary-evidence.json",
+    "--notes",
+    "Accepted bounded F01/F02 shell remediation delivered with final evidence and handoff; F03-F12 and baseline Runtime source blocker remain explicit separate work.",
+    "--json"
+  ],
+  "started_at": "2026-09-10T05:42:35.719645+00:00",
+  "elapsed_seconds": 14.348,
+  "exit_code": 0,
+  "stdout": "summary-transition.stdout.txt",
+  "stderr": "summary-transition.stderr.txt"
+}

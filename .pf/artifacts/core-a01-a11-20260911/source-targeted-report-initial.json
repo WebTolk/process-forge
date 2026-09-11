@@ -1,0 +1,263 @@
+{
+  "checks": [
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "py_compile",
+        "D:\\Dev\\process-forge\\tools\\processforge.py",
+        "D:\\Dev\\process-forge\\bin\\pf.py",
+        "D:\\Dev\\process-forge\\tools\\specialization_smoke_helpers.py",
+        "D:\\Dev\\process-forge\\tools\\codex_exec_worker.py"
+      ],
+      "elapsed_seconds": 4.777,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:04:13Z",
+      "label": "py_compile",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:04:08Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 30
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_search_file_root_containment.py"
+      ],
+      "elapsed_seconds": 0.208,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:04:13Z",
+      "label": "smoke_search_file_root_containment",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:04:13Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_search_multiple_roots.py"
+      ],
+      "elapsed_seconds": 0.381,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:04:13Z",
+      "label": "smoke_search_multiple_roots",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:04:13Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_classifier_distribution_parity.py"
+      ],
+      "elapsed_seconds": 0.375,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:04:14Z",
+      "label": "smoke_classifier_distribution_parity",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:04:13Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_scheduler_failure_isolation.py"
+      ],
+      "elapsed_seconds": 1.776,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:04:15Z",
+      "label": "smoke_runtime_scheduler_failure_isolation",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:04:14Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_singleton_orphan.py"
+      ],
+      "elapsed_seconds": 1.899,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:04:17Z",
+      "label": "smoke_runtime_singleton_orphan",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:04:15Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_core_update_migration_sources.py"
+      ],
+      "elapsed_seconds": 0.409,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:04:18Z",
+      "label": "smoke_core_update_migration_sources",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:04:17Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_expected_report_containment.py"
+      ],
+      "elapsed_seconds": 15.772,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:04:33Z",
+      "label": "smoke_expected_report_containment",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:04:18Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_authenticated_report_content.py"
+      ],
+      "elapsed_seconds": 11.126,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:04:45Z",
+      "label": "smoke_authenticated_report_content",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:04:33Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_mcp_jsonrpc_validation.py"
+      ],
+      "elapsed_seconds": 0.43,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:04:45Z",
+      "label": "smoke_mcp_jsonrpc_validation",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:04:45Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_session_identity_roundtrip.py"
+      ],
+      "elapsed_seconds": 17.634,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:05:03Z",
+      "label": "smoke_session_identity_roundtrip",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:04:45Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 180
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_codex_lifecycle_identity.py"
+      ],
+      "elapsed_seconds": 4.413,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:05:07Z",
+      "label": "smoke_codex_lifecycle_identity",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:05:03Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-process-forge-schemas.py",
+        "--root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 19.527,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:05:27Z",
+      "label": "schema validation",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:05:07Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-public-cleanliness.py",
+        "--root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 5.468,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:05:32Z",
+      "label": "public cleanliness",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:05:27Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-process-forge-checksums.py",
+        "--root",
+        "D:\\Dev\\process-forge",
+        "--check"
+      ],
+      "elapsed_seconds": 0.346,
+      "exit_code": 0,
+      "finished_at": "2026-09-11T09:05:32Z",
+      "label": "checksum",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-11T09:05:32Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60
+    }
+  ],
+  "elapsed_seconds": 84.542,
+  "finished_at": "2026-09-11T09:05:32Z",
+  "public": false,
+  "public_checks": [],
+  "result": "PASS",
+  "schema_version": 1,
+  "started_at": "2026-09-11T09:04:08Z"
+}

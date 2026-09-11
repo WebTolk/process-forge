@@ -1,0 +1,5 @@
+PASS: SQLite FTS5 available
+PASS: search index readable
+PASS: workplace resource catalogue resolved without project context
+PASS: search index status: fresh
+PASS: failed file count is zero

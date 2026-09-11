@@ -1,0 +1,1 @@
+PASS: Garage context/search/resolve work without hooks, session, or daemon

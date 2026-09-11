@@ -60,10 +60,16 @@ def normalized_event(payload: dict[str, Any]) -> dict[str, Any] | None:
     data = {key: payload[key] for key in ("turn_id", "tool_name", "tool_use_id", "model", "permission_mode", "reason") if payload.get(key) not in (None, "")}
     if hook == "PostToolUse" and tool_name and tool_name != "Bash":
         event_type = "agent.tool.completed"
+    event_id = f"codex:{hook}:{session_id}:{payload.get('turn_id', '')}:{payload.get('tool_use_id', '')}"
+    # Keep the historical startup ID stable while separating later lifecycle
+    # facts. Hook input has no documented stable occurrence ID; identical
+    # resume deliveries remain indistinguishable and therefore idempotent.
+    if hook == "SessionStart" and source != "startup":
+        event_id += f":{source}"
     return {
         "schema_version": 1,
         "event_type": event_type,
-        "event_id": f"codex:{hook}:{session_id}:{payload.get('turn_id', '')}:{payload.get('tool_use_id', '')}",
+        "event_id": event_id,
         "project_root": cwd,
         "session_id": session_id,
         "agent_id": "codex",

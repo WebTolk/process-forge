@@ -1,0 +1,226 @@
+schema_version: 1
+run:
+  id: core-f03-f05-shell-20260910
+  title: F03-F05 evidence integrity and recoverable terminal transition
+  process: multi-agent-task-orchestration
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 1
+  model: ""
+  reasoning_effort: ""
+allow_write_scope_overlap: false
+workers:
+  -
+    id: f0304-evidence
+    order: 1
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - src/processforge_core/process_execution.py
+      - tools/smoke_work_evidence_freshness.py
+      - .pf/artifacts/core-f03-f05-20260910/f0304-evidence/**
+      - .pf/tmp/core-f03-f05-20260910/f0304-evidence/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - templates/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f03-f05-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_outputs:
+      -
+        id: f0304-evidence-report
+        path: .pf/artifacts/core-f03-f05-20260910/f0304-evidence/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/core-f03-f05-20260910/f0304-evidence/report.md
+    depends_on:
+      []
+  -
+    id: f05-completion
+    order: 2
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - src/processforge_core/process_execution.py
+      - tools/smoke_work_completion_recovery.py
+      - .pf/artifacts/core-f03-f05-20260910/f05-completion/**
+      - .pf/tmp/core-f03-f05-20260910/f05-completion/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - templates/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f03-f05-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_outputs:
+      -
+        id: f05-completion-report
+        path: .pf/artifacts/core-f03-f05-20260910/f05-completion/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/core-f03-f05-20260910/f05-completion/report.md
+    depends_on:
+      - f0304-evidence
+  -
+    id: f0305-assurance
+    order: 3
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - .pf/artifacts/core-f03-f05-20260910/f0305-assurance/**
+      - .pf/tmp/core-f03-f05-20260910/f0305-assurance/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - templates/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f03-f05-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_outputs:
+      -
+        id: f0305-assurance-report
+        path: .pf/artifacts/core-f03-f05-20260910/f0305-assurance/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/core-f03-f05-20260910/f0305-assurance/report.md
+    depends_on:
+      - f05-completion
+  -
+    id: f0305-review
+    order: 4
+    runtime_driver: codex-exec
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - .pf/artifacts/core-f03-f05-20260910/f0305-review/**
+      - .pf/tmp/core-f03-f05-20260910/f0305-review/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - templates/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f03-f05-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_outputs:
+      -
+        id: f0305-review-report
+        path: .pf/artifacts/core-f03-f05-20260910/f0305-review/report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/core-f03-f05-20260910/f0305-review/report.md
+    depends_on:
+      - f0305-assurance

@@ -1,0 +1,4 @@
+WROTE: .pf/contexts/assignment-capsules/f02-owned-ancestor.capsule.yaml
+WROTE: .pf/runtime/agent-runs/core-f01-f02-shell-20260910/f02-owned-ancestor/workspace-access.json
+WROTE: .pf/runs/core-f01-f02-shell-20260910/worker-prompts/f02-owned-ancestor.md
+RUNNING: f02-owned-ancestor pid=15976

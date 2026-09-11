@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "run-review",
+    "status": "ready",
+    "path": ".pf/artifacts/publish-f06-f08-20260910/review-addendum.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-doctor-passed",
+    "status": "passed",
+    "summary": "Accepted source/installed tests, two completed shell assignments, independent review and preserved final-state evidence. PF doctors pass."
+  }
+]

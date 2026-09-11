@@ -1,0 +1,4 @@
+PRESENT: .pf/contexts/assignment-capsules/f0102-assurance.capsule.yaml
+WROTE: .pf/runtime/agent-runs/core-f01-f02-shell-20260910/f0102-assurance/workspace-access.json
+WROTE: .pf/runs/core-f01-f02-shell-20260910/worker-prompts/f0102-assurance.md
+RUNNING: f0102-assurance pid=18636

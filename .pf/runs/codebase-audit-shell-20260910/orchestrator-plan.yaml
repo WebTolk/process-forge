@@ -1,0 +1,183 @@
+schema_version: 1
+run:
+  id: codebase-audit-shell-20260910
+  title: Independent Python MCP and Runtime correctness audit
+  process: multi-agent-task-orchestration
+orchestrator:
+  role: orchestrator
+  responsibilities:
+    - architecture and sequential ownership
+    - real regression acceptance
+    - integration and governed closure
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 3
+workers:
+  -
+    id: audit-core
+    title: Python core and execution contracts
+    role: analyst
+    process: task-batch-execution
+    objective: Read .pf/artifacts/codebase-audit-20260910/audit-core-brief.md and execute bounded audit with reproducible evidence.
+    execution_mode: planning_only
+    writer: true
+    model: gpt-5.6-luna
+    reasoning_effort: medium
+    allowed_files:
+      - .pf/artifacts/codebase-audit-20260910/audit-core/**
+      - .pf/tmp/audit-core/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - requirements.txt
+      - VERSION
+      - .pf/AGENTS.md
+      - .pf/process-forge.yaml
+      - .pf/artifacts/**
+      - .pf/handoffs/**
+      - .pf/contexts/**
+      - .pf/runtime/agent-runs/**
+    forbidden_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/codebase-audit-20260910/audit-core-brief.md
+    required_outputs:
+      -
+        id: audit-core-report
+        path: .pf/artifacts/codebase-audit-20260910/audit-core/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/codebase-audit-20260910/audit-core/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: audit-mcp
+    title: MCP routing and worker collection
+    role: analyst
+    process: task-batch-execution
+    objective: Read .pf/artifacts/codebase-audit-20260910/audit-mcp-brief.md and execute bounded audit with reproducible evidence.
+    execution_mode: planning_only
+    writer: true
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files:
+      - .pf/artifacts/codebase-audit-20260910/audit-mcp/**
+      - .pf/tmp/audit-mcp/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - requirements.txt
+      - VERSION
+      - .pf/AGENTS.md
+      - .pf/process-forge.yaml
+      - .pf/artifacts/**
+      - .pf/handoffs/**
+      - .pf/contexts/**
+      - .pf/runtime/agent-runs/**
+    forbidden_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/codebase-audit-20260910/audit-mcp-brief.md
+    required_outputs:
+      -
+        id: audit-mcp-report
+        path: .pf/artifacts/codebase-audit-20260910/audit-mcp/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/codebase-audit-20260910/audit-mcp/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: audit-hooks
+    title: Background Runtime hook and ingress lifecycle
+    role: analyst
+    process: task-batch-execution
+    objective: Read .pf/artifacts/codebase-audit-20260910/audit-hooks-brief.md and execute bounded audit with reproducible evidence.
+    execution_mode: planning_only
+    writer: true
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files:
+      - .pf/artifacts/codebase-audit-20260910/audit-hooks/**
+      - .pf/tmp/audit-hooks/**
+    allowed_read_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - requirements.txt
+      - VERSION
+      - .pf/AGENTS.md
+      - .pf/process-forge.yaml
+      - .pf/artifacts/**
+      - .pf/handoffs/**
+      - .pf/contexts/**
+      - .pf/runtime/agent-runs/**
+    forbidden_files:
+      - src/**
+      - tools/**
+      - docs/**
+      - schemas/**
+      - processes/**
+      - policies/**
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/codebase-audit-20260910/audit-hooks-brief.md
+    required_outputs:
+      -
+        id: audit-hooks-report
+        path: .pf/artifacts/codebase-audit-20260910/audit-hooks/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/codebase-audit-20260910/audit-hooks/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+integration:
+  required: true
+  role: orchestrator
+  expected_output: .pf/artifacts/codebase-audit-20260910/report.md
+metadata:
+  carrier_run: garage-audit-python-core-mcp-and-background-hooks-with-bounded-junior-sh
+  authorization: User requests audit, isolated tasks, actual PF shell workers and junior models. Audit only; no product remediation in this batch.

@@ -1,0 +1,10 @@
+{
+  "test": "smoke_search_multiple_roots.py",
+  "mode": "baseline",
+  "returncode": 1,
+  "seconds": 0.48,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\core-a01-a11-baseline\\tools\\smoke_search_multiple_roots.py"
+  ]
+}

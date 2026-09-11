@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "run-summary",
+    "status": "ready",
+    "path": ".pf\\artifacts\\python-core-audit-20260908\\summary.md"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "run-handoff",
+    "status": "ready",
+    "path": ".pf/handoffs/python-core-audit-20260908.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-summary-created",
+    "status": "passed",
+    "summary": "Audit summary and remediation handoff exist; all analysis deliverables are complete."
+  }
+]

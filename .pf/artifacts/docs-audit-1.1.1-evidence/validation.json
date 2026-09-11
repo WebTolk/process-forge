@@ -1,0 +1,46 @@
+{
+  "verified_at": "2026-09-07T12:50:09.675581+00:00",
+  "checks": [
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "tools/validate-process-forge-schemas.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: ProcessForge structure and JSON Schema validation passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "tools/validate-public-cleanliness.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: public cleanliness checks passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "tools/validate-process-forge-checksums.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: checksum inventory matches.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: in the working copy of '.pf/artifacts/projections/command-history.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/artifacts/projections/process-execution-state.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/artifacts/projections/stage-obligations.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'checksums/processforge.sha256', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'tools/processforge.py', CRLF will be replaced by LF the next time Git touches it\n"
+    }
+  ],
+  "documents_checked_for_changes": 298,
+  "changed_documents": [],
+  "status": "PASS"
+}

@@ -1,0 +1,1 @@
+PASS: workplace-wide local resource index smoke

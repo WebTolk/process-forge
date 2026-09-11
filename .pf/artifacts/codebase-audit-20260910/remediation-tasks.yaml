@@ -1,0 +1,154 @@
+schema_version: 1
+kind: audit_remediation_backlog
+baseline: 901d0551773fe7a5b382b89ebe95b212b0747e83
+status: proposed
+execution_started: false
+source_report: .pf/artifacts/codebase-audit-20260910/recovery-20260911/primary-findings.md
+orchestration:
+  policy: one_writer_per_file
+  shared_file: tools/processforge.py
+  shared_file_tasks_execute_sequentially: [A02, A07, A09]
+  other_overlap_groups: [[A02, A06], [A03, A04, A10]]
+  operational_first: A09
+  acceptance: independent_primary_reproduction_and_review
+  product_changes: separate_governed_remediation_scope
+tasks:
+  - id: A01
+    title: Restrict file-root indexing to the authorized file
+    priority: P1
+    complexity: M
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files: [src/processforge_core/local_resource_search.py, tools/smoke_search_file_root_containment.py]
+    acceptance:
+      - A sibling source cannot be discovered or indexed from a file root.
+      - A unique sibling marker yields zero search results.
+      - Authorized explicit files, directory sources and include/exclude continue working.
+      - Test canonical containment and available symlink cases without widening authorization.
+  - id: A02
+    title: Enforce canonical project containment before reading expected reports
+    priority: P1
+    complexity: M
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files: [tools/processforge.py, tools/pf_runtime/host.py, tools/smoke_expected_report_containment.py]
+    acceptance:
+      - Reject traversal and absolute report paths before reading bytes.
+      - Reject symlink escapes where the platform supports fixture creation.
+      - No external content enters raw or chat; invalid task does not become done.
+      - Valid project report collects exactly once with existing provenance checks.
+  - id: A03
+    title: Keep scheduler alive when one project references a missing assignment
+    priority: P1
+    complexity: M
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files: [tools/pf_runtime/service.py, tools/smoke_runtime_scheduler_failure_isolation.py]
+    acceptance:
+      - Missing assignment cannot silently terminate the scheduler thread.
+      - Malformed host cache cannot escape known_project_roots before error handling.
+      - An unrelated healthy project still receives scheduler ticks.
+      - Error is visible and recoverable after fixing the fixture.
+      - Normal shutdown and cancellation semantics are preserved.
+  - id: A04
+    title: Expose actual Runtime health and scheduler liveness
+    priority: P2
+    complexity: S
+    model: gpt-5.6-luna
+    reasoning_effort: medium
+    depends_on: [A03]
+    allowed_files: [tools/pf_runtime/service.py, tools/smoke_runtime_scheduler_failure_isolation.py]
+    acceptance:
+      - Caught scheduler error reports degraded health while retaining diagnostic text.
+      - Ready status cannot mask a dead scheduler.
+      - Successful recovery restores truthful health.
+  - id: A05
+    title: Validate migration archive sources and retain structured update failure state
+    priority: P2
+    complexity: M
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files: [src/processforge_core/core_update.py, tools/smoke_core_update_migration_sources.py]
+    acceptance:
+      - Missing copy_if_missing source fails during planning before writes.
+      - Application faults produce structured failure and recoverable journal state.
+      - Valid and already-applied migrations continue to pass.
+      - Existing files and Workplace semantics remain preserved.
+  - id: A06
+    title: Allow path text in authenticated PF-owned report content
+    priority: P2
+    complexity: M
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    depends_on: [A02]
+    allowed_files: [tools/pf_runtime/host.py, tools/smoke_conversation_completeness.py]
+    acceptance:
+      - Windows and POSIX path-containing reports collect exactly one message.
+      - Retry after an accepted raw event can derive the same deterministic message.
+      - Successful retry is idempotent.
+      - Secrets, forged provenance, task/attempt/path mismatch and hash mismatch remain rejected.
+  - id: A07
+    title: Preserve opaque session identity in Ledger storage and lookup
+    priority: P2
+    complexity: L
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files: [tools/processforge.py, tools/pf_runtime/session_read.py, tools/smoke_session_identity_roundtrip.py]
+    acceptance:
+      - Mixed-case session exact lookup succeeds after real check-in.
+      - Case-Session and case-session retain distinct identities and presence records.
+      - Invalid session binding remains rejected across projects.
+      - Existing lowercase sessions stay compatible; storage migration is explicit if needed.
+  - id: A08
+    title: Validate native MCP JSON-RPC requests and notifications
+    priority: P2
+    complexity: M
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files: [tools/pf_runtime/mcp_server.py, tools/smoke_mcp_jsonrpc_validation.py]
+    acceptance:
+      - Reject invalid version and envelope with protocol-level invalid request errors.
+      - Reject non-object or invalid parameters before invoking a tool.
+      - Valid notifications never produce response messages.
+      - Valid requests, initialization and existing MCP contract remain compatible.
+  - id: A09
+    title: Separate classifier semantic identity from display-path representation
+    priority: P2
+    complexity: M
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files: [tools/processforge.py, tools/smoke_classifier_distribution_parity.py]
+    acceptance:
+      - Identical registered classifiers produce equal semantic classification across distribution roots.
+      - Source and installed-root fixture agree on snapshot freshness.
+      - Changed classifier rules or semantic registration still invalidate context.
+      - Display-path normalization must not hide actual classifier content changes.
+  - id: A10
+    title: Preserve singleton ownership when a live Runtime is orphaned
+    priority: P1
+    complexity: M
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files: [tools/pf_runtime/service.py, tools/smoke_runtime_singleton_orphan.py]
+    acceptance:
+      - A live service with mismatched or missing lock cannot be silently replaced.
+      - Real concurrent startup leaves one owner.
+      - Explicit recovery distinguishes dead owners from live ones.
+      - Startup failure does not remove another instance lock.
+  - id: A11
+    title: Preserve distinct Codex lifecycle facts across startup and resume
+    priority: P2
+    complexity: M
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files: [tools/pf_runtime/codex_hooks.py, tools/smoke_codex_lifecycle_identity.py]
+    acceptance:
+      - Startup and resume in one session produce both normalized project events.
+      - Raw retention and Ledger effects remain correct.
+      - Repeated delivery of one fact is idempotent.
+      - Distinguish repeated resume and clear or compact facts using available provider identity.
+delivery:
+  integration_owner: primary
+  registration_and_checksums: update only after accepted product changes, one primary writer
+  release_qualification: separate_source_archive_extracted_checks_if_release_is_requested
+  installed_apply: requires_separate_operator_authorization

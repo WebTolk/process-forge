@@ -1,0 +1,2 @@
+usage: smoke_search_source_integrity.py [-h] --root ROOT
+smoke_search_source_integrity.py: error: the following arguments are required: --root

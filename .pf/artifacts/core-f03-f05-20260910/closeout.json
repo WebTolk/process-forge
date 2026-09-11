@@ -1,0 +1,21 @@
+{
+  "runs": {
+    "core-f03-f05-shell-20260910": "completed",
+    "garage-remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-re": "completed"
+  },
+  "workers": {
+    "f0304-evidence": "done",
+    "f05-completion": "done",
+    "f0305-assurance": "done",
+    "f0305-review": "done"
+  },
+  "carrier_action": "run_completed",
+  "pending_completion_intents": [],
+  "doctors": {
+    "final-carrier-doctor": 0,
+    "final-shell-doctor": 0,
+    "final-task-doctor": 0
+  },
+  "head": "1aecc18b6824204ca45ab30241b92d26e6d583a5",
+  "commit_or_publication": false
+}

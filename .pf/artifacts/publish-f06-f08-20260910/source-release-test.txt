@@ -1,0 +1,69 @@
+ProcessForge release-test
+RUN py_compile:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe -m py_compile D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\processforge.py D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\bin\pf.py D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\specialization_smoke_helpers.py D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\codex_exec_worker.py
+  started_at: 2026-09-10T10:21:58Z
+PASS py_compile
+  finished_at: 2026-09-10T10:22:07Z
+  elapsed_seconds: 8.68
+RUN schema validation:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\validate-process-forge-schemas.py --root D:\Dev\process-forge\.pf\tmp\pf-update-5c95391
+  started_at: 2026-09-10T10:22:07Z
+PASS schema validation
+  finished_at: 2026-09-10T10:22:30Z
+  elapsed_seconds: 23.46
+RUN public cleanliness:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\validate-public-cleanliness.py --root D:\Dev\process-forge\.pf\tmp\pf-update-5c95391
+  started_at: 2026-09-10T10:22:30Z
+PASS public cleanliness
+  finished_at: 2026-09-10T10:22:40Z
+  elapsed_seconds: 9.60
+RUN smoke_public_cleanliness:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\smoke_public_cleanliness.py
+  started_at: 2026-09-10T10:22:40Z
+PASS smoke_public_cleanliness
+  finished_at: 2026-09-10T10:22:41Z
+  elapsed_seconds: 1.03
+RUN smoke_processforge_core_package_bootstrap:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\smoke_processforge_core_package_bootstrap.py
+  started_at: 2026-09-10T10:22:41Z
+PASS smoke_processforge_core_package_bootstrap
+  finished_at: 2026-09-10T10:22:42Z
+  elapsed_seconds: 1.11
+RUN smoke_central_event_ingress:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\smoke_central_event_ingress.py
+  started_at: 2026-09-10T10:22:42Z
+FAIL smoke_central_event_ingress
+  finished_at: 2026-09-10T10:23:03Z
+  elapsed_seconds: 21.01
+  exit: 1
+  Traceback (most recent call last):
+    File "D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\smoke_central_event_ingress.py", line 170, in <module>
+      raise SystemExit(main())
+                       ~~~~^^
+    File "D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\smoke_central_event_ingress.py", line 130, in main
+      pf("runtime", "start", "--workplace", str(workplace), "--timeout", "10")
+      ~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\smoke_central_event_ingress.py", line 25, in pf
+      raise AssertionError(f"expected {expect}: {' '.join(args)}\n{diagnostic_text(result)}")
+  AssertionError: expected 0: runtime start --workplace C:\Users\musst\AppData\Local\Temp\pf-central-ingress-yods6d4i\workplace --timeout 10
+  Command:
+    C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\pf-update-5c95391\tools\processforge.py runtime start --workplace C:\Users\musst\AppData\Local\Temp\pf-central-ingress-yods6d4i\workplace --timeout 10
+  
+  CWD:
+    D:\Dev\process-forge\.pf\tmp\pf-update-5c95391
+  
+  Timeout:
+    120s
+  
+  Exit code:
+    1
+  
+  STDERR tail:
+  FAIL: runtime exited during startup with code 1
+  
+SKIP git diff --check: fail-fast
+REPORT: .pf/runtime/release-test/latest-report.json
+REPORT: .pf/runtime/release-test/latest-report.md
+TRACE: .pf/runtime/release-test/latest-trace.ndjson
+ELAPSED: 64.89s
+RESULT: FAIL

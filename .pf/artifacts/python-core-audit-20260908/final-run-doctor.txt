@@ -1,0 +1,21 @@
+PASS: run.schema_version present
+PASS: run.id present
+PASS: run.title present
+PASS: run.process present
+PASS: run.status present
+PASS: run.created_at present
+PASS: run.updated_at present
+PASS: run.tasks present
+PASS: run status valid: completed
+PASS: summary status matches run: completed
+PASS: task index status matches run: completed
+PASS: handoff status matches run: completed
+PASS: process exists: task-batch-execution
+PASS: .pf/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci/run.yaml has no private absolute paths
+PASS: task id unique: audit-current-processforge-python-core-and-codebase-for-reproducible-cor
+PASS: task status valid for audit-current-processforge-python-core-and-codebase-for-reproducible-cor: done
+PASS: assignment exists for audit-current-processforge-python-core-and-codebase-for-reproducible-cor: .pf/assignments/audit-current-processforge-python-core-and-codebase-for-reproducible-cor.yaml
+PASS: audit-current-processforge-python-core-and-codebase-for-reproducible-cor run_id matches run
+PASS: completed run has all blocking tasks done
+PASS: .pf/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci/summary.md exists
+PASS: .pf/handoffs/runs/garage-audit-current-processforge-python-core-and-codebase-for-reproduci-handoff.md exists

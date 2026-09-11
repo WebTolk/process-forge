@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "run_id": "docs-fix-1-1-1-shell-20260907",
+  "task_id": "docs111-tests",
+  "driver_id": "codex-exec",
+  "agent_model": "gpt-5.4-mini",
+  "status": "cancelled",
+  "pid": 21052,
+  "started_at": null,
+  "finished_at": "2026-09-07T13:35:48Z",
+  "exit_code": null,
+  "timeout_seconds": 3600,
+  "attempt": 1,
+  "max_retries": 0,
+  "capsule_path": ".pf/contexts/assignment-capsules/docs111-tests.capsule.yaml",
+  "worker_prompt_path": ".pf/runs/docs-fix-1-1-1-shell-20260907/worker-prompts/docs111-tests.md",
+  "expected_report_path": ".pf/artifacts/docs-fix-1.1.1-20260907/docs111-tests-report.md",
+  "stdout_path": ".pf/runtime/agent-runs/docs-fix-1-1-1-shell-20260907/docs111-tests/stdout.log",
+  "stderr_path": ".pf/runtime/agent-runs/docs-fix-1-1-1-shell-20260907/docs111-tests/stderr.log",
+  "heartbeat_path": ".pf/runtime/agent-runs/docs-fix-1-1-1-shell-20260907/docs111-tests/heartbeat.json",
+  "last_heartbeat_at": "2026-09-07T13:35:48Z",
+  "failure_reason": "stop requested"
+}

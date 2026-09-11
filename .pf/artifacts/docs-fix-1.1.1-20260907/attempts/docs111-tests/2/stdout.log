@@ -1,0 +1,23 @@
+# docs111-tests-report
+
+## Files changed
+
+- `tools/smoke_docs_current_code_contract.py`
+- `tools/smoke_docs_agent_no_manual_infra.py`
+- `tools/smoke_context_freshness_vs_execution_readiness.py`
+
+## Results
+
+- Documentation contract smoke: **PASS**
+  - 606 CLI examples parsed
+  - 205 local links checked
+  - Front-matter normalization and declarative evidence checks passed
+- Manual-infrastructure smoke: **PASS**
+- Python compilation: **PASS**
+- `git diff --check`: **PASS**
+- Public-cleanliness scan: **PASS**
+- Context readiness smoke: **BLOCKED by host permissions**
+  - Managed Windows host denied child creation inside Python temporary directories, including the guarded fallback.
+  - No production or lifecycle commands were changed.
+
+Residual risk: readiness smoke requires execution on a host permitting isolated temporary-directory writes.

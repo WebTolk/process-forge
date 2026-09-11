@@ -21,9 +21,9 @@ MAX_FILE_BYTES = 1_000_000
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
 TEXT_SUFFIXES = {".md", ".txt", ".rst", ".py", ".json", ".yaml", ".yml", ".toml", ".ini", ".csv"}
-# Version 4 also invalidates derived rows produced before source deduplication
-# and explicit-file filtering, even though the SQL table layout is unchanged.
-SCHEMA_VERSION = 4
+# Version 5 also invalidates derived rows produced before canonical source-root
+# containment, even though the SQL table layout is unchanged.
+SCHEMA_VERSION = 6
 POLICY_MODES = {"fulltext", "metadata", "none"}
 
 
@@ -312,7 +312,7 @@ def authorized_roots(project_root: Path, snapshot: dict[str, Any]) -> list[Autho
                 candidate = project_root / candidate
             try:
                 root = candidate.resolve(strict=True)
-            except OSError:
+            except (OSError, RuntimeError):
                 continue
             identity = (resource_id, str(root))
             if identity in seen:
@@ -350,9 +350,26 @@ def _matches_any(path: str, patterns: tuple[str, ...]) -> bool:
 
 
 def _iter_source_files(root: Path, source: IndexSource) -> Iterable[tuple[Path, str]]:
-    base = (root / source.path).resolve() if source.path not in {"", "."} else root
+    # ``root`` is already canonicalized by ``authorized_roots``.  A file root
+    # authorizes that one file only; resolving a source relative to its parent
+    # would otherwise make ``../sibling`` readable.  Directory sources and
+    # every discovered path must remain canonically below the authorized root,
+    # including symlinks which point outside it.
     try:
-        base.relative_to(root if root.is_dir() else root.parent)
+        root = root.resolve()
+    except (OSError, RuntimeError):
+        return
+    if root.is_file():
+        if source.path not in {"", "."}:
+            return
+        base = root
+    else:
+        try:
+            base = (root / source.path).resolve()
+        except (OSError, RuntimeError):
+            return
+    try:
+        base.relative_to(root)
     except ValueError:
         return
     if base.is_file():
@@ -372,6 +389,11 @@ def _iter_source_files(root: Path, source: IndexSource) -> Iterable[tuple[Path, 
         return
     for path in base.rglob("*"):
         try:
+            canonical_path = path.resolve()
+            try:
+                canonical_path.relative_to(root)
+            except ValueError:
+                continue
             if not (path.is_file() and path.suffix.lower() in TEXT_SUFFIXES and path.stat().st_size <= MAX_FILE_BYTES):
                 continue
             rel_path = path.relative_to(root).as_posix() if root.is_dir() else path.name
@@ -381,7 +403,7 @@ def _iter_source_files(root: Path, source: IndexSource) -> Iterable[tuple[Path, 
             if source.exclude and (_matches_any(source_rel, source.exclude) or _matches_any(rel_path, source.exclude)):
                 continue
             yield path, rel_path
-        except OSError:
+        except (OSError, RuntimeError):
             continue
 
 
@@ -402,14 +424,14 @@ def _metadata_content(resource: AuthorizedResource, source: IndexSource | None =
 
 def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
     documents: list[dict[str, Any]] = []
-    positions: dict[tuple[str, str], int] = {}
+    positions: dict[tuple[str, str, str], int] = {}
 
     def append(document: dict[str, Any]) -> None:
         # Multiple sources may intentionally overlap (for example, a source
         # tree and an explicit file).  A logical document is identified by
         # its resource and canonical relative path, not by the source that
         # happened to discover it first.
-        identity = (str(document["resource_id"]), str(document["relative_path"]))
+        identity = (str(document["resource_id"]), str(document["metadata"]["root_id"]), str(document["relative_path"]))
         if identity not in positions:
             positions[identity] = len(documents)
             documents.append(document)
@@ -420,6 +442,7 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
 
     for resource in resources:
         policy_hash = _policy_hash(resource.indexing)
+        root_id = hashlib.sha256(str(resource.root).encode("utf-8")).hexdigest()
         if all(source.mode != "fulltext" for source in resource.sources):
             content = _metadata_content(resource, resource.sources[0] if resource.sources else None)
             content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
@@ -433,7 +456,7 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
                     "content": content,
                     "content_hash": content_hash,
                     "fingerprint": f"{resource.fingerprint}:{policy_hash}:{content_hash}",
-                    "metadata": {"mode": "metadata", "root_ref": resource.root_ref, "version": resource.version},
+                    "metadata": {"mode": "metadata", "root_id": root_id, "root_ref": resource.root_ref, "version": resource.version},
                 }
             )
             continue
@@ -453,7 +476,7 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
                         "content": content,
                         "content_hash": content_hash,
                         "fingerprint": f"{resource.fingerprint}:{policy_hash}:{content_hash}",
-                        "metadata": {"mode": "metadata", "role": source.role, "root_ref": resource.root_ref, "version": resource.version},
+                        "metadata": {"mode": "metadata", "root_id": root_id, "role": source.role, "root_ref": resource.root_ref, "version": resource.version},
                     }
                 )
                 continue
@@ -474,7 +497,7 @@ def _documents(resources: list[AuthorizedResource]) -> list[dict[str, Any]]:
                         "content": content,
                         "content_hash": content_hash,
                         "fingerprint": f"{resource.fingerprint}:{policy_hash}:{relative_path}:{content_hash}",
-                        "metadata": {"mode": "fulltext", "root_ref": resource.root_ref, "version": resource.version},
+                        "metadata": {"mode": "fulltext", "root_id": root_id, "root_ref": resource.root_ref, "version": resource.version},
                     }
                 )
     return documents
@@ -531,11 +554,12 @@ def _ensure_schema(db: sqlite3.Connection) -> None:
         "package_id TEXT, "
         "kind TEXT, "
         "relative_path TEXT NOT NULL, "
+        "root_id TEXT NOT NULL, "
         "title TEXT, "
         "content_hash TEXT, "
         "metadata TEXT, "
         "fingerprint TEXT, "
-        "UNIQUE(resource_id, relative_path))"
+        "UNIQUE(resource_id, root_id, relative_path))"
     )
     db.execute("CREATE INDEX IF NOT EXISTS documents_resource_idx ON documents(resource_id)")
     db.execute("CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING fts5(title, content, document_id UNINDEXED, resource_id UNINDEXED)")
@@ -578,16 +602,20 @@ def _error_code(exc: BaseException) -> str:
     return str(exc) or type(exc).__name__
 
 
+def _document_key(resource_id: str, relative_path: str, root_id: str) -> str:
+    return _stable_json([resource_id, root_id, relative_path])
+
+
 def _document_fingerprint_map(resources: list[AuthorizedResource]) -> dict[str, str]:
-    return {f"{item['resource_id']}:{item['relative_path']}": str(item["fingerprint"]) for item in _documents(resources)}
+    return {_document_key(item['resource_id'], item['relative_path'], item['metadata']['root_id']): str(item["fingerprint"]) for item in _documents(resources)}
 
 
 def _stored_fingerprint_map(db: sqlite3.Connection, resource_ids: list[str]) -> dict[str, str]:
     if not resource_ids:
         return {}
     placeholders = ",".join("?" for _ in resource_ids)
-    rows = db.execute(f"SELECT resource_id, relative_path, fingerprint FROM documents WHERE resource_id IN ({placeholders})", resource_ids).fetchall()
-    return {f"{row[0]}:{row[1]}": str(row[2]) for row in rows}
+    rows = db.execute(f"SELECT resource_id, relative_path, root_id, fingerprint FROM documents WHERE resource_id IN ({placeholders})", resource_ids).fetchall()
+    return {_document_key(row[0], row[1], row[2]): str(row[3]) for row in rows}
 
 
 def _scope_generation(snapshot: dict[str, Any], resource_ids: list[str], fingerprints: dict[str, str]) -> str:
@@ -603,7 +631,7 @@ def build_index(project_root: Path, snapshot: dict[str, Any], *, workplace_root:
     documents = _documents(resources)
     scope_key = _scope_key(snapshot)
     refreshed_at = _now_utc()
-    fingerprints = {f"{item['resource_id']}:{item['relative_path']}": str(item["fingerprint"]) for item in documents}
+    fingerprints = {_document_key(item['resource_id'], item['relative_path'], item['metadata']['root_id']): str(item["fingerprint"]) for item in documents}
     generation = _scope_generation(snapshot, resource_ids, fingerprints)
     db = sqlite3.connect(path)
     try:
@@ -625,12 +653,12 @@ def build_index(project_root: Path, snapshot: dict[str, Any], *, workplace_root:
             )
         for item in documents:
             cursor = db.execute(
-                "INSERT OR REPLACE INTO documents (resource_id, package_id, kind, relative_path, title, content_hash, metadata, fingerprint) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                (item["resource_id"], item["package_id"], item["kind"], item["relative_path"], item["title"], item["content_hash"], _stable_json(item["metadata"]), item["fingerprint"]),
+                "INSERT OR REPLACE INTO documents (resource_id, package_id, kind, relative_path, root_id, title, content_hash, metadata, fingerprint) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (item["resource_id"], item["package_id"], item["kind"], item["relative_path"], item['metadata']['root_id'], item["title"], item["content_hash"], _stable_json(item["metadata"]), item["fingerprint"]),
             )
             document_id = cursor.lastrowid
             if not document_id:
-                row = db.execute("SELECT id FROM documents WHERE resource_id=? AND relative_path=?", (item["resource_id"], item["relative_path"])).fetchone()
+                row = db.execute("SELECT id FROM documents WHERE resource_id=? AND root_id=? AND relative_path=?", (item["resource_id"], item['metadata']['root_id'], item["relative_path"])).fetchone()
                 document_id = int(row[0])
             db.execute("DELETE FROM documents_fts WHERE document_id=?", (document_id,))
             db.execute("INSERT INTO documents_fts (title, content, document_id, resource_id) VALUES (?, ?, ?, ?)", (item["title"], item["content"], document_id, item["resource_id"]))

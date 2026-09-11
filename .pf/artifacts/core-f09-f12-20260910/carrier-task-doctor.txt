@@ -1,0 +1,12 @@
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: in_progress
+PASS: referenced run exists: garage-remediate-python-core-audit-f09-f12-updater-search-and-raw-ingres
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/remediate-python-core-audit-f09-f12-updater-search-and-raw-ingress-with.yaml has no private absolute paths

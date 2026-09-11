@@ -1,0 +1,10 @@
+[
+  {
+    "case": "public",
+    "exit": 0
+  },
+  {
+    "case": "baseline",
+    "exit": 1
+  }
+]

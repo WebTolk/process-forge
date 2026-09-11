@@ -1,0 +1,200 @@
+schema_version: 1
+run:
+  id: core-f09-f12-shell-20260910
+  title: F09-F12 update integrity search and incremental ingress
+  process: multi-agent-task-orchestration
+orchestrator:
+  role: orchestrator
+  responsibilities:
+    - architecture and sequential ownership
+    - real regression acceptance
+    - integration and governed closure
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 3
+workers:
+  -
+    id: f09-update
+    title: f09-update
+    role: worker
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/core-f09-f12-20260910/f09-update-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.6-luna
+    reasoning_effort: medium
+    allowed_files:
+      - src/processforge_core/core_update.py
+      - tools/smoke_core_update_missing_owned.py
+      - .pf/artifacts/core-f09-f12-20260910/f09-update/**
+      - .pf/tmp/f09-update/**
+    allowed_read_files:
+      - src/processforge_core/core_update.py
+      - src/processforge_core/local_resource_search.py
+      - tools/pf_runtime/raw_ingress_kernel.py
+      - tools/smoke_*.py
+      - docs/**
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f09-f12-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_sources:
+      - .pf/artifacts/core-f09-f12-20260910/f09-update-brief.md
+    required_outputs:
+      -
+        id: f09-update-report
+        path: .pf/artifacts/core-f09-f12-20260910/f09-update/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/core-f09-f12-20260910/f09-update/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: f1011-search
+    title: f1011-search
+    role: worker
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/core-f09-f12-20260910/f1011-search-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.6-luna
+    reasoning_effort: medium
+    allowed_files:
+      - src/processforge_core/local_resource_search.py
+      - tools/smoke_search_source_integrity.py
+      - .pf/artifacts/core-f09-f12-20260910/f1011-search/**
+      - .pf/tmp/f1011-search/**
+    allowed_read_files:
+      - src/processforge_core/core_update.py
+      - src/processforge_core/local_resource_search.py
+      - tools/pf_runtime/raw_ingress_kernel.py
+      - tools/smoke_*.py
+      - docs/**
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f09-f12-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_sources:
+      - .pf/artifacts/core-f09-f12-20260910/f1011-search-brief.md
+    required_outputs:
+      -
+        id: f1011-search-report
+        path: .pf/artifacts/core-f09-f12-20260910/f1011-search/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/core-f09-f12-20260910/f1011-search/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: f12-ingress
+    title: f12-ingress
+    role: worker
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/core-f09-f12-20260910/f12-ingress-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files:
+      - tools/pf_runtime/raw_ingress_kernel.py
+      - tools/smoke_raw_ingress_incremental_recovery.py
+      - .pf/artifacts/core-f09-f12-20260910/f12-ingress/**
+      - .pf/tmp/f12-ingress/**
+    allowed_read_files:
+      - src/processforge_core/core_update.py
+      - src/processforge_core/local_resource_search.py
+      - tools/pf_runtime/raw_ingress_kernel.py
+      - tools/smoke_*.py
+      - docs/**
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f09-f12-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_sources:
+      - .pf/artifacts/core-f09-f12-20260910/f12-ingress-brief.md
+    required_outputs:
+      -
+        id: f12-ingress-report
+        path: .pf/artifacts/core-f09-f12-20260910/f12-ingress/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/core-f09-f12-20260910/f12-ingress/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: f0912-review
+    title: f0912-review
+    role: reviewer
+    process: task-batch-execution
+    objective: Execute bounded brief .pf/artifacts/core-f09-f12-20260910/f0912-review-brief.md
+    execution_mode: assurance
+    writer: false
+    model: gpt-5.6-luna
+    reasoning_effort: medium
+    allowed_files:
+      - .pf/artifacts/core-f09-f12-20260910/f0912-review/**
+      - .pf/tmp/f0912-review/**
+    allowed_read_files:
+      - src/processforge_core/core_update.py
+      - src/processforge_core/local_resource_search.py
+      - tools/pf_runtime/raw_ingress_kernel.py
+      - tools/smoke_*.py
+      - docs/**
+      - .pf/artifacts/python-core-audit-20260908/**
+      - .pf/artifacts/core-f09-f12-20260910/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - .pf/process-forge.yaml
+      - .pf/artifacts/python-core-audit-20260908/**
+    required_sources:
+      - .pf/artifacts/core-f09-f12-20260910/f0912-review-brief.md
+    required_outputs:
+      -
+        id: f0912-review-report
+        path: .pf/artifacts/core-f09-f12-20260910/f0912-review/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/core-f09-f12-20260910/f0912-review/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      - f09-update
+      - f1011-search
+      - f12-ingress
+    allow_subagents: false
+    worker_may_rebuild_context: false
+integration:
+  required: true
+  role: orchestrator
+  expected_output: .pf/artifacts/core-f09-f12-20260910/integration-report.md
+metadata:
+  carrier_run: garage-remediate-python-core-audit-f09-f12-updater-search-and-raw-ingres
+  authorization: User authorized junior PF shell workers, dev publication and installed Core update/testing; primary owns delivery and acceptance.

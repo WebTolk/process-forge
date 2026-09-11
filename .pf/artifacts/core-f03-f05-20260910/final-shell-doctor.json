@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "run-doctor",
+    "--project-root",
+    ".",
+    "--run",
+    "core-f03-f05-shell-20260910"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "seconds": 3.205
+}

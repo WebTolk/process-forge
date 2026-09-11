@@ -1,0 +1,21 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_search_multiple_roots.py
+
+CWD:
+  D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline
+
+Timeout:
+  180s
+
+Exit code:
+  1
+
+STDERR tail:
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_search_multiple_roots.py", line 50, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_search_multiple_roots.py", line 23, in main
+    assert build_index(root, snapshot)["indexed"] == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

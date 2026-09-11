@@ -71,6 +71,16 @@ PF Runtime — workplace-scoped local lifecycle host, scheduler и IPC transport
 Это не второй PF Core. Agent Ledger владеет canonical session-to-project
 binding; project и session maps Runtime являются только rebuildable caches.
 
+Поле `scheduler_alive` показывает, работает ли поток планировщика. Ошибка
+проекта или повреждение кеша маршрутизации переводит состояние здоровья в
+`degraded`; остальные доступные проекты продолжают обрабатываться. После
+успешной проверки состояние восстанавливается. Остановка планировщика видна
+даже при сохранении состояния IPC `ready`.
+Захват блокировки запрещён, если её владелец жив или его состояние нельзя
+надёжно проверить, в том числе при отсутствии или повреждении lock-файла.
+Запись завершившегося процесса допускает восстановление; наличие живого PID
+само по себе не доказывает, что неполная запись устарела.
+
 Routed session восстанавливается из Ledger record `project_id` и `project_root`.
 Request или event с другим project отклоняется. Это сохраняет recovery после
 удаления Runtime cache и cross-project isolation независимо от daemon.

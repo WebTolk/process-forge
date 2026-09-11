@@ -1,0 +1,15 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_expected_report_containment.py
+
+CWD:
+  D:\Dev\process-forge
+
+Timeout:
+  180s
+
+Exit code:
+  0
+
+STDOUT tail:
+SKIP: symlink creation unavailable
+PASS: report traversal, absolute and symlink escapes rejected before reads; valid collection works

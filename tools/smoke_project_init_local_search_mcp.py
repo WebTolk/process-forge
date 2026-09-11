@@ -174,8 +174,9 @@ def main() -> int:
         repair_result = json.loads(responses[8]["result"]["content"][0]["text"])
         assert repair_result["action"] == "repair" and repair_result["applied"] is True
         assert repair_result["result"]["doctor"]["status"] == "pass"
-        assert responses[9]["result"]["isError"] is True
-        assert json.loads(responses[9]["result"]["content"][0]["text"])["error"]["code"] == "invalid_arguments"
+        # answers_path is not an advertised argument: reject before dispatch.
+        assert responses[9]["error"]["code"] == -32602, responses[9]
+        assert "result" not in responses[9]
         template_result = json.loads(responses[10]["result"]["content"][0]["text"])
         assert template_result["results"][0]["provenance"]["kind"] == "template"
         assert Path(template_result["results"][0]["local_path"]).is_file()

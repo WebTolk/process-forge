@@ -1,0 +1,33 @@
+PASS: run.schema_version present
+PASS: run.id present
+PASS: run.title present
+PASS: run.process present
+PASS: run.status present
+PASS: run.created_at present
+PASS: run.updated_at present
+PASS: run.tasks present
+PASS: run status valid: completed
+PASS: summary status matches run: completed
+PASS: task index status matches run: completed
+PASS: handoff status matches run: completed
+PASS: process exists: multi-agent-task-orchestration
+PASS: .pf/runs/core-f09-f12-shell-20260910/run.yaml has no private absolute paths
+PASS: task id unique: f09-update
+PASS: task status valid for f09-update: done
+PASS: assignment exists for f09-update: .pf/assignments/f09-update.yaml
+PASS: f09-update run_id matches run
+PASS: task id unique: f1011-search
+PASS: task status valid for f1011-search: done
+PASS: assignment exists for f1011-search: .pf/assignments/f1011-search.yaml
+PASS: f1011-search run_id matches run
+PASS: task id unique: f12-ingress
+PASS: task status valid for f12-ingress: done
+PASS: assignment exists for f12-ingress: .pf/assignments/f12-ingress.yaml
+PASS: f12-ingress run_id matches run
+PASS: task id unique: f0912-review
+PASS: task status valid for f0912-review: done
+PASS: assignment exists for f0912-review: .pf/assignments/f0912-review.yaml
+PASS: f0912-review run_id matches run
+PASS: completed run has all blocking tasks done
+PASS: .pf/runs/core-f09-f12-shell-20260910/summary.md exists
+PASS: .pf/handoffs/runs/core-f09-f12-shell-20260910-handoff.md exists

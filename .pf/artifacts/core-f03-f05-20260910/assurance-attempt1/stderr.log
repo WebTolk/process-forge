@@ -1,0 +1,642 @@
+2026-09-10T07:36:07.442522Z  WARN codex_skills::interface: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/
+2026-09-10T07:36:07.442691Z  WARN codex_skills::interface: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/
+2026-09-10T07:36:07.791733Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+OpenAI Codex v0.153.4
+--------
+workdir: D:\Dev\process-forge
+model: gpt-5.6-luna
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a08a3e-cf57-7610-b814-435399cbacf3
+--------
+user
+# Worker Launch Prompt
+
+You are a worker agent.
+You are not the orchestrator.
+Use only the assigned task and the provided assignment capsule.
+Do not rebuild full project context unless explicitly allowed.
+Do not edit files outside allowed_files.
+Do not read files outside allowed_read_files unless explicitly allowed.
+Use workspace_access_file for explicitly granted workplace resources.
+Do not copy private paths from workspace_access_file into public project artifacts, assignments, capsules, or reports.
+Respect forbidden_files.
+Produce required_outputs.
+Write expected_report.
+Stop and report if scope is insufficient.
+Invoke subagents only when subagent_policy.allow is true.
+When subagent reports are required, write them only under subagent_policy.reports_dir.
+
+## Assignment
+
+- task_id: `f0305-assurance`
+- run_id: `core-f03-f05-shell-20260910`
+- assignment: `.pf/assignments/f0305-assurance.yaml`
+- capsule: `.pf/contexts/assignment-capsules/f0305-assurance.capsule.yaml`
+- workspace_access_file: `.pf/runtime/agent-runs/core-f03-f05-shell-20260910/f0305-assurance/workspace-access.json`
+- worker_may_rebuild_context: `false`
+
+## workspace_access
+
+- knowledge_resources: `0`
+- templates: `0`
+- tools: `0`
+- mcp: `0`
+
+## allowed_files
+
+- `.pf/artifacts/core-f03-f05-20260910/f0305-assurance/**`
+- `.pf/tmp/core-f03-f05-20260910/f0305-assurance/**`
+
+## allowed_read_files
+
+- `src/**`
+- `tools/**`
+- `docs/**`
+- `schemas/**`
+- `processes/**`
+- `templates/**`
+- `.pf/contexts/project-context.snapshot.yaml`
+- `.pf/artifacts/python-core-audit-20260908/**`
+- `.pf/artifacts/core-f03-f05-20260910/**`
+
+## forbidden_files
+
+- `VERSION`
+- `CHANGELOG.md`
+- `checksums/**`
+- `tools/processforge.py`
+- `.pf/process-forge.yaml`
+- `.pf/artifacts/python-core-audit-20260908/**`
+
+## required_outputs
+
+- `f0305-assurance-report` -> `.pf/artifacts/core-f03-f05-20260910/f0305-assurance/report.md`
+
+## expected_report
+
+- `.pf/artifacts/core-f03-f05-20260910/f0305-assurance/report.md`
+
+## subagent_policy
+
+- allow: `false`
+- max_subagents: `0`
+- require_reports: `false`
+- reports_dir: ``
+
+## Output Delivery Contract
+
+Your final response is captured verbatim as the assignment's expected report artifact.
+Return only the complete report content in the requested format; do not say that you saved it, link to it, or add a conversational preface.
+For a read-only assignment, do not attempt to write the report file yourself.
+
+## Assignment Capsule
+
+schema_version: 1
+capsule:
+  id: f0305-assurance-capsule
+  generated_at: '2026-09-10T06:53:27Z'
+  assignment_id: f0305-assurance
+  assignment_path: .pf/assignments/f0305-assurance.yaml
+  assignment_checksum: 36711f6e973856cef593ff1dc0d0be381b73151d0e53ff334879be8bda1fcb83
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: cc1177bb10cd6c828740997502aaa82c7fc16f09702386a02455db06618ba179
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260910-065103-8ec72e
+  sha256: 'sha256:cc1177bb10cd6c828740997502aaa82c7fc16f09702386a02455db06618ba179'
+  generated_at: '2026-09-10T06:50:46Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  -
+    id: 'project.process-forge:project-profile'
+    kind: note_collection
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-profile@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts/project-profile.md
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:33c8f9edf949d6d99e3287d47c440a1341c1445fdd5361a4038e546d1f422ef0'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-profile
+    title: Project profile and repository map
+    load_policy: when_relevant
+    index_policy: full_text
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+  -
+    id: 'project.process-forge:project-artifacts'
+    kind: reference
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-artifacts@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:66f3079b7370d98d92f0fec9594cec7fe61fe44aab9cc97ae7b4ee74d4a73aa6'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-artifacts
+    title: Project ProcessForge artifacts
+    load_policy: on_demand
+    index_policy: metadata
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    []
+execution_route_summary:
+  process: ""
+  stages:
+    []
+  required_capabilities:
+    []
+  capability_requirements:
+    []
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    []
+  unsatisfied:
+    []
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: f0305-assurance
+  path: .pf/assignments/f0305-assurance.yaml
+  status: open
+  objective: Execute bounded brief .pf/artifacts/core-f03-f05-20260910/f0305-assurance-brief.md
+  execution_mode:
+    kind: assurance
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260910-065103-8ec72e
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/f0305-assurance.yaml
+    - .pf/artifacts/core-f03-f05-20260910/f0305-assurance-brief.md
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - .pf/artifacts/core-f03-f05-20260910/f0305-assurance/**
+    - .pf/tmp/core-f03-f05-20260910/f0305-assurance/**
+  allowed_read_files:
+    - src/**
+    - tools/**
+    - docs/**
+    - schemas/**
+    - processes/**
+    - templates/**
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/artifacts/python-core-audit-20260908/**
+    - .pf/artifacts/core-f03-f05-20260910/**
+  forbidden_files:
+    - VERSION
+    - CHANGELOG.md
+    - checksums/**
+    - tools/processforge.py
+    - .pf/process-forge.yaml
+    - .pf/artifacts/python-core-audit-20260908/**
+  ownership:
+    owner_id: f0305-assurance
+    owner_label: worker-f0305-assurance
+    role: reviewer
+    writer: false
+    owned_files:
+      - .pf/artifacts/core-f03-f05-20260910/f0305-assurance/**
+      - .pf/tmp/core-f03-f05-20260910/f0305-assurance/**
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/artifacts/core-f03-f05-20260910/f0305-assurance/**
+      - .pf/tmp/core-f03-f05-20260910/f0305-assurance/**
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: f0305-assurance-report
+      path: .pf/artifacts/core-f03-f05-20260910/f0305-assurance/report.md
+      type: markdown
+      required: true
+  expected_report:
+    language: en
+    artifact: .pf/artifacts/core-f03-f05-20260910/f0305-assurance/report.md
+    format: concise_markdown
+    include:
+      - f0305-assurance-report
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: high
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/f0305-assurance.ndjson
+  event_correlation_id: assignment-f0305-assurance
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/f0305-assurance.yaml
+  - .pf/artifacts/core-f03-f05-20260910/f0305-assurance-brief.md
+allowed_files:
+  - .pf/artifacts/core-f03-f05-20260910/f0305-assurance/**
+  - .pf/tmp/core-f03-f05-20260910/f0305-assurance/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - tools/processforge.py
+  - .pf/process-forge.yaml
+  - .pf/artifacts/python-core-audit-20260908/**
+required_outputs:
+  -
+    id: f0305-assurance-report
+    path: .pf/artifacts/core-f03-f05-20260910/f0305-assurance/report.md
+    type: markdown
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-f0305-assurance
+
+## Workspace Access File
+
+D:\Dev\process-forge\.pf\runtime\agent-runs\core-f03-f05-shell-20260910\f0305-assurance\workspace-access.json
+
+warning: `--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation.
+warning: `--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation.
+2026-09-10T07:36:10.081586Z  WARN codex_exec_server::client::http_client::route_aware_http_client: http/request send failed http_method="POST" error_is_timeout=false error_is_connect=true error=error sending request
+2026-09-10T07:36:10.081680Z  WARN codex_rmcp_client::http_client_adapter: streamable HTTP post_message failed endpoint_scheme="http" endpoint_host="127.0.0.1" endpoint_path="/stream" endpoint_has_query=false mcp_method="initialize" mcp_request_id="0" has_session_id=false has_authorization_header=false
+2026-09-10T07:36:10.081765Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-10T07:36:10.081872Z  WARN codex_rmcp_client::rmcp_client::streamable_http_retry: streamable HTTP MCP initialize failed with a retryable error; retrying attempt=1 max_attempts=3 delay_ms=250 error=handshaking with MCP server failed: Send message error Transport [codex_rmcp_client::event_notification_transport::EventNotificationTransport<rmcp::transport::worker::WorkerTransport<rmcp::transport::streamable_http_client::StreamableHttpClientWorker<codex_rmcp_client::http_client_adapter::StreamableHttpClientAdapter>>>] error: Client error: HTTP request failed: http/request failed: error sending request for url (http://127.0.0.1:64442/stream), when send initialize request
+2026-09-10T07:36:12.270851Z  WARN codex_core_plugins::manager: failed to load recommended plugins error=failed to send remote plugin catalog request to https://chatgpt.com/backend-api/ps/plugins/suggested/codex?scope=GLOBAL: error sending request for url (https://chatgpt.com/backend-api/ps/plugins/suggested/codex?scope=GLOBAL)
+2026-09-10T07:36:12.280361Z ERROR codex_models_manager::manager: failed to refresh available models: timeout waiting for child process to exit
+2026-09-10T07:36:12.418302Z  WARN codex_exec_server::client::http_client::route_aware_http_client: http/request send failed http_method="POST" error_is_timeout=false error_is_connect=true error=error sending request
+2026-09-10T07:36:12.418367Z  WARN codex_rmcp_client::http_client_adapter: streamable HTTP post_message failed endpoint_scheme="http" endpoint_host="127.0.0.1" endpoint_path="/stream" endpoint_has_query=false mcp_method="initialize" mcp_request_id="0" has_session_id=false has_authorization_header=false
+2026-09-10T07:36:12.418401Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-10T07:36:12.418448Z  WARN codex_rmcp_client::rmcp_client::streamable_http_retry: streamable HTTP MCP initialize failed with a retryable error; retrying attempt=2 max_attempts=3 delay_ms=1000 error=handshaking with MCP server failed: Send message error Transport [codex_rmcp_client::event_notification_transport::EventNotificationTransport<rmcp::transport::worker::WorkerTransport<rmcp::transport::streamable_http_client::StreamableHttpClientWorker<codex_rmcp_client::http_client_adapter::StreamableHttpClientAdapter>>>] error: Client error: HTTP request failed: http/request failed: error sending request for url (http://127.0.0.1:64442/stream), when send initialize request
+2026-09-10T07:36:15.481462Z  WARN codex_exec_server::client::http_client::route_aware_http_client: http/request send failed http_method="POST" error_is_timeout=false error_is_connect=true error=error sending request
+2026-09-10T07:36:15.481655Z  WARN codex_rmcp_client::http_client_adapter: streamable HTTP post_message failed endpoint_scheme="http" endpoint_host="127.0.0.1" endpoint_path="/stream" endpoint_has_query=false mcp_method="initialize" mcp_request_id="0" has_session_id=false has_authorization_header=false
+2026-09-10T07:36:15.481712Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64442/stream)")))
+2026-09-10T07:36:17.254246Z  WARN codex_core_plugins::manager: failed to warm featured plugin ids cache error=failed to send remote featured plugin request to https://chatgpt.com/backend-api/plugins/featured?platform=codex: error sending request for url (https://chatgpt.com/backend-api/plugins/featured?platform=codex)
+2026-09-10T07:36:17.935152Z  WARN codex_analytics::client: failed to send events request: error sending request for url (https://chatgpt.com/backend-api/codex/analytics-events/events)
+2026-09-10T07:36:27.934049Z  WARN codex_core_plugins::manager: failed to load recommended plugins error=failed to send remote plugin catalog request to https://chatgpt.com/backend-api/ps/plugins/suggested/codex?scope=GLOBAL: error sending request for url (https://chatgpt.com/backend-api/ps/plugins/suggested/codex?scope=GLOBAL)
+2026-09-10T07:36:37.246699Z  WARN codex_core_plugins::manager: failed to refresh remote installed plugins cache error=failed to send remote plugin catalog request to https://chatgpt.com/backend-api/ps/plugins/installed?limit=200: error sending request for url (https://chatgpt.com/backend-api/ps/plugins/installed?limit=200) materialized_remote_plugin_count=0
+2026-09-10T07:36:37.383871Z  WARN codex_core_plugins::manager: remote installed plugin bundle sync failed error=failed to send remote plugin catalog request to https://chatgpt.com/backend-api/ps/plugins/installed?limit=200&includeDownloadUrls=true: error sending request for url (https://chatgpt.com/backend-api/ps/plugins/installed?limit=200&includeDownloadUrls=true)
+2026-09-10T07:36:37.394452Z  WARN codex_core_plugins::manager: failed to refresh cached remote plugin catalog error=failed to send remote plugin catalog request to https://chatgpt.com/backend-api/ps/plugins/list?scope=GLOBAL&limit=200: error sending request for url (https://chatgpt.com/backend-api/ps/plugins/list?scope=GLOBAL&limit=200) scope=Global
+2026-09-10T07:36:37.912465Z  WARN codex_exec_server::client::http_client::route_aware_http_client: http/request send failed http_method="POST" error_is_timeout=true error_is_connect=false error=error sending request
+2026-09-10T07:36:37.912532Z  WARN codex_rmcp_client::http_client_adapter: streamable HTTP post_message failed endpoint_scheme="https" endpoint_host="chatgpt.com" endpoint_path="/backend-api/ps/mcp" endpoint_has_query=false mcp_method="initialize" mcp_request_id="0" has_session_id=false has_authorization_header=true
+2026-09-10T07:36:37.912570Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)")))
+2026-09-10T07:36:38.082342Z  WARN codex_core_plugins::manager: failed to load recommended plugins error=failed to send remote plugin catalog request to https://chatgpt.com/backend-api/ps/plugins/suggested/codex?scope=GLOBAL: error sending request for url (https://chatgpt.com/backend-api/ps/plugins/suggested/codex?scope=GLOBAL)
+2026-09-10T07:36:53.181110Z  WARN codex_core::responses_retry: stream disconnected - retrying sampling request (1/5 in 198ms)... turn_id=01a08a3e-d1fc-7e33-9225-f7be94368bc7 retries=1 max_retries=5 sampling_error=request timed out
+2026-09-10T07:37:07.398583Z  WARN codex_core_plugins::manager: failed to refresh remote installed plugins cache error=failed to send remote plugin catalog request to https://chatgpt.com/backend-api/ps/plugins/installed?limit=200: error sending request for url (https://chatgpt.com/backend-api/ps/plugins/installed?limit=200) materialized_remote_plugin_count=0
+2026-09-10T07:37:07.941182Z  WARN codex_exec_server::client::http_client::route_aware_http_client: http/request send failed http_method="POST" error_is_timeout=true error_is_connect=false error=error sending request
+2026-09-10T07:37:07.941235Z  WARN codex_mcp::rmcp_client: Apps MCP startup reconnect failed; continuing with cached tools error=MCP startup failed: timed out handshaking with MCP server after 29.9999996s retry_after_ms=1000
+2026-09-10T07:37:07.941252Z  WARN codex_rmcp_client::http_client_adapter: streamable HTTP post_message failed endpoint_scheme="https" endpoint_host="chatgpt.com" endpoint_path="/backend-api/ps/mcp" endpoint_has_query=false mcp_method="initialize" mcp_request_id="0" has_session_id=false has_authorization_header=true
+2026-09-10T07:37:07.941285Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (https://chatgpt.com/backend-api/ps/mcp)")))
+2026-09-10T07:37:08.403426Z  WARN codex_core::responses_retry: stream disconnected - retrying sampling request (2/5 in 430ms)... turn_id=01a08a3e-d1fc-7e33-9225-f7be94368bc7 retries=2 max_retries=5 sampling_error=request timed out
+ERROR: Reconnecting... 2/5
+2026-09-10T07:37:23.851571Z  WARN codex_core::responses_retry: stream disconnected - retrying sampling request (3/5 in 729ms)... turn_id=01a08a3e-d1fc-7e33-9225-f7be94368bc7 retries=3 max_retries=5 sampling_error=request timed out
+ERROR: Reconnecting... 3/5
+exec
+"C:\\Users\\musst\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe" -Command "Get-ChildItem -Recurse -File .pf\\artifacts\\core-f03-f05-20260910 | Select-Object -ExpandProperty FullName" in D:\Dev\process-forge
+ succeeded in 1236ms:
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\assurance-start.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\baseline-process_execution.py
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\baseline-reproduction.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\baseline-reproduction.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\baseline-reproduction.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\baseline.diff
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\baseline.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\check.py
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\checksum-write.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\cleanliness.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\cleanliness.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\cleanliness.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\diff-check.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\existing-records.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\existing-records.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\existing-records.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-acceptance.md
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-accepted-process_execution.py
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-collect.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-evidence-brief.md
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final-isolated-baseline-f04-file-change.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final-isolated-baseline-f04-file-change.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final-isolated-baseline-f04-file-change.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final-isolated-baseline-smoke_work_evidence_freshness.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final-isolated-baseline-smoke_work_evidence_freshness.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final-isolated-baseline-smoke_work_evidence_freshness.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final-isolated-portable-smoke_work_evidence_freshness.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final-isolated-portable-smoke_work_evidence_freshness.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final-isolated-portable-smoke_work_evidence_freshness.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final-isolated-results.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-final.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-isolated-baseline-smoke_work_evidence_freshness.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-isolated-baseline-smoke_work_evidence_freshness.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-isolated-baseline-smoke_work_evidence_freshness.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-isolated-portable-smoke_work_evidence_freshness.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-isolated-portable-smoke_work_evidence_freshness.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-isolated-portable-smoke_work_evidence_freshness.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-isolated-results.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-start.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-targeted.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-targeted.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-targeted.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-worker-smoke.py
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0305-assurance-brief.md
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0305-review-brief.md
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-collect.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-completion-brief.md
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-isolated-final-baseline-smoke_work_completion_recovery.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-isolated-final-baseline-smoke_work_completion_recovery.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-isolated-final-baseline-smoke_work_completion_recovery.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-isolated-final-portable-smoke_work_completion_recovery.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-isolated-final-portable-smoke_work_completion_recovery.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-isolated-final-portable-smoke_work_completion_recovery.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-isolated-final-results.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-matrix-1.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-matrix-1.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-matrix-1.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-matrix-final.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-matrix-final.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-matrix-final.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-start.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-worker-attempt.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-worker-attempt.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-worker-attempt.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-worker-process_execution.py
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-worker-smoke.py
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\final-evidence.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\final-evidence.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\implementation-handoff.md
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\initial-state.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\intake-evidence.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\intake-transition.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\orchestrator-plan.yaml
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\plan-apply.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\plan.md
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\planning-evidence.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\planning-transition.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\pre-integration-public.sha256
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\preservation.py
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related_checks.py
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_multi_process_work_capsule.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_multi_process_work_capsule.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_process_execution_integrity.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_process_execution_integrity.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_process_execution_integrity.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_process_execution_state_semantics.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_process_execution_state_semantics.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_process_execution_state_semantics.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_process_run_task_batch.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_process_run_task_batch.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_branching_if_supported.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_branching_if_supported.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_branching_if_supported.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_emits_stage_events.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_emits_stage_events.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_emits_stage_events.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_final_stage_completes_run.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_final_stage_completes_run.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_final_stage_completes_run.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_records_evidence.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_records_evidence.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_records_evidence.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_recovers_after_invalid_evidence.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_recovers_after_invalid_evidence.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_recovers_after_invalid_evidence.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_snapshot_pinned_process.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_snapshot_pinned_process.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\related-smoke_work_transition_snapshot_pinned_process.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\reproduce_baseline.py
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\schema.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\schema.stderr.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\schema.stdout.txt
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\setup.py
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\source-preservation.json
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-evidence\log.md
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f0304-evidence\report.md
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-completion\log.md
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\f05-completion\report.md
+D:\Dev\process-forge\.pf\artifacts\core-f03-f05-20260910\__pycache__\check.cpython-314.pyc
+
+2026-09-10T07:37:33.922319Z  WARN codex_skills::interface: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/
+2026-09-10T07:37:33.922363Z  WARN codex_skills::interface: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/
+2026-09-10T07:37:38.948777Z  WARN codex_core_plugins::manager: failed to load recommended plugins error=failed to send remote plugin catalog request to https://chatgpt.com/backend-api/ps/plugins/suggested/codex?scope=GLOBAL: error sending request for url (https://chatgpt.com/backend-api/ps/plugins/suggested/codex?scope=GLOBAL)

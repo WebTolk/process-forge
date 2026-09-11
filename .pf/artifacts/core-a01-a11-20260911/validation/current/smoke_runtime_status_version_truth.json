@@ -1,0 +1,10 @@
+{
+  "test": "smoke_runtime_status_version_truth.py",
+  "mode": "current",
+  "returncode": 0,
+  "seconds": 5.11,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_runtime_status_version_truth.py"
+  ]
+}

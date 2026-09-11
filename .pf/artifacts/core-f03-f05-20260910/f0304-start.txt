@@ -1,0 +1,4 @@
+PRESENT: .pf/contexts/assignment-capsules/f0304-evidence.capsule.yaml
+WROTE: .pf/runtime/agent-runs/core-f03-f05-shell-20260910/f0304-evidence/workspace-access.json
+WROTE: .pf/runs/core-f03-f05-shell-20260910/worker-prompts/f0304-evidence.md
+RUNNING: f0304-evidence pid=8168

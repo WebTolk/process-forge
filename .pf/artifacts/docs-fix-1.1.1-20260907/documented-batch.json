@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    ".pf/artifacts/docs-fix-1.1.1-20260907/run_documented_batch.py"
+  ],
+  "started_at": "2026-09-07T13:30:15.672484+00:00",
+  "finished_at": "2026-09-07T13:30:21.675013+00:00",
+  "elapsed_seconds": 6.003,
+  "exit_code": 1,
+  "output": "RUN published example: run-create\nRUN published example: task-create\nFAIL smoke_process_run_task_batch: unexpected command exit\nExpected exit code: 0\nCommand:\n  C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe D:\\Dev\\process-forge\\tools\\processforge.py task-create --project-root D:\\Dev\\process-forge\\.pf\\tmp\\docs-example-neswfybp\\documented-batch --run release-prep --id task-001-docs --title Update docs --process software-feature-development --apply\n\nCWD:\n  D:\\Dev\\process-forge\n\nTimeout:\n  60s\n\nExit code:\n  1\n\nSTDERR tail:\nFAIL: process software-feature-development is available in official pack processforge.official.software-development but is not active in this workplace.\nFix: run python bin/pf.py pack-activate --id processforge.official.software-development --workplace <path> --apply\n\nTraceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\.pf\\artifacts\\docs-fix-1.1.1-20260907\\run_documented_batch.py\", line 27, in <module>\n    fixture.pf(*args)\n    ~~~~~~~~~~^^^^^^^\n  File \"D:\\Dev\\process-forge\\tools\\smoke_process_run_task_batch.py\", line 39, in pf\n    return run_cmd([sys.executable, str(CLI), *args], expect=expect)\n  File \"D:\\Dev\\process-forge\\tools\\smoke_process_run_task_batch.py\", line 34, in run_cmd\n    raise AssertionError(f\"expected exit {expect}, got {result.returncode}: {' '.join(command)}\")\nAssertionError: expected exit 0, got 1: C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe D:\\Dev\\process-forge\\tools\\processforge.py task-create --project-root D:\\Dev\\process-forge\\.pf\\tmp\\docs-example-neswfybp\\documented-batch --run release-prep --id task-001-docs --title Update docs --process software-feature-development --apply\n"
+}

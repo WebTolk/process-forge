@@ -1,0 +1,175 @@
+schema_version: 1
+run:
+  id: core-a01-a11-wave2-20260911
+  title: A01-A11 remediation wave 2
+  process: multi-agent-task-orchestration
+orchestrator:
+  role: orchestrator
+  responsibilities:
+    - design
+    - independent regression acceptance
+    - sequential integration
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 3
+workers:
+  -
+    id: a0206-reports
+    title: a0206-reports
+    role: worker
+    process: task-batch-execution
+    objective: Implement bounded repair brief .pf/artifacts/core-a01-a11-20260911/a0206-reports-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files:
+      - tools/processforge.py
+      - tools/pf_runtime/host.py
+      - tools/smoke_expected_report_containment.py
+      - tools/smoke_authenticated_report_content.py
+      - .pf/artifacts/core-a01-a11-20260911/a0206-reports/**
+      - .pf/tmp/a0206-reports/**
+    allowed_read_files:
+      - tools/processforge.py
+      - tools/pf_runtime/host.py
+      - tools/smoke_expected_report_containment.py
+      - tools/smoke_authenticated_report_content.py
+      - src/processforge_core/**
+      - tools/pf_runtime/**
+      - tools/processforge.py
+      - tools/*smoke*.py
+      - tools/*helpers*.py
+      - docs/concepts/**
+      - .pf/artifacts/core-a01-a11-20260911/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/AGENTS.md
+      - .pf/contexts/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/core-a01-a11-20260911/a0206-reports-brief.md
+      - .pf/artifacts/core-a01-a11-20260911/design.md
+    required_outputs:
+      -
+        id: a0206-reports-report
+        path: .pf/artifacts/core-a01-a11-20260911/a0206-reports/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/a0206-reports/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: a05-migration
+    title: a05-migration
+    role: worker
+    process: task-batch-execution
+    objective: Implement bounded repair brief .pf/artifacts/core-a01-a11-20260911/a05-migration-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files:
+      - src/processforge_core/core_update.py
+      - tools/smoke_core_update_migration_sources.py
+      - .pf/artifacts/core-a01-a11-20260911/a05-migration/**
+      - .pf/tmp/a05-migration/**
+    allowed_read_files:
+      - src/processforge_core/core_update.py
+      - tools/smoke_core_update_migration_sources.py
+      - src/processforge_core/**
+      - tools/pf_runtime/**
+      - tools/processforge.py
+      - tools/*smoke*.py
+      - tools/*helpers*.py
+      - docs/concepts/**
+      - .pf/artifacts/core-a01-a11-20260911/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/AGENTS.md
+      - .pf/contexts/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/core-a01-a11-20260911/a05-migration-brief.md
+      - .pf/artifacts/core-a01-a11-20260911/design.md
+    required_outputs:
+      -
+        id: a05-migration-report
+        path: .pf/artifacts/core-a01-a11-20260911/a05-migration/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/a05-migration/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+  -
+    id: a08-jsonrpc
+    title: a08-jsonrpc
+    role: worker
+    process: task-batch-execution
+    objective: Implement bounded repair brief .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc-brief.md
+    execution_mode: implementation
+    writer: true
+    model: gpt-5.6-luna
+    reasoning_effort: high
+    allowed_files:
+      - tools/pf_runtime/mcp_server.py
+      - tools/smoke_mcp_jsonrpc_validation.py
+      - .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/**
+      - .pf/tmp/a08-jsonrpc/**
+    allowed_read_files:
+      - tools/pf_runtime/mcp_server.py
+      - tools/smoke_mcp_jsonrpc_validation.py
+      - src/processforge_core/**
+      - tools/pf_runtime/**
+      - tools/processforge.py
+      - tools/*smoke*.py
+      - tools/*helpers*.py
+      - docs/concepts/**
+      - .pf/artifacts/core-a01-a11-20260911/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/AGENTS.md
+      - .pf/contexts/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - .pf/artifacts/codebase-audit-20260910/**
+      - .pf/process-forge.yaml
+    required_sources:
+      - .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc-brief.md
+      - .pf/artifacts/core-a01-a11-20260911/design.md
+    required_outputs:
+      -
+        id: a08-jsonrpc-report
+        path: .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md
+        type: markdown
+        required: true
+    expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/a08-jsonrpc/report.md
+    runtime_driver: codex-exec
+    depends_on:
+      []
+    allow_subagents: false
+    worker_may_rebuild_context: false
+integration:
+  required: true
+  role: orchestrator
+  expected_output: .pf/artifacts/core-a01-a11-20260911/integration-report.md
+metadata:
+  carrier_run: garage-remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-wo
+  authorization: Explicit user request to implement A01-A11 with PF shell workers; source-only scope.

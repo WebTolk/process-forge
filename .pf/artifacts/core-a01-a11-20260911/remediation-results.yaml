@@ -1,0 +1,26 @@
+schema_version: 1
+kind: audit_remediation_results
+status: accepted_source_remediation
+baseline: 901d0551773fe7a5b382b89ebe95b212b0747e83
+source_backlog: .pf/artifacts/codebase-audit-20260910/remediation-tasks.yaml
+run: garage-remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-wo
+accepted_tasks: [A01, A02, A03, A04, A05, A06, A07, A08, A09, A10, A11]
+task_acceptance: .pf/artifacts/core-a01-a11-20260911/task-result.md
+independent_review_disposition: .pf/artifacts/core-a01-a11-20260911/review-disposition.md
+source_inventory: .pf/artifacts/core-a01-a11-20260911/accepted-source-inventory.json
+validation:
+  focused_regressions: PASS
+  new_regression_scripts: 11
+  original_baseline_counterexamples: 11
+  registered_source_commands: 218
+  latest_pass: 216
+  latest_fail: 2
+  broad_suite_status: FAIL
+  report: .pf/artifacts/core-a01-a11-20260911/validation-summary.json
+handoff: .pf/handoffs/core-a01-a11-20260911.md
+remaining_work: .pf/artifacts/core-a01-a11-20260911/remaining-work.yaml
+delivery:
+  source_only: true
+  committed: false
+  installed_applied: false
+  public_release_qualified: false

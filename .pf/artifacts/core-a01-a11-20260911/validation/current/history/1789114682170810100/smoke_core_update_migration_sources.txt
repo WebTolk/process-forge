@@ -1,0 +1,28 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_core_update_migration_sources.py
+
+CWD:
+  D:\Dev\process-forge
+
+Timeout:
+  180s
+
+Exit code:
+  1
+
+STDERR tail:
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_core_update_migration_sources.py", line 184, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_core_update_migration_sources.py", line 166, in main
+    apply_update(core, archive, confirm=True, workplace_root=workplace)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Dev\process-forge\src\processforge_core\core_update.py", line 666, in apply_update
+    migration_record = apply_workplace_migration(archive_path, workplace_root.resolve(), migration, backup_dir)
+  File "D:\Dev\process-forge\src\processforge_core\core_update.py", line 384, in apply_workplace_migration
+    atomic_write(target, read_archive_member(archive, str(operation["source"])))
+                         ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Dev\process-forge\tools\smoke_core_update_migration_sources.py", line 161, in fail_read
+    raise KeyError(relative_path)
+KeyError: 'templates/new.yaml'

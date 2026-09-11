@@ -1,0 +1,30 @@
+ProcessForge release-test
+RUN py_compile:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe -m py_compile D:\Dev\process-forge\tools\processforge.py D:\Dev\process-forge\bin\pf.py D:\Dev\process-forge\tools\specialization_smoke_helpers.py D:\Dev\process-forge\tools\codex_exec_worker.py
+  started_at: 2026-09-10T05:15:00Z
+PASS py_compile
+  finished_at: 2026-09-10T05:15:07Z
+  elapsed_seconds: 6.60
+RUN schema validation:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\validate-process-forge-schemas.py --root D:\Dev\process-forge
+  started_at: 2026-09-10T05:15:07Z
+PASS schema validation
+  finished_at: 2026-09-10T05:15:49Z
+  elapsed_seconds: 42.38
+RUN public cleanliness:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\validate-public-cleanliness.py --root D:\Dev\process-forge
+  started_at: 2026-09-10T05:15:49Z
+FAIL public cleanliness
+  finished_at: 2026-09-10T05:15:57Z
+  elapsed_seconds: 7.73
+  exit: 1
+  FAIL: tools/smoke_garage_cross_project_security.py: non-neutral docs package id 'docs.b'
+  FAIL: tools/smoke_garage_cross_project_security.py: non-neutral docs package id 'docs.b'
+  FAIL: tools/smoke_garage_no_hooks_sessionless.py: non-neutral docs package id 'docs.nohooks'
+  FAIL: tools/smoke_garage_no_hooks_sessionless.py: non-neutral docs package id 'docs.nohooks'
+SKIP git diff --check: fail-fast
+REPORT: .pf/runtime/release-test/latest-report.json
+REPORT: .pf/runtime/release-test/latest-report.md
+TRACE: .pf/runtime/release-test/latest-trace.ndjson
+ELAPSED: 56.71s
+RESULT: FAIL

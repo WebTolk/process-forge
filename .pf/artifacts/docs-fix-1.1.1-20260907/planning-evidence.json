@@ -1,0 +1,4 @@
+[
+  {"kind":"artifact","id":"task-index","path":".pf/artifacts/docs-fix-1.1.1-20260907/orchestrator-plan.yaml"},
+  {"kind":"gate","id":"run-has-tasks","status":"passed","path":".pf/artifacts/docs-fix-1.1.1-20260907/orchestrator-plan.yaml"}
+]

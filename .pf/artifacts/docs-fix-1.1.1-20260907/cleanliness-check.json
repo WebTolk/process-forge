@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    "tools/validate-process-forge-public-cleanliness.py"
+  ],
+  "started_at": "2026-09-07T13:55:41.792404+00:00",
+  "finished_at": "2026-09-07T13:55:41.955241+00:00",
+  "elapsed_seconds": 0.163,
+  "exit_code": 2,
+  "output": "python: can't open file 'D:\\\\Dev\\\\process-forge\\\\tools\\\\validate-process-forge-public-cleanliness.py': [Errno 2] No such file or directory\n"
+}

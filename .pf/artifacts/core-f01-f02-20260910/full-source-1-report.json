@@ -1,0 +1,68 @@
+{
+  "checks": [
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "py_compile",
+        "D:\\Dev\\process-forge\\tools\\processforge.py",
+        "D:\\Dev\\process-forge\\bin\\pf.py",
+        "D:\\Dev\\process-forge\\tools\\specialization_smoke_helpers.py",
+        "D:\\Dev\\process-forge\\tools\\codex_exec_worker.py"
+      ],
+      "elapsed_seconds": 6.596,
+      "exit_code": 0,
+      "finished_at": "2026-09-10T05:15:07Z",
+      "label": "py_compile",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-10T05:15:00Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 30
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-process-forge-schemas.py",
+        "--root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 42.382,
+      "exit_code": 0,
+      "finished_at": "2026-09-10T05:15:49Z",
+      "label": "schema validation",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-10T05:15:07Z",
+      "status": "PASS",
+      "timeout_reason": null,
+      "timeout_seconds": 60
+    },
+    {
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\validate-public-cleanliness.py",
+        "--root",
+        "D:\\Dev\\process-forge"
+      ],
+      "elapsed_seconds": 7.732,
+      "exit_code": 1,
+      "finished_at": "2026-09-10T05:15:57Z",
+      "label": "public cleanliness",
+      "layer": "public",
+      "public_gate": true,
+      "started_at": "2026-09-10T05:15:49Z",
+      "status": "FAIL",
+      "timeout_reason": null,
+      "timeout_seconds": 60
+    }
+  ],
+  "elapsed_seconds": 56.711,
+  "finished_at": "2026-09-10T05:15:57Z",
+  "public": false,
+  "public_checks": [],
+  "result": "FAIL",
+  "schema_version": 1,
+  "started_at": "2026-09-10T05:15:00Z"
+}

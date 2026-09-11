@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "tracked_unrelated_changed": [],
+  "prior_public_inventory_changed": [],
+  "cli_only_two_registrations": true,
+  "allowed_existing_files": [
+    "checksums/processforge.sha256",
+    "src/processforge_core/process_execution.py",
+    "tools/processforge.py"
+  ]
+}

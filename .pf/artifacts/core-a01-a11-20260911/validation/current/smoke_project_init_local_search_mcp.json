@@ -1,0 +1,10 @@
+{
+  "test": "smoke_project_init_local_search_mcp.py",
+  "mode": "current",
+  "returncode": 0,
+  "seconds": 44.43,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_project_init_local_search_mcp.py"
+  ]
+}

@@ -27,7 +27,7 @@ import uuid
 import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
 from urllib.parse import urlparse
 from urllib.request import url2pathname, urlopen
@@ -3548,6 +3548,27 @@ def project_available_paths(project_root: Path, files: list[Path] | None = None)
     return available_paths
 
 
+def processforge_distribution_root_for_path(path: Path) -> Path | None:
+    """Return the nearest ProcessForge distribution owning ``path``."""
+    resolved = path.resolve()
+    for candidate in (resolved.parent, *resolved.parents):
+        if looks_like_processforge_distribution(candidate):
+            return candidate
+    return None
+
+
+def project_classifier_source_label(path: Path, project_root: Path) -> str:
+    """Render classifier provenance stably across source and installed layouts."""
+    distribution_root = processforge_distribution_root_for_path(path)
+    if path_is_relative_to(path, project_root):
+        if distribution_root and distribution_root == project_root.resolve():
+            return rel(path, distribution_root)
+        return rel(path, project_root)
+    if distribution_root:
+        return rel(path, distribution_root)
+    return path.name
+
+
 def inactive_official_classifier_hints(workplace_manifest: Path | None, project_root: Path, files: list[Path] | None = None) -> list[str]:
     active_ids = active_process_pack_ids(workplace_manifest)
     available_paths = project_available_paths(project_root, files)
@@ -3670,7 +3691,7 @@ def classify_project(
                     "classifier": classifier_id,
                     "rule": str(rule.get("id") or "rule"),
                     "confidence": rule_confidence,
-                    "source": rel(path, project_root) if path.is_relative_to(project_root) else path.name,
+                    "source": project_classifier_source_label(path, project_root),
                 }
             )
     inactive_hints = inactive_official_classifier_hints(workplace_manifest, project_root, files) if not matched_rules else []
@@ -6871,6 +6892,17 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_cli_audit_f0608", [sys.executable, str(root / "tools" / "smoke_cli_audit_f0608.py")], 180),
         ReleaseCommand("smoke_core_update_missing_owned", [sys.executable, str(root / "tools" / "smoke_core_update_missing_owned.py")], 120),
         ReleaseCommand("smoke_search_source_integrity", [sys.executable, str(root / "tools" / "smoke_search_source_integrity.py")], 120),
+        ReleaseCommand("smoke_search_file_root_containment", [sys.executable, str(root / "tools" / "smoke_search_file_root_containment.py")], 120),
+        ReleaseCommand("smoke_search_multiple_roots", [sys.executable, str(root / "tools" / "smoke_search_multiple_roots.py")], 120),
+        ReleaseCommand("smoke_classifier_distribution_parity", [sys.executable, str(root / "tools" / "smoke_classifier_distribution_parity.py")], 120),
+        ReleaseCommand("smoke_runtime_scheduler_failure_isolation", [sys.executable, str(root / "tools" / "smoke_runtime_scheduler_failure_isolation.py")], 120),
+        ReleaseCommand("smoke_runtime_singleton_orphan", [sys.executable, str(root / "tools" / "smoke_runtime_singleton_orphan.py")], 120),
+        ReleaseCommand("smoke_core_update_migration_sources", [sys.executable, str(root / "tools" / "smoke_core_update_migration_sources.py")], 120),
+        ReleaseCommand("smoke_expected_report_containment", [sys.executable, str(root / "tools" / "smoke_expected_report_containment.py")], 180),
+        ReleaseCommand("smoke_authenticated_report_content", [sys.executable, str(root / "tools" / "smoke_authenticated_report_content.py")], 180),
+        ReleaseCommand("smoke_mcp_jsonrpc_validation", [sys.executable, str(root / "tools" / "smoke_mcp_jsonrpc_validation.py")], 120),
+        ReleaseCommand("smoke_session_identity_roundtrip", [sys.executable, str(root / "tools" / "smoke_session_identity_roundtrip.py")], 180),
+        ReleaseCommand("smoke_codex_lifecycle_identity", [sys.executable, str(root / "tools" / "smoke_codex_lifecycle_identity.py")], 120),
         ReleaseCommand("smoke_raw_ingress_incremental_recovery", [sys.executable, str(root / "tools" / "smoke_raw_ingress_incremental_recovery.py")], 180),
         ReleaseCommand("schema validation", [sys.executable, str(root / "tools" / "validate-process-forge-schemas.py"), "--root", str(root)], 60),
         ReleaseCommand("public cleanliness", [sys.executable, str(root / "tools" / "validate-public-cleanliness.py"), "--root", str(root)], 60),
@@ -11330,6 +11362,10 @@ def iter_ndjson(path: Path) -> list[tuple[int, Any, str | None]]:
 
 
 def chat_transcript_path(project_root: Path, session_id: str) -> Path:
+    return locate_flow_root(project_root) / "runtime" / "chat" / "transcripts" / f"session-{opaque_identity_digest(session_id)}.ndjson"
+
+
+def legacy_chat_transcript_path(project_root: Path, session_id: str) -> Path:
     return locate_flow_root(project_root) / "runtime" / "chat" / "transcripts" / f"{safe_id(session_id, 'session')}.ndjson"
 
 
@@ -11390,12 +11426,14 @@ def append_chat_message(
             time.sleep(0.05)
     try:
         existing_lines = transcript.read_text(encoding="utf-8", errors="replace").splitlines() if transcript.is_file() else []
-        for line in existing_lines:
-            try:
-                existing = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if isinstance(existing, dict) and str(existing.get("message_id") or "") == requested_message_id:
+        prior_records = [
+            (path, data)
+            for path in (transcript, legacy_chat_transcript_path(project_root, session_id))
+            for _line, data, error in iter_ndjson(path)
+            if error is None and isinstance(data, dict) and data.get("session_id") == session_id
+        ]
+        for existing_path, existing in prior_records:
+            if str(existing.get("message_id") or "") == requested_message_id:
                 if event_id:
                     body = existing.get("message") if isinstance(existing.get("message"), dict) else {}
                     existing_participant = existing.get("participant") if isinstance(existing.get("participant"), dict) else {}
@@ -11407,18 +11445,18 @@ def append_chat_message(
                             "role": body.get("role"),
                             "content_hash": body.get("content_hash"),
                             "redaction": body.get("redaction", "none"),
-                            "content_ref": {"path": rel(transcript, project_root), "line": 0, "message_id": requested_message_id},
+                            "content_ref": {"path": rel(existing_path, project_root), "line": 0, "message_id": requested_message_id},
                             "content_mode": "metadata_only",
                         },
                     }
                     emit_process_event(project_root, "chat.message.recorded", session_id=session_id, assignment_id_value=assignment_id_value, process_id=process_id, stage=stage_id, subject=f"chat/{session_id}/{requested_message_id}", data=core_data, privacy="private", correlation_id=session_id, event_id=event_id)
-                return transcript, existing, {}
+                return existing_path, existing, {}
         line_number = len([line for line in existing_lines if line.strip()]) + 1
         record = {
         "schema_version": 1,
         "message_id": requested_message_id,
         "session_id": session_id,
-        "turn_id": turn_id or f"turn_{line_number}",
+        "turn_id": turn_id or f"turn_{len(prior_records) + 1}",
         "parent_message_id": parent_message_id,
         "timestamp": now_utc(),
         "participant": chat_participant(participant_id, participant_role, participant_type),
@@ -11475,9 +11513,16 @@ def append_chat_message(
 def load_chat_messages(project_root: Path, session_id: str) -> list[dict[str, Any]]:
     transcript = chat_transcript_path(project_root, session_id)
     messages: list[dict[str, Any]] = []
-    for _line_number, data, error in iter_ndjson(transcript):
-        if error is None and isinstance(data, dict):
-            messages.append(data)
+    seen: set[str] = set()
+    for path in (legacy_chat_transcript_path(project_root, session_id), transcript):
+        for _line_number, data, error in iter_ndjson(path):
+            if error is None and isinstance(data, dict) and data.get("session_id") == session_id:
+                message_id = str(data.get("message_id") or "")
+                if message_id and message_id in seen:
+                    continue
+                if message_id:
+                    seen.add(message_id)
+                messages.append(data)
     return messages
 
 
@@ -12471,11 +12516,26 @@ def parse_required_output_waivers(value: Any) -> dict[str, str]:
     return waivers
 
 
+def project_output_path(project_root: Path, raw_path: str) -> Path:
+    """Resolve a declared project output before any content is read or written."""
+    value = str(raw_path).strip().replace("\\", "/")
+    if not value or value in {".", "./"} or "\x00" in value or ":" in value or PureWindowsPath(value).drive or value.startswith("/") or ".." in value.split("/"):
+        raise ValueError("output path must be project-relative without traversal")
+    root = project_root.resolve()
+    target = (root / value).resolve()
+    if not target.is_relative_to(root) or target == root:
+        raise ValueError("output path escapes project root")
+    return target
+
+
 def task_output_path(project_root: Path, output: dict[str, Any]) -> Path | None:
     raw_path = str(output.get("path") or "").strip()
     if not raw_path:
         return None
-    return project_root / normalize_assignment_path(raw_path)
+    try:
+        return project_output_path(project_root, raw_path)
+    except (OSError, ValueError):
+        return None
 
 
 def required_output_checks(project_root: Path, task: dict[str, Any], waivers: dict[str, str] | None = None, enforce_missing: bool = True) -> list[Check]:
@@ -12505,7 +12565,11 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
     expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
     expected_artifact = normalize_assignment_path(str(expected.get("artifact") or ""))
     if expected_artifact:
-        expected_path = project_root / expected_artifact
+        try:
+            expected_path = project_output_path(project_root, expected_artifact)
+        except (OSError, ValueError):
+            checks.append(check("FAIL", "expected report path is outside project output scope"))
+            return checks
         if expected_path.is_file():
             checks.append(check("PASS", f"expected report exists: {expected_artifact}"))
         elif "expected-report" in waiver_map or "expected_report" in waiver_map:
@@ -17081,8 +17145,14 @@ def legacy_agent_presence_path(workplace_root: Path, agent_id: str) -> Path:
     return workplace_agent_presence_dir(workplace_root) / f"{safe_id(agent_id, 'agent')}.json"
 
 
+def opaque_identity_digest(identity: str) -> str:
+    """Return a filesystem-safe key without normalizing the opaque identity."""
+
+    return hashlib.sha256(identity.encode("utf-8")).hexdigest()
+
+
 def agent_presence_path(workplace_root: Path, agent_id: str, session_id: str) -> Path:
-    return workplace_agent_presence_dir(workplace_root) / safe_id(agent_id, "agent") / f"{safe_id(session_id, 'session')}.json"
+    return workplace_agent_presence_dir(workplace_root) / safe_id(agent_id, "agent") / f"session-{opaque_identity_digest(session_id)}.json"
 
 
 def project_current_session_path(project_root: Path) -> Path:
@@ -17101,12 +17171,20 @@ def iter_agent_presence_paths(workplace_root: Path) -> list[Path]:
 
 
 def iter_agent_presence(workplace_root: Path) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
+    rows: dict[tuple[str, str], tuple[bool, dict[str, Any]]] = {}
     for path in iter_agent_presence_paths(workplace_root):
         item = json_read(path)
         if isinstance(item, dict) and item:
-            rows.append(item)
-    return rows
+            agent_id, session_id = str(item.get("agent_id") or ""), str(item.get("session_id") or "")
+            canonical = agent_presence_path(workplace_root, agent_id, session_id)
+            legacy = workplace_agent_presence_dir(workplace_root) / safe_id(agent_id, "agent") / f"{safe_id(session_id, 'session')}.json"
+            if path not in {canonical, legacy, legacy_agent_presence_path(workplace_root, agent_id)}:
+                continue
+            key = (agent_id, session_id)
+            is_canonical = path == canonical
+            if key not in rows or is_canonical:
+                rows[key] = (is_canonical, item)
+    return [item for _canonical, item in rows.values()]
 
 
 def read_current_project_session(project_root: Path) -> dict[str, Any]:
@@ -17135,21 +17213,27 @@ def write_current_session_refs(workplace_root: Path, project_root: Path | None, 
 
 
 def find_agent_presence(workplace_root: Path, *, agent_id: str | None = None, session_id: str | None = None, project_id: str | None = None) -> dict[str, Any]:
-    agent_id = safe_id(agent_id, "agent") if agent_id else None
-    session_id = safe_id(session_id, "session") if session_id else None
+    requested_agent_id = safe_id(agent_id, "agent") if agent_id is not None else None
+    requested_session_id = str(session_id) if session_id is not None else None
     matches: list[dict[str, Any]] = []
     for item in iter_agent_presence(workplace_root):
-        if agent_id and str(item.get("agent_id") or "") != agent_id:
+        if requested_agent_id is not None and item.get("agent_id") != requested_agent_id:
             continue
-        if session_id and str(item.get("session_id") or "") != session_id:
+        if requested_session_id is not None and item.get("session_id") != requested_session_id:
             continue
         if project_id and str(item.get("project_id") or "") != project_id:
             continue
         matches.append(item)
     if len(matches) == 1:
         return matches[0]
-    if not matches and agent_id and not session_id:
-        return json_read(legacy_agent_presence_path(workplace_root, agent_id))
+    if not matches and requested_agent_id is not None and requested_session_id is None:
+        legacy = json_read(legacy_agent_presence_path(workplace_root, requested_agent_id))
+        if (
+            isinstance(legacy, dict)
+            and legacy.get("agent_id") == requested_agent_id
+            and (not project_id or str(legacy.get("project_id") or "") == project_id)
+        ):
+            return legacy
     return {}
 
 
@@ -17177,14 +17261,13 @@ def ttl_expired(presence: dict[str, Any], *, now: datetime | None = None) -> boo
 
 
 def update_stale_agent_presence(workplace_root: Path) -> None:
-    for path in iter_agent_presence_paths(workplace_root):
-        presence = json_read(path)
+    for presence in iter_agent_presence(workplace_root):
         if not presence:
             continue
         if str(presence.get("status")) == "online" and ttl_expired(presence):
             presence["status"] = "stale"
             presence["updated_at"] = now_utc()
-            json_write(path, presence)
+            write_agent_presence(workplace_root, presence)
             project_ref = str(presence.get("project_root") or "")
             if project_ref:
                 try:
@@ -17323,7 +17406,7 @@ def command_agent_heartbeat(args: argparse.Namespace) -> int:
     if not presence:
         print(f"FAIL: agent presence not found: agent={raw_agent or '<unspecified>'} session={raw_session or '<unspecified>'}")
         return 1
-    if raw_session and str(presence.get("session_id")) != safe_id(raw_session, "session"):
+    if raw_session and presence.get("session_id") != raw_session:
         print(f"FAIL: session mismatch for {presence.get('agent_id')}")
         return 1
     presence["status"] = "online"
@@ -17347,7 +17430,7 @@ def command_agent_checkout(args: argparse.Namespace) -> int:
     if not presence:
         print(f"FAIL: agent presence not found: agent={raw_agent or '<unspecified>'} session={raw_session or '<unspecified>'}")
         return 1
-    if raw_session and str(presence.get("session_id")) != safe_id(raw_session, "session"):
+    if raw_session and presence.get("session_id") != raw_session:
         print(f"FAIL: session mismatch for {presence.get('agent_id')}")
         return 1
     presence["status"] = "checked_out"
@@ -17368,9 +17451,9 @@ def command_agent_status(args: argparse.Namespace) -> int:
     project_id = getattr(args, "project_id", None) or (safe_id(project_root.name, "project") if project_root else None)
     rows = []
     for item in iter_agent_presence(workplace_root):
-        if getattr(args, "agent", None) and str(item.get("agent_id") or "") != safe_id(args.agent, "agent"):
+        if getattr(args, "agent", None) and item.get("agent_id") != safe_id(args.agent, "agent"):
             continue
-        if getattr(args, "session", None) and str(item.get("session_id") or "") != safe_id(args.session, "session"):
+        if getattr(args, "session", None) and item.get("session_id") != str(args.session):
             continue
         if project_id and str(item.get("project_id") or "") != project_id:
             continue
@@ -18596,7 +18679,13 @@ def build_worker_process_command(
     paths = worker_run_paths(project_root, run_id, task_id)
     capsule_path = locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml"
     prompt_path = worker_prompt_path(project_root, run_id, task_id)
-    report_path = project_root / expected_report_artifact(task)
+    try:
+        report_path = project_output_path(project_root, expected_report_artifact(task))
+        for output in normalize_required_outputs(task.get("required_outputs")):
+            if output.get("path"):
+                project_output_path(project_root, str(output["path"]))
+    except (OSError, ValueError) as exc:
+        raise SystemExit(f"FAIL: invalid worker output path: {exc}") from exc
     variables = {
         "project_root": str(project_root),
         "processforge_root": str(ROOT),
@@ -19059,10 +19148,14 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
         if not bool(output.get("required", True)):
             continue
         raw_path = output.get("path") if isinstance(output, dict) else ""
-        out_path = project_root / normalize_assignment_path(str(raw_path))
-        if not out_path.is_file():
+        out_path = task_output_path(project_root, output)
+        if out_path is None or not out_path.is_file():
             missing.append(normalize_assignment_path(str(raw_path)))
-    report_path = project_root / expected_report_artifact(task)
+    try:
+        report_path = project_output_path(project_root, expected_report_artifact(task))
+    except (OSError, ValueError) as exc:
+        print(f"FAIL: invalid expected report path: {exc}")
+        return 1
     if not report_path.is_file():
         missing.append(expected_report_artifact(task))
     paths = worker_run_paths(project_root, run_id, task_id)
@@ -19093,7 +19186,7 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
     report_content = report_path.read_text(encoding="utf-8", errors="replace")
     report_hash = sha256_text(report_content)
     attempt = str(state.get("attempt") or 1)
-    expected_report = rel(report_path, project_root)
+    expected_report = expected_report_artifact(task)
     session_id = f"pf-worker:{run_id}:{task_id}:attempt:{attempt}"
     envelope = {
         "provider": "processforge",
@@ -20813,9 +20906,9 @@ def task_verification_fingerprint(project_root: Path, task: dict[str, Any]) -> s
     expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
     expected_path = str(expected.get("artifact") or "")
     if expected_path:
-        path = project_root / normalize_assignment_path(expected_path)
-        item = {"id": "expected-report", "path": normalize_assignment_path(expected_path), "status": "missing"}
-        if path.is_file():
+        path = task_output_path(project_root, {"path": expected_path})
+        item = {"id": "expected-report", "path": normalize_assignment_path(expected_path), "status": "missing" if path else "invalid"}
+        if path and path.is_file():
             item.update({"status": "present", "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()})
         inputs.append(item)
     payload = {"assignment": task, "inputs": inputs}

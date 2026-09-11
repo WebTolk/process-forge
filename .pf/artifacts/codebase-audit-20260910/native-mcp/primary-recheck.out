@@ -1,0 +1,1009 @@
+{
+  "jsonrpc_envelope": {
+    "actual": [
+      {
+        "id": null,
+        "jsonrpc": "2.0",
+        "result": {
+          "tools": [
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read Garage context for a ProcessForge project without requiring a Ledger session.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.context"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read the current routed ProcessForge project state.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.project_state"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read bounded project initialization status for a ProcessForge project.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.project_initialization.status"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false,
+                "readOnlyHint": false
+              },
+              "description": "With apply: true only, initialize deterministic PF project state for the Ledger-bound project.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "allow_missing_workplace": {
+                    "type": "boolean"
+                  },
+                  "answers": {
+                    "type": "object"
+                  },
+                  "apply": {
+                    "type": "boolean"
+                  },
+                  "coordination_mode": {
+                    "enum": [
+                      "inherit",
+                      "simple",
+                      "organized"
+                    ],
+                    "type": "string"
+                  },
+                  "force": {
+                    "type": "boolean"
+                  },
+                  "platforms": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "process": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "project_type": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "specializations": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.project_initialization.initialize"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false,
+                "readOnlyHint": false
+              },
+              "description": "With apply: true only, repair deterministic PF snapshot state for the Ledger-bound project.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "apply": {
+                    "type": "boolean"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "repair_action": {
+                    "enum": [
+                      "refresh_context",
+                      "restore_deterministic_artifacts",
+                      "install_codex_hooks"
+                    ],
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.project_initialization.repair"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Compatibility alias for the current declarative work state.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.work_state"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read the current declarative ProcessForge work state.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.work.state"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false,
+                "readOnlyHint": false
+              },
+              "description": "Start or continue governed ProcessForge work from a high-level objective.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "objective": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "process_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "objective"
+                ],
+                "type": "object"
+              },
+              "name": "pf.work.start"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false,
+                "readOnlyHint": false
+              },
+              "description": "Advance governed work using a declared outcome and evidence.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": true,
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "type": "array"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "outcome": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "outcome"
+                ],
+                "type": "object"
+              },
+              "name": "pf.work.transition"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Resolve a ProcessForge project or selected knowledge resource.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "resource_id": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.resolve"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Search only fresh snapshot-authorized local resources before using broader search.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "limit": {
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "limitstart": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "offset": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "query": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.search"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read derived workplace ledger state.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.workplace_state"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read a bounded current-context projection for the Ledger-bound session.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.session_context"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read paginated private transcript messages for the Ledger-bound session.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "before": {
+                    "type": "string"
+                  },
+                  "cursor": {
+                    "type": "string"
+                  },
+                  "limit": {
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "roles": {
+                    "items": {
+                      "enum": [
+                        "user",
+                        "assistant",
+                        "system"
+                      ],
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.session_chat"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read bounded normalized activity facts for the Ledger-bound session.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "limit": {
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.session_activity"
+            }
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "jsonrpc": "2.0",
+        "result": {
+          "tools": [
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read Garage context for a ProcessForge project without requiring a Ledger session.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.context"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read the current routed ProcessForge project state.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.project_state"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read bounded project initialization status for a ProcessForge project.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.project_initialization.status"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false,
+                "readOnlyHint": false
+              },
+              "description": "With apply: true only, initialize deterministic PF project state for the Ledger-bound project.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "allow_missing_workplace": {
+                    "type": "boolean"
+                  },
+                  "answers": {
+                    "type": "object"
+                  },
+                  "apply": {
+                    "type": "boolean"
+                  },
+                  "coordination_mode": {
+                    "enum": [
+                      "inherit",
+                      "simple",
+                      "organized"
+                    ],
+                    "type": "string"
+                  },
+                  "force": {
+                    "type": "boolean"
+                  },
+                  "platforms": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "process": {
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "project_type": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "specializations": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.project_initialization.initialize"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false,
+                "readOnlyHint": false
+              },
+              "description": "With apply: true only, repair deterministic PF snapshot state for the Ledger-bound project.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "apply": {
+                    "type": "boolean"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "repair_action": {
+                    "enum": [
+                      "refresh_context",
+                      "restore_deterministic_artifacts",
+                      "install_codex_hooks"
+                    ],
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.project_initialization.repair"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Compatibility alias for the current declarative work state.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.work_state"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read the current declarative ProcessForge work state.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.work.state"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false,
+                "readOnlyHint": false
+              },
+              "description": "Start or continue governed ProcessForge work from a high-level objective.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "objective": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "process_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "objective"
+                ],
+                "type": "object"
+              },
+              "name": "pf.work.start"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": false,
+                "openWorldHint": false,
+                "readOnlyHint": false
+              },
+              "description": "Advance governed work using a declared outcome and evidence.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": true,
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "type": "array"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "outcome": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "outcome"
+                ],
+                "type": "object"
+              },
+              "name": "pf.work.transition"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Resolve a ProcessForge project or selected knowledge resource.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "resource_id": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.resolve"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Search only fresh snapshot-authorized local resources before using broader search.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "limit": {
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "limitstart": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "offset": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "query": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.search"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read derived workplace ledger state.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.workplace_state"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read a bounded current-context projection for the Ledger-bound session.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.session_context"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read paginated private transcript messages for the Ledger-bound session.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "before": {
+                    "type": "string"
+                  },
+                  "cursor": {
+                    "type": "string"
+                  },
+                  "limit": {
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "roles": {
+                    "items": {
+                      "enum": [
+                        "user",
+                        "assistant",
+                        "system"
+                      ],
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.session_chat"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false,
+                "readOnlyHint": true
+              },
+              "description": "Read bounded normalized activity facts for the Ledger-bound session.",
+              "inputSchema": {
+                "additionalProperties": false,
+                "properties": {
+                  "limit": {
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "project_root": {
+                    "type": "string"
+                  },
+                  "session_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "name": "pf.session_activity"
+            }
+          ]
+        }
+      },
+      {
+        "id": 3,
+        "jsonrpc": "2.0",
+        "result": {
+          "content": [
+            {
+              "text": "{\"error\": {\"code\": \"missing_project_root\", \"remediation\": {\"checks\": [\"Call pf.context, pf.search, pf.resolve, or pf.work.start with project_root set to a valid ProcessForge project.\"], \"kind\": \"project_root_required\", \"summary\": \"Garage read-only tools can run without a Ledger session, but need project_root when no session is supplied.\"}}}",
+              "type": "text"
+            }
+          ],
+          "isError": true
+        }
+      }
+    ],
+    "case": "JSON-RPC envelope and params validation",
+    "expected": [
+      "notification without id produces no response",
+      "non-2.0 envelope is rejected as invalid request",
+      "non-object tools/call arguments are rejected as invalid params"
+    ],
+    "requests": [
+      {
+        "method": "tools/list"
+      },
+      {
+        "id": 2,
+        "jsonrpc": "1.0",
+        "method": "tools/list"
+      },
+      {
+        "id": 3,
+        "jsonrpc": "2.0",
+        "method": "tools/call",
+        "params": {
+          "arguments": [],
+          "name": "pf.context"
+        }
+      }
+    ]
+  },
+  "probe": "native PF stdio MCP",
+  "repo_head": "",
+  "session_binding": {
+    "actual": {
+      "error": {
+        "code": "unknown_session",
+        "remediation": {
+          "checks": [
+            "Use the current session id recorded by Codex hook ingress.",
+            "Verify the session project root matches the MCP request project_root."
+          ],
+          "kind": "ledger_session_binding_invalid",
+          "summary": "The supplied session id is not bound to the requested project in Ledger."
+        }
+      }
+    },
+    "case": "case-sensitive session id",
+    "expected": "successful pf.session_context because agent-checkin accepted and routed this exact id",
+    "is_error": true,
+    "request_session": "Case-Session"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "baseline_head": "901d0551773fe7a5b382b89ebe95b212b0747e83",
+  "baseline_public_file_count": 960,
+  "changed_tracked_public_files": {
+    "checksums/processforge.sha256": "74f8901dc6899def93e5d6debf4607669dffa688a23226e333adad2b24cebb50",
+    "docs/concepts/agent-session-model.md": "60dfbb987607d8bbe514ddfe2e29c3afaebae13d0abfc04aad04e2cac9b64fe6",
+    "docs/concepts/runtime-mcp.md": "69eb213cdc030bef7a80b605b72f5e2312d974c7cf80dd115b67e24860288de0",
+    "docs/concepts/runtime-model.md": "65380bcae2a5324814981091567515bea29db54be780caf1c5f354a718e6b502",
+    "docs/ru/concepts/agent-session-model.md": "cc272807e6f91af383e160a8fb646c077b810f1c8b317cabd6d2f75005953f11",
+    "docs/ru/concepts/runtime-mcp.md": "6ff7b331001685feb926f01eab587395050c34d21d7fc686b83165ab6fe2812f",
+    "docs/ru/concepts/runtime-model.md": "62a9f93050b5f17d2a49b4bb3a5e67a0a9b2d057294082410e4cb8f341d55f37",
+    "src/processforge_core/core_update.py": "3628f8201016953e43a7d599db7db9d33901713363f4d973df9af29eef1a088b",
+    "src/processforge_core/local_resource_search.py": "3a1d24e24dbc1131d3aac60a041128677027f827414dc2767d50759eb09fc336",
+    "tools/pf_runtime/codex_hooks.py": "b870574bdf8f49e65b9a57aa0461de4cd8f93ca0537abfd3cc8eb5b26d6631fb",
+    "tools/pf_runtime/host.py": "bd0fc4104c82bc53501069586ab62ea3ac319c437dfbcbc1e42575250d5add00",
+    "tools/pf_runtime/mcp_server.py": "404a7e00eb0d06097c616870ea03bd28200cf09d9c9f2a50ed3c5c8da4489bc1",
+    "tools/pf_runtime/service.py": "7bc55ff112b3a0c55cbc7054ddd32908d13844603b8ccd469b65a146c5509083",
+    "tools/processforge.py": "50402f407fba7b7c5486d6acc5db6d9818d1d939456c3761a9918e059ac9f270",
+    "tools/smoke_garage_mode_not_promoted_by_session.py": "06ca06acece4c45e7ff5621fd585c0f198a0252cc17a3809c980e68663e392fc",
+    "tools/smoke_garage_session_enhanced.py": "274c4fb12d08b538a1d8ab138e6444c912acfda4e4f6bc03c6e860f4368b791c",
+    "tools/smoke_governed_work_stage_resolution.py": "e13d6e55f65ca3bd4711f52b96cc80710dfd83300808203f748848ab5f257465",
+    "tools/smoke_long_lived_runtime.py": "f966f6baa616b38c0105f931d4cc7ca60de1c5fdb92a23c2b250bdd073e62b21",
+    "tools/smoke_project_init_local_search_mcp.py": "cdbc02e25fd6e8c3a3d6708f911c45d12d6fa46257f051a6ee39a37f689ba3e3",
+    "tools/smoke_single_agent_session_flow.py": "4f8066a9f6ea869f839bbf24f398c913afdc600acde9a8a637273298efd132ad"
+  },
+  "new_public_files": {
+    "tools/smoke_authenticated_report_content.py": "db395e0330b168bd1f90a71a049112c6378bfb077f5ea175924dd56bebaa42e7",
+    "tools/smoke_classifier_distribution_parity.py": "46c24bf910f6c019cefb67b8d692891de964e24f4ca7f1144680c6eb4258c335",
+    "tools/smoke_codex_lifecycle_identity.py": "c89adb20182f18a75e33fa087bbf4b6d74da7f54b3b1ddfc721db44a270ac35b",
+    "tools/smoke_core_update_migration_sources.py": "7a3d7ce89075e14d66689a80fda973aac2781321691a47da162ad49b21556ffd",
+    "tools/smoke_expected_report_containment.py": "82fca981e2f204cf63585065f2a853ec5e1d96d671dc51ffe84101fff3b5ca83",
+    "tools/smoke_mcp_jsonrpc_validation.py": "ef309d0bd141abc01338a50cdcea0f665340d873835e8dbed6b3447a54ef566a",
+    "tools/smoke_runtime_scheduler_failure_isolation.py": "b897f478d44ed4af4eebb7d83ed7e02efd6a5438e5f516188a8c6f50bd4e67d0",
+    "tools/smoke_runtime_singleton_orphan.py": "694ddcd1d9f3eeec0fea0556638f339c91bdfc13e60956e2b458df211491a57c",
+    "tools/smoke_search_file_root_containment.py": "8d8545febb388a8f5af1107bb70504d1b0167d5e95a6de44188d9b7469d3c277",
+    "tools/smoke_search_multiple_roots.py": "27449f81c56b3029eea4447812361b7d887f3a8004b27f8bb1d303973044feea",
+    "tools/smoke_session_identity_roundtrip.py": "8f0f3fb66b13091b5bdabae5c1f5080fe1595fd3a962221dec097cb8918d1815"
+  },
+  "regression_counterexamples": [
+    {
+      "test": "smoke_search_file_root_containment",
+      "current": 0,
+      "baseline": 1
+    },
+    {
+      "test": "smoke_search_multiple_roots",
+      "current": 0,
+      "baseline": 1
+    },
+    {
+      "test": "smoke_classifier_distribution_parity",
+      "current": 0,
+      "baseline": 1
+    },
+    {
+      "test": "smoke_runtime_scheduler_failure_isolation",
+      "current": 0,
+      "baseline": 1
+    },
+    {
+      "test": "smoke_runtime_singleton_orphan",
+      "current": 0,
+      "baseline": 1
+    },
+    {
+      "test": "smoke_core_update_migration_sources",
+      "current": 0,
+      "baseline": 1
+    },
+    {
+      "test": "smoke_expected_report_containment",
+      "current": 0,
+      "baseline": 1
+    },
+    {
+      "test": "smoke_authenticated_report_content",
+      "current": 0,
+      "baseline": 1
+    },
+    {
+      "test": "smoke_mcp_jsonrpc_validation",
+      "current": 0,
+      "baseline": 1
+    },
+    {
+      "test": "smoke_session_identity_roundtrip",
+      "current": 0,
+      "baseline": 1
+    },
+    {
+      "test": "smoke_codex_lifecycle_identity",
+      "current": 0,
+      "baseline": 1
+    }
+  ],
+  "scoped_diff_check": "PASS",
+  "boundary": "Source-only uncommitted working tree; unrelated PF artifacts preserved."
+}

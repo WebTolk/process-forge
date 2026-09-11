@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "run": {
+    "id": "core-a01-a11-wave1-20260911",
+    "title": "A09 A01 and Runtime safety remediation",
+    "process": "multi-agent-task-orchestration"
+  },
+  "orchestrator": {
+    "role": "orchestrator",
+    "responsibilities": [
+      "design",
+      "independent regression acceptance",
+      "sequential integration"
+    ]
+  },
+  "runtime": {
+    "default_driver": "codex-exec",
+    "supervisor_profile": "default",
+    "start_policy": "manual",
+    "max_parallel_workers": 3
+  },
+  "workers": [
+    {
+      "id": "a09-classifier",
+      "title": "a09-classifier",
+      "role": "worker",
+      "process": "task-batch-execution",
+      "objective": "Implement the bounded repair brief .pf/artifacts/core-a01-a11-20260911/a09-classifier-brief.md",
+      "execution_mode": "implementation",
+      "writer": true,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "high",
+      "allowed_files": [
+        "tools/processforge.py",
+        "tools/smoke_classifier_distribution_parity.py",
+        ".pf/artifacts/core-a01-a11-20260911/a09-classifier/**",
+        ".pf/tmp/a09-classifier/**"
+      ],
+      "allowed_read_files": [
+        "tools/processforge.py",
+        "tools/smoke_classifier_distribution_parity.py",
+        "src/processforge_core/**",
+        "tools/pf_runtime/**",
+        "tools/processforge.py",
+        "tools/*smoke*.py",
+        "tools/*helpers*.py",
+        "docs/concepts/**",
+        ".pf/artifacts/core-a01-a11-20260911/**",
+        ".pf/artifacts/codebase-audit-20260910/**",
+        ".pf/AGENTS.md",
+        ".pf/contexts/**"
+      ],
+      "forbidden_files": [
+        "VERSION",
+        "CHANGELOG.md",
+        "checksums/**",
+        ".pf/artifacts/codebase-audit-20260910/**",
+        ".pf/process-forge.yaml"
+      ],
+      "required_sources": [
+        ".pf/artifacts/core-a01-a11-20260911/a09-classifier-brief.md",
+        ".pf/artifacts/core-a01-a11-20260911/design.md"
+      ],
+      "required_outputs": [
+        {
+          "id": "a09-classifier-report",
+          "path": ".pf/artifacts/core-a01-a11-20260911/a09-classifier/report.md",
+          "type": "markdown",
+          "required": true
+        }
+      ],
+      "expected_report_artifact": ".pf/artifacts/core-a01-a11-20260911/a09-classifier/report.md",
+      "runtime_driver": "codex-exec",
+      "depends_on": [],
+      "allow_subagents": false,
+      "worker_may_rebuild_context": false
+    },
+    {
+      "id": "a01-search",
+      "title": "a01-search",
+      "role": "worker",
+      "process": "task-batch-execution",
+      "objective": "Implement the bounded repair brief .pf/artifacts/core-a01-a11-20260911/a01-search-brief.md",
+      "execution_mode": "implementation",
+      "writer": true,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "high",
+      "allowed_files": [
+        "src/processforge_core/local_resource_search.py",
+        "tools/smoke_search_file_root_containment.py",
+        ".pf/artifacts/core-a01-a11-20260911/a01-search/**",
+        ".pf/tmp/a01-search/**"
+      ],
+      "allowed_read_files": [
+        "src/processforge_core/local_resource_search.py",
+        "tools/smoke_search_file_root_containment.py",
+        "src/processforge_core/**",
+        "tools/pf_runtime/**",
+        "tools/processforge.py",
+        "tools/*smoke*.py",
+        "tools/*helpers*.py",
+        "docs/concepts/**",
+        ".pf/artifacts/core-a01-a11-20260911/**",
+        ".pf/artifacts/codebase-audit-20260910/**",
+        ".pf/AGENTS.md",
+        ".pf/contexts/**"
+      ],
+      "forbidden_files": [
+        "VERSION",
+        "CHANGELOG.md",
+        "checksums/**",
+        ".pf/artifacts/codebase-audit-20260910/**",
+        ".pf/process-forge.yaml"
+      ],
+      "required_sources": [
+        ".pf/artifacts/core-a01-a11-20260911/a01-search-brief.md",
+        ".pf/artifacts/core-a01-a11-20260911/design.md"
+      ],
+      "required_outputs": [
+        {
+          "id": "a01-search-report",
+          "path": ".pf/artifacts/core-a01-a11-20260911/a01-search/report.md",
+          "type": "markdown",
+          "required": true
+        }
+      ],
+      "expected_report_artifact": ".pf/artifacts/core-a01-a11-20260911/a01-search/report.md",
+      "runtime_driver": "codex-exec",
+      "depends_on": [],
+      "allow_subagents": false,
+      "worker_may_rebuild_context": false
+    },
+    {
+      "id": "a0310-runtime",
+      "title": "a0310-runtime",
+      "role": "worker",
+      "process": "task-batch-execution",
+      "objective": "Implement the bounded repair brief .pf/artifacts/core-a01-a11-20260911/a0310-runtime-brief.md",
+      "execution_mode": "implementation",
+      "writer": true,
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "high",
+      "allowed_files": [
+        "tools/pf_runtime/service.py",
+        "tools/smoke_runtime_scheduler_failure_isolation.py",
+        "tools/smoke_runtime_singleton_orphan.py",
+        ".pf/artifacts/core-a01-a11-20260911/a0310-runtime/**",
+        ".pf/tmp/a0310-runtime/**"
+      ],
+      "allowed_read_files": [
+        "tools/pf_runtime/service.py",
+        "tools/smoke_runtime_scheduler_failure_isolation.py",
+        "tools/smoke_runtime_singleton_orphan.py",
+        "src/processforge_core/**",
+        "tools/pf_runtime/**",
+        "tools/processforge.py",
+        "tools/*smoke*.py",
+        "tools/*helpers*.py",
+        "docs/concepts/**",
+        ".pf/artifacts/core-a01-a11-20260911/**",
+        ".pf/artifacts/codebase-audit-20260910/**",
+        ".pf/AGENTS.md",
+        ".pf/contexts/**"
+      ],
+      "forbidden_files": [
+        "VERSION",
+        "CHANGELOG.md",
+        "checksums/**",
+        ".pf/artifacts/codebase-audit-20260910/**",
+        ".pf/process-forge.yaml"
+      ],
+      "required_sources": [
+        ".pf/artifacts/core-a01-a11-20260911/a0310-runtime-brief.md",
+        ".pf/artifacts/core-a01-a11-20260911/design.md"
+      ],
+      "required_outputs": [
+        {
+          "id": "a0310-runtime-report",
+          "path": ".pf/artifacts/core-a01-a11-20260911/a0310-runtime/report.md",
+          "type": "markdown",
+          "required": true
+        }
+      ],
+      "expected_report_artifact": ".pf/artifacts/core-a01-a11-20260911/a0310-runtime/report.md",
+      "runtime_driver": "codex-exec",
+      "depends_on": [],
+      "allow_subagents": false,
+      "worker_may_rebuild_context": false
+    }
+  ],
+  "integration": {
+    "required": true,
+    "role": "orchestrator",
+    "expected_output": ".pf/artifacts/core-a01-a11-20260911/integration-report.md"
+  },
+  "metadata": {
+    "carrier_run": "garage-remediate-audited-a01-a11-defects-with-bounded-junior-pf-shell-wo",
+    "authorization": "Explicit user request to implement A01-A11 with PF shell workers; source-only scope."
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "run-record",
+    "status": "ready",
+    "path": ".pf/artifacts/codebase-audit-20260910/plan.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-has-context",
+    "status": "passed",
+    "summary": "Current source context fresh; current baseline recorded; three disjoint audit-only junior shell assignments specified."
+  }
+]

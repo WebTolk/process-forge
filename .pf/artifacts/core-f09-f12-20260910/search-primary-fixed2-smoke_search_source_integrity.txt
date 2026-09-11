@@ -1,0 +1,44 @@
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_search_source_integrity.py", line 139, in main
+    return check(Path(raw))
+  File "D:\Dev\process-forge\tools\smoke_search_source_integrity.py", line 103, in check
+    assert refreshed["action"] == "rebuild" and refreshed["after"]["status"] == "fresh", refreshed
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'schema_version': 1, 'kind': 'pf.search_index.maintenance_tick', 'action': 'failed_rebuild', 'before': {'schema_version': 4, 'kind': 'pf.search_index.status', 'path': 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-search-integrity-knwn674w\\.pf\\runtime\\local-resource-search\\search.sqlite', 'sqlite': {'sqlite_version': '3.50.4', 'fts5_available': True}, 'status': 'degraded', 'generation': None, 'resource_count': 0, 'document_count': 0, 'stale_resource_count': 0, 'failed_file_count': 0, 'last_successful_refresh': None, 'last_full_reconciliation': None, 'error': 'index_schema_mismatch'}, 'after': {'schema_version': 4, 'kind': 'pf.search_index.status', 'path': 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-search-integrity-knwn674w\\.pf\\runtime\\local-resource-search\\search.sqlite', 'sqlite': {'sqlite_version': '3.50.4', 'fts5_available': True}, 'status': 'degraded', 'generation': None, 'resource_count': 0, 'document_count': 0, 'stale_resource_count': 0, 'failed_file_count': 0, 'last_successful_refresh': None, 'last_full_reconciliation': None, 'error': "[WinError 32] ������� �� ����� �������� ������ � �����, ��� ��� ���� ���� ����� ������ ���������: 'C:\\\\Users\\\\musst\\\\AppData\\\\Local\\\\Temp\\\\pf-search-integrity-knwn674w\\\\.pf\\\\runtime\\\\local-resource-search\\\\search.sqlite'"}, 'result': None}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\Lib\shutil.py", line 701, in _rmtree_unsafe
+    os.unlink(fullname)
+    ~~~~~~~~~^^^^^^^^^^
+PermissionError: [WinError 32] ������� �� ����� �������� ������ � �����, ��� ��� ���� ���� ����� ������ ���������: 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-search-integrity-knwn674w\\.pf\\runtime\\local-resource-search\\search.sqlite'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_search_source_integrity.py", line 143, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_search_source_integrity.py", line 138, in main
+    with tempfile.TemporaryDirectory(prefix="pf-search-integrity-") as raw:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py", line 971, in __exit__
+    self.cleanup()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py", line 975, in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py", line 955, in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\Lib\shutil.py", line 852, in rmtree
+    _rmtree_impl(path, dir_fd, onexc)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\Lib\shutil.py", line 705, in _rmtree_unsafe
+    onexc(os.unlink, fullname, err)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py", line 930, in onexc
+    _os.unlink(path)
+    ~~~~~~~~~~^^^^^^
+PermissionError: [WinError 32] ������� �� ����� �������� ������ � �����, ��� ��� ���� ���� ����� ������ ���������: 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-search-integrity-knwn674w\\.pf\\runtime\\local-resource-search\\search.sqlite'

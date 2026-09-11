@@ -1,0 +1,23 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "work-transition",
+    "--project-root",
+    ".",
+    "--run",
+    "garage-remediate-python-core-audit-f01-project-search-authorization-and",
+    "--outcome",
+    "completed",
+    "--evidence-file",
+    ".pf/artifacts/core-f01-f02-20260910/review-evidence.json",
+    "--notes",
+    "Independent reviewer PASS, primary adjudication accepted and scoped run-doctors PASS; documented source qualification failure not hidden.",
+    "--json"
+  ],
+  "started_at": "2026-09-10T05:42:11.702705+00:00",
+  "elapsed_seconds": 19.081,
+  "exit_code": 0,
+  "stdout": "review-transition.stdout.txt",
+  "stderr": "review-transition.stderr.txt"
+}

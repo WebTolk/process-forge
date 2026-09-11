@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "changed_public_tracked": [
+    "checksums/processforge.sha256",
+    "src/processforge_core/core_update.py",
+    "src/processforge_core/garage.py",
+    "tools/smoke_core_update_manifest.py",
+    "tools/smoke_garage_cross_project_security.py",
+    "tools/smoke_garage_no_hooks_sessionless.py"
+  ],
+  "unexpected": [],
+  "basis": "Byte hashes of every tracked public file before worker launch; existing dirty baseline preserved outside this bounded scope."
+}

@@ -5,6 +5,11 @@
 stdin/stdout pipes. Этот сервер не регистрируется как Windows scheduled task или
 detached background service.
 
+Транспорт проверяет структуру JSON-RPC 2.0 и объявленную схему аргументов
+инструмента до выполнения запроса. Ошибки разбора JSON, структуры запроса и
+параметров имеют разные коды. Уведомления не создают ответов, в том числе при
+ошибке выполнения; явно заданный `id: null` остаётся запросом.
+
 Garage read tools принимают явный `project_root` и не требуют session identity,
 hooks, daemon, Ledger event, Director process или chat transcript. Session и
 Forge tools по-прежнему требуют session identity (`--session`,

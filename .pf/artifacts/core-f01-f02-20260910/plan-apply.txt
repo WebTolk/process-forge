@@ -1,0 +1,105 @@
+STATUS: fresh
+WROTE: .pf/contexts/project-context.snapshot.yaml
+WROTE: .pf/contexts/project-context.snapshot.md
+WROTE: .pf/contexts/project-context.snapshots/ctx-20260910-044833-2182bf.yaml
+WROTE: .pf/artifacts/project-context-refresh-report.md
+WROTE: .pf/runtime/cache/workplace-context.snapshot.yaml
+SEARCH_INDEX_SCOPE: workplace
+SEARCH_INDEX_REPORT: runtime/search/latest-maintenance.yaml
+SEARCH_INDEX: workplace action=refresh status=fresh generation=6725752f76bd6f5d documents=85
+TELEMETRY: .pf/runtime/telemetry/project-context-refresh-20260910T044818z.ndjson
+WROTE: .pf/contexts/assignment-capsules/f01-search.capsule.yaml
+WROTE: .pf/runs/core-f01-f02-shell-20260910/worker-prompts/f01-search.md
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: open
+PASS: referenced run exists: core-f01-f02-shell-20260910
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/f01-search.yaml has no private absolute paths
+WARN: required output pending: .pf/artifacts/core-f01-f02-20260910/f01-search/report.md
+WARN: expected report pending: .pf/artifacts/core-f01-f02-20260910/f01-search/report.md
+WROTE: .pf/contexts/assignment-capsules/f02-update.capsule.yaml
+WROTE: .pf/runs/core-f01-f02-shell-20260910/worker-prompts/f02-update.md
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: open
+PASS: referenced run exists: core-f01-f02-shell-20260910
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/f02-update.yaml has no private absolute paths
+WARN: required output pending: .pf/artifacts/core-f01-f02-20260910/f02-update/report.md
+WARN: expected report pending: .pf/artifacts/core-f01-f02-20260910/f02-update/report.md
+WROTE: .pf/contexts/assignment-capsules/f0102-assurance.capsule.yaml
+WROTE: .pf/runs/core-f01-f02-shell-20260910/worker-prompts/f0102-assurance.md
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: open
+PASS: referenced run exists: core-f01-f02-shell-20260910
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/f0102-assurance.yaml has no private absolute paths
+WARN: required output pending: .pf/artifacts/core-f01-f02-20260910/f0102-assurance/report.md
+WARN: expected report pending: .pf/artifacts/core-f01-f02-20260910/f0102-assurance/report.md
+WROTE: .pf/contexts/assignment-capsules/f0102-review.capsule.yaml
+WROTE: .pf/runs/core-f01-f02-shell-20260910/worker-prompts/f0102-review.md
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: open
+PASS: referenced run exists: core-f01-f02-shell-20260910
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/f0102-review.yaml has no private absolute paths
+WARN: required output pending: .pf/artifacts/core-f01-f02-20260910/f0102-review/report.md
+WARN: expected report pending: .pf/artifacts/core-f01-f02-20260910/f0102-review/report.md
+PASS: run.schema_version present
+PASS: run.id present
+PASS: run.title present
+PASS: run.process present
+PASS: run.status present
+PASS: run.created_at present
+PASS: run.updated_at present
+PASS: run.tasks present
+PASS: run status valid: in_progress
+PASS: summary artifact not yet required: .pf/runs/core-f01-f02-shell-20260910/summary.md
+PASS: task index status matches run: in_progress
+PASS: handoff artifact not yet required: .pf/handoffs/runs/core-f01-f02-shell-20260910-handoff.md
+PASS: process exists: multi-agent-task-orchestration
+PASS: .pf/runs/core-f01-f02-shell-20260910/run.yaml has no private absolute paths
+PASS: task id unique: f01-search
+PASS: task status valid for f01-search: open
+PASS: assignment exists for f01-search: .pf/assignments/f01-search.yaml
+PASS: f01-search run_id matches run
+PASS: task id unique: f02-update
+PASS: task status valid for f02-update: open
+PASS: assignment exists for f02-update: .pf/assignments/f02-update.yaml
+PASS: f02-update run_id matches run
+PASS: task id unique: f0102-assurance
+PASS: task status valid for f0102-assurance: open
+PASS: assignment exists for f0102-assurance: .pf/assignments/f0102-assurance.yaml
+PASS: f0102-assurance run_id matches run
+PASS: task id unique: f0102-review
+PASS: task status valid for f0102-review: open
+PASS: assignment exists for f0102-review: .pf/assignments/f0102-review.yaml
+PASS: f0102-review run_id matches run
+WROTE: .pf/runs/core-f01-f02-shell-20260910/orchestration-summary.md

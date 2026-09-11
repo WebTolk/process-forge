@@ -1,0 +1,266 @@
+[
+  {
+    "probe": "deleted_evidence_accepted",
+    "result": {
+      "before": "incomplete",
+      "file_exists": false,
+      "after": "stage_transitioned",
+      "stage": {
+        "id": "build",
+        "title": "Build",
+        "status": "in_progress"
+      },
+      "input_state": [
+        {
+          "id": "brief",
+          "kind": "input",
+          "satisfied": true,
+          "evidence": {
+            "kind": "artifact",
+            "artifact_id": "brief",
+            "status": "ready",
+            "path": "brief.md",
+            "recorded_at": "2026-09-08T08:00:25Z",
+            "sha256": "sha256:9c5d9c7dabc3e7e15cafee39473aff813c690746c2074c29378bda975bb024b0"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "probe": "new_failure_ignored",
+    "result": {
+      "action": "stage_transitioned",
+      "stage": {
+        "id": "verify",
+        "title": "Verify",
+        "status": "in_progress"
+      },
+      "history": {
+        "stage_id": "build",
+        "status": "completed",
+        "started_at": "2026-09-08T08:00:25Z",
+        "completed_at": "2026-09-08T08:00:26Z",
+        "outcome": "completed",
+        "next_stage_id": "verify",
+        "evidence": [
+          {
+            "kind": "artifact",
+            "artifact_id": "change",
+            "status": "ready",
+            "summary": "change is ready",
+            "recorded_at": "2026-09-08T08:00:26Z"
+          },
+          {
+            "kind": "gate",
+            "gate_id": "build-ready",
+            "status": "passed",
+            "summary": "build-ready passed",
+            "recorded_at": "2026-09-08T08:00:26Z"
+          },
+          {
+            "kind": "gate",
+            "gate_id": "prepare-ready",
+            "status": "failed",
+            "summary": "Revalidation failed",
+            "recorded_at": "2026-09-08T08:00:26Z"
+          },
+          {
+            "kind": "input",
+            "input_id": "brief",
+            "status": "failed",
+            "summary": "Input is invalid",
+            "recorded_at": "2026-09-08T08:00:26Z"
+          }
+        ],
+        "notes": ""
+      }
+    }
+  },
+  {
+    "probe": "interrupted_completion_unrecoverable",
+    "result": {
+      "error": "audit simulated disk failure after assignment commit",
+      "run_status": "in_progress",
+      "assignment_status": "done",
+      "retry": {
+        "schema_version": 1,
+        "kind": "pf.work.execution",
+        "action": "blocked",
+        "reason": "work_is_terminal",
+        "run_id": "garage-audit-interrupted-final-transition",
+        "assignment_id": "audit-interrupted-final-transition",
+        "run_status": "in_progress",
+        "assignment_status": "done"
+      }
+    }
+  },
+  {
+    "probe": "search_fixture_context",
+    "result": {
+      "check": {
+        "snapshot_id": "ctx-20260908-080033-a175ce",
+        "snapshot_sha256": "sha256:bc595f8ccea879348fffc8b6010b011ccaa76cbf58c2868af72e2f5e8986c26c",
+        "status": "fresh",
+        "fresh": true,
+        "stale": false,
+        "broken": false,
+        "updates_available": [],
+        "stale_resources": [],
+        "broken_refs": [],
+        "recommended_action": "continue",
+        "policy_action": "continue",
+        "policy": {
+          "action": "continue"
+        },
+        "health": {
+          "status": "pass"
+        },
+        "readiness": {
+          "context": {
+            "status": "fresh"
+          },
+          "resources": {
+            "status": "fresh",
+            "blockers": []
+          },
+          "execution": {
+            "status": "ready",
+            "missing_capabilities": [],
+            "blockers": []
+          }
+        },
+        "resource_readiness": {
+          "status": "fresh",
+          "blockers": []
+        },
+        "execution_readiness": {
+          "status": "ready",
+          "missing_capabilities": [],
+          "blockers": []
+        }
+      },
+      "authorized_resource_ids": [
+        "project.project:project-profile",
+        "project.project:project-artifacts"
+      ]
+    }
+  },
+  {
+    "probe": "mcp_search_project_authorization_bypass",
+    "result": {
+      "context_status": "fresh",
+      "authorized_resource_ids": [
+        "project.project:project-profile",
+        "project.project:project-artifacts"
+      ],
+      "workplace_positive_control_total": 1,
+      "resolve_b": {
+        "kind": "pf.resolve",
+        "project": {
+          "id": "project",
+          "root": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-process-execution-6wcuovhu\\project"
+        },
+        "resource": {
+          "id": "audit-b:guide",
+          "reason": "not_in_project_snapshot",
+          "status": "denied"
+        },
+        "schema_version": 1
+      },
+      "unauthorized_search": {
+        "garage_readiness": {
+          "document_count": 2,
+          "reason": "fresh_index",
+          "remediation": "none",
+          "resource_count": 2,
+          "status": "ready"
+        },
+        "index_generation": null,
+        "items": [
+          {
+            "canonical_path": "guide.md",
+            "document_id": 2,
+            "match": {
+              "fields": [
+                "title",
+                "content"
+              ],
+              "rank": -1e-06,
+              "reason": "FTS5 title/content match"
+            },
+            "match_reason": "content",
+            "metadata": {
+              "mode": "fulltext",
+              "root_ref": "{\"id\":\"global\",\"registry\":\"package_roots\",\"relative_path\":\"audit-b/guide\"}",
+              "version": ""
+            },
+            "path_ref": "audit-b:guide:guide.md",
+            "provenance": {
+              "kind": "documentation",
+              "package_id": "audit-b",
+              "snapshot_checksum": "sha256:86795a21143d2c8bf8013f9fb084d2749206ba508d80729e648001abceb52e09"
+            },
+            "relative_path": "guide.md",
+            "resource_id": "audit-b:guide",
+            "resource_type": "documentation",
+            "title": "guide.md"
+          }
+        ],
+        "kind": "pf.search",
+        "limit": 20,
+        "offset": 0,
+        "page": {
+          "limit": 20,
+          "limitstart": 0,
+          "next_limitstart": null,
+          "offset": 0,
+          "returned": 1,
+          "total": 1
+        },
+        "query": "ForbiddenAuditNeedle",
+        "results": [
+          {
+            "canonical_path": "guide.md",
+            "document_id": 2,
+            "match": {
+              "fields": [
+                "title",
+                "content"
+              ],
+              "rank": -1e-06,
+              "reason": "FTS5 title/content match"
+            },
+            "match_reason": "content",
+            "metadata": {
+              "mode": "fulltext",
+              "root_ref": "{\"id\":\"global\",\"registry\":\"package_roots\",\"relative_path\":\"audit-b/guide\"}",
+              "version": ""
+            },
+            "path_ref": "audit-b:guide:guide.md",
+            "provenance": {
+              "kind": "documentation",
+              "package_id": "audit-b",
+              "snapshot_checksum": "sha256:86795a21143d2c8bf8013f9fb084d2749206ba508d80729e648001abceb52e09"
+            },
+            "relative_path": "guide.md",
+            "resource_id": "audit-b:guide",
+            "resource_type": "documentation",
+            "title": "guide.md"
+          }
+        ],
+        "schema_version": 1,
+        "scope_key": "workplace",
+        "search": {
+          "document_count": 2,
+          "reason": "fresh_index",
+          "remediation": "none",
+          "resource_count": 2,
+          "status": "ready"
+        },
+        "search_status": "fresh",
+        "total": 1
+      }
+    }
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "version": "baseline",
+    "plan": "planned",
+    "blockers": [],
+    "outcome": "applied",
+    "child_exists": true
+  },
+  {
+    "version": "current",
+    "plan": "blocked",
+    "blockers": [
+      {
+        "code": "unowned_path_collision",
+        "path": "a.txt/child.txt",
+        "conflict_path": "a.txt"
+      }
+    ],
+    "outcome": "plan_blocked",
+    "child_exists": false
+  }
+]

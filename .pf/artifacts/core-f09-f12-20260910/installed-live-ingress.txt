@@ -1,0 +1,18 @@
+{
+  "result": "PASS",
+  "module": "D:\\.agents\\processforge\\tools\\pf_runtime\\raw_ingress_kernel.py",
+  "commit": "901d0551773fe7a5b382b89ebe95b212b0747e83",
+  "legacy_migration_decodes": {
+    "records": 0,
+    "bytes": 0
+  },
+  "subsequent_historical_decodes": 0,
+  "first_deduplicated": false,
+  "duplicate_confirmed": true,
+  "new_event_accepted": true,
+  "raw_locations": [
+    "raw/v1/2026/09/10/12.ndjson:305354",
+    "raw/v1/2026/09/10/12.ndjson:306057"
+  ],
+  "routing": "private raw acceptance only; no normalized event dispatch"
+}

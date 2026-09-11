@@ -1,0 +1,10 @@
+{
+  "test": "smoke_authenticated_report_content.py",
+  "mode": "current",
+  "returncode": 1,
+  "seconds": 17.8,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_authenticated_report_content.py"
+  ]
+}

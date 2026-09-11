@@ -1,0 +1,23 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "work-transition",
+    "--project-root",
+    ".",
+    "--run",
+    "garage-remediate-python-core-audit-f01-project-search-authorization-and",
+    "--outcome",
+    "completed",
+    "--evidence-file",
+    ".pf/artifacts/core-f01-f02-20260910/result-evidence.json",
+    "--notes",
+    "F01/F02 final result accepted, five shell tasks complete; full-source 45 PASS and 1 baseline-reproduced Runtime failure recorded as separate release boundary.",
+    "--json"
+  ],
+  "started_at": "2026-09-10T05:41:41.125379+00:00",
+  "elapsed_seconds": 14.335,
+  "exit_code": 0,
+  "stdout": "result-transition.stdout.txt",
+  "stderr": "result-transition.stderr.txt"
+}

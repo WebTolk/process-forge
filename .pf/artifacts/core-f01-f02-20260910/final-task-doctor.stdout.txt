@@ -1,0 +1,13 @@
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: done
+PASS: referenced run exists: garage-remediate-python-core-audit-f01-project-search-authorization-and
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/remediate-python-core-audit-f01-project-search-authorization-and-f02-uno.yaml has no private absolute paths
+PASS: completed task has result summary or artifact

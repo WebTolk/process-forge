@@ -1,0 +1,311 @@
+ProcessForge release-test
+RUN py_compile:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe -m py_compile D:\Dev\process-forge\tools\processforge.py D:\Dev\process-forge\bin\pf.py D:\Dev\process-forge\tools\specialization_smoke_helpers.py D:\Dev\process-forge\tools\codex_exec_worker.py
+  started_at: 2026-09-10T05:24:31Z
+PASS py_compile
+  finished_at: 2026-09-10T05:24:37Z
+  elapsed_seconds: 6.12
+RUN schema validation:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\validate-process-forge-schemas.py --root D:\Dev\process-forge
+  started_at: 2026-09-10T05:24:37Z
+PASS schema validation
+  finished_at: 2026-09-10T05:25:12Z
+  elapsed_seconds: 34.75
+RUN public cleanliness:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\validate-public-cleanliness.py --root D:\Dev\process-forge
+  started_at: 2026-09-10T05:25:12Z
+PASS public cleanliness
+  finished_at: 2026-09-10T05:25:21Z
+  elapsed_seconds: 8.62
+RUN smoke_public_cleanliness:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_public_cleanliness.py
+  started_at: 2026-09-10T05:25:21Z
+PASS smoke_public_cleanliness
+  finished_at: 2026-09-10T05:25:21Z
+  elapsed_seconds: 0.87
+RUN smoke_processforge_core_package_bootstrap:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_processforge_core_package_bootstrap.py
+  started_at: 2026-09-10T05:25:21Z
+PASS smoke_processforge_core_package_bootstrap
+  finished_at: 2026-09-10T05:25:22Z
+  elapsed_seconds: 1.01
+RUN smoke_central_event_ingress:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_central_event_ingress.py
+  started_at: 2026-09-10T05:25:22Z
+PASS smoke_central_event_ingress
+  finished_at: 2026-09-10T05:26:03Z
+  elapsed_seconds: 40.51
+RUN smoke_core_has_no_domain_knowledge_seeds:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_core_has_no_domain_knowledge_seeds.py
+  started_at: 2026-09-10T05:26:03Z
+PASS smoke_core_has_no_domain_knowledge_seeds
+  finished_at: 2026-09-10T05:26:04Z
+  elapsed_seconds: 0.99
+RUN smoke_empty_workplace_has_no_domain_resources:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_empty_workplace_has_no_domain_resources.py
+  started_at: 2026-09-10T05:26:04Z
+PASS smoke_empty_workplace_has_no_domain_resources
+  finished_at: 2026-09-10T05:26:08Z
+  elapsed_seconds: 3.93
+RUN smoke_project_classification_data_driven:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_project_classification_data_driven.py
+  started_at: 2026-09-10T05:26:08Z
+PASS smoke_project_classification_data_driven
+  finished_at: 2026-09-10T05:26:09Z
+  elapsed_seconds: 1.63
+RUN smoke_project_onboard_platform_selection:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_project_onboard_platform_selection.py
+  started_at: 2026-09-10T05:26:09Z
+PASS smoke_project_onboard_platform_selection
+  finished_at: 2026-09-10T05:26:11Z
+  elapsed_seconds: 1.19
+RUN smoke_no_hardcoded_file_project_detection:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_no_hardcoded_file_project_detection.py
+  started_at: 2026-09-10T05:26:11Z
+PASS smoke_no_hardcoded_file_project_detection
+  finished_at: 2026-09-10T05:26:11Z
+  elapsed_seconds: 0.49
+RUN smoke_optional_domain_pack_not_default:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_optional_domain_pack_not_default.py
+  started_at: 2026-09-10T05:26:11Z
+PASS smoke_optional_domain_pack_not_default
+  finished_at: 2026-09-10T05:26:12Z
+  elapsed_seconds: 0.41
+RUN smoke_domain_pack_can_classify_after_install:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_domain_pack_can_classify_after_install.py
+  started_at: 2026-09-10T05:26:12Z
+PASS smoke_domain_pack_can_classify_after_install
+  finished_at: 2026-09-10T05:26:12Z
+  elapsed_seconds: 0.45
+RUN smoke_core_process_catalog_domain_neutral:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_core_process_catalog_domain_neutral.py
+  started_at: 2026-09-10T05:26:12Z
+PASS smoke_core_process_catalog_domain_neutral
+  finished_at: 2026-09-10T05:26:14Z
+  elapsed_seconds: 1.62
+RUN smoke_core_prompts_domain_neutral:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_core_prompts_domain_neutral.py
+  started_at: 2026-09-10T05:26:14Z
+PASS smoke_core_prompts_domain_neutral
+  finished_at: 2026-09-10T05:26:14Z
+  elapsed_seconds: 0.14
+RUN smoke_runtime_no_domain_file_patterns:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_runtime_no_domain_file_patterns.py
+  started_at: 2026-09-10T05:26:14Z
+PASS smoke_runtime_no_domain_file_patterns
+  finished_at: 2026-09-10T05:26:15Z
+  elapsed_seconds: 1.25
+RUN smoke_official_packs_not_examples:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_official_packs_not_examples.py
+  started_at: 2026-09-10T05:26:15Z
+PASS smoke_official_packs_not_examples
+  finished_at: 2026-09-10T05:26:15Z
+  elapsed_seconds: 0.34
+RUN smoke_official_pack_manifest_schema:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_official_pack_manifest_schema.py
+  started_at: 2026-09-10T05:26:15Z
+PASS smoke_official_pack_manifest_schema
+  finished_at: 2026-09-10T05:26:16Z
+  elapsed_seconds: 0.38
+RUN smoke_official_software_process_available:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_official_software_process_available.py
+  started_at: 2026-09-10T05:26:16Z
+PASS smoke_official_software_process_available
+  finished_at: 2026-09-10T05:26:33Z
+  elapsed_seconds: 17.29
+RUN smoke_official_pack_not_kernel:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_official_pack_not_kernel.py
+  started_at: 2026-09-10T05:26:33Z
+PASS smoke_official_pack_not_kernel
+  finished_at: 2026-09-10T05:26:35Z
+  elapsed_seconds: 1.50
+RUN smoke_generic_workplace_no_domain_pack_active:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_generic_workplace_no_domain_pack_active.py
+  started_at: 2026-09-10T05:26:35Z
+PASS smoke_generic_workplace_no_domain_pack_active
+  finished_at: 2026-09-10T05:26:40Z
+  elapsed_seconds: 4.95
+RUN smoke_software_profile_activates_official_pack:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_software_profile_activates_official_pack.py
+  started_at: 2026-09-10T05:26:40Z
+PASS smoke_software_profile_activates_official_pack
+  finished_at: 2026-09-10T05:26:52Z
+  elapsed_seconds: 12.36
+RUN smoke_official_pack_classifier_data_driven:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_official_pack_classifier_data_driven.py
+  started_at: 2026-09-10T05:26:52Z
+PASS smoke_official_pack_classifier_data_driven
+  finished_at: 2026-09-10T05:27:17Z
+  elapsed_seconds: 25.07
+RUN smoke_official_process_can_start_minimal_run:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_official_process_can_start_minimal_run.py
+  started_at: 2026-09-10T05:27:17Z
+PASS smoke_official_process_can_start_minimal_run
+  finished_at: 2026-09-10T05:27:47Z
+  elapsed_seconds: 30.52
+RUN smoke_core_domain_neutral_still_passes:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_core_domain_neutral_still_passes.py
+  started_at: 2026-09-10T05:27:47Z
+PASS smoke_core_domain_neutral_still_passes
+  finished_at: 2026-09-10T05:28:03Z
+  elapsed_seconds: 15.19
+RUN smoke_examples_do_not_shadow_official_processes:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_examples_do_not_shadow_official_processes.py
+  started_at: 2026-09-10T05:28:03Z
+PASS smoke_examples_do_not_shadow_official_processes
+  finished_at: 2026-09-10T05:28:03Z
+  elapsed_seconds: 0.33
+RUN checksum:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\validate-process-forge-checksums.py --root D:\Dev\process-forge --check
+  started_at: 2026-09-10T05:28:03Z
+PASS checksum
+  finished_at: 2026-09-10T05:28:03Z
+  elapsed_seconds: 0.47
+RUN smoke_first_run:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_first_run.py
+  started_at: 2026-09-10T05:28:03Z
+PASS smoke_first_run
+  finished_at: 2026-09-10T05:28:18Z
+  elapsed_seconds: 14.73
+RUN smoke_runtime_driver_registry:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_runtime_driver_registry.py
+  started_at: 2026-09-10T05:28:18Z
+PASS smoke_runtime_driver_registry
+  finished_at: 2026-09-10T05:28:39Z
+  elapsed_seconds: 21.03
+RUN smoke_worker_run_shell:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_worker_run_shell.py
+  started_at: 2026-09-10T05:28:39Z
+PASS smoke_worker_run_shell
+  finished_at: 2026-09-10T05:29:54Z
+  elapsed_seconds: 74.78
+RUN smoke_worker_environment_secret_redaction:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_worker_environment_secret_redaction.py
+  started_at: 2026-09-10T05:29:54Z
+PASS smoke_worker_environment_secret_redaction
+  finished_at: 2026-09-10T05:29:54Z
+  elapsed_seconds: 0.36
+RUN smoke_worker_workspace_access:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_worker_workspace_access.py
+  started_at: 2026-09-10T05:29:54Z
+PASS smoke_worker_workspace_access
+  finished_at: 2026-09-10T05:30:08Z
+  elapsed_seconds: 13.53
+RUN smoke_codex_exec_worker:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_codex_exec_worker.py
+  started_at: 2026-09-10T05:30:08Z
+PASS smoke_codex_exec_worker
+  finished_at: 2026-09-10T05:30:21Z
+  elapsed_seconds: 13.53
+RUN smoke_codex_worker_governance:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_codex_worker_governance.py
+  started_at: 2026-09-10T05:30:21Z
+PASS smoke_codex_worker_governance
+  finished_at: 2026-09-10T05:30:22Z
+  elapsed_seconds: 0.85
+RUN smoke_mcp_codex_contract:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_mcp_codex_contract.py
+  started_at: 2026-09-10T05:30:22Z
+PASS smoke_mcp_codex_contract
+  finished_at: 2026-09-10T05:30:31Z
+  elapsed_seconds: 8.30
+RUN smoke_runtime_mcp_autostart:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_runtime_mcp_autostart.py
+  started_at: 2026-09-10T05:30:31Z
+PASS smoke_runtime_mcp_autostart
+  finished_at: 2026-09-10T05:30:31Z
+  elapsed_seconds: 0.34
+RUN smoke_central_event_replay:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_central_event_replay.py
+  started_at: 2026-09-10T05:30:31Z
+PASS smoke_central_event_replay
+  finished_at: 2026-09-10T05:30:43Z
+  elapsed_seconds: 11.75
+RUN smoke_conversation_completeness:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_conversation_completeness.py
+  started_at: 2026-09-10T05:30:43Z
+PASS smoke_conversation_completeness
+  finished_at: 2026-09-10T05:32:34Z
+  elapsed_seconds: 111.46
+RUN smoke_process_supervisor_tick:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_process_supervisor_tick.py
+  started_at: 2026-09-10T05:32:34Z
+PASS smoke_process_supervisor_tick
+  finished_at: 2026-09-10T05:32:55Z
+  elapsed_seconds: 20.45
+RUN smoke_director_inspector_boundary:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_director_inspector_boundary.py
+  started_at: 2026-09-10T05:32:55Z
+PASS smoke_director_inspector_boundary
+  finished_at: 2026-09-10T05:33:23Z
+  elapsed_seconds: 28.84
+RUN smoke_process_run_task_batch:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_process_run_task_batch.py
+  started_at: 2026-09-10T05:33:23Z
+PASS smoke_process_run_task_batch
+  finished_at: 2026-09-10T05:35:26Z
+  elapsed_seconds: 122.80
+RUN smoke_agent_ledger:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_agent_ledger.py
+  started_at: 2026-09-10T05:35:26Z
+PASS smoke_agent_ledger
+  finished_at: 2026-09-10T05:35:38Z
+  elapsed_seconds: 11.71
+RUN smoke_single_agent_session_flow:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_single_agent_session_flow.py
+  started_at: 2026-09-10T05:35:38Z
+PASS smoke_single_agent_session_flow
+  finished_at: 2026-09-10T05:35:53Z
+  elapsed_seconds: 15.39
+RUN smoke_multi_project_agent_sessions:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_multi_project_agent_sessions.py
+  started_at: 2026-09-10T05:35:53Z
+PASS smoke_multi_project_agent_sessions
+  finished_at: 2026-09-10T05:36:16Z
+  elapsed_seconds: 23.13
+RUN smoke_runtime_host_poc:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_runtime_host_poc.py
+  started_at: 2026-09-10T05:36:16Z
+PASS smoke_runtime_host_poc
+  finished_at: 2026-09-10T05:37:00Z
+  elapsed_seconds: 44.01
+RUN smoke_long_lived_runtime:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_long_lived_runtime.py
+  started_at: 2026-09-10T05:37:00Z
+FAIL smoke_long_lived_runtime
+  finished_at: 2026-09-10T05:37:32Z
+  elapsed_seconds: 32.02
+  exit: 1
+  Traceback (most recent call last):
+    File "D:\Dev\process-forge\tools\smoke_long_lived_runtime.py", line 358, in <module>
+      raise SystemExit(main())
+                       ~~~~^^
+    File "D:\Dev\process-forge\tools\smoke_long_lived_runtime.py", line 179, in main
+      first = start_runtime(workplace)
+    File "D:\Dev\process-forge\tools\smoke_long_lived_runtime.py", line 130, in start_runtime
+      return json.loads(pf("runtime", "start", "--workplace", str(workplace), "--interval", "60", "--json").stdout)
+                        ~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "D:\Dev\process-forge\tools\smoke_long_lived_runtime.py", line 33, in pf
+      raise AssertionError(f"expected {expect}, got {result.returncode}: {' '.join(args)}\n{diagnostic_text(result)}")
+  AssertionError: expected 0, got 1: runtime start --workplace C:\Users\musst\AppData\Local\Temp\pf-long-lived-runtime-ggl_3jwl\workplace --interval 60 --json
+  Command:
+    C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\processforge.py runtime start --workplace C:\Users\musst\AppData\Local\Temp\pf-long-lived-runtime-ggl_3jwl\workplace --interval 60 --json
+  
+  CWD:
+    D:\Dev\process-forge
+  
+  Timeout:
+    120s
+  
+  Exit code:
+    1
+  
+  STDERR tail:
+  FAIL: runtime exited during startup with code 1
+  
+SKIP git diff --check: fail-fast
+REPORT: .pf/runtime/release-test/latest-report.json
+REPORT: .pf/runtime/release-test/latest-report.md
+TRACE: .pf/runtime/release-test/latest-trace.ndjson
+ELAPSED: 781.40s
+RESULT: FAIL

@@ -1,0 +1,479 @@
+schema_version: 1
+capsule:
+  id: fix-required-output-checks-nameerror-per-process-forge-fix-required-outp-capsule
+  generated_at: '2026-09-07T12:08:29Z'
+  assignment_id: fix-required-output-checks-nameerror-per-process-forge-fix-required-outp
+  assignment_path: .pf/assignments/fix-required-output-checks-nameerror-per-process-forge-fix-required-outp.yaml
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260907-094912-ae667f
+  sha256: 'sha256:2751956d7d55c68afd582a55ac385080093f2a2243e3ad9b63163309fa2745cb'
+  freshness_at_creation: fresh
+context:
+  snapshot_id: ctx-20260907-094912-ae667f
+  freshness: fresh
+  required_sources:
+    []
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+assignment:
+  id: fix-required-output-checks-nameerror-per-process-forge-fix-required-outp
+  run_id: garage-fix-required-output-checks-nameerror-per-process-forge-fix-requir
+  objective: 'Fix required_output_checks NameError per Р·Р°РґР°РЅРёСЏ/process-forge-fix-required-output-checks-master-prompt.md: reproduce missing-path failure, establish Git origin, apply minimal fix, add regression tests and validate task/run/hooks behavior; no release or installed Core changes.'
+  stage: run-intake
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  process_source: processes/core/task-batch-execution.yaml
+  snapshot_id: ctx-20260907-094912-ae667f
+  snapshot_checksum: 'sha256:2751956d7d55c68afd582a55ac385080093f2a2243e3ad9b63163309fa2745cb'
+  definition:
+    schema_version: 1
+    id: task-batch-execution
+    name: Task Batch Execution
+    version: 1.0.0
+    status: active
+    description: Default single-agent process for one primary agent session to execute tasks sequentially inside one project/run with repeated work, debug, fix, review, and handoff iterations.
+    execution_mode: single_agent
+    required_capabilities:
+      - process_coordination
+      - repository_read
+      - reporting
+    hooks:
+      emit:
+        -
+          event: run.created
+          required: true
+        -
+          event: task.created
+          required: true
+        -
+          event: task.started
+          required: true
+        -
+          event: iteration.added
+          required: true
+        -
+          event: iteration.completed
+          required: true
+        -
+          event: task.completed
+          required: true
+        -
+          event: run.summary.created
+          required: true
+        -
+          event: run.completed
+          required: true
+      future_subscriptions:
+        -
+          event: task.completed
+          actions:
+            -
+              type: refresh_task_index
+        -
+          event: run.completed
+          actions:
+            -
+              type: create_handoff
+      tracking:
+        include:
+          - run_id
+          - task_id
+          - iteration_id
+          - process_id
+          - assignment_id
+          - artifact_refs
+          - actor
+          - status
+    roles:
+      -
+        id: run-coordinator
+        title: Run Coordinator
+        responsibility: Creates the run, keeps the task index coherent, and writes final summary and handoff.
+        kind: primary_agent
+        responsibilities:
+          - Creates the run, keeps the task index coherent, and writes final summary and handoff.
+      -
+        id: task-worker
+        title: Task Worker
+        responsibility: Executes task iterations and records results.
+        kind: worker_agent
+        responsibilities:
+          - Executes task iterations and records results.
+      -
+        id: reviewer
+        title: Reviewer
+        responsibility: Checks run consistency and residual risks before completion.
+        kind: primary_agent
+        responsibilities:
+          - Checks run consistency and residual risks before completion.
+    stages:
+      -
+        id: run-intake
+        title: Create or inspect run
+        description: Create the run or inspect an existing active run.
+        required_inputs:
+          []
+        produced_artifacts:
+          - run-record
+        required_role: run-coordinator
+        required_capabilities:
+          - process_coordination
+        allowed_tools:
+          - processforge-cli
+        entry_gates:
+          []
+        exit_gates:
+          - run-has-context
+        goal: Create the run or inspect an existing active run.
+        actor: primary_agent
+        gates:
+          - run-has-context
+      -
+        id: task-planning
+        title: Create or collect tasks
+        description: Create assignment-backed tasks and attach them to the run.
+        required_inputs:
+          - run-record
+        produced_artifacts:
+          - task-index
+        required_role: run-coordinator
+        required_capabilities:
+          - process_coordination
+        allowed_tools:
+          - processforge-cli
+        entry_gates:
+          - run-has-context
+        exit_gates:
+          - run-has-tasks
+        goal: Create assignment-backed tasks and attach them to the run.
+        actor: primary_agent
+        gates:
+          - run-has-tasks
+      -
+        id: task-execution-loop
+        title: Execute task iterations
+        description: Record work, debug, fix, review, test, research, handoff, or note iterations for each task.
+        required_inputs:
+          - task-index
+        produced_artifacts:
+          - task-iteration-log
+        required_role: task-worker
+        required_capabilities:
+          - repository_read
+        allowed_tools:
+          - processforge-cli
+          - test_runner
+        entry_gates:
+          - run-has-tasks
+        exit_gates:
+          - task-results-recorded
+        goal: Record work, debug, fix, review, test, research, handoff, or note iterations for each task.
+        actor: worker_agent
+        gates:
+          - task-results-recorded
+      -
+        id: task-result-fixation
+        title: Fix task results
+        description: Complete each task with a result summary or result artifact.
+        required_inputs:
+          - task-iteration-log
+        produced_artifacts:
+          - task-result
+        required_role: task-worker
+        required_capabilities:
+          - reporting
+        allowed_tools:
+          - processforge-cli
+        entry_gates:
+          - task-results-recorded
+        exit_gates:
+          - all-blocking-tasks-completed
+        goal: Complete each task with a result summary or result artifact.
+        actor: worker_agent
+        gates:
+          - all-blocking-tasks-completed
+      -
+        id: run-review
+        title: Review run results
+        description: Run run-doctor and task-doctor checks before final completion.
+        required_inputs:
+          - task-result
+        produced_artifacts:
+          - run-review
+        required_role: reviewer
+        required_capabilities:
+          - artifact_review
+        allowed_tools:
+          - processforge-cli
+        entry_gates:
+          - all-blocking-tasks-completed
+        exit_gates:
+          - run-doctor-passed
+        goal: Run run-doctor and task-doctor checks before final completion.
+        actor: primary_agent
+        gates:
+          - run-doctor-passed
+      -
+        id: run-summary
+        title: Create final run summary and handoff
+        description: Aggregate task results into a run summary and handoff.
+        required_inputs:
+          - run-review
+        produced_artifacts:
+          - run-summary
+          - run-handoff
+        required_role: run-coordinator
+        required_capabilities:
+          - reporting
+        allowed_tools:
+          - processforge-cli
+        entry_gates:
+          - run-doctor-passed
+        exit_gates:
+          - run-summary-created
+        goal: Aggregate task results into a run summary and handoff.
+        actor: primary_agent
+        gates:
+          - run-summary-created
+    artifact_definitions:
+      -
+        id: run-record
+        title: Run Record
+        owner_role: run-coordinator
+        template: run
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/run-record.md
+      -
+        id: task-index
+        title: Task Index
+        owner_role: run-coordinator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/task-index.md
+      -
+        id: task-iteration-log
+        title: Task Iteration Log
+        owner_role: task-worker
+        template: iteration
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/task-iteration-log.md
+      -
+        id: task-result
+        title: Task Result
+        owner_role: task-worker
+        template: assignment-task
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/task-result.md
+      -
+        id: run-review
+        title: Run Review
+        owner_role: reviewer
+        template: review-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/run-review.md
+      -
+        id: run-summary
+        title: Run Summary
+        owner_role: run-coordinator
+        template: validation-report-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/run-summary.md
+      -
+        id: run-handoff
+        title: Run Handoff
+        owner_role: run-coordinator
+        template: handoff-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/run-handoff.md
+    gates:
+      -
+        id: run-has-context
+        description: Run has title, objective, process id, and public-safe scope.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: run-has-tasks
+        description: Run contains at least one assignment-backed task.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: task-results-recorded
+        description: Each task has iterations and a result placeholder.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: all-blocking-tasks-completed
+        description: All blocking tasks are done before run completion.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: run-doctor-passed
+        description: run-doctor reports no failures.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: run-summary-created
+        description: Run summary and handoff exist.
+        blocking: true
+        type: checklist
+        required: true
+    required_packages:
+      - process-forge-core
+    required_templates:
+      - run
+      - assignment-task
+      - iteration
+      - review-template
+      - handoff-template
+    allowed_tools:
+      - processforge-cli
+      - test_runner
+      - validator
+    forbidden_actions:
+      - create_background_runner
+      - claim_task_without_assignment_record
+      - write_private_absolute_paths_to_public_files
+    evolve:
+      enabled: true
+      mode: optional
+      timing: end_of_run
+      default_scope: project
+      candidate_targets:
+        - knowledge_package
+        - template_package
+        - process_definition
+        - delivery_profile
+        - project_rule
+        - workplace_rule
+        - platform_contract
+      extraction_hints:
+        - Split candidates when an observation contains project-specific and platform-general parts.
+        - Default to the narrowest safe scope and require evidence before parent-platform promotion.
+        - reusable rule
+        - missing knowledge
+        - template improvement
+        - regression check
+        - process improvement
+      candidate_targeting:
+        default_scope: project
+        require_applicability: true
+        require_target: true
+        default_to_narrowest_scope: true
+      required_outputs:
+        - evolution-report
+      privacy:
+        default_sensitivity: internal
+        export_requires_sanitization: true
+        allow_private_paths: false
+      apply_policy:
+        auto_apply_global: false
+        create_candidates_only: true
+    evolution_policy:
+      active_run_upgrade:
+        default: manual_only
+      protected_artifacts:
+        - run-summary
+        - run-handoff
+      safe_changes:
+        - add_optional_iteration_kind
+        - add_non_blocking_gate
+      blocked_changes:
+        - add_file_locks_to_mvp
+        - add_background_watcher_to_mvp
+      requires_approval:
+        - change_task_status_model
+    catalog:
+      classification: PUBLIC_STABLE
+      public_surface: true
+      strict_contract: true
+    public_surface: true
+    coordination_requirements:
+      mode: simple_allowed
+      director_inbox:
+        required: false
+        optional: false
+      error_workflow:
+        mode: none
+      simple_mode_behavior: disable_director_features
+    error_handling:
+      enabled: false
+      mode: none
+      fallback_if_no_director: needs_operator
+    responsibility_boundaries:
+      operator:
+        - Provides the objective, constraints, approvals, and final acceptance.
+      primary_agent:
+        - Executes the process stages, writes required artifacts, and runs gates.
+      director:
+        - Coordinates handoffs and leases only when the effective project mode requires Director.
+      inspector:
+        - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+      worker:
+        - Works only from an assigned capsule and writes declared outputs.
+      cli_tools:
+        - Run deterministic ProcessForge checks and write machine-readable results.
+    subagent_policy:
+      allowed: false
+      require_reports: false
+      allowed_roles:
+        []
+    process_transitions:
+      []
+    stage_completion:
+      handoff_note_required: true
+    run_completion:
+      summary_required: true
+      handoff_artifact_required: true
+    process_pack:
+      package: process-forge-core
+      example_required: true
+    agent_prompt:
+      required: true

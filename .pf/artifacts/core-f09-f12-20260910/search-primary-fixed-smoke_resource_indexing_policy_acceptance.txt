@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_resource_indexing_policy_acceptance.py", line 162, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_resource_indexing_policy_acceptance.py", line 122, in main
+    assert maintenance_tick(project, admin_snapshot, workplace_root=workplace)["after"]["status"] == "fresh"
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Dev\process-forge\src\processforge_core\local_resource_search.py", line 763, in maintenance_tick
+    result = build_index(project_root, snapshot, workplace_root=workplace_root)
+  File "D:\Dev\process-forge\src\processforge_core\local_resource_search.py", line 599, in build_index
+    resources = authorized_roots(project_root, snapshot)
+  File "D:\Dev\process-forge\src\processforge_core\local_resource_search.py", line 318, in authorized_roots
+    if identity in seen:
+                   ^^^^
+NameError: name 'seen' is not defined

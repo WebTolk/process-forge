@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "worker-run",
+    "collect",
+    "--project-root",
+    ".",
+    "--task",
+    "f0102-review"
+  ],
+  "started_at": "2026-09-10T05:36:04.818767+00:00",
+  "elapsed_seconds": 5.217,
+  "exit_code": 0,
+  "stdout": "collect-review.stdout.txt",
+  "stderr": "collect-review.stderr.txt"
+}

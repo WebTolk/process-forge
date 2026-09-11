@@ -5,6 +5,11 @@ host-owned: Codex starts the Python process from Codex MCP configuration and
 owns the stdin/stdout pipes. It is not registered as a Windows scheduled task or
 detached background service.
 
+The native transport validates JSON-RPC 2.0 envelopes and advertised tool
+argument schemas before dispatch. Parse errors, invalid requests, and invalid
+parameters return distinct protocol errors. Notifications have no response,
+including when dispatch fails; an explicit null `id` remains a request.
+
 Garage read tools accept an explicit `project_root` and do not require a session identity,
 hooks, daemon, Ledger event, Director process, or chat transcript. Session and
 Forge tools still require a session identity (`--session`, `PF_MCP_SESSION_ID`,

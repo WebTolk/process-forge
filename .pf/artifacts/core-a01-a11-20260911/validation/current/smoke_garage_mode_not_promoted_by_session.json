@@ -1,0 +1,10 @@
+{
+  "test": "smoke_garage_mode_not_promoted_by_session.py",
+  "mode": "current",
+  "returncode": 0,
+  "seconds": 14.28,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_garage_mode_not_promoted_by_session.py"
+  ]
+}

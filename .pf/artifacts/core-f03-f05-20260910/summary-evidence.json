@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "run-summary",
+    "status": "ready",
+    "path": ".pf/artifacts/core-f03-f05-20260910/summary.md"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "run-handoff",
+    "status": "ready",
+    "path": ".pf/handoffs/core-f03-f05-20260910.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-summary-created",
+    "status": "passed",
+    "summary": "Summary and next-remediation handoff preserve F06-F12 and the separate Runtime/release boundary."
+  }
+]

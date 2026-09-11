@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "run-record",
+    "status": "ready",
+    "path": ".pf/runs/garage-remediate-python-core-audit-f01-project-search-authorization-and/run.yaml"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-has-context",
+    "status": "passed",
+    "summary": "Fresh context, immutable carrier capsule read, existing dirty source baseline and bounded remediation plan recorded."
+  }
+]

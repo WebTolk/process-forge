@@ -1,0 +1,144 @@
+schema_version: 1
+plan: .pf/runs/core-a01-a11-wave1-20260911/orchestrator-plan.yaml
+resolved:
+  allow_write_scope_overlap:
+    value: false
+    source: default.deny
+    behavior:
+      - assignment.overlap_policy=deny
+      - supervisor.write_scope_overlap=block_conflicts
+  runtime:
+    default_driver: codex-exec
+    supervisor_profile: default
+    start_policy: manual
+    max_parallel_workers: 3
+    model: ""
+    reasoning_effort: ""
+  workers:
+    -
+      id: a09-classifier
+      runtime_driver:
+        value: codex-exec
+        source: 'workers[a09-classifier].runtime_driver'
+        behavior:
+          - worker-run.runtime_driver
+      agent_model:
+        value: gpt-5.6-luna
+        source: 'workers[a09-classifier].model'
+        behavior:
+          - assignment.agent_model
+          - capsule.agent_model
+          - worker-run.PF_AGENT_MODEL
+          - runtime-driver.command.model_args
+      agent_reasoning_effort:
+        value: high
+        source: 'workers[a09-classifier].reasoning_effort'
+        behavior:
+          - assignment.agent_reasoning_effort
+          - capsule.agent_reasoning_effort
+          - worker-run.PF_AGENT_REASONING_EFFORT
+          - codex-exec.PF_CODEX_REASONING_EFFORT
+      subagent_policy:
+        allow: false
+        max_subagents: 0
+        allowed_roles:
+          []
+        require_reports: false
+        reports_dir: ""
+        behavior:
+          - assignment.subagent_policy
+          - capsule.subagent_policy
+          - worker-run.collect.subagent_reports
+      required_outputs:
+        -
+          id: a09-classifier-report
+          path: .pf/artifacts/core-a01-a11-20260911/a09-classifier/report.md
+          type: markdown
+          required: true
+      expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/a09-classifier/report.md
+    -
+      id: a01-search
+      runtime_driver:
+        value: codex-exec
+        source: 'workers[a01-search].runtime_driver'
+        behavior:
+          - worker-run.runtime_driver
+      agent_model:
+        value: gpt-5.6-luna
+        source: 'workers[a01-search].model'
+        behavior:
+          - assignment.agent_model
+          - capsule.agent_model
+          - worker-run.PF_AGENT_MODEL
+          - runtime-driver.command.model_args
+      agent_reasoning_effort:
+        value: high
+        source: 'workers[a01-search].reasoning_effort'
+        behavior:
+          - assignment.agent_reasoning_effort
+          - capsule.agent_reasoning_effort
+          - worker-run.PF_AGENT_REASONING_EFFORT
+          - codex-exec.PF_CODEX_REASONING_EFFORT
+      subagent_policy:
+        allow: false
+        max_subagents: 0
+        allowed_roles:
+          []
+        require_reports: false
+        reports_dir: ""
+        behavior:
+          - assignment.subagent_policy
+          - capsule.subagent_policy
+          - worker-run.collect.subagent_reports
+      required_outputs:
+        -
+          id: a01-search-report
+          path: .pf/artifacts/core-a01-a11-20260911/a01-search/report.md
+          type: markdown
+          required: true
+      expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/a01-search/report.md
+    -
+      id: a0310-runtime
+      runtime_driver:
+        value: codex-exec
+        source: 'workers[a0310-runtime].runtime_driver'
+        behavior:
+          - worker-run.runtime_driver
+      agent_model:
+        value: gpt-5.6-luna
+        source: 'workers[a0310-runtime].model'
+        behavior:
+          - assignment.agent_model
+          - capsule.agent_model
+          - worker-run.PF_AGENT_MODEL
+          - runtime-driver.command.model_args
+      agent_reasoning_effort:
+        value: high
+        source: 'workers[a0310-runtime].reasoning_effort'
+        behavior:
+          - assignment.agent_reasoning_effort
+          - capsule.agent_reasoning_effort
+          - worker-run.PF_AGENT_REASONING_EFFORT
+          - codex-exec.PF_CODEX_REASONING_EFFORT
+      subagent_policy:
+        allow: false
+        max_subagents: 0
+        allowed_roles:
+          []
+        require_reports: false
+        reports_dir: ""
+        behavior:
+          - assignment.subagent_policy
+          - capsule.subagent_policy
+          - worker-run.collect.subagent_reports
+      required_outputs:
+        -
+          id: a0310-runtime-report
+          path: .pf/artifacts/core-a01-a11-20260911/a0310-runtime/report.md
+          type: markdown
+          required: true
+      expected_report_artifact: .pf/artifacts/core-a01-a11-20260911/a0310-runtime/report.md
+warnings:
+  []
+unsupported_fields:
+  []

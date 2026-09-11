@@ -1,0 +1,6 @@
+# F09-F12 authorized continuation
+Baseline dev/source/installed: 52774e4761975ce0cb29095081c5294db882007d. Source CLI context fresh, connected MCP stale; CLI authoritative for this run.
+Architecture: restore manifest-owned missing files through existing update journal; deduplicate logical search documents and honor source filters consistently; ingress uses durable incremental recovery preserving raw-before-index contract.
+Ownership: f09-update owns core_update and new updater smoke; f1011-search owns local_resource_search and new search smoke; f12-ingress owns raw_ingress_kernel and new recovery smoke. Review starts only after implementation and primary tests. Primary owns release registration, checksums, delivery, acceptance, governance.
+Acceptance: reproduce baseline F09-F12, focused regression/related tests, independent review, commit/push dev then exact clean candidate archive and extracted quick test, inspect and apply user-authorized update, installed regressions and Workplace preservation, Runtime restart only after workers/jobs drain, verified remote/source/installed commit equality. Full release qualification remains distinct from focused PASS; intermittent Runtime fixture startup remains known backlog.
+Historical approved audit and unrelated dirty PF files remain preserved. No GitHub comments or public release planned.

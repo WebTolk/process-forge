@@ -1,0 +1,4 @@
+PRESENT: .pf/contexts/assignment-capsules/f01-search.capsule.yaml
+WROTE: .pf/runtime/agent-runs/core-f01-f02-shell-20260910/f01-search/workspace-access.json
+WROTE: .pf/runs/core-f01-f02-shell-20260910/worker-prompts/f01-search.md
+RUNNING: f01-search pid=15140

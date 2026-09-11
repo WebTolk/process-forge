@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\tools\smoke_garage_no_hooks_sessionless.py", line 94, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\tools\smoke_garage_no_hooks_sessionless.py", line 85, in main
+    raise AssertionError(search)
+AssertionError: {'degraded_reason': 'index_not_fresh', 'garage_readiness': {'document_count': 0, 'reason': 'empty_corpus', 'remediation': 'Select or authorize searchable project resources.', 'resource_count': 0, 'status': 'empty'}, 'index_generation': None, 'items': [], 'kind': 'pf.search', 'limit': 20, 'offset': 0, 'page': {'limit': 20, 'limitstart': 0, 'next_limitstart': None, 'offset': 0, 'returned': 0, 'total': 0}, 'query': 'GarageNoHooksNeedle', 'results': [], 'schema_version': 1, 'search': {'document_count': 0, 'reason': 'empty_corpus', 'remediation': 'Select or authorize searchable project resources.', 'resource_count': 0, 'status': 'empty'}, 'search_status': 'missing', 'total': 0}

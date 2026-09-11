@@ -1,0 +1,385 @@
+schema_version: 1
+capsule:
+  id: review-mcp-reports-capsule
+  generated_at: '2026-09-11T08:31:58Z'
+  assignment_id: review-mcp-reports
+  assignment_path: .pf/assignments/review-mcp-reports.yaml
+  assignment_checksum: e4830b1f29749a754241c5738961bcac7c76c605c284119be4524e7d2529f019
+  snapshot: .pf/contexts/project-context.snapshot.yaml
+  snapshot_checksum: 8d002f89b0fc847b8d5be79ebadf2696e016b653aa008bdcff9c7b31c12bb27e
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20260911-083003-04cbd9
+  sha256: 'sha256:8d002f89b0fc847b8d5be79ebadf2696e016b653aa008bdcff9c7b31c12bb27e'
+  generated_at: '2026-09-11T08:29:52Z'
+  freshness_at_creation: fresh
+project_classification:
+  status: classified
+  project_types:
+    - software.python
+  platforms:
+    []
+  tags:
+    - software
+  confidence: high
+  loaded_classifiers:
+    - processforge.official.software-web.classifier
+  matched_rules:
+    -
+      classifier: processforge.official.software-web.classifier
+      rule: processforge.official.rule.python-marker
+      confidence: high
+      source: packs/official/software-development/project-classifiers/software-web.yaml
+  inactive_classifier_hints:
+    []
+resolved_resources:
+  -
+    id: 'project.process-forge:project-profile'
+    kind: note_collection
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-profile@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts/project-profile.md
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:33c8f9edf949d6d99e3287d47c440a1341c1445fdd5361a4038e546d1f422ef0'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-profile
+    title: Project profile and repository map
+    load_policy: when_relevant
+    index_policy: full_text
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+  -
+    id: 'project.process-forge:project-artifacts'
+    kind: reference
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-artifacts@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:66f3079b7370d98d92f0fec9594cec7fe61fe44aab9cc97ae7b4ee74d4a73aa6'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-artifacts
+    title: Project ProcessForge artifacts
+    load_policy: on_demand
+    index_policy: metadata
+    selection:
+      mode: legacy_narrow
+      reason: legacy_direct_package
+      preferred_version: null
+      constraint: null
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+effective_specializations:
+  []
+project_override_summary:
+  []
+active_resource_profile:
+  selected_platform:
+    []
+  platform_stack:
+    []
+  selected_specializations:
+    []
+  available_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  activated_knowledge_packages:
+    - docs.php
+    - docs.web.accessibility
+    - docs.web.css
+    - docs.web.html
+    - docs.web.javascript
+    - docs.web.performance
+  excluded_knowledge_packages:
+    []
+  available_tools:
+    []
+  activated_tools:
+    []
+  excluded_tools:
+    []
+  available_mcp:
+    []
+  activated_mcp:
+    []
+  excluded_mcp:
+    []
+  activated_templates:
+    []
+  excluded_templates:
+    []
+  provided_capabilities:
+    - architecture
+    - investigation
+    - process_coordination
+    - reporting
+    - repository_read
+    - repository_write
+    - review
+    - test_execution
+    - test_planning
+    - test_running
+  applied_project_overrides:
+    []
+  effective_resources:
+    -
+      kind: knowledge_packages
+      id: docs.php
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.accessibility
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.css
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.html
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.javascript
+      status: activated
+    -
+      kind: knowledge_packages
+      id: docs.web.performance
+      status: activated
+  effective_fingerprints:
+    {}
+  resolution_reasons:
+    -
+      source: processforge.official.software-development
+      reason: active official process pack knowledge packages merged
+  conflicts:
+    []
+execution_route_summary:
+  process: ""
+  stages:
+    []
+  required_capabilities:
+    []
+  capability_requirements:
+    []
+  required_artifacts:
+    []
+  required_evidence:
+    []
+  acceptance_criteria:
+    []
+capability_resolution_summary:
+  satisfied:
+    []
+  unsatisfied:
+    []
+effective_resources:
+  -
+    kind: knowledge_packages
+    id: docs.php
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.accessibility
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.css
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.html
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.javascript
+    status: activated
+  -
+    kind: knowledge_packages
+    id: docs.web.performance
+    status: activated
+assignment:
+  id: review-mcp-reports
+  path: .pf/assignments/review-mcp-reports.yaml
+  status: open
+  objective: Independent review per .pf/artifacts/core-a01-a11-20260911/review-mcp-reports-brief.md
+  execution_mode:
+    kind: assurance
+    code_changes_allowed: false
+    artifact_changes_allowed: true
+    requires_review: true
+context:
+  snapshot_id: ctx-20260911-083003-04cbd9
+  freshness: fresh
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/review-mcp-reports.yaml
+    - .pf/artifacts/core-a01-a11-20260911/review-mcp-reports-brief.md
+    - .pf/artifacts/core-a01-a11-20260911/design.md
+  context_artifacts:
+    []
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+  parameter_sources:
+    []
+scope:
+  allowed_files:
+    - .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/**
+    - .pf/tmp/review-mcp-reports/**
+  allowed_read_files:
+    - tools/processforge.py
+    - tools/pf_runtime/host.py
+    - tools/pf_runtime/mcp_server.py
+    - tools/pf_runtime/session_read.py
+    - tools/pf_runtime/codex_hooks.py
+    - tools/smoke_expected_report_containment.py
+    - tools/smoke_authenticated_report_content.py
+    - tools/smoke_mcp_jsonrpc_validation.py
+    - tools/smoke_classifier_distribution_parity.py
+    - tools/smoke_session_identity_roundtrip.py
+    - tools/smoke_codex_lifecycle_identity.py
+    - tools/smoke_domain_neutral_core_helpers.py
+    - tools/processforge_subprocess.py
+    - docs/concepts/**
+    - .pf/artifacts/core-a01-a11-20260911/**
+    - .pf/logs/core-a01-a11-20260911.md
+    - .pf/AGENTS.md
+  forbidden_files:
+    - VERSION
+    - CHANGELOG.md
+    - checksums/**
+    - .pf/artifacts/codebase-audit-20260910/**
+    - .pf/process-forge.yaml
+  ownership:
+    owner_id: review-mcp-reports
+    owner_label: worker-review-mcp-reports
+    role: reviewer
+    writer: false
+    owned_files:
+      - .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/**
+      - .pf/tmp/review-mcp-reports/**
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/**
+      - .pf/tmp/review-mcp-reports/**
+    rule: Do not edit files owned by active parallel tasks.
+    overlap_check:
+      status: pass
+      conflicts:
+        []
+outputs:
+  required_outputs:
+    -
+      id: review-mcp-reports-report
+      path: .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/report.md
+      type: markdown
+      required: true
+  expected_report:
+    language: en
+    artifact: .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/report.md
+    format: concise_markdown
+    include:
+      - review-mcp-reports-report
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: high
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+workplace_coordination:
+  effective_mode: simple
+  director_required: false
+  director_available_at_workplace: false
+capabilities:
+  required:
+    []
+  optional:
+    []
+telemetry:
+  events: .pf/runtime/telemetry/review-mcp-reports.ndjson
+  event_correlation_id: assignment-review-mcp-reports
+required_sources:
+  - .pf/contexts/project-context.snapshot.yaml
+  - .pf/assignments/review-mcp-reports.yaml
+  - .pf/artifacts/core-a01-a11-20260911/review-mcp-reports-brief.md
+  - .pf/artifacts/core-a01-a11-20260911/design.md
+allowed_files:
+  - .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/**
+  - .pf/tmp/review-mcp-reports/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - .pf/artifacts/codebase-audit-20260910/**
+  - .pf/process-forge.yaml
+required_outputs:
+  -
+    id: review-mcp-reports-report
+    path: .pf/artifacts/core-a01-a11-20260911/review-mcp-reports/report.md
+    type: markdown
+    required: true
+required_capabilities:
+  []
+optional_capabilities:
+  []
+selected_sources:
+  []
+event_correlation_id: assignment-review-mcp-reports

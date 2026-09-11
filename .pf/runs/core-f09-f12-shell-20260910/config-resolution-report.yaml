@@ -1,0 +1,185 @@
+schema_version: 1
+plan: .pf/runs/core-f09-f12-shell-20260910/orchestrator-plan.yaml
+resolved:
+  allow_write_scope_overlap:
+    value: false
+    source: default.deny
+    behavior:
+      - assignment.overlap_policy=deny
+      - supervisor.write_scope_overlap=block_conflicts
+  runtime:
+    default_driver: codex-exec
+    supervisor_profile: default
+    start_policy: manual
+    max_parallel_workers: 3
+    model: ""
+    reasoning_effort: ""
+  workers:
+    -
+      id: f09-update
+      runtime_driver:
+        value: codex-exec
+        source: 'workers[f09-update].runtime_driver'
+        behavior:
+          - worker-run.runtime_driver
+      agent_model:
+        value: gpt-5.6-luna
+        source: 'workers[f09-update].model'
+        behavior:
+          - assignment.agent_model
+          - capsule.agent_model
+          - worker-run.PF_AGENT_MODEL
+          - runtime-driver.command.model_args
+      agent_reasoning_effort:
+        value: medium
+        source: 'workers[f09-update].reasoning_effort'
+        behavior:
+          - assignment.agent_reasoning_effort
+          - capsule.agent_reasoning_effort
+          - worker-run.PF_AGENT_REASONING_EFFORT
+          - codex-exec.PF_CODEX_REASONING_EFFORT
+      subagent_policy:
+        allow: false
+        max_subagents: 0
+        allowed_roles:
+          []
+        require_reports: false
+        reports_dir: ""
+        behavior:
+          - assignment.subagent_policy
+          - capsule.subagent_policy
+          - worker-run.collect.subagent_reports
+      required_outputs:
+        -
+          id: f09-update-report
+          path: .pf/artifacts/core-f09-f12-20260910/f09-update/report.md
+          type: markdown
+          required: true
+      expected_report_artifact: .pf/artifacts/core-f09-f12-20260910/f09-update/report.md
+    -
+      id: f1011-search
+      runtime_driver:
+        value: codex-exec
+        source: 'workers[f1011-search].runtime_driver'
+        behavior:
+          - worker-run.runtime_driver
+      agent_model:
+        value: gpt-5.6-luna
+        source: 'workers[f1011-search].model'
+        behavior:
+          - assignment.agent_model
+          - capsule.agent_model
+          - worker-run.PF_AGENT_MODEL
+          - runtime-driver.command.model_args
+      agent_reasoning_effort:
+        value: medium
+        source: 'workers[f1011-search].reasoning_effort'
+        behavior:
+          - assignment.agent_reasoning_effort
+          - capsule.agent_reasoning_effort
+          - worker-run.PF_AGENT_REASONING_EFFORT
+          - codex-exec.PF_CODEX_REASONING_EFFORT
+      subagent_policy:
+        allow: false
+        max_subagents: 0
+        allowed_roles:
+          []
+        require_reports: false
+        reports_dir: ""
+        behavior:
+          - assignment.subagent_policy
+          - capsule.subagent_policy
+          - worker-run.collect.subagent_reports
+      required_outputs:
+        -
+          id: f1011-search-report
+          path: .pf/artifacts/core-f09-f12-20260910/f1011-search/report.md
+          type: markdown
+          required: true
+      expected_report_artifact: .pf/artifacts/core-f09-f12-20260910/f1011-search/report.md
+    -
+      id: f12-ingress
+      runtime_driver:
+        value: codex-exec
+        source: 'workers[f12-ingress].runtime_driver'
+        behavior:
+          - worker-run.runtime_driver
+      agent_model:
+        value: gpt-5.6-luna
+        source: 'workers[f12-ingress].model'
+        behavior:
+          - assignment.agent_model
+          - capsule.agent_model
+          - worker-run.PF_AGENT_MODEL
+          - runtime-driver.command.model_args
+      agent_reasoning_effort:
+        value: high
+        source: 'workers[f12-ingress].reasoning_effort'
+        behavior:
+          - assignment.agent_reasoning_effort
+          - capsule.agent_reasoning_effort
+          - worker-run.PF_AGENT_REASONING_EFFORT
+          - codex-exec.PF_CODEX_REASONING_EFFORT
+      subagent_policy:
+        allow: false
+        max_subagents: 0
+        allowed_roles:
+          []
+        require_reports: false
+        reports_dir: ""
+        behavior:
+          - assignment.subagent_policy
+          - capsule.subagent_policy
+          - worker-run.collect.subagent_reports
+      required_outputs:
+        -
+          id: f12-ingress-report
+          path: .pf/artifacts/core-f09-f12-20260910/f12-ingress/report.md
+          type: markdown
+          required: true
+      expected_report_artifact: .pf/artifacts/core-f09-f12-20260910/f12-ingress/report.md
+    -
+      id: f0912-review
+      runtime_driver:
+        value: codex-exec
+        source: 'workers[f0912-review].runtime_driver'
+        behavior:
+          - worker-run.runtime_driver
+      agent_model:
+        value: gpt-5.6-luna
+        source: 'workers[f0912-review].model'
+        behavior:
+          - assignment.agent_model
+          - capsule.agent_model
+          - worker-run.PF_AGENT_MODEL
+          - runtime-driver.command.model_args
+      agent_reasoning_effort:
+        value: medium
+        source: 'workers[f0912-review].reasoning_effort'
+        behavior:
+          - assignment.agent_reasoning_effort
+          - capsule.agent_reasoning_effort
+          - worker-run.PF_AGENT_REASONING_EFFORT
+          - codex-exec.PF_CODEX_REASONING_EFFORT
+      subagent_policy:
+        allow: false
+        max_subagents: 0
+        allowed_roles:
+          []
+        require_reports: false
+        reports_dir: ""
+        behavior:
+          - assignment.subagent_policy
+          - capsule.subagent_policy
+          - worker-run.collect.subagent_reports
+      required_outputs:
+        -
+          id: f0912-review-report
+          path: .pf/artifacts/core-f09-f12-20260910/f0912-review/report.md
+          type: markdown
+          required: true
+      expected_report_artifact: .pf/artifacts/core-f09-f12-20260910/f0912-review/report.md
+warnings:
+  []
+unsupported_fields:
+  []

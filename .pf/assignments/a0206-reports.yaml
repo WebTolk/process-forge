@@ -1,0 +1,118 @@
+schema_version: 1
+id: a0206-reports
+title: a0206-reports
+run_id: core-a01-a11-wave2-20260911
+process: task-batch-execution
+status: done
+created_at: '2026-09-11T06:43:35Z'
+updated_at: '2026-09-11T09:02:03Z'
+objective: Implement bounded repair brief .pf/artifacts/core-a01-a11-20260911/a0206-reports-brief.md
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Primary fallback implemented and independently tested A02/A06 after recorded shell backend failure; independent review tracked separately
+  artifacts:
+    - .pf/artifacts/core-a01-a11-20260911/a0206-reports/report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/core-a01-a11-20260911/a0206-reports-brief.md
+  - .pf/artifacts/core-a01-a11-20260911/design.md
+allowed_files:
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - tools/smoke_expected_report_containment.py
+  - tools/smoke_authenticated_report_content.py
+  - .pf/artifacts/core-a01-a11-20260911/a0206-reports/**
+  - .pf/tmp/a0206-reports/**
+allowed_read_files:
+  - tools/processforge.py
+  - tools/pf_runtime/host.py
+  - tools/smoke_expected_report_containment.py
+  - tools/smoke_authenticated_report_content.py
+  - src/processforge_core/**
+  - tools/pf_runtime/**
+  - tools/*smoke*.py
+  - tools/*helpers*.py
+  - docs/concepts/**
+  - .pf/artifacts/core-a01-a11-20260911/**
+  - .pf/artifacts/codebase-audit-20260910/**
+  - .pf/AGENTS.md
+  - .pf/contexts/**
+forbidden_files:
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - .pf/artifacts/codebase-audit-20260910/**
+  - .pf/process-forge.yaml
+ownership:
+  owner_id: a0206-reports
+  owner_label: worker-a0206-reports
+  role: worker
+  writer: true
+  owned_files:
+    - tools/processforge.py
+    - tools/pf_runtime/host.py
+    - tools/smoke_expected_report_containment.py
+    - tools/smoke_authenticated_report_content.py
+    - .pf/artifacts/core-a01-a11-20260911/a0206-reports/**
+    - .pf/tmp/a0206-reports/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - tools/processforge.py
+    - tools/pf_runtime/host.py
+    - tools/smoke_expected_report_containment.py
+    - tools/smoke_authenticated_report_content.py
+    - .pf/artifacts/core-a01-a11-20260911/a0206-reports/**
+    - .pf/tmp/a0206-reports/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: a0206-reports-report
+    path: .pf/artifacts/core-a01-a11-20260911/a0206-reports/report.md
+    type: markdown
+    required: true
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: high
+expected_report:
+  language: en
+  artifact: .pf/artifacts/core-a01-a11-20260911/a0206-reports/report.md
+  format: concise_markdown
+  include:
+    - a0206-reports-report
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""

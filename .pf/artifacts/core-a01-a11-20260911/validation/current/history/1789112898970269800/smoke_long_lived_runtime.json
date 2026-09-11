@@ -1,0 +1,10 @@
+{
+  "test": "smoke_long_lived_runtime.py",
+  "mode": "current",
+  "returncode": 1,
+  "seconds": 117.61,
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_long_lived_runtime.py"
+  ]
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "test": "test_latest_failure_and_alias_recovery",
+    "result": "PASS",
+    "seconds": 58.55
+  },
+  {
+    "test": "test_reentry_requires_current_outputs",
+    "result": "PASS",
+    "seconds": 32.96
+  },
+  {
+    "test": "test_saved_file_changed_and_resubmitted",
+    "result": "PASS",
+    "seconds": 51.68
+  },
+  {
+    "test": "test_only_dependencies_are_freshness_checked",
+    "result": "PASS",
+    "seconds": 44.4
+  },
+  {
+    "test": "test_saved_gate_and_completion_freshness",
+    "result": "PASS",
+    "seconds": 26.12
+  },
+  {
+    "test": "test_missing_digest_and_unsafe_path_are_explicit_and_read_only",
+    "result": "PASS",
+    "seconds": 19.49
+  },
+  {
+    "test": "test_normal_completion",
+    "result": "PASS",
+    "seconds": 24.58
+  },
+  {
+    "test": "test_distinct_required_evidence_ids",
+    "result": "PASS",
+    "seconds": 19.25
+  }
+]

@@ -1,0 +1,11 @@
+FAIL: checksum inventory is stale.
+- actual only: 0e0bd774a4d5469e8887bbf0bff345a4b06885505accac118ae9b9de3ea80f18  examples/process-authoring/joomla-site-analysis/README.md
+- actual only: 1a1740ba066aa6d112f25061c6c6080e616445c98483a4fea6fa4d18ef78fe2d  prompts/joomla-site-analysis-agent.md
+- actual only: 49d2a61fc24e526a3fea0e04825a94c7e4a370a2b83c47b70e6826046fc19d01  examples/process-authoring/joomla-site-analysis/process-authoring-joomla-site-analysis-review.md
+- actual only: 654391bf054da09a8288a03f795afcb05a3a751d6a778121e35f9728d5d30dc7  examples/process-authoring/joomla-site-analysis/answers.yaml
+- actual only: 69b37bab7b020cdd661cb3bf2ec354828457f61e040b29d80a384eaa6dd60f02  examples/process-authoring/joomla-site-analysis/process-authoring-joomla-site-analysis-report.md
+- actual only: 7feef02d518f2645ff2bb23196c0d779ce04814ca4fd7bf511a5e30bef0be660  examples/process-authoring/joomla-site-analysis/process-authoring-joomla-site-analysis-handoff.md
+- actual only: 848e8b76a6a6a1879a6d5b6148d49eac0b152f163f75e6af9967862142129d3d  docs/processes/joomla-site-analysis.md
+- actual only: cf4ab097d096cb391a788c365ed0ec25a7fcc93a63762908da473ee32e5de93f  examples/process-authoring/joomla-site-analysis/logic-review.md
+- actual only: cff2dcb40ef588e40a1a0e77b5c61c9c23edf28297f5577e563ee370415dc697  examples/process-authoring/joomla-site-analysis/draft.process.yaml
+- actual only: cff2dcb40ef588e40a1a0e77b5c61c9c23edf28297f5577e563ee370415dc697  processes/user/joomla-site-analysis.yaml

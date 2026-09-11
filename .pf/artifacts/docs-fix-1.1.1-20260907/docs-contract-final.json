@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    "tools/smoke_docs_current_code_contract.py"
+  ],
+  "started_at": "2026-09-07T13:52:14.724744+00:00",
+  "finished_at": "2026-09-07T13:52:15.408905+00:00",
+  "elapsed_seconds": 0.684,
+  "exit_code": 0,
+  "output": "PASS: public docs match the current PF contract (610 CLI examples, 299 local links checked)\n"
+}

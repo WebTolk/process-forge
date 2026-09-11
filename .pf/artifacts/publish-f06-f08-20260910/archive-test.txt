@@ -1,0 +1,2 @@
+FAIL: archive exists: D:\Dev\process-forge\.pf\artifacts\publish-f06-f08-20260910\processforge-5c95391.zip
+FAIL: archive exists for root freshness check: D:\Dev\process-forge\.pf\artifacts\publish-f06-f08-20260910\processforge-5c95391.zip

@@ -1,0 +1,12 @@
+{
+  "smoke_work_transition_records_evidence": 0,
+  "smoke_work_transition_recovers_after_invalid_evidence": 0,
+  "smoke_work_transition_final_stage_completes_run": 0,
+  "smoke_work_transition_emits_stage_events": 0,
+  "smoke_work_transition_snapshot_pinned_process": 0,
+  "smoke_work_transition_branching_if_supported": 0,
+  "smoke_process_execution_integrity": 0,
+  "smoke_process_execution_state_semantics": 0,
+  "smoke_multi_process_work_capsule": 0,
+  "smoke_process_run_task_batch": 0
+}

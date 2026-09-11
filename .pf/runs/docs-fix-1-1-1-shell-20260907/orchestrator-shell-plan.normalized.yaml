@@ -1,0 +1,294 @@
+schema_version: 1
+run:
+  id: docs-fix-1-1-1-shell-20260907
+  title: PF 1.1.1 documentation remediation D01-D08
+  process: multi-agent-task-orchestration
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 3
+  model: ""
+  reasoning_effort: ""
+allow_write_scope_overlap: false
+workers:
+  -
+    id: docs111-mechanical
+    order: 1
+    runtime_driver: codex-exec
+    model: gpt-5.3-codex-spark
+    reasoning_effort: low
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - docs/ru/concepts/resource-search-index.md
+      - docs/concepts/assignment-front-matter.md
+      - docs/validation/validation.md
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+    allowed_read_files:
+      - docs/**
+      - prompts/**
+      - templates/**
+      - tools/**
+      - src/**
+      - updates/migrations/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+      - .pf/artifacts/docs-audit-1.1.1-evidence/**
+      - .pf/artifacts/docs-fix-1.1.1-20260907/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - src/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: docs111-mechanical-report
+        path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md
+    depends_on:
+      []
+  -
+    id: docs111-workflow
+    order: 2
+    runtime_driver: codex-exec
+    model: gpt-5.4-mini
+    reasoning_effort: medium
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - prompts/task-batch-execution-agent.md
+      - docs/getting-started/task-batch-workflow.md
+      - docs/ru/getting-started/task-batch-workflow.md
+      - docs/concepts/runtime-mcp.md
+      - docs/ru/concepts/runtime-mcp.md
+      - docs/getting-started/agent-prompts.md
+      - docs/ru/getting-started/agent-prompts.md
+      - docs/concepts/declarative-process-execution.md
+      - docs/index.md
+      - docs/ru/index.md
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-workflow-report.md
+    allowed_read_files:
+      - docs/**
+      - prompts/**
+      - templates/**
+      - tools/**
+      - src/**
+      - updates/migrations/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+      - .pf/artifacts/docs-audit-1.1.1-evidence/**
+      - .pf/artifacts/docs-fix-1.1.1-20260907/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - src/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: docs111-workflow-report
+        path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-workflow-report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-workflow-report.md
+    depends_on:
+      []
+  -
+    id: docs111-update
+    order: 3
+    runtime_driver: codex-exec
+    model: gpt-5.3-codex-spark
+    reasoning_effort: low
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - docs/ru/getting-started/update-system.md
+      - docs/ru/concepts/core-update-manifest.md
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-update-report.md
+    allowed_read_files:
+      - docs/**
+      - prompts/**
+      - templates/**
+      - tools/**
+      - src/**
+      - updates/migrations/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+      - .pf/artifacts/docs-audit-1.1.1-evidence/**
+      - .pf/artifacts/docs-fix-1.1.1-20260907/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - src/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: docs111-update-report
+        path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-update-report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-update-report.md
+    depends_on:
+      []
+  -
+    id: docs111-tests
+    order: 4
+    runtime_driver: codex-exec
+    model: gpt-5.4-mini
+    reasoning_effort: medium
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - tools/smoke_docs_current_code_contract.py
+      - tools/smoke_docs_agent_no_manual_infra.py
+      - tools/smoke_context_freshness_vs_execution_readiness.py
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-tests-report.md
+    allowed_read_files:
+      - docs/**
+      - prompts/**
+      - templates/**
+      - tools/**
+      - src/**
+      - updates/migrations/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+      - .pf/artifacts/docs-audit-1.1.1-evidence/**
+      - .pf/artifacts/docs-fix-1.1.1-20260907/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - src/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: docs111-tests-report
+        path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-tests-report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-tests-report.md
+    depends_on:
+      - docs111-mechanical
+      - docs111-update
+      - docs111-workflow
+  -
+    id: docs111-review
+    order: 5
+    runtime_driver: codex-exec
+    model: gpt-5.4-mini
+    reasoning_effort: medium
+    allow_subagents: false
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    allowed_files:
+      - .pf/artifacts/docs-fix-1.1.1-20260907/docs111-review-report.md
+    allowed_read_files:
+      - docs/**
+      - prompts/**
+      - templates/**
+      - tools/**
+      - src/**
+      - updates/migrations/**
+      - .pf/contexts/project-context.snapshot.yaml
+      - .pf/artifacts/docs-audit-1.1.1-report-20260907.md
+      - .pf/artifacts/docs-audit-1.1.1-evidence/**
+      - .pf/artifacts/docs-fix-1.1.1-20260907/**
+    forbidden_files:
+      - VERSION
+      - CHANGELOG.md
+      - checksums/**
+      - tools/processforge.py
+      - src/**
+      - .pf/process-forge.yaml
+    required_outputs:
+      -
+        id: docs111-review-report
+        path: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-review-report.md
+        type: markdown
+        required: true
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    expected_report_artifact: .pf/artifacts/docs-fix-1.1.1-20260907/docs111-review-report.md
+    depends_on:
+      - docs111-tests

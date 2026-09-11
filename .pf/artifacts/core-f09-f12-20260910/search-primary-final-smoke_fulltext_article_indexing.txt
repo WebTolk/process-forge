@@ -1,0 +1,1 @@
+PASS: fulltext article fixture is indexed and searchable

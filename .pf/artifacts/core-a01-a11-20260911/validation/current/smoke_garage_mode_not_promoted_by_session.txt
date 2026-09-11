@@ -1,0 +1,14 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\tools\smoke_garage_mode_not_promoted_by_session.py
+
+CWD:
+  D:\Dev\process-forge
+
+Timeout:
+  180s
+
+Exit code:
+  0
+
+STDOUT tail:
+PASS: bound session enriches Garage without promoting mode

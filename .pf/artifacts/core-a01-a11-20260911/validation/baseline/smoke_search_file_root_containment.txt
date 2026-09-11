@@ -1,0 +1,22 @@
+Command:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_search_file_root_containment.py
+
+CWD:
+  D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline
+
+Timeout:
+  180s
+
+Exit code:
+  1
+
+STDERR tail:
+Traceback (most recent call last):
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_search_file_root_containment.py", line 94, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_search_file_root_containment.py", line 90, in main
+    return check(Path(raw))
+  File "D:\Dev\process-forge\.pf\tmp\core-a01-a11-baseline\tools\smoke_search_file_root_containment.py", line 77, in check
+    raise AssertionError(result)
+AssertionError: {'status': 'fresh', 'indexed': 3, 'resources': 2, 'snapshot_checksum': 'search-file-root-containment', 'generation': 'eec97cd8133c2800'}

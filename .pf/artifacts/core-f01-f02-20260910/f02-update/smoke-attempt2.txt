@@ -1,0 +1,5 @@
+command: $env:TMP='D:\tmp'; $env:TEMP='D:\tmp'; python .pf/tmp/core-f01-f02-20260910/f02-update/run_smoke_fixed_temp.py
+exit: 0
+SKIP: symlink fixture unavailable: [WinError 1314] Клиент не обладает требуемыми правами: '...outside.txt' -> '...core\\user-link.txt'
+SKIP: broken-symlink fixture unavailable: [WinError 1314] Клиент не обладает требуемыми правами: '...missing-target' -> '...core\\user-link.txt'
+PASS: manifest-based core update smoke

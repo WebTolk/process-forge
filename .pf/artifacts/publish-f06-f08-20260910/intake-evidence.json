@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "run-record",
+    "status": "ready",
+    "path": ".pf\\artifacts\\publish-f06-f08-20260910\\plan.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "run-has-context",
+    "status": "passed",
+    "summary": "Source CLI context fresh; immutable capsule inspected, source published and remote equal."
+  }
+]

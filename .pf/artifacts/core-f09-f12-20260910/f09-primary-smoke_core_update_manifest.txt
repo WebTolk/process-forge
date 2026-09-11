@@ -1,0 +1,3 @@
+SKIP: symlink fixture unavailable: [WinError 1314] ������ �� �������� ���������� �������: 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-core-update-unowned-symlink-2txmrven\\outside.txt' -> 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-core-update-unowned-symlink-2txmrven\\core\\user-link.txt'
+SKIP: broken-symlink fixture unavailable: [WinError 1314] ������ �� �������� ���������� �������: 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-core-update-unowned-broken-symlink-i6wfs0p0\\missing-target' -> 'C:\\Users\\musst\\AppData\\Local\\Temp\\pf-core-update-unowned-broken-symlink-i6wfs0p0\\core\\user-link.txt'
+PASS: manifest-based core update smoke

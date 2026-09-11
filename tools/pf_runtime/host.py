@@ -827,6 +827,8 @@ def _allowed_conversation_message(envelope: dict[str, Any], item: dict[str, Any]
         return (
             (role, kind, provenance) == ("assistant", "pf_codex_exec_output", "pf_owned_output_file")
             and str(envelope.get("native_event_id") or "") == f"worker-output:{run_id}:{task_id}:attempt:{attempt}:{report_hash}"
+            and raw.get("report_hash") == report_hash
+            and str(item.get("session_id") or session) == session
             and item.get("content") == report_content
         )
     return False
@@ -847,15 +849,18 @@ def _worker_session_authorized(envelope: dict[str, Any], project_root: Path, cor
     attempt = str(raw.get("attempt") or "")
     if not state or attempt != str(state.get("attempt") or ""):
         return False
-    expected = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
-    expected_report = str(expected.get("artifact") or "")
+    expected_report = core.expected_report_artifact(task)
     if str(raw.get("expected_report") or "") != expected_report:
         return False
     if str(envelope.get("native_event_type") or "") == "WorkerPromptPayloadSubmitted" and _worker_input_contract(envelope, project_root, core) is None:
         return False
     if str(envelope.get("native_event_type") or "") == "WorkerExpectedReportCaptured":
-        report = project_root / expected_report
-        if not report.is_file() or report.read_text(encoding="utf-8", errors="replace") != raw.get("report_content"):
+        try:
+            report = core.project_output_path(project_root, expected_report)
+            matches = report.is_file() and report.read_text(encoding="utf-8", errors="replace") == raw.get("report_content")
+        except (OSError, ValueError):
+            return False
+        if not matches:
             return False
     return True
 
@@ -924,7 +929,12 @@ def _conversation_messages(
             return _conversation_denial("untrusted_conversation_provenance", sequence=sequence)
         if _is_session_end_fallback_duplicate(envelope, item, project_root, core):
             continue
-        if not _is_safe_automatic_content(content) or not _is_safe_automatic_content(json.dumps(source, ensure_ascii=False, sort_keys=True)) or core.contains_secret_value(content):
+        # A PF-owned expected report has already passed task/attempt/path and
+        # exact-content authorization, then native-id/hash/provenance checks.
+        # Its private transcript may retain diagnostic path text. Native host
+        # messages and all metadata retain the automatic-capture path filter.
+        owned_report = is_worker and str(envelope.get("native_event_type") or "") == "WorkerExpectedReportCaptured"
+        if (not owned_report and not _is_safe_automatic_content(content)) or not _is_safe_automatic_content(json.dumps(source, ensure_ascii=False, sort_keys=True)) or core.contains_secret_value(content):
             return _conversation_denial("unsafe_automatic_content", sequence=sequence)
         raw_id = str(receipt.raw_event_id or "")
         key = deterministic_derived_key(

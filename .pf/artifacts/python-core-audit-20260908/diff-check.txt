@@ -1,0 +1,10 @@
+warning: in the working copy of '.pf/artifacts/project-context-refresh-report.md', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of '.pf/artifacts/projections/command-history.md', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of '.pf/artifacts/projections/process-execution-state.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of '.pf/artifacts/projections/stage-obligations.json', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of '.pf/contexts/project-context.snapshot.md', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of '.pf/contexts/project-context.snapshot.yaml', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'README.md', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'README.ru.md', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'checksums/processforge.sha256', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'tools/processforge.py', CRLF will be replaced by LF the next time Git touches it

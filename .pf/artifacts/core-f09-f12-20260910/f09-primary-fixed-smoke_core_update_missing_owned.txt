@@ -1,0 +1,1 @@
+PASS: missing owned core update smoke

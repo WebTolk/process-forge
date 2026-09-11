@@ -233,6 +233,16 @@ def workplace_target(workplace_root: Path, relative_path: str) -> Path:
     return ensure_inside(workplace_root, safe_relative_path(relative_path))
 
 
+def read_archive_member(archive: zipfile.ZipFile, relative_path: str) -> bytes:
+    """Read an apply-time archive member as a structured update error."""
+    try:
+        return archive.read(relative_path)
+    except KeyError as exc:
+        raise CoreUpdateError("archive_file_missing", f"archive file missing: {relative_path}") from exc
+    except (zipfile.BadZipFile, OSError, EOFError) as exc:
+        raise CoreUpdateError("archive_read_failed", f"archive member read failed: {relative_path}: {exc}") from exc
+
+
 def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_version: str | None, target_version: str, workplace_root: Path | None) -> dict[str, Any]:
     result: dict[str, Any] = {
         "status": "not_requested",
@@ -259,6 +269,11 @@ def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_v
     if not migration_id or not isinstance(operations, list):
         raise CoreUpdateError("workplace_migration_invalid", f"migration {source_path} requires id and operations")
     result.update({"status": "planned", "migration": {"id": migration_id, "source": source_path}})
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            archive_members = {info.filename: info for info in archive.infolist()}
+    except zipfile.BadZipFile as exc:
+        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
     for item in operations:
         if not isinstance(item, dict):
             raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} contains a non-object operation")
@@ -269,7 +284,53 @@ def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_v
             raise CoreUpdateError("workplace_migration_invalid", f"migration {migration_id} operation requires id and target")
         target = workplace_target(workplace_root, target_path)
         if operation_type == "copy_if_missing":
-            source = safe_relative_path(item.get("source"))
+            raw_source = item.get("source")
+            if isinstance(raw_source, str) and raw_source.endswith("/"):
+                source_info = archive_members.get(raw_source)
+                if source_info is not None and source_info.is_dir():
+                    result["blockers"].append(
+                        {
+                            "code": "workplace_migration_source_directory",
+                            "migration": migration_id,
+                            "operation": operation_id,
+                            "source": raw_source,
+                        }
+                    )
+                    continue
+            try:
+                source = safe_relative_path(raw_source)
+            except CoreUpdateError as exc:
+                result["blockers"].append(
+                    {
+                        "code": "workplace_migration_source_invalid",
+                        "migration": migration_id,
+                        "operation": operation_id,
+                        "source": raw_source if isinstance(raw_source, str) else None,
+                        "reason": exc.code,
+                    }
+                )
+                continue
+            source_info = archive_members.get(source)
+            if source_info is None:
+                result["blockers"].append(
+                    {
+                        "code": "workplace_migration_source_missing",
+                        "migration": migration_id,
+                        "operation": operation_id,
+                        "source": source,
+                    }
+                )
+                continue
+            if source_info.is_dir():
+                result["blockers"].append(
+                    {
+                        "code": "workplace_migration_source_directory",
+                        "migration": migration_id,
+                        "operation": operation_id,
+                        "source": source,
+                    }
+                )
+                continue
             if target.exists():
                 result["preserved"].append({"id": operation_id, "path": target_path, "reason": "existing_file"})
             else:
@@ -293,6 +354,8 @@ def workplace_migration_plan(core_root: Path, archive_path: Path, *, installed_v
                 result["operations"].append({"id": operation_id, "type": operation_type, "target": target_path, "list_key": list_key, "entry": entry})
             continue
         raise CoreUpdateError("workplace_migration_invalid", f"unsupported migration operation: {operation_type}")
+    if result["blockers"]:
+        result["status"] = "blocked"
     return result
 
 
@@ -310,15 +373,24 @@ def backup_workplace_target(workplace_root: Path, backup_dir: Path, relative_pat
 def apply_workplace_migration(archive_path: Path, workplace_root: Path, migration_plan: dict[str, Any], backup_dir: Path) -> dict[str, Any]:
     operations = migration_plan.get("operations") if isinstance(migration_plan.get("operations"), list) else []
     backed_up: list[dict[str, Any]] = []
+    record = {
+        "schema_version": 1, "status": "applying",
+        "migration": migration_plan.get("migration"),
+        "operations": operations, "preserved": migration_plan.get("preserved", []),
+        "backed_up": backed_up,
+    }
     with zipfile.ZipFile(archive_path) as archive:
         for operation in operations:
             if not isinstance(operation, dict):
                 continue
             target_path = str(operation["target"])
             backed_up.append(backup_workplace_target(workplace_root, backup_dir, target_path))
+            # Preserve recovery evidence before each mutation, including when
+            # a subsequent archive member disappears or cannot be decoded.
+            atomic_write(backup_dir / "workplace-migration.json", (json.dumps(record, indent=2, sort_keys=True) + "\n").encode("utf-8"))
             target = workplace_target(workplace_root, target_path)
             if operation["type"] == "copy_if_missing":
-                atomic_write(target, archive.read(str(operation["source"])))
+                atomic_write(target, read_archive_member(archive, str(operation["source"])))
             elif operation["type"] == "append_registry_entry_if_missing":
                 data = load_yaml_bytes(target.read_bytes(), source=target_path) if target.is_file() else {"schema_version": 1}
                 values = data.get(str(operation["list_key"]))
@@ -329,6 +401,7 @@ def apply_workplace_migration(archive_path: Path, workplace_root: Path, migratio
                 atomic_write(target, dump_yaml_bytes(data))
     record = {
         "schema_version": 1,
+        "status": "applied",
         "migration": migration_plan.get("migration"),
         "applied_at": now_utc(),
         "operations": operations,
@@ -574,6 +647,21 @@ def apply_update(
                 break
         write_json(in_progress_path, progress)
 
+    def record_failure(code: str, message: str) -> None:
+        failure = {
+            **progress,
+            "schema_version": 1,
+            "update_id": update_id,
+            "status": "failed",
+            "failed_at": now_utc(),
+            "backup_dir": str(backup_dir),
+            "error": {"code": code, "message": message},
+        }
+        try:
+            write_json(in_progress_path, failure)
+        except OSError:
+            pass
+
     old_manifest = installed_manifest(core_root)
     if old_manifest:
         write_json(backup_dir / "control" / "old-manifest.json", old_manifest)
@@ -598,7 +686,7 @@ def apply_update(
             complete_operation("delete", relative_path)
         with zipfile.ZipFile(archive_path) as archive:
             for relative_path in sorted(write_paths):
-                content = archive.read(relative_path)
+                content = read_archive_member(archive, relative_path)
                 atomic_write(ensure_inside(core_root, relative_path), content)
                 complete_operation("write", relative_path)
         atomic_write(manifest_path(core_root), manifest_bytes(plan["new_manifest"]))
@@ -608,22 +696,14 @@ def apply_update(
         write_json(last_apply, record)
         in_progress_path.unlink(missing_ok=True)
         return record
-    except CoreUpdateError:
+    except CoreUpdateError as exc:
+        record_failure(exc.code, exc.message)
         raise
+    except zipfile.BadZipFile as exc:
+        record_failure("archive_invalid", f"invalid ZIP archive: {archive_path}")
+        raise CoreUpdateError("archive_invalid", f"invalid ZIP archive: {archive_path}") from exc
     except OSError as exc:
-        try:
-            failure = {
-                **progress,
-                "schema_version": 1,
-                "update_id": update_id,
-                "status": "failed",
-                "failed_at": now_utc(),
-                "backup_dir": str(backup_dir),
-                "error": {"code": "file_operation_failed", "message": str(exc)},
-            }
-            write_json(in_progress_path, failure)
-        except OSError:
-            pass
+        record_failure("file_operation_failed", str(exc))
         raise CoreUpdateError("file_operation_failed", str(exc)) from exc
 
 

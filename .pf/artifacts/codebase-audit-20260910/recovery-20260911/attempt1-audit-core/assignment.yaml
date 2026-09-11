@@ -1,0 +1,111 @@
+schema_version: 1
+id: audit-core
+title: Python core and execution contracts
+run_id: codebase-audit-shell-20260910
+process: task-batch-execution
+status: failed
+created_at: '2026-09-10T17:05:27Z'
+updated_at: '2026-09-10T17:20:31Z'
+objective: Read .pf/artifacts/codebase-audit-20260910/audit-core-brief.md and execute bounded audit with reproducible evidence.
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: failed
+  summary: 'Worker runtime ended with failed: failed'
+  artifacts:
+    []
+execution_mode:
+  kind: planning_only
+  code_changes_allowed: false
+  artifact_changes_allowed: true
+  requires_review: true
+required_sources:
+  - .pf/artifacts/codebase-audit-20260910/audit-core-brief.md
+allowed_files:
+  - .pf/artifacts/codebase-audit-20260910/audit-core/**
+  - .pf/tmp/audit-core/**
+allowed_read_files:
+  - src/**
+  - tools/**
+  - docs/**
+  - schemas/**
+  - processes/**
+  - policies/**
+  - requirements.txt
+  - VERSION
+  - .pf/AGENTS.md
+  - .pf/process-forge.yaml
+  - .pf/artifacts/**
+  - .pf/handoffs/**
+  - .pf/contexts/**
+  - .pf/runtime/agent-runs/**
+forbidden_files:
+  - src/**
+  - tools/**
+  - docs/**
+  - schemas/**
+  - processes/**
+  - policies/**
+  - VERSION
+  - CHANGELOG.md
+  - checksums/**
+  - .pf/process-forge.yaml
+ownership:
+  owner_id: audit-core
+  owner_label: worker-audit-core
+  role: analyst
+  writer: true
+  owned_files:
+    - .pf/artifacts/codebase-audit-20260910/audit-core/**
+    - .pf/tmp/audit-core/**
+  owned_globs:
+    []
+non_overlap:
+  policy: block_on_write_overlap
+  active_parallel_tasks:
+    []
+  current_write_scope:
+    - .pf/artifacts/codebase-audit-20260910/audit-core/**
+    - .pf/tmp/audit-core/**
+  rule: Do not edit files owned by active parallel tasks.
+required_outputs:
+  -
+    id: audit-core-report
+    path: .pf/artifacts/codebase-audit-20260910/audit-core/report.md
+    type: markdown
+    required: true
+agent_model: gpt-5.6-luna
+agent_reasoning_effort: medium
+expected_report:
+  language: en
+  artifact: .pf/artifacts/codebase-audit-20260910/audit-core/report.md
+  format: concise_markdown
+  include:
+    - audit-core-report
+worker_may_rebuild_context: false
+runtime_driver: codex-exec
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""

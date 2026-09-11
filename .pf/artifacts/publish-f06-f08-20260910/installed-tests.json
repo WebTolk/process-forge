@@ -1,0 +1,27 @@
+[
+  {
+    "name": "installed-checksum",
+    "exit": 1,
+    "seconds": 1.17
+  },
+  {
+    "name": "installed-update-doctor",
+    "exit": 0,
+    "seconds": 2.91
+  },
+  {
+    "name": "installed-search-smoke",
+    "exit": 0,
+    "seconds": 14.73
+  },
+  {
+    "name": "installed-evidence-smoke",
+    "exit": 0,
+    "seconds": 264.47
+  },
+  {
+    "name": "installed-completion-smoke",
+    "exit": 0,
+    "seconds": 260.94
+  }
+]

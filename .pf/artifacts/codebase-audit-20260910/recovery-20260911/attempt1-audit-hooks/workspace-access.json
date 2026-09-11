@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-10T17:12:07Z",
+  "run_id": "codebase-audit-shell-20260910",
+  "task_id": "audit-hooks",
+  "visibility": "private_runtime",
+  "policy": {
+    "do_not_copy_private_paths_to_public_artifacts": true,
+    "assignment_scope_remains_project_relative": true
+  },
+  "workplace_manifest": "D:\\.agents\\processforge-workplace\\workplace.yaml",
+  "requested": {
+    "knowledge_resources": [],
+    "templates": [],
+    "tools": [],
+    "mcp": []
+  },
+  "grants": {
+    "knowledge_resources": [],
+    "templates": [],
+    "tools": [],
+    "mcp": []
+  }
+}

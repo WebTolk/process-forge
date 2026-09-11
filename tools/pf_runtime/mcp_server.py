@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import math
 import os
 import sys
 from pathlib import Path
@@ -287,12 +288,78 @@ def safe_tool_error(exc: Exception) -> str:
     return json.dumps({"error": error}, ensure_ascii=False, sort_keys=True)
 
 
-def respond(request: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
+def schema_accepts(value: Any, schema: dict[str, Any]) -> bool:
+    """Validate the bounded JSON Schema vocabulary used by tool_schema()."""
+    if "anyOf" in schema and not any(schema_accepts(value, item) for item in schema["anyOf"]):
+        return False
+    if "oneOf" in schema and sum(schema_accepts(value, item) for item in schema["oneOf"]) != 1:
+        return False
+    types = {
+        "object": isinstance(value, dict), "array": isinstance(value, list),
+        "string": isinstance(value, str), "boolean": isinstance(value, bool),
+        "integer": isinstance(value, int) and not isinstance(value, bool),
+    }
+    if "type" in schema and not types.get(schema["type"], False):
+        return False
+    if "enum" in schema and value not in schema["enum"]:
+        return False
+    if isinstance(value, str) and len(value) < schema.get("minLength", 0):
+        return False
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if value < schema.get("minimum", value) or value > schema.get("maximum", value):
+            return False
+    if isinstance(value, dict):
+        properties = schema.get("properties", {})
+        if any(key not in value for key in schema.get("required", [])):
+            return False
+        if schema.get("additionalProperties") is False and set(value) - set(properties):
+            return False
+        if any(key in value and not schema_accepts(value[key], item) for key, item in properties.items()):
+            return False
+    if isinstance(value, list) and "items" in schema:
+        return all(schema_accepts(item, schema["items"]) for item in value)
+    return True
+
+
+def rpc_error(request_id: Any, code: int, message: str) -> dict[str, Any]:
+    return {"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}}
+
+
+def respond(request: Any, workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
+    request_id = request.get("id") if isinstance(request, dict) else None
+    valid_id = request_id is None or isinstance(request_id, str) or (type(request_id) in {int, float} and (not isinstance(request_id, float) or math.isfinite(request_id)))
+    if not isinstance(request, dict) or request.get("jsonrpc") != "2.0" or not isinstance(request.get("method"), str) or not valid_id:
+        return rpc_error(request_id if valid_id else None, -32600, "invalid request")
+    notification = "id" not in request
+    method = request["method"]
+    params = request.get("params", {})
+    params_valid = isinstance(params, dict)
+    if params_valid and method == "tools/call":
+        name = params.get("name")
+        params_valid = isinstance(name, str) and name in TOOLS and schema_accepts(params, {
+            "type": "object", "required": ["name"], "additionalProperties": False,
+            "properties": {"name": {"type": "string"}, "arguments": {"type": "object"}, "_meta": {"type": "object"}},
+        })
+        if params_valid:
+            params_valid = schema_accepts(params.get("arguments", {}), tool_schema(name))
+    elif params_valid and method in {"initialize", "tools/list"}:
+        params_valid = schema_accepts(params, {"type": "object", "properties": {
+            "_meta": {"type": "object"}, "cursor": {"type": "string"},
+            "protocolVersion": {"type": "string"}, "capabilities": {"type": "object"},
+            "clientInfo": {"type": "object", "properties": {"name": {"type": "string"}, "version": {"type": "string"}}},
+        }})
+    if not params_valid:
+        return None if notification else rpc_error(request_id, -32602, "invalid params")
+    response = respond_valid(request, workplace, session_id, runtime)
+    return None if notification else response
+
+
+def respond_valid(request: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
     core = runtime.core
     method = str(request.get("method") or "")
     request_id = request.get("id")
     if method == "notifications/initialized":
-        return None
+        return {"jsonrpc": "2.0", "id": request_id, "result": {}}
     if method == "initialize":
         return {"jsonrpc": "2.0", "id": request_id, "result": {"protocolVersion": "2024-11-05", "serverInfo": {"name": "processforge", "version": str(getattr(core, "PROCESSFORGE_VERSION", "1"))}, "capabilities": {"tools": {}}}}
     if method == "tools/list":
@@ -308,6 +375,10 @@ def respond(request: dict[str, Any], workplace: Path, session_id: str, runtime: 
     return {"jsonrpc": "2.0", "id": request_id, "error": {"code": -32601, "message": "method not found"}}
 
 
+def reject_json_constant(value: str) -> Any:
+    raise ValueError(f"invalid JSON constant: {value}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--workplace", required=True)
@@ -320,11 +391,16 @@ def main() -> int:
         if not line.strip():
             continue
         try:
-            response = respond(json.loads(line), workplace, args.session, runtime)
-            if response is not None:
-                print(json.dumps(response, ensure_ascii=False), flush=True)
+            request = json.loads(line, parse_constant=reject_json_constant)
+        except (json.JSONDecodeError, ValueError):
+            print(json.dumps(rpc_error(None, -32700, "parse error")), flush=True)
+            continue
+        try:
+            response = respond(request, workplace, args.session, runtime)
         except Exception:
-            print(json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "invalid request"}}, ensure_ascii=False), flush=True)
+            response = rpc_error(request.get("id"), -32603, "internal error") if isinstance(request, dict) and "id" in request else None
+        if response is not None:
+            print(json.dumps(response, ensure_ascii=False), flush=True)
     return 0
 
 

@@ -1,0 +1,112 @@
+{
+  "active_agent_sessions": 82,
+  "active_workers": 0,
+  "endpoint": "http://127.0.0.1:51996",
+  "health": "ready",
+  "installed_pf": {
+    "version": "1.1.0"
+  },
+  "instance_id": "6a5710b1b3c0469bbd7f72f71dc92e21",
+  "known_projects": [
+    {
+      "director_enabled": false,
+      "effective_mode": "simple",
+      "flow_root": ".pf",
+      "project_id": "plg-content-varreplace",
+      "project_root": "D:\\Dev\\plg-content-varreplace"
+    },
+    {
+      "director_enabled": false,
+      "effective_mode": "simple",
+      "flow_root": ".pf",
+      "project_id": "process-forge",
+      "project_root": "D:\\Dev\\process-forge"
+    },
+    {
+      "director_enabled": false,
+      "effective_mode": "simple",
+      "flow_root": ".pf",
+      "project_id": "wt-image-resize-and-convert-joomla-plugin",
+      "project_root": "D:\\Dev\\wt-image-resize-and-convert-joomla-plugin"
+    }
+  ],
+  "last_event": {
+    "event_id": "evt_8331f0861b4f494c877304e3af928fe9",
+    "event_type": "supervisor.tick.completed",
+    "project_id": "wt-image-resize-and-convert-joomla-plugin",
+    "time": "2026-09-10T12:25:03Z"
+  },
+  "last_runtime_instance": {
+    "status": "current",
+    "version": "1.0.0-poc"
+  },
+  "last_scheduler_error": null,
+  "last_scheduler_result": {
+    "projects": [
+      {
+        "director": "skipped_simple",
+        "effective_mode": "simple",
+        "inspector": "tick",
+        "project_id": "plg-content-varreplace",
+        "projection": ".pf/artifacts/projections/stage-obligations.json"
+      },
+      {
+        "director": "skipped_simple",
+        "effective_mode": "simple",
+        "inspector": "tick",
+        "project_id": "process-forge",
+        "projection": ".pf/artifacts/projections/stage-obligations.json"
+      },
+      {
+        "director": "skipped_simple",
+        "effective_mode": "simple",
+        "inspector": "tick",
+        "project_id": "wt-image-resize-and-convert-joomla-plugin",
+        "projection": ".pf/artifacts/projections/stage-obligations.json"
+      }
+    ],
+    "status": "ok"
+  },
+  "pending_runtime_jobs": 0,
+  "pid": 14080,
+  "processforge_core_version": "1.1.0",
+  "protocol_version": "pf-runtime-poc-1",
+  "runtime": {
+    "health": "ready",
+    "running": true,
+    "status": "ready"
+  },
+  "runtime_version": "1.0.0-poc",
+  "scheduler": {
+    "jobs": {
+      "director": {
+        "last_result": "ok",
+        "last_run": "2026-09-10T12:25:04Z",
+        "period_seconds": 10
+      },
+      "inspector": {
+        "last_result": "ok",
+        "last_run": "2026-09-10T12:25:04Z",
+        "period_seconds": 5
+      },
+      "ledger": {
+        "last_result": "ok",
+        "last_run": "2026-09-10T12:25:04Z",
+        "period_seconds": 5
+      },
+      "projection": {
+        "last_result": "ok",
+        "last_run": "2026-09-10T12:25:04Z",
+        "period_seconds": 30
+      }
+    }
+  },
+  "schema_version": 1,
+  "started_at": "2026-09-10T12:17:06Z",
+  "status": "ready",
+  "token_hash": "sha256:d1a48da56e161c1a1b37f1318dcdef6d3ccb8d85392425dd78d9c0dae801a7dc",
+  "token_ref": "D:\\.agents\\processforge-workplace\\runtime\\pf-runtime\\token.json",
+  "updated_at": "2026-09-10T12:24:31Z",
+  "workplace_id": "processforge-workplace",
+  "workplace_root": "D:\\.agents\\processforge-workplace"
+}

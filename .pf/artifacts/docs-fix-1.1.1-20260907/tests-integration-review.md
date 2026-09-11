@@ -1,0 +1,11 @@
+# Test integration and ownership handoff
+
+2026-09-07, orchestrator. Both test-worker attempts are terminal; attempt 2 actually exited 0 before the stop request. Raw reports and commands are preserved under attempts/docs111-tests/2. Exit 0 does not constitute acceptance.
+
+The orchestrator takes ownership of all three assigned test files for final integration. Removed the unrequested temporary-directory fallback and restored existing core-source coverage in the no-manual-infrastructure smoke. Readiness now changes only the obsolete search-index argument. The worker-created .smoke-tmp tree was moved recoverably to .pf/tmp/docs111-rejected-test-fixture-20260907 after process termination; no user data was deleted. It is retained as rejected-attempt evidence, not product output.
+
+Strengthened documentation regression to include root Markdown, both PF launchers, quoted placeholders, shell continuations, real gate-state semantics and completion of both documented tasks. No private assignment or report is loaded. Root documentation is part of the orchestrator's integration scope: portable-copy validation exposed README.md linking to the generated dist/processforge.zip output, which is absent from distributions. Replaced that local download hyperlink with the archive name and an explicit source-build location; no external URL was invented.
+
+Observed source checks: documentation contract PASS (610 CLI examples, 299 local link targets before README adjustment); no-manual-infrastructure PASS; readiness PASS. The worker's host-permission blocker does not reproduce in the orchestrator environment. Portable-copy check initially FAILED on the README build-output link; rerun required. Full suite and independent review are still pending.
+
+Final targeted acceptance: docs-contract-integrated.json PASS, 610 CLI examples and 297 existing local link targets; portable-docs-integrated.json PASS from 931 public inventory files without .pf or Git; readiness-final.json PASS (23.895 seconds); manual-infra-final.json PASS; integrated-diff.json PASS. Both EN/RU README links corrected. Original worker report remains raw evidence and is superseded for acceptance by this integration review. Full source suite and independent review remain pending.

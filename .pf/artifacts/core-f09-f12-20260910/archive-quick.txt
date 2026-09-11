@@ -1,0 +1,50 @@
+PASS: archive exists: D:\Dev\process-forge\.pf\artifacts\core-f09-f12-20260910\processforge-901d055.zip
+PASS: manifest exists: D:\Dev\process-forge\.pf\artifacts\core-f09-f12-20260910\processforge-901d055.manifest.json
+PASS: archive forbidden entries: 0
+PASS: release manifest v1 has no unexpected top-level keys
+PASS: release manifest v1 required keys present
+PASS: release manifest schema_version is 1
+PASS: release manifest name is processforge
+PASS: release manifest marks public release eligible
+PASS: release manifest source_date_epoch is valid
+PASS: release manifest generated_at matches source_date_epoch
+PASS: release manifest declares deterministic build
+PASS: release manifest source vcs is git
+PASS: release manifest source commit is 40 lowercase hex
+PASS: release manifest source tree is 40 lowercase hex
+PASS: release manifest source dirty is false
+PASS: release manifest archive filename matches sidecar zip
+PASS: release manifest archive format is zip
+PASS: release manifest archive size matches zip bytes
+PASS: release manifest archive sha256 matches zip bytes
+PASS: release manifest archive entry_count matches physical zip entries
+PASS: release manifest files are sorted and unique by path
+PASS: release manifest files length matches physical zip entries
+PASS: release archive physical members are safe regular files
+PASS: release manifest file list matches zip entries
+PASS: release manifest file size/hash entries match zip payloads
+PASS: release manifest official_packs are sorted v1 provenance entries
+PASS: manifest file list matches zip entries
+PASS: manifest files: 943
+PASS: archive entries match current root release file set: 943
+PASS: archive file hashes match current root
+PASS: manifest hashes match current root release file set
+RUN bin/pf.py --help:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\musst\AppData\Local\Temp\processforge-release-archive-xpo1hea2\bin\pf.py --help
+  started_at: 2026-09-10T12:10:52Z
+PASS bin/pf.py --help
+  finished_at: 2026-09-10T12:10:57Z
+  elapsed_seconds: 5.89
+RUN tools/processforge.py --help:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\musst\AppData\Local\Temp\processforge-release-archive-xpo1hea2\tools\processforge.py --help
+  started_at: 2026-09-10T12:10:57Z
+PASS tools/processforge.py --help
+  finished_at: 2026-09-10T12:11:00Z
+  elapsed_seconds: 3.06
+RUN release-test extracted archive:
+  C:\Users\musst\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\musst\AppData\Local\Temp\processforge-release-archive-xpo1hea2\tools\processforge.py release-test --root C:\Users\musst\AppData\Local\Temp\processforge-release-archive-xpo1hea2 --only py_compile --only schema validation --only public cleanliness --only checksum --only smoke_processforge_core_package_bootstrap --only smoke_central_event_ingress --only smoke_conversation_completeness --only smoke_central_event_replay
+  started_at: 2026-09-10T12:11:00Z
+PASS release-test extracted archive
+  finished_at: 2026-09-10T12:14:01Z
+  elapsed_seconds: 180.47
+RESULT: PASS

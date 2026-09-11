@@ -1,0 +1,109 @@
+# report-capture report
+
+## Diagnosis
+
+`worker-run-collect` rejects the three completed reports because `host._conversation_messages()` applies `_is_safe_automatic_content()` to the report body after provenance authorization.
+
+The safety regex rejects absolute/path-like text:
+
+```python
+r"(?:[a-zA-Z]:[\\/]|/(?:users|home|tmp|var)/)"
+```
+
+Report contents:
+
+| Report | Size | Rejected path pattern |
+|---|---:|---|
+| `f09-update` | 576 chars | none |
+| `f1011-search` | 814 chars | `/tmp/` |
+| `f12-ingress` | 1001 chars | `C:\` |
+| `f0912-review` | 2211 chars | `D:\` |
+
+Thus `f1011-search`, `f12-ingress`, and `f0912-review` receive:
+
+```json
+{
+  "accepted": true,
+  "chat_message_ids": [],
+  "diagnostics": {
+    "conversation": {
+      "status": "denied",
+      "reason": "untrusted_conversation_provenance",
+      "sequence": 0
+    }
+  }
+}
+```
+
+The diagnostic name is misleading: provenance validation passes; the later automatic-content safety check is what denies the message.
+
+## Exact isolated reproduction
+
+A disposable probe monkeypatched only the ingress kernel and chat writer, then passed the real `f1011-search` task/report through `host.ingest_event`. The exact return was:
+
+```json
+{
+  "accepted": true,
+  "chat_message_ids": [],
+  "deduplicated": false,
+  "diagnostics": {
+    "conversation": {
+      "reason": "untrusted_conversation_provenance",
+      "sequence": 0,
+      "status": "denied"
+    }
+  },
+  "normalized_event_ids": [],
+  "raw_event_id": "fixture-raw-1",
+  "raw_location": "fixture:0",
+  "routing_status": "accepted"
+}
+```
+
+The worker state was `completed`, task state was `done`, and the report size was 814 bytes.
+
+## Retry/idempotency defect
+
+`command_worker_run_collect()` uses a stable native event ID containing the report hash. The first attempt durably accepts the raw event but produces no conversation message. On retry, `RawIngressKernel.ingest()` returns a duplicate receipt, and `host.ingest_event()` returns immediately before retrying conversation derivation:
+
+```json
+{
+  "accepted": true,
+  "chat_message_ids": [],
+  "deduplicated": true,
+  "diagnostics": {},
+  "normalized_event_ids": [],
+  "raw_event_id": "fixture-raw-1",
+  "raw_location": "fixture:0",
+  "routing_status": "duplicate_raw"
+}
+```
+
+Therefore the first failed capture is permanently unrepairable through collect retry.
+
+## Root cause
+
+Two behaviors combine:
+
+1. Legitimate worker reports containing absolute paths are rejected by the generic automatic-content safety filter.
+2. Raw-ingress deduplication prevents conversation recovery for an already accepted raw event.
+
+`f09-update` collected successfully because its report contained no path matching the safety regex.
+
+## Recommended fix boundary
+
+Keep raw-first ingestion, stable identity, exact-one-message enforcement, task/run authorization, expected-report path validation, report-file byte equality, native-event ID validation, and secret scanning unchanged.
+
+Adjust only the content-safety policy for `WorkerExpectedReportCaptured`: after `_worker_session_authorized()` and `_allowed_conversation_message()` succeed, permit legitimate path-like report text as PF-owned output, while continuing to reject secret values and all malformed or untrusted provenance.
+
+Add regression coverage for:
+
+- first capture of safe reports with varying sizes/content;
+- first capture of path-containing reports;
+- retry after raw acceptance but conversation denial;
+- idempotent retry after successful capture;
+- malformed native ID/hash/content;
+- wrong task/run/attempt/report path;
+- untrusted provenance;
+- secret-containing reports;
+- exactly-one-message enforcement.

@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "task-iteration-log",
+    "status": "ready",
+    "path": ".pf/artifacts/publish-f06-f08-20260910/iteration-record.md"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "task-results-recorded",
+    "status": "passed",
+    "summary": "Accepted source/installed tests, two completed shell assignments, independent review and preserved final-state evidence. PF doctors pass."
+  }
+]

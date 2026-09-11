@@ -1,0 +1,145 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "run-summary",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "run-handoff",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "remediate-python-core-audit-f09-f12-updater-search-and-raw-ingress-with",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "run-summary",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "run-handoff",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "run-summary-created"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "run-summary"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "evidence": [],
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "run-doctor-passed",
+          "kind": "gate",
+          "recorded_at": "2026-09-10T12:23:28Z",
+          "status": "passed",
+          "summary": "Source/extracted/installed acceptance and preservation verified, four shell assignments completed, independent bounded review and primary final delta accepted, PF doctors passed."
+        },
+        "id": "run-doctor-passed",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "run-summary-created",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "run-summary",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "run-handoff",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "run-summary-created"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "run-summary"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "run-summary",
+  "obligations": [],
+  "previous_stage_id": "run-review",
+  "process": {
+    "fingerprint": "sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2",
+    "id": "task-batch-execution",
+    "pin_status": "pinned",
+    "version": "1.0.0"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "run-review",
+        "kind": "artifact",
+        "path": ".pf/artifacts/core-f09-f12-20260910/review-addendum.md",
+        "recorded_at": "2026-09-10T12:23:28Z",
+        "sha256": "sha256:91fca1cab45b9f988428e4bdfc1e909419fae08ee4443f145a630e25acc3a1af",
+        "status": "ready"
+      },
+      "id": "run-review",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-remediate-python-core-audit-f09-f12-updater-search-and-raw-ingres",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "run-summary",
+    "status": "in_progress",
+    "title": "Create final run summary and handoff"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "project.process-forge:project-profile",
+      "project.process-forge:project-artifacts"
+    ]
+  }
+}

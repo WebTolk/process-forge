@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "bin/pf.py",
+    "run-complete",
+    "--project-root",
+    ".",
+    "--run",
+    "core-f01-f02-shell-20260910",
+    "--apply"
+  ],
+  "started_at": "2026-09-10T05:41:09.627372+00:00",
+  "elapsed_seconds": 2.15,
+  "exit_code": 0,
+  "stdout": "shell-complete.stdout.txt",
+  "stderr": "shell-complete.stderr.txt"
+}

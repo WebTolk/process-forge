@@ -8,6 +8,7 @@ existing PF Core/Runtime Host helpers.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hmac
 import json
 import os
@@ -86,7 +87,7 @@ def read_json(path: Path) -> dict[str, Any]:
         return {}
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return {}
     return payload if isinstance(payload, dict) else {}
 
@@ -182,11 +183,14 @@ def inspect_lifecycle(workplace_root: Path, core: Any) -> dict[str, Any]:
     """Return the sole lifecycle interpretation for lock, state, PID and readiness."""
     state = read_json(service_path(workplace_root))
     lock = read_json(lock_path(workplace_root))
+    lock_exists = lock_path(workplace_root).exists()
     pid = lock.get("pid")
     instance_id = str(lock.get("instance_id") or "")
     state_instance_id = str(state.get("instance_id") or "")
     matching = bool(instance_id and instance_id == state_instance_id and pid == state.get("pid"))
     pid_running = isinstance(pid, int) and core.process_pid_running(pid)
+    state_pid = state.get("pid")
+    state_pid_running = isinstance(state_pid, int) and core.process_pid_running(state_pid)
     status = str(state.get("status") or "")
     endpoint = str(state.get("endpoint") or "")
     ready = False
@@ -195,14 +199,22 @@ def inspect_lifecycle(workplace_root: Path, core: Any) -> dict[str, Any]:
         ready = code == 200 and bool(body.get("ready"))
     if matching and pid_running:
         kind = "ready" if ready else (status if status in {"starting", "stopping", "failed"} else "failed")
-    elif state_instance_id and isinstance(state.get("pid"), int) and core.process_pid_running(state["pid"]):
+    elif state_instance_id and state_pid_running:
         # The daemon may have lost its lock file while its service record and
         # endpoint remain live.  This is not stale: starting another daemon
         # would create two owners for one workplace.
         kind = "orphaned"
-    elif not lock and status == "stopped":
+    elif pid_running:
+        # A lock owner whose service record is missing or mismatched is still
+        # live.  Never replace it based on an unrelated or absent state file.
+        kind = "orphaned"
+    elif lock_exists and not isinstance(pid, int):
+        # An unreadable/partial lock cannot be proven stale.  Conservative
+        # recovery preserves singleton safety until an operator removes it.
+        kind = "orphaned"
+    elif not lock_exists and status == "stopped":
         kind = "stopped"
-    elif not lock and not state:
+    elif not lock_exists and not state:
         kind = "not_running"
     else:
         kind = "stale"
@@ -226,16 +238,17 @@ def wait_for_ready_service(workplace_root: Path, core: Any, timeout: float) -> t
 
 
 def cleanup_stale_runtime(workplace_root: Path, core: Any) -> None:
-    inspection = inspect_lifecycle(workplace_root, core)
-    if inspection["kind"] in {"ready", "starting", "stopping", "failed", "orphaned", "stopped", "not_running"}:
-        return
-    lock_path(workplace_root).unlink(missing_ok=True)
-    state = inspection["state"]
-    if state:
-        state["status"] = "stale"
-        state["health"] = "stale"
-        state["stale_detected_at"] = core.now_utc()
-        write_json_atomic(service_path(workplace_root), state)
+    with singleton_critical_section(workplace_root, core):
+        inspection = inspect_lifecycle(workplace_root, core)
+        if inspection["kind"] in {"ready", "starting", "stopping", "failed", "orphaned", "stopped", "not_running"}:
+            return
+        lock_path(workplace_root).unlink(missing_ok=True)
+        state = inspection["state"]
+        if state:
+            state["status"] = "stale"
+            state["health"] = "stale"
+            state["stale_detected_at"] = core.now_utc()
+            write_json_atomic(service_path(workplace_root), state)
 
 
 def terminate_owned_process(pid: int, core: Any, timeout: float) -> bool:
@@ -252,26 +265,83 @@ def terminate_owned_process(pid: int, core: Any, timeout: float) -> bool:
     return not core.process_pid_running(pid)
 
 
+@contextlib.contextmanager
+def singleton_critical_section(workplace_root: Path, core: Any | None = None) -> Any:
+    """Serialize Runtime lock inspect/reap/create/release per workplace."""
+    registry_lock = getattr(core, "registry_file_lock", None)
+    if callable(registry_lock):
+        with registry_lock(lock_path(workplace_root), timeout_seconds=10.0, stale_after_seconds=10.0):
+            yield
+        return
+
+    # Runtime unit tests may provide a small core stub.  Keep the fallback
+    # cross-process and use a persistent inode so reapers cannot race unlink.
+    path = lock_path(workplace_root)
+    guard_path = path.with_name(f".{path.name}.lock.guard")
+    guard_path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(str(guard_path), os.O_CREAT | os.O_RDWR)
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            os.lseek(fd, 0, os.SEEK_SET)
+            deadline = time.monotonic() + 10.0
+            while True:
+                try:
+                    msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+                    break
+                except OSError:
+                    if time.monotonic() >= deadline:
+                        raise SystemExit("FAIL: Runtime singleton guard is locked")
+                    time.sleep(0.05)
+            try:
+                yield
+            finally:
+                os.lseek(fd, 0, os.SEEK_SET)
+                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+    finally:
+        os.close(fd)
+
+
 def acquire_singleton(workplace_root: Path, core: Any, instance_id: str) -> int:
     runtime_root(workplace_root).mkdir(parents=True, exist_ok=True)
-    cleanup_stale_runtime(workplace_root, core)
     path = lock_path(workplace_root)
-    try:
-        fd = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError:
+    with singleton_critical_section(workplace_root, core):
         inspection = inspect_lifecycle(workplace_root, core)
-        if inspection["kind"] in {"ready", "starting", "stopping", "failed"}:
+        if inspection["kind"] in {"ready", "starting", "stopping", "failed", "orphaned"}:
             raise SystemExit(f"FAIL: PF Runtime already owns workplace: state={inspection['kind']} pid={inspection['pid']}")
-        path.unlink(missing_ok=True)
-        fd = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    with os.fdopen(fd, "w", encoding="utf-8") as handle:
-        handle.write(json.dumps({"instance_id": instance_id, "pid": os.getpid(), "created_at": core.now_utc()}, sort_keys=True) + "\n")
+        if inspection["kind"] == "stale":
+            path.unlink(missing_ok=True)
+        try:
+            fd = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            # The guard makes this unlikely, but re-check under the same
+            # critical section before any stale cleanup.  Never unlink an
+            # owner that appeared after the first inspection.
+            inspection = inspect_lifecycle(workplace_root, core)
+            if inspection["kind"] in {"ready", "starting", "stopping", "failed", "orphaned"}:
+                raise SystemExit(f"FAIL: PF Runtime already owns workplace: state={inspection['kind']} pid={inspection['pid']}")
+            if inspection["kind"] != "stale":
+                raise SystemExit("FAIL: PF Runtime singleton lock requires recovery")
+            path.unlink(missing_ok=True)
+            fd = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps({"instance_id": instance_id, "pid": os.getpid(), "created_at": core.now_utc()}, sort_keys=True) + "\n")
     return os.getpid()
 
 
-def release_singleton(workplace_root: Path, instance_id: str) -> None:
-    if str(read_json(lock_path(workplace_root)).get("instance_id") or "") == instance_id:
-        lock_path(workplace_root).unlink(missing_ok=True)
+def release_singleton(workplace_root: Path, instance_id: str, core: Any | None = None) -> None:
+    with singleton_critical_section(workplace_root, core):
+        if str(read_json(lock_path(workplace_root)).get("instance_id") or "") == instance_id:
+            lock_path(workplace_root).unlink(missing_ok=True)
 
 
 class RuntimeProcess:
@@ -282,58 +352,110 @@ class RuntimeProcess:
         self.token = load_token(workplace_root)
         self.stop_event = threading.Event()
         self.httpd: ThreadingHTTPServer | None = None
+        self.scheduler_thread: threading.Thread | None = None
         self.instance_id = uuid.uuid4().hex
         self.state: dict[str, Any] = base_state(workplace_root, core, status="starting", instance_id=self.instance_id)
         self.state_lock = threading.RLock()
+        self._project_errors: dict[str, str] = {}
 
     def save(self) -> None:
         with self.state_lock:
             save_service_state(self.workplace_root, self.core, self.state)
 
     def known_project_roots(self) -> list[Path]:
-        state = host.load_state(self.workplace_root)
+        errors: dict[str, str] = {}
+        try:
+            state = host.load_state(self.workplace_root)
+        except Exception as exc:  # noqa: BLE001 - malformed cache is recoverable.
+            self._project_errors = {"host_cache": str(exc)}
+            with self.state_lock:
+                self.state["project_errors"] = dict(self._project_errors)
+                self.state["health"] = "degraded"
+            return []
+        projects = state.get("projects", [])
+        if not isinstance(projects, list):
+            errors["host_cache"] = "project cache field is not a list"
+            projects = []
         roots: list[Path] = []
-        for item in state.get("projects", []):
+        for item in projects:
             if isinstance(item, dict) and item.get("project_root"):
+                project_ref = str(item["project_root"])
                 try:
-                    roots.append(host.resolve_project(str(item["project_root"]), self.core))
-                except SystemExit:
-                    continue
+                    roots.append(host.resolve_project(project_ref, self.core))
+                except SystemExit as exc:
+                    errors[project_ref] = str(exc) or "project routing rejected the cached project"
+                except Exception as exc:  # noqa: BLE001 - isolate one bad project.
+                    errors[project_ref] = str(exc)
+            elif item:
+                errors["host_cache"] = "project cache contains a malformed entry"
+        self._project_errors = errors
+        with self.state_lock:
+            if errors:
+                self.state["project_errors"] = dict(errors)
+                self.state["health"] = "degraded"
+            else:
+                self.state.pop("project_errors", None)
         return roots
 
     def status_payload(self) -> dict[str, Any]:
         roots = self.known_project_roots()
-        runtime_host = host.load_state(self.workplace_root)
+        try:
+            runtime_host = host.load_state(self.workplace_root)
+        except Exception as exc:  # noqa: BLE001 - report malformed cache truthfully.
+            runtime_host = {}
+            self._project_errors["host_cache"] = str(exc)
+            with self.state_lock:
+                self.state["project_errors"] = dict(self._project_errors)
+                self.state["health"] = "degraded"
         with self.state_lock:
             payload = dict(self.state)
-        payload["health"] = "ready" if self.state.get("status") == "ready" else self.state.get("health", self.state.get("status"))
+        has_errors = bool(payload.get("project_errors") or payload.get("last_scheduler_error"))
+        payload["health"] = "degraded" if has_errors else payload.get("health", payload.get("status"))
+        scheduler_thread = getattr(self, "scheduler_thread", None)
+        payload["scheduler_alive"] = scheduler_thread.is_alive() if scheduler_thread is not None else False
+        if scheduler_thread is not None and not scheduler_thread.is_alive() and payload.get("status") == "ready":
+            payload["health"] = "degraded"
+            payload["last_scheduler_error"] = "scheduler thread is not running"
         payload["known_projects"] = runtime_host.get("projects", [])
         payload["active_agent_sessions"] = len(self.core.iter_agent_presence(self.workplace_root))
         payload["active_workers"] = self.active_worker_count(roots)
         payload["pending_runtime_jobs"] = 0
         payload["last_event"] = self.last_event(roots)
-        payload["last_scheduler_error"] = self.state.get("last_scheduler_error")
+        with self.state_lock:
+            current_errors = dict(self._project_errors)
+            current_scheduler_error = self.state.get("last_scheduler_error")
+        if current_errors:
+            payload["project_errors"] = current_errors
+            payload["health"] = "degraded"
+        if current_scheduler_error:
+            payload["last_scheduler_error"] = current_scheduler_error
         return payload
 
     def active_worker_count(self, roots: list[Path]) -> int:
         count = 0
         for project_root in roots:
-            agent_runs = self.core.locate_flow_root(project_root) / "runtime" / "agent-runs"
-            for status_path in agent_runs.glob("*/*/status.json") if agent_runs.is_dir() else []:
-                state = self.core.json_read(status_path)
-                if str(state.get("status") or "") == "running":
-                    count += 1
+            try:
+                agent_runs = self.core.locate_flow_root(project_root) / "runtime" / "agent-runs"
+                for status_path in agent_runs.glob("*/*/status.json") if agent_runs.is_dir() else []:
+                    state = self.core.json_read(status_path)
+                    if str(state.get("status") or "") == "running":
+                        count += 1
+            except Exception as exc:  # noqa: BLE001 - status must survive one project.
+                self._project_errors[str(project_root)] = str(exc)
         return count
 
     def last_event(self, roots: list[Path]) -> dict[str, Any] | None:
         latest: dict[str, Any] | None = None
         for project_root in roots:
-            events_path, _outbox = self.core.event_runtime_paths(project_root)
-            if not events_path.is_file():
-                continue
-            item = last_json_object(events_path)
-            if item is not None:
-                latest = {"project_id": self.core.project_id(project_root), "event_id": item.get("event_id"), "event_type": item.get("event_type"), "time": item.get("time")}
+            try:
+                events_path, _outbox = self.core.event_runtime_paths(project_root)
+                if not events_path.is_file():
+                    continue
+                item = last_json_object(events_path)
+                if item is not None:
+                    latest = {"project_id": self.core.project_id(project_root), "event_id": item.get("event_id"), "event_type": item.get("event_type"), "time": item.get("time")}
+            except Exception as exc:  # noqa: BLE001 - status must survive one project.
+                self._project_errors[str(project_root)] = str(exc)
         return latest
 
     def assert_session_project_scope(self, payload: dict[str, Any]) -> None:
@@ -347,12 +469,30 @@ class RuntimeProcess:
             raise PermissionError("session is not authorized for requested project_root")
 
     def scheduler_loop(self) -> None:
+        self.scheduler_thread = threading.current_thread()
         while not self.stop_event.wait(self.interval):
-            roots = self.known_project_roots()
             try:
+                roots = self.known_project_roots()
+                project_errors = dict(self._project_errors)
                 self.core.update_stale_agent_presence(self.workplace_root)
-                payload, status = host.tick_payload(self.workplace_root, roots, self.core, director=True, inspector=True)
+                projects: list[dict[str, Any]] = []
+                status = 0
+                for project_root in roots:
+                    try:
+                        item_payload, item_status = host.tick_payload(self.workplace_root, [project_root], self.core, director=True, inspector=True)
+                        projects.extend(item_payload.get("projects", []))
+                        status = status or item_status
+                        if item_status:
+                            project_errors[str(project_root)] = f"project scheduler pass failed with status {item_status}"
+                    except SystemExit as exc:
+                        project_errors[str(project_root)] = str(exc) or "project scheduler pass rejected the project"
+                        status = 1
+                    except Exception as exc:  # noqa: BLE001 - isolate one bad project.
+                        project_errors[str(project_root)] = str(exc)
+                        status = 1
+                payload = {"status": "ok" if status == 0 and not project_errors else "failed", "projects": projects}
                 with self.state_lock:
+                    self._project_errors = project_errors
                     jobs = self.state.setdefault("scheduler", {}).setdefault("jobs", {})
                     now = self.core.now_utc()
                     jobs.setdefault("ledger", {})["last_run"] = now
@@ -364,13 +504,28 @@ class RuntimeProcess:
                     jobs.setdefault("projection", {})["last_run"] = now
                     jobs["projection"]["last_result"] = "ok" if status == 0 else "failed"
                     self.state["last_scheduler_result"] = payload
-                    self.state.pop("last_scheduler_error", None)
-            except Exception as exc:  # noqa: BLE001 - runtime must degrade, not crash on one bad project.
+                    if self._project_errors:
+                        self.state["health"] = "degraded"
+                        self.state["project_errors"] = dict(self._project_errors)
+                        self.state["last_scheduler_error"] = "; ".join(f"{key}: {value}" for key, value in self._project_errors.items())
+                    else:
+                        self.state.pop("last_scheduler_error", None)
+                        self.state.pop("project_errors", None)
+                        self.state["health"] = "ready" if self.state.get("status") == "ready" else self.state.get("health", self.state.get("status"))
+            except (Exception, SystemExit) as exc:  # noqa: BLE001 - runtime must degrade, not crash on one bad project.
                 with self.state_lock:
                     self.state["health"] = "degraded"
                     self.state["last_scheduler_error"] = str(exc)
-                append_operator_log(self.workplace_root, self.core, "scheduler.error", error=str(exc))
-            self.save()
+                try:
+                    append_operator_log(self.workplace_root, self.core, "scheduler.error", error=str(exc))
+                except OSError:
+                    pass  # Preserve the in-memory fault when storage is unavailable.
+            try:
+                self.save()
+            except (Exception, SystemExit) as exc:  # noqa: BLE001 - retry persistence on the next pass.
+                with self.state_lock:
+                    self.state["health"] = "degraded"
+                    self.state["last_scheduler_error"] = str(exc)
 
     def make_handler(self) -> type[BaseHTTPRequestHandler]:
         runtime = self
@@ -492,7 +647,8 @@ class RuntimeProcess:
             self.state["health"] = "ready"
             self.save()
             append_operator_log(self.workplace_root, self.core, "runtime.started", endpoint=endpoint, pid=os.getpid())
-            threading.Thread(target=self.scheduler_loop, daemon=True).start()
+            self.scheduler_thread = threading.Thread(target=self.scheduler_loop, daemon=True)
+            self.scheduler_thread.start()
             self.httpd.serve_forever(poll_interval=0.2)
             self.state["status"] = "stopped"
             self.state["health"] = "stopped"
@@ -508,7 +664,7 @@ class RuntimeProcess:
             append_operator_log(self.workplace_root, self.core, "runtime.failed", pid=os.getpid(), error=str(exc))
             raise
         finally:
-            release_singleton(self.workplace_root, self.instance_id)
+            release_singleton(self.workplace_root, self.instance_id, self.core)
 
 
 def command_serve(args: argparse.Namespace, core: Any) -> int:

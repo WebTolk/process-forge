@@ -1,0 +1,140 @@
+[
+  {
+    "case": "plain",
+    "collect": [
+      {
+        "exit": 0,
+        "stdout": "DONE: worker-task\n"
+      },
+      {
+        "exit": 0,
+        "stdout": "DONE: worker-task\n"
+      }
+    ],
+    "capture": [
+      {
+        "raw_event_id": "raw_d0035fb27af1578fe933a17f8c7c03ea0c16c3161b1ccb0f02289f74bcde8720",
+        "accepted": true,
+        "deduplicated": false,
+        "raw_location": "raw/v1/2026/09/11/03.ndjson:0",
+        "routing_status": "raw_accepted",
+        "normalized_event_ids": [],
+        "chat_message_ids": [
+          "msg_76bad41ee3e9ff7cc72b64bcd5193320"
+        ],
+        "diagnostics": {}
+      },
+      {
+        "raw_event_id": "raw_d0035fb27af1578fe933a17f8c7c03ea0c16c3161b1ccb0f02289f74bcde8720",
+        "accepted": true,
+        "deduplicated": true,
+        "raw_location": "raw/v1/2026/09/11/03.ndjson:0",
+        "routing_status": "duplicate_raw",
+        "normalized_event_ids": [],
+        "chat_message_ids": [
+          "msg_76bad41ee3e9ff7cc72b64bcd5193320"
+        ],
+        "diagnostics": {}
+      }
+    ],
+    "assistant_count": 1,
+    "assistant_contents": [
+      "# Report\n\nVerified local result.\n"
+    ],
+    "task_status": "done"
+  },
+  {
+    "case": "path_content",
+    "collect": [
+      {
+        "exit": 1,
+        "stdout": "FAIL: collectible expected report was not captured as exactly one assistant transcript message\n"
+      },
+      {
+        "exit": 1,
+        "stdout": "FAIL: collectible expected report was not captured as exactly one assistant transcript message\n"
+      }
+    ],
+    "capture": [
+      {
+        "raw_event_id": "raw_68b8210e157ed6bd44412f0d8c5f80097f1df7ee3d0a004e38d5e242c41ac62d",
+        "accepted": true,
+        "deduplicated": false,
+        "raw_location": "raw/v1/2026/09/11/03.ndjson:0",
+        "routing_status": "raw_accepted",
+        "normalized_event_ids": [],
+        "chat_message_ids": [],
+        "diagnostics": {
+          "conversation": {
+            "status": "denied",
+            "reason": "unsafe_automatic_content",
+            "sequence": 0
+          }
+        }
+      },
+      {
+        "raw_event_id": "raw_68b8210e157ed6bd44412f0d8c5f80097f1df7ee3d0a004e38d5e242c41ac62d",
+        "accepted": true,
+        "deduplicated": true,
+        "raw_location": "raw/v1/2026/09/11/03.ndjson:0",
+        "routing_status": "duplicate_raw",
+        "normalized_event_ids": [],
+        "chat_message_ids": [],
+        "diagnostics": {
+          "conversation": {
+            "status": "denied",
+            "reason": "unsafe_automatic_content",
+            "sequence": 0
+          }
+        }
+      }
+    ],
+    "assistant_count": 0,
+    "assistant_contents": [],
+    "task_status": "open"
+  },
+  {
+    "case": "external_report",
+    "collect": [
+      {
+        "exit": 0,
+        "stdout": "DONE: worker-task\n"
+      },
+      {
+        "exit": 0,
+        "stdout": "DONE: worker-task\n"
+      }
+    ],
+    "capture": [
+      {
+        "raw_event_id": "raw_b039d5b261f51a62b4caf79f71bf841d45408cecbbeccabe0ee995e3eb3961e2",
+        "accepted": true,
+        "deduplicated": false,
+        "raw_location": "raw/v1/2026/09/11/03.ndjson:0",
+        "routing_status": "raw_accepted",
+        "normalized_event_ids": [],
+        "chat_message_ids": [
+          "msg_d22a7bfc37d1c8659ec4db03199fa046"
+        ],
+        "diagnostics": {}
+      },
+      {
+        "raw_event_id": "raw_b039d5b261f51a62b4caf79f71bf841d45408cecbbeccabe0ee995e3eb3961e2",
+        "accepted": true,
+        "deduplicated": true,
+        "raw_location": "raw/v1/2026/09/11/03.ndjson:0",
+        "routing_status": "duplicate_raw",
+        "normalized_event_ids": [],
+        "chat_message_ids": [
+          "msg_d22a7bfc37d1c8659ec4db03199fa046"
+        ],
+        "diagnostics": {}
+      }
+    ],
+    "assistant_count": 1,
+    "assistant_contents": [
+      "# Harmless external fixture\n\nOUTSIDE_FIXTURE_MARKER\n"
+    ],
+    "task_status": "done"
+  }
+]

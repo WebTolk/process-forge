@@ -1,0 +1,3 @@
+WROTE: .pf/artifacts/publish-f06-f08-20260910/processforge-5c95391.zip
+WROTE: .pf/artifacts/publish-f06-f08-20260910/processforge-5c95391.manifest.json
+FILES: 939

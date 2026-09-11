@@ -1,0 +1,18 @@
+{
+  "run_id": "garage-audit-current-processforge-python-core-and-codebase-for-reproduci",
+  "status": "completed",
+  "action": "run_completed",
+  "checks": [
+    {
+      "command": "run-doctor",
+      "exit_code": 0
+    },
+    {
+      "command": "task-doctor",
+      "exit_code": 0
+    }
+  ],
+  "diff_check_exit_code": 0,
+  "production_files_unchanged": 26,
+  "temporary_tooling_retained": "automatic approval review rejected deletion: blocked by policy"
+}

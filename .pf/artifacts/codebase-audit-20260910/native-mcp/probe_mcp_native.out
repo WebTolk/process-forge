@@ -1,0 +1,115 @@
+{
+  "jsonrpc_envelope": {
+    "actual": [
+      {
+        "id": null,
+        "isError": false,
+        "jsonrpc": "2.0"
+      },
+      {
+        "content_type": "text",
+        "id": null,
+        "isError": false,
+        "jsonrpc": "2.0"
+      },
+      {
+        "id": 2,
+        "isError": false,
+        "jsonrpc": "2.0"
+      },
+      {
+        "id": 3,
+        "isError": true,
+        "jsonrpc": "2.0",
+        "tool_error_code": "missing_project_root"
+      }
+    ],
+    "actual_response_count": 4,
+    "actual_response_counts_by_case": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "case": "JSON-RPC envelope and params validation",
+    "expected": [
+      "both valid notifications produce no response",
+      "non-2.0 envelope is rejected as invalid request",
+      "non-object tools/call arguments are rejected as invalid params"
+    ],
+    "expected_response_count": 2,
+    "expected_response_counts_by_case": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "requests": [
+      {
+        "jsonrpc": "2.0",
+        "method": "tools/list"
+      },
+      {
+        "jsonrpc": "2.0",
+        "method": "tools/call",
+        "params": {
+          "arguments": {
+            "project_root": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-native-mcp-kegqdh8j\\project-envelope"
+          },
+          "name": "pf.context"
+        }
+      },
+      {
+        "id": 2,
+        "jsonrpc": "1.0",
+        "method": "tools/list"
+      },
+      {
+        "id": 3,
+        "jsonrpc": "2.0",
+        "method": "tools/call",
+        "params": {
+          "arguments": [],
+          "name": "pf.context"
+        }
+      }
+    ]
+  },
+  "probe": "native PF stdio MCP",
+  "repo_head": "",
+  "session_binding": {
+    "case": "case-sensitive session id",
+    "collision_checkins": {
+      "actual_presence_count": 1,
+      "actual_presence_session_ids": [
+        "case-session"
+      ],
+      "expected_presence_count": 2,
+      "lower_lookup": {
+        "id": 3,
+        "isError": false,
+        "jsonrpc": "2.0"
+      },
+      "requested_sessions": [
+        "Case-Session",
+        "case-session"
+      ],
+      "upper_lookup": {
+        "id": 2,
+        "isError": false,
+        "jsonrpc": "2.0"
+      }
+    },
+    "expected": "exact opaque ids accepted by agent-checkin remain independently routable",
+    "single_checkin": {
+      "actual": {
+        "id": 1,
+        "isError": true,
+        "jsonrpc": "2.0",
+        "tool_error_code": "unknown_session"
+      },
+      "expected": "successful pf.session_context",
+      "request_session": "Case-Session"
+    }
+  }
+}

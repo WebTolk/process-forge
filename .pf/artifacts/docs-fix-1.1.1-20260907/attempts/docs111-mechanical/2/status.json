@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "run_id": "docs-fix-1-1-1-shell-20260907",
+  "task_id": "docs111-mechanical",
+  "driver_id": "codex-exec",
+  "agent_model": "gpt-5.3-codex-spark",
+  "status": "running",
+  "pid": 9528,
+  "started_at": "2026-09-07T13:12:53Z",
+  "finished_at": null,
+  "exit_code": null,
+  "timeout_seconds": 3600,
+  "attempt": 2,
+  "max_retries": 0,
+  "capsule_path": ".pf/contexts/assignment-capsules/docs111-mechanical.capsule.yaml",
+  "worker_prompt_path": ".pf/runs/docs-fix-1-1-1-shell-20260907/worker-prompts/docs111-mechanical.md",
+  "expected_report_path": ".pf/artifacts/docs-fix-1.1.1-20260907/docs111-mechanical-report.md",
+  "stdout_path": ".pf/runtime/agent-runs/docs-fix-1-1-1-shell-20260907/docs111-mechanical/stdout.log",
+  "stderr_path": ".pf/runtime/agent-runs/docs-fix-1-1-1-shell-20260907/docs111-mechanical/stderr.log",
+  "heartbeat_path": ".pf/runtime/agent-runs/docs-fix-1-1-1-shell-20260907/docs111-mechanical/heartbeat.json",
+  "last_heartbeat_at": "2026-09-07T13:15:59Z",
+  "failure_reason": null
+}

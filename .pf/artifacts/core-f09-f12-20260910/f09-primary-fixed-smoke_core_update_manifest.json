@@ -1,0 +1,10 @@
+{
+  "name": "smoke_core_update_manifest",
+  "root": "D:\\Dev\\process-forge",
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge\\tools\\smoke_core_update_manifest.py"
+  ],
+  "exit": 0,
+  "seconds": 19.29
+}

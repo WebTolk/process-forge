@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "run_id": "core-f01-f02-shell-20260910",
+  "task_id": "f01-search",
+  "driver_id": "codex-exec",
+  "agent_model": "gpt-5.6-luna",
+  "status": "cancelled",
+  "pid": 15140,
+  "started_at": null,
+  "finished_at": "2026-09-10T05:05:49Z",
+  "exit_code": null,
+  "timeout_seconds": 3600,
+  "attempt": 1,
+  "max_retries": 0,
+  "capsule_path": ".pf/contexts/assignment-capsules/f01-search.capsule.yaml",
+  "worker_prompt_path": ".pf/runs/core-f01-f02-shell-20260910/worker-prompts/f01-search.md",
+  "expected_report_path": ".pf/artifacts/core-f01-f02-20260910/f01-search/report.md",
+  "stdout_path": ".pf/runtime/agent-runs/core-f01-f02-shell-20260910/f01-search/stdout.log",
+  "stderr_path": ".pf/runtime/agent-runs/core-f01-f02-shell-20260910/f01-search/stderr.log",
+  "heartbeat_path": ".pf/runtime/agent-runs/core-f01-f02-shell-20260910/f01-search/heartbeat.json",
+  "last_heartbeat_at": "2026-09-10T05:05:49Z",
+  "failure_reason": "stop requested"
+}

@@ -1,0 +1,105 @@
+STATUS: fresh
+WROTE: .pf/contexts/project-context.snapshot.yaml
+WROTE: .pf/contexts/project-context.snapshot.md
+WROTE: .pf/contexts/project-context.snapshots/ctx-20260910-065103-8ec72e.yaml
+WROTE: .pf/artifacts/project-context-refresh-report.md
+WROTE: .pf/runtime/cache/workplace-context.snapshot.yaml
+SEARCH_INDEX_SCOPE: workplace
+SEARCH_INDEX_REPORT: runtime/search/latest-maintenance.yaml
+SEARCH_INDEX: workplace action=none status=fresh generation=6725752f76bd6f5d documents=85
+TELEMETRY: .pf/runtime/telemetry/project-context-refresh-20260910T065045z.ndjson
+WROTE: .pf/contexts/assignment-capsules/f0304-evidence.capsule.yaml
+WROTE: .pf/runs/core-f03-f05-shell-20260910/worker-prompts/f0304-evidence.md
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: open
+PASS: referenced run exists: core-f03-f05-shell-20260910
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/f0304-evidence.yaml has no private absolute paths
+WARN: required output pending: .pf/artifacts/core-f03-f05-20260910/f0304-evidence/report.md
+WARN: expected report pending: .pf/artifacts/core-f03-f05-20260910/f0304-evidence/report.md
+WROTE: .pf/contexts/assignment-capsules/f05-completion.capsule.yaml
+WROTE: .pf/runs/core-f03-f05-shell-20260910/worker-prompts/f05-completion.md
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: open
+PASS: referenced run exists: core-f03-f05-shell-20260910
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/f05-completion.yaml has no private absolute paths
+WARN: required output pending: .pf/artifacts/core-f03-f05-20260910/f05-completion/report.md
+WARN: expected report pending: .pf/artifacts/core-f03-f05-20260910/f05-completion/report.md
+WROTE: .pf/contexts/assignment-capsules/f0305-assurance.capsule.yaml
+WROTE: .pf/runs/core-f03-f05-shell-20260910/worker-prompts/f0305-assurance.md
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: open
+PASS: referenced run exists: core-f03-f05-shell-20260910
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/f0305-assurance.yaml has no private absolute paths
+WARN: required output pending: .pf/artifacts/core-f03-f05-20260910/f0305-assurance/report.md
+WARN: expected report pending: .pf/artifacts/core-f03-f05-20260910/f0305-assurance/report.md
+WROTE: .pf/contexts/assignment-capsules/f0305-review.capsule.yaml
+WROTE: .pf/runs/core-f03-f05-shell-20260910/worker-prompts/f0305-review.md
+PASS: task.schema_version present
+PASS: task.id present
+PASS: task.title present
+PASS: task.run_id present
+PASS: task.process present
+PASS: task.status present
+PASS: task.iterations present
+PASS: task.result present
+PASS: task status valid: open
+PASS: referenced run exists: core-f03-f05-shell-20260910
+PASS: process exists: task-batch-execution
+PASS: .pf/assignments/f0305-review.yaml has no private absolute paths
+WARN: required output pending: .pf/artifacts/core-f03-f05-20260910/f0305-review/report.md
+WARN: expected report pending: .pf/artifacts/core-f03-f05-20260910/f0305-review/report.md
+PASS: run.schema_version present
+PASS: run.id present
+PASS: run.title present
+PASS: run.process present
+PASS: run.status present
+PASS: run.created_at present
+PASS: run.updated_at present
+PASS: run.tasks present
+PASS: run status valid: in_progress
+PASS: summary artifact not yet required: .pf/runs/core-f03-f05-shell-20260910/summary.md
+PASS: task index status matches run: in_progress
+PASS: handoff artifact not yet required: .pf/handoffs/runs/core-f03-f05-shell-20260910-handoff.md
+PASS: process exists: multi-agent-task-orchestration
+PASS: .pf/runs/core-f03-f05-shell-20260910/run.yaml has no private absolute paths
+PASS: task id unique: f0304-evidence
+PASS: task status valid for f0304-evidence: open
+PASS: assignment exists for f0304-evidence: .pf/assignments/f0304-evidence.yaml
+PASS: f0304-evidence run_id matches run
+PASS: task id unique: f05-completion
+PASS: task status valid for f05-completion: open
+PASS: assignment exists for f05-completion: .pf/assignments/f05-completion.yaml
+PASS: f05-completion run_id matches run
+PASS: task id unique: f0305-assurance
+PASS: task status valid for f0305-assurance: open
+PASS: assignment exists for f0305-assurance: .pf/assignments/f0305-assurance.yaml
+PASS: f0305-assurance run_id matches run
+PASS: task id unique: f0305-review
+PASS: task status valid for f0305-review: open
+PASS: assignment exists for f0305-review: .pf/assignments/f0305-review.yaml
+PASS: f0305-review run_id matches run
+WROTE: .pf/runs/core-f03-f05-shell-20260910/orchestration-summary.md

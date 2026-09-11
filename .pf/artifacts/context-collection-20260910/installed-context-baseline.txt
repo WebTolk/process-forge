@@ -1,0 +1,7 @@
+SNAPSHOT_ID: ctx-20260910-113559-b35a98
+STATUS: stale
+POLICY_ACTION: ask_operator
+RECOMMENDED_ACTION: project-context-refresh
+STALE: project-context: project classification changed
+RESOURCE_READINESS: fresh
+EXECUTION_READINESS: ready

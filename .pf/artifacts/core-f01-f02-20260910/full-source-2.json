@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-u",
+    "bin/pf.py",
+    "release-test",
+    "--no-clean",
+    "--trace-smokes",
+    "--fail-fast"
+  ],
+  "started_at": "2026-09-10T05:24:28.979467+00:00",
+  "elapsed_seconds": 784.064,
+  "exit_code": 1,
+  "stdout": "full-source-2.stdout.txt",
+  "stderr": "full-source-2.stderr.txt"
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "pid": 23032,
+  "started_at": "2026-09-11T06:49:14Z",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "D:\\Dev\\process-forge/tools/codex_exec_worker.py",
+    "--worker-prompt",
+    "D:\\Dev\\process-forge\\.pf\\runs\\core-a01-a11-wave2-20260911\\worker-prompts\\a05-migration.md",
+    "--capsule",
+    "D:\\Dev\\process-forge\\.pf\\contexts\\assignment-capsules\\a05-migration.capsule.yaml",
+    "--workspace-access",
+    "D:\\Dev\\process-forge\\.pf\\runtime\\agent-runs\\core-a01-a11-wave2-20260911\\a05-migration\\workspace-access.json",
+    "--output",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\core-a01-a11-20260911\\a05-migration\\report.md",
+    "--heartbeat",
+    "D:\\Dev\\process-forge\\.pf\\runtime\\agent-runs\\core-a01-a11-wave2-20260911\\a05-migration\\heartbeat.json"
+  ]
+}

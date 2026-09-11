@@ -1,0 +1,3 @@
+PASS: D:\.agents\processforge-workplace\runtime\update\candidates.json matches update-candidates.schema.json
+PASS: D:\.agents\processforge-workplace\runtime\update\notifications.json matches update-notifications.schema.json
+PASS: update runtime state readable

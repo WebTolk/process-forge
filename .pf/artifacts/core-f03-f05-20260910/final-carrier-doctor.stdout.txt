@@ -1,0 +1,21 @@
+PASS: run.schema_version present
+PASS: run.id present
+PASS: run.title present
+PASS: run.process present
+PASS: run.status present
+PASS: run.created_at present
+PASS: run.updated_at present
+PASS: run.tasks present
+PASS: run status valid: completed
+PASS: summary status matches run: completed
+PASS: task index status matches run: completed
+PASS: handoff status matches run: completed
+PASS: process exists: task-batch-execution
+PASS: .pf/runs/garage-remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-re/run.yaml has no private absolute paths
+PASS: task id unique: remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-recoverab
+PASS: task status valid for remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-recoverab: done
+PASS: assignment exists for remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-recoverab: .pf/assignments/remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-recoverab.yaml
+PASS: remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-recoverab run_id matches run
+PASS: completed run has all blocking tasks done
+PASS: .pf/runs/garage-remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-re/summary.md exists
+PASS: .pf/handoffs/runs/garage-remediate-python-core-audit-f03-f04-f05-evidence-freshness-and-re-handoff.md exists
