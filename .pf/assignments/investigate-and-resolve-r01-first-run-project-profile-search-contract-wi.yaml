@@ -1,0 +1,210 @@
+schema_version: 1
+id: investigate-and-resolve-r01-first-run-project-profile-search-contract-wi
+title: Investigate and resolve R01 first-run project-profile search contract with a bou
+run_id: garage-investigate-and-resolve-r01-first-run-project-profile-search-cont
+process: task-batch-execution
+status: done
+created_at: '2026-09-11T11:04:16Z'
+updated_at: '2026-09-11T11:35:46Z'
+objective: Investigate and resolve R01 first-run project-profile search contract with a bounded PF shell worker, primary reproduction, review, and source-only delivery
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Completed R01 source correction with preserved worker cancellation and focused passing validation.
+  artifacts:
+    - .pf/artifacts/r01-first-run-search-20260911/intake.md
+    - .pf/artifacts/r01-first-run-search-20260911/integration-report.md
+    - .pf/artifacts/r01-first-run-search-20260911/plan.md
+    - .pf/artifacts/r01-first-run-search-20260911/run-review.md
+    - .pf/artifacts/r01-first-run-search-20260911/task-iteration-log.md
+    - .pf/artifacts/r01-first-run-search-20260911/task-result.md
+    - .pf/handoffs/r01-first-run-search-20260911.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-11T11:35:10Z'
+  evidence:
+    -
+      path: .pf/artifacts/r01-first-run-search-20260911/integration-report.md
+      status: ready
+      artifact_id: run-summary
+      kind: artifact
+      recorded_at: '2026-09-11T11:35:43Z'
+      sha256: 'sha256:41b0e411d0292fd958d80aaf6450326a72540b43c3ac0502471908e27d7c3ce6'
+    -
+      path: .pf/handoffs/r01-first-run-search-20260911.md
+      status: ready
+      artifact_id: run-handoff
+      kind: artifact
+      recorded_at: '2026-09-11T11:35:43Z'
+      sha256: 'sha256:f68a0e60a5a81adba64e4a26bf5f5f3c3904a7b99bb88befb7c33b1fa33b66cf'
+    -
+      summary: R01 conclusion, test/docs change, validation and cancelled-worker boundary recorded; source-only delivery ready for commit.
+      gate_id: run-summary-created
+      status: passed
+      kind: gate
+      recorded_at: '2026-09-11T11:35:43Z'
+  notes: Completed R01 source correction with preserved worker cancellation and focused passing validation.
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-11T11:04:16Z'
+    completed_at: '2026-09-11T11:06:54Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        kind: artifact
+        artifact_id: run-record
+        path: .pf/artifacts/r01-first-run-search-20260911/intake.md
+        status: ready
+        recorded_at: '2026-09-11T11:06:49Z'
+        sha256: 'sha256:46778b67447313c234bf02fdf8b341ef81db2a53700cd09d3c4f284aa6e4b6ee'
+      -
+        kind: gate
+        gate_id: run-has-context
+        status: passed
+        summary: Baseline failure and source contract boundaries recorded; current PF context is fresh and selected project resources are known.
+        recorded_at: '2026-09-11T11:06:49Z'
+    notes: Recorded baseline reproduction and bounded contract scope; planning a read-only independent shell diagnosis.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-11T11:06:54Z'
+    completed_at: '2026-09-11T11:31:14Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        path: .pf/artifacts/r01-first-run-search-20260911/plan.md
+        status: ready
+        artifact_id: task-index
+        kind: artifact
+        recorded_at: '2026-09-11T11:31:09Z'
+        sha256: 'sha256:09e412170274eb8af5725282f6cc948c52be1397a92a1e97050964e19c997ca8'
+      -
+        summary: One bounded diagnostic shell task materialized; primary owns the test/documentation correction after the worker cancellation.
+        gate_id: run-has-tasks
+        status: passed
+        kind: gate
+        recorded_at: '2026-09-11T11:31:09Z'
+    notes: Confirmed shared-index versus project-context contract; implementation is limited to the contradictory smoke and Garage documentation.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-11T11:31:14Z'
+    completed_at: '2026-09-11T11:33:26Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        path: .pf/artifacts/r01-first-run-search-20260911/task-iteration-log.md
+        status: ready
+        artifact_id: task-iteration-log
+        kind: artifact
+        recorded_at: '2026-09-11T11:33:21Z'
+        sha256: 'sha256:651292b39096673640d4102b6477ed2a66d83a96a1ecacc4447496f00b269a8c'
+      -
+        summary: Primary reproduced the shared-index contract, corrected the contradictory smoke and docs, and ran three focused PASS checks. Worker cancellation is preserved separately.
+        gate_id: task-results-recorded
+        status: passed
+        kind: gate
+        recorded_at: '2026-09-11T11:33:21Z'
+    notes: Corrected contradictory first-run smoke and documented the project-context versus Workplace-index boundary; preserved cancelled shell worker evidence.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-11T11:33:26Z'
+    completed_at: '2026-09-11T11:34:03Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        path: .pf/artifacts/r01-first-run-search-20260911/task-result.md
+        status: ready
+        artifact_id: task-result
+        kind: artifact
+        recorded_at: '2026-09-11T11:33:59Z'
+        sha256: 'sha256:e685eea658b6640c1ceca520664ff6275fee410bf4dfc36684220cc1b8fcd05f'
+      -
+        summary: R01 implementation is limited to the contradictory smoke, shared-index documentation and refreshed checksums; focused validation passed.
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        kind: gate
+        recorded_at: '2026-09-11T11:33:59Z'
+    notes: 'Task result fixed: project-context resolution remains tested, shared-index empty state is documented and tested.'
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-11T11:34:03Z'
+    completed_at: '2026-09-11T11:35:10Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        path: .pf/artifacts/r01-first-run-search-20260911/run-review.md
+        status: approved
+        artifact_id: run-review
+        kind: artifact
+        recorded_at: '2026-09-11T11:35:05Z'
+        sha256: 'sha256:44920a462ab762877327e004075a358f9f3016e0824c6deafa37225d8c37b06b'
+      -
+        summary: Run doctor passed. Three focused Garage/MCP checks, checksum refresh and scoped diff validation passed; cancelled worker was excluded from acceptance.
+        gate_id: run-doctor-passed
+        status: passed
+        kind: gate
+        recorded_at: '2026-09-11T11:35:05Z'
+    notes: 'Review passed: corrected test preserves empty corpus, resolve and work-start behavior without changing shared-index architecture.'
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-11T11:35:10Z'
+    completed_at: '2026-09-11T11:35:46Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        path: .pf/artifacts/r01-first-run-search-20260911/integration-report.md
+        status: ready
+        artifact_id: run-summary
+        kind: artifact
+        recorded_at: '2026-09-11T11:35:43Z'
+        sha256: 'sha256:41b0e411d0292fd958d80aaf6450326a72540b43c3ac0502471908e27d7c3ce6'
+      -
+        path: .pf/handoffs/r01-first-run-search-20260911.md
+        status: ready
+        artifact_id: run-handoff
+        kind: artifact
+        recorded_at: '2026-09-11T11:35:43Z'
+        sha256: 'sha256:f68a0e60a5a81adba64e4a26bf5f5f3c3904a7b99bb88befb7c33b1fa33b66cf'
+      -
+        summary: R01 conclusion, test/docs change, validation and cancelled-worker boundary recorded; source-only delivery ready for commit.
+        gate_id: run-summary-created
+        status: passed
+        kind: gate
+        recorded_at: '2026-09-11T11:35:43Z'
+    notes: Completed R01 source correction with preserved worker cancellation and focused passing validation.
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260911-083003-04cbd9
+  snapshot_checksum: 'sha256:8d002f89b0fc847b8d5be79ebadf2696e016b653aa008bdcff9c7b31c12bb27e'
+  assignment_capsule: .pf/contexts/assignment-capsules/investigate-and-resolve-r01-first-run-project-profile-search-contract-wi.capsule.yaml
+  assignment_capsule_checksum: 'sha256:16d354197ad5c8b71c869c3ec42a7831105bf933d5fed844ad8d52fe362e9017'

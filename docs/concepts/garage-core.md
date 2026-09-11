@@ -85,6 +85,16 @@ catalog from the selected resource set. Only selected resources are copied to
 to `pf.search`. A snapshot records `resource_selection` with the selection
 mode, target platform versions, counts, and selector provenance.
 
+The physical SQLite corpus is owned by the Workplace and is built only from
+registered Workplace packages and templates. A project-local package, including
+the generated `project-profile`, can be selected and resolved from that
+project's context without adding a document to the shared corpus. Consequently,
+a newly onboarded project with no selected registered Workplace document can
+report a fresh `empty` search state: `pf.search` returns no documents, while
+`pf.resolve` can still make its project profile available and `pf.work.start`
+can start work. Register a reusable resource at the Workplace when it must be
+searchable across the shared index.
+
 Use `context_requirements.resource_selection.platform_versions` for a
 data-driven platform target and explicit `knowledge_resources` selectors for
 an override. A selector may use `id`, `preferred_version`, and `constraint`.

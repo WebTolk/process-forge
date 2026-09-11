@@ -1,10 +1,10 @@
 schema_version: 1
-id: ctx-20260911-111043-433c17
-generated_at: '2026-09-11T11:10:31Z'
+id: ctx-20260911-110902-3143be
+generated_at: '2026-09-11T11:08:50Z'
 snapshot:
-  id: ctx-20260911-111043-433c17
-  generated_at: '2026-09-11T11:10:31Z'
-  valid_until: '2026-09-18T11:10:31Z'
+  id: ctx-20260911-110902-3143be
+  generated_at: '2026-09-11T11:08:50Z'
+  valid_until: '2026-09-18T11:08:50Z'
   refresh_policy:
     max_age_days: 7
     refresh_when_sources_change: true
@@ -961,7 +961,7 @@ resource_selection:
       status: selected
 freshness:
   status: fresh
-  checked_at: '2026-09-11T11:10:31Z'
+  checked_at: '2026-09-11T11:08:50Z'
   stale_reasons:
     []
   update_available:

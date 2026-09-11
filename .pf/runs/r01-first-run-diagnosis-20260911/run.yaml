@@ -1,0 +1,33 @@
+schema_version: 1
+id: r01-first-run-diagnosis-20260911
+title: R01 first-run project-profile search diagnosis
+process: multi-agent-task-orchestration
+status: in_progress
+created_at: '2026-09-11T11:08:34Z'
+updated_at: '2026-09-11T11:10:30Z'
+objective: R01 first-run project-profile search diagnosis
+platform: ""
+selected_specializations:
+  []
+scope:
+  type: project
+  project_root: .
+tasks:
+  -
+    id: r01-contract-diagnosis
+    assignment: .pf/assignments/r01-contract-diagnosis.yaml
+    status: open
+    order: 1
+    blocking: true
+final_artifacts:
+  []
+events:
+  emitted:
+    - run.created
+privacy:
+  public_safe: true
+runtime:
+  default_driver: codex-exec
+  supervisor_profile: default
+  start_policy: manual
+  max_parallel_workers: 1

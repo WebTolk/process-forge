@@ -1,0 +1,14 @@
+[
+    {
+        "path":  ".pf/artifacts/r01-first-run-search-20260911/task-iteration-log.md",
+        "status":  "ready",
+        "artifact_id":  "task-iteration-log",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "Primary reproduced the shared-index contract, corrected the contradictory smoke and docs, and ran three focused PASS checks. Worker cancellation is preserved separately.",
+        "gate_id":  "task-results-recorded",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]

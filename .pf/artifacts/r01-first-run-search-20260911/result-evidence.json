@@ -1,0 +1,14 @@
+[
+    {
+        "path":  ".pf/artifacts/r01-first-run-search-20260911/task-result.md",
+        "status":  "ready",
+        "artifact_id":  "task-result",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "R01 implementation is limited to the contradictory smoke, shared-index documentation and refreshed checksums; focused validation passed.",
+        "gate_id":  "all-blocking-tasks-completed",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]
