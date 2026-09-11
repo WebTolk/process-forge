@@ -382,7 +382,7 @@ operations:
         original_atomic_write = core_update.atomic_write
 
         def fail_on_workplace_driver(target: Path, content: bytes) -> None:
-            if target.name == "codex-exec.yaml":
+            if target.name == "codex-exec.yaml" and target.parent.parent.name != "templates":
                 raise OSError("locked workplace fixture")
             original_atomic_write(target, content)
 
@@ -396,7 +396,8 @@ operations:
                 raise AssertionError("locked Workplace migration was accepted")
         finally:
             core_update.atomic_write = original_atomic_write
-        assert repair_status(core)["status"] == "safe_to_rollback"
+        assert core_status(core)["version"] == "1.1.0"
+        assert repair_status(core)["status"] == "manual_repair_required"
 
     with tempfile.TemporaryDirectory(prefix="pf-core-update-workplace-doctor-") as raw:
         root = Path(raw)

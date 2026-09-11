@@ -616,9 +616,9 @@ def apply_update(
     for relative_path in sorted(write_paths):
         pending_operations.append({"op": "write", "path": relative_path})
     migration = plan.get("workplace_migration") if isinstance(plan.get("workplace_migration"), dict) else {}
+    pending_operations.append({"op": "write_manifest", "path": CORE_MANIFEST_NAME})
     if migration.get("status") == "planned" and migration.get("operations"):
         pending_operations.append({"op": "workplace_migration", "path": str(migration.get("migration", {}).get("id") or "workplace")})
-    pending_operations.append({"op": "write_manifest", "path": CORE_MANIFEST_NAME})
     progress = {
         "schema_version": 1,
         "update_id": update_id,
@@ -670,11 +670,6 @@ def apply_update(
     write_json(in_progress_path, progress)
     try:
         migration_record = None
-        if migration.get("status") == "planned" and migration.get("operations"):
-            if workplace_root is None:
-                raise CoreUpdateError("workplace_root_missing", "Workplace migration was planned without a Workplace root")
-            migration_record = apply_workplace_migration(archive_path, workplace_root.resolve(), migration, backup_dir)
-            complete_operation("workplace_migration", str(migration.get("migration", {}).get("id") or "workplace"))
         for relative_path in sorted(backup_paths):
             backed_up[relative_path] = backup_file(core_root, backup_dir, relative_path)
             complete_operation("backup", relative_path)
@@ -691,6 +686,11 @@ def apply_update(
                 complete_operation("write", relative_path)
         atomic_write(manifest_path(core_root), manifest_bytes(plan["new_manifest"]))
         complete_operation("write_manifest", CORE_MANIFEST_NAME)
+        if migration.get("status") == "planned" and migration.get("operations"):
+            if workplace_root is None:
+                raise CoreUpdateError("workplace_root_missing", "Workplace migration was planned without a Workplace root")
+            migration_record = apply_workplace_migration(archive_path, workplace_root.resolve(), migration, backup_dir)
+            complete_operation("workplace_migration", str(migration.get("migration", {}).get("id") or "workplace"))
         record = {"schema_version": 1, "update_id": update_id, "status": "applied", "applied_at": now_utc(), "available_version": plan["available_version"], "backup_dir": str(backup_dir), "backed_up": backed_up, "counts": plan["counts"], "workplace_migration": migration_record}
         last_apply = work_root / "last-apply.json"
         write_json(last_apply, record)

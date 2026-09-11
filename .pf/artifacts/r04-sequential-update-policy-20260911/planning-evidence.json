@@ -1,0 +1,14 @@
+[
+    {
+        "path":  ".pf/artifacts/r04-sequential-update-policy-20260911/plan.md",
+        "status":  "ready",
+        "artifact_id":  "task-index",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "R04 has bounded removal, ordering, regression, documentation and independent review steps.",
+        "gate_id":  "run-has-tasks",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]

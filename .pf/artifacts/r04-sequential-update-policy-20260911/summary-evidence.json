@@ -1,0 +1,20 @@
+[
+    {
+        "path":  ".pf/artifacts/r04-sequential-update-policy-20260911/run-summary.md",
+        "status":  "ready",
+        "artifact_id":  "run-summary",
+        "kind":  "artifact"
+    },
+    {
+        "path":  ".pf\\handoffs\\r04-sequential-update-policy-20260911.md",
+        "status":  "ready",
+        "artifact_id":  "run-handoff",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "R04 summary and handoff record user-selected release and update policy.",
+        "gate_id":  "run-summary-created",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]

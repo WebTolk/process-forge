@@ -41,8 +41,8 @@ installed Core path.
    python <staged-processforge-1.1.0>/bin/pf.py release-test --root <staged-processforge-1.1.0> --public
    ```
 
-4. Plan and explicitly apply the Core and compatible Workplace migration to the
-   stable installed directories:
+4. Plan and explicitly apply the Core update, followed by its compatible
+   Workplace migration, to the stable installed directories:
 
    ```powershell
    python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace>
@@ -50,7 +50,9 @@ installed Core path.
    ```
 
    The 1.1.0 archive adds only missing PF-owned Workplace defaults (including
-   `codex-exec`) and preserves existing Workplace configuration. Do not use
+   `codex-exec`) and preserves existing Workplace configuration. The order is
+   serial: Core, then Workplace. Do not run independent Workplace migrations in
+   parallel. Do not use
    `workplace-init` as an updater: it is for first-time initialization.
 
 5. Validate the installed Core and workplace, then restart PF Runtime when it is
@@ -62,7 +64,8 @@ installed Core path.
    python <installed-processforge>/bin/pf.py doctor-workplace --root <workplace>
    ```
 
-6. For each linked project, run `project-upgrade-check`, refresh the context,
+6. Only after Core and Workplace validation, for each linked project run
+   `project-upgrade-check`, refresh the context,
    and run `doctor-project` with the installed 1.1.0 CLI.
 
 The updater writes backups and an operation journal before replacing managed

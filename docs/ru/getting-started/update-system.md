@@ -44,7 +44,8 @@ HTTPS, `sha256` и ручное подтверждение оператора п
    python <staged-processforge-1.1.0>/bin/pf.py release-test --root <staged-processforge-1.1.0> --public
    ```
 
-4. Постройте план и явно примените обновление к стабильной установленной папке:
+4. Постройте план и явно примените обновление Core, а затем совместимую
+   миграцию Workplace к стабильным установленным папкам:
 
    ```powershell
    python <staged-processforge-1.1.0>/bin/pf.py core-update plan --core-root <installed-processforge> --archive <processforge-1.1.0.zip> --workplace-root <workplace>
@@ -54,7 +55,9 @@ HTTPS, `sha256` и ручное подтверждение оператора п
    Архив 1.1.0 добавляет только отсутствующие стандартные настройки Workplace,
    включая драйвер `codex-exec` и его регистрацию, и сохраняет существующую
    конфигурацию. Не используйте `workplace-init` как updater: эта команда
-   предназначена для первичной инициализации.
+   предназначена для первичной инициализации. Порядок всегда последовательный:
+   Core, затем Workplace; независимые миграции Workplace параллельно не
+   запускаются.
 
    После успешного apply с `--workplace-root` автоматически выполняется
    `doctor-workplace`; результат сохраняется в
@@ -69,7 +72,8 @@ HTTPS, `sha256` и ручное подтверждение оператора п
    python <installed-processforge>/bin/pf.py doctor-workplace --root <workplace>
    ```
 
-6. Для каждого связанного проекта выполните `project-upgrade-check`, обновите
+6. Только после проверки Core и Workplace для каждого связанного проекта
+   выполните `project-upgrade-check`, обновите
    context и запустите `doctor-project` через установленный CLI 1.1.0.
 
 Updater заранее пишет backups и operation journal. При прерванном обновлении

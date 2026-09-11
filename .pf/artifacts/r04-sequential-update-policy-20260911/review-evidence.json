@@ -1,0 +1,14 @@
+[
+    {
+        "path":  ".pf/artifacts/r04-sequential-update-policy-20260911/run-review.md",
+        "status":  "ready",
+        "artifact_id":  "run-review",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "Run doctor and focused implementation checks passed.",
+        "gate_id":  "run-doctor-passed",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]

@@ -179,7 +179,8 @@ def main() -> int:
         status = core_status(core)
         assert status["in_progress"]["status"] == "failed", status
         assert status["in_progress"]["error"]["code"] == "archive_file_missing", status
-        assert repair_status(core)["status"] == "safe_to_rollback", status
+        assert status["version"] == "1.1.0", status
+        assert repair_status(core)["status"] == "manual_repair_required", status
         assert not (workplace / "runtime-drivers" / "new.yaml").exists()
         assert (workplace / "runtime-drivers" / "first.yaml").read_text(encoding="utf-8") == "first-driver\n"
         backup = Path(status["in_progress"]["backup_dir"])

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-11T13:07:18Z",
+  "generated_at": "2026-09-11T16:46:48Z",
   "kind": "process-execution-state",
   "schema_version": 1,
   "source": {
@@ -19,9 +19,9 @@
         "evidence": {
           "artifact_id": "run-summary",
           "kind": "artifact",
-          "path": ".pf/artifacts/r03-updater-concurrency-20260911/run-summary.md",
-          "recorded_at": "2026-09-11T13:07:10Z",
-          "sha256": "sha256:74c5b7e18dd526e0df46ab4b37e98b751f72c9da28dfa38acf9973ec7379297a",
+          "path": ".pf/artifacts/r04-sequential-update-policy-20260911/run-summary.md",
+          "recorded_at": "2026-09-11T16:46:40Z",
+          "sha256": "sha256:c115ad0a745788d99c23005427d3ff586dd4873230852ac4f792ca000fa32ec1",
           "status": "ready"
         },
         "id": "run-summary",
@@ -32,9 +32,9 @@
         "evidence": {
           "artifact_id": "run-handoff",
           "kind": "artifact",
-          "path": ".pf/handoffs/r03-updater-concurrency-20260911.md",
-          "recorded_at": "2026-09-11T13:07:10Z",
-          "sha256": "sha256:7b029090a0ed86ae7f6ace01d699fb1bc2eb114d6c70e3e4bba7f2fbfa6a47c5",
+          "path": ".pf/handoffs/r04-sequential-update-policy-20260911.md",
+          "recorded_at": "2026-09-11T16:46:40Z",
+          "sha256": "sha256:5ec34d69abea13ebfeab1e1de81e12518824fb7cfd2af6e63911d0bb1b41f916",
           "status": "ready"
         },
         "id": "run-handoff",
@@ -43,7 +43,7 @@
       }
     ],
     "assignment": {
-      "id": "investigate-r03-concurrent-independent-workplace-migration-apply-behavio",
+      "id": "remove-stale-tracked-dist-archives-because-github-releases-are-the-publi",
       "status": "done"
     },
     "blockers": [],
@@ -55,25 +55,25 @@
       {
         "artifact_id": "run-summary",
         "kind": "artifact",
-        "path": ".pf/artifacts/r03-updater-concurrency-20260911/run-summary.md",
-        "recorded_at": "2026-09-11T13:07:10Z",
-        "sha256": "sha256:74c5b7e18dd526e0df46ab4b37e98b751f72c9da28dfa38acf9973ec7379297a",
+        "path": ".pf/artifacts/r04-sequential-update-policy-20260911/run-summary.md",
+        "recorded_at": "2026-09-11T16:46:40Z",
+        "sha256": "sha256:c115ad0a745788d99c23005427d3ff586dd4873230852ac4f792ca000fa32ec1",
         "status": "ready"
       },
       {
         "artifact_id": "run-handoff",
         "kind": "artifact",
-        "path": ".pf/handoffs/r03-updater-concurrency-20260911.md",
-        "recorded_at": "2026-09-11T13:07:10Z",
-        "sha256": "sha256:7b029090a0ed86ae7f6ace01d699fb1bc2eb114d6c70e3e4bba7f2fbfa6a47c5",
+        "path": ".pf/handoffs/r04-sequential-update-policy-20260911.md",
+        "recorded_at": "2026-09-11T16:46:40Z",
+        "sha256": "sha256:5ec34d69abea13ebfeab1e1de81e12518824fb7cfd2af6e63911d0bb1b41f916",
         "status": "ready"
       },
       {
         "gate_id": "run-summary-created",
         "kind": "gate",
-        "recorded_at": "2026-09-11T13:07:10Z",
+        "recorded_at": "2026-09-11T16:46:40Z",
         "status": "passed",
-        "summary": "R03 summary and handoff preserve fixture race evidence and separate future remediation."
+        "summary": "R04 summary and handoff record user-selected release and update policy."
       }
     ],
     "gates": {
@@ -83,9 +83,9 @@
           "evidence": {
             "gate_id": "run-doctor-passed",
             "kind": "gate",
-            "recorded_at": "2026-09-11T13:06:41Z",
+            "recorded_at": "2026-09-11T16:44:53Z",
             "status": "passed",
-            "summary": "Run doctor passed; reproduction boundary and no-source-change classification reviewed."
+            "summary": "Run doctor and focused implementation checks passed."
           },
           "id": "run-doctor-passed",
           "phase": "entry",
@@ -100,9 +100,9 @@
           "evidence": {
             "gate_id": "run-summary-created",
             "kind": "gate",
-            "recorded_at": "2026-09-11T13:07:10Z",
+            "recorded_at": "2026-09-11T16:46:40Z",
             "status": "passed",
-            "summary": "R03 summary and handoff preserve fixture race evidence and separate future remediation."
+            "summary": "R04 summary and handoff record user-selected release and update policy."
           },
           "id": "run-summary-created",
           "phase": "exit",
@@ -130,9 +130,9 @@
         "evidence": {
           "artifact_id": "run-review",
           "kind": "artifact",
-          "path": ".pf/artifacts/r03-updater-concurrency-20260911/run-review.md",
-          "recorded_at": "2026-09-11T13:06:41Z",
-          "sha256": "sha256:201014ba93672fe17d6d25016b8001b2fddfc732afc035a8c8213614592654af",
+          "path": ".pf/artifacts/r04-sequential-update-policy-20260911/run-review.md",
+          "recorded_at": "2026-09-11T16:44:53Z",
+          "sha256": "sha256:873a4e8d824569c0ce12dfa1e225c2b972df8688264983dcf697044bd5b2e088",
           "status": "ready"
         },
         "id": "run-review",
@@ -141,7 +141,7 @@
       }
     ],
     "run": {
-      "id": "garage-investigate-r03-concurrent-independent-workplace-migration-apply",
+      "id": "garage-remove-stale-tracked-dist-archives-because-github-releases-are-th",
       "status": "completed"
     },
     "schema_version": 1,

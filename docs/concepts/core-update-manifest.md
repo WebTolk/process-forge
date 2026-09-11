@@ -50,15 +50,22 @@ python bin/pf.py core-update plan --core-root <core> --archive <processforge.zip
 python bin/pf.py core-update apply --core-root <core> --archive <processforge.zip> --workplace-root <workplace> --confirm
 ```
 
-The plan lists only archive-declared operations. The 1.0.2-to-1.1.0 migration
+The plan lists only archive-declared operations. Apply is serial: it replaces
+the Core files and writes the Core manifest first, then applies the compatible
+Workplace migration. Project `.pf` changes are assessed and applied later,
+inside each project's own governed work. Concurrent independent Core or
+Workplace applies are unsupported.
+
+The 1.0.2-to-1.1.0 migration
 adds the built-in `codex-exec` driver and its registry entry only when missing;
 existing files and registry entries are preserved. It does not invoke
 `workplace-init`, which remains a first-time initialization command.
 
 Before a migration write, the updater copies the affected Workplace files into
 the Core update backup directory and records the operation in the update
-journal. When migration cannot finish, `core-update repair` exposes recoverable
-state and the backup location. A successful apply automatically runs the short
+journal. When the post-Core Workplace migration cannot finish, the Core remains
+at its new manifest and `core-update repair` reports a manual-repair state with
+the backup location. A successful apply automatically runs the short
 `doctor-workplace` check and stores its result in `last-apply.json`.
 
 The updater computes:

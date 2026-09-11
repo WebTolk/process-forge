@@ -1,0 +1,14 @@
+[
+    {
+        "path":  ".pf/artifacts/r04-sequential-update-policy-20260911/intake.md",
+        "status":  "ready",
+        "artifact_id":  "run-record",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "User-directed dist removal and explicit Core-to-Workplace-to-project sequence recorded.",
+        "gate_id":  "run-has-context",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]
