@@ -1,0 +1,210 @@
+schema_version: 1
+id: investigate-r03-concurrent-independent-workplace-migration-apply-behavio
+title: Investigate R03 concurrent independent Workplace migration apply behavior with a
+run_id: garage-investigate-r03-concurrent-independent-workplace-migration-apply
+process: task-batch-execution
+status: done
+created_at: '2026-09-11T13:00:01Z'
+updated_at: '2026-09-11T13:07:14Z'
+objective: Investigate R03 concurrent independent Workplace migration apply behavior with an isolated reproduction only; do not apply Core updates, publish, or change source without a confirmed defect
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'R03 complete: fixture race documented, supported-contract limitation preserved, no source remediation.'
+  artifacts:
+    - .pf/artifacts/r03-updater-concurrency-20260911/intake.md
+    - .pf/artifacts/r03-updater-concurrency-20260911/plan.md
+    - .pf/artifacts/r03-updater-concurrency-20260911/run-review.md
+    - .pf/artifacts/r03-updater-concurrency-20260911/run-summary.md
+    - .pf/artifacts/r03-updater-concurrency-20260911/task-iteration-log.md
+    - .pf/artifacts/r03-updater-concurrency-20260911/task-result.md
+    - .pf/handoffs/r03-updater-concurrency-20260911.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: run-summary
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-11T13:06:45Z'
+  evidence:
+    -
+      path: .pf/artifacts/r03-updater-concurrency-20260911/run-summary.md
+      status: ready
+      artifact_id: run-summary
+      kind: artifact
+      recorded_at: '2026-09-11T13:07:10Z'
+      sha256: 'sha256:74c5b7e18dd526e0df46ab4b37e98b751f72c9da28dfa38acf9973ec7379297a'
+    -
+      path: .pf/handoffs/r03-updater-concurrency-20260911.md
+      status: ready
+      artifact_id: run-handoff
+      kind: artifact
+      recorded_at: '2026-09-11T13:07:10Z'
+      sha256: 'sha256:7b029090a0ed86ae7f6ace01d699fb1bc2eb114d6c70e3e4bba7f2fbfa6a47c5'
+    -
+      summary: R03 summary and handoff preserve fixture race evidence and separate future remediation.
+      gate_id: run-summary-created
+      status: passed
+      kind: gate
+      recorded_at: '2026-09-11T13:07:10Z'
+  notes: 'R03 complete: fixture race documented, supported-contract limitation preserved, no source remediation.'
+stage_history:
+  -
+    stage_id: run-intake
+    status: completed
+    started_at: '2026-09-11T13:00:01Z'
+    completed_at: '2026-09-11T13:03:44Z'
+    outcome: completed
+    next_stage_id: task-planning
+    evidence:
+      -
+        path: .pf/artifacts/r03-updater-concurrency-20260911/intake.md
+        status: ready
+        artifact_id: run-record
+        kind: artifact
+        recorded_at: '2026-09-11T13:03:40Z'
+        sha256: 'sha256:2b803984762d7e3def8c6cacc8683280e48c4a5b86e8da84043b41da35a523db'
+      -
+        summary: R03 assignment, static review evidence, no-apply boundary, and disposable-fixture acceptance criteria are recorded.
+        gate_id: run-has-context
+        status: passed
+        kind: gate
+        recorded_at: '2026-09-11T13:03:40Z'
+    notes: R03 intake records static concern and strict isolated no-apply scope.
+  -
+    stage_id: task-planning
+    status: completed
+    started_at: '2026-09-11T13:03:44Z'
+    completed_at: '2026-09-11T13:04:36Z'
+    outcome: completed
+    next_stage_id: task-execution-loop
+    evidence:
+      -
+        path: .pf/artifacts/r03-updater-concurrency-20260911/plan.md
+        status: ready
+        artifact_id: task-index
+        kind: artifact
+        recorded_at: '2026-09-11T13:04:32Z'
+        sha256: 'sha256:fd2fcbd3ca26718cd13cc834ed55c061f5f6d8e090654b3ed1f7c6f71c90ae85'
+      -
+        summary: R03 has one bounded disposable-fixture reproduction task and a no-source-write boundary.
+        gate_id: run-has-tasks
+        status: passed
+        kind: gate
+        recorded_at: '2026-09-11T13:04:32Z'
+    notes: R03 plan uses a fixture-only preplan/apply race probe; no updater apply targets installed Core.
+  -
+    stage_id: task-execution-loop
+    status: completed
+    started_at: '2026-09-11T13:04:36Z'
+    completed_at: '2026-09-11T13:05:42Z'
+    outcome: completed
+    next_stage_id: task-result-fixation
+    evidence:
+      -
+        path: .pf/artifacts/r03-updater-concurrency-20260911/task-iteration-log.md
+        status: ready
+        artifact_id: task-iteration-log
+        kind: artifact
+        recorded_at: '2026-09-11T13:05:38Z'
+        sha256: 'sha256:8d0d6542925329e2bdcaf659c2d7e3038b1de5b5b412587c24306ea189c58195'
+      -
+        summary: Disposable synchronized two-process race reproduced; supported-contract review and no-apply boundary are recorded.
+        gate_id: task-results-recorded
+        status: passed
+        kind: gate
+        recorded_at: '2026-09-11T13:05:38Z'
+    notes: R03 fixture reproduced stale-plan overwrite; no supported concurrent-apply contract found.
+  -
+    stage_id: task-result-fixation
+    status: completed
+    started_at: '2026-09-11T13:05:42Z'
+    completed_at: '2026-09-11T13:06:06Z'
+    outcome: completed
+    next_stage_id: run-review
+    evidence:
+      -
+        path: .pf/artifacts/r03-updater-concurrency-20260911/task-result.md
+        status: ready
+        artifact_id: task-result
+        kind: artifact
+        recorded_at: '2026-09-11T13:06:02Z'
+        sha256: 'sha256:456b85ef6a3dc160fd88588762e04f841c18bab464d8bf3dff48a3e7525afc14'
+      -
+        summary: R03 assessment and fixture reproduction are complete; remediation remains separately scoped.
+        gate_id: all-blocking-tasks-completed
+        status: passed
+        kind: gate
+        recorded_at: '2026-09-11T13:06:02Z'
+    notes: 'R03 result fixed: race mechanism reproduced; no supported concurrency promise found; remediation separately scoped.'
+  -
+    stage_id: run-review
+    status: completed
+    started_at: '2026-09-11T13:06:06Z'
+    completed_at: '2026-09-11T13:06:45Z'
+    outcome: completed
+    next_stage_id: run-summary
+    evidence:
+      -
+        path: .pf/artifacts/r03-updater-concurrency-20260911/run-review.md
+        status: ready
+        artifact_id: run-review
+        kind: artifact
+        recorded_at: '2026-09-11T13:06:41Z'
+        sha256: 'sha256:201014ba93672fe17d6d25016b8001b2fddfc732afc035a8c8213614592654af'
+      -
+        summary: Run doctor passed; reproduction boundary and no-source-change classification reviewed.
+        gate_id: run-doctor-passed
+        status: passed
+        kind: gate
+        recorded_at: '2026-09-11T13:06:41Z'
+    notes: R03 review passed; race mechanism confirmed within unsupported concurrency boundary.
+  -
+    stage_id: run-summary
+    status: completed
+    started_at: '2026-09-11T13:06:45Z'
+    completed_at: '2026-09-11T13:07:14Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        path: .pf/artifacts/r03-updater-concurrency-20260911/run-summary.md
+        status: ready
+        artifact_id: run-summary
+        kind: artifact
+        recorded_at: '2026-09-11T13:07:10Z'
+        sha256: 'sha256:74c5b7e18dd526e0df46ab4b37e98b751f72c9da28dfa38acf9973ec7379297a'
+      -
+        path: .pf/handoffs/r03-updater-concurrency-20260911.md
+        status: ready
+        artifact_id: run-handoff
+        kind: artifact
+        recorded_at: '2026-09-11T13:07:10Z'
+        sha256: 'sha256:7b029090a0ed86ae7f6ace01d699fb1bc2eb114d6c70e3e4bba7f2fbfa6a47c5'
+      -
+        summary: R03 summary and handoff preserve fixture race evidence and separate future remediation.
+        gate_id: run-summary-created
+        status: passed
+        kind: gate
+        recorded_at: '2026-09-11T13:07:10Z'
+    notes: 'R03 complete: fixture race documented, supported-contract limitation preserved, no source remediation.'
+process_execution:
+  process_id: task-batch-execution
+  process_version: 1.0.0
+  process_fingerprint: 'sha256:f5785bc814a45efeb91625cf907d0546b9997dc0f9ce3e7e4cd7ed44de0dabb2'
+  snapshot_id: ctx-20260911-115553-6f2de5
+  snapshot_checksum: 'sha256:b984cb800c03308d821453dd686a9de25e0b1e8021bb50ce315c0c445e75ca42'
+  assignment_capsule: .pf/contexts/assignment-capsules/investigate-r03-concurrent-independent-workplace-migration-apply-behavio.capsule.yaml
+  assignment_capsule_checksum: 'sha256:ab9cb9496aacc97bf1d4a23cf5718ea4c202c9a579fb9921b714d8f1170be804'

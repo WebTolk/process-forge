@@ -1,0 +1,20 @@
+[
+    {
+        "path":  ".pf/artifacts/r03-updater-concurrency-20260911/run-summary.md",
+        "status":  "ready",
+        "artifact_id":  "run-summary",
+        "kind":  "artifact"
+    },
+    {
+        "path":  ".pf\\handoffs\\r03-updater-concurrency-20260911.md",
+        "status":  "ready",
+        "artifact_id":  "run-handoff",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "R03 summary and handoff preserve fixture race evidence and separate future remediation.",
+        "gate_id":  "run-summary-created",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]
