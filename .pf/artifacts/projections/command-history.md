@@ -1,7 +1,7 @@
 # Runtime Command History
 
 - source: `.pf/runtime/events/events.ndjson`
-- generated_at: `2026-09-11T11:37:52Z`
+- generated_at: `2026-09-11T12:58:25Z`
 
 | time | event | actor | session | subject | status |
 | --- | --- | --- | --- | --- | --- |
@@ -2464,3 +2464,66 @@
 | 2026-09-11T11:36:01Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
 | 2026-09-11T11:37:37Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
 | 2026-09-11T11:37:52Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:38:08Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:38:52Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:38:52Z | `agent.session.compaction.started` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:40:11Z | `agent.session.compacted` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:40:41Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:40:41Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:40:44Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:42:00Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:42:00Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:42:01Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:42:13Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:42:12Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:42:15Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:43:02Z | `agent.tool.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:43:20Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:43:20Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:43:23Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:46:11Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:46:25Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:46:26Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:46:26Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:47:43Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:49:31Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:49:33Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:50:31Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:51:08Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:51:46Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:51:48Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:52:10Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:55:49Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:55:49Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T11:57:43Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:00:26Z | `agent.session.started` | `codex` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `` |
+| 2026-09-11T12:00:46Z | `agent.command.completed` | `codex` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `` |
+| 2026-09-11T12:00:50Z | `agent.command.completed` | `codex` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `` |
+| 2026-09-11T12:00:58Z | `agent.command.completed` | `codex` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `` |
+| 2026-09-11T12:01:17Z | `agent.command.completed` | `codex` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `` |
+| 2026-09-11T12:01:22Z | `agent.command.completed` | `codex` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `` |
+| 2026-09-11T12:01:40Z | `agent.session.ended` | `codex` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `01a09056-d523-7fd2-9c77-c80c7c5ff61b` | `` |
+| 2026-09-11T12:02:49Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:03:00Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:05:10Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:08:10Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:10:20Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:11:57Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:12:26Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:13:13Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:14:12Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:15:25Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:48:47Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:49:06Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:49:06Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:50:58Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:51:25Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:51:26Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:52:14Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:53:19Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:53:20Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:54:40Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:58:05Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:58:23Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:58:24Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |
+| 2026-09-11T12:58:24Z | `agent.command.completed` | `codex` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `01a08e54-7510-7a93-8381-4c8b2df94ece` | `` |

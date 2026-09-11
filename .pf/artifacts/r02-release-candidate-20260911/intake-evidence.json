@@ -1,0 +1,14 @@
+[
+    {
+        "path":  ".pf/artifacts/r02-release-candidate-20260911/intake.md",
+        "status":  "ready",
+        "artifact_id":  "run-record",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "Active R02 assignment and pinned task-batch process were inspected through source CLI; MCP snapshot was recorded as stale and not used as current execution truth.",
+        "gate_id":  "run-has-context",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]

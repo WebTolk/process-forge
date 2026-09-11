@@ -1,0 +1,14 @@
+[
+    {
+        "path":  ".pf/artifacts/r02-release-candidate-20260911/run-review.md",
+        "status":  "ready",
+        "artifact_id":  "run-review",
+        "kind":  "artifact"
+    },
+    {
+        "summary":  "Run doctor passed and coordinator reviewed distinct source failure, archive PASS, extracted PASS, and worker-report limitation.",
+        "gate_id":  "run-doctor-passed",
+        "status":  "passed",
+        "kind":  "gate"
+    }
+]
