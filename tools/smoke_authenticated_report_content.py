@@ -33,6 +33,9 @@ def main() -> int:
             lambda e: e["raw_payload"].update(expected_report="../outside.md"),
             lambda e: e["derived_conversation_messages"][0].update(session_id="foreign"),
             lambda e: e["derived_conversation_messages"][0]["content_source"].update(content_provenance="provider_payload"),
+            lambda e: e["derived_conversation_messages"][0]["participant"].update(id="forged-owner"),
+            lambda e: e["derived_conversation_messages"][0].update(turn_id="forged-turn"),
+            lambda e: e["derived_conversation_messages"][0]["delivery"].update(sequence=999),
         ]
         for index, mutate in enumerate(mutations):
             candidate = content + f"Case {index}\n"

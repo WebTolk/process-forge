@@ -9,6 +9,7 @@
     "id": { "$ref": "#/$defs/id" },
     "title": { "type": "string", "minLength": 1 },
     "kind": { "enum": ["manual", "shell"] },
+    "prepared_lifecycle_wrapper": { "type": "boolean" },
     "command": {
       "type": "object",
       "properties": {
@@ -38,7 +39,10 @@
                 "PF_RUNTIME_DRIVER_ID",
                 "PF_WORKSPACE_ACCESS_FILE",
                 "PF_WORKER_RUN_ID",
-                "PF_WORKER_TASK_ID"
+                "PF_WORKER_TASK_ID",
+                "PF_WORKER_ATTEMPT",
+                "PF_PREPARED_INPUT_FILE",
+                "PF_PREPARED_INPUT_SHA256"
               ]
             }
           },

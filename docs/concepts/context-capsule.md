@@ -1,5 +1,9 @@
 # Context Capsule
 
+New source capsules include the shared [complete execution contract](work-context.md)
+with immutable assignment intent, explicit permissions and required input identities.
+Existing capsule bytes remain unchanged; `--force` cannot replace a pinned capsule.
+
 A context capsule is the small launch package for a worker-agent. In the active
 `worker-run` path it is the canonical launch descriptor for a bounded assignment.
 It records the assignment path, assignment checksum, project snapshot checksum,

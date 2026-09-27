@@ -1,5 +1,14 @@
 # PF Runtime MCP facade
 
+For a read-only terminal view of the existing workplace service, see the
+[local Runtime monitor](runtime-monitor.md).
+
+For exact Work/context resource selectors, material verification and current
+authorization, see [Work-scoped resource reads](work-resources.md).
+
+For bounded request logging, privacy, profiles and local exports, see
+[optional diagnostics](diagnostics.md). MCP stdout remains JSON-RPC only.
+
 `tools/pf_runtime/mcp_server.py` is a minimal stdio MCP server. It is
 host-owned: Codex starts the Python process from Codex MCP configuration and
 owns the stdin/stdout pipes. It is not registered as a Windows scheduled task or
@@ -21,11 +30,14 @@ explicit host integration for operators who need Forge session capture.
 
 Available tools are `pf.context`, `pf.project_state`, `pf.project_initialization.status`,
 `pf.project_initialization.initialize`, `pf.project_initialization.repair`,
-`pf.work_state`, `pf.work.state`, `pf.work.start`, `pf.work.transition`, `pf.resolve`, `pf.search`,
+`pf.work_state`, `pf.work.state`, `pf.work.start`, `pf.work.transition`,
+`pf.work.search`, `pf.work.resolve`, `pf.resolve`, `pf.search`,
 `pf.workplace_state`, `pf.session_context`, `pf.session_chat`, and
 `pf.session_activity`. `pf.context`, `pf.project_state`,
 `pf.project_initialization.status`, `pf.work_state`, `pf.work.state`, `pf.resolve`, and
-`pf.search` are Garage reads and can run from `project_root`. `pf.work.start`
+`pf.search` are Garage reads and can run from `project_root`. The Work read
+routes additionally require exact `run_id`, `assignment_id`, and `context_id`;
+see [Work-scoped resource reads](work-resources.md). `pf.work.start`
 and `pf.work.transition` are Garage-scoped governed mutations that can also run
 from `project_root`. The
 three `pf.session_*` tools are bounded, Ledger-authorized views; they do not read raw
@@ -70,6 +82,18 @@ snapshot, capsules, reports, or registries. It is emitted only after
 project-snapshot authorization, fresh-snapshot validation, path-ref containment,
 and confirmation that the file belongs to the result's authorized root.
 
+For continuation, retain the returned Run/Assignment/context identity and check
+it against durable handoff evidence after reconnect. A generic current-Work
+fallback can select another unfinished Run after completion; it is not proof
+that it selected the intended work. Session identity does not replace a Work
+selector. Work reads intersect pinned grants, current authorization and stage
+restrictions without silently migrating older capsules.
+
+The tool list above describes the current source. An installed MCP process
+may expose an older set; compare its advertised tools and loaded build before
+claiming source/host parity. Source subprocess tests, installed reconnect tests,
+and checks through an application's actual connected MCP are separate evidence.
+
 `pf.work_state` is retained as a compatibility alias for `pf.work.state`.
 The state is derived from canonical Run and Assignment files plus the pinned
 Process definition; technical projector facts remain declaration-driven.
@@ -83,3 +107,11 @@ Codex host registration can be inspected, installed, or removed with
 `python bin/pf.py codex-mcp status|install|remove --workplace <workplace>`.
 Install and remove are dry-run by default and require `--apply` to change Codex
 configuration. Restart or reload Codex after registration changes.
+
+Local operator commands are also available as `pf server` or
+`python bin/pf-server.py`: start, run, status, stop and restart. Guarded stop
+requires current worker/request/scheduler idleness and a compatible owner;
+`--force` explicitly bypasses that guard. Server status is the bounded read-only
+[monitor](runtime-monitor.md) projection. These commands control the workplace
+Runtime, not the host-owned MCP stdio process; updating Core on disk does not
+reload a connected host.

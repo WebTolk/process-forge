@@ -127,3 +127,18 @@ Completion can contain a handoff, next-work recommendation and an advisory
 session-continuity recommendation. With no active Work, a fresh `pf.context`
 can expose the latest relevant compact handoff continuation. Garage never
 creates or restarts an external session, Runtime, MCP, or Ledger session.
+
+## Work resources and executor handoff
+
+Project navigation and [Work-scoped reads](work-resources.md) have different
+authority boundaries. `pf.work.search` and `pf.work.resolve` require the exact
+Run, Assignment and context id; their grants intersect pinned resources,
+current authorization and the current stage subset. A ready project index
+does not prove coverage of a particular Work.
+
+The shared [execution contract](work-context.md) records intent, scope, sources
+and outputs. A worker-ready assignment can produce [prepared input](prepared-input.md)
+for an executor that does not use MCP. Collection records attributable results;
+it does not advance the primary governed Work. After changing executor or
+connection, compare the returned identity with the durable handoff before
+continuing. These contracts do not depend on a particular model provider.

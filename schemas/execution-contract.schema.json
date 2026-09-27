@@ -1,0 +1,1014 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/execution-contract.schema.json",
+  "title": "Complete Work Execution Contract",
+  "description": "Complete versioned immutable assignment intent and worker permission block. The context capsule schema leaves this block optional for legacy capsules.",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "identity",
+    "assignment_intent",
+    "assignment_intent_checksum",
+    "snapshot",
+    "process",
+    "resources",
+    "scope",
+    "required_sources",
+    "outputs",
+    "capabilities",
+    "workspace_access",
+    "parameters",
+    "coordination",
+    "source_limits",
+    "readiness",
+    "worker_may_rebuild_context",
+    "contract_checksum"
+  ],
+  "properties": {
+    "contract_version": {
+      "enum": [
+        1,
+        2
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "kind",
+        "project_id",
+        "run_id",
+        "assignment_id",
+        "context_id"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "work",
+            "assignment"
+          ]
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "assignment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "assignment_intent": {
+      "$ref": "#/$defs/assignment_intent"
+    },
+    "assignment_intent_checksum": {
+      "$ref": "#/$defs/digest"
+    },
+    "snapshot": {
+      "type": "object",
+      "required": [
+        "id",
+        "checksum"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "checksum": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "additionalProperties": false
+    },
+    "process": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "fingerprint"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^(?:sha256:[a-f0-9]{64})?$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "resources": {
+      "type": "object",
+      "required": [
+        "selected_ids",
+        "bindings_checksum"
+      ],
+      "properties": {
+        "selected_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bindings_checksum": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "additionalProperties": false
+    },
+    "scope": {
+      "$ref": "#/$defs/scope"
+    },
+    "required_sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/required_source"
+      }
+    },
+    "outputs": {
+      "$ref": "#/$defs/outputs"
+    },
+    "capabilities": {
+      "type": "object",
+      "required": [
+        "required",
+        "optional"
+      ],
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/capability"
+          }
+        },
+        "optional": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/capability"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "workspace_access": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array"
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "coordination": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "worker_may_rebuild_context": {
+      "const": false
+    },
+    "source_limits": {
+      "type": "object",
+      "required": [
+        "files",
+        "file_bytes",
+        "total_bytes"
+      ],
+      "properties": {
+        "files": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "file_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "total_bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "readiness": {
+      "type": "object",
+      "required": [
+        "status",
+        "blockers"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "ready",
+            "blocked"
+          ]
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "code"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "contract_checksum": {
+      "$ref": "#/$defs/digest"
+    },
+    "egress": {
+      "type": "object",
+      "required": [
+        "policy_id",
+        "recipient",
+        "purpose",
+        "policy_checksum",
+        "detector_checksum",
+        "minimum_enforcement",
+        "limits"
+      ],
+      "properties": {
+        "policy_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        },
+        "recipient": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        },
+        "purpose": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        },
+        "policy_checksum": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "detector_checksum": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "minimum_enforcement": {
+          "const": "mediated_session"
+        },
+        "limits": {
+          "type": "object",
+          "required": [
+            "unit_bytes",
+            "envelope_bytes",
+            "attempt_bytes",
+            "disclosures",
+            "json_depth",
+            "classification_ms",
+            "token_seconds"
+          ],
+          "properties": {
+            "unit_bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "envelope_bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            },
+            "attempt_bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 33554432
+            },
+            "disclosures": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 128
+            },
+            "json_depth": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            },
+            "classification_ms": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2000
+            },
+            "token_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "ownership": {
+      "type": "object",
+      "properties": {
+        "owner_id": {
+          "type": "string"
+        },
+        "owner_label": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "writer": {
+          "type": "boolean"
+        },
+        "owned_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owned_globs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "non_overlap": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "execution_mode": {
+      "type": "object",
+      "required": [
+        "kind",
+        "code_changes_allowed",
+        "artifact_changes_allowed",
+        "requires_review"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code_changes_allowed": {
+          "type": "boolean"
+        },
+        "artifact_changes_allowed": {
+          "type": "boolean"
+        },
+        "requires_review": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "outputs": {
+      "type": "object",
+      "required": [
+        "required_outputs",
+        "expected_report"
+      ],
+      "properties": {
+        "required_outputs": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": true
+              }
+            ]
+          }
+        },
+        "expected_report": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "allowed_files",
+        "allowed_read_files",
+        "forbidden_files",
+        "allowed_actions",
+        "forbidden_actions",
+        "ownership",
+        "non_overlap"
+      ],
+      "properties": {
+        "allowed_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowed_read_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "forbidden_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowed_actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "forbidden_actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ownership": {
+          "type": "object",
+          "properties": {
+            "owner_id": {
+              "type": "string"
+            },
+            "owner_label": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string"
+            },
+            "writer": {
+              "type": "boolean"
+            },
+            "owned_files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "owned_globs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "non_overlap": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "assignment_intent": {
+      "type": "object",
+      "required": [
+        "objective",
+        "execution_mode",
+        "scope",
+        "required_sources",
+        "context_artifacts",
+        "outputs",
+        "workspace_access",
+        "subagent_policy",
+        "required_capabilities",
+        "optional_capabilities",
+        "process",
+        "selected_specializations",
+        "coordination_requirements",
+        "director_inbox_submit_required",
+        "parameters",
+        "allowed_tools",
+        "allowed_templates",
+        "selected_sources",
+        "obligations"
+      ],
+      "properties": {
+        "objective": {
+          "type": "string"
+        },
+        "execution_mode": {
+          "type": "object",
+          "required": [
+            "kind",
+            "code_changes_allowed",
+            "artifact_changes_allowed",
+            "requires_review"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "code_changes_allowed": {
+              "type": "boolean"
+            },
+            "artifact_changes_allowed": {
+              "type": "boolean"
+            },
+            "requires_review": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        },
+        "scope": {
+          "type": "object",
+          "required": [
+            "allowed_files",
+            "allowed_read_files",
+            "forbidden_files",
+            "allowed_actions",
+            "forbidden_actions",
+            "ownership",
+            "non_overlap"
+          ],
+          "properties": {
+            "allowed_files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "allowed_read_files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "forbidden_files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "allowed_actions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "forbidden_actions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "ownership": {
+              "type": "object",
+              "properties": {
+                "owner_id": {
+                  "type": "string"
+                },
+                "owner_label": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                },
+                "writer": {
+                  "type": "boolean"
+                },
+                "owned_files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "owned_globs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": true
+            },
+            "non_overlap": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "required_sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "context_artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "required": [
+            "required_outputs",
+            "expected_report"
+          ],
+          "properties": {
+            "required_outputs": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                ]
+              }
+            },
+            "expected_report": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "workspace_access": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array"
+          }
+        },
+        "subagent_policy": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "required_capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "optional_capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "process": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": true
+            }
+          ]
+        },
+        "selected_specializations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "coordination_requirements": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "director_inbox_submit_required": {
+          "type": "boolean"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "allowed_tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowed_templates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selected_sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "obligations": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "egress": {
+          "type": "object",
+          "required": [
+            "policy_id",
+            "recipient",
+            "purpose",
+            "policy_checksum",
+            "detector_checksum",
+            "minimum_enforcement",
+            "limits"
+          ],
+          "properties": {
+            "policy_id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,63}$"
+            },
+            "recipient": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,63}$"
+            },
+            "purpose": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,63}$"
+            },
+            "policy_checksum": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "detector_checksum": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "minimum_enforcement": {
+              "const": "mediated_session"
+            },
+            "limits": {
+              "type": "object",
+              "required": [
+                "unit_bytes",
+                "envelope_bytes",
+                "attempt_bytes",
+                "disclosures",
+                "json_depth",
+                "classification_ms",
+                "token_seconds"
+              ],
+              "properties": {
+                "unit_bytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1048576
+                },
+                "envelope_bytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 4194304
+                },
+                "attempt_bytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 33554432
+                },
+                "disclosures": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 128
+                },
+                "json_depth": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 16
+                },
+                "classification_ms": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2000
+                },
+                "token_seconds": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 30
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "egress_predecessor": {
+          "type": "object",
+          "required": [
+            "assignment_id",
+            "capsule_checksum"
+          ],
+          "properties": {
+            "assignment_id": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,159}$"
+            },
+            "capsule_checksum": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "required_source": {
+      "type": "object",
+      "required": [
+        "path",
+        "status",
+        "required"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "available",
+            "unavailable"
+          ]
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "checksum": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "status": {
+              "const": "available"
+            }
+          },
+          "required": [
+            "size",
+            "checksum"
+          ]
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "unavailable"
+            }
+          },
+          "required": [
+            "reason"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "capability": {
+      "type": "object",
+      "required": [
+        "id",
+        "status",
+        "provider",
+        "severity"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "available",
+            "missing"
+          ]
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "fail",
+            "warn",
+            "info"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "contract_version": {
+          "const": 1
+        },
+        "identity": {},
+        "assignment_intent": {
+          "properties": {
+            "objective": {},
+            "execution_mode": {},
+            "scope": {},
+            "required_sources": {},
+            "context_artifacts": {},
+            "outputs": {},
+            "workspace_access": {},
+            "subagent_policy": {},
+            "required_capabilities": {},
+            "optional_capabilities": {},
+            "process": {},
+            "selected_specializations": {},
+            "coordination_requirements": {},
+            "director_inbox_submit_required": {},
+            "parameters": {},
+            "allowed_tools": {},
+            "allowed_templates": {},
+            "selected_sources": {},
+            "obligations": {}
+          },
+          "additionalProperties": false
+        },
+        "assignment_intent_checksum": {},
+        "snapshot": {},
+        "process": {},
+        "resources": {},
+        "scope": {},
+        "required_sources": {},
+        "outputs": {},
+        "capabilities": {},
+        "workspace_access": {},
+        "parameters": {},
+        "coordination": {},
+        "worker_may_rebuild_context": {},
+        "source_limits": {},
+        "readiness": {},
+        "contract_checksum": {}
+      },
+      "additionalProperties": false
+    },
+    {
+      "required": [
+        "egress"
+      ],
+      "properties": {
+        "contract_version": {
+          "const": 2
+        },
+        "assignment_intent": {
+          "required": [
+            "egress"
+          ]
+        }
+      }
+    }
+  ]
+}

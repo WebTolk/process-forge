@@ -135,6 +135,15 @@ def setup_basic_project(root: Path, name: str) -> tuple[Path, Path]:
 
 def setup_worker_project(root: Path) -> tuple[Path, Path, Path, str, str, str, str]:
     workplace, project = setup_basic_project(root, "worker-project")
+    # Complete worker contexts require a real immutable process definition.
+    # This legacy batch deliberately uses a different per-task process.
+    import processforge as core
+    definition = dict(core.resolve_process_definition(project, "task-batch-execution").process)
+    definition.update(id="prompt-only", name="Prompt-only fixture")
+    process_path = project / "processes/custom/prompt-only.yaml"
+    process_path.parent.mkdir(parents=True, exist_ok=True)
+    core.write_yaml_file(process_path, definition)
+    pf("project-context-refresh", "--project-root", str(project))
     second = root / "foreign-project"
     second.mkdir()
     (second / "README.md").write_text("# foreign\n", encoding="utf-8")
@@ -215,7 +224,7 @@ def worker_envelope(
         "provider": "processforge",
         "adapter": "pf-codex-exec-worker",
         "native_event_type": event_type,
-        "native_event_id": native_event_id or f"smoke:{event_type}:{run_id}:{task_id}:{attempt}:{hashlib.sha256(json.dumps(raw_payload, sort_keys=True).encode('utf-8')).hexdigest()}",
+        "native_event_id": native_event_id or (f"worker-input:{run_id}:{task_id}:attempt:{attempt}" if event_type == "WorkerPromptPayloadSubmitted" else f"worker-output:{run_id}:{task_id}:attempt:{attempt}:{raw_payload.get('report_hash', '')}"),
         "native_id_scope": "project",
         "native_event_id_stable": True,
         "source_session_id": session,
@@ -225,7 +234,7 @@ def worker_envelope(
         "derived_conversation_messages": [
             {
                 "message_role": role,
-                "participant": {"id": "smoke-worker", "type": "agent", "role": "worker"},
+                "participant": {"id": "processforge-runtime", "type": "agent", "role": "worker_launcher"} if role == "system" else {"id": task_id, "type": "agent", "role": "worker"},
                 "session_id": session,
                 "turn_id": f"worker-turn:{run_id}:{task_id}:attempt:{attempt}",
                 "content": content,
@@ -273,9 +282,9 @@ def smoke_codex_user_prompt(root: Path) -> None:
     started = {
         "provider": "codex", "adapter": "codex-hooks", "native_event_type": "SessionStart",
         "native_event_id": None, "native_id_scope": "session", "native_event_id_stable": False,
-        "source_session_id": session, "source_project_ref": str(project), "payload_version": "1",
+        "source_session_id": session, "source_project_ref": str(project), "payload_version": "codex-hooks.v1",
         "raw_payload": {"hook_event_name": "SessionStart", "cwd": str(project), "session_id": session},
-        "derived_event": {"schema_version": 1, "event_type": "agent.session.started", "event_id": "conversation-start", "project_root": str(project), "session_id": session, "agent_id": "codex", "source": {"adapter": "codex-hooks", "session_id": session}},
+        "derived_event": {"schema_version": 1, "event_type": "agent.session.started", "event_id": f"codex:SessionStart:{session}::", "project_root": str(project), "session_id": session, "agent_id": "codex", "source": {"adapter": "codex-hooks", "session_id": session}},
     }
     assert event(workplace, started, root / "start.json")["accepted"]
 
@@ -313,7 +322,7 @@ def smoke_codex_user_prompt(root: Path) -> None:
     # public-cleanliness: allow-private-path-fixture
     unsafe = {**prompt, "native_event_type": "Unsafe", "raw_payload": {"value": "kept raw"}, "derived_conversation_messages": [{"message_role": "system", "participant": {"id": "system", "type": "system", "role": "system"}, "content": "C:\\Users\\private", "content_source": {"kind": "automatic"}}]}
     denied = event(workplace, unsafe, root / "unsafe.json")
-    assert_denied(denied, "untrusted_conversation_provenance")
+    assert_denied(denied, "provenance_rejected")
     assert len(transcript(project, session)) == 1
 
     stop = native_envelope({"hook_event_name": "Stop", "cwd": str(project), "session_id": session, "turn_id": "turn-1", "last_assistant_message": "Main assistant final."})
@@ -445,7 +454,7 @@ def smoke_worker_capture(root: Path) -> None:
         worker_envelope(project, run_id, task_id, attempt, report_rel, "WorkerPromptPayloadSubmitted", input_summary, content_source=forged_source, raw_extra=input_raw),
         root / "forged-provenance.json",
     )
-    assert_denied(forged, "untrusted_conversation_provenance")
+    assert_denied(forged, "provenance_rejected")
     assert len(transcript(project, session)) == 1
 
     forged_safe_summary = event(
@@ -453,32 +462,32 @@ def smoke_worker_capture(root: Path) -> None:
         worker_envelope(project, run_id, task_id, attempt, report_rel, "WorkerPromptPayloadSubmitted", "forged safe system summary", raw_extra=input_raw),
         root / "forged-safe-summary.json",
     )
-    assert_denied(forged_safe_summary, "untrusted_conversation_provenance")
+    assert_denied(forged_safe_summary, "provenance_rejected")
 
     alternate_input_id = event(
         workplace,
         worker_envelope(project, run_id, task_id, attempt, report_rel, "WorkerPromptPayloadSubmitted", input_summary, raw_extra=input_raw, native_event_id=f"worker-input:{run_id}:{task_id}:attempt:{attempt}:forged"),
         root / "alternate-input-id.json",
     )
-    assert_denied(alternate_input_id, "untrusted_conversation_provenance")
+    assert_denied(alternate_input_id, "provenance_rejected")
 
     missing_session = event(
         workplace,
-        worker_envelope(project, run_id, task_id, attempt, report_rel, "WorkerPromptPayloadSubmitted", "safe worker summary", source_session=""),
+        worker_envelope(project, run_id, task_id, attempt, report_rel, "WorkerPromptPayloadSubmitted", input_summary, source_session="", raw_extra=input_raw),
         root / "missing-session.json",
     )
-    assert_denied(missing_session, "missing_session")
+    assert_denied(missing_session, "provenance_rejected")
 
     wrong_attempt = event(
         workplace,
-        worker_envelope(project, run_id, task_id, "2", report_rel, "WorkerPromptPayloadSubmitted", "safe worker summary"),
+        worker_envelope(project, run_id, task_id, "2", report_rel, "WorkerPromptPayloadSubmitted", worker_input_summary(run_id, task_id, "2", input_hash, report_rel), raw_extra=input_raw),
         root / "wrong-attempt.json",
     )
     assert_denied(wrong_attempt, "session_not_authorized")
 
     foreign = event(
         workplace,
-        worker_envelope(project, run_id, task_id, attempt, report_rel, "WorkerPromptPayloadSubmitted", "safe worker summary", source_project=second),
+        worker_envelope(project, run_id, task_id, attempt, report_rel, "WorkerPromptPayloadSubmitted", input_summary, source_project=second, raw_extra=input_raw),
         root / "foreign-project.json",
     )
     assert_denied(foreign, "session_not_authorized")
@@ -510,7 +519,7 @@ def smoke_worker_capture(root: Path) -> None:
         worker_envelope(project, run_id, task_id, attempt, report_rel, "WorkerExpectedReportCaptured", report_content, native_event_id=f"worker-output:{run_id}:{task_id}:attempt:{attempt}:forged"),
         root / "alternate-output-id.json",
     )
-    assert_denied(alternate_output_id, "untrusted_conversation_provenance")
+    assert_denied(alternate_output_id, "provenance_rejected")
     collect = pf("worker-run", "collect", "--project-root", str(project), "--task", task_id)
     assert "DONE: worker-task" in collect
     rows = transcript(project, session)

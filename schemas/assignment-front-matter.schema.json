@@ -3,43 +3,253 @@
   "$id": "https://processforge.local/schemas/assignment-front-matter.schema.json",
   "title": "Assignment Front Matter",
   "type": "object",
-  "required": ["schema_version", "id", "status", "role", "process", "stage", "allowed_files", "forbidden_files", "required_outputs"],
+  "required": [
+    "schema_version",
+    "id",
+    "status",
+    "role",
+    "process",
+    "stage",
+    "allowed_files",
+    "forbidden_files",
+    "required_outputs"
+  ],
   "properties": {
-    "schema_version": { "type": "integer", "minimum": 1 },
-    "id": { "type": "string", "minLength": 1 },
-    "status": { "type": "string", "enum": ["draft", "ready", "in_progress", "blocked", "completed", "cancelled"] },
-    "role": { "type": "string", "minLength": 1 },
-    "process": { "type": ["string", "object"] },
-    "stage": { "type": "string", "minLength": 1 },
-    "required_capabilities": { "type": "array", "items": { "type": "string" } },
-    "optional_capabilities": { "type": "array", "items": { "type": "string" } },
-    "allowed_files": { "type": "array", "items": { "type": "string" } },
-    "forbidden_files": { "type": "array", "items": { "type": "string" } },
-    "required_outputs": { "type": "array", "items": { "type": "string" } },
-    "parameters": { "type": "object", "additionalProperties": true },
-    "selected_sources": { "type": "array", "items": { "type": "string" } },
-    "telemetry_path": { "type": "string" },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "ready",
+        "in_progress",
+        "blocked",
+        "completed",
+        "cancelled"
+      ]
+    },
+    "role": {
+      "type": "string",
+      "minLength": 1
+    },
+    "process": {
+      "type": [
+        "string",
+        "object"
+      ]
+    },
+    "stage": {
+      "type": "string",
+      "minLength": 1
+    },
+    "required_capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "optional_capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allowed_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "forbidden_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "required_outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "selected_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "telemetry_path": {
+      "type": "string"
+    },
     "hooks": {
       "type": "object",
       "properties": {
-        "tracking": { "type": "string" },
-        "chat_capture": { "type": "string", "enum": ["enabled", "disabled"] },
-        "emit_on_complete": { "type": "boolean" },
-        "notify_wtaicc": { "type": "string", "enum": ["outbox", "disabled"] }
+        "tracking": {
+          "type": "string"
+        },
+        "chat_capture": {
+          "type": "string",
+          "enum": [
+            "enabled",
+            "disabled"
+          ]
+        },
+        "emit_on_complete": {
+          "type": "boolean"
+        },
+        "notify_wtaicc": {
+          "type": "string",
+          "enum": [
+            "outbox",
+            "disabled"
+          ]
+        }
       },
       "additionalProperties": true
     },
     "chat_capture": {
       "type": "object",
       "properties": {
-        "enabled": { "type": "boolean" },
-        "include_content": { "type": "boolean" },
-        "max_message_chars": { "type": "integer", "minimum": 0 },
-        "redact_patterns": { "type": "array", "items": { "type": "string" } },
-        "allow_private_paths": { "type": "boolean" },
-        "send_to_outbox": { "type": "boolean" }
+        "enabled": {
+          "type": "boolean"
+        },
+        "include_content": {
+          "type": "boolean"
+        },
+        "max_message_chars": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "redact_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allow_private_paths": {
+          "type": "boolean"
+        },
+        "send_to_outbox": {
+          "type": "boolean"
+        }
       },
       "additionalProperties": true
+    },
+    "egress": {
+      "type": "object",
+      "required": [
+        "policy_id",
+        "recipient",
+        "purpose",
+        "policy_checksum",
+        "detector_checksum",
+        "minimum_enforcement",
+        "limits"
+      ],
+      "properties": {
+        "policy_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        },
+        "recipient": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        },
+        "purpose": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        },
+        "policy_checksum": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "detector_checksum": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "minimum_enforcement": {
+          "const": "mediated_session"
+        },
+        "limits": {
+          "type": "object",
+          "required": [
+            "unit_bytes",
+            "envelope_bytes",
+            "attempt_bytes",
+            "disclosures",
+            "json_depth",
+            "classification_ms",
+            "token_seconds"
+          ],
+          "properties": {
+            "unit_bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "envelope_bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            },
+            "attempt_bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 33554432
+            },
+            "disclosures": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 128
+            },
+            "json_depth": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            },
+            "classification_ms": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2000
+            },
+            "token_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "egress_predecessor": {
+      "type": "object",
+      "required": [
+        "assignment_id",
+        "capsule_checksum"
+      ],
+      "properties": {
+        "assignment_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,159}$"
+        },
+        "capsule_checksum": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": true

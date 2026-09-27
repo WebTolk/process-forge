@@ -23,6 +23,8 @@ TOOLS = {
     "pf.work.state": "Read the current declarative ProcessForge work state.",
     "pf.work.start": "Start or continue governed ProcessForge work from a high-level objective.",
     "pf.work.transition": "Advance governed work using a declared outcome and evidence.",
+    "pf.work.search": "Search verified resources pinned to an explicit Work/context, intersected with current access and stage scope.",
+    "pf.work.resolve": "Resolve a verified resource pinned to an explicit Work/context without widening current access.",
     "pf.resolve": "Resolve a ProcessForge project or selected knowledge resource.",
     "pf.search": "Search only fresh snapshot-authorized local resources before using broader search.",
     "pf.workplace_state": "Read derived workplace ledger state.",
@@ -158,6 +160,14 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
             notes=str(arguments.get("notes") or ""),
             session_id=supplied_session,
         )
+    if name in {"pf.work.search", "pf.work.resolve"}:
+        from processforge_core.work_resources import WorkResourceService
+
+        bound_project = resolve_garage_project()
+        return WorkResourceService(bound_project, workplace, core).read(
+            operation=name.rsplit(".", 1)[1], run_id=arguments.get("run_id"), assignment_id=arguments.get("assignment_id"),
+            context_id=arguments.get("context_id"), resource_id=arguments.get("resource_id"), query=arguments.get("query"),
+            limit=arguments.get("limit"), limitstart=arguments.get("limitstart"), offset=arguments.get("offset"))
     if name == "pf.resolve":
         bound_project = resolve_garage_project()
         context = core.project_context_check_result(bound_project, explicit_workplace=str(workplace))
@@ -208,10 +218,13 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
 def tool_schema(name: str) -> dict[str, Any]:
     properties: dict[str, Any] = {"session_id": {"type": "string"}, "project_root": {"type": "string"}}
     required: list[str] = []
-    if name == "pf.resolve":
+    if name in {"pf.resolve", "pf.work.resolve"}:
         properties["resource_id"] = {"type": "string"}
-    if name == "pf.search":
+    if name in {"pf.search", "pf.work.search"}:
         properties.update({"query": {"type": "string", "minLength": 1}, "limit": {"type": "integer", "minimum": 1, "maximum": 100}, "limitstart": {"type": "integer", "minimum": 0}, "offset": {"type": "integer", "minimum": 0}})
+    if name in {"pf.work.search", "pf.work.resolve"}:
+        properties.update({key: {"type": "string", "minLength": 1} for key in ("run_id", "assignment_id", "context_id")})
+        required.extend(["run_id", "assignment_id", "context_id", "query" if name.endswith("search") else "resource_id"])
     if name == "pf.work.start":
         properties.update({"objective": {"type": "string", "minLength": 1}})
         properties["process_id"] = {"type": "string", "minLength": 1}
@@ -326,6 +339,45 @@ def rpc_error(request_id: Any, code: int, message: str) -> dict[str, Any]:
 
 
 def respond(request: Any, workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
+    src_root = str(Path(__file__).resolve().parents[2] / "src")
+    if src_root not in sys.path:
+        sys.path.insert(0, src_root)
+    from processforge_core import diagnostics
+    arguments = {}
+    if isinstance(request, dict) and isinstance(request.get("params"), dict):
+        candidate = request["params"].get("arguments")
+        arguments = candidate if isinstance(candidate, dict) else {}
+    supplied_session = session_id or arguments.get("session_id") or None
+    project = None
+    # Never create optional private files before project/session authorization.
+    try:
+        if arguments.get("project_root"):
+            candidate = runtime.host.resolve_project(str(arguments["project_root"]), runtime.core)
+            if session_id and arguments.get("session_id") not in (None, "", session_id):
+                raise ValueError("session mismatch")
+            if supplied_session:
+                bound = runtime.host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, runtime.core)
+                if runtime.core.project_id(bound) != runtime.core.project_id(candidate):
+                    raise ValueError("session project mismatch")
+            project = candidate
+        elif supplied_session:
+            project = runtime.host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, runtime.core)
+    except (Exception, SystemExit):
+        pass  # original dispatcher remains the authority for returned errors
+    logger = diagnostics.for_project(project, session_id=supplied_session)
+    identity = {"request_id": request.get("id") if isinstance(request, dict) and "id" in request else None,
+                "session_id": supplied_session, "project_id": runtime.core.project_id(project) if project else None,
+                "build": diagnostics.identity_for(logger, __file__)}
+    if identity["request_id"] is None:
+        identity.pop("request_id")  # generated operation id, never a fabricated session
+    with diagnostics.operation(logger, "mcp", "mcp.request", **identity):
+        response = _respond(request, workplace, session_id, runtime)
+        if response and ("error" in response or response.get("result", {}).get("isError")):
+            diagnostics.emit("error", "mcp.request_error", {"rpc_error": response.get("error", {}).get("code")}, component="mcp")
+        return response
+
+
+def _respond(request: Any, workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
     request_id = request.get("id") if isinstance(request, dict) else None
     valid_id = request_id is None or isinstance(request_id, str) or (type(request_id) in {int, float} and (not isinstance(request_id, float) or math.isfinite(request_id)))
     if not isinstance(request, dict) or request.get("jsonrpc") != "2.0" or not isinstance(request.get("method"), str) or not valid_id:

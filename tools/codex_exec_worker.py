@@ -111,10 +111,17 @@ def managed_hook_trust_args(project_root: Path) -> list[str]:
     return ["--dangerously-bypass-hook-trust"]
 
 
-def prompt_payload(worker_prompt: Path, capsule: Path, workspace_access: Path) -> str:
+def prompt_payload(worker_prompt: Path, capsule: Path, workspace_access: Path, prepared: dict[str, Any] | None = None) -> str:
+    introduction = read_text(worker_prompt).rstrip() if prepared is None else "\n".join([
+        "You are a worker executing exactly the immutable prepared input below.",
+        "Use only its scope, actions, outputs, inline inputs and explicitly declared file references.",
+        "Metadata-only grants do not authorize body reads. Do not copy private paths into public reports.",
+        "Do not bootstrap ProcessForge, start another Work, reselect the process or rebuild context.",
+        "No ProcessForge MCP connection is required. Stop and report if scope or input is insufficient.",
+    ])
     return "\n".join(
         [
-            read_text(worker_prompt).rstrip(),
+            introduction,
             "",
             "## Output Delivery Contract",
             "",
@@ -122,13 +129,11 @@ def prompt_payload(worker_prompt: Path, capsule: Path, workspace_access: Path) -
             "Return only the complete report content in the requested format; do not say that you saved it, link to it, or add a conversational preface.",
             "For a read-only assignment, do not attempt to write the report file yourself.",
             "",
-            "## Assignment Capsule",
+            "## Prepared Execution Input" if prepared else "## Assignment Capsule",
             "",
-            read_text(capsule).rstrip(),
+            json.dumps(prepared, ensure_ascii=False, sort_keys=True) if prepared else read_text(capsule).rstrip(),
             "",
-            "## Workspace Access File",
-            "",
-            str(workspace_access),
+            *(["## Workspace Access File", "", str(workspace_access)] if prepared is None else []),
             "",
         ]
     )
@@ -256,9 +261,27 @@ def main() -> int:
     if memories not in {"true", "false"}:
         raise SystemExit("FAIL: PF_CODEX_MEMORIES must be true or false")
     project_root = os.environ.get("PF_PROJECT_ROOT") or str(Path.cwd())
-    add_dirs = resolved_workspace_dirs(workspace_access)
+    prepared = None
+    prepared_path = os.environ.get("PF_PREPARED_INPUT_FILE")
+    if prepared_path:
+        from prepared_executor import ExecutorError, load_and_validate_manifest
+        try:
+            prepared = load_and_validate_manifest(argparse.Namespace(prepared_input=prepared_path,
+                prepared_sha256=os.environ.get("PF_PREPARED_INPUT_SHA256", "")), dict(os.environ))
+            if (Path(project_root) / prepared["input"]["capsule"]["path"]).resolve() != capsule:
+                raise ValueError("prepared_capsule_pointer_mismatch")
+            report = prepared["input"]["outputs"]["expected_report"]["artifact"]
+            if (Path(project_root) / report).resolve() != output:
+                raise ValueError("prepared_report_pointer_mismatch")
+        except (ExecutorError, KeyError, TypeError, ValueError) as exc:
+            raise SystemExit("FAIL: prepared input invalid: " + str(exc)) from exc
+    elif os.environ.get("PF_AGENT_RUN_DIR"):
+        raise SystemExit("FAIL: prepared_input_required")
+    # Prepared references authorize exact material, never a whole external
+    # directory. Native readers can consume the declared references directly.
+    add_dirs = [] if prepared else resolved_workspace_dirs(workspace_access)
     extra_read_dir = os.environ.get("PF_CODEX_EXTRA_READ_DIR")
-    if extra_read_dir:
+    if extra_read_dir and not prepared:
         extra = Path(extra_read_dir).expanduser()
         if extra.exists():
             add_dirs.append(extra)
@@ -285,13 +308,18 @@ def main() -> int:
     # payload with the Windows console/code-page default, corrupting a valid
     # non-ASCII assignment (for example a Russian project path) before the
     # CLI receives it.  Supply explicit UTF-8 bytes instead.
-    payload_text = prompt_payload(worker_prompt, capsule, workspace_access)
+    payload_text = prompt_payload(worker_prompt, capsule, workspace_access, prepared)
     capture_worker_input(payload_text, output)
-    result = subprocess.run(
-        command,
-        input=payload_text.encode("utf-8"),
-        check=False,
-    )
+    src_root = str(Path(__file__).resolve().parents[1] / "src")
+    if src_root not in sys.path:
+        sys.path.insert(0, src_root)
+    from processforge_core import diagnostics
+    logger = diagnostics.for_project(project_path, run_id=os.environ.get("PF_RUN_ID"))
+    with diagnostics.operation(logger, "worker", "worker.subprocess", run_id=os.environ.get("PF_RUN_ID"),
+                               assignment_id=os.environ.get("PF_TASK_ID"), attempt=os.environ.get("PF_WORKER_ATTEMPT"),
+                               build=diagnostics.identity_for(logger, __file__)):
+        result = subprocess.run(command, input=payload_text.encode("utf-8"), check=False)
+        diagnostics.emit("error" if result.returncode else "info", "worker.exit", {"exit_code": result.returncode}, component="worker")
     write_exit_contract(exit_contract, int(result.returncode))
     write_heartbeat(heartbeat, "completed" if result.returncode == 0 else "failed", {"exit_code": result.returncode})
     return int(result.returncode)

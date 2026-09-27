@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
+from .host_integration import optional_host_integration_status
+
 
 @dataclass(frozen=True)
 class ProjectInitializationError(Exception):
@@ -40,8 +42,7 @@ def status(project_root: Path, core: Any, *, workplace: str | None = None) -> di
     snapshot = core.load_yaml_document(snapshot_path) if snapshot_path.is_file() else {}
     resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
     missing_artifacts = [item for item in _DETERMINISTIC_ARTIFACTS if not (flow / item).is_file()] if flow.is_dir() else list(_DETERMINISTIC_ARTIFACTS)
-    codex = dict(core.project_codex_integration_status(project_root)) if hasattr(core, "project_codex_integration_status") else {"status": "unsupported"}
-    codex.update({"required": False, "severity": "info", "purpose": "optional_host_telemetry"})
+    codex = optional_host_integration_status(project_root, core)
     if not flow.is_dir() or not snapshot_path.is_file():
         state = "incomplete"
     elif str(health.get("status") or "") == "blocked":

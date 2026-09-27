@@ -8,8 +8,7 @@ Built-in drivers:
 
 - `manual`: prepares state and never starts a process.
 - `generic-shell`: starts an explicit executable with configured arguments.
-- `codex-exec`: starts a Codex CLI worker with the assignment capsule, worker
-  prompt, and private workspace access file.
+- `codex-exec`: starts a Codex CLI worker with verified prepared input.
 - `test-echo-worker`: local smoke-test worker that writes the expected report.
 - `test-shell-agent`: local smoke-test shell agent that writes report,
   stdout/stderr, process, heartbeat, and exit proof artifacts.
@@ -38,7 +37,8 @@ ProcessForge always injects reserved worker environment variables including
 `PF_RUN_ID`, `PF_TASK_ID`, `PF_AGENT_RUN_DIR`, `PF_AGENT_EXIT_PATH`,
 `PF_AGENT_MODEL`, `PF_PROJECT_ROOT`, `PF_RUNTIME_DRIVER_ID`,
 `PF_AGENT_REASONING_EFFORT`, `PF_WORKSPACE_ACCESS_FILE`, `PF_WORKER_RUN_ID`,
-and `PF_WORKER_TASK_ID`. Shell drivers cannot override those names. A detached
+`PF_WORKER_TASK_ID`, `PF_WORKER_ATTEMPT`, `PF_PREPARED_INPUT_FILE`, and
+`PF_PREPARED_INPUT_SHA256`. Shell drivers cannot override those names. A detached
 contract-aware worker should write its final marker to `PF_AGENT_EXIT_PATH`;
 if the supervisor later observes a lost process without that marker, it records
 `unknown_exit` instead of inferring success from a report artifact.
@@ -48,12 +48,34 @@ When a shell worker has an agent model, ProcessForge exposes it as
 `model_args`, ProcessForge appends `--model {agent_model}` only when the model
 is non-empty.
 
+## Prepared execution and collection
+
+Worker preparation requires a ready [execution contract](work-context.md),
+an explicit expected report and matching write scope. It publishes a bounded,
+immutable [prepared input](prepared-input.md) for one attempt. A primary Work
+without these worker declarations is not worker-ready. The manifest carries
+authorized resources and checked source references; it cannot widen permission.
+
+`manual` prepares this input without launching a process. `generic-shell` uses
+`tools/prepared_executor.py` to verify it, execute the configured argv, and record
+heartbeat and exit state. `codex-exec` uses its existing wrapper with the same
+verified manifest. Prepared execution can run without MCP; the executable's
+actual network/filesystem access still depends on its operating-system sandbox.
+
+Starting a ready worker reuses its prepared attempt. A changed preference or
+blocked attempt requires explicit preparation again. Collection checks output
+attribution and writes a receipt; repetition and dead-owner recovery must not
+duplicate completion events. Governed collection records the result while the
+primary Work stays on its current stage. The primary agent reviews evidence and
+calls `pf.work.transition` to advance the process.
+
 ## Codex Exec
 
 `codex-exec` is the built-in driver for launching shell-agents through the
-Codex CLI. ProcessForge writes the assignment capsule, worker prompt, expected
-report path, heartbeat path, and private `workspace-access.json` file, then the
-driver runs `tools/codex_exec_worker.py`.
+Codex CLI. The driver runs `tools/codex_exec_worker.py`, which verifies the
+prepared input path, checksum and identity before passing fixed instructions
+and that manifest to Codex. In prepared mode it does not reread the mutable
+worker prompt, capsule body or workspace-access pointer.
 
 The driver does not choose the model. The orchestrator must provide one through
 `agent_model`, `--model`, plan-level `runtime.model`, or worker-level `model`.
@@ -69,18 +91,19 @@ empty, no reasoning config argument is added.
 
 Workspace access is resolved privately at runtime. Public assignments and
 capsules may contain resource ids or `path_ref` values, but private absolute
-paths are written only to `.pf/runtime/agent-runs/.../workspace-access.json`.
-`codex-exec` reads that runtime file and grants resolved directories to Codex
-with `--add-dir`.
+paths remain in private runtime files such as `workspace-access.json` and the
+attempt's prepared manifest. The legacy direct wrapper can read workspace
+access and use `--add-dir`; a prepared launch does not grant broad directories
+from that file. Metadata-only grants never authorize resource body reads.
 
 Prepare and start one Codex shell-agent directly:
 
 ```bash
-python .pf/runtime/bin/pf.py task-create --project-root . --run docs-run --id docs-worker --title "Docs worker" --process task-batch-execution --allowed-file ".pf/artifacts/**" --workspace-knowledge-resource <knowledge-resource-id> --reasoning-effort high --apply
+python .pf/runtime/bin/pf.py task-create --project-root . --run docs-run --id docs-worker --title "Docs worker" --process task-batch-execution --allowed-file ".pf/artifacts/docs-worker.md" --required-output "id=report,path=.pf/artifacts/docs-worker.md" --expected-report-artifact ".pf/artifacts/docs-worker.md" --workspace-knowledge-resource <knowledge-resource-id> --reasoning-effort high --apply
 python .pf/runtime/bin/pf.py worker-run start --project-root . --task docs-worker --driver codex-exec --model chatgpt-5.3-codex-spark --reasoning-effort high
 ```
 
-Run another worker with the same model and medium reasoning:
+For another already declared, worker-ready task, use the same model and medium reasoning:
 
 ```bash
 python .pf/runtime/bin/pf.py worker-run start --project-root . --task test-worker --driver codex-exec --model chatgpt-5.3-codex-spark --reasoning-effort medium
@@ -115,9 +138,9 @@ all generated shell workers. Reasoning effort is currently selected in the plan,
 in the generated assignment, or on `worker-run prepare/start` with
 `--reasoning-effort`.
 
-Shell execution uses `shell=False`. Generic shell drivers have no network
-permission by default; `codex-exec` explicitly declares network access because
-the Codex CLI must reach its configured model provider.
+Shell execution uses `shell=False`. Generic shell drivers declare no network
+permission by default; `codex-exec` declares network access for its model provider.
+These declarations do not implement operating-system network isolation.
 
 ProcessForge does not install agents, create agent folders, or require a daemon
 for driver registry use.

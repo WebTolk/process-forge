@@ -61,6 +61,7 @@ from processforge_core.process_catalog import (
 )
 from processforge_core.process_execution import ProcessExecutionService, project_process_selection, project_specialization_selection
 from processforge_core import project_initialization
+from processforge_core import diagnostics
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
 PROJECT_FLOW_ROOT = ".pf"
@@ -167,6 +168,8 @@ RESERVED_WORKER_ENV_KEYS = {
     "PF_WORKER_RUN_ID",
     "PF_WORKER_TASK_ID",
     "PF_WORKER_ATTEMPT",
+    "PF_PREPARED_INPUT_FILE",
+    "PF_PREPARED_INPUT_SHA256",
 }
 
 GLOBAL_AGENT_SECTION_START = "<!-- PROCESSFORGE:START -->"
@@ -1773,6 +1776,7 @@ def default_runtime_driver_documents() -> dict[str, dict[str, Any]]:
             "id": "generic-shell",
             "title": "Generic Shell Runtime",
             "kind": "shell",
+            "prepared_lifecycle_wrapper": True,
             "command": {
                 "executable": "{executable}",
                 "args": ["{worker_prompt_path}", "{capsule_path}"],
@@ -5991,8 +5995,8 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
     emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": request.get("command", "project-onboard")})
     results = [write_file(path, content, force=force) for path, content in files.items()]
     results.append(append_gitignore_entries(project_root / ".gitignore", PROJECT_PRIVATE_GITIGNORE, force=force))
-    codex_integration = project_codex_integration_status(project_root)
-    codex_integration.update({"required": False, "severity": "info", "purpose": "optional_host_telemetry"})
+    from processforge_core.host_integration import optional_host_integration_status
+    codex_integration = optional_host_integration_status(project_root, sys.modules[__name__])
     emit_process_event(project_root, "project.flow_root.created", process_id="project-onboarding", process_version="1.0.0", payload={"flow_root": PROJECT_FLOW_ROOT})
     emit_process_event(project_root, "project.platform.detected", process_id="project-onboarding", process_version="1.0.0", payload={"project_type": project_type or "auto"})
     snapshot_status, snapshot_paths, _snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root)
@@ -6908,6 +6912,10 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_expected_report_containment", [sys.executable, str(root / "tools" / "smoke_expected_report_containment.py")], 180),
         ReleaseCommand("smoke_authenticated_report_content", [sys.executable, str(root / "tools" / "smoke_authenticated_report_content.py")], 180),
         ReleaseCommand("smoke_mcp_jsonrpc_validation", [sys.executable, str(root / "tools" / "smoke_mcp_jsonrpc_validation.py")], 120),
+        ReleaseCommand("smoke_diagnostics", [sys.executable, str(root / "tools" / "smoke_diagnostics.py")], 180),
+        ReleaseCommand("smoke_diagnostics_process_invariance", [sys.executable, str(root / "tools" / "smoke_diagnostics_process_invariance.py")], 240),
+        ReleaseCommand("smoke_work_resource_binding", [sys.executable, str(root / "tools" / "smoke_work_resource_binding.py")], 300),
+        ReleaseCommand("smoke_work_capsule_contract_parity", [sys.executable, str(root / "tools" / "smoke_work_capsule_contract_parity.py")], 300),
         ReleaseCommand("smoke_session_identity_roundtrip", [sys.executable, str(root / "tools" / "smoke_session_identity_roundtrip.py")], 180),
         ReleaseCommand("smoke_codex_lifecycle_identity", [sys.executable, str(root / "tools" / "smoke_codex_lifecycle_identity.py")], 120),
         ReleaseCommand("smoke_raw_ingress_incremental_recovery", [sys.executable, str(root / "tools" / "smoke_raw_ingress_incremental_recovery.py")], 180),
@@ -6916,6 +6924,9 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_public_cleanliness", [sys.executable, str(root / "tools" / "smoke_public_cleanliness.py")], 60),
         ReleaseCommand("smoke_processforge_core_package_bootstrap", [sys.executable, str(root / "tools" / "smoke_processforge_core_package_bootstrap.py")], 120),
         ReleaseCommand("smoke_central_event_ingress", [sys.executable, str(root / "tools" / "smoke_central_event_ingress.py")], 180),
+        ReleaseCommand("smoke_provider_adapter_admission", [sys.executable, str(root / "tools" / "smoke_provider_adapter_admission.py")], 180),
+        ReleaseCommand("smoke_prepared_execution_context", [sys.executable, str(root / "tools" / "smoke_prepared_execution_context.py")], 360),
+        ReleaseCommand("smoke_prepared_execution_recovery", [sys.executable, str(root / "tools" / "smoke_prepared_execution_recovery.py")], 240),
         ReleaseCommand("smoke_core_has_no_domain_knowledge_seeds", [sys.executable, str(root / "tools" / "smoke_core_has_no_domain_knowledge_seeds.py")], 120),
         ReleaseCommand("smoke_empty_workplace_has_no_domain_resources", [sys.executable, str(root / "tools" / "smoke_empty_workplace_has_no_domain_resources.py")], 120),
         ReleaseCommand("smoke_project_classification_data_driven", [sys.executable, str(root / "tools" / "smoke_project_classification_data_driven.py")], 120),
@@ -7040,6 +7051,11 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_process_execution_integrity", [sys.executable, str(root / "tools" / "smoke_process_execution_integrity.py")], 240),
         ReleaseCommand("smoke_derived_report_stale_marking", [sys.executable, str(root / "tools" / "smoke_derived_report_stale_marking.py")], 180),
         ReleaseCommand("smoke_runtime_status_version_truth", [sys.executable, str(root / "tools" / "smoke_runtime_status_version_truth.py")], 180),
+        ReleaseCommand("smoke_runtime_monitor", [sys.executable, str(root / "tools" / "smoke_runtime_monitor.py")], 120),
+        ReleaseCommand("smoke_runtime_metrics", [sys.executable, str(root / "tools" / "smoke_runtime_metrics.py")], 120),
+        ReleaseCommand("smoke_server_operator", [sys.executable, str(root / "tools" / "smoke_server_operator.py")], 120),
+        ReleaseCommand("smoke_diagnostics_configure", [sys.executable, str(root / "tools" / "smoke_diagnostics_configure.py")], 120),
+        ReleaseCommand("smoke_process_event_concurrency", [sys.executable, str(root / "tools" / "smoke_process_event_concurrency.py")], 120),
         ReleaseCommand("smoke_user_like_garage_path", [sys.executable, str(root / "tools" / "smoke_user_like_garage_path.py")], 180),
         ReleaseCommand("smoke_parameter_cascade_resolution", [sys.executable, str(root / "tools" / "smoke_parameter_cascade_resolution.py")], 120),
         ReleaseCommand("smoke_parameter_freshness", [sys.executable, str(root / "tools" / "smoke_parameter_freshness.py")], 120),
@@ -9850,67 +9866,26 @@ def workspace_ref_matches_resource(resource: dict[str, Any], requested: Any) -> 
 
 
 def workspace_access_runtime_document(project_root: Path, task: dict[str, Any]) -> dict[str, Any]:
+    from processforge_core.prepared_resources import authorize_resources
+    from processforge_core.work_context import validate_execution_contract
     task_id = safe_id(str(task.get("id") or "task"), "task")
-    run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    capsule_path = locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{task_id}.capsule.yaml"
-    capsule = load_yaml_document(capsule_path)
-    requested = normalize_workspace_access(task.get("workspace_access") or capsule.get("workspace_access"))
-    resources = capsule.get("resolved_resources") if isinstance(capsule.get("resolved_resources"), list) else []
-    selected_resources = [
-        resource
-        for resource in resources
-        if isinstance(resource, dict) and any(workspace_ref_matches_resource(resource, item) for item in requested["knowledge_resources"])
-    ]
-    manifest = normalize_workplace_manifest(project_workplace_manifest(project_root))
-    document: dict[str, Any] = {
-        "schema_version": 1,
-        "generated_at": now_utc(),
-        "run_id": run_id,
-        "task_id": task_id,
-        "visibility": "private_runtime",
-        "policy": {
-            "do_not_copy_private_paths_to_public_artifacts": True,
-            "assignment_scope_remains_project_relative": True,
-        },
-        "workplace_manifest": str(manifest) if manifest else "",
-        "requested": requested,
-        "grants": {key: [] for key in WORKSPACE_ACCESS_KEYS},
-    }
-    for resource in selected_resources:
-        path_ref = resource.get("path_ref") if isinstance(resource.get("path_ref"), dict) else {}
-        grant = {
-            "id": str(resource.get("id") or ""),
-            "instance_id": str(resource.get("instance_id") or ""),
-            "package_id": str(resource.get("package_id") or ""),
-            "kind": str(resource.get("kind") or ""),
-            "load_policy": str(resource.get("load_policy") or "on_demand"),
-            "path_ref": path_ref,
-            "resolution": resolve_workspace_path_ref(project_root, path_ref, workplace_manifest=manifest) if path_ref else {"status": "unresolved", "reason": "missing path_ref"},
-        }
-        document["grants"]["knowledge_resources"].append(grant)
-    registry_for_group = {"templates": "templates", "tools": "tools", "mcp": "mcp"}
-    for group, registry in registry_for_group.items():
-        for item in requested[group]:
-            if isinstance(item, dict):
-                path_ref = item.get("path_ref") if isinstance(item.get("path_ref"), dict) else {"registry": registry, "id": str(item.get("id") or "")}
-                label = str(item.get("id") or item.get("name") or "")
-            else:
-                label = str(item)
-                path_ref = {"registry": registry, "id": label}
-            document["grants"][group].append(
-                {
-                    "id": label,
-                    "path_ref": path_ref,
-                    "resolution": resolve_workspace_path_ref(project_root, path_ref, workplace_manifest=manifest),
-                }
-            )
-    return document
+    capsule = load_yaml_document(assignment_capsule_path(project_root, task_id))
+    validation = validate_execution_contract(project_root, assignment_yaml_path(project_root, task_id), task,
+                                             capsule, sys.modules[__name__], require_ready=True)
+    if validation["status"] != "valid":
+        raise SystemExit("FAIL: " + str(validation.get("reason") or "execution_contract_invalid"))
+    try:
+        return authorize_resources(project_root, task, capsule, sys.modules[__name__])
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise SystemExit("FAIL: worker resource preparation blocked: " + str(exc)) from exc
 
 
 def write_workspace_access_runtime_file(project_root: Path, task: dict[str, Any]) -> Path:
+    from processforge_core.prepared_input import private_file
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     task_id = safe_id(str(task.get("id") or "task"), "task")
     paths = worker_run_paths(project_root, run_id, task_id)
+    private_file(project_root, rel(paths["workspace_access"], project_root))
     document = workspace_access_runtime_document(project_root, task)
     json_write(paths["workspace_access"], document)
     return paths["workspace_access"]
@@ -10228,6 +10203,16 @@ def current_resolved_resource_indexes(current_snapshot: dict[str, Any]) -> tuple
 
 
 def project_context_check_result(project_root: Path, *, explicit_workplace: str | None = None) -> dict[str, Any]:
+    with diagnostics.span("context.check", component="context"):
+        result = _project_context_check_result(project_root, explicit_workplace=explicit_workplace)
+    diagnostics.annotate(snapshot_id=result.get("snapshot_id"))
+    diagnostics.emit("info" if result.get("fresh") else "warning", "context.freshness", lambda: {
+        key: result.get(key) for key in ("snapshot_id", "status", "policy_action", "recommended_action", "reasons", "stale_resources", "broken_refs")
+    }, component="context")
+    return result
+
+
+def _project_context_check_result(project_root: Path, *, explicit_workplace: str | None = None) -> dict[str, Any]:
     snapshot_yaml, _snapshot_md = project_context_snapshot_paths(project_root)
     if not snapshot_yaml.is_file():
         return {
@@ -11295,19 +11280,29 @@ def append_process_event(project_root: Path, event: dict[str, Any], *, dispatch:
     events_path, _outbox = event_runtime_paths(project_root)
     events_path.parent.mkdir(parents=True, exist_ok=True)
     event_id = event_id_value(event)
-    exists = False
-    if events_path.is_file():
-        for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
-            try:
-                existing = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if isinstance(existing, dict) and event_id_value(existing) == event_id:
-                exists = True
-                break
-    if not exists:
-        with events_path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
+    record = (json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
+    try:
+        # Deduplication and the whole-record append share one cross-process
+        # writer boundary. A dead owner is recoverable through the OS guard.
+        with registry_file_lock(events_path, stale_after_seconds=0):
+            exists = False
+            if events_path.is_file():
+                for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
+                    try:
+                        existing = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if isinstance(existing, dict) and event_id_value(existing) == event_id:
+                        exists = True
+                        break
+            with events_path.open("ab") as handle:
+                if not exists:
+                    handle.write(record)
+                handle.flush()
+                os.fsync(handle.fileno())
+    except SystemExit as exc:
+        # Registry CLI errors must not terminate a Runtime request thread.
+        raise RuntimeError(f"Project event journal writer unavailable: {exc}") from exc
     if dispatch:
         dispatch_hooks(project_root, event, dry_run=False, outbox=True)
     return events_path
@@ -12802,41 +12797,8 @@ def assignment_dependency_set(metadata: dict[str, Any]) -> set[str]:
 
 
 def normalized_assignment_contract(project_root: Path, assignment: Path, metadata: dict[str, Any]) -> dict[str, Any]:
-    snapshot_yaml, _snapshot_md = project_context_snapshot_paths(project_root)
-    assignment_rel = rel(assignment, project_root)
-    required_sources = assignment_scope_items([rel(snapshot_yaml, project_root), assignment_rel, *as_list(metadata.get("required_sources"))])
-    context_artifacts = normalize_context_artifacts(metadata.get("context_artifacts"))
-    allowed_files = assignment_scope_items(metadata.get("allowed_files"))
-    allowed_read_files = assignment_scope_items(metadata.get("allowed_read_files"))
-    forbidden_files = assignment_scope_items(metadata.get("forbidden_files"))
-    ownership = normalize_ownership(metadata, allowed_files)
-    write_scope = assignment_write_scope({"allowed_files": allowed_files, "ownership": ownership})
-    non_overlap = normalize_non_overlap(metadata.get("non_overlap"), write_scope)
-    return {
-        "assignment": {
-            "id": safe_id(str(metadata.get("id", assignment.stem)), "assignment"),
-            "path": assignment_rel,
-            "status": metadata.get("status", "ready"),
-            "objective": metadata.get("objective", ""),
-            "execution_mode": normalize_execution_mode(metadata.get("execution_mode")),
-        },
-        "context": {"required_sources": required_sources, "context_artifacts": context_artifacts},
-        "scope": {
-            "allowed_files": allowed_files,
-            "allowed_read_files": allowed_read_files,
-            "forbidden_files": forbidden_files,
-            "ownership": ownership,
-            "non_overlap": non_overlap,
-        },
-        "outputs": {
-            "required_outputs": normalize_required_outputs(metadata.get("required_outputs")),
-            "expected_report": metadata.get("expected_report") if isinstance(metadata.get("expected_report"), dict) else {},
-        },
-        "workspace_access": normalize_workspace_access(metadata.get("workspace_access")),
-        "agent_model": normalize_agent_model(metadata.get("agent_model") or metadata.get("model") or ""),
-        "agent_reasoning_effort": normalize_agent_reasoning_effort(metadata.get("agent_reasoning_effort") or metadata.get("reasoning_effort") or ""),
-        "subagent_policy": normalize_subagent_policy(metadata.get("subagent_policy")),
-    }
+    from processforge_core.work_context import normalized_assignment_contract as normalize
+    return normalize(project_root, assignment, metadata, sys.modules[__name__])
 
 
 WORKSPACE_ACCESS_KEYS = ("knowledge_resources", "templates", "tools", "mcp")
@@ -12955,6 +12917,11 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     if status not in {"fresh", "fresh_with_updates"}:
         raise SystemExit("FAIL: project context snapshot is not fresh: " + (", ".join(reasons) if reasons else status))
     assn_id = safe_id(str(metadata.get("id", assignment.stem)), "assignment")
+    capsule_path = locate_flow_root(project_root) / "contexts" / "assignment-capsules" / f"{assn_id}.capsule.yaml"
+    if capsule_path.exists():
+        raise SystemExit("FAIL: immutable_context_exists; create_successor_work; --force cannot replace a pinned capsule")
+    if (metadata.get("process_execution") or {}).get("assignment_capsule"):
+        raise SystemExit("FAIL: pinned_context_unavailable; create_successor_work or restore the exact recorded context")
     required = [str(item) for item in metadata.get("required_capabilities", [])] if isinstance(metadata.get("required_capabilities"), list) else []
     optional = [str(item) for item in metadata.get("optional_capabilities", [])] if isinstance(metadata.get("optional_capabilities"), list) else []
     providers = load_registry_capability_providers(project_root, resolve_project_workplace_manifest(project_root))
@@ -12969,7 +12936,14 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     snapshot_yaml, _snapshot_md = project_context_snapshot_paths(project_root)
     snapshot_sha = "sha256:" + sha256_file(snapshot_yaml)
     snapshot_meta = snapshot.get("snapshot", {}) if isinstance(snapshot.get("snapshot"), dict) else {}
-    contract = normalized_assignment_contract(project_root, assignment, metadata)
+    from processforge_core.work_context import ContextContractError, build_context_fields
+    try:
+        fields = build_context_fields(project_root, assignment, metadata, snapshot, sys.modules[__name__],
+            workplace=(resolve_project_workplace_manifest(project_root).parent if resolve_project_workplace_manifest(project_root) else None))
+    except ContextContractError as exc:
+        prefix = "workspace access must use public refs: " if exc.code == "private_path_forbidden" else ""
+        raise SystemExit("FAIL: " + prefix + exc.code) from exc
+    contract = fields
     workspace_access_issues = workspace_access_public_path_issues(contract["workspace_access"])
     if workspace_access_issues:
         raise SystemExit("FAIL: workspace access must use public refs: " + "; ".join(workspace_access_issues))
@@ -12982,7 +12956,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     if overlap_check["status"] == "fail" and not args.force:
         raise SystemExit("FAIL: assignment write scope overlaps active assignments: " + dump_yaml(overlap_check))
     contract["scope"]["non_overlap"]["overlap_check"] = overlap_check
-    assignment_parameter_resolution = resolve_assignment_parameters(project_root, snapshot, metadata)
+    assignment_parameter_resolution = {**fields["parameter_resolution_summary"], "resolved_parameters": fields["resolved_parameters"]}
     capsule = {
         "schema_version": 1,
         "capsule": {
@@ -13044,12 +13018,19 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
         "selected_sources": metadata.get("selected_sources", []),
         "event_correlation_id": f"assignment-{assn_id}",
     }
+    common_context = {**capsule["context"], **fields["context"]}
+    capsule.update(fields)
+    capsule["context"] = common_context
+    capsule["required_capabilities"] = fields["capabilities"]["required"]
+    capsule["optional_capabilities"] = fields["capabilities"]["optional"]
     capsule_dir = flow_root / "contexts" / "assignment-capsules"
     capsule_dir.mkdir(parents=True, exist_ok=True)
     capsule_path = capsule_dir / f"{assn_id}.capsule.yaml"
-    if capsule_path.exists() and not args.force:
-        raise SystemExit(f"FAIL: capsule already exists: {rel(capsule_path, project_root)}")
-    capsule_path.write_text(ensure_trailing_newline(dump_yaml(capsule)), encoding="utf-8")
+    try:
+        with capsule_path.open("x", encoding="utf-8") as stream:
+            stream.write(ensure_trailing_newline(dump_yaml(capsule)))
+    except FileExistsError as exc:
+        raise SystemExit("FAIL: immutable_context_exists; create_successor_work") from exc
     emit_process_event(project_root, "assignment.started", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"path": rel(assignment, project_root)}, correlation_id=f"assignment-{assn_id}")
     emit_process_event(project_root, "assignment.created", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"capsule": rel(capsule_path, project_root)}, correlation_id=f"assignment-{assn_id}")
     emit_process_event(project_root, "artifact.created", assignment_id_value=assn_id, assignment_path=rel(assignment, project_root), payload={"path": rel(capsule_path, project_root)}, correlation_id=f"assignment-{assn_id}")
@@ -13093,6 +13074,17 @@ def command_capsule_doctor(args: argparse.Namespace) -> int:
         reproducibility = item.get("reproducibility") if isinstance(item.get("reproducibility"), dict) else {}
         allowed_live = bool(item.get("non_reproducible_live_resource")) or reproducibility.get("level") == "non_reproducible"
         checks.append(check("FAIL" if uses_latest and not allowed_live else "PASS", f"resource {item.get('id', 'resource')} avoids unpinned latest"))
+    if "execution_contract" in capsule:
+        from processforge_core.work_context import validate_execution_contract
+        assignment_ref = str(capsule.get("capsule", {}).get("assignment_path") or "")
+        assignment_path = project_root / assignment_ref
+        metadata = extract_assignment_front_matter(assignment_path) if assignment_path.is_file() else {}
+        result = validate_execution_contract(project_root, assignment_path, metadata, capsule, sys.modules[__name__])
+        checks.append(check("PASS" if result["status"] == "valid" else "FAIL", "execution contract: " + str(result.get("reason") or result["status"])))
+        if result.get("readiness", {}).get("status") == "blocked":
+            checks.append(check("WARN", "worker readiness: " + ", ".join(item["code"] for item in result["readiness"]["blockers"])))
+    else:
+        checks.append(check("WARN", "legacy_contract_incomplete: create_successor_work for restricted execution"))
     return print_checks(checks)
 
 
@@ -18045,7 +18037,7 @@ def command_continuation_doctor(args: argparse.Namespace) -> int:
 def normalize_subagent_policy(raw: Any) -> dict[str, Any]:
     source = raw if isinstance(raw, dict) else {}
     allow = bool(source.get("allow", source.get("allow_subagents", False)))
-    max_subagents = int(source.get("max_subagents") or (1 if allow else 0))
+    max_subagents = int(source["max_subagents"]) if "max_subagents" in source else (1 if allow else 0)
     reports_dir = normalize_assignment_path(str(source.get("reports_dir") or ""))
     return {
         "allow": allow,
@@ -18147,6 +18139,8 @@ def worker_prompt_path(project_root: Path, run_id: str, task_id: str) -> Path:
 
 
 RUNTIME_DRIVER_PLACEHOLDERS = {
+    "attempt",
+    "prepared_input_path",
     "project_root",
     "processforge_root",
     "run_id",
@@ -18367,6 +18361,8 @@ def build_worker_environment(driver: dict[str, Any], variables: dict[str, str]) 
             "PF_WORKER_RUN_ID": variables["run_id"],
             "PF_WORKER_TASK_ID": variables["task_id"],
             "PF_WORKER_ATTEMPT": variables["attempt"],
+            "PF_PREPARED_INPUT_FILE": variables.get("prepared_input_path", ""),
+            "PF_PREPARED_INPUT_SHA256": variables.get("prepared_input_checksum", ""),
         }
     )
     explicit = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
@@ -18411,6 +18407,8 @@ def validate_runtime_driver_document(driver: dict[str, Any], executable_override
     checks.append(check("PASS" if driver.get("schema_version") else "FAIL", "schema_version present"))
     checks.append(check("PASS" if driver_id else "FAIL", "id present"))
     checks.append(check("PASS" if kind in {"manual", "shell"} else "FAIL", f"kind valid: {kind or 'missing'}"))
+    if "prepared_lifecycle_wrapper" in driver:
+        checks.append(check("PASS" if type(driver["prepared_lifecycle_wrapper"]) is bool else "FAIL", "prepared_lifecycle_wrapper is boolean"))
     security = driver.get("security") if isinstance(driver.get("security"), dict) else {}
     env_spec = driver.get("environment") if isinstance(driver.get("environment"), dict) else {}
     explicit_env = env_spec.get("variables") if isinstance(env_spec.get("variables"), dict) else {}
@@ -18525,26 +18523,19 @@ DETACHED_WORKER_PROCESSES: dict[tuple[str, str, str], subprocess.Popen[bytes]] =
 
 @contextlib.contextmanager
 def worker_run_lifecycle_lock(project_root: Path, run_id: str, task_id: str) -> Any:
+    from processforge_core.prepared_input import private_file
     root = agent_run_root(project_root, run_id, task_id)
-    root.mkdir(parents=True, exist_ok=True)
-    lock_path = root / ".lifecycle.lock"
-    deadline = time.time() + 30.0
-    fd: int | None = None
-    while fd is None:
-        try:
-            fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except FileExistsError:
-            if time.time() >= deadline:
-                raise SystemExit(f"FAIL: worker run lifecycle lock unavailable for {run_id}/{task_id}")
-            time.sleep(0.05)
     try:
-        payload = {"schema_version": 1, "pid": os.getpid(), "created_at": now_utc()}
-        os.write(fd, json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8"))
+        for path in worker_run_paths(project_root, run_id, task_id).values():
+            private_file(project_root, rel(path, project_root))
+        for name in (".lifecycle.lock", ".lifecycle.lock.guard"):
+            private_file(project_root, rel(root / name, project_root))
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise SystemExit("FAIL: worker private path invalid: " + str(exc)) from exc
+    # The existing OS guard serializes dead-owner recovery and releases on
+    # process exit. Proven dead local owners can be reclaimed immediately.
+    with registry_file_lock(root / "lifecycle", stale_after_seconds=0):
         yield
-    finally:
-        if fd is not None:
-            os.close(fd)
-        lock_path.unlink(missing_ok=True)
 
 
 def expand_runtime_value(value: Any, variables: dict[str, str]) -> Any:
@@ -18680,6 +18671,7 @@ def build_worker_process_command(
     executable_override: str | None = None,
     *,
     attempt: int = 1,
+    prepared_input: dict[str, str] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Path]]:
     task_id = safe_id(str(task.get("id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
@@ -18704,6 +18696,8 @@ def build_worker_process_command(
         "capsule_path": str(capsule_path),
         "worker_prompt_path": str(prompt_path),
         "workspace_access_path": str(paths["workspace_access"]),
+        "prepared_input_path": str(project_root / prepared_input["path"]) if prepared_input else "",
+        "prepared_input_checksum": prepared_input["checksum"] if prepared_input else "",
         "expected_report_path": str(report_path),
         "python_executable": sys.executable,
         "executable": executable_override or "",
@@ -18746,6 +18740,13 @@ def build_worker_process_command(
             raise SystemExit("FAIL: runtime driver command.model_args must be a list when model is set")
         args.extend(expand_runtime_value(model_args_raw, variables))
     env, inherit_env = build_worker_environment(driver, variables)
+    if driver.get("prepared_lifecycle_wrapper") is True and executable:
+        if not prepared_input:
+            raise SystemExit("FAIL: prepared_input_required")
+        args = [str(ROOT / "tools" / "prepared_executor.py"), "--prepared-input", variables["prepared_input_path"],
+                "--prepared-sha256", variables["prepared_input_checksum"], "--heartbeat", str(paths["heartbeat"]),
+                "--exit-path", str(paths["exit"]), "--", executable, *args]
+        executable = sys.executable
     working_directory = str(expand_runtime_value(driver.get("working_directory") or "{project_root}", variables))
     command = {
         "schema_version": 1,
@@ -18756,6 +18757,8 @@ def build_worker_process_command(
         "agent_model": variables["agent_model"],
         "agent_reasoning_effort": variables["agent_reasoning_effort"],
         "kind": str(driver.get("kind") or "manual"),
+        "prepared_input": prepared_input or {},
+        "executable_override": executable_override or "",
         "command": {
             "executable": executable,
             "args": args,
@@ -18826,6 +18829,11 @@ def write_agent_run_state(
     }
     if paths["heartbeat"].is_file():
         state["last_heartbeat_at"] = now_utc()
+    reference = (command or {}).get("prepared_input")
+    if reference is None and previous_state.get("attempt") == attempt:
+        reference = previous_state.get("prepared_input")
+    if reference:
+        state["prepared_input"] = reference
     json_write(paths["status"], state)
     if command:
         json_write(paths["command"], command)
@@ -18958,7 +18966,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
         suffix = " (legacy capsule without assignment checksum)" if capsule_status == "legacy" else ""
         print(f"PRESENT: {capsule_rel}{suffix}")
     elif capsule_status == "stale":
-        raise SystemExit(f"FAIL: assignment capsule is stale for {task_id}: {capsule_rel}; create a new capsule intentionally before launch")
+        raise SystemExit(f"FAIL: assignment capsule is stale for {task_id}: {capsule_rel}; create_successor_work; immutable contexts cannot be rebuilt in place")
     else:
         status, output = run_command_capture(
             command_assignment_capsule,
@@ -18972,12 +18980,12 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
         if status:
             raise SystemExit(status)
     task = load_task(project_root, task_id)
-    workspace_access_path = write_workspace_access_runtime_file(project_root, task)
-    print(f"WROTE: {rel(workspace_access_path, project_root)}\n", end="")
-    status, output = run_command_capture(command_worker_launch_prompt_create, argparse.Namespace(project_root=str(project_root), task=task_id, output=None, apply=True, dry_run=False))
-    print(output, end="")
-    if status:
-        raise SystemExit(status)
+    from processforge_core.work_context import validate_execution_contract
+    prepared_capsule = load_yaml_document(assignment_capsule_path(project_root, task_id))
+    validation = validate_execution_contract(project_root, assignment_yaml_path(project_root, task_id), task,
+                                             prepared_capsule, sys.modules[__name__], require_ready=True)
+    if validation["status"] != "valid":
+        raise SystemExit("FAIL: " + str(validation.get("reason") or "execution_contract_invalid") + "; create_successor_work")
     driver = runtime_driver_for_task(project_root, task, driver_arg)
     start_failures = [
         item.message
@@ -18992,7 +19000,26 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
         attempt = max(1, int(previous_state.get("attempt") or 0) + 1)
     except (TypeError, ValueError):
         attempt = 1
-    command, paths = build_worker_process_command(project_root, task, driver, executable_override, attempt=attempt)
+    from processforge_core import prepared_input
+    # A failed prepare may have left a manifest but no ready state. Never
+    # overwrite it or reuse its identity on the next deliberate attempt.
+    attempt_root = paths["root"] / "attempts"
+    if attempt_root.is_dir():
+        attempt = max([attempt, *[int(item.name) + 1 for item in attempt_root.iterdir() if item.name.isdigit()]])
+    prepared_path = attempt_root / str(attempt) / "prepared-input.json"
+    try:
+        document = prepared_input.build(project_root, task, prepared_capsule, attempt, sys.modules[__name__])
+        reference = {"path": rel(prepared_path, project_root), "checksum": prepared_input.digest(prepared_input.encoded(document))}
+        command, paths = build_worker_process_command(project_root, task, driver, executable_override, attempt=attempt, prepared_input=reference)
+        prepared_input.private_file(project_root, reference["path"])
+        prepared_input.write_once(prepared_path, document)
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise SystemExit("FAIL: worker preparation blocked: " + str(exc)) from exc
+    json_write(paths["workspace_access"], document["input"]["resources"])
+    prompt_path = worker_prompt_path(project_root, run_id, task_id)
+    prepared_input.local_file(project_root, rel(prompt_path, project_root))
+    prompt_path.parent.mkdir(parents=True, exist_ok=True)
+    prompt_path.write_text(render_worker_launch_prompt(project_root, task_id, prepared_input=reference), encoding="utf-8")
     state_status = "manual_required" if str(driver.get("kind")) == "manual" else "ready"
     paths["root"].mkdir(parents=True, exist_ok=True)
     # A deliberate prepare is a new attempt.  An old durable exit contract
@@ -19001,6 +19028,8 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
     paths["exit"].unlink(missing_ok=True)
     write_agent_run_state(project_root, task, driver, state_status, command=command, paths=paths, attempt=attempt)
     emit_process_event(project_root, "worker.run.prepared", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "driver_id": driver.get("id"), "status": state_status, "attempt": attempt}, correlation_id=f"run-{run_id}")
+    diagnostics.annotate(run_id=run_id, assignment_id=task_id, attempt=attempt)
+    diagnostics.emit("info", "worker.prepared", {"driver_id": driver.get("id"), "status": state_status}, component="worker")
     return task, driver, paths
 
 
@@ -19037,12 +19066,43 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
             emit_worker_run_skip(project_root, task, driver, state, "worker.run.start_skipped")
             print(f"SKIPPED: {task_id} already running pid={state.get('pid')}")
             return 0
-        task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
+        state = load_agent_run_state(project_root, run_id, task_id)
+        if state.get("status") == "blocked" and state.get("prepared_input"):
+            print("FAIL: prepared attempt is blocked; use explicit worker-run prepare after repair")
+            return 1
+        if state.get("status") in {"ready", "manual_required"}:
+            paths = worker_run_paths(project_root, run_id, task_id)
+            saved = json_read(paths["command"])
+            driver = runtime_driver_for_worker_state(project_root, task, state)
+            requested_driver = getattr(args, "driver", None)
+            if requested_driver and runtime_driver_for_task(project_root, task, requested_driver).get("id") != saved.get("driver_id"):
+                print("FAIL: prepared driver differs; use explicit worker-run prepare")
+                return 1
+            for option, field in (("model", "agent_model"), ("reasoning_effort", "agent_reasoning_effort"), ("executable", "executable_override")):
+                value = getattr(args, option, None)
+                if value is not None and value != saved.get(field):
+                    print("FAIL: prepared launch preference differs; use explicit worker-run prepare")
+                    return 1
+            if saved.get("prepared_input") != state.get("prepared_input") or str(saved.get("attempt")) != str(state.get("attempt")):
+                print("FAIL: prepared command and state identity mismatch")
+                return 1
+            for key, relative in saved.get("paths", {}).items():
+                if key in paths and key != "root":
+                    paths[key] = project_root / relative
+        else:
+            task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
         run_id = safe_id(str(task.get("run_id") or "run"), "run")
+        command = json_read(paths["command"])
+        from processforge_core import prepared_input
+        try:
+            prepared_input.load(project_root, task, command, sys.modules[__name__])
+        except (OSError, ValueError, RuntimeError) as exc:
+            write_agent_run_state(project_root, task, driver, "blocked", failure_reason=str(exc), command=command, paths=paths)
+            print("FAIL: prepared launch blocked: " + str(exc))
+            return 1
         if str(driver.get("kind")) == "manual":
             print(f"MANUAL: {task_id} prepared at {rel(paths['status'], project_root)}")
             return 0
-        command = json_read(paths["command"])
         argv = command.get("command", {}).get("argv") if isinstance(command.get("command"), dict) else []
         if not argv:
             write_agent_run_state(project_root, task, driver, "failed", failure_reason="empty argv", command=command, paths=paths)
@@ -19140,10 +19200,15 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
     task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
-        state = load_agent_run_state(project_root, run_id, task_id)
-        if state and worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
-            driver = runtime_driver_for_worker_state(project_root, task, state)
-            state = observe_worker_run(project_root, task, driver, state)
+        return _collect_worker_run_locked(project_root, load_task(project_root, task_id))
+
+
+def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
+    task_id, run_id = task["id"], task["run_id"]
+    state = load_agent_run_state(project_root, run_id, task_id)
+    if state and worker_run_state_requires_reconciliation(project_root, run_id, task_id, state):
+        driver = runtime_driver_for_worker_state(project_root, task, state)
+        state = observe_worker_run(project_root, task, driver, state)
     if not state:
         print(f"FAIL: worker run is not prepared: {task_id}")
         return 1
@@ -19190,7 +19255,29 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
         write_agent_run_state(project_root, task, driver, "failed", failure_reason="; ".join(reasons), paths=paths)
         print("FAIL: " + "; ".join(reasons))
         return 1
-    report_content = report_path.read_text(encoding="utf-8", errors="replace")
+    from processforge_core import prepared_input
+    try:
+        report_raw = prepared_input.bounded_read(report_path, 2 * 1024 * 1024)
+        report_content = report_raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+        receipt_path, receipt = prepared_input.collection_receipt(project_root, task, state, sys.modules[__name__])
+        report_record = next(item for item in receipt["outputs"] if item["path"] == expected_report_artifact(task))
+        if prepared_input.digest(report_raw) != report_record["checksum"]:
+            raise ValueError("collected_output_changed")
+    except (OSError, ValueError, RuntimeError) as exc:
+        print("FAIL: collection blocked: " + str(exc))
+        return 1
+    completion_path = receipt_path.with_name("collection-complete.json")
+    try:
+        prepared_input.private_file(project_root, rel(completion_path, project_root))
+    except (OSError, ValueError, RuntimeError) as exc:
+        print("FAIL: collection completion path invalid: " + str(exc))
+        return 1
+    if completion_path.is_file():
+        if json_read(completion_path).get("receipt_id") != receipt["receipt_id"]:
+            print("FAIL: collection completion identity mismatch")
+            return 1
+        print(f"COLLECTED: {task_id} already collected for attempt {state['attempt']}")
+        return 0
     report_hash = sha256_text(report_content)
     attempt = str(state.get("attempt") or 1)
     expected_report = expected_report_artifact(task)
@@ -19228,10 +19315,29 @@ def command_worker_run_collect(args: argparse.Namespace) -> int:
     if not capture.get("accepted") or len(capture.get("chat_message_ids") or []) != 1:
         print("FAIL: collectible expected report was not captured as exactly one assistant transcript message")
         return 1
-    status, output = run_command_capture(command_task_complete, argparse.Namespace(project_root=str(project_root), task=task_id, summary=f"Collected worker run output from {state.get('driver_id')}", artifact=[expected_report_artifact(task)], dry_run=False))
-    print(output, end="")
-    emit_process_event(project_root, "worker.run.collected", process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "report": expected_report_artifact(task)}, correlation_id=f"run-{run_id}")
+    # A governed primary Work still has stage obligations. Worker delivery is
+    # evidence for those transitions, never a compatibility completion bypass.
+    run = load_yaml_document(run_root(project_root, run_id) / "run.yaml")
+    governed = "process_execution" in run or "process_execution" in task
+    status = 0
+    if not governed:
+        status, output = run_command_capture(command_task_complete, argparse.Namespace(project_root=str(project_root), task=task_id, summary=f"Collected worker run output from {state.get('driver_id')}", artifact=[expected_report_artifact(task)], dry_run=False, completion_id=receipt["receipt_id"]))
+        print(output, end="")
+        if status:
+            return status
+    emit_worker_completion_event(project_root, "worker.run.collected", receipt["receipt_id"], process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": run_id, "report": expected_report_artifact(task), "receipt_id": receipt["receipt_id"], "attempt": state["attempt"]}, correlation_id=f"run-{run_id}")
+    prepared_input.write_once(completion_path, {"schema_version": 1, "receipt_id": receipt["receipt_id"]})
+    if governed:
+        print(f"COLLECTED: {task_id}; governed stage transition remains required")
     return status
+
+
+def emit_worker_completion_event(project_root: Path, event_type: str, receipt_id: str, **kwargs: Any) -> dict[str, Any]:
+    event_id = "evt_" + hashlib.sha256((receipt_id + ":" + event_type).encode("utf-8")).hexdigest()
+    for _line, event, error in iter_ndjson(event_runtime_paths(project_root)[0]):
+        if not error and isinstance(event, dict) and event_id_value(event) == event_id:
+            return event
+    return emit_process_event(project_root, event_type, event_id=event_id, **kwargs)
 
 
 def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state: dict[str, Any]) -> None:
@@ -19590,7 +19696,16 @@ def command_runtime_restart(args: argparse.Namespace) -> int:
     return runtime_service.command_restart(args, sys.modules[__name__])
 
 
+def command_runtime_monitor(args: argparse.Namespace) -> int:
+    from pf_runtime import monitor
+
+    return monitor.command_monitor(args, sys.modules[__name__])
+
+
 def command_runtime_status(args: argparse.Namespace) -> int:
+    if args.command == "server":
+        args.once, args.ascii, args.no_color, args.interval = True, False, True, 2.0
+        return command_runtime_monitor(args)
     from pf_runtime import service as runtime_service
 
     return runtime_service.command_status(args, sys.modules[__name__])
@@ -19956,7 +20071,7 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
     return checks
 
 
-def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
+def render_worker_launch_prompt(project_root: Path, task_id: str, *, prepared_input: dict[str, str] | None = None) -> str:
     task_id = safe_id(task_id, "task")
     task = load_task(project_root, task_id)
     run_id = str(task.get("run_id") or "")
@@ -19969,21 +20084,22 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
     required_outputs = normalize_required_outputs(task.get("required_outputs"))
     expected_report = task.get("expected_report") if isinstance(task.get("expected_report"), dict) else {}
     subagent_policy = normalize_subagent_policy(task.get("subagent_policy"))
-    pf_first_instructions: list[str] = []
-    if requested_workspace_access["knowledge_resources"]:
-        pf_first_instructions = [
-            "This assignment has governed workplace knowledge grants.",
-            "Before any shell command, project file read, global memory lookup, or broad search, use the ProcessForge MCP control plane in this order: `pf.context`, `pf.work.start`, `pf.resolve`, then `pf.search`.",
-            "Use `pf.resolve` and `pf.search` results as the primary route to knowledge paths and articles; open resolved files only after PF returns them.",
-            "If the ProcessForge MCP tools are unavailable or fail, stop and return a blocked report. Do not silently fall back to filesystem discovery.",
-        ]
+    prepared_instructions = [
+        "Read the prepared input identified by PF_PREPARED_INPUT_FILE and verify PF_PREPARED_INPUT_SHA256 before working.",
+        "The orchestrator has already resolved the process, scope, inputs and resource permissions for this attempt.",
+        "Do not bootstrap ProcessForge, start another Work, reselect the process or rebuild context.",
+        "Use inline inputs and only explicitly declared file references. Metadata-only resources do not permit reading their bodies.",
+        "No ProcessForge MCP connection is required to execute this prepared assignment.",
+    ]
+    if not prepared_input:
+        prepared_instructions.append("This prompt alone is not launch-ready; the orchestrator must prepare the attempt manifest first.")
     lines = [
         "# Worker Launch Prompt",
         "",
         "You are a worker agent.",
         "You are not the orchestrator.",
         "Use only the assigned task and the provided assignment capsule.",
-        "Do not rebuild full project context unless explicitly allowed.",
+        "Use the immutable prepared execution input; do not rebuild project context.",
         "Do not edit files outside allowed_files.",
         "Do not read files outside allowed_read_files unless explicitly allowed.",
         "Use workspace_access_file for explicitly granted workplace resources.",
@@ -19994,7 +20110,7 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
         "Stop and report if scope is insufficient.",
         "Invoke subagents only when subagent_policy.allow is true.",
         "When subagent reports are required, write them only under subagent_policy.reports_dir.",
-        *pf_first_instructions,
+        *prepared_instructions,
         "",
         "## Assignment",
         "",
@@ -20003,6 +20119,8 @@ def render_worker_launch_prompt(project_root: Path, task_id: str) -> str:
         f"- assignment: `{rel(assignment_yaml_path(project_root, task_id), project_root)}`",
         f"- capsule: `{capsule}`",
         f"- workspace_access_file: `{workspace_access}`",
+        f"- prepared_input_file: `{(prepared_input or {}).get('path', 'pending preparation')}`",
+        f"- prepared_input_checksum: `{(prepared_input or {}).get('checksum', 'pending preparation')}`",
         "- worker_may_rebuild_context: `false`",
         "",
         "## workspace_access",
@@ -20420,7 +20538,7 @@ def command_orchestrator_plan_apply(args: argparse.Namespace) -> int:
             suffix = " (legacy capsule without assignment checksum)" if capsule_status == "legacy" else ""
             print(f"PRESENT: {capsule_rel}{suffix}")
         elif capsule_status == "stale":
-            print(f"FAIL: assignment capsule is stale for {task_id}: {capsule_rel}; create a new capsule intentionally before launch")
+            print(f"FAIL: assignment capsule is stale for {task_id}: {capsule_rel}; create_successor_work; immutable contexts cannot be rebuilt in place")
             return 1
         else:
             status, output = run_command_capture(command_assignment_capsule, argparse.Namespace(project_root=str(project_root), assignment=str(assignment_yaml_path(project_root, task_id)), force=bool(plan.get("allow_write_scope_overlap", False))))
@@ -20502,7 +20620,16 @@ def print_process_execution_result(payload: dict[str, Any], *, as_json: bool = F
 def command_work_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    payload = process_execution_service(project_root, getattr(args, "workplace", None)).start(objective=args.objective, process_id=str(getattr(args, "process_id", None) or ""))
+    security = None
+    if getattr(args, "egress_intent", None):
+        from processforge_core.egress.contracts import EgressError, bounded_json, security_intent
+        try:
+            with Path(args.egress_intent).open("rb") as stream:
+                security = security_intent(bounded_json(stream.read(1048577), 1048576))
+        except (EgressError, OSError, ValueError):
+            print_process_execution_result({"action": "blocked", "reason": "egress_contract_invalid"}, as_json=bool(args.json))
+            return 1
+    payload = process_execution_service(project_root, getattr(args, "workplace", None)).start(objective=args.objective, process_id=str(getattr(args, "process_id", None) or ""), security=security)
     print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
     return 0 if payload.get("action") in {"created_new", "continue_existing"} else 1
 
@@ -20516,6 +20643,20 @@ def command_work_state(args: argparse.Namespace) -> int:
     )
     print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
     return 0
+
+
+def command_work_resource_read(args: argparse.Namespace) -> int:
+    from processforge_core.work_resources import WorkResourceService
+
+    project_root = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project_root)
+    manifest = resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))
+    payload = WorkResourceService(project_root, manifest.parent if manifest else None, sys.modules[__name__]).read(
+        operation=args.command.removeprefix("work-"), run_id=args.run, assignment_id=args.assignment,
+        context_id=args.context_id, resource_id=getattr(args, "resource_id", None), query=getattr(args, "query", None),
+        limit=getattr(args, "limit", None), limitstart=getattr(args, "limitstart", None), offset=getattr(args, "offset", None))
+    print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
+    return 0 if payload.get("status") == "ready" else 1
 
 
 def command_work_transition(args: argparse.Namespace) -> int:
@@ -20871,7 +21012,7 @@ def command_task_complete(args: argparse.Namespace) -> int:
     task_id = safe_id(args.task, "task")
     task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
-    with registry_file_lock(run_root(project_root, run_id) / "run.yaml"):
+    with registry_file_lock(run_root(project_root, run_id) / "run.yaml", stale_after_seconds=0 if getattr(args, "completion_id", None) else 300):
         return _command_task_complete_locked(args)
 
 
@@ -20894,7 +21035,11 @@ def _command_task_complete_locked(args: argparse.Namespace) -> int:
     save_task(project_root, task)
     update_run_task_status_locked(project_root, str(task.get("run_id", "")), task_id, "done")
     for event_type in ["task.completed", "assignment.completed"]:
-        emit_process_event(project_root, event_type, process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "summary": args.summary}, correlation_id=f"run-{task.get('run_id')}")
+        event_kwargs = dict(process_id=task_process_id(task), subject=task_id, assignment_id_value=task_id, assignment_path=rel(assignment_yaml_path(project_root, task_id), project_root), payload={"run_id": task.get("run_id"), "task_id": task_id, "summary": args.summary}, correlation_id=f"run-{task.get('run_id')}")
+        if getattr(args, "completion_id", None):
+            emit_worker_completion_event(project_root, event_type, args.completion_id, **event_kwargs)
+        else:
+            emit_process_event(project_root, event_type, **event_kwargs)
     print(f"DONE: {task_id}")
     return 0
 
@@ -21194,6 +21339,12 @@ def existing_capsule_status(project_root: Path, task_id: str) -> tuple[str, str]
     if not capsule_path.is_file():
         return "missing", rel(capsule_path, project_root)
     capsule = load_yaml_document(capsule_path)
+    if isinstance(capsule, dict) and "execution_contract" in capsule:
+        from processforge_core.work_context import validate_execution_contract
+        assignment_path = assignment_yaml_path(project_root, task_id)
+        metadata = extract_assignment_front_matter(assignment_path) if assignment_path.is_file() else {}
+        validation = validate_execution_contract(project_root, assignment_path, metadata, capsule, sys.modules[__name__])
+        return ("fresh" if validation["status"] == "valid" else "stale"), rel(capsule_path, project_root)
     capsule_meta = capsule.get("capsule") if isinstance(capsule, dict) else {}
     recorded_checksum = str(capsule_meta.get("assignment_checksum") or "") if isinstance(capsule_meta, dict) else ""
     if not recorded_checksum:
@@ -26136,9 +26287,94 @@ def command_platform_contract_install(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_diagnostics_configure(args: argparse.Namespace) -> int:
+    project = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project)
+    path = project / ".pf" / "diagnostics.json"
+    options = diagnostics.invocation_options(args.diagnostic_profile, args.diagnostic_threshold, args.diagnostic_components, args.diagnostic_sink)
+    def proposal():
+        return diagnostics.configure_proposal(diagnostics._read_config(path), args.profile,
+            duration=args.duration, run_id=args.run_id, session_id=args.session_id, invocation=options)
+    try:
+        proposed, report = proposal()
+        if args.apply:
+            with registry_file_lock(path, stale_after_seconds=0):
+                proposed, report = proposal()
+                # The encoder is identical to the bounded proposal validation.
+                temp = path.with_name("." + path.name + "." + uuid.uuid4().hex + ".tmp")
+                try:
+                    with temp.open("xb") as handle:
+                        handle.write(diagnostics.encode(proposed))
+                        handle.flush()
+                        os.fsync(handle.fileno())
+                    os.replace(temp, path)
+                finally:
+                    temp.unlink(missing_ok=True)
+        report["action"] = "applied" if args.apply else "plan"
+        print(json.dumps(report, ensure_ascii=True, indent=2))
+        return 0
+    except (OSError, ValueError, TypeError):
+        print("FAIL: diagnostic configuration rejected; invalid input, policy lock or storage unavailable", file=sys.stderr)
+        return 1
+
+
+def command_diagnostics_status(args: argparse.Namespace) -> int:
+    project = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project)
+    options = diagnostics.invocation_options(args.diagnostic_profile, args.diagnostic_threshold, args.diagnostic_components, args.diagnostic_sink)
+    logger = diagnostics.for_project(project, run_id=args.run_id, session_id=args.session_id, invocation=options)
+    root = project / ".pf" / "runtime" / "diagnostics"
+    files = [{"name": p.name, "bytes": p.stat().st_size} for p in diagnostics.log_files(root) if p.is_file() and not p.is_symlink()]
+    print(json.dumps({"schema_version": 1, "effective": logger.effective(), "build": diagnostics.build_identity(__file__),
+                      "storage": files, "health_scope": "current-process; retained records carry prior counters"}, indent=2))
+    return 0
+
+
+def command_diagnostics_export(args: argparse.Namespace) -> int:
+    project = Path(args.project_root).expanduser().resolve()
+    require_flow_root(project)
+    check = project_context_check_result(project)
+    metadata = {"context_check": {k: check.get(k) for k in ("snapshot_id", "status", "reasons", "broken_refs", "stale_resources", "policy_action")},
+                "entry_build": diagnostics.build_identity(__file__)}
+    snapshot_yaml, _ = project_context_snapshot_paths(project)
+    if snapshot_yaml.is_file():
+        metadata["snapshot_sha256"] = hashlib.sha256(snapshot_yaml.read_bytes()).hexdigest()
+    result = diagnostics.export_bundle(project, Path(args.output).expanduser().resolve(), request_id=args.request_id,
+                                       run_id=args.run_id, since=args.since, until=args.until, metadata=metadata)
+    print(json.dumps(result, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ProcessForge MVP init and doctor commands.")
+    parser.add_argument("--diagnostic-profile", choices=list(diagnostics.PROFILES))
+    parser.add_argument("--diagnostic-threshold", choices=list(diagnostics.LEVELS))
+    parser.add_argument("--diagnostic-components", help="Comma-separated optional diagnostic components.")
+    parser.add_argument("--diagnostic-sink", choices=["jsonl", "stderr", "both", "none"])
     sub = parser.add_subparsers(dest="command", required=True)
+
+    configure = sub.add_parser("diagnostics-configure", help="Plan or apply a bounded diagnostic profile change.")
+    configure.add_argument("--project-root", required=True)
+    configure.add_argument("--profile", choices=list(diagnostics.PROFILES), required=True)
+    configure.add_argument("--duration", type=int, default=600, help="Detailed profile lifetime in seconds (1..900).")
+    configure_scope = configure.add_mutually_exclusive_group()
+    configure_scope.add_argument("--run-id")
+    configure_scope.add_argument("--session-id")
+    configure.add_argument("--apply", action="store_true")
+    configure.set_defaults(func=command_diagnostics_configure)
+    diagnostic_status = sub.add_parser("diagnostics-status", help="Inspect optional diagnostic configuration and local health without repairs.")
+    diagnostic_status.add_argument("--project-root", required=True)
+    diagnostic_status.add_argument("--run-id")
+    diagnostic_status.add_argument("--session-id")
+    diagnostic_status.set_defaults(func=command_diagnostics_status)
+    diagnostic_export = sub.add_parser("diagnostics-export", help="Create a bounded sanitized local diagnostic bundle; no repair or upload.")
+    diagnostic_export.add_argument("--project-root", required=True)
+    diagnostic_export.add_argument("--output", required=True)
+    diagnostic_export.add_argument("--request-id")
+    diagnostic_export.add_argument("--run-id")
+    diagnostic_export.add_argument("--since")
+    diagnostic_export.add_argument("--until")
+    diagnostic_export.set_defaults(func=command_diagnostics_export)
 
     init_workplace = sub.add_parser("init-workplace", help="Initialize a ProcessForge workplace layer.")
     init_workplace.add_argument("--root", required=True, help="Workplace root path.")
@@ -27219,10 +27455,22 @@ def build_parser() -> argparse.ArgumentParser:
     execution_inspector_stop_alias.add_argument("--project-root", required=True, help="Project root path.")
     execution_inspector_stop_alias.set_defaults(func=command_supervisor_stop)
 
-    runtime = sub.add_parser("runtime", help="Run and control the long-lived local PF Runtime process.")
+    from pf_runtime.monitor import interval_value
+
+    monitor = sub.add_parser("monitor", help="Observe local Runtime without starting, stopping, or changing it.")
+    monitor.add_argument("--workplace", required=True, help="Existing workplace root directory.")
+    monitor.add_argument("--once", action="store_true", help="Print one plain snapshot and exit.")
+    monitor.add_argument("--json", action="store_true", help="Print one allowlisted JSON snapshot without terminal controls.")
+    monitor.add_argument("--interval", type=interval_value, default=2.0, help="Seconds between observations (1 to 60; default 2).")
+    monitor.add_argument("--ascii", action="store_true", help="Use ASCII-only terminal text.")
+    monitor.add_argument("--no-color", action="store_true", help="Disable color (the monitor is monochrome by default).")
+    monitor.set_defaults(func=command_runtime_monitor)
+
+    runtime = sub.add_parser("runtime", aliases=["server"], help="Run and control the long-lived local PF Runtime process.")
     runtime_sub = runtime.add_subparsers(dest="runtime_command", required=True)
 
-    runtime_serve = runtime_sub.add_parser("serve", help="Run PF Runtime in the foreground for one workplace.")
+    runtime_serve = runtime_sub.add_parser("serve", aliases=["run"], help="Run PF Runtime in the foreground for one workplace.")
+    runtime_serve.add_argument("--console", action="store_true", help="Show a foreground banner on an interactive terminal.")
     runtime_serve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
     runtime_serve.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
     runtime_serve.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")
@@ -27240,6 +27488,7 @@ def build_parser() -> argparse.ArgumentParser:
     runtime_stop.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
     runtime_stop.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for graceful shutdown.")
     runtime_stop.set_defaults(func=command_runtime_stop)
+    runtime_stop.add_argument("--force", action="store_true", help="Explicitly bypass the server busy guard.")
 
     runtime_restart = runtime_sub.add_parser("restart", help="Restart PF Runtime for one workplace.")
     runtime_restart.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
@@ -27248,6 +27497,7 @@ def build_parser() -> argparse.ArgumentParser:
     runtime_restart.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for stop/start.")
     runtime_restart.add_argument("--json", action="store_true", help="Print JSON.")
     runtime_restart.set_defaults(func=command_runtime_restart)
+    runtime_restart.add_argument("--force", action="store_true", help="Explicitly bypass the server busy guard.")
 
     runtime_status = runtime_sub.add_parser("status", help="Print PF Runtime process and projection status.")
     runtime_status.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
@@ -27765,8 +28015,11 @@ def build_parser() -> argparse.ArgumentParser:
     work_start.add_argument("--workplace", help="Workplace root override.")
     work_start.add_argument("--objective", required=True, help="High-level work objective.")
     work_start.add_argument("--process-id", help="Optional allowed process id for the new governed work.")
+    work_start.add_argument("--egress-intent", help="Explicit trusted v2 intent JSON created by egress bind; existing capsules stay immutable.")
     work_start.add_argument("--json", action="store_true", help="Print JSON.")
     work_start.set_defaults(func=command_work_start)
+    from processforge_core.egress.service import add_parser as add_egress_parser
+    add_egress_parser(sub, sys.modules[__name__])
 
     work_state = sub.add_parser("work-state", help="Read current declarative governed work state.")
     work_state.add_argument("--project-root", required=True, help="Project root path.")
@@ -27775,6 +28028,23 @@ def build_parser() -> argparse.ArgumentParser:
     work_state.add_argument("--assignment", help="Explicit Assignment id.")
     work_state.add_argument("--json", action="store_true", help="Print JSON.")
     work_state.set_defaults(func=command_work_state)
+
+    for work_read_name in ("work-search", "work-resolve"):
+        work_read = sub.add_parser(work_read_name, help="Read verified resources of an explicitly selected immutable Work context.")
+        work_read.add_argument("--project-root", required=True)
+        work_read.add_argument("--workplace")
+        work_read.add_argument("--run", required=True)
+        work_read.add_argument("--assignment", required=True)
+        work_read.add_argument("--context-id", required=True)
+        work_read.add_argument("--json", action="store_true")
+        if work_read_name == "work-search":
+            work_read.add_argument("--query", required=True)
+            work_read.add_argument("--limit", type=int)
+            work_read.add_argument("--limitstart", type=int)
+            work_read.add_argument("--offset", type=int)
+        else:
+            work_read.add_argument("--resource-id", required=True)
+        work_read.set_defaults(func=command_work_resource_read)
 
     work_transition = sub.add_parser("work-transition", help="Advance declarative governed work using outcome and evidence.")
     work_transition.add_argument("--project-root", required=True, help="Project root path.")
@@ -28001,7 +28271,20 @@ def main(argv: list[str] | None = None) -> int:
         if not getattr(args, "dry_run", False):
             args.mode_implicit = True
         args.dry_run = True
-    return args.func(args)
+    if args.command in {"diagnostics-status", "diagnostics-export", "diagnostics-configure", "monitor"} or (args.command == "server" and args.runtime_command == "status"):
+        return args.func(args)
+    project_value = getattr(args, "project_root", None)
+    project = Path(project_value).expanduser().resolve() if isinstance(project_value, str) else None
+    run_id = getattr(args, "run", None)
+    session_id = getattr(args, "session", None)
+    options = diagnostics.invocation_options(args.diagnostic_profile, args.diagnostic_threshold, args.diagnostic_components, args.diagnostic_sink)
+    logger = diagnostics.for_project(project, run_id=run_id, session_id=session_id, invocation=options)
+    with diagnostics.operation(logger, "cli", str(args.command), project_id=project_id(project) if project and (project / ".pf").is_dir() else None,
+                               run_id=run_id, session_id=session_id or None, build=diagnostics.identity_for(logger, __file__)):
+        result = args.func(args)
+        if result:
+            diagnostics.emit("error", "cli.nonzero_exit", {"exit_code": result}, component="cli")
+        return result
 
 
 if __name__ == "__main__":

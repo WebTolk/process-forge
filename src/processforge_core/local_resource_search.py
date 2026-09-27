@@ -511,6 +511,31 @@ def index_path(project_root: Path, workplace_root: Path | None = None) -> Path:
     return project_root / ".pf" / "runtime" / "local-resource-search" / "search.sqlite"
 
 
+def authorized_coverage(project_root: Path, snapshot: dict[str, Any], *, workplace_root: Path | None = None) -> dict[str, Any]:
+    """Describe physical index coverage, without equating it with material proof."""
+    identifiers = authorized_resource_ids(snapshot)
+    result: dict[str, Any] = {"authorized_resource_count": len(identifiers), "indexed_resource_count": 0,
+                             "document_count": 0, "missing_resource_ids": identifiers, "status": "empty" if not identifiers else "none"}
+    path = index_path(project_root, workplace_root)
+    if not identifiers or not path.is_file():
+        return result
+    counts: dict[str, int] = {}
+    try:
+        db = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)
+        try:
+            for start in range(0, len(identifiers), 128):
+                page = identifiers[start:start + 128]
+                marks = ",".join("?" for _ in page)
+                counts.update(db.execute(f"SELECT resource_id,count(*) FROM documents WHERE resource_id IN ({marks}) GROUP BY resource_id", page).fetchall())
+        finally:
+            db.close()
+    except (OSError, sqlite3.Error):
+        return {**result, "status": "unavailable"}
+    missing = [identifier for identifier in identifiers if identifier not in counts]
+    return {**result, "indexed_resource_count": len(counts), "document_count": sum(counts.values()),
+            "missing_resource_ids": missing, "status": "complete" if not missing else "partial" if counts else "none"}
+
+
 def sqlite_fts5_capability() -> dict[str, Any]:
     version = sqlite3.sqlite_version
     try:

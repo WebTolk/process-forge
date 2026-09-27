@@ -9,8 +9,8 @@
 
 - `manual`: готовит состояние запуска и не стартует процесс.
 - `generic-shell`: запускает явно указанную программу с аргументами.
-- `codex-exec`: запускает shell-агента через Codex CLI, передавая капсулу
-  назначения, рабочий prompt и приватный файл доступа к ресурсам рабочего места.
+- `codex-exec`: запускает исполнителя через Codex CLI с проверенными
+  подготовленными входными данными.
 - `test-echo-worker`: локальный проверочный исполнитель, который пишет
   ожидаемый отчёт.
 - `test-shell-agent`: локальный проверочный shell-агент, который пишет отчёт,
@@ -40,14 +40,38 @@ ProcessForge всегда добавляет служебные переменн
 `PF_RUN_ID`, `PF_TASK_ID`, `PF_AGENT_RUN_DIR`, `PF_AGENT_EXIT_PATH`,
 `PF_AGENT_MODEL`, `PF_AGENT_REASONING_EFFORT`, `PF_PROJECT_ROOT`,
 `PF_RUNTIME_DRIVER_ID`, `PF_WORKSPACE_ACCESS_FILE`, `PF_WORKER_RUN_ID` и
-`PF_WORKER_TASK_ID`. Shell-драйверы не могут переопределить эти имена.
+`PF_WORKER_TASK_ID`, `PF_WORKER_ATTEMPT`, `PF_PREPARED_INPUT_FILE` и
+`PF_PREPARED_INPUT_SHA256`. Shell-драйверы не могут переопределить эти имена.
+
+## Подготовка, выполнение и сбор результата
+
+Подготовка исполнителя требует готового [контракта](work-context.md), явно
+объявленного отчёта и права записи по его пути. PF создаёт ограниченные,
+неизменяемые [входные данные](prepared-input.md) для одной попытки. Обычная
+основная Work без этих объявлений к запуску исполнителя не готова. Манифест
+содержит разрешённые ресурсы и проверенные ссылки на источники; он не расширяет
+права назначения.
+
+`manual` готовит вход без запуска процесса. `generic-shell` использует
+`tools/prepared_executor.py`: проверяет манифест, запускает заданную команду,
+записывает heartbeat и результат завершения. `codex-exec` получает тот же
+манифест через свою обёртку. Такой исполнитель может работать без MCP;
+фактический доступ программы к сети и файлам зависит от ограничений ОС.
+
+Запуск готового исполнителя использует уже подготовленную попытку. Изменение
+настроек или заблокированная попытка требуют явной повторной подготовки.
+Сбор проверяет принадлежность результатов попытке и сохраняет квитанцию;
+повторение и восстановление после гибели процесса не должны дублировать события
+завершения. В управляемой Work сбор не меняет стадию основной работы. Основной
+агент проверяет результат и передаёт свидетельства в `pf.work.transition`.
 
 ## Codex Exec
 
 `codex-exec` - штатный драйвер для запуска shell-агентов через Codex CLI.
-ProcessForge создаёт капсулу назначения, prompt исполнителя, путь ожидаемого
-отчёта, heartbeat-файл и приватный `workspace-access.json`, а затем запускает
-`tools/codex_exec_worker.py`.
+Драйвер запускает `tools/codex_exec_worker.py`, который проверяет путь,
+контрольную сумму и идентичность подготовленного входа, затем передаёт Codex
+фиксированные инструкции и манифест. В этом режиме изменяемые prompt, тело
+капсулы и указатель workspace-access повторно не читаются.
 
 Драйвер не выбирает модель сам. Её должен задать оркестратор: через
 `agent_model`, параметр `--model` или поле `runtime.model` / `workers[].model` в
@@ -64,19 +88,22 @@ Codex затем добавляет аргумент `-c model_reasoning_effort=
 
 Доступ к общим знаниям, шаблонам, инструментам и MCP рабочего места решается во
 время запуска. В публичных assignment и capsule остаются только id ресурсов или
-`path_ref`; приватные абсолютные пути пишутся в
-`.pf/runtime/agent-runs/.../workspace-access.json`. `codex-exec` читает этот
-файл и передаёт найденные директории в Codex через `--add-dir`.
+`path_ref`; абсолютные пути остаются в приватных файлах среды выполнения,
+включая `workspace-access.json` и манифест попытки. Старый прямой вызов обёртки
+может читать workspace-access и передавать `--add-dir`; подготовленный запуск
+не выдаёт через этот файл доступ к целым каталогам. Ресурс с разрешением только
+на метаданные не даёт права читать его содержимое.
 
 Пример прямого запуска shell-агента с моделью `chatgpt-5.3-codex-spark` и
 уровнем `high`:
 
 ```bash
-python .pf/runtime/bin/pf.py task-create --project-root . --run docs-run --id docs-worker --title "Docs worker" --process task-batch-execution --allowed-file ".pf/artifacts/**" --workspace-knowledge-resource <knowledge-resource-id> --reasoning-effort high --apply
+python .pf/runtime/bin/pf.py task-create --project-root . --run docs-run --id docs-worker --title "Docs worker" --process task-batch-execution --allowed-file ".pf/artifacts/docs-worker.md" --required-output "id=report,path=.pf/artifacts/docs-worker.md" --expected-report-artifact ".pf/artifacts/docs-worker.md" --workspace-knowledge-resource <knowledge-resource-id> --reasoning-effort high --apply
 python .pf/runtime/bin/pf.py worker-run start --project-root . --task docs-worker --driver codex-exec --model chatgpt-5.3-codex-spark --reasoning-effort high
 ```
 
-Второй shell-агент с той же моделью и уровнем `medium`:
+Для другого уже объявленного и готового к запуску назначения с той же моделью
+можно выбрать уровень `medium`:
 
 ```bash
 python .pf/runtime/bin/pf.py worker-run start --project-root . --task test-worker --driver codex-exec --model chatgpt-5.3-codex-spark --reasoning-effort medium
@@ -111,9 +138,9 @@ python bin/pf.py orchestrator-shell-plan-apply --project-root . --run docs-run -
 сгенерированном assignment или при `worker-run prepare/start` через
 `--reasoning-effort`.
 
-Shell-запуск выполняется с `shell=False`. Обычные shell-драйверы не получают
-сеть по умолчанию; `codex-exec` явно объявляет сетевой доступ, потому что Codex
-CLI обращается к своему провайдеру модели.
+Shell-запуск выполняется с `shell=False`. Обычные shell-драйверы по умолчанию
+объявляют отсутствие сетевого доступа; `codex-exec` объявляет его для обращения
+к провайдеру модели. Эти декларации сами по себе не ограничивают сеть средствами ОС.
 
 ProcessForge не устанавливает агентов, не создаёт агентские папки и не требует
 фонового сервиса для работы реестра драйверов.

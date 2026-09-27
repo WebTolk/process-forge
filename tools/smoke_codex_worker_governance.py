@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke test assignment-derived Codex sandbox and PF-first worker prompts."""
+"""Smoke test assignment-derived Codex sandbox and prepared worker prompts."""
 
 from __future__ import annotations
 
@@ -84,16 +84,18 @@ def main() -> int:
             raise AssertionError(readonly_command)
 
         prompt = pf.render_worker_launch_prompt(project, "governed-worker")
-        required = ["`pf.context`", "`pf.work.start`", "`pf.resolve`", "`pf.search`", "Do not silently fall back"]
+        required = ["PF_PREPARED_INPUT_FILE", "PF_PREPARED_INPUT_SHA256", "Do not bootstrap ProcessForge", "No ProcessForge MCP connection is required"]
         missing = [item for item in required if item not in prompt]
         if missing:
             raise AssertionError({"missing": missing, "prompt": prompt})
+        if "`pf.work.start`" in prompt or "`pf.context`" in prompt:
+            raise AssertionError("worker must not bootstrap another Work")
 
         template = pf.load_yaml_document(pf.ROOT / "templates" / "runtime-drivers" / "codex-exec.yaml")
         if template.get("environment", {}).get("variables", {}).get("PF_CODEX_SANDBOX") != "{agent_sandbox}":
             raise AssertionError(template)
         json.dumps(command)
-    print("PASS: Codex worker sandbox and PF-first governance")
+    print("PASS: Codex worker sandbox and prepared input governance")
     return 0
 
 

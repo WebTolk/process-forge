@@ -85,8 +85,10 @@ def main() -> int:
     )
     assert hook_debug.returncode == 0, hook_debug.stderr
     assert not hook_debug.stdout
-    assert '"status": "ignored"' in hook_debug.stderr
-    assert '"reason": "not_processforge_project"' in hook_debug.stderr
+    diagnostic_rows = [json.loads(line) for line in hook_debug.stderr.splitlines() if line.strip()]
+    result = next(row["context"] for row in diagnostic_rows if row.get("code") == "hook.result")
+    assert result["status"] == "ignored"
+    assert result["reason"] == "not_processforge_project"
 
     print("ok")
     return 0

@@ -1,5 +1,14 @@
 # PF Runtime MCP facade
 
+Для просмотра состояния существующего сервиса рабочего места доступен
+[локальный терминальный монитор Runtime](runtime-monitor.md).
+
+Точные идентификаторы Work/контекста, проверка материала и текущего доступа
+описаны в [чтении ресурсов Work](work-resources.md).
+
+Уровни детализации, защиту данных и локальный экспорт описывает
+[контракт диагностики](diagnostics.md). Stdout MCP содержит только JSON-RPC.
+
 `tools/pf_runtime/mcp_server.py` — минимальный stdio MCP-сервер. Процессом
 владеет host: Codex запускает Python-процесс из своей MCP-конфигурации и владеет
 stdin/stdout pipes. Этот сервер не регистрируется как Windows scheduled task или
@@ -23,7 +32,7 @@ Forge sessions.
 Доступные tools: `pf.context`, `pf.project_state`,
 `pf.project_initialization.status`, `pf.project_initialization.initialize`,
 `pf.project_initialization.repair`, `pf.work_state`, `pf.work.state`,
-`pf.work.start`, `pf.work.transition`,
+`pf.work.start`, `pf.work.transition`, `pf.work.search`, `pf.work.resolve`,
 `pf.resolve`, `pf.search`, `pf.workplace_state`, `pf.session_context`,
 `pf.session_chat` и `pf.session_activity`.
 
@@ -75,6 +84,21 @@ reports или registries. Значение выдается только пос
 fresh-snapshot validation, path-ref containment и проверки, что файл принадлежит
 authorized root результата.
 
+`pf.work.search` и `pf.work.resolve` дополнительно требуют точные `run_id`,
+`assignment_id` и `context_id`. Они пересекают закреплённые разрешения с текущими
+правами проекта и ограничениями стадии. См. [ресурсы Work](work-resources.md).
+Старые капсулы при этом не обновляются автоматически.
+
+После повторного подключения сверяйте Run/Assignment/context с сохранённой
+передачей работы. Общий выбор текущей Work после завершения может указать на
+другой незавершённый Run. Идентификатор сессии не заменяет идентификаторы Work.
+
+Перечень инструментов здесь описывает текущий исходный код. Установленный MCP
+может предлагать более ранний набор: проверяйте объявленные инструменты и
+происхождение запущенной сборки. Тесты исходного сервера, новое соединение с
+установленным сервером и вызовы через реальное подключение приложения —
+разные уровни свидетельств.
+
 `pf.work_state` сохранён как compatibility alias для `pf.work.state`. Состояние
 выводится из канонических Run и Assignment и закреплённого Process definition;
 technical projectors остаются declaration-driven.
@@ -88,3 +112,10 @@ Codex host registration можно проверить, установить ил
 `python bin/pf.py codex-mcp status|install|remove --workplace <workplace>`.
 Install и remove по умолчанию dry-run и требуют `--apply` для изменения Codex
 configuration. После изменения регистрации перезапустите или reload Codex.
+
+Для оператора доступны `pf server` и `python bin/pf-server.py`: start, run,
+status, stop, restart. Защищённая остановка требует свободных работников,
+запросов и планировщика, а также поддержки текущим владельцем; `--force` явно
+обходит эту проверку. Status использует ограниченную проекцию
+[монитора](runtime-monitor.md) без записи. Команды управляют workplace Runtime;
+обновление файлов Core не перезагружает MCP stdio, которым владеет хост.

@@ -183,9 +183,25 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def main() -> int:
+    src_root = str(Path(__file__).resolve().parents[2] / "src")
+    if src_root not in sys.path:
+        sys.path.insert(0, src_root)
+    from processforge_core import diagnostics
+    hook = ""
+    debug = os.environ.get("PF_CODEX_HOOK_DEBUG") == "1"
+    options = diagnostics.invocation_options("diagnostic", sink="stderr") if debug else {}
+    logger = diagnostics.for_project(Path.cwd(), invocation=options)
+    if logger is diagnostics.NULL and (debug or os.environ.get("PF_DIAGNOSTICS")):
+        logger = diagnostics.for_stderr(options)
     try:
         payload = json.load(sys.stdin)
-        result = dispatch(payload if isinstance(payload, dict) else {})
+        hook = str(payload.get("hook_event_name") or "") if isinstance(payload, dict) else ""
+        if isinstance(payload, dict) and isinstance(payload.get("cwd"), str):
+            logger = diagnostics.for_project(Path(payload["cwd"]), session_id=payload.get("session_id"), invocation=options)
+            if logger is diagnostics.NULL and (debug or os.environ.get("PF_DIAGNOSTICS")):
+                logger = diagnostics.for_stderr(options)
+        with diagnostics.operation(logger, "hooks", "hook.dispatch", session_id=payload.get("session_id") if isinstance(payload, dict) else None, build=diagnostics.identity_for(logger, __file__)):
+            result = dispatch(payload if isinstance(payload, dict) else {})
         # Stop and SubagentStop require a JSON result on stdout.  An empty
         # object is a neutral protocol response: this observer never blocks,
         # rewrites, or continues a Codex session.
@@ -198,12 +214,12 @@ def main() -> int:
             # identifier.  It lets the current Codex turn call session MCP
             # tools without searching private PF state or guessing a path.
             print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": f"ProcessForge session id: {session_id}. Use it only with pf.session_* tools for this project."}}, ensure_ascii=False))
-        if os.environ.get("PF_CODEX_HOOK_DEBUG") == "1":
-            # Never append diagnostic output to Codex hook protocol stdout.
-            print(json.dumps(result, ensure_ascii=False), file=sys.stderr)
+        logger.debug("hook.result", {"status": result.get("status"), "transport": result.get("transport"), "reason": result.get("reason"),
+                                     "normalized_event_count": len(result.get("normalized_event_ids") or [])}, component="hooks", code="hook.result")
     except Exception as exc:  # hooks are observation, never a Codex failure point
-        if os.environ.get("PF_CODEX_HOOK_DEBUG") == "1":
-            print(json.dumps({"status": "ignored", "reason": type(exc).__name__}, ensure_ascii=False))
+        if hook in {"Stop", "SubagentStop"}:
+            print("{}")
+        logger.error("hook.ignored", {"exception": exc}, component="hooks", code="hook.ignored")
     return 0
 
 

@@ -259,6 +259,15 @@ def smoke_environment_isolation(project: Path) -> None:
     assignment_payload = assignment_path.read_text(encoding="utf-8")
     assignment_path.write_text(assignment_payload.rstrip() + "\n# stale-check\n", encoding="utf-8")
 
+    # Comments/lifecycle serialization do not change complete assignment intent.
+    pf("worker-run", "prepare", "--project-root", str(project), "--task", task_id,
+       "--driver", "test-shell-agent", expect=0)
+    pf("worker-run", "stop", "--project-root", str(project), "--task", task_id, expect=0)
+    import yaml
+    changed_assignment = yaml.safe_load(assignment_payload)
+    changed_assignment["objective"] = "Different worker intent after capsule creation"
+    assignment_path.write_text(yaml.safe_dump(changed_assignment, sort_keys=False), encoding="utf-8")
+
     stale = pf(
         "worker-run",
         "prepare",
@@ -509,8 +518,11 @@ def main() -> int:
             for task_id in tasks_for_cleanup:
                 stop_if_running(project, task_id)
                 ensure_stopped(project, task_id)
-        shutil.rmtree(temp_root, ignore_errors=True)
-        shutil.rmtree(driver_root, ignore_errors=True)
+        for cleanup_root in (temp_root, driver_root):
+            resolved = cleanup_root.resolve()
+            if resolved == temp_parent.resolve() or not resolved.is_relative_to(temp_parent.resolve()):
+                raise AssertionError("temporary cleanup target escapes the smoke workspace")
+            shutil.rmtree(resolved, ignore_errors=True)
 
     print("PASS: worker-run shell regressions smoke")
     return 0

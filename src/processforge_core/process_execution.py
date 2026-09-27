@@ -123,14 +123,26 @@ class ProcessExecutionService:
     workplace_root: Path | None
     core: Any
 
-    def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "") -> dict[str, Any]:
+    def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None) -> dict[str, Any]:
         with self._start_lock():
-            return self._start_locked(objective=objective, process_id=process_id, session_id=session_id, stage_override=stage_override)
+            return self._start_locked(objective=objective, process_id=process_id, session_id=session_id, stage_override=stage_override, security=security)
 
-    def _start_locked(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "") -> dict[str, Any]:
+    def _start_locked(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None) -> dict[str, Any]:
         objective = str(objective or "").strip()
         if not objective:
             return self._blocked("objective_required")
+        if security is not None:
+            from .egress.contracts import EgressError, security_intent, digest
+            try:
+                security = security_intent(security)
+                predecessor = security.get("predecessor")
+                if predecessor:
+                    previous_path = self.core.assignment_capsule_path(self.project_root, predecessor["assignment_id"])
+                    from .prepared_input import bounded_read
+                    if digest(bounded_read(previous_path)) != predecessor["capsule_checksum"]:
+                        return self._blocked("predecessor_changed")
+            except (EgressError, OSError, ValueError):
+                return self._blocked("egress_contract_invalid")
         check = self._context_check()
         if str(check.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             return self._blocked(
@@ -139,6 +151,12 @@ class ProcessExecutionService:
             )
         duplicate = self._find_by_objective(objective)
         if duplicate.get("active"):
+            if security is not None:
+                active = self.core.load_yaml_document(self._assignment_path(str(duplicate["active"].get("assignment_id") or "")))
+                if (active.get("egress") != security["egress"]
+                        or sorted(active.get("allowed_read_files") or []) != security["allowed_read_files"]
+                        or active.get("egress_predecessor") != security.get("predecessor")):
+                    return self._blocked("security_intent_mismatch", remediation="create_successor_work_with_new_objective")
             state = self.state(
                 run_id=str(duplicate["active"].get("run_id") or ""),
                 assignment_id=str(duplicate["active"].get("assignment_id") or ""),
@@ -154,6 +172,7 @@ class ProcessExecutionService:
                 "stage": state.get("stage", {}).get("id"),
                 "session": {"status": "bound", "id": session_id} if session_id else {"status": "absent"},
                 "work_state": state,
+                "context": state.get("context", {}),
             }
         if duplicate.get("historical"):
             return self._blocked(
@@ -248,7 +267,16 @@ class ProcessExecutionService:
         }
         if session_id:
             assignment["session"] = {"status": "bound", "id": session_id}
-        capsule_path, capsule_checksum = self._write_capsule(run, assignment, pin)
+        if security is not None:
+            assignment["egress"] = copy.deepcopy(security["egress"])
+            assignment["allowed_read_files"] = list(security["allowed_read_files"])
+            if security.get("predecessor"):
+                assignment["egress_predecessor"] = copy.deepcopy(security["predecessor"])
+        from .work_context import ContextContractError
+        try:
+            capsule_path, capsule_checksum = self._write_capsule(run, assignment, pin)
+        except ContextContractError as exc:
+            return self._blocked(exc.code, **exc.details)
         run["process_execution"]["assignment_capsule"] = capsule_path
         run["process_execution"]["assignment_capsule_checksum"] = capsule_checksum
         assignment["process_execution"]["assignment_capsule"] = capsule_path
@@ -280,6 +308,7 @@ class ProcessExecutionService:
             "obligations": state.get("obligations", []),
             "gates": state.get("gates", {}),
             "work_state": state,
+            "context": state.get("context", {}),
         }
 
     def state(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
@@ -293,6 +322,8 @@ class ProcessExecutionService:
             }
         run, assignment = selected
         process, pin_status = self._effective_process(run)
+        from . import diagnostics
+        diagnostics.select_work(self.project_root, str(run.get("id") or ""), assignment.get("id"))
         stage_id = str(assignment.get("stage") or "")
         stage = self._stage(process, stage_id)
         current_evidence = self._current_evidence(assignment)
@@ -330,6 +361,9 @@ class ProcessExecutionService:
             incomplete.append({"code": "invalid_process_definition", "message": str(exc), "stage_id": stage_id})
         stored_blockers = stage_execution.get("blockers") if isinstance(stage_execution.get("blockers"), list) else []
         blockers = [copy.deepcopy(item) for item in stored_blockers if isinstance(item, dict)]
+        contract_validation = self._contract_validation(assignment)
+        if contract_validation.get("status") == "blocked":
+            blockers.append({"code": contract_validation.get("reason") or "execution_contract_invalid"})
         if str(assignment.get("stage_status") or "") == "blocked" and not blockers:
             blockers.append({"code": "stage_marked_blocked", "stage_id": stage_id})
         if str(run.get("status") or "") == "completed":
@@ -355,6 +389,8 @@ class ProcessExecutionService:
                 "active_specializations": _stable_ids(assignment.get("selected_specializations") or run.get("selected_specializations")),
                 "selected_resource_ids": _stable_ids((run.get("process_execution") or {}).get("selected_resource_ids")),
             },
+            "context": {"id": f"{assignment['id']}-capsule", "checksum": (assignment.get("process_execution") or {}).get("assignment_capsule_checksum"),
+                        "identity_source": "assignment_process_pin", "validation": contract_validation},
             "run": {"id": str(run.get("id") or ""), "status": str(run.get("status") or "")},
             "assignment": {"id": str(assignment.get("id") or ""), "status": str(assignment.get("status") or "")},
             "stage": {"id": stage_id, "title": str(stage.get("title") or stage_id), "status": str(assignment.get("stage_status") or "in_progress")},
@@ -401,6 +437,9 @@ class ProcessExecutionService:
         with self._run_lock(str(run.get("id") or "")):
             run = self._load_run(str(run.get("id") or ""))
             assignment = self._load_assignment(str(assignment.get("id") or ""))
+            contract_validation = self._contract_validation(assignment)
+            if contract_validation.get("status") == "blocked":
+                return self._blocked(contract_validation.get("reason") or "execution_contract_invalid", remediation="create_successor_work")
             pending_intent, intent_error = self._load_completion_intent(run, assignment)
             if pending_intent is not None:
                 return self._replay_completion_intent(pending_intent, session_id=session_id)
@@ -1312,25 +1351,57 @@ class ProcessExecutionService:
             lines.append("- No stage history recorded.")
         return "\n".join(lines) + "\n"
 
-    def _write_capsule(self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]) -> tuple[str, str]:
+    def _contract_validation(self, assignment: dict[str, Any]) -> dict[str, Any]:
+        from .work_context import stage_view, validate_execution_contract
+        import yaml
+
         path = self._flow_root() / "contexts" / "assignment-capsules" / f"{assignment['id']}.capsule.yaml"
+        if not path.is_file():
+            if (assignment.get("process_execution") or {}).get("assignment_capsule"):
+                return {"status": "blocked", "reason": "work_context_unavailable"}
+            return {"status": "legacy", "reason": "legacy_contract_incomplete"}
+        try:
+            if path.is_symlink() or not path.resolve().is_relative_to(self._flow_root().resolve()) or path.stat().st_size > 2 * 1024 * 1024:
+                return {"status": "blocked", "reason": "execution_contract_invalid"}
+            raw = path.read_bytes()
+            if len(raw) > 2 * 1024 * 1024:
+                return {"status": "blocked", "reason": "execution_contract_invalid"}
+            capsule = yaml.safe_load(raw.decode("utf-8-sig"))
+            expected = (assignment.get("process_execution") or {}).get("assignment_capsule_checksum")
+            if expected and expected != "sha256:" + hashlib.sha256(raw).hexdigest():
+                return {"status": "blocked", "reason": "immutable_context_changed"}
+            if "execution_contract" not in capsule:
+                return {"status": "legacy", "reason": "legacy_contract_incomplete"}
+            result = validate_execution_contract(self.project_root, self._assignment_path(assignment["id"]), assignment, capsule, self.core, check_sources=False)
+            if result.get("status") == "valid":
+                result["stage_view"] = stage_view(capsule, assignment)
+            return result
+        except (OSError, ValueError, TypeError, AttributeError, yaml.YAMLError, UnicodeError):
+            return {"status": "blocked", "reason": "execution_contract_invalid"}
+
+    def _write_capsule(self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]) -> tuple[str, str]:
+        from .work_context import ContextContractError, build_context_fields
+
+        path = self._flow_root() / "contexts" / "assignment-capsules" / f"{assignment['id']}.capsule.yaml"
+        if path.exists():
+            raise ContextContractError("immutable_context_exists", remediation="create_successor_work")
+        snapshot = self.core.load_yaml_document(self._flow_root() / "contexts" / "project-context.snapshot.yaml")
+        fields = build_context_fields(self.project_root, self._assignment_path(assignment["id"]), assignment,
+                                      snapshot, self.core, workplace=self.workplace_root, pin=pin, run_record=run)
         capsule = {
             "schema_version": 1,
             "capsule": {"id": f"{assignment['id']}-capsule", "generated_at": self.core.now_utc(), "assignment_id": assignment["id"], "assignment_path": f".pf/assignments/{assignment['id']}.yaml", "immutable": True, "worker_may_rebuild_context": False},
             "context_snapshot": {"id": pin["snapshot_id"], "sha256": pin["snapshot_checksum"], "freshness_at_creation": "fresh"},
-            "context": {
-                "snapshot_id": pin["snapshot_id"],
-                "freshness": "fresh",
-                "required_sources": [],
-                "context_artifacts": [],
-                "selected_specializations": _stable_ids(assignment.get("selected_specializations")),
-                "applied_project_overrides": [],
-                "selected_resource_ids": _stable_ids(pin.get("selected_resource_ids")),
-            },
-            "assignment": {"id": assignment["id"], "run_id": run["id"], "objective": assignment["objective"], "stage": assignment["stage"]},
-            "process_execution": copy.deepcopy(pin),
+            **fields,
         }
-        self._atomic_yaml(path, capsule)
+        capsule["context"].update(freshness="fresh", selected_specializations=_stable_ids(assignment.get("selected_specializations")), applied_project_overrides=[])
+        capsule["assignment"]["stage"] = assignment["stage"]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with path.open("x", encoding="utf-8") as stream:
+                stream.write(self.core.ensure_trailing_newline(self.core.dump_yaml(capsule)))
+        except FileExistsError as exc:
+            raise ContextContractError("immutable_context_exists", remediation="create_successor_work") from exc
         return self.core.rel(path, self.project_root), "sha256:" + self._sha256_file(path)
 
     def _write_projection(self, state: dict[str, Any]) -> None:
@@ -1373,6 +1444,12 @@ class ProcessExecutionService:
             correlation_id=f"run-{run.get('id')}",
             event_id=event_id,
         )
+        from . import diagnostics
+        diagnostics.select_work(self.project_root, str(run.get("id") or ""), assignment.get("id"))
+        diagnostics.annotate(run_id=run.get("id"), assignment_id=assignment.get("id"), stage_id=stage_id)
+        diagnostics.emit("warning" if blockers else "info", "work.event_recorded", {
+            "event_type": event_type, "outcome": outcome, "blockers": blockers or [],
+        }, component="work")
 
     @contextlib.contextmanager
     def _start_lock(self) -> Iterator[None]:

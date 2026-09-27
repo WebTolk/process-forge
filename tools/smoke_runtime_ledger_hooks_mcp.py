@@ -65,7 +65,8 @@ def main() -> int:
         adapter_env = dict(os.environ)
         adapter_env["PF_CODEX_HOOK_DEBUG"] = "1"
         adapter = subprocess.run([sys.executable, str(ROOT / "tools" / "pf_runtime" / "codex_hooks.py")], input=json.dumps(hook), text=True, capture_output=True, cwd=ROOT, env=adapter_env, check=True)
-        if json.loads(adapter.stderr).get("status") != "delivered" or adapter.stdout:
+        diagnostic_rows = [json.loads(line) for line in adapter.stderr.splitlines() if line.strip()]
+        if not any(row.get("code") == "hook.result" and row.get("context", {}).get("status") == "delivered" for row in diagnostic_rows) or adapter.stdout:
             raise AssertionError("Codex adapter did not deliver a documented tool event")
 
         clear_hook = {"hook_event_name": "SessionStart", "source": "clear", "cwd": str(first), "session_id": "sess-clear"}

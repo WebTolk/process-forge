@@ -1,0 +1,509 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/runtime-metrics.schema.json",
+  "title": "Bounded Runtime metrics",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "instance_id",
+    "observed_at",
+    "groups"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "instance_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "groups": {
+      "type": "object",
+      "required": [
+        "registrations",
+        "sessions",
+        "workers",
+        "work",
+        "leases"
+      ],
+      "properties": {
+        "registrations": {
+          "type": "object",
+          "required": [
+            "source",
+            "coverage",
+            "counts",
+            "observed",
+            "issues"
+          ],
+          "properties": {
+            "source": {
+              "const": "host_registration_cache"
+            },
+            "coverage": {
+              "enum": [
+                "complete",
+                "partial"
+              ]
+            },
+            "counts": {
+              "type": "object",
+              "required": [
+                "projects",
+                "sessions"
+              ],
+              "properties": {
+                "projects": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "sessions": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "observed": {
+              "type": "object",
+              "required": [
+                "projects",
+                "sessions"
+              ],
+              "properties": {
+                "projects": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "sessions": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                }
+              },
+              "additionalProperties": false
+            },
+            "issues": {
+              "type": "array",
+              "maxItems": 5,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "coverage",
+                  "budget",
+                  "invalid",
+                  "unreadable",
+                  "unsafe_path"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "sessions": {
+          "type": "object",
+          "required": [
+            "source",
+            "coverage",
+            "counts",
+            "observed",
+            "issues"
+          ],
+          "properties": {
+            "source": {
+              "const": "agent_presence_ttl"
+            },
+            "coverage": {
+              "enum": [
+                "complete",
+                "partial"
+              ]
+            },
+            "counts": {
+              "type": "object",
+              "required": [
+                "online",
+                "stale",
+                "offline"
+              ],
+              "properties": {
+                "online": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stale": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "offline": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "observed": {
+              "type": "object",
+              "required": [
+                "online",
+                "stale",
+                "offline"
+              ],
+              "properties": {
+                "online": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "stale": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "offline": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                }
+              },
+              "additionalProperties": false
+            },
+            "issues": {
+              "type": "array",
+              "maxItems": 5,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "coverage",
+                  "budget",
+                  "invalid",
+                  "unreadable",
+                  "unsafe_path"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "workers": {
+          "type": "object",
+          "required": [
+            "source",
+            "coverage",
+            "counts",
+            "observed",
+            "issues"
+          ],
+          "properties": {
+            "source": {
+              "const": "worker_status_records"
+            },
+            "coverage": {
+              "enum": [
+                "complete",
+                "partial"
+              ]
+            },
+            "counts": {
+              "type": "object",
+              "required": [
+                "running"
+              ],
+              "properties": {
+                "running": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "observed": {
+              "type": "object",
+              "required": [
+                "running"
+              ],
+              "properties": {
+                "running": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                }
+              },
+              "additionalProperties": false
+            },
+            "issues": {
+              "type": "array",
+              "maxItems": 5,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "coverage",
+                  "budget",
+                  "invalid",
+                  "unreadable",
+                  "unsafe_path"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "work": {
+          "type": "object",
+          "required": [
+            "source",
+            "coverage",
+            "counts",
+            "observed",
+            "issues"
+          ],
+          "properties": {
+            "source": {
+              "const": "run_records"
+            },
+            "coverage": {
+              "enum": [
+                "complete",
+                "partial"
+              ]
+            },
+            "counts": {
+              "type": "object",
+              "required": [
+                "in_progress",
+                "blocked"
+              ],
+              "properties": {
+                "in_progress": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "blocked": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "observed": {
+              "type": "object",
+              "required": [
+                "in_progress",
+                "blocked"
+              ],
+              "properties": {
+                "in_progress": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "blocked": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                }
+              },
+              "additionalProperties": false
+            },
+            "issues": {
+              "type": "array",
+              "maxItems": 5,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "coverage",
+                  "budget",
+                  "invalid",
+                  "unreadable",
+                  "unsafe_path"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "leases": {
+          "type": "object",
+          "required": [
+            "source",
+            "coverage",
+            "counts",
+            "observed",
+            "issues"
+          ],
+          "properties": {
+            "source": {
+              "const": "lease_records"
+            },
+            "coverage": {
+              "enum": [
+                "complete",
+                "partial"
+              ]
+            },
+            "counts": {
+              "type": "object",
+              "required": [
+                "held",
+                "expired",
+                "inactive"
+              ],
+              "properties": {
+                "held": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "expired": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "inactive": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2147483647
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "observed": {
+              "type": "object",
+              "required": [
+                "held",
+                "expired",
+                "inactive"
+              ],
+              "properties": {
+                "held": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "expired": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "inactive": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                }
+              },
+              "additionalProperties": false
+            },
+            "issues": {
+              "type": "array",
+              "maxItems": 5,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "coverage",
+                  "budget",
+                  "invalid",
+                  "unreadable",
+                  "unsafe_path"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

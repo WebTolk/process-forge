@@ -1,5 +1,9 @@
 # Context capsule
 
+Новые капсулы в исходниках содержат [единый контракт выполнения](work-context.md):
+неизменное назначение, явные права и идентичность обязательных входных файлов.
+Старые капсулы сохраняются; `--force` не заменяет закреплённый контекст.
+
 Context capsule - это небольшой launch package для worker-agent. Он ссылается
 на Execution Context Package и несёт минимальную policy, нужную для bounded
 assignment.

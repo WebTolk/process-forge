@@ -80,3 +80,18 @@ history, refreshes the execution projection, and emits `process.stage.*`
 events. The final successful transition from the last stage completes the
 Assignment and Run automatically and writes the summary and handoff without a
 separate terminal completion command.
+
+## Executor results and continuation
+
+A worker can consume [prepared input](prepared-input.md) without an MCP
+connection. Its result collection preserves the primary governed Run,
+Assignment stage and immutable capsule; the primary agent still reviews
+the result and supplies stage evidence. Legacy task collection has a separate
+compatibility completion path. Receipt recovery and repeated collection must
+not duplicate completion events in either path.
+
+Changing executor preferences or reconnecting does not authorize a new intent,
+snapshot or resource set. Check the durable Work identity, current stage and
+accepted evidence after reconnect. Stage obligations come from the pinned
+process and current assignment; they do not require rewriting the capsule.
+See [Work context](work-context.md) and [Work resources](work-resources.md).

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .local_resource_search import LocalSearchError, ResourceSearchIndex
+from .local_resource_search import LocalSearchError, ResourceSearchIndex, authorized_coverage
 from .process_execution import ProcessExecutionService, project_process_selection
 
 
@@ -109,6 +109,12 @@ class ResourceSearchService:
     core: Any
 
     def readiness(self, *, snapshot: dict[str, Any] | None = None, check: dict[str, Any] | None = None) -> dict[str, Any]:
+        result = self._readiness(snapshot=snapshot, check=check)
+        result["scope"] = "project_context"
+        result["authorized_coverage"] = authorized_coverage(self.project_root, snapshot if snapshot is not None else load_snapshot(self.project_root, self.core), workplace_root=self.workplace_root)
+        return result
+
+    def _readiness(self, *, snapshot: dict[str, Any] | None = None, check: dict[str, Any] | None = None) -> dict[str, Any]:
         check = check or self.core.project_context_check_result(self.project_root, explicit_workplace=str(self.workplace_root))
         if str(check.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             return {"status": "blocked", "reason": "snapshot_not_fresh", "resource_count": 0, "document_count": 0}
@@ -145,6 +151,8 @@ class ResourceSearchService:
         query_index = ResourceSearchIndex(self.project_root, runtime_snapshot, self.workplace_root)
         payload = query_index.search(query=query, limit=limit, limitstart=limitstart, offset=offset)
         payload["garage_readiness"] = readiness
+        payload["scope"] = "project_context"
+        payload["authorized_coverage"] = readiness["authorized_coverage"]
         payload["search"] = readiness
         add_private_navigation(payload, runtime_snapshot)
         return payload
@@ -160,6 +168,7 @@ class ResourceResolveService:
         payload: dict[str, Any] = {
             "schema_version": 1,
             "kind": "pf.resolve",
+            "scope": "project_context",
             "project": {"id": self.core.project_id(self.project_root), "root": str(self.project_root)},
         }
         if not resource_id:

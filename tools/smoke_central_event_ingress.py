@@ -147,8 +147,9 @@ def main() -> int:
             check=True,
         )
         assert not unknown_hook.stdout
-        unknown_result = json.loads(unknown_hook.stderr)
-        assert unknown_result["status"] == "delivered" and unknown_result["normalized_event_ids"] == []
+        unknown_rows = [json.loads(line) for line in unknown_hook.stderr.splitlines() if line.strip()]
+        unknown_result = next(row["context"] for row in unknown_rows if row.get("code") == "hook.result")
+        assert unknown_result["status"] == "delivered" and unknown_result["normalized_event_count"] == 0
         assert len(raw_records(workplace)) == 3
 
         mismatch = native_event(

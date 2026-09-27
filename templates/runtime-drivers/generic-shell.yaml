@@ -2,6 +2,7 @@ schema_version: 1
 id: generic-shell
 title: Generic Shell Runtime
 kind: shell
+prepared_lifecycle_wrapper: true
 command:
   executable: "{executable}"
   args:

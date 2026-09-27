@@ -29,6 +29,12 @@ from . import RUNTIME_PROTOCOL_VERSION
 from . import host
 
 
+def metrics_core():
+    # The host may be imported before the Core bootstrap by standalone callers.
+    from processforge_core import runtime_metrics
+    return runtime_metrics
+
+
 RUNTIME_VERSION = "1.0.0-poc"
 MAX_BODY_BYTES = 1024 * 1024
 
@@ -139,6 +145,7 @@ def base_state(workplace_root: Path, core: Any, *, status: str, endpoint: str = 
         "workplace_id": workplace_root.name,
         "status": status,
         "health": status,
+        "capabilities": {"guarded_shutdown": 1},
         "token_ref": str(token_path(workplace_root)),
         "scheduler": {
             "jobs": {
@@ -179,24 +186,14 @@ def http_json(method: str, url: str, token: str | None = None, payload: dict[str
         return 0, {"error": str(exc)}
 
 
-def inspect_lifecycle(workplace_root: Path, core: Any) -> dict[str, Any]:
-    """Return the sole lifecycle interpretation for lock, state, PID and readiness."""
-    state = read_json(service_path(workplace_root))
-    lock = read_json(lock_path(workplace_root))
-    lock_exists = lock_path(workplace_root).exists()
+def classify_lifecycle(state: dict[str, Any], lock: dict[str, Any], *, lock_exists: bool,
+                       pid_running: bool, state_pid_running: bool, ready: bool) -> str:
+    """Pure shared interpretation; callers own observation and its uncertainty."""
     pid = lock.get("pid")
     instance_id = str(lock.get("instance_id") or "")
     state_instance_id = str(state.get("instance_id") or "")
     matching = bool(instance_id and instance_id == state_instance_id and pid == state.get("pid"))
-    pid_running = isinstance(pid, int) and core.process_pid_running(pid)
-    state_pid = state.get("pid")
-    state_pid_running = isinstance(state_pid, int) and core.process_pid_running(state_pid)
     status = str(state.get("status") or "")
-    endpoint = str(state.get("endpoint") or "")
-    ready = False
-    if matching and pid_running and endpoint:
-        code, body = http_json("GET", endpoint.rstrip("/") + "/readyz", timeout=1.0)
-        ready = code == 200 and bool(body.get("ready"))
     if matching and pid_running:
         kind = "ready" if ready else (status if status in {"starting", "stopping", "failed"} else "failed")
     elif state_instance_id and state_pid_running:
@@ -218,6 +215,27 @@ def inspect_lifecycle(workplace_root: Path, core: Any) -> dict[str, Any]:
         kind = "not_running"
     else:
         kind = "stale"
+    return kind
+
+
+def inspect_lifecycle(workplace_root: Path, core: Any) -> dict[str, Any]:
+    """Return the sole lifecycle interpretation for lock, state, PID and readiness."""
+    state = read_json(service_path(workplace_root))
+    lock = read_json(lock_path(workplace_root))
+    lock_exists = lock_path(workplace_root).exists()
+    pid = lock.get("pid")
+    instance_id = str(lock.get("instance_id") or "")
+    matching = bool(instance_id and instance_id == str(state.get("instance_id") or "") and pid == state.get("pid"))
+    pid_running = isinstance(pid, int) and core.process_pid_running(pid)
+    state_pid = state.get("pid")
+    state_pid_running = isinstance(state_pid, int) and core.process_pid_running(state_pid)
+    endpoint = str(state.get("endpoint") or "")
+    ready = False
+    if matching and pid_running and endpoint:
+        code, body = http_json("GET", endpoint.rstrip("/") + "/readyz", timeout=1.0)
+        ready = code == 200 and bool(body.get("ready"))
+    kind = classify_lifecycle(state, lock, lock_exists=lock_exists, pid_running=pid_running,
+                              state_pid_running=state_pid_running, ready=ready)
     return {"kind": kind, "state": state, "lock": lock, "pid": pid, "instance_id": instance_id, "matching": matching, "pid_running": pid_running}
 
 
@@ -357,6 +375,11 @@ class RuntimeProcess:
         self.state: dict[str, Any] = base_state(workplace_root, core, status="starting", instance_id=self.instance_id)
         self.state_lock = threading.RLock()
         self._project_errors: dict[str, str] = {}
+        self._registrations = metrics_core().registrations({})
+        self._metrics_at = float("-inf")
+        self.active_requests = 0
+        self.scheduler_active = False
+        self.shutdown_check = False
 
     def save(self) -> None:
         with self.state_lock:
@@ -367,12 +390,14 @@ class RuntimeProcess:
         try:
             state = host.load_state(self.workplace_root)
         except Exception as exc:  # noqa: BLE001 - malformed cache is recoverable.
+            self._registrations = metrics_core().registrations({})
             self._project_errors = {"host_cache": str(exc)}
             with self.state_lock:
                 self.state["project_errors"] = dict(self._project_errors)
                 self.state["health"] = "degraded"
             return []
         projects = state.get("projects", [])
+        self._registrations = metrics_core().registrations(state)
         if not isinstance(projects, list):
             errors["host_cache"] = "project cache field is not a list"
             projects = []
@@ -395,7 +420,40 @@ class RuntimeProcess:
                 self.state["health"] = "degraded"
             else:
                 self.state.pop("project_errors", None)
-        return roots
+        return list(dict.fromkeys(roots))
+
+    def publish_metrics(self, roots: list[Path], *, registration=None, coverage=None) -> None:
+        if time.monotonic() - self._metrics_at < 10:
+            return
+        self._metrics_at = time.monotonic()
+        snapshot = metrics_core().collect(self.workplace_root, roots, self.core, self.instance_id,
+                                           self._registrations if registration is None else registration,
+                                           coverage=not self._project_errors if coverage is None else coverage)
+        with self.state_lock:
+            self.state["metrics"] = snapshot
+            self.state["scheduler"]["jobs"]["metrics"] = {
+                "period_seconds": 10, "last_run": snapshot["observed_at"],
+                "last_result": "ok" if all(g["coverage"] == "complete" for g in snapshot["groups"].values()) else "failed"}
+
+    def metrics_loop(self) -> None:
+        # Observation must not wait for project routing, event replay or tick.
+        # Domain readers remain in Core; this thread only schedules/publishes.
+        while not self.stop_event.is_set():
+            try:
+                roots, registration, coverage = metrics_core().registered_projects(self.workplace_root)
+                self.publish_metrics(roots, registration=registration, coverage=coverage)
+                self.save()
+            except (Exception, SystemExit):
+                with self.state_lock:
+                    self.state.pop("metrics", None)
+                    self.state["scheduler"]["jobs"]["metrics"] = {
+                        "period_seconds": 10, "last_run": self.core.now_utc(), "last_result": "failed"}
+                try:
+                    self.save()
+                except (Exception, SystemExit):
+                    pass  # Existing sample expires even when persistence fails.
+            if self.stop_event.wait(10):
+                break
 
     def status_payload(self) -> dict[str, Any]:
         roots = self.known_project_roots()
@@ -471,6 +529,12 @@ class RuntimeProcess:
     def scheduler_loop(self) -> None:
         self.scheduler_thread = threading.current_thread()
         while not self.stop_event.wait(self.interval):
+            with self.state_lock:
+                if self.state.get("status") == "stopping":
+                    break
+                if self.shutdown_check:
+                    continue
+                self.scheduler_active = True
             try:
                 roots = self.known_project_roots()
                 project_errors = dict(self._project_errors)
@@ -520,6 +584,9 @@ class RuntimeProcess:
                     append_operator_log(self.workplace_root, self.core, "scheduler.error", error=str(exc))
                 except OSError:
                     pass  # Preserve the in-memory fault when storage is unavailable.
+            finally:
+                with self.state_lock:
+                    self.scheduler_active = False
             try:
                 self.save()
             except (Exception, SystemExit) as exc:  # noqa: BLE001 - retry persistence on the next pass.
@@ -576,6 +643,21 @@ class RuntimeProcess:
             def do_POST(self) -> None:
                 if not self.authorize():
                     return
+                counted = self.path != "/shutdown"
+                with runtime.state_lock:
+                    if runtime.state.get("status") == "stopping" or (counted and runtime.shutdown_check):
+                        self.send_json(503, {"error": "runtime_stopping"})
+                        return
+                    if counted:
+                        runtime.active_requests += 1
+                try:
+                    self.handle_post()
+                finally:
+                    if counted:
+                        with runtime.state_lock:
+                            runtime.active_requests -= 1
+
+            def handle_post(self) -> None:
                 try:
                     payload = self.read_body()
                     if self.path == "/event":
@@ -611,11 +693,26 @@ class RuntimeProcess:
                         result, status = host.tick_payload(runtime.workplace_root, roots, runtime.core, director=bool(payload.get("director")), inspector=bool(payload.get("inspector")))
                         self.send_json(200 if status == 0 else 500, result)
                     elif self.path == "/shutdown":
-                        if not self.authorize():
+                        guarded = payload.get("require_idle") is True
+                        if guarded and payload.get("expected_instance_id") != runtime.instance_id:
+                            self.send_json(409, {"error": "owner_changed"})
                             return
                         with runtime.state_lock:
-                            runtime.state["status"] = "stopping"
-                            runtime.state["health"] = "stopping"
+                            if guarded and (runtime.active_requests or runtime.scheduler_active or runtime.shutdown_check):
+                                self.send_json(409, {"error": "runtime_busy_or_activity_unknown"})
+                                return
+                            runtime.shutdown_check = True
+                        try:
+                            workers = metrics_core().shutdown_workers(runtime.workplace_root, runtime.core) if guarded else None
+                            with runtime.state_lock:
+                                if guarded and workers["counts"]["running"] != 0:
+                                    self.send_json(409, {"error": "runtime_busy_or_activity_unknown"})
+                                    return
+                                runtime.state["status"] = "stopping"
+                                runtime.state["health"] = "stopping"
+                        finally:
+                            with runtime.state_lock:
+                                runtime.shutdown_check = False
                         runtime.save()
                         self.send_json(200, {"status": "stopping"})
                         runtime.stop_event.set()
@@ -649,6 +746,7 @@ class RuntimeProcess:
             append_operator_log(self.workplace_root, self.core, "runtime.started", endpoint=endpoint, pid=os.getpid())
             self.scheduler_thread = threading.Thread(target=self.scheduler_loop, daemon=True)
             self.scheduler_thread.start()
+            threading.Thread(target=self.metrics_loop, daemon=True).start()
             self.httpd.serve_forever(poll_interval=0.2)
             self.state["status"] = "stopped"
             self.state["health"] = "stopped"
@@ -670,6 +768,8 @@ class RuntimeProcess:
 def command_serve(args: argparse.Namespace, core: Any) -> int:
     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
     runtime = RuntimeProcess(workplace_root, core, interval=float(getattr(args, "interval", 2.0) or 2.0))
+    if getattr(args, "console", False) and sys.stdout.isatty():
+        print("PF | ProcessForge Server - foreground Runtime", flush=True)
     return runtime.serve(int(getattr(args, "port", 0) or 0))
 
 
@@ -733,6 +833,12 @@ def command_stop(args: argparse.Namespace, core: Any) -> int:
     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
     inspection = inspect_lifecycle(workplace_root, core)
     state = inspection["state"]
+    guarded = getattr(args, "command", "") == "server" and not getattr(args, "force", False)
+    if guarded and inspection["kind"] not in {"ready", "stopped", "not_running"}:
+        raise SystemExit("FAIL: guarded stop requires a ready verified owner; inspect state or use explicit --force")
+    capabilities = state.get("capabilities")
+    if guarded and inspection["kind"] == "ready" and (not isinstance(capabilities, dict) or type(capabilities.get("guarded_shutdown")) is not int or capabilities["guarded_shutdown"] != 1):
+        raise SystemExit("FAIL: server lacks guarded shutdown capability; upgrade or use explicit --force")
     if inspection["kind"] == "orphaned":
         endpoint = str(state.get("endpoint") or "")
         code, body = http_json("GET", endpoint.rstrip("/") + "/readyz", timeout=1.0) if endpoint else (0, {})
@@ -761,7 +867,8 @@ def command_stop(args: argparse.Namespace, core: Any) -> int:
         return 0
     token = load_token(workplace_root)
     endpoint = str(state.get("endpoint") or "")
-    code, body = http_json("POST", endpoint.rstrip("/") + "/shutdown", token=token, payload={}, timeout=2.0)
+    payload = {"require_idle": True, "expected_instance_id": state.get("instance_id")} if guarded else {}
+    code, body = http_json("POST", endpoint.rstrip("/") + "/shutdown", token=token, payload=payload, timeout=2.0)
     if code != 200:
         raise SystemExit(f"FAIL: runtime stop request failed: {code} {body}")
     pid = state.get("pid")
@@ -776,7 +883,12 @@ def command_stop(args: argparse.Namespace, core: Any) -> int:
 
 
 def command_restart(args: argparse.Namespace, core: Any) -> int:
-    command_stop(args, core)
+    if getattr(args, "command", "") == "server" and getattr(args, "json", False):
+        import io
+        with contextlib.redirect_stdout(io.StringIO()):
+            command_stop(args, core)
+    else:
+        command_stop(args, core)
     return command_start(args, core)
 
 

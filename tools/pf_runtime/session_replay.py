@@ -15,7 +15,7 @@ from typing import Any, Iterable, Mapping
 
 from .codex_hooks import native_envelope, normalized_event
 from .host import _conversation_messages, _ingest_derived_event, event_exists, resolve_project, stable_event_id
-from .raw_ingress_kernel import RawIngressKernel, atomic_write_json, contained_path
+from .raw_ingress_kernel import NativeAgentEvent, RawIngressKernel, atomic_write_json, contained_path, raw_event_id as native_raw_event_id, raw_payload_hash
 
 PROCESSOR_ID = "processforge.session-replay.codex-hooks"
 PROCESSOR_VERSION = "1"
@@ -144,6 +144,16 @@ def _process_record(
     if envelope is None:
         counts["unsupported_mapping"] += 1
         return _record_status("unsupported_mapping", raw_location, raw_event_id)
+    # A raw receipt is not adapter admission. Reconstruct canonical provider
+    # identity and compare its digest before replay can create any effect.
+    canonical = NativeAgentEvent(**{key: envelope[key] for key in (
+        "provider", "adapter", "native_event_type", "raw_payload", "payload_version",
+        "native_event_id", "native_id_scope", "native_event_id_stable", "source_session_id", "source_project_ref")})
+    if (native_raw_event_id(canonical) != raw_event_id
+            or record.get("raw_payload_hash") != raw_payload_hash(raw_payload)
+            or any(record.get(key) != envelope.get(key) for key in ("source_session_id", "native_event_id", "native_event_type", "payload_version"))):
+        counts["denied"] += 1
+        return _record_status("denied", raw_location, raw_event_id, code="provenance_rejected")
     chat_message_ids, conversation_diagnostics = _conversation_messages(
         envelope,
         SimpleNamespace(raw_event_id=raw_event_id),
