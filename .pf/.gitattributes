@@ -1,0 +1,4 @@
+# PF evidence and immutable capsules use checksums of exact file bytes.
+# Preserve their recorded LF/CRLF bytes through Git staging and checkout.
+# Treat the preserved CR in CRLF evidence as a line ending, not trailing space.
+** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

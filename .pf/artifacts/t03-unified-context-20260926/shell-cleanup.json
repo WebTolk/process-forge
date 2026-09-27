@@ -1,0 +1,37 @@
+{
+  "reason": "T03 old shell-smoke cleanup expected terminal but the newly accepted comment-only prepare left state ready",
+  "stops": [
+    {
+      "task": "direct-path-recovery",
+      "exit_code": 0,
+      "stdout": "STOPPED: direct-path-recovery\n",
+      "stderr": ""
+    },
+    {
+      "task": "duplicate-start-par",
+      "exit_code": 0,
+      "stdout": "STOPPED: duplicate-start-par\n",
+      "stderr": ""
+    },
+    {
+      "task": "duplicate-start-seq",
+      "exit_code": 0,
+      "stdout": "STOPPED: duplicate-start-seq\n",
+      "stderr": ""
+    },
+    {
+      "task": "env-isolation",
+      "exit_code": 0,
+      "stdout": "STOPPED: env-isolation\n",
+      "stderr": ""
+    },
+    {
+      "task": "prepare-while-running",
+      "exit_code": 0,
+      "stdout": "STOPPED: prepare-while-running\n",
+      "stderr": ""
+    }
+  ],
+  "archived_files": 293,
+  "status": "PASS"
+}

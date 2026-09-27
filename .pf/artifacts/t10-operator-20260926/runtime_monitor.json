@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_runtime_monitor.py"
+  ],
+  "exit_code": 1,
+  "seconds": 14.117,
+  "stdout": "",
+  "stderr": "Traceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\tools\\smoke_runtime_monitor.py\", line 313, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"D:\\Dev\\process-forge\\tools\\smoke_runtime_monitor.py\", line 291, in main\n    assert paths == [\"/readyz\"] * 3\n           ^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+}

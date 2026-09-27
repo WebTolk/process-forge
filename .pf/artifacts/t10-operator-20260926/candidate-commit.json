@@ -1,0 +1,13 @@
+{
+  "time": "2026-09-26T19:00:01.786879+00:00",
+  "argv": [
+    "git",
+    "commit",
+    "-m",
+    "Deliver bounded operator metrics, guarded server controls and journal serialization"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-operator-20260926\\candidate",
+  "exit_code": 0,
+  "stdout": "[detached HEAD a5eeac5] Deliver bounded operator metrics, guarded server controls and journal serialization\n 23 files changed, 1696 insertions(+), 58 deletions(-)\n create mode 100644 bin/pf-server\n create mode 100644 bin/pf-server.bat\n create mode 100644 bin/pf-server.py\n create mode 100644 docs/ru/concepts/session-telemetry.md\n create mode 100644 schemas/runtime-metrics.schema.json\n create mode 100644 src/processforge_core/runtime_metrics.py\n create mode 100644 tools/smoke_diagnostics_configure.py\n create mode 100644 tools/smoke_process_event_concurrency.py\n create mode 100644 tools/smoke_runtime_metrics.py\n create mode 100644 tools/smoke_server_operator.py\n",
+  "stderr": ""
+}

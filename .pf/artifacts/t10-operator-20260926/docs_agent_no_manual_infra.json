@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_docs_agent_no_manual_infra.py"
+  ],
+  "exit_code": 0,
+  "seconds": 0.304,
+  "stdout": "PASS: agent instructions use the high-level Garage path and prohibit manual infrastructure repair\n",
+  "stderr": ""
+}

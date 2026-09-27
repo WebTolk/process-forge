@@ -1,0 +1,16 @@
+{
+  "time_utc": "2026-09-25T19:43:13.972901+00:00",
+  "document_links_whitespace": "PASS",
+  "documents": 6,
+  "python_syntax": "PASS",
+  "python_files": 8,
+  "schema_validation": "PASS: ProcessForge structure and JSON Schema validation passed (separate captured tool execution)",
+  "final_bundle": {
+    "sha256": "2f9f13a9a9671263d80aed9f98a6ba4862f860a71eca64e708b2a6811c1640d9",
+    "records": 486,
+    "truncated": false,
+    "private_absolute_paths": 0,
+    "build_matches_source": true,
+    "context_status": "fresh"
+  }
+}

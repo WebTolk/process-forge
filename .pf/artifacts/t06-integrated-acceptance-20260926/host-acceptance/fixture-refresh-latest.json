@@ -1,0 +1,1118 @@
+{
+  "status": "fresh",
+  "snapshot": {
+    "schema_version": 1,
+    "id": "ctx-20260926-121847-9aa14c",
+    "generated_at": "2026-09-26T12:18:41Z",
+    "snapshot": {
+      "id": "ctx-20260926-121847-9aa14c",
+      "generated_at": "2026-09-26T12:18:41Z",
+      "valid_until": "2026-10-03T12:18:41Z",
+      "refresh_policy": {
+        "max_age_days": 7,
+        "refresh_when_sources_change": true,
+        "refresh_when_workplace_changes": true,
+        "refresh_when_package_versions_change": true,
+        "refresh_when_required_tools_change": true
+      },
+      "health": {
+        "status": "pass"
+      }
+    },
+    "project": {
+      "id": "t06-host-fixture",
+      "name": "project",
+      "type": "generic"
+    },
+    "project_classification": {
+      "status": "unclassified",
+      "project_types": [],
+      "platforms": [],
+      "tags": [],
+      "confidence": "low",
+      "loaded_classifiers": [
+        "processforge.official.software-web.classifier"
+      ],
+      "matched_rules": [],
+      "inactive_classifier_hints": []
+    },
+    "flow": {
+      "root": ".pf",
+      "layout": "pf",
+      "manifest": ".pf/process-forge.yaml",
+      "local_config": ".pf/process-forge.local.yaml"
+    },
+    "process_forge": {
+      "version": "1.1.0",
+      "version_constraint": "^1.0",
+      "install_mode": "linked",
+      "distribution": {
+        "id": "processforge",
+        "source": "workplace",
+        "path": "<private-distribution-ref>",
+        "status": "available"
+      }
+    },
+    "platform_contracts": {
+      "available": [
+        {
+          "id": "platform.joomla",
+          "platform": "joomla",
+          "registry_entry": "joomla",
+          "source": "platform-contracts/platform.joomla/platform-contract.yaml",
+          "status": "available"
+        }
+      ],
+      "selected": [],
+      "stack": [],
+      "missing_required": [],
+      "circular": [],
+      "missing_required_resources": [],
+      "missing_recommended_resources": []
+    },
+    "available_platform_contracts": [
+      {
+        "id": "platform.joomla",
+        "platform": "joomla",
+        "registry_entry": "joomla",
+        "source": "platform-contracts/platform.joomla/platform-contract.yaml",
+        "status": "available"
+      }
+    ],
+    "selected_platform_contracts": [],
+    "platform_selection": {
+      "status": "not_selected",
+      "reason": "No platform contracts were selected for this project."
+    },
+    "platform_stack": [],
+    "sources": {
+      "fingerprints": [
+        {
+          "id": "project_manifest",
+          "path": ".pf/process-forge.yaml",
+          "kind": "manifest",
+          "checksum": "8d865afe5f779219cbe19548c92eead88a6cdf1f1598055871bd8043716397c1"
+        },
+        {
+          "id": "process-processes-custom-t06-host-fixture-yaml",
+          "path": "processes/custom/t06-host-fixture.yaml",
+          "kind": "process",
+          "checksum": "f5f3a9ec20937ab7f068bc753b47af81fb7f7a886bc2f5276e752149174c9cba"
+        },
+        {
+          "id": "package-pf-packages-project-t06-host-fixture-yaml",
+          "path": ".pf/packages/project.t06-host-fixture.yaml",
+          "kind": "package",
+          "checksum": "333e1b3f33587688e47e37f383bdf22a052c3d3b86f70c37ea71123fda860466"
+        },
+        {
+          "id": "package-override-packages-project-t06-host-fixture-yaml",
+          "path": ".pf/packages/project.t06-host-fixture.yaml",
+          "kind": "package-override",
+          "checksum": "333e1b3f33587688e47e37f383bdf22a052c3d3b86f70c37ea71123fda860466"
+        }
+      ]
+    },
+    "requirements_fingerprint": {
+      "process_forge_yaml": "sha256:8d865afe5f779219cbe19548c92eead88a6cdf1f1598055871bd8043716397c1",
+      "process_forge_local_yaml": "missing"
+    },
+    "context_requirements": {
+      "knowledge_packages": [
+        {
+          "id": "project.t06-host-fixture",
+          "constraint": "*",
+          "required": true
+        }
+      ],
+      "knowledge_resources": [
+        {
+          "id": "guide",
+          "constraint": "*",
+          "required": true
+        }
+      ],
+      "resource_selection": {},
+      "template_packages": [],
+      "templates": [],
+      "tools": [],
+      "platform_contracts": []
+    },
+    "context_policy": {
+      "on_session_start": {
+        "check_freshness": true,
+        "check_update_candidates": "if_due",
+        "if_fresh": "continue",
+        "if_fresh_with_updates": "notify",
+        "if_stale": "ask_operator",
+        "if_broken": "block"
+      },
+      "auto_refresh": {
+        "enabled": false,
+        "allow_patch": true,
+        "allow_minor": false,
+        "allow_major": false,
+        "allow_rolling_resources": false
+      },
+      "active_run_behavior": {
+        "existing_capsules": "pin_existing",
+        "new_capsules": "require_fresh_snapshot"
+      },
+      "organized_mode": {
+        "stale_snapshot_action": "needs_operator"
+      }
+    },
+    "resolved_parameters": {},
+    "parameter_resolution": {
+      "status": "resolved",
+      "sources": [],
+      "provenance": {},
+      "conflicts": []
+    },
+    "resolved_context": {
+      "selected_platform": [],
+      "platform_stack": [],
+      "selected_specializations": [],
+      "available_knowledge_packages": [
+        "docs.php",
+        "docs.web.accessibility",
+        "docs.web.css",
+        "docs.web.html",
+        "docs.web.javascript",
+        "docs.web.performance"
+      ],
+      "activated_knowledge_packages": [
+        "docs.php",
+        "docs.web.accessibility",
+        "docs.web.css",
+        "docs.web.html",
+        "docs.web.javascript",
+        "docs.web.performance"
+      ],
+      "excluded_knowledge_packages": [],
+      "available_tools": [],
+      "activated_tools": [],
+      "excluded_tools": [],
+      "available_mcp": [],
+      "activated_mcp": [],
+      "excluded_mcp": [],
+      "activated_templates": [],
+      "excluded_templates": [],
+      "provided_capabilities": [
+        "architecture",
+        "investigation",
+        "process_coordination",
+        "reporting",
+        "repository_read",
+        "repository_write",
+        "review",
+        "test_execution",
+        "test_planning",
+        "test_running"
+      ],
+      "applied_project_overrides": [],
+      "effective_resources": [
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.php",
+          "status": "activated"
+        },
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.web.accessibility",
+          "status": "activated"
+        },
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.web.css",
+          "status": "activated"
+        },
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.web.html",
+          "status": "activated"
+        },
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.web.javascript",
+          "status": "activated"
+        },
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.web.performance",
+          "status": "activated"
+        }
+      ],
+      "effective_fingerprints": {},
+      "resolution_reasons": [
+        {
+          "source": "processforge.official.software-development",
+          "reason": "active official process pack knowledge packages merged"
+        }
+      ],
+      "conflicts": [],
+      "status": "resolved",
+      "process": "t06-host-fixture",
+      "active_resource_profile": {
+        "selected_platform": [],
+        "platform_stack": [],
+        "selected_specializations": [],
+        "available_knowledge_packages": [
+          "docs.php",
+          "docs.web.accessibility",
+          "docs.web.css",
+          "docs.web.html",
+          "docs.web.javascript",
+          "docs.web.performance"
+        ],
+        "activated_knowledge_packages": [
+          "docs.php",
+          "docs.web.accessibility",
+          "docs.web.css",
+          "docs.web.html",
+          "docs.web.javascript",
+          "docs.web.performance"
+        ],
+        "excluded_knowledge_packages": [],
+        "available_tools": [],
+        "activated_tools": [],
+        "excluded_tools": [],
+        "available_mcp": [],
+        "activated_mcp": [],
+        "excluded_mcp": [],
+        "activated_templates": [],
+        "excluded_templates": [],
+        "provided_capabilities": [
+          "architecture",
+          "investigation",
+          "process_coordination",
+          "reporting",
+          "repository_read",
+          "repository_write",
+          "review",
+          "test_execution",
+          "test_planning",
+          "test_running"
+        ],
+        "applied_project_overrides": [],
+        "effective_resources": [
+          {
+            "kind": "knowledge_packages",
+            "id": "docs.php",
+            "status": "activated"
+          },
+          {
+            "kind": "knowledge_packages",
+            "id": "docs.web.accessibility",
+            "status": "activated"
+          },
+          {
+            "kind": "knowledge_packages",
+            "id": "docs.web.css",
+            "status": "activated"
+          },
+          {
+            "kind": "knowledge_packages",
+            "id": "docs.web.html",
+            "status": "activated"
+          },
+          {
+            "kind": "knowledge_packages",
+            "id": "docs.web.javascript",
+            "status": "activated"
+          },
+          {
+            "kind": "knowledge_packages",
+            "id": "docs.web.performance",
+            "status": "activated"
+          }
+        ],
+        "effective_fingerprints": {},
+        "resolution_reasons": [
+          {
+            "source": "processforge.official.software-development",
+            "reason": "active official process pack knowledge packages merged"
+          }
+        ],
+        "conflicts": []
+      },
+      "execution_route": {
+        "process": "t06-host-fixture",
+        "stages": [
+          {
+            "id": "prepare",
+            "required_capabilities": [],
+            "required_artifacts": [],
+            "required_evidence": [],
+            "exit_gates": [
+              "prepare-ready"
+            ]
+          },
+          {
+            "id": "build",
+            "required_capabilities": [],
+            "required_artifacts": [],
+            "required_evidence": [],
+            "exit_gates": [
+              "build-ready"
+            ]
+          },
+          {
+            "id": "verify",
+            "required_capabilities": [],
+            "required_artifacts": [],
+            "required_evidence": [],
+            "exit_gates": [
+              "verify-ready"
+            ]
+          }
+        ],
+        "required_capabilities": [],
+        "capability_requirements": [],
+        "required_artifacts": [],
+        "required_evidence": [],
+        "acceptance_criteria": []
+      },
+      "capability_resolution": {
+        "satisfied": [],
+        "unsatisfied": []
+      }
+    },
+    "active_resource_profile": {
+      "selected_platform": [],
+      "platform_stack": [],
+      "selected_specializations": [],
+      "available_knowledge_packages": [
+        "docs.php",
+        "docs.web.accessibility",
+        "docs.web.css",
+        "docs.web.html",
+        "docs.web.javascript",
+        "docs.web.performance"
+      ],
+      "activated_knowledge_packages": [
+        "docs.php",
+        "docs.web.accessibility",
+        "docs.web.css",
+        "docs.web.html",
+        "docs.web.javascript",
+        "docs.web.performance"
+      ],
+      "excluded_knowledge_packages": [],
+      "available_tools": [],
+      "activated_tools": [],
+      "excluded_tools": [],
+      "available_mcp": [],
+      "activated_mcp": [],
+      "excluded_mcp": [],
+      "activated_templates": [],
+      "excluded_templates": [],
+      "provided_capabilities": [
+        "architecture",
+        "investigation",
+        "process_coordination",
+        "reporting",
+        "repository_read",
+        "repository_write",
+        "review",
+        "test_execution",
+        "test_planning",
+        "test_running"
+      ],
+      "applied_project_overrides": [],
+      "effective_resources": [
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.php",
+          "status": "activated"
+        },
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.web.accessibility",
+          "status": "activated"
+        },
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.web.css",
+          "status": "activated"
+        },
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.web.html",
+          "status": "activated"
+        },
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.web.javascript",
+          "status": "activated"
+        },
+        {
+          "kind": "knowledge_packages",
+          "id": "docs.web.performance",
+          "status": "activated"
+        }
+      ],
+      "effective_fingerprints": {},
+      "resolution_reasons": [
+        {
+          "source": "processforge.official.software-development",
+          "reason": "active official process pack knowledge packages merged"
+        }
+      ],
+      "conflicts": []
+    },
+    "execution_route": {
+      "process": "t06-host-fixture",
+      "stages": [
+        {
+          "id": "prepare",
+          "required_capabilities": [],
+          "required_artifacts": [],
+          "required_evidence": [],
+          "exit_gates": [
+            "prepare-ready"
+          ]
+        },
+        {
+          "id": "build",
+          "required_capabilities": [],
+          "required_artifacts": [],
+          "required_evidence": [],
+          "exit_gates": [
+            "build-ready"
+          ]
+        },
+        {
+          "id": "verify",
+          "required_capabilities": [],
+          "required_artifacts": [],
+          "required_evidence": [],
+          "exit_gates": [
+            "verify-ready"
+          ]
+        }
+      ],
+      "required_capabilities": [],
+      "capability_requirements": [],
+      "required_artifacts": [],
+      "required_evidence": [],
+      "acceptance_criteria": []
+    },
+    "capability_resolution": {
+      "satisfied": [],
+      "unsatisfied": []
+    },
+    "selected_specializations": [],
+    "applied_project_overrides": [],
+    "effective_fingerprints": {},
+    "resolution_reasons": [
+      {
+        "source": "processforge.official.software-development",
+        "reason": "active official process pack knowledge packages merged"
+      }
+    ],
+    "conflicts": [],
+    "resolved": {
+      "knowledge_packages": [
+        {
+          "id": "docs.php",
+          "constraint": "declared"
+        },
+        {
+          "id": "docs.web.accessibility",
+          "constraint": "declared"
+        },
+        {
+          "id": "docs.web.css",
+          "constraint": "declared"
+        },
+        {
+          "id": "docs.web.html",
+          "constraint": "declared"
+        },
+        {
+          "id": "docs.web.javascript",
+          "constraint": "declared"
+        },
+        {
+          "id": "docs.web.performance",
+          "constraint": "declared"
+        },
+        {
+          "id": "project.t06-host-fixture",
+          "constraint": "declared"
+        }
+      ],
+      "knowledge_resources": [
+        {
+          "id": "project.t06-host-fixture:guide",
+          "kind": "reference",
+          "package_id": "project.t06-host-fixture",
+          "requirement": "required",
+          "versioning_mode": "rolling_index",
+          "retention_policy": "replace_in_place",
+          "instance_id": "project.t06-host-fixture:guide@current",
+          "path_ref": {
+            "package": "project.t06-host-fixture",
+            "relative_path": "resources/guide"
+          },
+          "fingerprint": {
+            "type": "resource_record_sha256",
+            "value": "sha256:8b497cb2f64ab5441224c8694ac0b86e431624e98e89606911a2f95fd525663c"
+          },
+          "reproducibility": {
+            "level": "best_effort",
+            "reason": "resource retention policy is replace_in_place"
+          },
+          "snapshot_behavior": {
+            "on_new_version": "mark_stale",
+            "on_current_generation_changed": "mark_stale",
+            "on_instance_missing": "broken",
+            "reproducibility": "best_effort"
+          },
+          "resource_id": "guide",
+          "title": "T06 guide",
+          "load_policy": "on_demand",
+          "index_policy": "metadata",
+          "indexing": {
+            "enabled": true,
+            "mode": "fulltext",
+            "sources": [
+              {
+                "path": ".",
+                "mode": "fulltext",
+                "include": [
+                  "**/*.md"
+                ]
+              }
+            ]
+          },
+          "selection": {
+            "mode": "explicit",
+            "reason": "explicit_selector",
+            "preferred_version": null,
+            "constraint": "*"
+          }
+        }
+      ],
+      "available_knowledge_resources": [
+        {
+          "id": "project.t06-host-fixture:guide",
+          "kind": "reference",
+          "package_id": "project.t06-host-fixture",
+          "requirement": "recommended",
+          "versioning_mode": "rolling_index",
+          "retention_policy": "replace_in_place",
+          "instance_id": "project.t06-host-fixture:guide@current",
+          "path_ref": {
+            "package": "project.t06-host-fixture",
+            "relative_path": "resources/guide"
+          },
+          "fingerprint": {
+            "type": "resource_record_sha256",
+            "value": "sha256:8b497cb2f64ab5441224c8694ac0b86e431624e98e89606911a2f95fd525663c"
+          },
+          "reproducibility": {
+            "level": "best_effort",
+            "reason": "resource retention policy is replace_in_place"
+          },
+          "snapshot_behavior": {
+            "on_new_version": "mark_stale",
+            "on_current_generation_changed": "mark_stale",
+            "on_instance_missing": "broken",
+            "reproducibility": "best_effort"
+          },
+          "resource_id": "guide",
+          "title": "T06 guide",
+          "load_policy": "on_demand",
+          "index_policy": "metadata",
+          "indexing": {
+            "enabled": true,
+            "mode": "fulltext",
+            "sources": [
+              {
+                "path": ".",
+                "mode": "fulltext",
+                "include": [
+                  "**/*.md"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "project.t06-host-fixture:unselected",
+          "kind": "reference",
+          "package_id": "project.t06-host-fixture",
+          "requirement": "recommended",
+          "versioning_mode": "rolling_index",
+          "retention_policy": "replace_in_place",
+          "instance_id": "project.t06-host-fixture:unselected@current",
+          "path_ref": {
+            "package": "project.t06-host-fixture",
+            "relative_path": "resources/unselected"
+          },
+          "fingerprint": {
+            "type": "resource_record_sha256",
+            "value": "sha256:8b80a686f9d6c8001fc771013df446029502062be0e951ccf171ba399c45a71c"
+          },
+          "reproducibility": {
+            "level": "best_effort",
+            "reason": "resource retention policy is replace_in_place"
+          },
+          "snapshot_behavior": {
+            "on_new_version": "mark_stale",
+            "on_current_generation_changed": "mark_stale",
+            "on_instance_missing": "broken",
+            "reproducibility": "best_effort"
+          },
+          "resource_id": "unselected",
+          "title": "T06 unselected",
+          "load_policy": "on_demand",
+          "index_policy": "metadata",
+          "indexing": {
+            "enabled": true,
+            "mode": "fulltext",
+            "sources": [
+              {
+                "path": ".",
+                "mode": "fulltext",
+                "include": [
+                  "**/*.md"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "template_packages": [],
+      "templates": [],
+      "excluded_templates": [],
+      "tools": [],
+      "excluded_tools": [],
+      "platform_contracts": [],
+      "process_packages": [
+        {
+          "id": "project.t06-host-fixture",
+          "path": "packages/project.t06-host-fixture.yaml"
+        }
+      ]
+    },
+    "local_search_resources": [
+      {
+        "id": "project.t06-host-fixture:guide",
+        "resource_id": "project.t06-host-fixture:guide",
+        "package_id": "project.t06-host-fixture",
+        "kind": "reference",
+        "title": "T06 guide",
+        "description": "",
+        "version": "",
+        "fingerprint": {
+          "type": "resource_record_sha256",
+          "value": "sha256:8b497cb2f64ab5441224c8694ac0b86e431624e98e89606911a2f95fd525663c"
+        },
+        "path_ref": {
+          "package": "project.t06-host-fixture",
+          "relative_path": "resources/guide"
+        },
+        "status": "available",
+        "load_policy": "snapshot_authorized",
+        "indexing": {
+          "enabled": true,
+          "mode": "fulltext",
+          "sources": [
+            {
+              "path": ".",
+              "mode": "fulltext",
+              "include": [
+                "**/*.md"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "resource_selection": {
+      "mode": "explicit",
+      "status": "resolved",
+      "target_versions": [],
+      "selected_count": 1,
+      "available_count": 2,
+      "provenance": [
+        {
+          "selector": {
+            "id": "guide",
+            "constraint": "*",
+            "required": true
+          },
+          "resource_id": "project.t06-host-fixture:guide",
+          "instance_id": "project.t06-host-fixture:guide@current",
+          "status": "selected"
+        }
+      ]
+    },
+    "freshness": {
+      "status": "fresh",
+      "checked_at": "2026-09-26T12:18:41Z",
+      "stale_reasons": [],
+      "update_available": [],
+      "broken_refs": []
+    },
+    "readiness": {
+      "context": {
+        "status": "fresh"
+      },
+      "resources": {
+        "status": "fresh",
+        "blockers": []
+      },
+      "execution": {
+        "status": "ready",
+        "missing_capabilities": [],
+        "blockers": []
+      }
+    },
+    "resource_readiness": {
+      "status": "fresh",
+      "blockers": []
+    },
+    "execution_readiness": {
+      "status": "ready",
+      "missing_capabilities": [],
+      "blockers": []
+    },
+    "reproducibility": {
+      "level": "best_effort",
+      "reasons": [
+        "resource retention policy is replace_in_place"
+      ]
+    },
+    "source_fingerprints": {
+      "workplace_manifest": "missing",
+      "package_roots_registry": "sha256:6a6bfe485b123f49b9dfa2d586c55a132a4ae8b2d6348a8d8ab6fc1e88a83c70",
+      "knowledge_roots_registry": "sha256:2733faabff2dc10f6aebda9d1338769e5dbd724817e85639f67d90dd550ea5b2",
+      "template_registry": "sha256:6fe70970531eddee119c32aca9d352eaa66b51e2df24affddfb6648254928608",
+      "tool_registry": "sha256:c09ec7dcf23effd2c4233a592e12a5f9e9ea213408497390a9738574c2197626",
+      "parameters_registry": "missing",
+      "installed_subjects": "sha256:7e1838c48fb61e63001b54d4b84b5869f92fba298c8d25386095988881b28f8f"
+    },
+    "knowledge_stack": [
+      {
+        "id": "project.t06-host-fixture",
+        "version": "1.0.0",
+        "source": "project"
+      }
+    ],
+    "resolved_policies": {
+      "hard": [
+        {
+          "id": "public.no_local_absolute_paths",
+          "value": true,
+          "locked": true
+        },
+        {
+          "id": "files.one_writer_per_scope",
+          "value": true,
+          "locked": true
+        },
+        {
+          "id": "secrets.public_exports_sanitized",
+          "value": true,
+          "locked": true
+        },
+        {
+          "id": "runtime.private",
+          "value": true,
+          "locked": true
+        },
+        {
+          "id": "markdown.not_machine_merge_source",
+          "value": true,
+          "locked": true
+        }
+      ],
+      "preferences": [
+        {
+          "id": "templates.project_overrides_global",
+          "value": true
+        },
+        {
+          "id": "session.prefer_project_context_snapshot",
+          "value": true
+        }
+      ]
+    },
+    "capabilities": {
+      "required": [],
+      "optional": []
+    },
+    "knowledge_resources": {
+      "selected": [
+        {
+          "id": "project.t06-host-fixture:guide",
+          "kind": "reference",
+          "package_id": "project.t06-host-fixture",
+          "requirement": "required",
+          "versioning_mode": "rolling_index",
+          "retention_policy": "replace_in_place",
+          "instance_id": "project.t06-host-fixture:guide@current",
+          "path_ref": {
+            "package": "project.t06-host-fixture",
+            "relative_path": "resources/guide"
+          },
+          "fingerprint": {
+            "type": "resource_record_sha256",
+            "value": "sha256:8b497cb2f64ab5441224c8694ac0b86e431624e98e89606911a2f95fd525663c"
+          },
+          "reproducibility": {
+            "level": "best_effort",
+            "reason": "resource retention policy is replace_in_place"
+          },
+          "snapshot_behavior": {
+            "on_new_version": "mark_stale",
+            "on_current_generation_changed": "mark_stale",
+            "on_instance_missing": "broken",
+            "reproducibility": "best_effort"
+          },
+          "resource_id": "guide",
+          "title": "T06 guide",
+          "load_policy": "on_demand",
+          "index_policy": "metadata",
+          "indexing": {
+            "enabled": true,
+            "mode": "fulltext",
+            "sources": [
+              {
+                "path": ".",
+                "mode": "fulltext",
+                "include": [
+                  "**/*.md"
+                ]
+              }
+            ]
+          },
+          "selection": {
+            "mode": "explicit",
+            "reason": "explicit_selector",
+            "preferred_version": null,
+            "constraint": "*"
+          }
+        }
+      ],
+      "available": [
+        {
+          "id": "project.t06-host-fixture:guide",
+          "kind": "reference",
+          "package_id": "project.t06-host-fixture",
+          "requirement": "recommended",
+          "versioning_mode": "rolling_index",
+          "retention_policy": "replace_in_place",
+          "instance_id": "project.t06-host-fixture:guide@current",
+          "path_ref": {
+            "package": "project.t06-host-fixture",
+            "relative_path": "resources/guide"
+          },
+          "fingerprint": {
+            "type": "resource_record_sha256",
+            "value": "sha256:8b497cb2f64ab5441224c8694ac0b86e431624e98e89606911a2f95fd525663c"
+          },
+          "reproducibility": {
+            "level": "best_effort",
+            "reason": "resource retention policy is replace_in_place"
+          },
+          "snapshot_behavior": {
+            "on_new_version": "mark_stale",
+            "on_current_generation_changed": "mark_stale",
+            "on_instance_missing": "broken",
+            "reproducibility": "best_effort"
+          },
+          "resource_id": "guide",
+          "title": "T06 guide",
+          "load_policy": "on_demand",
+          "index_policy": "metadata",
+          "indexing": {
+            "enabled": true,
+            "mode": "fulltext",
+            "sources": [
+              {
+                "path": ".",
+                "mode": "fulltext",
+                "include": [
+                  "**/*.md"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "project.t06-host-fixture:unselected",
+          "kind": "reference",
+          "package_id": "project.t06-host-fixture",
+          "requirement": "recommended",
+          "versioning_mode": "rolling_index",
+          "retention_policy": "replace_in_place",
+          "instance_id": "project.t06-host-fixture:unselected@current",
+          "path_ref": {
+            "package": "project.t06-host-fixture",
+            "relative_path": "resources/unselected"
+          },
+          "fingerprint": {
+            "type": "resource_record_sha256",
+            "value": "sha256:8b80a686f9d6c8001fc771013df446029502062be0e951ccf171ba399c45a71c"
+          },
+          "reproducibility": {
+            "level": "best_effort",
+            "reason": "resource retention policy is replace_in_place"
+          },
+          "snapshot_behavior": {
+            "on_new_version": "mark_stale",
+            "on_current_generation_changed": "mark_stale",
+            "on_instance_missing": "broken",
+            "reproducibility": "best_effort"
+          },
+          "resource_id": "unselected",
+          "title": "T06 unselected",
+          "load_policy": "on_demand",
+          "index_policy": "metadata",
+          "indexing": {
+            "enabled": true,
+            "mode": "fulltext",
+            "sources": [
+              {
+                "path": ".",
+                "mode": "fulltext",
+                "include": [
+                  "**/*.md"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "required": [
+        {
+          "id": "project.t06-host-fixture:guide",
+          "kind": "reference",
+          "package_id": "project.t06-host-fixture",
+          "requirement": "required",
+          "versioning_mode": "rolling_index",
+          "retention_policy": "replace_in_place",
+          "instance_id": "project.t06-host-fixture:guide@current",
+          "path_ref": {
+            "package": "project.t06-host-fixture",
+            "relative_path": "resources/guide"
+          },
+          "fingerprint": {
+            "type": "resource_record_sha256",
+            "value": "sha256:8b497cb2f64ab5441224c8694ac0b86e431624e98e89606911a2f95fd525663c"
+          },
+          "reproducibility": {
+            "level": "best_effort",
+            "reason": "resource retention policy is replace_in_place"
+          },
+          "snapshot_behavior": {
+            "on_new_version": "mark_stale",
+            "on_current_generation_changed": "mark_stale",
+            "on_instance_missing": "broken",
+            "reproducibility": "best_effort"
+          },
+          "resource_id": "guide",
+          "title": "T06 guide",
+          "load_policy": "on_demand",
+          "index_policy": "metadata",
+          "indexing": {
+            "enabled": true,
+            "mode": "fulltext",
+            "sources": [
+              {
+                "path": ".",
+                "mode": "fulltext",
+                "include": [
+                  "**/*.md"
+                ]
+              }
+            ]
+          },
+          "selection": {
+            "mode": "explicit",
+            "reason": "explicit_selector",
+            "preferred_version": null,
+            "constraint": "*"
+          }
+        }
+      ],
+      "recommended": [],
+      "missing_required": [],
+      "missing_recommended": []
+    },
+    "tools": {
+      "required": [],
+      "recommended": [],
+      "activated": [],
+      "excluded": [],
+      "source": "workplace-registry"
+    },
+    "mcp": {
+      "required": [],
+      "recommended": [],
+      "activated": [],
+      "excluded": [],
+      "source": "workplace-registry"
+    },
+    "templates": {
+      "project": [],
+      "required": [],
+      "recommended": [],
+      "activated": [],
+      "excluded": [],
+      "source": "workplace-registry"
+    },
+    "processes": {
+      "enabled": [
+        {
+          "id": "t06-host-fixture",
+          "path": "../processes/custom/t06-host-fixture.yaml"
+        }
+      ],
+      "selection": {
+        "default": "t06-host-fixture",
+        "allowed": [
+          "t06-host-fixture"
+        ],
+        "source": "legacy_process"
+      }
+    },
+    "packages": {
+      "selected": [
+        {
+          "id": "project.t06-host-fixture",
+          "path": "packages/project.t06-host-fixture.yaml"
+        }
+      ]
+    },
+    "workplace_coordination": {
+      "project_mode": "inherit",
+      "workplace_default_project_mode": "simple",
+      "effective_mode": "simple",
+      "director_enabled": false,
+      "director_available_at_workplace": false,
+      "director_office_exists": false,
+      "director_required": false,
+      "director_process": null,
+      "director_inbox": {
+        "enabled": false
+      }
+    },
+    "session": {
+      "startup_read_order": [
+        ".pf/AGENTS.md",
+        ".pf/process-forge.yaml",
+        ".pf/contexts/project-context.snapshot.md",
+        "current assignment",
+        "relevant logs/reviews/handoffs"
+      ],
+      "telemetry_root": ".pf/runtime/telemetry",
+      "events_log": ".pf/runtime/events/events.ndjson"
+    }
+  }
+}

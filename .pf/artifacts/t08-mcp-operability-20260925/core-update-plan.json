@@ -1,0 +1,91 @@
+{
+    "added":  [
+                  "tools/smoke_authenticated_report_content.py",
+                  "tools/smoke_classifier_distribution_parity.py",
+                  "tools/smoke_codex_lifecycle_identity.py",
+                  "tools/smoke_core_update_migration_sources.py",
+                  "tools/smoke_expected_report_containment.py",
+                  "tools/smoke_mcp_jsonrpc_validation.py",
+                  "tools/smoke_release_public_dist_gate.py",
+                  "tools/smoke_runtime_scheduler_failure_isolation.py",
+                  "tools/smoke_runtime_singleton_orphan.py",
+                  "tools/smoke_search_file_root_containment.py",
+                  "tools/smoke_search_multiple_roots.py",
+                  "tools/smoke_session_identity_roundtrip.py"
+              ],
+    "archive":  "D:\\Dev\\process-forge\\.pf\\tmp\\t08-core-package-20260925\\processforge-1.1.0-a180ad6.zip",
+    "available_version":  "1.1.0",
+    "blockers":  [
+
+                 ],
+    "changed":  [
+                    "checksums/processforge.sha256",
+                    "docs/concepts/agent-session-model.md",
+                    "docs/concepts/core-update-manifest.md",
+                    "docs/concepts/garage-core.md",
+                    "docs/concepts/runtime-mcp.md",
+                    "docs/concepts/runtime-model.md",
+                    "docs/getting-started/update-system.md",
+                    "docs/ru/concepts/agent-session-model.md",
+                    "docs/ru/concepts/core-update-manifest.md",
+                    "docs/ru/concepts/runtime-mcp.md",
+                    "docs/ru/concepts/runtime-model.md",
+                    "docs/ru/getting-started/update-system.md",
+                    "src/processforge_core/core_update.py",
+                    "src/processforge_core/local_resource_search.py",
+                    "tools/pf_runtime/codex_hooks.py",
+                    "tools/pf_runtime/host.py",
+                    "tools/pf_runtime/mcp_server.py",
+                    "tools/pf_runtime/service.py",
+                    "tools/processforge.py",
+                    "tools/smoke_core_update_manifest.py",
+                    "tools/smoke_garage_mode_not_promoted_by_session.py",
+                    "tools/smoke_garage_session_enhanced.py",
+                    "tools/smoke_governed_work_stage_resolution.py",
+                    "tools/smoke_long_lived_runtime.py",
+                    "tools/smoke_project_init_local_search_mcp.py",
+                    "tools/smoke_single_agent_session_flow.py",
+                    "tools/smoke_user_like_garage_path.py"
+                ],
+    "core_root":  "D:\\.agents\\processforge",
+    "counts":  {
+                   "added":  12,
+                   "changed":  27,
+                   "locally_modified":  0,
+                   "missing_owned":  0,
+                   "removed":  0,
+                   "restored":  0,
+                   "unchanged":  915
+               },
+    "installed_manifest":  "D:\\.agents\\processforge\\processforge-core.manifest.json",
+    "installed_version":  "1.1.0",
+    "kind":  "processforge.core_update.plan",
+    "locally_modified":  [
+
+                         ],
+    "missing_owned":  [
+
+                      ],
+    "removed":  [
+
+                ],
+    "restored":  [
+
+                 ],
+    "schema_version":  1,
+    "status":  "planned",
+    "workplace_migration":  {
+                                "blockers":  [
+
+                                             ],
+                                "migration":  null,
+                                "operations":  [
+
+                                               ],
+                                "preserved":  [
+
+                                              ],
+                                "status":  "not_applicable",
+                                "workplace_root":  "D:\\.agents\\processforge-workplace"
+                            }
+}

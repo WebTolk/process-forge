@@ -1,0 +1,19 @@
+{
+  "time": "2026-09-27T08:14:20.192954+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "project-context-check",
+    "--project-root",
+    "D:\\Dev\\process-forge",
+    "--workplace",
+    "D:\\.agents\\processforge-workplace",
+    "--json",
+    "--check-update-candidates",
+    "never"
+  ],
+  "exit_code": 0,
+  "stdout": "{\n  \"broken\": false,\n  \"broken_refs\": [],\n  \"check_update_candidates\": \"never\",\n  \"execution_readiness\": {\n    \"blockers\": [],\n    \"missing_capabilities\": [],\n    \"status\": \"ready\"\n  },\n  \"fresh\": true,\n  \"health\": {\n    \"status\": \"warn\"\n  },\n  \"policy\": {\n    \"action\": \"continue\"\n  },\n  \"policy_action\": \"continue\",\n  \"readiness\": {\n    \"context\": {\n      \"status\": \"fresh\"\n    },\n    \"execution\": {\n      \"blockers\": [],\n      \"missing_capabilities\": [],\n      \"status\": \"ready\"\n    },\n    \"resources\": {\n      \"blockers\": [],\n      \"status\": \"fresh\"\n    }\n  },\n  \"recommended_action\": \"continue\",\n  \"resource_readiness\": {\n    \"blockers\": [],\n    \"status\": \"fresh\"\n  },\n  \"session_start\": false,\n  \"snapshot_id\": \"ctx-20260925-140110-0dbc7c\",\n  \"snapshot_sha256\": \"sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562\",\n  \"stale\": false,\n  \"stale_resources\": [],\n  \"status\": \"fresh\",\n  \"updates_available\": []\n}\n",
+  "stderr": ""
+}

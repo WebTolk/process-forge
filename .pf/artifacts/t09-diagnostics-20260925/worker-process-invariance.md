@@ -1,0 +1,9 @@
+# T09 process invariance regression
+
+Implemented `tools/smoke_diagnostics_process_invariance.py` and ran it after adjusting the assignment assertion to compare process semantics rather than serialized bytes. Final run: **PASS**, 67.4 s, five profiles; new optional record counts were quiet 0, normal 18, diagnostic 23, trace 25, off 0.
+
+Each temporary project started its Work before measurement, then ran a no-evidence transition and the same three evidence-backed stage transitions through the real MCP source. The test compared the negative action/reason, normalized stage history and evidence hashes, final run/assignment status, and mandatory event-type sequence across profiles. Each capsule was checked byte-for-byte before and after its own scenario. Evidence files used identical project-relative paths and constant contents. A project-context check exercised the real trace span; per-profile optional log records were counted after subtracting fixture-time records.
+
+The first run stopped on a byte-for-byte assignment comparison (quiet, 12.85 s); the response was `incomplete`. Per primary guidance, the assertion now checks semantic stage/status/history/evidence/blocker state, while exact capsule-byte immutability remains required. The transition path writes `stage_execution.evidence` as an empty list and updates `updated_at` on this rejected/incomplete request (`src/processforge_core/process_execution.py:461-464`); missing and empty evidence normalize to the same semantic state. No stage/history/evidence/blocker mutation occurred in the passing semantic check. Fresh fixtures have independent snapshot timestamps, so capsule digests are retained per profile but not compared across fixtures.
+
+Only the assigned smoke test and this report were written. No release registry/checksum, main project Work, product source, or PF transition was changed. The passing run exercised five temporary fixture Works and did not modify installed state.

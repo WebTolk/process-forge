@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T20:20:40.974220+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_work_resource_binding.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "PASS: Work resource binding isolation/pinning/current access/metadata/fulltext/subsets/provenance; symlink=unsupported by host\n",
+  "stderr": ""
+}

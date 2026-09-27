@@ -1,0 +1,8 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"kind\": \"pf.resolve\", \"project\": {\"id\": \"process-forge\", \"root\": \"D:\\\\Dev\\\\process-forge\"}, \"resource\": {\"application\": {\"kind\": \"reference\", \"package_id\": \"project.process-forge\"}, \"id\": \"project.process-forge:project-artifacts\", \"local_root\": \"D:\\\\Dev\\\\process-forge\\\\.pf\\\\artifacts\", \"navigation\": \"private_runtime_authorized\", \"reference\": {\"package\": \"project.process-forge\", \"relative_path\": \"artifacts\"}, \"registry_source\": \"project-context.snapshot\", \"scope\": \"project_context\", \"status\": \"available\"}, \"schema_version\": 1}"
+    }
+  ]
+}

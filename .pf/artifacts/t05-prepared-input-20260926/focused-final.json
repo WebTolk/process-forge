@@ -1,0 +1,7 @@
+{
+  "command": "python -B tools/smoke_prepared_execution_context.py",
+  "exit_code": 0,
+  "stdout": "PASS: prepared-input schema/budgets, empty and denied grants, semantic driver/model invariance, source/intent/manifest drift denial, offline generic-shell same-attempt launch, receipt interruption repair/idempotent collection/output attribution, metadata/fulltext drift and revocation, explicit empty stage subset\n",
+  "stderr": "",
+  "seconds": 149.969
+}

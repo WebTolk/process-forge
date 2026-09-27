@@ -1,0 +1,73 @@
+{
+  "started_at": "2026-09-25T19:40:45.466710+00:00",
+  "checks": [
+    {
+      "command": [
+        "tools/smoke_diagnostics.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"result\": \"PASS\", \"checks\": [\"severity/profile/config\", \"privacy\", \"journal invariance\", \"sink failures\", \"parallel correlation\", \"hook protocol\", \"rotation/retention/export\", \"performance\"], \"metrics\": {\"disabled_100000_seconds_median\": 0.16456640002434142, \"memory_10000_seconds\": 0.7978625999821816, \"jsonl_10000_seconds\": 15.206316099996911, \"max_storage_bytes\": 16384, \"rotated_files\": 2, \"bundle_records\": 2}}\n",
+      "stderr": "",
+      "seconds": 29.28
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-schemas.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: ProcessForge structure and JSON Schema validation passed.\n",
+      "stderr": "",
+      "seconds": 48.831
+    },
+    {
+      "command": [
+        "tools/validate-public-cleanliness.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: public cleanliness checks passed.\n",
+      "stderr": "",
+      "seconds": 8.681
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: wrote checksums\\processforge.sha256\n",
+      "stderr": "",
+      "seconds": 0.673
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: checksum inventory matches.\n",
+      "stderr": "",
+      "seconds": 0.703
+    },
+    {
+      "command": [
+        "tools/processforge.py",
+        "diagnostics-export",
+        "--project-root",
+        "D:\\Dev\\process-forge",
+        "--output",
+        "D:\\Dev\\process-forge\\.pf\\artifacts\\t09-diagnostics-20260925\\sanitized-diagnostic-bundle-accepted.json"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"path\": \"D:\\\\Dev\\\\process-forge\\\\.pf\\\\artifacts\\\\t09-diagnostics-20260925\\\\sanitized-diagnostic-bundle-accepted.json\",\n  \"records\": 486,\n  \"truncated\": false,\n  \"sha256\": \"2f9f13a9a9671263d80aed9f98a6ba4862f860a71eca64e708b2a6811c1640d9\"\n}\n",
+      "stderr": "",
+      "seconds": 30.038
+    }
+  ],
+  "source_sha256": {
+    "src/processforge_core/diagnostics.py": "2821636ea5179da200305854eb0a7f503bea376e3337164b2e610bd74279b472",
+    "tools/processforge.py": "740682df004607710794adf0893c8715ca0c9a23ec041c44a06a7584ee1b4a5a",
+    "tools/smoke_diagnostics.py": "df27ef1038ebaf13dc9f7bb997291e846e03a8bc384f0a711c6c241c446a3f3c",
+    "tools/smoke_diagnostics_process_invariance.py": "d133aa1a2d97c0cfa0f6e098eb92b5e8cb530aa0c450909f76d76af789df9d95"
+  },
+  "finished_at": "2026-09-25T19:42:43.680088+00:00"
+}

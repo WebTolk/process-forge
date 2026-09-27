@@ -1,0 +1,90 @@
+{
+  "started_at": "2026-09-26T05:40:52.958020+00:00",
+  "checks": [
+    {
+      "name": "smoke_worker_workspace_access",
+      "exit_code": 0,
+      "stdout": "PASS: worker workspace access smoke\n",
+      "stderr": "",
+      "seconds": 39.804
+    },
+    {
+      "name": "smoke_codex_worker_governance",
+      "exit_code": 0,
+      "stdout": "PASS: Codex worker sandbox and prepared input governance\n",
+      "stderr": "",
+      "seconds": 0.54
+    },
+    {
+      "name": "smoke_codex_exec_worker",
+      "exit_code": 0,
+      "stdout": "PASS: codex exec worker smoke\n",
+      "stderr": "",
+      "seconds": 43.281
+    },
+    {
+      "name": "smoke_runtime_driver_registry",
+      "exit_code": 0,
+      "stdout": "PASS: runtime driver registry smoke\n",
+      "stderr": "",
+      "seconds": 21.498
+    },
+    {
+      "name": "smoke_authenticated_report_content",
+      "exit_code": 0,
+      "stdout": "PASS: authenticated path report collected exactly once; forged provenance/hash and secrets denied\n",
+      "stderr": "",
+      "seconds": 41.915
+    },
+    {
+      "name": "smoke_worker_report_containment",
+      "exit_code": 2,
+      "stdout": "",
+      "stderr": "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe: can't open file 'D:\\\\Dev\\\\process-forge\\\\tools\\\\smoke_worker_report_containment.py': [Errno 2] No such file or directory\n",
+      "seconds": 0.071
+    },
+    {
+      "name": "smoke_work_capsule_contract_parity",
+      "exit_code": 0,
+      "stdout": "WROTE: .pf/contexts/assignment-capsules/t03-contract-parity.capsule.yaml\n{\n  \"status\": \"PASS\",\n  \"checks\": [\n    \"process and stage capabilities remain lifecycle requirements\",\n    \"actual governed and assignment constructors have exact contract parity\",\n    \"process/stage capability requirements stay in the pin, outside worker readiness\",\n    \"recomputed inner checksum cannot bypass the governed capsule byte anchor\",\n    \"status, stage, evidence, timestamps, retry/session and preferences retain intent\",\n    \"objective, scope, output, capability and workspace mutations are rejected\",\n    \"empty path/action/resource grants remain empty\",\n    \"analysis mode denies product writes despite contradictory defaults\",\n    \"invalid modes and malformed subagent policy fail closed; explicit zero limit remains zero\",\n    \"missing required source and explicit worker capability block readiness\",\n    \"missing/non-member runs remain incomplete assignment contexts\",\n    \"conflicting immutable source checksums are rejected\",\n    \"absolute/traversal and supported symlink source escapes are rejected\",\n    \"source-count, per-file and aggregate byte budgets are enforced\",\n    \"missing/changed material, legacy absence and unknown contract version are diagnosed\",\n    \"--force refuses replacement without changing capsule bytes\",\n    \"current catalog edits do not alter process/stage pins; governed transition preserves capsule bytes\"\n  ],\n  \"skipped\": [\n    \"symlink containment unavailable on host: OSError\"\n  ]\n}\n",
+      "stderr": "",
+      "seconds": 33.237
+    },
+    {
+      "name": "smoke_worker_run_shell",
+      "exit_code": 0,
+      "stdout": "PASS: worker-run shell regressions smoke\n",
+      "stderr": "",
+      "seconds": 152.029
+    },
+    {
+      "name": "smoke_provider_adapter_admission",
+      "exit_code": 0,
+      "stdout": "PASS: trusted custom provider start/message, duplicate replay repair/idempotence, untrusted identity/provenance denial, forged Codex identity replay denial, partial-native raw-only denial, native-ID quarantine, duplicate registry rejection, Host/kernel/replay sources unchanged\n",
+      "stderr": "",
+      "seconds": 10.877
+    },
+    {
+      "name": "smoke_conversation_completeness",
+      "exit_code": 0,
+      "stdout": "PASS: conversation completeness smoke\n",
+      "stderr": "",
+      "seconds": 108.026
+    },
+    {
+      "name": "smoke_work_resource_binding",
+      "exit_code": 0,
+      "stdout": "PASS: Work resource binding isolation/pinning/current access/metadata/fulltext/subsets/provenance; symlink=unsupported by host\n",
+      "stderr": "",
+      "seconds": 142.153
+    },
+    {
+      "name": "smoke_diagnostics_process_invariance",
+      "exit_code": 0,
+      "stdout": "PASS: Work lifecycle invariant across diagnostic profiles {\"diagnostic\": 23, \"normal\": 18, \"off\": 0, \"quiet\": 0, \"trace\": 25}\n",
+      "stderr": "",
+      "seconds": 115.059
+    }
+  ],
+  "finished_at": "2026-09-26T05:45:30.933908+00:00"
+}

@@ -1,0 +1,17 @@
+{
+  "time": "2026-09-26T19:06:28.963212+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "server",
+    "status",
+    "--workplace",
+    "D:\\.agents\\processforge-workplace",
+    "--json"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "{\"activity\": {\"backlog\": null, \"event_rate\": null, \"hooks\": null, \"leases\": null, \"mcp\": null, \"sessions\": null, \"work_waiting\": null, \"workers\": null}, \"cli_version\": \"1.1.0\", \"issues\": [\"cache_oversize\"], \"kind\": \"pf.runtime.monitor\", \"metrics\": null, \"observed_at\": \"2026-09-26T19:06:28.865110+00:00\", \"registrations\": {\"freshness\": {\"age_seconds\": null, \"status\": \"unknown\"}, \"projects\": null, \"sessions\": null}, \"runtime\": {\"health\": \"ready\", \"instance_version\": \"1.0.0-poc\", \"lifecycle\": \"ready\", \"owner_alive\": true, \"owner_pid\": 15900, \"readiness\": \"ready\"}, \"scheduler\": {\"jobs\": [{\"freshness\": {\"age_seconds\": null, \"status\": \"unknown\"}, \"last_result\": \"not_started\", \"name\": \"director\"}, {\"freshness\": {\"age_seconds\": null, \"status\": \"unknown\"}, \"last_result\": \"not_started\", \"name\": \"inspector\"}, {\"freshness\": {\"age_seconds\": null, \"status\": \"unknown\"}, \"last_result\": \"not_started\", \"name\": \"ledger\"}, {\"freshness\": {\"age_seconds\": null, \"status\": \"unknown\"}, \"last_result\": \"not_started\", \"name\": \"projection\"}], \"source\": \"cached_job_results\"}, \"schema_version\": 1, \"source\": \"bounded_local_state_and_loopback_readyz\", \"state_freshness\": {\"age_seconds\": 6.9, \"status\": \"fresh\"}, \"workplace\": \"processforge-workplace\"}\n",
+  "stderr": ""
+}

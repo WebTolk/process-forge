@@ -1,0 +1,414 @@
+schema_version: 1
+id: implement-the-t07-provider-neutral-egress-engine-qualify-a-bounded-enfor
+title: 'Implement the T07 provider-neutral egress engine: qualify a bounded enforcement '
+run_id: garage-implement-the-t07-provider-neutral-egress-engine-qualify-a-bounde
+process: software-feature-development
+status: done
+created_at: '2026-09-26T19:22:19Z'
+updated_at: '2026-09-26T20:49:24Z'
+objective: 'Implement the T07 provider-neutral egress engine: qualify a bounded enforcement route, bind successor security intent, filter immutable views through policy and mandatory audit, mediate resource and tool access, preserve export provenance, test adversarial behavior and install the qualified Core through the standard updater.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: Evidence reviewed; continue the pinned process from this completed stage.
+  artifacts:
+    - .pf/artifacts/t07-engine-20260926/architecture.md
+    - .pf/artifacts/t07-engine-20260926/assurance.md
+    - .pf/artifacts/t07-engine-20260926/domain.md
+    - .pf/artifacts/t07-engine-20260926/final/delivery.md
+    - .pf/artifacts/t07-engine-20260926/final/evolution.md
+    - .pf/artifacts/t07-engine-20260926/implementation.md
+    - .pf/artifacts/t07-engine-20260926/investigation.md
+    - .pf/artifacts/t07-engine-20260926/orchestration.md
+    - .pf/artifacts/t07-engine-20260926/scope.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-26T20:48:11Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/t07-engine-20260926/final/evolution.md
+      status: ready
+      recorded_at: '2026-09-26T20:49:17Z'
+      sha256: 'sha256:eaae9e729ff1fb40f58bc3ec30bd0b86caf8c7c512bfe2278517ce08b1eb3dde'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/t07-engine-20260926/final/evolution.md
+      status: passed
+      recorded_at: '2026-09-26T20:49:17Z'
+      sha256: 'sha256:eaae9e729ff1fb40f58bc3ec30bd0b86caf8c7c512bfe2278517ce08b1eb3dde'
+  notes: Evidence reviewed; continue the pinned process from this completed stage.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-09-26T19:22:19Z'
+    completed_at: '2026-09-26T19:25:05Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t07-engine-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T19:24:57Z'
+        sha256: 'sha256:52d294beb91b97afb44028c874f0a0f1fe4f4323ae8f28dabe96bc23b8c28c88'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/t07-engine-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T19:24:57Z'
+        sha256: 'sha256:52d294beb91b97afb44028c874f0a0f1fe4f4323ae8f28dabe96bc23b8c28c88'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/t07-engine-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T19:24:57Z'
+        sha256: 'sha256:52d294beb91b97afb44028c874f0a0f1fe4f4323ae8f28dabe96bc23b8c28c88'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/t07-engine-20260926/orchestration.md
+        status: passed
+        recorded_at: '2026-09-26T19:24:57Z'
+        sha256: 'sha256:52d294beb91b97afb44028c874f0a0f1fe4f4323ae8f28dabe96bc23b8c28c88'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-09-26T19:25:05Z'
+    completed_at: '2026-09-26T19:25:35Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/t07-engine-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T19:25:29Z'
+        sha256: 'sha256:7e35e9ec0f1635866c85f52403384e2ff9db9da4e7034fd924626c6244311f85'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/t07-engine-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T19:25:29Z'
+        sha256: 'sha256:7e35e9ec0f1635866c85f52403384e2ff9db9da4e7034fd924626c6244311f85'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t07-engine-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T19:25:29Z'
+        sha256: 'sha256:7e35e9ec0f1635866c85f52403384e2ff9db9da4e7034fd924626c6244311f85'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/t07-engine-20260926/scope.md
+        status: passed
+        recorded_at: '2026-09-26T19:25:29Z'
+        sha256: 'sha256:7e35e9ec0f1635866c85f52403384e2ff9db9da4e7034fd924626c6244311f85'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-09-26T19:25:35Z'
+    completed_at: '2026-09-26T19:29:53Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/t07-engine-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T19:29:43Z'
+        sha256: 'sha256:bd04fcdfb135046d49caed0c6772169ddc8638b4445f8075e923c5d21c0255b9'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/t07-engine-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T19:29:43Z'
+        sha256: 'sha256:bd04fcdfb135046d49caed0c6772169ddc8638b4445f8075e923c5d21c0255b9'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/t07-engine-20260926/investigation.md
+        status: passed
+        recorded_at: '2026-09-26T19:29:43Z'
+        sha256: 'sha256:bd04fcdfb135046d49caed0c6772169ddc8638b4445f8075e923c5d21c0255b9'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/t07-engine-20260926/investigation.md
+        status: passed
+        recorded_at: '2026-09-26T19:29:43Z'
+        sha256: 'sha256:bd04fcdfb135046d49caed0c6772169ddc8638b4445f8075e923c5d21c0255b9'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-09-26T19:29:53Z'
+    completed_at: '2026-09-26T19:35:55Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/t07-engine-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T19:35:45Z'
+        sha256: 'sha256:42d3f5fff113e352d01f340378f9b9a456d0f70e90842b46787380348eae253f'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/t07-engine-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T19:35:45Z'
+        sha256: 'sha256:42d3f5fff113e352d01f340378f9b9a456d0f70e90842b46787380348eae253f'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/t07-engine-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T19:35:45Z'
+        sha256: 'sha256:42d3f5fff113e352d01f340378f9b9a456d0f70e90842b46787380348eae253f'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/t07-engine-20260926/domain.md
+        status: passed
+        recorded_at: '2026-09-26T19:35:45Z'
+        sha256: 'sha256:42d3f5fff113e352d01f340378f9b9a456d0f70e90842b46787380348eae253f'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-09-26T19:35:55Z'
+    completed_at: '2026-09-26T19:37:44Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/t07-engine-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T19:37:37Z'
+        sha256: 'sha256:e92e4ee37048b72e6ff31a0af9e1c919b33a49bb8d6de9cb755f76f0b357d5d1'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/t07-engine-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T19:37:37Z'
+        sha256: 'sha256:e92e4ee37048b72e6ff31a0af9e1c919b33a49bb8d6de9cb755f76f0b357d5d1'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/t07-engine-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T19:37:37Z'
+        sha256: 'sha256:e92e4ee37048b72e6ff31a0af9e1c919b33a49bb8d6de9cb755f76f0b357d5d1'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/t07-engine-20260926/architecture.md
+        status: passed
+        recorded_at: '2026-09-26T19:37:37Z'
+        sha256: 'sha256:e92e4ee37048b72e6ff31a0af9e1c919b33a49bb8d6de9cb755f76f0b357d5d1'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-09-26T19:37:44Z'
+    completed_at: '2026-09-26T20:16:02Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/t07-engine-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T20:15:50Z'
+        sha256: 'sha256:204864eb1e467d099a687ee73776f69054dc4d76cbf79e20a05143b0e8e16915'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/t07-engine-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T20:15:50Z'
+        sha256: 'sha256:204864eb1e467d099a687ee73776f69054dc4d76cbf79e20a05143b0e8e16915'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/t07-engine-20260926/implementation.md
+        status: passed
+        recorded_at: '2026-09-26T20:15:50Z'
+        sha256: 'sha256:204864eb1e467d099a687ee73776f69054dc4d76cbf79e20a05143b0e8e16915'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-09-26T20:16:02Z'
+    completed_at: '2026-09-26T20:30:20Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/t07-engine-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T20:30:12Z'
+        sha256: 'sha256:717c3fcffe1a2087aa020711e0d659577249542e19e79a636b838ef4e41c1c47'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/t07-engine-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T20:30:12Z'
+        sha256: 'sha256:717c3fcffe1a2087aa020711e0d659577249542e19e79a636b838ef4e41c1c47'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/t07-engine-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T20:30:12Z'
+        sha256: 'sha256:717c3fcffe1a2087aa020711e0d659577249542e19e79a636b838ef4e41c1c47'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/t07-engine-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T20:30:12Z'
+        sha256: 'sha256:717c3fcffe1a2087aa020711e0d659577249542e19e79a636b838ef4e41c1c47'
+      -
+        kind: artifact
+        artifact_id: browser-verification-report
+        path: .pf/artifacts/t07-engine-20260926/assurance.md
+        status: ready
+        recorded_at: '2026-09-26T20:30:12Z'
+        sha256: 'sha256:717c3fcffe1a2087aa020711e0d659577249542e19e79a636b838ef4e41c1c47'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/t07-engine-20260926/assurance.md
+        status: passed
+        recorded_at: '2026-09-26T20:30:12Z'
+        sha256: 'sha256:717c3fcffe1a2087aa020711e0d659577249542e19e79a636b838ef4e41c1c47'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-09-26T20:30:20Z'
+    completed_at: '2026-09-26T20:48:11Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: release-notes
+        path: .pf/artifacts/t07-engine-20260926/final/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T20:48:05Z'
+        sha256: 'sha256:ceec7ad8c8af109842362c816122444891deee7276d0bf1d2d45ef21bed70d05'
+      -
+        kind: artifact
+        artifact_id: migration-notes
+        path: .pf/artifacts/t07-engine-20260926/final/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T20:48:05Z'
+        sha256: 'sha256:ceec7ad8c8af109842362c816122444891deee7276d0bf1d2d45ef21bed70d05'
+      -
+        kind: artifact
+        artifact_id: patch
+        path: .pf/artifacts/t07-engine-20260926/final/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T20:48:05Z'
+        sha256: 'sha256:ceec7ad8c8af109842362c816122444891deee7276d0bf1d2d45ef21bed70d05'
+      -
+        kind: artifact
+        artifact_id: delivery-plan
+        path: .pf/artifacts/t07-engine-20260926/final/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T20:48:05Z'
+        sha256: 'sha256:ceec7ad8c8af109842362c816122444891deee7276d0bf1d2d45ef21bed70d05'
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/t07-engine-20260926/final/delivery.md
+        status: ready
+        recorded_at: '2026-09-26T20:48:05Z'
+        sha256: 'sha256:ceec7ad8c8af109842362c816122444891deee7276d0bf1d2d45ef21bed70d05'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/t07-engine-20260926/final/delivery.md
+        status: passed
+        recorded_at: '2026-09-26T20:48:05Z'
+        sha256: 'sha256:ceec7ad8c8af109842362c816122444891deee7276d0bf1d2d45ef21bed70d05'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/t07-engine-20260926/final/delivery.md
+        status: passed
+        recorded_at: '2026-09-26T20:48:05Z'
+        sha256: 'sha256:ceec7ad8c8af109842362c816122444891deee7276d0bf1d2d45ef21bed70d05'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-09-26T20:48:11Z'
+    completed_at: '2026-09-26T20:49:24Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/t07-engine-20260926/final/evolution.md
+        status: ready
+        recorded_at: '2026-09-26T20:49:17Z'
+        sha256: 'sha256:eaae9e729ff1fb40f58bc3ec30bd0b86caf8c7c512bfe2278517ce08b1eb3dde'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/t07-engine-20260926/final/evolution.md
+        status: passed
+        recorded_at: '2026-09-26T20:49:17Z'
+        sha256: 'sha256:eaae9e729ff1fb40f58bc3ec30bd0b86caf8c7c512bfe2278517ce08b1eb3dde'
+    notes: Evidence reviewed; continue the pinned process from this completed stage.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20260925-140110-0dbc7c
+  snapshot_checksum: 'sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562'
+  assignment_capsule: .pf/contexts/assignment-capsules/implement-the-t07-provider-neutral-egress-engine-qualify-a-bounded-enfor.capsule.yaml
+  assignment_capsule_checksum: 'sha256:000b31cf7f3af61f3b7d07943712ae201e030b7c97afb681ea85313f6792cd37'

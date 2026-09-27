@@ -1,0 +1,441 @@
+{
+  "work": {
+    "action": "created_new",
+    "assignment_id": "probe-exact-work-resource-reads",
+    "context": {
+      "checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+      "id": "probe-exact-work-resource-reads-capsule",
+      "identity_source": "assignment_process_pin"
+    },
+    "gates": {
+      "entry": [],
+      "exit": [
+        {
+          "blocking": true,
+          "evidence": {},
+          "id": "prepare-ready",
+          "phase": "exit",
+          "required": true,
+          "satisfied": false,
+          "type": "checklist"
+        }
+      ]
+    },
+    "kind": "pf.work.start",
+    "obligations": [],
+    "project": {
+      "id": "project"
+    },
+    "run_id": "garage-probe-exact-work-resource-reads",
+    "schema_version": 1,
+    "session": {
+      "status": "absent"
+    },
+    "stage": "prepare",
+    "stage_selection": "process_initial_stage",
+    "valid_stages": [
+      "prepare",
+      "build",
+      "verify"
+    ],
+    "work_state": {
+      "action": "work_incomplete",
+      "allowed_outcomes": [
+        {
+          "id": "completed",
+          "next_stage": "build",
+          "title": "completed"
+        }
+      ],
+      "artifacts": [
+        {
+          "evidence": {},
+          "id": "brief",
+          "kind": "artifact",
+          "satisfied": false
+        }
+      ],
+      "assignment": {
+        "id": "probe-exact-work-resource-reads",
+        "status": "in_progress"
+      },
+      "blockers": [],
+      "completion": {
+        "requirements": [
+          {
+            "artifact_id": "brief",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "code": "gate_evidence_missing",
+            "gate_id": "prepare-ready"
+          },
+          {
+            "code": "stage_evidence_required",
+            "stage_id": "prepare"
+          }
+        ],
+        "status": "incomplete"
+      },
+      "context": {
+        "checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+        "id": "probe-exact-work-resource-reads-capsule",
+        "identity_source": "assignment_process_pin"
+      },
+      "evidence": [],
+      "gates": {
+        "entry": [],
+        "exit": [
+          {
+            "blocking": true,
+            "evidence": {},
+            "id": "prepare-ready",
+            "phase": "exit",
+            "required": true,
+            "satisfied": false,
+            "type": "checklist"
+          }
+        ]
+      },
+      "incomplete": [
+        {
+          "artifact_id": "brief",
+          "code": "artifact_evidence_missing"
+        },
+        {
+          "code": "gate_evidence_missing",
+          "gate_id": "prepare-ready"
+        },
+        {
+          "code": "stage_evidence_required",
+          "stage_id": "prepare"
+        }
+      ],
+      "kind": "pf.work.state",
+      "obligations": [],
+      "process": {
+        "fingerprint": "sha256:b0034cdf50d795ab6f0ef10bdbc87eba0c73a9d3978a42e9ce4aa21b9b432c08",
+        "id": "declarative-smoke",
+        "pin_status": "pinned",
+        "version": "1.0.0"
+      },
+      "project": {
+        "id": "project"
+      },
+      "required_evidence": [],
+      "required_inputs": [],
+      "run": {
+        "id": "garage-probe-exact-work-resource-reads",
+        "status": "in_progress"
+      },
+      "schema_version": 1,
+      "stage": {
+        "id": "prepare",
+        "status": "in_progress",
+        "title": "Prepare"
+      },
+      "work": {
+        "active_specializations": [],
+        "selected_resource_ids": [
+          "fixture.t02-probe:guide"
+        ]
+      }
+    }
+  },
+  "resolve": {
+    "coverage": {
+      "authorized_resources": 1,
+      "documents": null,
+      "source": "verified_work_material",
+      "status": "complete",
+      "verified_resources": 1
+    },
+    "kind": "pf.work.resolve",
+    "resource": {
+      "generation": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+      "id": "fixture.t02-probe:guide",
+      "indexing": {
+        "enabled": true,
+        "fields": [
+          "title",
+          "description",
+          "path"
+        ],
+        "mode": "fulltext",
+        "sources": [
+          {
+            "exclude": [],
+            "include": [
+              "**/*.md"
+            ],
+            "mode": "fulltext",
+            "path": "."
+          }
+        ]
+      },
+      "local_root": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-process-execution-co9azx_b\\workplace\\packages\\fixture.t02-probe\\resources\\guide",
+      "manifest": [
+        {
+          "relative_path": "guide.md",
+          "sha256": "sha256:9c30d70eda1711eb4a1c83ad6410d0175d2bd494d7142d871bda553da6f34ce0",
+          "size": 20
+        }
+      ],
+      "material_fingerprint": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+      "material_kind": "fulltext",
+      "metadata_fingerprint": "sha256:2cc33b28ffa3a14da2263dc7493621ffdcd364c531ce3b9ee66d7cfb2a7ade7c",
+      "navigation": "verified_declared_material",
+      "reference": {
+        "id": "global",
+        "registry": "package_roots",
+        "relative_path": "fixture.t02-probe/resources/guide"
+      },
+      "resource_provenance": {
+        "assignment_id": "probe-exact-work-resource-reads",
+        "context_checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+        "context_id": "probe-exact-work-resource-reads-capsule",
+        "generation": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+        "material_fingerprint": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+        "material_kind": "fulltext",
+        "metadata_fingerprint": "sha256:2cc33b28ffa3a14da2263dc7493621ffdcd364c531ce3b9ee66d7cfb2a7ade7c",
+        "project_id": "project",
+        "resource_id": "fixture.t02-probe:guide",
+        "run_id": "garage-probe-exact-work-resource-reads",
+        "snapshot_checksum": "sha256:e9dd9eba8aa75101c7fefa2446748a53cdcfd83b6aeede14fe242c599fa0f94e",
+        "snapshot_id": "ctx-20260925-201429-e6ba46",
+        "stage_id": "prepare"
+      },
+      "status": "available"
+    },
+    "resource_provenance": [
+      {
+        "assignment_id": "probe-exact-work-resource-reads",
+        "context_checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+        "context_id": "probe-exact-work-resource-reads-capsule",
+        "generation": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+        "material_fingerprint": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+        "material_kind": "fulltext",
+        "metadata_fingerprint": "sha256:2cc33b28ffa3a14da2263dc7493621ffdcd364c531ce3b9ee66d7cfb2a7ade7c",
+        "project_id": "project",
+        "resource_id": "fixture.t02-probe:guide",
+        "run_id": "garage-probe-exact-work-resource-reads",
+        "snapshot_checksum": "sha256:e9dd9eba8aa75101c7fefa2446748a53cdcfd83b6aeede14fe242c599fa0f94e",
+        "snapshot_id": "ctx-20260925-201429-e6ba46",
+        "stage_id": "prepare"
+      }
+    ],
+    "schema_version": 1,
+    "scope": "work_context",
+    "status": "ready",
+    "work": {
+      "assignment_id": "probe-exact-work-resource-reads",
+      "context_checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+      "context_id": "probe-exact-work-resource-reads-capsule",
+      "project_id": "project",
+      "run_id": "garage-probe-exact-work-resource-reads",
+      "snapshot_checksum": "sha256:e9dd9eba8aa75101c7fefa2446748a53cdcfd83b6aeede14fe242c599fa0f94e",
+      "snapshot_id": "ctx-20260925-201429-e6ba46",
+      "stage_id": "prepare"
+    }
+  },
+  "search": {
+    "coverage": {
+      "authorized_resources": 1,
+      "documents": 1,
+      "source": "verified_work_material",
+      "status": "complete",
+      "verified_resources": 1
+    },
+    "items": [
+      {
+        "mode": "fulltext",
+        "relative_path": "guide.md",
+        "resource_id": "fixture.t02-probe:guide",
+        "resource_provenance": {
+          "assignment_id": "probe-exact-work-resource-reads",
+          "context_checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+          "context_id": "probe-exact-work-resource-reads-capsule",
+          "generation": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+          "material_fingerprint": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+          "material_kind": "fulltext",
+          "metadata_fingerprint": "sha256:2cc33b28ffa3a14da2263dc7493621ffdcd364c531ce3b9ee66d7cfb2a7ade7c",
+          "project_id": "project",
+          "resource_id": "fixture.t02-probe:guide",
+          "run_id": "garage-probe-exact-work-resource-reads",
+          "snapshot_checksum": "sha256:e9dd9eba8aa75101c7fefa2446748a53cdcfd83b6aeede14fe242c599fa0f94e",
+          "snapshot_id": "ctx-20260925-201429-e6ba46",
+          "stage_id": "prepare"
+        },
+        "sha256": "sha256:9c30d70eda1711eb4a1c83ad6410d0175d2bd494d7142d871bda553da6f34ce0",
+        "title": "guide.md"
+      }
+    ],
+    "kind": "pf.work.search",
+    "limit": 20,
+    "offset": 0,
+    "page": {
+      "limit": 20,
+      "limitstart": 0,
+      "next_limitstart": null,
+      "offset": 0,
+      "returned": 1,
+      "total": 1
+    },
+    "query": "PinnedMaterialNeedle",
+    "resource_provenance": [
+      {
+        "assignment_id": "probe-exact-work-resource-reads",
+        "context_checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+        "context_id": "probe-exact-work-resource-reads-capsule",
+        "generation": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+        "material_fingerprint": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+        "material_kind": "fulltext",
+        "metadata_fingerprint": "sha256:2cc33b28ffa3a14da2263dc7493621ffdcd364c531ce3b9ee66d7cfb2a7ade7c",
+        "project_id": "project",
+        "resource_id": "fixture.t02-probe:guide",
+        "run_id": "garage-probe-exact-work-resource-reads",
+        "snapshot_checksum": "sha256:e9dd9eba8aa75101c7fefa2446748a53cdcfd83b6aeede14fe242c599fa0f94e",
+        "snapshot_id": "ctx-20260925-201429-e6ba46",
+        "stage_id": "prepare"
+      }
+    ],
+    "results": [
+      {
+        "mode": "fulltext",
+        "relative_path": "guide.md",
+        "resource_id": "fixture.t02-probe:guide",
+        "resource_provenance": {
+          "assignment_id": "probe-exact-work-resource-reads",
+          "context_checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+          "context_id": "probe-exact-work-resource-reads-capsule",
+          "generation": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+          "material_fingerprint": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+          "material_kind": "fulltext",
+          "metadata_fingerprint": "sha256:2cc33b28ffa3a14da2263dc7493621ffdcd364c531ce3b9ee66d7cfb2a7ade7c",
+          "project_id": "project",
+          "resource_id": "fixture.t02-probe:guide",
+          "run_id": "garage-probe-exact-work-resource-reads",
+          "snapshot_checksum": "sha256:e9dd9eba8aa75101c7fefa2446748a53cdcfd83b6aeede14fe242c599fa0f94e",
+          "snapshot_id": "ctx-20260925-201429-e6ba46",
+          "stage_id": "prepare"
+        },
+        "sha256": "sha256:9c30d70eda1711eb4a1c83ad6410d0175d2bd494d7142d871bda553da6f34ce0",
+        "title": "guide.md"
+      }
+    ],
+    "schema_version": 1,
+    "scope": "work_context",
+    "status": "ready",
+    "total": 1,
+    "work": {
+      "assignment_id": "probe-exact-work-resource-reads",
+      "context_checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+      "context_id": "probe-exact-work-resource-reads-capsule",
+      "project_id": "project",
+      "run_id": "garage-probe-exact-work-resource-reads",
+      "snapshot_checksum": "sha256:e9dd9eba8aa75101c7fefa2446748a53cdcfd83b6aeede14fe242c599fa0f94e",
+      "snapshot_id": "ctx-20260925-201429-e6ba46",
+      "stage_id": "prepare"
+    }
+  },
+  "cli": {
+    "coverage": {
+      "authorized_resources": 1,
+      "documents": 1,
+      "source": "verified_work_material",
+      "status": "complete",
+      "verified_resources": 1
+    },
+    "items": [
+      {
+        "mode": "fulltext",
+        "relative_path": "guide.md",
+        "resource_id": "fixture.t02-probe:guide",
+        "resource_provenance": {
+          "assignment_id": "probe-exact-work-resource-reads",
+          "context_checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+          "context_id": "probe-exact-work-resource-reads-capsule",
+          "generation": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+          "material_fingerprint": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+          "material_kind": "fulltext",
+          "metadata_fingerprint": "sha256:2cc33b28ffa3a14da2263dc7493621ffdcd364c531ce3b9ee66d7cfb2a7ade7c",
+          "project_id": "project",
+          "resource_id": "fixture.t02-probe:guide",
+          "run_id": "garage-probe-exact-work-resource-reads",
+          "snapshot_checksum": "sha256:e9dd9eba8aa75101c7fefa2446748a53cdcfd83b6aeede14fe242c599fa0f94e",
+          "snapshot_id": "ctx-20260925-201429-e6ba46",
+          "stage_id": "prepare"
+        },
+        "sha256": "sha256:9c30d70eda1711eb4a1c83ad6410d0175d2bd494d7142d871bda553da6f34ce0",
+        "title": "guide.md"
+      }
+    ],
+    "kind": "pf.work.search",
+    "limit": 20,
+    "offset": 0,
+    "page": {
+      "limit": 20,
+      "limitstart": 0,
+      "next_limitstart": null,
+      "offset": 0,
+      "returned": 1,
+      "total": 1
+    },
+    "query": "PinnedMaterialNeedle",
+    "resource_provenance": [
+      {
+        "assignment_id": "probe-exact-work-resource-reads",
+        "context_checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+        "context_id": "probe-exact-work-resource-reads-capsule",
+        "generation": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+        "material_fingerprint": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+        "material_kind": "fulltext",
+        "metadata_fingerprint": "sha256:2cc33b28ffa3a14da2263dc7493621ffdcd364c531ce3b9ee66d7cfb2a7ade7c",
+        "project_id": "project",
+        "resource_id": "fixture.t02-probe:guide",
+        "run_id": "garage-probe-exact-work-resource-reads",
+        "snapshot_checksum": "sha256:e9dd9eba8aa75101c7fefa2446748a53cdcfd83b6aeede14fe242c599fa0f94e",
+        "snapshot_id": "ctx-20260925-201429-e6ba46",
+        "stage_id": "prepare"
+      }
+    ],
+    "results": [
+      {
+        "mode": "fulltext",
+        "relative_path": "guide.md",
+        "resource_id": "fixture.t02-probe:guide",
+        "resource_provenance": {
+          "assignment_id": "probe-exact-work-resource-reads",
+          "context_checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+          "context_id": "probe-exact-work-resource-reads-capsule",
+          "generation": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+          "material_fingerprint": "sha256:3d610d0e866d17ef12504c5fa5694716157e71150e1fc100c0533ae6a5433156",
+          "material_kind": "fulltext",
+          "metadata_fingerprint": "sha256:2cc33b28ffa3a14da2263dc7493621ffdcd364c531ce3b9ee66d7cfb2a7ade7c",
+          "project_id": "project",
+          "resource_id": "fixture.t02-probe:guide",
+          "run_id": "garage-probe-exact-work-resource-reads",
+          "snapshot_checksum": "sha256:e9dd9eba8aa75101c7fefa2446748a53cdcfd83b6aeede14fe242c599fa0f94e",
+          "snapshot_id": "ctx-20260925-201429-e6ba46",
+          "stage_id": "prepare"
+        },
+        "sha256": "sha256:9c30d70eda1711eb4a1c83ad6410d0175d2bd494d7142d871bda553da6f34ce0",
+        "title": "guide.md"
+      }
+    ],
+    "schema_version": 1,
+    "scope": "work_context",
+    "status": "ready",
+    "total": 1,
+    "work": {
+      "assignment_id": "probe-exact-work-resource-reads",
+      "context_checksum": "sha256:6d15bda9b8c146a656b95be72762123658251b63bb6b722561798b72d04629a6",
+      "context_id": "probe-exact-work-resource-reads-capsule",
+      "project_id": "project",
+      "run_id": "garage-probe-exact-work-resource-reads",
+      "snapshot_checksum": "sha256:e9dd9eba8aa75101c7fefa2446748a53cdcfd83b6aeede14fe242c599fa0f94e",
+      "snapshot_id": "ctx-20260925-201429-e6ba46",
+      "stage_id": "prepare"
+    }
+  }
+}

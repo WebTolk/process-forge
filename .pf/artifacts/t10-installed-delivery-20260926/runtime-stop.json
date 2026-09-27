@@ -1,0 +1,18 @@
+{
+  "time": "2026-09-26T17:51:51.646170+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "runtime",
+    "stop",
+    "--workplace",
+    "D:\\.agents\\processforge-workplace",
+    "--timeout",
+    "30"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "RUNTIME: stopped\n",
+  "stderr": ""
+}

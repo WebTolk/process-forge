@@ -1,0 +1,1890 @@
+--- before/bin/pf-server
++++ after/bin/pf-server
+@@ -0,0 +1,6 @@
++#!/usr/bin/env sh
++SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
++if command -v python3 >/dev/null 2>&1; then
++  exec python3 "$SCRIPT_DIR/pf-server.py" "$@"
++fi
++exec python "$SCRIPT_DIR/pf-server.py" "$@"
+--- before/bin/pf-server.bat
++++ after/bin/pf-server.bat
+@@ -0,0 +1,4 @@
++@echo off
++set SCRIPT_DIR=%~dp0
++py -3 "%SCRIPT_DIR%pf-server.py" %*
++if errorlevel 9009 python "%SCRIPT_DIR%pf-server.py" %*
+--- before/bin/pf-server.py
++++ after/bin/pf-server.py
+@@ -0,0 +1,7 @@
++#!/usr/bin/env python3
++"""ProcessForge Server operator launcher using the standard PF CLI."""
++import sys
++from pf import main
++
++if __name__ == "__main__":
++    raise SystemExit(main(["server", *sys.argv[1:]]))
+--- before/checksums/processforge.sha256
++++ after/checksums/processforge.sha256
+@@ -13,6 +13,9 @@
+ c76d145ecf0c4f7221d374d26f45712d838d282aed0a81859675b09a9efd0091  README.ru.md
+ 1575e1af4a95f12f70b4ee6a6adce8160953d93ea17dc2611b90883ccc3ad3b8  VERSION
+ 8ca62165f47157d6d4d940ddc856e6e4cdf028be574251c13a6a76d8186826f0  bin/pf
++c0fb86f99bf10fc3578b307a886cc38653ede17e64c19544956bd5b16e1b987d  bin/pf-server
++d073f507b2aa1e6693efd7fd00ea1dec069b91513470f16ae5f83836ad2b39bc  bin/pf-server.bat
++8d7635dbd03673bb2ffbbf4bd9737d22492f35a47e393d3ed69db1f25ff58f75  bin/pf-server.py
+ eace0e4e62555274793297e1b2702bd69df3724e8c25173e9eae1e3d87c98bde  bin/pf.bat
+ e4383fd01256f64e636fc8ca09790afd370965f4d4db09f31f6ad7a10abaf38c  bin/pf.py
+ d175c477b440e9c55263c41ebe6468dfcfe9db7a1864c068e45069742c0dce1d  docs/assets/processforge-architecture.svg
+@@ -46,7 +49,7 @@
+ 8d2470eb7217234d542ebe6fc093604ba847abf2424979dae93cf3304aee5a82  docs/concepts/context-resolution.md
+ aee4d36746c3169d0ea1641d2d8e2425aa139f593309f3d1fa6c0ba74570dd9e  docs/concepts/core-update-manifest.md
+ 015307dda146ff8b3d3ef1b79b067264042060cf815960183994bdaf067258db  docs/concepts/declarative-process-execution.md
+-dc3a8c355d9bccf5467c8e8e03c7348daea062d9a4699ee5044ace1e7377c4df  docs/concepts/diagnostics.md
++ff13d0c7dad58e2416ba03a820800bedc3568e23ff36c06d02179d425b9861d6  docs/concepts/diagnostics.md
+ 1928b1ee1f0bd96d8d5c714db5b508e35c4be0101d9efa227987b6ef20d0b427  docs/concepts/director-ledger-inspector-boundary.md
+ 1beb14f8f807c612f922bb9dbcd0f2509f8c4779544e0db273dcb0cff45cfbce  docs/concepts/documentation-import.md
+ fc12835312e4766f2cbb0ca05fcf6399a95fc31649aef899e13d8b6932c5dc00  docs/concepts/domain-neutral-core.md
+@@ -102,9 +105,9 @@
+ 4d8cb55398e188abe3898a8b1e846b2b6d2efba7f01d0e3b24d636760c8a897c  docs/concepts/reusable-templates.md
+ c0324211032b6c155a99ce52860a4b11a26cebc25d1bba64a913076e1b167d2f  docs/concepts/runs-tasks-iterations.md
+ 26872ef288d5393d729378aeaa31af69daa585c2f1cd25381c4e77aedd66400a  docs/concepts/runtime-drivers.md
+-e242c4e86cae66e5e9dd84e0017012db7f89fe25671849b4c263c2b0db925962  docs/concepts/runtime-mcp.md
++bfef6d029fbd73e40f73d112ac9042fd49f2d5c214e1687e1912b062b849957c  docs/concepts/runtime-mcp.md
+ 65380bcae2a5324814981091567515bea29db54be780caf1c5f354a718e6b502  docs/concepts/runtime-model.md
+-bc3f084a08357e736531017ad737a798117aa66f1b3f92b399e1fb5ff7e2c3f5  docs/concepts/runtime-monitor.md
++d8c958d89a96f74fbfbc8d6a3be26308e0978b157863d1183c1c7ffd857a65dc  docs/concepts/runtime-monitor.md
+ 08f6bcc331b5d89f66f2ebaa6c1611d5ab17470452254625c192809daedd6ff0  docs/concepts/semantic-parity.md
+ 49dd431cced87cf44c17fa9b731725e34964b8e882cc7bae620f3b4a67f74ff5  docs/concepts/session-bootstrap.md
+ 11255366bf901afb2a3ca14021b741110b42e3d04a16acc912b190555475ffb0  docs/concepts/session-telemetry.md
+@@ -193,7 +196,7 @@
+ efd65c9b9647c824302768fffaf9212cf183b20634aa0a501e2b0a5518c0d18a  docs/ru/concepts/context-resolution.md
+ c9eff22cca5629a54ea638c9e796bbaa66e4e139e47637ca5d112d6bb5595867  docs/ru/concepts/core-update-manifest.md
+ b50ed5f94c4cdcaa4a1eb3f0640144d42cc944c838b6451d1f70a76e01830467  docs/ru/concepts/declarative-process-execution.md
+-9cbad01c1e8beb1fdfafed33b47b760223c360940dc959eecaa9988e315855c9  docs/ru/concepts/diagnostics.md
++c7a141c7d074dbd2eb4f905d0d853a641d47c46d2cee65b1d3d149a7f319193d  docs/ru/concepts/diagnostics.md
+ 8f0e39d3b16dd74ab5598c01c40276d9c1ff289be7b01fb73a742c2e63a400e1  docs/ru/concepts/director-ledger-inspector-boundary.md
+ 3dea912d1dabf7222ec073d734a6a8239c6eba29359a9d3c8110b843f2de7d85  docs/ru/concepts/domain-neutral-core.md
+ 392b81add9af9fd3da1304e5dd91475d308cbb5ec35c8f6acfe9ee6c8cf6ba48  docs/ru/concepts/evolve-mechanism.md
+@@ -229,9 +232,9 @@
+ 03b9f09865685f2fadabd7c75d63d56e2a641f4ef84a8b2fba0858c79402027f  docs/ru/concepts/resource-search-index.md
+ cce25770f6cfd84df3ddeeae9cbf923d541d8cef2579da3dc91ca905f1cd01c1  docs/ru/concepts/runs-tasks-iterations.md
+ da5580bf22a5494df34272f24033cdf3f218e35b73ae46045d59edb35f59784a  docs/ru/concepts/runtime-drivers.md
+-222dc64053da9d25adbad197afab516360a0bd24e72ddbd0ccce3743ee3cdd26  docs/ru/concepts/runtime-mcp.md
++4f72364d6d02a172f0078b0e49a89dc29b5f8e4761470633ddd141d8cab9d3fb  docs/ru/concepts/runtime-mcp.md
+ 62a9f93050b5f17d2a49b4bb3a5e67a0a9b2d057294082410e4cb8f341d55f37  docs/ru/concepts/runtime-model.md
+-e8dee9260aae40ce282066fba585931afb248b3faae5e16f534ad5e0af3c22ce  docs/ru/concepts/runtime-monitor.md
++354284dba7593a9d58c757dbb5c06b0f70fcb9eea9b7d5cc23ccfb8e8aa2a26e  docs/ru/concepts/runtime-monitor.md
+ 2d0adea436fbf0c9ac3b6c45afcfffed50ce2af7d9f19d0f545b025feec70787  docs/ru/concepts/semantic-parity.md
+ 014781f52fbe82f101f6bb027eedcea668380f91170ec1e18c3894522bac3898  docs/ru/concepts/session-telemetry.md
+ b3c1d6980fcc999d470c1985de2760e5a8de122e031604397e6d85b96f6cd9c0  docs/ru/concepts/shell-agent-subagent-policy.md
+@@ -546,6 +549,7 @@
+ 3409246554f30fb9942b1b92884bd9a7659de75e8b749450684da9f0628b01da  schemas/run.schema.json
+ 3e6ec28c3db2892091c0d04ef6ff15f7f1d9e5a2300a1112df5bd19921170806  schemas/runtime-driver-registry.schema.json
+ 4d8fa6cc8e14a7801c8f5b2cce0dec6a713a8bcfe754f0b14d368500b5ee8654  schemas/runtime-driver.schema.json
++a911e602df4171b947f08882c0bffb751b60ffa425bb0661ac6f2ac73688fd60  schemas/runtime-metrics.schema.json
+ 7a20b0a2f4c8cb9f25586c5f4b9e8a9188de9f1aef35f1172a12d456082a9385  schemas/session-metadata.schema.json
+ c723d3f6d94350df04532f5cdd977d4b68935cac541c958927b26dc14c3680e5  schemas/session-start.schema.json
+ 186eece5d2364f578af2d283a9e06b49efeda91057b3ef7a67089af8e19bc005  schemas/session-telemetry-event.schema.json
+@@ -582,7 +586,7 @@
+ 82847d5b1ad6f157744c02a5f6d87d482544ecc12575662fa71aded2f7078862  src/processforge_core/common/paths.py
+ 543b66bec8956241e4a86111ba73a870156bde294f428e0ff55757d583e17b27  src/processforge_core/common/yaml_io.py
+ cc05140e64b2b82bfc8ff872843c4db9994537ec731438be71241a19b24d4618  src/processforge_core/core_update.py
+-2821636ea5179da200305854eb0a7f503bea376e3337164b2e610bd74279b472  src/processforge_core/diagnostics.py
++71ad30aa506967f4f2e64ac69b01561d7738a0213a49b1f0f9c3be745336614e  src/processforge_core/diagnostics.py
+ aeb1768bc7ee02e7b2b559fd1d07dc9ea7b554ebdd29809718e86cc2037be517  src/processforge_core/garage.py
+ 489d9810c12abbf74f8b084de150e7f333b85af4eff3610ca17c24378b67c6bf  src/processforge_core/host_integration.py
+ 039849b670e47436ea0ff680e3a822a5c2c1c4e63c56d3539121872eded39887  src/processforge_core/local_resource_search.py
+@@ -593,6 +597,7 @@
+ 8c6150e02e1fe6cc56969c874165b3f6c97f2e0efa779ab156fdb167366f491b  src/processforge_core/process_catalog/service.py
+ 2894e7ef963607e74870dd8b95b63aa55396082bcb0a395090995e9932c98191  src/processforge_core/process_execution.py
+ 2890b3ecddc94d903027d9e6ef4f60ce264d5d9152827e6a38915ba7564df7c2  src/processforge_core/project_initialization.py
++9eadd3482f9f412f10ed92a1e2a4ccbbf4a3a99907d2bb55cf056e77fe213aba  src/processforge_core/runtime_metrics.py
+ 6236204f0f3666881bd53090bf097a4210b907c3e7a2e0ee0ac0c28c52ed6f5e  src/processforge_core/work_context.py
+ 459cbd9359389044133df9d851b4b3a49170c43438fd24584c8b89b50946d79d  src/processforge_core/work_resource_material.py
+ f73ccaed5186419fe05edfdfff7933395695234ad5aef2eab2243363600814f9  src/processforge_core/work_resources.py
+@@ -715,16 +720,16 @@
+ 9fc01f05c2fd365adfb4bb10479c45704ee570b4ae6e4331f637ded4fb2e564e  tools/pf_runtime/codex_mcp.py
+ b8d3d813fa3e3c5a7e16546e277b9df9a7d778f2763e87e965332a96e6d7bcf4  tools/pf_runtime/host.py
+ 38320b994b02eb0735712bdc0756f2e7f7e8893b0e348247676cace966f35ed7  tools/pf_runtime/mcp_server.py
+-2d74c81eb8e524b7dc6493fd456b90d262286dde18d68734d18690aec39e779f  tools/pf_runtime/monitor.py
++5bb46bc46cb5a1f538e115444e27245f4271091eca9abde638ed11d40beba94f  tools/pf_runtime/monitor.py
+ a8dbf3bcc9f7bb70fb46a7c1d47da85820f31d5a5ad9fb6a37336b0c068e123d  tools/pf_runtime/provider_adapters.py
+ 7b3a99288d1e275eda98774f787a1b7b109c47c97bb55dcb2178298d11c5407a  tools/pf_runtime/raw_ingress_kernel.py
+-16fc587dc901545075b4a02b7fa870527fddba8a6fedf30b31789921861864ee  tools/pf_runtime/service.py
++e6e446156a12ad1c0315f90f8056a8db30d50f96fed47fe2c23f10bc491e7872  tools/pf_runtime/service.py
+ 277af88a255448a08cec44ccae48ad634d65d0a71965fbc9b5a1f84f2ff46f62  tools/pf_runtime/session_read.py
+ f1bb4214f304c6420cd79326de53f6a496d49962771aa827047f42aff115bfc8  tools/pf_runtime/session_replay.py
+ 70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a  tools/pf_runtime/windows_autostart.py
+ c5959bcf2f738fa82b52d3380bece30cb226f305395d3ac129bceebc5156dd2e  tools/prepared_executor.py
+ f0dddadd196e7dc9e217f940b007837056b518bccb7089f4f6af8adb6bf3ee7f  tools/process_execution_smoke_support.py
+-98c6c2e0950901cbbd75e21819b1941071491d0e36241acaa8ff6916c2c632cb  tools/processforge.py
++990a715f49197433ae787520ed35ad1e8ca70030d926ca5cce53f594c62c3ce1  tools/processforge.py
+ 26f3b9bf8502afeb69ce5245df40aa80ed4cd1a19cab0abc6fb5ddc5d39f424f  tools/processforge_subprocess.py
+ 7ef9cae38fe2e4a17c17d19f9a329c6ded82a47702c4483c3f0a77733c54cd24  tools/release_metadata_contract.py
+ c6906397a9bcb932112165d1b1996d2ad8486447fa2e9f9bbf623fc4e6e68208  tools/smoke_agent_director_tick.py
+@@ -761,6 +766,7 @@
+ cc2515e364dde4dc5c87b8dc883dd513f66e413bc3193d6fbfc80846d14fc60b  tools/smoke_delivery_profile_not_process.py
+ 18fb000dd539edda1059885a90d86c81443f17fcb6ef8051801d78bbb3f6b746  tools/smoke_derived_report_stale_marking.py
+ df27ef1038ebaf13dc9f7bb997291e846e03a8bc384f0a711c6c241c446a3f3c  tools/smoke_diagnostics.py
++f6e4a67bfe5af249268cc4d1cf68a7f54aa37a8945008e0f5005cf6d820e6079  tools/smoke_diagnostics_configure.py
+ d133aa1a2d97c0cfa0f6e098eb92b5e8cb530aa0c450909f76d76af789df9d95  tools/smoke_diagnostics_process_invariance.py
+ 2db1665b38a85fbf3d2281ac0523ee54d6e2f189543a25a4985be322ced572a3  tools/smoke_director_inspector_boundary.py
+ 489b1c18ec82b92681653ac4dc51314763f4ee9248162d954644af4ca7242311  tools/smoke_docs_agent_no_manual_infra.py
+@@ -905,6 +911,7 @@
+ 78cbcc67fc3c1e8bb740b2115b8c67239945bb572c2c1b90e385ddfe08465f34  tools/smoke_runtime_host_poc.py
+ 11acde9ded0d82dd194ab1bf8c6e9994fbf92ae35fb31ac70fcfd289532ceb95  tools/smoke_runtime_ledger_hooks_mcp.py
+ ce1cbbde9d9a6fe0823b798f93c6bf9dfe457eab96e13b8dcb7397ebedc2b3ef  tools/smoke_runtime_mcp_autostart.py
++27a50cefe3c700355f30698174d2e977dbe6ebd45635773cc14f53199b4d8b3b  tools/smoke_runtime_metrics.py
+ e75c52ec0e8d86ba4cc5c29a17656ad5dae55af65c9fb3ead523d844c2fd159c  tools/smoke_runtime_monitor.py
+ 3e4d06d04e560e26729a6d42fe8a66aa0339cc588ac6265bcb48fe252daee194  tools/smoke_runtime_no_domain_capability_constants.py
+ d132a00a7be32f1346a97bb62c26c6fee11a31e4efcfa91b75c61078b502686f  tools/smoke_runtime_no_domain_file_patterns.py
+@@ -916,6 +923,7 @@
+ 27449f81c56b3029eea4447812361b7d887f3a8004b27f8bb1d303973044feea  tools/smoke_search_multiple_roots.py
+ 07effa3b174bd0dbfe88b03e2456e08effc51def77a0edf046bf0277bdad7ef6  tools/smoke_search_source_integrity.py
+ 687b992bad229d86b031c8be2ca89bb0ef1909e16b5482e1ceab01794745ee52  tools/smoke_search_update_operational_hardening.py
++4fa278c7ca400d0e6df31cf88f0da36847843d41d851fcab89ab1c9039f3fec1  tools/smoke_server_operator.py
+ 8f0f3fb66b13091b5bdabae5c1f5080fe1595fd3a962221dec097cb8918d1815  tools/smoke_session_identity_roundtrip.py
+ 29e2d3009f37d6f3d19930a5b546362152bd76215fc7bc16e2258e15ebf525c1  tools/smoke_session_projection_expiry.py
+ 82bef202f9ef83a10f07b216a154e06ec75f9c0c8e5c0c6bb801bfa6b169cfbd  tools/smoke_session_start_context_check.py
+--- before/docs/concepts/diagnostics.md
++++ after/docs/concepts/diagnostics.md
+@@ -61,6 +61,18 @@
+ 
+ ## Privacy and failure behavior
+ 
++`pf diagnostics-configure --project-root . --profile diagnostic --duration 120`
++previews a profile change; repeat with `--apply` to persist it atomically in
++`.pf/diagnostics.json` v1. Select at most one exact `--run-id` or `--session-id`;
++otherwise the project layer changes. Other scopes/settings are preserved.
++Existing locks apply even to the edited layer; malformed, linked or oversized
++configuration is rejected. `diagnostic`/`trace` expires after 1..900 seconds
++(default 600); other profiles clear the selected layer's expiry. Environment
++and invocation precedence appears in the effective preview. Planning creates
++no logs, locks or directories; apply serializes edits. Existing processes retain
++their resolved configuration until their normal lookup; this is not a remote
++live reconfiguration protocol. Mandatory process events are unaffected.
++
+ By default, diagnostics omit prompts, raw payloads, environment data, and file contents. Secret-like keys/values are redacted before sinks; local records may contain local operational paths, while export replaces absolute paths with a private-path marker. Context and messages are bounded by size/depth/item limits. Export is bounded to 4 MiB of input and output and at most 2,000 records; malformed or oversized records are rejected or marked truncated in the manifest.
+ 
+ The default private JSONL family is under `.pf/runtime/diagnostics/`; stderr is also available. Health counters expose emitted, filtered, dropped, truncated, serialization-failure, sink-failure, and detail-expiry information for the current process. Each retained canonical diagnostic record includes a counter snapshot. A bounded stderr warning signals loss of serious optional diagnostics. This signal is not a substitute for the required process journal, whose event names, severity values, deduplication, and failure semantics remain separate.
+--- before/docs/concepts/runtime-mcp.md
++++ after/docs/concepts/runtime-mcp.md
+@@ -107,3 +107,11 @@
+ `python bin/pf.py codex-mcp status|install|remove --workplace <workplace>`.
+ Install and remove are dry-run by default and require `--apply` to change Codex
+ configuration. Restart or reload Codex after registration changes.
++
++Local operator commands are also available as `pf server` or
++`python bin/pf-server.py`: start, run, status, stop and restart. Guarded stop
++requires current worker/request/scheduler idleness and a compatible owner;
++`--force` explicitly bypasses that guard. Server status is the bounded read-only
++[monitor](runtime-monitor.md) projection. These commands control the workplace
++Runtime, not the host-owned MCP stdio process; updating Core on disk does not
++reload a connected host.
+--- before/docs/concepts/runtime-monitor.md
++++ after/docs/concepts/runtime-monitor.md
+@@ -41,7 +41,11 @@
+ | State age | `service.json` timestamp; older than 15 seconds is stale; missing, malformed or future time is unknown |
+ | Scheduler | Saved job results and their own freshness, not a live scheduler-thread health check |
+ | Registered projects / cached sessions | Host cache entries, with cache freshness; these are not active-work totals |
+-| Active sessions, workers, Work, leases, events, backlog, MCP and hooks | Unknown in this first monitor; no bounded authoritative aggregate is available |
++| Session presence | Agent Ledger online/stale/offline with heartbeat TTL; online does not mean busy |
++| Reported workers | Running status records; not OS liveness |
++| Work records | In-progress and blocked Runs; blocked does not mean waiting for the user |
++| Leases | Held, expired and inactive records; not a conflict detector |
++| Waiting for user, events, backlog, MCP and hooks | Unknown; no aggregate contract |
+ | CLI / instance versions | Version of the command being run versus the recorded Runtime instance; neither proves matching builds |
+ 
+ Readiness can coexist with degraded health. An unavailable probe or a changing
+@@ -55,6 +59,21 @@
+ `cache_oversize` and unknown counts. It never scans project trees to fill in
+ missing values. The 15-second threshold is an observation policy, not a daemon
+ heartbeat guarantee; slow scheduler passes can legitimately exceed it.
++
++New Runtime builds publish compact instance-bound `metrics` inside `service.json`
++at most once per ten seconds. Its own timestamp expires after 45 seconds.
++Offline, changed-owner, stale or malformed snapshots cannot supply activity.
++The viewer validates fixed fields and prefers compact registration counts to
++the historical cache, including caches exceeding 1 MiB. Old servers retain the
++unknown/fallback view.
++
++Each activity group has independent budgets: 512 visited entries, 128 files,
++128 KiB per record, 4 MiB total, up to 128 project roots and one second checked
++between filesystem operations. Fixed-depth traversal rejects symlinks/junctions.
++Missing project coverage, malformed records or any limit produce `partial`:
++exact JSON counts are null; `observed` and terminal `>=N` are lower bounds.
++Canonical presence records supersede legacy duplicates. No journal scan occurs
++per repaint. This is not an atomic cross-project transaction or a kernel IO deadline.
+ 
+ Readiness uses only numeric loopback HTTP, a 0.75-second overall network deadline
+ and bounded headers/body. Redirects, proxies, DNS destinations and tokens are
+@@ -73,7 +92,17 @@
+ 
+ Normal exit restores the cursor and terminal mode. Killing the viewer
+ unconditionally may prevent terminal restoration, but cannot stop the server.
+-There are no server controls or log-profile editing in this first slice.
+-Authoritative activity aggregates, tray/executable packaging and remote web
+-remain separate work. See [Runtime MCP](runtime-mcp.md) and
++Server controls are separate commands: `pf server start|run|status|stop|restart`
++or `python bin/pf-server.py ...`. `run --console` shows a banner only on a real
++terminal; `status --json` uses this same read-only projection. Legacy `runtime`
++commands remain compatible. These launchers run Python, not a native executable.
++
++`server stop/restart` negotiate guarded shutdown with the current owner. The
++server pauses admission while checking fresh worker records; running or unknown
++workers, in-flight requests and an active scheduler pass refuse the stop.
++Old servers without the capability also refuse. `--force` selects legacy
++shutdown. The guard does not freeze independently launched CLI/MCP work.
++Profile changes use `diagnostics-configure`, with preview and explicit `--apply`.
++Closing the monitor never changes profiles. Tray/native packaging and remote
++web remain separate work. See [Runtime MCP](runtime-mcp.md) and
+ [diagnostics](diagnostics.md) for their existing contracts.
+--- before/docs/ru/concepts/diagnostics.md
++++ after/docs/ru/concepts/diagnostics.md
+@@ -3,6 +3,19 @@
+ Диагностические записи ProcessForge дают дополнительную информацию об операции или локальной ошибке. Они не являются фактами процесса или аудиторскими доказательствами и не заменяют обязательный журнал событий. Режим `off`, отключённый приёмник или потеря диагностической записи не должны отключать обязательное событие, менять результат операции или скрывать явную ошибку.
+ 
+ ## Настройка
++
++Команда `pf diagnostics-configure --project-root . --profile diagnostic --duration 120`
++показывает план смены профиля. Добавление `--apply` атомарно сохраняет его
++в существующем формате `.pf/diagnostics.json` v1. Можно выбрать один точный
++`--run-id` или `--session-id`; без них меняется уровень проекта. Прочие настройки
++и области сохраняются. Блокировки действуют и внутри редактируемого уровня;
++ошибочные, слишком большие файлы и ссылки отклоняются. Подробные профили
++`diagnostic`/`trace` действуют 1..900 секунд, по умолчанию 600; прочие очищают
++срок выбранного уровня. План показывает приоритеты окружения и аргументов,
++не создаёт журналов, блокировок или каталогов. Применение сериализует изменения.
++Работающий процесс использует уже прочитанную конфигурацию до следующего
++штатного обращения к ней; отдельного протокола удалённого переключения нет.
++Обязательные события процесса сохраняют прежнее поведение.
+ 
+ Настройки проекта находятся в `.pf/diagnostics.json`; их версия 1 описана в [`diagnostics.schema.json`](../../../schemas/diagnostics.schema.json). Минимальный пример:
+ 
+--- before/docs/ru/concepts/runtime-mcp.md
++++ after/docs/ru/concepts/runtime-mcp.md
+@@ -112,3 +112,10 @@
+ `python bin/pf.py codex-mcp status|install|remove --workplace <workplace>`.
+ Install и remove по умолчанию dry-run и требуют `--apply` для изменения Codex
+ configuration. После изменения регистрации перезапустите или reload Codex.
++
++Для оператора доступны `pf server` и `python bin/pf-server.py`: start, run,
++status, stop, restart. Защищённая остановка требует свободных работников,
++запросов и планировщика, а также поддержки текущим владельцем; `--force` явно
++обходит эту проверку. Status использует ограниченную проекцию
++[монитора](runtime-monitor.md) без записи. Команды управляют workplace Runtime;
++обновление файлов Core не перезагружает MCP stdio, которым владеет хост.
+--- before/docs/ru/concepts/runtime-monitor.md
++++ after/docs/ru/concepts/runtime-monitor.md
+@@ -40,7 +40,11 @@
+ | State age | Возраст service.json: старше 15 секунд — stale; отсутствующее, ошибочное или будущее время — unknown |
+ | Scheduler | Сохранённые результаты jobs и их свежесть; это не проверка живого потока scheduler |
+ | Registered projects / cached sessions | Записи кэша и его свежесть; не число активных работ или агентов |
+-| Активные сессии, workers, Work, leases, события, backlog, MCP и hooks | В первом срезе unknown: нет ограниченного авторитетного источника совокупных показателей |
++| Присутствие сессий | Записи Agent Ledger online/stale/offline с проверкой TTL; online не означает занятость |
++| Работники | Записи со статусом running; это не проверка процесса ОС |
++| Work | Записи Run in_progress и blocked; blocked не означает ожидание пользователя |
++| Аренды | Действующие непросроченные, истёкшие и неактивные записи; конфликты не вычисляются |
++| Ожидание пользователя, события, очередь, MCP и hooks | Unknown: общего достоверного контракта пока нет |
+ | CLI / instance versions | Версия запущенной команды и записанная версия Runtime; совпадение не доказывает равенства сборок |
+ 
+ Readiness может сочетаться с degraded health. Неудачная проба и смена владельца
+@@ -53,6 +57,22 @@
+ или ошибка чтения дают причину, например `cache_oversize`, и unknown вместо числа.
+ Для заполнения пробелов проекты не сканируются. Порог 15 секунд — правило свежести
+ монитора, не гарантия частоты heartbeat; долгий проход scheduler может его превысить.
++
++Новые сборки Runtime помещают компактный снимок `metrics` в `service.json`
++не чаще раза в десять секунд. Снимок привязан к экземпляру сервера и устаревает
++через 45 секунд по собственному времени наблюдения. После остановки, смены
++владельца, при устаревшем или ошибочном снимке активность неизвестна.
++Монитор предпочитает компактные сведения о регистрациях большому историческому
++кэшу. Для старого сервера сохраняется прежний режим с неизвестными показателями.
++
++Для каждой группы Core независимо ограничивает обход: 512 элементов, 128 файлов,
++128 KiB на запись, 4 MiB суммарно, до 128 проектов и одна секунда с проверкой
++между файловыми операциями. Глубина фиксирована; ссылки и junction отклоняются.
++Неполное покрытие, ошибочная запись или достигнутый лимит дают `partial`: точные
++значения JSON равны null, а `observed` и `>=N` означают нижнюю границу.
++Канонические записи сессий имеют приоритет над прежними дублями. При перерисовке
++журнал не сканируется. Это не атомарный снимок всех проектов и не гарантия срока
++выполнения операции внутри ОС.
+ 
+ Проба готовности использует только числовой loopback HTTP, общий сетевой deadline
+ 0,75 секунды и ограничения размера заголовков/ответа. Redirects, proxy, DNS и tokens
+@@ -69,6 +89,17 @@
+ 
+ Штатный выход восстанавливает курсор и режим терминала. Принудительное завершение
+ ОС может помешать восстановлению терминала, но не останавливает сервер.
+-Управление сервером, переключение log profile, новые показатели активности,
+-tray/executable packaging и удалённый веб остаются отдельными задачами.
++Управление вынесено в команды `pf server start|run|status|stop|restart` или
++`python bin/pf-server.py ...`. `run --console` выводит заставку только в терминале;
++`status --json` использует ту же проекцию без записи. Прежние команды `runtime`
++совместимы. Команды запускают Python; отдельного нативного файла нет.
++
++`server stop/restart` проверяют поддержку защищённой остановки текущим сервером.
++На время проверки сервер приостанавливает приём новых операций. Работающий или
++неопределённый работник, выполняющийся запрос или проход планировщика запрещают
++остановку. Старый сервер без этой возможности также получает отказ. `--force`
++явно выбирает прежний режим. Проверка не блокирует независимые запуски CLI/MCP.
++`diagnostics-configure` показывает план смены профиля; запись требует `--apply`.
++Закрытие монитора профиль не меняет. Значок в трее, нативная упаковка и удалённый
++веб остаются отдельными задачами.
+ Существующие контракты: [Runtime MCP](runtime-mcp.md), [диагностика](diagnostics.md).
+--- before/schemas/runtime-metrics.schema.json
++++ after/schemas/runtime-metrics.schema.json
+@@ -0,0 +1,509 @@
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "$id": "https://processforge.local/schemas/runtime-metrics.schema.json",
++  "title": "Bounded Runtime metrics",
++  "type": "object",
++  "required": [
++    "schema_version",
++    "instance_id",
++    "observed_at",
++    "groups"
++  ],
++  "properties": {
++    "schema_version": {
++      "const": 1
++    },
++    "instance_id": {
++      "type": "string",
++      "minLength": 1,
++      "maxLength": 128
++    },
++    "observed_at": {
++      "type": "string",
++      "format": "date-time"
++    },
++    "groups": {
++      "type": "object",
++      "required": [
++        "registrations",
++        "sessions",
++        "workers",
++        "work",
++        "leases"
++      ],
++      "properties": {
++        "registrations": {
++          "type": "object",
++          "required": [
++            "source",
++            "coverage",
++            "counts",
++            "observed",
++            "issues"
++          ],
++          "properties": {
++            "source": {
++              "const": "host_registration_cache"
++            },
++            "coverage": {
++              "enum": [
++                "complete",
++                "partial"
++              ]
++            },
++            "counts": {
++              "type": "object",
++              "required": [
++                "projects",
++                "sessions"
++              ],
++              "properties": {
++                "projects": {
++                  "anyOf": [
++                    {
++                      "type": "integer",
++                      "minimum": 0,
++                      "maximum": 2147483647
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                },
++                "sessions": {
++                  "anyOf": [
++                    {
++                      "type": "integer",
++                      "minimum": 0,
++                      "maximum": 2147483647
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                }
++              },
++              "additionalProperties": false
++            },
++            "observed": {
++              "type": "object",
++              "required": [
++                "projects",
++                "sessions"
++              ],
++              "properties": {
++                "projects": {
++                  "type": "integer",
++                  "minimum": 0,
++                  "maximum": 2147483647
++                },
++                "sessions": {
++                  "type": "integer",
++                  "minimum": 0,
++                  "maximum": 2147483647
++                }
++              },
++              "additionalProperties": false
++            },
++            "issues": {
++              "type": "array",
++              "maxItems": 5,
++              "uniqueItems": true,
++              "items": {
++                "enum": [
++                  "coverage",
++                  "budget",
++                  "invalid",
++                  "unreadable",
++                  "unsafe_path"
++                ]
++              }
++            }
++          },
++          "additionalProperties": false
++        },
++        "sessions": {
++          "type": "object",
++          "required": [
++            "source",
++            "coverage",
++            "counts",
++            "observed",
++            "issues"
++          ],
++          "properties": {
++            "source": {
++              "const": "agent_presence_ttl"
++            },
++            "coverage": {
++              "enum": [
++                "complete",
++                "partial"
++              ]
++            },
++            "counts": {
++              "type": "object",
++              "required": [
++                "online",
++                "stale",
++                "offline"
++              ],
++              "properties": {
++                "online": {
++                  "anyOf": [
++                    {
++                      "type": "integer",
++                      "minimum": 0,
++                      "maximum": 2147483647
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                },
++                "stale": {
++                  "anyOf": [
++                    {
++                      "type": "integer",
++                      "minimum": 0,
++                      "maximum": 2147483647
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                },
++                "offline": {
++                  "anyOf": [
++                    {
++                      "type": "integer",
++                      "minimum": 0,
++                      "maximum": 2147483647
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                }
++              },
++              "additionalProperties": false
++            },
++            "observed": {
++              "type": "object",
++              "required": [
++                "online",
++                "stale",
++                "offline"
++              ],
++              "properties": {
++                "online": {
++                  "type": "integer",
++                  "minimum": 0,
++                  "maximum": 2147483647
++                },
++                "stale": {
++                  "type": "integer",
++                  "minimum": 0,
++                  "maximum": 2147483647
++                },
++                "offline": {
++                  "type": "integer",
++                  "minimum": 0,
++                  "maximum": 2147483647
++                }
++              },
++              "additionalProperties": false
++            },
++            "issues": {
++              "type": "array",
++              "maxItems": 5,
++              "uniqueItems": true,
++              "items": {
++                "enum": [
++                  "coverage",
++                  "budget",
++                  "invalid",
++                  "unreadable",
++                  "unsafe_path"
++                ]
++              }
++            }
++          },
++          "additionalProperties": false
++        },
++        "workers": {
++          "type": "object",
++          "required": [
++            "source",
++            "coverage",
++            "counts",
++            "observed",
++            "issues"
++          ],
++          "properties": {
++            "source": {
++              "const": "worker_status_records"
++            },
++            "coverage": {
++              "enum": [
++                "complete",
++                "partial"
++              ]
++            },
++            "counts": {
++              "type": "object",
++              "required": [
++                "running"
++              ],
++              "properties": {
++                "running": {
++                  "anyOf": [
++                    {
++                      "type": "integer",
++                      "minimum": 0,
++                      "maximum": 2147483647
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                }
++              },
++              "additionalProperties": false
++            },
++            "observed": {
++              "type": "object",
++              "required": [
++                "running"
++              ],
++              "properties": {
++                "running": {
++                  "type": "integer",
++                  "minimum": 0,
++                  "maximum": 2147483647
++                }
++              },
++              "additionalProperties": false
++            },
++            "issues": {
++              "type": "array",
++              "maxItems": 5,
++              "uniqueItems": true,
++              "items": {
++                "enum": [
++                  "coverage",
++                  "budget",
++                  "invalid",
++                  "unreadable",
++                  "unsafe_path"
++                ]
++              }
++            }
++          },
++          "additionalProperties": false
++        },
++        "work": {
++          "type": "object",
++          "required": [
++            "source",
++            "coverage",
++            "counts",
++            "observed",
++            "issues"
++          ],
++          "properties": {
++            "source": {
++              "const": "run_records"
++            },
++            "coverage": {
++              "enum": [
++                "complete",
++                "partial"
++              ]
++            },
++            "counts": {
++              "type": "object",
++              "required": [
++                "in_progress",
++                "blocked"
++              ],
++              "properties": {
++                "in_progress": {
++                  "anyOf": [
++                    {
++                      "type": "integer",
++                      "minimum": 0,
++                      "maximum": 2147483647
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                },
++                "blocked": {
++                  "anyOf": [
++                    {
++                      "type": "integer",
++                      "minimum": 0,
++                      "maximum": 2147483647
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                }
++              },
++              "additionalProperties": false
++            },
++            "observed": {
++              "type": "object",
++              "required": [
++                "in_progress",
++                "blocked"
++              ],
++              "properties": {
++                "in_progress": {
++                  "type": "integer",
++                  "minimum": 0,
++                  "maximum": 2147483647
++                },
++                "blocked": {
++                  "type": "integer",
++                  "minimum": 0,
++                  "maximum": 2147483647
++                }
++              },
++              "additionalProperties": false
++            },
++            "issues": {
++              "type": "array",
++              "maxItems": 5,
++              "uniqueItems": true,
++              "items": {
++                "enum": [
++                  "coverage",
++                  "budget",
++                  "invalid",
++                  "unreadable",
++                  "unsafe_path"
++                ]
++              }
++            }
++          },
++          "additionalProperties": false
++        },
++        "leases": {
++          "type": "object",
++          "required": [
++            "source",
++            "coverage",
++            "counts",
++            "observed",
++            "issues"
++          ],
++          "properties": {
++            "source": {
++              "const": "lease_records"
++            },
++            "coverage": {
++              "enum": [
++                "complete",
++                "partial"
++              ]
++            },
++            "counts": {
++              "type": "object",
++              "required": [
++                "held",
++                "expired",
++                "inactive"
++              ],
++              "properties": {
++                "held": {
++                  "anyOf": [
++                    {
++                      "type": "integer",
++                      "minimum": 0,
++                      "maximum": 2147483647
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                },
++                "expired": {
++                  "anyOf": [
++                    {
++                      "type": "integer",
++                      "minimum": 0,
++                      "maximum": 2147483647
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                },
++                "inactive": {
++                  "anyOf": [
++                    {
++                      "type": "integer",
++                      "minimum": 0,
++                      "maximum": 2147483647
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                }
++              },
++              "additionalProperties": false
++            },
++            "observed": {
++              "type": "object",
++              "required": [
++                "held",
++                "expired",
++                "inactive"
++              ],
++              "properties": {
++                "held": {
++                  "type": "integer",
++                  "minimum": 0,
++                  "maximum": 2147483647
++                },
++                "expired": {
++                  "type": "integer",
++                  "minimum": 0,
++                  "maximum": 2147483647
++                },
++                "inactive": {
++                  "type": "integer",
++                  "minimum": 0,
++                  "maximum": 2147483647
++                }
++              },
++              "additionalProperties": false
++            },
++            "issues": {
++              "type": "array",
++              "maxItems": 5,
++              "uniqueItems": true,
++              "items": {
++                "enum": [
++                  "coverage",
++                  "budget",
++                  "invalid",
++                  "unreadable",
++                  "unsafe_path"
++                ]
++              }
++            }
++          },
++          "additionalProperties": false
++        }
++      },
++      "additionalProperties": false
++    }
++  },
++  "additionalProperties": false
++}
+--- before/src/processforge_core/diagnostics.py
++++ after/src/processforge_core/diagnostics.py
+@@ -8,6 +8,7 @@
+ import math
+ import os
+ import re
++import stat
+ import sys
+ import threading
+ import time
+@@ -452,11 +453,18 @@
+ 
+ 
+ def _read_config(path: Path) -> dict[str, Any]:
++    for item in (path, path.parent):
++        if item.is_symlink() or (item.exists() and getattr(item.lstat(), "st_file_attributes", 0) & 0x400):
++            raise ValueError("diagnostic config path is linked")
+     if not path.exists():
+         return {}
+-    if path.is_symlink() or path.stat().st_size > 65536:
++    if not stat.S_ISREG(path.stat().st_mode) or path.stat().st_size > 65536:
+         raise ValueError("diagnostic config is not a bounded regular file")
+-    result = json.loads(path.read_text(encoding="utf-8"))
++    with path.open("rb") as handle:
++        raw = handle.read(65537)
++    if len(raw) > 65536:
++        raise ValueError("diagnostic config is too large")
++    result = json.loads(raw)
+     if not isinstance(result, dict):
+         raise ValueError("diagnostic config must be an object")
+     return result
+@@ -465,6 +473,11 @@
+ def configuration(project: Path, *, run_id: str | None = None, session_id: str | None = None,
+                   invocation: dict[str, Any] | None = None) -> dict[str, Any]:
+     document = _read_config(project / ".pf" / "diagnostics.json")
++    return configuration_document(document, run_id=run_id, session_id=session_id, invocation=invocation)
++
++
++def configuration_document(document, *, run_id=None, session_id=None, invocation=None, now=None):
++    document = dict(document)
+     work = document.pop("work", {})
+     sessions = document.pop("sessions", {})
+     if not isinstance(work, dict) or not isinstance(sessions, dict):
+@@ -476,7 +489,51 @@
+     # CLI overrides are a distinct layer: they cannot hide environment locks.
+     return resolve_config(("project", document), ("work", work.get(run_id, {}) if run_id else {}),
+                           ("session", sessions.get(session_id, {}) if session_id else {}),
+-                          ("environment", override), ("invocation", invocation or {}))
++                          ("environment", override), ("invocation", invocation or {}), now=now)
++
++
++def configure_proposal(document, profile, *, duration=600, run_id=None, session_id=None, invocation=None, now=None):
++    """Pure bounded v1 edit. Existing locks apply even within the edited layer."""
++    now = time.time() if now is None else now
++    if profile not in PROFILES or type(duration) is not int or not 1 <= duration <= 900:
++        raise ValueError("profile/duration invalid; duration must be 1..900 seconds")
++    if run_id and session_id:
++        raise ValueError("choose one target scope")
++    for identifier in (run_id, session_id):
++        if identifier is not None and (not isinstance(identifier, str) or not 1 <= len(identifier) <= 256 or any(ord(c) < 32 for c in identifier)):
++            raise ValueError("invalid target identifier")
++    if not isinstance(document, dict) or len(encode(document)) > 65536:
++        raise ValueError("invalid bounded diagnostic document")
++    proposed = json.loads(json.dumps(document))
++    project = {k: v for k, v in document.items() if k not in {"work", "sessions"}}
++    resolve_config(("project", project), now=now)
++    for name in ("work", "sessions"):
++        scopes = document.get(name, {})
++        if not isinstance(scopes, dict):
++            raise ValueError("invalid diagnostic scopes")
++        for key, value in scopes.items():
++            if not isinstance(key, str) or not key:
++                raise ValueError("invalid diagnostic scope key")
++            resolve_config(("project", project), (name, value), now=now)
++    scope, identifier = ("work", run_id) if run_id else ("sessions", session_id) if session_id else ("project", None)
++    target = project if identifier is None else document.get(scope, {}).get(identifier, {})
++    layers = [("project", project)] + ([(scope, target)] if identifier else [])
++    change = {"profile": profile, "threshold": PROFILES[profile],
++              "expires_at": datetime.fromtimestamp(now + duration, timezone.utc).isoformat() if profile in {"diagnostic", "trace"} else None}
++    resolve_config(*layers, ("requested_change", change), now=now)
++    if identifier:
++        proposed.setdefault(scope, {}).setdefault(identifier, {}).update(change)
++    else:
++        proposed.update(change)
++    new_project = {k: v for k, v in proposed.items() if k not in {"work", "sessions"}}
++    for name in ("work", "sessions"):
++        for value in proposed.get(name, {}).values():
++            resolve_config(("project", new_project), (name, value), now=now)
++    effective = configuration_document(proposed, run_id=run_id, session_id=session_id, invocation=invocation, now=now)
++    if len(encode(proposed)) > 65536:
++        raise ValueError("diagnostic config output exceeds limit")
++    return proposed, {"schema_version": 1, "scope": scope, "target": identifier,
++                      "change": change, "effective": effective}
+ 
+ 
+ @lru_cache(maxsize=16)
+--- before/src/processforge_core/runtime_metrics.py
++++ after/src/processforge_core/runtime_metrics.py
+@@ -0,0 +1,270 @@
++"""Bounded, read-only observations of local PF records, never activity guesses.
++
++Budgets bound work/bytes between filesystem calls, not kernel IO latency. A
++partial group has observed lower bounds but no exact counts. No source text,
++identities, paths or exception messages leave this module's projection.
++"""
++from __future__ import annotations
++
++import json
++import os
++import stat
++import time
++from datetime import datetime, timezone
++from pathlib import Path
++from typing import Any
++
++import yaml
++
++FIELDS = {"registrations": ("projects", "sessions"),
++          "sessions": ("online", "stale", "offline"),
++          "workers": ("running",), "work": ("in_progress", "blocked"),
++          "leases": ("held", "expired", "inactive")}
++SOURCES = dict(registrations="host_registration_cache", sessions="agent_presence_ttl",
++               workers="worker_status_records", work="run_records", leases="lease_records")
++ISSUES = {"coverage", "budget", "invalid", "unreadable", "unsafe_path"}
++MAX_AGE = 45
++
++
++def epoch(value: Any) -> float:
++    if not isinstance(value, str):
++        raise ValueError("invalid timestamp")
++    stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
++    if stamp.tzinfo is None:
++        raise ValueError("timestamp needs timezone")
++    return stamp.timestamp()
++
++
++def linked(path: Path) -> bool:
++    st = path.lstat()
++    return stat.S_ISLNK(st.st_mode) or bool(getattr(st, "st_file_attributes", 0) & 0x400)
++
++
++def contained(path: Path, root: Path) -> None:
++    path.relative_to(root)
++    for item in (path, *path.parents):
++        if item.exists() or item.is_symlink():
++            if linked(item):
++                raise ValueError("unsafe path")
++        if item == root:
++            return
++    raise ValueError("unsafe path")
++
++
++class Budget:
++    def __init__(self, *, entries=512, files=128, bytes_=4 * 1024 * 1024, seconds=1.0):
++        self.entries, self.files, self.bytes = entries, files, bytes_
++        self.deadline = time.monotonic() + seconds
++        self.issues: set[str] = set()
++
++    def check(self):
++        if min(self.entries, self.files, self.bytes) < 0 or time.monotonic() > self.deadline:
++            self.issues.add("budget")
++            raise TimeoutError
++
++    def walk(self, root: Path, parts: tuple[str, ...], base: Path):
++        """Walk only fixed-depth patterns, accounting for every visited entry."""
++        self.check()
++        try:
++            contained(root, base)
++            if not root.exists():
++                return
++            with os.scandir(root) as entries:
++                for entry in entries:
++                    self.entries -= 1
++                    self.check()
++                    path = Path(entry.path)
++                    if parts[0] != "*" and entry.name != parts[0] and not (parts[0].startswith("*.") and entry.name.endswith(parts[0][1:])):
++                        continue
++                    if linked(path):
++                        self.issues.add("unsafe_path")
++                        continue
++                    if len(parts) > 1:
++                        if entry.is_dir(follow_symlinks=False):
++                            yield from self.walk(path, parts[1:], base)
++                    elif entry.is_file(follow_symlinks=False):
++                        yield path
++                    else:
++                        self.issues.add("invalid")
++        except TimeoutError:
++            raise
++        except ValueError:
++            self.issues.add("unsafe_path")
++        except OSError:
++            self.issues.add("unreadable")
++
++    def read(self, path: Path, base: Path, maximum=131072):
++        self.files -= 1
++        self.check()
++        contained(path, base)
++        before = path.stat()
++        if not stat.S_ISREG(before.st_mode):
++            raise ValueError("invalid record")
++        with path.open("rb") as handle:
++            opened = os.fstat(handle.fileno())
++            if (before.st_dev, before.st_ino) != (opened.st_dev, opened.st_ino):
++                raise ValueError("record changed")
++            raw = handle.read(min(maximum, self.bytes) + 1)
++        self.bytes -= len(raw)
++        self.check()
++        if len(raw) > maximum:
++            self.issues.add("budget")
++            raise ValueError("oversize record")
++        data = json.loads(raw) if path.suffix == ".json" else yaml.load(raw.decode("utf-8"), Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader))
++        if not isinstance(data, dict):
++            raise ValueError("invalid record")
++        return data
++
++
++def group(name, observed, issues=()):
++    issues = sorted(set(issues))
++    return {"source": SOURCES[name], "coverage": "partial" if issues else "complete",
++            "counts": {k: None if issues else observed[k] for k in FIELDS[name]},
++            "observed": observed, "issues": issues}
++
++
++def registrations(cache):
++    valid = (isinstance(cache, dict) and isinstance(cache.get("projects"), list)
++             and isinstance(cache.get("sessions"), dict))
++    return group("registrations", {"projects": len(cache["projects"]) if valid else 0,
++                                    "sessions": len(cache["sessions"]) if valid else 0}, () if valid else ("coverage",))
++
++
++def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
++    budget = budget or Budget()
++    counts = dict.fromkeys(FIELDS[name], 0)
++    if not coverage and name in {"workers", "work"}:
++        budget.issues.add("coverage")
++    rows = {}
++    try:
++        if name == "sessions":
++            presence_dir = core.workplace_agent_presence_dir(workplace)
++            paths = ((path, workplace) for parts in (("*.json",), ("*", "*.json")) for path in budget.walk(presence_dir, parts, workplace))
++        elif name == "leases":
++            paths = ((path, workplace) for path in budget.walk(core.workplace_agent_leases_dir(workplace), ("*.yaml",), workplace))
++        else:
++            def project_paths():
++                for project in roots[:128]:
++                    budget.check()
++                    if name == "workers":
++                        folder, pattern = project / ".pf/runtime/agent-runs", ("*", "*", "status.json")
++                    else:
++                        folder, pattern = project / ".pf/runs", ("*", "run.yaml")
++                    yield from ((path, project) for path in budget.walk(folder, pattern, project))
++                if len(roots) > 128:
++                    budget.issues.add("budget")
++            paths = project_paths()
++        for path, base in paths:
++            try:
++                item = budget.read(path, base)
++                status = item.get("status")
++                if name == "sessions":
++                    agent, session = item.get("agent_id"), item.get("session_id")
++                    if not isinstance(agent, str) or not agent or not isinstance(session, str) or not session:
++                        raise ValueError
++                    canonical = core.agent_presence_path(workplace, agent, session)
++                    legacy = core.workplace_agent_presence_dir(workplace) / core.safe_id(agent, "agent") / (core.safe_id(session, "session") + ".json")
++                    if path not in {canonical, legacy, core.legacy_agent_presence_path(workplace, agent)}:
++                        raise ValueError
++                    key = (agent, session)
++                    if key not in rows or path == canonical:
++                        rows[key] = (path == canonical, item)
++                elif name == "workers":
++                    if status not in {"planned", "ready", "starting", "running", "completed", "failed", "timed_out", "unknown_exit", "lost", "blocked", "cancelled", "manual_required"}:
++                        raise ValueError
++                    if status in {"starting", "unknown_exit", "lost"}:
++                        budget.issues.add("coverage")
++                    counts["running"] += status == "running"
++                elif name == "work":
++                    if status not in {"draft", "open", "in_progress", "blocked", "review", "completed", "cancelled", "failed"}:
++                        raise ValueError
++                    if status in counts:
++                        counts[status] += 1
++                else:
++                    issued, expires = epoch(item.get("issued_at")), epoch(item.get("expires_at"))
++                    if issued > now or expires < issued or status not in {"active", "released", "revoked", "expired", "stale"}:
++                        raise ValueError
++                    counts["held" if status == "active" and expires > now else "expired" if status in {"active", "expired"} else "inactive"] += 1
++            except (ValueError, TypeError, OverflowError, RecursionError, yaml.YAMLError):
++                budget.issues.add("invalid")
++            except OSError:
++                budget.issues.add("unreadable")
++        for _canonical, item in rows.values():
++            try:
++                status, ttl = item.get("status"), item.get("heartbeat_ttl_seconds")
++                age = now - epoch(item.get("last_seen_at"))
++                if type(ttl) is not int or ttl < 1 or age < 0 or status not in {"online", "offline", "stale", "checked_out", "failed"}:
++                    raise ValueError
++                counts["online" if status == "online" and age <= ttl else "stale" if status in {"online", "stale"} else "offline"] += 1
++            except (ValueError, TypeError, OverflowError):
++                budget.issues.add("invalid")
++    except TimeoutError:
++        budget.issues.add("budget")
++    except (OSError, ValueError, TypeError):
++        budget.issues.add("unreadable")
++    return group(name, counts, budget.issues)
++
++
++def collect(workplace, roots, core, instance_id, registration, *, coverage=True, now=None):
++    now = time.time() if now is None else now
++    groups = {name: observe(name, workplace, roots, core, now=now, coverage=coverage)
++              for name in ("sessions", "workers", "work", "leases")}
++    groups["registrations"] = registration
++    return {"schema_version": 1, "instance_id": instance_id,
++            "observed_at": datetime.fromtimestamp(now, timezone.utc).isoformat(), "groups": groups}
++
++
++def project(snapshot, instance_id, *, now):
++    """Allowlist and strictly validate a fresh instance-bound compact snapshot."""
++    try:
++        if not isinstance(snapshot, dict) or type(snapshot.get("schema_version")) is not int or snapshot["schema_version"] != 1 or not instance_id or snapshot.get("instance_id") != instance_id:
++            raise ValueError
++        age = now - epoch(snapshot.get("observed_at"))
++        if not 0 <= age <= MAX_AGE:
++            raise ValueError
++        result = {}
++        for name, fields in FIELDS.items():
++            item = snapshot["groups"][name]
++            if item["source"] != SOURCES[name] or item["coverage"] not in {"complete", "partial"}:
++                raise ValueError
++            issues = item["issues"]
++            if not isinstance(issues, list) or len(issues) > len(ISSUES) or any(type(i) is not str or i not in ISSUES for i in issues):
++                raise ValueError
++            counts, observed = {}, {}
++            for key in fields:
++                v, o = item["counts"][key], item["observed"][key]
++                if type(o) is not int or not 0 <= o <= 2147483647:
++                    raise ValueError
++                if item["coverage"] == "complete":
++                    if type(v) is not int or v != o or issues:
++                        raise ValueError
++                elif v is not None or not issues:
++                    raise ValueError
++                counts[key], observed[key] = v, o
++            result[name] = group(name, observed, issues)
++        return {"age_seconds": round(age, 1), "groups": result}
++    except (KeyError, ValueError, TypeError, OverflowError):
++        return None
++
++
++def shutdown_workers(workplace, core):
++    """Fresh worker-only guard, including invalid/unroutable registrations."""
++    budget = Budget(seconds=0.5)
++    try:
++        cache = budget.read(workplace / "runtime/pf-runtime-host/state.json", workplace, maximum=4194304)
++        projects = cache.get("projects")
++        if not isinstance(projects, list) or len(projects) > 128:
++            raise ValueError
++        roots = []
++        for item in projects:
++            if not isinstance(item, dict) or not isinstance(item.get("project_root"), str):
++                raise ValueError
++            root = Path(item["project_root"])
++            if not root.is_absolute() or not (root / ".pf/process-forge.yaml").is_file():
++                raise ValueError
++            contained(root / ".pf/process-forge.yaml", root)
++            if root not in roots:
++                roots.append(root)
++        return observe("workers", workplace, roots, core, now=time.time(), budget=budget)
++    except (OSError, ValueError, TypeError, TimeoutError):
++        return group("workers", {"running": 0}, ("coverage",))
+--- before/tools/pf_runtime/monitor.py
++++ after/tools/pf_runtime/monitor.py
+@@ -209,6 +209,16 @@
+         if len(jobs) > MAX_JOBS:
+             issues.append("jobs_truncated")
+     cache_age = freshness(cache.get("updated_at"), now)
++    compact = service.metrics_core().project(state.get("metrics"), state.get("instance_id"), now=now.timestamp()) if lifecycle == "ready" and age["status"] == "fresh" else None
++    if "metrics" in state and compact is None:
++        issues.append("metrics_unavailable")
++    registration = {"projects": len(cache["projects"]) if isinstance(cache.get("projects"), list) else None,
++                    "sessions": len(cache["sessions"]) if isinstance(cache.get("sessions"), dict) else None,
++                    "freshness": cache_age}
++    if compact:
++        registration = {**compact["groups"]["registrations"]["counts"],
++                        "freshness": {"status": "fresh", "age_seconds": compact["age_seconds"]}}
++        issues = [i for i in issues if not i.startswith("cache_")]
+     return {"schema_version": 1, "kind": "pf.runtime.monitor", "observed_at": now.isoformat(),
+             "source": "bounded_local_state_and_loopback_readyz", "workplace": safe_text(workplace.name),
+             "cli_version": version(cli_version), "state_freshness": age,
+@@ -216,9 +226,8 @@
+                         "owner_alive": lock_alive if matching and not uncertain else None,
+                         "instance_version": version(state.get("runtime_version")), "readiness": probe_reason},
+             "scheduler": {"source": "cached_job_results", "jobs": rows},
+-            "registrations": {"projects": len(cache["projects"]) if isinstance(cache.get("projects"), list) else None,
+-                              "sessions": len(cache["sessions"]) if isinstance(cache.get("sessions"), dict) else None,
+-                              "freshness": cache_age},
++            "registrations": registration,
++            "metrics": compact,
+             "activity": {key: None for key in ["sessions", "workers", "work_waiting", "leases", "event_rate", "backlog", "mcp", "hooks"]},
+             "issues": issues}
+ 
+@@ -259,8 +268,18 @@
+         rows.append("  unknown")
+     reg = snapshot["registrations"]
+     rows.extend([f"Registered projects: {number(reg['projects'])} | cached sessions: {number(reg['sessions'])}",
+-                 f"Registry cache: {reg['freshness']['status']} (registrations are not activity)",
+-                 "Active sessions/workers/Work/leases: unknown", "Events/backlog/MCP/hooks: unknown (no aggregate coverage)"])
++                 f"Registry cache: {reg['freshness']['status']} (registrations are not activity)"])
++    compact = snapshot.get("metrics")
++    if compact:
++        rows.append(f"Activity sample: {compact['age_seconds']:.1f}s; partial counts are lower bounds")
++        labels = {"sessions": "Session presence", "workers": "Reported workers", "work": "Work records", "leases": "Leases"}
++        for key, label in labels.items():
++            item = compact["groups"][key]
++            values = ", ".join(f"{k}={v if item['coverage'] == 'complete' else '>=' + str(v)}" for k, v in item["observed"].items())
++            rows.append(f"{label}: {values} [{item['coverage']}]")
++    else:
++        rows.append("Active sessions/workers/Work/leases: unknown")
++    rows.append("Waiting for user/events/backlog/MCP/hooks: unknown (no aggregate coverage)")
+     if snapshot["issues"]:
+         rows.append("Observation: " + ", ".join(snapshot["issues"]))
+     footer = "Q / Esc / Ctrl+C: close monitor; server unchanged"
+--- before/tools/pf_runtime/service.py
++++ after/tools/pf_runtime/service.py
+@@ -27,6 +27,12 @@
+ 
+ from . import RUNTIME_PROTOCOL_VERSION
+ from . import host
++
++
++def metrics_core():
++    # The host may be imported before the Core bootstrap by standalone callers.
++    from processforge_core import runtime_metrics
++    return runtime_metrics
+ 
+ 
+ RUNTIME_VERSION = "1.0.0-poc"
+@@ -139,6 +145,7 @@
+         "workplace_id": workplace_root.name,
+         "status": status,
+         "health": status,
++        "capabilities": {"guarded_shutdown": 1},
+         "token_ref": str(token_path(workplace_root)),
+         "scheduler": {
+             "jobs": {
+@@ -368,6 +375,11 @@
+         self.state: dict[str, Any] = base_state(workplace_root, core, status="starting", instance_id=self.instance_id)
+         self.state_lock = threading.RLock()
+         self._project_errors: dict[str, str] = {}
++        self._registrations = metrics_core().registrations({})
++        self._metrics_at = float("-inf")
++        self.active_requests = 0
++        self.scheduler_active = False
++        self.shutdown_check = False
+ 
+     def save(self) -> None:
+         with self.state_lock:
+@@ -378,12 +390,14 @@
+         try:
+             state = host.load_state(self.workplace_root)
+         except Exception as exc:  # noqa: BLE001 - malformed cache is recoverable.
++            self._registrations = metrics_core().registrations({})
+             self._project_errors = {"host_cache": str(exc)}
+             with self.state_lock:
+                 self.state["project_errors"] = dict(self._project_errors)
+                 self.state["health"] = "degraded"
+             return []
+         projects = state.get("projects", [])
++        self._registrations = metrics_core().registrations(state)
+         if not isinstance(projects, list):
+             errors["host_cache"] = "project cache field is not a list"
+             projects = []
+@@ -406,7 +420,19 @@
+                 self.state["health"] = "degraded"
+             else:
+                 self.state.pop("project_errors", None)
+-        return roots
++        return list(dict.fromkeys(roots))
++
++    def publish_metrics(self, roots: list[Path]) -> None:
++        if time.monotonic() - self._metrics_at < 10:
++            return
++        self._metrics_at = time.monotonic()
++        snapshot = metrics_core().collect(self.workplace_root, roots, self.core, self.instance_id,
++                                           self._registrations, coverage=not self._project_errors)
++        with self.state_lock:
++            self.state["metrics"] = snapshot
++            self.state["scheduler"]["jobs"]["metrics"] = {
++                "period_seconds": 10, "last_run": snapshot["observed_at"],
++                "last_result": "ok" if all(g["coverage"] == "complete" for g in snapshot["groups"].values()) else "failed"}
+ 
+     def status_payload(self) -> dict[str, Any]:
+         roots = self.known_project_roots()
+@@ -482,8 +508,15 @@
+     def scheduler_loop(self) -> None:
+         self.scheduler_thread = threading.current_thread()
+         while not self.stop_event.wait(self.interval):
++            with self.state_lock:
++                if self.state.get("status") == "stopping":
++                    break
++                if self.shutdown_check:
++                    continue
++                self.scheduler_active = True
+             try:
+                 roots = self.known_project_roots()
++                self.publish_metrics(roots)
+                 project_errors = dict(self._project_errors)
+                 self.core.update_stale_agent_presence(self.workplace_root)
+                 projects: list[dict[str, Any]] = []
+@@ -531,6 +564,9 @@
+                     append_operator_log(self.workplace_root, self.core, "scheduler.error", error=str(exc))
+                 except OSError:
+                     pass  # Preserve the in-memory fault when storage is unavailable.
++            finally:
++                with self.state_lock:
++                    self.scheduler_active = False
+             try:
+                 self.save()
+             except (Exception, SystemExit) as exc:  # noqa: BLE001 - retry persistence on the next pass.
+@@ -587,6 +623,21 @@
+             def do_POST(self) -> None:
+                 if not self.authorize():
+                     return
++                counted = self.path != "/shutdown"
++                with runtime.state_lock:
++                    if runtime.state.get("status") == "stopping" or (counted and runtime.shutdown_check):
++                        self.send_json(503, {"error": "runtime_stopping"})
++                        return
++                    if counted:
++                        runtime.active_requests += 1
++                try:
++                    self.handle_post()
++                finally:
++                    if counted:
++                        with runtime.state_lock:
++                            runtime.active_requests -= 1
++
++            def handle_post(self) -> None:
+                 try:
+                     payload = self.read_body()
+                     if self.path == "/event":
+@@ -622,11 +673,26 @@
+                         result, status = host.tick_payload(runtime.workplace_root, roots, runtime.core, director=bool(payload.get("director")), inspector=bool(payload.get("inspector")))
+                         self.send_json(200 if status == 0 else 500, result)
+                     elif self.path == "/shutdown":
+-                        if not self.authorize():
++                        guarded = payload.get("require_idle") is True
++                        if guarded and payload.get("expected_instance_id") != runtime.instance_id:
++                            self.send_json(409, {"error": "owner_changed"})
+                             return
+                         with runtime.state_lock:
+-                            runtime.state["status"] = "stopping"
+-                            runtime.state["health"] = "stopping"
++                            if guarded and (runtime.active_requests or runtime.scheduler_active or runtime.shutdown_check):
++                                self.send_json(409, {"error": "runtime_busy_or_activity_unknown"})
++                                return
++                            runtime.shutdown_check = True
++                        try:
++                            workers = metrics_core().shutdown_workers(runtime.workplace_root, runtime.core) if guarded else None
++                            with runtime.state_lock:
++                                if guarded and workers["counts"]["running"] != 0:
++                                    self.send_json(409, {"error": "runtime_busy_or_activity_unknown"})
++                                    return
++                                runtime.state["status"] = "stopping"
++                                runtime.state["health"] = "stopping"
++                        finally:
++                            with runtime.state_lock:
++                                runtime.shutdown_check = False
+                         runtime.save()
+                         self.send_json(200, {"status": "stopping"})
+                         runtime.stop_event.set()
+@@ -681,6 +747,8 @@
+ def command_serve(args: argparse.Namespace, core: Any) -> int:
+     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
+     runtime = RuntimeProcess(workplace_root, core, interval=float(getattr(args, "interval", 2.0) or 2.0))
++    if getattr(args, "console", False) and sys.stdout.isatty():
++        print("PF | ProcessForge Server - foreground Runtime", flush=True)
+     return runtime.serve(int(getattr(args, "port", 0) or 0))
+ 
+ 
+@@ -744,6 +812,12 @@
+     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
+     inspection = inspect_lifecycle(workplace_root, core)
+     state = inspection["state"]
++    guarded = getattr(args, "command", "") == "server" and not getattr(args, "force", False)
++    if guarded and inspection["kind"] not in {"ready", "stopped", "not_running"}:
++        raise SystemExit("FAIL: guarded stop requires a ready verified owner; inspect state or use explicit --force")
++    capabilities = state.get("capabilities")
++    if guarded and inspection["kind"] == "ready" and (not isinstance(capabilities, dict) or type(capabilities.get("guarded_shutdown")) is not int or capabilities["guarded_shutdown"] != 1):
++        raise SystemExit("FAIL: server lacks guarded shutdown capability; upgrade or use explicit --force")
+     if inspection["kind"] == "orphaned":
+         endpoint = str(state.get("endpoint") or "")
+         code, body = http_json("GET", endpoint.rstrip("/") + "/readyz", timeout=1.0) if endpoint else (0, {})
+@@ -772,7 +846,8 @@
+         return 0
+     token = load_token(workplace_root)
+     endpoint = str(state.get("endpoint") or "")
+-    code, body = http_json("POST", endpoint.rstrip("/") + "/shutdown", token=token, payload={}, timeout=2.0)
++    payload = {"require_idle": True, "expected_instance_id": state.get("instance_id")} if guarded else {}
++    code, body = http_json("POST", endpoint.rstrip("/") + "/shutdown", token=token, payload=payload, timeout=2.0)
+     if code != 200:
+         raise SystemExit(f"FAIL: runtime stop request failed: {code} {body}")
+     pid = state.get("pid")
+@@ -787,7 +862,12 @@
+ 
+ 
+ def command_restart(args: argparse.Namespace, core: Any) -> int:
+-    command_stop(args, core)
++    if getattr(args, "command", "") == "server" and getattr(args, "json", False):
++        import io
++        with contextlib.redirect_stdout(io.StringIO()):
++            command_stop(args, core)
++    else:
++        command_stop(args, core)
+     return command_start(args, core)
+ 
+ 
+--- before/tools/processforge.py
++++ after/tools/processforge.py
+@@ -7052,6 +7052,9 @@
+         ReleaseCommand("smoke_derived_report_stale_marking", [sys.executable, str(root / "tools" / "smoke_derived_report_stale_marking.py")], 180),
+         ReleaseCommand("smoke_runtime_status_version_truth", [sys.executable, str(root / "tools" / "smoke_runtime_status_version_truth.py")], 180),
+         ReleaseCommand("smoke_runtime_monitor", [sys.executable, str(root / "tools" / "smoke_runtime_monitor.py")], 120),
++        ReleaseCommand("smoke_runtime_metrics", [sys.executable, str(root / "tools" / "smoke_runtime_metrics.py")], 120),
++        ReleaseCommand("smoke_server_operator", [sys.executable, str(root / "tools" / "smoke_server_operator.py")], 120),
++        ReleaseCommand("smoke_diagnostics_configure", [sys.executable, str(root / "tools" / "smoke_diagnostics_configure.py")], 120),
+         ReleaseCommand("smoke_process_event_concurrency", [sys.executable, str(root / "tools" / "smoke_process_event_concurrency.py")], 120),
+         ReleaseCommand("smoke_user_like_garage_path", [sys.executable, str(root / "tools" / "smoke_user_like_garage_path.py")], 180),
+         ReleaseCommand("smoke_parameter_cascade_resolution", [sys.executable, str(root / "tools" / "smoke_parameter_cascade_resolution.py")], 120),
+@@ -19700,6 +19703,9 @@
+ 
+ 
+ def command_runtime_status(args: argparse.Namespace) -> int:
++    if args.command == "server":
++        args.once, args.ascii, args.no_color, args.interval = True, False, True, 2.0
++        return command_runtime_monitor(args)
+     from pf_runtime import service as runtime_service
+ 
+     return runtime_service.command_status(args, sys.modules[__name__])
+@@ -26272,6 +26278,37 @@
+     return 0
+ 
+ 
++def command_diagnostics_configure(args: argparse.Namespace) -> int:
++    project = Path(args.project_root).expanduser().resolve()
++    require_flow_root(project)
++    path = project / ".pf" / "diagnostics.json"
++    options = diagnostics.invocation_options(args.diagnostic_profile, args.diagnostic_threshold, args.diagnostic_components, args.diagnostic_sink)
++    def proposal():
++        return diagnostics.configure_proposal(diagnostics._read_config(path), args.profile,
++            duration=args.duration, run_id=args.run_id, session_id=args.session_id, invocation=options)
++    try:
++        proposed, report = proposal()
++        if args.apply:
++            with registry_file_lock(path, stale_after_seconds=0):
++                proposed, report = proposal()
++                # The encoder is identical to the bounded proposal validation.
++                temp = path.with_name("." + path.name + "." + uuid.uuid4().hex + ".tmp")
++                try:
++                    with temp.open("xb") as handle:
++                        handle.write(diagnostics.encode(proposed))
++                        handle.flush()
++                        os.fsync(handle.fileno())
++                    os.replace(temp, path)
++                finally:
++                    temp.unlink(missing_ok=True)
++        report["action"] = "applied" if args.apply else "plan"
++        print(json.dumps(report, ensure_ascii=True, indent=2))
++        return 0
++    except (OSError, ValueError, TypeError):
++        print("FAIL: diagnostic configuration rejected; invalid input, policy lock or storage unavailable", file=sys.stderr)
++        return 1
++
++
+ def command_diagnostics_status(args: argparse.Namespace) -> int:
+     project = Path(args.project_root).expanduser().resolve()
+     require_flow_root(project)
+@@ -26307,6 +26344,15 @@
+     parser.add_argument("--diagnostic-sink", choices=["jsonl", "stderr", "both", "none"])
+     sub = parser.add_subparsers(dest="command", required=True)
+ 
++    configure = sub.add_parser("diagnostics-configure", help="Plan or apply a bounded diagnostic profile change.")
++    configure.add_argument("--project-root", required=True)
++    configure.add_argument("--profile", choices=list(diagnostics.PROFILES), required=True)
++    configure.add_argument("--duration", type=int, default=600, help="Detailed profile lifetime in seconds (1..900).")
++    configure_scope = configure.add_mutually_exclusive_group()
++    configure_scope.add_argument("--run-id")
++    configure_scope.add_argument("--session-id")
++    configure.add_argument("--apply", action="store_true")
++    configure.set_defaults(func=command_diagnostics_configure)
+     diagnostic_status = sub.add_parser("diagnostics-status", help="Inspect optional diagnostic configuration and local health without repairs.")
+     diagnostic_status.add_argument("--project-root", required=True)
+     diagnostic_status.add_argument("--run-id")
+@@ -27411,10 +27457,11 @@
+     monitor.add_argument("--no-color", action="store_true", help="Disable color (the monitor is monochrome by default).")
+     monitor.set_defaults(func=command_runtime_monitor)
+ 
+-    runtime = sub.add_parser("runtime", help="Run and control the long-lived local PF Runtime process.")
++    runtime = sub.add_parser("runtime", aliases=["server"], help="Run and control the long-lived local PF Runtime process.")
+     runtime_sub = runtime.add_subparsers(dest="runtime_command", required=True)
+ 
+-    runtime_serve = runtime_sub.add_parser("serve", help="Run PF Runtime in the foreground for one workplace.")
++    runtime_serve = runtime_sub.add_parser("serve", aliases=["run"], help="Run PF Runtime in the foreground for one workplace.")
++    runtime_serve.add_argument("--console", action="store_true", help="Show a foreground banner on an interactive terminal.")
+     runtime_serve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+     runtime_serve.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
+     runtime_serve.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")
+@@ -27432,6 +27479,7 @@
+     runtime_stop.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+     runtime_stop.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for graceful shutdown.")
+     runtime_stop.set_defaults(func=command_runtime_stop)
++    runtime_stop.add_argument("--force", action="store_true", help="Explicitly bypass the server busy guard.")
+ 
+     runtime_restart = runtime_sub.add_parser("restart", help="Restart PF Runtime for one workplace.")
+     runtime_restart.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+@@ -27440,6 +27488,7 @@
+     runtime_restart.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for stop/start.")
+     runtime_restart.add_argument("--json", action="store_true", help="Print JSON.")
+     runtime_restart.set_defaults(func=command_runtime_restart)
++    runtime_restart.add_argument("--force", action="store_true", help="Explicitly bypass the server busy guard.")
+ 
+     runtime_status = runtime_sub.add_parser("status", help="Print PF Runtime process and projection status.")
+     runtime_status.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
+@@ -28210,7 +28259,7 @@
+         if not getattr(args, "dry_run", False):
+             args.mode_implicit = True
+         args.dry_run = True
+-    if args.command in {"diagnostics-status", "diagnostics-export", "monitor"}:
++    if args.command in {"diagnostics-status", "diagnostics-export", "diagnostics-configure", "monitor"} or (args.command == "server" and args.runtime_command == "status"):
+         return args.func(args)
+     project_value = getattr(args, "project_root", None)
+     project = Path(project_value).expanduser().resolve() if isinstance(project_value, str) else None
+--- before/tools/smoke_diagnostics_configure.py
++++ after/tools/smoke_diagnostics_configure.py
+@@ -0,0 +1,69 @@
++#!/usr/bin/env python3
++"""Profile proposal policy and actual CLI no-write/apply behavior."""
++import json
++import os
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import time
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / "src"))
++from processforge_core import diagnostics as d
++
++
++def main():
++    now = time.time()
++    original = {"schema_version": 1, "sink": "none", "work": {"other": {"profile": "quiet"}}, "sessions": {"keep": {"profile": "off"}}}
++    proposed, report = d.configure_proposal(original, "diagnostic", run_id="exact-work", duration=120, now=now)
++    assert original["work"] == {"other": {"profile": "quiet"}}
++    assert proposed["sessions"] == original["sessions"] and proposed["sink"] == "none"
++    assert abs(d._epoch(report["change"]["expires_at"]) - now - 120) < 0.00001
++    assert report["effective"]["values"]["profile"] == "diagnostic"
++    expired = d.Logger(d.resolve_config(("project", proposed["work"]["exact-work"]), now=now))
++    expired.values["expires_at"] = "2000-01-01T00:00:00Z"
++    assert expired.effective()["values"]["profile"] == "normal"
++    rejected = [({"profile": "quiet", "locked": ["profile"]}, {}),
++                ({"work": {"one": {"profile": "quiet", "locked": ["profile"]}}}, {"run_id": "one"}),
++                ({"work": []}, {}), ({"unsupported": True}, {}), ({}, {"duration": 901}),
++                ({}, {"duration": 0}), ({}, {"duration": True}), ({}, {"run_id": "x", "session_id": "y"})]
++    for document, kwargs in rejected:
++        try:
++            d.configure_proposal(document, "trace", now=now, **kwargs)
++        except (ValueError, TypeError):
++            pass
++        else:
++            raise AssertionError("invalid/locked proposal accepted")
++    with tempfile.TemporaryDirectory(prefix="pf-profile spaces-") as temp:
++        project = Path(temp)
++        (project / ".pf").mkdir()
++        (project / ".pf/process-forge.yaml").write_text("schema_version: 1\nid: fixture\n")
++        path = project / ".pf/diagnostics.json"
++        path.write_text(json.dumps(original))
++        env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
++        env.pop("PF_DIAGNOSTICS", None)
++        command = [sys.executable, "-B", str(ROOT / "bin/pf.py"), "diagnostics-configure", "--project-root", str(project), "--profile", "diagnostic", "--session-id", "new", "--duration", "60"]
++        before = {p.relative_to(project).as_posix(): p.read_bytes() for p in project.rglob("*") if p.is_file()}
++        result = subprocess.run(command, capture_output=True, env=env, timeout=30)
++        assert result.returncode == 0, result.stderr
++        assert json.loads(result.stdout)["action"] == "plan"
++        assert before == {p.relative_to(project).as_posix(): p.read_bytes() for p in project.rglob("*") if p.is_file()}
++        result = subprocess.run([*command, "--apply"], capture_output=True, env=env, timeout=30)
++        assert result.returncode == 0, result.stderr
++        after = json.loads(path.read_text())
++        assert after["work"] == original["work"] and after["sessions"]["keep"] == original["sessions"]["keep"]
++        assert after["sessions"]["new"]["profile"] == "diagnostic"
++        assert not (project / ".pf/runtime/events").exists() and not (project / ".pf/runtime/diagnostics").exists()
++        path.write_text(json.dumps({"profile": "quiet", "locked": ["profile"]}))
++        previous = path.read_bytes()
++        assert subprocess.run([*command, "--apply"], capture_output=True, env=env, timeout=30).returncode != 0
++        assert path.read_bytes() == previous
++        path.write_bytes(b" " * 65537)
++        assert subprocess.run(command, capture_output=True, env=env, timeout=30).returncode != 0
++    print("PASS: diagnostics profile plan/apply, preservation, locks, expiry, bounds and no-write inspection")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+--- before/tools/smoke_runtime_metrics.py
++++ after/tools/smoke_runtime_metrics.py
+@@ -0,0 +1,97 @@
++#!/usr/bin/env python3
++"""Real record semantics, budget/invalid truth and publisher/viewer contract."""
++from __future__ import annotations
++import copy
++import json
++import os
++from pathlib import Path
++import sys
++import tempfile
++import time
++from datetime import datetime, timezone
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / "tools"))
++import processforge as core
++from processforge_core import runtime_metrics as metrics
++from pf_runtime import service, monitor
++
++
++def put(path, value):
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_text(json.dumps(value), encoding="utf-8")
++
++
++def main():
++    with tempfile.TemporaryDirectory(prefix="pf-metrics-") as temp:
++        base = Path(temp)
++        wp, project = base / "workplace", base / "project"
++        now = time.time()
++        stamp = lambda seconds: datetime.fromtimestamp(now + seconds, timezone.utc).isoformat()
++        presence = dict(agent_id="test", session_id="opaque/private", status="online", last_seen_at=stamp(-2), heartbeat_ttl_seconds=10)
++        canonical = core.agent_presence_path(wp, "test", "opaque/private")
++        put(canonical, presence)
++        put(core.legacy_agent_presence_path(wp, "test"), {**presence, "status": "offline"})
++        put(core.agent_presence_path(wp, "other", "stale"), {**presence, "agent_id": "other", "session_id": "stale", "last_seen_at": stamp(-20)})
++        put(project / ".pf/process-forge.yaml", {})
++        worker = project / ".pf/runtime/agent-runs/task/attempt/status.json"
++        put(worker, {"status": "running", "private": "SECRET-MARKER"})
++        put(project / ".pf/runs/one/run.yaml", {"status": "blocked"})
++        put(project / ".pf/runs/two/run.yaml", {"status": "in_progress"})
++        for key, status, expires in (("one", "active", 20), ("two", "active", -1), ("three", "revoked", 20)):
++            put(wp / ("runtime/agent-leases/" + key + ".yaml"), dict(status=status, issued_at=stamp(-30), expires_at=stamp(expires)))
++        cache = {"projects": [{"project_root": str(project)}], "sessions": {"old": {}}}
++        put(wp / "runtime/pf-runtime-host/state.json", cache)
++        result = metrics.collect(wp, [project], core, "instance", metrics.registrations(cache), now=now)
++        groups = result["groups"]
++        assert groups["sessions"]["counts"] == dict(online=1, stale=1, offline=0), groups["sessions"]
++        assert groups["workers"]["counts"]["running"] == 1
++        assert groups["work"]["counts"] == dict(in_progress=1, blocked=1)
++        assert groups["leases"]["counts"] == dict(held=1, expired=1, inactive=1)
++        assert metrics.shutdown_workers(wp, core)["counts"]["running"] == 1
++        raw = json.dumps(result)
++        assert all(s not in raw for s in ("SECRET-MARKER", str(base), "opaque/private"))
++        schema = json.loads((ROOT / "schemas/runtime-metrics.schema.json").read_text())
++        assert set(result) == set(schema["required"])
++        assert metrics.project(result, "instance", now=now)
++        for mutant in (None, {}, {**result, "instance_id": "other"}, {**result, "observed_at": stamp(1)}, {**result, "observed_at": stamp(-46)}):
++            assert metrics.project(mutant, "instance", now=now) is None
++        for field in ("counts", "observed"):
++            mutant = copy.deepcopy(result)
++            mutant["groups"]["workers"][field]["running"] = True
++            assert metrics.project(mutant, "instance", now=now) is None
++        put(canonical, {**presence, "heartbeat_ttl_seconds": True})
++        assert metrics.observe("sessions", wp, [], core, now=now)["counts"]["online"] is None
++        limited = metrics.observe("work", wp, [project], core, now=now, budget=metrics.Budget(entries=0))
++        assert limited["coverage"] == "partial" and "budget" in limited["issues"] and limited["counts"]["blocked"] is None
++        put(worker, {"status": "lost"})
++        assert metrics.shutdown_workers(wp, core)["counts"]["running"] is None
++        worker.write_bytes(b"x" * 131073)
++        assert metrics.observe("workers", wp, [project], core, now=now)["coverage"] == "partial"
++        put(worker, {"status": "completed"})
++        assert metrics.shutdown_workers(wp, core)["counts"]["running"] == 0
++        put(wp / "runtime/pf-runtime-host/state.json", {**cache, "projects": [*cache["projects"], {"project_root": str(base / "missing")} ]})
++        assert metrics.shutdown_workers(wp, core)["counts"]["running"] is None
++        # Real publisher -> atomic state -> monitor, including oversized cache.
++        runtime = service.RuntimeProcess(wp, core, interval=2)
++        runtime.state.update(status="ready", health="ready", endpoint="http://127.0.0.1:12345")
++        runtime._registrations = metrics.registrations(cache)
++        runtime.publish_metrics([project])
++        runtime.save()
++        put(service.lock_path(wp), {"pid": os.getpid(), "instance_id": runtime.instance_id})
++        (wp / "runtime/pf-runtime-host/state.json").write_bytes(b"x" * 1048577)
++        snapshot = monitor.collect_snapshot(wp, "1.1.0", alive=lambda _: True, probe=lambda _: (True, "ready"))
++        assert snapshot["metrics"] and snapshot["registrations"]["sessions"] == 1 and "cache_oversize" not in snapshot["issues"]
++        assert "partial" in "\n".join(monitor.render(snapshot, 120, 35))
++        stopped = monitor.collect_snapshot(wp, "1.1.0", alive=lambda _: False)
++        assert stopped["metrics"] is None
++        # Empty directories consume budget too; no unbounded glob walk.
++        for n in range(5):
++            (project / f".pf/runs/empty-{n}").mkdir()
++        assert "budget" in metrics.observe("work", wp, [project], core, now=now, budget=metrics.Budget(entries=2))["issues"]
++    print("PASS: metrics semantics, canonical dedup, bounds, privacy, schema and publisher/monitor")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+--- before/tools/smoke_server_operator.py
++++ after/tools/smoke_server_operator.py
+@@ -0,0 +1,137 @@
++#!/usr/bin/env python3
++"""Negotiated server stop and actual authenticated HTTP admission guards."""
++from __future__ import annotations
++import argparse
++from contextlib import redirect_stdout
++from http.server import ThreadingHTTPServer
++import io
++import json
++from pathlib import Path
++import shutil
++import subprocess
++import sys
++import tempfile
++import threading
++from unittest.mock import patch
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / "tools"))
++import processforge as core
++from pf_runtime import service
++
++
++def put(path, value):
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_text(json.dumps(value), encoding="utf-8")
++
++
++def main():
++    with tempfile.TemporaryDirectory(prefix="pf-server spaces-") as temp:
++        root = Path(temp)
++        wp, project = root / "workplace", root / "project"
++        put(project / ".pf/process-forge.yaml", {})
++        cache_path = wp / "runtime/pf-runtime-host/state.json"
++        put(cache_path, {"projects": [{"project_root": str(project)}], "sessions": {}})
++        worker = project / ".pf/runtime/agent-runs/task/attempt/status.json"
++        runtime = service.RuntimeProcess(wp, core, interval=2)
++        runtime.state.update(status="ready", health="ready")
++        server = ThreadingHTTPServer(("127.0.0.1", 0), runtime.make_handler())
++        thread = threading.Thread(target=server.serve_forever, daemon=True)
++        thread.start()
++        endpoint = f"http://127.0.0.1:{server.server_port}"
++        guarded = dict(require_idle=True, expected_instance_id=runtime.instance_id)
++        post = lambda path, payload, token=runtime.token: service.http_json("POST", endpoint + path, token, payload)
++        try:
++            assert post("/shutdown", guarded, "wrong")[0] == 401
++            assert post("/shutdown", {**guarded, "expected_instance_id": "old"})[0] == 409
++            put(worker, {"status": "running"})
++            assert post("/shutdown", guarded)[0] == 409 and not runtime.stop_event.is_set()
++            put(worker, {"status": "completed"})
++            cache_path.write_text("invalid")
++            assert post("/shutdown", guarded)[0] == 409
++            put(cache_path, {"projects": [{"project_root": str(project)}], "sessions": {}})
++            entered, release = threading.Event(), threading.Event()
++            def slow_event(*args, **kwargs):
++                entered.set()
++                assert release.wait(5)
++                return {"ok": True}
++            responses = []
++            with patch.object(service.host, "ingest_event", slow_event):
++                request = threading.Thread(target=lambda: responses.append(post("/event", {})), daemon=True)
++                request.start()
++                assert entered.wait(3)
++                assert runtime.active_requests == 1
++                assert post("/shutdown", guarded)[0] == 409
++                assert runtime.state["status"] == "ready"
++                release.set()
++                request.join(4)
++            assert responses[0][0] == 200 and runtime.active_requests == 0
++            runtime.scheduler_active = True
++            assert post("/shutdown", guarded)[0] == 409
++            runtime.scheduler_active = False
++            observed, finish = threading.Event(), threading.Event()
++            def held_guard(*args):
++                observed.set()
++                assert finish.wait(5)
++                return {"counts": {"running": 1}}
++            with patch.object(service.metrics_core(), "shutdown_workers", held_guard):
++                shutdown_response = []
++                shutdown_request = threading.Thread(target=lambda: shutdown_response.append(post("/shutdown", guarded)), daemon=True)
++                shutdown_request.start()
++                assert observed.wait(3)
++                assert post("/event", {})[0] == 503
++                assert post("/shutdown", guarded)[0] == 409
++                finish.set()
++                shutdown_request.join(4)
++                assert shutdown_response[0][0] == 409 and not runtime.shutdown_check
++            assert post("/shutdown", guarded)[0] == 200 and runtime.stop_event.is_set()
++            assert post("/event", {})[0] == 503
++            # Explicit legacy/force request retains compatibility, despite busy records.
++            runtime.state["status"] = "ready"
++            runtime.stop_event.clear()
++            put(worker, {"status": "running"})
++            assert post("/shutdown", {})[0] == 200
++        finally:
++            server.shutdown()
++            server.server_close()
++            thread.join(3)
++        args = argparse.Namespace(command="server", workplace=str(wp), force=False, timeout=1)
++        inspection = {"kind": "ready", "state": {"pid": 1, "endpoint": endpoint, "instance_id": "owner"}, "pid": 1}
++        with patch.object(core, "resolve_workplace_root", return_value=wp), patch.object(service, "inspect_lifecycle", return_value=inspection), patch.object(service, "http_json") as call:
++            try:
++                service.command_stop(args, core)
++            except SystemExit as exc:
++                assert "lacks guarded" in str(exc)
++            else:
++                raise AssertionError("old service received unsafe fallback")
++            call.assert_not_called()
++        with patch.object(core, "resolve_workplace_root", return_value=wp), patch.object(service, "inspect_lifecycle", return_value=inspection), patch.object(service, "http_json", return_value=(200, {})) as call, patch.object(core, "process_pid_running", return_value=False), patch.object(service, "cleanup_stale_runtime"):
++            inspection["state"]["capabilities"] = {"guarded_shutdown": 1}
++            with redirect_stdout(io.StringIO()):
++                assert service.command_stop(args, core) == 0
++            assert call.call_args.kwargs["payload"] == {"require_idle": True, "expected_instance_id": "owner"}
++            args.force = True
++            with redirect_stdout(io.StringIO()):
++                assert service.command_stop(args, core) == 0
++            assert call.call_args.kwargs["payload"] == {}
++        missing = root / "does not exist"
++        result = subprocess.run([sys.executable, "-B", str(ROOT / "bin/pf-server.py"), "status", "--workplace", str(missing), "--json"], capture_output=True, timeout=30)
++        assert result.returncode == 0, result.stderr
++        assert json.loads(result.stdout)["runtime"]["lifecycle"] == "not_running" and not missing.exists()
++        # Both launcher and quoted arguments live in paths with spaces.
++        fixture = root / "quoted launcher"
++        (fixture / "bin").mkdir(parents=True)
++        (fixture / "tools").mkdir()
++        for name in ("pf.py", "pf-server.py"):
++            shutil.copyfile(ROOT / "bin" / name, fixture / "bin" / name)
++        (fixture / "tools/processforge.py").write_text("import json,sys; print(json.dumps(sys.argv[1:]))")
++        result = subprocess.run([sys.executable, "-B", str(fixture / "bin/pf-server.py"), "status", "--workplace", str(missing), "--json"], capture_output=True, timeout=30)
++        assert json.loads(result.stdout) == ["server", "status", "--workplace", str(missing), "--json"]
++        parsed = core.build_parser().parse_args(["server", "run", "--workplace", str(wp), "--console"])
++        assert parsed.func is core.command_runtime_serve and parsed.console
++    print("PASS: actual HTTP busy/unknown/inflight/owner/auth guards, force, old capability refusal, launcher and readonly JSON")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())

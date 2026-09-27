@@ -1,0 +1,44 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "release-notes",
+    "path": ".pf/artifacts/artifact-completion-20260927/release-notes.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "migration-notes",
+    "path": ".pf/artifacts/artifact-completion-20260927/migration-notes.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "patch",
+    "path": ".pf/artifacts/artifact-completion-20260927/patch.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "delivery-plan",
+    "path": ".pf/artifacts/artifact-completion-20260927/delivery-plan.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "delivery-report",
+    "path": ".pf/artifacts/artifact-completion-20260927/delivery-report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "release-readiness-decided",
+    "path": ".pf/artifacts/artifact-completion-20260927/release-notes.md",
+    "status": "passed"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "delivery-profile-run-or-skipped-with-reason",
+    "path": ".pf/artifacts/artifact-completion-20260927/release-notes.md",
+    "status": "passed"
+  }
+]

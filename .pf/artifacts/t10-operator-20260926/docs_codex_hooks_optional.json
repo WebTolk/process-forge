@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_docs_codex_hooks_optional.py"
+  ],
+  "exit_code": 0,
+  "seconds": 0.285,
+  "stdout": "PASS: docs consistently treat Codex hooks as optional host telemetry\n",
+  "stderr": ""
+}

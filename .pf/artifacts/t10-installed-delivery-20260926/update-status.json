@@ -1,0 +1,16 @@
+{
+  "time": "2026-09-26T17:52:09.589282+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\.agents\\processforge\\bin\\pf.py",
+    "core-update",
+    "status",
+    "--core-root",
+    "D:\\.agents\\processforge"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "{\n  \"core_root\": \"D:\\\\.agents\\\\processforge\",\n  \"file_count\": 991,\n  \"incomplete_update\": false,\n  \"kind\": \"processforge.core_update.status\",\n  \"manifest\": \"D:\\\\.agents\\\\processforge\\\\processforge-core.manifest.json\",\n  \"schema_version\": 1,\n  \"status\": \"installed\",\n  \"version\": \"1.1.0\"\n}\n",
+  "stderr": ""
+}

@@ -1,0 +1,7 @@
+{
+  "missing_grant_denied_before_ready": true,
+  "repeat_collection_one_completion": true,
+  "changed_collected_bytes_denied": true,
+  "retry_leftover_denied": true,
+  "generic_offline_lifecycle_and_collection": true
+}

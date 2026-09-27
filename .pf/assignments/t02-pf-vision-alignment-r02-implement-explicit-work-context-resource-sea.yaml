@@ -1,0 +1,393 @@
+schema_version: 1
+id: t02-pf-vision-alignment-r02-implement-explicit-work-context-resource-sea
+title: 'T02 PF vision-alignment r02: implement explicit Work-context resource search and'
+run_id: garage-t02-pf-vision-alignment-r02-implement-explicit-work-context-resou
+process: software-feature-development
+status: done
+created_at: '2026-09-25T19:46:50Z'
+updated_at: '2026-09-25T20:43:45Z'
+objective: 'T02 PF vision-alignment r02: implement explicit Work-context resource search and resolution through a shared application service, intersect pinned resource/material generation with current authorization and stage subset; preserve project navigation and immutable legacy capsules. Validate A/B selection, revocation, changed/missing material, isolated Works, CLI/MCP parity and continuation. Follow accepted T01 contract and T09 source delivery; no installed update or publication.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: T02 complete; begin separate T03 Work under approved r02 AFK sequence. Do not mutate historical capsules.
+  artifacts:
+    - .pf/artifacts/t02-work-resources-20260925/architecture.md
+    - .pf/artifacts/t02-work-resources-20260925/delivery-report.md
+    - .pf/artifacts/t02-work-resources-20260925/domain.md
+    - .pf/artifacts/t02-work-resources-20260925/evolution-report.md
+    - .pf/artifacts/t02-work-resources-20260925/implementation.md
+    - .pf/artifacts/t02-work-resources-20260925/investigation.md
+    - .pf/artifacts/t02-work-resources-20260925/review-findings.md
+    - .pf/artifacts/t02-work-resources-20260925/scope.md
+    - .pf/artifacts/t02-work-resources-20260925/test-cases.md
+    - .pf/artifacts/t02-work-resources-20260925/test-plan.md
+    - .pf/artifacts/t02-work-resources-20260925/test-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-25T20:43:10Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/t02-work-resources-20260925/evolution-report.md
+      status: ready
+      recorded_at: '2026-09-25T20:43:37Z'
+      sha256: 'sha256:faededdb12d53d5e23e0373c0603e249074909e0b4c7c3d743f916938aa9cbff'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/t02-work-resources-20260925/evolution-report.md
+      status: passed
+      summary: Scope/material/SQLite lessons and legacy/install limits captured; next T03 identified.
+      recorded_at: '2026-09-25T20:43:37Z'
+      sha256: 'sha256:faededdb12d53d5e23e0373c0603e249074909e0b4c7c3d743f916938aa9cbff'
+  notes: T02 complete; begin separate T03 Work under approved r02 AFK sequence. Do not mutate historical capsules.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-09-25T19:46:50Z'
+    completed_at: '2026-09-25T19:48:42Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t02-work-resources-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T19:48:38Z'
+        sha256: 'sha256:28ade10d1c9a802636bb555e1957585d4391a739638c0a38f32e8b756bb727a0'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/t02-work-resources-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T19:48:38Z'
+        sha256: 'sha256:28ade10d1c9a802636bb555e1957585d4391a739638c0a38f32e8b756bb727a0'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/t02-work-resources-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T19:48:38Z'
+        sha256: 'sha256:28ade10d1c9a802636bb555e1957585d4391a739638c0a38f32e8b756bb727a0'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/t02-work-resources-20260925/scope.md
+        status: passed
+        summary: Fresh same snapshot; exact T02 assignment/capsule and process pin inspected; local feature lifecycle and operator delegation override recorded.
+        recorded_at: '2026-09-25T19:48:38Z'
+        sha256: 'sha256:28ade10d1c9a802636bb555e1957585d4391a739638c0a38f32e8b756bb727a0'
+    notes: Context and T02 identity verified; proceed to intake under accepted T01 contract and AFK serial plan.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-09-25T19:48:42Z'
+    completed_at: '2026-09-25T19:49:19Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/t02-work-resources-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T19:49:12Z'
+        sha256: 'sha256:28ade10d1c9a802636bb555e1957585d4391a739638c0a38f32e8b756bb727a0'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/t02-work-resources-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T19:49:12Z'
+        sha256: 'sha256:28ade10d1c9a802636bb555e1957585d4391a739638c0a38f32e8b756bb727a0'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t02-work-resources-20260925/scope.md
+        status: ready
+        recorded_at: '2026-09-25T19:49:12Z'
+        sha256: 'sha256:28ade10d1c9a802636bb555e1957585d4391a739638c0a38f32e8b756bb727a0'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/t02-work-resources-20260925/scope.md
+        status: passed
+        summary: Explicit Work-scoped reads with pinned/current/stage intersection and material proof; bounded source/schema/docs/test scope, legacy immutability, no installed operations.
+        recorded_at: '2026-09-25T19:49:12Z'
+        sha256: 'sha256:28ade10d1c9a802636bb555e1957585d4391a739638c0a38f32e8b756bb727a0'
+    notes: Primary accepts T02 scope within user-authorized r02 implementation. Investigate existing resource search/resolution and immutable Work bindings before architecture.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-09-25T19:49:19Z'
+    completed_at: '2026-09-25T19:55:58Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/t02-work-resources-20260925/investigation.md
+        status: ready
+        recorded_at: '2026-09-25T19:55:53Z'
+        sha256: 'sha256:bf531e2af82bed66644bd0ec974c987890a7425d467adb2a2f4a68337f244d5f'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/t02-work-resources-20260925/investigation.md
+        status: ready
+        recorded_at: '2026-09-25T19:55:53Z'
+        sha256: 'sha256:bf531e2af82bed66644bd0ec974c987890a7425d467adb2a2f4a68337f244d5f'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/t02-work-resources-20260925/investigation.md
+        status: passed
+        summary: A/B source MCP reproduction saved; selector/capsule/index/material paths inspected; additive and legacy boundaries recorded.
+        recorded_at: '2026-09-25T19:55:53Z'
+        sha256: 'sha256:bf531e2af82bed66644bd0ec974c987890a7425d467adb2a2f4a68337f244d5f'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/t02-work-resources-20260925/investigation.md
+        status: passed
+        summary: A/B source MCP reproduction saved; selector/capsule/index/material paths inspected; additive and legacy boundaries recorded.
+        recorded_at: '2026-09-25T19:55:53Z'
+        sha256: 'sha256:bf531e2af82bed66644bd0ec974c987890a7425d467adb2a2f4a68337f244d5f'
+    notes: Investigation confirmed missing Work resource surface and material-generation gap; no authorization bypass claimed. Proceed to resource domain rules.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-09-25T19:55:58Z'
+    completed_at: '2026-09-25T19:57:15Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/t02-work-resources-20260925/domain.md
+        status: ready
+        recorded_at: '2026-09-25T19:57:11Z'
+        sha256: 'sha256:67ed89e5b168fdb470e3dcb33d0d6b3a321c6e99afb8444e76b2fd2f2b17d232'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/t02-work-resources-20260925/domain.md
+        status: ready
+        recorded_at: '2026-09-25T19:57:11Z'
+        sha256: 'sha256:67ed89e5b168fdb470e3dcb33d0d6b3a321c6e99afb8444e76b2fd2f2b17d232'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/t02-work-resources-20260925/domain.md
+        status: ready
+        recorded_at: '2026-09-25T19:57:11Z'
+        sha256: 'sha256:67ed89e5b168fdb470e3dcb33d0d6b3a321c6e99afb8444e76b2fd2f2b17d232'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/t02-work-resources-20260925/domain.md
+        status: passed
+        summary: Exact Work/context selectors; pinned/current/stage intersection; bounded metadata/fulltext identities; immutable legacy behavior and provenance evidence.
+        recorded_at: '2026-09-25T19:57:11Z'
+        sha256: 'sha256:67ed89e5b168fdb470e3dcb33d0d6b3a321c6e99afb8444e76b2fd2f2b17d232'
+    notes: Domain rules accepted. Material binding is distinct from optional index readiness and mutable output trees. Proceed to bounded shared-service architecture.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-09-25T19:57:15Z'
+    completed_at: '2026-09-25T19:57:57Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/t02-work-resources-20260925/architecture.md
+        status: ready
+        recorded_at: '2026-09-25T19:57:54Z'
+        sha256: 'sha256:360b79f097c444d70a0a2ca0fdbfa8db16ce413bdbe5e948477f1a53b54ce042'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/t02-work-resources-20260925/architecture.md
+        status: ready
+        recorded_at: '2026-09-25T19:57:54Z'
+        sha256: 'sha256:360b79f097c444d70a0a2ca0fdbfa8db16ce413bdbe5e948477f1a53b54ce042'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/t02-work-resources-20260925/architecture.md
+        status: ready
+        recorded_at: '2026-09-25T19:57:54Z'
+        sha256: 'sha256:360b79f097c444d70a0a2ca0fdbfa8db16ce413bdbe5e948477f1a53b54ce042'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/t02-work-resources-20260925/architecture.md
+        status: passed
+        summary: Shared exact-selector Work service plus bounded pure material module; new capsule component and CLI/MCP routes; independent project coverage; fixed budgets and negative matrix before code.
+        recorded_at: '2026-09-25T19:57:54Z'
+        sha256: 'sha256:360b79f097c444d70a0a2ca0fdbfa8db16ce413bdbe5e948477f1a53b54ce042'
+    notes: Primary accepts T02 architecture and disjoint material-module refinement within operator-authorized scope. Begin implementation; old capsules and project API meaning preserved.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-09-25T19:57:57Z'
+    completed_at: '2026-09-25T20:17:08Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/t02-work-resources-20260925/implementation.md
+        status: ready
+        recorded_at: '2026-09-25T20:16:58Z'
+        sha256: 'sha256:0c010ab8123e38ac4f49844fa8b210821fdb4666d4d950ab5a8744eefdb23650'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/t02-work-resources-20260925/implementation.md
+        status: ready
+        recorded_at: '2026-09-25T20:16:58Z'
+        sha256: 'sha256:0c010ab8123e38ac4f49844fa8b210821fdb4666d4d950ab5a8744eefdb23650'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/t02-work-resources-20260925/implementation.md
+        status: passed
+        summary: Exact Work read service/material helper and additive CLI/MCP/schema/docs integration complete; real source fulltext CLI/MCP probe PASS. No installed/shared or old capsule changes.
+        recorded_at: '2026-09-25T20:16:58Z'
+        sha256: 'sha256:0c010ab8123e38ac4f49844fa8b210821fdb4666d4d950ab5a8744eefdb23650'
+    notes: Implementation complete, developer positive and bounded material checks pass. Proceed to independent review and comprehensive negative/source regression assurance; source acceptance not yet claimed.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-09-25T20:17:08Z'
+    completed_at: '2026-09-25T20:42:27Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/t02-work-resources-20260925/review-findings.md
+        status: ready
+        recorded_at: '2026-09-25T20:42:23Z'
+        sha256: 'sha256:9bef3e663c2a65ec319836ea31cc3610071d6ef5b379cc6dbc0380b0b88e8248'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/t02-work-resources-20260925/test-plan.md
+        status: ready
+        recorded_at: '2026-09-25T20:42:23Z'
+        sha256: 'sha256:53b5332877428b580dbaa14fca7ab63aa12aa8943dd997892b983f471e5ad6a1'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/t02-work-resources-20260925/test-cases.md
+        status: ready
+        recorded_at: '2026-09-25T20:42:23Z'
+        sha256: 'sha256:8475985e310569addd27583eaa71a63373191c8ea2ed786625c85ab5088f5bea'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/t02-work-resources-20260925/test-report.md
+        status: ready
+        recorded_at: '2026-09-25T20:42:23Z'
+        sha256: 'sha256:4092aef913f93eeab9cf5afca7485ce88d530f35bcba9abc872507b9458fb6c4'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/t02-work-resources-20260925/test-report.md
+        status: passed
+        summary: New regression and nine compatibility smokes PASS; schema/public/checksum/closure proofs PASS; reviewed final fixes; symlink host limit explicit.
+        recorded_at: '2026-09-25T20:42:23Z'
+        sha256: 'sha256:4092aef913f93eeab9cf5afca7485ce88d530f35bcba9abc872507b9458fb6c4'
+    notes: T02 local source assurance accepted; release-delivery may proceed under AFK authorization. Installed/actual-host qualification remains T06.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-09-25T20:42:27Z'
+    completed_at: '2026-09-25T20:43:10Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/t02-work-resources-20260925/delivery-report.md
+        status: ready
+        recorded_at: '2026-09-25T20:43:02Z'
+        sha256: 'sha256:1face02efaa3cd84d6705ab1359aa63e6c5f57aa83dbe6a425b7eac9c4162efb'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/t02-work-resources-20260925/delivery-report.md
+        status: passed
+        summary: Local source accepted, no requested public release; archive/installed qualification intentionally deferred to integrated T06.
+        recorded_at: '2026-09-25T20:43:02Z'
+        sha256: 'sha256:1face02efaa3cd84d6705ab1359aa63e6c5f57aa83dbe6a425b7eac9c4162efb'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/t02-work-resources-20260925/delivery-report.md
+        status: passed
+        summary: Local source accepted, no requested public release; archive/installed qualification intentionally deferred to integrated T06.
+        recorded_at: '2026-09-25T20:43:02Z'
+        sha256: 'sha256:1face02efaa3cd84d6705ab1359aa63e6c5f57aa83dbe6a425b7eac9c4162efb'
+    notes: T02 source delivery accepted; evolve captures compatibility and integration boundaries.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-09-25T20:43:10Z'
+    completed_at: '2026-09-25T20:43:45Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/t02-work-resources-20260925/evolution-report.md
+        status: ready
+        recorded_at: '2026-09-25T20:43:37Z'
+        sha256: 'sha256:faededdb12d53d5e23e0373c0603e249074909e0b4c7c3d743f916938aa9cbff'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/t02-work-resources-20260925/evolution-report.md
+        status: passed
+        summary: Scope/material/SQLite lessons and legacy/install limits captured; next T03 identified.
+        recorded_at: '2026-09-25T20:43:37Z'
+        sha256: 'sha256:faededdb12d53d5e23e0373c0603e249074909e0b4c7c3d743f916938aa9cbff'
+    notes: T02 complete; begin separate T03 Work under approved r02 AFK sequence. Do not mutate historical capsules.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20260925-140110-0dbc7c
+  snapshot_checksum: 'sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562'
+  assignment_capsule: .pf/contexts/assignment-capsules/t02-pf-vision-alignment-r02-implement-explicit-work-context-resource-sea.capsule.yaml
+  assignment_capsule_checksum: 'sha256:2fb619b7c370565ab7519689c4ff5aaa808dc528846b5793021c2c30210bff29'

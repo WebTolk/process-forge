@@ -1,0 +1,382 @@
+schema_version: 1
+id: t10-pf-vision-follow-up-implement-the-first-local-read-only-terminal-mon
+title: 'T10 PF vision follow-up: implement the first local read-only terminal monitor fo'
+run_id: garage-t10-pf-vision-follow-up-implement-the-first-local-read-only-termi
+process: software-feature-development
+status: done
+created_at: '2026-09-26T16:05:40Z'
+updated_at: '2026-09-26T16:34:38Z'
+objective: 'T10 PF vision follow-up: implement the first local read-only terminal monitor for existing ProcessForge Runtime, with explicit freshness and unknown states, bounded polling, independent monitor lifecycle, narrow and non-TTY output, JSON mode, screen-state and failure-path tests, and EN/RU operator documentation. Preserve existing work and immutable evidence. No daemon startup, stop, restart, installation, shared configuration changes, browser UI, remote web, privacy-engine implementation or public release.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: 'Final handoff: first T10 read-only monitor slice implemented, tested and delivered from source; project-local evolution captured. Broader metrics/lifecycle controls, installed update/public release and old journal investigation are separate work. Complete this Work and verify final immutable evidence/capsule/source hashes.'
+  artifacts:
+    - .pf/artifacts/t10-monitor-20260926/architecture.md
+    - .pf/artifacts/t10-monitor-20260926/delivery-report.md
+    - .pf/artifacts/t10-monitor-20260926/domain.md
+    - .pf/artifacts/t10-monitor-20260926/evolution-report.md
+    - .pf/artifacts/t10-monitor-20260926/implementation.md
+    - .pf/artifacts/t10-monitor-20260926/investigation.md
+    - .pf/artifacts/t10-monitor-20260926/orchestration.md
+    - .pf/artifacts/t10-monitor-20260926/preservation.json
+    - .pf/artifacts/t10-monitor-20260926/review-findings.md
+    - .pf/artifacts/t10-monitor-20260926/scope.md
+    - .pf/artifacts/t10-monitor-20260926/test-plan.md
+    - .pf/artifacts/t10-monitor-20260926/test-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-26T16:33:35Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/t10-monitor-20260926/evolution-report.md
+      status: ready
+      recorded_at: '2026-09-26T16:34:32Z'
+      sha256: 'sha256:f56acac4f874799e783a34778b9a97ea8e7f95c453e23ee0d28bff5ceed69e62'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/t10-monitor-20260926/evolution-report.md
+      status: passed
+      recorded_at: '2026-09-26T16:34:32Z'
+      sha256: 'sha256:f56acac4f874799e783a34778b9a97ea8e7f95c453e23ee0d28bff5ceed69e62'
+  notes: 'Final handoff: first T10 read-only monitor slice implemented, tested and delivered from source; project-local evolution captured. Broader metrics/lifecycle controls, installed update/public release and old journal investigation are separate work. Complete this Work and verify final immutable evidence/capsule/source hashes.'
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-09-26T16:05:40Z'
+    completed_at: '2026-09-26T16:09:17Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t10-monitor-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T16:09:09Z'
+        sha256: 'sha256:21fb5c7ee35cd154db8932af8341d3f5762c085ae2e4563a722b1ad757f1c2ed'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/t10-monitor-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T16:09:09Z'
+        sha256: 'sha256:21fb5c7ee35cd154db8932af8341d3f5762c085ae2e4563a722b1ad757f1c2ed'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/t10-monitor-20260926/orchestration.md
+        status: ready
+        recorded_at: '2026-09-26T16:09:09Z'
+        sha256: 'sha256:21fb5c7ee35cd154db8932af8341d3f5762c085ae2e4563a722b1ad757f1c2ed'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/t10-monitor-20260926/orchestration.md
+        status: passed
+        recorded_at: '2026-09-26T16:09:09Z'
+        sha256: 'sha256:21fb5c7ee35cd154db8932af8341d3f5762c085ae2e4563a722b1ad757f1c2ed'
+    notes: 'Orchestration handoff: scoped first read-only terminal monitor, single primary writer, baseline captured, no worker permissions inferred from empty grants. No live infrastructure lifecycle changes. Proceed to intake.'
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-09-26T16:09:17Z'
+    completed_at: '2026-09-26T16:10:14Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/t10-monitor-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T16:10:08Z'
+        sha256: 'sha256:5feb51b9d293b85f3f774755432b2dbfb535b8b0a00c1610204422ef46c6bed8'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/t10-monitor-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T16:10:08Z'
+        sha256: 'sha256:5feb51b9d293b85f3f774755432b2dbfb535b8b0a00c1610204422ef46c6bed8'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t10-monitor-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T16:10:08Z'
+        sha256: 'sha256:5feb51b9d293b85f3f774755432b2dbfb535b8b0a00c1610204422ef46c6bed8'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/t10-monitor-20260926/scope.md
+        status: passed
+        recorded_at: '2026-09-26T16:10:08Z'
+        sha256: 'sha256:5feb51b9d293b85f3f774755432b2dbfb535b8b0a00c1610204422ef46c6bed8'
+    notes: 'Intake handoff: R01-R07 define a complete first read-only viewer, with honest unknown metrics and explicit later T10 boundaries. Use exact declared file scope and preserve baseline. Continue source-backed investigation.'
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-09-26T16:10:14Z'
+    completed_at: '2026-09-26T16:11:08Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/t10-monitor-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T16:11:02Z'
+        sha256: 'sha256:4b74f0fc97136f460afd0a37bd52406bc470aa8a0a482751d97b79ec5a41921b'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/t10-monitor-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T16:11:02Z'
+        sha256: 'sha256:4b74f0fc97136f460afd0a37bd52406bc470aa8a0a482751d97b79ec5a41921b'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/t10-monitor-20260926/investigation.md
+        status: passed
+        recorded_at: '2026-09-26T16:11:02Z'
+        sha256: 'sha256:4b74f0fc97136f460afd0a37bd52406bc470aa8a0a482751d97b79ec5a41921b'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/t10-monitor-20260926/investigation.md
+        status: passed
+        recorded_at: '2026-09-26T16:11:02Z'
+        sha256: 'sha256:4b74f0fc97136f460afd0a37bd52406bc470aa8a0a482751d97b79ec5a41921b'
+    notes: 'Investigation handoff: /status scans projects and token loader can write, so viewer uses bounded local state plus readiness probe; preserve shared lifecycle semantics with a pure classifier. Session cache is not active truth. No infrastructure changes needed.'
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-09-26T16:11:08Z'
+    completed_at: '2026-09-26T16:12:45Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/t10-monitor-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T16:12:40Z'
+        sha256: 'sha256:60f88c871284b9ea6fb1c6ac6143ef39561e6365dc4397f317fb5b47b9bb21af'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/t10-monitor-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T16:12:40Z'
+        sha256: 'sha256:60f88c871284b9ea6fb1c6ac6143ef39561e6365dc4397f317fb5b47b9bb21af'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/t10-monitor-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T16:12:40Z'
+        sha256: 'sha256:60f88c871284b9ea6fb1c6ac6143ef39561e6365dc4397f317fb5b47b9bb21af'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/t10-monitor-20260926/domain.md
+        status: passed
+        recorded_at: '2026-09-26T16:12:40Z'
+        sha256: 'sha256:60f88c871284b9ea6fb1c6ac6143ef39561e6365dc4397f317fb5b47b9bb21af'
+    notes: 'Domain handoff: distinguish lock owner, readiness, cached health/scheduler, freshness and observation coverage. Cached registrations are not activity; unknown is explicit. No write or lifecycle authority in viewer.'
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-09-26T16:12:45Z'
+    completed_at: '2026-09-26T16:13:16Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/t10-monitor-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T16:13:09Z'
+        sha256: 'sha256:0ad947da2942e898a16934ea92181d8f520903da4f12a0ac7d31b86ddc91ff06'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/t10-monitor-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T16:13:09Z'
+        sha256: 'sha256:0ad947da2942e898a16934ea92181d8f520903da4f12a0ac7d31b86ddc91ff06'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/t10-monitor-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T16:13:09Z'
+        sha256: 'sha256:0ad947da2942e898a16934ea92181d8f520903da4f12a0ac7d31b86ddc91ff06'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/t10-monitor-20260926/architecture.md
+        status: passed
+        recorded_at: '2026-09-26T16:13:09Z'
+        sha256: 'sha256:0ad947da2942e898a16934ea92181d8f520903da4f12a0ac7d31b86ddc91ff06'
+    notes: 'Architecture handoff: bounded collector and pure projection/rendering; reusable lifecycle classifier, no full status/project scans or diagnostic writes. Implement first viewer with explicit unknown coverage, deterministic screen tests and no shared installation.'
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-09-26T16:13:16Z'
+    completed_at: '2026-09-26T16:27:25Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/t10-monitor-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T16:27:17Z'
+        sha256: 'sha256:5f51971c1dd7d833778979ed22d231d1a4f1a86ed4767e7e266745334f936f61'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/t10-monitor-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T16:27:17Z'
+        sha256: 'sha256:5f51971c1dd7d833778979ed22d231d1a4f1a86ed4767e7e266745334f936f61'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/t10-monitor-20260926/preservation.json
+        status: passed
+        recorded_at: '2026-09-26T16:27:17Z'
+        sha256: 'sha256:430728f96d89dd85e1f96a0770e349e65a58c5b5e7652e50a292d95f0d11eb9f'
+    notes: 'Implementation handoff: first read-only viewer, CLI/docs/smoke complete; exact nine-file product scope, baseline preserved. Source Windows PTY Q exit observed. Proceed to final assurance, retain pre-existing malformed live journal finding separately from product validation.'
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-09-26T16:27:25Z'
+    completed_at: '2026-09-26T16:32:25Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/t10-monitor-20260926/review-findings.md
+        status: ready
+        recorded_at: '2026-09-26T16:32:19Z'
+        sha256: 'sha256:78afc561394c29613c7a88dc6da89e5c3aeb6cc6ec1db7d30b67285c7c66db8b'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/t10-monitor-20260926/test-plan.md
+        status: ready
+        recorded_at: '2026-09-26T16:32:19Z'
+        sha256: 'sha256:8071bf89bb17dd81da5a41eaddd87cd25867eb21bb66333266239536dbec8b12'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/t10-monitor-20260926/test-plan.md
+        status: ready
+        recorded_at: '2026-09-26T16:32:19Z'
+        sha256: 'sha256:8071bf89bb17dd81da5a41eaddd87cd25867eb21bb66333266239536dbec8b12'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/t10-monitor-20260926/test-report.md
+        status: ready
+        recorded_at: '2026-09-26T16:32:19Z'
+        sha256: 'sha256:c6428639bc59eca55328d36fc087aee2070f1fa837fbbd3d05dc30f7c1ac228b'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/t10-monitor-20260926/test-report.md
+        status: passed
+        recorded_at: '2026-09-26T16:32:19Z'
+        sha256: 'sha256:c6428639bc59eca55328d36fc087aee2070f1fa837fbbd3d05dc30f7c1ac228b'
+    notes: 'Assurance handoff: scoped monitor and seven existing source regressions pass; public fixture schemas/checksums/monitor pass; Windows PTY Q exit and restoration observed; baseline preserved. Retain full-checkout schema FAIL for old private journal line 34212 as separate finding, not a green global claim. Source-only delivery; no shared install.'
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-09-26T16:32:25Z'
+    completed_at: '2026-09-26T16:33:35Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/t10-monitor-20260926/delivery-report.md
+        status: ready
+        recorded_at: '2026-09-26T16:33:29Z'
+        sha256: 'sha256:6a0747f8762f27ef6c6d168fb914ae71da0c355673c1c4124c01ad977bb4f8af'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/t10-monitor-20260926/delivery-report.md
+        status: passed
+        recorded_at: '2026-09-26T16:33:29Z'
+        sha256: 'sha256:6a0747f8762f27ef6c6d168fb914ae71da0c355673c1c4124c01ad977bb4f8af'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/t10-monitor-20260926/delivery-report.md
+        status: passed
+        recorded_at: '2026-09-26T16:33:29Z'
+        sha256: 'sha256:6a0747f8762f27ef6c6d168fb914ae71da0c355673c1c4124c01ad977bb4f8af'
+    notes: 'Delivery handoff: first terminal monitor slice available from source with exact commands and EN/RU docs; source validation profile completed. Shared install/restart/public release not_applicable. Old private journal finding and unknown aggregate coverage explicit; broader T10 proposal not claimed complete.'
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-09-26T16:33:35Z'
+    completed_at: '2026-09-26T16:34:38Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/t10-monitor-20260926/evolution-report.md
+        status: ready
+        recorded_at: '2026-09-26T16:34:32Z'
+        sha256: 'sha256:f56acac4f874799e783a34778b9a97ea8e7f95c453e23ee0d28bff5ceed69e62'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/t10-monitor-20260926/evolution-report.md
+        status: passed
+        recorded_at: '2026-09-26T16:34:32Z'
+        sha256: 'sha256:f56acac4f874799e783a34778b9a97ea8e7f95c453e23ee0d28bff5ceed69e62'
+    notes: 'Final handoff: first T10 read-only monitor slice implemented, tested and delivered from source; project-local evolution captured. Broader metrics/lifecycle controls, installed update/public release and old journal investigation are separate work. Complete this Work and verify final immutable evidence/capsule/source hashes.'
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20260925-140110-0dbc7c
+  snapshot_checksum: 'sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562'
+  assignment_capsule: .pf/contexts/assignment-capsules/t10-pf-vision-follow-up-implement-the-first-local-read-only-terminal-mon.capsule.yaml
+  assignment_capsule_checksum: 'sha256:6fb471b0e5f7ec47533c9acc17a18ef1cd262dd6ccb3cb79dd4044ebd0fe2cf4'

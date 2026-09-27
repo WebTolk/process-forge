@@ -1,0 +1,150 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "evolve",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "delivery-report",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "t02-pf-vision-alignment-r02-implement-explicit-work-context-resource-sea",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "delivery-report",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "release-readiness-decided"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "delivery-profile-run-or-skipped-with-reason"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "release-delivery"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "evidence": [],
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "assurance-complete",
+          "kind": "gate",
+          "path": ".pf/artifacts/t02-work-resources-20260925/test-report.md",
+          "recorded_at": "2026-09-25T20:42:23Z",
+          "sha256": "sha256:4092aef913f93eeab9cf5afca7485ce88d530f35bcba9abc872507b9458fb6c4",
+          "status": "passed",
+          "summary": "New regression and nine compatibility smokes PASS; schema/public/checksum/closure proofs PASS; reviewed final fixes; symlink host limit explicit."
+        },
+        "id": "assurance-complete",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "release-readiness-decided",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "decision"
+      },
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "delivery-profile-run-or-skipped-with-reason",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "decision"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "delivery-report",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "release-readiness-decided"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "delivery-profile-run-or-skipped-with-reason"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "release-delivery"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "release-delivery",
+  "obligations": [],
+  "previous_stage_id": "code-assurance",
+  "process": {
+    "fingerprint": "sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.1.0"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "test-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/t02-work-resources-20260925/test-report.md",
+        "recorded_at": "2026-09-25T20:42:23Z",
+        "sha256": "sha256:4092aef913f93eeab9cf5afca7485ce88d530f35bcba9abc872507b9458fb6c4",
+        "status": "ready"
+      },
+      "id": "test-report",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-t02-pf-vision-alignment-r02-implement-explicit-work-context-resou",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "release-delivery",
+    "status": "in_progress",
+    "title": "Release Delivery"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "project.process-forge:project-profile",
+      "project.process-forge:project-artifacts"
+    ]
+  }
+}

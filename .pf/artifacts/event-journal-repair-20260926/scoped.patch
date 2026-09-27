@@ -1,0 +1,281 @@
+--- before/checksums/processforge.sha256
++++ after/checksums/processforge.sha256
+@@ -107,7 +107,7 @@
+ bc3f084a08357e736531017ad737a798117aa66f1b3f92b399e1fb5ff7e2c3f5  docs/concepts/runtime-monitor.md
+ 08f6bcc331b5d89f66f2ebaa6c1611d5ab17470452254625c192809daedd6ff0  docs/concepts/semantic-parity.md
+ 49dd431cced87cf44c17fa9b731725e34964b8e882cc7bae620f3b4a67f74ff5  docs/concepts/session-bootstrap.md
+-e1312ae345d78829a1681745ba21ddcb9520f494a7514b49c2c44ce7f8ab02aa  docs/concepts/session-telemetry.md
++11255366bf901afb2a3ca14021b741110b42e3d04a16acc912b190555475ffb0  docs/concepts/session-telemetry.md
+ d77c60d5240a9cef4f483685d3ad2a37237fc32a25acff04bb9c42cb8a01c36c  docs/concepts/shell-agent-subagent-policy.md
+ e4f3626390cbb0a05b1ec30650c5c54d32beb56b11c0ab543b358a7c5c97e30e  docs/concepts/specializations.md
+ 1f898d33176974727046b84de1ffcffd523966fa3215bf949bee19be2ac238ae  docs/concepts/status-model.md
+@@ -233,6 +233,7 @@
+ 62a9f93050b5f17d2a49b4bb3a5e67a0a9b2d057294082410e4cb8f341d55f37  docs/ru/concepts/runtime-model.md
+ e8dee9260aae40ce282066fba585931afb248b3faae5e16f534ad5e0af3c22ce  docs/ru/concepts/runtime-monitor.md
+ 2d0adea436fbf0c9ac3b6c45afcfffed50ce2af7d9f19d0f545b025feec70787  docs/ru/concepts/semantic-parity.md
++014781f52fbe82f101f6bb027eedcea668380f91170ec1e18c3894522bac3898  docs/ru/concepts/session-telemetry.md
+ b3c1d6980fcc999d470c1985de2760e5a8de122e031604397e6d85b96f6cd9c0  docs/ru/concepts/shell-agent-subagent-policy.md
+ a2fc1fa4b166a162d1dd10e6bb91b291fd1d8c63cc622bd6d38f373a9bf6b85a  docs/ru/concepts/specializations.md
+ 2e31c02692366f0b07836fe83cd04e3ee864772411fc78da004f52ba50bfb201  docs/ru/concepts/update-lifecycle.md
+@@ -723,7 +724,7 @@
+ 70d89a92df622823bf6b1c9e56580a925a5a402d20a495e43160cd8558a9fd3a  tools/pf_runtime/windows_autostart.py
+ c5959bcf2f738fa82b52d3380bece30cb226f305395d3ac129bceebc5156dd2e  tools/prepared_executor.py
+ f0dddadd196e7dc9e217f940b007837056b518bccb7089f4f6af8adb6bf3ee7f  tools/process_execution_smoke_support.py
+-60e2fd1bdd9bf1e0191c31624c627d0762ce13eb472572b31d6a57f78e9fd034  tools/processforge.py
++98c6c2e0950901cbbd75e21819b1941071491d0e36241acaa8ff6916c2c632cb  tools/processforge.py
+ 26f3b9bf8502afeb69ce5245df40aa80ed4cd1a19cab0abc6fb5ddc5d39f424f  tools/processforge_subprocess.py
+ 7ef9cae38fe2e4a17c17d19f9a329c6ded82a47702c4483c3f0a77733c54cd24  tools/release_metadata_contract.py
+ c6906397a9bcb932112165d1b1996d2ad8486447fa2e9f9bbf623fc4e6e68208  tools/smoke_agent_director_tick.py
+@@ -839,6 +840,7 @@
+ 06bedc990414d021f6b7fb1e81ee325fc9954a3a4743e786b2964499acaab1f0  tools/smoke_process_catalog_not_implicit_execution_route.py
+ 174c4cd9c08efe5b50a67596043af6ee0724a3d6c422e6e11c283e6ea4c5f70e  tools/smoke_process_definition_schema_contract.py
+ 5c68e033930529a3482bc4c700ddb2b2b4b5375a70ae7bad64495269cc6957f7  tools/smoke_process_directory_layout.py
++d340b85c485f34fd18e11d5fb8114f50f515c21125d5bea12e7093a97231252a  tools/smoke_process_event_concurrency.py
+ 9be74ba39c25980d00b93da6ae90c941da965d8c918aaa0f1eff2f1e75c3526b  tools/smoke_process_execution_initial_stage.py
+ 6fbcbeb4541c3e4280467ca6ce403573320fc2e3e084dfdb9bf3446e7b0924a3  tools/smoke_process_execution_integrity.py
+ 0da4b14cb90618be01993858744f3c692324d89d680e8f29d4fd9786bcc33194  tools/smoke_process_execution_state_semantics.py
+--- before/docs/concepts/session-telemetry.md
++++ after/docs/concepts/session-telemetry.md
+@@ -50,3 +50,19 @@
+ describe flow-level facts that hooks or future consumers can observe. Chat relay
+ records conversation messages separately under `.pf/runtime/chat/transcripts/`
+ and emits `chat.message.recorded` with metadata-only content by default.
++
++## Project event journal writers
++
++Project event-id deduplication and append use the same cross-process writer
++lock. A complete UTF-8 record is appended and flushed before success; hooks
++dispatch after releasing the lock. A lock failure is reported explicitly.
++Already running clients keep their loaded code until their normal restart or
++reconnect, so the guarantee applies to writers using the updated Core.
++
++Malformed historical records must retain their original evidence. Do not
++replace or truncate a live journal to remove a bad line: concurrent appended
++events and byte offsets would be at risk. A reviewed operator recovery may
++quarantine an exact invalid fragment, preserve its newline and byte length,
++and verify every valid byte plus later appends. Blank lines are ignored by the
++existing NDJSON readers. Keep the original backup and a separate repair audit;
++do not reconstruct an event id or payload from an incomplete timestamp.
+--- before/docs/ru/concepts/session-telemetry.md
++++ after/docs/ru/concepts/session-telemetry.md
+@@ -0,0 +1,34 @@
++# Телеметрия сессии и журнал событий
++
++Телеметрия описывает действия агента в сессии. Процессные события фиксируют
++факты выполнения процесса, а сообщения разговора сохраняются отдельно.
++Данные в `.pf/runtime/` приватны; публичные отчёты не должны содержать
++исходные сообщения, секреты или содержимое очереди хуков.
++
++Необязательная [диагностика](diagnostics.md) дополняет эти данные. Её профиль
++и порог подробности не отключают обязательные процессные события.
++Полное описание путей и словаря телеметрии — в
++[английском контракте](../../concepts/session-telemetry.md).
++
++## Параллельная запись событий
++
++Проверка дубликата по идентификатору события и добавление записи в журнал
++проекта выполняются под одной межпроцессной блокировкой. Полная запись UTF-8
++сохраняется и сбрасывается на диск до успешного возврата. Обработка хуков
++начинается после освобождения блокировки. Ошибка захвата блокировки
++сообщается явно. Уже запущенные клиенты используют прежний загруженный код
++до штатного перезапуска или переподключения; гарантия относится к писателям
++на обновлённом Core.
++
++## Восстановление повреждённой записи
++
++Сначала сохраните исходные доказательства. Нельзя целиком заменять или
++обрезать действующий журнал ради удаления плохой строки: это создаёт риск
++потери параллельно записанных событий и меняет смещения последующих данных.
++
++Проверенная операторская процедура может вынести точный повреждённый
++фрагмент в отдельное хранилище, сохранив длину строки и её перевод строки.
++Она должна проверить неизменность всех исправных байтов и новых записей.
++Существующие читатели NDJSON пропускают пустые строки. Сохраняйте исходную
++копию и отдельную запись о восстановлении; не придумывайте идентификатор
++или содержимое события по обрывку временной метки.
+--- before/tools/processforge.py
++++ after/tools/processforge.py
+@@ -7052,6 +7052,7 @@
+         ReleaseCommand("smoke_derived_report_stale_marking", [sys.executable, str(root / "tools" / "smoke_derived_report_stale_marking.py")], 180),
+         ReleaseCommand("smoke_runtime_status_version_truth", [sys.executable, str(root / "tools" / "smoke_runtime_status_version_truth.py")], 180),
+         ReleaseCommand("smoke_runtime_monitor", [sys.executable, str(root / "tools" / "smoke_runtime_monitor.py")], 120),
++        ReleaseCommand("smoke_process_event_concurrency", [sys.executable, str(root / "tools" / "smoke_process_event_concurrency.py")], 120),
+         ReleaseCommand("smoke_user_like_garage_path", [sys.executable, str(root / "tools" / "smoke_user_like_garage_path.py")], 180),
+         ReleaseCommand("smoke_parameter_cascade_resolution", [sys.executable, str(root / "tools" / "smoke_parameter_cascade_resolution.py")], 120),
+         ReleaseCommand("smoke_parameter_freshness", [sys.executable, str(root / "tools" / "smoke_parameter_freshness.py")], 120),
+@@ -11276,19 +11277,29 @@
+     events_path, _outbox = event_runtime_paths(project_root)
+     events_path.parent.mkdir(parents=True, exist_ok=True)
+     event_id = event_id_value(event)
+-    exists = False
+-    if events_path.is_file():
+-        for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
+-            try:
+-                existing = json.loads(line)
+-            except json.JSONDecodeError:
+-                continue
+-            if isinstance(existing, dict) and event_id_value(existing) == event_id:
+-                exists = True
+-                break
+-    if not exists:
+-        with events_path.open("a", encoding="utf-8") as handle:
+-            handle.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
++    record = (json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
++    try:
++        # Deduplication and the whole-record append share one cross-process
++        # writer boundary. A dead owner is recoverable through the OS guard.
++        with registry_file_lock(events_path, stale_after_seconds=0):
++            exists = False
++            if events_path.is_file():
++                for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
++                    try:
++                        existing = json.loads(line)
++                    except json.JSONDecodeError:
++                        continue
++                    if isinstance(existing, dict) and event_id_value(existing) == event_id:
++                        exists = True
++                        break
++            with events_path.open("ab") as handle:
++                if not exists:
++                    handle.write(record)
++                handle.flush()
++                os.fsync(handle.fileno())
++    except SystemExit as exc:
++        # Registry CLI errors must not terminate a Runtime request thread.
++        raise RuntimeError(f"Project event journal writer unavailable: {exc}") from exc
+     if dispatch:
+         dispatch_hooks(project_root, event, dry_run=False, outbox=True)
+     return events_path
+--- before/tools/smoke_process_event_concurrency.py
++++ after/tools/smoke_process_event_concurrency.py
+@@ -0,0 +1,130 @@
++#!/usr/bin/env python3
++"""Actual concurrent journal writers, duplicate ids, durability and hook boundaries."""
++from __future__ import annotations
++
++from contextlib import contextmanager
++import json
++import os
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import time
++from unittest.mock import patch
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / "tools"))
++import processforge as core  # noqa: E402
++
++
++def worker(project: Path, index: int) -> None:
++    (project / f"ready-{index}").touch()
++    deadline = time.monotonic() + 20
++    while not (project / "start").exists():
++        assert time.monotonic() < deadline, "start barrier timed out"
++        time.sleep(0.005)
++    # Slow the first read to expose check-then-append races deterministically.
++    # With a real journal lock, only its owner can reach this read at a time.
++    loads = core.json.loads
++    first = True
++
++    def slow_first(*args, **kwargs):
++        nonlocal first
++        if first:
++            first = False
++            time.sleep(0.25)
++        return loads(*args, **kwargs)
++
++    core.json.loads = slow_first
++    core.append_process_event(project, {"event_id": "evt_shared", "data": {"text": "same"}}, dispatch=False)
++    for item in range(8):
++        core.append_process_event(project, {"event_id": f"evt_worker{index}item{item}",
++                                           "data": {"text": "Журнал 🌍\n" * 2048}}, dispatch=False)
++
++
++def main() -> None:
++    with tempfile.TemporaryDirectory(prefix="pf-event-journal-") as temporary:
++        project = Path(temporary)
++        journal, _ = core.event_runtime_paths(project)
++        journal.parent.mkdir(parents=True)
++        prefix = b"".join((json.dumps({"event_id": f"evt_seed{i}", "data": {"padding": "x" * 512}}) + "\n").encode()
++                          for i in range(512))
++        journal.write_bytes(prefix)
++        workers = [subprocess.Popen([sys.executable, "-B", __file__, "--worker", str(project), str(i)],
++                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
++                   for i in range(4)]
++        try:
++            deadline = time.monotonic() + 25
++            while not all((project / f"ready-{i}").exists() for i in range(4)):
++                assert time.monotonic() < deadline, "workers did not reach the barrier"
++                assert all(p.poll() is None for p in workers), "worker failed before barrier"
++                time.sleep(0.01)
++            (project / "start").touch()
++            for process in workers:
++                out, err = process.communicate(timeout=60)
++                assert process.returncode == 0, (out, err)
++        finally:
++            for process in workers:
++                if process.poll() is None:
++                    process.kill()
++                process.wait(timeout=10)
++        raw = journal.read_bytes()
++        assert raw.startswith(prefix), "preexisting bytes changed"
++        rows = [json.loads(line) for line in raw.splitlines()]
++        ids = [row["event_id"] for row in rows]
++        assert ids.count("evt_shared") == 1, f"duplicate-id race: {ids.count('evt_shared')} copies"
++        assert len(ids) == len(set(ids)) == 545, (len(ids), len(set(ids)))
++        expected = {f"evt_worker{i}item{j}" for i in range(4) for j in range(8)}
++        assert expected.issubset(ids), "a concurrent event was lost"
++        assert all(row["data"]["text"] == "Журнал 🌍\n" * 2048 for row in rows if row["event_id"] in expected)
++
++        held = False
++        dispatched = []
++        synced = []
++        actual_fsync = os.fsync
++
++        @contextmanager
++        def observed_lock(path, **kwargs):
++            nonlocal held
++            assert path == journal and not held
++            held = True
++            try:
++                yield
++            finally:
++                held = False
++
++        def dispatch(_project, event, **kwargs):
++            assert not held, "hook dispatch kept the journal lock"
++            dispatched.append(event["event_id"])
++
++        def fsync(fd):
++            assert held, "durability must precede lock release"
++            synced.append(fd)
++            actual_fsync(fd)
++
++        with patch.object(core, "registry_file_lock", observed_lock), patch.object(core, "dispatch_hooks", dispatch), patch.object(core.os, "fsync", fsync):
++            core.append_process_event(project, {"event_id": "evt_boundary"})
++        assert dispatched == ["evt_boundary"] and synced
++        before = journal.read_bytes()
++
++        @contextmanager
++        def busy(*_args, **_kwargs):
++            raise SystemExit("fixture lock timeout")
++            yield
++
++        with patch.object(core, "registry_file_lock", busy), patch.object(core, "dispatch_hooks", dispatch):
++            try:
++                core.append_process_event(project, {"event_id": "evt_blocked"})
++            except RuntimeError as exc:
++                assert "journal" in str(exc).lower()
++            else:
++                raise AssertionError("lock failure was silently acknowledged")
++        assert journal.read_bytes() == before and dispatched == ["evt_boundary"]
++    print("PASS: concurrent unique/duplicate Unicode events, prefix preservation, durable append, hook boundary and explicit lock failure")
++
++
++if __name__ == "__main__":
++    if sys.argv[1:2] == ["--worker"]:
++        worker(Path(sys.argv[2]), int(sys.argv[3]))
++    else:
++        main()

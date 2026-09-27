@@ -1,0 +1,64 @@
+{
+  "started_at": "2026-09-26T03:46:17.933309+00:00",
+  "checks": [
+    {
+      "command": [
+        ".pf/artifacts/t03-unified-context-20260926/verify-delivery.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"status\": \"PASS\", \"schema_equivalence\": \"PASS\", \"complete_contract_positive\": \"PASS\", \"required_field_negatives\": 18, \"unknown_version_and_missing_source_hash\": \"PASS\", \"docs\": 5, \"python_files\": 8}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-schemas.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: ProcessForge structure and JSON Schema validation passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-public-cleanliness.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: public cleanliness checks passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: wrote checksums\\processforge.sha256\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: checksum inventory matches.\n",
+      "stderr": ""
+    }
+  ],
+  "source_sha256": {
+    "src/processforge_core/work_context.py": "cfa676d241f2913695aaa76c66750fcba62b75f8476227901db8634257357841",
+    "src/processforge_core/process_execution.py": "b1f2b28cd0e3349a6248915d30bf531960e2528ee8ff04b1d79d9f9eb90eabf6",
+    "src/processforge_core/work_resources.py": "f73ccaed5186419fe05edfdfff7933395695234ad5aef2eab2243363600814f9",
+    "tools/processforge.py": "1b41c4dd48386176bf94d251dad1bb084476ca1a7a127867c2ea1aa8ce68f096",
+    "tools/smoke_work_capsule_contract_parity.py": "5c95f5348d5dac304899d9a8f72d95bf7b9e456c4a93db3112c2d8caab7c7a56",
+    "tools/smoke_work_resource_binding.py": "097e6c23f099045876f197d226e35ea03d11f698157fdf2a3835250190458a09",
+    "tools/smoke_worker_run_shell.py": "caf6bc111c0dab5411d4a572d3821359c8622e4e25cc53c31ce7ea7aa1899172",
+    "tools/smoke_worker_workspace_access.py": "2896e3c6801cf3b459fbf15737a55a75a7e39457c8a714c68d796fc73f4a0206",
+    "schemas/execution-contract.schema.json": "ac5e625e81a53825bdce643d7ff1ce1c0286877d0e57343f361a03280cab5f55",
+    "schemas/context-capsule.schema.json": "79696ed6d18fb95e0b09ba792cfbcf72e490c985348b90ef0eb3199b4a12184e",
+    "schemas/assignment.schema.json": "2de37de6080d5ea266a0f3980933f09a90737f990d3e863a94032fa379395b1a",
+    "docs/concepts/work-context.md": "d27de3f1792283010053d15f4d18e35e4035035121e0178d891ddcf3dc23b953",
+    "docs/ru/concepts/work-context.md": "cbdaae3f056a17e3ba328a999622aa0ce2277a1f8e98bfaa96ceddd13fbcc6e1"
+  },
+  "main_legacy_capsule_sha256": "8ee0d2ac810317140423b23529603a42183f2c6be3649e8c94ee33544fdcea9a",
+  "finished_at": "2026-09-26T03:47:08.705224+00:00"
+}

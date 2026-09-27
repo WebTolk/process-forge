@@ -1,0 +1,68 @@
+{
+  "time_utc": "2026-09-25T18:08:30.412140+00:00",
+  "installed_ownership": {
+    "count": 954,
+    "mismatches": []
+  },
+  "entrypoint_hashes": {
+    "tools/processforge.py": "d3c100062981a351706c09f0808138edb6fe2ae7050a67a73fdbc306cb9a90be",
+    "tools/pf_runtime/mcp_server.py": "404a7e00eb0d06097c616870ea03bd28200cf09d9c9f2a50ed3c5c8da4489bc1"
+  },
+  "registered_evidence_unchanged": {
+    ".pf/artifacts/t08-mcp-operability-20260925/scope.md": "sha256:9dd0d89736457da4903a00e576ef0cf9f4f0f104bb4d5480d1fadee9006e3f44",
+    ".pf/artifacts/t08-mcp-operability-20260925/investigation.md": "sha256:ebd2b8004584c8edd70b67bbda39739bc2fc97d7652dd4ad303101dcc3dfdcd8",
+    ".pf/artifacts/t08-mcp-operability-20260925/domain.md": "sha256:7005286664935d2a1acab39144726bdcc8c0b6100635fb5b363fd5da11143684",
+    ".pf/artifacts/t08-mcp-operability-20260925/architecture.md": "sha256:7066c1e48679e5faaba5c44218e5eb6d23df48fb3f4a8fbf45f3467603761b1a",
+    ".pf/artifacts/t08-mcp-operability-20260925/implementation.md": "sha256:7429bebe798a3dee67f7c506d0acf97cc2b2d0d3118c267e20539939692fe1c9"
+  },
+  "capsule_unchanged": true,
+  "workplace_config_unchanged": true,
+  "runtime": {
+    "status": "ready",
+    "health": "degraded",
+    "pid": 2732,
+    "started_at": "2026-09-25T14:32:50Z",
+    "runtime": {
+      "health": "degraded",
+      "running": true,
+      "status": "ready"
+    },
+    "last_scheduler_error": "D:\\Dev\\plg-content-varreplace: FAIL: .pf/process-forge.yaml not found under D:\\Dev\\plg-content-varreplace. Run `python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type <project-type> --apply` first."
+  },
+  "source_work_state": {
+    "project": {
+      "id": "process-forge"
+    },
+    "run": {
+      "id": "garage-t08-mcp-operability-reproduce-current-source-versus-installed-mcp",
+      "status": "in_progress"
+    },
+    "assignment": {
+      "id": "t08-mcp-operability-reproduce-current-source-versus-installed-mcp-freshn",
+      "status": "in_progress"
+    },
+    "stage": {
+      "id": "code-assurance",
+      "status": "in_progress",
+      "title": "Code Assurance"
+    },
+    "process": {
+      "fingerprint": "sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49",
+      "id": "software-feature-development",
+      "pin_status": "pinned",
+      "version": "1.1.0"
+    },
+    "work": {
+      "active_specializations": [],
+      "selected_resource_ids": [
+        "project.process-forge:project-profile",
+        "project.process-forge:project-artifacts"
+      ]
+    },
+    "blockers": []
+  },
+  "installed_regressions": {
+    "passed": 6,
+    "seconds": 85.924
+  }
+}

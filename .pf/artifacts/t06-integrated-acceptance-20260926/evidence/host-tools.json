@@ -1,0 +1,17 @@
+[
+  "mcp__processforge__pf_context",
+  "mcp__processforge__pf_project_initialization_initialize",
+  "mcp__processforge__pf_project_initialization_repair",
+  "mcp__processforge__pf_project_initialization_status",
+  "mcp__processforge__pf_project_state",
+  "mcp__processforge__pf_resolve",
+  "mcp__processforge__pf_search",
+  "mcp__processforge__pf_session_activity",
+  "mcp__processforge__pf_session_chat",
+  "mcp__processforge__pf_session_context",
+  "mcp__processforge__pf_work_start",
+  "mcp__processforge__pf_work_state_5db96d12111c",
+  "mcp__processforge__pf_work_state_9175a5bb3fec",
+  "mcp__processforge__pf_work_transition",
+  "mcp__processforge__pf_workplace_state"
+]

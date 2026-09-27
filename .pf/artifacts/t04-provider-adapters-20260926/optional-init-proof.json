@@ -1,0 +1,49 @@
+{
+  "boundary": "temporary workplace/projects; no shared registry or installed host touched",
+  "kind": "pf.t04.optional_initialization_proof",
+  "passed": true,
+  "scenarios": [
+    {
+      "codex_error": "optional_integration_unavailable",
+      "codex_status": "unavailable",
+      "hooks_created": false,
+      "onboard_exit_code": 0,
+      "passed": true,
+      "project_state": "complete",
+      "scenario": "import_error",
+      "status_exit_code": 0
+    },
+    {
+      "codex_error": "optional_integration_unavailable",
+      "codex_status": "unavailable",
+      "hooks_created": false,
+      "onboard_exit_code": 0,
+      "passed": true,
+      "project_state": "complete",
+      "scenario": "runtime_error",
+      "status_exit_code": 0
+    },
+    {
+      "codex_error": "optional_integration_unavailable",
+      "codex_status": "unavailable",
+      "hooks_created": false,
+      "onboard_exit_code": 0,
+      "passed": true,
+      "project_state": "complete",
+      "scenario": "missing_callable",
+      "status_exit_code": 0
+    },
+    {
+      "codex_error": "optional_integration_result_invalid",
+      "codex_status": "unavailable",
+      "hooks_created": false,
+      "onboard_exit_code": 0,
+      "passed": true,
+      "project_state": "complete",
+      "scenario": "malformed_response",
+      "status_exit_code": 0
+    }
+  ],
+  "schema_version": 1,
+  "source_checkout": true
+}

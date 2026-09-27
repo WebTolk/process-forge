@@ -1,0 +1,392 @@
+schema_version: 1
+id: t05-pf-vision-alignment-r02-prepare-bounded-authorized-immutable-executi
+title: 'T05 PF vision alignment r02: prepare bounded authorized immutable execution inpu'
+run_id: garage-t05-pf-vision-alignment-r02-prepare-bounded-authorized-immutable
+process: software-feature-development
+status: done
+created_at: '2026-09-26T04:55:31Z'
+updated_at: '2026-09-26T06:50:24Z'
+objective: 'T05 PF vision alignment r02: prepare bounded authorized immutable execution input before launching one Work/context/attempt; deterministic offline generic-shell without MCP/network, driver-independent process/scope/outputs, fail-before-launch access checks and restart/retry idempotent result collection. Continue approved AFK sequence after T04; no install/publication, T07/T10 or web UI.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: T05 complete. Continue the approved AFK sequence directly with T06 integrated acceptance; do not conflate source PASS with installed/actual-host new-feature qualification.
+  artifacts:
+    - .pf/artifacts/t05-prepared-input-20260926/architecture.md
+    - .pf/artifacts/t05-prepared-input-20260926/delivery-report.md
+    - .pf/artifacts/t05-prepared-input-20260926/domain.md
+    - .pf/artifacts/t05-prepared-input-20260926/evolution-report.md
+    - .pf/artifacts/t05-prepared-input-20260926/implementation.md
+    - .pf/artifacts/t05-prepared-input-20260926/investigation.md
+    - .pf/artifacts/t05-prepared-input-20260926/review-findings.md
+    - .pf/artifacts/t05-prepared-input-20260926/scope.md
+    - .pf/artifacts/t05-prepared-input-20260926/test-plan.md
+    - .pf/artifacts/t05-prepared-input-20260926/test-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-26T06:47:49Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/t05-prepared-input-20260926/evolution-report.md
+      status: ready
+      recorded_at: '2026-09-26T06:50:18Z'
+      sha256: 'sha256:e8ca10aaa317377a8c0895020ab056997eb917226124178c2f54f235121c6775'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/t05-prepared-input-20260926/evolution-report.md
+      status: passed
+      summary: Recorded authorization, immutable delivery, atomic receipt/lock recovery, private path and primary lifecycle lessons; T06 continuation explicit.
+      recorded_at: '2026-09-26T06:50:18Z'
+      sha256: 'sha256:e8ca10aaa317377a8c0895020ab056997eb917226124178c2f54f235121c6775'
+  notes: T05 complete. Continue the approved AFK sequence directly with T06 integrated acceptance; do not conflate source PASS with installed/actual-host new-feature qualification.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-09-26T04:55:31Z'
+    completed_at: '2026-09-26T04:57:08Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t05-prepared-input-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T04:57:02Z'
+        sha256: 'sha256:bfbb03a6c37aafb7ae56c893128f81a4a4d63071101fb66e8c9eb9769f778163'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/t05-prepared-input-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T04:57:02Z'
+        sha256: 'sha256:bfbb03a6c37aafb7ae56c893128f81a4a4d63071101fb66e8c9eb9769f778163'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/t05-prepared-input-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T04:57:02Z'
+        sha256: 'sha256:bfbb03a6c37aafb7ae56c893128f81a4a4d63071101fb66e8c9eb9769f778163'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/t05-prepared-input-20260926/scope.md
+        status: passed
+        summary: Fresh actual context, new exact T05 identity/process pin/main capsule and bounded source scope confirmed.
+        recorded_at: '2026-09-26T04:57:02Z'
+        sha256: 'sha256:bfbb03a6c37aafb7ae56c893128f81a4a4d63071101fb66e8c9eb9769f778163'
+    notes: T05 preflight complete; intake then investigation, no bootstrap of another Work.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-09-26T04:57:08Z'
+    completed_at: '2026-09-26T04:58:08Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/t05-prepared-input-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T04:58:00Z'
+        sha256: 'sha256:bfbb03a6c37aafb7ae56c893128f81a4a4d63071101fb66e8c9eb9769f778163'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/t05-prepared-input-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T04:58:00Z'
+        sha256: 'sha256:bfbb03a6c37aafb7ae56c893128f81a4a4d63071101fb66e8c9eb9769f778163'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t05-prepared-input-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T04:58:00Z'
+        sha256: 'sha256:bfbb03a6c37aafb7ae56c893128f81a4a4d63071101fb66e8c9eb9769f778163'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/t05-prepared-input-20260926/scope.md
+        status: passed
+        summary: Approved T05 bounded preparation/offline execution scope; reuse accepted T02/T03/T04 contracts, no infrastructure or privacy-engine expansion.
+        recorded_at: '2026-09-26T04:58:00Z'
+        sha256: 'sha256:bfbb03a6c37aafb7ae56c893128f81a4a4d63071101fb66e8c9eb9769f778163'
+    notes: Intake accepted. Inspect actual resource/grant preparation and before behavior.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-09-26T04:58:08Z'
+    completed_at: '2026-09-26T05:04:17Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/t05-prepared-input-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T05:04:11Z'
+        sha256: 'sha256:d2385d68388052f7b1fa44bb7125637cc47c89fabb3c8f28b63d7ae14b792cdd'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/t05-prepared-input-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T05:04:11Z'
+        sha256: 'sha256:d2385d68388052f7b1fa44bb7125637cc47c89fabb3c8f28b63d7ae14b792cdd'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/t05-prepared-input-20260926/investigation.md
+        status: passed
+        summary: Actual missing-grant prepare and duplicate collection reproduced; shared preparation, resource verification, driver and replay seams mapped.
+        recorded_at: '2026-09-26T05:04:11Z'
+        sha256: 'sha256:d2385d68388052f7b1fa44bb7125637cc47c89fabb3c8f28b63d7ae14b792cdd'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/t05-prepared-input-20260926/investigation.md
+        status: passed
+        summary: Actual missing-grant prepare and duplicate collection reproduced; shared preparation, resource verification, driver and replay seams mapped.
+        recorded_at: '2026-09-26T05:04:11Z'
+        sha256: 'sha256:d2385d68388052f7b1fa44bb7125637cc47c89fabb3c8f28b63d7ae14b792cdd'
+    notes: Investigation complete; define prepared input and collection contract before code.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-09-26T05:04:17Z'
+    completed_at: '2026-09-26T05:05:50Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/t05-prepared-input-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T05:05:44Z'
+        sha256: 'sha256:d1d7f6f612ae0b5f3665cd82ac3a4e1abf3610e5eaca8a090662bd702db0b58b'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/t05-prepared-input-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T05:05:44Z'
+        sha256: 'sha256:d1d7f6f612ae0b5f3665cd82ac3a4e1abf3610e5eaca8a090662bd702db0b58b'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/t05-prepared-input-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T05:05:44Z'
+        sha256: 'sha256:d1d7f6f612ae0b5f3665cd82ac3a4e1abf3610e5eaca8a090662bd702db0b58b'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/t05-prepared-input-20260926/domain.md
+        status: passed
+        summary: One-context/attempt input, bounded bodies and current grants, no worker bootstrap, durable idempotent collection and sandbox boundary fixed.
+        recorded_at: '2026-09-26T05:05:44Z'
+        sha256: 'sha256:d1d7f6f612ae0b5f3665cd82ac3a4e1abf3610e5eaca8a090662bd702db0b58b'
+    notes: Domain accepted. Define concrete prepared file, validation and driver/collection integration.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-09-26T05:05:50Z'
+    completed_at: '2026-09-26T05:11:22Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/t05-prepared-input-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T05:11:16Z'
+        sha256: 'sha256:ccf3b1989955ef118e86ad237d463d47a90639a3a20603e120c115a8a0a954b5'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/t05-prepared-input-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T05:11:16Z'
+        sha256: 'sha256:ccf3b1989955ef118e86ad237d463d47a90639a3a20603e120c115a8a0a954b5'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/t05-prepared-input-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T05:11:16Z'
+        sha256: 'sha256:ccf3b1989955ef118e86ad237d463d47a90639a3a20603e120c115a8a0a954b5'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/t05-prepared-input-20260926/architecture.md
+        status: passed
+        summary: Service, limits, authorization, immutable attempt persistence, driver compatibility and receipt recovery interfaces defined.
+        recorded_at: '2026-09-26T05:11:16Z'
+        sha256: 'sha256:ccf3b1989955ef118e86ad237d463d47a90639a3a20603e120c115a8a0a954b5'
+    notes: Architecture accepted against frozen T05 domain; implement bounded shared input, driver handoff and durable idempotent collection in scoped source files.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-09-26T05:11:22Z'
+    completed_at: '2026-09-26T06:18:12Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/t05-prepared-input-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T06:18:01Z'
+        sha256: 'sha256:5648f4328def3717d5c57062f21d54d7694d496372563f768ff1bd55bd8df4f3'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/t05-prepared-input-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T06:18:01Z'
+        sha256: 'sha256:5648f4328def3717d5c57062f21d54d7694d496372563f768ff1bd55bd8df4f3'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/t05-prepared-input-20260926/implementation.md
+        status: passed
+        summary: Only declared source/test/docs seams and T05 governance; no installed infrastructure changes or primary capsule mutation.
+        recorded_at: '2026-09-26T06:18:01Z'
+        sha256: 'sha256:5648f4328def3717d5c57062f21d54d7694d496372563f768ff1bd55bd8df4f3'
+    notes: Scoped T05 implementation complete; developer proof and independent review corrections integrated. Proceed to final behavioral and source QA acceptance.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-09-26T06:18:12Z'
+    completed_at: '2026-09-26T06:46:28Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/t05-prepared-input-20260926/review-findings.md
+        status: ready
+        recorded_at: '2026-09-26T06:46:22Z'
+        sha256: 'sha256:a637eab55f85b7ab551d03e316676012be58627a967b0bdf54edca060aa21e67'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/t05-prepared-input-20260926/test-plan.md
+        status: ready
+        recorded_at: '2026-09-26T06:46:22Z'
+        sha256: 'sha256:20776fab0245afad588f16dc92e6038fe7acc6a6197e142624007226b2f747cd'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/t05-prepared-input-20260926/test-plan.md
+        status: ready
+        recorded_at: '2026-09-26T06:46:22Z'
+        sha256: 'sha256:20776fab0245afad588f16dc92e6038fe7acc6a6197e142624007226b2f747cd'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/t05-prepared-input-20260926/test-report.md
+        status: ready
+        recorded_at: '2026-09-26T06:46:22Z'
+        sha256: 'sha256:9c6e298a06f85edff862a9d130def4c15ac2dd11c85dec5cdebeeff82381dc60'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/t05-prepared-input-20260926/test-report.md
+        status: passed
+        summary: Final focused regression, 12 compatibility checks, actual crash/governed/Junction proofs, source review and final QA passed with recorded limitations.
+        recorded_at: '2026-09-26T06:46:22Z'
+        sha256: 'sha256:9c6e298a06f85edff862a9d130def4c15ac2dd11c85dec5cdebeeff82381dc60'
+    notes: T05 scoped source assurance passed. Preserve initial failures and limitations; delivery is local source, integrated actual-host qualification remains T06.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-09-26T06:46:28Z'
+    completed_at: '2026-09-26T06:47:49Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/t05-prepared-input-20260926/delivery-report.md
+        status: ready
+        recorded_at: '2026-09-26T06:47:43Z'
+        sha256: 'sha256:faf7c588c2c1bb59e43fb95fe6e134feccf0e58dce4ed955833d92da6f492994'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/t05-prepared-input-20260926/delivery-report.md
+        status: passed
+        summary: Local source accepted; packaging/install/publication intentionally skipped per scoped serial plan.
+        recorded_at: '2026-09-26T06:47:43Z'
+        sha256: 'sha256:faf7c588c2c1bb59e43fb95fe6e134feccf0e58dce4ed955833d92da6f492994'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/t05-prepared-input-20260926/delivery-report.md
+        status: passed
+        summary: Local source accepted; packaging/install/publication intentionally skipped per scoped serial plan.
+        recorded_at: '2026-09-26T06:47:43Z'
+        sha256: 'sha256:faf7c588c2c1bb59e43fb95fe6e134feccf0e58dce4ed955833d92da6f492994'
+    notes: T05 accepted as local source delivery; archive/install/public release not applicable in this slice, with explicit remaining T06 integrated/host gates.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-09-26T06:47:49Z'
+    completed_at: '2026-09-26T06:50:24Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/t05-prepared-input-20260926/evolution-report.md
+        status: ready
+        recorded_at: '2026-09-26T06:50:18Z'
+        sha256: 'sha256:e8ca10aaa317377a8c0895020ab056997eb917226124178c2f54f235121c6775'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/t05-prepared-input-20260926/evolution-report.md
+        status: passed
+        summary: Recorded authorization, immutable delivery, atomic receipt/lock recovery, private path and primary lifecycle lessons; T06 continuation explicit.
+        recorded_at: '2026-09-26T06:50:18Z'
+        sha256: 'sha256:e8ca10aaa317377a8c0895020ab056997eb917226124178c2f54f235121c6775'
+    notes: T05 complete. Continue the approved AFK sequence directly with T06 integrated acceptance; do not conflate source PASS with installed/actual-host new-feature qualification.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20260925-140110-0dbc7c
+  snapshot_checksum: 'sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562'
+  assignment_capsule: .pf/contexts/assignment-capsules/t05-pf-vision-alignment-r02-prepare-bounded-authorized-immutable-executi.capsule.yaml
+  assignment_capsule_checksum: 'sha256:9f4967fd988154fd1e499e7f3f3833e028138f3944b294f409736b56141eeecd'

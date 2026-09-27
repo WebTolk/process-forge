@@ -1,0 +1,107 @@
+[
+  {
+    "name": "smoke_diagnostics",
+    "exit_code": 0,
+    "stdout": "{\"result\": \"PASS\", \"checks\": [\"severity/profile/config\", \"privacy\", \"journal invariance\", \"sink failures\", \"parallel correlation\", \"hook protocol\", \"rotation/retention/export\", \"performance\"], \"metrics\": {\"disabled_100000_seconds_median\": 0.13097289999132045, \"memory_10000_seconds\": 0.747554500005208, \"jsonl_10000_seconds\": 13.705733599985251, \"max_storage_bytes\": 16384, \"rotated_files\": 2, \"bundle_records\": 2}}\n",
+    "stderr": "",
+    "seconds": 25.173
+  },
+  {
+    "name": "smoke_classifier_distribution_parity",
+    "exit_code": 0,
+    "stdout": "PASS: smoke_classifier_distribution_parity\n",
+    "stderr": "",
+    "seconds": 0.756
+  },
+  {
+    "name": "smoke_mcp_jsonrpc_validation",
+    "exit_code": 0,
+    "stdout": "PASS: native MCP validates JSON-RPC and tool arguments; notifications stay silent\n",
+    "stderr": "",
+    "seconds": 0.828
+  },
+  {
+    "name": "smoke_mcp_missing_session_diagnostics",
+    "exit_code": 0,
+    "stdout": "PASS: MCP missing-session diagnostics are actionable\n",
+    "stderr": "",
+    "seconds": 0.244
+  },
+  {
+    "name": "smoke_garage_no_hooks_sessionless",
+    "exit_code": 0,
+    "stdout": "PASS: Garage context/search/resolve work without hooks, session, or daemon\n",
+    "stderr": "",
+    "seconds": 13.326
+  },
+  {
+    "name": "smoke_runtime_ledger_hooks_mcp",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "Traceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\tools\\smoke_runtime_ledger_hooks_mcp.py\", line 145, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"D:\\Dev\\process-forge\\tools\\smoke_runtime_ledger_hooks_mcp.py\", line 121, in main\n    pf(\"runtime\", \"start\", \"--workplace\", str(workplace), \"--timeout\", \"10\")\n    ~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Dev\\process-forge\\tools\\smoke_runtime_ledger_hooks_mcp.py\", line 27, in pf\n    raise AssertionError(f\"expected {expect}: {' '.join(args)}\\n{diagnostic_text(result)}\")\nAssertionError: expected 0: runtime start --workplace D:\\Dev\\process-forge\\.pf\\tmp\\pf-ledger-hooks-mcp-d0fcaca5b36745039c1295fe4ba6ab1a\\workplace --timeout 10\nCommand:\n  C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe D:\\Dev\\process-forge\\tools\\processforge.py runtime start --workplace D:\\Dev\\process-forge\\.pf\\tmp\\pf-ledger-hooks-mcp-d0fcaca5b36745039c1295fe4ba6ab1a\\workplace --timeout 10\n\nCWD:\n  D:\\Dev\\process-forge\n\nTimeout:\n  120s\n\nExit code:\n  1\n\nSTDERR tail:\nFAIL: runtime exited during startup with code 1\n\n",
+    "seconds": 21.211
+  },
+  {
+    "name": "smoke_central_event_ingress",
+    "exit_code": 0,
+    "stdout": "PASS: central raw-first ingress smoke\n",
+    "stderr": "",
+    "seconds": 26.832
+  },
+  {
+    "name": "smoke_processforge_core_package_bootstrap",
+    "exit_code": 0,
+    "stdout": "ok\n",
+    "stderr": "",
+    "seconds": 0.68
+  },
+  {
+    "name": "smoke_worker_run_shell",
+    "exit_code": 0,
+    "stdout": "PASS: worker-run shell regressions smoke\n",
+    "stderr": "",
+    "seconds": 42.258
+  },
+  {
+    "name": "smoke_worker_environment_secret_redaction",
+    "exit_code": 0,
+    "stdout": "PASS: inherited worker environment is launch-only and absent from durable command state\n",
+    "stderr": "",
+    "seconds": 0.237
+  },
+  {
+    "name": "smoke_codex_exec_worker",
+    "exit_code": 0,
+    "stdout": "PASS: codex exec worker smoke\n",
+    "stderr": "",
+    "seconds": 7.153
+  },
+  {
+    "name": "smoke_process_execution_integrity",
+    "exit_code": 0,
+    "stdout": "PASS: process execution integrity guards\n",
+    "stderr": "",
+    "seconds": 71.094
+  },
+  {
+    "name": "smoke_process_execution_state_semantics",
+    "exit_code": 0,
+    "stdout": "PASS: work state distinguishes incomplete requirements from blocked work\n",
+    "stderr": "",
+    "seconds": 62.867
+  },
+  {
+    "name": "smoke_multi_process_work_capsule",
+    "exit_code": 0,
+    "stdout": "PASS: smoke_project_legacy_single_process_compatibility\nPASS: smoke_legacy_single_process_completion\nPASS: smoke_project_multiple_allowed_processes\nPASS: smoke_work_start_multiple_processes_requires_choice\nPASS: smoke_work_start_rejects_disallowed_process\nPASS: smoke_work_start_explicit_allowed_process\nPASS: smoke_active_work_has_single_process\nPASS: smoke_work_capsule_does_not_union_allowed_processes\nPASS: smoke_active_specializations_pinned_to_work\nPASS: smoke_process_transition_next_work_recommendation\nPASS: smoke_pf_context_exposes_fresh_session_continuation\nPASS: smoke_existing_work_start_contract_compatible\nPASS: smoke_multi_process_garage_sessionless\nPASS: smoke_multi_process_does_not_require_runtime\nPASS: smoke_consumed_handoff_not_reoffered\nPASS: smoke_work_start_single_process_auto_select\n",
+    "stderr": "",
+    "seconds": 96.079
+  },
+  {
+    "name": "validate-public-cleanliness",
+    "exit_code": 1,
+    "stdout": "FAIL: tools/smoke_diagnostics.py: forbidden marker 'password='\n",
+    "stderr": "",
+    "seconds": 8.922
+  }
+]

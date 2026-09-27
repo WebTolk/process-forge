@@ -1,0 +1,35 @@
+{
+  "size": 42999979,
+  "sha256": "fd8f45e09f74fedb93e91004d6b27bf4cde03aed2d8c11ca4483d4f6c76d7ab6",
+  "valid_records": 35166,
+  "bad": [
+    {
+      "line": 34212,
+      "offset": 41877766,
+      "length": 26,
+      "body_length": 24,
+      "body_sha256": "6f1fa1694252d1b08e1ac8351716ab6129f302a26135c6bd56d7b1466c088739",
+      "raw_hex": "2022323032362d30392d32365431323a31353a34325a227d0d0a",
+      "error": "Extra data: line 1 column 24 (char 23)"
+    }
+  ],
+  "status": "applied",
+  "backup": "events-before.bin",
+  "identity": [
+    13293543426724661544,
+    1988902185437495344
+  ],
+  "after": {
+    "size": 42999979,
+    "sha256": "815e13d3a9f17b889f5c87e5dce26f3d1fae332b718cc805c3825eb2ce06f35a",
+    "valid_records": 35166,
+    "bad": []
+  },
+  "changed_range": [
+    41877766,
+    41877790
+  ],
+  "original_valid_bytes_preserved": true,
+  "newline_and_offsets_preserved": true,
+  "post_snapshot_appended_bytes": 0
+}

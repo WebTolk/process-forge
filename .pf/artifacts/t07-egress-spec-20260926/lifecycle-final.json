@@ -1,0 +1,54 @@
+{
+  "recorded_at": "2026-09-26T14:00:40.625697+00:00",
+  "phase": "final",
+  "run": "garage-t07-pf-vision-alignment-r02-specify-provider-neutral-local-filter",
+  "run_status": "completed",
+  "assignment_status": "done",
+  "capsule_sha256": "698a17753a3677a9d2e158806d3331e1df4585ca65134a94598fe73929bf888d",
+  "completed_stages": [
+    "orchestration",
+    "intake-scope",
+    "investigation",
+    "domain-modeling",
+    "architecture-plan",
+    "implementation",
+    "code-assurance",
+    "release-delivery",
+    "evolve"
+  ],
+  "stage_evidence_records": 33,
+  "evidence_hashes": {
+    ".pf/artifacts/t07-egress-spec-20260926/orchestration.md": "b4a89beffb00d674a1e5cb8d23af2a78c91dd95ee3770a1cf062a0a16029c0b3",
+    ".pf/artifacts/t07-egress-spec-20260926/scope.md": "0cf14546367811bc1326d0de589f26c8b66cc864d811d9eeee955b5ec3b1f145",
+    ".pf/artifacts/t07-egress-spec-20260926/investigation.md": "63ae540377f10858f2fce97fa4e202239516ca680164262794a5adc0d345008e",
+    ".pf/artifacts/t07-egress-spec-20260926/privacy-domain.md": "62ee031b51e40f088d5a75e7f8a7b81dcec21006c63e0a3c10519870a4a38656",
+    ".pf/artifacts/t07-egress-spec-20260926/architecture.md": "a70e2158665b027407c74c50f7bb77bf5e8d0e7569fbdc5ff4502431a77da513",
+    ".pf/artifacts/t07-egress-spec-20260926/implementation-plan.md": "76050e91285dcaef4d4c8be3f186d5df4e10695fba19cc8702e132f60ac8a1d3",
+    ".pf/artifacts/t07-egress-spec-20260926/decision-log.md": "f04991b1471d9fb674cf27ba0003d4de6ecea6e9c5a9c03ceaf3a2c104825d7c",
+    ".pf/artifacts/t07-egress-spec-20260926/implementation-record.md": "63e0d345fb60b97eb2bc16b0bd835b93db81e68c7fa91385eaf757d2e1380ee0",
+    ".pf/artifacts/t07-egress-spec-20260926/specification.md": "a2a88e0f976fa5022a71a4231e1d845f7e4b48b62f212c5b523234aea02df990",
+    ".pf/artifacts/t07-egress-spec-20260926/review-findings.md": "dc6acbc2240409fb5b925b17b0edf029bf6e37d5f693fea63cdf11663499c657",
+    ".pf/artifacts/t07-egress-spec-20260926/test-plan.md": "c52d1b79956c6b4abf41dc85113bdf85c7c25f8735074b8e1eacd233a412b24b",
+    ".pf/artifacts/t07-egress-spec-20260926/test-report.md": "f8625453b22ee33abba724b8cf1622333fad5d40ad8abc3956a8e2727f6c7c8d",
+    ".pf/artifacts/t07-egress-spec-20260926/document-check-assurance.json": "a91c1a3e5d12f542c40cb6ab0453fef28385fc33d2602f3fff223e6af2dfc9fc",
+    ".pf/artifacts/t07-egress-spec-20260926/delivery-report.md": "d2900f1cb9b89610d0aa5d8cc6cd3d104558b11216b778c9ed39bd0559e0edc1",
+    ".pf/artifacts/t07-egress-spec-20260926/evolution-report.md": "0839fbc683549a7296deedb476566031263919d1a516f4501936ff90b6ee88ae"
+  },
+  "doctor": {
+    "argv": [
+      "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "-B",
+      "D:/.agents/processforge/bin/pf.py",
+      "run-doctor",
+      "--project-root",
+      "D:\\Dev\\process-forge",
+      "--run",
+      "garage-t07-pf-vision-alignment-r02-specify-provider-neutral-local-filter"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS: run.schema_version present\nPASS: run.id present\nPASS: run.title present\nPASS: run.process present\nPASS: run.status present\nPASS: run.created_at present\nPASS: run.updated_at present\nPASS: run.tasks present\nPASS: run status valid: completed\nPASS: summary status matches run: completed\nPASS: task index status matches run: completed\nPASS: handoff status matches run: completed\nPASS: process exists: software-feature-development\nPASS: .pf/runs/garage-t07-pf-vision-alignment-r02-specify-provider-neutral-local-filter/run.yaml has no private absolute paths\nPASS: task id unique: t07-pf-vision-alignment-r02-specify-provider-neutral-local-filtering-of\nPASS: task status valid for t07-pf-vision-alignment-r02-specify-provider-neutral-local-filtering-of: done\nPASS: assignment exists for t07-pf-vision-alignment-r02-specify-provider-neutral-local-filtering-of: .pf/assignments/t07-pf-vision-alignment-r02-specify-provider-neutral-local-filtering-of.yaml\nPASS: t07-pf-vision-alignment-r02-specify-provider-neutral-local-filtering-of run_id matches run\nPASS: completed run has all blocking tasks done\nPASS: .pf/runs/garage-t07-pf-vision-alignment-r02-specify-provider-neutral-local-filter/summary.md exists\nPASS: .pf/handoffs/runs/garage-t07-pf-vision-alignment-r02-specify-provider-neutral-local-filter-handoff.md exists\n",
+    "stderr": ""
+  },
+  "doctor_passes": 21,
+  "status": "PASS"
+}

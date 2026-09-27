@@ -1,0 +1,33 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "review-findings",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/review-findings.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-plan",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/test-plan.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-cases",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/test-cases.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-report",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/test-report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "assurance-complete",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/test-report.md",
+    "status": "passed",
+    "summary": "Actual host MCP and source/installed parity, authorized/denied search-resolve, real-host fixture completion and fresh-connection continuation passed; genuine stale guard preserved; six installed regressions passed. Residual Workplace health/search catalogue observations documented."
+  }
+]

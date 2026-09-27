@@ -1,0 +1,16 @@
+{
+  "time_utc": "2026-09-26T12:23:09.429Z",
+  "duration_ms": 20928,
+  "arguments": {
+    "project_root": "D:\\Dev\\process-forge",
+    "resource_id": "docs.api.gitverse:root"
+  },
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"kind\": \"pf.resolve\", \"project\": {\"id\": \"process-forge\", \"root\": \"D:\\\\Dev\\\\process-forge\"}, \"resource\": {\"id\": \"docs.api.gitverse:root\", \"reason\": \"not_in_project_snapshot\", \"status\": \"denied\"}, \"schema_version\": 1, \"scope\": \"project_context\"}"
+      }
+    ]
+  }
+}

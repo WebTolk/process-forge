@@ -1,0 +1,12 @@
+{
+  "missing_resource_prepare_succeeded": true,
+  "requested": [
+    "not-authorized-resource"
+  ],
+  "granted": [],
+  "prompt_requires_new_work": true,
+  "prompt_requires_mcp": true,
+  "prepared_input_manifest_present": false,
+  "repeated_collection_events": 2,
+  "repeated_task_completed_events": 2
+}

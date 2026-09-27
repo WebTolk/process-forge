@@ -1,0 +1,38 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "review-findings",
+    "path": ".pf/artifacts/t07-engine-20260926/assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-plan",
+    "path": ".pf/artifacts/t07-engine-20260926/assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-cases",
+    "path": ".pf/artifacts/t07-engine-20260926/assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-report",
+    "path": ".pf/artifacts/t07-engine-20260926/assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "browser-verification-report",
+    "path": ".pf/artifacts/t07-engine-20260926/assurance.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "assurance-complete",
+    "path": ".pf/artifacts/t07-engine-20260926/assurance.md",
+    "status": "passed"
+  }
+]

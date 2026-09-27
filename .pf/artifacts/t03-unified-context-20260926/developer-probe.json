@@ -1,0 +1,212 @@
+{
+  "status": "PASS",
+  "checks": [
+    "both actual builders exact execution-contract equality",
+    "ready declared source/report scope",
+    "lifecycle and preferences retain intent",
+    "objective mutation rejected",
+    "source byte mutation rejected",
+    "force rejected without capsule mutation"
+  ],
+  "execution_contract": {
+    "contract_version": 1,
+    "identity": {
+      "kind": "work",
+      "project_id": "project",
+      "run_id": "garage-execute-declarative-smoke",
+      "assignment_id": "t03-parity",
+      "context_id": "t03-parity-capsule"
+    },
+    "assignment_intent": {
+      "objective": "Execute declarative smoke",
+      "execution_mode": {
+        "kind": "read_only",
+        "code_changes_allowed": false,
+        "artifact_changes_allowed": true,
+        "requires_review": true
+      },
+      "scope": {
+        "allowed_files": [
+          ".pf/artifacts/report.md"
+        ],
+        "allowed_read_files": [
+          "input.md"
+        ],
+        "forbidden_files": [],
+        "allowed_actions": [
+          "read",
+          "write_artifact"
+        ],
+        "forbidden_actions": [
+          "write_product"
+        ],
+        "ownership": {
+          "owner_id": "t03-parity",
+          "owner_label": "worker-t03-parity",
+          "role": "",
+          "writer": true,
+          "owned_files": [
+            ".pf/artifacts/report.md"
+          ],
+          "owned_globs": []
+        },
+        "non_overlap": {
+          "policy": "block_on_write_overlap",
+          "active_parallel_tasks": [],
+          "current_write_scope": [
+            ".pf/artifacts/report.md"
+          ]
+        }
+      },
+      "required_sources": [
+        "input.md"
+      ],
+      "context_artifacts": [],
+      "outputs": {
+        "required_outputs": [
+          {
+            "id": "report",
+            "path": ".pf/artifacts/report.md",
+            "required": true,
+            "type": "unspecified"
+          }
+        ],
+        "expected_report": {}
+      },
+      "workspace_access": {
+        "knowledge_resources": [],
+        "templates": [],
+        "tools": [],
+        "mcp": []
+      },
+      "subagent_policy": {
+        "allow": false,
+        "max_subagents": 0,
+        "allowed_roles": [],
+        "require_reports": false,
+        "reports_dir": ""
+      },
+      "required_capabilities": [],
+      "optional_capabilities": [],
+      "process": "declarative-smoke",
+      "selected_specializations": [],
+      "coordination_requirements": {},
+      "director_inbox_submit_required": false,
+      "parameters": {},
+      "allowed_tools": [],
+      "allowed_templates": [],
+      "selected_sources": [],
+      "obligations": {
+        "required_artifacts": [],
+        "required_reviews": [],
+        "quality_checklist": [],
+        "completion_criteria": [],
+        "handoff_requirements": [],
+        "required_specializations": [],
+        "goal": "",
+        "role": "",
+        "dependencies": {
+          "blocked_by": [],
+          "blocks": []
+        }
+      }
+    },
+    "assignment_intent_checksum": "sha256:32f2f79721bc7505a296e9f48d59ce99f525e96d169036c882a589dde3f10303",
+    "snapshot": {
+      "id": "ctx-20260926-032912-94f401",
+      "checksum": "sha256:4704f93e7365ddb66a810af1636de068191b8c3eb8db77e7c129397a6efec448"
+    },
+    "process": {
+      "id": "declarative-smoke",
+      "version": "1.0.0",
+      "fingerprint": "sha256:b0034cdf50d795ab6f0ef10bdbc87eba0c73a9d3978a42e9ce4aa21b9b432c08"
+    },
+    "resources": {
+      "selected_ids": [
+        "project.project:project-artifacts",
+        "project.project:project-profile"
+      ],
+      "bindings_checksum": "sha256:1583eea277cad13a537ee6776eb3d1294ee2a55534d9cb91a01a2c251e869670"
+    },
+    "scope": {
+      "allowed_files": [
+        ".pf/artifacts/report.md"
+      ],
+      "allowed_read_files": [
+        "input.md"
+      ],
+      "forbidden_files": [],
+      "allowed_actions": [
+        "read",
+        "write_artifact"
+      ],
+      "forbidden_actions": [
+        "write_product"
+      ],
+      "ownership": {
+        "owner_id": "t03-parity",
+        "owner_label": "worker-t03-parity",
+        "role": "",
+        "writer": true,
+        "owned_files": [
+          ".pf/artifacts/report.md"
+        ],
+        "owned_globs": []
+      },
+      "non_overlap": {
+        "policy": "block_on_write_overlap",
+        "active_parallel_tasks": [],
+        "current_write_scope": [
+          ".pf/artifacts/report.md"
+        ]
+      }
+    },
+    "required_sources": [
+      {
+        "path": "input.md",
+        "status": "available",
+        "size": 11,
+        "checksum": "sha256:01cadfa37f70dd32b86cbdadd173ff1b0bf744b79ae6f12c1a56745c26bcb1f1",
+        "required": true
+      }
+    ],
+    "outputs": {
+      "required_outputs": [
+        {
+          "id": "report",
+          "path": ".pf/artifacts/report.md",
+          "required": true,
+          "type": "unspecified"
+        }
+      ],
+      "expected_report": {}
+    },
+    "capabilities": {
+      "required": [],
+      "optional": []
+    },
+    "workspace_access": {
+      "knowledge_resources": [],
+      "templates": [],
+      "tools": [],
+      "mcp": []
+    },
+    "parameters": {},
+    "coordination": {
+      "effective_mode": "simple",
+      "director_required": false,
+      "director_available_at_workplace": false
+    },
+    "worker_may_rebuild_context": false,
+    "source_limits": {
+      "files": 128,
+      "file_bytes": 1048576,
+      "total_bytes": 8388608
+    },
+    "readiness": {
+      "status": "ready",
+      "blockers": []
+    },
+    "contract_checksum": "sha256:980ddf009624b0cfe29d7ee6fd7fc3bf9a2efeba5d273336df2082057246f63d"
+  }
+}

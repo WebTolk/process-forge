@@ -1,0 +1,393 @@
+schema_version: 1
+id: t04-pf-vision-alignment-r02-implement-trusted-provider-adapters-and-prov
+title: 'T04 PF vision alignment r02: implement trusted provider adapters and provider-ne'
+run_id: garage-t04-pf-vision-alignment-r02-implement-trusted-provider-adapters-a
+process: software-feature-development
+status: done
+created_at: '2026-09-26T03:50:56Z'
+updated_at: '2026-09-26T04:52:55Z'
+objective: 'T04 PF vision alignment r02: implement trusted provider adapters and provider-neutral Host admission, preserving raw-first ingress, identity/session/path/hash validation, quarantine, deduplication and replay; preserve Codex compatibility and generic initialization. Approved AFK sequence after completed T03; no installation, publication, T07/T10 or web UI.'
+platform: ""
+selected_specializations:
+  []
+order: 1
+dependencies:
+  blocked_by:
+    []
+  blocks:
+    []
+iterations:
+  []
+result:
+  status: done
+  summary: T04 complete. Start separate T05 Work next; preserve installed/source qualification boundary.
+  artifacts:
+    - .pf/artifacts/t04-provider-adapters-20260926/architecture.md
+    - .pf/artifacts/t04-provider-adapters-20260926/delivery-report.md
+    - .pf/artifacts/t04-provider-adapters-20260926/domain.md
+    - .pf/artifacts/t04-provider-adapters-20260926/evolution-report.md
+    - .pf/artifacts/t04-provider-adapters-20260926/implementation.md
+    - .pf/artifacts/t04-provider-adapters-20260926/investigation.md
+    - .pf/artifacts/t04-provider-adapters-20260926/review-findings.md
+    - .pf/artifacts/t04-provider-adapters-20260926/scope.md
+    - .pf/artifacts/t04-provider-adapters-20260926/test-cases.md
+    - .pf/artifacts/t04-provider-adapters-20260926/test-plan.md
+    - .pf/artifacts/t04-provider-adapters-20260926/test-report.md
+execution_mode:
+  kind: implementation
+  code_changes_allowed: true
+  artifact_changes_allowed: true
+  requires_review: true
+stage: evolve
+stage_status: completed
+stage_execution:
+  started_at: '2026-09-26T04:52:14Z'
+  evidence:
+    -
+      kind: artifact
+      artifact_id: evolution-report
+      path: .pf/artifacts/t04-provider-adapters-20260926/evolution-report.md
+      status: ready
+      recorded_at: '2026-09-26T04:52:47Z'
+      sha256: 'sha256:27e86b65661d7177baf9b3468ecc13d52cbee8dc49ad7bf352a1f1a66393ec93'
+    -
+      kind: gate
+      gate_id: evolution-captured
+      path: .pf/artifacts/t04-provider-adapters-20260926/evolution-report.md
+      status: passed
+      summary: Identity/admission/replay lessons and compatibility boundaries captured; T05 next under AFK plan.
+      recorded_at: '2026-09-26T04:52:47Z'
+      sha256: 'sha256:27e86b65661d7177baf9b3468ecc13d52cbee8dc49ad7bf352a1f1a66393ec93'
+  notes: T04 complete. Start separate T05 Work next; preserve installed/source qualification boundary.
+stage_history:
+  -
+    stage_id: orchestration
+    status: completed
+    started_at: '2026-09-26T03:50:56Z'
+    completed_at: '2026-09-26T03:52:05Z'
+    outcome: completed
+    next_stage_id: intake-scope
+    evidence:
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t04-provider-adapters-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T03:52:00Z'
+        sha256: 'sha256:b34d537b9c8aac9182364b96a7f96e3909a8973db5a105698287a40ee280dd5d'
+      -
+        kind: artifact
+        artifact_id: execution-context-summary
+        path: .pf/artifacts/t04-provider-adapters-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T03:52:00Z'
+        sha256: 'sha256:b34d537b9c8aac9182364b96a7f96e3909a8973db5a105698287a40ee280dd5d'
+      -
+        kind: artifact
+        artifact_id: lifecycle-mode-decision
+        path: .pf/artifacts/t04-provider-adapters-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T03:52:00Z'
+        sha256: 'sha256:b34d537b9c8aac9182364b96a7f96e3909a8973db5a105698287a40ee280dd5d'
+      -
+        kind: gate
+        gate_id: context-ready
+        path: .pf/artifacts/t04-provider-adapters-20260926/scope.md
+        status: passed
+        summary: Fresh actual MCP context, exact new Work/pin/capsule, explicit local source scope and autonomous plan confirmed.
+        recorded_at: '2026-09-26T03:52:00Z'
+        sha256: 'sha256:b34d537b9c8aac9182364b96a7f96e3909a8973db5a105698287a40ee280dd5d'
+    notes: T04 preflight complete; intake next, preserve prior work and immutable context.
+  -
+    stage_id: intake-scope
+    status: completed
+    started_at: '2026-09-26T03:52:05Z'
+    completed_at: '2026-09-26T03:53:01Z'
+    outcome: completed
+    next_stage_id: investigation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: brief
+        path: .pf/artifacts/t04-provider-adapters-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T03:52:53Z'
+        sha256: 'sha256:b34d537b9c8aac9182364b96a7f96e3909a8973db5a105698287a40ee280dd5d'
+      -
+        kind: artifact
+        artifact_id: scope
+        path: .pf/artifacts/t04-provider-adapters-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T03:52:53Z'
+        sha256: 'sha256:b34d537b9c8aac9182364b96a7f96e3909a8973db5a105698287a40ee280dd5d'
+      -
+        kind: artifact
+        artifact_id: task-record
+        path: .pf/artifacts/t04-provider-adapters-20260926/scope.md
+        status: ready
+        recorded_at: '2026-09-26T03:52:53Z'
+        sha256: 'sha256:b34d537b9c8aac9182364b96a7f96e3909a8973db5a105698287a40ee280dd5d'
+      -
+        kind: gate
+        gate_id: scope-accepted
+        path: .pf/artifacts/t04-provider-adapters-20260926/scope.md
+        status: passed
+        summary: Approved T04 card narrowed to trusted provider admission; no raw kernel rewrite or installation.
+        recorded_at: '2026-09-26T03:52:53Z'
+        sha256: 'sha256:b34d537b9c8aac9182364b96a7f96e3909a8973db5a105698287a40ee280dd5d'
+    notes: Intake accepted under operator AFK plan; inspect actual security boundaries before design.
+  -
+    stage_id: investigation
+    status: completed
+    started_at: '2026-09-26T03:53:01Z'
+    completed_at: '2026-09-26T03:59:58Z'
+    outcome: completed
+    next_stage_id: domain-modeling
+    evidence:
+      -
+        kind: artifact
+        artifact_id: investigation-report
+        path: .pf/artifacts/t04-provider-adapters-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T03:59:53Z'
+        sha256: 'sha256:c983498090a2effcd6dfda8622e428fcc2869c3ddcd65cfb99801a67697d8897'
+      -
+        kind: artifact
+        artifact_id: impact-analysis
+        path: .pf/artifacts/t04-provider-adapters-20260926/investigation.md
+        status: ready
+        recorded_at: '2026-09-26T03:59:53Z'
+        sha256: 'sha256:c983498090a2effcd6dfda8622e428fcc2869c3ddcd65cfb99801a67697d8897'
+      -
+        kind: gate
+        gate_id: investigation-complete
+        path: .pf/artifacts/t04-provider-adapters-20260926/investigation.md
+        status: passed
+        summary: Actual unknown-adapter route reproduced; Host/producer/replay/init boundaries mapped; legacy per-task-process compatibility gap identified.
+        recorded_at: '2026-09-26T03:59:53Z'
+        sha256: 'sha256:c983498090a2effcd6dfda8622e428fcc2869c3ddcd65cfb99801a67697d8897'
+      -
+        kind: gate
+        gate_id: impact-understood
+        path: .pf/artifacts/t04-provider-adapters-20260926/investigation.md
+        status: passed
+        summary: Actual unknown-adapter route reproduced; Host/producer/replay/init boundaries mapped; legacy per-task-process compatibility gap identified.
+        recorded_at: '2026-09-26T03:59:53Z'
+        sha256: 'sha256:c983498090a2effcd6dfda8622e428fcc2869c3ddcd65cfb99801a67697d8897'
+    notes: Investigation accepted. Design trusted admission and preserve raw-first and legacy batch task semantics.
+  -
+    stage_id: domain-modeling
+    status: completed
+    started_at: '2026-09-26T03:59:58Z'
+    completed_at: '2026-09-26T04:00:57Z'
+    outcome: completed
+    next_stage_id: architecture-plan
+    evidence:
+      -
+        kind: artifact
+        artifact_id: domain-notes
+        path: .pf/artifacts/t04-provider-adapters-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T04:00:52Z'
+        sha256: 'sha256:ce121f325488ea8b2a4db044a8e04f6d88a1e2092f2f33cdf363bfe2c5d1e780'
+      -
+        kind: artifact
+        artifact_id: domain-model
+        path: .pf/artifacts/t04-provider-adapters-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T04:00:52Z'
+        sha256: 'sha256:ce121f325488ea8b2a4db044a8e04f6d88a1e2092f2f33cdf363bfe2c5d1e780'
+      -
+        kind: artifact
+        artifact_id: domain-rules
+        path: .pf/artifacts/t04-provider-adapters-20260926/domain.md
+        status: ready
+        recorded_at: '2026-09-26T04:00:52Z'
+        sha256: 'sha256:ce121f325488ea8b2a4db044a8e04f6d88a1e2092f2f33cdf363bfe2c5d1e780'
+      -
+        kind: gate
+        gate_id: domain-rules-captured
+        path: .pf/artifacts/t04-provider-adapters-20260926/domain.md
+        status: passed
+        summary: Trusted registration separated from event data; neutral common authorization and explicit legacy/init compatibility captured.
+        recorded_at: '2026-09-26T04:00:52Z'
+        sha256: 'sha256:ce121f325488ea8b2a4db044a8e04f6d88a1e2092f2f33cdf363bfe2c5d1e780'
+    notes: Domain accepted; pin architecture and test matrix before source edits.
+  -
+    stage_id: architecture-plan
+    status: completed
+    started_at: '2026-09-26T04:00:57Z'
+    completed_at: '2026-09-26T04:01:54Z'
+    outcome: completed
+    next_stage_id: implementation
+    evidence:
+      -
+        kind: artifact
+        artifact_id: architecture
+        path: .pf/artifacts/t04-provider-adapters-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T04:01:48Z'
+        sha256: 'sha256:f4f4f69d30143ba0908d6eab8ea8579efde6c5b2ee46723858b44da9f60f7f97'
+      -
+        kind: artifact
+        artifact_id: implementation-plan
+        path: .pf/artifacts/t04-provider-adapters-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T04:01:48Z'
+        sha256: 'sha256:f4f4f69d30143ba0908d6eab8ea8579efde6c5b2ee46723858b44da9f60f7f97'
+      -
+        kind: artifact
+        artifact_id: decision-log
+        path: .pf/artifacts/t04-provider-adapters-20260926/architecture.md
+        status: ready
+        recorded_at: '2026-09-26T04:01:48Z'
+        sha256: 'sha256:f4f4f69d30143ba0908d6eab8ea8579efde6c5b2ee46723858b44da9f60f7f97'
+      -
+        kind: gate
+        gate_id: architecture-plan-ready
+        path: .pf/artifacts/t04-provider-adapters-20260926/architecture.md
+        status: passed
+        summary: Immutable code-supplied registry; provider policy extraction; common raw/authorization retained; explicit optional init and narrow legacy compatibility repair; checks planned.
+        recorded_at: '2026-09-26T04:01:48Z'
+        sha256: 'sha256:f4f4f69d30143ba0908d6eab8ea8579efde6c5b2ee46723858b44da9f60f7f97'
+    notes: Architecture accepted. Begin bounded implementation with disjoint ownership.
+  -
+    stage_id: implementation
+    status: completed
+    started_at: '2026-09-26T04:01:54Z'
+    completed_at: '2026-09-26T04:25:10Z'
+    outcome: completed
+    next_stage_id: code-assurance
+    evidence:
+      -
+        kind: artifact
+        artifact_id: changed-files
+        path: .pf/artifacts/t04-provider-adapters-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T04:25:00Z'
+        sha256: 'sha256:4bcc8c8c29f1cbd449e4fe86750cd646525bd260bd3c1f851196c8094ff5b3d6'
+      -
+        kind: artifact
+        artifact_id: change-summary
+        path: .pf/artifacts/t04-provider-adapters-20260926/implementation.md
+        status: ready
+        recorded_at: '2026-09-26T04:25:00Z'
+        sha256: 'sha256:4bcc8c8c29f1cbd449e4fe86750cd646525bd260bd3c1f851196c8094ff5b3d6'
+      -
+        kind: gate
+        gate_id: implementation-scope-respected
+        path: .pf/artifacts/t04-provider-adapters-20260926/implementation.md
+        status: passed
+        summary: Trusted provider policy extraction and optional init implemented; narrow documented legacy compatibility fix; developer checks pass; no raw kernel/installed change.
+        recorded_at: '2026-09-26T04:25:00Z'
+        sha256: 'sha256:4bcc8c8c29f1cbd449e4fe86750cd646525bd260bd3c1f851196c8094ff5b3d6'
+    notes: Implementation ready for assurance. Independent review and alternate-provider regression after implementation; fix findings then accept.
+  -
+    stage_id: code-assurance
+    status: completed
+    started_at: '2026-09-26T04:25:10Z'
+    completed_at: '2026-09-26T04:51:36Z'
+    outcome: completed
+    next_stage_id: release-delivery
+    evidence:
+      -
+        kind: artifact
+        artifact_id: review-findings
+        path: .pf/artifacts/t04-provider-adapters-20260926/review-findings.md
+        status: ready
+        recorded_at: '2026-09-26T04:51:27Z'
+        sha256: 'sha256:cebe4a50f1986f793d16defd087530db7778d67fe705bc81f8f150f30a99d82b'
+      -
+        kind: artifact
+        artifact_id: test-plan
+        path: .pf/artifacts/t04-provider-adapters-20260926/test-plan.md
+        status: ready
+        recorded_at: '2026-09-26T04:51:27Z'
+        sha256: 'sha256:f43d25f8853f954b1318652e36164c1420f15796ce929344ce573cd419ef6adc'
+      -
+        kind: artifact
+        artifact_id: test-cases
+        path: .pf/artifacts/t04-provider-adapters-20260926/test-cases.md
+        status: ready
+        recorded_at: '2026-09-26T04:51:27Z'
+        sha256: 'sha256:513e65326bf0e31c1eba6046f20f9af6ea06049c5cc691bec563bb5659bd9d97'
+      -
+        kind: artifact
+        artifact_id: test-report
+        path: .pf/artifacts/t04-provider-adapters-20260926/test-report.md
+        status: ready
+        recorded_at: '2026-09-26T04:51:27Z'
+        sha256: 'sha256:d1a65c19578d89e09d9d3fd02688d02ea355e652ba6493e1723d583c0d607bef'
+      -
+        kind: gate
+        gate_id: assurance-complete
+        path: .pf/artifacts/t04-provider-adapters-20260926/test-report.md
+        status: passed
+        summary: 13 compatibility smokes and registered alternate provider regression pass; four actual optional-init scenarios pass; independent review resolved; schema/public/checksum pass.
+        recorded_at: '2026-09-26T04:51:27Z'
+        sha256: 'sha256:d1a65c19578d89e09d9d3fd02688d02ea355e652ba6493e1723d583c0d607bef'
+    notes: T04 source assurance accepted. Raw kernel/main capsule unchanged; actual installed new-feature qualification remains T06.
+  -
+    stage_id: release-delivery
+    status: completed
+    started_at: '2026-09-26T04:51:36Z'
+    completed_at: '2026-09-26T04:52:14Z'
+    outcome: completed
+    next_stage_id: evolve
+    evidence:
+      -
+        kind: artifact
+        artifact_id: delivery-report
+        path: .pf/artifacts/t04-provider-adapters-20260926/delivery-report.md
+        status: ready
+        recorded_at: '2026-09-26T04:52:05Z'
+        sha256: 'sha256:64d6465ef01542283b41c6d66cadc62b71f99a2239673ebc24d4e308e9eefedc'
+      -
+        kind: gate
+        gate_id: release-readiness-decided
+        path: .pf/artifacts/t04-provider-adapters-20260926/delivery-report.md
+        status: passed
+        summary: Local source accepted. Archive/install/publication not_applicable here, T06 actual-host integration still required.
+        recorded_at: '2026-09-26T04:52:05Z'
+        sha256: 'sha256:64d6465ef01542283b41c6d66cadc62b71f99a2239673ebc24d4e308e9eefedc'
+      -
+        kind: gate
+        gate_id: delivery-profile-run-or-skipped-with-reason
+        path: .pf/artifacts/t04-provider-adapters-20260926/delivery-report.md
+        status: passed
+        summary: Local source accepted. Archive/install/publication not_applicable here, T06 actual-host integration still required.
+        recorded_at: '2026-09-26T04:52:05Z'
+        sha256: 'sha256:64d6465ef01542283b41c6d66cadc62b71f99a2239673ebc24d4e308e9eefedc'
+    notes: Local source delivery accepted; no install or public release.
+  -
+    stage_id: evolve
+    status: completed
+    started_at: '2026-09-26T04:52:14Z'
+    completed_at: '2026-09-26T04:52:55Z'
+    outcome: completed
+    next_stage_id: ""
+    evidence:
+      -
+        kind: artifact
+        artifact_id: evolution-report
+        path: .pf/artifacts/t04-provider-adapters-20260926/evolution-report.md
+        status: ready
+        recorded_at: '2026-09-26T04:52:47Z'
+        sha256: 'sha256:27e86b65661d7177baf9b3468ecc13d52cbee8dc49ad7bf352a1f1a66393ec93'
+      -
+        kind: gate
+        gate_id: evolution-captured
+        path: .pf/artifacts/t04-provider-adapters-20260926/evolution-report.md
+        status: passed
+        summary: Identity/admission/replay lessons and compatibility boundaries captured; T05 next under AFK plan.
+        recorded_at: '2026-09-26T04:52:47Z'
+        sha256: 'sha256:27e86b65661d7177baf9b3468ecc13d52cbee8dc49ad7bf352a1f1a66393ec93'
+    notes: T04 complete. Start separate T05 Work next; preserve installed/source qualification boundary.
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  snapshot_id: ctx-20260925-140110-0dbc7c
+  snapshot_checksum: 'sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562'
+  assignment_capsule: .pf/contexts/assignment-capsules/t04-pf-vision-alignment-r02-implement-trusted-provider-adapters-and-prov.capsule.yaml
+  assignment_capsule_checksum: 'sha256:d503b512dfa96ae942fd873f067405ffc8899cf36c29f06d4d09bc77a06add75'

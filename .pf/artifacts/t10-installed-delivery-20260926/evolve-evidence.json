@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "evolution-report",
+    "path": ".pf/artifacts/t10-installed-delivery-20260926/evolution.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "evolution-captured",
+    "path": ".pf/artifacts/t10-installed-delivery-20260926/evolution.md",
+    "status": "passed"
+  }
+]

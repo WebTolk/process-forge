@@ -1,0 +1,174 @@
+{
+  "action": "stage_transitioned",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "release-delivery",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {},
+      "id": "review-findings",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "test-plan",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "test-cases",
+      "kind": "artifact",
+      "satisfied": false
+    },
+    {
+      "evidence": {},
+      "id": "test-report",
+      "kind": "artifact",
+      "satisfied": false
+    }
+  ],
+  "assignment": {
+    "id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+    "status": "in_progress"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [
+      {
+        "artifact_id": "review-findings",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "test-plan",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "test-cases",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "artifact_id": "test-report",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "assurance-complete"
+      },
+      {
+        "code": "handoff_note_required",
+        "stage_id": "code-assurance"
+      }
+    ],
+    "status": "incomplete"
+  },
+  "evidence": [],
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "implementation-scope-respected",
+          "kind": "gate",
+          "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+          "recorded_at": "2026-09-26T08:11:58Z",
+          "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+          "status": "passed"
+        },
+        "id": "implementation-scope-respected",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "checklist"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {},
+        "id": "assurance-complete",
+        "phase": "exit",
+        "required": true,
+        "satisfied": false,
+        "type": "checklist"
+      }
+    ]
+  },
+  "incomplete": [
+    {
+      "artifact_id": "review-findings",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "test-plan",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "test-cases",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "artifact_id": "test-report",
+      "code": "artifact_evidence_missing"
+    },
+    {
+      "code": "gate_evidence_missing",
+      "gate_id": "assurance-complete"
+    },
+    {
+      "code": "handoff_note_required",
+      "stage_id": "code-assurance"
+    }
+  ],
+  "kind": "pf.work.state",
+  "next_stage_id": "code-assurance",
+  "obligations": [],
+  "previous_stage_id": "implementation",
+  "process": {
+    "fingerprint": "sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.1.0"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "change-summary",
+        "kind": "artifact",
+        "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+        "recorded_at": "2026-09-26T08:11:58Z",
+        "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+        "status": "ready"
+      },
+      "id": "change-summary",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+    "status": "in_progress"
+  },
+  "schema_version": 1,
+  "stage": {
+    "id": "code-assurance",
+    "status": "in_progress",
+    "title": "Code Assurance"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "project.process-forge:project-profile",
+      "project.process-forge:project-artifacts"
+    ]
+  }
+}

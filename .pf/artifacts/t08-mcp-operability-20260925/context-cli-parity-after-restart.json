@@ -1,0 +1,111 @@
+{
+  "time_utc": "2026-09-25T17:59:29.504018+00:00",
+  "workplace_config_before": {
+    "workplace.yaml": "b9f8a5e6bf7827418bba4d42757f028db8ea16d4784b58c28b59974c09a524f3",
+    "registries\\agents.yaml": "d577a8ab3ffdc9b812476f5c2319bffb427bbe6ce7f1c2c9223dd0ff46e68c22",
+    "registries\\distributions.pre-1.1.0-dev-20260814.yaml": "5753520537b69ba7a225ee111b2fa8dcbaf55f80c44a1d0869d88df993409c1a",
+    "registries\\distributions.yaml": "5d6337cb65626980f04c5f83d531e6b24b299c5a02afc9dac76887ed13b21bd5",
+    "registries\\installed-subjects.yaml": "7e1838c48fb61e63001b54d4b84b5869f92fba298c8d25386095988881b28f8f",
+    "registries\\knowledge-roots.yaml": "2733faabff2dc10f6aebda9d1338769e5dbd724817e85639f67d90dd550ea5b2",
+    "registries\\mcp.yaml": "2f389429181e7e3db2b0a42f55e8ea51d0e5f80b85befdac2ad145c38e3a4a3a",
+    "registries\\package-roots.yaml": "6a6bfe485b123f49b9dfa2d586c55a132a4ae8b2d6348a8d8ab6fc1e88a83c70",
+    "registries\\platform-contract-roots.yaml": "844e13e7556e807a63f90adcf14ef0ba07ac627d0b9e9cb14e82fa3f5c88cb24",
+    "registries\\platforms.yaml": "950de8bc978d591fe6bc887167c54e00ff687a8daf30d1bf1cb679258da443cb",
+    "registries\\process-packs.yaml": "ecd4ea0fe28f22250187d77dcdb0aaad52ecd23698dc46b9b8d6a390f0ea18db",
+    "registries\\project-classifiers.yaml": "d1c26c4994bae658594d9dcfae02f8879a318db78a679dd3f06d6f492c92da32",
+    "registries\\runtime-drivers.yaml": "a5fa0fe3b2c690bb6fb13364aff4807a6dbd59b78a49c6ca0fccf66c9f0e78b6",
+    "registries\\specializations.yaml": "734fa4ae49334a70b0236c57f6ae6227f3431c4b5434e7c49630c86c874c4039",
+    "registries\\templates.yaml": "6fe70970531eddee119c32aca9d352eaa66b51e2df24affddfb6648254928608",
+    "registries\\tools.yaml": "c09ec7dcf23effd2c4233a592e12a5f9e9ea213408497390a9738574c2197626",
+    "registries\\update-site-overrides.yaml": "ca1f21051059b597a5b00a4d5404b84d7fbba077f9542941ee16e9fe21650d75",
+    "registries\\update-sources.yaml": "18315d758a7bbba14b65ce9805d887095f53b52b2670242014b739ef1cff996f"
+  },
+  "source": {
+    "broken": false,
+    "broken_refs": [],
+    "check_update_candidates": "if_due",
+    "execution_readiness": {
+      "blockers": [],
+      "missing_capabilities": [],
+      "status": "ready"
+    },
+    "fresh": true,
+    "health": {
+      "status": "warn"
+    },
+    "policy": {
+      "action": "continue"
+    },
+    "policy_action": "continue",
+    "readiness": {
+      "context": {
+        "status": "fresh"
+      },
+      "execution": {
+        "blockers": [],
+        "missing_capabilities": [],
+        "status": "ready"
+      },
+      "resources": {
+        "blockers": [],
+        "status": "fresh"
+      }
+    },
+    "recommended_action": "continue",
+    "resource_readiness": {
+      "blockers": [],
+      "status": "fresh"
+    },
+    "session_start": false,
+    "snapshot_id": "ctx-20260925-140110-0dbc7c",
+    "snapshot_sha256": "sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562",
+    "stale": false,
+    "stale_resources": [],
+    "status": "fresh",
+    "updates_available": []
+  },
+  "installed": {
+    "broken": false,
+    "broken_refs": [],
+    "check_update_candidates": "if_due",
+    "execution_readiness": {
+      "blockers": [],
+      "missing_capabilities": [],
+      "status": "ready"
+    },
+    "fresh": true,
+    "health": {
+      "status": "warn"
+    },
+    "policy": {
+      "action": "continue"
+    },
+    "policy_action": "continue",
+    "readiness": {
+      "context": {
+        "status": "fresh"
+      },
+      "execution": {
+        "blockers": [],
+        "missing_capabilities": [],
+        "status": "ready"
+      },
+      "resources": {
+        "blockers": [],
+        "status": "fresh"
+      }
+    },
+    "recommended_action": "continue",
+    "resource_readiness": {
+      "blockers": [],
+      "status": "fresh"
+    },
+    "session_start": false,
+    "snapshot_id": "ctx-20260925-140110-0dbc7c",
+    "snapshot_sha256": "sha256:f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562",
+    "stale": false,
+    "stale_resources": [],
+    "status": "fresh",
+    "updates_available": []
+  }
+}

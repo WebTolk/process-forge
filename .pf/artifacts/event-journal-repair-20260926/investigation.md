@@ -1,0 +1,7 @@
+# Journal investigation and impact
+
+Read-only scan observed 35039 lines / 42857894 bytes, exactly one invalid JSON line (34212): a leading space, quoted timestamp 2026-09-26T12:15:42Z and closing brace. Non-newline SHA256 6f1fa1694252d1b08e1ac8351716ab6129f302a26135c6bd56d7b1466c088739. Valid neighboring event times are 12:15:41 and 12:15:46, from codex-hooks. Raw central shard for hour 12 has no record containing that timestamp; this does not establish the producer or full intended event. Historical cause remains unproven.
+
+Concrete source defect: append_process_event reads/deduplicates then independently opens text append without a cross-process lock. Two producers can both see a missing id and write duplicates; Windows multi-process text append also has no single-writer protection. Existing registry_file_lock uses a persistent OS guard and ownership/stale-owner checks, already used for process/run state. Reuse it for journal append rather than inventing a second lock protocol. RawIngressKernel already serializes/fsyncs raw appends independently; do not change it.
+
+validate-process-forge-schemas.py skips blank lines before JSON parsing. iter_ndjson likewise skips blank lines. A fixed-length whitespace quarantine at an existing historical invalid record keeps every later byte offset and concurrently appended suffix. Existing append-only producers operate at EOF. Repair will retain backup and compare actual bytes before and after; never replace the live file wholesale. Snapshot/capsules and prior failing evidence remain unchanged.

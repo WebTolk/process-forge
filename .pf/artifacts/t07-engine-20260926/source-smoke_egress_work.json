@@ -1,0 +1,13 @@
+{
+  "time": "2026-09-26T20:17:57.657392+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_egress_work.py",
+    "--json"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "{\"status\": \"passed\", \"checks\": 9, \"cases\": [\"A23 actual v1 Work unchanged strict v1 rejected\", \"A23 successor sealed before lifecycle writes preserves predecessor\", \"A23 same-objective security mismatch never resumes v1\", \"A23 schema version rejection and security intent tamper\", \"A05 strict native preparation and wrapper reject before launch\", \"A01 real governed Work to independently capturing broker\", \"A26 actual CLI connected loopback capture\", \"A11 real stage transition revokes old view without capsule mutation\", \"A27 reserved private store excluded from Work material\"]}\n",
+  "stderr": ""
+}

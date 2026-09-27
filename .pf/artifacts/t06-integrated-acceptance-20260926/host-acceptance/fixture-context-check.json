@@ -1,0 +1,42 @@
+{
+  "snapshot_id": "ctx-20260926-121847-9aa14c",
+  "snapshot_sha256": "sha256:55d445990b2c0f5e4b51e1fdb320f95c2bdced3a358edd78044c0331fa6857da",
+  "status": "fresh",
+  "fresh": true,
+  "stale": false,
+  "broken": false,
+  "updates_available": [],
+  "stale_resources": [],
+  "broken_refs": [],
+  "recommended_action": "continue",
+  "policy_action": "continue",
+  "policy": {
+    "action": "continue"
+  },
+  "health": {
+    "status": "pass"
+  },
+  "readiness": {
+    "context": {
+      "status": "fresh"
+    },
+    "resources": {
+      "status": "fresh",
+      "blockers": []
+    },
+    "execution": {
+      "status": "ready",
+      "missing_capabilities": [],
+      "blockers": []
+    }
+  },
+  "resource_readiness": {
+    "status": "fresh",
+    "blockers": []
+  },
+  "execution_readiness": {
+    "status": "ready",
+    "missing_capabilities": [],
+    "blockers": []
+  }
+}

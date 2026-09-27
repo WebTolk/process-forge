@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T20:21:44.808363+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_prepared_execution_context.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "PASS: prepared-input schema/budgets, empty and denied grants, semantic driver/model invariance, source/intent/manifest drift denial, offline generic-shell same-attempt launch, receipt interruption repair/idempotent collection/output attribution, metadata/fulltext drift and revocation, explicit empty stage subset\n",
+  "stderr": ""
+}

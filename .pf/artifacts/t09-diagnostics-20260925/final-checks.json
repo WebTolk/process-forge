@@ -1,0 +1,76 @@
+{
+  "started_at": "2026-09-25T19:25:01.622685+00:00",
+  "checks": [
+    {
+      "command": [
+        "tools/smoke_diagnostics.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"result\": \"PASS\", \"checks\": [\"severity/profile/config\", \"privacy\", \"journal invariance\", \"sink failures\", \"parallel correlation\", \"hook protocol\", \"rotation/retention/export\", \"performance\"], \"metrics\": {\"disabled_100000_seconds_median\": 0.15581970001221634, \"memory_10000_seconds\": 0.7773434999980964, \"jsonl_10000_seconds\": 14.658301399991615, \"max_storage_bytes\": 16384, \"rotated_files\": 2, \"bundle_records\": 2}}\n",
+      "stderr": "",
+      "seconds": 24.126
+    },
+    {
+      "command": [
+        "tools/smoke_runtime_ledger_hooks_mcp.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: Runtime Ledger, Codex adapter, and MCP smoke\n",
+      "stderr": "",
+      "seconds": 25.306
+    },
+    {
+      "command": [
+        "tools/smoke_central_event_ingress.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: central raw-first ingress smoke\n",
+      "stderr": "",
+      "seconds": 20.38
+    },
+    {
+      "command": [
+        "tools/smoke_processforge_core_package_bootstrap.py"
+      ],
+      "exit_code": 0,
+      "stdout": "ok\n",
+      "stderr": "",
+      "seconds": 0.773
+    },
+    {
+      "command": [
+        "tools/validate-public-cleanliness.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: public cleanliness checks passed.\n",
+      "stderr": "",
+      "seconds": 5.612
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: wrote checksums\\processforge.sha256\n",
+      "stderr": "",
+      "seconds": 0.354
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: checksum inventory matches.\n",
+      "stderr": "",
+      "seconds": 0.348
+    }
+  ],
+  "source_sha256": {
+    "src\\processforge_core\\diagnostics.py": "d7b318e2ca4031f68b8fb90ed6d5296d06d5da9af9d785dc9923767b50a1f37a",
+    "tools\\processforge.py": "60907c0896082d9596207c92b03592c38536bd86bec543f57ac7b6dd90abe99d",
+    "tools\\smoke_diagnostics.py": "175789422e0dbe66e6c39ad1604b83b050622ec0877dcfc6e2963d4dfd824a44"
+  },
+  "finished_at": "2026-09-25T19:26:18.528985+00:00"
+}

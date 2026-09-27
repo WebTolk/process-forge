@@ -1,0 +1,15 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "evolution-report",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/evolution-report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "evolution-captured",
+    "path": ".pf/artifacts/t08-mcp-operability-20260925/evolution-report.md",
+    "status": "passed",
+    "summary": "Project-local identity, search readiness, live-vs-stdio evidence and operator backlog observations captured for separate T01/T02/T09/T06; no global auto-application."
+  }
+]

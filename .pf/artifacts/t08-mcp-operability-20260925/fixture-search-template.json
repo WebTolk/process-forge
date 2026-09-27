@@ -1,0 +1,8 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"garage_readiness\": {\"document_count\": 85, \"reason\": \"fresh_index\", \"remediation\": \"none\", \"resource_count\": 85, \"status\": \"ready\"}, \"index_generation\": null, \"items\": [], \"kind\": \"pf.search\", \"limit\": 2, \"offset\": 0, \"page\": {\"limit\": 2, \"limitstart\": 0, \"next_limitstart\": null, \"offset\": 0, \"returned\": 0, \"total\": 0}, \"query\": \"PHP class\", \"results\": [], \"schema_version\": 1, \"scope_key\": \"ctx-20260925-180032-eb702e\", \"search\": {\"document_count\": 85, \"reason\": \"fresh_index\", \"remediation\": \"none\", \"resource_count\": 85, \"status\": \"ready\"}, \"search_status\": \"fresh\", \"total\": 0}"
+    }
+  ]
+}

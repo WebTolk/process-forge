@@ -1,0 +1,33 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "review-findings",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/review.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-plan",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/test-report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-cases",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/test-report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "test-report",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/test-report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "assurance-complete",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/test-report.md",
+    "status": "passed",
+    "summary": "DOC-01 through DOC-05 automated PASS; DOC-06 primary self-review PASS. Product tests and browser checks not applicable to plan-only delivery."
+  }
+]

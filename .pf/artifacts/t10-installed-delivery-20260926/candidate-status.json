@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T17:43:13.853746+00:00",
+  "argv": [
+    "git",
+    "status",
+    "--porcelain"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": ""
+}

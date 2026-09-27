@@ -1,0 +1,17 @@
+{
+  "time": "2026-09-26T20:41:03.114971+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t07-engine-20260926\\final\\candidate\\bin\\pf.py",
+    "release-pack",
+    "--root",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t07-engine-20260926\\final\\candidate",
+    "--output",
+    "D:\\Dev\\process-forge\\.pf\\artifacts\\t07-engine-20260926\\final\\delivery-package\\processforge-1.1.0-egress-ddff5983.zip"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t07-engine-20260926\\final\\candidate",
+  "exit_code": 0,
+  "stdout": "WROTE: D:/Dev/process-forge/.pf/artifacts/t07-engine-20260926/final/delivery-package/processforge-1.1.0-egress-ddff5983.zip\nWROTE: D:/Dev/process-forge/.pf/artifacts/t07-engine-20260926/final/delivery-package/processforge-1.1.0-egress-ddff5983.manifest.json\nFILES: 1016\n",
+  "stderr": ""
+}

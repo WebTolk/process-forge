@@ -1,0 +1,20 @@
+{
+  "exit_code": 1,
+  "payload": {
+    "kind": "pf.work.resolve",
+    "reason": "legacy_contract_incomplete",
+    "remediation": "create_successor_work",
+    "schema_version": 1,
+    "scope": "work_context",
+    "status": "blocked"
+  },
+  "stderr": "",
+  "state_hashes": {
+    ".pf\\assignments\\t02-pf-vision-alignment-r02-implement-explicit-work-context-resource-sea.yaml": "024b151f5519e260573322337e22a241b2d5619f56db0cf6bc032e154bbb1c88",
+    ".pf\\runs\\garage-t02-pf-vision-alignment-r02-implement-explicit-work-context-resou\\run.yaml": "32c99806e08d930bf25ce75259454930b0a59e5b9ac9835ad4895c2776483074",
+    ".pf\\contexts\\assignment-capsules\\t02-pf-vision-alignment-r02-implement-explicit-work-context-resource-sea.capsule.yaml": "2fb619b7c370565ab7519689c4ff5aaa808dc528846b5793021c2c30210bff29",
+    ".pf\\contexts\\project-context.snapshot.yaml": "f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562"
+  },
+  "state_unchanged": true,
+  "fixture": "actual main Work created by installed T08 core before T02 source feature"
+}

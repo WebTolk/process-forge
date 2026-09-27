@@ -1,0 +1,13 @@
+{
+  "time": "2026-09-26T20:39:36.016060+00:00",
+  "argv": [
+    "git",
+    "commit",
+    "-m",
+    "Add qualified Work v2 egress broker with immutable views and mandatory audit"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t07-engine-20260926\\final\\candidate",
+  "exit_code": 0,
+  "stdout": "[detached HEAD ddff598] Add qualified Work v2 egress broker with immutable views and mandatory audit\n 30 files changed, 3481 insertions(+), 56 deletions(-)\n create mode 100644 docs/concepts/egress-engine.md\n create mode 100644 docs/ru/concepts/egress-engine.md\n create mode 100644 schemas/egress-binding.schema.json\n create mode 100644 src/processforge_core/egress/__init__.py\n create mode 100644 src/processforge_core/egress/contracts.py\n create mode 100644 src/processforge_core/egress/engine.py\n create mode 100644 src/processforge_core/egress/policy.py\n create mode 100644 src/processforge_core/egress/service.py\n create mode 100644 src/processforge_core/egress/storage.py\n create mode 100644 src/processforge_core/egress/transport.py\n create mode 100644 src/processforge_core/egress/windows.py\n create mode 100644 tools/smoke_egress_engine.py\n create mode 100644 tools/smoke_egress_transport.py\n create mode 100644 tools/smoke_egress_work.py\n",
+  "stderr": ""
+}

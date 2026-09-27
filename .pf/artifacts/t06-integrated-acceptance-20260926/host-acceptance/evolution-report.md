@@ -1,0 +1,11 @@
+# T06 evolution capture
+
+Status: completed. Applicability: this project's delivery/acceptance workflow. Target: project_rule and acceptance harness proposals only. Global rules, process versions, skills and user memory are unchanged.
+
+1. Preserve separate source, candidate/archive, installed-process and actual application connection evidence. A successful installed update does not reload an existing client. Tool discovery plus actual feature calls, post-delivery process identity and diagnostic build hashes provide a reviewable connection check. Evidence: connected-process-identity.json, bootstrap.json, fixture-diagnostics.jsonl and acceptance-result.json.
+2. For a legacy immutable capsule, exercise new grants through a separately declared isolated current-contract fixture; retain original Work identity for closure. Never edit old intent or grant bindings to make acceptance pass. Evidence: legacy-capsule-denial.json, fixture-start.json, boundary-result.json.
+3. Use portable objective labels; machine-specific operational paths belong in private evidence. Propose a future objective preview/public-cleanliness check and a separate metadata sanitization/export decision that preserves original immutable bytes. Existing delivery metadata finding remains open; no historical record is repaired in this Work.
+4. Declare diagnostic semantics explicitly in assertions: quiet preserves warnings; off suppresses optional records but mandatory events persist; final process completion includes a terminal transition event. Preserve failed harness assumptions and correct them against contract/evidence. Evidence: verifier-observation.md and fixture-events.ndjson.
+5. Use bounded sequential calls for tests sharing one stdio connection, and poll shell sessions returned as running. The initial resolve timeout is an observation; this run does not establish its cause or propose a product performance patch.
+
+No product implementation defect requiring remediation was found in the accepted scope. Browser, full public release and T07/T10/UI are not applicable here. Handoff: original T06 may complete; preserve archive and host evidence, perform scoped scratch cleanup and final completed-run checks. Follow-up metadata work or later roadmap tasks require their own governed scope.

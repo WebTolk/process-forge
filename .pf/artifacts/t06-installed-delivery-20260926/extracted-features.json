@@ -1,0 +1,274 @@
+{
+  "started_at": "2026-09-26T08:41:28.665758+00:00",
+  "extracted_root": "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted",
+  "archive_sha256": "ec36643ec0fd3ee08f3caf077da01be023b136bdad0a9d158421dac2d63fbd00",
+  "payload_hashes_verified": 987,
+  "scope": "targeted extracted feature and update checks, not full release suite",
+  "checks": [
+    {
+      "name": "smoke_prepared_execution_recovery",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_prepared_execution_recovery.py"
+      ],
+      "timeout": 240,
+      "exit_code": 0,
+      "seconds": 108.426,
+      "stdout": "PASS: offline governed execution, collection invariance, source MCP reconnect and transition\nPASS: actual process death, dead-owner lock and exactly-once receipt recovery\nPASS: real directory redirect refused without private-byte publication\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_work_capsule_contract_parity",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_work_capsule_contract_parity.py"
+      ],
+      "timeout": 300,
+      "exit_code": 0,
+      "seconds": 41.535,
+      "stdout": "WROTE: .pf/contexts/assignment-capsules/t03-contract-parity.capsule.yaml\n{\n  \"status\": \"PASS\",\n  \"checks\": [\n    \"process and stage capabilities remain lifecycle requirements\",\n    \"actual governed and assignment constructors have exact contract parity\",\n    \"process/stage capability requirements stay in the pin, outside worker readiness\",\n    \"recomputed inner checksum cannot bypass the governed capsule byte anchor\",\n    \"status, stage, evidence, timestamps, retry/session and preferences retain intent\",\n    \"objective, scope, output, capability and workspace mutations are rejected\",\n    \"empty path/action/resource grants remain empty\",\n    \"analysis mode denies product writes despite contradictory defaults\",\n    \"invalid modes and malformed subagent policy fail closed; explicit zero limit remains zero\",\n    \"missing required source and explicit worker capability block readiness\",\n    \"missing/non-member runs remain incomplete assignment contexts\",\n    \"conflicting immutable source checksums are rejected\",\n    \"absolute/traversal and supported symlink source escapes are rejected\",\n    \"source-count, per-file and aggregate byte budgets are enforced\",\n    \"missing/changed material, legacy absence and unknown contract version are diagnosed\",\n    \"--force refuses replacement without changing capsule bytes\",\n    \"current catalog edits do not alter process/stage pins; governed transition preserves capsule bytes\"\n  ],\n  \"skipped\": [\n    \"symlink containment unavailable on host: OSError\"\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_provider_adapter_admission",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_provider_adapter_admission.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 12.89,
+      "stdout": "PASS: trusted custom provider start/message, duplicate replay repair/idempotence, untrusted identity/provenance denial, forged Codex identity replay denial, partial-native raw-only denial, native-ID quarantine, duplicate registry rejection, Host/kernel/replay sources unchanged\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_work_resource_binding",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_work_resource_binding.py"
+      ],
+      "timeout": 300,
+      "exit_code": 0,
+      "seconds": 168.81,
+      "stdout": "PASS: Work resource binding isolation/pinning/current access/metadata/fulltext/subsets/provenance; symlink=unsupported by host\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_core_update_manifest",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_core_update_manifest.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 9.696,
+      "stdout": "SKIP: symlink fixture unavailable: [WinError 1314] \u041a\u043b\u0438\u0435\u043d\u0442 \u043d\u0435 \u043e\u0431\u043b\u0430\u0434\u0430\u0435\u0442 \u0442\u0440\u0435\u0431\u0443\u0435\u043c\u044b\u043c\u0438 \u043f\u0440\u0430\u0432\u0430\u043c\u0438: 'C:\\\\Users\\\\musst\\\\AppData\\\\Local\\\\Temp\\\\pf-core-update-unowned-symlink-svg9ne3a\\\\outside.txt' -> 'C:\\\\Users\\\\musst\\\\AppData\\\\Local\\\\Temp\\\\pf-core-update-unowned-symlink-svg9ne3a\\\\core\\\\user-link.txt'\nSKIP: broken-symlink fixture unavailable: [WinError 1314] \u041a\u043b\u0438\u0435\u043d\u0442 \u043d\u0435 \u043e\u0431\u043b\u0430\u0434\u0430\u0435\u0442 \u0442\u0440\u0435\u0431\u0443\u0435\u043c\u044b\u043c\u0438 \u043f\u0440\u0430\u0432\u0430\u043c\u0438: 'C:\\\\Users\\\\musst\\\\AppData\\\\Local\\\\Temp\\\\pf-core-update-unowned-broken-symlink-bvwoy37s\\\\missing-target' -> 'C:\\\\Users\\\\musst\\\\AppData\\\\Local\\\\Temp\\\\pf-core-update-unowned-broken-symlink-bvwoy37s\\\\core\\\\user-link.txt'\nPASS: manifest-based core update smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_core_update_missing_owned",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_core_update_missing_owned.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 0.548,
+      "stdout": "PASS: missing owned core update smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_core_update_migration_sources",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_core_update_migration_sources.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 0.594,
+      "stdout": "PASS: core update migration source validation and recovery\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_classifier_distribution_parity",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_classifier_distribution_parity.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 0.601,
+      "stdout": "PASS: smoke_classifier_distribution_parity\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_mcp_jsonrpc_validation",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_mcp_jsonrpc_validation.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 0.698,
+      "stdout": "PASS: native MCP validates JSON-RPC and tool arguments; notifications stay silent\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_mcp_missing_session_diagnostics",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_mcp_missing_session_diagnostics.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 0.251,
+      "stdout": "PASS: MCP missing-session diagnostics are actionable\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_prepared_execution_context",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_prepared_execution_context.py"
+      ],
+      "timeout": 360,
+      "exit_code": 0,
+      "seconds": 205.13,
+      "stdout": "PASS: prepared-input schema/budgets, empty and denied grants, semantic driver/model invariance, source/intent/manifest drift denial, offline generic-shell same-attempt launch, receipt interruption repair/idempotent collection/output attribution, metadata/fulltext drift and revocation, explicit empty stage subset\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_project_init_local_search_mcp",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_project_init_local_search_mcp.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 44.873,
+      "stdout": "PASS: snapshot-authorized SQLite FTS5 search smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_docs_current_code_contract",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_docs_current_code_contract.py"
+      ],
+      "timeout": 120,
+      "exit_code": 1,
+      "seconds": 0.582,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\argparse.py\", line 2042, in _parse_known_args2\n    namespace, args = self._parse_known_args(args, namespace, intermixed)\n                      ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\argparse.py\", line 2297, in _parse_known_args\n    stop_index = consume_positionals(start_index)\n  File \"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\argparse.py\", line 2249, in consume_positionals\n    take_action(action, args)\n    ~~~~~~~~~~~^^^^^^^^^^^^^^\n  File \"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\argparse.py\", line 2103, in take_action\n    argument_values = self._get_values(action, argument_strings)\n  File \"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\argparse.py\", line 2629, in _get_values\n    self._check_value(action, value[0])\n    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\argparse.py\", line 2691, in _check_value\n    raise ArgumentError(action, msg % args)\nargparse.ArgumentError: argument command: invalid choice: 'placeholder' (choose from diagnostics-status, diagnostics-export, init-workplace, workplace-init, workplace-setup, global-agents-section, doctor-workplace, workplace-mode, init-project, project-init, project-onboard, project-init-status, project-init-repair, doctor-project, project-mode, director-inbox-submit, director-case-refresh, error-route, agent-start-prompt, first-run, release-check, release-test, smoke-all, dev-test, dogfood-test, clean, release-pack, release-archive-test, examples-check, version, path-resolve, search-index, core-update, knowledge-add-url, knowledge-add-resource, knowledge-package-doctor, knowledge-index-refresh, docs-import-plan, template-add, template-create, template-doctor, tool-register, mcp-register, specialization-list, specialization-show, specialization-doctor, specialization-create, specialization-bind-platform, project-override-add, project-override-list, project-override-doctor, platform-contract-install, knowledge-package-create, platform-create, platform-contract-doctor, update, self-update-check, project-upgrade-check, session-start, project-context-refresh, project-context-check, project-context-mark-stale, assignment-capsule, capsule-doctor, process-authoring-start, process-authoring-review, process-authoring-apply, process-authoring-import, process-parity-check, process-parity-check-all, template-parity-check, knowledge-package-parity-check, platform-parity-check, authoring-parity-check-all, process-create, authoring-transaction-recover, process-doctor, builtin-process-catalog-doctor, pack-list, pack-activate, process-list, process-describe, process-show, process-layout-doctor, process-layout-migrate, evolve-run, evolve-candidate-create, evolve-candidate-list, evolve-candidate-export, evolve-candidate-sanitize, knowledge-hub-init, knowledge-hub-import, knowledge-package-build-from-candidates, knowledge-package-release, runtime-driver, runtime-driver-list, runtime-driver-validate, runtime-driver-describe, worker-run, worker-run-prepare, worker-run-start, worker-run-status, worker-run-stop, worker-run-collect, supervisor, supervisor-tick, supervisor-run, supervisor-status, supervisor-stop, execution-inspector-tick, execution-inspector-run, execution-inspector-status, execution-inspector-stop, runtime, codex-mcp, runtime-host, orchestrator-plan, worker-launch-prompt, orchestrator-plan-create, orchestrator-plan-validate, orchestrator-plan-apply, orchestrator-plan-status, worker-launch-prompt-create, agent-register, agent-list, agent-checkin, agent-heartbeat, agent-checkout, agent-status, session-heartbeat, session-end, session-status, agent-availability, agent-ledger-doctor, agent-lease-grant, agent-lease-release, agent-lease-revoke, agent-lease-list, agent-lease-doctor, process-route-list, process-route-validate, process-route-doctor, handoff-create, handoff-offer, handoff-status, handoff-accept, handoff-start-target-run, handoff-return, handoff-finalize, handoff-doctor, agent-director-tick, agent-director-run, agent-director-status, continuation-create, continuation-status, continuation-resume, continuation-doctor, orchestrator-shell-plan-create, orchestrator-shell-plan-validate, orchestrator-shell-plan-apply, work-start, work-state, work-search, work-resolve, work-transition, run-create, run-list, run-status, run-doctor, run-summary, run-complete, task-create, task-list, task-start, task-complete, task-doctor, iteration-add, iteration-complete, hooks-dispatch, events-validate, chat-record, chat-export, context-resolve, context-compile, doctor-context)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_docs_current_code_contract.py\", line 139, in check_command_docs\n    parser.parse_args(args)\n    ~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\argparse.py\", line 2003, in parse_args\n    args, argv = self.parse_known_args(args, namespace)\n                 ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\argparse.py\", line 2013, in parse_known_args\n    return self._parse_known_args2(args, namespace, intermixed=False)\n           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\argparse.py\", line 2044, in _parse_known_args2\n    self.error(str(err))\n    ~~~~~~~~~~^^^^^^^^^^\n  File \"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\argparse.py\", line 2780, in error\n    self.exit(2, _('%(prog)s: error: %(message)s\\n') % args)\n    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\argparse.py\", line 2767, in exit\n    _sys.exit(status)\n    ~~~~~~~~~^^^^^^^^\nSystemExit: 2\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_docs_current_code_contract.py\", line 309, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_docs_current_code_contract.py\", line 297, in main\n    checked = check_command_docs(parser_module.build_parser())\n  File \"D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_docs_current_code_contract.py\", line 145, in check_command_docs\n    raise AssertionError(\n        f\"{path.relative_to(ROOT)}: CLI example rejected ({detail}): {line}\"\n    ) from exc\nAssertionError: docs\\concepts\\diagnostics.md: CLI example rejected (usage: smoke_docs_current_code_contract.py [-h]\n                                           [--diagnostic-profile {quiet,normal,diagnostic,trace,off}]\n                                           [--diagnostic-threshold {debug,info,notice,warning,error,critical,alert,emergency}]\n                                           [--diagnostic-components DIAGNOSTIC_COMPONENTS]\n                                           [--diagnostic-sink {jsonl,stderr,both,none}]\n                                           {diagnostics-status,diagnostics-export,init-workplace,workplace-init,workplace-setup,global-agents-section,doctor-workplace,workplace-mode,init-project,project-init,project-onboard,project-init-status,project-init-repair,doctor-project,project-mode,director-inbox-submit,director-case-refresh,error-route,agent-start-prompt,first-run,release-check,release-test,smoke-all,dev-test,dogfood-test,clean,release-pack,release-archive-test,examples-check,version,path-resolve,search-index,core-update,knowledge-add-url,knowledge-add-resource,knowledge-package-doctor,knowledge-index-refresh,docs-import-plan,template-add,template-create,template-doctor,tool-register,mcp-register,specialization-list,specialization-show,specialization-doctor,specialization-create,specialization-bind-platform,project-override-add,project-override-list,project-override-doctor,platform-contract-install,knowledge-package-create,platform-create,platform-contract-doctor,update,self-update-check,project-upgrade-check,session-start,project-context-refresh,project-context-check,project-context-mark-stale,assignment-capsule,capsule-doctor,process-authoring-start,process-authoring-review,process-authoring-apply,process-authoring-import,process-parity-check,process-parity-check-all,template-parity-check,knowledge-package-parity-check,platform-parity-check,authoring-parity-check-all,process-create,authoring-transaction-recover,process-doctor,builtin-process-catalog-doctor,pack-list,pack-activate,process-list,process-describe,process-show,process-layout-doctor,process-layout-migrate,evolve-run,evolve-candidate-create,evolve-candidate-list,evolve-candidate-export,evolve-candidate-sanitize,knowledge-hub-init,knowledge-hub-import,knowledge-package-build-from-candidates,knowledge-package-release,runtime-driver,runtime-driver-list,runtime-driver-validate,runtime-driver-describe,worker-run,worker-run-prepare,worker-run-start,worker-run-status,worker-run-stop,worker-run-collect,supervisor,supervisor-tick,supervisor-run,supervisor-status,supervisor-stop,execution-inspector-tick,execution-inspector-run,execution-inspector-status,execution-inspector-stop,runtime,codex-mcp,runtime-host,orchestrator-plan,worker-launch-prompt,orchestrator-plan-create,orchestrator-plan-validate,orchestrator-plan-apply,orchestrator-plan-status,worker-launch-prompt-create,agent-register,agent-list,agent-checkin,agent-heartbeat,agent-checkout,agent-status,session-heartbeat,session-end,session-status,agent-availability,agent-ledger-doctor,agent-lease-grant,agent-lease-release,agent-lease-revoke,agent-lease-list,agent-lease-doctor,process-route-list,process-route-validate,process-route-doctor,handoff-create,handoff-offer,handoff-status,handoff-accept,handoff-start-target-run,handoff-return,handoff-finalize,handoff-doctor,agent-director-tick,agent-director-run,agent-director-status,continuation-create,continuation-status,continuation-resume,continuation-doctor,orchestrator-shell-plan-create,orchestrator-shell-plan-validate,orchestrator-shell-plan-apply,work-start,work-state,work-search,work-resolve,work-transition,run-create,run-list,run-status,run-doctor,run-summary,run-complete,task-create,task-list,task-start,task-complete,task-doctor,iteration-add,iteration-complete,hooks-dispatch,events-validate,chat-record,chat-export,context-resolve,context-compile,doctor-context} ...\nsmoke_docs_current_code_contract.py: error: argument command: invalid choice: 'placeholder' (choose from diagnostics-status, diagnostics-export, init-workplace, workplace-init, workplace-setup, global-agents-section, doctor-workplace, workplace-mode, init-project, project-init, project-onboard, project-init-status, project-init-repair, doctor-project, project-mode, director-inbox-submit, director-case-refresh, error-route, agent-start-prompt, first-run, release-check, release-test, smoke-all, dev-test, dogfood-test, clean, release-pack, release-archive-test, examples-check, version, path-resolve, search-index, core-update, knowledge-add-url, knowledge-add-resource, knowledge-package-doctor, knowledge-index-refresh, docs-import-plan, template-add, template-create, template-doctor, tool-register, mcp-register, specialization-list, specialization-show, specialization-doctor, specialization-create, specialization-bind-platform, project-override-add, project-override-list, project-override-doctor, platform-contract-install, knowledge-package-create, platform-create, platform-contract-doctor, update, self-update-check, project-upgrade-check, session-start, project-context-refresh, project-context-check, project-context-mark-stale, assignment-capsule, capsule-doctor, process-authoring-start, process-authoring-review, process-authoring-apply, process-authoring-import, process-parity-check, process-parity-check-all, template-parity-check, knowledge-package-parity-check, platform-parity-check, authoring-parity-check-all, process-create, authoring-transaction-recover, process-doctor, builtin-process-catalog-doctor, pack-list, pack-activate, process-list, process-describe, process-show, process-layout-doctor, process-layout-migrate, evolve-run, evolve-candidate-create, evolve-candidate-list, evolve-candidate-export, evolve-candidate-sanitize, knowledge-hub-init, knowledge-hub-import, knowledge-package-build-from-candidates, knowledge-package-release, runtime-driver, runtime-driver-list, runtime-driver-validate, runtime-driver-describe, worker-run, worker-run-prepare, worker-run-start, worker-run-status, worker-run-stop, worker-run-collect, supervisor, supervisor-tick, supervisor-run, supervisor-status, supervisor-stop, execution-inspector-tick, execution-inspector-run, execution-inspector-status, execution-inspector-stop, runtime, codex-mcp, runtime-host, orchestrator-plan, worker-launch-prompt, orchestrator-plan-create, orchestrator-plan-validate, orchestrator-plan-apply, orchestrator-plan-status, worker-launch-prompt-create, agent-register, agent-list, agent-checkin, agent-heartbeat, agent-checkout, agent-status, session-heartbeat, session-end, session-status, agent-availability, agent-ledger-doctor, agent-lease-grant, agent-lease-release, agent-lease-revoke, agent-lease-list, agent-lease-doctor, process-route-list, process-route-validate, process-route-doctor, handoff-create, handoff-offer, handoff-status, handoff-accept, handoff-start-target-run, handoff-return, handoff-finalize, handoff-doctor, agent-director-tick, agent-director-run, agent-director-status, continuation-create, continuation-status, continuation-resume, continuation-doctor, orchestrator-shell-plan-create, orchestrator-shell-plan-validate, orchestrator-shell-plan-apply, work-start, work-state, work-search, work-resolve, work-transition, run-create, run-list, run-status, run-doctor, run-summary, run-complete, task-create, task-list, task-start, task-complete, task-doctor, iteration-add, iteration-complete, hooks-dispatch, events-validate, chat-record, chat-export, context-resolve, context-compile, doctor-context)): pf --diagnostic-profile diagnostic --diagnostic-threshold debug --diagnostic-components mcp,context --diagnostic-sink both <command>\n"
+    },
+    {
+      "name": "smoke_docs_mcp_host_owned_stdio",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_docs_mcp_host_owned_stdio.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 0.136,
+      "stdout": "PASS: docs describe MCP as a host-owned stdio process\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_docs_agent_no_manual_infra",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_docs_agent_no_manual_infra.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 0.172,
+      "stdout": "PASS: agent instructions use the high-level Garage path and prohibit manual infrastructure repair\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_docs_codex_hooks_optional",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_docs_codex_hooks_optional.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 0.127,
+      "stdout": "PASS: docs consistently treat Codex hooks as optional host telemetry\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_runtime_driver_registry",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_runtime_driver_registry.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 16.492,
+      "stdout": "PASS: runtime driver registry smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_garage_cross_project_security",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_garage_cross_project_security.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 47.028,
+      "stdout": "PASS: Garage resource authorization is snapshot-bound across projects\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_worker_workspace_access",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_worker_workspace_access.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 15.519,
+      "stdout": "PASS: worker workspace access smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_codex_worker_governance",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_codex_worker_governance.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 0.435,
+      "stdout": "PASS: Codex worker sandbox and prepared input governance\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_codex_exec_worker",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_codex_exec_worker.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 15.13,
+      "stdout": "PASS: codex exec worker smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_diagnostics_process_invariance",
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted\\tools\\smoke_diagnostics_process_invariance.py"
+      ],
+      "timeout": 240,
+      "exit_code": 0,
+      "seconds": 117.177,
+      "stdout": "PASS: Work lifecycle invariant across diagnostic profiles {\"diagnostic\": 23, \"normal\": 18, \"off\": 0, \"quiet\": 0, \"trace\": 25}\n",
+      "stderr": ""
+    }
+  ],
+  "finished_at": "2026-09-26T08:46:08.699082+00:00"
+}

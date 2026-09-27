@@ -1,0 +1,16 @@
+{
+  "status": "retained_policy_block",
+  "action": "remove verified T06 temporary delivery worktree, extracted copies and isolated acceptance fixture after archiving",
+  "executed": false,
+  "reason": "Automatic tool approval review rejected exec_command creation: blocked by policy. No more specific reason was supplied.",
+  "retained_as_durable_evidence": [
+    ".pf/tmp/t06-installed-delivery-20260926/candidate",
+    ".pf/tmp/t06-installed-delivery-20260926/extracted",
+    ".pf/tmp/t06-installed-delivery-20260926/extracted-corrected",
+    ".pf/tmp/t06-host-acceptance-20260926/project"
+  ],
+  "fixture_archive": ".pf/artifacts/t06-integrated-acceptance-20260926/host-acceptance/fixture-evidence.zip",
+  "fixture_archive_sha256": "ce147ea3eda3b9e9da5c4ba7518a37ff27575a87a7049e31786c3ff0e8b22863",
+  "preflight": "final-checks.json: clean exact candidate commit; both extracted manifests have 987 matching owned files; all 27 archived fixture files verified",
+  "follow_up": "No deletion retry or policy workaround. Treat retained trees as durable private verification evidence; later cleanup can be a separate permitted maintenance action."
+}

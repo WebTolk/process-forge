@@ -1,0 +1,87 @@
+{
+  "time_utc": "2026-09-25T18:07:02.216229+00:00",
+  "layer": "fresh installed stdio connection, separate from actual host calls",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:/.agents/processforge/tools/pf_runtime/mcp_server.py",
+    "--workplace",
+    "D:/.agents/processforge-workplace"
+  ],
+  "requests": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "initialize"
+    },
+    {
+      "jsonrpc": "2.0",
+      "method": "notifications/initialized"
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "tools/call",
+      "params": {
+        "name": "pf.work.start",
+        "arguments": {
+          "project_root": "D:\\Dev\\process-forge\\.pf\\tmp\\t08-host-acceptance-20260925\\project",
+          "objective": "T08 real host acceptance: verify selected resource authorization, required evidence and continuation through a fresh installed stdio connection."
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "tools/call",
+      "params": {
+        "name": "pf.work.state",
+        "arguments": {
+          "project_root": "D:\\Dev\\process-forge\\.pf\\tmp\\t08-host-acceptance-20260925\\project"
+        }
+      }
+    }
+  ],
+  "responses": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "serverInfo": {
+          "name": "processforge",
+          "version": "1.1.0"
+        },
+        "capabilities": {
+          "tools": {}
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"action\": \"continue_existing\", \"assignment_id\": \"t08-real-host-acceptance-verify-selected-resource-authorization-required\", \"kind\": \"pf.work.start\", \"project\": {\"id\": \"t08-host-acceptance-20260925\"}, \"run_id\": \"garage-t08-real-host-acceptance-verify-selected-resource-authorization-r\", \"schema_version\": 1, \"session\": {\"status\": \"absent\"}, \"stage\": \"finish\", \"work_state\": {\"action\": \"work_incomplete\", \"allowed_outcomes\": [{\"id\": \"completed\", \"next_stage\": \"\", \"title\": \"completed\"}], \"artifacts\": [{\"evidence\": {}, \"id\": \"completion\", \"kind\": \"artifact\", \"satisfied\": false}], \"assignment\": {\"id\": \"t08-real-host-acceptance-verify-selected-resource-authorization-required\", \"status\": \"in_progress\"}, \"blockers\": [], \"completion\": {\"requirements\": [{\"artifact_id\": \"completion\", \"code\": \"artifact_evidence_missing\"}, {\"code\": \"gate_evidence_missing\", \"gate_id\": \"accepted\"}, {\"code\": \"handoff_note_required\", \"stage_id\": \"finish\"}], \"status\": \"incomplete\"}, \"evidence\": [], \"gates\": {\"entry\": [{\"blocking\": true, \"evidence\": {\"gate_id\": \"verified\", \"kind\": \"gate\", \"path\": \".pf/artifacts/verification.md\", \"recorded_at\": \"2026-09-25T18:06:26Z\", \"sha256\": \"sha256:7ad3801255a8579d6d165338fd00433f1d0d79e0c11aebaa7bbdafecc06ff619\", \"status\": \"passed\", \"summary\": \"Real host search/resolve authorization, sessionless start/state, invalid evidence rejection verified.\"}, \"id\": \"verified\", \"phase\": \"entry\", \"required\": true, \"satisfied\": true, \"type\": \"checklist\"}], \"exit\": [{\"blocking\": true, \"evidence\": {}, \"id\": \"accepted\", \"phase\": \"exit\", \"required\": true, \"satisfied\": false, \"type\": \"checklist\"}]}, \"incomplete\": [{\"artifact_id\": \"completion\", \"code\": \"artifact_evidence_missing\"}, {\"code\": \"gate_evidence_missing\", \"gate_id\": \"accepted\"}, {\"code\": \"handoff_note_required\", \"stage_id\": \"finish\"}], \"kind\": \"pf.work.state\", \"obligations\": [], \"process\": {\"fingerprint\": \"sha256:5729d2aa9fa7ca24454c4c51dde1a72dbcb1b5f4ab272ceb03bd3b46223c20f3\", \"id\": \"t08-host-acceptance\", \"pin_status\": \"pinned\", \"version\": \"1.0.0\"}, \"project\": {\"id\": \"t08-host-acceptance-20260925\"}, \"required_evidence\": [], \"required_inputs\": [{\"evidence\": {\"artifact_id\": \"verification\", \"kind\": \"artifact\", \"path\": \".pf/artifacts/verification.md\", \"recorded_at\": \"2026-09-25T18:06:26Z\", \"sha256\": \"sha256:7ad3801255a8579d6d165338fd00433f1d0d79e0c11aebaa7bbdafecc06ff619\", \"status\": \"ready\"}, \"id\": \"verification\", \"kind\": \"input\", \"satisfied\": true}], \"run\": {\"id\": \"garage-t08-real-host-acceptance-verify-selected-resource-authorization-r\", \"status\": \"in_progress\"}, \"schema_version\": 1, \"stage\": {\"id\": \"finish\", \"status\": \"in_progress\", \"title\": \"Finish\"}, \"work\": {\"active_specializations\": [], \"selected_resource_ids\": [\"docs.api.gitverse:root\"]}}}"
+          }
+        ]
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"action\": \"work_incomplete\", \"allowed_outcomes\": [{\"id\": \"completed\", \"next_stage\": \"\", \"title\": \"completed\"}], \"artifacts\": [{\"evidence\": {}, \"id\": \"completion\", \"kind\": \"artifact\", \"satisfied\": false}], \"assignment\": {\"id\": \"t08-real-host-acceptance-verify-selected-resource-authorization-required\", \"status\": \"in_progress\"}, \"blockers\": [], \"completion\": {\"requirements\": [{\"artifact_id\": \"completion\", \"code\": \"artifact_evidence_missing\"}, {\"code\": \"gate_evidence_missing\", \"gate_id\": \"accepted\"}, {\"code\": \"handoff_note_required\", \"stage_id\": \"finish\"}], \"status\": \"incomplete\"}, \"evidence\": [], \"gates\": {\"entry\": [{\"blocking\": true, \"evidence\": {\"gate_id\": \"verified\", \"kind\": \"gate\", \"path\": \".pf/artifacts/verification.md\", \"recorded_at\": \"2026-09-25T18:06:26Z\", \"sha256\": \"sha256:7ad3801255a8579d6d165338fd00433f1d0d79e0c11aebaa7bbdafecc06ff619\", \"status\": \"passed\", \"summary\": \"Real host search/resolve authorization, sessionless start/state, invalid evidence rejection verified.\"}, \"id\": \"verified\", \"phase\": \"entry\", \"required\": true, \"satisfied\": true, \"type\": \"checklist\"}], \"exit\": [{\"blocking\": true, \"evidence\": {}, \"id\": \"accepted\", \"phase\": \"exit\", \"required\": true, \"satisfied\": false, \"type\": \"checklist\"}]}, \"incomplete\": [{\"artifact_id\": \"completion\", \"code\": \"artifact_evidence_missing\"}, {\"code\": \"gate_evidence_missing\", \"gate_id\": \"accepted\"}, {\"code\": \"handoff_note_required\", \"stage_id\": \"finish\"}], \"kind\": \"pf.work.state\", \"obligations\": [], \"process\": {\"fingerprint\": \"sha256:5729d2aa9fa7ca24454c4c51dde1a72dbcb1b5f4ab272ceb03bd3b46223c20f3\", \"id\": \"t08-host-acceptance\", \"pin_status\": \"pinned\", \"version\": \"1.0.0\"}, \"project\": {\"id\": \"t08-host-acceptance-20260925\"}, \"required_evidence\": [], \"required_inputs\": [{\"evidence\": {\"artifact_id\": \"verification\", \"kind\": \"artifact\", \"path\": \".pf/artifacts/verification.md\", \"recorded_at\": \"2026-09-25T18:06:26Z\", \"sha256\": \"sha256:7ad3801255a8579d6d165338fd00433f1d0d79e0c11aebaa7bbdafecc06ff619\", \"status\": \"ready\"}, \"id\": \"verification\", \"kind\": \"input\", \"satisfied\": true}], \"run\": {\"id\": \"garage-t08-real-host-acceptance-verify-selected-resource-authorization-r\", \"status\": \"in_progress\"}, \"schema_version\": 1, \"stage\": {\"id\": \"finish\", \"status\": \"in_progress\", \"title\": \"Finish\"}, \"work\": {\"active_specializations\": [], \"selected_resource_ids\": [\"docs.api.gitverse:root\"]}}"
+          }
+        ]
+      }
+    }
+  ],
+  "exit_code": 0,
+  "stderr": ""
+}

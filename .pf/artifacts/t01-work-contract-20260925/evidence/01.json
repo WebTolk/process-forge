@@ -1,0 +1,27 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "task-record",
+    "path": ".pf/artifacts/t01-work-contract-20260925/scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "execution-context-summary",
+    "path": ".pf/artifacts/t01-work-contract-20260925/scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "lifecycle-mode-decision",
+    "path": ".pf/artifacts/t01-work-contract-20260925/scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "context-ready",
+    "path": ".pf/artifacts/t01-work-contract-20260925/scope.md",
+    "status": "passed",
+    "summary": "T01 context and documentation-only scope established from accepted T08 and AFK plan r02; source/installed identity and single-agent boundary explicit."
+  }
+]

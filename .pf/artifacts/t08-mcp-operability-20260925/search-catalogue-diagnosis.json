@@ -1,0 +1,626 @@
+{
+  "catalogue": [
+    {
+      "id": "docs.api.gitverse:root",
+      "package": "docs.api.gitverse",
+      "root": "D:\\.agents\\docs\\rest-api\\gitverse",
+      "title": "API Documentation: gitverse"
+    },
+    {
+      "id": "docs.api.max-platform:root",
+      "package": "docs.api.max-platform",
+      "root": "D:\\.agents\\docs\\rest-api\\max-platform-api",
+      "title": "API Documentation: max-platform-api"
+    },
+    {
+      "id": "docs.api.mcn-telephony:root",
+      "package": "docs.api.mcn-telephony",
+      "root": "D:\\.agents\\docs\\rest-api\\mcn-telephony",
+      "title": "API Documentation: mcn-telephony"
+    },
+    {
+      "id": "docs.api.moo-team:root",
+      "package": "docs.api.moo-team",
+      "root": "D:\\.agents\\docs\\rest-api\\api-moo-team",
+      "title": "API Documentation: api-moo-team"
+    },
+    {
+      "id": "docs.api.otpravka-pochta:root",
+      "package": "docs.api.otpravka-pochta",
+      "root": "D:\\.agents\\docs\\rest-api\\otpravka-pochta",
+      "title": "Russian Post Otpravka REST API local mirror"
+    },
+    {
+      "id": "docs.device:root",
+      "package": "docs.device",
+      "root": "D:\\.agents\\docs",
+      "title": "Device docs root"
+    },
+    {
+      "id": "docs.joomla:root",
+      "package": "docs.joomla",
+      "root": "D:\\.agents\\docs\\joomla",
+      "title": "Joomla docs root"
+    },
+    {
+      "id": "docs.joomla-6-1:root",
+      "package": "docs.joomla-6-1",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-6-1-docs",
+      "title": "Joomla 6.1 Documentation"
+    },
+    {
+      "id": "docs.joomla-administrator:root",
+      "package": "docs.joomla-administrator",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-administrator-docs",
+      "title": "Joomla Administrator Documentation"
+    },
+    {
+      "id": "docs.joomla-context7:root",
+      "package": "docs.joomla-context7",
+      "root": "D:\\.agents\\docs\\joomla\\Joomla-context7",
+      "title": "Joomla Context7 Documentation"
+    },
+    {
+      "id": "docs.joomla-context7.v2026-02-21:root",
+      "package": "docs.joomla-context7.v2026-02-21",
+      "root": "D:\\.agents\\docs\\joomla\\Joomla-context7\\2026-02-21",
+      "title": "Joomla Context7 Documentation 2026-02-21"
+    },
+    {
+      "id": "docs.joomla-context7.v2026-02-21-refresh:root",
+      "package": "docs.joomla-context7.v2026-02-21-refresh",
+      "root": "D:\\.agents\\docs\\joomla\\Joomla-context7\\2026-02-21-refresh",
+      "title": "Joomla Context7 Documentation 2026-02-21-refresh"
+    },
+    {
+      "id": "docs.joomla-core:root",
+      "package": "docs.joomla-core",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core",
+      "title": "Joomla Core source root"
+    },
+    {
+      "id": "docs.joomla-core.branch-v1-5-x:root",
+      "package": "docs.joomla-core.branch-v1-5-x",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\1.5.x",
+      "title": "Joomla Core 1.5.x"
+    },
+    {
+      "id": "docs.joomla-core.branch-v1-x:root",
+      "package": "docs.joomla-core.branch-v1-x",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\1.x",
+      "title": "Joomla Core 1.x"
+    },
+    {
+      "id": "docs.joomla-core.branch-v2-5-x:root",
+      "package": "docs.joomla-core.branch-v2-5-x",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\2.5.x",
+      "title": "Joomla Core 2.5.x"
+    },
+    {
+      "id": "docs.joomla-core.branch-v3-x:root",
+      "package": "docs.joomla-core.branch-v3-x",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\3.x",
+      "title": "Joomla Core 3.x"
+    },
+    {
+      "id": "docs.joomla-core.branch-v4-x:root",
+      "package": "docs.joomla-core.branch-v4-x",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\4.x",
+      "title": "Joomla Core 4.x"
+    },
+    {
+      "id": "docs.joomla-core.branch-v5-x:root",
+      "package": "docs.joomla-core.branch-v5-x",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\5.x",
+      "title": "Joomla Core 5.x"
+    },
+    {
+      "id": "docs.joomla-core.branch-v6-x:root",
+      "package": "docs.joomla-core.branch-v6-x",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\6.x",
+      "title": "Joomla Core 6.x"
+    },
+    {
+      "id": "docs.joomla-core.v1-0-15:source-tree",
+      "package": "docs.joomla-core.v1-0-15",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\1.x\\1.0.15",
+      "title": "Joomla Core 1.0.15"
+    },
+    {
+      "id": "docs.joomla-core.v1-5-26:source-tree",
+      "package": "docs.joomla-core.v1-5-26",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\1.5.x\\1.5.26",
+      "title": "Joomla Core 1.5.26"
+    },
+    {
+      "id": "docs.joomla-core.v2-5-28:source-tree",
+      "package": "docs.joomla-core.v2-5-28",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\2.5.x\\2.5.28",
+      "title": "Joomla Core 2.5.28"
+    },
+    {
+      "id": "docs.joomla-core.v3-10-12:source-tree",
+      "package": "docs.joomla-core.v3-10-12",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\3.x\\3.10.12",
+      "title": "Joomla Core 3.10.12"
+    },
+    {
+      "id": "docs.joomla-core.v4-4-14:source-tree",
+      "package": "docs.joomla-core.v4-4-14",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\4.x\\4.4.14",
+      "title": "Joomla Core 4.4.14"
+    },
+    {
+      "id": "docs.joomla-core.v5-4-5:source-tree",
+      "package": "docs.joomla-core.v5-4-5",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\5.x\\5.4.5",
+      "title": "Joomla Core 5.4.5"
+    },
+    {
+      "id": "docs.joomla-core.v5-4-6:source-tree",
+      "package": "docs.joomla-core.v5-4-6",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\5.x\\5.4.6",
+      "title": "Joomla Core 5.4.6"
+    },
+    {
+      "id": "docs.joomla-core.v5-4-7:source-tree",
+      "package": "docs.joomla-core.v5-4-7",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\5.x\\5.4.7",
+      "title": "Joomla Core 5.4.7"
+    },
+    {
+      "id": "docs.joomla-core.v6-0-4:source-tree",
+      "package": "docs.joomla-core.v6-0-4",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\6.x\\6.0.4",
+      "title": "Joomla Core 6.0.4"
+    },
+    {
+      "id": "docs.joomla-core.v6-1-0:source-tree",
+      "package": "docs.joomla-core.v6-1-0",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\6.x\\6.1.0",
+      "title": "Joomla Core 6.1.0"
+    },
+    {
+      "id": "docs.joomla-core.v6-1-1:source-tree",
+      "package": "docs.joomla-core.v6-1-1",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\6.x\\6.1.1",
+      "title": "Joomla Core 6.1.1"
+    },
+    {
+      "id": "docs.joomla-core.v6-1-2:source-tree",
+      "package": "docs.joomla-core.v6-1-2",
+      "root": "D:\\.agents\\docs\\joomla\\core\\Joomla-core\\6.x\\6.1.2",
+      "title": "Joomla Core 6.1.2"
+    },
+    {
+      "id": "docs.joomla-development-articles:root",
+      "package": "docs.joomla-development-articles",
+      "root": "D:\\.agents\\docs\\joomla\\core\\joomla-development-articles",
+      "title": "Joomla Development Articles"
+    },
+    {
+      "id": "docs.joomla-extensions:root",
+      "package": "docs.joomla-extensions",
+      "root": "D:\\.agents\\docs\\joomla\\3rd-party-extensions-docs",
+      "title": "Joomla extension docs root"
+    },
+    {
+      "id": "docs.joomla-extensions.joomshopping:root",
+      "package": "docs.joomla-extensions.joomshopping",
+      "root": "D:\\.agents\\docs\\joomla\\3rd-party-extensions-docs\\joomshopping",
+      "title": "joomshopping"
+    },
+    {
+      "id": "docs.joomla-extensions.radical-form:root",
+      "package": "docs.joomla-extensions.radical-form",
+      "root": "D:\\.agents\\docs\\joomla\\3rd-party-extensions-docs\\radical-form",
+      "title": "radical-form"
+    },
+    {
+      "id": "docs.joomla-extensions.revars:root",
+      "package": "docs.joomla-extensions.revars",
+      "root": "D:\\.agents\\docs\\joomla\\3rd-party-extensions-docs\\revars",
+      "title": "revars"
+    },
+    {
+      "id": "docs.joomla-extensions.web-tolk-dev-catalog:root",
+      "package": "docs.joomla-extensions.web-tolk-dev-catalog",
+      "root": "D:\\.agents\\docs\\joomla\\3rd-party-extensions-docs\\web-tolk-dev-catalog",
+      "title": "web-tolk-dev-catalog"
+    },
+    {
+      "id": "docs.joomla-extensions.web-tolk-extensions:root",
+      "package": "docs.joomla-extensions.web-tolk-extensions",
+      "root": "D:\\.agents\\docs\\joomla\\3rd-party-extensions-docs\\web-tolk-extensions",
+      "title": "web-tolk-extensions"
+    },
+    {
+      "id": "docs.joomla-toolkit:root",
+      "package": "docs.joomla-toolkit",
+      "root": "D:\\.agents\\docs\\joomla\\core\\joomla-toolkit",
+      "title": "Joomla Toolkit Knowledge"
+    },
+    {
+      "id": "docs.joomshopping:root",
+      "package": "docs.joomshopping",
+      "root": "D:\\.agents\\docs\\joomla\\3rd-party-extensions-docs\\joomshopping",
+      "title": "JoomShopping Documentation"
+    },
+    {
+      "id": "docs.joomshopping-core:root",
+      "package": "docs.joomshopping-core",
+      "root": "D:\\.agents\\docs\\joomla\\Joomshopping-core",
+      "title": "JoomShopping Core source root"
+    },
+    {
+      "id": "docs.joomshopping-core.v5-9-1:source-tree",
+      "package": "docs.joomshopping-core.v5-9-1",
+      "root": "D:\\.agents\\docs\\joomla\\Joomshopping-core\\5.9.1",
+      "title": "JoomShopping Core 5.9.1"
+    },
+    {
+      "id": "docs.joomshopping-core.v5-9-2:source-tree",
+      "package": "docs.joomshopping-core.v5-9-2",
+      "root": "D:\\.agents\\docs\\joomla\\Joomshopping-core\\5.9.2",
+      "title": "JoomShopping Core 5.9.2"
+    },
+    {
+      "id": "docs.marketing-seo-geo-ai:root",
+      "package": "docs.marketing-seo-geo-ai",
+      "root": "D:\\.agents\\docs\\marketing-seo-geo-ai-knowledge",
+      "title": "Marketing SEO GEO AI Knowledge"
+    },
+    {
+      "id": "docs.radicalmart:root",
+      "package": "docs.radicalmart",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-core",
+      "title": "RadicalMart docs root"
+    },
+    {
+      "id": "docs.radicalmart-core:root",
+      "package": "docs.radicalmart-core",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-core",
+      "title": "RadicalMart Core source root"
+    },
+    {
+      "id": "docs.radicalmart-core.radicalmart-express-v3-x.v3-0-4:source-tree",
+      "package": "docs.radicalmart-core.radicalmart-express-v3-x.v3-0-4",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-core\\Radicalmart Express\\3.x\\3.0.4",
+      "title": "RadicalMart Core: Radicalmart Express / 3.x 3.0.4"
+    },
+    {
+      "id": "docs.radicalmart-core.radicalmart-v2-x.v2-2-4:source-tree",
+      "package": "docs.radicalmart-core.radicalmart-v2-x.v2-2-4",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-core\\RadicalMart\\2.x\\2.2.4",
+      "title": "RadicalMart Core: RadicalMart / 2.x 2.2.4"
+    },
+    {
+      "id": "docs.radicalmart-core.radicalmart-v3-x.v3-0-23:source-tree",
+      "package": "docs.radicalmart-core.radicalmart-v3-x.v3-0-23",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-core\\RadicalMart\\3.x\\3.0.23",
+      "title": "RadicalMart Core: RadicalMart / 3.x 3.0.23"
+    },
+    {
+      "id": "docs.radicalmart-extensions:root",
+      "package": "docs.radicalmart-extensions",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions",
+      "title": "RadicalMart Extensions source root"
+    },
+    {
+      "id": "docs.radicalmart-extensions.analytics.v1-1-0:source-tree",
+      "package": "docs.radicalmart-extensions.analytics.v1-1-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\Analytics\\1.1.0",
+      "title": "RadicalMart Extensions: Analytics 1.1.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.export-core.v0-2-1-dev:source-tree",
+      "package": "docs.radicalmart-extensions.export-core.v0-2-1-dev",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\Export\\Core\\0.2.1-dev",
+      "title": "RadicalMart Extensions: Export / Core 0.2.1-dev"
+    },
+    {
+      "id": "docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-0-0:source-tree",
+      "package": "docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-0-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\Export\\Plugins\\plg_radicalmart_export_yml\\1.0.0",
+      "title": "RadicalMart Extensions: Export / Plugins / plg_radicalmart_export_yml 1.0.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-1-1-dev:source-tree",
+      "package": "docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-1-1-dev",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\Export\\Plugins\\plg_radicalmart_export_yml\\1.1.1-dev",
+      "title": "RadicalMart Extensions: Export / Plugins / plg_radicalmart_export_yml 1.1.1-dev"
+    },
+    {
+      "id": "docs.radicalmart-extensions.import-core.v0-8-6:source-tree",
+      "package": "docs.radicalmart-extensions.import-core.v0-8-6",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\Import\\Core\\0.8.6",
+      "title": "RadicalMart Extensions: Import / Core 0.8.6"
+    },
+    {
+      "id": "docs.radicalmart-extensions.import-core.v0-9-1-dev:source-tree",
+      "package": "docs.radicalmart-extensions.import-core.v0-9-1-dev",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\Import\\Core\\0.9.1-dev",
+      "title": "RadicalMart Extensions: Import / Core 0.9.1-dev"
+    },
+    {
+      "id": "docs.radicalmart-extensions.import-plugins-plg-radicalmart-import-excel.v1-0-0:source-tree",
+      "package": "docs.radicalmart-extensions.import-plugins-plg-radicalmart-import-excel.v1-0-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\Import\\pLugins\\plg_radicalmart_import_excel\\1.0.0",
+      "title": "RadicalMart Extensions: Import / pLugins / plg_radicalmart_import_excel 1.0.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.modules-filter-extended-mod-msg-rmf.v2-0-0:source-tree",
+      "package": "docs.radicalmart-extensions.modules-filter-extended-mod-msg-rmf.v2-0-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\Modules\\filter_extended_mod_msg_rmf\\2.0.0",
+      "title": "RadicalMart Extensions: Modules / filter_extended_mod_msg_rmf 2.0.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-crm-retailcrm.v1-0-2:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-crm-retailcrm.v1-0-2",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\CRM\\RetailCRM\\1.0.2",
+      "title": "RadicalMart Extensions: plugins / CRM / RetailCRM 1.0.2"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-gallery.v1-0-0:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-gallery.v1-0-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\Fields\\plg_radicalmart_fields_gallery\\1.0.0",
+      "title": "RadicalMart Extensions: plugins / Fields / plg_radicalmart_fields_gallery 1.0.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-standard.v2-1-5:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-standard.v2-1-5",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\Fields\\plg_radicalmart_fields_standard\\2.1.5",
+      "title": "RadicalMart Extensions: plugins / Fields / plg_radicalmart_fields_standard 2.1.5"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-resize.v1-1-0:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-resize.v1-1-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\Media\\plg_radicalmart_media_resize\\1.1.0",
+      "title": "RadicalMart Extensions: plugins / Media / plg_radicalmart_media_resize 1.1.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-video.v1-0-0:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-video.v1-0-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\Media\\plg_radicalmart_media_video\\1.0.0",
+      "title": "RadicalMart Extensions: plugins / Media / plg_radicalmart_media_video 1.0.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-message-plg-radicalmart-message-email.v2-2-0:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-message-plg-radicalmart-message-email.v2-2-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\Message\\plg_radicalmart_message_email\\2.2.0",
+      "title": "RadicalMart Extensions: plugins / Message / plg_radicalmart_message_email 2.2.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-payment-plg-radicalmart-payment-robokassa.v2-0-0:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-payment-plg-radicalmart-payment-robokassa.v2-0-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\payment\\plg_radicalmart_payment_robokassa\\2.0.0",
+      "title": "RadicalMart Extensions: plugins / payment / plg_radicalmart_payment_robokassa 2.0.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-payment-plg-radicalmart-payment-yookassa.v2-1-0:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-payment-plg-radicalmart-payment-yookassa.v2-1-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\payment\\plg_radicalmart_payment_yookassa\\2.1.0",
+      "title": "RadicalMart Extensions: plugins / payment / plg_radicalmart_payment_yookassa 2.1.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-addresses.v1-0-0:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-addresses.v1-0-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\shipping\\plg_radicalmart_shipping_addresses\\1.0.0",
+      "title": "RadicalMart Extensions: plugins / shipping / plg_radicalmart_shipping_addresses 1.0.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-apiship.v1-0-2:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-apiship.v1-0-2",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\shipping\\plg_radicalmart_shipping_apiship\\1.0.2",
+      "title": "RadicalMart Extensions: plugins / shipping / plg_radicalmart_shipping_apiship 1.0.2"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-standard.v3-0-0:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-standard.v3-0-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\shipping\\plg_radicalmart_shipping_standard\\3.0.0",
+      "title": "RadicalMart Extensions: plugins / shipping / plg_radicalmart_shipping_standard 3.0.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-zone.v1-0-0:source-tree",
+      "package": "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-zone.v1-0-0",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\plugins\\shipping\\plg_radicalmart_shipping_zone\\1.0.0",
+      "title": "RadicalMart Extensions: plugins / shipping / plg_radicalmart_shipping_zone 1.0.0"
+    },
+    {
+      "id": "docs.radicalmart-extensions.templates-uikit-pkg-radicalmart-uikit.v3-0-16:source-tree",
+      "package": "docs.radicalmart-extensions.templates-uikit-pkg-radicalmart-uikit.v3-0-16",
+      "root": "D:\\.agents\\docs\\joomla\\Radicalmart-extensions\\templates\\uikit\\pkg_radicalmart_uikit\\3.0.16",
+      "title": "RadicalMart Extensions: templates / uikit / pkg_radicalmart_uikit 3.0.16"
+    },
+    {
+      "id": "docs.rest-api:root",
+      "package": "docs.rest-api",
+      "root": "D:\\.agents\\docs\\rest-api",
+      "title": "REST API docs root"
+    },
+    {
+      "id": "docs.seo:root",
+      "package": "docs.seo",
+      "root": "D:\\.agents\\docs\\SEO",
+      "title": "SEO Documentation"
+    },
+    {
+      "id": "docs.virtuemart:root",
+      "package": "docs.virtuemart",
+      "root": "D:\\.agents\\docs\\joomla\\Virtuemart-core",
+      "title": "VirtueMart Documentation"
+    },
+    {
+      "id": "docs.virtuemart-core:root",
+      "package": "docs.virtuemart-core",
+      "root": "D:\\.agents\\docs\\joomla\\Virtuemart-core",
+      "title": "VirtueMart Core source root"
+    },
+    {
+      "id": "docs.virtuemart-core.v4-4-10:source-tree",
+      "package": "docs.virtuemart-core.v4-4-10",
+      "root": "D:\\.agents\\docs\\joomla\\Virtuemart-core\\4.4.10",
+      "title": "VirtueMart Core 4.4.10"
+    },
+    {
+      "id": "docs.web:root",
+      "package": "docs.web",
+      "root": "D:\\.agents\\docs\\web",
+      "title": "Web docs root"
+    },
+    {
+      "id": "docs.web.api:root",
+      "package": "docs.web.api",
+      "root": "D:\\.agents\\docs\\web\\api",
+      "title": "api"
+    },
+    {
+      "id": "docs.web.css:root",
+      "package": "docs.web.css",
+      "root": "D:\\.agents\\docs\\web\\css",
+      "title": "css"
+    },
+    {
+      "id": "docs.web.css-framework:root",
+      "package": "docs.web.css-framework",
+      "root": "D:\\.agents\\docs\\web\\css-framework",
+      "title": "css-framework"
+    },
+    {
+      "id": "docs.web.html:root",
+      "package": "docs.web.html",
+      "root": "D:\\.agents\\docs\\web\\html",
+      "title": "html"
+    },
+    {
+      "id": "docs.web.javascript:root",
+      "package": "docs.web.javascript",
+      "root": "D:\\.agents\\docs\\web\\javascript",
+      "title": "javascript"
+    },
+    {
+      "id": "docs.web.javascript-framework:root",
+      "package": "docs.web.javascript-framework",
+      "root": "D:\\.agents\\docs\\web\\javascript-framework",
+      "title": "javascript-framework"
+    },
+    {
+      "id": "docs.web.yandex-maps-js-api:root",
+      "package": "docs.web.yandex-maps-js-api",
+      "root": "D:\\.agents\\docs\\web\\yandex-maps-js-api",
+      "title": "yandex-maps-js-api"
+    }
+  ],
+  "projects": {
+    "main": {
+      "selected_ids": [
+        "project.process-forge:project-profile",
+        "project.process-forge:project-artifacts"
+      ],
+      "resolved_indexable_ids": [
+        "project.process-forge:project-profile",
+        "project.process-forge:project-artifacts"
+      ],
+      "catalogue_intersection": []
+    },
+    "fixture": {
+      "selected_ids": [
+        "project.project:project-profile",
+        "project.project:project-artifacts",
+        "php.class-doc-block"
+      ],
+      "resolved_indexable_ids": [
+        "project.project:project-profile",
+        "project.project:project-artifacts"
+      ],
+      "catalogue_intersection": []
+    }
+  },
+  "indexed_resource_ids": [
+    "docs.api.gitverse:root",
+    "docs.api.max-platform:root",
+    "docs.api.mcn-telephony:root",
+    "docs.api.moo-team:root",
+    "docs.api.otpravka-pochta:root",
+    "docs.device:root",
+    "docs.joomla-6-1:root",
+    "docs.joomla-administrator:root",
+    "docs.joomla-context7.v2026-02-21-refresh:root",
+    "docs.joomla-context7.v2026-02-21:root",
+    "docs.joomla-context7:root",
+    "docs.joomla-core.branch-v1-5-x:root",
+    "docs.joomla-core.branch-v1-x:root",
+    "docs.joomla-core.branch-v2-5-x:root",
+    "docs.joomla-core.branch-v3-x:root",
+    "docs.joomla-core.branch-v4-x:root",
+    "docs.joomla-core.branch-v5-x:root",
+    "docs.joomla-core.branch-v6-x:root",
+    "docs.joomla-core.v1-0-15:source-tree",
+    "docs.joomla-core.v1-5-26:source-tree",
+    "docs.joomla-core.v2-5-28:source-tree",
+    "docs.joomla-core.v3-10-12:source-tree",
+    "docs.joomla-core.v4-4-14:source-tree",
+    "docs.joomla-core.v5-4-5:source-tree",
+    "docs.joomla-core.v5-4-6:source-tree",
+    "docs.joomla-core.v5-4-7:source-tree",
+    "docs.joomla-core.v6-0-4:source-tree",
+    "docs.joomla-core.v6-1-0:source-tree",
+    "docs.joomla-core.v6-1-1:source-tree",
+    "docs.joomla-core.v6-1-2:source-tree",
+    "docs.joomla-core:root",
+    "docs.joomla-development-articles:root",
+    "docs.joomla-extensions.joomshopping:root",
+    "docs.joomla-extensions.radical-form:root",
+    "docs.joomla-extensions.revars:root",
+    "docs.joomla-extensions.web-tolk-dev-catalog:root",
+    "docs.joomla-extensions.web-tolk-extensions:root",
+    "docs.joomla-extensions:root",
+    "docs.joomla-toolkit:root",
+    "docs.joomla:root",
+    "docs.joomshopping-core.v5-9-1:source-tree",
+    "docs.joomshopping-core.v5-9-2:source-tree",
+    "docs.joomshopping-core:root",
+    "docs.joomshopping:root",
+    "docs.marketing-seo-geo-ai:root",
+    "docs.radicalmart-core.radicalmart-express-v3-x.v3-0-4:source-tree",
+    "docs.radicalmart-core.radicalmart-v2-x.v2-2-4:source-tree",
+    "docs.radicalmart-core.radicalmart-v3-x.v3-0-23:source-tree",
+    "docs.radicalmart-core:root",
+    "docs.radicalmart-extensions.analytics.v1-1-0:source-tree",
+    "docs.radicalmart-extensions.export-core.v0-2-1-dev:source-tree",
+    "docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-0-0:source-tree",
+    "docs.radicalmart-extensions.export-plugins-plg-radicalmart-export-yml.v1-1-1-dev:source-tree",
+    "docs.radicalmart-extensions.import-core.v0-8-6:source-tree",
+    "docs.radicalmart-extensions.import-core.v0-9-1-dev:source-tree",
+    "docs.radicalmart-extensions.import-plugins-plg-radicalmart-import-excel.v1-0-0:source-tree",
+    "docs.radicalmart-extensions.modules-filter-extended-mod-msg-rmf.v2-0-0:source-tree",
+    "docs.radicalmart-extensions.plugins-crm-retailcrm.v1-0-2:source-tree",
+    "docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-gallery.v1-0-0:source-tree",
+    "docs.radicalmart-extensions.plugins-fields-plg-radicalmart-fields-standard.v2-1-5:source-tree",
+    "docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-resize.v1-1-0:source-tree",
+    "docs.radicalmart-extensions.plugins-media-plg-radicalmart-media-video.v1-0-0:source-tree",
+    "docs.radicalmart-extensions.plugins-message-plg-radicalmart-message-email.v2-2-0:source-tree",
+    "docs.radicalmart-extensions.plugins-payment-plg-radicalmart-payment-robokassa.v2-0-0:source-tree",
+    "docs.radicalmart-extensions.plugins-payment-plg-radicalmart-payment-yookassa.v2-1-0:source-tree",
+    "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-addresses.v1-0-0:source-tree",
+    "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-apiship.v1-0-2:source-tree",
+    "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-standard.v3-0-0:source-tree",
+    "docs.radicalmart-extensions.plugins-shipping-plg-radicalmart-shipping-zone.v1-0-0:source-tree",
+    "docs.radicalmart-extensions.templates-uikit-pkg-radicalmart-uikit.v3-0-16:source-tree",
+    "docs.radicalmart-extensions:root",
+    "docs.radicalmart:root",
+    "docs.rest-api:root",
+    "docs.seo:root",
+    "docs.virtuemart-core.v4-4-10:source-tree",
+    "docs.virtuemart-core:root",
+    "docs.virtuemart:root",
+    "docs.web.api:root",
+    "docs.web.css-framework:root",
+    "docs.web.css:root",
+    "docs.web.html:root",
+    "docs.web.javascript-framework:root",
+    "docs.web.javascript:root",
+    "docs.web.yandex-maps-js-api:root",
+    "docs.web:root"
+  ]
+}

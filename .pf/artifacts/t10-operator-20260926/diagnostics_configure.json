@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_diagnostics_configure.py"
+  ],
+  "exit_code": 0,
+  "seconds": 7.631,
+  "stdout": "PASS: diagnostics profile plan/apply, preservation, locks, expiry, bounds and no-write inspection\n",
+  "stderr": ""
+}

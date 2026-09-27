@@ -1,0 +1,1734 @@
+{
+  "time_utc": "2026-09-26T08:14:51.233237+00:00",
+  "layer": "read-only source/installed CLI and separate stdio connections; not host reconnection",
+  "before": {
+    "D:\\Dev\\process-forge\\.pf\\assignments\\t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm.yaml": "e2dd2b4b5c194406bb26ce9b0b2018244ec753a787c6e5b64f9ab4d134f03d16",
+    "D:\\Dev\\process-forge\\.pf\\runs\\garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc\\run.yaml": "159ff2018f0d273c77a8e9d53b60320187475012be76c0e7f52dcb5bb7d6f42c",
+    "D:\\Dev\\process-forge\\.pf\\contexts\\assignment-capsules\\t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm.capsule.yaml": "8bd7af0ba78c19c7c3aedb3e80d8d45436511ed0fa4090e501b1536dfa5467a6",
+    "D:\\Dev\\process-forge\\.pf\\contexts\\project-context.snapshot.yaml": "f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562",
+    "D:\\.agents\\processforge-workplace\\workplace.yaml": "b9f8a5e6bf7827418bba4d42757f028db8ea16d4784b58c28b59974c09a524f3",
+    "D:\\.agents\\processforge-workplace\\registries\\agents.yaml": "d577a8ab3ffdc9b812476f5c2319bffb427bbe6ce7f1c2c9223dd0ff46e68c22",
+    "D:\\.agents\\processforge-workplace\\registries\\distributions.pre-1.1.0-dev-20260814.yaml": "5753520537b69ba7a225ee111b2fa8dcbaf55f80c44a1d0869d88df993409c1a",
+    "D:\\.agents\\processforge-workplace\\registries\\distributions.yaml": "5d6337cb65626980f04c5f83d531e6b24b299c5a02afc9dac76887ed13b21bd5",
+    "D:\\.agents\\processforge-workplace\\registries\\installed-subjects.yaml": "7e1838c48fb61e63001b54d4b84b5869f92fba298c8d25386095988881b28f8f",
+    "D:\\.agents\\processforge-workplace\\registries\\knowledge-roots.yaml": "2733faabff2dc10f6aebda9d1338769e5dbd724817e85639f67d90dd550ea5b2",
+    "D:\\.agents\\processforge-workplace\\registries\\mcp.yaml": "2f389429181e7e3db2b0a42f55e8ea51d0e5f80b85befdac2ad145c38e3a4a3a",
+    "D:\\.agents\\processforge-workplace\\registries\\package-roots.yaml": "6a6bfe485b123f49b9dfa2d586c55a132a4ae8b2d6348a8d8ab6fc1e88a83c70",
+    "D:\\.agents\\processforge-workplace\\registries\\platform-contract-roots.yaml": "844e13e7556e807a63f90adcf14ef0ba07ac627d0b9e9cb14e82fa3f5c88cb24",
+    "D:\\.agents\\processforge-workplace\\registries\\platforms.yaml": "950de8bc978d591fe6bc887167c54e00ff687a8daf30d1bf1cb679258da443cb",
+    "D:\\.agents\\processforge-workplace\\registries\\process-packs.yaml": "ecd4ea0fe28f22250187d77dcdb0aaad52ecd23698dc46b9b8d6a390f0ea18db",
+    "D:\\.agents\\processforge-workplace\\registries\\project-classifiers.yaml": "d1c26c4994bae658594d9dcfae02f8879a318db78a679dd3f06d6f492c92da32",
+    "D:\\.agents\\processforge-workplace\\registries\\runtime-drivers.yaml": "a5fa0fe3b2c690bb6fb13364aff4807a6dbd59b78a49c6ca0fccf66c9f0e78b6",
+    "D:\\.agents\\processforge-workplace\\registries\\specializations.yaml": "734fa4ae49334a70b0236c57f6ae6227f3431c4b5434e7c49630c86c874c4039",
+    "D:\\.agents\\processforge-workplace\\registries\\templates.yaml": "6fe70970531eddee119c32aca9d352eaa66b51e2df24affddfb6648254928608",
+    "D:\\.agents\\processforge-workplace\\registries\\tools.yaml": "c09ec7dcf23effd2c4233a592e12a5f9e9ea213408497390a9738574c2197626",
+    "D:\\.agents\\processforge-workplace\\registries\\update-site-overrides.yaml": "ca1f21051059b597a5b00a4d5404b84d7fbba077f9542941ee16e9fe21650d75",
+    "D:\\.agents\\processforge-workplace\\registries\\update-sources.yaml": "18315d758a7bbba14b65ce9805d887095f53b52b2670242014b739ef1cff996f"
+  },
+  "build_files": {
+    "VERSION": {
+      "source": "1575e1af4a95f12f70b4ee6a6adce8160953d93ea17dc2611b90883ccc3ad3b8",
+      "installed": "1575e1af4a95f12f70b4ee6a6adce8160953d93ea17dc2611b90883ccc3ad3b8"
+    },
+    "tools/pf_runtime/mcp_server.py": {
+      "source": "38320b994b02eb0735712bdc0756f2e7f7e8893b0e348247676cace966f35ed7",
+      "installed": "404a7e00eb0d06097c616870ea03bd28200cf09d9c9f2a50ed3c5c8da4489bc1"
+    },
+    "tools/pf_runtime/host.py": {
+      "source": "b8d3d813fa3e3c5a7e16546e277b9df9a7d778f2763e87e965332a96e6d7bcf4",
+      "installed": "bd0fc4104c82bc53501069586ab62ea3ac319c437dfbcbc1e42575250d5add00"
+    },
+    "src/processforge_core/work_context.py": {
+      "source": "6236204f0f3666881bd53090bf097a4210b907c3e7a2e0ee0ac0c28c52ed6f5e",
+      "installed": null
+    },
+    "src/processforge_core/diagnostics.py": {
+      "source": "2821636ea5179da200305854eb0a7f503bea376e3337164b2e610bd74279b472",
+      "installed": null
+    }
+  },
+  "cli": {
+    "source": {
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-B",
+        "D:\\Dev\\process-forge\\bin\\pf.py",
+        "work-state",
+        "--project-root",
+        "D:\\Dev\\process-forge",
+        "--workplace",
+        "D:\\.agents\\processforge-workplace",
+        "--run",
+        "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+        "--assignment",
+        "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+        "--json"
+      ],
+      "state": {
+        "action": "work_incomplete",
+        "allowed_outcomes": [
+          {
+            "id": "completed",
+            "next_stage": "release-delivery",
+            "title": "completed"
+          }
+        ],
+        "artifacts": [
+          {
+            "evidence": {},
+            "id": "review-findings",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-plan",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-cases",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-report",
+            "kind": "artifact",
+            "satisfied": false
+          }
+        ],
+        "assignment": {
+          "id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+          "status": "in_progress"
+        },
+        "blockers": [],
+        "completion": {
+          "requirements": [
+            {
+              "artifact_id": "review-findings",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-plan",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-cases",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-report",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "code": "gate_evidence_missing",
+              "gate_id": "assurance-complete"
+            },
+            {
+              "code": "handoff_note_required",
+              "stage_id": "code-assurance"
+            }
+          ],
+          "status": "incomplete"
+        },
+        "context": {
+          "checksum": "sha256:8bd7af0ba78c19c7c3aedb3e80d8d45436511ed0fa4090e501b1536dfa5467a6",
+          "id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm-capsule",
+          "identity_source": "assignment_process_pin",
+          "validation": {
+            "reason": "legacy_contract_incomplete",
+            "status": "legacy"
+          }
+        },
+        "evidence": [],
+        "gates": {
+          "entry": [
+            {
+              "blocking": true,
+              "evidence": {
+                "gate_id": "implementation-scope-respected",
+                "kind": "gate",
+                "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+                "recorded_at": "2026-09-26T08:11:58Z",
+                "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+                "status": "passed"
+              },
+              "id": "implementation-scope-respected",
+              "phase": "entry",
+              "required": true,
+              "satisfied": true,
+              "type": "checklist"
+            }
+          ],
+          "exit": [
+            {
+              "blocking": true,
+              "evidence": {},
+              "id": "assurance-complete",
+              "phase": "exit",
+              "required": true,
+              "satisfied": false,
+              "type": "checklist"
+            }
+          ]
+        },
+        "incomplete": [
+          {
+            "artifact_id": "review-findings",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-plan",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-cases",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-report",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "code": "gate_evidence_missing",
+            "gate_id": "assurance-complete"
+          },
+          {
+            "code": "handoff_note_required",
+            "stage_id": "code-assurance"
+          }
+        ],
+        "kind": "pf.work.state",
+        "obligations": [],
+        "process": {
+          "fingerprint": "sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49",
+          "id": "software-feature-development",
+          "pin_status": "pinned",
+          "version": "1.1.0"
+        },
+        "project": {
+          "id": "process-forge"
+        },
+        "required_evidence": [],
+        "required_inputs": [
+          {
+            "evidence": {
+              "artifact_id": "change-summary",
+              "kind": "artifact",
+              "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+              "recorded_at": "2026-09-26T08:11:58Z",
+              "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+              "status": "ready"
+            },
+            "id": "change-summary",
+            "kind": "input",
+            "satisfied": true
+          }
+        ],
+        "run": {
+          "id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+          "status": "in_progress"
+        },
+        "schema_version": 1,
+        "stage": {
+          "id": "code-assurance",
+          "status": "in_progress",
+          "title": "Code Assurance"
+        },
+        "work": {
+          "active_specializations": [],
+          "selected_resource_ids": [
+            "project.process-forge:project-profile",
+            "project.process-forge:project-artifacts"
+          ]
+        }
+      },
+      "stderr": ""
+    },
+    "installed": {
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-B",
+        "D:\\.agents\\processforge\\bin\\pf.py",
+        "work-state",
+        "--project-root",
+        "D:\\Dev\\process-forge",
+        "--workplace",
+        "D:\\.agents\\processforge-workplace",
+        "--run",
+        "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+        "--assignment",
+        "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+        "--json"
+      ],
+      "state": {
+        "action": "work_incomplete",
+        "allowed_outcomes": [
+          {
+            "id": "completed",
+            "next_stage": "release-delivery",
+            "title": "completed"
+          }
+        ],
+        "artifacts": [
+          {
+            "evidence": {},
+            "id": "review-findings",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-plan",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-cases",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-report",
+            "kind": "artifact",
+            "satisfied": false
+          }
+        ],
+        "assignment": {
+          "id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+          "status": "in_progress"
+        },
+        "blockers": [],
+        "completion": {
+          "requirements": [
+            {
+              "artifact_id": "review-findings",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-plan",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-cases",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-report",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "code": "gate_evidence_missing",
+              "gate_id": "assurance-complete"
+            },
+            {
+              "code": "handoff_note_required",
+              "stage_id": "code-assurance"
+            }
+          ],
+          "status": "incomplete"
+        },
+        "evidence": [],
+        "gates": {
+          "entry": [
+            {
+              "blocking": true,
+              "evidence": {
+                "gate_id": "implementation-scope-respected",
+                "kind": "gate",
+                "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+                "recorded_at": "2026-09-26T08:11:58Z",
+                "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+                "status": "passed"
+              },
+              "id": "implementation-scope-respected",
+              "phase": "entry",
+              "required": true,
+              "satisfied": true,
+              "type": "checklist"
+            }
+          ],
+          "exit": [
+            {
+              "blocking": true,
+              "evidence": {},
+              "id": "assurance-complete",
+              "phase": "exit",
+              "required": true,
+              "satisfied": false,
+              "type": "checklist"
+            }
+          ]
+        },
+        "incomplete": [
+          {
+            "artifact_id": "review-findings",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-plan",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-cases",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-report",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "code": "gate_evidence_missing",
+            "gate_id": "assurance-complete"
+          },
+          {
+            "code": "handoff_note_required",
+            "stage_id": "code-assurance"
+          }
+        ],
+        "kind": "pf.work.state",
+        "obligations": [],
+        "process": {
+          "fingerprint": "sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49",
+          "id": "software-feature-development",
+          "pin_status": "pinned",
+          "version": "1.1.0"
+        },
+        "project": {
+          "id": "process-forge"
+        },
+        "required_evidence": [],
+        "required_inputs": [
+          {
+            "evidence": {
+              "artifact_id": "change-summary",
+              "kind": "artifact",
+              "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+              "recorded_at": "2026-09-26T08:11:58Z",
+              "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+              "status": "ready"
+            },
+            "id": "change-summary",
+            "kind": "input",
+            "satisfied": true
+          }
+        ],
+        "run": {
+          "id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+          "status": "in_progress"
+        },
+        "schema_version": 1,
+        "stage": {
+          "id": "code-assurance",
+          "status": "in_progress",
+          "title": "Code Assurance"
+        },
+        "work": {
+          "active_specializations": [],
+          "selected_resource_ids": [
+            "project.process-forge:project-profile",
+            "project.process-forge:project-artifacts"
+          ]
+        }
+      },
+      "stderr": ""
+    }
+  },
+  "mcp": {
+    "source": {
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-B",
+        "D:\\Dev\\process-forge\\tools\\pf_runtime\\mcp_server.py",
+        "--workplace",
+        "D:\\.agents\\processforge-workplace"
+      ],
+      "tools": [
+        "pf.context",
+        "pf.project_state",
+        "pf.project_initialization.status",
+        "pf.project_initialization.initialize",
+        "pf.project_initialization.repair",
+        "pf.work_state",
+        "pf.work.state",
+        "pf.work.start",
+        "pf.work.transition",
+        "pf.work.search",
+        "pf.work.resolve",
+        "pf.resolve",
+        "pf.search",
+        "pf.workplace_state",
+        "pf.session_context",
+        "pf.session_chat",
+        "pf.session_activity"
+      ],
+      "context": {
+        "context": {
+          "policy_action": "continue",
+          "recommended_action": "continue",
+          "snapshot_id": "ctx-20260925-140110-0dbc7c",
+          "status": "fresh"
+        },
+        "derived_reports": {
+          "reports": [
+            {
+              "path": ".pf/artifacts/project-classification-report.md",
+              "status": "stale"
+            },
+            {
+              "path": ".pf/artifacts/global-resource-matching-report.md",
+              "status": "stale"
+            },
+            {
+              "path": ".pf/artifacts/toolchain-detection-report.md",
+              "status": "stale"
+            },
+            {
+              "path": ".pf/artifacts/capability-provider-audit.md",
+              "status": "stale"
+            },
+            {
+              "path": ".pf/artifacts/project-profile.md",
+              "status": "stale"
+            }
+          ],
+          "snapshot_generated_at": "2026-09-25T14:00:49Z",
+          "status": "stale"
+        },
+        "diagnostics": [],
+        "kind": "pf.context",
+        "mode": "garage",
+        "process": {
+          "allowed": [
+            {
+              "id": "software-feature-development",
+              "purpose": "Guides software work from orchestration and intake through investigation, domain understanding, architecture, implementation, assurance, release delivery, and evolution capture. Release and evolution stages may be completed as not_applicable with evidence when the task does not require delivery.",
+              "title": "Software Feature Development"
+            }
+          ],
+          "default": "software-feature-development",
+          "id": "",
+          "stage_count": 0
+        },
+        "project": {
+          "id": "process-forge",
+          "root": "D:\\Dev\\process-forge"
+        },
+        "resources": {
+          "authorized_knowledge_ids": [
+            "project.process-forge:project-profile",
+            "project.process-forge:project-artifacts"
+          ],
+          "document_count": 85,
+          "reason": "fresh_index",
+          "resource_count": 85,
+          "search": {
+            "authorized_coverage": {
+              "authorized_resource_count": 2,
+              "document_count": 0,
+              "indexed_resource_count": 0,
+              "missing_resource_ids": [
+                "project.process-forge:project-profile",
+                "project.process-forge:project-artifacts"
+              ],
+              "status": "none"
+            },
+            "document_count": 85,
+            "reason": "fresh_index",
+            "remediation": "none",
+            "resource_count": 85,
+            "scope": "project_context",
+            "status": "ready"
+          },
+          "search_status": "ready",
+          "selection": {
+            "available_count": 2,
+            "mode": "legacy_narrow",
+            "preferred": [
+              {
+                "id": "project.process-forge:project-profile",
+                "kind": "note_collection",
+                "reason": "legacy_direct_package",
+                "version": ""
+              },
+              {
+                "id": "project.process-forge:project-artifacts",
+                "kind": "reference",
+                "reason": "legacy_direct_package",
+                "version": ""
+              }
+            ],
+            "selected_count": 2,
+            "target_versions": []
+          }
+        },
+        "schema_version": 1,
+        "session": {
+          "status": "absent"
+        },
+        "work": {
+          "active_runs": [
+            {
+              "process": "software-feature-development",
+              "run_id": "declarative-process-execution-20260902",
+              "status": "in_progress"
+            },
+            {
+              "process": "task-batch-execution",
+              "run_id": "distribution-release-docs-sync-20260821",
+              "status": "blocked"
+            },
+            {
+              "process": "multi-agent-task-orchestration",
+              "run_id": "garage-stabilization-after-new-project-20260824",
+              "status": "in_progress"
+            },
+            {
+              "process": "software-feature-development",
+              "run_id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+              "status": "in_progress"
+            },
+            {
+              "process": "process-supervisor",
+              "run_id": "interrupted-session-code-audit-20260814",
+              "status": "blocked"
+            },
+            {
+              "process": "software-feature-development",
+              "run_id": "processforge-1-1-0-final-release-20260831",
+              "status": "blocked"
+            },
+            {
+              "process": "software-feature-development",
+              "run_id": "project-init-local-search-mcp-20260821",
+              "status": "blocked"
+            },
+            {
+              "process": "task-batch-execution",
+              "run_id": "r01-first-run-diagnosis-20260911",
+              "status": "in_progress"
+            },
+            {
+              "process": "task-batch-execution",
+              "run_id": "r02-release-command-review-20260911",
+              "status": "in_progress"
+            },
+            {
+              "process": "software-feature-development",
+              "run_id": "resource-indexing-release-boundary-20260822",
+              "status": "in_progress"
+            }
+          ],
+          "active_work": [
+            {
+              "assignment_id": "declarative-process-execution-implementation-20260902",
+              "process": "software-feature-development",
+              "run_id": "declarative-process-execution-20260902",
+              "run_status": "in_progress",
+              "stage": "orchestration",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "declarative-process-execution-shell-review-20260902",
+              "process": "software-feature-development",
+              "run_id": "declarative-process-execution-20260902",
+              "run_status": "in_progress",
+              "stage": "code-assurance",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "distribution-consistency-audit-20260821",
+              "process": "task-batch-execution",
+              "run_id": "distribution-release-docs-sync-20260821",
+              "run_status": "blocked",
+              "stage": "task-execution-loop",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "distribution-audit-evidence-20260821",
+              "process": "task-batch-execution",
+              "run_id": "distribution-release-docs-sync-20260821",
+              "run_status": "blocked",
+              "stage": "task-result-fixation",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "release-docs-correction-20260821",
+              "process": "task-batch-execution",
+              "run_id": "distribution-release-docs-sync-20260821",
+              "run_status": "blocked",
+              "stage": "task-execution-loop",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "release-smoke-isolation-20260821",
+              "process": "task-batch-execution",
+              "run_id": "distribution-release-docs-sync-20260821",
+              "run_status": "blocked",
+              "stage": "task-execution-loop",
+              "state": "active",
+              "status": "blocked"
+            },
+            {
+              "assignment_id": "garage-after-new-project-baseline-20260824",
+              "process": "multi-agent-task-orchestration",
+              "run_id": "garage-stabilization-after-new-project-20260824",
+              "run_status": "in_progress",
+              "stage": "plan",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "garage-after-new-project-implementation-20260824",
+              "process": "multi-agent-task-orchestration",
+              "run_id": "garage-stabilization-after-new-project-20260824",
+              "run_status": "in_progress",
+              "stage": "worker-execution",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "garage-after-new-project-acceptance-20260824",
+              "process": "multi-agent-task-orchestration",
+              "run_id": "garage-stabilization-after-new-project-20260824",
+              "run_status": "in_progress",
+              "stage": "integration-review",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+              "process": "software-feature-development",
+              "run_id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+              "run_status": "in_progress",
+              "stage": "code-assurance",
+              "state": "active",
+              "status": "in_progress"
+            }
+          ],
+          "current": {
+            "action": "work_incomplete",
+            "allowed_outcomes": [
+              {
+                "id": "completed",
+                "next_stage": "release-delivery",
+                "title": "completed"
+              }
+            ],
+            "artifacts": [
+              {
+                "evidence": {},
+                "id": "review-findings",
+                "kind": "artifact",
+                "satisfied": false
+              },
+              {
+                "evidence": {},
+                "id": "test-plan",
+                "kind": "artifact",
+                "satisfied": false
+              },
+              {
+                "evidence": {},
+                "id": "test-cases",
+                "kind": "artifact",
+                "satisfied": false
+              },
+              {
+                "evidence": {},
+                "id": "test-report",
+                "kind": "artifact",
+                "satisfied": false
+              }
+            ],
+            "assignment": {
+              "id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+              "status": "in_progress"
+            },
+            "blockers": [],
+            "completion": {
+              "requirements": [
+                {
+                  "artifact_id": "review-findings",
+                  "code": "artifact_evidence_missing"
+                },
+                {
+                  "artifact_id": "test-plan",
+                  "code": "artifact_evidence_missing"
+                },
+                {
+                  "artifact_id": "test-cases",
+                  "code": "artifact_evidence_missing"
+                },
+                {
+                  "artifact_id": "test-report",
+                  "code": "artifact_evidence_missing"
+                },
+                {
+                  "code": "gate_evidence_missing",
+                  "gate_id": "assurance-complete"
+                },
+                {
+                  "code": "handoff_note_required",
+                  "stage_id": "code-assurance"
+                }
+              ],
+              "status": "incomplete"
+            },
+            "context": {
+              "checksum": "sha256:8bd7af0ba78c19c7c3aedb3e80d8d45436511ed0fa4090e501b1536dfa5467a6",
+              "id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm-capsule",
+              "identity_source": "assignment_process_pin",
+              "validation": {
+                "reason": "legacy_contract_incomplete",
+                "status": "legacy"
+              }
+            },
+            "evidence": [],
+            "gates": {
+              "entry": [
+                {
+                  "blocking": true,
+                  "evidence": {
+                    "gate_id": "implementation-scope-respected",
+                    "kind": "gate",
+                    "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+                    "recorded_at": "2026-09-26T08:11:58Z",
+                    "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+                    "status": "passed"
+                  },
+                  "id": "implementation-scope-respected",
+                  "phase": "entry",
+                  "required": true,
+                  "satisfied": true,
+                  "type": "checklist"
+                }
+              ],
+              "exit": [
+                {
+                  "blocking": true,
+                  "evidence": {},
+                  "id": "assurance-complete",
+                  "phase": "exit",
+                  "required": true,
+                  "satisfied": false,
+                  "type": "checklist"
+                }
+              ]
+            },
+            "incomplete": [
+              {
+                "artifact_id": "review-findings",
+                "code": "artifact_evidence_missing"
+              },
+              {
+                "artifact_id": "test-plan",
+                "code": "artifact_evidence_missing"
+              },
+              {
+                "artifact_id": "test-cases",
+                "code": "artifact_evidence_missing"
+              },
+              {
+                "artifact_id": "test-report",
+                "code": "artifact_evidence_missing"
+              },
+              {
+                "code": "gate_evidence_missing",
+                "gate_id": "assurance-complete"
+              },
+              {
+                "code": "handoff_note_required",
+                "stage_id": "code-assurance"
+              }
+            ],
+            "kind": "pf.work.state",
+            "obligations": [],
+            "process": {
+              "fingerprint": "sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49",
+              "id": "software-feature-development",
+              "pin_status": "pinned",
+              "version": "1.1.0"
+            },
+            "project": {
+              "id": "process-forge"
+            },
+            "required_evidence": [],
+            "required_inputs": [
+              {
+                "evidence": {
+                  "artifact_id": "change-summary",
+                  "kind": "artifact",
+                  "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+                  "recorded_at": "2026-09-26T08:11:58Z",
+                  "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+                  "status": "ready"
+                },
+                "id": "change-summary",
+                "kind": "input",
+                "satisfied": true
+              }
+            ],
+            "run": {
+              "id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+              "status": "in_progress"
+            },
+            "schema_version": 1,
+            "stage": {
+              "id": "code-assurance",
+              "status": "in_progress",
+              "title": "Code Assurance"
+            },
+            "work": {
+              "active_specializations": [],
+              "selected_resource_ids": [
+                "project.process-forge:project-profile",
+                "project.process-forge:project-artifacts"
+              ]
+            }
+          },
+          "governed": true,
+          "recommendation": "continue"
+        }
+      },
+      "state": {
+        "action": "work_incomplete",
+        "allowed_outcomes": [
+          {
+            "id": "completed",
+            "next_stage": "release-delivery",
+            "title": "completed"
+          }
+        ],
+        "artifacts": [
+          {
+            "evidence": {},
+            "id": "review-findings",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-plan",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-cases",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-report",
+            "kind": "artifact",
+            "satisfied": false
+          }
+        ],
+        "assignment": {
+          "id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+          "status": "in_progress"
+        },
+        "blockers": [],
+        "completion": {
+          "requirements": [
+            {
+              "artifact_id": "review-findings",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-plan",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-cases",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-report",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "code": "gate_evidence_missing",
+              "gate_id": "assurance-complete"
+            },
+            {
+              "code": "handoff_note_required",
+              "stage_id": "code-assurance"
+            }
+          ],
+          "status": "incomplete"
+        },
+        "context": {
+          "checksum": "sha256:8bd7af0ba78c19c7c3aedb3e80d8d45436511ed0fa4090e501b1536dfa5467a6",
+          "id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm-capsule",
+          "identity_source": "assignment_process_pin",
+          "validation": {
+            "reason": "legacy_contract_incomplete",
+            "status": "legacy"
+          }
+        },
+        "evidence": [],
+        "gates": {
+          "entry": [
+            {
+              "blocking": true,
+              "evidence": {
+                "gate_id": "implementation-scope-respected",
+                "kind": "gate",
+                "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+                "recorded_at": "2026-09-26T08:11:58Z",
+                "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+                "status": "passed"
+              },
+              "id": "implementation-scope-respected",
+              "phase": "entry",
+              "required": true,
+              "satisfied": true,
+              "type": "checklist"
+            }
+          ],
+          "exit": [
+            {
+              "blocking": true,
+              "evidence": {},
+              "id": "assurance-complete",
+              "phase": "exit",
+              "required": true,
+              "satisfied": false,
+              "type": "checklist"
+            }
+          ]
+        },
+        "incomplete": [
+          {
+            "artifact_id": "review-findings",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-plan",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-cases",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-report",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "code": "gate_evidence_missing",
+            "gate_id": "assurance-complete"
+          },
+          {
+            "code": "handoff_note_required",
+            "stage_id": "code-assurance"
+          }
+        ],
+        "kind": "pf.work.state",
+        "obligations": [],
+        "process": {
+          "fingerprint": "sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49",
+          "id": "software-feature-development",
+          "pin_status": "pinned",
+          "version": "1.1.0"
+        },
+        "project": {
+          "id": "process-forge"
+        },
+        "required_evidence": [],
+        "required_inputs": [
+          {
+            "evidence": {
+              "artifact_id": "change-summary",
+              "kind": "artifact",
+              "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+              "recorded_at": "2026-09-26T08:11:58Z",
+              "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+              "status": "ready"
+            },
+            "id": "change-summary",
+            "kind": "input",
+            "satisfied": true
+          }
+        ],
+        "run": {
+          "id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+          "status": "in_progress"
+        },
+        "schema_version": 1,
+        "stage": {
+          "id": "code-assurance",
+          "status": "in_progress",
+          "title": "Code Assurance"
+        },
+        "work": {
+          "active_specializations": [],
+          "selected_resource_ids": [
+            "project.process-forge:project-profile",
+            "project.process-forge:project-artifacts"
+          ]
+        }
+      },
+      "stdout_jsonrpc_only": true,
+      "notification_silent": true,
+      "eof_exit": 0,
+      "stderr": ""
+    },
+    "installed": {
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-B",
+        "D:\\.agents\\processforge\\tools\\pf_runtime\\mcp_server.py",
+        "--workplace",
+        "D:\\.agents\\processforge-workplace"
+      ],
+      "tools": [
+        "pf.context",
+        "pf.project_state",
+        "pf.project_initialization.status",
+        "pf.project_initialization.initialize",
+        "pf.project_initialization.repair",
+        "pf.work_state",
+        "pf.work.state",
+        "pf.work.start",
+        "pf.work.transition",
+        "pf.resolve",
+        "pf.search",
+        "pf.workplace_state",
+        "pf.session_context",
+        "pf.session_chat",
+        "pf.session_activity"
+      ],
+      "context": {
+        "context": {
+          "policy_action": "continue",
+          "recommended_action": "continue",
+          "snapshot_id": "ctx-20260925-140110-0dbc7c",
+          "status": "fresh"
+        },
+        "derived_reports": {
+          "reports": [
+            {
+              "path": ".pf/artifacts/project-classification-report.md",
+              "status": "stale"
+            },
+            {
+              "path": ".pf/artifacts/global-resource-matching-report.md",
+              "status": "stale"
+            },
+            {
+              "path": ".pf/artifacts/toolchain-detection-report.md",
+              "status": "stale"
+            },
+            {
+              "path": ".pf/artifacts/capability-provider-audit.md",
+              "status": "stale"
+            },
+            {
+              "path": ".pf/artifacts/project-profile.md",
+              "status": "stale"
+            }
+          ],
+          "snapshot_generated_at": "2026-09-25T14:00:49Z",
+          "status": "stale"
+        },
+        "diagnostics": [],
+        "kind": "pf.context",
+        "mode": "garage",
+        "process": {
+          "allowed": [
+            {
+              "id": "software-feature-development",
+              "purpose": "Guides software work from orchestration and intake through investigation, domain understanding, architecture, implementation, assurance, release delivery, and evolution capture. Release and evolution stages may be completed as not_applicable with evidence when the task does not require delivery.",
+              "title": "Software Feature Development"
+            }
+          ],
+          "default": "software-feature-development",
+          "id": "",
+          "stage_count": 0
+        },
+        "project": {
+          "id": "process-forge",
+          "root": "D:\\Dev\\process-forge"
+        },
+        "resources": {
+          "authorized_knowledge_ids": [
+            "project.process-forge:project-profile",
+            "project.process-forge:project-artifacts"
+          ],
+          "document_count": 85,
+          "reason": "fresh_index",
+          "resource_count": 85,
+          "search": {
+            "document_count": 85,
+            "reason": "fresh_index",
+            "remediation": "none",
+            "resource_count": 85,
+            "status": "ready"
+          },
+          "search_status": "ready",
+          "selection": {
+            "available_count": 2,
+            "mode": "legacy_narrow",
+            "preferred": [
+              {
+                "id": "project.process-forge:project-profile",
+                "kind": "note_collection",
+                "reason": "legacy_direct_package",
+                "version": ""
+              },
+              {
+                "id": "project.process-forge:project-artifacts",
+                "kind": "reference",
+                "reason": "legacy_direct_package",
+                "version": ""
+              }
+            ],
+            "selected_count": 2,
+            "target_versions": []
+          }
+        },
+        "schema_version": 1,
+        "session": {
+          "status": "absent"
+        },
+        "work": {
+          "active_runs": [
+            {
+              "process": "software-feature-development",
+              "run_id": "declarative-process-execution-20260902",
+              "status": "in_progress"
+            },
+            {
+              "process": "task-batch-execution",
+              "run_id": "distribution-release-docs-sync-20260821",
+              "status": "blocked"
+            },
+            {
+              "process": "multi-agent-task-orchestration",
+              "run_id": "garage-stabilization-after-new-project-20260824",
+              "status": "in_progress"
+            },
+            {
+              "process": "software-feature-development",
+              "run_id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+              "status": "in_progress"
+            },
+            {
+              "process": "process-supervisor",
+              "run_id": "interrupted-session-code-audit-20260814",
+              "status": "blocked"
+            },
+            {
+              "process": "software-feature-development",
+              "run_id": "processforge-1-1-0-final-release-20260831",
+              "status": "blocked"
+            },
+            {
+              "process": "software-feature-development",
+              "run_id": "project-init-local-search-mcp-20260821",
+              "status": "blocked"
+            },
+            {
+              "process": "task-batch-execution",
+              "run_id": "r01-first-run-diagnosis-20260911",
+              "status": "in_progress"
+            },
+            {
+              "process": "task-batch-execution",
+              "run_id": "r02-release-command-review-20260911",
+              "status": "in_progress"
+            },
+            {
+              "process": "software-feature-development",
+              "run_id": "resource-indexing-release-boundary-20260822",
+              "status": "in_progress"
+            }
+          ],
+          "active_work": [
+            {
+              "assignment_id": "declarative-process-execution-implementation-20260902",
+              "process": "software-feature-development",
+              "run_id": "declarative-process-execution-20260902",
+              "run_status": "in_progress",
+              "stage": "orchestration",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "declarative-process-execution-shell-review-20260902",
+              "process": "software-feature-development",
+              "run_id": "declarative-process-execution-20260902",
+              "run_status": "in_progress",
+              "stage": "code-assurance",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "distribution-consistency-audit-20260821",
+              "process": "task-batch-execution",
+              "run_id": "distribution-release-docs-sync-20260821",
+              "run_status": "blocked",
+              "stage": "task-execution-loop",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "distribution-audit-evidence-20260821",
+              "process": "task-batch-execution",
+              "run_id": "distribution-release-docs-sync-20260821",
+              "run_status": "blocked",
+              "stage": "task-result-fixation",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "release-docs-correction-20260821",
+              "process": "task-batch-execution",
+              "run_id": "distribution-release-docs-sync-20260821",
+              "run_status": "blocked",
+              "stage": "task-execution-loop",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "release-smoke-isolation-20260821",
+              "process": "task-batch-execution",
+              "run_id": "distribution-release-docs-sync-20260821",
+              "run_status": "blocked",
+              "stage": "task-execution-loop",
+              "state": "active",
+              "status": "blocked"
+            },
+            {
+              "assignment_id": "garage-after-new-project-baseline-20260824",
+              "process": "multi-agent-task-orchestration",
+              "run_id": "garage-stabilization-after-new-project-20260824",
+              "run_status": "in_progress",
+              "stage": "plan",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "garage-after-new-project-implementation-20260824",
+              "process": "multi-agent-task-orchestration",
+              "run_id": "garage-stabilization-after-new-project-20260824",
+              "run_status": "in_progress",
+              "stage": "worker-execution",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "garage-after-new-project-acceptance-20260824",
+              "process": "multi-agent-task-orchestration",
+              "run_id": "garage-stabilization-after-new-project-20260824",
+              "run_status": "in_progress",
+              "stage": "integration-review",
+              "state": "active",
+              "status": "done"
+            },
+            {
+              "assignment_id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+              "process": "software-feature-development",
+              "run_id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+              "run_status": "in_progress",
+              "stage": "code-assurance",
+              "state": "active",
+              "status": "in_progress"
+            }
+          ],
+          "current": {
+            "action": "work_incomplete",
+            "allowed_outcomes": [
+              {
+                "id": "completed",
+                "next_stage": "release-delivery",
+                "title": "completed"
+              }
+            ],
+            "artifacts": [
+              {
+                "evidence": {},
+                "id": "review-findings",
+                "kind": "artifact",
+                "satisfied": false
+              },
+              {
+                "evidence": {},
+                "id": "test-plan",
+                "kind": "artifact",
+                "satisfied": false
+              },
+              {
+                "evidence": {},
+                "id": "test-cases",
+                "kind": "artifact",
+                "satisfied": false
+              },
+              {
+                "evidence": {},
+                "id": "test-report",
+                "kind": "artifact",
+                "satisfied": false
+              }
+            ],
+            "assignment": {
+              "id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+              "status": "in_progress"
+            },
+            "blockers": [],
+            "completion": {
+              "requirements": [
+                {
+                  "artifact_id": "review-findings",
+                  "code": "artifact_evidence_missing"
+                },
+                {
+                  "artifact_id": "test-plan",
+                  "code": "artifact_evidence_missing"
+                },
+                {
+                  "artifact_id": "test-cases",
+                  "code": "artifact_evidence_missing"
+                },
+                {
+                  "artifact_id": "test-report",
+                  "code": "artifact_evidence_missing"
+                },
+                {
+                  "code": "gate_evidence_missing",
+                  "gate_id": "assurance-complete"
+                },
+                {
+                  "code": "handoff_note_required",
+                  "stage_id": "code-assurance"
+                }
+              ],
+              "status": "incomplete"
+            },
+            "evidence": [],
+            "gates": {
+              "entry": [
+                {
+                  "blocking": true,
+                  "evidence": {
+                    "gate_id": "implementation-scope-respected",
+                    "kind": "gate",
+                    "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+                    "recorded_at": "2026-09-26T08:11:58Z",
+                    "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+                    "status": "passed"
+                  },
+                  "id": "implementation-scope-respected",
+                  "phase": "entry",
+                  "required": true,
+                  "satisfied": true,
+                  "type": "checklist"
+                }
+              ],
+              "exit": [
+                {
+                  "blocking": true,
+                  "evidence": {},
+                  "id": "assurance-complete",
+                  "phase": "exit",
+                  "required": true,
+                  "satisfied": false,
+                  "type": "checklist"
+                }
+              ]
+            },
+            "incomplete": [
+              {
+                "artifact_id": "review-findings",
+                "code": "artifact_evidence_missing"
+              },
+              {
+                "artifact_id": "test-plan",
+                "code": "artifact_evidence_missing"
+              },
+              {
+                "artifact_id": "test-cases",
+                "code": "artifact_evidence_missing"
+              },
+              {
+                "artifact_id": "test-report",
+                "code": "artifact_evidence_missing"
+              },
+              {
+                "code": "gate_evidence_missing",
+                "gate_id": "assurance-complete"
+              },
+              {
+                "code": "handoff_note_required",
+                "stage_id": "code-assurance"
+              }
+            ],
+            "kind": "pf.work.state",
+            "obligations": [],
+            "process": {
+              "fingerprint": "sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49",
+              "id": "software-feature-development",
+              "pin_status": "pinned",
+              "version": "1.1.0"
+            },
+            "project": {
+              "id": "process-forge"
+            },
+            "required_evidence": [],
+            "required_inputs": [
+              {
+                "evidence": {
+                  "artifact_id": "change-summary",
+                  "kind": "artifact",
+                  "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+                  "recorded_at": "2026-09-26T08:11:58Z",
+                  "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+                  "status": "ready"
+                },
+                "id": "change-summary",
+                "kind": "input",
+                "satisfied": true
+              }
+            ],
+            "run": {
+              "id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+              "status": "in_progress"
+            },
+            "schema_version": 1,
+            "stage": {
+              "id": "code-assurance",
+              "status": "in_progress",
+              "title": "Code Assurance"
+            },
+            "work": {
+              "active_specializations": [],
+              "selected_resource_ids": [
+                "project.process-forge:project-profile",
+                "project.process-forge:project-artifacts"
+              ]
+            }
+          },
+          "governed": true,
+          "recommendation": "continue"
+        }
+      },
+      "state": {
+        "action": "work_incomplete",
+        "allowed_outcomes": [
+          {
+            "id": "completed",
+            "next_stage": "release-delivery",
+            "title": "completed"
+          }
+        ],
+        "artifacts": [
+          {
+            "evidence": {},
+            "id": "review-findings",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-plan",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-cases",
+            "kind": "artifact",
+            "satisfied": false
+          },
+          {
+            "evidence": {},
+            "id": "test-report",
+            "kind": "artifact",
+            "satisfied": false
+          }
+        ],
+        "assignment": {
+          "id": "t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm",
+          "status": "in_progress"
+        },
+        "blockers": [],
+        "completion": {
+          "requirements": [
+            {
+              "artifact_id": "review-findings",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-plan",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-cases",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "artifact_id": "test-report",
+              "code": "artifact_evidence_missing"
+            },
+            {
+              "code": "gate_evidence_missing",
+              "gate_id": "assurance-complete"
+            },
+            {
+              "code": "handoff_note_required",
+              "stage_id": "code-assurance"
+            }
+          ],
+          "status": "incomplete"
+        },
+        "evidence": [],
+        "gates": {
+          "entry": [
+            {
+              "blocking": true,
+              "evidence": {
+                "gate_id": "implementation-scope-respected",
+                "kind": "gate",
+                "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+                "recorded_at": "2026-09-26T08:11:58Z",
+                "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+                "status": "passed"
+              },
+              "id": "implementation-scope-respected",
+              "phase": "entry",
+              "required": true,
+              "satisfied": true,
+              "type": "checklist"
+            }
+          ],
+          "exit": [
+            {
+              "blocking": true,
+              "evidence": {},
+              "id": "assurance-complete",
+              "phase": "exit",
+              "required": true,
+              "satisfied": false,
+              "type": "checklist"
+            }
+          ]
+        },
+        "incomplete": [
+          {
+            "artifact_id": "review-findings",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-plan",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-cases",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "artifact_id": "test-report",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "code": "gate_evidence_missing",
+            "gate_id": "assurance-complete"
+          },
+          {
+            "code": "handoff_note_required",
+            "stage_id": "code-assurance"
+          }
+        ],
+        "kind": "pf.work.state",
+        "obligations": [],
+        "process": {
+          "fingerprint": "sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49",
+          "id": "software-feature-development",
+          "pin_status": "pinned",
+          "version": "1.1.0"
+        },
+        "project": {
+          "id": "process-forge"
+        },
+        "required_evidence": [],
+        "required_inputs": [
+          {
+            "evidence": {
+              "artifact_id": "change-summary",
+              "kind": "artifact",
+              "path": ".pf/artifacts/t06-integrated-acceptance-20260926/implementation.md",
+              "recorded_at": "2026-09-26T08:11:58Z",
+              "sha256": "sha256:9ca1ca55b18e5b3786d06aa743a50a222e6f12ded679a918146c80e5ee8f45ae",
+              "status": "ready"
+            },
+            "id": "change-summary",
+            "kind": "input",
+            "satisfied": true
+          }
+        ],
+        "run": {
+          "id": "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc",
+          "status": "in_progress"
+        },
+        "schema_version": 1,
+        "stage": {
+          "id": "code-assurance",
+          "status": "in_progress",
+          "title": "Code Assurance"
+        },
+        "work": {
+          "active_specializations": [],
+          "selected_resource_ids": [
+            "project.process-forge:project-profile",
+            "project.process-forge:project-artifacts"
+          ]
+        }
+      },
+      "stdout_jsonrpc_only": true,
+      "notification_silent": true,
+      "eof_exit": 0,
+      "stderr": ""
+    }
+  },
+  "after": {
+    "D:\\Dev\\process-forge\\.pf\\assignments\\t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm.yaml": "e2dd2b4b5c194406bb26ce9b0b2018244ec753a787c6e5b64f9ab4d134f03d16",
+    "D:\\Dev\\process-forge\\.pf\\runs\\garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc\\run.yaml": "159ff2018f0d273c77a8e9d53b60320187475012be76c0e7f52dcb5bb7d6f42c",
+    "D:\\Dev\\process-forge\\.pf\\contexts\\assignment-capsules\\t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm.capsule.yaml": "8bd7af0ba78c19c7c3aedb3e80d8d45436511ed0fa4090e501b1536dfa5467a6",
+    "D:\\Dev\\process-forge\\.pf\\contexts\\project-context.snapshot.yaml": "f73d8d332313f45a99d4e7b943e18bf4e812b44a51d4d8c682e8291b0753a562",
+    "D:\\.agents\\processforge-workplace\\workplace.yaml": "b9f8a5e6bf7827418bba4d42757f028db8ea16d4784b58c28b59974c09a524f3",
+    "D:\\.agents\\processforge-workplace\\registries\\agents.yaml": "d577a8ab3ffdc9b812476f5c2319bffb427bbe6ce7f1c2c9223dd0ff46e68c22",
+    "D:\\.agents\\processforge-workplace\\registries\\distributions.pre-1.1.0-dev-20260814.yaml": "5753520537b69ba7a225ee111b2fa8dcbaf55f80c44a1d0869d88df993409c1a",
+    "D:\\.agents\\processforge-workplace\\registries\\distributions.yaml": "5d6337cb65626980f04c5f83d531e6b24b299c5a02afc9dac76887ed13b21bd5",
+    "D:\\.agents\\processforge-workplace\\registries\\installed-subjects.yaml": "7e1838c48fb61e63001b54d4b84b5869f92fba298c8d25386095988881b28f8f",
+    "D:\\.agents\\processforge-workplace\\registries\\knowledge-roots.yaml": "2733faabff2dc10f6aebda9d1338769e5dbd724817e85639f67d90dd550ea5b2",
+    "D:\\.agents\\processforge-workplace\\registries\\mcp.yaml": "2f389429181e7e3db2b0a42f55e8ea51d0e5f80b85befdac2ad145c38e3a4a3a",
+    "D:\\.agents\\processforge-workplace\\registries\\package-roots.yaml": "6a6bfe485b123f49b9dfa2d586c55a132a4ae8b2d6348a8d8ab6fc1e88a83c70",
+    "D:\\.agents\\processforge-workplace\\registries\\platform-contract-roots.yaml": "844e13e7556e807a63f90adcf14ef0ba07ac627d0b9e9cb14e82fa3f5c88cb24",
+    "D:\\.agents\\processforge-workplace\\registries\\platforms.yaml": "950de8bc978d591fe6bc887167c54e00ff687a8daf30d1bf1cb679258da443cb",
+    "D:\\.agents\\processforge-workplace\\registries\\process-packs.yaml": "ecd4ea0fe28f22250187d77dcdb0aaad52ecd23698dc46b9b8d6a390f0ea18db",
+    "D:\\.agents\\processforge-workplace\\registries\\project-classifiers.yaml": "d1c26c4994bae658594d9dcfae02f8879a318db78a679dd3f06d6f492c92da32",
+    "D:\\.agents\\processforge-workplace\\registries\\runtime-drivers.yaml": "a5fa0fe3b2c690bb6fb13364aff4807a6dbd59b78a49c6ca0fccf66c9f0e78b6",
+    "D:\\.agents\\processforge-workplace\\registries\\specializations.yaml": "734fa4ae49334a70b0236c57f6ae6227f3431c4b5434e7c49630c86c874c4039",
+    "D:\\.agents\\processforge-workplace\\registries\\templates.yaml": "6fe70970531eddee119c32aca9d352eaa66b51e2df24affddfb6648254928608",
+    "D:\\.agents\\processforge-workplace\\registries\\tools.yaml": "c09ec7dcf23effd2c4233a592e12a5f9e9ea213408497390a9738574c2197626",
+    "D:\\.agents\\processforge-workplace\\registries\\update-site-overrides.yaml": "ca1f21051059b597a5b00a4d5404b84d7fbba077f9542941ee16e9fe21650d75",
+    "D:\\.agents\\processforge-workplace\\registries\\update-sources.yaml": "18315d758a7bbba14b65ce9805d887095f53b52b2670242014b739ef1cff996f"
+  },
+  "missing_installed_tools": [
+    "pf.work.resolve",
+    "pf.work.search"
+  ]
+}

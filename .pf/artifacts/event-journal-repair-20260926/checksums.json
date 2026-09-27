@@ -1,0 +1,12 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\validate-process-forge-checksums.py",
+    "--check"
+  ],
+  "exit_code": 0,
+  "seconds": 5.288,
+  "stdout": "PASS: checksum inventory matches.\n",
+  "stderr": ""
+}

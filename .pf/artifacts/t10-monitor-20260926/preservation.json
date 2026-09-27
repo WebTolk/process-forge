@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "baseline_files": 3769,
+  "unexpected_changed": [],
+  "unexpected_added": [],
+  "allowed_changes": [
+    "checksums/processforge.sha256",
+    "docs/concepts/runtime-mcp.md",
+    "docs/concepts/runtime-monitor.md",
+    "docs/ru/concepts/runtime-mcp.md",
+    "docs/ru/concepts/runtime-monitor.md",
+    "tools/pf_runtime/monitor.py",
+    "tools/pf_runtime/service.py",
+    "tools/processforge.py",
+    "tools/smoke_runtime_monitor.py"
+  ]
+}

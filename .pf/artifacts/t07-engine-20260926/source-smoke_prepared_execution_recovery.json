@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T20:20:07.992900+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_prepared_execution_recovery.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "PASS: offline governed execution, collection invariance, source MCP reconnect and transition\nPASS: actual process death, dead-owner lock and exactly-once receipt recovery\nPASS: real directory redirect refused without private-byte publication\n",
+  "stderr": ""
+}

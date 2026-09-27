@@ -1,0 +1,9 @@
+﻿{
+    "time_utc":  "2026-09-25T18:16:57.7775247Z",
+    "removed_clean_worktree":  "D:\\dev\\process-forge\\.pf\\tmp\\t08-core-candidate-20260925",
+    "removed_archived_fixture":  "D:\\dev\\process-forge\\.pf\\tmp\\t08-host-acceptance-20260925",
+    "retained_delivery_package":  "D:\\dev\\process-forge\\.pf\\artifacts\\t08-mcp-operability-20260925\\delivery-package",
+    "archive_sha256":  "324932d147aecb1ad7d1511735a7d69d4391c6220eb3dbc5e18e2d7ecbce6008",
+    "fixture_archive_sha256":  "6a4317ea6f2b5e82df8cf1fecba1b5bbec17be01561be7d0322612bec67ebcea",
+    "installed_backup_preserved":  true
+}

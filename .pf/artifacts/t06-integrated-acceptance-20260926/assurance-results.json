@@ -1,0 +1,224 @@
+{
+  "started_at": "2026-09-26T08:13:28.594526+00:00",
+  "kind": "source_registered_integration_subset",
+  "checks": [
+    {
+      "name": "smoke_worker_workspace_access",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_worker_workspace_access.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 23.57,
+      "stdout": "PASS: worker workspace access smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_codex_exec_worker",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_codex_exec_worker.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 19.344,
+      "stdout": "PASS: codex exec worker smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_codex_worker_governance",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_codex_worker_governance.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 0.61,
+      "stdout": "PASS: Codex worker sandbox and prepared input governance\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_runtime_driver_registry",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_driver_registry.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 18.5,
+      "stdout": "PASS: runtime driver registry smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_authenticated_report_content",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_authenticated_report_content.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 33.063,
+      "stdout": "PASS: authenticated path report collected exactly once; forged provenance/hash and secrets denied\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_worker_run_shell",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_worker_run_shell.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 128.967,
+      "stdout": "PASS: worker-run shell regressions smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_expected_report_containment",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_expected_report_containment.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 47.911,
+      "stdout": "SKIP: symlink creation unavailable\nPASS: report traversal, absolute and symlink escapes rejected before reads; valid collection works\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_prepared_execution_context",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_prepared_execution_context.py"
+      ],
+      "timeout": 360,
+      "exit_code": 0,
+      "seconds": 198.769,
+      "stdout": "PASS: prepared-input schema/budgets, empty and denied grants, semantic driver/model invariance, source/intent/manifest drift denial, offline generic-shell same-attempt launch, receipt interruption repair/idempotent collection/output attribution, metadata/fulltext drift and revocation, explicit empty stage subset\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_work_capsule_contract_parity",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_capsule_contract_parity.py"
+      ],
+      "timeout": 300,
+      "exit_code": 0,
+      "seconds": 33.769,
+      "stdout": "WROTE: .pf/contexts/assignment-capsules/t03-contract-parity.capsule.yaml\n{\n  \"status\": \"PASS\",\n  \"checks\": [\n    \"process and stage capabilities remain lifecycle requirements\",\n    \"actual governed and assignment constructors have exact contract parity\",\n    \"process/stage capability requirements stay in the pin, outside worker readiness\",\n    \"recomputed inner checksum cannot bypass the governed capsule byte anchor\",\n    \"status, stage, evidence, timestamps, retry/session and preferences retain intent\",\n    \"objective, scope, output, capability and workspace mutations are rejected\",\n    \"empty path/action/resource grants remain empty\",\n    \"analysis mode denies product writes despite contradictory defaults\",\n    \"invalid modes and malformed subagent policy fail closed; explicit zero limit remains zero\",\n    \"missing required source and explicit worker capability block readiness\",\n    \"missing/non-member runs remain incomplete assignment contexts\",\n    \"conflicting immutable source checksums are rejected\",\n    \"absolute/traversal and supported symlink source escapes are rejected\",\n    \"source-count, per-file and aggregate byte budgets are enforced\",\n    \"missing/changed material, legacy absence and unknown contract version are diagnosed\",\n    \"--force refuses replacement without changing capsule bytes\",\n    \"current catalog edits do not alter process/stage pins; governed transition preserves capsule bytes\"\n  ],\n  \"skipped\": [\n    \"symlink containment unavailable on host: OSError\"\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_provider_adapter_admission",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_provider_adapter_admission.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 15.962,
+      "stdout": "PASS: trusted custom provider start/message, duplicate replay repair/idempotence, untrusted identity/provenance denial, forged Codex identity replay denial, partial-native raw-only denial, native-ID quarantine, duplicate registry rejection, Host/kernel/replay sources unchanged\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_conversation_completeness",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_conversation_completeness.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 145.229,
+      "stdout": "PASS: conversation completeness smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_mcp_jsonrpc_validation",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_mcp_jsonrpc_validation.py"
+      ],
+      "timeout": 120,
+      "exit_code": 0,
+      "seconds": 1.811,
+      "stdout": "PASS: native MCP validates JSON-RPC and tool arguments; notifications stay silent\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_central_event_ingress",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_central_event_ingress.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 45.658,
+      "stdout": "PASS: central raw-first ingress smoke\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_session_identity_roundtrip",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_session_identity_roundtrip.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 48.428,
+      "stdout": "PASS: exact opaque session identity round trip\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_work_resource_binding",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_work_resource_binding.py"
+      ],
+      "timeout": 300,
+      "exit_code": 0,
+      "seconds": 151.468,
+      "stdout": "PASS: Work resource binding isolation/pinning/current access/metadata/fulltext/subsets/provenance; symlink=unsupported by host\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_diagnostics_process_invariance",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_diagnostics_process_invariance.py"
+      ],
+      "timeout": 240,
+      "exit_code": 0,
+      "seconds": 82.59,
+      "stdout": "PASS: Work lifecycle invariant across diagnostic profiles {\"diagnostic\": 23, \"normal\": 18, \"off\": 0, \"quiet\": 0, \"trace\": 25}\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_diagnostics",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "D:\\Dev\\process-forge\\tools\\smoke_diagnostics.py"
+      ],
+      "timeout": 180,
+      "exit_code": 0,
+      "seconds": 21.218,
+      "stdout": "{\"result\": \"PASS\", \"checks\": [\"severity/profile/config\", \"privacy\", \"journal invariance\", \"sink failures\", \"parallel correlation\", \"hook protocol\", \"rotation/retention/export\", \"performance\"], \"metrics\": {\"disabled_100000_seconds_median\": 0.1105758000003334, \"memory_10000_seconds\": 0.6347266000002492, \"jsonl_10000_seconds\": 12.932200099999136, \"max_storage_bytes\": 16384, \"rotated_files\": 2, \"bundle_records\": 2}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "smoke_runtime_ledger_hooks_mcp",
+      "command": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-B",
+        "D:\\Dev\\process-forge\\tools\\smoke_runtime_ledger_hooks_mcp.py"
+      ],
+      "timeout": 240,
+      "exit_code": 0,
+      "seconds": 23.51,
+      "stdout": "PASS: Runtime Ledger, Codex adapter, and MCP smoke\n",
+      "stderr": ""
+    }
+  ],
+  "finished_at": "2026-09-26T08:21:26.173833+00:00"
+}

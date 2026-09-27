@@ -1,0 +1,12 @@
+{
+  "malformed_input": {
+    "exit_code": 0,
+    "stdout": "{\"status\": \"ignored\", \"reason\": \"JSONDecodeError\"}\n",
+    "stderr": ""
+  },
+  "stop_dispatch_failure": {
+    "exit_code": 0,
+    "stdout": "{\"status\": \"ignored\", \"reason\": \"OSError\"}\n",
+    "stderr": ""
+  }
+}

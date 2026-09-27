@@ -1,0 +1,7 @@
+# Assurance
+
+PASS: 18 focused checks including full actual checkout schema validation, T09 five-profile real Work lifecycle invariance, existing monitor terminal/no-write/probe cases, actual guarded HTTP worker/request/scheduler/admission/auth/owner cases, profile CLI plan/apply/lock/expiry, new metrics semantics/budgets/canonical dedup and real publisher-to-monitor projection, concurrent journal writers, Runtime singleton/status/scheduler isolation, docs boundaries, checksum/cleanliness/diff. Exact recorded commands/results: assurance-results.json.
+
+Initial fixture rounding and slow tasklist observations remain in original results. The fixture was corrected and the Windows PID observation now uses a nonblocking native process handle check, including actual live/exited PID and independent access-denied/failure tests. See assurance-correction.md and pid-probe-correction.md. Network timeouts remain unchanged. Review verified admission serialization before stop, independent metric budgets, no raw source identities in aggregate output, locked policy preservation and protected journal append AST. No unresolved source defect found.
+
+Browser verification: not_applicable, local terminal and CLI only. Existing real terminal state-machine/resize/cleanup tests passed; no new browser UI. Native POSIX and connected host MCP acceptance are not claimed by Windows subprocess tests. Candidate/archive/update plan will be qualified before release.

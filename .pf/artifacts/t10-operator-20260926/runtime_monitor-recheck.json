@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T18:56:47.558435+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_runtime_monitor.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 1,
+  "stdout": "",
+  "stderr": "Traceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\tools\\smoke_runtime_monitor.py\", line 313, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"D:\\Dev\\process-forge\\tools\\smoke_runtime_monitor.py\", line 289, in main\n    assert json.loads(result.stdout)[\"runtime\"][\"lifecycle\"] == \"ready\", result.stdout\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: {\"activity\": {\"backlog\": null, \"event_rate\": null, \"hooks\": null, \"leases\": null, \"mcp\": null, \"sessions\": null, \"work_waiting\": null, \"workers\": null}, \"cli_version\": \"1.1.0\", \"issues\": [\"pid_probe_unknown\"], \"kind\": \"pf.runtime.monitor\", \"metrics\": null, \"observed_at\": \"2026-09-26T18:56:46.483714+00:00\", \"registrations\": {\"freshness\": {\"age_seconds\": 4.9, \"status\": \"fresh\"}, \"projects\": 1, \"sessions\": 1}, \"runtime\": {\"health\": \"unknown\", \"instance_version\": \"1.0.0-poc\", \"lifecycle\": \"unknown\", \"owner_alive\": null, \"owner_pid\": null, \"readiness\": \"not_probed\"}, \"scheduler\": {\"jobs\": [{\"freshness\": {\"age_seconds\": 4.9, \"status\": \"fresh\"}, \"last_result\": \"ok\", \"name\": \"worker\"}], \"source\": \"cached_job_results\"}, \"schema_version\": 1, \"source\": \"bounded_local_state_and_loopback_readyz\", \"state_freshness\": {\"age_seconds\": 1.0, \"status\": \"fresh\"}, \"workplace\": \"workplace\"}\n\n"
+}

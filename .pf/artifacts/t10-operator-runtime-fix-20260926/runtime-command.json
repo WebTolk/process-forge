@@ -1,0 +1,13 @@
+{
+  "time": "2026-09-26T19:16:02.964753+00:00",
+  "argv": [
+    "powershell",
+    "-NoProfile",
+    "-Command",
+    "Get-CimInstance Win32_Process -Filter 'ProcessId = 15900' | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 0,
+  "stdout": "{\"ProcessId\":15900,\"CommandLine\":\"C:\\\\Users\\\\musst\\\\AppData\\\\Local\\\\Python\\\\pythoncore-3.14-64\\\\python.exe D:\\\\.agents\\\\processforge\\\\tools\\\\processforge.py runtime serve --workplace D:\\\\.agents\\\\processforge-workplace --port 0 --interval 2.0\"}\n",
+  "stderr": ""
+}

@@ -1,0 +1,4 @@
+{
+  "additional_patterns": ["tools/smoke_server_operator.py"],
+  "reason": "Authorized finish-found-defects scope: source assurance exposed a pre-existing test race between client response receipt and server handler finally decrement. Add a completion event in the test only; no T10 Runtime behavior change."
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "delivery-report",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925-r02/delivery.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "release-readiness-decided",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925-r02/delivery.md",
+    "status": "passed",
+    "summary": "Local plan revision ready; MCP repair and logging implementation remain future tasks."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "delivery-profile-run-or-skipped-with-reason",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925-r02/delivery.md",
+    "status": "not_applicable",
+    "reason": "Documentation-only revision; no product deployment or release requested in this Work.",
+    "evidence": [
+      ".pf/artifacts/vision-alignment-plan-20260925-r02/scope-and-design.md",
+      ".pf/artifacts/vision-alignment-plan-20260925-r02/assurance.md"
+    ]
+  }
+]

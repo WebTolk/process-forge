@@ -1,0 +1,10 @@
+# Handoff: T05 -> T06
+
+Objective: bounded authorized immutable prepared worker input and attributable idempotent results.
+Current status: actual MCP run_completed, assignment done; source run-doctor 21 PASS on 2026-09-26. Final focused regression 149.969 s PASS; independent source review and final source QA PASS. Installed Core remains T08.
+Input artifacts: .pf/artifacts/t05-prepared-input-20260926/; test-report.md, review-findings.md, final-checks.json, focused-final.json, recovery-proof.json, private-path-proof.json, developer-proof.json and evidence/07-09.json. Earlier harness/schema failures retained.
+Files changed: shared prepared_input/resources services, neutral prepared_executor, targeted CLI/Codex integration, schema/templates/docs and registered focused regression. Exact hashes in final-checks.json. Main legacy capsule SHA256 9f4967fd988154fd1e499e7f3f3833e028138f3944b294f409736b56141eeecd unchanged.
+Files not to touch: frozen artifacts/capsules and unrelated dirty work; installed/shared infrastructure outside an explicit separately governed delivery scope.
+Known issues: no full release/package/installed/new-host acceptance; direct symlink privilege unavailable, actual Windows Junction coverage passed. Hard links required for atomic publication. Ordinary primary Work without explicit worker report/write scope is not worker-ready; governed positive fixture declares them before real capsule creation. Scope declaration is not an OS sandbox.
+Required checks: 12 compatibility checks, final registered prepared-input smoke, actual process crash/dead-lock recovery, governed lifecycle preservation, Junction refusal, syntax/schema/public/checksum/links and final source hashes PASS. Preserve distinctions between declaration, deterministic proof and semantic review.
+Next recommended action: immediately begin T06 per AFK authorization, promote crash/governed proof into standard integrated tests, review and synchronize broader EN/RU docs, repeat MCP reconnect/authorization/profiles and evaluate actual connected-host boundary. No T07/T10/UI or public release.

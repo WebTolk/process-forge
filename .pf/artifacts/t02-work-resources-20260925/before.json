@@ -1,0 +1,372 @@
+{
+  "work": {
+    "action": "created_new",
+    "assignment_id": "reproduce-t02-work-a-binding",
+    "gates": {
+      "entry": [],
+      "exit": [
+        {
+          "blocking": true,
+          "evidence": {},
+          "id": "prepare-ready",
+          "phase": "exit",
+          "required": true,
+          "satisfied": false,
+          "type": "checklist"
+        }
+      ]
+    },
+    "kind": "pf.work.start",
+    "obligations": [],
+    "project": {
+      "id": "project"
+    },
+    "run_id": "garage-reproduce-t02-work-a-binding",
+    "schema_version": 1,
+    "session": {
+      "status": "absent"
+    },
+    "stage": "prepare",
+    "stage_selection": "process_initial_stage",
+    "valid_stages": [
+      "prepare",
+      "build",
+      "verify"
+    ],
+    "work_state": {
+      "action": "work_incomplete",
+      "allowed_outcomes": [
+        {
+          "id": "completed",
+          "next_stage": "build",
+          "title": "completed"
+        }
+      ],
+      "artifacts": [
+        {
+          "evidence": {},
+          "id": "brief",
+          "kind": "artifact",
+          "satisfied": false
+        }
+      ],
+      "assignment": {
+        "id": "reproduce-t02-work-a-binding",
+        "status": "in_progress"
+      },
+      "blockers": [],
+      "completion": {
+        "requirements": [
+          {
+            "artifact_id": "brief",
+            "code": "artifact_evidence_missing"
+          },
+          {
+            "code": "gate_evidence_missing",
+            "gate_id": "prepare-ready"
+          },
+          {
+            "code": "stage_evidence_required",
+            "stage_id": "prepare"
+          }
+        ],
+        "status": "incomplete"
+      },
+      "evidence": [],
+      "gates": {
+        "entry": [],
+        "exit": [
+          {
+            "blocking": true,
+            "evidence": {},
+            "id": "prepare-ready",
+            "phase": "exit",
+            "required": true,
+            "satisfied": false,
+            "type": "checklist"
+          }
+        ]
+      },
+      "incomplete": [
+        {
+          "artifact_id": "brief",
+          "code": "artifact_evidence_missing"
+        },
+        {
+          "code": "gate_evidence_missing",
+          "gate_id": "prepare-ready"
+        },
+        {
+          "code": "stage_evidence_required",
+          "stage_id": "prepare"
+        }
+      ],
+      "kind": "pf.work.state",
+      "obligations": [],
+      "process": {
+        "fingerprint": "sha256:b0034cdf50d795ab6f0ef10bdbc87eba0c73a9d3978a42e9ce4aa21b9b432c08",
+        "id": "declarative-smoke",
+        "pin_status": "pinned",
+        "version": "1.0.0"
+      },
+      "project": {
+        "id": "project"
+      },
+      "required_evidence": [],
+      "required_inputs": [],
+      "run": {
+        "id": "garage-reproduce-t02-work-a-binding",
+        "status": "in_progress"
+      },
+      "schema_version": 1,
+      "stage": {
+        "id": "prepare",
+        "status": "in_progress",
+        "title": "Prepare"
+      },
+      "work": {
+        "active_specializations": [],
+        "selected_resource_ids": [
+          "fixture.binding-a:root"
+        ]
+      }
+    }
+  },
+  "state_after": {
+    "action": "work_incomplete",
+    "allowed_outcomes": [
+      {
+        "id": "completed",
+        "next_stage": "build",
+        "title": "completed"
+      }
+    ],
+    "artifacts": [
+      {
+        "evidence": {},
+        "id": "brief",
+        "kind": "artifact",
+        "satisfied": false
+      }
+    ],
+    "assignment": {
+      "id": "reproduce-t02-work-a-binding",
+      "status": "in_progress"
+    },
+    "blockers": [],
+    "completion": {
+      "requirements": [
+        {
+          "artifact_id": "brief",
+          "code": "artifact_evidence_missing"
+        },
+        {
+          "code": "gate_evidence_missing",
+          "gate_id": "prepare-ready"
+        },
+        {
+          "code": "stage_evidence_required",
+          "stage_id": "prepare"
+        }
+      ],
+      "status": "incomplete"
+    },
+    "evidence": [],
+    "gates": {
+      "entry": [],
+      "exit": [
+        {
+          "blocking": true,
+          "evidence": {},
+          "id": "prepare-ready",
+          "phase": "exit",
+          "required": true,
+          "satisfied": false,
+          "type": "checklist"
+        }
+      ]
+    },
+    "incomplete": [
+      {
+        "artifact_id": "brief",
+        "code": "artifact_evidence_missing"
+      },
+      {
+        "code": "gate_evidence_missing",
+        "gate_id": "prepare-ready"
+      },
+      {
+        "code": "stage_evidence_required",
+        "stage_id": "prepare"
+      }
+    ],
+    "kind": "pf.work.state",
+    "obligations": [],
+    "process": {
+      "fingerprint": "sha256:b0034cdf50d795ab6f0ef10bdbc87eba0c73a9d3978a42e9ce4aa21b9b432c08",
+      "id": "declarative-smoke",
+      "pin_status": "pinned",
+      "version": "1.0.0"
+    },
+    "project": {
+      "id": "project"
+    },
+    "required_evidence": [],
+    "required_inputs": [],
+    "run": {
+      "id": "garage-reproduce-t02-work-a-binding",
+      "status": "in_progress"
+    },
+    "schema_version": 1,
+    "stage": {
+      "id": "prepare",
+      "status": "in_progress",
+      "title": "Prepare"
+    },
+    "work": {
+      "active_specializations": [],
+      "selected_resource_ids": [
+        "fixture.binding-a:root"
+      ]
+    }
+  },
+  "resolve_a": {
+    "kind": "pf.resolve",
+    "project": {
+      "id": "project",
+      "root": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-process-execution-fhi7h_fs\\project"
+    },
+    "resource": {
+      "id": "fixture.binding-a:root",
+      "reason": "not_in_project_snapshot",
+      "status": "denied"
+    },
+    "schema_version": 1
+  },
+  "resolve_b": {
+    "kind": "pf.resolve",
+    "project": {
+      "id": "project",
+      "root": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-process-execution-fhi7h_fs\\project"
+    },
+    "resource": {
+      "application": {
+        "kind": "documentation",
+        "package_id": "fixture.binding-b"
+      },
+      "id": "fixture.binding-b:root",
+      "local_root": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-process-execution-fhi7h_fs\\workplace\\packages\\fixture.binding-b\\resources\\root",
+      "navigation": "private_runtime_authorized",
+      "reference": {
+        "id": "global",
+        "registry": "package_roots",
+        "relative_path": "fixture.binding-b/resources/root"
+      },
+      "registry_source": "project-context.snapshot",
+      "scope": "project_context",
+      "status": "available"
+    },
+    "schema_version": 1
+  },
+  "search_b": {
+    "garage_readiness": {
+      "document_count": 2,
+      "reason": "fresh_index",
+      "remediation": "none",
+      "resource_count": 2,
+      "status": "ready"
+    },
+    "index_generation": null,
+    "items": [
+      {
+        "canonical_path": "b.md",
+        "document_id": 2,
+        "local_path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-process-execution-fhi7h_fs\\workplace\\packages\\fixture.binding-b\\resources\\root\\b.md",
+        "match": {
+          "fields": [
+            "title",
+            "content"
+          ],
+          "rank": -1e-06,
+          "reason": "FTS5 title/content match"
+        },
+        "match_reason": "content",
+        "metadata": {
+          "mode": "fulltext",
+          "root_id": "d1fa21c4b3b112abc28d9b51e0d8b07222a993daf500d1fc0385778c8ac92046",
+          "root_ref": "{\"id\":\"global\",\"registry\":\"package_roots\",\"relative_path\":\"fixture.binding-b/resources/root\"}",
+          "version": ""
+        },
+        "navigation": "private_runtime_authorized",
+        "path_ref": "fixture.binding-b:root:b.md",
+        "provenance": {
+          "kind": "documentation",
+          "package_id": "fixture.binding-b",
+          "snapshot_checksum": "ctx-20260925-195310-cc20b4"
+        },
+        "relative_path": "b.md",
+        "resource_id": "fixture.binding-b:root",
+        "resource_type": "documentation",
+        "title": "b.md"
+      }
+    ],
+    "kind": "pf.search",
+    "limit": 20,
+    "offset": 0,
+    "page": {
+      "limit": 20,
+      "limitstart": 0,
+      "next_limitstart": null,
+      "offset": 0,
+      "returned": 1,
+      "total": 1
+    },
+    "query": "CurrentBetaNeedle",
+    "results": [
+      {
+        "canonical_path": "b.md",
+        "document_id": 2,
+        "local_path": "C:\\Users\\musst\\AppData\\Local\\Temp\\pf-process-execution-fhi7h_fs\\workplace\\packages\\fixture.binding-b\\resources\\root\\b.md",
+        "match": {
+          "fields": [
+            "title",
+            "content"
+          ],
+          "rank": -1e-06,
+          "reason": "FTS5 title/content match"
+        },
+        "match_reason": "content",
+        "metadata": {
+          "mode": "fulltext",
+          "root_id": "d1fa21c4b3b112abc28d9b51e0d8b07222a993daf500d1fc0385778c8ac92046",
+          "root_ref": "{\"id\":\"global\",\"registry\":\"package_roots\",\"relative_path\":\"fixture.binding-b/resources/root\"}",
+          "version": ""
+        },
+        "navigation": "private_runtime_authorized",
+        "path_ref": "fixture.binding-b:root:b.md",
+        "provenance": {
+          "kind": "documentation",
+          "package_id": "fixture.binding-b",
+          "snapshot_checksum": "ctx-20260925-195310-cc20b4"
+        },
+        "relative_path": "b.md",
+        "resource_id": "fixture.binding-b:root",
+        "resource_type": "documentation",
+        "title": "b.md"
+      }
+    ],
+    "schema_version": 1,
+    "scope_key": "ctx-20260925-195310-cc20b4",
+    "search": {
+      "document_count": 2,
+      "reason": "fresh_index",
+      "remediation": "none",
+      "resource_count": 2,
+      "status": "ready"
+    },
+    "search_status": "fresh",
+    "total": 1
+  },
+  "capsule_unchanged": true,
+  "capsule_sha256": "86632bc04b61149493ec2821069169fbeff895f37f33abb804c7d4cb480e4399"
+}

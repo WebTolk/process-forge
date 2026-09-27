@@ -1,0 +1,16 @@
+﻿[
+    {
+        "ProcessId":  18788,
+        "ParentProcessId":  13528,
+        "CreationDate":  "\/Date(1790358791721)\/",
+        "ExecutablePath":  "C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.PythonManager_26.3.240.0_x64__qbz5n2kfra8p0\\python.exe",
+        "CommandLine":  "\"C:\\Users\\musst\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe\" D:\\.agents\\processforge\\tools\\pf_runtime\\mcp_server.py --workplace D:\\.agents\\processforge-workplace"
+    },
+    {
+        "ProcessId":  5044,
+        "ParentProcessId":  18788,
+        "CreationDate":  "\/Date(1790358792421)\/",
+        "ExecutablePath":  "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "CommandLine":  "\"C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\"  D:\\.agents\\processforge\\tools\\pf_runtime\\mcp_server.py --workplace D:\\.agents\\processforge-workplace"
+    }
+]

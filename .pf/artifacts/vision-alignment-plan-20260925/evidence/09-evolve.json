@@ -1,0 +1,15 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "evolution-report",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/evolution-report.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "evolution-captured",
+    "path": ".pf/artifacts/vision-alignment-plan-20260925/evolution-report.md",
+    "status": "passed",
+    "summary": "Captured planning lessons, explicit non-applicability of global rule/template changes, and bounded next-work handoff."
+  }
+]

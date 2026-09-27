@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_diagnostics.py"
+  ],
+  "exit_code": 0,
+  "seconds": 43.871,
+  "stdout": "{\"result\": \"PASS\", \"checks\": [\"severity/profile/config\", \"privacy\", \"journal invariance\", \"sink failures\", \"parallel correlation\", \"hook protocol\", \"rotation/retention/export\", \"performance\"], \"metrics\": {\"disabled_100000_seconds_median\": 0.14357010000094306, \"memory_10000_seconds\": 0.728834999994433, \"jsonl_10000_seconds\": 13.928585999994539, \"max_storage_bytes\": 16384, \"rotated_files\": 2, \"bundle_records\": 2}}\n",
+  "stderr": ""
+}

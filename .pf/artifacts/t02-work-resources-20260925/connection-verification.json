@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "checks": [
+    "coverage success closes",
+    "coverage SQL failure closes",
+    "memory search success closes",
+    "memory search document failure closes",
+    "Windows temp cleanup without gc"
+  ]
+}

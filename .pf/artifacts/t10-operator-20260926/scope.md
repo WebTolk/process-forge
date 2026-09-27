@@ -1,0 +1,9 @@
+# Local operator scope and acceptance
+
+Deliver usable bounded metrics in the existing read-only monitor, a ProcessForge Server command/launcher using the existing singleton, guarded explicit server stop, and T09-based diagnostic profile configuration. Finish by qualifying a clean candidate containing these changes plus the already tested journal append fix and installing through core-update plan/apply. No manual installed payload copying or global configuration edits.
+
+Acceptance: compact snapshot produced by Runtime, counts defined by source/coverage/freshness; no active counts from cached registrations. Online Agent Ledger sessions are not proof of busy work; running worker records are not an OS thread-health claim; blocked Work is not necessarily waiting for a user. Undefined global MCP/hooks, backlog, waiting-user, capacity/conflict metrics remain explicit unknown, rather than invented contracts. The first local product may truthfully show partial coverage for the preexisting invalid registered project.
+
+Monitor polls bounded saved state and readiness only, remains read-only, independent lifetime and no hidden start/repair. Server start/run reuse singleton; status is a bounded read-only view; stop/restart refuse busy or unknown observation unless explicitly forced. Legacy runtime commands remain compatible. No process renaming claim: Python-backed pf-server command is not a native pf-server.exe.
+
+Diagnostics changes use existing .pf/diagnostics.json v1, profiles, locks, limits and expiry. Plan is read-only, apply explicit and atomic, unrelated scopes preserved. No real user profile is changed during this task; isolated fixtures prove behavior. New local operator commands preserve JSON/protocol output privacy. Browser/tray/native-binary/public publication not_applicable to this selected terminal delivery; remote web excluded by operator decision.

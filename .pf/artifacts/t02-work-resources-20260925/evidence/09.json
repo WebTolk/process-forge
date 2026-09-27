@@ -1,0 +1,147 @@
+{
+  "action": "run_completed",
+  "allowed_outcomes": [
+    {
+      "id": "completed",
+      "next_stage": "",
+      "title": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "evidence": {
+        "artifact_id": "evolution-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/t02-work-resources-20260925/evolution-report.md",
+        "recorded_at": "2026-09-25T20:43:37Z",
+        "sha256": "sha256:faededdb12d53d5e23e0373c0603e249074909e0b4c7c3d743f916938aa9cbff",
+        "status": "ready"
+      },
+      "id": "evolution-report",
+      "kind": "artifact",
+      "satisfied": true
+    }
+  ],
+  "assignment": {
+    "id": "t02-pf-vision-alignment-r02-implement-explicit-work-context-resource-sea",
+    "status": "done"
+  },
+  "blockers": [],
+  "completion": {
+    "requirements": [],
+    "status": "complete"
+  },
+  "evidence": [
+    {
+      "artifact_id": "evolution-report",
+      "kind": "artifact",
+      "path": ".pf/artifacts/t02-work-resources-20260925/evolution-report.md",
+      "recorded_at": "2026-09-25T20:43:37Z",
+      "sha256": "sha256:faededdb12d53d5e23e0373c0603e249074909e0b4c7c3d743f916938aa9cbff",
+      "status": "ready"
+    },
+    {
+      "gate_id": "evolution-captured",
+      "kind": "gate",
+      "path": ".pf/artifacts/t02-work-resources-20260925/evolution-report.md",
+      "recorded_at": "2026-09-25T20:43:37Z",
+      "sha256": "sha256:faededdb12d53d5e23e0373c0603e249074909e0b4c7c3d743f916938aa9cbff",
+      "status": "passed",
+      "summary": "Scope/material/SQLite lessons and legacy/install limits captured; next T03 identified."
+    }
+  ],
+  "gates": {
+    "entry": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "release-readiness-decided",
+          "kind": "gate",
+          "path": ".pf/artifacts/t02-work-resources-20260925/delivery-report.md",
+          "recorded_at": "2026-09-25T20:43:02Z",
+          "sha256": "sha256:1face02efaa3cd84d6705ab1359aa63e6c5f57aa83dbe6a425b7eac9c4162efb",
+          "status": "passed",
+          "summary": "Local source accepted, no requested public release; archive/installed qualification intentionally deferred to integrated T06."
+        },
+        "id": "release-readiness-decided",
+        "phase": "entry",
+        "required": true,
+        "satisfied": true,
+        "type": "decision"
+      }
+    ],
+    "exit": [
+      {
+        "blocking": true,
+        "evidence": {
+          "gate_id": "evolution-captured",
+          "kind": "gate",
+          "path": ".pf/artifacts/t02-work-resources-20260925/evolution-report.md",
+          "recorded_at": "2026-09-25T20:43:37Z",
+          "sha256": "sha256:faededdb12d53d5e23e0373c0603e249074909e0b4c7c3d743f916938aa9cbff",
+          "status": "passed",
+          "summary": "Scope/material/SQLite lessons and legacy/install limits captured; next T03 identified."
+        },
+        "id": "evolution-captured",
+        "phase": "exit",
+        "required": true,
+        "satisfied": true,
+        "type": "decision"
+      }
+    ]
+  },
+  "incomplete": [],
+  "kind": "pf.work.state",
+  "next": {
+    "available_processes": []
+  },
+  "next_stage_id": "",
+  "obligations": [],
+  "previous_stage_id": "evolve",
+  "process": {
+    "fingerprint": "sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49",
+    "id": "software-feature-development",
+    "pin_status": "pinned",
+    "version": "1.1.0"
+  },
+  "project": {
+    "id": "process-forge"
+  },
+  "required_evidence": [],
+  "required_inputs": [
+    {
+      "evidence": {
+        "artifact_id": "delivery-report",
+        "kind": "artifact",
+        "path": ".pf/artifacts/t02-work-resources-20260925/delivery-report.md",
+        "recorded_at": "2026-09-25T20:43:02Z",
+        "sha256": "sha256:1face02efaa3cd84d6705ab1359aa63e6c5f57aa83dbe6a425b7eac9c4162efb",
+        "status": "ready"
+      },
+      "id": "delivery-report",
+      "kind": "input",
+      "satisfied": true
+    }
+  ],
+  "run": {
+    "id": "garage-t02-pf-vision-alignment-r02-implement-explicit-work-context-resou",
+    "status": "completed"
+  },
+  "schema_version": 1,
+  "session_continuity": {
+    "reason": "process_boundary",
+    "recommendation": "auto"
+  },
+  "stage": {
+    "id": "evolve",
+    "status": "completed",
+    "title": "Evolve"
+  },
+  "work": {
+    "active_specializations": [],
+    "selected_resource_ids": [
+      "project.process-forge:project-profile",
+      "project.process-forge:project-artifacts"
+    ]
+  }
+}

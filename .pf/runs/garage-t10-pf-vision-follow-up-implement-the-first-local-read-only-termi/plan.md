@@ -1,0 +1,3 @@
+# Run Plan: T10 PF vision follow-up: implement the first local read-only terminal monitor fo
+
+Objective: T10 PF vision follow-up: implement the first local read-only terminal monitor for existing ProcessForge Runtime, with explicit freshness and unknown states, bounded polling, independent monitor lifecycle, narrow and non-TTY output, JSON mode, screen-state and failure-path tests, and EN/RU operator documentation. Preserve existing work and immutable evidence. No daemon startup, stop, restart, installation, shared configuration changes, browser UI, remote web, privacy-engine implementation or public release.

@@ -1,0 +1,6 @@
+{
+  "additional_patterns": [
+    "src/processforge_core/work_resource_material.py"
+  ],
+  "reason": "Architecture-approved private store exclusion from broad registered resource roots; baseline unchanged."
+}

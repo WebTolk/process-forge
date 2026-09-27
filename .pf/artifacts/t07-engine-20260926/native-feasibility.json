@@ -1,0 +1,35 @@
+{
+  "status": "PASS evidence of native bypass; strict capability unavailable",
+  "os": "Windows-11-10.0.26200-SP0",
+  "python": "3.14.3 (tags/v3.14.3:323c59a, Feb  3 2026, 16:04:56) [MSC v.1944 64 bit (AMD64)]",
+  "wrapper_sha256": "e0738c87a16d14cce72534ee671cd6c4d2ab169d5d49784e7976f9f4964fa52f",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\prepared_executor.py",
+    "--prepared-input",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t07-engine-20260926\\feasibility\\prepared-input.json",
+    "--prepared-sha256",
+    "sha256:880aff15437b980cbcf0781f531dad36c98f95178276a94b80235d6beddf234d",
+    "--heartbeat",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t07-engine-20260926\\feasibility\\heartbeat.json",
+    "--exit-path",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t07-engine-20260926\\feasibility\\exit.json",
+    "--",
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t07-engine-20260926\\feasibility\\probe.py"
+  ],
+  "exit_code": 0,
+  "observed": {
+    "home_read": true,
+    "environment": true,
+    "plugin": true,
+    "child_process": true,
+    "direct_loopback_network": true
+  },
+  "recipient": "synthetic numeric loopback only",
+  "fixture": "D:\\Dev\\process-forge\\.pf\\tmp\\t07-engine-20260926\\feasibility",
+  "codex_cli": "not executed; separate qualification unavailable",
+  "managed_http_route": "candidate architecture, qualification pending implementation; no capability asserted"
+}

@@ -1,0 +1,67 @@
+{
+  "started_at": "2026-09-26T08:16:49.882415+00:00",
+  "checks": [
+    {
+      "command": [
+        "tools/validate-process-forge-schemas.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: ProcessForge structure and JSON Schema validation passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-public-cleanliness.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: public cleanliness checks passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: wrote checksums\\processforge.sha256\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: checksum inventory matches.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bin/pf.py",
+        "run-doctor",
+        "--project-root",
+        "D:\\Dev\\process-forge",
+        "--run",
+        "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: run.schema_version present\nPASS: run.id present\nPASS: run.title present\nPASS: run.process present\nPASS: run.status present\nPASS: run.created_at present\nPASS: run.updated_at present\nPASS: run.tasks present\nPASS: run status valid: in_progress\nPASS: summary artifact not yet required: .pf/runs/garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc/summary.md\nPASS: task index status matches run: in_progress\nPASS: handoff artifact not yet required: .pf/handoffs/runs/garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc-handoff.md\nPASS: process exists: software-feature-development\nPASS: .pf/runs/garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc/run.yaml has no private absolute paths\nPASS: task id unique: t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm\nPASS: task status valid for t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm: in_progress\nPASS: assignment exists for t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm: .pf/assignments/t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm.yaml\nPASS: t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm run_id matches run\n",
+      "stderr": ""
+    }
+  ],
+  "syntax_and_changed_doc_links": "PASS",
+  "frozen_files_unchanged": 561,
+  "source_sha256": {
+    "tools/processforge.py": "6f38e27c0a1fba89ba55a77b18699fcb1269eb7e1cb6ccc72433ae3f3c7f38c5",
+    "docs/concepts/runtime-drivers.md": "26872ef288d5393d729378aeaa31af69daa585c2f1cd25381c4e77aedd66400a",
+    "docs/ru/concepts/runtime-drivers.md": "da5580bf22a5494df34272f24033cdf3f218e35b73ae46045d59edb35f59784a",
+    "docs/concepts/runtime-mcp.md": "9a3532099da6ac1fb2e7a82f5db28f10259a9c69ef5ff452d84bbc6169981dee",
+    "docs/ru/concepts/runtime-mcp.md": "97e1ff18c9046cc0020d5a684cfe5ec38f88e1d43ed983bce969bd2a7aa8d252",
+    "docs/concepts/garage-core.md": "68652b5631a146daf2dd0f6ac76266287f8847ae0f32eeb242486ea469285c58",
+    "docs/concepts/declarative-process-execution.md": "015307dda146ff8b3d3ef1b79b067264042060cf815960183994bdaf067258db",
+    "docs/ru/concepts/declarative-process-execution.md": "b50ed5f94c4cdcaa4a1eb3f0640144d42cc944c838b6451d1f70a76e01830467",
+    "tools/smoke_prepared_execution_recovery.py": "a1edd9736536e3a5b883140948b5c1a5c3f61ac35050a9762e2988c6809b9ec2",
+    "checksums/processforge.sha256": "d58720db89e7746b2cfa6f4afa9a2ddb5e4af9a03cb60dfca10306fc5b6623e5"
+  },
+  "finished_at": "2026-09-26T08:18:35.097509+00:00"
+}

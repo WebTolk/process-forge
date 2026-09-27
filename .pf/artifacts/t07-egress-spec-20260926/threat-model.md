@@ -1,0 +1,22 @@
+# T07: модель угроз и границы заявлений
+
+Статус: проектная модель. Доверены операторская конфигурация PF, локальный Core и явно зарегистрированный classifier/transport adapter. Prompt, документы, возвращаемые model/tool данные, заявленная моделью классификация и native события сами себе доверия не создают. Компрометация ОС/Core или злонамеренный локальный администратор не покрываются предлагаемым application-level фильтром.
+
+| ID | Сценарий | Предлагаемый контроль | Остаточная граница |
+|---|---|---|---|
+| H01 | Private project_root/objective/path попадает в начальный prepared JSON | Отдельная recipient view, field allowlist, private id map, проверка всего envelope | Смысл допустимого текста может косвенно раскрывать контекст; формальной анонимности не обещать |
+| H02 | После безопасного prompt модель читает исходный файл через native tool | Broker на каждое чтение; raw filesystem недоступен mediated route | Payload-only адаптер не имеет этой гарантии и не допускается в strict session |
+| H03 | SDK/плагин/дочерний процесс отправляет env, home config, git remote, stderr | Environment allowlist; изолированная среда; контролируемый transport и child permissions | Без доказанной backend capability strict session запрещена |
+| H04 | Tool result/exception/attachment содержит новый секрет/PII | Проверка полного результата до передачи исполнителю; metadata тоже проходит правила | Неподдерживаемый binary/stream блокируется; будущий parser требует отдельной квалификации |
+| H05 | Источник или symlink/junction подменён между scan и send | Читать/проверять одни bytes, выпускать immutable view, не перечитывать по исходному пути; deny revocation перед выдачей | Уже отправленные bytes невозможно отозвать; смена policy прекращает только дальнейшие раскрытия |
+| H06 | Старый decision/view/token повторно используется в другой Work/endpoint/stage | Binding на Work/context/attempt/stage/recipient/policy/view hash/nonce, одноразовый dispatch | Неясный сетевой исход не превращается в exactly-once remote delivery |
+| H07 | Prompt injection предлагает другой detector, recipient или 'public' marker | Конфигурация/классификация из trusted registry; значения контента не становятся полномочиями | Фильтр не заменяет tool authorization и не решает всю безопасность исполнения |
+| H08 | Дробление секрета/кодирование/вложенные документы обходит простые regex | Bounded whole-unit parse, поддержанные декодеры, unknown fail-closed, ограничения совокупной выдачи | Не обещать обнаружение всех кодировок/семантических выводов; обходные форматы исключены из first release |
+| H09 | Audit/логи/preview содержат запрещённое значение | Поля по allowlist, категории/reason codes, hashes только private, sanitization ошибок | Private storage ACL/retention входят в отдельную ОС-приёмку |
+| H10 | Redaction незаметно меняет обязательное действие или команды | Отделить данные от инструкций; required_semantics_lost; не исполнять выданный remote placeholder как локальную команду | Утилитарность маскирования проверяется для конкретной задачи |
+| H11 | Нет audit disk space / classifier timeout / budget exceeded | До sends нет разрешения; сохранение исходной ошибки без частичного раскрытия | Optional diagnostics могут отсутствовать, обязательный отказ виден вызывающему |
+| H12 | Старые архив/капсула 'исправлены' для зелёного doctor | Новая явно производная export projection + local link к immutable original | Исторический original FAIL остаётся; он не является ошибкой нового export |
+| H13 | Public/metadata result раскрывает имена клиентов через ids/filenames/URI/хеш короткого значения | Opaque recipient ids, отсутствие исходных paths/raw hashes, audience-specific export | Состав необходимого audit различается для оператора и внешнего получателя |
+| H14 | Credential нужен локальному инструменту, но утекает в model args/output | Broker хранит credential вне model scope; tool effect permission отдельно; response проходит фильтр | Вызов доверенного локального tool не делает его результаты автоматически безопасными |
+
+Не покрываются текущей спецификацией как готовые гарантии: фильтрация произвольного desktop/browser агента; контроль неизвестных CLI, которым доступен весь профиль пользователя; юридическая оценка обработки персональных данных; защита от утечки через время/размер ответа; криптографически доказанная анонимизация. Для неподтверждённого канала не выдаётся статус enforced.

@@ -1,0 +1,60 @@
+{
+  "started_at": "2026-09-26T06:40:27.754037+00:00",
+  "checks": [
+    {
+      "command": [
+        "tools/validate-process-forge-schemas.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: ProcessForge structure and JSON Schema validation passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-public-cleanliness.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: public cleanliness checks passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--write"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: wrote checksums\\processforge.sha256\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "tools/validate-process-forge-checksums.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: checksum inventory matches.\n",
+      "stderr": ""
+    }
+  ],
+  "syntax_docs_registration": "PASS",
+  "source_sha256": {
+    "src/processforge_core/prepared_input.py": "71adc747d767d3767202bb3437d3b4831f11e999c17f27f6e0a1256153646d40",
+    "src/processforge_core/prepared_resources.py": "2b8d7d83f649d2545646c72b75165cb0d1e5781b5773304045efcfc387596914",
+    "tools/prepared_executor.py": "e0738c87a16d14cce72534ee671cd6c4d2ab169d5d49784e7976f9f4964fa52f",
+    "tools/processforge.py": "f2d08ef5d51cb8a9bc8b7443ddc4dca31271a7162c974209998db52a31807f35",
+    "tools/codex_exec_worker.py": "2b60d64a5cccba576000a8ea070bcbf0373a2829d9b17d7672d9015a2aaa4109",
+    "tools/smoke_prepared_execution_context.py": "3fdf3760f22eb841991977e51a36cf5d12c04b1a54df68b5e197f2151425f1ff",
+    "tools/smoke_worker_workspace_access.py": "1468dd6bb62baefcdb0e19d967d191edaa7935d11ebde83e2985fe27046baf22",
+    "tools/smoke_codex_exec_worker.py": "d353381ae07d25025d70675216eaf18199f9e27daa0b048ca2236fb780e5e291",
+    "tools/smoke_codex_worker_governance.py": "5276f1ce9aaa65decbec9c0cb72e8cdc2fd01a85a9548af56e889ecfc66a892a",
+    "docs/concepts/prepared-input.md": "57672902488d0ec42202b431d7d90fbdc2658ef54a14ee1dec8511478be81419",
+    "docs/ru/concepts/prepared-input.md": "cd7e278794b49f82fc1d9fbf30d01f81bb643ccc87dbbb64cc6abb6b791297b9",
+    "docs/concepts/work-execution-contract.md": "1d07e3fd8516db163f77a7df52ef419f989efeccffbdf90f1c0c49ce7161748c",
+    "schemas/prepared-input.schema.json": "692b089fb7de981f0dc86776f7fd82d9bf51a6f61232485cb52b6afcbf08a58a",
+    "schemas/runtime-driver.schema.json": "4d8fa6cc8e14a7801c8f5b2cce0dec6a713a8bcfe754f0b14d368500b5ee8654",
+    "templates/runtime-drivers/generic-shell.yaml": "b79c4d60b11f960a17062443af09b4f867a3ef3d6f54e0b6dc81a063f38fa1ff",
+    "templates/worker-launch-prompt.md": "b780aa613773dfe72335bfde8f1ace0403229e874f725109e3ac3ebc78849225"
+  },
+  "main_legacy_capsule_sha256": "9f4967fd988154fd1e499e7f3f3833e028138f3944b294f409736b56141eeecd",
+  "finished_at": "2026-09-26T06:42:01.054263+00:00"
+}

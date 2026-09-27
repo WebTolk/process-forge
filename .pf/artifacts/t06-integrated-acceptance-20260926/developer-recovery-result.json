@@ -1,0 +1,8 @@
+{
+  "layer": "source focused developer verification",
+  "command": ["python", "-B", "tools/smoke_prepared_execution_recovery.py"],
+  "exit_code": 0,
+  "stdout": "PASS: offline governed execution, collection invariance, source MCP reconnect and transition\nPASS: actual process death, dead-owner lock and exactly-once receipt recovery\nPASS: real directory redirect refused without private-byte publication\n",
+  "duration": "not captured",
+  "note": "Observed tool process result from this T06 turn; actual Windows Junction branch executed. No current-source installed-host acceptance is implied."
+}

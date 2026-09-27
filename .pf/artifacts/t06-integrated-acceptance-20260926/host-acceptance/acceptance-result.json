@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "checks": [
+    "complete immutable contract created by connected MCP",
+    "fixture capsule unchanged after all host operations",
+    "positive fulltext coverage",
+    "resolve verifies declared material",
+    "unselected resource blocked",
+    "wrong immutable context blocked",
+    "real Ledger session required",
+    "five profiles preserve search",
+    "five profiles preserve deny",
+    "five profiles enforce required gates",
+    "material-drift",
+    "revoked-access",
+    "restored-material",
+    "restored-grant",
+    "empty stage subset enforced after governed transition",
+    "empty stage subset gives no search documents",
+    "later omitted subset inherits pinned grants",
+    "fixture completes through actual host with diagnostics off",
+    "bounded canonical diagnostics",
+    "actual host diagnostic build matches installed entry and implementation",
+    "diagnostics omit fixture contents and query",
+    "quiet preserves warning diagnostics while filtering lower levels",
+    "off emits no optional diagnostics",
+    "mandatory stage completions survive diagnostics off",
+    "mandatory run completion survives diagnostics off",
+    "installed product frozen evidence and shared configuration preserved"
+  ],
+  "count": 26,
+  "diagnostic_records": 51,
+  "diagnostic_bytes": 44817,
+  "event_count": 16,
+  "fixture_capsule_sha256": "7d45ebb10c65faa6e2d744186752b5ded3d7e983274aa77adf7f71f61861a4ff",
+  "limitations": [
+    "Raw application stdio/notification framing is not exposed by the tool API; existing delivered installed stdio proof is a separate complementary layer.",
+    "No real Ledger-bound session exists; session-bound cross-project negatives are covered by installed isolated tests, not claimed as live-host session acceptance."
+  ]
+}

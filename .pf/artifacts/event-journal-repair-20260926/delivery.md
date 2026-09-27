@@ -1,0 +1,11 @@
+# Journal recovery delivered
+
+Result: PASS. Reviewed private repair.py --apply ran at release-delivery and modified exactly bytes 41877766..41877789: the known 24-byte malformed body became equal-length whitespace, retaining its CRLF. Every original valid byte and later offset was verified unchanged. Journal length at repair remained 42999979 bytes and all 35166 original valid records remained. No wholesale replacement, truncation, process stop or raw-ingress mutation.
+
+Original backup: .pf/tmp/event-journal-repair-20260926/original-journal/events-before.bin. SHA256 fd8f45e09f74fedb93e91004d6b27bf4cde03aed2d8c11ca4483d4f6c76d7ab6. Backup repair.json and durable repair-result.json preserve raw fragment hex, original error, exact offset/length, file identity and before/after hashes. The historical producer/full intended event remains unknown; no event was reconstructed from the timestamp.
+
+Appended ordinary private audit event evt_fd8f45e09f74fedb93e91004d6b27bf4, type journal.record.quarantined, using the fixed source append function (no external hook dispatch). Verification subsequently counted 35169 valid records including concurrent additions and audit, zero invalid records. Full actual checkout schema validation PASS; exact command/stdout in full-checkout-schemas.json. This supersedes the current failure condition, not the immutable historical failing test evidence.
+
+delivery-verification.json confirms original valid bytes, backup hash, capsule, 44 protected configuration files, 499 prior frozen evidence files, 987 out-of-scope source files and all scoped source QA hashes preserved. Source regression/fixture assurance is recorded in assurance.md. Main source contains only the five declared new changes beyond its initial dirty state.
+
+The concurrency fix is source-qualified and source-only at this point. Installed tools/processforge.py still matches the delivered T10 manifest and differs from the fixed source, verified explicitly. Include these five paths in the next standard Core update together with remaining T10. Existing clients must normally reload/reconnect before all writers use the fix; no hot-patching claim. Source patch: scoped.patch. Browser verification and public publication not_applicable. Core/Workplace/project schema migration not_applicable; no schema changed.

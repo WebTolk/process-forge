@@ -1,0 +1,125 @@
+{
+  "basis": "current checkout, source-read evidence only",
+  "symbols": [
+    {
+      "path": "src/processforge_core/prepared_input.py",
+      "symbol": "semantic_input",
+      "line": 76,
+      "sha256": "71adc747d767d3767202bb3437d3b4831f11e999c17f27f6e0a1256153646d40"
+    },
+    {
+      "path": "src/processforge_core/prepared_input.py",
+      "symbol": "build",
+      "line": 130,
+      "sha256": "71adc747d767d3767202bb3437d3b4831f11e999c17f27f6e0a1256153646d40"
+    },
+    {
+      "path": "src/processforge_core/prepared_input.py",
+      "symbol": "load",
+      "line": 167,
+      "sha256": "71adc747d767d3767202bb3437d3b4831f11e999c17f27f6e0a1256153646d40"
+    },
+    {
+      "path": "src/processforge_core/prepared_input.py",
+      "symbol": "write_once",
+      "line": 148,
+      "sha256": "71adc747d767d3767202bb3437d3b4831f11e999c17f27f6e0a1256153646d40"
+    },
+    {
+      "path": "src/processforge_core/prepared_resources.py",
+      "symbol": "authorize_resources",
+      "line": 276,
+      "sha256": "2b8d7d83f649d2545646c72b75165cb0d1e5781b5773304045efcfc387596914"
+    },
+    {
+      "path": "src/processforge_core/work_resources.py",
+      "symbol": "read",
+      "line": 199,
+      "sha256": "f73ccaed5186419fe05edfdfff7933395695234ad5aef2eab2243363600814f9"
+    },
+    {
+      "path": "src/processforge_core/work_resources.py",
+      "symbol": "_search",
+      "line": 271,
+      "sha256": "f73ccaed5186419fe05edfdfff7933395695234ad5aef2eab2243363600814f9"
+    },
+    {
+      "path": "tools/codex_exec_worker.py",
+      "symbol": "prompt_payload",
+      "line": 114,
+      "sha256": "2b60d64a5cccba576000a8ea070bcbf0373a2829d9b17d7672d9015a2aaa4109"
+    },
+    {
+      "path": "tools/codex_exec_worker.py",
+      "symbol": "capture_worker_input",
+      "line": 142,
+      "sha256": "2b60d64a5cccba576000a8ea070bcbf0373a2829d9b17d7672d9015a2aaa4109"
+    },
+    {
+      "path": "tools/codex_exec_worker.py",
+      "symbol": "main",
+      "line": 239,
+      "sha256": "2b60d64a5cccba576000a8ea070bcbf0373a2829d9b17d7672d9015a2aaa4109"
+    },
+    {
+      "path": "tools/prepared_executor.py",
+      "symbol": "load_and_validate_manifest",
+      "line": 67,
+      "sha256": "e0738c87a16d14cce72534ee671cd6c4d2ab169d5d49784e7976f9f4964fa52f"
+    },
+    {
+      "path": "tools/prepared_executor.py",
+      "symbol": "run_target",
+      "line": 169,
+      "sha256": "e0738c87a16d14cce72534ee671cd6c4d2ab169d5d49784e7976f9f4964fa52f"
+    },
+    {
+      "path": "tools/processforge.py",
+      "symbol": "materialize_worker_launch_environment",
+      "line": 18362,
+      "sha256": "6f38e27c0a1fba89ba55a77b18699fcb1269eb7e1cb6ccc72433ae3f3c7f38c5"
+    },
+    {
+      "path": "tools/processforge.py",
+      "symbol": "redact_chat_content",
+      "line": 11363,
+      "sha256": "6f38e27c0a1fba89ba55a77b18699fcb1269eb7e1cb6ccc72433ae3f3c7f38c5"
+    },
+    {
+      "path": "tools/processforge.py",
+      "symbol": "chat_export_messages",
+      "line": 11516,
+      "sha256": "6f38e27c0a1fba89ba55a77b18699fcb1269eb7e1cb6ccc72433ae3f3c7f38c5"
+    },
+    {
+      "path": "tools/processforge.py",
+      "symbol": "command_chat_export",
+      "line": 21208,
+      "sha256": "6f38e27c0a1fba89ba55a77b18699fcb1269eb7e1cb6ccc72433ae3f3c7f38c5"
+    },
+    {
+      "path": "tools/processforge.py",
+      "symbol": "public_yaml_has_private_path",
+      "line": 13854,
+      "sha256": "6f38e27c0a1fba89ba55a77b18699fcb1269eb7e1cb6ccc72433ae3f3c7f38c5"
+    },
+    {
+      "path": "tools/processforge.py",
+      "symbol": "validate_run_consistency",
+      "line": 13858,
+      "sha256": "6f38e27c0a1fba89ba55a77b18699fcb1269eb7e1cb6ccc72433ae3f3c7f38c5"
+    },
+    {
+      "path": "src/processforge_core/diagnostics.py",
+      "symbol": "Sanitizer",
+      "line": 111,
+      "sha256": "2821636ea5179da200305854eb0a7f503bea376e3337164b2e610bd74279b472"
+    },
+    {
+      "path": "src/processforge_core/diagnostics.py",
+      "symbol": "export_bundle",
+      "line": 595,
+      "sha256": "2821636ea5179da200305854eb0a7f503bea376e3337164b2e610bd74279b472"
+    }
+  ]
+}

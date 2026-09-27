@@ -1,0 +1,57 @@
+{
+  "time": "2026-09-27T08:20:42.364372+00:00",
+  "action": "run_completed",
+  "run": {
+    "id": "garage-complete-all-required-pf-artifacts-for-the-current-processforge-t",
+    "status": "completed"
+  },
+  "assignment": {
+    "id": "complete-all-required-pf-artifacts-for-the-current-processforge-t01-t10",
+    "status": "done"
+  },
+  "effective_artifact_ids": [
+    "architecture",
+    "brief",
+    "browser-verification-report",
+    "change-summary",
+    "changed-files",
+    "decision-log",
+    "delivery-plan",
+    "delivery-report",
+    "domain-model",
+    "domain-notes",
+    "domain-rules",
+    "evolution-report",
+    "execution-context-summary",
+    "impact-analysis",
+    "implementation-plan",
+    "instruction-update-proposal",
+    "investigation-report",
+    "knowledge-update-proposal",
+    "lifecycle-mode-decision",
+    "migration-notes",
+    "patch",
+    "release-notes",
+    "review-findings",
+    "scope",
+    "task-record",
+    "test-cases",
+    "test-plan",
+    "test-report",
+    "updated-rules-or-extensions"
+  ],
+  "doctor_pass": 21,
+  "verification": {
+    "time": "2026-09-27T08:20:42.362271+00:00",
+    "status": "pass",
+    "artifact_count": 29,
+    "current_delivery_runs": 17,
+    "required_delivery_bindings": 340,
+    "protected_files": 661,
+    "tracked_public_files": 966,
+    "deferred_future_links": [],
+    "preexisting_historical_hash_findings": 26,
+    "errors": []
+  },
+  "capsule_sha256": "ba35824ecdc7b6ce52a4e144fd18ff83c66259e4f095b735214f667610da3d6a"
+}

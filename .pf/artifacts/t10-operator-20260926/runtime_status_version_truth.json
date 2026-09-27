@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_runtime_status_version_truth.py"
+  ],
+  "exit_code": 0,
+  "seconds": 11.284,
+  "stdout": "PASS: runtime status separates installed PF from runtime instance\n",
+  "stderr": ""
+}

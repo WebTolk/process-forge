@@ -1,0 +1,186 @@
+{
+  "time": "2026-09-26T20:44:50.511990+00:00",
+  "host_bytes": 1927120,
+  "session_registrations": 96,
+  "projects": [
+    {
+      "root": "D:\\Dev\\plg-content-varreplace",
+      "status_count": 0,
+      "active": []
+    },
+    {
+      "root": "D:\\Dev\\process-forge",
+      "status_count": 37,
+      "active": []
+    },
+    {
+      "root": "D:\\Dev\\wt-image-resize-and-convert-joomla-plugin",
+      "status_count": 0,
+      "active": []
+    }
+  ],
+  "service": {
+    "capabilities": {
+      "guarded_shutdown": 1
+    },
+    "endpoint": "http://127.0.0.1:62437",
+    "health": "degraded",
+    "instance_id": "3cca2f5faa274117a0d7e948478b4def",
+    "last_scheduler_error": "D:\\Dev\\plg-content-varreplace: FAIL: .pf/process-forge.yaml not found under D:\\Dev\\plg-content-varreplace. Run `python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type <project-type> --apply` first.",
+    "last_scheduler_result": {
+      "projects": [
+        {
+          "director": "skipped_simple",
+          "effective_mode": "simple",
+          "inspector": "tick",
+          "project_id": "process-forge",
+          "projection": ".pf/artifacts/projections/stage-obligations.json"
+        },
+        {
+          "director": "skipped_simple",
+          "effective_mode": "simple",
+          "inspector": "tick",
+          "project_id": "wt-image-resize-and-convert-joomla-plugin",
+          "projection": ".pf/artifacts/projections/stage-obligations.json"
+        }
+      ],
+      "status": "failed"
+    },
+    "metrics": {
+      "groups": {
+        "leases": {
+          "counts": {
+            "expired": 4,
+            "held": 0,
+            "inactive": 0
+          },
+          "coverage": "complete",
+          "issues": [],
+          "observed": {
+            "expired": 4,
+            "held": 0,
+            "inactive": 0
+          },
+          "source": "lease_records"
+        },
+        "registrations": {
+          "counts": {
+            "projects": 3,
+            "sessions": 96
+          },
+          "coverage": "complete",
+          "issues": [],
+          "observed": {
+            "projects": 3,
+            "sessions": 96
+          },
+          "source": "host_registration_cache"
+        },
+        "sessions": {
+          "counts": {
+            "offline": null,
+            "online": null,
+            "stale": null
+          },
+          "coverage": "partial",
+          "issues": [
+            "invalid"
+          ],
+          "observed": {
+            "offline": 68,
+            "online": 1,
+            "stale": 40
+          },
+          "source": "agent_presence_ttl"
+        },
+        "work": {
+          "counts": {
+            "blocked": null,
+            "in_progress": null
+          },
+          "coverage": "partial",
+          "issues": [
+            "budget",
+            "coverage",
+            "unreadable"
+          ],
+          "observed": {
+            "blocked": 1,
+            "in_progress": 2
+          },
+          "source": "run_records"
+        },
+        "workers": {
+          "counts": {
+            "running": null
+          },
+          "coverage": "partial",
+          "issues": [
+            "coverage"
+          ],
+          "observed": {
+            "running": 0
+          },
+          "source": "worker_status_records"
+        }
+      },
+      "instance_id": "3cca2f5faa274117a0d7e948478b4def",
+      "observed_at": "2026-09-26T20:44:39.298684+00:00",
+      "schema_version": 1
+    },
+    "pid": 17776,
+    "processforge_core_version": "1.1.0",
+    "project_errors": {
+      "D:\\Dev\\plg-content-varreplace": "FAIL: .pf/process-forge.yaml not found under D:\\Dev\\plg-content-varreplace. Run `python bin/pf.py project-onboard --project-root <project-root> --workplace <workplace-root> --type <project-type> --apply` first."
+    },
+    "protocol_version": "pf-runtime-poc-1",
+    "runtime_version": "1.0.0-poc",
+    "scheduler": {
+      "jobs": {
+        "director": {
+          "last_result": "ok",
+          "last_run": "2026-09-26T20:44:28Z",
+          "period_seconds": 10
+        },
+        "inspector": {
+          "last_result": "ok",
+          "last_run": "2026-09-26T20:44:28Z",
+          "period_seconds": 5
+        },
+        "ledger": {
+          "last_result": "ok",
+          "last_run": "2026-09-26T20:44:28Z",
+          "period_seconds": 5
+        },
+        "metrics": {
+          "last_result": "failed",
+          "last_run": "2026-09-26T20:44:39.298684+00:00",
+          "period_seconds": 10
+        },
+        "projection": {
+          "last_result": "ok",
+          "last_run": "2026-09-26T20:44:28Z",
+          "period_seconds": 30
+        }
+      }
+    },
+    "schema_version": 1,
+    "started_at": "2026-09-26T19:16:16Z",
+    "status": "ready",
+    "token_hash": "sha256:d1a48da56e161c1a1b37f1318dcdef6d3ccb8d85392425dd78d9c0dae801a7dc",
+    "token_ref": "D:\\.agents\\processforge-workplace\\runtime\\pf-runtime\\token.json",
+    "updated_at": "2026-09-26T20:44:40Z",
+    "workplace_id": "processforge-workplace",
+    "workplace_root": "D:\\.agents\\processforge-workplace"
+  },
+  "lock": {
+    "created_at": "2026-09-26T19:16:16Z",
+    "instance_id": "3cca2f5faa274117a0d7e948478b4def",
+    "pid": 17776
+  },
+  "active_worker_records": 0,
+  "pending_runtime_jobs": {
+    "value": 0,
+    "source": "current service.status_payload literal; no asynchronous runtime job queue"
+  }
+}

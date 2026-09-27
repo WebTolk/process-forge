@@ -1,0 +1,5 @@
+# Concrete delivery plan
+
+User explicitly authorized installed Core update and standard PF updater. Apply the qualified archive from build.json through installed core-update plan/apply/status. Recheck live owner and worker records, save current manifest/previous apply/Runtime state, stop only the verified named Runtime through its standard CLI, apply without force/conflict bypass, verify all installed hashes and automatic old/new-manifest/backed-up payload hashes, then restart with original port 0 / interval 2.0. Verify live monitor/server compact metrics, operator feature smokes, Runtime/Workplace doctors and preservation of protected config/unowned files/frozen artifacts/main source.
+
+No Workplace migration is applicable. No host-owned MCP process kill or reload claim. Known plg-content-varreplace manifest warning is unrelated and preserved. Disk update, new subprocess/Runtime acceptance and actual connected host acceptance are distinct. Automatic backups and exact status are recorded in install.json; on failure reconcile official updater status before any retry.

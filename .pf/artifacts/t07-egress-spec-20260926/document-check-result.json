@@ -1,0 +1,60 @@
+{
+  "kind": "t07.document-check",
+  "recorded_at": "2026-09-26T13:54:14.049573+00:00",
+  "checks": {
+    "documents": {
+      "count": 11,
+      "existing_local_links": 21
+    },
+    "source_anchors": {
+      "symbols": 20,
+      "files": 7
+    },
+    "traceability": {
+      "requirements": [
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07",
+        "R08",
+        "R09"
+      ],
+      "threats": [
+        "H01",
+        "H02",
+        "H03",
+        "H04",
+        "H05",
+        "H06",
+        "H07",
+        "H08",
+        "H09",
+        "H10",
+        "H11",
+        "H12",
+        "H13",
+        "H14"
+      ],
+      "future_cases": 28,
+      "runtime_cases_executed": 0
+    },
+    "example_structure": {
+      "examples": 5,
+      "product_schema_validation": "not_applicable_proposal"
+    },
+    "preservation": {
+      "protected_files": 3736,
+      "changed": [],
+      "added_product_files": []
+    },
+    "git_diff_check": {
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: in the working copy of '.pf/artifacts/project-context-refresh-report.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/artifacts/projections/command-history.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/artifacts/projections/process-execution-state.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/artifacts/projections/stage-obligations.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/contexts/project-context.snapshot.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of '.pf/contexts/project-context.snapshot.yaml', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'checksums/processforge.sha256', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'docs/ru/concepts/context-capsule.md', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'schemas/assignment.schema.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'schemas/context-capsule.schema.json', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'src/processforge_core/process_execution.py', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'tools/processforge.py', CRLF will be replaced by LF the next time Git touches it\n"
+    }
+  },
+  "status": "PASS"
+}

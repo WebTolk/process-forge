@@ -1,0 +1,29 @@
+{
+  "passed": [
+    "public-cleanliness",
+    "schemas",
+    "smoke_egress_engine",
+    "smoke_egress_work",
+    "smoke_prepared_execution_context",
+    "smoke_prepared_execution_recovery",
+    "smoke_process_event_concurrency",
+    "smoke_runtime_metrics",
+    "smoke_work_capsule_contract_parity",
+    "smoke_work_resource_binding",
+    "smoke_work_start_no_stage_guessing"
+  ],
+  "failed": [
+    {
+      "check": "smoke_egress_transport",
+      "error": "line 130, in run_checks\\n    tokens = [s.authorize(first), s.authorize(second)]\\n                                  ~~~~~~~~~~~^^^^^^^^\\n  File \"D:\\\\Dev\\\\process-forge\\\\src\\\\processforge_core\\\\egress\\\\engine.py\", line 26, in call\\n    return operation(self, *args, **kwargs)\\n  File \"D:\\\\Dev\\\\process-forge\\\\src\\\\processforge_core\\\\egress\\\\engine.py\", line 241, in authorize\\n    raise EgressError(\"attempt_budget_exceeded\")\\nprocessforge_core.egress.contracts.EgressError: attempt_budget_exceeded\\n')"
+    },
+    {
+      "check": "smoke_server_operator",
+      "error": "('', 'Traceback (most recent call last):\\n  File \"D:\\\\Dev\\\\process-forge\\\\tools\\\\smoke_server_operator.py\", line 137, in <module>\\n    raise SystemExit(main())\\n                     ~~~~^^\\n  File \"D:\\\\Dev\\\\process-forge\\\\tools\\\\smoke_server_operator.py\", line 68, in main\\n    assert responses[0][0] == 200 and runtime.active_requests == 0\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\nAssertionError\\n')"
+    },
+    {
+      "check": "checksums",
+      "error": "('FAIL: checksum inventory is stale.\\n- expected only: bd89f40d2537ad3ff40d5ff74833659ed694bd5ed0315a8f2846f21701ceea87  tools/smoke_egress_transport.py\\n- actual only: 228503a02f4520ad0299cac91e84c96c61644b001ab58db9579c7d5113edaf25  tools/smoke_egress_transport.py\\n', '')"
+    }
+  ]
+}

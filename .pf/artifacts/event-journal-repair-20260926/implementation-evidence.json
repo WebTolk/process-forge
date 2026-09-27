@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "changed-files",
+    "path": ".pf/artifacts/event-journal-repair-20260926/implementation.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "change-summary",
+    "path": ".pf/artifacts/event-journal-repair-20260926/implementation.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "implementation-scope-respected",
+    "path": ".pf/artifacts/event-journal-repair-20260926/implementation.md",
+    "status": "passed"
+  }
+]

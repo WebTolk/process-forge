@@ -1,0 +1,18 @@
+{
+  "time_utc": "2026-09-25T19:26:40.864857+00:00",
+  "bundle": {
+    "sha256": "0b6018c4365cb137b6b2c3d18ba8b18ff049170ceebbeaea2a9d1133c75ca378",
+    "records": 263,
+    "truncated": false,
+    "private_absolute_paths": 0,
+    "context_status": "fresh"
+  },
+  "runtime_fixture": {
+    "status": "stopped",
+    "files_archived": 176,
+    "archive_sha256": "efb83f75ee920d2fc526b70947c7b69f43515cb4eb434deceea5e8684d6a842c",
+    "first_failure": "one batch startup exit 1; initial fixture cleaned by test; root cause not reproduced",
+    "followup": "isolated preserved-fixture PASS and final assurance rerun PASS",
+    "removed_after_archive": true
+  }
+}

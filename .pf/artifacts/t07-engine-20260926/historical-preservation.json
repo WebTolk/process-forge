@@ -1,0 +1,35 @@
+{
+  "before": {
+    "run": "3279e497203683f936e13eda8404b57b561eeacae420edb1c2b3d14feae6c68f",
+    "capsule": "465307848dbbc2b1b898c551ea8ccac907a0b0d77b7f17fa37b48c36a643c7e1"
+  },
+  "doctor_before": {
+    "exit_code": 1,
+    "failures": [
+      "FAIL: .pf/runs/garage-t06-delivery-prerequisite-qualify-a-clean-isolated-candidate-cont/run.yaml has no private absolute paths"
+    ],
+    "pass_count": 20
+  },
+  "derivative": {
+    "sha256": "9edb2c0bdb5b80194e96742ac88303be2925ce0e92650da255237be5e34aa74c",
+    "bytes": 189,
+    "decision": "whole-unit-redaction",
+    "no_network": true,
+    "review_exception": "exact known generated YAML identifiers; no content released"
+  },
+  "doctor_after": {
+    "exit_code": 1,
+    "failures": [
+      "FAIL: .pf/runs/garage-t06-delivery-prerequisite-qualify-a-clean-isolated-candidate-cont/run.yaml has no private absolute paths"
+    ],
+    "pass_count": 20
+  },
+  "actual_old_reader": {
+    "path": "D:\\.agents\\processforge\\src\\processforge_core\\work_context.py",
+    "sha256": "6236204f0f3666881bd53090bf097a4210b907c3e7a2e0ee0ac0c28c52ed6f5e",
+    "result": {
+      "status": "blocked",
+      "reason": "contract_version_unsupported"
+    }
+  }
+}

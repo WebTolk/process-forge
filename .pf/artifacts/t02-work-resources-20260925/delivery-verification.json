@@ -1,0 +1,8 @@
+{
+  "binding_schema_equivalence": "PASS",
+  "binding_required_fields_positive_negative": "PASS",
+  "document_links_whitespace": "PASS",
+  "documents": 5,
+  "python_syntax": "PASS",
+  "python_files": 7
+}

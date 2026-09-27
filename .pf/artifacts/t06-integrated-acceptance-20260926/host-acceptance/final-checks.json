@@ -1,0 +1,104 @@
+{
+  "time_utc": "2026-09-26T12:29:15.545616+00:00",
+  "commands": [
+    {
+      "argv": [
+        "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-B",
+        "D:\\.agents\\processforge\\bin\\pf.py",
+        "run-doctor",
+        "--project-root",
+        "D:\\Dev\\process-forge",
+        "--run",
+        "garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: run.schema_version present\nPASS: run.id present\nPASS: run.title present\nPASS: run.process present\nPASS: run.status present\nPASS: run.created_at present\nPASS: run.updated_at present\nPASS: run.tasks present\nPASS: run status valid: completed\nPASS: summary status matches run: completed\nPASS: task index status matches run: completed\nPASS: handoff status matches run: completed\nPASS: process exists: software-feature-development\nPASS: .pf/runs/garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc/run.yaml has no private absolute paths\nPASS: task id unique: t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm\nPASS: task status valid for t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm: done\nPASS: assignment exists for t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm: .pf/assignments/t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm.yaml\nPASS: t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resources-norm run_id matches run\nPASS: completed run has all blocking tasks done\nPASS: .pf/runs/garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc/summary.md exists\nPASS: .pf/handoffs/runs/garage-t06-pf-vision-alignment-r02-integrate-acceptance-for-work-resourc-handoff.md exists\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-c",
+        "core.safecrlf=false",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "lifecycle": {
+    "run_status": "completed",
+    "assignment_status": "done",
+    "history_stages": [
+      "orchestration",
+      "intake-scope",
+      "investigation",
+      "domain-modeling",
+      "architecture-plan",
+      "implementation",
+      "code-assurance",
+      "release-delivery",
+      "evolve"
+    ],
+    "evidence_checks": 33,
+    "original_capsule_unchanged": true,
+    "snapshot_unchanged": true
+  },
+  "fixture_archive": {
+    "path": ".pf\\artifacts\\t06-integrated-acceptance-20260926\\host-acceptance\\fixture-evidence.zip",
+    "sha256": "ce147ea3eda3b9e9da5c4ba7518a37ff27575a87a7049e31786c3ff0e8b22863",
+    "file_count": 27,
+    "files": {
+      ".pf/artifacts/project-context-refresh-report.md": "154fe9e4e3a78b4e6683aa86dc4d8de87709e7dad0669be29c9d3a304f533953",
+      ".pf/artifacts/projections/process-execution-state.json": "a289a0a29e4e93fd05ae50eadb0f4e1a819d8b0e2b5f56cdf97284557ac2bc4a",
+      ".pf/artifacts/proof.md": "9751e206bb6367819b3231f01650da616545d878dfd4c7e28fcabe6cfb94df6c",
+      ".pf/assignments/t06-actual-connected-host-isolated-current-contract-acceptance.yaml": "6af044856d8d7aec15b1544333fc945d860c1963e40883fd0f9fc129d8ea24be",
+      ".pf/contexts/assignment-capsules/t06-actual-connected-host-isolated-current-contract-acceptance.capsule.yaml": "7d45ebb10c65faa6e2d744186752b5ded3d7e983274aa77adf7f71f61861a4ff",
+      ".pf/contexts/project-context.snapshot.md": "5c196ec04f1e8f401eaf283e570ca8faa08dd7b39b5348b151cbb82c4b338b7c",
+      ".pf/contexts/project-context.snapshot.yaml": "55d445990b2c0f5e4b51e1fdb320f95c2bdced3a358edd78044c0331fa6857da",
+      ".pf/contexts/project-context.snapshots/ctx-20260926-121317-4844b4.yaml": "2c83019ba12a22b7bea3c0c5668387388bfea06f9bf429b877e223ebd91a642d",
+      ".pf/contexts/project-context.snapshots/ctx-20260926-121822-e66cd8.yaml": "4a62e20116cc2f6cee06c36c5509ba686cfbb8da0288baf0bb11e4b190a3e9f7",
+      ".pf/contexts/project-context.snapshots/ctx-20260926-121847-9aa14c.yaml": "55d445990b2c0f5e4b51e1fdb320f95c2bdced3a358edd78044c0331fa6857da",
+      ".pf/diagnostics.json": "b796a18918dbfba5080ba60e7e607f3e49bf0497c79d1bb8f39bd1f17a0303ce",
+      ".pf/handoffs/runs/garage-t06-actual-connected-host-isolated-current-contract-acceptance-handoff.md": "f9396783c5d7491f32ecc314dcd65c7dbb170b681d28f967f089abba5ba0c57b",
+      ".pf/packages/project.t06-host-fixture.yaml": "333e1b3f33587688e47e37f383bdf22a052c3d3b86f70c37ea71123fda860466",
+      ".pf/process-forge.yaml": "8d865afe5f779219cbe19548c92eead88a6cdf1f1598055871bd8043716397c1",
+      ".pf/resources/guide/guide.md": "18983d19bda0000a4f93ab5bec33315d0d3312741d4ec4b8ffb16424acdbd524",
+      ".pf/resources/unselected/private.md": "67a0c0262615458633d89999ea19c7478ae98eb6ea5051b19b3d57b494daacfb",
+      ".pf/runs/..process-execution-start.yaml.lock.guard": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".pf/runs/garage-t06-actual-connected-host-isolated-current-contract-acceptance/.run.yaml.lock.guard": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".pf/runs/garage-t06-actual-connected-host-isolated-current-contract-acceptance/plan.md": "7767fbe6a073c8a5a6d8b6cb5dc958135535aac3b5a4575e5723240ae0e91810",
+      ".pf/runs/garage-t06-actual-connected-host-isolated-current-contract-acceptance/run.yaml": "4b7cc46533d279dcf0c940521cc8101edab01a40365d9ef4e72635c6a0c79953",
+      ".pf/runs/garage-t06-actual-connected-host-isolated-current-contract-acceptance/summary.md": "50319509a264aa0f8bad166a67114922d934b42a22e0a1006c00fa08391763af",
+      ".pf/runs/garage-t06-actual-connected-host-isolated-current-contract-acceptance/task-index.md": "8cb7994bff189d9b8b38c72eac46a4d8ecd2635da5212766dd50199d91f5561e",
+      ".pf/runtime/cache/workplace-context.snapshot.yaml": "b5063c93df7e36667c0600896c3c1ea6c820a7ee7471752ebcac8f6e7306806a",
+      ".pf/runtime/diagnostics/.diagnostics.lock": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      ".pf/runtime/diagnostics/diagnostics.jsonl": "07bcf4a0d7193aea62c5d56a6ec6a0cd85167879d6cd37d6421775ec62ce4ee0",
+      ".pf/runtime/events/events.ndjson": "5e376aec46f2f13cbc3dfd2348f9c87aa58d96686b9a145ec1bbb99e531b40a7",
+      "processes/custom/t06-host-fixture.yaml": "f5f3a9ec20937ab7f068bc753b47af81fb7f7a886bc2f5276e752149174c9cba"
+    }
+  },
+  "cleanup_preflight": {
+    "candidate": {
+      "path": "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\candidate",
+      "head": "69110c50559d994d7a31e751b7cd7afc989698db",
+      "status": ""
+    },
+    "extracted": [
+      {
+        "path": "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted",
+        "owned_count": 987,
+        "mismatches": []
+      },
+      {
+        "path": "D:\\Dev\\process-forge\\.pf\\tmp\\t06-installed-delivery-20260926\\extracted-corrected",
+        "owned_count": 987,
+        "mismatches": []
+      }
+    ]
+  },
+  "status": "PASS"
+}

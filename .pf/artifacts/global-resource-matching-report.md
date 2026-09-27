@@ -1,59 +1,38 @@
-# Global Resource Matching Report
+# Resource Matching Report
 
-## Matched Platforms
+Reviewed on 2026-09-27. This report describes declared and selected resources;
+it does not expand filesystem access or assert all global resources were loaded.
 
-- None.
+## Selected Work resources
 
-## Missing Required Platform Contracts
+| Resource id | Meaning | Selection |
+| --- | --- | --- |
+| `project.process-forge:project-profile` | Project profile note | Selected by the current capsule |
+| `project.process-forge:project-artifacts` | Project artifact reference collection | Selected by the current capsule |
 
-- None.
+The project package declares these resources in
+[project.process-forge.yaml](../packages/project.process-forge.yaml). Profile
+loads when relevant with full-text indexing; artifact collection loads on demand
+with metadata indexing. Resource presence is not permission to publish its
+contents or bypass Work scope.
 
-## Missing Required Platform Resources
+## Packages, platform and tools
 
-- None.
+The manifest knowledge stack includes `processforge.core` from the distribution
+and `project.process-forge` from the project. The pinned software process requires
+`process-forge-core` and `processforge.official.software-development`.
+No platform/toolchain overlay or active specialization is selected. This does
+not imply Python is absent: it is the observed implementation language.
 
-## Missing Recommended Platform Resources
+Required process templates are documented in the
+[template report](template-matching-report.md). Actual tools and MCP limitations
+are documented in the [tool report](toolchain-detection-report.md) and
+[MCP report](mcp-capability-report.md).
 
-- None.
+## Readiness and limits
 
-## Matched Packages
-
-- package roots configured
-
-## Matched Tools
-
-- None.
-
-## Matched MCP
-
-- None.
-
-## Matched Templates
-
-- template roots configured
-
-## Missing Required Capabilities
-
-- None.
-
-## Optional Missing Capabilities
-
-- None.
-
-## Capability Diagnostics
-
-- Missing required capabilities are registry declaration gaps, not proof that
-  the active runtime lacks access.
-- If runtime access was verified independently, record the evidence in
-  `.pf/artifacts/capability-waivers.yaml` with `capability`, `status`,
-  `reason`, and `evidence`.
-- Prefer registering the real provider in the workplace registry when the
-  capability should be reusable.
-
-## Conflicts
-
-- None.
-
-## Recommendations
-
-- Review missing required capabilities before using strict automated stages.
+Standard context check reported fresh resources and ready execution with no
+missing required capabilities. The connected MCP timed out; no waiver or global
+registration is inferred from that observation. Current Work uses installed CLI
+and directly verified local tools. Broader global docs/skills/platform roots are
+not imported into the project package by this task.

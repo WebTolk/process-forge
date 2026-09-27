@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T20:20:45.921969+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\tools\\smoke_server_operator.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge",
+  "exit_code": 1,
+  "stdout": "",
+  "stderr": "Traceback (most recent call last):\n  File \"D:\\Dev\\process-forge\\tools\\smoke_server_operator.py\", line 137, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"D:\\Dev\\process-forge\\tools\\smoke_server_operator.py\", line 68, in main\n    assert responses[0][0] == 200 and runtime.active_requests == 0\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+}

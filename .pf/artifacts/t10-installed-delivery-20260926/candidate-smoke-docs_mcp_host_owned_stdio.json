@@ -1,0 +1,12 @@
+{
+  "time": "2026-09-26T17:45:02.222407+00:00",
+  "argv": [
+    "C:\\Users\\musst\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "-B",
+    "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate\\tools\\smoke_docs_mcp_host_owned_stdio.py"
+  ],
+  "cwd": "D:\\Dev\\process-forge\\.pf\\tmp\\t10-installed-delivery-20260926\\candidate",
+  "exit_code": 0,
+  "stdout": "PASS: docs describe MCP as a host-owned stdio process\n",
+  "stderr": ""
+}
