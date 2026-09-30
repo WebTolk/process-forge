@@ -22,6 +22,7 @@ from processforge_core.work_context import (
     SOURCE_LIMITS,
     ContextContractError,
     _capture_sources,
+    _run_matches,
     _source,
     assignment_intent,
     build_context_fields,
@@ -88,8 +89,29 @@ def validate(project: Path, task_path: Path, task: dict, capsule: dict, *, requi
     return validate_execution_contract(project, task_path, task, capsule, core, require_ready=require_ready)
 
 
+def check_run_membership() -> None:
+    task = {"id": "worker", "run_id": "container", "process": "worker-process"}
+    for process in ("task-batch-execution", "multi-agent-task-orchestration"):
+        run = {"id": "container", "process": process,
+               "tasks": [{"id": "worker", "assignment": ".pf/assignments/worker.yaml"}]}
+        check(_run_matches(run, task), f"native compatibility container rejected its worker: {process}")
+        for invalid in (
+            {**run, "process_execution": {}},
+            {**run, "process": "unrelated-process"},
+            {**run, "id": "other-run"},
+            {**run, "tasks": []},
+            {**run, "tasks": run["tasks"] * 2},
+            {**run, "tasks": [{"id": "worker", "assignment": ".pf/assignments/other.yaml"}]},
+        ):
+            check(not _run_matches(invalid, task), f"invalid Run membership accepted: {invalid}")
+        check(not _run_matches(run, {**task, "process": ""}), "empty worker process accepted")
+        check(_run_matches({**run, "process": {"id": "worker-process"}, "process_execution": {}}, task),
+              "same-process governed membership rejected")
+
+
 def main() -> None:
-    checks: list[str] = []
+    check_run_membership()
+    checks: list[str] = ["compatibility containers preserve strict governed and unique Run membership"]
     skipped: list[str] = []
     original_process = copy.deepcopy(support.PROCESS)
     support.PROCESS["parameters"] = {"process_source": "original"}
@@ -189,6 +211,39 @@ def main() -> None:
                 # The complete immutable contract validates; lifecycle/preferences are intentionally outside intent.
                 check(validate(clone_governed, governed_task_path, governed_task_for_validation, governed_capsule, require_ready=True).get("status") == "valid",
                       "valid source/output assignment did not produce a ready contract")
+                # A captured overlap diagnostic is signed data, not declarative scope.
+                diagnostic_task = copy.deepcopy(task)
+                diagnostic_task.setdefault("non_overlap", {})["overlap_check"] = {
+                    "status": "fail", "conflicts": [{"other_assignment": "preceding-worker"}],
+                }
+                diagnostic_fields = contract_fields(clone_governed, workplace, governed_run,
+                                                     governed_task_path, diagnostic_task)
+                diagnostic_capsule = capsule_for(diagnostic_fields, diagnostic_task,
+                                                  diagnostic_fields["process_execution"])
+                check(validate(clone_governed, governed_task_path, diagnostic_task,
+                               diagnostic_capsule, require_ready=True).get("status") == "valid",
+                      "signed advisory overlap diagnostic invalidated the complete contract")
+                diagnostic_bytes = copy.deepcopy(diagnostic_capsule)
+                changed_diagnostic = copy.deepcopy(diagnostic_task)
+                changed_diagnostic["non_overlap"]["overlap_check"] = {"status": "pass", "conflicts": []}
+                check(validate(clone_governed, governed_task_path, changed_diagnostic,
+                               diagnostic_capsule, require_ready=True).get("status") == "valid",
+                      "current diagnostic was incorrectly treated as immutable intent")
+                check(diagnostic_capsule == diagnostic_bytes, "scope validation mutated captured evidence")
+                tampered_diagnostic = copy.deepcopy(diagnostic_capsule)
+                tampered_diagnostic["execution_contract"]["scope"]["non_overlap"]["overlap_check"]["status"] = "pass"
+                check_reason(validate(clone_governed, governed_task_path, diagnostic_task, tampered_diagnostic),
+                             "immutable_context_changed", "signed overlap diagnostic mutation")
+                broadened = copy.deepcopy(diagnostic_capsule)
+                broadened_contract = broadened["execution_contract"]
+                broadened_contract["scope"]["allowed_files"].append("src/**")
+                broadened_contract["contract_checksum"] = fingerprint({
+                    key: value for key, value in broadened_contract.items() if key != "contract_checksum"
+                })
+                check_reason(validate(clone_governed, governed_task_path, diagnostic_task, broadened),
+                             "execution_contract_invalid", "broadened declarative scope with recomputed inner checksum")
+                checks.append("signed overlap diagnostics remain advisory; scope grants and immutable bytes stay protected")
+
                 forged = copy.deepcopy(governed_capsule)
                 forged_source = forged["execution_contract"]["required_sources"][0]
                 forged_source["checksum"] = "sha256:" + "f" * 64

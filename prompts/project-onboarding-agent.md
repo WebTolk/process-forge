@@ -24,14 +24,14 @@ explicitly out of scope.
 8. Create `.pf/`.
 9. Create `.pf/process-forge.yaml`.
 10. Create `.pf/process-forge.local.yaml`.
-11. Create `.pf/AGENTS.md`.
+11. Use the common entry service to place root `AGENTS.md`, extended `.pf/AGENTS.md` and their manifest; preserve surrounding user text and report ownership conflicts.
 12. Create `.pf/hooks.yaml`.
 13. Resolve platform contracts.
 14. Refresh project context snapshot; this writes `.pf/contexts/project-context.snapshot.yaml` and a generation under `.pf/contexts/project-context.snapshots/`.
 15. Run `project-context-check --session-start --json` and record the status.
-16. Create `.pf/assignments/first-assignment.yaml`.
-17. Create an assignment capsule; it must pin the current snapshot id/checksum and must not use `latest`.
-18. Generate `.pf/START_AGENT_HERE.md`.
+16. Let the onboarding service create compatibility bootstrap records. These records do not select the agent's current Work.
+17. Start substantive work with `pf.work.start` and read `pf.work.state`, its returned assignment and immutable capsule; use exact returned Work/context selectors for resource search and resolution.
+18. Preview current startup guidance with `agent-start-prompt`. New onboarding generates `.pf/START_AGENT_HERE.md`; changing an existing copy requires an explicit `--plan` / `--apply` placement through the common service.
 19. Create `.pf/runtime/bin/pf.py`.
 20. Check `project-mode status`.
 21. Run `doctor-project` through `pf` or `.pf/runtime/bin/pf.py`.
@@ -47,7 +47,7 @@ explicitly out of scope.
 - Do not copy global packages into the project.
 - Do not rewrite existing capsules when refreshing project context.
 - Do not put `latest` resource references into capsules.
-- Do not overwrite brownfield files without explicit force.
+- Do not use force to bypass entry ownership, placement preconditions or a customized START conflict.
 - Do not require Director Office for a project with effective `simple` mode.
 - Do not set `organized` unless workplace Director capability exists or the operator explicitly enables it.
 

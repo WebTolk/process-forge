@@ -37,6 +37,7 @@ def make_project(root: Path) -> Path:
     project.mkdir()
     (project / "README.md").write_text("# Shell-launched agents smoke\n", encoding="utf-8")
     pf("workplace-init", "--workplace", str(workplace), "--apply")
+    pf("pack-activate", "--id", "processforge.official.verification", "--workplace", str(workplace), "--apply")
     pf("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic-software-project", "--apply")
     return project
 
@@ -62,8 +63,8 @@ workers:
     execution_mode: assurance
     writer: true
     allowed_files: [.pf/artifacts/{task_id}-report.md]
-    allowed_read_files: [.pf/contexts/project-context.snapshot.yaml]
-    required_sources: [.pf/contexts/project-context.snapshot.yaml]
+    allowed_read_files: [README.md]
+    required_sources: [README.md]
     required_outputs:
       - id: {task_id}-report
         path: .pf/artifacts/{task_id}-report.md

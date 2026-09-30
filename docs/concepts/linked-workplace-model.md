@@ -15,7 +15,12 @@ Package manifests and package indexes are resolved through
 required/recommended status, and resource index records, not resolved package
 root paths.
 
-The required project-local files are:
+New or explicitly migrated projects use root `AGENTS.md` and
+`.pf/agent-entry.json` for entry. Legacy projects without these keep the explicit
+hidden-entry fallback; entry status is separate from context freshness.
+See [entry compatibility](agent-entry.md).
+
+The project-local flow files are:
 
 - `.pf/AGENTS.md`
 - `.pf/process-forge.yaml`

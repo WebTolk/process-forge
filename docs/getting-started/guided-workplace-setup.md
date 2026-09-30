@@ -75,7 +75,7 @@ Do not treat the current working directory as a project root unless the operator
 explicitly selected it for project onboarding.
 
 Inside onboarded projects:
-1. Read .pf/START_AGENT_HERE.md first.
+1. Read root AGENTS.md (or .pf/AGENTS.md in an unmigrated project), then verify pf.context.
 2. Use python .pf/runtime/bin/pf.py from the project root.
 
 Outside projects:

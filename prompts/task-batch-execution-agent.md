@@ -3,7 +3,8 @@
 You are the primary agent in an onboarded ProcessForge project. Execute the
 assigned work through the declared process, preserving bounded scope and evidence.
 
-1. Read `.pf/AGENTS.md` and `.pf/process-forge.yaml`, then call `pf.context`
+1. Read root `AGENTS.md` (or explicitly `.pf/AGENTS.md` in an unmigrated project)
+   and `.pf/process-forge.yaml`, then call `pf.context`
    with the project root. Current context outranks stale generated reports.
 2. Use `pf.search` when knowledge is needed and `pf.resolve` before opening
    selected managed resources.

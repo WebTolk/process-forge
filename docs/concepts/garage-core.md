@@ -108,7 +108,7 @@ metadata-only.
 
 The default agent path is:
 
-1. read `.pf/AGENTS.md`;
+1. read root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project);
 2. call `pf.context` with `project_root`, or read the snapshot when MCP is
    unavailable;
 3. use `pf.search` for authorized project knowledge, templates, process, and

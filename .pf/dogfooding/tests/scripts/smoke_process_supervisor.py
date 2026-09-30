@@ -33,6 +33,7 @@ def make_project(root: Path) -> Path:
     project.mkdir()
     (project / "README.md").write_text("# Supervisor smoke\n", encoding="utf-8")
     pf("workplace-init", "--workplace", str(workplace), "--apply")
+    pf("pack-activate", "--id", "processforge.official.verification", "--workplace", str(workplace), "--apply")
     pf("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic-software-project", "--apply")
     return project
 
@@ -58,9 +59,9 @@ workers:
     execution_mode: assurance
     writer: true
     allowed_files: [.pf/artifacts/**]
-    allowed_read_files: [.pf/contexts/project-context.snapshot.yaml]
+    allowed_read_files: [README.md]
     forbidden_files: [tools/**]
-    required_sources: [.pf/contexts/project-context.snapshot.yaml]
+    required_sources: [README.md]
     required_outputs:
       - id: first-report
         path: .pf/artifacts/first-report.md
@@ -76,9 +77,9 @@ workers:
     execution_mode: assurance
     writer: true
     allowed_files: [.pf/artifacts/**]
-    allowed_read_files: [.pf/contexts/project-context.snapshot.yaml]
+    allowed_read_files: [README.md]
     forbidden_files: [tools/**]
-    required_sources: [.pf/contexts/project-context.snapshot.yaml]
+    required_sources: [README.md]
     required_outputs:
       - id: second-report
         path: .pf/artifacts/second-report.md

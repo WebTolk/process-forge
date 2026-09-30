@@ -135,7 +135,9 @@ def main() -> int:
         # Simulate a partial initialization: restore only a missing PF-owned
         # artifact and prove that a semantic user file stays untouched.
         start_here = project / ".pf" / "START_AGENT_HERE.md"
-        start_here.unlink()
+        assert not start_here.exists(), "new project created START"
+        report = project / ".pf" / "artifacts" / "project-onboarding-report.md"
+        report.unlink()
         semantic = project / ".pf" / "artifacts" / "user-semantic-note.md"
         semantic.write_text("preserve this user content", encoding="utf-8")
         repair_status = json.loads(cli("project-init-status", "--project-root", str(project), "--workplace", str(workplace), "--json").stdout)
@@ -144,7 +146,8 @@ def main() -> int:
             "project-init-repair", "--project-root", str(project), "--workplace", str(workplace),
             "--repair-action", "restore_deterministic_artifacts", "--apply",
         )
-        assert start_here.is_file()
+        assert report.is_file(), "repair did not restore the missing deterministic report"
+        assert not start_here.exists(), "repair recreated retired START"
         assert semantic.read_text(encoding="utf-8") == "preserve this user content"
         assert not list((project / ".pf").rglob("START_AGENT_HERE.md.candidate"))
         assert json.loads(cli("project-init-status", "--project-root", str(project), "--workplace", str(workplace), "--json").stdout)["state"] == "complete"

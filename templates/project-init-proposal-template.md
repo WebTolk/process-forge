@@ -8,7 +8,9 @@
 
 ## Planned Public Files
 
+- AGENTS.md
 - .pf/AGENTS.md
+- .pf/agent-entry.json
 - .pf/process-forge.yaml
 - .pf/hooks.yaml
 - .pf/packages/project.<project-id>.yaml
@@ -28,7 +30,9 @@
 ## Risks
 
 - Existing files are not overwritten without explicit approval.
-- Root project AGENTS.md is not created by default.
+- Root and hidden AGENTS receive K; original user text is preserved.
+- Entry conflicts or known budget loss block apply; generic force cannot override them.
+- START is no longer needed or generated; all existing START files are preserved.
 - Detection results are observed, not confirmed.
 
 ## Recommendation

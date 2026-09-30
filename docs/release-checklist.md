@@ -2,6 +2,16 @@
 
 Run these checks before publishing a ProcessForge release:
 
+Prepare a clean source candidate with explicit root `AGENTS.md` and hidden
+`.pf/AGENTS.md` projections containing the current versioned startup contract.
+The canonical source is `templates/agent-entry-contract.md` and its metadata;
+`templates/project-agents-template.md` is the verified extended projection.
+Review any entry migration before applying it to an existing project. Candidate
+preparation and project migration are separate from packing: `release-pack`
+does not generate instructions or substitute a hidden file for a missing root.
+The release gate rejects missing, stale, changed or inconsistent contracts.
+Regenerate the candidate's checksum inventory after preparing its final layout.
+
 ```bash
 python -m py_compile tools/processforge.py
 python tools/validate-process-forge-schemas.py --root .

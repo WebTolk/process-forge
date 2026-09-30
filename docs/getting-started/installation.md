@@ -40,7 +40,9 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 Do not copy the full ProcessForge repository into `.codex`, `.claude`,
 `.agents`, or similar agent configuration folders. The agent configuration only
 needs a short instruction that points to the tool installation and tells the
-agent to read `.pf/START_AGENT_HERE.md` inside the project.
+agent to load root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project).
+Select the supported loader or explicit adapter described in
+[agent entry](../concepts/agent-entry.md); a pointer alone is not delivery proof.
 
 ## Verify The Installation
 

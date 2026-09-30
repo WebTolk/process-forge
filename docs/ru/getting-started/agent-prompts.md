@@ -17,7 +17,9 @@
   его как проект и там намеренно не создан `.pf/process-forge.yaml`.
 - Из корня дистрибутива ProcessForge используйте `python bin/pf.py`.
 - Внутри подключенного проекта используйте `python .pf/runtime/bin/pf.py`.
-- Перед проектной работой читайте `.pf/START_AGENT_HERE.md`.
+- Перед проектной работой читайте корневой `AGENTS.md` (в старом проекте без него — `.pf/AGENTS.md`).
+- `agent-start-prompt` печатает необязательную актуальную подсказку без записи
+  файлов; сохранённый START не даёт полномочий. См. [политику входа](../concepts/agent-entry.md).
 - Для новой настройки машины с участием человека по умолчанию используйте
   пошаговую настройку workplace: `workplace-setup start`,
   `workplace-setup review`, `workplace-setup apply` и
@@ -266,9 +268,10 @@ tools, MCP providers, processes, coding standards и capabilities уже
 ## Prompt для человека: работа над проектом
 
 ```text
-Используй ProcessForge для этой задачи. Сначала прочитай
-.pf/START_AGENT_HERE.md, создай или переиспользуй governed work через
-pf.work.start, используй pf.search и pf.resolve для разрешённых ресурсов,
+Используй ProcessForge для этой задачи. Прочитай корневой AGENTS.md
+(в старом проекте без него — .pf/AGENTS.md), проверь pf.context и создай
+или продолжи работу через pf.work.start. Сохраняй возвращённые идентификаторы
+Run, assignment и capsule. Используй pf.search и pf.resolve для разрешённых ресурсов,
 проверяй текущие обязательства через pf.work.state и переходи между стадиями
 через pf.work.transition(outcome, evidence, notes). Продолжай до run_completed.
 Сохраняй артефакты в .pf, выполни проверки и заверши кратким handoff.

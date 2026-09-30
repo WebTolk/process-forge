@@ -98,8 +98,11 @@ workplace_coordination:
     enabled: false
 session:
   startup_read_order:
-    - ".pf/AGENTS.md"
+    - "AGENTS.md (explicit .pf/AGENTS.md fallback in an unmigrated project)"
     - ".pf/process-forge.yaml"
-    - ".pf/contexts/project-context.snapshot.md"
+    - "pf.context or existing CLI project-context-check with verified context fallback"
+    - "Run/assignment/immutable capsule returned by pf.work.start"
+    - "Required sources, resolved resources and relevant handoffs for that Work"
+    - "Extended .pf/AGENTS.md instructions on demand"
   telemetry_root: ".pf/runtime/telemetry"
   events_log: ".pf/runtime/events/events.ndjson"

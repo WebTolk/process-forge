@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
+from .agent_entry import EntryError
+from . import agent_entry_migration as entry_migration
 from .host_integration import optional_host_integration_status
 
 
@@ -20,7 +22,6 @@ class ProjectInitializationError(Exception):
 
 
 _DETERMINISTIC_ARTIFACTS = (
-    "START_AGENT_HERE.md",
     "process-forge.yaml",
     "assignments/first-assignment.yaml",
     "artifacts/project-onboarding-report.md",
@@ -32,9 +33,49 @@ def _resource_state(items: Any) -> dict[str, int]:
     return {"required": 0, "recommended": 0, "activated": count, "missing": 0}
 
 
+def entry_status(project_root: Path) -> dict[str, Any]:
+    """Entry ownership and budget confidence never replace context health."""
+    try:
+        return entry_migration.check_entry(project_root)
+    except (EntryError, OSError) as exc:
+        return {"status": "conflict", "entry": "unverified", "budget": {"status": "budget_unverified"},
+                "blockers": [exc.reason if isinstance(exc, EntryError) else "storage_error"]}
+
+
+def plan_agent_entry(project_root: Path, budget_policy: Any = None) -> dict[str, Any]:
+    try:
+        return entry_migration.plan_entry(project_root, budget_policy=budget_policy)
+    except (EntryError, OSError) as exc:
+        raise ProjectInitializationError(exc.reason if isinstance(exc, EntryError) else "storage_error") from exc
+
+
+def apply_agent_entry(project_root: Path, plan: dict[str, Any]) -> dict[str, Any]:
+    """Apply only a preflighted entry plan; retain incomplete recovery receipts."""
+    try:
+        receipt = entry_migration.apply_entry(project_root, plan, apply=True)
+    except (EntryError, OSError) as exc:
+        raise ProjectInitializationError(exc.reason if isinstance(exc, EntryError) else "storage_error") from exc
+    complete = receipt.get("action") in {"applied", "unchanged"}
+    return {"status": "complete" if complete else "blocked", "agent_entry": receipt,
+            "next_action": "continue" if complete else "rollback_agent_entry_transaction"}
+
+
+def _create_project_root(project_root: Path) -> None:
+    # Validate the existing ancestor before acknowledged greenfield creation;
+    # resolving the input first would erase a symlink/junction boundary.
+    ancestor = project_root
+    while not ancestor.exists() and ancestor != ancestor.parent:
+        ancestor = ancestor.parent
+    try:
+        entry_migration.root_path(ancestor)
+        project_root.mkdir(parents=True, exist_ok=True)
+    except (EntryError, OSError) as exc:
+        raise ProjectInitializationError(exc.reason if isinstance(exc, EntryError) else "storage_error") from exc
+
+
 def status(project_root: Path, core: Any, *, workplace: str | None = None) -> dict[str, Any]:
     """Return a non-mutating, public-safe initialization read model."""
-    project_root = Path(project_root).expanduser().resolve()
+    project_root = Path(project_root).expanduser().absolute()
     flow = project_root / ".pf"
     snapshot_path, _snapshot_md = core.project_context_snapshot_paths(project_root)
     context = core.project_context_check_result(project_root, explicit_workplace=workplace) if flow.is_dir() else {"status": "missing"}
@@ -61,6 +102,7 @@ def status(project_root: Path, core: Any, *, workplace: str | None = None) -> di
     else:
         workplace_state = "reachable"
     mcp_rows = resolved.get("activated_mcp") or resolved.get("available_mcp") or []
+    entry = entry_status(project_root)
     repair_plan = []
     if state == "incomplete":
         repair_plan.append("initialize")
@@ -68,7 +110,9 @@ def status(project_root: Path, core: Any, *, workplace: str | None = None) -> di
         repair_plan.append("refresh_context")
         if missing_artifacts:
             repair_plan.append("restore_deterministic_artifacts")
-    return {"schema_version": 1, "kind": "pf.project_initialization.status", "state": state, "snapshot": {"status": context.get("status"), "health": health.get("status")}, "snapshot_health": health.get("status"), "workplace": workplace_state, "resources": {"knowledge": _resource_state(resolved.get("knowledge_resources")), "tools": _resource_state(resolved.get("tools")), "mcp": _resource_state(mcp_rows), "templates": _resource_state(resolved.get("templates"))}, "mcp": "active_in_snapshot" if mcp_rows else "not_configured", "codex_integration": codex, "missing_deterministic_artifacts": missing_artifacts, "repair_plan": repair_plan or ["none"], "public_safety": "no_private_paths"}
+    if state != "incomplete" and entry.get("status") == "planned":
+        repair_plan.append("migrate_agent_entry")
+    return {"schema_version": 1, "kind": "pf.project_initialization.status", "state": state, "snapshot": {"status": context.get("status"), "health": health.get("status")}, "snapshot_health": health.get("status"), "workplace": workplace_state, "resources": {"knowledge": _resource_state(resolved.get("knowledge_resources")), "tools": _resource_state(resolved.get("tools")), "mcp": _resource_state(mcp_rows), "templates": _resource_state(resolved.get("templates"))}, "mcp": "active_in_snapshot" if mcp_rows else "not_configured", "codex_integration": codex, "agent_entry": entry, "missing_deterministic_artifacts": missing_artifacts, "repair_plan": repair_plan or ["none"], "public_safety": "no_private_paths"}
 
 
 def apply(action: str, *, apply_requested: Any, execute: Callable[[], dict[str, Any]]) -> dict[str, Any]:
@@ -83,7 +127,7 @@ def _initialization_request(request: dict[str, Any], core: Any) -> dict[str, Any
     raw_root, raw_workplace = request.get("project_root"), request.get("workplace")
     if not raw_root or not raw_workplace:
         raise ProjectInitializationError("project_root_and_workplace_required")
-    project_root = Path(str(raw_root)).expanduser().resolve()
+    project_root = Path(str(raw_root)).expanduser().absolute()
     workplace = Path(str(raw_workplace)).expanduser().resolve()
     if workplace.is_dir():
         workplace = workplace / "workplace.yaml"
@@ -126,20 +170,19 @@ def initialize_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
     if apply_requested is not True and not project_root.is_dir():
         raise ProjectInitializationError("project_root_missing")
     if apply_requested is True:
-        def execute() -> dict[str, Any]:
-            # Greenfield creation is an acknowledged deterministic write. It
-            # must precede inspection because the legacy detector reads root.
-            project_root.mkdir(parents=True, exist_ok=True)
-            files = core.build_project_files(project_root, workplace, normalized["answers"])
-            return core.execute_project_initialization(normalized, files)
-
-        return apply("initialize", apply_requested=True, execute=execute)
+        _create_project_root(project_root)
+    entry_plan = plan_agent_entry(project_root, request.get("entry_budget_policy"))
+    normalized["agent_entry_plan"] = entry_plan
+    if apply_requested is True and entry_plan["blockers"]:
+        raise ProjectInitializationError(entry_plan["blockers"][0])
     files = core.build_project_files(project_root, workplace, normalized["answers"])
+    if apply_requested is True:
+        return apply("initialize", apply_requested=True, execute=lambda: core.execute_project_initialization(normalized, files))
     planned = [core.rel(path, project_root) for path in files]
     planned.extend(f"{core.PROJECT_FLOW_ROOT}/{item}" for item in core.PROJECT_FLOW_DIRS)
     planned.append(".gitignore")
     if apply_requested is not True:
-        return {"action": "initialize", "applied": False, "status": "planned", "mode": core.project_mode(project_root, normalized["answers"]), "planned_artifacts": sorted(set(planned)), "next_action": "rerun with apply: true"}
+        return {"action": "initialize", "applied": False, "status": "blocked" if entry_plan["blockers"] else "planned", "mode": core.project_mode(project_root, normalized["answers"]), "planned_artifacts": sorted(set(planned)), "agent_entry": entry_plan, "next_action": "resolve_entry_blockers" if entry_plan["blockers"] else "rerun with apply: true"}
     raise ProjectInitializationError("apply_required")
 
 
@@ -148,16 +191,24 @@ def repair_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
     raw_root = request.get("project_root")
     if not raw_root:
         raise ProjectInitializationError("project_root_required")
-    project_root = Path(str(raw_root)).expanduser().resolve()
+    project_root = Path(str(raw_root)).expanduser().absolute()
     if not project_root.is_dir() or not (project_root / ".pf").is_dir():
         raise ProjectInitializationError("project_not_initialized")
     action = str(request.get("repair_action") or "refresh_context")
-    if action not in {"refresh_context", "restore_deterministic_artifacts", "install_codex_hooks"}:
+    if action not in {"refresh_context", "restore_deterministic_artifacts", "migrate_agent_entry", "install_codex_hooks"}:
         raise ProjectInitializationError("unsupported_repair_action")
     workplace = request.get("workplace")
     before = status(project_root, core, workplace=str(workplace) if workplace else None)
+    entry_plan = None
+    if action in {"restore_deterministic_artifacts", "migrate_agent_entry"}:
+        entry_plan = plan_agent_entry(project_root, request.get("entry_budget_policy"))
+        if request.get("apply") is True and entry_plan["blockers"]:
+            raise ProjectInitializationError(entry_plan["blockers"][0])
     if request.get("apply") is not True:
-        return {"action": "repair", "applied": False, "status": "planned", "repair_action": action, "before": {"state": before["state"], "snapshot": before["snapshot"]}, "next_action": "rerun with apply: true"}
+        blocked = bool(entry_plan and entry_plan["blockers"])
+        return {"action": "repair", "applied": False, "status": "blocked" if blocked else "planned", "repair_action": action, "before": {"state": before["state"], "snapshot": before["snapshot"], "agent_entry": before["agent_entry"]}, "agent_entry": entry_plan, "next_action": "resolve_entry_blockers" if blocked else "rerun with apply: true"}
+    if action == "migrate_agent_entry":
+        return apply("repair", apply_requested=True, execute=lambda: apply_agent_entry(project_root, entry_plan))
     if action == "restore_deterministic_artifacts":
         def restore() -> dict[str, Any]:
             manifest = core.load_yaml_document(project_root / ".pf" / "process-forge.yaml")
@@ -167,7 +218,7 @@ def repair_project(request: dict[str, Any], core: Any) -> dict[str, Any]:
             project_answers["platforms"] = [str(item.get("id") or item.get("platform") or "") for item in platforms if isinstance(item, dict) and str(item.get("id") or item.get("platform") or "")]
             answers["project"] = project_answers
             files = core.build_project_files(project_root, Path(str(workplace)).expanduser().resolve() / "workplace.yaml" if workplace and Path(str(workplace)).is_dir() else Path(str(workplace)).expanduser().resolve() if workplace else core.resolve_workplace_manifest(project_root / ".pf" / "process-forge.local.yaml"), answers)
-            return core.execute_project_initialization({"project_root": project_root, "project_type": project_answers.get("type"), "force": False, "command": "project-init-repair"}, files)
+            return core.execute_project_initialization({"project_root": project_root, "project_type": project_answers.get("type"), "force": False, "command": "project-init-repair", "agent_entry_plan": entry_plan}, files)
         return apply("repair", apply_requested=True, execute=restore)
     if action == "install_codex_hooks":
         if not hasattr(core, "execute_project_codex_integration_repair"):

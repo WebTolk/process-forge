@@ -49,15 +49,11 @@ def public_file_entries(root_path: Path) -> list[tuple[str, Path]]:
         if path.is_file():
             files.append((name, path))
 
-    # release-pack exposes AGENTS.md at the archive root. Source checkouts may
-    # use .pf/AGENTS.md as its canonical source, while extracted archives have
-    # both paths. Preserve the archive-visible name in either layout.
+    # The archive root must have an explicit source file. A hidden project
+    # instruction file cannot satisfy or stand in for the root release entry.
     root_agents = root_path / "AGENTS.md"
-    pf_agents = root_path / ".pf" / "AGENTS.md"
     if root_agents.is_file():
         files.append(("AGENTS.md", root_agents))
-    elif pf_agents.is_file():
-        files.append(("AGENTS.md", pf_agents))
 
     for name in PF_PUBLIC_ROOT_FILES:
         path = root_path / name

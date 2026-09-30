@@ -18,11 +18,15 @@ TOOLS = {
     "pf.project_state": "Read the current routed ProcessForge project state.",
     "pf.project_initialization.status": "Read bounded project initialization status for a ProcessForge project.",
     "pf.project_initialization.initialize": "With apply: true only, initialize deterministic PF project state for the Ledger-bound project.",
-    "pf.project_initialization.repair": "With apply: true only, repair deterministic PF snapshot state for the Ledger-bound project.",
+    "pf.project_initialization.repair": "With apply: true only, repair deterministic PF state or migrate agent entry for the Ledger-bound project.",
     "pf.work_state": "Compatibility alias for the current declarative work state.",
     "pf.work.state": "Read the current declarative ProcessForge work state.",
     "pf.work.start": "Start or continue governed ProcessForge work from a high-level objective.",
     "pf.work.transition": "Advance governed work using a declared outcome and evidence.",
+    "pf.continuation.create": "Preview or create an exact Work continuation; requires apply true to write.",
+    "pf.continuation.status": "Inspect continuation waiting and Work readiness, or discover candidates without creating Work.",
+    "pf.continuation.resume": "Resume an existing verified Work through its continuation; never create Work or widen scope.",
+    "pf.work.cancel": "Preview or cancel one exact Work with reason and evidence; no process termination or data rollback.",
     "pf.work.search": "Search verified resources pinned to an explicit Work/context, intersected with current access and stage scope.",
     "pf.work.resolve": "Resolve a verified resource pinned to an explicit Work/context without widening current access.",
     "pf.resolve": "Resolve a ProcessForge project or selected knowledge resource.",
@@ -38,6 +42,9 @@ MUTATING_TOOLS = {
     "pf.project_initialization.repair",
     "pf.work.start",
     "pf.work.transition",
+    "pf.continuation.create",
+    "pf.continuation.resume",
+    "pf.work.cancel",
 }
 
 
@@ -146,7 +153,19 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
         return {"project": context["project"], "work": context["work"], "context": context["context"], "session": context.get("session", {})}
     if name == "pf.work.state":
         bound_project = resolve_garage_project()
-        return ProcessExecutionService(bound_project, workplace, core).state(session_id=supplied_session)
+        return ProcessExecutionService(bound_project, workplace, core).state(session_id=supplied_session,
+            run_id=arguments.get("run_id", ""), assignment_id=arguments.get("assignment_id", ""), context_id=arguments.get("context_id", ""))
+    if name.startswith("pf.continuation.") or name == "pf.work.cancel":
+        from processforge_core.continuation import ContinuationService
+        allowed = set(tool_schema(name)["properties"])
+        if set(arguments) - allowed:
+            raise session_read.SessionReadError("invalid_arguments")
+        bound_project = resolve_garage_project()
+        request = {key: value for key, value in arguments.items() if key not in {"project_root", "session_id"}}
+        operation = "cancel_work" if name == "pf.work.cancel" else name.rsplit(".", 1)[1]
+        if operation == "resume":
+            request["session_id"] = supplied_session
+        return ContinuationService(bound_project, workplace, core).request(operation, **request)
     if name == "pf.work.start":
         if set(arguments) - {"session_id", "project_root", "objective", "process_id"}:
             raise session_read.SessionReadError("invalid_arguments")
@@ -159,6 +178,9 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
             evidence=arguments.get("evidence"),
             notes=str(arguments.get("notes") or ""),
             session_id=supplied_session,
+            run_id=arguments.get("run_id", ""),
+            assignment_id=arguments.get("assignment_id", ""),
+            context_id=arguments.get("context_id", ""),
         )
     if name in {"pf.work.search", "pf.work.resolve"}:
         from processforge_core.work_resources import WorkResourceService
@@ -195,8 +217,8 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
         if arguments.get("apply") is not True:
             raise session_read.SessionReadError("apply_required")
         allowed = {
-            "pf.project_initialization.initialize": {"session_id", "project_root", "apply", "answers", "project_type", "coordination_mode", "platforms", "specializations", "process", "force", "allow_missing_workplace"},
-            "pf.project_initialization.repair": {"session_id", "project_root", "apply", "repair_action", "reason"},
+            "pf.project_initialization.initialize": {"session_id", "project_root", "apply", "answers", "project_type", "coordination_mode", "platforms", "specializations", "process", "force", "allow_missing_workplace", "entry_budget_policy"},
+            "pf.project_initialization.repair": {"session_id", "project_root", "apply", "repair_action", "reason", "entry_budget_policy"},
         }
         if set(arguments) - allowed[name]:
             raise session_read.SessionReadError("invalid_arguments")
@@ -218,6 +240,20 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
 def tool_schema(name: str) -> dict[str, Any]:
     properties: dict[str, Any] = {"session_id": {"type": "string"}, "project_root": {"type": "string"}}
     required: list[str] = []
+    if name in {"pf.work.state", "pf.work.transition", "pf.work.cancel", "pf.continuation.create"}:
+        properties.update({key: {"type": "string", "minLength": 1} for key in ("run_id", "assignment_id", "context_id")})
+    if name.startswith("pf.continuation."):
+        properties["continuation_id"] = {"type": "string", "minLength": 1}
+        if name != "pf.continuation.status":
+            required.append("continuation_id")
+    if name == "pf.continuation.create":
+        properties.update({"apply": {"type": "boolean"}, "expected_artifacts": {"type": "array", "maxItems": 128, "items": {"type": "string"}},
+                           "handoff_id": {"type": "string"}, "instruction": {"type": "string"}})
+        required.extend(["run_id", "assignment_id", "context_id"])
+    if name == "pf.work.cancel":
+        properties.update({"apply": {"type": "boolean"}, "reason": {"type": "string", "minLength": 1},
+                           "capsule_checksum": {"type": "string"}, "evidence": {"type": "array", "maxItems": 128, "items": {"type": "string"}}})
+        required.extend(["run_id", "assignment_id", "context_id", "capsule_checksum", "reason"])
     if name in {"pf.resolve", "pf.work.resolve"}:
         properties["resource_id"] = {"type": "string"}
     if name in {"pf.search", "pf.work.search"}:
@@ -244,7 +280,9 @@ def tool_schema(name: str) -> dict[str, Any]:
     if name == "pf.project_initialization.initialize":
         properties.update({"apply": {"type": "boolean"}, "answers": {"type": "object"}, "project_type": {"type": "string"}, "coordination_mode": {"type": "string", "enum": ["inherit", "simple", "organized"]}, "platforms": {"type": "array", "items": {"type": "string"}}, "specializations": {"type": "array", "items": {"type": "string"}}, "process": {"type": "string"}, "force": {"type": "boolean"}, "allow_missing_workplace": {"type": "boolean"}})
     if name == "pf.project_initialization.repair":
-        properties.update({"apply": {"type": "boolean"}, "repair_action": {"type": "string", "enum": ["refresh_context", "restore_deterministic_artifacts", "install_codex_hooks"]}, "reason": {"type": "string"}})
+        properties.update({"apply": {"type": "boolean"}, "repair_action": {"type": "string", "enum": ["refresh_context", "restore_deterministic_artifacts", "migrate_agent_entry", "install_codex_hooks"]}, "reason": {"type": "string"}})
+    if name in {"pf.project_initialization.initialize", "pf.project_initialization.repair"}:
+        properties["entry_budget_policy"] = {"type": "array", "maxItems": 32, "items": {"type": "object"}}
     if name in {"pf.session_chat", "pf.session_activity"}:
         properties["limit"] = {"type": "integer", "minimum": 1, "maximum": 100}
     if name == "pf.session_chat":
@@ -339,6 +377,21 @@ def rpc_error(request_id: Any, code: int, message: str) -> dict[str, Any]:
 
 
 def respond(request: Any, workplace: Path, session_id: str, runtime: Any) -> dict[str, Any] | None:
+    if isinstance(request, dict):
+        params = request.get("params")
+        method = request.get("method")
+        if method in ("initialize", "tools/list", "notifications/initialized") or (
+            method == "tools/call" and isinstance(params, dict)
+            and params.get("name") in (
+                "pf.project_initialization.status",
+                "pf.project_initialization.initialize",
+                "pf.project_initialization.repair",
+            )
+        ):
+            # Protocol reads and initialization preflight must not create logs.
+            # The dispatcher still validates schemas, sessions and apply; the
+            # initializer owns durable events after its entry preflight passes.
+            return _respond(request, workplace, session_id, runtime)
     src_root = str(Path(__file__).resolve().parents[2] / "src")
     if src_root not in sys.path:
         sys.path.insert(0, src_root)

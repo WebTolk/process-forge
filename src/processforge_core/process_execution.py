@@ -18,6 +18,91 @@ TERMINAL_RUN_STATUSES = {"completed", "cancelled", "failed"}
 SAFE_ID_RE = re.compile(r"^(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])$")
 
 
+def creation_scope_intent(value: Any) -> dict[str, Any]:
+    """Validate explicit local-operator input; never infer grants from an objective."""
+    from .work_context import ContextContractError
+
+    fields = {"allowed_files", "allowed_read_files", "forbidden_files", "allowed_actions",
+              "forbidden_actions", "required_sources", "required_outputs", "expected_report",
+              "execution_mode", "ownership"}
+    if (not isinstance(value, dict) or type(value.get("schema_version")) is not int
+            or value["schema_version"] != 1 or set(value) - {"schema_version", "assignment", "predecessor", "predecessor_handoff"}
+            or not isinstance(value.get("assignment"), dict) or set(value["assignment"]) - fields):
+        raise ContextContractError("work_scope_invalid")
+    result = copy.deepcopy(value)
+    assignment = result["assignment"]
+    for key in fields - {"required_outputs", "expected_report", "execution_mode", "ownership"}:
+        if key in assignment and (not isinstance(assignment[key], list) or len(assignment[key]) > 256
+                or any(not isinstance(item, str) or not item.strip() for item in assignment[key])):
+            raise ContextContractError("work_scope_invalid")
+    actions = {"read", "write_artifact", "write_product"}
+    for key in ("allowed_actions", "forbidden_actions"):
+        if set(assignment.get(key, [])) - actions:
+            raise ContextContractError("work_scope_invalid")
+    if set(assignment.get("allowed_actions", [])) & set(assignment.get("forbidden_actions", [])):
+        raise ContextContractError("work_scope_conflict")
+    if "execution_mode" in assignment and not isinstance(assignment["execution_mode"], str):
+        raise ContextContractError("work_scope_invalid")
+    for key, allowed in (("ownership", {"owner_id", "role", "writer"}),
+                         ("expected_report", {"artifact", "language", "format"})):
+        if key in assignment and (not isinstance(assignment[key], dict) or set(assignment[key]) - allowed):
+            raise ContextContractError("work_scope_invalid")
+        if key in assignment and any(not isinstance(item, str) for name, item in assignment[key].items() if name != "writer"):
+            raise ContextContractError("work_scope_invalid")
+    outputs = assignment.get("required_outputs", [])
+    if (not isinstance(outputs, list) or len(outputs) > 256
+            or any(not isinstance(item, dict) or set(item) - {"id", "path", "type", "required"}
+                   or not isinstance(item.get("id"), str) or not SAFE_ID_RE.fullmatch(item["id"])
+                   or not isinstance(item.get("path"), str) or not item["path"]
+                   or ("required" in item and type(item["required"]) is not bool) for item in outputs)):
+        raise ContextContractError("work_scope_invalid")
+    if "predecessor" in result:
+        prior = result["predecessor"]
+        if (not isinstance(prior, dict) or set(prior) != {"run_id", "assignment_id", "capsule_checksum"}
+                or any(not isinstance(prior.get(key), str) or not SAFE_ID_RE.fullmatch(prior[key])
+                       for key in ("run_id", "assignment_id"))
+                or not isinstance(prior.get("capsule_checksum"), str)
+                or not re.fullmatch(r"sha256:[a-f0-9]{64}", prior["capsule_checksum"])):
+            raise ContextContractError("work_scope_invalid")
+    if "predecessor_handoff" in result:
+        from .work_context import portable_path
+        if not result.get("predecessor"):
+            raise ContextContractError("work_scope_invalid")
+        result["predecessor_handoff"] = portable_path(result["predecessor_handoff"])
+        if not result["predecessor_handoff"].startswith(".pf/handoffs/"):
+            raise ContextContractError("work_scope_invalid")
+    return result
+
+
+def scope_handoff_predecessor(project: Path, metadata: dict[str, Any], core: Any) -> str:
+    """Recognize only the exact immutable predecessor of an explicit local handoff."""
+    import yaml
+    from .prepared_input import bounded_read
+    from .work_context import ContextContractError, portable_path
+    coordination = metadata.get("coordination_requirements") or {}
+    if not isinstance(coordination, dict):
+        return ""
+    prior = coordination.get("scope_predecessor")
+    handoff = coordination.get("scope_handoff")
+    if not prior or not handoff:
+        return ""
+    try:
+        creation_scope_intent({"schema_version": 1, "assignment": {}, "predecessor": prior,
+                               "predecessor_handoff": handoff["path"]})
+        source = bounded_read(core.assignment_capsule_path(project, prior["assignment_id"]))
+        note = bounded_read(project / portable_path(handoff["path"]))
+        identity = yaml.safe_load(source.decode("utf-8-sig"))["execution_contract"]["identity"]
+        if (isinstance(identity, dict) and "sha256:" + hashlib.sha256(source).hexdigest() == prior["capsule_checksum"]
+                and "sha256:" + hashlib.sha256(note).hexdigest() == handoff["checksum"]
+                and identity.get("project_id") == core.project_id(project)
+                and identity.get("run_id") == prior["run_id"]
+                and identity.get("assignment_id") == prior["assignment_id"]):
+            return prior["assignment_id"]
+    except (OSError, ValueError, KeyError, TypeError, yaml.YAMLError, ContextContractError):
+        pass
+    return ""
+
+
 def _stable_ids(value: Any) -> list[str]:
     values = value if isinstance(value, list) else ([] if value is None or value == "" else [value])
     result: list[str] = []
@@ -123,14 +208,38 @@ class ProcessExecutionService:
     workplace_root: Path | None
     core: Any
 
-    def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None) -> dict[str, Any]:
+    def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
         with self._start_lock():
-            return self._start_locked(objective=objective, process_id=process_id, session_id=session_id, stage_override=stage_override, security=security)
+            return self._start_locked(objective=objective, process_id=process_id, session_id=session_id, stage_override=stage_override, security=security, scope_intent=scope_intent)
 
-    def _start_locked(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None) -> dict[str, Any]:
+    def _start_locked(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
         objective = str(objective or "").strip()
         if not objective:
             return self._blocked("objective_required")
+        from .work_context import ContextContractError, assignment_intent, normalized_assignment_contract
+        if scope_intent is not None:
+            import yaml
+            try:
+                scope_intent = creation_scope_intent(scope_intent)
+                prior = scope_intent.get("predecessor")
+                if prior:
+                    from .prepared_input import bounded_read
+                    prior_path = self.core.assignment_capsule_path(self.project_root, prior["assignment_id"])
+                    raw = bounded_read(prior_path)
+                    identity = yaml.safe_load(raw.decode("utf-8-sig"))["execution_contract"]["identity"]
+                    if (not isinstance(identity, dict) or "sha256:" + hashlib.sha256(raw).hexdigest() != prior["capsule_checksum"]
+                            or identity.get("project_id") != self.core.project_id(self.project_root)
+                            or identity.get("run_id") != prior["run_id"]
+                            or identity.get("assignment_id") != prior["assignment_id"]):
+                        return self._blocked("predecessor_changed")
+                if scope_intent.get("predecessor_handoff"):
+                    from .prepared_input import bounded_read
+                    handoff = self.project_root / scope_intent["predecessor_handoff"]
+                    bounded_read(handoff)
+            except ContextContractError as exc:
+                return self._blocked(exc.code, **exc.details)
+            except (OSError, ValueError, KeyError, TypeError, yaml.YAMLError):
+                return self._blocked("work_scope_invalid")
         if security is not None:
             from .egress.contracts import EgressError, security_intent, digest
             try:
@@ -151,6 +260,15 @@ class ProcessExecutionService:
             )
         duplicate = self._find_by_objective(objective)
         if duplicate.get("active"):
+            if scope_intent is not None:
+                active = self.core.load_yaml_document(self._assignment_path(str(duplicate["active"].get("assignment_id") or "")))
+                try:
+                    desired = self._with_creation_scope(active, scope_intent)
+                    path = self._assignment_path(str(active["id"]))
+                    if assignment_intent(self.project_root, path, active, self.core) != assignment_intent(self.project_root, path, desired, self.core):
+                        return self._blocked("scope_intent_mismatch", remediation="create_successor_work_with_new_objective")
+                except ContextContractError as exc:
+                    return self._blocked(exc.code, **exc.details)
             if security is not None:
                 active = self.core.load_yaml_document(self._assignment_path(str(duplicate["active"].get("assignment_id") or "")))
                 if (active.get("egress") != security["egress"]
@@ -268,12 +386,30 @@ class ProcessExecutionService:
         if session_id:
             assignment["session"] = {"status": "bound", "id": session_id}
         if security is not None:
+            if scope_intent is not None and "allowed_read_files" in scope_intent["assignment"]:
+                if sorted(scope_intent["assignment"]["allowed_read_files"]) != security["allowed_read_files"]:
+                    return self._blocked("scope_security_conflict")
             assignment["egress"] = copy.deepcopy(security["egress"])
             assignment["allowed_read_files"] = list(security["allowed_read_files"])
             if security.get("predecessor"):
                 assignment["egress_predecessor"] = copy.deepcopy(security["predecessor"])
-        from .work_context import ContextContractError
         try:
+            if scope_intent is not None:
+                assignment = self._with_creation_scope(assignment, scope_intent)
+                normalized = normalized_assignment_contract(self.project_root, self._assignment_path(assignment_id), assignment, self.core)
+                requested = scope_intent["assignment"].get("allowed_actions", [])
+                if set(requested) - set(normalized["scope"]["allowed_actions"]):
+                    return self._blocked("work_scope_conflict")
+                overlap = self.core.validate_assignment_scope_overlaps(self.project_root, assignment, assignment_path=self._assignment_path(assignment_id))
+                if overlap["status"] != "pass":
+                    return self._blocked("write_scope_overlap", conflicts=overlap["conflicts"])
+                # Preflight readiness before the immutable capsule is published.
+                from .work_context import build_context_fields
+                snapshot = self.core.load_yaml_document(self._flow_root() / "contexts" / "project-context.snapshot.yaml")
+                fields = build_context_fields(self.project_root, self._assignment_path(assignment_id), assignment,
+                                              snapshot, self.core, workplace=self.workplace_root, pin=pin, run_record=run)
+                if fields["execution_contract"]["readiness"]["status"] != "ready":
+                    return self._blocked("work_scope_not_ready", blockers=fields["execution_contract"]["readiness"]["blockers"])
             capsule_path, capsule_checksum = self._write_capsule(run, assignment, pin)
         except ContextContractError as exc:
             return self._blocked(exc.code, **exc.details)
@@ -311,9 +447,26 @@ class ProcessExecutionService:
             "context": state.get("context", {}),
         }
 
-    def state(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
-        selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+    def _with_creation_scope(self, assignment: dict[str, Any], intent: dict[str, Any]) -> dict[str, Any]:
+        result = copy.deepcopy(assignment)
+        result.update(copy.deepcopy(intent["assignment"]))
+        if intent.get("predecessor"):
+            result.setdefault("coordination_requirements", {})["scope_predecessor"] = copy.deepcopy(intent["predecessor"])
+        if intent.get("predecessor_handoff"):
+            from .prepared_input import bounded_read
+            raw = bounded_read(self.project_root / intent["predecessor_handoff"])
+            result.setdefault("coordination_requirements", {})["scope_handoff"] = {
+                "path": intent["predecessor_handoff"], "checksum": "sha256:" + hashlib.sha256(raw).hexdigest()}
+        return result
+
+    def state(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "", context_id: str = "") -> dict[str, Any]:
+        try:
+            selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        except ValueError as exc:
+            return self._blocked(str(exc))
         if not selected:
+            if run_id or assignment_id or context_id:
+                return self._blocked("work_not_found")
             return {
                 "schema_version": 1,
                 "kind": "pf.work.state",
@@ -321,6 +474,8 @@ class ProcessExecutionService:
                 "project": {"id": self.core.project_id(self.project_root)},
             }
         run, assignment = selected
+        if context_id and context_id != f"{assignment['id']}-capsule":
+            return self._blocked("work_context_mismatch")
         process, pin_status = self._effective_process(run)
         from . import diagnostics
         diagnostics.select_work(self.project_root, str(run.get("id") or ""), assignment.get("id"))
@@ -366,7 +521,9 @@ class ProcessExecutionService:
             blockers.append({"code": contract_validation.get("reason") or "execution_contract_invalid"})
         if str(assignment.get("stage_status") or "") == "blocked" and not blockers:
             blockers.append({"code": "stage_marked_blocked", "stage_id": stage_id})
-        if str(run.get("status") or "") == "completed":
+        if str(assignment.get("status") or "") in {"cancelled", "failed"} or str(run.get("status") or "") in {"cancelled", "failed"}:
+            action = "work_terminal"
+        elif str(run.get("status") or "") == "completed":
             action = "run_completed"
         elif blockers:
             action = "work_blocked"
@@ -374,10 +531,18 @@ class ProcessExecutionService:
             action = "work_incomplete"
         else:
             action = "work_ready"
+        from .continuation import permission_readiness
+        from .work_context import ContextContractError, normalized_assignment_contract
+        try:
+            normalized = normalized_assignment_contract(self.project_root, self._assignment_path(assignment['id']), assignment, self.core)
+            permissions = permission_readiness(normalized['scope'], normalized['assignment']['execution_mode'])
+        except ContextContractError as exc:
+            permissions = {"status": "blocked", "blockers": [exc.code]}
         return {
             "schema_version": 1,
             "kind": "pf.work.state",
             "action": action,
+            "execution_readiness": permissions,
             "project": {"id": self.core.project_id(self.project_root)},
             "process": {
                 "id": str(process.get("id") or run.get("process") or ""),
@@ -427,16 +592,25 @@ class ProcessExecutionService:
         run_id: str = "",
         assignment_id: str = "",
         session_id: str = "",
+        context_id: str = "",
     ) -> dict[str, Any]:
-        selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        try:
+            selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        except ValueError as exc:
+            return self._blocked(str(exc))
         if not selected:
             return self._blocked("active_work_not_found")
         run, assignment = selected
+        if context_id and context_id != f"{assignment['id']}-capsule":
+            return self._blocked("work_context_mismatch")
         if not isinstance(run.get("process_execution"), dict) or not isinstance(run["process_execution"].get("definition"), dict):
             return self._blocked("process_not_pinned", run_id=run.get("id"), assignment_id=assignment.get("id"))
         with self._run_lock(str(run.get("id") or "")):
             run = self._load_run(str(run.get("id") or ""))
             assignment = self._load_assignment(str(assignment.get("id") or ""))
+            for pending_cancel in self._run_path(str(run["id"])).parent.glob("cancellation-*.yaml"):
+                if not pending_cancel.with_suffix(".applied.json").is_file():
+                    return self._blocked("cancellation_recovery_pending")
             contract_validation = self._contract_validation(assignment)
             if contract_validation.get("status") == "blocked":
                 return self._blocked(contract_validation.get("reason") or "execution_contract_invalid", remediation="create_successor_work")
@@ -587,7 +761,10 @@ class ProcessExecutionService:
             return result
 
     def can_complete(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
-        selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        try:
+            selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        except ValueError as exc:
+            return {"can_complete": False, "blockers": [{"code": str(exc)}]}
         if not selected:
             return {"can_complete": False, "blockers": [{"code": "active_work_not_found"}]}
         run, assignment = selected
@@ -605,7 +782,10 @@ class ProcessExecutionService:
         return {"can_complete": not blockers, "blockers": blockers, "run": state.get("run"), "assignment": state.get("assignment"), "stage": state.get("stage")}
 
     def complete(self, *, outcome: str = "completed", evidence: Any = None, notes: str = "", run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
-        selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        try:
+            selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        except ValueError as exc:
+            return self._blocked(str(exc))
         if selected:
             run, assignment = selected
             pending, _error = self._load_completion_intent(run, assignment)
@@ -719,7 +899,8 @@ class ProcessExecutionService:
     def _selected_resource_ids(self) -> list[str]:
         snapshot = self.core.load_yaml_document(self._flow_root() / "contexts" / "project-context.snapshot.yaml")
         resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
-        return _stable_ids(resolved.get("knowledge_resources"))
+        # Match the canonical order used by complete context capture.
+        return sorted(_stable_ids(resolved.get("knowledge_resources")))
 
     def _next_work_advisory(self, process: dict[str, Any], run: dict[str, Any]) -> dict[str, Any]:
         pin = run.get("process_execution") if isinstance(run.get("process_execution"), dict) else {}
@@ -761,17 +942,29 @@ class ProcessExecutionService:
         return next((stage for stage in executable_stages(process) if str(stage.get("id")) == stage_id), {"id": stage_id})
 
     def _select_work(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> tuple[dict[str, Any], dict[str, Any]] | None:
+        if not run_id and not assignment_id and session_id:
+            from .continuation import ContinuationService
+            binding = ContinuationService(self.project_root, self.workplace_root, self.core).selected(session_id)
+            if binding:
+                run_id, assignment_id = binding["run_id"], binding["assignment_id"]
+        for value in (run_id, assignment_id):
+            if value and (not isinstance(value, str) or not SAFE_ID_RE.fullmatch(value)):
+                raise ValueError("invalid_work_selector")
         records = self._work_records(include_historical=True)
         if assignment_id:
             record = next((item for item in records if item["assignment_id"] == assignment_id), None)
         elif run_id:
             candidates = [item for item in records if item["run_id"] == run_id]
+            if len(candidates) > 1:
+                raise ValueError("assignment_choice_required")
             record = self._preferred_record(candidates, session_id)
         else:
             active = [item for item in records if item["active"]]
             record = self._preferred_record(active, session_id)
         if not record:
             return None
+        if run_id and record["run_id"] != run_id:
+            raise ValueError("work_identity_mismatch")
         return self._load_run(record["run_id"]), self._load_assignment(record["assignment_id"])
 
     def _preferred_record(self, records: list[dict[str, Any]], session_id: str) -> dict[str, Any] | None:

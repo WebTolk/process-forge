@@ -17,7 +17,9 @@ archive names, and reports.
   project-local `.pf/process-forge.yaml` is created there intentionally.
 - From the ProcessForge distribution root, use `python bin/pf.py`.
 - Inside an onboarded project, use `python .pf/runtime/bin/pf.py`.
-- Read `.pf/START_AGENT_HERE.md` before project work.
+- Read root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project) before project work.
+- `agent-start-prompt` prints optional current guidance without writing files;
+  stored START is not execution authority. See [entry policy](../concepts/agent-entry.md).
 - For new human-led machine setup, use guided workplace setup by default:
   `workplace-setup start`, `workplace-setup review`,
   `workplace-setup apply`, and `workplace-setup status`.
@@ -266,8 +268,10 @@ Initialize ProcessForge in fully automatic mode. It is located at
 ## Human Prompt: Project Work
 
 ```text
-Use ProcessForge for this task. Read .pf/START_AGENT_HERE.md first, create or
-reuse governed work through pf.work.start, use pf.search and pf.resolve for
+Use ProcessForge for this task. Read root AGENTS.md (or .pf/AGENTS.md in an
+unmigrated project), verify pf.context, and create or reuse work through
+pf.work.start. Keep the returned Run, assignment and capsule identities.
+Use pf.search and pf.resolve for
 authorized resources, inspect the current state with pf.work.state, record
 each step with pf.work.transition(outcome, evidence, notes), continue until
 the work reports run_completed, keep artifacts in .pf, run the relevant checks,

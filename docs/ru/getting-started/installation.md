@@ -38,8 +38,10 @@ python .pf/runtime/bin/pf.py doctor-project --project-root .
 
 Не копируйте весь ProcessForge в `.codex`, `.claude`, `.agents` или похожие
 папки конфигурации агентов. Конфигурации агента достаточно короткой инструкции:
-где установлен ProcessForge и что project instructions находятся в
-`.pf/START_AGENT_HERE.md`.
+где установлен ProcessForge. Для входа используйте
+корневой `AGENTS.md` (в старом проекте без него — `.pf/AGENTS.md`).
+Загрузчик или явный адаптер выбирается по [политике входа](../concepts/agent-entry.md);
+ссылка сама не доказывает доставку.
 
 ## Проверка
 

@@ -1,0 +1,295 @@
+{
+  "schema_version": 1,
+  "kind": "pf.agent-entry.profiles",
+  "registry_version": "1.0.0",
+  "profiles": [
+    {
+      "version": "1.0.0",
+      "selector": "codex",
+      "unit": "utf8_bytes",
+      "scope": "chain",
+      "accounting_phase": "codex_read",
+      "overflow": "truncate",
+      "default_limit": 32768,
+      "default_file_limit": null,
+      "id": "P-CODEX",
+      "surface": "codex-cli",
+      "route": "root-agents",
+      "client_revision": "b412ff32c417f855c2b2d1581b77058eed87c84b",
+      "prerequisites": [
+        "trusted_project",
+        "injection_enabled",
+        "complete_boundary",
+        "single_environment"
+      ],
+      "proof_refs": [
+        {
+          "level": "S",
+          "reference": "https://github.com/openai/codex/blob/b412ff32c417f855c2b2d1581b77058eed87c84b/codex-rs/core/src/agents_md.rs"
+        }
+      ],
+      "input_deduplication": "none"
+    },
+    {
+      "version": "1.0.0",
+      "selector": "observed",
+      "unit": "unknown",
+      "scope": "chain",
+      "accounting_phase": "unknown",
+      "overflow": "unknown",
+      "default_limit": null,
+      "default_file_limit": null,
+      "id": "P-CLAUDE",
+      "surface": "claude-code",
+      "route": "selected-native-or-import",
+      "client_revision": "7779afb12e3635f46f56ec823979d68350ae000b",
+      "prerequisites": [
+        "selected_mode",
+        "plugin_enabled",
+        "imports_and_exclusions"
+      ],
+      "proof_refs": [
+        {
+          "level": "S",
+          "reference": "https://github.com/anthropics/claude-code/blob/7779afb12e3635f46f56ec823979d68350ae000b/mods/agents-md/hooks/register.ts"
+        }
+      ],
+      "input_deduplication": "none"
+    },
+    {
+      "version": "1.0.0",
+      "selector": "observed",
+      "unit": "utf8_bytes",
+      "scope": "chain",
+      "accounting_phase": "expanded_render",
+      "overflow": "warn",
+      "default_limit": 32768,
+      "default_file_limit": null,
+      "id": "P-KIMI",
+      "surface": "kimi-code-typescript",
+      "route": "root-agents",
+      "client_revision": "4fbe065442179435c43d3c3dc8d11bb408b3fd30",
+      "prerequisites": [
+        "standard_prompt",
+        "expanded_render",
+        "complete_boundary"
+      ],
+      "proof_refs": [
+        {
+          "level": "S",
+          "reference": "https://github.com/MoonshotAI/kimi-code/blob/4fbe065442179435c43d3c3dc8d11bb408b3fd30/packages/agent-core-v2/src/agent/profile/context.ts"
+        }
+      ],
+      "input_deduplication": "same_path"
+    },
+    {
+      "version": "1.0.0",
+      "selector": "observed",
+      "unit": "unknown",
+      "scope": "chain",
+      "accounting_phase": "unknown",
+      "overflow": "unknown",
+      "default_limit": null,
+      "default_file_limit": null,
+      "id": "P-OPENCODE",
+      "surface": "opencode",
+      "route": "root-agents",
+      "client_revision": "03e67171ab2dc1e7f16e8cebfbc7f778f61b89f0",
+      "prerequisites": [
+        "project_config_enabled",
+        "ancestor_family",
+        "explicit_instructions"
+      ],
+      "proof_refs": [
+        {
+          "level": "S",
+          "reference": "https://github.com/anomalyco/opencode/blob/03e67171ab2dc1e7f16e8cebfbc7f778f61b89f0/packages/opencode/src/session/instruction.ts"
+        }
+      ],
+      "input_deduplication": "none"
+    },
+    {
+      "version": "1.0.0",
+      "selector": "observed",
+      "unit": "unknown",
+      "scope": "chain",
+      "accounting_phase": "unknown",
+      "overflow": "unknown",
+      "default_limit": null,
+      "default_file_limit": null,
+      "id": "P-GEMINI",
+      "surface": "gemini-cli",
+      "route": "selected-native-import",
+      "client_revision": "2fe7c2d3f065dc40ad573d50b2091116f8a4aa18",
+      "prerequisites": [
+        "trusted_roots",
+        "selected_names",
+        "expanded_imports"
+      ],
+      "proof_refs": [
+        {
+          "level": "S",
+          "reference": "https://github.com/google-gemini/gemini-cli/blob/2fe7c2d3f065dc40ad573d50b2091116f8a4aa18/packages/core/src/utils/memoryImportProcessor.ts"
+        }
+      ],
+      "input_deduplication": "none"
+    },
+    {
+      "version": "1.0.0",
+      "selector": "observed",
+      "unit": "unknown",
+      "scope": "chain",
+      "accounting_phase": "unknown",
+      "overflow": "unknown",
+      "default_limit": null,
+      "default_file_limit": null,
+      "id": "P-COPILOT-CLI",
+      "surface": "copilot-cli",
+      "route": "root-agents",
+      "client_revision": "docs-2026-09-28",
+      "prerequisites": [
+        "cli_surface",
+        "enabled_files",
+        "combined_instructions"
+      ],
+      "proof_refs": [
+        {
+          "level": "D",
+          "reference": "docs/concepts/agent-entry.md#profile-evidence"
+        }
+      ],
+      "input_deduplication": "none"
+    },
+    {
+      "version": "1.0.0",
+      "selector": "observed",
+      "unit": "unknown",
+      "scope": "chain",
+      "accounting_phase": "unknown",
+      "overflow": "unknown",
+      "default_limit": null,
+      "default_file_limit": null,
+      "id": "P-CURSOR-CHAT",
+      "surface": "cursor-agent-chat",
+      "route": "root-agents",
+      "client_revision": "docs-2026-09-28",
+      "prerequisites": [
+        "agent_chat_surface",
+        "rule_applicability"
+      ],
+      "proof_refs": [
+        {
+          "level": "D",
+          "reference": "https://cursor.com/help/customization/rules"
+        }
+      ],
+      "input_deduplication": "none"
+    },
+    {
+      "version": "1.0.0",
+      "selector": "observed",
+      "unit": "unknown",
+      "scope": "chain",
+      "accounting_phase": "unknown",
+      "overflow": "unknown",
+      "default_limit": null,
+      "default_file_limit": null,
+      "id": "P-CASCADE",
+      "surface": "devin-desktop-cascade",
+      "route": "root-agents",
+      "client_revision": "docs-2026-09-28",
+      "prerequisites": [
+        "documented_surface",
+        "directory_scope"
+      ],
+      "proof_refs": [
+        {
+          "level": "D",
+          "reference": "docs/concepts/agent-entry.md#profile-evidence"
+        }
+      ],
+      "input_deduplication": "none"
+    },
+    {
+      "version": "1.0.0",
+      "selector": "observed",
+      "unit": "unknown",
+      "scope": "chain",
+      "accounting_phase": "unknown",
+      "overflow": "unknown",
+      "default_limit": null,
+      "default_file_limit": null,
+      "id": "P-AIDER",
+      "surface": "aider",
+      "route": "explicit-read",
+      "client_revision": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+      "prerequisites": [
+        "explicit_read"
+      ],
+      "proof_refs": [
+        {
+          "level": "S",
+          "reference": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/main.py"
+        }
+      ],
+      "input_deduplication": "none"
+    },
+    {
+      "version": "1.0.0",
+      "selector": "observed",
+      "unit": "utf16_code_units",
+      "scope": "file_and_chain",
+      "accounting_phase": "bootstrap_render",
+      "overflow": "truncate",
+      "default_limit": 60000,
+      "default_file_limit": 20000,
+      "id": "P-OPENCLAW-EMBEDDED",
+      "surface": "openclaw-embedded",
+      "route": "workspace-agents",
+      "client_revision": "ff8c752d852f5d01da5a8a5e6abb7546c1328e83",
+      "prerequisites": [
+        "workspace_matches",
+        "full_mode",
+        "injection_enabled",
+        "bootstrap_filters"
+      ],
+      "proof_refs": [
+        {
+          "level": "D",
+          "reference": "https://github.com/openclaw/openclaw/blob/ff8c752d852f5d01da5a8a5e6abb7546c1328e83/docs/gateway/config-agents/workspace-and-bootstrap.md"
+        },
+        {
+          "level": "S",
+          "reference": "https://github.com/openclaw/openclaw/blob/ff8c752d852f5d01da5a8a5e6abb7546c1328e83/src/agents/bootstrap-files.ts"
+        }
+      ],
+      "input_deduplication": "none"
+    },
+    {
+      "version": "1.0.0",
+      "selector": "observed",
+      "unit": "unknown",
+      "scope": "chain",
+      "accounting_phase": "unknown",
+      "overflow": "unknown",
+      "default_limit": null,
+      "default_file_limit": null,
+      "id": "P-OPENCLAW-CODEX",
+      "surface": "openclaw-native-codex",
+      "route": "host-carrier",
+      "client_revision": "ff8c752d852f5d01da5a8a5e6abb7546c1328e83",
+      "prerequisites": [
+        "native_host_tuple",
+        "carrier_policy",
+        "resume_mode"
+      ],
+      "proof_refs": [
+        {
+          "level": "D",
+          "reference": "https://github.com/openclaw/openclaw/blob/ff8c752d852f5d01da5a8a5e6abb7546c1328e83/docs/plugins/codex-harness-reference/workspace-bootstrap-files.md"
+        }
+      ],
+      "input_deduplication": "none"
+    }
+  ]
+}

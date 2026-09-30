@@ -81,8 +81,11 @@ def positive_workflow(root: Path) -> None:
     project = make_project(root, "positive")
     run_id = "release-prep"
     pf("run-create", "--project-root", str(project), "--id", run_id, "--title", "Release preparation", "--process", "task-batch-execution", "--apply")
-    pf("agent-start-prompt", "--project-root", str(project))
-    assert_contains(project / ".pf" / "START_AGENT_HERE.md", "run-status --project-root . --run release-prep")
+    start = project / ".pf" / "START_AGENT_HERE.md"
+    assert not start.exists(), "new project created START"
+    preview = pf("agent-start-prompt", "--project-root", str(project))
+    assert not start.exists(), "preview created START"
+    assert "release-prep" not in preview.stdout and "pf.work.start" in preview.stdout
     pf("task-create", "--project-root", str(project), "--run", run_id, "--id", "task-001-fix", "--title", "First task", "--process", "task-batch-execution", "--apply")
     pf("iteration-add", "--project-root", str(project), "--task", "task-001-fix", "--kind", "work", "--summary", "Implemented first fix.", "--apply")
     pf("iteration-add", "--project-root", str(project), "--task", "task-001-fix", "--kind", "debug", "--status", "failed", "--summary", "Initial debug failed.", "--apply")

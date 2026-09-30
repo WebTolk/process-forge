@@ -1,5 +1,7 @@
 # Work context and execution contract
 
+For resuming existing Work by exact identity and cancelling mistaken Work, see [Work continuation](work-continuation.md). Continuation references the original capsule; it does not rebuild it.
+
 ProcessForge source now uses one shared context builder for governed Work capsules and the `assignment-capsule` command. The existing capsule envelope stays version 1; new capsules add a versioned `execution_contract` block. This block makes the assignment’s intent and permissions explicit in a form both creation paths can validate. It does not replace the run/assignment journals or make the worker’s filesystem an OS sandbox.
 
 See [Work and Execution Contract](work-execution-contract.md) for the wider vision-alignment contract, [context capsules](context-capsule.md) for the envelope and launch role, and [Work-scoped resource reads](work-resources.md) for T02’s pinned resource material and current-access rules.
@@ -56,6 +58,29 @@ A standalone assignment without a run has `identity.kind: assignment`. It can pr
 
 Older capsules without `execution_contract` remain readable as legacy records. Missing permissions are never inferred as broad access: restricted preparation reports `legacy_contract_incomplete` and asks for a successor context. Unknown contract versions fail explicitly. Capsule creation never overwrites an existing immutable capsule; `--force` can affect the separate overlap check, but does not replace a context. Preserve the old capsule and create a new governed successor when intent changes.
 
-## Source boundary
+## Explicit local Work creation scope
+
+`work-start --scope-file <json>` accepts explicit local operator input before the
+normal immutable capsule and pinned Run are created. The UTF-8 JSON is at most
+64 KiB, with `schema_version: 1` and an `assignment` object. Supported fields:
+`allowed_files`, `allowed_read_files`, `forbidden_files`, `allowed_actions`,
+`forbidden_actions`, `execution_mode` (mode name), `required_sources`,
+`required_outputs`, `expected_report`, `ownership` (owner_id, role, writer).
+Output records require an id and project-relative path. Actions are read,
+write_artifact and write_product. Existing normalization, readiness and overlap
+checks apply. Omitted input retains conservative defaults; objectives imply no
+file grants. This input does not add an MCP permission surface.
+
+An optional `predecessor` contains run_id, assignment_id and sha256-prefixed
+capsule_checksum. It records lineage, not automatic ownership transfer. Explicit
+`predecessor_handoff` may name an existing `.pf/handoffs/` document authorizing
+serial ownership transfer from that verified predecessor only. The operator must
+ensure the predecessor stopped writing. Its capsule and the handoff hash are
+checked by overlap validation; other writers and forbidden paths remain blockers.
+Old assignments and capsules are unchanged. Repeating the same objective/intent
+continues Work; changed scope returns `scope_intent_mismatch` and requires a new
+objective. Malformed/unready declarations fail before new Work records publish.
+
+## Qualification boundary
 
 These behaviors describe the current source checkout. They do not claim that an installed Core or a real host has been qualified. Installed and host integration acceptance belongs to T06; source-level smokes and schema checks are not a substitute for that boundary.

@@ -10,7 +10,9 @@ Public files can be committed.
 Examples for `.pf` projects:
 
 ```text
+AGENTS.md
 .pf/AGENTS.md
+.pf/agent-entry.json
 .pf/process-forge.yaml
 .pf/hooks.yaml
 .pf/contexts/project-context.snapshot.yaml

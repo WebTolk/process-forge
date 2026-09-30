@@ -4,7 +4,7 @@
 
 Start from the top-level operating model: ProcessForge is installed once as a
 tool, a workplace is the machine-level home for reusable resources, and each
-repository keeps only a project-local `.pf/` layer.
+repository keeps `.pf/` process state and a root `AGENTS.md` entry contract.
 
 The required initialization order is workplace first, workplace resources
 second, and project onboarding third. Use guided workplace setup by default for
@@ -63,6 +63,11 @@ provides explicit paths and choices.
 - [Task batch execution](authoring/task-batch-execution.md)
 
 ## Concepts
+
+- [Agent entry and compatibility](concepts/agent-entry.md)
+- [Project flow root](concepts/project-flow-root.md)
+- [Session bootstrap](concepts/session-bootstrap.md)
+- [Global agent section](concepts/global-agent-section.md)
 
 - [Workplace vs project](concepts/workplace-vs-project.md)
 - [Path constants](concepts/path-constants.md)

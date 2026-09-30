@@ -53,14 +53,14 @@ lock.__exit__(None, None, None)
 def legacy_lock_child_code(target: Path) -> str:
     target_text = repr(str(target))
     return f"""
-import json, os, time
+import json, os, sys
 from pathlib import Path
 target = Path({target_text})
 lock = target.with_name(f'.{{target.name}}.lock')
 lock.parent.mkdir(parents=True, exist_ok=True)
 lock.write_text(json.dumps({{'path': str(target), 'pid': os.getpid(), 'created_at': '2026-09-10T10:00:00Z'}}) + '\\n', encoding='utf-8')
 print('READY', flush=True)
-time.sleep(5.0)
+sys.stdin.readline()
 lock.unlink(missing_ok=True)
 """
 
@@ -77,6 +77,7 @@ def smoke_live_old_lock_contention(root: Path) -> None:
     owner = subprocess.Popen(
         [sys.executable, "-c", legacy_lock_child_code(target)],
         cwd=ROOT,
+        stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -87,24 +88,30 @@ def smoke_live_old_lock_contention(root: Path) -> None:
         existing = lock_path(target)
         old = time.time() - 3600
         os.utime(existing, (old, old))
+        before = (existing.read_bytes(), existing.stat().st_mtime_ns)
         contender = run_python(
             f"""
-import sys
+import sys, time
 sys.path.insert(0, {str(ROOT / 'tools')!r})
 import processforge as pf
 from pathlib import Path
+started = time.monotonic()
 try:
     with pf.registry_file_lock(Path({str(target)!r}), timeout_seconds=0.25, stale_after_seconds=0):
         raise SystemExit('unexpected acquisition')
 except SystemExit as exc:
     if 'locked by another writer' not in str(exc):
         raise
+assert time.monotonic() - started < 1.5, 'live-owner refusal exceeded lock operation budget'
 """,
-            timeout=5,
+            timeout=30,
         )
         assert contender.returncode == 0, contender.stdout + contender.stderr
+        assert owner.poll() is None, "legacy owner must stay alive through contention"
+        assert (existing.read_bytes(), existing.stat().st_mtime_ns) == before, "live legacy lock was changed"
     finally:
-        owner.wait(timeout=5)
+        # Release only after the contender; EOF also releases if this parent exits.
+        owner.communicate(input="release\n", timeout=5)
 
 
 def smoke_reacquire_after_owner_death(root: Path) -> None:

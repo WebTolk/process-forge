@@ -5,13 +5,29 @@
   "type": "object",
   "required": ["schema_version", "id", "waiting_for", "resume", "status"],
   "properties": {
-    "schema_version": { "type": "integer", "minimum": 1 },
+    "schema_version": { "enum": [1, 2] },
     "id": { "type": "string" },
     "agent_id": { "type": "string" },
     "previous_session_id": { "type": "string" },
     "waiting_for": { "type": "object", "additionalProperties": true },
     "resume": { "type": "object", "additionalProperties": true },
-    "status": { "enum": ["waiting", "ready", "resumed", "cancelled"] }
+    "status": { "enum": ["waiting", "ready", "resumed", "cancelled"] },
+    "work": {
+      "type": "object",
+      "required": ["project_id", "run_id", "assignment_id", "context_id", "capsule_checksum"],
+      "properties": {
+        "project_id": { "type": "string", "minLength": 1 },
+        "run_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "assignment_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "context_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "capsule_checksum": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      },
+      "additionalProperties": false
+    }
   },
+  "oneOf": [
+    { "properties": { "schema_version": { "const": 1 } } },
+    { "properties": { "schema_version": { "const": 2 } }, "required": ["work"] }
+  ],
   "additionalProperties": true
 }

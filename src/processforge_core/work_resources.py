@@ -165,7 +165,12 @@ class WorkResourceService:
         if snapshot.get("id") != capsule_pin["snapshot_id"] or snapshot.get("sha256") != capsule_pin["snapshot_checksum"]:
             raise WorkResourceError("work_context_mismatch")
         selected = _ids(capsule.get("context", {}).get("selected_resource_ids"), "resource_scope_invalid")
-        if selected != capsule_pin.get("selected_resource_ids") or selected != pin.get("selected_resource_ids"):
+        # Older native pins preserve declaration order while their complete
+        # contexts sort it. Grants are membership; validate each list before
+        # comparing so duplicates and malformed pins still fail closed.
+        selected_set = set(selected)
+        if any(set(_ids(item.get("selected_resource_ids"), "resource_scope_invalid")) != selected_set
+               for item in (capsule_pin, pin)):
             raise WorkResourceError("resource_scope_invalid")
         bindings = capsule.get("resource_bindings")
         if not isinstance(bindings, dict):
@@ -175,7 +180,7 @@ class WorkResourceService:
         resources = bindings.get("resources")
         if not isinstance(resources, list) or any(not isinstance(item, dict) for item in resources):
             raise WorkResourceError("resource_binding_invalid")
-        if _ids([item.get("id") for item in resources], "resource_binding_invalid") != selected:
+        if set(_ids([item.get("id") for item in resources], "resource_binding_invalid")) != selected_set:
             raise WorkResourceError("resource_binding_invalid")
         if "execution_contract" in capsule:
             from .work_context import validate_execution_contract

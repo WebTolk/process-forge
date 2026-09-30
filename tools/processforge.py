@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import csv
 import contextlib
 import fnmatch
 import hashlib
@@ -2648,7 +2649,7 @@ Workplace is {workplace_path}.
 Do not copy ProcessForge into agent config folders or projects.
 
 Inside onboarded projects:
-1. Read .pf/START_AGENT_HERE.md first.
+1. Read root AGENTS.md (or .pf/AGENTS.md in an unmigrated project), then verify pf.context.
 2. Use python .pf/runtime/bin/pf.py from the project root.
 
 Outside projects:
@@ -2774,7 +2775,7 @@ def command_workplace_setup_apply(args: argparse.Namespace) -> int:
 python {machine.get("processforge_root") or "<processforge-root>"}/bin/pf.py project-onboard --project-root <project-root> --workplace {workplace} --type generic --apply
 ```
 
-Inside an onboarded project, read `.pf/START_AGENT_HERE.md` and use `python .pf/runtime/bin/pf.py`.
+Inside an onboarded project, read root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project), verify `pf.context`, and use `pf.work.start`, `pf.work.state`, and `pf.work.transition` with returned identities. The existing local CLI is `python .pf/runtime/bin/pf.py`.
 """
     (session_dir / "apply-report.md").write_text(ensure_trailing_newline(report), encoding="utf-8")
     (session_dir / "next-steps.md").write_text(ensure_trailing_newline(next_steps), encoding="utf-8")
@@ -3475,6 +3476,35 @@ def list_project_files(project_root: Path) -> list[Path]:
     return sorted(files, key=lambda item: item.relative_to(project_root).as_posix())
 
 
+def list_classifier_files(project_root: Path) -> list[Path]:
+    """Walk product markers without entering flow state or excluded trees."""
+    flow_root = locate_flow_root(project_root)
+    ignored_names = {".git", ".idea", ".serena", "__pycache__", "runtime", "cache"}
+    files: list[Path] = []
+    for directory, dirnames, filenames in os.walk(project_root, topdown=True, followlinks=False):
+        parent = Path(directory)
+        retained = []
+        for name in dirnames:
+            path = parent / name
+            if name in ignored_names or path == flow_root:
+                continue
+            try:
+                info = path.lstat()
+            except OSError:
+                continue
+            # Windows junctions are reparse points but need not be symlinks.
+            # Neither may reintroduce flow state through an alias or cycle.
+            if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
+                continue
+            retained.append(name)
+        dirnames[:] = retained
+        for name in filenames:
+            path = parent / name
+            if name not in ignored_names and path.is_file():
+                files.append(path)
+    return sorted(files, key=lambda item: item.relative_to(project_root).as_posix())
+
+
 def project_classifier_registry_documents(
     workplace_manifest: Path | None,
     project_root: Path,
@@ -3537,7 +3567,12 @@ def project_classifier_paths(
 
 
 def project_available_paths(project_root: Path, files: list[Path] | None = None) -> set[str]:
-    source_files = files if files is not None else list_project_files(project_root)
+    """Product markers for classification, excluding PF's own flow state."""
+    source_files = files if files is not None else list_classifier_files(project_root)
+    flow_root = locate_flow_root(project_root)
+    # Receipts and captured fixtures are not application manifests. Classifier
+    # definitions in the flow registry are loaded separately and remain usable.
+    source_files = [path for path in source_files if not path.is_relative_to(flow_root)]
     available_paths = {rel(path, project_root) for path in source_files}
     for path in source_files:
         parent = path.relative_to(project_root).parent
@@ -3547,7 +3582,7 @@ def project_available_paths(project_root: Path, files: list[Path] | None = None)
     available_paths.update(
         path.name
         for path in project_root.iterdir()
-        if path.is_dir() and path.name not in {".git", ".idea", ".serena"}
+        if path.is_dir() and path != flow_root and path.name not in {".git", ".idea", ".serena"}
     )
     return available_paths
 
@@ -3655,7 +3690,7 @@ def classify_project(
     workplace_manifest: Path | None = None,
     explicit_classifier_paths: list[Path] | None = None,
 ) -> dict[str, Any]:
-    files = list_project_files(project_root)
+    files = list_classifier_files(project_root)
     available_paths = project_available_paths(project_root, files)
     project_types: set[str] = set()
     platforms: set[str] = set()
@@ -5329,35 +5364,11 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
         },
     }
 
-    agents = """# ProcessForge Project Instructions
+    from processforge_core.agent_entry import encoded, load_contract
+    from processforge_core.agent_entry_migration import manifest as entry_manifest
 
-This project uses ProcessForge.
-
-## Start Order
-
-1. Read `.pf/START_AGENT_HERE.md` and `.pf/process-forge.yaml`.
-2. Call `pf.context` with this project root. If MCP is unavailable, read the
-   current snapshot as the file-only fallback.
-3. Use `pf.search` when project, platform, process, template, or tool knowledge
-   is needed.
-4. Use `pf.resolve` before opening a ProcessForge-managed resource root.
-5. Call `pf.work.start` with the high-level objective when work becomes
-   substantive, then follow the selected assignment and capsule.
-6. Write durable artifacts, reviews, logs, and handoffs required by the work.
-
-## Important Rules
-
-- Do not edit files outside assignment scope.
-- Do not put absolute local paths into public files.
-- Do not commit `.pf/process-forge.local.yaml`.
-- Do not commit `.pf/runtime/`.
-- Use project-local templates before global templates when allowed.
-- Record template usage.
-- Do not commit `.pf/runtime/events/` or webhook outbox payloads.
-- During ordinary project work, do not install, start, or repair PF Runtime,
-  MCP, host hooks, or Agent Ledger. Use available PF tools; report an explicit
-  operator-level infrastructure blocker when PF says operator action is needed.
-"""
+    entry_contract = load_contract()
+    agents = entry_contract.render(extended=True).decode("utf-8")
 
     classification_report = f"""# Project Classification Report
 
@@ -5672,7 +5683,9 @@ Unknown until reviewed.
 
 ## Planned Public Files
 
+- AGENTS.md
 - .pf/AGENTS.md
+- .pf/agent-entry.json
 - .pf/process-forge.yaml
 - .pf/hooks.yaml
 - .pf/packages/project.{defaults["id"]}.yaml
@@ -5693,7 +5706,8 @@ Unknown until reviewed.
 ## Risks
 
 - Existing files are not overwritten without explicit approval.
-- Root project AGENTS.md is not created by default.
+- Root and hidden AGENTS receive the same minimum contract K, preserving user text.
+- Entry ownership conflicts or known budget loss block apply; generic force cannot override them.
 - Detection results are observed, not confirmed.
 
 ## Recommendation
@@ -5712,7 +5726,7 @@ Run doctor after apply mode.
         "iterations": [],
         "result": {"status": "pending", "summary": "", "artifacts": []},
         "tasks": [
-            "Read .pf/AGENTS.md",
+            "Read root AGENTS.md (or .pf/AGENTS.md in an unmigrated project)",
             "Inspect the current project through pf.context",
             "Use pf.search or pf.resolve when project knowledge is needed",
             "Use pf.work.start for substantive governed work",
@@ -5723,46 +5737,6 @@ Run doctor after apply mode.
             ".pf/artifacts/first-assignment-readiness-note.md",
         ],
     }
-
-    start_agent_here = f"""# Start Agent Here
-
-You are working inside a ProcessForge-enabled project.
-
-## Preferred Path
-
-1. Read `.pf/AGENTS.md`.
-2. Call `pf.context` with this project root. If MCP is unavailable, read
-   `.pf/contexts/project-context.snapshot.yaml` as the file-only fallback.
-3. Use `pf.search` when project-authorized knowledge is needed.
-4. Use `pf.resolve` before opening a ProcessForge-managed resource root.
-5. Perform local read-only analysis.
-6. Call `pf.work.start` with the high-level objective when work becomes
-   substantive.
-7. Read the assignment and immutable capsule selected or created by PF, then
-   complete the required artifacts, review, log, and handoff.
-
-## Infrastructure Boundary
-
-During ordinary project work, do not install, start, restart, or repair PF
-Runtime, MCP, host hooks, or Agent Ledger. Use available PF tools. If a Forge or
-host integration is unavailable and PF returns an operator-level blocker,
-report it concisely to the operator. Garage context, search, resolve, and work
-bootstrap do not require a Runtime daemon, hooks, or a manual Ledger session.
-
-Do not expose local absolute paths from `.pf/process-forge.local.yaml`. Do not
-call a distribution-local CLI path from this project root unless this project
-is the ProcessForge distribution itself.
-
-## Current Assignment
-
-- File: `.pf/assignments/first-assignment.yaml`
-- Goal: Verify ProcessForge project onboarding for `{defaults["id"]}`.
-
-## Operator Diagnostics
-
-Low-level doctor, context refresh, hook, Runtime, Ledger, and index commands are
-operator/advanced diagnostics, not the normal agent start path.
-"""
 
     onboarding_report = f"""# Project Onboarding Report
 
@@ -5778,12 +5752,14 @@ applied
 
 ## Process Boundary
 
-Project onboarding creates only the project-local `.pf/` flow root and links it to an existing workplace. It does not recreate the workplace, copy global packages into the project, or write local absolute paths to public files.
+Project onboarding creates root `AGENTS.md`, hidden `.pf/AGENTS.md`, `.pf/agent-entry.json` and project-local `.pf/` state, linked to an existing workplace. It does not recreate the workplace, copy global packages into the project, or write local absolute paths to public files.
 
 ## Created First-Run Files
 
-- .pf/START_AGENT_HERE.md
-- .pf/assignments/first-assignment.yaml
+- AGENTS.md
+- .pf/AGENTS.md
+- .pf/agent-entry.json
+- .pf/assignments/first-assignment.yaml (compatibility placeholder, not required Work)
 - .pf/contexts/project-context.snapshot.yaml
 - .pf/artifacts/project-onboarding-report.md
 - .pf/reviews/project-onboarding-review.md
@@ -5808,25 +5784,29 @@ pass_with_conditions
 ## Required Follow-Up
 
 - Run `doctor-project` after onboarding.
-- Review the generated first assignment before assigning work.
+- Verify current context with `pf.context`, then use `pf.work.start` for substantive work.
+- The generated first assignment is an optional compatibility placeholder, not required Work.
 """
 
-    onboarding_handoff = f"""# Handoff: project-onboarding -> first-assignment
+    onboarding_handoff = f"""# Handoff: project-onboarding -> governed-work
 
 Objective:
-Connect `{defaults["id"]}` to ProcessForge and prepare the first assignment.
+Connect `{defaults["id"]}` to ProcessForge and prepare for governed work.
 
 Current status:
 Project onboarding files were generated.
 
 Input artifacts:
+- AGENTS.md
+- .pf/AGENTS.md
+- .pf/agent-entry.json
 - .pf/process-forge.yaml
 - .pf/process-forge.local.yaml
 - .pf/contexts/project-context.snapshot.yaml
-- .pf/START_AGENT_HERE.md
-- .pf/assignments/first-assignment.yaml
+- .pf/assignments/first-assignment.yaml (optional compatibility placeholder)
 
 Files changed:
+- AGENTS.md
 - .pf/
 - .gitignore
 
@@ -5842,7 +5822,11 @@ Required checks:
 - `python .pf/runtime/bin/pf.py project-context-check --project-root .`
 
 Next recommended action:
-Start `.pf/assignments/first-assignment.yaml`.
+Read root `AGENTS.md`, verify `pf.context`, and use `pf.work.start` for the requested work.
+Use its returned Run/assignment/capsule identities with `pf.work.state` and
+`pf.work.transition` until `run_completed`. Handle `process_choice_required`
+from the offered processes. Do not select the onboarding placeholder as ordinary Work.
+`agent-start-prompt` prints current guidance without writing files or trusting stored START.
 """
 
     package = {
@@ -5930,8 +5914,9 @@ Review and confirm observed conventions.
 """
 
     files = {
+        project_root / "AGENTS.md": entry_contract.render().decode("utf-8"),
         flow_root / "AGENTS.md": agents,
-        flow_root / "START_AGENT_HERE.md": start_agent_here,
+        flow_root / "agent-entry.json": encoded(entry_manifest(entry_contract)).decode("utf-8"),
         flow_root / "process-forge.yaml": dump_yaml(public_manifest),
         flow_root / "process-forge.local.yaml": dump_yaml(local_manifest),
         flow_root / "parameters.yaml": dump_yaml({"schema_version": 1, "kind": "processforge.parameters", "scope": "project", "parameters": {}}),
@@ -5985,15 +5970,27 @@ diagnostic output.
 
 def execute_project_initialization(request: dict[str, Any], files: dict[Path, str]) -> dict[str, Any]:
     """CLI writer adapter used only by project_initialization.initialize_project()."""
+    from processforge_core.agent_entry_migration import TARGETS as entry_targets
+
     project_root = request["project_root"]
-    project_root.mkdir(parents=True, exist_ok=True)
+    entry_plan = request.get("agent_entry_plan")
+    if not isinstance(entry_plan, dict):
+        raise project_initialization.ProjectInitializationError("entry_plan_required")
+    # Revalidate ownership/budgets before events or ordinary initialization writes.
+    entry_result = project_initialization.apply_agent_entry(project_root, entry_plan)
+    if entry_result["status"] != "complete":
+        return entry_result
     project_type = request.get("project_type")
     force = bool(request.get("force", False))
     flow_root = project_root / PROJECT_FLOW_ROOT
     for dirname in PROJECT_FLOW_DIRS:
         (flow_root / dirname).mkdir(parents=True, exist_ok=True)
     emit_process_event(project_root, "project.onboarding.started", process_id="project-onboarding", process_version="1.0.0", payload={"command": request.get("command", "project-onboard")})
-    results = [write_file(path, content, force=force) for path, content in files.items()]
+    protected = {project_root / name for name in entry_targets}
+    # Legacy START is not initializer-owned, even for an old caller's file map.
+    protected.add(flow_root / "START_AGENT_HERE.md")
+    results = [write_file(path, content, force=force) for path, content in files.items()
+               if path not in protected]
     results.append(append_gitignore_entries(project_root / ".gitignore", PROJECT_PRIVATE_GITIGNORE, force=force))
     from processforge_core.host_integration import optional_host_integration_status
     codex_integration = optional_host_integration_status(project_root, sys.modules[__name__])
@@ -6002,7 +5999,6 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
     snapshot_status, snapshot_paths, _snapshot, _old_reasons = write_project_context_snapshot_outputs(project_root)
     emit_process_event(project_root, "project.snapshot.refreshed", process_id="project-onboarding", process_version="1.0.0", payload={"status": snapshot_status, "paths": {key: rel(value, project_root) for key, value in snapshot_paths.items()}})
     emit_process_event(project_root, "launcher.project_runtime.created", process_id="project-onboarding", process_version="1.0.0", payload={"path": ".pf/runtime/bin/pf.py"})
-    emit_process_event(project_root, "agent.start_prompt.generated", process_id="project-onboarding", process_version="1.0.0", payload={"path": ".pf/START_AGENT_HERE.md"})
     emit_process_event(project_root, "assignment.created", process_id="project-onboarding", process_version="1.0.0", assignment_id_value="first-assignment", assignment_path=".pf/assignments/first-assignment.yaml", payload={"path": ".pf/assignments/first-assignment.yaml"})
     doctor_status, doctor_output = run_command_capture(command_doctor_project, argparse.Namespace(project_root=str(project_root)))
     finalize_project_onboarding_doctor_artifacts(project_root, doctor_status, doctor_output)
@@ -6024,8 +6020,10 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
     emit_process_event(project_root, "project.onboarding.completed", process_id="project-onboarding", process_version="1.0.0", payload={"files": [rel(result.target, project_root) for result in results], "doctor_status": doctor_status})
     return {
         "status": "complete" if doctor_status == 0 else "blocked",
+        "agent_entry": entry_result["agent_entry"],
         "project": {"id": project_id(project_root)},
-        "created_or_reused": [{"path": rel(result.target, project_root), "status": result.status} for result in results],
+        "created_or_reused": [{"path": rel(result.target, project_root), "status": result.status} for result in results]
+        + [{"path": row["path"], "status": "reused" if row["action"] == "unchanged" else "written"} for row in entry_plan["files"]],
         "codex_integration": codex_integration,
         "snapshot": {"status": snapshot_status, "id": _snapshot.get("snapshot", {}).get("id") if isinstance(_snapshot.get("snapshot"), dict) else None},
         "search_index": search_index,
@@ -6069,6 +6067,20 @@ def _project_initialization_error(exc: project_initialization.ProjectInitializat
     return SystemExit(f"FAIL: {exc.code}. {hints.get(exc.code, 'Check the initialization request.')}")
 
 
+def project_entry_budget_input(args: argparse.Namespace) -> Any:
+    from processforge_core.agent_entry import EntryError, decode_json
+
+    name = getattr(args, "entry_budget_file", None)
+    if not name:
+        return None
+    try:
+        with Path(name).expanduser().open("rb") as stream:
+            return decode_json(stream.read(65537), 65536)
+    except (EntryError, OSError) as exc:
+        raise project_initialization.ProjectInitializationError(
+            exc.reason if isinstance(exc, EntryError) else "budget_file_unreadable") from exc
+
+
 def command_init_project(args: argparse.Namespace) -> int:
     request = {
         "project_root": args.project_root,
@@ -6085,19 +6097,20 @@ def command_init_project(args: argparse.Namespace) -> int:
         "command": getattr(args, "command", "project-onboard"),
     }
     try:
+        request["entry_budget_policy"] = project_entry_budget_input(args)
         result = project_initialization.initialize_project(request, sys.modules[__name__])
     except project_initialization.ProjectInitializationError as exc:
         raise _project_initialization_error(exc) from exc
     if result.get("applied") is not True:
         print(dump_yaml(result), end="")
-        return 0
+        return 1 if result.get("status") == "blocked" else 0
     payload = result.get("result") if isinstance(result.get("result"), dict) else {}
     print(dump_yaml(payload), end="")
     return 0 if payload.get("doctor", {}).get("status") == "pass" else 1
 
 
 def command_project_init_status(args: argparse.Namespace) -> int:
-    project_root = Path(args.project_root).expanduser().resolve()
+    project_root = Path(args.project_root).expanduser().absolute()
     payload = project_initialization.status(project_root, sys.modules[__name__], workplace=getattr(args, "workplace", None))
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if getattr(args, "json", False) else dump_yaml(payload))
     return 0
@@ -6106,13 +6119,14 @@ def command_project_init_status(args: argparse.Namespace) -> int:
 def command_project_init_repair(args: argparse.Namespace) -> int:
     request = {"project_root": args.project_root, "workplace": getattr(args, "workplace", None), "repair_action": args.repair_action, "reason": args.reason, "apply": args.apply is True}
     try:
+        request["entry_budget_policy"] = project_entry_budget_input(args)
         result = project_initialization.repair_project(request, sys.modules[__name__])
     except project_initialization.ProjectInitializationError as exc:
         raise _project_initialization_error(exc) from exc
     print(dump_yaml(result), end="")
     payload = result.get("result") if isinstance(result.get("result"), dict) else {}
     if result.get("applied") is not True:
-        return 0
+        return 1 if result.get("status") == "blocked" else 0
     if payload.get("doctor") is None:
         return 0 if payload.get("status") == "complete" else 1
     return 0 if payload.get("doctor", {}).get("status") == "pass" else 1
@@ -6140,106 +6154,45 @@ def gitignore_effectively_protects(project_root: Path, entry: str) -> bool | Non
 
 
 def default_start_agent_here(project_root: Path) -> str:
-    assignment_path = locate_flow_root(project_root) / "assignments" / "first-assignment.yaml"
-    assignment_rel = rel(assignment_path, project_root) if assignment_path.is_file() else ".pf/assignments/"
-    run_block = start_agent_run_block(project_root)
-    return f"""# Start Agent Here
-
-You are working inside a ProcessForge-enabled project.
-
-## Preferred Path
-
-1. Read `.pf/AGENTS.md`.
-2. Call `pf.context` with this project root; use the current snapshot only as a
-   file-only fallback when MCP is unavailable.
-3. Use `pf.search` and `pf.resolve` for project-authorized resources.
-4. Perform local read-only analysis.
-5. Call `pf.work.start` with the high-level objective when work becomes
-   substantive, then follow the selected assignment and capsule.
-6. Use ProcessForge artifacts, reviews, logs, and handoffs for durable outputs.
-
-## Infrastructure Boundary
-
-During ordinary project work, do not install, start, restart, or repair PF
-Runtime, MCP, host hooks, or Agent Ledger. Report an operator-level blocker if
-Forge infrastructure is required but unavailable. Garage work does not require
-Runtime, hooks, or a manually created Ledger session.
-
-Do not expose local absolute paths from `.pf/process-forge.local.yaml`. Do not
-call a distribution-local CLI path from this project root unless this project
-is the ProcessForge distribution itself.
-
-## Current Assignment
-
-- File: `{assignment_rel}`
-- Goal: Verify this project is ready for ProcessForge assignment work.
-
-{run_block}
-"""
+    from processforge_core.agent_start_prompt import render_start_prompt
+    return render_start_prompt()
 
 
 def start_agent_run_block(project_root: Path) -> str:
-    active_runs = active_run_ids(project_root)
-    if active_runs:
-        return f"""## Active Run
-
-Current ProcessForge run:
-
-```bash
-python .pf/runtime/bin/pf.py run-status --project-root . --run {active_runs[0]}
-```
-
-Work loop:
-
-```bash
-python .pf/runtime/bin/pf.py task-list --project-root . --run {active_runs[0]}
-python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --kind work --summary "..." --apply
-python .pf/runtime/bin/pf.py iteration-add --project-root . --task <task-id> --kind debug --summary "..." --apply
-python .pf/runtime/bin/pf.py task-complete --project-root . --task <task-id> --summary "..." --apply
-python .pf/runtime/bin/pf.py run-summary --project-root . --run {active_runs[0]} --apply
-```
-"""
-    return """## Create A Run
-
-```bash
-python .pf/runtime/bin/pf.py run-create --project-root . --id <run-id> --title "<title>" --process task-batch-execution --apply
-```
-
-## Create A Process
-
-```bash
-python .pf/runtime/bin/pf.py process-authoring-start --project-root . --id <process-id> --title "<title>" --apply
-python .pf/runtime/bin/pf.py process-authoring-review --project-root . --process <process-id>
-python .pf/runtime/bin/pf.py process-authoring-apply --project-root . --process <process-id>
-python .pf/runtime/bin/pf.py process-doctor --project-root . --process <process-id>
-```
-"""
+    """Compatibility helper: no discovery or selection of diagnostic Runs."""
+    from processforge_core.agent_start_prompt import WORK_GUIDANCE
+    return WORK_GUIDANCE
 
 
 def refresh_start_agent_run_block(project_root: Path, text: str) -> str:
-    block = start_agent_run_block(project_root).rstrip() + "\n"
-    markers = ["## Active Run", "## Create A Run"]
-    positions = [text.find(marker) for marker in markers if marker in text]
-    if positions:
-        start = min(positions)
-        return text[:start].rstrip() + "\n\n" + block
-    return text.rstrip() + "\n\n" + block
+    """Pure recognized-content refresh; customized text is never spliced away."""
+    from processforge_core.agent_start_prompt import load_start_source, project_start_content
+    generated, _source_digest, legacy = load_start_source()
+    raw, _action = project_start_content(text.encode("utf-8"), generated, legacy)
+    return raw.decode("utf-8")
 
 
 def command_agent_start_prompt(args: argparse.Namespace) -> int:
-    project_root = Path(args.project_root).expanduser().resolve()
+    from processforge_core.agent_entry import EntryError
+    from processforge_core.agent_entry_migration import plan_start_prompt, apply_start_prompt
+    project_root = Path(args.project_root).expanduser().absolute()
     flow_root = require_flow_root(project_root)
-    target = flow_root / "START_AGENT_HERE.md"
-    if target.is_file() and "python tools/processforge.py" not in target.read_text(encoding="utf-8", errors="replace"):
-        text = refresh_start_agent_run_block(project_root, target.read_text(encoding="utf-8", errors="replace"))
-        target.write_text(ensure_trailing_newline(text), encoding="utf-8")
-    else:
-        text = default_start_agent_here(project_root)
-        target.write_text(ensure_trailing_newline(text), encoding="utf-8")
-        emit_process_event(project_root, "artifact.created", payload={"path": rel(target, project_root)})
-        emit_process_event(project_root, "agent.start_prompt.generated", payload={"path": rel(target, project_root)})
-    print(text.rstrip())
-    return 0
+    if not getattr(args, "plan", False) and not getattr(args, "apply", False):
+        print(default_start_agent_here(project_root).rstrip())
+        return 0
+    try:
+        if flow_root != project_root / ".pf":
+            raise EntryError("unsupported_flow_root")
+        plan = plan_start_prompt(project_root)
+        result = apply_start_prompt(project_root, plan, apply=True) if getattr(args, "apply", False) else plan
+    except EntryError as exc:
+        print(json.dumps({"status": "conflict", "reason": exc.reason, "path": exc.path}, ensure_ascii=False, indent=2))
+        return 1
+    except OSError:
+        print(json.dumps({"status": "conflict", "reason": "storage_error"}))
+        return 1
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return 1 if result.get("action") == "incomplete" or result.get("blockers") else 0
 
 
 def command_first_run(args: argparse.Namespace) -> int:
@@ -6373,11 +6326,8 @@ def release_source_files(root: Path) -> list[tuple[str, Path]]:
         if path.is_file():
             files.append((name, path))
     root_agents = root / "AGENTS.md"
-    pf_agents = root / ".pf" / "AGENTS.md"
     if root_agents.is_file():
         files.append(("AGENTS.md", root_agents))
-    elif pf_agents.is_file():
-        files.append(("AGENTS.md", pf_agents))
     for name in RELEASE_PF_PUBLIC_FILES:
         path = root / name
         if path.is_file():
@@ -6545,9 +6495,40 @@ def public_support_policy_violations(archive_path: str, text: str, policy: dict[
 
 
 def release_required_path_exists(root: Path, archive_path: str) -> bool:
-    if archive_path == "AGENTS.md":
-        return (root / "AGENTS.md").is_file() or (root / ".pf" / "AGENTS.md").is_file()
     return (root / archive_path).exists()
+
+
+def release_agent_entry_checks(root: Path) -> list[Check]:
+    """Verify explicit source projections; packaging never generates instructions."""
+    from processforge_core.agent_entry import EntryError, block_span, load_contract
+
+    try:
+        contract = load_contract(root)
+    except EntryError as exc:
+        return [check_with_hint(
+            "FAIL", f"release agent entry source invalid: {exc.reason}",
+            "The versioned contract source, metadata and derived template must agree.",
+            "restore the reviewed contract source and derived template before packaging",
+        )]
+    checks: list[Check] = []
+    for name in ("AGENTS.md", ".pf/AGENTS.md"):
+        try:
+            raw = release_file_content(root / name)
+            span = block_span(raw, contract)
+            if span is None:
+                raise EntryError("entry_contract_missing")
+            if raw[span[0]:span[1]] != contract.raw:
+                raise EntryError("entry_contract_outdated")
+        except (EntryError, OSError) as exc:
+            reason = exc.reason if isinstance(exc, EntryError) else "entry_projection_unavailable"
+            checks.append(check_with_hint(
+                "FAIL", f"release agent entry invalid: {name}: {reason}",
+                "Root and hidden source projections must contain the current startup contract; hidden files are not root aliases.",
+                "prepare and review explicit current entry projections in the source checkout before packaging",
+            ))
+        else:
+            checks.append(check("PASS", f"release agent entry current: {name}: {contract.version} sha256:{contract.sha256}"))
+    return checks
 
 
 def release_checks(root: Path) -> list[Check]:
@@ -6579,6 +6560,8 @@ def release_checks(root: Path) -> list[Check]:
             if not release_required_path_exists(root, required)
             else check("PASS", f"required release path present: {required}")
         )
+
+    checks.extend(release_agent_entry_checks(root))
 
     core_violations = core_hardcode_violations(root)
     if core_violations:
@@ -6930,6 +6913,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_core_has_no_domain_knowledge_seeds", [sys.executable, str(root / "tools" / "smoke_core_has_no_domain_knowledge_seeds.py")], 120),
         ReleaseCommand("smoke_empty_workplace_has_no_domain_resources", [sys.executable, str(root / "tools" / "smoke_empty_workplace_has_no_domain_resources.py")], 120),
         ReleaseCommand("smoke_project_classification_data_driven", [sys.executable, str(root / "tools" / "smoke_project_classification_data_driven.py")], 120),
+        ReleaseCommand("smoke_classifier_inventory_pruning", [sys.executable, str(root / "tools" / "smoke_classifier_inventory_pruning.py")], 120),
         ReleaseCommand("smoke_project_onboard_platform_selection", [sys.executable, str(root / "tools" / "smoke_project_onboard_platform_selection.py")], 120),
         ReleaseCommand("smoke_no_hardcoded_file_project_detection", [sys.executable, str(root / "tools" / "smoke_no_hardcoded_file_project_detection.py")], 120),
         ReleaseCommand("smoke_optional_domain_pack_not_default", [sys.executable, str(root / "tools" / "smoke_optional_domain_pack_not_default.py")], 120),
@@ -7008,10 +6992,17 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_project_context_snapshot_lock_model", [sys.executable, str(root / "tools" / "smoke_project_context_snapshot_lock_model.py")], 120),
         ReleaseCommand("smoke_project_context_freshness_policies", [sys.executable, str(root / "tools" / "smoke_project_context_freshness_policies.py")], 120),
         ReleaseCommand("smoke_context_freshness_vs_execution_readiness", [sys.executable, str(root / "tools" / "smoke_context_freshness_vs_execution_readiness.py")], 180),
+        ReleaseCommand("smoke_continuation_work", [sys.executable, str(root / "tools" / "smoke_continuation_work.py")], 240),
         ReleaseCommand("smoke_process_catalog_not_implicit_execution_route", [sys.executable, str(root / "tools" / "smoke_process_catalog_not_implicit_execution_route.py")], 180),
         ReleaseCommand("smoke_project_init_local_search_mcp", [sys.executable, str(root / "tools" / "smoke_project_init_local_search_mcp.py")], 180),
         ReleaseCommand("smoke_resource_indexing_policy_acceptance", [sys.executable, str(root / "tools" / "smoke_resource_indexing_policy_acceptance.py")], 180),
         ReleaseCommand("smoke_project_init_acceptance", [sys.executable, str(root / "tools" / "smoke_project_init_acceptance.py")], 180),
+        ReleaseCommand("smoke_project_init_entry", [sys.executable, str(root / "tools" / "smoke_project_init_entry.py")], 180),
+        ReleaseCommand("smoke_agent_entry", [sys.executable, str(root / "tools" / "smoke_agent_entry.py")], 180),
+        ReleaseCommand("smoke_agent_entry_release", [sys.executable, str(root / "tools" / "smoke_agent_entry_release.py")], 120),
+        ReleaseCommand("smoke_agent_start_prompt", [sys.executable, str(root / "tools" / "smoke_agent_start_prompt.py")], 180),
+        ReleaseCommand("smoke_agent_entry_profiles", [sys.executable, str(root / "tools" / "smoke_agent_entry_profiles.py")], 180),
+        ReleaseCommand("smoke_agent_entry_adapters", [sys.executable, str(root / "tools" / "smoke_agent_entry_adapters.py")], 180),
         ReleaseCommand("smoke_project_init_codex_integration", [sys.executable, str(root / "tools" / "smoke_project_init_codex_integration.py")], 180),
         ReleaseCommand("smoke_no_production_example_update_urls", [sys.executable, str(root / "tools" / "smoke_no_production_example_update_urls.py")], 120),
         ReleaseCommand("smoke_docs_garage_no_runtime_required", [sys.executable, str(root / "tools" / "smoke_docs_garage_no_runtime_required.py")], 120),
@@ -8069,12 +8060,16 @@ def manifest_path_refs(project_root: Path, key: str) -> list[Path]:
 
 def collect_context_sources(project_root: Path, assignment: Path | None = None) -> list[dict[str, Any]]:
     flow_root = locate_flow_root(project_root)
+    root_boot = project_root / "AGENTS.md"
+    has_root_boot = root_boot.is_file()
     candidates: list[tuple[Path, str, bool]] = [
-        (flow_root / "AGENTS.md", "agent-boot", True),
+        (root_boot if has_root_boot else flow_root / "AGENTS.md", "agent-boot", True),
         (flow_root / "process-forge.yaml", "project-flow", True),
         (flow_root / "process-forge.local.yaml", "local-config", False),
         (project_root / "tools" / "processforge.py", "tool", False),
     ]
+    if has_root_boot:
+        candidates.append((flow_root / "AGENTS.md", "agent-extended", False))
     candidates.extend((path, "process", False) for path in manifest_path_refs(project_root, "processes"))
     candidates.extend((path, "package", False) for path in manifest_path_refs(project_root, "packages"))
     for dirname, kind in [("processes", "process"), ("packages", "package")]:
@@ -8097,7 +8092,12 @@ def collect_context_sources(project_root: Path, assignment: Path | None = None) 
         seen.add(resolved)
         if required:
             reason = "required for session bootstrap" if kind != "assignment" else "required by context compile assignment"
+            if kind == "agent-boot" and not has_root_boot:
+                reason = "legacy compatibility entry; root AGENTS.md is absent"
             policy = "read_required"
+        elif kind == "agent-extended":
+            reason = "extended PF instructions; load when current obligations require them"
+            policy = "available"
         elif kind in {"process", "package", "template"}:
             reason = "available in broad project context; not loaded by default for workers"
             policy = "available"
@@ -10726,11 +10726,12 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         },
         "session": {
             "startup_read_order": [
-                rel(flow_root / "AGENTS.md", project_root),
+                "AGENTS.md" if (project_root / "AGENTS.md").is_file() else rel(flow_root / "AGENTS.md", project_root),
                 rel(flow_root / "process-forge.yaml", project_root),
-                rel(flow_root / "contexts" / "project-context.snapshot.md", project_root),
-                "current assignment",
-                "relevant logs/reviews/handoffs",
+                "pf.context; verify current snapshot freshness and readiness with the existing CLI when MCP is unavailable",
+                "pf.work.start / pf.work.state: returned assignment and immutable capsule, identity, scope and obligations",
+                "pf.work.search / pf.work.resolve: exact returned Work/context selectors and authorized resources",
+                "extended .pf/AGENTS.md and relevant artifacts/logs/reviews/handoffs on demand",
             ],
             "telemetry_root": rel(flow_root / "runtime" / "telemetry", project_root),
             "events_log": rel(flow_root / "runtime" / "events" / "events.ndjson", project_root),
@@ -10934,11 +10935,7 @@ def render_project_context_snapshot_md(snapshot: dict[str, Any], freshness: str 
             "",
             "Read in this order:",
             "",
-            "1. `.pf/AGENTS.md`.",
-            "2. `.pf/process-forge.yaml`.",
-            "3. this snapshot.",
-            "4. current assignment.",
-            "5. relevant logs/reviews/handoffs.",
+            *[f"{index}. {item}" for index, item in enumerate(snapshot.get("session", {}).get("startup_read_order", []), 1)],
             "",
             f"Telemetry root: `{snapshot.get('session', {}).get('telemetry_root', 'runtime/telemetry')}`",
             f"Events log: `{snapshot.get('session', {}).get('events_log', 'runtime/events/events.ndjson')}`",
@@ -12686,7 +12683,6 @@ def assignment_patterns_overlap(left: str, right: str, repo_files: list[str]) ->
     right_key = assignment_path_key(right)
     left_glob = assignment_has_glob(left_key)
     right_glob = assignment_has_glob(right_key)
-    files = [assignment_path_key(item) for item in repo_files]
     if not left_glob and not right_glob:
         return (left_key == right_key, "same_file")
     if left_glob and not right_glob:
@@ -12695,6 +12691,7 @@ def assignment_patterns_overlap(left: str, right: str, repo_files: list[str]) ->
         return (fnmatch.fnmatch(left_key, right_key), "file_matches_glob")
     if left_key == right_key:
         return True, "same_glob"
+    files = [assignment_path_key(item) for item in repo_files]
     if any(fnmatch.fnmatch(item, left_key) and fnmatch.fnmatch(item, right_key) for item in files):
         return True, "glob_matches_same_file"
     left_prefix = re.split(r"[*?\[]", left_key, maxsplit=1)[0]
@@ -12737,6 +12734,8 @@ def validate_assignment_scope_overlaps(
     assignment_path: Path | None = None,
 ) -> dict[str, Any]:
     current_id = safe_id(str(metadata.get("id") or (assignment_path.stem if assignment_path else "assignment")), "assignment")
+    from processforge_core.process_execution import scope_handoff_predecessor
+    handed_off_predecessor = scope_handoff_predecessor(project_root, metadata, sys.modules[__name__])
     current_scope = assignment_write_scope(metadata)
     forbidden_scope = assignment_scope_items(metadata.get("forbidden_files"))
     repo_files = iter_repo_files(project_root)
@@ -12763,6 +12762,8 @@ def validate_assignment_scope_overlaps(
         if not other_scope:
             continue
         other_id = safe_id(str(other.get("id") or candidate.stem), "assignment")
+        if other_id == handed_off_predecessor:
+            continue
         current_deps = assignment_dependency_set(metadata)
         other_deps = assignment_dependency_set(other)
         if other_id in current_deps or current_id in other_deps:
@@ -17515,7 +17516,8 @@ def load_lease(workplace_root: Path, lease_id: str) -> dict[str, Any]:
 
 def save_lease(workplace_root: Path, lease: dict[str, Any]) -> None:
     ensure_agent_workplace_dirs(workplace_root)
-    write_yaml_file(lease_path(workplace_root, str(lease.get("id") or "lease")), lease)
+    with registry_file_lock(workplace_agent_leases_dir(workplace_root) / "registry"):
+        write_yaml_file(lease_path(workplace_root, str(lease.get("id") or "lease")), lease)
 
 
 def command_agent_lease_grant(args: argparse.Namespace) -> int:
@@ -17958,6 +17960,11 @@ def continuation_path(project_root: Path, continuation_id: str) -> Path:
 def command_continuation_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
+    if getattr(args, "assignment", None) or getattr(args, "context_id", None):
+        return continuation_command(args, "create", continuation_id=args.id, run_id=args.run,
+                                    assignment_id=args.assignment, context_id=args.context_id,
+                                    expected_artifacts=args.expected_artifact, handoff_id=args.handoff or "",
+                                    instruction=args.instruction or "", apply=args.apply)
     continuation_id = safe_id(args.id, "continuation")
     payload = {
         "schema_version": 1,
@@ -17970,6 +17977,9 @@ def command_continuation_create(args: argparse.Namespace) -> int:
         "created_at": now_utc(),
     }
     path = continuation_path(project_root, continuation_id)
+    if path.exists():
+        print("FAIL: continuation already exists; preserve it and choose a new id")
+        return 1
     if not getattr(args, "apply", False):
         print_plan("continuation-create dry run", [path], project_root)
         return 0
@@ -17979,45 +17989,27 @@ def command_continuation_create(args: argparse.Namespace) -> int:
 
 
 def command_continuation_status(args: argparse.Namespace) -> int:
-    project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
-    payload = load_yaml_document(continuation_path(project_root, args.continuation))
-    if not payload:
-        print(f"FAIL: continuation not found: {args.continuation}")
-        return 1
-    expected = (payload.get("waiting_for") if isinstance(payload.get("waiting_for"), dict) else {}).get("expected_artifacts", [])
-    missing = [normalize_assignment_path(item) for item in as_list(expected) if not (project_root / normalize_assignment_path(item)).is_file()]
-    status = "ready" if not missing else str(payload.get("status") or "waiting")
-    result = {"continuation": payload.get("id"), "status": status, "missing_expected_artifacts": missing}
-    if getattr(args, "json", False):
-        print(json.dumps(result, ensure_ascii=False, indent=2))
-    else:
-        print(dump_yaml(result))
-    return 0
+    return continuation_command(args, "status", continuation_id=args.continuation or "")
 
 
 def command_continuation_resume(args: argparse.Namespace) -> int:
+    return continuation_command(args, "resume", continuation_id=args.continuation, session_id=getattr(args, "session", None) or "")
+
+
+def continuation_command(args: argparse.Namespace, operation: str, **request: Any) -> int:
+    from processforge_core.continuation import ContinuationService
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    path = continuation_path(project_root, args.continuation)
-    payload = load_yaml_document(path)
-    if not payload:
-        print(f"FAIL: continuation not found: {args.continuation}")
-        return 1
-    status_args = argparse.Namespace(project_root=str(project_root), continuation=args.continuation, json=True)
-    capture_status, output = run_command_capture(command_continuation_status, status_args)
-    if capture_status:
-        print(output, end="")
-        return capture_status
-    state = json.loads(output)
-    if state.get("status") != "ready":
-        print(f"WAITING: {payload.get('id')}")
-        return 1
-    payload["status"] = "resumed"
-    payload["resumed_at"] = now_utc()
-    write_yaml_file(path, payload)
-    print(f"RESUMED: {payload.get('id')}")
-    return 0
+    manifest = resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))
+    result = ContinuationService(project_root, manifest.parent if manifest else None, sys.modules[__name__]).request(operation, **request)
+    print(json.dumps(result, ensure_ascii=False, indent=2) if getattr(args, "json", False) else dump_yaml(result))
+    return 1 if result.get("status") == "blocked" else 0
+
+
+def command_work_cancel(args: argparse.Namespace) -> int:
+    return continuation_command(args, "cancel_work", run_id=args.run, assignment_id=args.assignment,
+                                context_id=args.context_id, capsule_checksum=args.capsule_checksum,
+                                reason=args.reason, evidence=args.evidence, apply=args.apply)
 
 
 def command_continuation_doctor(args: argparse.Namespace) -> int:
@@ -18870,8 +18862,11 @@ def terminate_worker_pid(pid: int) -> None:
 
 def process_pid_running(pid: int) -> bool:
     if os.name == "nt":
-        result = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, shell=False)
-        return str(pid) in (result.stdout or "")
+        result = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, shell=False)
+        # tasklist uses a Windows console code page even when Python uses UTF-8.
+        # Only the CSV PID column is relevant; localized names/messages are not.
+        rows = csv.reader((result.stdout or b"").decode("ascii", errors="replace").splitlines())
+        return any(len(row) > 1 and row[1].strip() == str(pid) for row in rows)
     try:
         os.kill(pid, 0)
         return True
@@ -19040,6 +19035,14 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
     task = load_task(project_root, task_id)
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        task = load_task(project_root, task_id)
+        if any(not intent.with_suffix(".applied.json").is_file() for intent in
+               (locate_flow_root(project_root) / "runs" / run_id).glob("cancellation-*.yaml")):
+            print("FAIL: cancellation_recovery_pending")
+            return 1
+        if task.get("status") == "cancelled":
+            print("FAIL: work_is_terminal")
+            return 1
         running = existing_running_worker_run(project_root, task, getattr(args, "driver", None))
         if running:
             state, driver, paths = running
@@ -19060,6 +19063,14 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
     detach = bool(getattr(args, "detach", False))
     proc: subprocess.Popen[bytes] | None = None
     with worker_run_lifecycle_lock(project_root, run_id, task_id):
+        task = load_task(project_root, task_id)
+        if any(not intent.with_suffix(".applied.json").is_file() for intent in
+               (locate_flow_root(project_root) / "runs" / run_id).glob("cancellation-*.yaml")):
+            print("FAIL: cancellation_recovery_pending")
+            return 1
+        if task.get("status") == "cancelled":
+            print("FAIL: work_is_terminal")
+            return 1
         running = existing_running_worker_run(project_root, task, getattr(args, "driver", None))
         if running:
             state, driver, paths = running
@@ -20617,6 +20628,49 @@ def print_process_execution_result(payload: dict[str, Any], *, as_json: bool = F
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if as_json else dump_yaml(payload))
 
 
+def command_agent_entry(args: argparse.Namespace) -> int:
+    from processforge_core.agent_entry import EntryError, decode_json
+    from processforge_core.agent_entry_migration import apply_entry, check_entry, plan_entry, rollback_entry
+    from processforge_core.agent_entry_profiles import diagnose_entry, load_profiles
+    from processforge_core.agent_entry_adapters import adapter_guide, apply_adapter, plan_adapter
+
+    def input_json(name: str, maximum: int):
+        with Path(name).expanduser().open("rb") as stream:
+            return decode_json(stream.read(maximum + 1), maximum)
+
+    try:
+        operation = args.entry_operation
+        project = Path(args.project_root) if args.project_root else None
+        if operation == "profiles":
+            result = load_profiles()
+        elif operation == "adapter-plan":
+            policy = input_json(args.budget_file, 65536) if args.budget_file else None
+            result = plan_adapter(project, profile_id=args.profile, route=args.route, budget_policy=policy)
+        elif operation == "adapter-apply":
+            result = apply_adapter(project, input_json(args.plan_file, 262144), apply=args.apply)
+        elif operation == "adapter-guide":
+            observed = input_json(args.observations_file, 65536) if args.observations_file else None
+            result = adapter_guide(project, profile_id=args.profile, route=args.route, cwd=args.cwd, observation=observed)
+        elif operation == "diagnose":
+            observed = input_json(args.observations_file, 65536) if args.observations_file else None
+            result = diagnose_entry(project, profile_id=args.profile, observation=observed, cwd=args.cwd)
+        elif operation in {"plan", "check"}:
+            policy = input_json(args.budget_file, 65536) if args.budget_file else None
+            result = (plan_entry if operation == "plan" else check_entry)(project, budget_policy=policy)
+        elif operation == "apply":
+            result = apply_entry(project, input_json(args.plan_file, 262144), apply=args.apply)
+        else:
+            result = rollback_entry(project, args.transaction, apply=args.apply)
+    except EntryError as exc:
+        result = {"action": "blocked", "reason": exc.reason}
+        if exc.path:
+            result["path"] = exc.path
+    except OSError:
+        result = {"action": "blocked", "reason": "storage_error"}
+    print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+    return 1 if result.get("action") in {"blocked", "incomplete"} or result.get("blockers") else 0
+
+
 def command_work_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
@@ -20629,7 +20683,20 @@ def command_work_start(args: argparse.Namespace) -> int:
         except (EgressError, OSError, ValueError):
             print_process_execution_result({"action": "blocked", "reason": "egress_contract_invalid"}, as_json=bool(args.json))
             return 1
-    payload = process_execution_service(project_root, getattr(args, "workplace", None)).start(objective=args.objective, process_id=str(getattr(args, "process_id", None) or ""), security=security)
+    scope_intent = None
+    if getattr(args, "scope_file", None):
+        from processforge_core.process_execution import creation_scope_intent
+        from processforge_core.work_context import ContextContractError
+        try:
+            with Path(args.scope_file).open("rb") as stream:
+                raw = stream.read(65537)
+            if len(raw) > 65536:
+                raise ValueError("scope input too large")
+            scope_intent = creation_scope_intent(json.loads(raw.decode("utf-8")))
+        except (ContextContractError, OSError, ValueError):
+            print_process_execution_result({"action": "blocked", "reason": "work_scope_invalid"}, as_json=bool(args.json))
+            return 1
+    payload = process_execution_service(project_root, getattr(args, "workplace", None)).start(objective=args.objective, process_id=str(getattr(args, "process_id", None) or ""), security=security, scope_intent=scope_intent)
     print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
     return 0 if payload.get("action") in {"created_new", "continue_existing"} else 1
 
@@ -20640,6 +20707,8 @@ def command_work_state(args: argparse.Namespace) -> int:
     payload = process_execution_service(project_root, getattr(args, "workplace", None)).state(
         run_id=str(getattr(args, "run", None) or ""),
         assignment_id=str(getattr(args, "assignment", None) or ""),
+        context_id=str(getattr(args, "context_id", None) or ""),
+        session_id=str(getattr(args, "session", None) or ""),
     )
     print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
     return 0
@@ -20678,6 +20747,8 @@ def command_work_transition(args: argparse.Namespace) -> int:
         notes=str(getattr(args, "notes", None) or ""),
         run_id=str(getattr(args, "run", None) or ""),
         assignment_id=str(getattr(args, "assignment", None) or ""),
+        context_id=str(getattr(args, "context_id", None) or ""),
+        session_id=str(getattr(args, "session", None) or ""),
     )
     print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
     return 0 if payload.get("action") in {"stage_transitioned", "run_completed"} else 1
@@ -21646,7 +21717,6 @@ Fix:
     checks.extend(project_knowledge_resource_index_checks(project_root, distribution_root, workplace_manifest_path))
 
     for rel_path in [
-        "START_AGENT_HERE.md",
         "runtime/bin/pf.py",
         "assignments/first-assignment.yaml",
         "artifacts/project-profile.md",
@@ -26468,6 +26538,7 @@ def build_parser() -> argparse.ArgumentParser:
     init_project.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
     init_project.add_argument("--process", help="Explicit active process id.")
     init_project.add_argument("--answers", help="Optional project answers YAML.")
+    init_project.add_argument("--entry-budget-file", help="Optional JSON array of observed generic entry budget policies.")
     init_project.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     init_project.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     init_project.add_argument("--apply", action="store_true", help="Write files.")
@@ -26484,6 +26555,7 @@ def build_parser() -> argparse.ArgumentParser:
     project_init.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
     project_init.add_argument("--process", help="Explicit active process id.")
     project_init.add_argument("--answers", help="Optional project answers YAML.")
+    project_init.add_argument("--entry-budget-file", help="Optional JSON array of observed generic entry budget policies.")
     project_init.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     project_init.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     project_init.add_argument("--apply", action="store_true", help="Write files.")
@@ -26500,6 +26572,7 @@ def build_parser() -> argparse.ArgumentParser:
     project_onboard.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
     project_onboard.add_argument("--process", help="Explicit active process id.")
     project_onboard.add_argument("--answers", help="Optional project answers YAML.")
+    project_onboard.add_argument("--entry-budget-file", help="Optional JSON array of observed generic entry budget policies.")
     project_onboard.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
     project_onboard.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
     project_onboard.add_argument("--apply", action="store_true", help="Write files.")
@@ -26516,7 +26589,8 @@ def build_parser() -> argparse.ArgumentParser:
     project_init_repair = sub.add_parser("project-init-repair", help="Repair deterministic project initialization state.")
     project_init_repair.add_argument("--project-root", required=True, help="Existing PF project root path.")
     project_init_repair.add_argument("--workplace", help="Optional workplace root or manifest for context resolution.")
-    project_init_repair.add_argument("--repair-action", default="refresh_context", choices=["refresh_context", "restore_deterministic_artifacts", "install_codex_hooks"], help="Deterministic repair action.")
+    project_init_repair.add_argument("--repair-action", default="refresh_context", choices=["refresh_context", "restore_deterministic_artifacts", "migrate_agent_entry", "install_codex_hooks"], help="Deterministic repair action.")
+    project_init_repair.add_argument("--entry-budget-file", help="Optional JSON array of observed generic entry budget policies.")
     project_init_repair.add_argument("--reason", default="manual", help="Repair reason recorded in the event journal.")
     project_init_repair.add_argument("--apply", action="store_true", help="Perform the repair; omission is a non-mutating plan.")
     project_init_repair.set_defaults(func=command_project_init_repair)
@@ -26568,8 +26642,11 @@ def build_parser() -> argparse.ArgumentParser:
     error_route.add_argument("--json", action="store_true", help="Print JSON.")
     error_route.set_defaults(func=command_error_route)
 
-    agent_start_prompt = sub.add_parser("agent-start-prompt", help="Print and ensure the project START_AGENT_HERE prompt.")
+    agent_start_prompt = sub.add_parser("agent-start-prompt", help="Preview current startup guidance; placement requires --apply.")
     agent_start_prompt.add_argument("--project-root", required=True, help="Project root path.")
+    start_mode = agent_start_prompt.add_mutually_exclusive_group()
+    start_mode.add_argument("--plan", action="store_true", help="Print the read-only placement plan as JSON.")
+    start_mode.add_argument("--apply", action="store_true", help="Explicitly place recognized PF-owned START text with a rollback journal.")
     agent_start_prompt.set_defaults(func=command_agent_start_prompt)
 
     first_run = sub.add_parser("first-run", help="Convenience command that runs workplace-init and then project-onboard.")
@@ -27965,6 +28042,10 @@ def build_parser() -> argparse.ArgumentParser:
     continuation_create.add_argument("--expected-artifact", action="append", default=[], help="Expected artifact path. Repeatable.")
     continuation_create.add_argument("--process", help="Resume process id.")
     continuation_create.add_argument("--run", help="Resume run id.")
+    continuation_create.add_argument("--assignment", help="Exact Work assignment id; creates a v2 continuation.")
+    continuation_create.add_argument("--context-id", help="Exact immutable Work context id.")
+    continuation_create.add_argument("--workplace", help="Workplace root override.")
+    continuation_create.add_argument("--json", action="store_true", help="Print JSON.")
     continuation_create.add_argument("--stage", help="Resume stage id.")
     continuation_create.add_argument("--instruction", help="Resume instruction.")
     continuation_create.add_argument("--apply", action="store_true", help="Write the continuation capsule.")
@@ -27972,13 +28053,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     continuation_status = sub.add_parser("continuation-status", help="Show continuation status.")
     continuation_status.add_argument("--project-root", required=True, help="Project root path.")
-    continuation_status.add_argument("--continuation", required=True, help="Continuation id.")
+    continuation_status.add_argument("--continuation", help="Continuation id; omit to discover Work candidates without creating anything.")
+    continuation_status.add_argument("--workplace", help="Workplace root override.")
     continuation_status.add_argument("--json", action="store_true", help="Print JSON.")
     continuation_status.set_defaults(func=command_continuation_status)
 
-    continuation_resume = sub.add_parser("continuation-resume", help="Mark a ready continuation resumed.")
+    continuation_resume = sub.add_parser("continuation-resume", help="Resume verified Work, or explicitly mark a legacy wait-only record.")
     continuation_resume.add_argument("--project-root", required=True, help="Project root path.")
     continuation_resume.add_argument("--continuation", required=True, help="Continuation id.")
+    continuation_resume.add_argument("--session", help="Bind selection to this session; otherwise return mandatory exact selectors.")
+    continuation_resume.add_argument("--workplace", help="Workplace root override.")
+    continuation_resume.add_argument("--json", action="store_true", help="Print JSON.")
     continuation_resume.set_defaults(func=command_continuation_resume)
 
     continuation_doctor = sub.add_parser("continuation-doctor", help="Validate continuation capsules.")
@@ -28010,12 +28095,37 @@ def build_parser() -> argparse.ArgumentParser:
                 shell_plan.add_argument("--write-normalized", help="Optional normalized plan YAML output path.")
         shell_plan.set_defaults(func=func, shell_plan=alias_name.endswith("apply"))
 
+    entry = sub.add_parser("agent-entry", help="Inspect entry profiles, diagnose actual files, or explicitly migrate the startup contract.")
+    entry_commands = entry.add_subparsers(dest="entry_operation", required=True)
+    for operation in ("plan", "check", "apply", "rollback", "diagnose", "profiles", "adapter-plan", "adapter-apply", "adapter-guide"):
+        entry_command = entry_commands.add_parser(operation)
+        entry_command.add_argument("--project-root", required=operation != "profiles")
+        entry_command.add_argument("--json", action="store_true", help="JSON is always emitted by this command.")
+        if operation in {"adapter-plan", "adapter-guide"}:
+            entry_command.add_argument("--profile", required=True, help="Exact id from agent-entry profiles.")
+            entry_command.add_argument("--route", required=True, choices=["root-agents", "native-import", "explicit-read", "prerequisites"])
+        if operation in {"plan", "check", "adapter-plan"}:
+            entry_command.add_argument("--budget-file", help="Explicit generic instruction-accounting policies JSON.")
+        elif operation in {"diagnose", "adapter-guide"}:
+            if operation == "diagnose":
+                entry_command.add_argument("--profile", required=True, help="Exact id from agent-entry profiles.")
+            entry_command.add_argument("--cwd", default=".", help="Project-relative client working directory; no directory change.")
+            entry_command.add_argument("--observations-file", help="Bounded explicit settings/context observations JSON; never host certification.")
+        elif operation in {"apply", "rollback", "adapter-apply"}:
+            entry_command.add_argument("--apply", action="store_true", help="Explicit acknowledgement of filesystem writes.")
+            if operation in {"apply", "adapter-apply"}:
+                entry_command.add_argument("--plan-file", required=True)
+            else:
+                entry_command.add_argument("--transaction", required=True)
+        entry_command.set_defaults(func=command_agent_entry)
+
     work_start = sub.add_parser("work-start", help="Start or continue declarative governed work.")
     work_start.add_argument("--project-root", required=True, help="Project root path.")
     work_start.add_argument("--workplace", help="Workplace root override.")
     work_start.add_argument("--objective", required=True, help="High-level work objective.")
     work_start.add_argument("--process-id", help="Optional allowed process id for the new governed work.")
     work_start.add_argument("--egress-intent", help="Explicit trusted v2 intent JSON created by egress bind; existing capsules stay immutable.")
+    work_start.add_argument("--scope-file", help="Explicit local operator assignment-scope JSON (version 1, max 64 KiB); pinned before creation, never applied to an existing context.")
     work_start.add_argument("--json", action="store_true", help="Print JSON.")
     work_start.set_defaults(func=command_work_start)
     from processforge_core.egress.service import add_parser as add_egress_parser
@@ -28026,6 +28136,8 @@ def build_parser() -> argparse.ArgumentParser:
     work_state.add_argument("--workplace", help="Workplace root override.")
     work_state.add_argument("--run", help="Explicit Run id.")
     work_state.add_argument("--assignment", help="Explicit Assignment id.")
+    work_state.add_argument("--context-id", help="Expected Work context id.")
+    work_state.add_argument("--session", help="Use this session's explicit continuation selection.")
     work_state.add_argument("--json", action="store_true", help="Print JSON.")
     work_state.set_defaults(func=command_work_state)
 
@@ -28051,12 +28163,27 @@ def build_parser() -> argparse.ArgumentParser:
     work_transition.add_argument("--workplace", help="Workplace root override.")
     work_transition.add_argument("--run", help="Explicit Run id.")
     work_transition.add_argument("--assignment", help="Explicit Assignment id.")
+    work_transition.add_argument("--context-id", help="Expected Work context id.")
+    work_transition.add_argument("--session", help="Use this session's explicit continuation selection.")
     work_transition.add_argument("--outcome", required=True, help="Declared stage outcome.")
     work_transition.add_argument("--evidence", action="append", default=[], help="Evidence JSON object or attestation text. Repeatable.")
     work_transition.add_argument("--evidence-file", help="JSON file containing one evidence object or an array.")
     work_transition.add_argument("--notes", help="Optional transition notes.")
     work_transition.add_argument("--json", action="store_true", help="Print JSON.")
     work_transition.set_defaults(func=command_work_transition)
+
+    work_cancel = sub.add_parser("work-cancel", help="Preview or apply cancellation of one exact Work; preserve history and capsule.")
+    work_cancel.add_argument("--project-root", required=True)
+    work_cancel.add_argument("--workplace")
+    work_cancel.add_argument("--run", required=True)
+    work_cancel.add_argument("--assignment", required=True)
+    work_cancel.add_argument("--context-id", required=True)
+    work_cancel.add_argument("--capsule-checksum", required=True)
+    work_cancel.add_argument("--reason", required=True)
+    work_cancel.add_argument("--evidence", action="append", default=[])
+    work_cancel.add_argument("--apply", action="store_true")
+    work_cancel.add_argument("--json", action="store_true")
+    work_cancel.set_defaults(func=command_work_cancel)
 
     run_create = sub.add_parser("run-create", help="Create a project run/work session.")
     run_create.add_argument("--project-root", required=True, help="Project root path.")
@@ -28271,7 +28398,9 @@ def main(argv: list[str] | None = None) -> int:
         if not getattr(args, "dry_run", False):
             args.mode_implicit = True
         args.dry_run = True
-    if args.command in {"diagnostics-status", "diagnostics-export", "diagnostics-configure", "monitor"} or (args.command == "server" and args.runtime_command == "status"):
+    # Initialization owns its post-preflight events. Eager CLI diagnostics must
+    # not turn status, a preview, or an entry refusal into a project write.
+    if args.command in {"agent-entry", "agent-start-prompt", "init-project", "project-init", "project-onboard", "project-init-status", "project-init-repair", "diagnostics-status", "diagnostics-export", "diagnostics-configure", "monitor"} or (args.command == "server" and args.runtime_command == "status"):
         return args.func(args)
     project_value = getattr(args, "project_root", None)
     project = Path(project_value).expanduser().resolve() if isinstance(project_value, str) else None

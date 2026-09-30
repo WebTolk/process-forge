@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.dev/schemas/agent-entry.schema.json",
+  "title": "ProcessForge agent entry manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "contract_version", "contract_sha256", "projections"],
+  "properties": {
+    "schema_version": {"const": 1, "type": "integer"},
+    "kind": {"const": "pf.agent-entry"},
+    "contract_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "contract_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "projections": {"const": ["AGENTS.md", ".pf/AGENTS.md"]}
+  }
+}

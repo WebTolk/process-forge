@@ -34,6 +34,14 @@ python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-
 python bin/pf.py agent-start-prompt --project-root ../my-project
 ```
 
+The project now has root `AGENTS.md`, hidden `.pf/AGENTS.md` and
+`.pf/agent-entry.json`. START is no longer needed or generated; existing START
+files stay untouched. `agent-start-prompt` only prints current guidance without
+writing files. Unmigrated projects explicitly
+use hidden entry. Ordinary work follows `pf.context`, `pf.work.start`,
+`pf.work.state` and `pf.work.transition` to `run_completed`, using returned
+Run/assignment/capsule identities. See [entry policy](../concepts/agent-entry.md).
+
 Inside `../my-project`, run ProcessForge through `pf` or the project-local runtime launcher:
 
 ```bash

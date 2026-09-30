@@ -1,55 +1,53 @@
-# AGENTS.md
+<!-- PF:ENTRY:BEGIN contract=1.1.0 -->
+## ProcessForge startup contract
 
-## Mission
+This project is governed by ProcessForge (PF). This section is the startup
+contract; `.pf/` holds state and further instructions. It grants no file,
+tool, resource, process or infrastructure permissions by itself.
 
-Use ProcessForge as a file-first process system. Work through assignments, execution contexts, artifacts, reviews, handoffs, logs, and ADRs.
+1. Locate this project's `.pf/process-forge.yaml` and read it. Call `pf.context`
+   for this project root. If MCP is unavailable, use the existing project PF
+   CLI and current `.pf/contexts/project-context.snapshot.yaml`; check freshness
+   with `project-context-check`. Do not install or start tools to obtain context.
+2. Before substantive work, require a valid, current context with no blocking
+   readiness or policy result. Missing, stale, broken, conflicting or ambiguous
+   context means stop the dependent work and report the exact blocker and
+   required operator action. Historical reports do not override current state.
+3. For continuation, discover candidates through `pf.continuation.status` or
+   read the named continuation. Select exact run/assignment/context ids, create
+   a continuation with explicit apply if needed, then `pf.continuation.resume`.
+   Missing or ambiguous selection must not create Work. Without a bound session,
+   pass returned selectors to every Work call. Use `pf.work.start` for new work.
+   Follow PF's returned identity; never choose the first or newest assignment.
+   If `process_choice_required`, select only an offered process and call again
+   with `process_id`; do not infer a choice from a default among alternatives.
+   If the objective cannot disambiguate the choice, ask the user.
+4. Read `pf.work.state`, its selected assignment and immutable context capsule.
+   Verify matching project/run/assignment/context identity, validity, current
+   stage, allowed actions, read/write scope and obligations before acting.
+   Empty grants grant nothing. A denied action or required unavailable resource
+   blocks dependent work; do not broaden scope or rebuild the capsule yourself.
+5. Use `pf.search`/`pf.resolve` for authorized project navigation. For Work
+   resources use `pf.work.search`/`pf.work.resolve` with the exact returned run,
+   assignment and context ids. Resolve before opening PF-managed resource roots;
+   load only the authorized instructions, knowledge and templates needed now.
+6. Satisfy the current stage, record artifacts/evidence and call
+   `pf.work.transition` with outcome and evidence. The pinned process selects
+   stages: never supply `next_stage` or edit lifecycle state manually. Repeat
+   state/work/transition until PF returns `action: run_completed`. Use equivalent
+   existing CLI operations when MCP is unavailable; do not invent commands.
+7. Respect one writer per scope. Keep approved artifacts, process versions and
+   capsules immutable. Use a governed handoff for scope/context changes. Keep
+   repository scratch under `.pf/tmp/`; remove it unless retained as evidence.
+   Never put private paths, credentials or machine details in public outputs.
+8. Ordinary work must not install, start, restart or repair PF Runtime, MCP,
+   host hooks or Agent Ledger. Report infrastructure blockers to the operator.
+   File-only work does not require these services. Completion handoffs are
+   advisory and do not authorize infrastructure or external-session actions.
 
-## Boot Sequence
-
-1. Read this file.
-2. Read `.pf/process-forge.yaml`.
-3. Call `pf.context` with the project root, or read the current snapshot only
-   when MCP is unavailable.
-4. Use `pf.search` for authorized project knowledge and `pf.resolve` before
-   opening ProcessForge-managed resource roots.
-5. Call `pf.work.start` with the objective when work becomes substantive. If it
-   returns `process_choice_required`, choose an offered process and call it
-   again with `process_id`; do not infer from `default` when multiple processes
-   are allowed.
-6. Call `pf.work.state` and read the selected assignment and immutable
-   Execution Context Package.
-7. Check allowed and forbidden files before editing.
-8. Satisfy the current stage obligations, then call `pf.work.transition` with
-   a declared outcome and evidence. Never choose `next_stage` directly.
-9. Repeat state, work, and transition until PF returns `action: run_completed`.
-
-## Core Rules
-
-- File-only mode is the default.
-- One file scope has one responsible writer.
-- Assignments define the work boundary.
-- Do not edit files outside the assignment scope without a handoff.
-- Approved artifacts are protected.
-- Execution Context Packages are immutable snapshots.
-- Process versions are immutable.
-- ProcessForge selects the initial stage and every next stage from the pinned
-  Process definition. Agents provide outcomes and evidence, not stage ids.
-- Runner and backend support are optional future modes, not requirements.
-- Public product files must not include private paths, secrets, machine names, or temporary private notes.
-- Use stable machine-readable ids for statuses, processes, artifacts, assignments, templates, and packages.
-- Create every repository-local temporary directory under `.pf/tmp/`; never create temporary worker, debug, staging, or scratch directories at the repository root.
-- In particular, do not create root directories named `.pf-worker-shell-*` or similar runner sandboxes. Clean `.pf/tmp/` outputs after use unless they are declared durable evidence.
-- System temporary directories are allowed only for isolated tests that never write a temporary directory into the repository.
-- During ordinary project work, do not install, start, restart, or repair PF
-  Runtime, MCP, host hooks, or Agent Ledger. Use available PF tools. If PF
-  returns an operator-level infrastructure blocker, report it to the operator.
-- Current `pf.context`/snapshot state outranks historical generated reports.
-  Do not treat a report marked `stale` or `historical` as current truth.
-- A completed Work can offer a compact fresh-session handoff through
-  `pf.context`; it is advisory and must not cause Runtime, MCP, Ledger, or
-  external-session lifecycle actions.
-- `run-create`, `task-create`, `task-complete`, and `run-complete` are
-  compatibility and diagnostic commands, not the ordinary agent workflow.
+Specialized work begins only after PF resolves its valid context and obligations.
+This text defines conduct; technical access enforcement belongs to the host/PF.
+<!-- PF:ENTRY:END -->
 
 ## Standard Statuses
 

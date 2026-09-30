@@ -67,7 +67,7 @@ Workplace находится в <workplace-root>.
 её для project onboarding.
 
 Внутри подключённых проектов:
-1. Сначала прочитайте .pf/START_AGENT_HERE.md.
+1. Прочитайте корневой AGENTS.md (в старом проекте без него — .pf/AGENTS.md), затем проверьте pf.context.
 2. Из корня проекта используйте python .pf/runtime/bin/pf.py.
 
 Вне проектов используйте python <processforge-root>/bin/pf.py.

@@ -102,7 +102,7 @@ After the workplace is ready, connect a project:
 Connect this project to my existing ProcessForge workplace.
 
 Inspect the project first, choose a conservative project type, create the
-project-local .pf layer, read .pf/START_AGENT_HERE.md, inspect the current
+project-local .pf state and root AGENTS.md, read that entry contract, inspect the current
 context through ProcessForge, and summarize what ProcessForge now knows about
 the project.
 
@@ -110,10 +110,10 @@ Keep global resources in the workplace. Do not copy heavy documentation,
 source mirrors, toolchains, or the ProcessForge repository into this project.
 ```
 
-Inside an onboarded project, start each ProcessForge-backed session from
-`.pf/START_AGENT_HERE.md`. The normal agent path is `pf.context`, optional
-`pf.search`/`pf.resolve`, then `pf.work.start`; Runtime and host integration are
-operator concerns.
+Inside an onboarded project, start from root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project). The normal path is `pf.context`, optional
+`pf.search`/`pf.resolve`, then `pf.work.start`; use its returned identities with
+`pf.work.state` and `pf.work.transition` until `run_completed`. Runtime and host
+integration are operator concerns. See [entry compatibility](docs/concepts/agent-entry.md).
 
 More starter prompts are in [QUICKSTART.md](QUICKSTART.md).
 
@@ -214,11 +214,14 @@ knowledge, and use it for <what we are doing>. Fill all required artifacts.
 Start a work session:
 
 ```text
-Start a ProcessForge run for this work.
+Use ProcessForge for this work.
 
-Read .pf/START_AGENT_HERE.md first. Create a run, split the work into explicit
-tasks, record work/debug/fix/review iterations, keep artifacts and handoffs in
-the project-local .pf folder, and finish with a run summary and doctor check.
+Read root AGENTS.md (or .pf/AGENTS.md in an unmigrated project), verify current
+context with pf.context, then start or reuse governed work through pf.work.start.
+Use the returned Run, assignment and capsule identities; inspect pf.work.state,
+record evidence through pf.work.transition, and continue until run_completed.
+Handle process_choice_required using the returned choices. Keep artifacts and
+handoffs within the assignment scope.
 ```
 
 ### Forge / Factory Mode
@@ -384,7 +387,7 @@ Do not copy the whole ProcessForge repository into `.codex`, `.claude`,
 
 Install ProcessForge once as a tool, initialize a workplace, and add a short
 instruction to the agent configuration telling it where ProcessForge is
-installed and that project-specific instructions live in `.pf/START_AGENT_HERE.md`.
+installed. Project entry uses root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project). A configuration pointer alone does not prove that the client loaded it.
 
 ## License
 

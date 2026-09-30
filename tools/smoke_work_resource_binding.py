@@ -19,7 +19,7 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
 from processforge_core.local_resource_search import authorized_coverage, build_index, index_status
-from processforge_core.process_execution import canonical_fingerprint
+from processforge_core.process_execution import ProcessExecutionService, canonical_fingerprint
 from processforge_core.work_resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, capture_material
 from processforge_core.work_resources import WorkResourceService
 import processforge as core
@@ -118,7 +118,93 @@ def set_subset(cap: dict, task: dict, run_doc: dict, values: list[str]) -> None:
         contract["contract_checksum"] = contract_fingerprint({key: value for key, value in contract.items() if key != "contract_checksum"})
 
 
+def resource_order_checks() -> None:
+    """Declaration order must not change grants, including older native pins."""
+    with fixture() as (workplace, project, _initial):
+        declared = []
+        for package, resource in [("fixture.order-z", "z-guide"), ("fixture.order-a", "a-guide")]:
+            declared.append(register_fixture_resource(workplace, package, resource,
+                            {"guide.md": "ResourceOrderNeedle"}, title=resource))
+            configure_resource(workplace, package, resource,
+                               {"enabled": True, "mode": "fulltext", "sources": [{"path": ".", "mode": "fulltext", "include": ["**/*.md"]}]})
+            select_fixture_resource(project, workplace, package, resource)
+        work = call_mcp(workplace, "pf.work.start", {"project_root": str(project), "objective": "Nonalphabetic resource order"})
+        require(work.get("action") == "created_new", work)
+        args = {key: value for key, value in selectors(project, work).items() if key != "project_root"}
+        cap_path = project / ".pf/contexts/assignment-capsules" / f"{work['assignment_id']}.capsule.yaml"
+        task_path = project / ".pf/assignments" / f"{work['assignment_id']}.yaml"
+        run_path = project / ".pf/runs" / work["run_id"] / "run.yaml"
+        cap = yaml.safe_load(cap_path.read_bytes())
+        canonical = sorted(declared)
+        require(cap["context"]["selected_resource_ids"] == canonical, cap["context"])
+        require(cap["process_execution"]["selected_resource_ids"] == canonical, cap["process_execution"])
+        require(run(project, work)["process_execution"]["selected_resource_ids"] == canonical, run(project, work))
+        service = WorkResourceService(project, workplace, core)
+
+        def read(expected: str = "ready") -> None:
+            before = {path: path.read_bytes() for path in (cap_path, task_path, run_path)}
+            result = service.read(operation="resolve", **args, resource_id=declared[0])
+            require(result.get("status") == "ready" if expected == "ready" else
+                    result.get("status") == "blocked" and result.get("reason") == expected, result)
+            require(all(path.read_bytes() == raw for path, raw in before.items()), "resource read changed Work state")
+
+        read()
+        found = service.read(operation="search", **args, query="ResourceOrderNeedle")
+        require(found.get("status") == "ready" and found.get("total") == 2, found)
+
+        def old_order(cap, task, run_doc):
+            cap["process_execution"]["selected_resource_ids"] = list(declared)
+            run_doc["process_execution"]["selected_resource_ids"] = list(declared)
+
+        old = change_capsule(project, work, old_order)
+        try:
+            state = ProcessExecutionService(project, workplace, core).state(run_id=work["run_id"], assignment_id=work["assignment_id"])
+            require(state["context"]["validation"]["status"] == "valid", state)
+            read()  # Existing native capsules remain byte-identical and usable.
+        finally:
+            restore_capsule(project, work, old)
+
+        invalid = [canonical[:1], canonical + ["not-selected"], [canonical[0], canonical[0]],
+                   "not-a-list", [None], [1], [""], [f"id-{i}" for i in range(65)]]
+        for location in ("capsule_pin", "run_pin", "context"):
+            for value in invalid:
+                def corrupt(cap, task, run_doc):
+                    target = cap["context"] if location == "context" else (cap if location == "capsule_pin" else run_doc)["process_execution"]
+                    target["selected_resource_ids"] = copy.deepcopy(value)
+                old = change_capsule(project, work, corrupt)
+                try:
+                    read("resource_scope_invalid")
+                finally:
+                    restore_capsule(project, work, old)
+
+        def binding_change(cap, task, run_doc, mode):
+            resources = cap["resource_bindings"]["resources"]
+            if mode == "reverse":
+                resources.reverse()
+            elif mode == "missing":
+                resources.pop()
+            elif mode == "extra":
+                resources.append({**copy.deepcopy(resources[0]), "id": "not-selected"})
+            elif mode == "duplicate":
+                resources.append(copy.deepcopy(resources[0]))
+            else:
+                resources[0]["id"] = None
+            # Coherent synthetic fixtures exercise membership, not stale digests.
+            from processforge_core.work_context import fingerprint
+            contract = cap["execution_contract"]
+            contract["resources"]["bindings_checksum"] = fingerprint(cap["resource_bindings"])
+            contract["contract_checksum"] = fingerprint({k: v for k, v in contract.items() if k != "contract_checksum"})
+
+        for mode in ("reverse", "missing", "extra", "duplicate", "invalid"):
+            old = change_capsule(project, work, lambda cap, task, run_doc: binding_change(cap, task, run_doc, mode))
+            try:
+                read("ready" if mode == "reverse" else "resource_binding_invalid")
+            finally:
+                restore_capsule(project, work, old)
+
+
 def main() -> int:
+    resource_order_checks()
     with tempfile.TemporaryDirectory(prefix="pf-work-resource-binding-") as raw:
         root = Path(raw)
         with fixture() as (workplace, project, _fixture_work):

@@ -1,0 +1,398 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.dev/schemas/agent-entry-adapters.schema.json",
+  "title": "ProcessForge explicit agent entry adapter plan and guidance",
+  "type": "object",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/plan"
+    },
+    {
+      "$ref": "#/$defs/guide"
+    }
+  ],
+  "$defs": {
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "adapter",
+        "blockers",
+        "pending_transactions",
+        "delivery",
+        "behavior",
+        "kind",
+        "project",
+        "source_digest",
+        "contract_version",
+        "contract_sha256",
+        "preconditions",
+        "budget_inputs",
+        "budget_policy",
+        "budget",
+        "files",
+        "status",
+        "digest"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "adapter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "profile_id",
+            "profile_version",
+            "client_revision",
+            "adapter_version",
+            "route",
+            "target",
+            "generated_section",
+            "prerequisites"
+          ],
+          "properties": {
+            "profile_id": {
+              "type": "string"
+            },
+            "profile_version": {
+              "type": "string"
+            },
+            "client_revision": {
+              "type": "string"
+            },
+            "adapter_version": {
+              "const": "1.0.0"
+            },
+            "route": {
+              "enum": [
+                "root-agents",
+                "native-import",
+                "explicit-read",
+                "prerequisites"
+              ]
+            },
+            "target": {
+              "enum": [
+                "CLAUDE.md",
+                "GEMINI.md",
+                null
+              ]
+            },
+            "generated_section": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "prerequisites": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pending_transactions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "delivery": {
+          "const": "unverified"
+        },
+        "behavior": {
+          "const": "unverified"
+        },
+        "kind": {
+          "const": "pf.agent-entry.adapter-plan"
+        },
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "source_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "contract_version": {
+          "type": "string"
+        },
+        "contract_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "preconditions": {
+          "type": "object"
+        },
+        "budget_inputs": {
+          "type": "object"
+        },
+        "budget_policy": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "reason",
+            "unit",
+            "vendor_file_bytes",
+            "root_file_bytes",
+            "single_import_preview_bytes",
+            "preview_k_start",
+            "preview_k_end",
+            "expanded_bytes",
+            "contract_complete",
+            "required_instructions_complete",
+            "raw_policy"
+          ],
+          "properties": {
+            "status": {
+              "const": "budget_unverified"
+            },
+            "reason": {
+              "const": "native_expansion_not_observed"
+            },
+            "unit": {
+              "const": "utf8_bytes"
+            },
+            "vendor_file_bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "root_file_bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "single_import_preview_bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "preview_k_start": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "preview_k_end": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "expanded_bytes": {
+              "type": "null"
+            },
+            "contract_complete": {
+              "type": "null"
+            },
+            "required_instructions_complete": {
+              "type": "null"
+            },
+            "raw_policy": {
+              "type": "object"
+            }
+          }
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "action",
+              "before_sha256",
+              "after_sha256"
+            ],
+            "properties": {
+              "path": {
+                "enum": [
+                  "CLAUDE.md",
+                  "GEMINI.md"
+                ]
+              },
+              "action": {
+                "enum": [
+                  "create",
+                  "prepend_block",
+                  "unchanged"
+                ]
+              },
+              "before_sha256": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "after_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        "status": {
+          "enum": [
+            "conflict",
+            "current",
+            "planned"
+          ]
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "guide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "adapter",
+        "blockers",
+        "pending_transactions",
+        "delivery",
+        "behavior",
+        "kind",
+        "cwd",
+        "argv",
+        "status",
+        "diagnostics"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "adapter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "profile_id",
+            "profile_version",
+            "client_revision",
+            "adapter_version",
+            "route",
+            "target",
+            "generated_section",
+            "prerequisites"
+          ],
+          "properties": {
+            "profile_id": {
+              "type": "string"
+            },
+            "profile_version": {
+              "type": "string"
+            },
+            "client_revision": {
+              "type": "string"
+            },
+            "adapter_version": {
+              "const": "1.0.0"
+            },
+            "route": {
+              "enum": [
+                "root-agents",
+                "native-import",
+                "explicit-read",
+                "prerequisites"
+              ]
+            },
+            "target": {
+              "enum": [
+                "CLAUDE.md",
+                "GEMINI.md",
+                null
+              ]
+            },
+            "generated_section": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "prerequisites": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pending_transactions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "delivery": {
+          "const": "unverified"
+        },
+        "behavior": {
+          "const": "unverified"
+        },
+        "kind": {
+          "const": "pf.agent-entry.adapter-guide"
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "argv": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "blocked",
+            "guidance"
+          ]
+        },
+        "diagnostics": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

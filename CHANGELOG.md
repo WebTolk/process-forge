@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Changed
+
+- `START_AGENT_HERE.md` is no longer needed. New project onboarding and
+  deterministic repair no longer create it; project entry uses root `AGENTS.md`
+  and current ProcessForge context instead.
+- Existing START files remain untouched, including during forced onboarding
+  and repair. A missing START no longer affects project readiness or doctor
+  checks. `agent-start-prompt` remains a no-write guidance preview; explicit
+  compatibility placement is still available with `--apply`.
+
 ## 1.1.0 - 2026-08-31
 
 ### Added

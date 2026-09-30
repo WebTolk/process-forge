@@ -312,8 +312,10 @@ def _run_matches(run: dict[str, Any], metadata: dict[str, Any]) -> bool:
         return False
     # Compatibility Runs are containers for independently declared task
     # processes. A governed Run with an execution pin still has one process.
-    legacy_batch = "process_execution" not in run and process_id(run.get("process")) == "task-batch-execution"
-    return bool(process_id(metadata.get("process"))) and (legacy_batch or process_id(run.get("process")) == process_id(metadata.get("process")))
+    legacy_container = "process_execution" not in run and process_id(run.get("process")) in {
+        "task-batch-execution", "multi-agent-task-orchestration",
+    }
+    return bool(process_id(metadata.get("process"))) and (legacy_container or process_id(run.get("process")) == process_id(metadata.get("process")))
 
 
 def _assignment_run(project: Path, metadata: dict[str, Any], core: Any) -> dict[str, Any]:
@@ -486,7 +488,11 @@ def validate_execution_contract(project: Path, assignment_path: Path, metadata: 
             run_pin = run.get("process_execution") or {}
             if run_pin and contract["process"] != {"id": run_pin.get("process_id"), "version": run_pin.get("process_version"), "fingerprint": run_pin.get("process_fingerprint")}:
                 raise ContextContractError("work_context_mismatch")
-        if contract["scope"] != current_intent["scope"] or contract["outputs"] != current_intent["outputs"] or contract["workspace_access"] != current_intent["workspace_access"]:
+        # Advisory overlap diagnostics are signed, but excluded from assignment
+        # intent. Compare declarative scope using that same representation.
+        contract_scope = copy.deepcopy(contract["scope"])
+        contract_scope["non_overlap"].pop("overlap_check", None)
+        if contract_scope != current_intent["scope"] or contract["outputs"] != current_intent["outputs"] or contract["workspace_access"] != current_intent["workspace_access"]:
             raise ContextContractError("execution_contract_invalid")
         if contract["resources"]["bindings_checksum"] != fingerprint(capsule.get("resource_bindings")):
             raise ContextContractError("immutable_context_changed")

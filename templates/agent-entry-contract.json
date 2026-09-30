@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "contract_version": "1.1.0",
+  "sha256": "b5491764bf2ab070630c0b78c4849bc8d75729d8c8b676f9ac7581f2466abeba",
+  "max_utf8_bytes": 4096,
+  "known_blocks": [
+    {
+      "version": "1.0.0",
+      "sha256": "81eb72e9447e6a62ea0e9515f6be7a87b592015d06ef68b18ae10fb7e4d86aa6"
+    },
+    {
+      "version": "1.1.0",
+      "sha256": "b5491764bf2ab070630c0b78c4849bc8d75729d8c8b676f9ac7581f2466abeba"
+    }
+  ],
+  "legacy_prefixes": [
+    {
+      "lines": 16,
+      "sha256": "58947835746579dcb6c26b4761d2efb1d18ab9d8534641c399bb44e294dc3206",
+      "suffix_heading": "## Important Rules"
+    },
+    {
+      "lines": 20,
+      "sha256": "38db6e962c5727352bd20945594dea6f66d15e1698da55c89140514128e975ca",
+      "suffix_heading": "## Important Rules"
+    },
+    {
+      "lines": 53,
+      "sha256": "7b62937504791df29259b23a05d713db8e8dd5781b9021105b779899a226c7d2",
+      "suffix_heading": "## Standard Statuses"
+    }
+  ]
+}

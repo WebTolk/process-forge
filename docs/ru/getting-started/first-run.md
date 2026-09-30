@@ -46,8 +46,13 @@ python bin/pf.py project-onboard --project-root ../my-project --workplace ../pf-
 python bin/pf.py agent-start-prompt --project-root ../my-project
 ```
 
-После подключения в проекте появится `.pf/` и стартовый файл
-`.pf/START_AGENT_HERE.md`.
+После подключения появятся корневой `AGENTS.md`, состояние `.pf/`, скрытая
+проекция `.pf/AGENTS.md` и `.pf/agent-entry.json`. START больше не нужен и не
+создаётся; существующие файлы остаются нетронутыми. `agent-start-prompt` только
+печатает актуальную подсказку без записи файлов. Старый проект без корневого входа явно использует `.pf/AGENTS.md`.
+Обычная работа идёт через `pf.context`, `pf.work.start`, `pf.work.state` и
+`pf.work.transition` до `run_completed`, с возвращёнными идентификаторами
+Run/assignment/capsule. См. [политику входа](../concepts/agent-entry.md).
 
 ## 3. Проверить проект
 

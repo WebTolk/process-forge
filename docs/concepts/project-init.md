@@ -40,8 +40,9 @@ New projects use `.pf/` as the project flow root. `build_project_files()` and
 `project_runtime_launcher_files()` currently write:
 
 ```text
+AGENTS.md
 .pf/AGENTS.md
-.pf/START_AGENT_HERE.md
+.pf/agent-entry.json
 .pf/process-forge.yaml
 .pf/hooks.yaml
 .pf/assignments/first-assignment.yaml
@@ -65,7 +66,15 @@ The onboarding command also refreshes the project context snapshot under
 `.pf/contexts/` and writes runtime launcher files under `.pf/runtime/bin/`.
 Generic onboarding is agent-host agnostic and does not install Codex hooks.
 
-Root project `AGENTS.md` is not created by default.
+Root `AGENTS.md` and hidden `.pf/AGENTS.md` receive the same minimum contract K.
+The root is the ordinary entry; hidden extended instructions are read on demand.
+Entry ownership and budget checks cannot be bypassed with `--force`.
+`first-assignment.yaml` remains a compatibility placeholder, not required Work.
+`agent-start-prompt` is a no-write preview; START is no longer needed or generated.
+Existing START files are preserved. Missing START does not affect readiness or
+doctor, and deterministic repair does not restore it. Explicit compatibility
+placement remains separate.
+See [entry migration and legacy status](agent-entry.md).
 
 ## Created Private Files
 

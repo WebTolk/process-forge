@@ -53,7 +53,7 @@ def assert_file(path: Path) -> None:
 def assert_no_public_absolute_paths(project: Path) -> None:
     for path in [
         project / ".pf" / "process-forge.yaml",
-        project / ".pf" / "START_AGENT_HERE.md",
+        project / "AGENTS.md",
         project / ".pf" / "contexts" / "project-context.snapshot.yaml",
     ]:
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -93,8 +93,9 @@ def main() -> int:
             "--apply",
         )
         for rel_path in [
+            "AGENTS.md",
             ".pf/AGENTS.md",
-            ".pf/START_AGENT_HERE.md",
+            ".pf/agent-entry.json",
             ".pf/process-forge.yaml",
             ".pf/process-forge.local.yaml",
             ".pf/hooks.yaml",
@@ -108,15 +109,8 @@ def main() -> int:
         ]:
             assert_file(project / rel_path)
         assert_no_public_absolute_paths(project)
-        start_text = (project / ".pf" / "START_AGENT_HERE.md").read_text(encoding="utf-8", errors="replace")
-        if "python tools/processforge.py" in start_text:
-            raise AssertionError("START_AGENT_HERE contains broken linked-project command")
-        for marker in ["pf.context", "pf.search", "pf.resolve", "pf.work.start", "## Infrastructure Boundary"]:
-            if marker not in start_text:
-                raise AssertionError(f"START_AGENT_HERE is missing Garage-first marker: {marker}")
-        preferred_path = start_text.split("## Infrastructure Boundary", 1)[0]
-        if "doctor-project" in preferred_path or "session-start" in preferred_path or "install" in preferred_path:
-            raise AssertionError("START_AGENT_HERE mixes operator infrastructure into the preferred Garage path")
+        start = project / ".pf" / "START_AGENT_HERE.md"
+        assert not start.exists(), "new onboarding created retired START"
         if (project / ".codex" / "hooks.json").exists():
             raise AssertionError("generic first run unexpectedly installed Codex hooks")
 
@@ -125,6 +119,11 @@ def main() -> int:
             raise AssertionError("agent-start-prompt did not print the start prompt")
         if "python tools/processforge.py" in prompt:
             raise AssertionError("agent-start-prompt printed broken linked-project command")
+        assert not start.exists(), "preview created START"
+        for marker in ["pf.context", "pf.search", "pf.resolve", "pf.work.start", "## Infrastructure Boundary"]:
+            assert marker in prompt, f"startup preview is missing Garage-first marker: {marker}"
+        preferred_path = prompt.split("## Infrastructure Boundary", 1)[0]
+        assert not any(word in preferred_path for word in ("doctor-project", "session-start", "install")), "preview mixes operator infrastructure into the Garage path"
 
         run_python(project / ".pf" / "runtime" / "bin" / "pf.py", "doctor-project", "--project-root", ".", cwd=project)
         outside_cwd = root / "outside-cwd"
@@ -147,13 +146,15 @@ def main() -> int:
             "project.flow_root.created",
             "project.snapshot.refreshed",
             "launcher.project_runtime.created",
-            "agent.start_prompt.generated",
             "project.doctor.passed",
             "assignment.created",
             "project.onboarding.completed",
         ]:
             if marker not in events:
                 raise AssertionError(f"missing project event: {marker}")
+
+        assert "agent.start_prompt.generated" not in events, "onboarding emitted a false START generation event"
+        assert not start.exists(), "doctor/context refresh created START"
 
         outbox = project / ".pf" / "runtime" / "hooks" / "outbox" / "wtaicc"
         if not any(outbox.glob("*.json")):

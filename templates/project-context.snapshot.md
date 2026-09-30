@@ -61,14 +61,19 @@ unknown
 
 Read in this order:
 
-1. `.pf/AGENTS.md`
+1. root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project)
 2. `.pf/process-forge.yaml`
-3. this snapshot
-4. current assignment
-5. relevant logs/reviews/handoffs
+3. `pf.context`, or existing CLI `project-context-check` and verified context fallback
+4. Run/assignment/immutable capsule returned by `pf.work.start`; retain those identities
+5. required sources, resolved resources and relevant logs/reviews/handoffs
+6. extended `.pf/AGENTS.md` instructions on demand
 
-Telemetry is written to `.pf/runtime/telemetry/`.
-Flow events are written to `.pf/runtime/events/events.ndjson`.
+This snapshot records context; its presence alone does not establish freshness.
+Use `pf.work.state` and `pf.work.transition` until `run_completed`; handle
+`process_choice_required` from returned choices. START is optional guidance.
+Manual session creation is an operator interface, not a prerequisite for work.
+Explicit session telemetry lives in `.pf/runtime/telemetry/`, events in
+`.pf/runtime/events/events.ndjson`.
 
 ## Current Risks
 

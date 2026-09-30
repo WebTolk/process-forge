@@ -98,7 +98,7 @@ Inspect the repository first, choose a conservative project type, connect it to
 the existing workplace, and first verify that required workplace resources are
 already present or explicitly out of scope.
 
-Create the project-local .pf layer, read the generated .pf/START_AGENT_HERE.md,
+Create the project-local .pf state and root AGENTS.md, read the entry contract,
 run doctor-project, refresh the project context, and summarize what ProcessForge
 now knows about the project. Run project-context-check and confirm whether the
 snapshot is fresh, fresh_with_updates, stale, or broken.
@@ -222,4 +222,4 @@ For update checks, start with `python bin/pf.py update candidates refresh
 Do not copy the whole ProcessForge repository into `.codex`, `.claude`,
 `.agents`, or similar agent configuration folders. Install ProcessForge once as
 a tool and tell the agent where it is installed; project-specific instructions
-live in `.pf/START_AGENT_HERE.md`.
+use root `AGENTS.md` (explicit `.pf/AGENTS.md` fallback in an unmigrated project). See [entry compatibility](docs/concepts/agent-entry.md); a pointer is not delivery proof.
