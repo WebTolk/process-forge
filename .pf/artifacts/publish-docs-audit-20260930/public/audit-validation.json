@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "finding_count": 20,
+  "references_validated": 101,
+  "coverage_entries": 430,
+  "pending": 0,
+  "native_smokes_passed": 6,
+  "counterexamples_confirmed": [
+    "D01",
+    "D02",
+    "D03",
+    "D12",
+    "D19"
+  ],
+  "report_sha256": "7312430ad5f7481958bf58d25c01bb41cdc5914f37691225e89ee482ac5fe6f9",
+  "limitations": [
+    "Windows symlink fixtures partially skipped",
+    "Source audit, not new installed/Core/archive/host acceptance",
+    "Self-review: subagents prohibited by capsule"
+  ]
+}

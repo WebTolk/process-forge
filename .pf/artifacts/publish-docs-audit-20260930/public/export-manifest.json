@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "baseline": "25952e6d65a306054b0c29c33912267add7b2c0e",
+  "source_audit": "docs-code-audit-20260930",
+  "files": [
+    {
+      "path": "report.md",
+      "source_sha256": "7312430ad5f7481958bf58d25c01bb41cdc5914f37691225e89ee482ac5fe6f9",
+      "export_sha256": "7312430ad5f7481958bf58d25c01bb41cdc5914f37691225e89ee482ac5fe6f9",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "findings.json",
+      "source_sha256": "79c366e5fd784f29ebd1a05d40cf484e2af94dd313e27ed0e841e303cd7bca75",
+      "export_sha256": "79c366e5fd784f29ebd1a05d40cf484e2af94dd313e27ed0e841e303cd7bca75",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "coverage.md",
+      "source_sha256": "8190fde3947232a2c6d663fa550124b13da8057f84f9060d80e471c79896b95b",
+      "export_sha256": "8190fde3947232a2c6d663fa550124b13da8057f84f9060d80e471c79896b95b",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "coverage.json",
+      "source_sha256": "c7487c9a108451d994b7a4eeca4efcc9af015228b50b930deab88a6d92ac2aca",
+      "export_sha256": "c7487c9a108451d994b7a4eeca4efcc9af015228b50b930deab88a6d92ac2aca",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "coverage-summary.json",
+      "source_sha256": "9e439700a1f990ef4e54ccbdf83a58a2a4c48bab5ac8e2d7cac34217fc13ca23",
+      "export_sha256": "9e439700a1f990ef4e54ccbdf83a58a2a4c48bab5ac8e2d7cac34217fc13ca23",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "mechanism-evidence.md",
+      "source_sha256": "84b83b77c0d7e79b0023560107b3fa1ab97040cedafa44271e3fbbe9df63b4fe",
+      "export_sha256": "84b83b77c0d7e79b0023560107b3fa1ab97040cedafa44271e3fbbe9df63b4fe",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "mechanism-evidence.json",
+      "source_sha256": "2a6301e0c11e8d2e9cd903960259554ccdefe33f5239610e3f34b47537efef13",
+      "export_sha256": "2a6301e0c11e8d2e9cd903960259554ccdefe33f5239610e3f34b47537efef13",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "cli-handler-map.json",
+      "source_sha256": "3a79e901de508ce387c250ba6eab98ced6aea5a65d8ee58a88350e30387596bf",
+      "export_sha256": "3a79e901de508ce387c250ba6eab98ced6aea5a65d8ee58a88350e30387596bf",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "counterexamples.json",
+      "source_sha256": "a24293b384eafbf36709da4223018cca6fa2fce7d65ae8f2c12fca8b1ce8f7f6",
+      "export_sha256": "a24293b384eafbf36709da4223018cca6fa2fce7d65ae8f2c12fca8b1ce8f7f6",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "semantic-probes.json",
+      "source_sha256": "755e5e67d626bc3002cc98895254ca6a5c17b582c2fc10bc11a0c3af0946e5e5",
+      "export_sha256": "755e5e67d626bc3002cc98895254ca6a5c17b582c2fc10bc11a0c3af0946e5e5",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "links.json",
+      "source_sha256": "c6d398538a5e7a522aee28bd7fd2b8d6d04c216f0a111dd01674d7dad8ed8469",
+      "export_sha256": "c6d398538a5e7a522aee28bd7fd2b8d6d04c216f0a111dd01674d7dad8ed8469",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "anchors.json",
+      "source_sha256": "1c1d58c5fe7b939ffb630519052f29b0bd7aa3470dede6ad501faf804ab64b8c",
+      "export_sha256": "1c1d58c5fe7b939ffb630519052f29b0bd7aa3470dede6ad501faf804ab64b8c",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "structured-snippets.json",
+      "source_sha256": "79dfbcffb3d4f7f16022baf2349b6926137b22940971a520fd07b5e92d0f8726",
+      "export_sha256": "79dfbcffb3d4f7f16022baf2349b6926137b22940971a520fd07b5e92d0f8726",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "alternative-json.json",
+      "source_sha256": "b55834870565871a4083e17ccb584abad07895fbfd602d517516fe98237bbc22",
+      "export_sha256": "b55834870565871a4083e17ccb584abad07895fbfd602d517516fe98237bbc22",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "process-documentation.json",
+      "source_sha256": "2cc17a442ee5c63657a5920a033cd95ec6410d4fb2666169b07ce259ae3e8cc5",
+      "export_sha256": "2cc17a442ee5c63657a5920a033cd95ec6410d4fb2666169b07ce259ae3e8cc5",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "diagrams.json",
+      "source_sha256": "3fb3979c13fd81e9d6160f8c5a1723347f1a2195a438181fe73dacc513f63ede",
+      "export_sha256": "3fb3979c13fd81e9d6160f8c5a1723347f1a2195a438181fe73dacc513f63ede",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "supporting-checks.json",
+      "source_sha256": "021ab17d1b4a511c2b6b85eb0eb56fd9b1d2ab7102f218753e97c7376f1090f6",
+      "export_sha256": "144b5fe2277d385fd624e34a9cf9d4373195262260e29ebbb952cd4e75757dea",
+      "transformation": "Only local fixture paths/OS-localized error text replaced; WinError, both SKIPs, PASS and exit status retained."
+    },
+    {
+      "path": "audit-validation.json",
+      "source_sha256": "57fccb31156d1e7920871e5ce46859cb51b29a10b1c6ce966801cba4420f0eee",
+      "export_sha256": "57fccb31156d1e7920871e5ce46859cb51b29a10b1c6ce966801cba4420f0eee",
+      "transformation": "byte-identical"
+    },
+    {
+      "path": "inventory.json",
+      "source_sha256": "b79a8fee899b474443f1f6ff736fe0f8000cde40cbb8bf1c6915865c80e47df1",
+      "export_sha256": "b79a8fee899b474443f1f6ff736fe0f8000cde40cbb8bf1c6915865c80e47df1",
+      "transformation": "byte-identical"
+    }
+  ]
+}

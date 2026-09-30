@@ -1,0 +1,49 @@
+{
+  "non_gate_blockers": [
+    {
+      "code": "required_input_missing",
+      "input_id": "input"
+    },
+    {
+      "code": "artifact_evidence_missing",
+      "artifact_id": "artifact"
+    },
+    {
+      "code": "required_evidence_missing",
+      "evidence_id": "evidence"
+    },
+    {
+      "code": "automation_not_ready",
+      "obligation_id": "automation",
+      "status": "missing"
+    }
+  ],
+  "unapproved_parent_rule_curated": {
+    "exit_code": 0,
+    "promotion": {
+      "status": "proposed"
+    },
+    "review": {
+      "status": "pending"
+    },
+    "selected_as_curated": true,
+    "candidate_present_in_curated_notes": true,
+    "notes": "# Candidate Notes\n\nReviewed candidates staged for package curation.\n\n## generic\n\n- `audit-parent-rule`: Synthetic audit observation; no promotion approval.\n",
+    "schema_valid": true,
+    "candidate_validation_failures": []
+  },
+  "production_literal_consumers": {
+    "chat_capture": [],
+    "max_message_chars": [],
+    "notify_wtaicc": [],
+    "emit_on_complete": [],
+    "execution_profile": [],
+    "lifecycle_mode": [],
+    "stage_decisions": []
+  },
+  "native_docs_smoke": {
+    "exit_code": 0,
+    "stdout": "PASS: public docs match the current PF contract (660 CLI examples, 425 local links checked)\n",
+    "stderr": ""
+  }
+}

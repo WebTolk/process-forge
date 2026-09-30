@@ -1,0 +1,285 @@
+[
+  {
+    "id": "M01",
+    "title": "CLI и MCP",
+    "supported_claim": "CLI parser принимает зафиксированные примеры и связывает их с настоящими handlers; MCP публикует TOOLS.",
+    "source": [
+      "tools/processforge.py:26418",
+      "tools/pf_runtime/mcp_server.py:16"
+    ],
+    "evidence": "cli-handler-map.json; semantic-probes.json:native_docs_smoke",
+    "boundary": "Разбор аргументов не доказывает результат команды. D06, D20.",
+    "keywords": [
+      "runtime-mcp",
+      "cli",
+      "README",
+      "QUICKSTART"
+    ]
+  },
+  {
+    "id": "M02",
+    "title": "Процесс и переходы Work",
+    "supported_claim": "Движок использует pinned definition, проверяет selectors, contract и evidence перед переходом.",
+    "source": [
+      "src/processforge_core/process_execution.py:586",
+      "src/processforge_core/process_execution.py:1136"
+    ],
+    "evidence": "semantic-probes.json:non_gate_blockers; process-documentation.json",
+    "boundary": "Gate attestation не доказывает качество работы. D08, D11, D12, D13, D17.",
+    "keywords": [
+      "process",
+      "gate",
+      "automation",
+      "lifecycle",
+      "stage",
+      "execution"
+    ]
+  },
+  {
+    "id": "M03",
+    "title": "Области и ресурсы Work",
+    "supported_claim": "Work resource service проверяет run/assignment/capsule identity и process pin; доступ ограничен разрешёнными ресурсами.",
+    "source": [
+      "src/processforge_core/work_resources.py:130",
+      "src/processforge_core/work_context.py:219"
+    ],
+    "evidence": "supporting-checks.json:smoke_work_resource_binding",
+    "boundary": "Это проверки операций PF, а не sandbox произвольного shell или агента. Symlink fixture не поддержана host. D02.",
+    "keywords": [
+      "work-context",
+      "work-resource",
+      "capsule",
+      "execution-context",
+      "resource",
+      "scope"
+    ]
+  },
+  {
+    "id": "M04",
+    "title": "Продолжение Work",
+    "supported_claim": "Continuation v2 возвращает точные selectors; session binding сохраняется явно; legacy v1 не объявляется resumed Work.",
+    "source": [
+      "src/processforge_core/continuation.py:252"
+    ],
+    "evidence": "source review; текущая Work использует явные selectors",
+    "boundary": "Не выбирает newest/first assignment. Текущий аудит не повторяет все crash/reconnect сценарии.",
+    "keywords": [
+      "continuation",
+      "agent-entry",
+      "startup"
+    ]
+  },
+  {
+    "id": "M05",
+    "title": "Контекст и параметры",
+    "supported_claim": "Структурный merge параметров использует реальные источники и provenance; контекст формируется отдельным builder.",
+    "source": [
+      "tools/processforge.py:8783",
+      "tools/processforge.py:8900",
+      "tools/processforge.py:11622"
+    ],
+    "evidence": "supporting-checks.json:smoke_parameter_cascade_resolution",
+    "boundary": "Общий semantic policy merge этим не реализован: D07.",
+    "keywords": [
+      "context",
+      "cascade",
+      "parameter",
+      "instruction",
+      "assignment"
+    ]
+  },
+  {
+    "id": "M06",
+    "title": "Поиск и resolve",
+    "supported_claim": "Project search проверяет freshness; resolve отказывает ресурсу вне snapshot, Work navigation проверяет отдельную привязку.",
+    "source": [
+      "src/processforge_core/garage.py:140",
+      "src/processforge_core/garage.py:167",
+      "src/processforge_core/local_resource_search.py:831"
+    ],
+    "evidence": "source review; supporting-checks.json:smoke_work_resource_binding",
+    "boundary": "Fresh индекс с нулевым authorized coverage возможен; поиск не разрешает произвольное чтение.",
+    "keywords": [
+      "search",
+      "resource",
+      "navigation",
+      "garage"
+    ]
+  },
+  {
+    "id": "M07",
+    "title": "Agent entry и onboarding",
+    "supported_claim": "Renderer и migration раздельны; plan/apply/rollback имеют реальные реализации; onboarding защищает START от обычной записи.",
+    "source": [
+      "src/processforge_core/agent_entry.py:82",
+      "src/processforge_core/agent_entry_migration.py:330",
+      "src/processforge_core/agent_entry_migration.py:526",
+      "tools/processforge.py:5989"
+    ],
+    "evidence": "source review; существующие E10 receipts считаются историческими, не новым host proof",
+    "boundary": "Source не доказывает фактическую загрузку клиентом, POSIX или повторный host reconnect. D18.",
+    "keywords": [
+      "agent-entry",
+      "agent-start",
+      "onboard",
+      "initialization",
+      "setup",
+      "bootstrap"
+    ]
+  },
+  {
+    "id": "M08",
+    "title": "Director, leases, handoff",
+    "supported_claim": "Есть явные lease и handoff операции; legacy return/finalize имеют более слабые проверки, чем обещает текст.",
+    "source": [
+      "tools/processforge.py:17523",
+      "tools/processforge.py:17799",
+      "tools/processforge.py:17816",
+      "tools/processforge.py:17902"
+    ],
+    "evidence": "counterexamples.json",
+    "boundary": "D01, D02, D03, D08, D10. Операция summary не завершает session: D15.",
+    "keywords": [
+      "director",
+      "ledger",
+      "handoff",
+      "multi-agent",
+      "run-",
+      "agent-session"
+    ]
+  },
+  {
+    "id": "M09",
+    "title": "Worker и prepared resources",
+    "supported_claim": "Worker command строится из driver; prepared resources проходят отдельную авторизацию.",
+    "source": [
+      "tools/processforge.py:18659",
+      "src/processforge_core/prepared_resources.py:276",
+      "tools/codex_exec_worker.py:1"
+    ],
+    "evidence": "source review; driver manifests",
+    "boundary": "Не запускались реальные внешние модели/worker; private runtime output не становится public: D14.",
+    "keywords": [
+      "worker",
+      "driver",
+      "supervisor",
+      "prepared",
+      "runner"
+    ]
+  },
+  {
+    "id": "M10",
+    "title": "Host, adapters, chat",
+    "supported_claim": "Codex adapter преобразует поддержанные assistant events; host проверяет provenance и полномочия session/project.",
+    "source": [
+      "tools/pf_runtime/codex_hooks.py:123",
+      "tools/pf_runtime/codex_adapters.py:43",
+      "tools/pf_runtime/host.py:910",
+      "tools/processforge.py:11393"
+    ],
+    "evidence": "supporting-checks.json:smoke_provider_adapter_admission; semantic-probes.json:production_literal_consumers",
+    "boundary": "Это не универсальный transcript capture. Assignment chat_capture/hooks не исполняются: D04, D09.",
+    "keywords": [
+      "host",
+      "runtime",
+      "chat",
+      "provider",
+      "hook",
+      "ledger",
+      "session"
+    ]
+  },
+  {
+    "id": "M11",
+    "title": "Диагностика",
+    "supported_claim": "Сбор имеет отдельные уровни/config, sanitizer и sinks; неисправная конфигурация отключает необязательный сбор.",
+    "source": [
+      "src/processforge_core/diagnostics.py:112",
+      "src/processforge_core/diagnostics.py:573"
+    ],
+    "evidence": "supporting-checks.json:smoke_diagnostics",
+    "boundary": "Fallback отличается от раннего текста: D05. Фиксированное stderr health notice не означает quiet collector.",
+    "keywords": [
+      "diagnostic",
+      "logging",
+      "observability"
+    ]
+  },
+  {
+    "id": "M12",
+    "title": "Egress",
+    "supported_claim": "Session проверяет operation shape и допускает read/tool/finish; лимиты disclosure и bytes проверяются до выдачи.",
+    "source": [
+      "src/processforge_core/egress/engine.py:300",
+      "src/processforge_core/egress/engine.py:330",
+      "src/processforge_core/egress/transport.py:59"
+    ],
+    "evidence": "source review; alternative-json.json",
+    "boundary": "Доказательство bounded mediated session, а не произвольной работы внешнего агента; сетевой recipient не запускался.",
+    "keywords": [
+      "egress",
+      "security",
+      "export"
+    ]
+  },
+  {
+    "id": "M13",
+    "title": "Knowledge/evolve",
+    "supported_claim": "CLI принимает и валидирует явно переданных кандидатов; package builder формирует curation notes.",
+    "source": [
+      "tools/processforge.py:15973",
+      "tools/processforge.py:16159",
+      "tools/processforge.py:16277"
+    ],
+    "evidence": "semantic-probes.json:unapproved_parent_rule_curated",
+    "boundary": "Автоматический смысловой extractor отсутствует; approval barrier неполон: D16, D19.",
+    "keywords": [
+      "knowledge",
+      "evolve",
+      "platform-inheritance"
+    ]
+  },
+  {
+    "id": "M14",
+    "title": "Пакеты, платформы и capabilities",
+    "supported_claim": "Root/path/resource resolution и registries представлены конкретными resolver функциями.",
+    "source": [
+      "tools/processforge.py:8178",
+      "tools/processforge.py:8553",
+      "tools/processforge.py:8727",
+      "tools/processforge.py:9674"
+    ],
+    "evidence": "source review; schemas и samples; cli-handler-map.json",
+    "boundary": "Наличие registry не доказывает установленный внешний tool. Agent conventions и машинные checks различаются.",
+    "keywords": [
+      "package",
+      "platform",
+      "toolchain",
+      "specialization",
+      "registry",
+      "capabilit",
+      "template",
+      "pack"
+    ]
+  },
+  {
+    "id": "M15",
+    "title": "Поставка и Core update",
+    "supported_claim": "Manifest plan/apply, проверка payload и backup реализованы отдельно от release pack/test.",
+    "source": [
+      "src/processforge_core/core_update.py:167",
+      "src/processforge_core/core_update.py:453",
+      "src/processforge_core/core_update.py:587",
+      "tools/processforge.py:7501"
+    ],
+    "evidence": "supporting-checks.json:smoke_core_update_manifest",
+    "boundary": "В этом аудите нет новой сборки/установки/публикации; две symlink ветви теста пропущены Windows.",
+    "keywords": [
+      "release",
+      "update",
+      "install",
+      "migration",
+      "delivery"
+    ]
+  }
+]
