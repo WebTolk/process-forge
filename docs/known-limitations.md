@@ -43,6 +43,9 @@ artifacts.
 - TUF metadata and key management are not implemented in 1.1.0; update trust is
   based on HTTPS, SHA-256, immutable release assets, and Git provenance.
 - `release-test` and smoke commands use per-command process-tree timeouts; a hung child process should fail with command, cwd, timeout, stdout tail, and stderr tail diagnostics instead of hanging silently.
+- `release-archive-test --timeout-scale` requires a finite positive value,
+  passes that scale to the extracted archive's `release-test`, and separately
+  multiplies the outer extracted-test process timeout by the same scale.
 - `release-test --trace-smokes` writes per-smoke elapsed and timeout diagnostics
   under `.pf/runtime/release-test/`.
 - A long-running watcher is a future optional layer, not part of the core

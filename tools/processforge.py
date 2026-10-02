@@ -12,6 +12,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import math
 import os
 import platform
 import socket
@@ -7209,11 +7210,19 @@ def write_release_test_report(root: Path, results: list[ReleaseCommandResult], p
         (report_dir / "latest-trace.ndjson").write_text(ensure_trailing_newline("\n".join(trace_lines)), encoding="utf-8")
 
 
+def positive_timeout_scale(args: argparse.Namespace) -> float | None:
+    raw_timeout_scale = getattr(args, "timeout_scale", 1.0)
+    timeout_scale = float(1.0 if raw_timeout_scale is None else raw_timeout_scale)
+    if not math.isfinite(timeout_scale) or timeout_scale <= 0:
+        print("FAIL: --timeout-scale must be a finite value greater than 0")
+        return None
+    return timeout_scale
+
+
 def command_release_test(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
-    timeout_scale = float(getattr(args, "timeout_scale", 1.0) or 1.0)
-    if timeout_scale <= 0:
-        print("FAIL: --timeout-scale must be greater than 0")
+    timeout_scale = positive_timeout_scale(args)
+    if timeout_scale is None:
         return 1
     clean_first = not getattr(args, "no_clean", False)
     if getattr(args, "clean_first", False):
@@ -7325,9 +7334,8 @@ def command_dev_test(args: argparse.Namespace) -> int:
         command.extend(["--test", test])
     if getattr(args, "fail_fast", False):
         command.append("--fail-fast")
-    timeout_scale = float(getattr(args, "timeout_scale", 1.0) or 1.0)
-    if timeout_scale <= 0:
-        print("FAIL: --timeout-scale must be greater than 0")
+    timeout_scale = positive_timeout_scale(args)
+    if timeout_scale is None:
         return 1
     command.extend(["--timeout-scale", str(timeout_scale)])
     result = run_subprocess_command(command, cwd=root, timeout=max(1, int(1200 * timeout_scale)))
@@ -7806,9 +7814,8 @@ def command_release_archive_test(args: argparse.Namespace) -> int:
         print("SKIP: extracted archive release-test")
         print("RESULT: PASS")
         return 0
-    timeout_scale = float(getattr(args, "timeout_scale", 1.0) or 1.0)
-    if timeout_scale <= 0:
-        print("FAIL: --timeout-scale must be greater than 0")
+    timeout_scale = positive_timeout_scale(args)
+    if timeout_scale is None:
         return 1
     with tempfile.TemporaryDirectory(prefix="processforge-release-archive-") as temp:
         extract_root = Path(temp)
@@ -7838,6 +7845,7 @@ def command_release_archive_test(args: argparse.Namespace) -> int:
             ])
         else:
             command.append("--public")
+        command.extend(["--timeout-scale", str(timeout_scale)])
         result = run_release_command(
             "release-test extracted archive",
             command,
@@ -26681,7 +26689,7 @@ def build_parser() -> argparse.ArgumentParser:
     release_test.add_argument("--only", action="append", default=[], help="Run only a named check. Repeatable.")
     release_test.add_argument("--skip", action="append", default=[], help="Skip a named check. Repeatable.")
     release_test.add_argument("--fail-fast", action="store_true", help="Stop after the first failed check.")
-    release_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply per-check timeouts by this positive value.")
+    release_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply per-check timeouts by this finite positive value.")
     release_test.add_argument("--trace-smokes", action="store_true", help="Write a per-smoke trace report with elapsed and timeout diagnostics.")
     release_test.add_argument("--no-clean", action="store_true", help="Do not run the clean release artifacts check.")
     release_test.add_argument("--clean-first", action="store_true", help="Run clean release artifacts before checks. Default unless --no-clean is set.")
@@ -26694,7 +26702,7 @@ def build_parser() -> argparse.ArgumentParser:
     smoke_all.add_argument("--only", action="append", default=[], help="Run only a named check. Repeatable.")
     smoke_all.add_argument("--skip", action="append", default=[], help="Skip a named check. Repeatable.")
     smoke_all.add_argument("--fail-fast", action="store_true", help="Stop after the first failed check.")
-    smoke_all.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply per-check timeouts by this positive value.")
+    smoke_all.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply per-check timeouts by this finite positive value.")
     smoke_all.add_argument("--trace-smokes", action="store_true", help="Write a per-smoke trace report with elapsed and timeout diagnostics.")
     smoke_all.add_argument("--no-clean", action="store_true", help="Do not run the clean release artifacts check.")
     smoke_all.add_argument("--clean-first", action="store_true", help="Run clean release artifacts before checks. Default unless --no-clean is set.")
@@ -26706,7 +26714,7 @@ def build_parser() -> argparse.ArgumentParser:
     dev_test.add_argument("--suite", action="append", default=[], help="Dogfooding suite id to run. Repeatable.")
     dev_test.add_argument("--test", action="append", default=[], help="Dogfooding test id to run. Repeatable.")
     dev_test.add_argument("--fail-fast", action="store_true", help="Stop after the first failed dogfooding test.")
-    dev_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply dogfooding test timeouts by this positive value.")
+    dev_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply dogfooding test timeouts by this finite positive value.")
     dev_test.set_defaults(func=command_dev_test)
 
     dogfood_test = sub.add_parser("dogfood-test", help="Alias for dev-test.")
@@ -26715,7 +26723,7 @@ def build_parser() -> argparse.ArgumentParser:
     dogfood_test.add_argument("--suite", action="append", default=[], help="Dogfooding suite id to run. Repeatable.")
     dogfood_test.add_argument("--test", action="append", default=[], help="Dogfooding test id to run. Repeatable.")
     dogfood_test.add_argument("--fail-fast", action="store_true", help="Stop after the first failed dogfooding test.")
-    dogfood_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply dogfooding test timeouts by this positive value.")
+    dogfood_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply dogfooding test timeouts by this finite positive value.")
     dogfood_test.set_defaults(func=command_dev_test)
 
     clean = sub.add_parser("clean", help="Remove safe generated ProcessForge artifacts.")
@@ -26734,7 +26742,7 @@ def build_parser() -> argparse.ArgumentParser:
     release_archive_test.add_argument("--manifest", help="Optional release manifest path. Defaults to archive path with .manifest.json suffix.")
     release_archive_test.add_argument("--root", help="Optional source root; when set, verify archive entries and manifest hashes are current.")
     release_archive_test.add_argument("--extracted-test", choices=["full", "quick", "skip"], default="full", help="How much release-test coverage to run inside the extracted archive. Default: full.")
-    release_archive_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply extracted release-test timeout budgets by this factor.")
+    release_archive_test.add_argument("--timeout-scale", type=float, default=1.0, help="Pass this finite positive scale to the extracted release-test and multiply the outer process timeout by it.")
     release_archive_test.set_defaults(func=command_release_archive_test)
 
     examples_check = sub.add_parser("examples-check", help="Validate release examples for portability and stale generated data.")

@@ -1,0 +1,2180 @@
+schema_version: 1
+capsule:
+  id: implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propagation-f-capsule
+  generated_at: '2026-10-02T16:36:44Z'
+  assignment_id: implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propagation-f
+  assignment_path: .pf/assignments/implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propagation-f.yaml
+  immutable: true
+  worker_may_rebuild_context: false
+context_snapshot:
+  id: ctx-20261002-060156-86cbed
+  sha256: 'sha256:c0cc71edb3f7ea9b97c2a2571d95b3c8ef7f67b188a476d7a29451193545c2a0'
+  freshness_at_creation: fresh
+assignment:
+  id: implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propagation-f
+  run_id: garage-implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propag
+  path: .pf/assignments/implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propagation-f.yaml
+  status: in_progress
+  objective: 'Implement evolve-20261002-28: clarify and fix timeout-scale propagation from release-archive-test into extracted release-test, with focused tests and EN/RU CLI/help documentation updates.'
+  execution_mode:
+    kind: implementation
+    code_changes_allowed: true
+    artifact_changes_allowed: true
+    requires_review: true
+  stage: orchestration
+context:
+  required_sources:
+    - .pf/contexts/project-context.snapshot.yaml
+    - .pf/assignments/implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propagation-f.yaml
+    - .pf/artifacts/evolve/tasks-20261002/evolve-20261002-28.md
+  context_artifacts:
+    []
+  snapshot_id: ctx-20261002-060156-86cbed
+  selected_resource_ids:
+    - 'docs.python-devguide:root'
+    - 'docs.python-packaging:root'
+    - 'docs.python-peps:root'
+    - 'docs.python-practices:root'
+    - 'docs.python:root'
+    - 'project.process-forge:project-artifacts'
+    - 'project.process-forge:project-profile'
+  parameter_sources:
+    []
+  freshness: fresh
+  selected_specializations:
+    []
+  applied_project_overrides:
+    []
+scope:
+  allowed_files:
+    - .pf/artifacts/evolve/evolve-20261002-28/**
+    - .pf/logs/evolve-20261002-28.md
+    - QUICKSTART*.md
+    - README*.md
+    - checksums/**
+    - docs/**
+    - logs/evolve-20261002-28.md
+    - tools/processforge.py
+    - tools/smoke_release_archive_timeout_scale.py
+  allowed_read_files:
+    - .pf/artifacts/agent-entry-e09-20260929/evolution.md
+    - .pf/artifacts/evolve/tasks-20261002/evolve-20261002-28.md
+    - QUICKSTART*.md
+    - README*.md
+    - checksums/**
+    - docs/**
+    - tools/**
+    - tools/processforge.py
+  forbidden_files:
+    - .pf/assignments/**
+    - .pf/contexts/**
+    - .pf/handoffs/**
+    - .pf/processes/**
+    - .pf/runs/**
+    - .pf/runtime/**
+  allowed_actions:
+    - read
+    - write_artifact
+    - write_product
+  forbidden_actions:
+    []
+  ownership:
+    owner_id: codex
+    owner_label: worker-codex
+    role: implementation
+    writer: true
+    owned_files:
+      - .pf/artifacts/evolve/evolve-20261002-28/**
+      - .pf/logs/evolve-20261002-28.md
+      - QUICKSTART*.md
+      - README*.md
+      - checksums/**
+      - docs/**
+      - logs/evolve-20261002-28.md
+      - tools/processforge.py
+      - tools/smoke_release_archive_timeout_scale.py
+    owned_globs:
+      []
+  non_overlap:
+    policy: block_on_write_overlap
+    active_parallel_tasks:
+      []
+    current_write_scope:
+      - .pf/artifacts/evolve/evolve-20261002-28/**
+      - .pf/logs/evolve-20261002-28.md
+      - QUICKSTART*.md
+      - README*.md
+      - checksums/**
+      - docs/**
+      - logs/evolve-20261002-28.md
+      - tools/processforge.py
+      - tools/smoke_release_archive_timeout_scale.py
+outputs:
+  required_outputs:
+    -
+      id: implementation-report
+      path: .pf/artifacts/evolve/evolve-20261002-28/implementation-report.md
+      type: artifact
+      required: true
+  expected_report:
+    artifact: .pf/artifacts/evolve/evolve-20261002-28/implementation-report.md
+    format: markdown
+    language: ru
+workspace_access:
+  knowledge_resources:
+    []
+  templates:
+    []
+  tools:
+    []
+  mcp:
+    []
+agent_model: ""
+agent_reasoning_effort: ""
+subagent_policy:
+  allow: false
+  max_subagents: 0
+  allowed_roles:
+    []
+  require_reports: false
+  reports_dir: ""
+execution_contract:
+  contract_version: 1
+  identity:
+    kind: work
+    project_id: process-forge
+    run_id: garage-implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propag
+    assignment_id: implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propagation-f
+    context_id: implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propagation-f-capsule
+  assignment_intent:
+    objective: 'Implement evolve-20261002-28: clarify and fix timeout-scale propagation from release-archive-test into extracted release-test, with focused tests and EN/RU CLI/help documentation updates.'
+    execution_mode:
+      kind: implementation
+      code_changes_allowed: true
+      artifact_changes_allowed: true
+      requires_review: true
+    scope:
+      allowed_files:
+        - .pf/artifacts/evolve/evolve-20261002-28/**
+        - .pf/logs/evolve-20261002-28.md
+        - QUICKSTART*.md
+        - README*.md
+        - checksums/**
+        - docs/**
+        - logs/evolve-20261002-28.md
+        - tools/processforge.py
+        - tools/smoke_release_archive_timeout_scale.py
+      allowed_read_files:
+        - .pf/artifacts/agent-entry-e09-20260929/evolution.md
+        - .pf/artifacts/evolve/tasks-20261002/evolve-20261002-28.md
+        - QUICKSTART*.md
+        - README*.md
+        - checksums/**
+        - docs/**
+        - tools/**
+        - tools/processforge.py
+      forbidden_files:
+        - .pf/assignments/**
+        - .pf/contexts/**
+        - .pf/handoffs/**
+        - .pf/processes/**
+        - .pf/runs/**
+        - .pf/runtime/**
+      allowed_actions:
+        - read
+        - write_artifact
+        - write_product
+      forbidden_actions:
+        []
+      ownership:
+        owner_id: codex
+        owner_label: worker-codex
+        role: implementation
+        writer: true
+        owned_files:
+          - .pf/artifacts/evolve/evolve-20261002-28/**
+          - .pf/logs/evolve-20261002-28.md
+          - QUICKSTART*.md
+          - README*.md
+          - checksums/**
+          - docs/**
+          - logs/evolve-20261002-28.md
+          - tools/processforge.py
+          - tools/smoke_release_archive_timeout_scale.py
+        owned_globs:
+          []
+      non_overlap:
+        policy: block_on_write_overlap
+        active_parallel_tasks:
+          []
+        current_write_scope:
+          - .pf/artifacts/evolve/evolve-20261002-28/**
+          - .pf/logs/evolve-20261002-28.md
+          - QUICKSTART*.md
+          - README*.md
+          - checksums/**
+          - docs/**
+          - logs/evolve-20261002-28.md
+          - tools/processforge.py
+          - tools/smoke_release_archive_timeout_scale.py
+    required_sources:
+      - .pf/artifacts/evolve/tasks-20261002/evolve-20261002-28.md
+    context_artifacts:
+      []
+    outputs:
+      required_outputs:
+        -
+          id: implementation-report
+          path: .pf/artifacts/evolve/evolve-20261002-28/implementation-report.md
+          type: artifact
+          required: true
+      expected_report:
+        artifact: .pf/artifacts/evolve/evolve-20261002-28/implementation-report.md
+        format: markdown
+        language: ru
+    workspace_access:
+      knowledge_resources:
+        []
+      templates:
+        []
+      tools:
+        []
+      mcp:
+        []
+    subagent_policy:
+      allow: false
+      max_subagents: 0
+      allowed_roles:
+        []
+      require_reports: false
+      reports_dir: ""
+    required_capabilities:
+      []
+    optional_capabilities:
+      []
+    process: software-feature-development
+    selected_specializations:
+      []
+    coordination_requirements:
+      {}
+    director_inbox_submit_required: false
+    parameters:
+      {}
+    allowed_tools:
+      []
+    allowed_templates:
+      []
+    selected_sources:
+      []
+    obligations:
+      required_artifacts:
+        []
+      required_reviews:
+        []
+      quality_checklist:
+        []
+      completion_criteria:
+        []
+      handoff_requirements:
+        []
+      required_specializations:
+        []
+      goal: ""
+      role: ""
+      dependencies:
+        blocked_by:
+          []
+        blocks:
+          []
+  assignment_intent_checksum: 'sha256:1f76a038b4ae5b17a743c90a2a84b4321354f01aef6d5f2c3dc6079a906971b1'
+  snapshot:
+    id: ctx-20261002-060156-86cbed
+    checksum: 'sha256:c0cc71edb3f7ea9b97c2a2571d95b3c8ef7f67b188a476d7a29451193545c2a0'
+  process:
+    id: software-feature-development
+    version: 1.1.0
+    fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  resources:
+    selected_ids:
+      - 'docs.python-devguide:root'
+      - 'docs.python-packaging:root'
+      - 'docs.python-peps:root'
+      - 'docs.python-practices:root'
+      - 'docs.python:root'
+      - 'project.process-forge:project-artifacts'
+      - 'project.process-forge:project-profile'
+    bindings_checksum: 'sha256:5ff0d742284e3337d54f750faaf8454c24dbf4ca960e4a8125b4f3d778b82a89'
+  scope:
+    allowed_files:
+      - .pf/artifacts/evolve/evolve-20261002-28/**
+      - .pf/logs/evolve-20261002-28.md
+      - QUICKSTART*.md
+      - README*.md
+      - checksums/**
+      - docs/**
+      - logs/evolve-20261002-28.md
+      - tools/processforge.py
+      - tools/smoke_release_archive_timeout_scale.py
+    allowed_read_files:
+      - .pf/artifacts/agent-entry-e09-20260929/evolution.md
+      - .pf/artifacts/evolve/tasks-20261002/evolve-20261002-28.md
+      - QUICKSTART*.md
+      - README*.md
+      - checksums/**
+      - docs/**
+      - tools/**
+      - tools/processforge.py
+    forbidden_files:
+      - .pf/assignments/**
+      - .pf/contexts/**
+      - .pf/handoffs/**
+      - .pf/processes/**
+      - .pf/runs/**
+      - .pf/runtime/**
+    allowed_actions:
+      - read
+      - write_artifact
+      - write_product
+    forbidden_actions:
+      []
+    ownership:
+      owner_id: codex
+      owner_label: worker-codex
+      role: implementation
+      writer: true
+      owned_files:
+        - .pf/artifacts/evolve/evolve-20261002-28/**
+        - .pf/logs/evolve-20261002-28.md
+        - QUICKSTART*.md
+        - README*.md
+        - checksums/**
+        - docs/**
+        - logs/evolve-20261002-28.md
+        - tools/processforge.py
+        - tools/smoke_release_archive_timeout_scale.py
+      owned_globs:
+        []
+    non_overlap:
+      policy: block_on_write_overlap
+      active_parallel_tasks:
+        []
+      current_write_scope:
+        - .pf/artifacts/evolve/evolve-20261002-28/**
+        - .pf/logs/evolve-20261002-28.md
+        - QUICKSTART*.md
+        - README*.md
+        - checksums/**
+        - docs/**
+        - logs/evolve-20261002-28.md
+        - tools/processforge.py
+        - tools/smoke_release_archive_timeout_scale.py
+  required_sources:
+    -
+      path: .pf/artifacts/evolve/tasks-20261002/evolve-20261002-28.md
+      status: available
+      size: 3786
+      checksum: 'sha256:20da3dc732517038d24834365d30029d278eea07b68dfedb39b9e8de925d2223'
+      required: true
+  outputs:
+    required_outputs:
+      -
+        id: implementation-report
+        path: .pf/artifacts/evolve/evolve-20261002-28/implementation-report.md
+        type: artifact
+        required: true
+    expected_report:
+      artifact: .pf/artifacts/evolve/evolve-20261002-28/implementation-report.md
+      format: markdown
+      language: ru
+  capabilities:
+    required:
+      []
+    optional:
+      []
+  workspace_access:
+    knowledge_resources:
+      []
+    templates:
+      []
+    tools:
+      []
+    mcp:
+      []
+  parameters:
+    {}
+  coordination:
+    effective_mode: simple
+    director_required: false
+    director_available_at_workplace: false
+  worker_may_rebuild_context: false
+  source_limits:
+    files: 128
+    file_bytes: 1048576
+    total_bytes: 8388608
+  readiness:
+    status: ready
+    blockers:
+      []
+  contract_checksum: 'sha256:0aecf2a5ab87e1d09737cb2894bed32510ec86f8c05234fdb98965e985755916'
+resource_bindings:
+  schema_version: 1
+  resources:
+    -
+      id: 'docs.python-devguide:root'
+      status: available
+      material_kind: fulltext
+      generation: 'sha256:96e24a2ced1cf50740eeb19c1d4d16dc9dc3cfd9ba112df8834e0fcc4b9dc70d'
+      metadata_fingerprint: 'sha256:29a24a8fb062b4381c53f5e1f3b3ca771e1b0c81a5fc29e30d07db96e3394410'
+      material_fingerprint: 'sha256:96e24a2ced1cf50740eeb19c1d4d16dc9dc3cfd9ba112df8834e0fcc4b9dc70d'
+      reference:
+        id: local-docs
+        registry: knowledge_roots
+        relative_path: python-devguide
+      indexing:
+        enabled: true
+        mode: fulltext
+        fields:
+          - title
+          - description
+          - path
+        sources:
+          -
+            path: .
+            mode: fulltext
+            include:
+              - '**/*.md'
+              - '**/*.txt'
+              - '**/*.rst'
+            exclude:
+              []
+      manifest:
+        -
+          relative_path: README.md
+          size: 1061
+          sha256: 'sha256:36f2ddceb8a34d65f0f40c2e8ce79e3861c60bf1cc5d3e55f54ea4dd00dc6005'
+        -
+          relative_path: communication.md
+          size: 14528
+          sha256: 'sha256:1a0c31f44bc540e17a3e04d4937a2447672100645eb1140b4ddd747128c64913'
+        -
+          relative_path: core-developers.md
+          size: 356
+          sha256: 'sha256:bbda2d56a89dfe98050470446407f6e2b4a05791b5ee53989bf5e2c081db4346'
+        -
+          relative_path: developer-workflow.md
+          size: 11112
+          sha256: 'sha256:531046e77d906307e172227e2e954009db99011c7b67b3b46f056603d7db3685'
+        -
+          relative_path: documentation.md
+          size: 12213
+          sha256: 'sha256:0e3429f0afcb1138c2bc53291e217fe1f248375e6b640ebd8f8c6abff39bc1f3'
+        -
+          relative_path: help-triage.md
+          size: 3405
+          sha256: 'sha256:efe01ad94099ad88f70c5ebc138ba467f89264213b5518b697075deafe0f3801'
+        -
+          relative_path: index.md
+          size: 35084
+          sha256: 'sha256:b400f71262b36cfefc2114efaa17a2b0d3314848018dae0ea667bcc49cee4ff5'
+        -
+          relative_path: pull-request-lifecycle.md
+          size: 33633
+          sha256: 'sha256:d839ff6baa9acebf7ad75d691ae64e43a4361d65b9f8e1034158043527aa0ff9'
+        -
+          relative_path: setup-building.md
+          size: 50828
+          sha256: 'sha256:037d3cc6a9ea8aa684e523ea6340ea16d03000f44b2450b20ac4c68a34cb35b3'
+        -
+          relative_path: setup.md
+          size: 12030
+          sha256: 'sha256:de8c5c41a021d2e281657dfc512ad6fbe960bdb8499d5f27f464b820aac53553'
+        -
+          relative_path: testing.md
+          size: 4030
+          sha256: 'sha256:4d04728427ba53d27c831763f015cb9e754cae8a2200413041211c5bae7c4509'
+    -
+      id: 'docs.python-packaging:root'
+      status: available
+      material_kind: fulltext
+      generation: 'sha256:34836c32d88ffd78b864fc6abafb88004b6bc1703608a61226d771259c694af6'
+      metadata_fingerprint: 'sha256:88bbe9e435fe16a1bd7da8b092b1e3badd50dcb3e3e85624222362e46ce844a2'
+      material_fingerprint: 'sha256:34836c32d88ffd78b864fc6abafb88004b6bc1703608a61226d771259c694af6'
+      reference:
+        id: local-docs
+        registry: knowledge_roots
+        relative_path: python-packaging
+      indexing:
+        enabled: true
+        mode: fulltext
+        fields:
+          - title
+          - description
+          - path
+        sources:
+          -
+            path: .
+            mode: fulltext
+            include:
+              - '**/*.md'
+              - '**/*.txt'
+              - '**/*.rst'
+            exclude:
+              []
+      manifest:
+        -
+          relative_path: README.md
+          size: 1121
+          sha256: 'sha256:27af532d7d7cc87c38c9ce75da31a688f0c2d109a8d6406a609146dac1cffe83'
+        -
+          relative_path: core-metadata.md
+          size: 40570
+          sha256: 'sha256:63a44b2ea543b471cfd178f66b532a54b0af1a802b6c4879ad3e322bde8a331f'
+        -
+          relative_path: distributing-modules.md
+          size: 1905
+          sha256: 'sha256:a2d9a120686ef12a038b7d65a985011c35d7af0bde4f7f7603a864ce954949d2'
+        -
+          relative_path: index.md
+          size: 3780
+          sha256: 'sha256:918f9cc0427760ce1153ab980d18b79ba019c855830d3509f5ef0a422efd75ee'
+        -
+          relative_path: installing-modules.md
+          size: 10785
+          sha256: 'sha256:395e7a8e5a5240ac71cadf4a7efcd0d1ad614b467cd806c5900fb82203703e45'
+        -
+          relative_path: installing-packages.md
+          size: 22763
+          sha256: 'sha256:49593b43f21ed1f2d799bb7a8fec2c2da85780a44ddca1181ae1150ca31d043b'
+        -
+          relative_path: packaging-projects.md
+          size: 23681
+          sha256: 'sha256:2999eff9a16284cc789b2bdc73aca90d3e9ef3c76ffd88ef79bc29a8c6a63cde'
+        -
+          relative_path: pyproject-spec.md
+          size: 32608
+          sha256: 'sha256:2a79c75701c8cce00247f8f1c2b393773c8c572a8c08f2838b6d13fc6e1f97c1'
+        -
+          relative_path: version-specifiers.md
+          size: 54486
+          sha256: 'sha256:9eff15c18e4db53a09e26cca1cfb695287d6eaf897292cca005154f0b3c684d1'
+        -
+          relative_path: writing-pyproject.md
+          size: 21366
+          sha256: 'sha256:a626e729b7558e3ff7d1e163b89d0318190e46301abf15551a49252ab73a38a8'
+    -
+      id: 'docs.python-peps:root'
+      status: available
+      material_kind: fulltext
+      generation: 'sha256:5154d92e89a1c0001f82c7fa6b01c522dc7152b841b455cb003256f1b107c6be'
+      metadata_fingerprint: 'sha256:8819df8b285d844e68a8d1b49512421964892693933e54c1bc8bbdb7a6f3faa7'
+      material_fingerprint: 'sha256:5154d92e89a1c0001f82c7fa6b01c522dc7152b841b455cb003256f1b107c6be'
+      reference:
+        id: local-docs
+        registry: knowledge_roots
+        relative_path: python-peps
+      indexing:
+        enabled: true
+        mode: fulltext
+        fields:
+          - title
+          - description
+          - path
+        sources:
+          -
+            path: .
+            mode: fulltext
+            include:
+              - '**/*.md'
+              - '**/*.txt'
+              - '**/*.rst'
+            exclude:
+              []
+      manifest:
+        -
+          relative_path: README.md
+          size: 1954
+          sha256: 'sha256:a8733c9b556a576d60840cac548011198c1477c03ece969802aaabba5d9e49c0'
+        -
+          relative_path: index.md
+          size: 141408
+          sha256: 'sha256:bd84dd06debc98b518bf6adbf8da223665c5470e0ec2fafac41f22e532ffc2ec'
+        -
+          relative_path: pep-0001.md
+          size: 45569
+          sha256: 'sha256:02018f0ae2b9d0af137d47fda2ad101366256657d8e8cf722dfd2ba8f0059f71'
+        -
+          relative_path: pep-0008.md
+          size: 52851
+          sha256: 'sha256:152ee3110c34bfd3a450b94a3930460b8bf3870deb78da4a812d8c5196ac7e3e'
+        -
+          relative_path: pep-0020.md
+          size: 2463
+          sha256: 'sha256:56e60b9202e50cf6f1006bac3a8f37fde9b33f83e5f2356f395e0aad57c3ba54'
+        -
+          relative_path: pep-0257.md
+          size: 11903
+          sha256: 'sha256:17e7f9904f81667daf381bdecf04e6877c40fbdd0f5a7a58b106b167827c0d6a'
+        -
+          relative_path: pep-0318.md
+          size: 31279
+          sha256: 'sha256:d8d83582e2f79a2a93fd85dbccaeb0f721034a6f4f6e1cc032d6c97279394000'
+        -
+          relative_path: pep-0484.md
+          size: 95191
+          sha256: 'sha256:040e7eb73a5d7523f0ed4f6ff070eecc0096a78ff9304446261d346c88e6aa23'
+        -
+          relative_path: pep-0526.md
+          size: 28880
+          sha256: 'sha256:1801e4ffb2e3b62ff19b88b8a431979bed31866b692ccf0c74ef4173b6cc9e54'
+        -
+          relative_path: pep-0544.md
+          size: 63974
+          sha256: 'sha256:b9f278dd2e6c94e013d9007e16de512c5395f5639e26a99479ba92fa3c6f4bc6'
+        -
+          relative_path: pep-0557.md
+          size: 39019
+          sha256: 'sha256:e20c29a9c6865050685b8e9d60618f29adf99584a7e90f50db3e0e80697a4398'
+        -
+          relative_path: pep-0561.md
+          size: 17013
+          sha256: 'sha256:a41f844535b2e797a908ec382b3ad8ef849f744fcbf7c09bfce4929af5ef4e75'
+        -
+          relative_path: pep-0585.md
+          size: 16339
+          sha256: 'sha256:a28e4af9006f35ae2db3d7a3a941ce1bb0526ae740bc40bd393e14f4a71e2af7'
+        -
+          relative_path: pep-0604.md
+          size: 9361
+          sha256: 'sha256:57d76338f31c78c5b31708e7b899614e597bca6f8992375f79729ceafc7b10c9'
+        -
+          relative_path: pep-0621.md
+          size: 38792
+          sha256: 'sha256:0692c1a726862935c4dbcfd5c74ffca47d972944f41e64b96f101872aec6ec63'
+        -
+          relative_path: pep-0634.md
+          size: 26249
+          sha256: 'sha256:4bc9519bae616984cfefcd1843cd5e5213c7ac6b82594e16350f2b675c1c61a3'
+        -
+          relative_path: pep-0635.md
+          size: 61006
+          sha256: 'sha256:6dc30bafbff833c0277141ef37f7ce3e116d980fa84cdbab9dbd4f10d5d672d0'
+        -
+          relative_path: pep-0636.md
+          size: 27593
+          sha256: 'sha256:c7695923f2a1a555af250a6e02a1be68c2adf3e8ea0c183686f223c292e07ffd'
+        -
+          relative_path: pep-0660.md
+          size: 17269
+          sha256: 'sha256:59795a9580ac467b38a8bdf9939ba5768db203eafb9e4f21c6a0c8a17f5860d5'
+        -
+          relative_path: pep-0703.md
+          size: 93077
+          sha256: 'sha256:cdb1b121d13e00cb8f345f4c276155bc729a189580005ae5871e500d57d229e9'
+        -
+          relative_path: pep-0723.md
+          size: 37818
+          sha256: 'sha256:03e66759d671118c51de76f1c0dd3d272668ec4a41f7a2526094f958cef1d9a0'
+    -
+      id: 'docs.python-practices:root'
+      status: available
+      material_kind: fulltext
+      generation: 'sha256:a79ec68220e1b953af3364cd20d4d80a5fb31de2b3226f04e046592283ec22fe'
+      metadata_fingerprint: 'sha256:0a36b5c30fa499bb9f39229b768924c7b0f39b73bbb519af037c409510ae505e'
+      material_fingerprint: 'sha256:a79ec68220e1b953af3364cd20d4d80a5fb31de2b3226f04e046592283ec22fe'
+      reference:
+        id: local-docs
+        registry: knowledge_roots
+        relative_path: python-practices
+      indexing:
+        enabled: true
+        mode: fulltext
+        fields:
+          - title
+          - description
+          - path
+        sources:
+          -
+            path: .
+            mode: fulltext
+            include:
+              - '**/*.md'
+              - '**/*.txt'
+              - '**/*.rst'
+            exclude:
+              []
+      manifest:
+        -
+          relative_path: README.md
+          size: 1173
+          sha256: 'sha256:58aac3cb5cc41e9ead32716b54e6dd8780bf8e6bbbc4860f46f81b1fbdf3a0c1'
+        -
+          relative_path: annotations.md
+          size: 14877
+          sha256: 'sha256:2be26458e010482bab7e9c2f2469018ac37f176203df45112426fe62fa2cb4f2'
+        -
+          relative_path: argparse.md
+          size: 32865
+          sha256: 'sha256:38bb529db38a288ba33bdf18e7b0c74ad3d2dcdb60900590b1cf65256d062156'
+        -
+          relative_path: descriptor.md
+          size: 56654
+          sha256: 'sha256:6f6df4e96e2eaa9def26712c0800a50ece0b9de3ccbbf7fee2d2bda1fea2df89'
+        -
+          relative_path: functional.md
+          size: 59640
+          sha256: 'sha256:e60333b21f81366f2298652195950c0069ba42034f71c26c80dad511da138688'
+        -
+          relative_path: index.md
+          size: 4747
+          sha256: 'sha256:d874a1071ee23a722611b85f81cba4fbe5150551dd5d4af6105a1c1001e1bc68'
+        -
+          relative_path: logging-cookbook.md
+          size: 179842
+          sha256: 'sha256:5cd77f81bd9e5c48490b85df658ce1890ac16f944fe2d4fa75bff08013af067c'
+        -
+          relative_path: logging.md
+          size: 59570
+          sha256: 'sha256:0420794a99d1db6c223e14eb68a64357f26f55d701d3744ac4d4298dca8cf2cf'
+        -
+          relative_path: pep20.md
+          size: 2431
+          sha256: 'sha256:9ee7c54f484c758a2e59d242d66326ec7f198de5eadbdf017eaefcf090718d5a'
+        -
+          relative_path: pep257.md
+          size: 11879
+          sha256: 'sha256:1d300c4bf12d0ada91aff573f6eb45daa933e3fd322cefd7e24a68382b3f3c06'
+        -
+          relative_path: pep8.md
+          size: 52809
+          sha256: 'sha256:9c1f6c135bc0a3db8cc1f22a7753a5d970d4cfe8a93da90ddaaf39240689bdb0'
+        -
+          relative_path: regex.md
+          size: 66949
+          sha256: 'sha256:471e8cf943e423671bd81df72b3e44a106b2c3858d84e52d11650cb6ce0cc87e'
+        -
+          relative_path: sorting.md
+          size: 20202
+          sha256: 'sha256:726b0d29d7119c233389b63ab0737f5dc877c3fc7361f84f40d683b12face1a2'
+        -
+          relative_path: typing-guide.md
+          size: 9302
+          sha256: 'sha256:f3d55756f4efdd54a007d62b2c1086d275c9210293bfaf3829f90ddc37077984'
+    -
+      id: 'docs.python:root'
+      status: available
+      material_kind: fulltext
+      generation: 'sha256:0d5e255d8c7bf06e6f259954d5ba7960e0aeaa09c0a9b1b8ede7d57b9c794801'
+      metadata_fingerprint: 'sha256:e86d7fc78d999acbfe7b7e70eecec38554dde1f0892ec4eafd422aa8f0b019e9'
+      material_fingerprint: 'sha256:0d5e255d8c7bf06e6f259954d5ba7960e0aeaa09c0a9b1b8ede7d57b9c794801'
+      reference:
+        id: local-docs
+        registry: knowledge_roots
+        relative_path: python
+      indexing:
+        enabled: true
+        mode: fulltext
+        fields:
+          - title
+          - description
+          - path
+        sources:
+          -
+            path: .
+            mode: fulltext
+            include:
+              - '**/*.md'
+              - '**/*.txt'
+              - '**/*.rst'
+            exclude:
+              []
+      manifest:
+        -
+          relative_path: README.md
+          size: 1893
+          sha256: 'sha256:5a691fa3a4013199d3224b56023125bd49fade165aaf98b142c76cb964cf2cb4'
+        -
+          relative_path: asyncio.md
+          size: 7397
+          sha256: 'sha256:58b231bd7a089809fb407fc1dbd0edbabc52a1cc643d3fe8d3da441fea0fcc62'
+        -
+          relative_path: builtins.md
+          size: 119952
+          sha256: 'sha256:755226fd1e374e11e41e3db15bfe63b2868bb3680bedb62dc0c05a044bc7b3ea'
+        -
+          relative_path: compound-statements.md
+          size: 99816
+          sha256: 'sha256:fa52d4dc9077dbeed9f99a9d9c1f7da6ac834394c7a60c1b222b418c4c82f9f1'
+        -
+          relative_path: data-model.md
+          size: 204464
+          sha256: 'sha256:5c499089cb4461cfe6f74d18f5d7bae8725acb98b00b594ace1251f5d46a81ec'
+        -
+          relative_path: dataclasses.md
+          size: 43640
+          sha256: 'sha256:9c19c5658aedb68dcf49bf6ccdaa676df31c96f3dea5c9d6fb1e0efe551703c8'
+        -
+          relative_path: exceptions.md
+          size: 61305
+          sha256: 'sha256:dcf4fbaa2fa87d823cf31059aedf3dda579eae51a035301721d8a953f73e49c8'
+        -
+          relative_path: execution-model.md
+          size: 31244
+          sha256: 'sha256:79f948f0e1b6042b4aa016a2de1c6d5e0d396077cc9189efc7989c1d784b67f5'
+        -
+          relative_path: expressions.md
+          size: 117433
+          sha256: 'sha256:2178c86653e7b894618e7ad85ed6de1d8c85850631dd1638204cf0ebdd1f377d'
+        -
+          relative_path: index.md
+          size: 5565
+          sha256: 'sha256:c6ac77a8132ef9d85e29b8d5a350831379ee4611794cb3714fcdf787d4489d83'
+        -
+          relative_path: language-reference.md
+          size: 11088
+          sha256: 'sha256:bf405dcd61d5fb1c4c3fe9cbf92907c61a543dd9b7adf6defa82dde495ff0dc5'
+        -
+          relative_path: logging.md
+          size: 83712
+          sha256: 'sha256:e9bea3273e71235f708bb701acea86c6f1982ee36066adfbf1a9a6832e110593'
+        -
+          relative_path: pathlib.md
+          size: 90132
+          sha256: 'sha256:b046f5ead7e731f9c9c7417f9b21de7d2181bb5e6d9b08b9e578910b94cad92a'
+        -
+          relative_path: simple-statements.md
+          size: 55655
+          sha256: 'sha256:c93902a569c34ad1882aeb6e6fc399feb1ecdcf1aa7abc071efce674d8b669a1'
+        -
+          relative_path: standard-library.md
+          size: 30340
+          sha256: 'sha256:016326bb29f532630c6e49e1a83420fbcf3223329aa915f198bb86c7115cb722'
+        -
+          relative_path: stdtypes.md
+          size: 272108
+          sha256: 'sha256:6f473f54c13bade2e041309e4346467cb0c19a20511a20b5c1ccee9e91f1eff0'
+        -
+          relative_path: subprocess.md
+          size: 84141
+          sha256: 'sha256:1ec05df939508b1a1679241e7b3c70b49d603159f88e6beb3b910e3dbe62e514'
+        -
+          relative_path: tutorial.md
+          size: 18537
+          sha256: 'sha256:686ba314da7a0be76fc2979110ee44e48ddd64442f7c8398671bb1e4de36c28a'
+        -
+          relative_path: typing.md
+          size: 179913
+          sha256: 'sha256:cf7a9727d0ef5100fa5b650c9e0ee4f329fdb2f5a11090dae8ca06def9ca4c54'
+        -
+          relative_path: unittest.md
+          size: 128031
+          sha256: 'sha256:2acab2e3aecce5d9228cdbb9f9bf4df4f03c4af1e48d888e90007724362a9710'
+        -
+          relative_path: venv.md
+          size: 35220
+          sha256: 'sha256:e9d56497d39ee725873515b72d6513674dbb41e2ecd189368b282fdc2088066d'
+        -
+          relative_path: whats-new.md
+          size: 54183
+          sha256: 'sha256:6171efd697a2e32fb9d2e0610badbe859d8ae09b8feb1ad00568eeb2251e6e5d'
+    -
+      id: 'project.process-forge:project-artifacts'
+      status: available
+      material_kind: metadata
+      generation: 'sha256:1cf7b28be74c0721f54bb5af6deb02927e4af213239f55a79e3a105825e02dd8'
+      metadata_fingerprint: 'sha256:ea7c2c44d3e8fd68fe5ef17b6f79f3ebf2a3f8595cb3f26db1fc2f23f74c3d2b'
+      material_fingerprint: 'sha256:1cf7b28be74c0721f54bb5af6deb02927e4af213239f55a79e3a105825e02dd8'
+      reference:
+        package: project.process-forge
+        relative_path: artifacts
+      indexing:
+        enabled: true
+        mode: metadata
+        fields:
+          - title
+          - description
+          - tags
+          - path
+        sources:
+          -
+            path: .
+            mode: metadata
+            include:
+              - '**/*'
+            exclude:
+              []
+      manifest:
+        []
+    -
+      id: 'project.process-forge:project-profile'
+      status: available
+      material_kind: fulltext
+      generation: 'sha256:013f7d3ea2d1c79eec950cf89668fde09cd2407ff60a0203727d73f55b3f5ae3'
+      metadata_fingerprint: 'sha256:0002d63f2f0cb2106a6202375556f77681915fadcd6b67492595ac5d3cb46ad4'
+      material_fingerprint: 'sha256:013f7d3ea2d1c79eec950cf89668fde09cd2407ff60a0203727d73f55b3f5ae3'
+      reference:
+        package: project.process-forge
+        relative_path: artifacts/project-profile.md
+      indexing:
+        enabled: true
+        mode: fulltext
+        fields:
+          - title
+          - description
+          - path
+        sources:
+          -
+            path: .
+            mode: fulltext
+            include:
+              - '**/*.md'
+              - '**/*.txt'
+              - '**/*.rst'
+            exclude:
+              []
+      manifest:
+        -
+          relative_path: project-profile.md
+          size: 2712
+          sha256: 'sha256:04b07509da9153495d910c1e868c3f144f8b34f773a7180ddb2e9952b274a112'
+  limits:
+    resources: 64
+    files: 2048
+    bytes: 33554432
+    documents: 2048
+    document_bytes: 33554432
+    visited_entries: 20000
+    files_per_resource: 256
+    bytes_per_resource: 8388608
+    bytes_per_file: 1000000
+  status: available
+process_execution:
+  process_id: software-feature-development
+  process_version: 1.1.0
+  process_fingerprint: 'sha256:cc411028e9585dd8f56e07faa8997d9e7af1a39a801a0d8c0ca9c8c1e89dfd49'
+  process_source: 'catalog:software-feature-development'
+  snapshot_id: ctx-20261002-060156-86cbed
+  snapshot_checksum: 'sha256:c0cc71edb3f7ea9b97c2a2571d95b3c8ef7f67b188a476d7a29451193545c2a0'
+  definition:
+    schema_version: 1
+    id: software-feature-development
+    name: Software Feature Development
+    version: 1.1.0
+    status: active
+    description: Guides software work from orchestration and intake through investigation, domain understanding, architecture, implementation, assurance, release delivery, and evolution capture. Release and evolution stages may be completed as not_applicable with evidence when the task does not require delivery.
+    required_capabilities:
+      - repository_read
+      - repository_write
+      - test_running
+      - review
+    metadata:
+      lifecycle_modes:
+        full:
+          description: Full software lifecycle from intake to evolve.
+          release_delivery_required: true
+          evolve_required: true
+        feature:
+          description: Feature development with investigation, architecture, implementation, assurance, and optional release/evolve.
+          release_delivery_required: conditional
+          evolve_required: conditional
+        bug_fix:
+          description: Focused fix with investigation, impact analysis, implementation, regression assurance, and optional release notes.
+          release_delivery_required: conditional
+          evolve_required: conditional
+        debug_loop:
+          description: Investigation and repeated implementation/assurance loop; release/evolve optional.
+          release_delivery_required: false
+          evolve_required: conditional
+        implementation_only:
+          description: Allowed only when intake, investigation, and architecture artifacts already exist or are explicitly provided as inputs.
+          requires_existing_inputs:
+            - scope
+            - investigation-report
+            - implementation-plan
+          release_delivery_required: false
+          evolve_required: conditional
+      compact_mode:
+        allowed: true
+        rule: Optional stages must be recorded as not_applicable with reason and evidence; they must not be silently skipped.
+      lifecycle_stage_order:
+        - orchestration
+        - intake-scope
+        - investigation
+        - domain-modeling
+        - architecture-plan
+        - implementation
+        - code-assurance
+        - release-delivery
+        - evolve
+      legacy_webtolk_mapping:
+        orchestration: orchestration
+        intake: intake-scope
+        investigation: investigation
+        domain: domain-modeling
+        architecture: architecture-plan
+        implementation: implementation
+        assurance: code-assurance
+        release: release-delivery
+        evolve: evolve
+        delivery-build-runner: delivery-build-profile
+      delivery_profile_boundary:
+        rule: Delivery/build/package/install is an operation profile used inside assurance or release-delivery, not a separate process id.
+        process_id_forbidden_examples:
+          - platform-plugin-delivery
+          - platform-extension-delivery
+          - plugin-delivery
+          - package-delivery
+        preferred_shape:
+          process_id: software-feature-development
+          execution_profile:
+            delivery_profile: project.default_delivery
+    hooks:
+      emit:
+        -
+          event: process.started
+          required: true
+        -
+          event: stage.started
+          required: true
+        -
+          event: stage.completed
+          required: true
+        -
+          event: assignment.created
+          required: true
+        -
+          event: artifact.created
+          required: true
+        -
+          event: gate.failed
+          required: true
+        -
+          event: chat.message.recorded
+          required: false
+      subscriptions:
+        -
+          event: assignment.completed
+          actions:
+            -
+              type: create_review_request
+        -
+          event: gate.failed
+          actions:
+            -
+              type: block_stage
+            -
+              type: notify_orchestrator
+      tracking:
+        include:
+          - process_id
+          - process_version
+          - stage_id
+          - assignment_id
+          - artifact_refs
+          - actor
+          - session_id
+          - status
+    roles:
+      -
+        id: orchestrator
+        title: Orchestrator
+        responsibility: Coordinates lifecycle mode, scope, planning, gates, and handoffs.
+        kind: primary_agent
+        responsibilities:
+          - Coordinates lifecycle mode, scope, planning, gates, and handoffs.
+      -
+        id: developer
+        title: Developer
+        responsibility: Implements the approved change inside the allowed scope.
+        kind: primary_agent
+        responsibilities:
+          - Implements the approved change inside the allowed scope.
+      -
+        id: reviewer
+        title: Reviewer
+        responsibility: Reviews behavior, risks, verification evidence, and release readiness.
+        kind: primary_agent
+        responsibilities:
+          - Reviews behavior, risks, verification evidence, and release readiness.
+    stages:
+      -
+        id: orchestration
+        title: Orchestration
+        description: Prepare execution context, lifecycle mode, coordination mode, run/task ids, context snapshot, and available delivery/build profile.
+        required_inputs:
+          []
+        produced_artifacts:
+          - task-record
+          - execution-context-summary
+          - lifecycle-mode-decision
+        required_role: orchestrator
+        required_capabilities:
+          - process_coordination
+        allowed_tools:
+          - processforge-cli
+        entry_gates:
+          []
+        exit_gates:
+          - context-ready
+        goal: Prepare execution context and select lifecycle mode before scope work starts.
+        actor: primary_agent
+        gates:
+          - context-ready
+      -
+        id: intake-scope
+        title: Intake And Scope
+        description: Capture objective, boundaries, non-goals, acceptance criteria, risks, unknowns, and release/delivery requirement.
+        required_inputs:
+          - execution-context-summary
+          - lifecycle-mode-decision
+        produced_artifacts:
+          - brief
+          - scope
+          - task-record
+        required_role: orchestrator
+        required_capabilities:
+          - process_coordination
+        allowed_tools:
+          - processforge-cli
+        entry_gates:
+          - context-ready
+        exit_gates:
+          - scope-accepted
+        goal: Establish accepted scope and delivery expectations.
+        actor: primary_agent
+        gates:
+          - scope-accepted
+      -
+        id: investigation
+        title: Investigation
+        description: Inspect existing code, affected areas, configs, tests, docs, compatibility, migration risk, and evidence paths.
+        required_inputs:
+          - scope
+        produced_artifacts:
+          - investigation-report
+          - impact-analysis
+        required_role: orchestrator
+        required_capabilities:
+          - repository_read
+        allowed_tools:
+          - repository_symbol_analysis
+          - validator
+        entry_gates:
+          - scope-accepted
+        exit_gates:
+          - investigation-complete
+          - impact-understood
+        goal: Understand the existing system before architecture or edits.
+        actor: primary_agent
+        gates:
+          - investigation-complete
+          - impact-understood
+      -
+        id: domain-modeling
+        title: Domain Modeling
+        description: Capture domain terms, rules, constraints, and platform/framework rules from project context and platform contracts.
+        required_inputs:
+          - investigation-report
+          - impact-analysis
+        produced_artifacts:
+          - domain-notes
+          - domain-model
+          - domain-rules
+        required_role: orchestrator
+        required_capabilities:
+          - repository_read
+        allowed_tools:
+          - processforge-cli
+          - repository_symbol_analysis
+        entry_gates:
+          - investigation-complete
+          - impact-understood
+        exit_gates:
+          - domain-rules-captured
+        goal: Record domain understanding without hardcoding platform-specific rules into the core process.
+        actor: primary_agent
+        gates:
+          - domain-rules-captured
+      -
+        id: architecture-plan
+        title: Architecture Plan
+        description: Choose approach, file/module plan, verification outline, trade-offs, rollback, and migration concerns.
+        required_inputs:
+          - domain-rules
+        produced_artifacts:
+          - architecture
+          - implementation-plan
+          - decision-log
+        required_role: orchestrator
+        required_capabilities:
+          - architecture
+        allowed_tools:
+          - repository_symbol_analysis
+          - validator
+        entry_gates:
+          - domain-rules-captured
+        exit_gates:
+          - architecture-plan-ready
+        goal: Approve a bounded implementation plan before edits.
+        actor: primary_agent
+        gates:
+          - architecture-plan-ready
+      -
+        id: implementation
+        title: Implementation
+        description: Make bounded changes, preserve unrelated files, collect evidence, and update decisions when the plan changes.
+        required_inputs:
+          - implementation-plan
+        produced_artifacts:
+          - changed-files
+          - change-summary
+        required_role: developer
+        required_capabilities:
+          - repository_write
+        allowed_tools:
+          - editor
+          - test_runner
+        hooks:
+          emit:
+            -
+              event: tool.invoked
+            -
+              event: artifact.created
+            -
+              event: artifact.updated
+          stop_gates:
+            -
+              event: session.ended
+              require:
+                - gate.passed
+        entry_gates:
+          - architecture-plan-ready
+        exit_gates:
+          - implementation-scope-respected
+        goal: Implement only the approved change and record changed files.
+        actor: primary_agent
+        gates:
+          - implementation-scope-respected
+      -
+        id: code-assurance
+        title: Code Assurance
+        description: Review behavior, risks, static checks, tests, browser/UI verification when applicable, regressions, and known limitations.
+        required_inputs:
+          - change-summary
+        produced_artifacts:
+          - review-findings
+          - test-plan
+          - test-cases
+          - test-report
+          - browser-verification-report
+        required_role: reviewer
+        required_capabilities:
+          - review
+          - test_running
+        allowed_tools:
+          - test_runner
+          - validator
+        entry_gates:
+          - implementation-scope-respected
+        exit_gates:
+          - assurance-complete
+        goal: Verify the change and explicitly record browser/UI verification as applicable or not_applicable.
+        actor: primary_agent
+        gates:
+          - assurance-complete
+      -
+        id: release-delivery
+        title: Release Delivery
+        description: Decide release readiness, prepare package or patch when requested, run delivery/build profile when configured, and record release evidence or not_applicable reason.
+        required_inputs:
+          - test-report
+        produced_artifacts:
+          - release-notes
+          - migration-notes
+          - patch
+          - delivery-plan
+          - delivery-report
+        required_role: reviewer
+        required_capabilities:
+          - test_running
+        allowed_tools:
+          - test_runner
+          - validator
+          - processforge-cli
+        entry_gates:
+          - assurance-complete
+        exit_gates:
+          - release-readiness-decided
+          - delivery-profile-run-or-skipped-with-reason
+        goal: Treat delivery/build/package/install as an operation profile, not a separate process.
+        actor: primary_agent
+        conditional: true
+        not_applicable_policy:
+          required: true
+          evidence_fields:
+            - status
+            - reason
+            - evidence
+        gates:
+          - release-readiness-decided
+          - delivery-profile-run-or-skipped-with-reason
+      -
+        id: evolve
+        title: Evolve
+        description: Capture lessons learned and propose updates to rules, templates, knowledge packages, checks, delivery profiles, or agent instructions.
+        required_inputs:
+          - delivery-report
+        produced_artifacts:
+          - evolution-report
+          - updated-rules-or-extensions
+          - instruction-update-proposal
+          - knowledge-update-proposal
+        required_role: orchestrator
+        required_capabilities:
+          - review
+        allowed_tools:
+          - processforge-cli
+          - validator
+        entry_gates:
+          - release-readiness-decided
+        exit_gates:
+          - evolution-captured
+        goal: Capture evolution learning or explicit not_applicable evidence before run completion.
+        actor: primary_agent
+        conditional: true
+        not_applicable_policy:
+          required: true
+          evidence_fields:
+            - status
+            - reason
+            - evidence
+        gates:
+          - evolution-captured
+    artifact_definitions:
+      -
+        id: task-record
+        title: Task Record
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/task-record.md
+      -
+        id: execution-context-summary
+        title: Execution Context Summary
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/execution-context-summary.md
+      -
+        id: lifecycle-mode-decision
+        title: Lifecycle Mode Decision
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/lifecycle-mode-decision.md
+      -
+        id: brief
+        title: Brief
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/brief.md
+      -
+        id: scope
+        title: Scope
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/scope.md
+      -
+        id: investigation-report
+        title: Investigation Report
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/investigation-report.md
+      -
+        id: impact-analysis
+        title: Impact Analysis
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/impact-analysis.md
+      -
+        id: domain-notes
+        title: Domain Notes
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/domain-notes.md
+      -
+        id: domain-model
+        title: Domain Model
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/domain-model.md
+      -
+        id: domain-rules
+        title: Domain Rules
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/domain-rules.md
+      -
+        id: architecture
+        title: Architecture
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/architecture.md
+      -
+        id: implementation-plan
+        title: Implementation Plan
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/implementation-plan.md
+      -
+        id: decision-log
+        title: Decision Log
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/decision-log.md
+      -
+        id: changed-files
+        title: Changed Files
+        owner_role: developer
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/changed-files.md
+      -
+        id: change-summary
+        title: Change Summary
+        owner_role: developer
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/change-summary.md
+      -
+        id: review-findings
+        title: Review Findings
+        owner_role: reviewer
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/review-findings.md
+      -
+        id: test-plan
+        title: Test Plan
+        owner_role: reviewer
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/test-plan.md
+      -
+        id: test-cases
+        title: Test Cases
+        owner_role: reviewer
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/test-cases.md
+      -
+        id: test-report
+        title: Test Report
+        owner_role: reviewer
+        template: validation-report-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        path_hint: .pf/artifacts/test-report.md
+      -
+        id: browser-verification-report
+        title: Browser Verification Report
+        owner_role: reviewer
+        template: validation-report-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: false
+        required_when: UI or browser behavior changed.
+        not_applicable_requires:
+          - reason
+          - evidence
+        path_hint: .pf/artifacts/browser-verification-report.md
+      -
+        id: release-notes
+        title: Release Notes
+        owner_role: reviewer
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: false
+        required_when: A delivery or release is requested or produced.
+        not_applicable_requires:
+          - reason
+          - evidence
+        path_hint: .pf/artifacts/release-notes.md
+      -
+        id: migration-notes
+        title: Migration Notes
+        owner_role: reviewer
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: false
+        required_when: Change has compatibility, data, install, or upgrade implications.
+        not_applicable_requires:
+          - reason
+          - evidence
+        path_hint: .pf/artifacts/migration-notes.md
+      -
+        id: patch
+        title: Patch
+        owner_role: developer
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: file
+        required: false
+        required_when: Operator requests a patch artifact or release package evidence.
+        not_applicable_requires:
+          - reason
+          - evidence
+        path_hint: .pf/artifacts/patch
+      -
+        id: delivery-plan
+        title: Delivery Plan
+        owner_role: reviewer
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: false
+        required_when: Delivery/build profile exists or release delivery is requested.
+        not_applicable_requires:
+          - reason
+          - evidence
+        path_hint: .pf/artifacts/delivery-plan.md
+      -
+        id: delivery-report
+        title: Delivery Report
+        owner_role: reviewer
+        template: validation-report-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: false
+        required_when: Delivery/build profile runs or release delivery is requested.
+        not_applicable_requires:
+          - reason
+          - evidence
+        path_hint: .pf/artifacts/delivery-report.md
+      -
+        id: evolution-report
+        title: Evolution Report
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: true
+        not_applicable_requires:
+          - reason
+          - evidence
+        path_hint: .pf/artifacts/evolve/evolution-report.md
+      -
+        id: updated-rules-or-extensions
+        title: Updated Rules Or Extensions
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: false
+        required_when: The run discovers reusable rule, template, check, or extension changes.
+        not_applicable_requires:
+          - reason
+          - evidence
+        path_hint: .pf/artifacts/updated-rules-or-extensions.md
+      -
+        id: instruction-update-proposal
+        title: Instruction Update Proposal
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: false
+        required_when: The run discovers agent instruction changes.
+        not_applicable_requires:
+          - reason
+          - evidence
+        path_hint: .pf/artifacts/instruction-update-proposal.md
+      -
+        id: knowledge-update-proposal
+        title: Knowledge Update Proposal
+        owner_role: orchestrator
+        template: artifact-template
+        lifecycle:
+          - draft
+          - ready_for_review
+          - approved
+        type: markdown
+        required: false
+        required_when: The run discovers reusable knowledge package changes.
+        not_applicable_requires:
+          - reason
+          - evidence
+        path_hint: .pf/artifacts/knowledge-update-proposal.md
+    gates:
+      -
+        id: context-ready
+        description: Assignment, run/task ids, context snapshot status, coordination mode, lifecycle mode, and delivery profile availability are explicit.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: scope-accepted
+        description: Goal, boundaries, non-goals, acceptance criteria, risks, unknowns, and release/delivery need are accepted.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: investigation-complete
+        description: Existing code, configs, tests, docs, compatibility, and evidence paths were inspected.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: impact-understood
+        description: Affected areas, backward compatibility, migration risk, and regression risk are recorded.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: domain-rules-captured
+        description: Domain terms, rules, and platform constraints from project context are captured without hardcoding platform behavior in the core process.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: architecture-plan-ready
+        description: Architecture, implementation plan, decision log, verification outline, and rollback/migration concerns are ready.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: implementation-scope-respected
+        description: Changes are bounded to approved scope and changed-files/change-summary are recorded.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: assurance-complete
+        description: Review, tests, test report, and conditional browser/UI verification evidence are complete.
+        blocking: true
+        type: checklist
+        required: true
+      -
+        id: release-readiness-decided
+        description: Release delivery is either completed or explicitly recorded as not_applicable with reason and evidence.
+        blocking: true
+        type: decision
+        required: true
+        not_applicable_example:
+          gate_id: release-readiness-decided
+          status: not_applicable
+          reason: Task changes are local development only; no release requested.
+          evidence:
+            - scope
+            - test-report
+      -
+        id: delivery-profile-run-or-skipped-with-reason
+        description: Delivery/build profile ran and wrote evidence, or no profile/release need was recorded with reason and evidence.
+        blocking: true
+        type: decision
+        required: true
+      -
+        id: evolution-captured
+        description: Lessons learned and reusable update proposals are captured, or evolve is recorded as not_applicable with reason and evidence.
+        blocking: true
+        type: decision
+        required: true
+    required_packages:
+      - process-forge-core
+      - processforge.official.software-development
+    required_templates:
+      - assignment-template
+      - artifact-template
+      - review-template
+      - handoff-template
+    allowed_tools:
+      - repository_symbol_analysis
+      - test_runner
+      - validator
+      - processforge-cli
+    forbidden_actions:
+      - edit_outside_assignment_scope
+      - skip_required_review
+      - use_delivery_profile_as_process_id
+      - create_platform_specific_delivery_process_in_public_core
+    evolve:
+      enabled: true
+      mode: optional
+      timing: end_of_run
+      default_scope: project
+      candidate_targets:
+        - knowledge_package
+        - delivery_profile
+        - process_definition
+        - project_rule
+        - platform_contract
+      extraction_hints:
+        - Split candidates when an observation contains project-specific and platform-general parts.
+        - Default to the narrowest safe scope and require evidence before parent-platform promotion.
+        - reusable rule
+        - missing knowledge
+        - Split build-command or release-operation findings into delivery_profile candidates.
+        - Split process-flow findings into process_definition candidates.
+        - Split project-only constraints into project_rule candidates.
+        - Route platform constraints to platform_contract only with explicit applicability.
+        - Do not promote child-platform observations to a parent platform without reviewed evidence.
+      candidate_targeting:
+        default_scope: project
+        require_applicability: true
+        require_target: true
+        default_to_narrowest_scope: true
+      required_outputs:
+        - evolution-report
+      privacy:
+        default_sensitivity: internal
+        export_requires_sanitization: true
+        allow_private_paths: false
+      apply_policy:
+        auto_apply_global: false
+        create_candidates_only: true
+    evolution_policy:
+      active_run_upgrade:
+        default: manual_only
+      protected_artifacts:
+        - scope
+        - implementation-plan
+        - test-report
+      safe_changes:
+        - add_optional_artifact
+        - add_non_blocking_gate
+        - add_delivery_profile_adapter
+      blocked_changes:
+        - remove_existing_artifact_definition
+        - change_approved_artifact_meaning
+        - hardcode_platform_delivery_in_core_process
+      requires_approval:
+        - add_required_gate
+        - change_exit_criteria
+    catalog:
+      classification: PUBLIC_STABLE
+      public_surface: true
+      strict_contract: true
+    public_surface: true
+    execution_mode: single_agent
+    coordination_requirements:
+      mode: simple_allowed
+      director_inbox:
+        required: false
+        optional: false
+      error_workflow:
+        mode: none
+      simple_mode_behavior: disable_director_features
+    error_handling:
+      enabled: false
+      mode: none
+      fallback_if_no_director: needs_operator
+    responsibility_boundaries:
+      operator:
+        - Provides the objective, constraints, approvals, lifecycle mode overrides, release/delivery requirement, and final acceptance.
+      primary_agent:
+        - Executes the lifecycle stages, writes required artifacts, records not_applicable decisions, and runs gates.
+      director:
+        - Coordinates handoffs and leases only when the effective project mode requires Director.
+      inspector:
+        - Verifies runtime state, CLI gates, and worker proof artifacts when applicable.
+      worker:
+        - Works only from an assigned capsule and writes declared outputs.
+      cli_tools:
+        - Run deterministic ProcessForge checks and write machine-readable results.
+    subagent_policy:
+      allowed: false
+      require_reports: false
+      allowed_roles:
+        []
+    process_transitions:
+      []
+    stage_completion:
+      handoff_note_required: true
+    run_completion:
+      summary_required: true
+      handoff_artifact_required: true
+    process_pack:
+      package: processforge.official.software-development
+      example_required: false
+    agent_prompt:
+      required: true
+  active_specializations:
+    []
+  selected_resource_ids:
+    - 'docs.python-devguide:root'
+    - 'docs.python-packaging:root'
+    - 'docs.python-peps:root'
+    - 'docs.python-practices:root'
+    - 'docs.python:root'
+    - 'project.process-forge:project-artifacts'
+    - 'project.process-forge:project-profile'
+  allowed_processes:
+    - software-feature-development
+capabilities:
+  required:
+    []
+  optional:
+    []
+resolved_parameters:
+  {}
+parameter_resolution_summary:
+  status: resolved
+  sources:
+    []
+  conflicts:
+    []
+resolved_resources:
+  -
+    id: 'docs.python:root'
+    kind: documentation
+    package_id: docs.python
+    requirement: required
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.python:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: python
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:62123b0a5f4a65bcadf04b37b59454b31563548e9736baf9930eaad1f4944fd2'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resource_id: root
+    title: Python Documentation Markdown Mirror
+    description: Local Markdown mirror under local-docs/python, generated from official Python documentation sources.
+    load_policy: on_demand
+    index_policy: full_text
+    selection:
+      mode: explicit
+      reason: explicit_selector
+      preferred_version: null
+      constraint: null
+  -
+    id: 'docs.python-packaging:root'
+    kind: documentation
+    package_id: docs.python-packaging
+    requirement: required
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.python-packaging:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: python-packaging
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:f43ce8e10e18576e4b9bc6c74b74b15ffaca200988fc39cc84667be1f0a7b9be'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resource_id: root
+    title: Python Packaging Markdown Mirror
+    description: Local Markdown mirror under local-docs/python-packaging, generated from PyPA and official Python packaging sources.
+    load_policy: on_demand
+    index_policy: full_text
+    selection:
+      mode: explicit
+      reason: explicit_selector
+      preferred_version: null
+      constraint: null
+  -
+    id: 'docs.python-practices:root'
+    kind: documentation
+    package_id: docs.python-practices
+    requirement: required
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.python-practices:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: python-practices
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:fe6534764b133ee8e5bd4aa55aba84d3b034a29376d88770ebf40617aba4b67b'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resource_id: root
+    title: Python Patterns and Recipes Markdown Mirror
+    description: Local Markdown mirror under local-docs/python-practices, generated from Python HOWTO, typing, and PEP sources.
+    load_policy: on_demand
+    index_policy: full_text
+    selection:
+      mode: explicit
+      reason: explicit_selector
+      preferred_version: null
+      constraint: null
+  -
+    id: 'docs.python-devguide:root'
+    kind: documentation
+    package_id: docs.python-devguide
+    requirement: required
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.python-devguide:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: python-devguide
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:a536c1902413117c0c01a47017f77c319d5b3fa04295b0558bcf6261796c7b3e'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resource_id: root
+    title: Python Developer's Guide Markdown Mirror
+    description: Local Markdown mirror under local-docs/python-devguide, generated from devguide.python.org.
+    load_policy: on_demand
+    index_policy: full_text
+    selection:
+      mode: explicit
+      reason: explicit_selector
+      preferred_version: null
+      constraint: null
+  -
+    id: 'docs.python-peps:root'
+    kind: documentation
+    package_id: docs.python-peps
+    requirement: required
+    versioning_mode: single_current
+    retention_policy: replace_in_place
+    instance_id: 'docs.python-peps:root@current'
+    path_ref:
+      registry: knowledge_roots
+      id: local-docs
+      relative_path: python-peps
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:b9cd806c8d79ef2d14f46389fda8eba28e14780c096615ba203c783dfd7cd92b'
+    reproducibility:
+      level: exact
+    snapshot_behavior:
+      on_new_version: notify_only
+      on_current_generation_changed: notify_only
+      on_instance_missing: broken
+      reproducibility: exact
+    resource_id: root
+    title: Python Enhancement Proposals Markdown Mirror
+    description: Local Markdown mirror under local-docs/python-peps, generated from peps.python.org.
+    load_policy: on_demand
+    index_policy: full_text
+    selection:
+      mode: explicit
+      reason: explicit_selector
+      preferred_version: null
+      constraint: null
+  -
+    id: 'project.process-forge:project-profile'
+    kind: note_collection
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-profile@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts/project-profile.md
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:33c8f9edf949d6d99e3287d47c440a1341c1445fdd5361a4038e546d1f422ef0'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-profile
+    title: Project profile and repository map
+    load_policy: when_relevant
+    index_policy: full_text
+    selection:
+      mode: explicit
+      reason: explicit_selector
+      preferred_version: null
+      constraint: null
+  -
+    id: 'project.process-forge:project-artifacts'
+    kind: reference
+    package_id: project.process-forge
+    requirement: required
+    versioning_mode: rolling_index
+    retention_policy: replace_in_place
+    instance_id: 'project.process-forge:project-artifacts@current'
+    path_ref:
+      package: project.process-forge
+      relative_path: artifacts
+    fingerprint:
+      type: resource_record_sha256
+      value: 'sha256:66f3079b7370d98d92f0fec9594cec7fe61fe44aab9cc97ae7b4ee74d4a73aa6'
+    reproducibility:
+      level: best_effort
+      reason: resource retention policy is replace_in_place
+    snapshot_behavior:
+      on_new_version: mark_stale
+      on_current_generation_changed: mark_stale
+      on_instance_missing: broken
+      reproducibility: best_effort
+    resource_id: project-artifacts
+    title: Project ProcessForge artifacts
+    load_policy: on_demand
+    index_policy: metadata
+    selection:
+      mode: explicit
+      reason: explicit_selector
+      preferred_version: null
+      constraint: null

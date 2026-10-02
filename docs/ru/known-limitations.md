@@ -50,6 +50,9 @@ artifacts.
 - `release-test` и smoke commands используют per-command process-tree timeouts;
   зависший child process должен завершиться с diagnostics по command, cwd,
   timeout, stdout tail и stderr tail.
+- `release-archive-test --timeout-scale` требует finite positive значение,
+  передаёт этот scale во вложенный `release-test` извлечённого архива и отдельно
+  умножает внешний process timeout extracted-test на тот же scale.
 - `release-test --trace-smokes` пишет per-smoke elapsed и timeout diagnostics в
   `.pf/runtime/release-test/`.
 - Long-running watcher остается future optional layer, не частью core runtime.
