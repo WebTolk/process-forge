@@ -50,6 +50,16 @@ def main():
             {**spec, "schema_version": True},
             {**spec, "assignment": {"allowed_files": ["example.py"], "forbidden_files": ["example.py"]}},
             {**spec, "assignment": {"allowed_actions": ["write_product"], "execution_mode": "read_only"}},
+            {**spec, "assignment": {"allowed_actions": ["read"], "forbidden_actions": ["read"]}},
+            {**spec, "assignment": {"execution_mode": "docs_only", "allowed_files": ["docs/guide.md"],
+                                    "allowed_read_files": ["docs/guide.md"],
+                                    "allowed_actions": ["read", "write_product"]}},
+            {**spec, "assignment": {"allowed_files": [".pf/artifacts/implicit/**"],
+                                    "allowed_read_files": ["example.py"],
+                                    "allowed_actions": ["read", "write_artifact"],
+                                    "required_outputs": [{"id": "implicit", "path": ".pf/artifacts/implicit/result.md"}],
+                                    "expected_report": {"artifact": ".pf/artifacts/implicit/result.md"}}},
+            {**spec, "assignment": {"allowed_files": [], "allowed_read_files": [], "allowed_actions": []}},
             {**spec, "assignment": {"required_sources": ["missing.md"]}},
             {**spec, "assignment": {"required_outputs": [{"id": "x", "path": "no-grant.md"}]}},
         ])
@@ -58,6 +68,21 @@ def main():
             result = service.start(objective=f"Reject explicit scope {i}", scope_intent=candidate)
             assert result["action"] == "blocked", result
             assert records(project) == before, result
+
+        planning = {"schema_version": 1, "assignment": {
+            "execution_mode": "planning_only",
+            "allowed_files": [".pf/artifacts/planning/**"],
+            "allowed_read_files": ["example.py"],
+            "allowed_actions": ["read", "write_artifact"],
+            "required_outputs": [{"id": "plan", "path": ".pf/artifacts/planning/plan.md"}],
+            "expected_report": {"artifact": ".pf/artifacts/planning/plan.md"},
+        }}
+        planned = service.start(objective="Explicit planning artifact scope", scope_intent=planning)
+        assert planned["action"] == "created_new", planned
+        assert planned["work_state"]["execution_readiness"]["status"] == "ready", planned
+        planning_pin = project / ".pf/contexts/assignment-capsules" / (planned["assignment_id"] + ".capsule.yaml")
+        planning_scope = yaml.safe_load(planning_pin.read_text(encoding="utf-8"))["execution_contract"]["scope"]
+        assert "write_artifact" in planning_scope["allowed_actions"] and "write_product" not in planning_scope["allowed_actions"]
 
         # The public local CLI forwards input before standard immutable capture.
         path = project / "scope.json"

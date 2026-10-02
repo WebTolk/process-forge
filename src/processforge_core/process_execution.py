@@ -410,6 +410,11 @@ class ProcessExecutionService:
                                               snapshot, self.core, workplace=self.workplace_root, pin=pin, run_record=run)
                 if fields["execution_contract"]["readiness"]["status"] != "ready":
                     return self._blocked("work_scope_not_ready", blockers=fields["execution_contract"]["readiness"]["blockers"])
+                from .continuation import permission_readiness
+                permissions = permission_readiness(fields["execution_contract"]["scope"],
+                                                   fields["execution_contract"]["assignment_intent"]["execution_mode"])
+                if permissions["status"] != "ready":
+                    return self._blocked("work_scope_not_ready", blockers=permissions["blockers"], execution_readiness=permissions)
             capsule_path, capsule_checksum = self._write_capsule(run, assignment, pin)
         except ContextContractError as exc:
             return self._blocked(exc.code, **exc.details)

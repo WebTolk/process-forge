@@ -71,6 +71,12 @@ write_artifact and write_product. Existing normalization, readiness and overlap
 checks apply. Omitted input retains conservative defaults; objectives imply no
 file grants. This input does not add an MCP permission surface.
 
+Before publishing the new Run, Assignment or capsule, `work-start` also checks
+the effective permission readiness derived from the normalized execution mode
+and scope. For example, an implicit implementation scope that omits
+`write_product`, an empty grant set, or a contradictory deny returns a blocked
+result instead of creating Work that is immediately unusable.
+
 An optional `predecessor` contains run_id, assignment_id and sha256-prefixed
 capsule_checksum. It records lineage, not automatic ownership transfer. Explicit
 `predecessor_handoff` may name an existing `.pf/handoffs/` document authorizing
@@ -79,7 +85,9 @@ ensure the predecessor stopped writing. Its capsule and the handoff hash are
 checked by overlap validation; other writers and forbidden paths remain blockers.
 Old assignments and capsules are unchanged. Repeating the same objective/intent
 continues Work; changed scope returns `scope_intent_mismatch` and requires a new
-objective. Malformed/unready declarations fail before new Work records publish.
+objective. After a timeout, retry by checking the exact returned identity or by
+reusing the same objective and intent; do not blindly create a wider successor.
+Malformed/unready declarations fail before new Work records publish.
 
 ## Qualification boundary
 
