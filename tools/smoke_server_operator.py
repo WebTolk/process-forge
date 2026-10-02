@@ -150,6 +150,27 @@ def main():
         assert json.loads(result.stdout) == ["server", "status", "--workplace", str(missing), "--json"]
         parsed = core.build_parser().parse_args(["server", "run", "--workplace", str(wp), "--console"])
         assert parsed.func is core.command_runtime_serve and parsed.console
+        broken = root / "invalid configuration"
+        broken.mkdir()
+        (broken / "configuration.yaml").write_text("runtime: [PRIVATE_CANARY\n", encoding="utf-8")
+        result = subprocess.run([sys.executable, "-B", str(ROOT / "tools/processforge.py"), "server", "run", "--workplace", str(broken)], capture_output=True, text=True, timeout=15)
+        assert result.returncode == 1 and result.stdout == ""
+        assert result.stderr.strip() == "FAIL: configuration_yaml_invalid", result.stderr
+        assert set(p.name for p in broken.iterdir()) == {"configuration.yaml"}
+        class Console(io.StringIO):
+            encoding = "ascii"
+            def isatty(self):
+                return True
+        for enabled, stream in ((True, Console()), (False, Console()), (True, io.StringIO())):
+            parsed.console = enabled
+            with patch.object(service, "RuntimeProcess") as process, redirect_stdout(stream):
+                process.return_value.serve.return_value = 0
+                assert service.command_serve(parsed, core) == 0
+            text = stream.getvalue()
+            assert bool(text) == (enabled and stream.isatty())
+            if text:
+                assert "ProcessForge" in text and "closing this window stops" in text
+                assert all(ord(char) < 128 for char in text) and "\x1b" not in text
     print("PASS: actual HTTP busy/unknown/inflight/owner/auth guards, force, old capability refusal, launcher and readonly JSON")
     return 0
 

@@ -16,8 +16,15 @@ The launcher also accepts `python bin/pf.py monitor ...` in distributions that
 include this command. Updating a source checkout does not update an already
 installed Core. `pf monitor --help` describes the available flags.
 
-An interactive terminal refreshes after each observation, with a two-second
-delay by default; `--interval` accepts finite values from 1 to 60 seconds.
+An interactive terminal follows the applied Runtime statistics interval (default
+10 seconds), with a delay after each observation. `--interval` accepts finite
+values from 1 to 60 seconds and overrides only the viewer. A legacy ready Runtime
+without interval metadata keeps the old two-second viewer default. Without a
+running Runtime the viewer uses the selected workplace configuration/default.
+The compact view includes a small static PF splash, uptime, sample age and
+activity counts; `--details` selects scheduler and observation diagnostics.
+There is no splash delay. See [workplace configuration](../authoring/workplace-configuration.md)
+for YAML, the independent Core CRUD API and CLI commands.
 There are no overlapping probes or catch-up bursts. Resizing the terminal
 reflows the view. Ordinary updates change only affected rows. A narrow/short
 screen keeps the Runtime state first and omits lower-priority rows. Output is
@@ -38,7 +45,7 @@ unknown; 2 indicates invalid arguments; 1 indicates an internal viewer error.
 |---|---|
 | Runtime lifecycle | Matching lock/state identity, a bounded PID observation and loopback readiness; orphaned/stale are not ready |
 | Health | Saved Runtime health, shown as current only with ready lifecycle and fresh state |
-| State age | `service.json` timestamp; older than 15 seconds is stale; missing, malformed or future time is unknown |
+| State age | `service.json` timestamp; stale after max(15, 2 × applied interval + 5) seconds; legacy threshold 15; missing, malformed or future time is unknown |
 | Scheduler | Saved job results and their own freshness, not a live scheduler-thread health check |
 | Registered projects / cached sessions | Host cache entries, with cache freshness; these are not active-work totals |
 | Session presence | Agent Ledger online/stale/offline with heartbeat TTL; online does not mean busy |
@@ -57,11 +64,13 @@ The viewer reads only bounded service/lock/host-cache records. Service and cache
 records are limited to 1 MiB each; lock records to 64 KiB; at most 32 scheduler
 rows are shown. Oversized or unreadable data yields a reason such as
 `cache_oversize` and unknown counts. It never scans project trees to fill in
-missing values. The 15-second threshold is an observation policy, not a daemon
-heartbeat guarantee; slow scheduler passes can legitimately exceed it.
+missing values. These thresholds are observation policies, not a daemon
+heartbeat guarantee; slow storage can legitimately exceed them.
 
 New Runtime builds publish compact instance-bound `metrics` inside `service.json`
-at most once per ten seconds. Its own timestamp expires after 45 seconds.
+at the configured period, 10 seconds by default. Its own timestamp expires after
+max(5, 4.5 × sample interval) seconds. Legacy samples without interval metadata
+keep the 45-second limit. Invalid interval metadata cannot extend freshness.
 Offline, changed-owner, stale or malformed snapshots cannot supply activity.
 The viewer validates fixed fields and prefers compact registration counts to
 the historical cache, including caches exceeding 1 MiB. Old servers retain the
@@ -79,6 +88,11 @@ Missing project coverage, malformed records or any limit produce `partial`:
 exact JSON counts are null; `observed` and terminal `>=N` are lower bounds.
 Canonical presence records supersede legacy duplicates. No journal scan occurs
 per repaint. This is not an atomic cross-project transaction or a kernel IO deadline.
+Collection is serial; overruns skip missed ticks and wait a full period. Runtime
+reloads configuration at the next observation cycle; errors retain the last
+valid value and appear as `configuration_invalid`. A fresh service heartbeat
+does not refresh an old activity sample. Project context freshness remains a
+separate per-project concept.
 
 Readiness uses only numeric loopback HTTP, a 0.75-second overall network deadline
 and bounded headers/body. Redirects, proxies, DNS destinations and tokens are

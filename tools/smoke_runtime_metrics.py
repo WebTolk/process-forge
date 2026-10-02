@@ -17,6 +17,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 import processforge as core
 from processforge_core import runtime_metrics as metrics
 from pf_runtime import service, monitor
+from processforge_core.configuration import ConfigService, ConfigurationError, PFConfig
+from processforge_core.configuration.yaml_store import YamlConfigStore
 
 
 def put(path, value):
@@ -118,6 +120,76 @@ def main():
                 runtime.stop_event.set()
                 slow.join(2)
                 observer.join(2)
+        # Configuration reload is independent of routing; invalid input retains
+        # the last applied model, while deletion restores the default.
+        settings = ConfigService(YamlConfigStore(wp / "configuration.yaml"))
+        settings.create(PFConfig().with_changes({"runtime.metrics.interval_seconds": 1}))
+        runtime = service.RuntimeProcess(wp, core, interval=2, configuration=settings)
+        assert runtime.metrics_interval == 1
+        first, second = threading.Event(), threading.Event()
+        periods = []
+        publish = runtime.publish_metrics
+        def record_sample(*args, **kwargs):
+            publish(*args, **kwargs)
+            periods.append(runtime.state["metrics"]["interval_seconds"])
+            (first if len(periods) == 1 else second).set()
+        with patch.object(runtime, "publish_metrics", side_effect=record_sample):
+            observer = threading.Thread(target=runtime.metrics_loop)
+            observer.start()
+            try:
+                assert first.wait(5), "one-second observer failed to publish"
+                settings.update({"runtime.metrics.interval_seconds": 2})
+                assert second.wait(5), "observer failed to reload configuration on its next cycle"
+                assert periods[:2] == [1, 2], periods
+            finally:
+                runtime.stop_event.set()
+                observer.join(5)
+                assert not observer.is_alive()
+        settings.update({"runtime.metrics.interval_seconds": 2})
+        runtime.reload_configuration()
+        assert runtime.metrics_interval == 2 and runtime.interval == 2
+        valid_bytes = (wp / "configuration.yaml").read_bytes()
+        (wp / "configuration.yaml").write_text("runtime: [PRIVATE_CANARY", encoding="utf-8")
+        runtime.reload_configuration()
+        assert runtime.metrics_interval == 2 and runtime.state["configuration"]["status"] == "invalid"
+        assert "PRIVATE_CANARY" not in json.dumps(runtime.state["configuration"])
+        (wp / "configuration.yaml").write_bytes(valid_bytes)
+        settings.delete()
+        runtime.reload_configuration()
+        assert runtime.metrics_interval == 10 and runtime.state["configuration"]["status"] == "valid"
+        # Deterministic clock/event adapter exercises the production observer:
+        # monotonic cadence, overruns, and no catch-up/parallel collection.
+        class OneCycle:
+            def is_set(self):
+                return False
+            def wait(self, delay):
+                self.delay = delay
+                return True
+        for period, elapsed in ((1, .2), (2, .3), (10, .5), (60, .5), (1, 3)):
+            if settings.read().exists:
+                settings.update({"runtime.metrics.interval_seconds": period})
+            else:
+                settings.create(PFConfig().with_changes({"runtime.metrics.interval_seconds": period}))
+            runtime.stop_event = OneCycle()
+            with patch.object(service.time, "monotonic", side_effect=[0, elapsed]), patch.object(metrics, "registered_projects", return_value=([], metrics.registrations({}), True)), patch.object(runtime, "publish_metrics") as publish, patch.object(runtime, "save"):
+                runtime.metrics_loop()
+                assert publish.call_count == 1
+            assert runtime.stop_event.delay == (period - elapsed if elapsed < period else period)
+            sample = metrics.collect(wp, [], core, "test", metrics.registrations({}), now=now, interval_seconds=period)
+            ttl = max(5, 4.5 * period)
+            assert metrics.project(sample, "test", now=now + ttl - .1)
+            assert metrics.project(sample, "test", now=now + ttl + .1) is None
+            assert metrics.project({**sample, "interval_seconds": True}, "test", now=now) is None
+        broken = base / "broken"
+        broken.mkdir()
+        (broken / "configuration.yaml").write_text("runtime: [", encoding="utf-8")
+        try:
+            service.RuntimeProcess(broken, core, interval=2)
+        except ConfigurationError:
+            pass
+        else:
+            raise AssertionError("invalid startup must fail before creating runtime files")
+        assert set(p.name for p in broken.iterdir()) == {"configuration.yaml"}
     print("PASS: metrics semantics, canonical dedup, bounds, privacy, schema and publisher/monitor")
     return 0
 

@@ -1949,6 +1949,7 @@ def default_runtime_driver_registry() -> dict[str, Any]:
 
 
 def build_workplace_files(root: Path, answers: dict[str, Any]) -> dict[Path, str]:
+    from processforge_core.configuration import PFConfig
     defaults = workplace_defaults(root, answers)
     profile = str(answers.get("profile") or "generic").strip() or "generic"
     paths_answers = answers.get("paths", {}) if isinstance(answers.get("paths"), dict) else {}
@@ -2201,6 +2202,7 @@ Run `project-onboard` for a concrete project.
     files = {
         root / "AGENTS.md": agents,
         root / "workplace.yaml": dump_yaml(workplace),
+        root / "configuration.yaml": dump_yaml(PFConfig().to_dict()),
         root / "terms.yaml": dump_yaml(build_terms()),
         root / "registries" / "distributions.yaml": dump_yaml(
             {"schema_version": 1, "distributions": distribution_entries}
@@ -2979,8 +2981,16 @@ def package_root_registry_checks(workplace_root: Path) -> list[Check]:
 
 
 def command_doctor_workplace(args: argparse.Namespace) -> int:
+    from processforge_core.configuration import ConfigService, ConfigurationError
+    from processforge_core.configuration.yaml_store import YamlConfigStore
+
     root = Path(args.root).expanduser().resolve()
     checks: list[Check] = []
+    try:
+        configuration = ConfigService(YamlConfigStore(root / "configuration.yaml")).read()
+        checks.append(check("PASS", "configuration.yaml valid" if configuration.exists else "configuration.yaml absent; defaults apply"))
+    except ConfigurationError as exc:
+        checks.append(check("FAIL", exc.code))
     manifest = root / "workplace.yaml"
     if manifest.is_file():
         checks.append(check("PASS", "workplace.yaml found"))
@@ -7044,6 +7054,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_runtime_status_version_truth", [sys.executable, str(root / "tools" / "smoke_runtime_status_version_truth.py")], 180),
         ReleaseCommand("smoke_runtime_monitor", [sys.executable, str(root / "tools" / "smoke_runtime_monitor.py")], 120),
         ReleaseCommand("smoke_runtime_metrics", [sys.executable, str(root / "tools" / "smoke_runtime_metrics.py")], 120),
+        ReleaseCommand("smoke_workplace_configuration", [sys.executable, str(root / "tools" / "smoke_workplace_configuration.py")], 120),
         ReleaseCommand("smoke_server_operator", [sys.executable, str(root / "tools" / "smoke_server_operator.py")], 120),
         ReleaseCommand("smoke_diagnostics_configure", [sys.executable, str(root / "tools" / "smoke_diagnostics_configure.py")], 120),
         ReleaseCommand("smoke_process_event_concurrency", [sys.executable, str(root / "tools" / "smoke_process_event_concurrency.py")], 120),
@@ -27533,12 +27544,16 @@ def build_parser() -> argparse.ArgumentParser:
     execution_inspector_stop_alias.set_defaults(func=command_supervisor_stop)
 
     from pf_runtime.monitor import interval_value
+    from pf_config import register as register_config_commands
+
+    register_config_commands(sub)
 
     monitor = sub.add_parser("monitor", help="Observe local Runtime without starting, stopping, or changing it.")
     monitor.add_argument("--workplace", required=True, help="Existing workplace root directory.")
     monitor.add_argument("--once", action="store_true", help="Print one plain snapshot and exit.")
     monitor.add_argument("--json", action="store_true", help="Print one allowlisted JSON snapshot without terminal controls.")
-    monitor.add_argument("--interval", type=interval_value, default=2.0, help="Seconds between observations (1 to 60; default 2).")
+    monitor.add_argument("--interval", type=interval_value, default=None, help="Viewer interval override (1 to 60); default follows Runtime configuration.")
+    monitor.add_argument("--details", action="store_true", help="Show detailed scheduler and observation diagnostics.")
     monitor.add_argument("--ascii", action="store_true", help="Use ASCII-only terminal text.")
     monitor.add_argument("--no-color", action="store_true", help="Disable color (the monitor is monochrome by default).")
     monitor.set_defaults(func=command_runtime_monitor)
@@ -28400,7 +28415,7 @@ def main(argv: list[str] | None = None) -> int:
         args.dry_run = True
     # Initialization owns its post-preflight events. Eager CLI diagnostics must
     # not turn status, a preview, or an entry refusal into a project write.
-    if args.command in {"agent-entry", "agent-start-prompt", "init-project", "project-init", "project-onboard", "project-init-status", "project-init-repair", "diagnostics-status", "diagnostics-export", "diagnostics-configure", "monitor"} or (args.command == "server" and args.runtime_command == "status"):
+    if args.command in {"agent-entry", "agent-start-prompt", "init-project", "project-init", "project-onboard", "project-init-status", "project-init-repair", "diagnostics-status", "diagnostics-export", "diagnostics-configure", "monitor", "config"} or (args.command == "server" and args.runtime_command == "status"):
         return args.func(args)
     project_value = getattr(args, "project_root", None)
     project = Path(project_value).expanduser().resolve() if isinstance(project_value, str) else None

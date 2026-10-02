@@ -503,6 +503,11 @@
         }
       },
       "additionalProperties": false
+    },
+    "interval_seconds": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 60
     }
   },
   "additionalProperties": false

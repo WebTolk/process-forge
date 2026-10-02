@@ -205,13 +205,17 @@ def observe(name, workplace, roots, core, *, now, coverage=True, budget=None):
     return group(name, counts, budget.issues)
 
 
-def collect(workplace, roots, core, instance_id, registration, *, coverage=True, now=None):
+def collect(workplace, roots, core, instance_id, registration, *, coverage=True, now=None, interval_seconds=None):
     now = time.time() if now is None else now
     groups = {name: observe(name, workplace, roots, core, now=now, coverage=coverage)
               for name in ("sessions", "workers", "work", "leases")}
     groups["registrations"] = registration
-    return {"schema_version": 1, "instance_id": instance_id,
-            "observed_at": datetime.fromtimestamp(now, timezone.utc).isoformat(), "groups": groups}
+    result = {"schema_version": 1, "instance_id": instance_id,
+              "observed_at": datetime.fromtimestamp(now, timezone.utc).isoformat(), "groups": groups}
+    if interval_seconds is not None:
+        from .configuration import MetricsConfig
+        result["interval_seconds"] = MetricsConfig(interval_seconds).interval_seconds
+    return result
 
 
 def project(snapshot, instance_id, *, now):
@@ -220,7 +224,13 @@ def project(snapshot, instance_id, *, now):
         if not isinstance(snapshot, dict) or type(snapshot.get("schema_version")) is not int or snapshot["schema_version"] != 1 or not instance_id or snapshot.get("instance_id") != instance_id:
             raise ValueError
         age = now - epoch(snapshot.get("observed_at"))
-        if not 0 <= age <= MAX_AGE:
+        interval = snapshot.get("interval_seconds")
+        maximum_age = MAX_AGE
+        if "interval_seconds" in snapshot:
+            from .configuration import MetricsConfig
+            interval = MetricsConfig(interval).interval_seconds
+            maximum_age = max(5, 4.5 * interval)
+        if not 0 <= age <= maximum_age:
             raise ValueError
         result = {}
         for name, fields in FIELDS.items():
@@ -242,7 +252,7 @@ def project(snapshot, instance_id, *, now):
                     raise ValueError
                 counts[key], observed[key] = v, o
             result[name] = group(name, observed, issues)
-        return {"age_seconds": round(age, 1), "groups": result}
+        return {"age_seconds": round(age, 1), "groups": result, "interval_seconds": interval}
     except (KeyError, ValueError, TypeError, OverflowError):
         return None
 

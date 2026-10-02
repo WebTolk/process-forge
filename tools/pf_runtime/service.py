@@ -363,10 +363,16 @@ def release_singleton(workplace_root: Path, instance_id: str, core: Any | None =
 
 
 class RuntimeProcess:
-    def __init__(self, workplace_root: Path, core: Any, *, interval: float) -> None:
+    def __init__(self, workplace_root: Path, core: Any, *, interval: float, configuration=None) -> None:
+        from processforge_core.configuration import ConfigService
+        from processforge_core.configuration.yaml_store import YamlConfigStore
+
         self.workplace_root = workplace_root
         self.core = core
         self.interval = max(0.25, float(interval))
+        self.config_service = configuration if configuration is not None else ConfigService(YamlConfigStore(workplace_root / "configuration.yaml"))
+        # Validate before token/state creation. Core models/services have no host discovery.
+        self.configuration = self.config_service.read()
         self.token = load_token(workplace_root)
         self.stop_event = threading.Event()
         self.httpd: ThreadingHTTPServer | None = None
@@ -376,10 +382,28 @@ class RuntimeProcess:
         self.state_lock = threading.RLock()
         self._project_errors: dict[str, str] = {}
         self._registrations = metrics_core().registrations({})
-        self._metrics_at = float("-inf")
         self.active_requests = 0
         self.scheduler_active = False
         self.shutdown_check = False
+        self.reload_configuration()
+
+    @property
+    def metrics_interval(self) -> float:
+        return self.configuration.config.runtime.metrics.interval_seconds
+
+    def reload_configuration(self) -> None:
+        from processforge_core.configuration import ConfigurationError
+
+        error = None
+        try:
+            self.configuration = self.config_service.read()
+        except ConfigurationError as exc:
+            error = exc.code  # Keep last valid snapshot; never publish raw YAML or paths.
+        with self.state_lock:
+            self.state["configuration"] = {
+                "status": "invalid" if error else "valid", "error": error,
+                "metrics_interval_seconds": self.metrics_interval,
+            }
 
     def save(self) -> None:
         with self.state_lock:
@@ -423,22 +447,22 @@ class RuntimeProcess:
         return list(dict.fromkeys(roots))
 
     def publish_metrics(self, roots: list[Path], *, registration=None, coverage=None) -> None:
-        if time.monotonic() - self._metrics_at < 10:
-            return
-        self._metrics_at = time.monotonic()
         snapshot = metrics_core().collect(self.workplace_root, roots, self.core, self.instance_id,
                                            self._registrations if registration is None else registration,
-                                           coverage=not self._project_errors if coverage is None else coverage)
+                                           coverage=not self._project_errors if coverage is None else coverage,
+                                           interval_seconds=self.metrics_interval)
         with self.state_lock:
             self.state["metrics"] = snapshot
             self.state["scheduler"]["jobs"]["metrics"] = {
-                "period_seconds": 10, "last_run": snapshot["observed_at"],
+                "period_seconds": self.metrics_interval, "last_run": snapshot["observed_at"],
                 "last_result": "ok" if all(g["coverage"] == "complete" for g in snapshot["groups"].values()) else "failed"}
 
     def metrics_loop(self) -> None:
         # Observation must not wait for project routing, event replay or tick.
         # Domain readers remain in Core; this thread only schedules/publishes.
         while not self.stop_event.is_set():
+            self.reload_configuration()
+            started = time.monotonic()
             try:
                 roots, registration, coverage = metrics_core().registered_projects(self.workplace_root)
                 self.publish_metrics(roots, registration=registration, coverage=coverage)
@@ -447,12 +471,15 @@ class RuntimeProcess:
                 with self.state_lock:
                     self.state.pop("metrics", None)
                     self.state["scheduler"]["jobs"]["metrics"] = {
-                        "period_seconds": 10, "last_run": self.core.now_utc(), "last_result": "failed"}
+                        "period_seconds": self.metrics_interval, "last_run": self.core.now_utc(), "last_result": "failed"}
                 try:
                     self.save()
                 except (Exception, SystemExit):
                     pass  # Existing sample expires even when persistence fails.
-            if self.stop_event.wait(10):
+            elapsed = time.monotonic() - started
+            # One observer only; an overrun skips missed ticks rather than catching up.
+            delay = self.metrics_interval - elapsed if elapsed < self.metrics_interval else self.metrics_interval
+            if self.stop_event.wait(delay):
                 break
 
     def status_payload(self) -> dict[str, Any]:
@@ -766,10 +793,18 @@ class RuntimeProcess:
 
 
 def command_serve(args: argparse.Namespace, core: Any) -> int:
+    from processforge_core.configuration import ConfigurationError
+
     workplace_root = core.resolve_workplace_root(getattr(args, "workplace", None))
-    runtime = RuntimeProcess(workplace_root, core, interval=float(getattr(args, "interval", 2.0) or 2.0))
+    try:
+        runtime = RuntimeProcess(workplace_root, core, interval=float(getattr(args, "interval", 2.0) or 2.0))
+    except ConfigurationError as exc:
+        raise SystemExit(f"FAIL: {exc.code}") from None
     if getattr(args, "console", False) and sys.stdout.isatty():
-        print("PF | ProcessForge Server - foreground Runtime", flush=True)
+        from .monitor import banner
+        ascii_only = (sys.stdout.encoding or "").lower().replace("-", "") != "utf8"
+        print("\n".join(banner(ascii_only)), flush=True)
+        print("Foreground Runtime: closing this window stops the server.", flush=True)
     return runtime.serve(int(getattr(args, "port", 0) or 0))
 
 

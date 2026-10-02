@@ -140,7 +140,7 @@ def probe_ready(endpoint: str) -> tuple[bool | None, str]:
         return None, "probe_failed"
 
 
-def freshness(value: Any, now: datetime) -> dict[str, Any]:
+def freshness(value: Any, now: datetime, maximum_age: float = STALE_SECONDS) -> dict[str, Any]:
     try:
         stamp = datetime.fromisoformat(value.replace("Z", "+00:00")) if isinstance(value, str) else None
         if stamp is None or stamp.tzinfo is None:
@@ -148,7 +148,7 @@ def freshness(value: Any, now: datetime) -> dict[str, Any]:
         age = (now - stamp).total_seconds()
         if age < 0 or not math.isfinite(age):
             raise ValueError
-        return {"status": "fresh" if age <= STALE_SECONDS else "stale", "age_seconds": round(age, 1)}
+        return {"status": "fresh" if age <= maximum_age else "stale", "age_seconds": round(age, 1)}
     except (ValueError, TypeError, OverflowError):
         return {"status": "unknown", "age_seconds": None}
 
@@ -161,6 +161,15 @@ def safe_text(value: Any, limit: int = 64, *, ascii_only: bool = False) -> str:
 
 def version(value: Any) -> str:
     return value if isinstance(value, str) and re.fullmatch(r"[0-9][0-9A-Za-z.+-]{0,63}", value) else "unknown"
+
+
+def applied_interval(configuration: Any) -> float | None:
+    from processforge_core.configuration import MetricsConfig
+
+    try:
+        return MetricsConfig(configuration["metrics_interval_seconds"]).interval_seconds
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def collect_snapshot(workplace: Path, cli_version: str, *, now: datetime | None = None,
@@ -202,7 +211,8 @@ def collect_snapshot(workplace: Path, cli_version: str, *, now: datetime | None 
     lifecycle = "unknown" if uncertain else service.classify_lifecycle(
         state, lock, lock_exists=lock_reason != "missing", pid_running=bool(lock_alive),
         state_pid_running=bool(state_alive), ready=ready is True)
-    age = freshness(state.get("updated_at"), now)
+    interval = applied_interval(state.get("configuration")) if lifecycle == "ready" else None
+    age = freshness(state.get("updated_at"), now, max(15, 2 * interval + 5) if interval is not None else STALE_SECONDS)
     health = state.get("health") if lifecycle == "ready" and age["status"] == "fresh" else "unknown"
     if not isinstance(health, str) or health not in {"ready", "degraded", "failed", "starting", "stopping", "stopped"}:
         health = "unknown"
@@ -228,12 +238,19 @@ def collect_snapshot(workplace: Path, cli_version: str, *, now: datetime | None 
         registration = {**compact["groups"]["registrations"]["counts"],
                         "freshness": {"status": "fresh", "age_seconds": compact["age_seconds"]}}
         issues = [i for i in issues if not i.startswith("cache_")]
+    configuration = state.get("configuration")
+    config_status = configuration.get("status") if isinstance(configuration, dict) and lifecycle == "ready" else None
+    if config_status == "invalid":
+        issues.append("configuration_invalid")
+    uptime = freshness(state.get("started_at"), now)["age_seconds"] if lifecycle == "ready" else None
     return {"schema_version": 1, "kind": "pf.runtime.monitor", "observed_at": now.isoformat(),
             "source": "bounded_local_state_and_loopback_readyz", "workplace": safe_text(workplace.name),
             "cli_version": version(cli_version), "state_freshness": age,
             "runtime": {"lifecycle": lifecycle, "health": health, "owner_pid": lock.get("pid") if matching and lock_alive and not uncertain else None,
                         "owner_alive": lock_alive if matching and not uncertain else None,
-                        "instance_version": version(state.get("runtime_version")), "readiness": probe_reason},
+                        "instance_version": version(state.get("runtime_version")), "readiness": probe_reason,
+                        "uptime_seconds": uptime},
+            "configuration": {"status": config_status if config_status in {"valid", "invalid"} else "unknown", "interval_seconds": interval},
             "scheduler": {"source": "cached_job_results", "jobs": rows},
             "registrations": registration,
             "metrics": compact,
@@ -260,7 +277,7 @@ def crop(text: str, columns: int, *, ascii_only: bool = False) -> str:
     return result
 
 
-def render(snapshot: dict[str, Any], columns: int = 80, lines: int = 24, *, ascii_only: bool = False) -> list[str]:
+def render_details(snapshot: dict[str, Any], columns: int = 80, lines: int = 24, *, ascii_only: bool = False) -> list[str]:
     runtime = snapshot["runtime"]
     age = snapshot["state_freshness"]
     age_text = "unknown" if age["age_seconds"] is None else f"{age['age_seconds']:.1f}s"
@@ -291,6 +308,45 @@ def render(snapshot: dict[str, Any], columns: int = 80, lines: int = 24, *, asci
     rows.append("Waiting for user/events/backlog/MCP/hooks: unknown (no aggregate coverage)")
     if snapshot["issues"]:
         rows.append("Observation: " + ", ".join(snapshot["issues"]))
+    footer = "Q / Esc / Ctrl+C: close monitor; server unchanged"
+    height = max(1, lines - 1)
+    rows = rows[:max(1, height - 1)] + ([footer] if height > 1 else [])
+    return [crop(row, max(1, columns - 1), ascii_only=ascii_only) for row in rows]
+
+
+def banner(ascii_only: bool = False) -> list[str]:
+    return (["PP  FF   ProcessForge Server", "P   F    PF"] if ascii_only else
+            ["█▀█ █▀▀   ProcessForge Server", "█▀▀ █▀    PF"])
+
+
+def render(snapshot: dict[str, Any], columns: int = 80, lines: int = 24, *, ascii_only: bool = False,
+           details: bool = False, decorative: bool = False) -> list[str]:
+    if details:
+        return render_details(snapshot, columns, lines, ascii_only=ascii_only)
+    runtime = snapshot["runtime"]
+    number = lambda value: "unknown" if value is None else str(value)
+    rows = [f"Runtime: {runtime['lifecycle'].upper()} | health: {runtime['health']}"]
+    rows.extend(banner(ascii_only) if decorative and columns >= 35 and lines >= 16 else ["PF | ProcessForge Server"])
+    rows += [f"Workplace: {snapshot['workplace']} | PID: {number(runtime['owner_pid'])}",
+             f"CLI: {snapshot['cli_version']} | instance: {runtime['instance_version']}",
+             f"Uptime: {number(runtime.get('uptime_seconds'))}s"]
+    compact = snapshot.get("metrics")
+    interval = snapshot.get("configuration", {}).get("interval_seconds")
+    if compact:
+        rows.append(f"Metrics: {compact['age_seconds']:.1f}s old | interval: {number(interval)}s")
+        labels = {"registrations": "Registered", "sessions": "Session presence", "workers": "Reported workers",
+                  "work": "Work records", "leases": "Leases"}
+        for key, label in labels.items():
+            item = compact["groups"][key]
+            values = ", ".join(f"{k}={v if item['coverage'] == 'complete' else '>=' + str(v)}" for k, v in item["observed"].items())
+            rows.append(f"{label}: {values}" + (" [partial]" if item["coverage"] != "complete" else ""))
+    else:
+        rows += [f"Metrics: unavailable | interval: {number(interval)}s",
+                 f"Registered projects: {number(snapshot['registrations']['projects'])}",
+                 "Sessions / workers / Work / leases: unknown"]
+    if snapshot["issues"]:
+        rows.append("Observation: " + ", ".join(snapshot["issues"]))
+    rows.append("--details: scheduler and observation diagnostics")
     footer = "Q / Esc / Ctrl+C: close monitor; server unchanged"
     height = max(1, lines - 1)
     rows = rows[:max(1, height - 1)] + ([footer] if height > 1 else [])
@@ -396,26 +452,42 @@ def run_view(collect: Callable, args: argparse.Namespace, *, stream: TextIO, inp
         print(json.dumps(collect(), ensure_ascii=True, sort_keys=True), file=stream)
         return 0
     if args.once or not stream.isatty() or not input_stream.isatty():
-        print("\n".join(render(collect(), 100, 60, ascii_only=ascii_only)), file=stream)
+        print("\n".join(render(collect(), 100, 60, ascii_only=ascii_only, details=getattr(args, "details", False))), file=stream)
         return 0
     with terminal_mode(stream, input_stream) as interactive:
         if not interactive:
-            print("\n".join(render(collect(), 100, 60, ascii_only=ascii_only)), file=stream)
+            print("\n".join(render(collect(), 100, 60, ascii_only=ascii_only, details=getattr(args, "details", False))), file=stream)
             return 0
         screen = Screen(stream)
         while True:
             snapshot = collect()
             dimensions = size()
-            screen.draw(render(snapshot, *dimensions, ascii_only=ascii_only), tuple(dimensions))
-            if wait(args.interval, input_stream):
+            screen.draw(render(snapshot, *dimensions, ascii_only=ascii_only, details=getattr(args, "details", False), decorative=True), tuple(dimensions))
+            interval = args.interval if args.interval is not None else snapshot.get("configuration", {}).get("interval_seconds")
+            if interval is None:
+                interval = 2 if snapshot["runtime"]["lifecycle"] == "ready" else snapshot.get("default_interval_seconds", 10)
+            if wait(interval, input_stream):
                 return 0
 
 
 def command_monitor(args: argparse.Namespace, core: Any) -> int:
-    workplace = Path(args.workplace).expanduser().resolve()
+    from processforge_core.configuration import ConfigService, ConfigurationError
+    from processforge_core.configuration.yaml_store import YamlConfigStore
+
+    workplace = core.resolve_workplace_root(args.workplace)
+    configuration = ConfigService(YamlConfigStore(workplace / "configuration.yaml"))
+
+    def collect():
+        snapshot = collect_snapshot(workplace, core.PROCESSFORGE_VERSION)
+        if snapshot["runtime"]["lifecycle"] != "ready":
+            try:
+                snapshot["default_interval_seconds"] = configuration.read().config.runtime.metrics.interval_seconds
+            except ConfigurationError:
+                snapshot["issues"].append("configuration_invalid")
+        return snapshot
+
     try:
-        return run_view(lambda: collect_snapshot(workplace, core.PROCESSFORGE_VERSION), args,
-                        stream=sys.stdout, input_stream=sys.stdin)
+        return run_view(collect, args, stream=sys.stdout, input_stream=sys.stdin)
     except (KeyboardInterrupt, BrokenPipeError):
         return 0
     except Exception:  # A viewer failure must not leak raw local state/paths.

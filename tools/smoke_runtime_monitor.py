@@ -165,6 +165,30 @@ def main():
         assert hashes(root) == before and not service.token_path(workplace).exists()
         groups.append("allowlist, cached counts, unknown coverage, no writes")
 
+        metrics = service.metrics_core()
+        for period in (1, 2, 10, 60):
+            age = period
+            sample = metrics.collect(workplace, [], core, "test", metrics.registrations({}),
+                                     now=now.timestamp() - age, interval_seconds=period)
+            applied = {**state, "updated_at": (now - timedelta(seconds=age)).isoformat(),
+                       "started_at": (now - timedelta(seconds=100)).isoformat(), "metrics": sample,
+                       "configuration": {"status": "valid", "metrics_interval_seconds": period}}
+            write(applied)
+            snapshot = collect()
+            assert snapshot["metrics"]["age_seconds"] == age
+            assert snapshot["configuration"]["interval_seconds"] == period
+            assert snapshot["runtime"]["uptime_seconds"] == 100
+            # A fresh service heartbeat must not refresh an old activity sample.
+            stale_sample = {**sample, "observed_at": (now - timedelta(seconds=max(5, 4.5 * period) + 1)).isoformat()}
+            write({**applied, "updated_at": now.isoformat(), "metrics": stale_sample})
+            assert collect()["metrics"] is None
+        write({**applied, "configuration": {"status": "invalid", "metrics_interval_seconds": 60}})
+        assert "configuration_invalid" in collect()["issues"]
+        write({**applied, "configuration": {"status": "valid", "metrics_interval_seconds": True}})
+        assert collect()["state_freshness"]["status"] == "stale"
+        write(state)
+        groups.append("configured freshness, original sample age, invalid configuration and legacy compatibility")
+
         for stamp, expected in [(None, "unknown"), ("bad", "unknown"), ((now + timedelta(seconds=1)).isoformat(), "unknown"),
                                 ((now - timedelta(seconds=16)).isoformat(), "stale")]:
             write({**state, "updated_at": stamp})
@@ -246,6 +270,23 @@ def main():
             screen.draw(short, (columns, lines))
             assert len(output.getvalue()) == previous, "unchanged frame should not flicker"
         groups.append("terminal injection, cell widths, screen resize and cleared tails")
+
+        decorated = monitor.render(snapshot, 100, 28, decorative=True, ascii_only=True)
+        assert all(ord(char) < 128 for char in "".join(decorated))
+        assert len(decorated) < 28 and all(monitor.cell_width(row) < 100 for row in decorated)
+        assert monitor.render(snapshot, 100, 28, details=True) == monitor.render_details(snapshot, 100, 28)
+        assert "\x1b" not in "".join(monitor.banner(True))
+        args = argparse.Namespace(json=False, once=False, ascii=True, no_color=True, interval=None)
+        for requested, applied, expected in ((None, 1, 1), (None, 2, 2), (None, 10, 10), (None, 60, 60), (None, None, 2), (1, 10, 1)):
+            args.interval = requested
+            frame = {**snapshot, "configuration": {"interval_seconds": applied}}
+            waits = []
+            with patch.object(monitor, "terminal_mode") as mode:
+                mode.return_value.__enter__.return_value = True
+                monitor.run_view(lambda: frame, args, stream=TTY(), input_stream=TTY(),
+                                 wait=lambda delay, _: waits.append(delay) or True, size=lambda: (80, 24))
+            assert waits == [expected]
+        groups.append("compact splash/ASCII/details layout and viewer cadence override")
 
         args = argparse.Namespace(json=False, once=False, ascii=True, no_color=True, interval=1.0)
         screen_stream = TTY()

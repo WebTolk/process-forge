@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://processforge.local/schemas/workplace-configuration.schema.json",
+  "title": "Workplace operational configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "runtime": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "metrics": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "interval_seconds": {"type": "number", "minimum": 1, "maximum": 60, "default": 10}
+          }
+        }
+      }
+    }
+  }
+}
