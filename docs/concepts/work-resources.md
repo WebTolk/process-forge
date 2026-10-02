@@ -53,6 +53,13 @@ Work. New governed capsules carry `resource_bindings.schema_version: 1`.
 Existing context capsules are not rewritten: when their bindings are missing,
 the read asks for a successor Work rather than silently migrating them.
 
+For new Work bindings, resource materialization keeps grant membership from the
+authorized local-search rows but treats the resolved resource declaration as the
+authoritative indexing policy when it declares explicit `indexing` or recognized
+legacy `index_policy` values. Legacy full-text spellings such as `fulltext` and
+`full_text` materialize as fulltext; explicit `metadata` and `none` policies
+remain non-fulltext and are not broadened by Work.
+
 The process field `stage.resource_subset` narrows a Work's pinned resources.
 Fulltext material is verified within fixed per-request budgets: at most 64
 resources, 2,048 files, 32 MiB total content and 20,000 visited entries; each

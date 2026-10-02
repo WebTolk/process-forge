@@ -26,6 +26,9 @@ DEFAULT_LIMITS = {"resources": 64, "files": 2048, "bytes": 32 * 1024 * 1024,
                   "documents": 2048, "document_bytes": 32 * 1024 * 1024,
                   "visited_entries": 20000, "files_per_resource": RESOURCE_FILES,
                   "bytes_per_resource": RESOURCE_BYTES, "bytes_per_file": MAX_FILE_BYTES}
+LEGACY_INDEX_POLICIES = {"none", "never", "disabled", "metadata", "metadata_first", "index_only",
+                         "source_tree", "symbols", "fulltext", "full_text", "always_index", "snapshot_authorized"}
+LEGACY_POLICY_CANONICAL = {"full_text": "fulltext"}
 
 
 class MaterialError(Exception):
@@ -143,7 +146,8 @@ def _portable_reference(reference: dict[str, Any]) -> dict[str, Any]:
 def _indexing(row: dict[str, Any]) -> dict[str, Any]:
     raw = row.get("indexing")
     legacy = str(row.get("index_policy") or "").strip().casefold()
-    explicit_legacy = legacy in {"none", "never", "disabled", "metadata", "metadata_first", "index_only", "source_tree", "symbols", "fulltext", "always_index", "snapshot_authorized"}
+    canonical_legacy = LEGACY_POLICY_CANONICAL.get(legacy, legacy)
+    explicit_legacy = legacy in LEGACY_INDEX_POLICIES
     if not isinstance(raw, dict) and not explicit_legacy:
         raise MaterialError("resource_policy_unverifiable")
     if isinstance(raw, dict):
@@ -169,7 +173,8 @@ def _indexing(row: dict[str, Any]) -> dict[str, Any]:
                 for pattern in patterns:
                     _relative(pattern, allow_glob=True)
     try:
-        policy = normalize_indexing_policy(row)
+        policy_row = row if canonical_legacy == legacy else {**row, "index_policy": canonical_legacy}
+        policy = normalize_indexing_policy(policy_row)
     except (TypeError, ValueError, AttributeError) as exc:
         raise MaterialError("resource_policy_unverifiable") from exc
     if policy.get("mode") not in POLICY_MODES:

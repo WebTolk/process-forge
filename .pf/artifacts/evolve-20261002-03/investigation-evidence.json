@@ -1,0 +1,30 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "investigation-report",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/investigation.md",
+    "summary": "Work materialization loses legacy full_text policy when generated metadata indexing overrides the resolved resource declaration."
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "impact-analysis",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/investigation.md",
+    "summary": "New Work bindings, work.search/resolve and prepared resources are affected; existing capsules and explicit metadata grants remain out of scope."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "investigation-complete",
+    "status": "passed",
+    "path": ".pf/artifacts/evolve-20261002-03/investigation.md",
+    "summary": "Root cause identified in grant row merge and Work material policy validation."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "impact-understood",
+    "status": "passed",
+    "path": ".pf/artifacts/evolve-20261002-03/investigation.md",
+    "summary": "Impact and scope boundaries documented, including the out-of-scope project producer file."
+  }
+]

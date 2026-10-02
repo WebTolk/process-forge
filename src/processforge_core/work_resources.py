@@ -17,6 +17,9 @@ from .work_resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialErro
 
 
 MAX_STATE_BYTES = 2 * 1024 * 1024
+LEGACY_INDEX_POLICIES = {"none", "never", "disabled", "metadata", "metadata_first", "index_only",
+                         "source_tree", "symbols", "fulltext", "full_text", "always_index", "snapshot_authorized"}
+LEGACY_POLICY_CANONICAL = {"full_text": "fulltext"}
 
 
 class WorkResourceError(Exception):
@@ -33,6 +36,15 @@ def _ids(value: Any, reason: str) -> list[str]:
     return list(value)
 
 
+def _declared_policy(row: dict[str, Any]) -> dict[str, Any]:
+    if isinstance(row.get("indexing"), dict):
+        return {"indexing": copy.deepcopy(row["indexing"])}
+    legacy = str(row.get("index_policy") or "").strip().casefold()
+    if legacy in LEGACY_INDEX_POLICIES:
+        return {"index_policy": LEGACY_POLICY_CANONICAL.get(legacy, legacy)}
+    return {}
+
+
 def grant_rows(snapshot: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """A local-search allowlist, including an empty one, is authoritative."""
     resolved = snapshot.get("resolved") or {}
@@ -47,7 +59,13 @@ def grant_rows(snapshot: dict[str, Any]) -> dict[str, dict[str, Any]]:
         identifier = item.get("id") or item.get("resource_id")
         if not isinstance(identifier, str) or not identifier or identifier in rows:
             raise WorkResourceError("resource_scope_invalid")
-        rows[identifier] = {**copy.deepcopy(originals.get(identifier, {})), **copy.deepcopy(item), "id": identifier}
+        original = copy.deepcopy(originals.get(identifier, {}))
+        row = {**original, **copy.deepcopy(item), "id": identifier}
+        policy = _declared_policy(original)
+        if policy:
+            row.pop("indexing", None)
+            row.update(policy)
+        rows[identifier] = row
     return rows
 
 

@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "brief",
+    "path": ".pf/artifacts/evolve-20261002-03/intake-scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "scope",
+    "path": ".pf/artifacts/evolve-20261002-03/intake-scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "task-record",
+    "path": ".pf/artifacts/evolve-20261002-03/intake-scope.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "scope-accepted",
+    "path": ".pf/artifacts/evolve-20261002-03/intake-scope.md",
+    "status": "passed"
+  }
+]

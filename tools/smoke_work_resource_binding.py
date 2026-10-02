@@ -60,6 +60,16 @@ def configure_resource(workplace: Path, package_id: str, resource_id: str, polic
     return manifest_path
 
 
+def configure_legacy_policy(workplace: Path, package_id: str, resource_id: str, policy: str) -> Path:
+    manifest_path = workplace / "packages" / package_id / "package.yaml"
+    document = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    resource = next(item for item in document["resources"] if item.get("id") == resource_id)
+    resource.pop("indexing", None)
+    resource["index_policy"] = policy
+    manifest_path.write_text(yaml.safe_dump(document, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    return manifest_path
+
+
 def checkin(workplace: Path, project: Path, agent: str, session: str) -> None:
     run_cli("agent-checkin", "--workplace", str(workplace), "--agent", agent, "--session", session,
             "--project-root", str(project), "--role", "worker")
@@ -203,8 +213,46 @@ def resource_order_checks() -> None:
                 restore_capsule(project, work, old)
 
 
+def legacy_full_text_policy_checks() -> None:
+    """Legacy full_text declarations stay fulltext through Work materialization."""
+    with fixture() as (workplace, project, _initial):
+        records = []
+        for suffix, policy, needle in (
+            ("underscore", "full_text", "LegacyUnderscoreNeedle"),
+            ("canonical", "fulltext", "LegacyCanonicalNeedle"),
+        ):
+            package, resource = f"fixture.legacy-{suffix}", f"guide-{suffix}"
+            rid = register_fixture_resource(workplace, package, resource, {"guide.md": needle}, title=f"Legacy {policy} Guide")
+            configure_legacy_policy(workplace, package, resource, policy)
+            select_fixture_resource(project, workplace, package, resource)
+            records.append((rid, package, resource, needle))
+
+        work = call_mcp(workplace, "pf.work.start", {"project_root": str(project), "objective": "Legacy fulltext policies pin fulltext"})
+        require(work.get("action") == "created_new", work)
+        args = selectors(project, work)
+        cap_path = project / ".pf" / "contexts" / "assignment-capsules" / f"{work['assignment_id']}.capsule.yaml"
+        cap = yaml.safe_load(cap_path.read_bytes())
+        bindings = {item["id"]: item for item in cap["resource_bindings"]["resources"]}
+        service = WorkResourceService(project, workplace, core)
+        for rid, package, resource, needle in records:
+            binding = bindings[rid]
+            require(binding["status"] == "available" and binding["material_kind"] == "fulltext", binding)
+            require(binding.get("manifest"), binding)
+            require(binding["indexing"]["mode"] == "fulltext", binding)
+            require(binding["indexing"]["sources"][0]["mode"] == "fulltext", binding)
+
+            found = service.read(operation="search", **{key: args[key] for key in ("run_id", "assignment_id", "context_id")}, query=needle)
+            require(found.get("status") == "ready" and found.get("total") == 1, found)
+            resolved = service.read(operation="resolve", **{key: args[key] for key in ("run_id", "assignment_id", "context_id")}, resource_id=rid)
+            require(resolved.get("status") == "ready" and resolved["resource"]["navigation"] == "verified_declared_material", resolved)
+            root = workplace / "packages" / package / "resources" / resource
+            captured, _ = capture_material(binding, root, {"package": package, "relative_path": f"resources/{resource}"}, include_content=True)
+            require(captured["material_kind"] == "fulltext" and captured["manifest"] == binding["manifest"], captured)
+
+
 def main() -> int:
     resource_order_checks()
+    legacy_full_text_policy_checks()
     with tempfile.TemporaryDirectory(prefix="pf-work-resource-binding-") as raw:
         root = Path(raw)
         with fixture() as (workplace, project, _fixture_work):

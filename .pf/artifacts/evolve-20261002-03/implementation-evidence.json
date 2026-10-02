@@ -1,0 +1,23 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "changed-files",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/implementation.md",
+    "summary": "Changed Work material policy normalization, Work row merge precedence, Work binding smoke coverage and EN/RU docs."
+  },
+  {
+    "kind": "artifact",
+    "artifact_id": "change-summary",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/implementation.md",
+    "summary": "New Work bindings preserve resolved full_text/fulltext declarations while explicit metadata/none remain non-fulltext."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "implementation-scope-respected",
+    "status": "passed",
+    "path": ".pf/artifacts/evolve-20261002-03/implementation.md",
+    "summary": "Implementation stayed within PF allowed product, test, docs and artifact files."
+  }
+]

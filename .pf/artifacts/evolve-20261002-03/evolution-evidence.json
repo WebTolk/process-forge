@@ -1,0 +1,16 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "evolution-report",
+    "status": "ready",
+    "path": ".pf/artifacts/evolve-20261002-03/evolution-report.md",
+    "summary": "Captured project-local learning: separate grant membership from materialization policy and preserve resolved declaration policy for Work."
+  },
+  {
+    "kind": "gate",
+    "gate_id": "evolution-captured",
+    "status": "passed",
+    "path": ".pf/artifacts/evolve-20261002-03/evolution-report.md",
+    "summary": "Evolution notes and follow-up boundary are recorded."
+  }
+]
