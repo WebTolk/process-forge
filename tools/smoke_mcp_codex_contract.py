@@ -54,6 +54,13 @@ def main() -> int:
             raise AssertionError(tools["pf.context"])
         if tools["pf.work.start"]["annotations"]["readOnlyHint"] is not False:
             raise AssertionError(tools["pf.work.start"])
+        work_start_schema = tools["pf.work.start"]["inputSchema"]
+        scope_schema = work_start_schema.get("properties", {}).get("scope_intent", {})
+        assignment_schema = scope_schema.get("properties", {}).get("assignment", {})
+        if scope_schema.get("additionalProperties") is not False or assignment_schema.get("additionalProperties") is not False:
+            raise AssertionError(scope_schema)
+        if "allowed_files" not in assignment_schema.get("properties", {}) or "required_outputs" not in assignment_schema.get("properties", {}):
+            raise AssertionError(scope_schema)
         payload_text = responses[2]["result"]["content"][0]["text"]
         payload = json.loads(payload_text)
         if payload.get("kind") != "pf.context" or payload.get("context", {}).get("status") not in {"fresh", "fresh_with_updates"}:

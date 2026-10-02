@@ -71,8 +71,9 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
     core = runtime.core
     from pf_runtime import session_read
     from processforge_core.local_resource_search import LocalSearchError
-    from processforge_core.garage import GovernedWorkBootstrapService, ProjectContextService, ResourceResolveService, ResourceSearchService
-    from processforge_core.process_execution import ProcessExecutionService
+    from processforge_core.garage import ProjectContextService, ResourceResolveService, ResourceSearchService
+    from processforge_core.process_execution import ProcessExecutionService, creation_scope_intent
+    from processforge_core.work_context import ContextContractError
 
     configured_session = str(session_id or "")
     requested_session = str(arguments.get("session_id") or "")
@@ -167,10 +168,21 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
             request["session_id"] = supplied_session
         return ContinuationService(bound_project, workplace, core).request(operation, **request)
     if name == "pf.work.start":
-        if set(arguments) - {"session_id", "project_root", "objective", "process_id"}:
+        if set(arguments) - {"session_id", "project_root", "objective", "process_id", "scope_intent"}:
             raise session_read.SessionReadError("invalid_arguments")
         bound_project = resolve_garage_project()
-        return GovernedWorkBootstrapService(bound_project, workplace, core).start(objective=str(arguments.get("objective") or ""), process_id=str(arguments.get("process_id") or ""), session_id=supplied_session)
+        scope_intent = None
+        if "scope_intent" in arguments:
+            try:
+                scope_intent = creation_scope_intent(arguments["scope_intent"])
+            except ContextContractError as exc:
+                raise session_read.SessionReadError(str(exc) or "work_scope_invalid") from exc
+        return ProcessExecutionService(bound_project, workplace, core).start(
+            objective=str(arguments.get("objective") or ""),
+            process_id=str(arguments.get("process_id") or "").strip(),
+            session_id=supplied_session,
+            scope_intent=scope_intent,
+        )
     if name == "pf.work.transition":
         bound_project = resolve_garage_project()
         return ProcessExecutionService(bound_project, workplace, core).transition(
@@ -237,6 +249,80 @@ def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_i
     raise session_read.SessionReadError("unknown_tool")
 
 
+def scope_intent_tool_schema() -> dict[str, Any]:
+    string_array = {"type": "array", "items": {"type": "string"}}
+    return {
+        "type": "object",
+        "required": ["schema_version", "assignment"],
+        "additionalProperties": False,
+        "properties": {
+            "schema_version": {"type": "integer"},
+            "predecessor": {
+                "type": "object",
+                "required": ["run_id", "assignment_id", "capsule_checksum"],
+                "additionalProperties": False,
+                "properties": {
+                    "run_id": {"type": "string", "minLength": 1},
+                    "assignment_id": {"type": "string", "minLength": 1},
+                    "capsule_checksum": {"type": "string", "minLength": 1},
+                },
+            },
+            "predecessor_handoff": {"type": "string", "minLength": 1},
+            "assignment": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "allowed_files": string_array,
+                    "allowed_read_files": string_array,
+                    "forbidden_files": string_array,
+                    "allowed_actions": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": ["read", "write_artifact", "write_product"]},
+                    },
+                    "forbidden_actions": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": ["read", "write_artifact", "write_product"]},
+                    },
+                    "execution_mode": {"type": "string", "minLength": 1},
+                    "required_sources": string_array,
+                    "required_outputs": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["id", "path"],
+                            "additionalProperties": False,
+                            "properties": {
+                                "id": {"type": "string", "minLength": 1},
+                                "path": {"type": "string", "minLength": 1},
+                                "type": {"type": "string"},
+                                "required": {"type": "boolean"},
+                            },
+                        },
+                    },
+                    "expected_report": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "artifact": {"type": "string", "minLength": 1},
+                            "language": {"type": "string"},
+                            "format": {"type": "string"},
+                        },
+                    },
+                    "ownership": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "owner_id": {"type": "string"},
+                            "role": {"type": "string"},
+                            "writer": {"type": "boolean"},
+                        },
+                    },
+                },
+            },
+        },
+    }
+
+
 def tool_schema(name: str) -> dict[str, Any]:
     properties: dict[str, Any] = {"session_id": {"type": "string"}, "project_root": {"type": "string"}}
     required: list[str] = []
@@ -264,6 +350,7 @@ def tool_schema(name: str) -> dict[str, Any]:
     if name == "pf.work.start":
         properties.update({"objective": {"type": "string", "minLength": 1}})
         properties["process_id"] = {"type": "string", "minLength": 1}
+        properties["scope_intent"] = scope_intent_tool_schema()
         required.append("objective")
     if name == "pf.work.transition":
         properties.update(

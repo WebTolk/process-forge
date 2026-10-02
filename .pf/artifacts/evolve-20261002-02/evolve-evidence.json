@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "artifact",
+    "artifact_id": "evolution-report",
+    "path": ".pf/artifacts/evolve-20261002-02/evolution.md",
+    "status": "ready"
+  },
+  {
+    "kind": "gate",
+    "gate_id": "evolution-captured",
+    "path": ".pf/artifacts/evolve-20261002-02/evolution.md",
+    "status": "passed"
+  }
+]
