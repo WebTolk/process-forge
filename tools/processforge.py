@@ -20631,9 +20631,11 @@ def command_orchestrator_plan_status(args: argparse.Namespace) -> int:
 
 
 def process_execution_service(project_root: Path, explicit_workplace: str | None = None) -> ProcessExecutionService:
+    from processforge_core.composition import build_process_execution_service
+
     manifest = resolve_project_workplace_manifest(project_root, explicit_workplace)
     workplace_root = manifest.parent if manifest is not None else None
-    return ProcessExecutionService(project_root, workplace_root, sys.modules[__name__])
+    return build_process_execution_service(project_root, workplace_root, sys.modules[__name__])
 
 
 def print_process_execution_result(payload: dict[str, Any], *, as_json: bool = False) -> None:

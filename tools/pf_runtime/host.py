@@ -1206,7 +1206,7 @@ def command_work_state(args: argparse.Namespace, core: Any) -> int:
 
 
 def work_state_payload(workplace_root: Path, core: Any, *, session: str | None = None, project_root_ref: str | None = None) -> dict[str, Any]:
-    from processforge_core.process_execution import ProcessExecutionService
+    from processforge_core.composition import build_process_execution_service
 
     project_root = project_for_session(argparse.Namespace(session=session, project_root=project_root_ref), workplace_root, core)
     handle = route_project(str(project_root), workplace_root, core)
@@ -1237,7 +1237,7 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
         "freshness": projection.get("status"),
         "last_relevant_activity": str(event_rows[-1].get("time") or "") if event_rows else "",
     }
-    declarative_state = ProcessExecutionService(project_root, workplace_root, core).state(session_id=str(session or ""))
+    declarative_state = build_process_execution_service(project_root, workplace_root, core).state(session_id=str(session or ""))
     if declarative_state.get("action") != "start_recommended":
         current_work_state.update(
             {

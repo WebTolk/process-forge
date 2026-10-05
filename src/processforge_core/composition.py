@@ -1,14 +1,18 @@
-"""Internal, explicit composition of the current-work read service."""
+"""Internal, explicit service composition; construction performs no I/O."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .garage import CurrentWorkService
 from .ports import WorkReadCorePort
+
+if TYPE_CHECKING:
+    from .diagnostics import Logger
+    from .process_execution import ProcessExecutionService
 
 __all__ = ()
 
@@ -26,3 +30,11 @@ class LegacyWorkReadAdapter:
 
 def build_current_work_service(project_root: Path, core: WorkReadCorePort) -> CurrentWorkService:
     return CurrentWorkService(project_root, core)
+
+
+def build_process_execution_service(
+    project_root: Path, workplace_root: Path | None, core: Any, *, observer: Logger | None = None,
+) -> ProcessExecutionService:
+    from .process_execution import ProcessExecutionService
+
+    return ProcessExecutionService(project_root, workplace_root, core, observer=observer)

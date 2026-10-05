@@ -6,12 +6,16 @@ import hashlib
 import json
 import re
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
 
 from .request_scope import safe_load, scoped_request
 from .work_inventory import WorkInventory
+from .work_state import WorkStatePolicy
+
+if TYPE_CHECKING:
+    from .diagnostics import Logger
 
 
 ACTIVE_RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review"}
@@ -210,6 +214,7 @@ class ProcessExecutionService:
     project_root: Path
     workplace_root: Path | None
     core: Any
+    observer: Logger | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     @scoped_request
     def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
@@ -468,8 +473,31 @@ class ProcessExecutionService:
                 "path": intent["predecessor_handoff"], "checksum": "sha256:" + hashlib.sha256(raw).hexdigest()}
         return result
 
-    @scoped_request
     def state(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "", context_id: str = "") -> dict[str, Any]:
+        from . import diagnostics
+
+        logger = self.observer if self.observer is not None else diagnostics.current()
+        observation = diagnostics.operation(logger, "work", "work.state", run_id=None,
+                                            assignment_id=None, stage_id=None, session_id=session_id or None)
+        observation.__enter__()
+        try:
+            payload = self._state(run_id=run_id, assignment_id=assignment_id,
+                                  session_id=session_id, context_id=context_id)
+            diagnostics.emit("debug", "work.state.result", {"action": payload.get("action"), "reason": payload.get("reason")}, component="work")
+        except BaseException as exc:
+            try:
+                observation.__exit__(type(exc), exc, exc.__traceback__)
+            except BaseException:
+                # contextlib may rewrite a frozen exception's traceback after
+                # operation has already logged it and reset its context tokens.
+                pass
+            raise
+        else:
+            observation.__exit__(None, None, None)
+            return payload
+
+    @scoped_request
+    def _state(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "", context_id: str = "") -> dict[str, Any]:
         try:
             selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
         except ValueError as exc:
@@ -491,6 +519,7 @@ class ProcessExecutionService:
         diagnostics.select_work(self.project_root, str(run.get("id") or ""), assignment.get("id"))
         stage_id = str(assignment.get("stage") or "")
         stage = self._stage(process, stage_id)
+        diagnostics.annotate(stage_id=stage_id)
         current_evidence = self._current_evidence(assignment)
         accumulated_evidence = self._accumulated_evidence(assignment)
         required_inputs = [
@@ -513,34 +542,20 @@ class ProcessExecutionService:
         ]
         obligations = self._automation_states(process, stage, assignment)
         incomplete = self._stage_requirements(required_inputs, artifacts, required_evidence, entry_gates + exit_gates, obligations)
-        completion = stage.get("stage_completion") if isinstance(stage.get("stage_completion"), dict) else process.get("stage_completion") if isinstance(process.get("stage_completion"), dict) else {}
-        if completion.get("evidence_required") is True and not current_evidence:
-            incomplete.append({"code": "stage_evidence_required", "stage_id": stage_id})
-        stage_execution = assignment.get("stage_execution") if isinstance(assignment.get("stage_execution"), dict) else {}
-        if completion.get("handoff_note_required") is True and not str(stage_execution.get("notes") or "").strip():
-            incomplete.append({"code": "handoff_note_required", "stage_id": stage_id})
+        policy = WorkStatePolicy()
+        incomplete = policy.completion_requirements(process, stage, assignment, current_evidence, incomplete)
         try:
             outcomes = normalized_outcomes(process, stage_id)
         except ValueError as exc:
             outcomes = []
             incomplete.append({"code": "invalid_process_definition", "message": str(exc), "stage_id": stage_id})
-        stored_blockers = stage_execution.get("blockers") if isinstance(stage_execution.get("blockers"), list) else []
-        blockers = [copy.deepcopy(item) for item in stored_blockers if isinstance(item, dict)]
-        contract_validation = self._contract_validation(assignment)
-        if contract_validation.get("status") == "blocked":
-            blockers.append({"code": contract_validation.get("reason") or "execution_contract_invalid"})
-        if str(assignment.get("stage_status") or "") == "blocked" and not blockers:
-            blockers.append({"code": "stage_marked_blocked", "stage_id": stage_id})
-        if str(assignment.get("status") or "") in {"cancelled", "failed"} or str(run.get("status") or "") in {"cancelled", "failed"}:
-            action = "work_terminal"
-        elif str(run.get("status") or "") == "completed":
-            action = "run_completed"
-        elif blockers:
-            action = "work_blocked"
-        elif incomplete:
-            action = "work_incomplete"
-        else:
-            action = "work_ready"
+        trace = diagnostics.span("work.state.validation")
+        trace.__enter__()
+        try:
+            contract_validation = self._contract_validation(assignment)
+        finally:
+            trace.__exit__(None, None, None)
+        decision = policy.decide(run, assignment, contract_validation, incomplete)
         from .continuation import permission_readiness
         from .work_context import ContextContractError, normalized_assignment_contract
         try:
@@ -551,7 +566,7 @@ class ProcessExecutionService:
         return {
             "schema_version": 1,
             "kind": "pf.work.state",
-            "action": action,
+            "action": decision.action,
             "execution_readiness": permissions,
             "project": {"id": self.core.project_id(self.project_root)},
             "process": {
@@ -575,7 +590,7 @@ class ProcessExecutionService:
             "artifacts": artifacts,
             "gates": {"entry": entry_gates, "exit": exit_gates},
             "allowed_outcomes": outcomes,
-            "blockers": blockers,
+            "blockers": decision.blockers,
             "incomplete": incomplete,
             "completion": {"status": "complete" if not incomplete else "incomplete", "requirements": incomplete},
             "evidence": current_evidence,

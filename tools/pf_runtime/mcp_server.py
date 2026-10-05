@@ -78,7 +78,8 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
     from pf_runtime import session_read
     from processforge_core.local_resource_search import LocalSearchError
     from processforge_core.garage import ProjectContextService, ResourceResolveService, ResourceSearchService
-    from processforge_core.process_execution import ProcessExecutionService, creation_scope_intent
+    from processforge_core.composition import build_process_execution_service
+    from processforge_core.process_execution import creation_scope_intent
     from processforge_core.work_context import ContextContractError
 
     configured_session = str(session_id or "")
@@ -114,7 +115,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         knowledge = snapshot.get("knowledge_resources") if isinstance(snapshot.get("knowledge_resources"), dict) else {}
         selected = knowledge.get("selected") if isinstance(knowledge.get("selected"), list) else []
         active_work = context.get("work", {}).get("active_work", []) if isinstance(context.get("work"), dict) else []
-        current_work = ProcessExecutionService(bound_project, workplace, core).state(session_id=supplied_session)
+        current_work = build_process_execution_service(bound_project, workplace, core).state(session_id=supplied_session)
         # Keep the MCP bootstrap response bounded. Full assignment objectives
         # can be large and are already available through the governed capsule.
         payload = {
@@ -160,7 +161,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         return {"project": context["project"], "work": context["work"], "context": context["context"], "session": context.get("session", {})}
     if name == "pf.work.state":
         bound_project = resolve_garage_project()
-        return ProcessExecutionService(bound_project, workplace, core).state(session_id=supplied_session,
+        return build_process_execution_service(bound_project, workplace, core).state(session_id=supplied_session,
             run_id=arguments.get("run_id", ""), assignment_id=arguments.get("assignment_id", ""), context_id=arguments.get("context_id", ""))
     if name.startswith("pf.continuation.") or name == "pf.work.cancel":
         from processforge_core.continuation import ContinuationService
@@ -183,7 +184,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
                 scope_intent = creation_scope_intent(arguments["scope_intent"])
             except ContextContractError as exc:
                 raise session_read.SessionReadError(str(exc) or "work_scope_invalid") from exc
-        return ProcessExecutionService(bound_project, workplace, core).start(
+        return build_process_execution_service(bound_project, workplace, core).start(
             objective=str(arguments.get("objective") or ""),
             process_id=str(arguments.get("process_id") or "").strip(),
             session_id=supplied_session,
@@ -191,7 +192,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         )
     if name == "pf.work.transition":
         bound_project = resolve_garage_project()
-        return ProcessExecutionService(bound_project, workplace, core).transition(
+        return build_process_execution_service(bound_project, workplace, core).transition(
             outcome=str(arguments.get("outcome") or ""),
             evidence=arguments.get("evidence"),
             notes=str(arguments.get("notes") or ""),
