@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .local_resource_search import LocalSearchError, ResourceSearchIndex, authorized_coverage
+from .ports import WorkReadCorePort
 from .process_execution import ProcessExecutionService, project_process_selection
 from .request_scope import scoped_request
 from .work_inventory import WorkInventory
@@ -246,7 +247,7 @@ class GovernedWorkBootstrapService:
 @dataclass(frozen=True)
 class CurrentWorkService:
     project_root: Path
-    core: Any
+    core: WorkReadCorePort
 
     def summary(self) -> dict[str, Any]:
         active = self.active_items()

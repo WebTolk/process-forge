@@ -8,6 +8,10 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .garage import CurrentWorkService
 
 LEGACY_CORE_MODULE_NAME = "processforge_core._legacy_processforge"
 LEGACY_PUBLIC_MODULE_NAME = "processforge"
@@ -19,6 +23,11 @@ class RuntimeBootstrap:
     core: ModuleType
     host: ModuleType
     service: ModuleType
+
+    def current_work_service(self, project_root: Path) -> CurrentWorkService:
+        from .composition import LegacyWorkReadAdapter, build_current_work_service
+
+        return build_current_work_service(project_root, LegacyWorkReadAdapter(self.core))
 
 
 def _repo_root_from(caller_file: str | Path) -> Path:
