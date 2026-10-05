@@ -16,7 +16,7 @@ from .work_state import WorkStatePolicy
 
 if TYPE_CHECKING:
     from .diagnostics import Logger
-    from .ports import WorkRecordReadPort
+    from .ports import WorkContextReadPort, WorkRecordReadPort
 
 
 ACTIVE_RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review"}
@@ -217,6 +217,7 @@ class ProcessExecutionService:
     core: Any
     observer: Logger | None = field(default=None, kw_only=True, repr=False, compare=False)
     records: WorkRecordReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
+    context: WorkContextReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     @scoped_request
     def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
@@ -559,9 +560,9 @@ class ProcessExecutionService:
             trace.__exit__(None, None, None)
         decision = policy.decide(run, assignment, contract_validation, incomplete)
         from .continuation import permission_readiness
-        from .work_context import ContextContractError, normalized_assignment_contract
+        from .work_context import ContextContractError
         try:
-            normalized = normalized_assignment_contract(self.project_root, self._assignment_path(assignment['id']), assignment, self.core)
+            normalized = self._context_reader().normalized_assignment(assignment)
             permissions = permission_readiness(normalized['scope'], normalized['assignment']['execution_mode'])
         except ContextContractError as exc:
             permissions = {"status": "blocked", "blockers": [exc.code]}
@@ -1576,32 +1577,15 @@ class ProcessExecutionService:
         return "\n".join(lines) + "\n"
 
     def _contract_validation(self, assignment: dict[str, Any]) -> dict[str, Any]:
-        from .work_context import stage_view, validate_execution_contract
-        import yaml
+        return self._context_reader().validation(assignment)
 
-        path = self._flow_root() / "contexts" / "assignment-capsules" / f"{assignment['id']}.capsule.yaml"
-        if not path.is_file():
-            if (assignment.get("process_execution") or {}).get("assignment_capsule"):
-                return {"status": "blocked", "reason": "work_context_unavailable"}
-            return {"status": "legacy", "reason": "legacy_contract_incomplete"}
-        try:
-            if path.is_symlink() or not path.resolve().is_relative_to(self._flow_root().resolve()) or path.stat().st_size > 2 * 1024 * 1024:
-                return {"status": "blocked", "reason": "execution_contract_invalid"}
-            raw = path.read_bytes()
-            if len(raw) > 2 * 1024 * 1024:
-                return {"status": "blocked", "reason": "execution_contract_invalid"}
-            capsule = safe_load(raw.decode("utf-8-sig"))
-            expected = (assignment.get("process_execution") or {}).get("assignment_capsule_checksum")
-            if expected and expected != "sha256:" + hashlib.sha256(raw).hexdigest():
-                return {"status": "blocked", "reason": "immutable_context_changed"}
-            if "execution_contract" not in capsule:
-                return {"status": "legacy", "reason": "legacy_contract_incomplete"}
-            result = validate_execution_contract(self.project_root, self._assignment_path(assignment["id"]), assignment, capsule, self.core, check_sources=False)
-            if result.get("status") == "valid":
-                result["stage_view"] = stage_view(capsule, assignment)
-            return result
-        except (OSError, ValueError, TypeError, AttributeError, yaml.YAMLError, UnicodeError):
-            return {"status": "blocked", "reason": "execution_contract_invalid"}
+    def _context_reader(self) -> WorkContextReadPort:
+        if self.context is not None:
+            return self.context
+        from .composition import build_work_context_read_service
+
+        return build_work_context_read_service(self.project_root, self.core,
+                                               flow_root=self._flow_root, assignment_path=self._assignment_path)
 
     def _write_capsule(self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]) -> tuple[str, str]:
         from .work_context import ContextContractError, build_context_fields

@@ -10,8 +10,10 @@ The core is evolving incrementally. `tools/processforge.py` is still the active 
 | `src/processforge_core/process_execution.py`, `continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
 | `src/processforge_core/work_state.py` | I/O-free completion requirements and Work-state action/blocker policy; not lifecycle authority. |
 | `src/processforge_core/document_store.py`, `work_inventory.py` | YAML reading and live sorted discovery; no shared mutable document cache. |
-| `src/processforge_core/ports.py` | Internal structural dependencies; the first port has only flow-root resolution and document reading. |
-| `src/processforge_core/composition.py` | Explicit current-work and process-execution factories; two-operation legacy read adapter. |
+| `src/processforge_core/work_records.py` | Live raw Run/Assignment reader; selection and recovery remain in the application service. |
+| `src/processforge_core/work_context_read.py` | Existing capsule validation and assignment normalization with explicit path/validator callbacks. |
+| `src/processforge_core/ports.py` | Internal structural current-work, raw Work-record and context-read dependencies. |
+| `src/processforge_core/composition.py` | Explicit service factories and narrow legacy read/context adapters. |
 | `src/processforge_core/bootstrap.py` | Existing runtime module assembly and lazy access to the service factories. |
 | `tools/processforge.py`, `tools/pf_runtime/` | Legacy CLI facade and transport/host/provider adapters. |
 
@@ -19,7 +21,11 @@ The core is evolving incrementally. `tools/processforge.py` is still the active 
 
 The existing `CurrentWorkService(project_root, core)` constructor and module path are preserved. Its discovery order, missing-assignment fallback, bootstrap-placeholder handling, summary shape and error behavior are unchanged. Existing consumers need not migrate immediately.
 
-`build_process_execution_service(project_root, workplace_root, core, *, observer=None)` is shared by CLI, MCP and Host/Daemon. `RuntimeBootstrap.process_execution_service(...)` delegates to it. Construction does not load the CLI, resolve a project, read configuration or perform I/O. The three-argument `ProcessExecutionService` constructor remains compatible; its optional observer is keyword-only. The remaining legacy dependency is explicit: this factory does not replace `core: Any` with a universal Core interface.
+`build_process_execution_service(project_root, workplace_root, core, *, observer=None, records=None, context=None)` is shared by CLI, MCP and Host/Daemon. `RuntimeBootstrap.process_execution_service(...)` delegates to it. Construction does not load the CLI, resolve a project, read configuration or perform I/O. The three-argument `ProcessExecutionService` constructor remains compatible; optional dependencies are keyword-only and excluded from equality/repr. Remaining legacy dependencies are explicit, not replaced by a universal Core interface.
+
+`WorkRecordReadPort` exposes `runs`, `load_run` and `load_assignment`. The factory defaults to `YamlWorkRecordReader`, which uses the existing `WorkInventory` and YAML loader. Roots and records are read live; no cross-request result cache is added. Direct legacy construction retains its inventory and private-path fallback, including subclass overrides. Raw readers neither choose Work nor hide duplicate/alias discovery or pending recovery.
+
+`WorkContextReadPort` exposes `validation` and `normalized_assignment`. The default is assembled lazily through `build_work_context_read_service`, using the caller's private path callbacks and the narrow `LegacyWorkContextAdapter`. `WorkContextReadService` does not depend on the monolithic core: its four dependencies resolve paths, validate contracts and normalize assignments. Existing `work_context.py` rules still own signed identity/intent, pins, scope and stage views. Byte limits, symlink/containment checks, raw checksum, safe parsing and original error order remain intact. Default assembly captures no document/root/logger; validation and normalization return live results.
 
 `ProcessExecutionService.state()` retains exact selection, context/pin checks, evidence/outcome validation and permission readiness. `WorkStatePolicy` separately computes completion requirements and action/blockers from supplied records. It does not read files, alter records, choose caller identity or advance a process. Terminal, completed, blocked and incomplete precedence remains unchanged; permission readiness stays a separate response field.
 
@@ -40,3 +46,5 @@ Other services still depend on the legacy core. The target separation is domain 
 `tools/smoke_core_read_composition.py` checks characterization, fake-port composition, bootstrap fields, delegation and an isolated installed-shaped package without a CLI. That fixture is not acceptance of an actual installed Core or connected host. Source, archive, installed and connected-host qualification remain distinct.
 
 `tools/smoke_core_work_state.py` checks the extracted policy, state semantics, no-I/O composition, observer profiles/failures/isolation, and CLI/MCP/Host delegation. Its optional `--baseline` compares a retained original state method; `--scratch-root` confines temporary fixtures. The isolated package check proves imports and composition in an installed-shaped tree, not a live installation or connected Daemon.
+
+`tools/smoke_work_record_read_composition.py` covers injected records, live YAML and selector compatibility. `tools/smoke_work_context_read_composition.py` covers injected context, capsule refusals, normalization/readiness, live reads and observation. Their optional retained baselines prove parity; they do not qualify a real installed Core. Snapshot repositories, atomic writes/recovery and the remaining legacy services still require separate bounded extraction.

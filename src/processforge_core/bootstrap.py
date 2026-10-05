@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .diagnostics import Logger
     from .garage import CurrentWorkService
-    from .ports import WorkRecordReadPort
+    from .ports import WorkContextReadPort, WorkRecordReadPort
     from .process_execution import ProcessExecutionService
 
 LEGACY_CORE_MODULE_NAME = "processforge_core._legacy_processforge"
@@ -35,10 +35,11 @@ class RuntimeBootstrap:
     def process_execution_service(
         self, project_root: Path, workplace_root: Path | None, *, observer: Logger | None = None,
         records: WorkRecordReadPort | None = None,
+        context: WorkContextReadPort | None = None,
     ) -> ProcessExecutionService:
         from .composition import build_process_execution_service
 
-        return build_process_execution_service(project_root, workplace_root, self.core, observer=observer, records=records)
+        return build_process_execution_service(project_root, workplace_root, self.core, observer=observer, records=records, context=context)
 
 
 def _repo_root_from(caller_file: str | Path) -> Path:
