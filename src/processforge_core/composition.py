@@ -8,7 +8,8 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any
 
 from .garage import CurrentWorkService
-from .ports import WorkReadCorePort
+from .ports import WorkReadCorePort, WorkRecordReadPort
+from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
     from .diagnostics import Logger
@@ -34,7 +35,10 @@ def build_current_work_service(project_root: Path, core: WorkReadCorePort) -> Cu
 
 def build_process_execution_service(
     project_root: Path, workplace_root: Path | None, core: Any, *, observer: Logger | None = None,
+    records: WorkRecordReadPort | None = None,
 ) -> ProcessExecutionService:
     from .process_execution import ProcessExecutionService
 
-    return ProcessExecutionService(project_root, workplace_root, core, observer=observer)
+    if records is None:
+        records = YamlWorkRecordReader(project_root, core)
+    return ProcessExecutionService(project_root, workplace_root, core, observer=observer, records=records)

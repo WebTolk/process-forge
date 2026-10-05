@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 
 if TYPE_CHECKING:
     from .diagnostics import Logger
+    from .ports import WorkRecordReadPort
 
 
 ACTIVE_RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review"}
@@ -215,6 +216,7 @@ class ProcessExecutionService:
     workplace_root: Path | None
     core: Any
     observer: Logger | None = field(default=None, kw_only=True, repr=False, compare=False)
+    records: WorkRecordReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     @scoped_request
     def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
@@ -1002,8 +1004,12 @@ class ProcessExecutionService:
 
     def _work_records(self, *, include_historical: bool) -> list[dict[str, Any]]:
         records: list[dict[str, Any]] = []
-        inventory = WorkInventory(self._flow_root(), self.core.load_yaml_document)
-        for path, run in inventory.runs():
+        if self.records is None:
+            inventory = WorkInventory(self._flow_root(), self.core.load_yaml_document)
+            run_documents, load_assignment = inventory.runs(), inventory.assignment
+        else:
+            run_documents, load_assignment = self.records.runs(), self.records.load_assignment
+        for path, run in run_documents:
             run_id = str(run.get("id") or path.parent.name)
             if not SAFE_ID_RE.fullmatch(run_id):
                 continue
@@ -1013,7 +1019,7 @@ class ProcessExecutionService:
                 entry_id = str(entry["id"])
                 if not SAFE_ID_RE.fullmatch(entry_id):
                     continue
-                task = inventory.assignment(entry_id)
+                task = load_assignment(entry_id)
                 if not task:
                     continue
                 task_id = str(task.get("id") or entry_id)
@@ -1701,9 +1707,13 @@ class ProcessExecutionService:
         temporary.replace(path)
 
     def _load_run(self, run_id: str) -> dict[str, Any]:
+        if self.records is not None:
+            return self.records.load_run(self._validated_id(run_id, "run"))
         return self.core.load_yaml_document(self._run_path(run_id))
 
     def _load_assignment(self, assignment_id: str) -> dict[str, Any]:
+        if self.records is not None:
+            return self.records.load_assignment(self._validated_id(assignment_id, "assignment"))
         return self.core.load_yaml_document(self._assignment_path(assignment_id))
 
     def _run_path(self, run_id: str) -> Path:

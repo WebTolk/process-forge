@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Iterator, Protocol
 
 __all__ = ()
 
@@ -12,3 +12,13 @@ class WorkReadCorePort(Protocol):
     def locate_flow_root(self, project_root: Path) -> Path: ...
 
     def load_yaml_document(self, path: Path) -> dict[str, Any]: ...
+
+
+class WorkRecordReadPort(Protocol):
+    """Raw live records; consumers validate identity and select Work."""
+
+    def runs(self) -> Iterator[tuple[Path, dict[str, Any]]]: ...
+
+    def load_run(self, run_id: str) -> dict[str, Any]: ...
+
+    def load_assignment(self, assignment_id: str) -> dict[str, Any]: ...
