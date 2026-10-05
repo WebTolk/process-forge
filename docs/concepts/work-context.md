@@ -106,6 +106,16 @@ their parsing is reused. Private diagnostic/trace profiles can record
 or contain document contents or paths. After a timeout, inspect the exact durable
 Work identity before attempting another creation.
 
+`YamlDocumentReader` supplies the same live-reading boundary to Core and the
+process catalog, including the mapping-only fallback when PyYAML is absent.
+Strict reads retain the `FAIL: ... is invalid YAML` error; parser-specific
+location formatting can differ between safe loader implementations.
+`WorkInventory` shares sorted raw Run discovery and Assignment reads between
+Garage and lifecycle. It does not cache directories or documents, select Work,
+interpret permissions or merge their different missing/legacy record rules.
+Every inventory call sees current files; catalog precedence and full-history
+identity/ambiguity checks remain unchanged.
+
 ## Qualification boundary
 
 These behaviors describe the current source checkout. They do not claim that an installed Core or a real host has been qualified. Installed and host integration acceptance belongs to T06; source-level smokes and schema checks are not a substitute for that boundary.

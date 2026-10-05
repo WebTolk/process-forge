@@ -11,6 +11,7 @@ from typing import Any
 from .local_resource_search import LocalSearchError, ResourceSearchIndex, authorized_coverage
 from .process_execution import ProcessExecutionService, project_process_selection
 from .request_scope import scoped_request
+from .work_inventory import WorkInventory
 
 
 @dataclass(frozen=True)
@@ -274,10 +275,9 @@ class CurrentWorkService:
 
     def items(self) -> list[dict[str, Any]]:
         flow_root = self.core.locate_flow_root(self.project_root)
+        inventory = WorkInventory(flow_root, self.core.load_yaml_document)
         rows: list[dict[str, Any]] = []
-        runs_dir = flow_root / "runs"
-        for run_path in sorted(runs_dir.glob("*/run.yaml")) if runs_dir.is_dir() else []:
-            run = self.core.load_yaml_document(run_path)
+        for run_path, run in inventory.runs():
             run_status = str(run.get("status") or "")
             run_id = str(run.get("id") or run_path.parent.name)
             tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
@@ -287,12 +287,12 @@ class CurrentWorkService:
                 if not isinstance(entry, dict):
                     continue
                 task_id = str(entry.get("id") or "")
-                task_path = flow_root / "assignments" / f"{task_id}.yaml"
-                task = self.core.load_yaml_document(task_path) if task_path.is_file() else {"id": task_id, "status": entry.get("status"), "objective": run.get("objective")}
+                task_path = inventory.assignment_path(task_id)
+                task = inventory.assignment(task_id) if task_path.is_file() else {"id": task_id, "status": entry.get("status"), "objective": run.get("objective")}
                 rows.append(work_item(run_id=run_id, run_status=run_status, task=task, run=run))
-        first = flow_root / "assignments" / "first-assignment.yaml"
+        first = inventory.assignment_path("first-assignment")
         if first.is_file():
-            task = self.core.load_yaml_document(first)
+            task = inventory.assignment("first-assignment")
             rows.append(work_item(run_id="", run_status="", task=task, run={}))
         return rows
 

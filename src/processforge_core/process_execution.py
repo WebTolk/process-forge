@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from .request_scope import safe_load, scoped_request
+from .work_inventory import WorkInventory
 
 
 ACTIVE_RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review"}
@@ -986,9 +987,8 @@ class ProcessExecutionService:
 
     def _work_records(self, *, include_historical: bool) -> list[dict[str, Any]]:
         records: list[dict[str, Any]] = []
-        runs_root = self._flow_root() / "runs"
-        for path in sorted(runs_root.glob("*/run.yaml")) if runs_root.is_dir() else []:
-            run = self.core.load_yaml_document(path)
+        inventory = WorkInventory(self._flow_root(), self.core.load_yaml_document)
+        for path, run in inventory.runs():
             run_id = str(run.get("id") or path.parent.name)
             if not SAFE_ID_RE.fullmatch(run_id):
                 continue
@@ -998,7 +998,7 @@ class ProcessExecutionService:
                 entry_id = str(entry["id"])
                 if not SAFE_ID_RE.fullmatch(entry_id):
                     continue
-                task = self.core.load_yaml_document(self._assignment_path(entry_id))
+                task = inventory.assignment(entry_id)
                 if not task:
                     continue
                 task_id = str(task.get("id") or entry_id)

@@ -3,9 +3,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from processforge_core.common import load_yaml_document, read_yaml_file, rel, safe_id, yaml_error
+from processforge_core.common import rel, safe_id, yaml_error
+from processforge_core.common.yaml_io import _parse_simple_yaml
+from processforge_core.document_store import YamlDocumentReader
 
 from .models import ProcessCatalogContext, ProcessDefinitionRef
+
+
+_documents = YamlDocumentReader(fallback=_parse_simple_yaml)
+load_yaml_document = _documents.load
+read_yaml_file = _documents.read
 
 
 PROCESS_CATALOG_CLASSIFICATIONS = {

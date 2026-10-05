@@ -64,7 +64,7 @@ from processforge_core.process_catalog import (
 from processforge_core.process_execution import ProcessExecutionService, project_process_selection, project_specialization_selection
 from processforge_core import project_initialization
 from processforge_core import diagnostics
-from processforge_core.request_scope import safe_load as request_safe_load
+from processforge_core.document_store import YamlDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
 PROJECT_FLOW_ROOT = ".pf"
@@ -8216,19 +8216,11 @@ def resolve_capabilities(texts: dict[str, str], project_root: Path) -> dict[str,
     }
 
 
-def load_yaml_document(path: Path) -> dict[str, Any]:
-    if not path.is_file():
-        return {}
-    text = path.read_text(encoding="utf-8", errors="replace")
-    try:
-        import yaml  # type: ignore
+_yaml_documents = YamlDocumentReader(fallback=parse_simple_yaml)
 
-        data = request_safe_load(text)
-        return data if isinstance(data, dict) else {}
-    except ModuleNotFoundError:
-        return parse_simple_yaml(text)
-    except Exception as exc:
-        return {"__yaml_error__": f"{exc.__class__.__name__}: {exc}"}
+
+def load_yaml_document(path: Path) -> dict[str, Any]:
+    return _yaml_documents.load(path)
 
 
 def yaml_error(data: Any) -> str | None:
