@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator
 
+from .request_scope import safe_load, scoped_request
+
 
 ACTIVE_RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review"}
 ACTIVE_ASSIGNMENT_STATUSES = {"draft", "ready", "open", "pending", "in_progress", "blocked", "debugging", "review", "ready_for_review"}
@@ -208,6 +210,7 @@ class ProcessExecutionService:
     workplace_root: Path | None
     core: Any
 
+    @scoped_request
     def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
         with self._start_lock():
             return self._start_locked(objective=objective, process_id=process_id, session_id=session_id, stage_override=stage_override, security=security, scope_intent=scope_intent)
@@ -464,6 +467,7 @@ class ProcessExecutionService:
                 "path": intent["predecessor_handoff"], "checksum": "sha256:" + hashlib.sha256(raw).hexdigest()}
         return result
 
+    @scoped_request
     def state(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "", context_id: str = "") -> dict[str, Any]:
         try:
             selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
@@ -588,6 +592,7 @@ class ProcessExecutionService:
             "blockers": state.get("blockers", []),
         }
 
+    @scoped_request
     def transition(
         self,
         *,
@@ -1564,7 +1569,7 @@ class ProcessExecutionService:
             raw = path.read_bytes()
             if len(raw) > 2 * 1024 * 1024:
                 return {"status": "blocked", "reason": "execution_contract_invalid"}
-            capsule = yaml.safe_load(raw.decode("utf-8-sig"))
+            capsule = safe_load(raw.decode("utf-8-sig"))
             expected = (assignment.get("process_execution") or {}).get("assignment_capsule_checksum")
             if expected and expected != "sha256:" + hashlib.sha256(raw).hexdigest():
                 return {"status": "blocked", "reason": "immutable_context_changed"}

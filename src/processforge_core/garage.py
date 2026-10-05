@@ -10,6 +10,7 @@ from typing import Any
 
 from .local_resource_search import LocalSearchError, ResourceSearchIndex, authorized_coverage
 from .process_execution import ProcessExecutionService, project_process_selection
+from .request_scope import scoped_request
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,7 @@ class ProjectContextService:
     def runtime_snapshot(self) -> dict[str, Any]:
         return snapshot_with_resolved_search_roots(self.project_root, self.snapshot(), self.workplace_root, self.core)
 
+    @scoped_request
     def context(self, *, session_id: str = "") -> dict[str, Any]:
         check = self.check()
         snapshot = self.snapshot() if not check.get("broken") else {}

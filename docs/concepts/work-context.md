@@ -89,6 +89,23 @@ objective. After a timeout, retry by checking the exact returned identity or by
 reusing the same objective and intent; do not blindly create a wider successor.
 Malformed/unready declarations fail before new Work records publish.
 
+## Request-local YAML parsing
+
+Core context and Work start/state/transition, including their MCP request, share
+a bounded cache of parsed YAML for that synchronous request only. Exact document
+text and the safe loader type identify entries; returned values are independent
+copies. When available, PyYAML's CSafeLoader is used, otherwise SafeLoader.
+The cache holds at most 1024 documents, 8 MiB of UTF-8 input and 512 KiB per
+document. Larger inputs are still parsed without retention.
+
+File reads, source hashes, capsule pins, current access, identity selection and
+stage validation still run. There is no cross-request cache or metadata-only
+freshness shortcut. Repeated loader calls therefore remain visible even when
+their parsing is reused. Private diagnostic/trace profiles can record
+`work.request.yaml` counts and `work.request` spans; they do not write MCP stdout
+or contain document contents or paths. After a timeout, inspect the exact durable
+Work identity before attempting another creation.
+
 ## Qualification boundary
 
 These behaviors describe the current source checkout. They do not claim that an installed Core or a real host has been qualified. Installed and host integration acceptance belongs to T06; source-level smokes and schema checks are not a substitute for that boundary.

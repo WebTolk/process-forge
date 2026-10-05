@@ -17,6 +17,8 @@ from typing import Any
 
 import yaml
 
+from .request_scope import safe_load
+
 
 CONTRACT_VERSION = 1
 SOURCE_LIMITS = {"files": 128, "file_bytes": 1024 * 1024, "total_bytes": 8 * 1024 * 1024}
@@ -463,7 +465,7 @@ def validate_execution_contract(project: Path, assignment_path: Path, metadata: 
             raw = pinned_path.read_bytes()
             if len(raw) > 2 * 1024 * 1024 or "sha256:" + hashlib.sha256(raw).hexdigest() != assignment_pin["assignment_capsule_checksum"]:
                 raise ContextContractError("immutable_context_changed")
-            if yaml.safe_load(raw.decode("utf-8-sig")) != capsule:
+            if safe_load(raw.decode("utf-8-sig")) != capsule:
                 raise ContextContractError("immutable_context_changed")
         required = {"identity", "assignment_intent", "assignment_intent_checksum", "snapshot", "process", "resources", "scope", "outputs", "capabilities", "workspace_access", "parameters", "coordination", "source_limits", "readiness", "required_sources", "contract_checksum", "worker_may_rebuild_context"}
         if not required.issubset(contract) or contract["worker_may_rebuild_context"] is not False:
