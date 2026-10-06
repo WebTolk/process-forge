@@ -41,6 +41,8 @@
 
 `ResourceResolveService` принимает keyword-only порт `snapshots` через тот же helper. Пустой идентификатор ресурса по-прежнему возвращает сведения о проекте без чтения снимка. `build_resource_resolve_service` собирает MCP resolver без I/O после существующих проверок привязки и freshness. Порядок выбора, aliases, denied results, разрешение path reference и private navigation сохраняют своё поведение. Host использует совместимый конструктор этого общего сервиса; его routing не меняется.
 
+`GarageModeService` использует тот же keyword-only порт чтения. Существующий fallback `snapshot or ...` сохранён: переданный пустой snapshot вызывает чтение, непустой исключает его. `build_garage_mode_service` собирает существующего потребителя `ProjectContextService.context` без I/O и сохраняет default вызов конструктора с тремя аргументами. Context не передаёт собственный optional reader в mode fallback. Coordination, представление session, blockers и правила mode сохраняют своё поведение; одна session не повышает Garage до Forge.
+
 ## Диагностика
 
 Чтение Work state использует существующие PF operation, validation span и ограниченные счётчики request/YAML. Для библиотечного вызова можно передать существующий `diagnostics.Logger` как observer либо использовать текущую operation. Без обоих действует no-op: диагностические файлы не создаются. При сборке сервис не захватывает текущий Logger или Work.
@@ -70,3 +72,5 @@ CLI/MCP сохраняют внешнюю диагностику и провер
 `tools/smoke_resource_search_snapshot_composition.py` проверяет инъекцию чтения readiness/search, ветки пустого snapshot и stale context, порядок maintenance/ошибок, актуальность YAML, request scope, MCP guards/error mapping и пакет без CLI. `--baseline` сравнивает сохранённый исходный service, `--scratch-root` ограничивает fixtures.
 
 `tools/smoke_resource_resolve_snapshot_composition.py` проверяет прежнее поведение resolve, пустые идентификаторы, инъекцию reader, aliases и порядок выбора, актуальность YAML и изоляцию request, порядок MCP guards, совместимость Host и пакет без CLI. `--baseline` сравнивает сохранённый исходный resolver, `--scratch-root` ограничивает fixtures.
+
+`tools/smoke_garage_mode_snapshot_composition.py` проверяет прежнее поведение mode и context, fallback пустого snapshot, инъекцию reader, подмены конструктора, правила session, актуальность YAML и изоляцию request, а также пакет без CLI. `--baseline` сравнивает сохранённый mode service, `--context-baseline` — сохранённого context consumer, `--scratch-root` ограничивает fixtures.

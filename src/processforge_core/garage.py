@@ -36,11 +36,13 @@ class ProjectContextService:
 
     @scoped_request
     def context(self, *, session_id: str = "") -> dict[str, Any]:
+        from .composition import build_garage_mode_service
+
         check = self.check()
         snapshot = self.snapshot() if not check.get("broken") else {}
         manifest = self.core.load_yaml_document(self.core.locate_flow_root(self.project_root) / "process-forge.yaml")
         search = ResourceSearchService(self.project_root, self.workplace_root, self.core).readiness(snapshot=snapshot, check=check)
-        mode = GarageModeService(self.project_root, self.workplace_root, self.core).status(snapshot=snapshot, session_id=session_id)
+        mode = build_garage_mode_service(self.project_root, self.workplace_root, self.core).status(snapshot=snapshot, session_id=session_id)
         work = CurrentWorkService(self.project_root, self.core).summary()
         payload: dict[str, Any] = {
             "schema_version": 1,
@@ -82,9 +84,10 @@ class GarageModeService:
     project_root: Path
     workplace_root: Path
     core: Any
+    snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     def status(self, *, snapshot: dict[str, Any] | None = None, session_id: str = "") -> dict[str, Any]:
-        snapshot = snapshot or load_snapshot(self.project_root, self.core)
+        snapshot = snapshot or load_snapshot(self.project_root, self.core, snapshots=self.snapshots)
         coordination = snapshot.get("workplace_coordination") if isinstance(snapshot.get("workplace_coordination"), dict) else {}
         effective_mode = str(coordination.get("effective_mode") or "simple")
         director_required = bool(coordination.get("director_required", effective_mode == "organized"))
