@@ -47,9 +47,8 @@ def _taskkill_tree(pid: int) -> None:
     try:
         killer = subprocess.Popen(
             [taskkill, "/PID", str(pid), "/T", "/F"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
             creationflags=flags,
         )
         try:
@@ -132,6 +131,7 @@ def run_command(
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        errors="replace",
         shell=False,
         start_new_session=(os.name != "nt"),
         creationflags=creationflags,

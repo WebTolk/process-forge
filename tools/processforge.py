@@ -6932,6 +6932,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_evidence_collection_policy", [sys.executable, str(root / "tools" / "smoke_evidence_collection_policy.py")], 120),
         ReleaseCommand("smoke_evidence_validation_service", [sys.executable, str(root / "tools" / "smoke_evidence_validation_service.py")], 120),
         ReleaseCommand("smoke_stage_readiness_policy", [sys.executable, str(root / "tools" / "smoke_stage_readiness_policy.py")], 120),
+        ReleaseCommand("smoke_subprocess_capture", [sys.executable, str(root / "tools" / "smoke_subprocess_capture.py")], 60),
         ReleaseCommand("smoke_central_event_ingress", [sys.executable, str(root / "tools" / "smoke_central_event_ingress.py")], 180),
         ReleaseCommand("smoke_provider_adapter_admission", [sys.executable, str(root / "tools" / "smoke_provider_adapter_admission.py")], 180),
         ReleaseCommand("smoke_prepared_execution_context", [sys.executable, str(root / "tools" / "smoke_prepared_execution_context.py")], 360),
