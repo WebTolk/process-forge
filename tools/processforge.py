@@ -6934,6 +6934,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_automation_readiness", [sys.executable, str(root / "tools" / "smoke_automation_readiness.py")], 120),
         ReleaseCommand("smoke_work_selection_service", [sys.executable, str(root / "tools" / "smoke_work_selection_service.py")], 120),
         ReleaseCommand("smoke_process_selection_service", [sys.executable, str(root / "tools" / "smoke_process_selection_service.py")], 120),
+        ReleaseCommand("smoke_process_pin_read_service", [sys.executable, str(root / "tools" / "smoke_process_pin_read_service.py")], 120),
         ReleaseCommand("smoke_stage_readiness_policy", [sys.executable, str(root / "tools" / "smoke_stage_readiness_policy.py")], 120),
         ReleaseCommand("smoke_subprocess_capture", [sys.executable, str(root / "tools" / "smoke_subprocess_capture.py")], 60),
         ReleaseCommand("smoke_central_event_ingress", [sys.executable, str(root / "tools" / "smoke_central_event_ingress.py")], 180),

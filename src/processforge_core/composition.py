@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .process_pin import ProcessPinReadService
     from .process_selection import ProcessSelectionService, ResolvedDefinitionView
     from .work_selection import WorkSelectionService
     from .stage_readiness import StageReadinessPolicy
@@ -226,4 +227,18 @@ def build_process_selection_service(
 
     return ProcessSelectionService(
         project_root=project_root, stable_ids=stable_ids, resolve_definition=resolve_definition, blocked=blocked, candidates=candidates
+    )
+
+
+def build_process_pin_read_service(
+    *, project_root: Path,
+    flow_root: Callable[[], Path],
+    snapshots: Callable[[], ProjectSnapshotReadPort],
+    fingerprint: Callable[[Any], str],
+    stable_ids: Callable[[Any], list[str]]
+) -> ProcessPinReadService:
+    from .process_pin import ProcessPinReadService
+
+    return ProcessPinReadService(
+        project_root=project_root, flow_root=flow_root, snapshots=snapshots, fingerprint=fingerprint, stable_ids=stable_ids
     )

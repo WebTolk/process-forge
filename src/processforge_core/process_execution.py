@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .process_pin import ProcessPinReadService
     from .process_selection import ProcessSelectionService
     from .work_selection import WorkSelectionService
     from .automation_readiness import AutomationReadinessService
@@ -884,34 +885,18 @@ class ProcessExecutionService:
         state = self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
         return {**state, "action": "transition_rejected", "reason": reason, "blockers": blockers}
 
+    def _process_pin_read_service(self) -> ProcessPinReadService:
+        from .composition import build_process_pin_read_service
+
+        return build_process_pin_read_service(
+            project_root=self.project_root, flow_root=self._flow_root, snapshots=self._snapshot_reader, fingerprint=canonical_fingerprint, stable_ids=_stable_ids
+        )
+
     def _process_pin(self, process: dict[str, Any], source_path: Path, *, active_specializations: list[str], selected_resource_ids: list[str], allowed_processes: list[str]) -> dict[str, Any]:
-        snapshot_path = self._flow_root() / "contexts" / "project-context.snapshot.yaml"
-        snapshot = self._snapshot_reader().load(snapshot_path)
-        meta = snapshot.get("snapshot") if isinstance(snapshot.get("snapshot"), dict) else {}
-        snapshot_checksum = self._snapshot_reader().checksum(snapshot_path)
-        normalized = json.loads(json.dumps(process, ensure_ascii=False))
-        try:
-            process_source = source_path.resolve().relative_to(self.project_root.resolve()).as_posix()
-        except ValueError:
-            process_source = f"catalog:{normalized.get('id') or source_path.stem}"
-        return {
-            "process_id": str(normalized.get("id") or ""),
-            "process_version": str(normalized.get("version") or ""),
-            "process_fingerprint": canonical_fingerprint(normalized),
-            "process_source": process_source,
-            "snapshot_id": str(meta.get("id") or ""),
-            "snapshot_checksum": snapshot_checksum,
-            "definition": normalized,
-            "active_specializations": active_specializations,
-            "selected_resource_ids": selected_resource_ids,
-            "allowed_processes": allowed_processes,
-        }
+        return self._process_pin_read_service().pin(process, source_path, active_specializations=active_specializations, selected_resource_ids=selected_resource_ids, allowed_processes=allowed_processes)
 
     def _selected_resource_ids(self) -> list[str]:
-        snapshot = self._snapshot_reader().load()
-        resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
-        # Match the canonical order used by complete context capture.
-        return sorted(_stable_ids(resolved.get("knowledge_resources")))
+        return self._process_pin_read_service().selected_resource_ids()
 
     def _snapshot_reader(self) -> ProjectSnapshotReadPort:
         if self.snapshots is not None:
