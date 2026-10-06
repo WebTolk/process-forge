@@ -77,8 +77,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
     core = runtime.core
     from pf_runtime import session_read
     from processforge_core.local_resource_search import LocalSearchError
-    from processforge_core.garage import ResourceResolveService
-    from processforge_core.composition import build_process_execution_service, build_project_context_service, build_resource_search_service
+    from processforge_core.composition import build_process_execution_service, build_project_context_service, build_resource_search_service, build_resource_resolve_service
     from processforge_core.process_execution import creation_scope_intent
     from processforge_core.work_context import ContextContractError
 
@@ -214,7 +213,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         context = core.project_context_check_result(bound_project, explicit_workplace=str(workplace))
         if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             raise session_read.SessionReadError("snapshot_not_fresh")
-        return ResourceResolveService(bound_project, workplace, core).resolve(resource_id=str(arguments.get("resource_id") or "") or None)
+        return build_resource_resolve_service(bound_project, workplace, core).resolve(resource_id=str(arguments.get("resource_id") or "") or None)
     if name == "pf.search":
         bound_project = resolve_garage_project()
         try:

@@ -39,6 +39,8 @@
 
 `ResourceSearchService` принимает тот же keyword-only порт `snapshots`. Default чтение для readiness coverage и поиска использует совместимый Garage helper; явно переданный пустой snapshot по-прежнему исключает загрузку. Freshness guard поиска предшествует чтению, а blocked readiness сохраняет существующее чтение для coverage. `build_resource_search_service` собирает существующего MCP потребителя поиска без I/O, после ingress guards. Index maintenance, аргументы запроса, navigation, coverage, payload и границы обработки ошибок сохраняют прежнее поведение.
 
+`ResourceResolveService` принимает keyword-only порт `snapshots` через тот же helper. Пустой идентификатор ресурса по-прежнему возвращает сведения о проекте без чтения снимка. `build_resource_resolve_service` собирает MCP resolver без I/O после существующих проверок привязки и freshness. Порядок выбора, aliases, denied results, разрешение path reference и private navigation сохраняют своё поведение. Host использует совместимый конструктор этого общего сервиса; его routing не меняется.
+
 ## Диагностика
 
 Чтение Work state использует существующие PF operation, validation span и ограниченные счётчики request/YAML. Для библиотечного вызова можно передать существующий `diagnostics.Logger` как observer либо использовать текущую operation. Без обоих действует no-op: диагностические файлы не создаются. При сборке сервис не захватывает текущий Logger или Work.
@@ -66,3 +68,5 @@ CLI/MCP сохраняют внешнюю диагностику и провер
 `tools/smoke_garage_snapshot_read_composition.py` проверяет инъекцию reader Garage, актуальность путей, совместимость конструктора, context/runtime payload, порядок ошибок, изоляцию запросов и MCP композицию после ingress guards. Поддерживает сохранённые исходные методы через `--baseline` и ограничивает временные fixtures через `--scratch-root`.
 
 `tools/smoke_resource_search_snapshot_composition.py` проверяет инъекцию чтения readiness/search, ветки пустого snapshot и stale context, порядок maintenance/ошибок, актуальность YAML, request scope, MCP guards/error mapping и пакет без CLI. `--baseline` сравнивает сохранённый исходный service, `--scratch-root` ограничивает fixtures.
+
+`tools/smoke_resource_resolve_snapshot_composition.py` проверяет прежнее поведение resolve, пустые идентификаторы, инъекцию reader, aliases и порядок выбора, актуальность YAML и изоляцию request, порядок MCP guards, совместимость Host и пакет без CLI. `--baseline` сравнивает сохранённый исходный resolver, `--scratch-root` ограничивает fixtures.

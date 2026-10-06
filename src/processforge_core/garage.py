@@ -168,6 +168,7 @@ class ResourceResolveService:
     project_root: Path
     workplace_root: Path
     core: Any
+    snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     def resolve(self, *, resource_id: str | None = None) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -178,7 +179,7 @@ class ResourceResolveService:
         }
         if not resource_id:
             return payload
-        snapshot = load_snapshot(self.project_root, self.core)
+        snapshot = load_snapshot(self.project_root, self.core, snapshots=self.snapshots)
         selected = selected_resource(snapshot, resource_id)
         if not selected:
             return {**payload, "resource": {"id": resource_id, "status": "denied", "reason": "not_in_project_snapshot"}}

@@ -39,6 +39,8 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 
 `ResourceSearchService` accepts the same keyword-only `snapshots` port. Default reads in readiness coverage and search use the compatible Garage helper; an explicitly supplied empty snapshot still bypasses loading. The search freshness guard precedes reading, while blocked readiness retains its existing coverage read. `build_resource_search_service` assembles the existing MCP search consumer without I/O, after ingress guards. Index maintenance, query arguments, navigation, coverage, payloads and error boundaries retain their existing behavior.
 
+`ResourceResolveService` accepts a keyword-only `snapshots` port through the same helper. An empty resource id still returns project metadata without reading. `build_resource_resolve_service` assembles the MCP resolver without I/O, after the existing binding and freshness guards. Selection order, aliases, denied results, path reference resolution and private navigation retain their behavior. Host uses the compatible constructor of this shared service; its routing is unchanged.
+
 ## Observation
 
 Work-state reads use the existing PF diagnostics operation, validation span and bounded request/YAML counters. Pass an existing `diagnostics.Logger` as `observer` for direct-library observation, or inherit the current operation. Without either, the default is no-op and creates no diagnostic files. No ambient logger or current Work is captured at service construction.
@@ -66,3 +68,5 @@ Other services still depend on the legacy core. The target separation is domain 
 `tools/smoke_garage_snapshot_read_composition.py` covers Garage snapshot injection, live paths, constructor compatibility, context/runtime payloads, error order, request isolation and MCP composition after ingress guards. It supports retained original methods through `--baseline` and confines fixtures through `--scratch-root`.
 
 `tools/smoke_resource_search_snapshot_composition.py` covers readiness/search read injection, supplied-empty and stale-context branches, maintenance/error order, live YAML, request scopes, MCP guards/error mapping and package use without CLI. `--baseline` compares the retained original service and `--scratch-root` confines fixtures.
+
+`tools/smoke_resource_resolve_snapshot_composition.py` covers retained resolution behavior, empty ids, injected readers, aliases and selection order, live YAML and request isolation, MCP guard order, Host compatibility and package use without CLI. `--baseline` compares the retained original resolver and `--scratch-root` confines fixtures.

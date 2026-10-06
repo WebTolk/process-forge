@@ -14,6 +14,7 @@ from .work_records import YamlWorkRecordReader
 if TYPE_CHECKING:
     from .garage import ProjectContextService
     from .garage import ResourceSearchService
+    from .garage import ResourceResolveService
     from .diagnostics import Logger
     from .process_execution import ProcessExecutionService
     from .process_definition_read import ProcessDefinitionReadService
@@ -122,6 +123,14 @@ def build_resource_search_service(
     from .garage import ResourceSearchService
 
     return ResourceSearchService(project_root, workplace_root, core, snapshots=snapshots)
+
+
+def build_resource_resolve_service(
+    project_root: Path, workplace_root: Path, core: Any, *, snapshots: ProjectSnapshotReadPort | None = None,
+) -> ResourceResolveService:
+    from .garage import ResourceResolveService
+
+    return ResourceResolveService(project_root, workplace_root, core, snapshots=snapshots)
 
 
 def build_process_execution_service(
