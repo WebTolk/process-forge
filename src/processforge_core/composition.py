@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .stage_readiness import StageReadinessPolicy
     from .evidence_validation import EvidenceValidationService
     from .garage import ProjectContextService
     from .garage import ResourceSearchService
@@ -166,3 +167,14 @@ def build_evidence_validation_service(
     from .evidence_validation import EvidenceValidationService
 
     return EvidenceValidationService(project_root, now_utc, relative_path, sha256_file, path_resolver)
+
+
+def build_stage_readiness_policy(
+    *, file_diagnostic: Callable[[dict[str, Any] | None], dict[str, Any] | None],
+    string_list: Callable[[Any], list[str]],
+    stage_definitions: Callable[[dict[str, Any]], list[dict[str, Any]]],
+    blocker_callback: Callable[[str, str, dict[str, Any]], dict[str, Any]],
+) -> StageReadinessPolicy:
+    from .stage_readiness import StageReadinessPolicy
+
+    return StageReadinessPolicy(file_diagnostic, string_list, stage_definitions, blocker_callback)

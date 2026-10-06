@@ -53,6 +53,10 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 
 `tools/smoke_evidence_validation_service.py` covers retained outcomes and callback counts, copy semantics, not-applicable evidence, live file changes/deletion, unsafe paths, read failures, exception identity and isolated package construction. It accepts `--baseline` and `--scratch-root`.
 
+`StageReadinessPolicy` owns the existing requirement/gate satisfaction, required artifact selection and ordered blocker rules. Its frozen callbacks provide file diagnostics, string lists, executable stages and facade blocker dispatch. The policy performs no direct I/O and receives no Core; the composition factory only assembles dependencies. Private facade methods preserve aliases, latest evidence, status sets, diagnostic priority and copy/reference semantics. Automation loading, state orchestration and transition persistence retain their existing owners.
+
+`tools/smoke_stage_readiness_policy.py` covers retained pure rules, callback counts/overrides, optional artifacts/gates, blocker order, exception identity and live validation of changed/deleted files through the shared facade. It accepts `--baseline` and `--scratch-root`.
+
 Work-state reads use the existing PF diagnostics operation, validation span and bounded request/YAML counters. Pass an existing `diagnostics.Logger` as `observer` for direct-library observation, or inherit the current operation. Without either, the default is no-op and creates no diagnostic files. No ambient logger or current Work is captured at service construction.
 
 Selected run/assignment/stage identity is bound inside the read operation and restored afterward, including failures. Existing profile filtering, expiry, budgets and sink-failure handling apply. An operation-completed record means the read returned, not that a Task succeeded; the domain action is unchanged. Timing/spans are not a CPU or memory profiler.
