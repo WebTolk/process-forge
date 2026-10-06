@@ -45,6 +45,10 @@
 
 ## Диагностика
 
+`EvidenceCollectionPolicy` выполняет существующие правила сбора current/history evidence, merge и определения identity без I/O или Core. `ProcessExecutionService` сохраняет private facade methods и явно передаёт свои current/identity callbacks для совместимости переопределений в наследниках. Current/history и прежние merge records глубоко копируются; входящие merge records сохраняют исходные ссылки. Поздние input/artifact aliases по-прежнему заменяют прежние записи. Lifecycle, проверка файлов и фиксация остаются у прежних владельцев.
+
+`tools/smoke_evidence_collection_policy.py` проверяет сохранённые алгоритмы collection, замену aliases, порядок, семантику копирования/ссылок, переопределения facade и пакет без CLI. `--baseline` сравнивает сохранённый service, `--scratch-root` ограничивает fixtures.
+
 Чтение Work state использует существующие PF operation, validation span и ограниченные счётчики request/YAML. Для библиотечного вызова можно передать существующий `diagnostics.Logger` как observer либо использовать текущую operation. Без обоих действует no-op: диагностические файлы не создаются. При сборке сервис не захватывает текущий Logger или Work.
 
 Выбранные run/assignment/stage привязываются внутри операции чтения и восстанавливаются после неё, включая ошибки. Сохраняются фильтры профилей, срок действия, лимиты и обработка сбоя sink. Operation-completed означает возврат из чтения, а не успех Task; предметное действие не меняется. Замеры времени и spans не являются CPU- или memory-профайлером.

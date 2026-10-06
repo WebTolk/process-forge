@@ -45,6 +45,10 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 
 ## Observation
 
+`EvidenceCollectionPolicy` owns the existing current/history collection, merge and evidence identity rules without I/O or Core. `ProcessExecutionService` retains its private facade methods, passing its current/identity callbacks explicitly so subclass dispatch remains compatible. Current/history and previous merge records are deep-copied; incoming merge records retain their reference identity. Later input/artifact aliases still replace older records. Lifecycle, file validation and persistence retain their existing owners.
+
+`tools/smoke_evidence_collection_policy.py` covers retained collection algorithms, alias replacement, ordering, copy/reference semantics, facade overrides and package use without CLI. `--baseline` compares the retained service; `--scratch-root` confines fixtures.
+
 Work-state reads use the existing PF diagnostics operation, validation span and bounded request/YAML counters. Pass an existing `diagnostics.Logger` as `observer` for direct-library observation, or inherit the current operation. Without either, the default is no-op and creates no diagnostic files. No ambient logger or current Work is captured at service construction.
 
 Selected run/assignment/stage identity is bound inside the read operation and restored afterward, including failures. Existing profile filtering, expiry, budgets and sink-failure handling apply. An operation-completed record means the read returned, not that a Task succeeded; the domain action is unchanged. Timing/spans are not a CPU or memory profiler.

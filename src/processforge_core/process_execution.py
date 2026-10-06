@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Iterator
 from .request_scope import safe_load, scoped_request
 from .work_inventory import WorkInventory
 from .work_state import WorkStatePolicy
+from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
     from .diagnostics import Logger
@@ -1067,17 +1068,10 @@ class ProcessExecutionService:
         return {"active": active, "historical": historical}
 
     def _current_evidence(self, assignment: dict[str, Any]) -> list[dict[str, Any]]:
-        execution = assignment.get("stage_execution") if isinstance(assignment.get("stage_execution"), dict) else {}
-        return [copy.deepcopy(item) for item in execution.get("evidence", []) if isinstance(item, dict)] if isinstance(execution.get("evidence"), list) else []
+        return EvidenceCollectionPolicy().current(assignment)
 
     def _accumulated_evidence(self, assignment: dict[str, Any]) -> list[dict[str, Any]]:
-        evidence: list[dict[str, Any]] = []
-        history = assignment.get("stage_history") if isinstance(assignment.get("stage_history"), list) else []
-        for record in history:
-            if isinstance(record, dict) and isinstance(record.get("evidence"), list):
-                evidence.extend(copy.deepcopy(item) for item in record["evidence"] if isinstance(item, dict))
-        evidence.extend(self._current_evidence(assignment))
-        return evidence
+        return EvidenceCollectionPolicy().accumulated(assignment, current=self._current_evidence)
 
     def _required_artifact_ids(self, process: dict[str, Any], stage: dict[str, Any]) -> list[str]:
         declared = self._string_list(stage.get("required_artifacts"))
@@ -1247,25 +1241,10 @@ class ProcessExecutionService:
         return resolved
 
     def _merge_evidence(self, existing: Any, incoming: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        values = [copy.deepcopy(item) for item in existing if isinstance(item, dict)] if isinstance(existing, list) else []
-        for item in incoming:
-            marker = self._evidence_merge_identity(item)
-            values = [current for current in values if self._evidence_merge_identity(current) != marker]
-            values.append(item)
-        return values
+        return EvidenceCollectionPolicy().merge(existing, incoming, identity=self._evidence_merge_identity)
 
     def _evidence_merge_identity(self, item: dict[str, Any]) -> tuple[str, str]:
-        kind = str(item.get("kind") or "")
-        if kind == "gate":
-            return ("gate", str(item.get("gate_id") or item.get("id") or ""))
-        if kind in {"input", "artifact"}:
-            # Inputs deliberately accept artifact-shaped evidence. Treat both
-            # forms as one identity so a later alias cannot resurrect an older
-            # positive record.
-            return ("input_or_artifact", str(item.get("input_id") or item.get("artifact_id") or item.get("id") or ""))
-        if kind in {"evidence", "attestation"}:
-            return ("evidence", str(item.get("evidence_id") or item.get("id") or ""))
-        return (kind, str(item.get("id") or ""))
+        return EvidenceCollectionPolicy().identity(item)
 
     def _evidence_file_diagnostic(self, evidence: dict[str, Any] | None) -> dict[str, Any] | None:
         if not isinstance(evidence, dict):
