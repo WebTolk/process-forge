@@ -16,7 +16,7 @@ from .work_state import WorkStatePolicy
 
 if TYPE_CHECKING:
     from .diagnostics import Logger
-    from .ports import WorkContextReadPort, WorkRecordReadPort
+    from .ports import ProcessDefinitionReadPort, WorkContextReadPort, WorkRecordReadPort
 
 
 ACTIVE_RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review"}
@@ -218,6 +218,7 @@ class ProcessExecutionService:
     observer: Logger | None = field(default=None, kw_only=True, repr=False, compare=False)
     records: WorkRecordReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
     context: WorkContextReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
+    definitions: ProcessDefinitionReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     @scoped_request
     def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
@@ -955,17 +956,14 @@ class ProcessExecutionService:
         return result
 
     def _effective_process(self, run: dict[str, Any]) -> tuple[dict[str, Any], str]:
-        pin = run.get("process_execution") if isinstance(run.get("process_execution"), dict) else {}
-        definition = pin.get("definition") if isinstance(pin.get("definition"), dict) else None
-        if definition is not None and str(pin.get("process_fingerprint") or "") == canonical_fingerprint(definition):
-            return copy.deepcopy(definition), "pinned"
-        if pin:
-            return copy.deepcopy(definition) if isinstance(definition, dict) else {"id": str(run.get("process") or ""), "stages": []}, "corrupt"
-        try:
-            resolved = self.core.resolve_process_definition(self.project_root, str(run.get("process") or ""))
-            return copy.deepcopy(resolved.process), "legacy_unpinned"
-        except (OSError, SystemExit, ValueError):
-            return {"id": str(run.get("process") or ""), "stages": []}, "missing"
+        return self._process_reader().effective_process(run)
+
+    def _process_reader(self) -> ProcessDefinitionReadPort:
+        if self.definitions is not None:
+            return self.definitions
+        from .composition import build_process_definition_read_service
+
+        return build_process_definition_read_service(self.project_root, self.core, fingerprint=canonical_fingerprint)
 
     def _stage(self, process: dict[str, Any], stage_id: str) -> dict[str, Any]:
         return next((stage for stage in executable_stages(process) if str(stage.get("id")) == stage_id), {"id": stage_id})

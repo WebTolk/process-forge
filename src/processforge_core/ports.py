@@ -8,6 +8,12 @@ from typing import Any, Iterator, Protocol
 __all__ = ()
 
 
+class ProcessDefinitionReadPort(Protocol):
+    """Effective definition and pin status; not selection or transition authority."""
+
+    def effective_process(self, run: dict[str, Any]) -> tuple[dict[str, Any], str]: ...
+
+
 class WorkReadCorePort(Protocol):
     def locate_flow_root(self, project_root: Path) -> Path: ...
 
