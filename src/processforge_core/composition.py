@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .completion_intent_validation import CompletionIntentValidationService
     from .run_completion import RunCompletionPolicy
     from .process_pin import ProcessPinReadService
     from .process_selection import ProcessSelectionService, ResolvedDefinitionView
@@ -254,4 +255,23 @@ def build_run_completion_policy(
 
     return RunCompletionPolicy(
         accumulated_evidence=accumulated_evidence, string_list=string_list, gate_state=gate_state
+    )
+
+
+def build_completion_intent_validation_service(
+    *, project_root: Path,
+    fingerprint: Callable[[Any], str],
+    terminal_assignment_statuses: Callable[[], set[str]],
+    effective_process: Callable[[dict[str, Any]], tuple[dict[str, Any], str]],
+    rel: Callable[[Path, Path], str],
+    run_path: Callable[[str], Path],
+    assignment_path: Callable[[str], Path],
+    flow_root: Callable[[], Path],
+    has_project_id: Callable[[], bool],
+    project_id: Callable[[Path], Any]
+) -> CompletionIntentValidationService:
+    from .completion_intent_validation import CompletionIntentValidationService
+
+    return CompletionIntentValidationService(
+        project_root=project_root, fingerprint=fingerprint, terminal_assignment_statuses=terminal_assignment_statuses, effective_process=effective_process, rel=rel, run_path=run_path, assignment_path=assignment_path, flow_root=flow_root, has_project_id=has_project_id, project_id=project_id
     )
