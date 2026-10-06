@@ -45,9 +45,13 @@
 
 ## Диагностика
 
-`EvidenceCollectionPolicy` выполняет существующие правила сбора current/history evidence, merge и определения identity без I/O или Core. `ProcessExecutionService` сохраняет private facade methods и явно передаёт свои current/identity callbacks для совместимости переопределений в наследниках. Current/history и прежние merge records глубоко копируются; входящие merge records сохраняют исходные ссылки. Поздние input/artifact aliases по-прежнему заменяют прежние записи. Lifecycle, проверка файлов и фиксация остаются у прежних владельцев.
+`EvidenceCollectionPolicy` выполняет существующие правила сбора current/history evidence, merge и определения identity без I/O или Core. `ProcessExecutionService` сохраняет private facade methods и явно передаёт свои current/identity callbacks для совместимости переопределений в наследниках. Current/history и прежние merge records глубоко копируются; входящие merge records сохраняют исходные ссылки. Поздние input/artifact aliases по-прежнему заменяют прежние записи. Lifecycle и фиксация остаются у прежних владельцев.
 
 `tools/smoke_evidence_collection_policy.py` проверяет сохранённые алгоритмы collection, замену aliases, порядок, семантику копирования/ссылок, переопределения facade и пакет без CLI. `--baseline` сравнивает сохранённый service, `--scratch-root` ограничивает fixtures.
+
+`EvidenceValidationService` выполняет существующие алгоритмы нормализации evidence, проверки безопасного пути и диагностики файла. Неизменяемые зависимости конструктора — корень проекта и явные callbacks часов, относительного пути, hash и необязательного разрешения пути. Factory в composition выполняет только сборку; приватный фасад сохраняет отложенное обращение к Core и переопределения в наследниках. Пути и байты файла проверяются на каждом вызове с прежними diagnostic codes и порядком ошибок.
+
+`tools/smoke_evidence_validation_service.py` проверяет сохранённые результаты и число вызовов, копирование, not_applicable evidence, изменения и удаление файлов, опасные пути, ошибки чтения, identity исключений и сборку пакета без CLI. Поддерживает `--baseline` и `--scratch-root`.
 
 Чтение Work state использует существующие PF operation, validation span и ограниченные счётчики request/YAML. Для библиотечного вызова можно передать существующий `diagnostics.Logger` как observer либо использовать текущую operation. Без обоих действует no-op: диагностические файлы не создаются. При сборке сервис не захватывает текущий Logger или Work.
 

@@ -45,9 +45,13 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 
 ## Observation
 
-`EvidenceCollectionPolicy` owns the existing current/history collection, merge and evidence identity rules without I/O or Core. `ProcessExecutionService` retains its private facade methods, passing its current/identity callbacks explicitly so subclass dispatch remains compatible. Current/history and previous merge records are deep-copied; incoming merge records retain their reference identity. Later input/artifact aliases still replace older records. Lifecycle, file validation and persistence retain their existing owners.
+`EvidenceCollectionPolicy` owns the existing current/history collection, merge and evidence identity rules without I/O or Core. `ProcessExecutionService` retains its private facade methods, passing its current/identity callbacks explicitly so subclass dispatch remains compatible. Current/history and previous merge records are deep-copied; incoming merge records retain their reference identity. Later input/artifact aliases still replace older records. Lifecycle and persistence retain their existing owners.
 
 `tools/smoke_evidence_collection_policy.py` covers retained collection algorithms, alias replacement, ordering, copy/reference semantics, facade overrides and package use without CLI. `--baseline` compares the retained service; `--scratch-root` confines fixtures.
+
+`EvidenceValidationService` owns the existing evidence normalization, safe path and file diagnostic algorithms. Its frozen dependencies are the project root and explicit clock, relative path, hash and optional path resolver callbacks. The composition factory performs no I/O; the private facade preserves deferred Core access and subclass overrides. Paths and file bytes are checked on every call, with the existing diagnostic codes and error order.
+
+`tools/smoke_evidence_validation_service.py` covers retained outcomes and callback counts, copy semantics, not-applicable evidence, live file changes/deletion, unsafe paths, read failures, exception identity and isolated package construction. It accepts `--baseline` and `--scratch-root`.
 
 Work-state reads use the existing PF diagnostics operation, validation span and bounded request/YAML counters. Pass an existing `diagnostics.Logger` as `observer` for direct-library observation, or inherit the current operation. Without either, the default is no-op and creates no diagnostic files. No ambient logger or current Work is captured at service construction.
 

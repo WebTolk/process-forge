@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .evidence_validation import EvidenceValidationService
     from .garage import ProjectContextService
     from .garage import ResourceSearchService
     from .garage import ResourceResolveService
@@ -156,3 +157,12 @@ def build_process_execution_service(
     if records is None:
         records = YamlWorkRecordReader(project_root, core)
     return ProcessExecutionService(project_root, workplace_root, core, observer=observer, records=records, context=context, definitions=definitions, snapshots=snapshots)
+
+
+def build_evidence_validation_service(
+    project_root: Path, *, now_utc: Callable[[], str], relative_path: Callable[[Path], str],
+    sha256_file: Callable[[Path], str], path_resolver: Callable[[str], Path | None] | None = None,
+) -> EvidenceValidationService:
+    from .evidence_validation import EvidenceValidationService
+
+    return EvidenceValidationService(project_root, now_utc, relative_path, sha256_file, path_resolver)

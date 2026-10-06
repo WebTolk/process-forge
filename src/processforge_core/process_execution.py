@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .evidence_validation import EvidenceValidationService
     from .diagnostics import Logger
     from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkRecordReadPort
 
@@ -1184,61 +1185,22 @@ class ProcessExecutionService:
             blocker["diagnostic"] = copy.deepcopy(diagnostic)
         return blocker
 
+    def _evidence_validator(self) -> EvidenceValidationService:
+        from .composition import build_evidence_validation_service
+
+        return build_evidence_validation_service(
+            self.project_root,
+            now_utc=lambda: self.core.now_utc(),
+            relative_path=lambda path: self.core.rel(path, self.project_root),
+            sha256_file=self._sha256_file,
+            path_resolver=self._safe_evidence_path,
+        )
+
     def _normalize_evidence(self, evidence: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        values = evidence if isinstance(evidence, list) else ([] if evidence is None or evidence == "" else [evidence])
-        normalized: list[dict[str, Any]] = []
-        blockers: list[dict[str, Any]] = []
-        now = self.core.now_utc()
-        for index, value in enumerate(values):
-            if isinstance(value, str):
-                item = {"kind": "attestation", "id": f"attestation-{index + 1}", "status": "ready", "summary": value}
-            elif isinstance(value, dict):
-                item = copy.deepcopy(value)
-            else:
-                blockers.append({"code": "invalid_evidence", "index": index})
-                continue
-            item.setdefault("kind", "attestation")
-            item.setdefault("status", "ready")
-            item["recorded_at"] = now
-            if str(item.get("status") or "") == "not_applicable":
-                reason = str(item.get("reason") or "").strip()
-                supporting = item.get("evidence")
-                if not reason or not isinstance(supporting, list) or not supporting:
-                    blockers.append({"code": "not_applicable_evidence_incomplete", "index": index})
-                    continue
-            path_value = str(item.get("path") or "").strip()
-            if path_value:
-                safe_path = self._safe_evidence_path(path_value)
-                try:
-                    valid_file = safe_path is not None and safe_path.is_file()
-                except OSError:
-                    valid_file = False
-                if not valid_file:
-                    blockers.append({"code": "artifact_path_missing", "index": index, "path": path_value})
-                    continue
-                else:
-                    try:
-                        item["path"] = self.core.rel(safe_path, self.project_root)
-                        item["sha256"] = "sha256:" + self._sha256_file(safe_path)
-                    except OSError:
-                        blockers.append({"code": "artifact_path_unreadable", "index": index, "path": path_value})
-                        continue
-            normalized.append(item)
-        return normalized, blockers
+        return self._evidence_validator().normalize(evidence)
 
     def _safe_evidence_path(self, value: str) -> Path | None:
-        try:
-            path = Path(value)
-            if path.is_absolute():
-                return None
-            resolved = (self.project_root / path).resolve()
-        except (OSError, RuntimeError, ValueError):
-            return None
-        try:
-            resolved.relative_to(self.project_root.resolve())
-        except (OSError, RuntimeError, ValueError):
-            return None
-        return resolved
+        return self._evidence_validator().safe_path(value)
 
     def _merge_evidence(self, existing: Any, incoming: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return EvidenceCollectionPolicy().merge(existing, incoming, identity=self._evidence_merge_identity)
@@ -1247,31 +1209,7 @@ class ProcessExecutionService:
         return EvidenceCollectionPolicy().identity(item)
 
     def _evidence_file_diagnostic(self, evidence: dict[str, Any] | None) -> dict[str, Any] | None:
-        if not isinstance(evidence, dict):
-            return None
-        path_value = str(evidence.get("path") or "").strip()
-        if not path_value:
-            return None
-        safe_path = self._safe_evidence_path(path_value)
-        if safe_path is None:
-            return {"code": "evidence_file_unsafe", "path": path_value}
-        try:
-            if not safe_path.exists():
-                return {"code": "evidence_file_missing", "path": path_value}
-            if not safe_path.is_file():
-                return {"code": "evidence_file_not_regular", "path": path_value}
-        except OSError as exc:
-            return {"code": "evidence_file_unreadable", "path": path_value, "error": str(exc)}
-        stored = str(evidence.get("sha256") or "").strip()
-        if not stored:
-            return {"code": "evidence_digest_missing", "path": path_value}
-        try:
-            actual = "sha256:" + self._sha256_file(safe_path)
-        except OSError as exc:
-            return {"code": "evidence_file_unreadable", "path": path_value, "error": str(exc)}
-        if stored.casefold() != actual.casefold():
-            return {"code": "evidence_file_changed", "path": path_value, "stored_sha256": stored, "actual_sha256": actual}
-        return None
+        return self._evidence_validator().diagnostic(evidence)
 
     def _latest_assignment_event(self, assignment_id: str, event_types: set[str]) -> dict[str, Any] | None:
         if not event_types or not hasattr(self.core, "event_runtime_paths"):
