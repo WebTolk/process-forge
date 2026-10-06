@@ -111,11 +111,12 @@ class ResourceSearchService:
     project_root: Path
     workplace_root: Path
     core: Any
+    snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     def readiness(self, *, snapshot: dict[str, Any] | None = None, check: dict[str, Any] | None = None) -> dict[str, Any]:
         result = self._readiness(snapshot=snapshot, check=check)
         result["scope"] = "project_context"
-        result["authorized_coverage"] = authorized_coverage(self.project_root, snapshot if snapshot is not None else load_snapshot(self.project_root, self.core), workplace_root=self.workplace_root)
+        result["authorized_coverage"] = authorized_coverage(self.project_root, snapshot if snapshot is not None else load_snapshot(self.project_root, self.core, snapshots=self.snapshots), workplace_root=self.workplace_root)
         return result
 
     def _readiness(self, *, snapshot: dict[str, Any] | None = None, check: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -145,7 +146,7 @@ class ResourceSearchService:
         check = self.core.project_context_check_result(self.project_root, explicit_workplace=str(self.workplace_root))
         if str(check.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             raise LocalSearchError("snapshot_not_fresh")
-        runtime_snapshot = snapshot_with_resolved_search_roots(self.project_root, load_snapshot(self.project_root, self.core), self.workplace_root, self.core)
+        runtime_snapshot = snapshot_with_resolved_search_roots(self.project_root, load_snapshot(self.project_root, self.core, snapshots=self.snapshots), self.workplace_root, self.core)
         index_snapshot = self.core.workplace_search_runtime_snapshot(self.workplace_root)
         index = ResourceSearchIndex(self.workplace_root, index_snapshot, self.workplace_root)
         state = index.status(verify_files=True)

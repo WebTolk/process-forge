@@ -37,6 +37,8 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 
 `ProjectContextService` also accepts the keyword-only `snapshots` dependency. Its snapshot read and the compatible two-argument Garage `load_snapshot` helper reuse the existing reader through `build_project_context_snapshot_read_service`. The legacy path resolver and YAML loader run in their original order on every default call; malformed path pairs and loader errors propagate unchanged. Assembly performs no I/O, and a legacy read does not require a checksum callback. Existing MCP context consumers use `build_project_context_service` after their session/project guards. Freshness checks, context payloads, request scopes and other legacy Garage dependencies remain in their existing owners; composition grants no permissions.
 
+`ResourceSearchService` accepts the same keyword-only `snapshots` port. Default reads in readiness coverage and search use the compatible Garage helper; an explicitly supplied empty snapshot still bypasses loading. The search freshness guard precedes reading, while blocked readiness retains its existing coverage read. `build_resource_search_service` assembles the existing MCP search consumer without I/O, after ingress guards. Index maintenance, query arguments, navigation, coverage, payloads and error boundaries retain their existing behavior.
+
 ## Observation
 
 Work-state reads use the existing PF diagnostics operation, validation span and bounded request/YAML counters. Pass an existing `diagnostics.Logger` as `observer` for direct-library observation, or inherit the current operation. Without either, the default is no-op and creates no diagnostic files. No ambient logger or current Work is captured at service construction.
@@ -62,3 +64,5 @@ Other services still depend on the legacy core. The target separation is domain 
 `tools/smoke_project_snapshot_read_composition.py` checks reader substitution at all four read sites, immutable-capsule refusal before loading, equal-size/mtime updates, raw-byte checksums, private path/hash overrides, constructor compatibility and assembly without the CLI. `--baseline` compares retained original helpers, including exceptions and call order; `--scratch-root` scopes temporary fixtures.
 
 `tools/smoke_garage_snapshot_read_composition.py` covers Garage snapshot injection, live paths, constructor compatibility, context/runtime payloads, error order, request isolation and MCP composition after ingress guards. It supports retained original methods through `--baseline` and confines fixtures through `--scratch-root`.
+
+`tools/smoke_resource_search_snapshot_composition.py` covers readiness/search read injection, supplied-empty and stale-context branches, maintenance/error order, live YAML, request scopes, MCP guards/error mapping and package use without CLI. `--baseline` compares the retained original service and `--scratch-root` confines fixtures.

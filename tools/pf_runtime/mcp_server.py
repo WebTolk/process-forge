@@ -77,8 +77,8 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
     core = runtime.core
     from pf_runtime import session_read
     from processforge_core.local_resource_search import LocalSearchError
-    from processforge_core.garage import ResourceResolveService, ResourceSearchService
-    from processforge_core.composition import build_process_execution_service, build_project_context_service
+    from processforge_core.garage import ResourceResolveService
+    from processforge_core.composition import build_process_execution_service, build_project_context_service, build_resource_search_service
     from processforge_core.process_execution import creation_scope_intent
     from processforge_core.work_context import ContextContractError
 
@@ -218,7 +218,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
     if name == "pf.search":
         bound_project = resolve_garage_project()
         try:
-            return ResourceSearchService(bound_project, workplace, core).search(query=arguments.get("query"), limit=arguments.get("limit"), limitstart=arguments.get("limitstart"), offset=arguments.get("offset"))
+            return build_resource_search_service(bound_project, workplace, core).search(query=arguments.get("query"), limit=arguments.get("limit"), limitstart=arguments.get("limitstart"), offset=arguments.get("offset"))
         except LocalSearchError as exc:
             raise session_read.SessionReadError(exc.code) from exc
     if not supplied_session:
