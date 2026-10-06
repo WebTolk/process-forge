@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work_selection import WorkSelectionService
     from .stage_readiness import StageReadinessPolicy
     from .automation_readiness import AutomationReadinessService
     from .evidence_validation import EvidenceValidationService
@@ -195,4 +196,19 @@ def build_automation_readiness_service(
 
     return AutomationReadinessService(
         project_root=project_root, has_output_checks=has_output_checks, output_checks=output_checks, has_fingerprint=has_fingerprint, fingerprint=fingerprint, has_event_paths=has_event_paths, event_paths=event_paths, latest_event=latest_event
+    )
+
+
+def build_work_selection_service(
+    *, bound_selection: Callable[[str], dict[str, Any] | None],
+    valid_selector: Callable[[str], bool],
+    records: Callable[..., list[dict[str, Any]]],
+    prefer: Callable[[list[dict[str, Any]], str], dict[str, Any] | None],
+    load_run: Callable[[str], dict[str, Any]],
+    load_assignment: Callable[[str], dict[str, Any]]
+) -> WorkSelectionService:
+    from .work_selection import WorkSelectionService
+
+    return WorkSelectionService(
+        bound_selection=bound_selection, valid_selector=valid_selector, records=records, prefer=prefer, load_run=load_run, load_assignment=load_assignment
     )

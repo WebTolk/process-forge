@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .work_selection import WorkSelectionService
     from .automation_readiness import AutomationReadinessService
     from .stage_readiness import StageReadinessPolicy
     from .evidence_validation import EvidenceValidationService
@@ -983,38 +984,23 @@ class ProcessExecutionService:
     def _stage(self, process: dict[str, Any], stage_id: str) -> dict[str, Any]:
         return next((stage for stage in executable_stages(process) if str(stage.get("id")) == stage_id), {"id": stage_id})
 
+    def _work_selection_service(self) -> WorkSelectionService:
+        from .composition import build_work_selection_service
+
+        return build_work_selection_service(
+            bound_selection=self._bound_work_selection, valid_selector=lambda value: bool(SAFE_ID_RE.fullmatch(value)), records=self._work_records, prefer=self._preferred_record, load_run=self._load_run, load_assignment=self._load_assignment
+        )
+
+    def _bound_work_selection(self, session_id: str) -> dict[str, Any] | None:
+        from .continuation import ContinuationService
+
+        return ContinuationService(self.project_root, self.workplace_root, self.core).selected(session_id)
+
     def _select_work(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> tuple[dict[str, Any], dict[str, Any]] | None:
-        if not run_id and not assignment_id and session_id:
-            from .continuation import ContinuationService
-            binding = ContinuationService(self.project_root, self.workplace_root, self.core).selected(session_id)
-            if binding:
-                run_id, assignment_id = binding["run_id"], binding["assignment_id"]
-        for value in (run_id, assignment_id):
-            if value and (not isinstance(value, str) or not SAFE_ID_RE.fullmatch(value)):
-                raise ValueError("invalid_work_selector")
-        records = self._work_records(include_historical=True)
-        if assignment_id:
-            record = next((item for item in records if item["assignment_id"] == assignment_id), None)
-        elif run_id:
-            candidates = [item for item in records if item["run_id"] == run_id]
-            if len(candidates) > 1:
-                raise ValueError("assignment_choice_required")
-            record = self._preferred_record(candidates, session_id)
-        else:
-            active = [item for item in records if item["active"]]
-            record = self._preferred_record(active, session_id)
-        if not record:
-            return None
-        if run_id and record["run_id"] != run_id:
-            raise ValueError("work_identity_mismatch")
-        return self._load_run(record["run_id"]), self._load_assignment(record["assignment_id"])
+        return self._work_selection_service().select(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
 
     def _preferred_record(self, records: list[dict[str, Any]], session_id: str) -> dict[str, Any] | None:
-        if session_id:
-            bound = [item for item in records if item.get("session_id") == session_id]
-            if bound:
-                records = bound
-        return max(records, key=lambda item: (item.get("updated_at", ""), item.get("created_at", ""), item.get("assignment_id", ""))) if records else None
+        return self._work_selection_service().preferred_record(records, session_id)
 
     def _work_records(self, *, include_historical: bool) -> list[dict[str, Any]]:
         records: list[dict[str, Any]] = []
@@ -1064,11 +1050,7 @@ class ProcessExecutionService:
         return records
 
     def _find_by_objective(self, objective: str) -> dict[str, Any]:
-        normalized = " ".join(objective.casefold().split())
-        matches = [item for item in self._work_records(include_historical=True) if " ".join(item["objective"].casefold().split()) == normalized]
-        active = self._preferred_record([item for item in matches if item["active"]], "")
-        historical = [item for item in matches if not item["active"]]
-        return {"active": active, "historical": historical}
+        return self._work_selection_service().find_by_objective(objective)
 
     def _current_evidence(self, assignment: dict[str, Any]) -> list[dict[str, Any]]:
         return EvidenceCollectionPolicy().current(assignment)
