@@ -160,6 +160,52 @@ class ValidationTests(unittest.TestCase):
         self.assertIsNone(instance._evidence_file_diagnostic({}))
         self.assertEqual(instance._safe_evidence_path('valid.txt'),self.root/'valid.txt')
 
+    def test_rootless_facade_preserves_existing_early_returns(self):
+        for cls in ([BASELINE] if BASELINE else [])+[process_execution.ProcessExecutionService]:
+            instance=object.__new__(cls)
+            for evidence in [None,[],{}, {'path':'  '}, {'kind':'gate','id':'example','status':'passed'}]:
+                self.assertIsNone(instance._evidence_file_diagnostic(evidence))
+            self.assertIsNone(instance._safe_evidence_path(str(self.root/'valid.txt')))
+            if cls is process_execution.ProcessExecutionService:
+                gate=instance._gate_state({},'example',[{'kind':'gate','id':'example','status':'passed'}],phase='exit')
+                self.assertTrue(gate['satisfied'])
+            calls=[]
+            object.__setattr__(instance,'core',SimpleNamespace(now_utc=lambda:calls.append('clock') or 'fixed'))
+            normalized,blockers=instance._normalize_evidence([{'unknown':{'items':[1]}},'note',{'path':str(self.root/'valid.txt')}])
+            self.assertEqual(calls,['clock'])
+            self.assertEqual(normalized,[{'unknown':{'items':[1]},'kind':'attestation','status':'ready','recorded_at':'fixed'},
+                                         {'kind':'attestation','id':'attestation-2','status':'ready','summary':'note','recorded_at':'fixed'}])
+            self.assertEqual(blockers,[{'code':'artifact_path_missing','index':2,'path':str(self.root/'valid.txt')}])
+
+    def test_deferred_root_preserves_file_branch_order_and_exceptions(self):
+        trace=[]
+        selected=[self.root]
+        def root():trace.append('root');return selected[0]
+        validator=build_evidence_validation_service(root,now_utc=lambda:trace.append('clock') or 'fixed',
+                    relative_path=lambda path:trace.append('rel') or 'valid.txt',
+                    sha256_file=lambda path:trace.append('hash') or 'digest')
+        self.assertEqual(trace,[])
+        self.assertIsNone(validator.diagnostic(None))
+        self.assertIsNone(validator.diagnostic({'path':' '}))
+        self.assertEqual(validator.diagnostic({'path':str(self.root/'valid.txt')})['code'],'evidence_file_unsafe')
+        self.assertEqual(trace,[])
+        self.assertFalse(validator.normalize('note')[1]);self.assertEqual(trace,['clock'])
+        trace.clear()
+        self.assertEqual(validator.normalize({'path':'valid.txt'})[0][0]['sha256'],'sha256:digest')
+        self.assertEqual(trace,['clock','root','root','rel','hash'])
+        selected[0]=self.root/'dir';trace.clear()
+        self.assertEqual(validator.safe_path('valid.txt'),self.root/'dir'/'valid.txt')
+        self.assertEqual(trace,['root','root'])
+        error=LookupError('required_root_failure')
+        def fail():raise error
+        validator=build_evidence_validation_service(fail,now_utc=lambda:'fixed',relative_path=str,sha256_file=lambda path:'digest')
+        self.assertIsNone(validator.diagnostic({}))
+        self.assertIsNone(validator.safe_path(str(self.root/'valid.txt')))
+        caught=None
+        try:validator.safe_path('valid.txt')
+        except LookupError as exc:caught=exc
+        self.assertIs(caught,error)
+
     def test_construction_is_pure_and_dependencies_frozen(self):
         def forbidden(*args):raise AssertionError('unexpected callback')
         with patch.object(Path,'resolve',side_effect=forbidden),patch.object(Path,'read_bytes',side_effect=forbidden):

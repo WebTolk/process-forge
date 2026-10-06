@@ -161,7 +161,7 @@ def build_process_execution_service(
 
 
 def build_evidence_validation_service(
-    project_root: Path, *, now_utc: Callable[[], str], relative_path: Callable[[Path], str],
+    project_root: Path | Callable[[], Path], *, now_utc: Callable[[], str], relative_path: Callable[[Path], str],
     sha256_file: Callable[[Path], str], path_resolver: Callable[[str], Path | None] | None = None,
 ) -> EvidenceValidationService:
     from .evidence_validation import EvidenceValidationService

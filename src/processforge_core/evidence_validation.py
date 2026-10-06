@@ -9,11 +9,14 @@ from typing import Any, Callable
 
 @dataclass(frozen=True)
 class EvidenceValidationService:
-    project_root: Path
+    project_root: Path | Callable[[], Path]
     now_utc: Callable[[], str]
     relative_path: Callable[[Path], str]
     sha256_file: Callable[[Path], str]
     path_resolver: Callable[[str], Path | None] | None = None
+
+    def _root(self) -> Path:
+        return self.project_root() if callable(self.project_root) else self.project_root
 
     def _path(self, value: str) -> Path | None:
         if self.path_resolver is not None:
@@ -67,11 +70,11 @@ class EvidenceValidationService:
             path = Path(value)
             if path.is_absolute():
                 return None
-            resolved = (self.project_root / path).resolve()
+            resolved = (self._root() / path).resolve()
         except (OSError, RuntimeError, ValueError):
             return None
         try:
-            resolved.relative_to(self.project_root.resolve())
+            resolved.relative_to(self._root().resolve())
         except (OSError, RuntimeError, ValueError):
             return None
         return resolved

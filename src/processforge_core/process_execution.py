@@ -1134,7 +1134,7 @@ class ProcessExecutionService:
         from .composition import build_evidence_validation_service
 
         return build_evidence_validation_service(
-            self.project_root,
+            lambda: self.project_root,
             now_utc=lambda: self.core.now_utc(),
             relative_path=lambda path: self.core.rel(path, self.project_root),
             sha256_file=self._sha256_file,
