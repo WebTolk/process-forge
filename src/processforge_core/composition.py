@@ -13,6 +13,7 @@ from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
     from .stage_readiness import StageReadinessPolicy
+    from .automation_readiness import AutomationReadinessService
     from .evidence_validation import EvidenceValidationService
     from .garage import ProjectContextService
     from .garage import ResourceSearchService
@@ -178,3 +179,20 @@ def build_stage_readiness_policy(
     from .stage_readiness import StageReadinessPolicy
 
     return StageReadinessPolicy(file_diagnostic, string_list, stage_definitions, blocker_callback)
+
+
+def build_automation_readiness_service(
+    *, project_root: Path,
+    has_output_checks: Callable[[], bool],
+    output_checks: Callable[[Path, dict[str, Any]], Any],
+    has_fingerprint: Callable[[], bool],
+    fingerprint: Callable[[Path, dict[str, Any]], Any],
+    has_event_paths: Callable[[], bool],
+    event_paths: Callable[[Path], tuple[Path, Any]],
+    latest_event: Callable[[str, set[str]], dict[str, Any] | None]
+) -> AutomationReadinessService:
+    from .automation_readiness import AutomationReadinessService
+
+    return AutomationReadinessService(
+        project_root=project_root, has_output_checks=has_output_checks, output_checks=output_checks, has_fingerprint=has_fingerprint, fingerprint=fingerprint, has_event_paths=has_event_paths, event_paths=event_paths, latest_event=latest_event
+    )
