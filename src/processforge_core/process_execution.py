@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .run_completion import RunCompletionPolicy
     from .process_pin import ProcessPinReadService
     from .process_selection import ProcessSelectionService
     from .work_selection import WorkSelectionService
@@ -1082,24 +1083,15 @@ class ProcessExecutionService:
     def _latest_assignment_event(self, assignment_id: str, event_types: set[str]) -> dict[str, Any] | None:
         return self._automation_readiness_service().latest_assignment_event(assignment_id, event_types)
 
+    def _run_completion_policy(self) -> RunCompletionPolicy:
+        from .composition import build_run_completion_policy
+
+        return build_run_completion_policy(
+            accumulated_evidence=self._accumulated_evidence, string_list=self._string_list, gate_state=self._gate_state
+        )
+
     def _run_completion_blockers(self, process: dict[str, Any], run: dict[str, Any], assignment: dict[str, Any]) -> list[dict[str, Any]]:
-        completion = process.get("run_completion") if isinstance(process.get("run_completion"), dict) else {}
-        evidence = self._accumulated_evidence(assignment)
-        blockers: list[dict[str, Any]] = []
-        for gate_id in self._string_list(completion.get("gates")):
-            gate = self._gate_state(process, gate_id, evidence, phase="run_completion")
-            if gate["required"] and gate["blocking"] and not gate["satisfied"]:
-                blocker = {"code": "run_completion_gate_missing", "gate_id": gate_id}
-                if isinstance(gate.get("diagnostic"), dict):
-                    blocker["diagnostic"] = copy.deepcopy(gate["diagnostic"])
-                blockers.append(blocker)
-        assignment_id = str(assignment.get("id") or "")
-        for task in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
-            if not isinstance(task, dict) or str(task.get("id") or "") == assignment_id or task.get("blocking", True) is False:
-                continue
-            if str(task.get("status") or "") not in {"done", "completed", "cancelled"}:
-                blockers.append({"code": "blocking_assignment_incomplete", "assignment_id": str(task.get("id") or ""), "status": str(task.get("status") or "")})
-        return blockers
+        return self._run_completion_policy().blockers(process, run, assignment)
 
     def _completion_intent_path(self, run_id: str) -> Path:
         return self._run_path(run_id).parent / "completion-intent.yaml"
@@ -1457,10 +1449,7 @@ class ProcessExecutionService:
             yield
 
     def _set_run_task_status(self, run: dict[str, Any], assignment_id: str, status: str) -> None:
-        tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
-        for item in tasks:
-            if isinstance(item, dict) and str(item.get("id") or "") == assignment_id:
-                item["status"] = status
+        self._run_completion_policy().set_task_status(run, assignment_id, status)
 
     def _atomic_yaml(self, path: Path, value: dict[str, Any]) -> None:
         self._atomic_text(path, self.core.dump_yaml(value).rstrip() + "\n")

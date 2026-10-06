@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .run_completion import RunCompletionPolicy
     from .process_pin import ProcessPinReadService
     from .process_selection import ProcessSelectionService, ResolvedDefinitionView
     from .work_selection import WorkSelectionService
@@ -241,4 +242,16 @@ def build_process_pin_read_service(
 
     return ProcessPinReadService(
         project_root=project_root, flow_root=flow_root, snapshots=snapshots, fingerprint=fingerprint, stable_ids=stable_ids
+    )
+
+
+def build_run_completion_policy(
+    *, accumulated_evidence: Callable[[dict[str, Any]], list[dict[str, Any]]],
+    string_list: Callable[[Any], list[str]],
+    gate_state: Callable[..., dict[str, Any]]
+) -> RunCompletionPolicy:
+    from .run_completion import RunCompletionPolicy
+
+    return RunCompletionPolicy(
+        accumulated_evidence=accumulated_evidence, string_list=string_list, gate_state=gate_state
     )
