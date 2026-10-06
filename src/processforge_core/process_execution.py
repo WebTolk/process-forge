@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .process_selection import ProcessSelectionService
     from .work_selection import WorkSelectionService
     from .automation_readiness import AutomationReadinessService
     from .stage_readiness import StageReadinessPolicy
@@ -854,44 +855,18 @@ class ProcessExecutionService:
     def _project_process_selection(self) -> dict[str, Any]:
         return project_process_selection(self._manifest())
 
-    def _select_process(self, selection: dict[str, Any], requested: str) -> tuple[str, dict[str, Any]]:
-        allowed = _stable_ids(selection.get("allowed"))
-        if requested:
-            if requested not in allowed:
-                try:
-                    self.core.resolve_process_definition(self.project_root, requested)
-                except (OSError, SystemExit, ValueError):
-                    return "", self._blocked("process_not_found", process_id=requested)
-                return "", self._blocked("process_not_allowed", process_id=requested, allowed_processes=allowed)
-            return requested, {}
-        if len(allowed) == 1:
-            return allowed[0], {}
-        default = str(selection.get("default") or "").strip()
-        return "", self._blocked(
-            "process_choice_required",
-            action="process_choice_required",
-            default_process=default if default in allowed else "",
-            candidates=self._process_candidates(allowed, default=default),
+    def _process_selection_service(self) -> ProcessSelectionService:
+        from .composition import build_process_selection_service
+
+        return build_process_selection_service(
+            project_root=self.project_root, stable_ids=_stable_ids, resolve_definition=lambda root, process_id: self.core.resolve_process_definition(root, process_id), blocked=self._blocked, candidates=self._process_candidates
         )
 
+    def _select_process(self, selection: dict[str, Any], requested: str) -> tuple[str, dict[str, Any]]:
+        return self._process_selection_service().select(selection, requested)
+
     def _process_candidates(self, process_ids: list[str], *, default: str = "") -> list[dict[str, Any]]:
-        candidates: list[dict[str, Any]] = []
-        for process_id in process_ids:
-            try:
-                process = self.core.resolve_process_definition(self.project_root, process_id).process
-            except (OSError, SystemExit, ValueError):
-                candidates.append({"id": process_id, "title": process_id, "purpose": "Process definition unavailable.", "expected_result": "", "default": process_id == default})
-                continue
-            candidates.append(
-                {
-                    "id": str(process.get("id") or process_id),
-                    "title": str(process.get("name") or process_id),
-                    "purpose": str(process.get("purpose") or process.get("description") or ""),
-                    "expected_result": str(process.get("expected_result") or ""),
-                    "default": str(process.get("id") or process_id) == default,
-                }
-            )
-        return candidates
+        return self._process_selection_service().process_candidates(process_ids, default=default)
 
     @staticmethod
     def _is_recoverable_transition_rejection(blocker: Any) -> bool:

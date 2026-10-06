@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .process_selection import ProcessSelectionService, ResolvedDefinitionView
     from .work_selection import WorkSelectionService
     from .stage_readiness import StageReadinessPolicy
     from .automation_readiness import AutomationReadinessService
@@ -211,4 +212,18 @@ def build_work_selection_service(
 
     return WorkSelectionService(
         bound_selection=bound_selection, valid_selector=valid_selector, records=records, prefer=prefer, load_run=load_run, load_assignment=load_assignment
+    )
+
+
+def build_process_selection_service(
+    *, project_root: Path,
+    stable_ids: Callable[[Any], list[str]],
+    resolve_definition: Callable[[Path, str], ResolvedDefinitionView],
+    blocked: Callable[..., dict[str, Any]],
+    candidates: Callable[..., list[dict[str, Any]]]
+) -> ProcessSelectionService:
+    from .process_selection import ProcessSelectionService
+
+    return ProcessSelectionService(
+        project_root=project_root, stable_ids=stable_ids, resolve_definition=resolve_definition, blocked=blocked, candidates=candidates
     )
