@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .garage import ProjectContextService
     from .diagnostics import Logger
     from .process_execution import ProcessExecutionService
     from .process_definition_read import ProcessDefinitionReadService
@@ -94,6 +95,24 @@ def build_project_snapshot_read_service(
 
     adapter = LegacyProjectSnapshotAdapter(core)
     return ProjectSnapshotReadService(snapshot_path, adapter.load_document, sha256_file)
+
+
+def build_project_context_snapshot_read_service(project_root: Path, core: Any) -> ProjectSnapshotReadService:
+    def snapshot_path() -> Path:
+        path, _snapshot_md = core.project_context_snapshot_paths(project_root)
+        return path
+
+    return build_project_snapshot_read_service(
+        core, snapshot_path=snapshot_path, sha256_file=lambda path: core.sha256_file(path),
+    )
+
+
+def build_project_context_service(
+    project_root: Path, workplace_root: Path, core: Any, *, snapshots: ProjectSnapshotReadPort | None = None,
+) -> ProjectContextService:
+    from .garage import ProjectContextService
+
+    return ProjectContextService(project_root, workplace_root, core, snapshots=snapshots)
 
 
 def build_process_execution_service(

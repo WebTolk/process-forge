@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import copy
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from .local_resource_search import LocalSearchError, ResourceSearchIndex, authorized_coverage
-from .ports import WorkReadCorePort
+from .ports import ProjectSnapshotReadPort, WorkReadCorePort
 from .process_execution import ProcessExecutionService, project_process_selection
 from .request_scope import scoped_request
 from .work_inventory import WorkInventory
@@ -20,13 +20,13 @@ class ProjectContextService:
     project_root: Path
     workplace_root: Path
     core: Any
+    snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     def project_id(self) -> str:
         return str(self.core.project_id(self.project_root))
 
     def snapshot(self) -> dict[str, Any]:
-        snapshot_path, _snapshot_md = self.core.project_context_snapshot_paths(self.project_root)
-        return self.core.load_yaml_document(snapshot_path)
+        return load_snapshot(self.project_root, self.core, snapshots=self.snapshots)
 
     def check(self) -> dict[str, Any]:
         return self.core.project_context_check_result(self.project_root, explicit_workplace=str(self.workplace_root))
@@ -327,9 +327,14 @@ class DerivedReportLifecycleService:
         return {"status": aggregate, "snapshot_generated_at": snapshot_time, "reports": reports}
 
 
-def load_snapshot(project_root: Path, core: Any) -> dict[str, Any]:
-    snapshot_path, _snapshot_md = core.project_context_snapshot_paths(project_root)
-    return core.load_yaml_document(snapshot_path)
+def load_snapshot(
+    project_root: Path, core: Any, *, snapshots: ProjectSnapshotReadPort | None = None,
+) -> dict[str, Any]:
+    if snapshots is None:
+        from .composition import build_project_context_snapshot_read_service
+
+        snapshots = build_project_context_snapshot_read_service(project_root, core)
+    return snapshots.load()
 
 
 def snapshot_with_resolved_search_roots(project_root: Path, snapshot: dict[str, Any], workplace_root: Path, core: Any) -> dict[str, Any]:

@@ -35,6 +35,8 @@
 
 `ProcessExecutionService.state()` сохраняет точный выбор Work, проверки контекста и pins, evidence/outcomes и готовность полномочий. `WorkStatePolicy` отдельно вычисляет требования завершения и action/blockers по переданным записям. Она не читает файлы, не меняет записи, не выбирает caller identity и не переводит процесс. Приоритеты конечного состояния, завершения, блокировки и незавершённости прежние; execution_readiness остаётся отдельным полем ответа.
 
+`ProjectContextService` также принимает keyword-only зависимость `snapshots`. Его чтение снимка и совместимый двухаргументный Garage helper `load_snapshot` переиспользуют существующий reader через `build_project_context_snapshot_read_service`. Прежние resolver пути и YAML loader вызываются в исходном порядке при каждом стандартном чтении; ошибки неправильной пары путей и загрузки передаются без изменений. Сборка не делает I/O, а legacy чтение не требует checksum callback. Существующие MCP потребители контекста используют `build_project_context_service` после session/project guards. Freshness checks, payload контекста, request scope и остальные legacy зависимости Garage остаются у прежних владельцев; композиция не даёт полномочий.
+
 ## Диагностика
 
 Чтение Work state использует существующие PF operation, validation span и ограниченные счётчики request/YAML. Для библиотечного вызова можно передать существующий `diagnostics.Logger` как observer либо использовать текущую operation. Без обоих действует no-op: диагностические файлы не создаются. При сборке сервис не захватывает текущий Logger или Work.
@@ -58,3 +60,5 @@ CLI/MCP сохраняют внешнюю диагностику и провер
 `tools/smoke_process_definition_read_composition.py` проверяет pin, форму данных, исключения, актуальность legacy resolver, подмену зависимости и сборку без ввода-вывода. Также проверяются state guard и изолированная структура пакета без CLI; `--baseline` сравнивает сохранённый исходный метод, `--scratch-root` ограничивает временные файлы. Это проверка исходников и fixture, а не приёмка установленного Core.
 
 `tools/smoke_project_snapshot_read_composition.py` проверяет подмену reader во всех четырёх местах чтения, отказ immutable capsule до загрузки, актуальность при одинаковых размере и mtime, checksum исходных байтов, переопределённые пути и хеширование, совместимость конструктора и сборку без CLI. `--baseline` сравнивает сохранённые исходные методы, включая исключения и порядок вызовов; `--scratch-root` ограничивает временные fixtures.
+
+`tools/smoke_garage_snapshot_read_composition.py` проверяет инъекцию reader Garage, актуальность путей, совместимость конструктора, context/runtime payload, порядок ошибок, изоляцию запросов и MCP композицию после ingress guards. Поддерживает сохранённые исходные методы через `--baseline` и ограничивает временные fixtures через `--scratch-root`.

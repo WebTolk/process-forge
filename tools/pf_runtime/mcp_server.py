@@ -77,8 +77,8 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
     core = runtime.core
     from pf_runtime import session_read
     from processforge_core.local_resource_search import LocalSearchError
-    from processforge_core.garage import ProjectContextService, ResourceResolveService, ResourceSearchService
-    from processforge_core.composition import build_process_execution_service
+    from processforge_core.garage import ResourceResolveService, ResourceSearchService
+    from processforge_core.composition import build_process_execution_service, build_project_context_service
     from processforge_core.process_execution import creation_scope_intent
     from processforge_core.work_context import ContextContractError
 
@@ -109,7 +109,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         return session_read.session_activity_payload(workplace, core, session_id=supplied_session, project_root_ref=project_root, limit=arguments.get("limit"))
     if name == "pf.context":
         bound_project = resolve_garage_project()
-        service = ProjectContextService(bound_project, workplace, core)
+        service = build_project_context_service(bound_project, workplace, core)
         context = service.context(session_id=supplied_session)
         snapshot = service.snapshot()
         knowledge = snapshot.get("knowledge_resources") if isinstance(snapshot.get("knowledge_resources"), dict) else {}
@@ -157,7 +157,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         return project_initialization.status(bound_project, core, workplace=str(workplace))
     if name == "pf.work_state":
         bound_project = resolve_garage_project()
-        context = ProjectContextService(bound_project, workplace, core).context(session_id=supplied_session)
+        context = build_project_context_service(bound_project, workplace, core).context(session_id=supplied_session)
         return {"project": context["project"], "work": context["work"], "context": context["context"], "session": context.get("session", {})}
     if name == "pf.work.state":
         bound_project = resolve_garage_project()
