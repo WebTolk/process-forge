@@ -8,13 +8,14 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any, Callable
 
 from .garage import CurrentWorkService
-from .ports import ProcessDefinitionReadPort, WorkContextReadPort, WorkReadCorePort, WorkRecordReadPort
+from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkReadCorePort, WorkRecordReadPort
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
     from .diagnostics import Logger
     from .process_execution import ProcessExecutionService
     from .process_definition_read import ProcessDefinitionReadService
+    from .project_snapshot_read import ProjectSnapshotReadService
     from .work_context_read import WorkContextReadService
 
 __all__ = ()
@@ -78,14 +79,32 @@ def build_process_definition_read_service(
     return ProcessDefinitionReadService(adapter.resolve_definition, fingerprint)
 
 
+@dataclass(frozen=True)
+class LegacyProjectSnapshotAdapter:
+    core: Any
+
+    def load_document(self, path: Path) -> dict[str, Any]:
+        return self.core.load_yaml_document(path)
+
+
+def build_project_snapshot_read_service(
+    core: Any, *, snapshot_path: Callable[[], Path], sha256_file: Callable[[Path], str],
+) -> ProjectSnapshotReadService:
+    from .project_snapshot_read import ProjectSnapshotReadService
+
+    adapter = LegacyProjectSnapshotAdapter(core)
+    return ProjectSnapshotReadService(snapshot_path, adapter.load_document, sha256_file)
+
+
 def build_process_execution_service(
     project_root: Path, workplace_root: Path | None, core: Any, *, observer: Logger | None = None,
     records: WorkRecordReadPort | None = None,
     context: WorkContextReadPort | None = None,
     definitions: ProcessDefinitionReadPort | None = None,
+    snapshots: ProjectSnapshotReadPort | None = None,
 ) -> ProcessExecutionService:
     from .process_execution import ProcessExecutionService
 
     if records is None:
         records = YamlWorkRecordReader(project_root, core)
-    return ProcessExecutionService(project_root, workplace_root, core, observer=observer, records=records, context=context, definitions=definitions)
+    return ProcessExecutionService(project_root, workplace_root, core, observer=observer, records=records, context=context, definitions=definitions, snapshots=snapshots)

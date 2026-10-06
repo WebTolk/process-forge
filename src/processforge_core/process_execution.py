@@ -16,7 +16,7 @@ from .work_state import WorkStatePolicy
 
 if TYPE_CHECKING:
     from .diagnostics import Logger
-    from .ports import ProcessDefinitionReadPort, WorkContextReadPort, WorkRecordReadPort
+    from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkRecordReadPort
 
 
 ACTIVE_RUN_STATUSES = {"draft", "open", "in_progress", "blocked", "review"}
@@ -219,6 +219,7 @@ class ProcessExecutionService:
     records: WorkRecordReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
     context: WorkContextReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
     definitions: ProcessDefinitionReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
+    snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     @scoped_request
     def start(self, *, objective: str, process_id: str = "", session_id: str = "", stage_override: str = "", security: dict | None = None, scope_intent: dict | None = None) -> dict[str, Any]:
@@ -418,7 +419,7 @@ class ProcessExecutionService:
                     return self._blocked("write_scope_overlap", conflicts=overlap["conflicts"])
                 # Preflight readiness before the immutable capsule is published.
                 from .work_context import build_context_fields
-                snapshot = self.core.load_yaml_document(self._flow_root() / "contexts" / "project-context.snapshot.yaml")
+                snapshot = self._snapshot_reader().load()
                 fields = build_context_fields(self.project_root, self._assignment_path(assignment_id), assignment,
                                               snapshot, self.core, workplace=self.workplace_root, pin=pin, run_record=run)
                 if fields["execution_contract"]["readiness"]["status"] != "ready":
@@ -905,9 +906,9 @@ class ProcessExecutionService:
 
     def _process_pin(self, process: dict[str, Any], source_path: Path, *, active_specializations: list[str], selected_resource_ids: list[str], allowed_processes: list[str]) -> dict[str, Any]:
         snapshot_path = self._flow_root() / "contexts" / "project-context.snapshot.yaml"
-        snapshot = self.core.load_yaml_document(snapshot_path)
+        snapshot = self._snapshot_reader().load(snapshot_path)
         meta = snapshot.get("snapshot") if isinstance(snapshot.get("snapshot"), dict) else {}
-        snapshot_checksum = "sha256:" + self._sha256_file(snapshot_path) if snapshot_path.is_file() else ""
+        snapshot_checksum = self._snapshot_reader().checksum(snapshot_path)
         normalized = json.loads(json.dumps(process, ensure_ascii=False))
         try:
             process_source = source_path.resolve().relative_to(self.project_root.resolve()).as_posix()
@@ -927,10 +928,20 @@ class ProcessExecutionService:
         }
 
     def _selected_resource_ids(self) -> list[str]:
-        snapshot = self.core.load_yaml_document(self._flow_root() / "contexts" / "project-context.snapshot.yaml")
+        snapshot = self._snapshot_reader().load()
         resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
         # Match the canonical order used by complete context capture.
         return sorted(_stable_ids(resolved.get("knowledge_resources")))
+
+    def _snapshot_reader(self) -> ProjectSnapshotReadPort:
+        if self.snapshots is not None:
+            return self.snapshots
+        from .composition import build_project_snapshot_read_service
+
+        return build_project_snapshot_read_service(
+            self.core, snapshot_path=lambda: self._flow_root() / "contexts" / "project-context.snapshot.yaml",
+            sha256_file=self._sha256_file,
+        )
 
     def _next_work_advisory(self, process: dict[str, Any], run: dict[str, Any]) -> dict[str, Any]:
         pin = run.get("process_execution") if isinstance(run.get("process_execution"), dict) else {}
@@ -1591,7 +1602,7 @@ class ProcessExecutionService:
         path = self._flow_root() / "contexts" / "assignment-capsules" / f"{assignment['id']}.capsule.yaml"
         if path.exists():
             raise ContextContractError("immutable_context_exists", remediation="create_successor_work")
-        snapshot = self.core.load_yaml_document(self._flow_root() / "contexts" / "project-context.snapshot.yaml")
+        snapshot = self._snapshot_reader().load()
         fields = build_context_fields(self.project_root, self._assignment_path(assignment["id"]), assignment,
                                       snapshot, self.core, workplace=self.workplace_root, pin=pin, run_record=run)
         capsule = {

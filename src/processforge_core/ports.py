@@ -8,6 +8,14 @@ from typing import Any, Iterator, Protocol
 __all__ = ()
 
 
+class ProjectSnapshotReadPort(Protocol):
+    """Live snapshot reads; not freshness, permissions or capture authority."""
+
+    def load(self, path: Path | None = None) -> dict[str, Any]: ...
+
+    def checksum(self, path: Path) -> str: ...
+
+
 class ProcessDefinitionReadPort(Protocol):
     """Effective definition and pin status; not selection or transition authority."""
 
