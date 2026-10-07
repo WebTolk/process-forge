@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from processforge_core.local_resource_search import build_index, search
+from processforge_core.resources.local_search import build_index, search
 
 
 def _resource(resource_id: str, root: Path, sources: list[dict[str, object]]) -> dict[str, object]:

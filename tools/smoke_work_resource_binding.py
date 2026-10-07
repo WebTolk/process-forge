@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from processforge_core.local_resource_search import authorized_coverage, build_index, index_status
+from processforge_core.resources.local_search import authorized_coverage, build_index, index_status
 from processforge_core.process_execution import ProcessExecutionService, canonical_fingerprint
 from processforge_core.work.resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, capture_material
 from processforge_core.work.resources import WorkResourceService

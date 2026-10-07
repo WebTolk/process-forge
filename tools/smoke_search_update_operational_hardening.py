@@ -17,7 +17,7 @@ for path in (SRC, TOOLS):
         sys.path.insert(0, str(path))
 
 import processforge
-from processforge_core.local_resource_search import index_path, index_status, maintenance_tick, search
+from processforge_core.resources.local_search import index_path, index_status, maintenance_tick, search
 
 
 def snapshot(knowledge: Path, template: Path) -> dict:

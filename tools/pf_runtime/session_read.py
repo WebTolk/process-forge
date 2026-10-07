@@ -137,7 +137,7 @@ def session_context_payload(
     search_projection = {"status": "unavailable", "generation": None, "stale": True}
     if str(context.get("status") or "") in {"fresh", "fresh_with_updates", "ok"}:
         try:
-            from processforge_core.local_resource_search import ResourceSearchIndex
+            from processforge_core.resources.local_search import ResourceSearchIndex
 
             # The shared Workplace index has no project-snapshot state.  The
             # snapshot remains an authorization filter for pf.search only.

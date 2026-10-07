@@ -11,7 +11,7 @@ from typing import Any
 
 import yaml
 
-from ..local_resource_search import LocalSearchError, pagination
+from ..resources.local_search import LocalSearchError, pagination
 from ..process_execution import SAFE_ID_RE, canonical_fingerprint
 from .resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, capture_material, metadata_descriptor
 

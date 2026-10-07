@@ -76,7 +76,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
     host = runtime.host
     core = runtime.core
     from pf_runtime import session_read
-    from processforge_core.local_resource_search import LocalSearchError
+    from processforge_core.resources.local_search import LocalSearchError
     from processforge_core.composition import build_process_execution_service, build_project_context_service, build_resource_search_service, build_resource_resolve_service
     from processforge_core.process_execution import creation_scope_intent
     from processforge_core.work.context import ContextContractError

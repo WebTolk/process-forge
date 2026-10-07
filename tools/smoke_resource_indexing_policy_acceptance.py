@@ -13,7 +13,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from processforge_core.local_resource_search import index_path, index_status, maintenance_tick, search
+from processforge_core.resources.local_search import index_path, index_status, maintenance_tick, search
 
 
 def fulltext_resource(resource_id: str, root: Path, *, title: str = "") -> dict:

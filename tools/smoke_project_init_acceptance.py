@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from processforge_core.local_resource_search import maintenance_tick, search
+from processforge_core.resources.local_search import maintenance_tick, search
 import processforge as core
 from pf_runtime.session_read import session_context_payload
 
@@ -86,7 +86,7 @@ def assert_fts_lifecycle(project: Path) -> None:
     assert search(project, current_snapshot, query="lifecycle")["search_status"] == "fresh"
     stale_snapshot = {**current_snapshot, "snapshot": {"id": "stale"}}
     assert search(project, stale_snapshot, query="lifecycle")["search_status"] == "stale"
-    with patch("processforge_core.local_resource_search.sqlite3.connect", side_effect=sqlite3.OperationalError("fixture unavailable")):
+    with patch("processforge_core.resources.local_search.sqlite3.connect", side_effect=sqlite3.OperationalError("fixture unavailable")):
         unavailable = search(project, stale_snapshot, query="lifecycle")
         assert unavailable["search_status"] == "degraded", unavailable
 

@@ -12,7 +12,7 @@ import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
-from ..local_resource_search import MAX_FILE_BYTES, POLICY_MODES, TEXT_SUFFIXES, normalize_indexing_policy
+from ..resources.local_search import MAX_FILE_BYTES, POLICY_MODES, TEXT_SUFFIXES, normalize_indexing_policy
 
 
 PREFIX = "sha256:"

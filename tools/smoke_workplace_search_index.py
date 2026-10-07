@@ -19,7 +19,7 @@ for entry in (ROOT / "src", ROOT / "tools"):
 
 import processforge as core
 from processforge_core.garage import ResourceResolveService
-from processforge_core.local_resource_search import search
+from processforge_core.resources.local_search import search
 
 
 def cli(*args: str) -> str:

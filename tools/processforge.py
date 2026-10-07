@@ -9501,7 +9501,7 @@ def mark_search_index_dirty_after_resource_event(workplace_root: Path, event: di
     if status in {"dry_run", "skipped", "passed", "failed"}:
         return
     try:
-        from processforge_core.local_resource_search import ResourceSearchIndex
+        from processforge_core.resources.local_search import ResourceSearchIndex
 
         ResourceSearchIndex(workplace_root, workplace_root=workplace_root).mark_dirty(reason=str(event.get("event_type") or "resource_event"))
     except Exception:
@@ -24009,7 +24009,7 @@ def search_index_maintenance_for_known_projects(
     call sites.  ``project_roots`` is intentionally ignored: selection is a
     query-time project-snapshot concern, never an index-maintenance concern.
     """
-    from processforge_core.local_resource_search import ResourceSearchIndex
+    from processforge_core.resources.local_search import ResourceSearchIndex
 
     del project_roots
     payload: dict[str, Any] = {
@@ -24106,7 +24106,7 @@ def print_search_index_status(payload: dict[str, Any]) -> None:
 
 
 def command_search_index_status(args: argparse.Namespace) -> int:
-    from processforge_core.local_resource_search import ResourceSearchIndex
+    from processforge_core.resources.local_search import ResourceSearchIndex
 
     workplace_root = Path(args.workplace).expanduser().resolve()
     snapshot = workplace_search_runtime_snapshot(workplace_root)
@@ -24116,7 +24116,7 @@ def command_search_index_status(args: argparse.Namespace) -> int:
 
 
 def command_search_index_refresh(args: argparse.Namespace) -> int:
-    from processforge_core.local_resource_search import ResourceSearchIndex
+    from processforge_core.resources.local_search import ResourceSearchIndex
 
     workplace_root = Path(args.workplace).expanduser().resolve()
     snapshot = workplace_search_runtime_snapshot(workplace_root)
@@ -24128,7 +24128,7 @@ def command_search_index_refresh(args: argparse.Namespace) -> int:
 
 
 def command_search_index_rebuild(args: argparse.Namespace) -> int:
-    from processforge_core.local_resource_search import ResourceSearchIndex
+    from processforge_core.resources.local_search import ResourceSearchIndex
 
     workplace_root = Path(args.workplace).expanduser().resolve()
     snapshot = workplace_search_runtime_snapshot(workplace_root)
@@ -24140,7 +24140,7 @@ def command_search_index_rebuild(args: argparse.Namespace) -> int:
 
 
 def command_search_index_doctor(args: argparse.Namespace) -> int:
-    from processforge_core.local_resource_search import ResourceSearchIndex
+    from processforge_core.resources.local_search import ResourceSearchIndex
 
     workplace_root = Path(args.workplace).expanduser().resolve()
     snapshot = workplace_search_runtime_snapshot(workplace_root)
@@ -24157,7 +24157,7 @@ def command_search_index_doctor(args: argparse.Namespace) -> int:
 
 
 def command_search_index_tick(args: argparse.Namespace) -> int:
-    from processforge_core.local_resource_search import ResourceSearchIndex
+    from processforge_core.resources.local_search import ResourceSearchIndex
 
     workplace_root = Path(args.workplace).expanduser().resolve()
     snapshot = workplace_search_runtime_snapshot(workplace_root)
