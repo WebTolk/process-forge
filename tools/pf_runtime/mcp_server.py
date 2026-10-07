@@ -150,7 +150,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         bound_project = resolve_garage_project()
         return host.project_state_payload(workplace, core, session=supplied_session, project_root_ref=str(bound_project))
     if name == "pf.project_initialization.status":
-        from processforge_core import project_initialization
+        from processforge_core.project import initialization as project_initialization
 
         bound_project = resolve_garage_project()
         return project_initialization.status(bound_project, core, workplace=str(workplace))
@@ -230,7 +230,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         if core.project_id(bound_project) != core.project_id(requested_project):
             raise session_read.SessionReadError("session_project_mismatch")
     if name in {"pf.project_initialization.initialize", "pf.project_initialization.repair"}:
-        from processforge_core import project_initialization
+        from processforge_core.project import initialization as project_initialization
 
         if arguments.get("apply") is not True:
             raise session_read.SessionReadError("apply_required")

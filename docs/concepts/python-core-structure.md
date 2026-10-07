@@ -80,6 +80,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/work/context_read.py` | Existing capsule validation and assignment normalization with explicit path/validator callbacks. |
 | `src/processforge_core/process_catalog/` | Catalog models/resolution, effective ProcessDefinition reads, offered process selection and pin construction through explicit callbacks. |
 | `src/processforge_core/project/snapshot.py` | Live ProjectContextSnapshot loading and raw-byte checksum through explicit path/loader/hash callbacks. |
+| `src/processforge_core/project/initialization.py` | Existing project onboarding, initialization status and deterministic repair, reusing guarded agent entry transactions. |
 | `src/processforge_core/ports.py` | Internal structural current-work, raw Work-record, context-read and process-definition dependencies. |
 | `src/processforge_core/composition.py` | Explicit service factories and narrow legacy read/context/definition adapters. |
 | `src/processforge_core/bootstrap.py` | Existing runtime module assembly and lazy access to the service factories. |

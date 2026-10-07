@@ -11,9 +11,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
-from .agent_entry.contract import EntryError
-from .agent_entry import migration as entry_migration
-from .host_integration import optional_host_integration_status
+from ..agent_entry.contract import EntryError
+from ..agent_entry import migration as entry_migration
+from ..host_integration import optional_host_integration_status
 
 
 @dataclass(frozen=True)

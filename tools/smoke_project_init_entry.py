@@ -17,7 +17,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 import processforge as core
-from processforge_core import project_initialization as initialization
+from processforge_core.project import initialization
 from processforge_core.agent_entry import migration
 from processforge_core.agent_entry.contract import BOM, block_span, load_contract
 

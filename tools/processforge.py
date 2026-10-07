@@ -62,7 +62,7 @@ from processforge_core.process_catalog import (
     resolve_process_definition as catalog_resolve_process_definition,
 )
 from processforge_core.process_execution import ProcessExecutionService, project_process_selection, project_specialization_selection
-from processforge_core import project_initialization
+from processforge_core.project import initialization as project_initialization
 from processforge_core import diagnostics
 from processforge_core.documents.reader import YamlDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
