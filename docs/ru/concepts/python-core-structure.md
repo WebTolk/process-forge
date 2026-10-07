@@ -13,7 +13,8 @@
 
 Существующие Work-модули перенесены в `processforge_core.work`: `context`,
 `context_read`, `inventory`, `records`, `resources`, `resource_material`,
-`selection`, `state`, `boundary_advisory`, `transition_commit`. Например,
+`selection`, `state`, `boundary_advisory`, `transition_commit`, `automation_readiness`,
+`transition_rejection`. Например,
 `WorkResourceService` импортируется из `processforge_core.work.resources`.
 Текущие потребители Core/CLI/MCP/Host переведены на эти пути. Старые плоские
 Work-импорты на текущем dev-этапе не сохраняются.
@@ -50,6 +51,15 @@ Work-импорты на текущем dev-этапе не сохраняютс
 актуальных данных сохраняются; допуск к работе и управление жизненным циклом
 остаются у координатора процесса.
 
+Проекции готовности автоматизации и правила восстанавливаемого отказа перехода
+размещены в `processforge_core.work.automation_readiness` и
+`processforge_core.work.transition_rejection`. Например, `AutomationReadinessService`
+импортируется из `processforge_core.work.automation_readiness`. Сборка, выполнение
+процесса и существующие проверки используют модули по их ответственности; старые
+плоские пути на текущем dev-этапе удаляются. Существующие классы целиком, неизменяемые
+зависимости и отложенная сборка сохранены. Защитные проверки жизненного цикла,
+блокировки, форматы ответов и восстановление остаются у прежних владельцев.
+
 ## Текущие Обязанности
 
 | Модуль | Обязанность |
@@ -59,6 +69,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/garage.py` | Сервисы проекта, контекста и чтения текущей работы, включая `CurrentWorkService`. |
 | `src/processforge_core/process_execution.py`, `continuation.py` | Управляемый lifecycle, выбор работы, pinned execution, evidence, завершение и восстановление. |
 | `src/processforge_core/work/state.py` | Чистые правила требований завершения и action/blockers состояния Work, без ввода-вывода и полномочий на переход. |
+| `src/processforge_core/work/automation_readiness.py`, `work/transition_rejection.py` | Прежние проекции готовности автоматизации, чтение актуальных событий Assignment и правила ответа при восстанавливаемом отказе перехода через явные зависимости. |
 | `src/processforge_core/document_store.py`, `work/inventory.py` | Чтение YAML и актуальный отсортированный обход без общего изменяемого кеша документов. |
 | `src/processforge_core/work/records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
 | `src/processforge_core/work/context_read.py` | Прежние проверки капсулы и нормализация Assignment с явно переданными функциями путей и проверки. |

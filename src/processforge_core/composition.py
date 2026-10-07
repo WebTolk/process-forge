@@ -18,14 +18,14 @@ if TYPE_CHECKING:
     from .completion.intent_builder import CompletionIntentBuilder
     from .completion.documents import CompletionDocumentService
     from .work.boundary_advisory import WorkBoundaryAdvisoryService
-    from .transition_rejection import TransitionRejectionPolicy
+    from .work.transition_rejection import TransitionRejectionPolicy
     from .completion.intent_validation import CompletionIntentValidationService
     from .completion.policy import RunCompletionPolicy
     from .process_catalog.pin import ProcessPinReadService
     from .process_catalog.selection import ProcessSelectionService, ResolvedDefinitionView
     from .work.selection import WorkSelectionService
     from .stage_readiness import StageReadinessPolicy
-    from .automation_readiness import AutomationReadinessService
+    from .work.automation_readiness import AutomationReadinessService
     from .evidence_validation import EvidenceValidationService
     from .garage import ProjectContextService
     from .garage import ResourceSearchService
@@ -203,7 +203,7 @@ def build_automation_readiness_service(
     event_paths: Callable[[Path], tuple[Path, Any]],
     latest_event: Callable[[str, set[str]], dict[str, Any] | None]
 ) -> AutomationReadinessService:
-    from .automation_readiness import AutomationReadinessService
+    from .work.automation_readiness import AutomationReadinessService
 
     return AutomationReadinessService(
         project_root=project_root, has_output_checks=has_output_checks, output_checks=output_checks, has_fingerprint=has_fingerprint, fingerprint=fingerprint, has_event_paths=has_event_paths, event_paths=event_paths, latest_event=latest_event
@@ -287,7 +287,7 @@ def build_completion_intent_validation_service(
 def build_transition_rejection_policy(
     *, state: Callable[..., dict[str, Any]]
 ) -> TransitionRejectionPolicy:
-    from .transition_rejection import TransitionRejectionPolicy
+    from .work.transition_rejection import TransitionRejectionPolicy
 
     return TransitionRejectionPolicy(
         state=state

@@ -12,7 +12,8 @@ requirement. Keep the package tree shallow and package initializers minimal.
 
 The existing Work modules now live in `processforge_core.work`: `context`,
 `context_read`, `inventory`, `records`, `resources`, `resource_material`,
-`selection`, `state`, `boundary_advisory` and `transition_commit`. For example,
+`selection`, `state`, `boundary_advisory`, `transition_commit`, `automation_readiness`
+and `transition_rejection`. For example,
 import `WorkResourceService` from `processforge_core.work.resources`. Current
 Core/CLI/MCP/Host consumers use these paths. Old flat Work module imports are not
 retained during this dev refactor.
@@ -45,6 +46,15 @@ module paths are removed during this dev refactor. The existing rules, explicit
 dependencies and live reads remain unchanged; admission and lifecycle authority
 remain in the process coordinator.
 
+Automation readiness projections and recoverable transition rejection rules live
+in `processforge_core.work.automation_readiness` and
+`processforge_core.work.transition_rejection`. For example, import
+`AutomationReadinessService` from `processforge_core.work.automation_readiness`.
+Composition, process execution and existing checks use the owning modules; old
+flat paths are removed during this dev refactor. The complete existing classes,
+frozen callback dependencies and lazy factories are unchanged. Lifecycle guards,
+locks, response formats and recovery retain their existing owners.
+
 ## Current Ownership
 
 | Module | Responsibility |
@@ -54,6 +64,7 @@ remain in the process coordinator.
 | `src/processforge_core/garage.py` | Project/context/read-model services, including `CurrentWorkService`. |
 | `src/processforge_core/process_execution.py`, `continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
 | `src/processforge_core/work/state.py` | I/O-free completion requirements and Work-state action/blocker policy; not lifecycle authority. |
+| `src/processforge_core/work/automation_readiness.py`, `work/transition_rejection.py` | Existing automation readiness projections, live assignment-event reads and recoverable transition rejection response rules through explicit callbacks. |
 | `src/processforge_core/document_store.py`, `work/inventory.py` | YAML reading and live sorted discovery; no shared mutable document cache. |
 | `src/processforge_core/work/records.py` | Live raw Run/Assignment reader; selection and recovery remain in the application service. |
 | `src/processforge_core/work/context_read.py` | Existing capsule validation and assignment normalization with explicit path/validator callbacks. |

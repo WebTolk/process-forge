@@ -22,13 +22,13 @@ if TYPE_CHECKING:
     from .completion.intent_builder import CompletionIntentBuilder
     from .completion.documents import CompletionDocumentService
     from .work.boundary_advisory import WorkBoundaryAdvisoryService
-    from .transition_rejection import TransitionRejectionPolicy
+    from .work.transition_rejection import TransitionRejectionPolicy
     from .completion.intent_validation import CompletionIntentValidationService
     from .completion.policy import RunCompletionPolicy
     from .process_catalog.pin import ProcessPinReadService
     from .process_catalog.selection import ProcessSelectionService
     from .work.selection import WorkSelectionService
-    from .automation_readiness import AutomationReadinessService
+    from .work.automation_readiness import AutomationReadinessService
     from .stage_readiness import StageReadinessPolicy
     from .evidence_validation import EvidenceValidationService
     from .diagnostics import Logger
@@ -866,7 +866,7 @@ class ProcessExecutionService:
 
     @staticmethod
     def _is_recoverable_transition_rejection(blocker: Any) -> bool:
-        from .transition_rejection import TransitionRejectionPolicy
+        from .work.transition_rejection import TransitionRejectionPolicy
 
         return TransitionRejectionPolicy.is_recoverable(blocker)
 

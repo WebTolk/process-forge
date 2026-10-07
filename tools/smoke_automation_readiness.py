@@ -77,7 +77,7 @@ def main():
         current=suite(module.ProcessExecutionService,root)
         if a.baseline:assert current==suite(retained(a.baseline),root)
         try:
-            from processforge_core.automation_readiness import AutomationReadinessService
+            from processforge_core.work.automation_readiness import AutomationReadinessService
         except ModuleNotFoundError:
             assert not a.baseline
         else:
