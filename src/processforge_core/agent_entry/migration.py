@@ -15,7 +15,7 @@ import uuid
 
 from processforge_platforms.file_security import FileReplacementError, native_file_security
 
-from .agent_entry import (Contract, EntryError, block_span, decode_json, digest, encoded,
+from .contract import (Contract, EntryError, block_span, decode_json, digest, encoded,
                           load_contract, project_content, text_bytes)
 
 
@@ -112,8 +112,8 @@ def read_file(root: Path, name: str, *, maximum: int = MAX_FILE, writable: bool 
         if hasattr(os, "listxattr") and "system.posix_acl_access" in os.listxattr(path, follow_symlinks=False):
             raise EntryError("unsupported_acl", name)
     if os.name == "nt":
-        from .egress.windows import read_source
-        from .egress.contracts import EgressError
+        from ..egress.windows import read_source
+        from ..egress.contracts import EgressError
         try:
             raw = read_source(path, maximum)
         except EgressError:
@@ -333,7 +333,7 @@ def plan_entry(project: Path, *, source: Path | None = None, budget_policy=None)
 
 
 def _start_plan(root: Path):
-    from .agent_start_prompt import load_start_source, project_start_content
+    from .start_prompt import load_start_source, project_start_content
     root = root_path(root)
     generated, source_digest, legacy = load_start_source()
     name = START_TARGETS[0]
@@ -359,7 +359,7 @@ def plan_start_prompt(project: Path) -> dict:
 
 
 def apply_start_prompt(project: Path, supplied: dict, *, apply: bool = False, _fault=None) -> dict:
-    from .agent_start_prompt import load_start_source
+    from .start_prompt import load_start_source
     return _apply_placement(project, supplied, apply=apply, targets=START_TARGETS, planner=_start_plan,
                             source_guard=lambda: load_start_source()[1], _fault=_fault)
 
@@ -375,8 +375,8 @@ def check_entry(project: Path, **kwargs) -> dict:
 def _directory(root: Path, name: str, *, private: bool = False):
     path = safe_path(root, name, writable=True)
     if private and os.name == "nt":
-        from .egress.windows import private_directory
-        from .egress.contracts import EgressError
+        from ..egress.windows import private_directory
+        from ..egress.contracts import EgressError
         try:
             private_directory(path)
         except EgressError:

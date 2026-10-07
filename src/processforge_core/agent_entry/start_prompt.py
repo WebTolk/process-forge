@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 import string
 
-from .agent_entry import BOM, EntryError, SOURCE_ROOT, decode_json, digest, text_bytes
+from .contract import BOM, EntryError, SOURCE_ROOT, decode_json, digest, text_bytes
 
 
 WORK_GUIDANCE = """## Governed Work

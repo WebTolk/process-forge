@@ -4,11 +4,17 @@ The canonical startup contract K is `templates/agent-entry-contract.md`.
 Its metadata fixes the contract version, SHA256 of UTF-8 LF bytes, the 4096-byte
 ceiling including markers, and reviewed legacy prefix hashes. Contract version,
 manifest schema version and Core release version are separate identities.
-`agent_entry.py` validates the source and renders the full K directly in root
+`processforge_core.agent_entry.contract` validates the source and renders the full K
+directly in root
 `AGENTS.md` and hidden `.pf/AGENTS.md`. The hidden form adds extended instructions.
 `templates/project-agents-template.md` is a checked derivative; an independently
 edited K there is an error. K changes require a new contract version and review
 of all eight clauses; a matching hash alone is not semantic review.
+
+The existing entry implementation lives in the `processforge_core.agent_entry`
+package: `contract`, `migration`, `profiles`, `adapters` and `start_prompt`.
+Internal imports use the owning modules; command names and document formats remain
+unchanged.
 
 ## Commands
 

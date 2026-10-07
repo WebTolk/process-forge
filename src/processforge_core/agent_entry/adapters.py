@@ -5,12 +5,12 @@ import os
 from pathlib import Path
 import re
 
-from .agent_entry import (BOM, EntryError, decode_json, digest, encoded,
+from .contract import (BOM, EntryError, decode_json, digest, encoded,
                           inspect_projection, load_contract, text_bytes)
-from .agent_entry_migration import (MAX_FILE, TARGETS, _apply_placement, budgets,
+from .migration import (MAX_FILE, TARGETS, _apply_placement, budgets,
                                     manifest, pending, policy_input, project_identity,
                                     read_file, root_path, safe_path)
-from .agent_entry_profiles import adapter_spec, diagnose_entry
+from .profiles import adapter_spec, diagnose_entry
 
 
 def project_adapter_content(before: bytes | None, spec: dict) -> tuple[bytes, str]:

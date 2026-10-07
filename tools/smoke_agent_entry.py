@@ -20,8 +20,8 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from processforge_core.agent_entry import (BOM, EntryError, block_span, decode_json, digest, encoded, load_contract)
-from processforge_core.agent_entry_migration import (TARGETS, JOURNALS, apply_entry, check_entry,
+from processforge_core.agent_entry.contract import (BOM, EntryError, block_span, decode_json, digest, encoded, load_contract)
+from processforge_core.agent_entry.migration import (TARGETS, JOURNALS, apply_entry, check_entry,
     entry_lock, manifest, measure, pending, plan_entry, rollback_entry, security)
 
 
@@ -424,7 +424,7 @@ def windows_acl_checks(base):
         return
     import ctypes
     from ctypes import wintypes as w
-    import processforge_core.agent_entry_migration as migration
+    import processforge_core.agent_entry.migration as migration
     from processforge_core.egress.windows import current_sid, verify_private
     from processforge_platforms.file_security import native_file_security
 

@@ -21,10 +21,18 @@ Bootstrap/composition/shared seams and remaining legacy modules are still at the
 root; other responsibility groups move in subsequent bounded work. The structure
 uses ordinary Python packages, with no import compatibility layer or new loader.
 
+The agent instruction entry modules live in `processforge_core.agent_entry`:
+`contract`, `migration`, `profiles`, `adapters` and `start_prompt`. For example, import
+`load_contract` from `processforge_core.agent_entry.contract`. Project initialization,
+CLI and existing checks use canonical imports; old flat entry-module imports are
+removed during this dev refactor. The package groups existing implementations and
+preserves instruction formats, command behavior and transaction guards.
+
 ## Current Ownership
 
 | Module | Responsibility |
 | --- | --- |
+| `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/garage.py` | Project/context/read-model services, including `CurrentWorkService`. |
 | `src/processforge_core/process_execution.py`, `continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
 | `src/processforge_core/work/state.py` | I/O-free completion requirements and Work-state action/blocker policy; not lifecycle authority. |

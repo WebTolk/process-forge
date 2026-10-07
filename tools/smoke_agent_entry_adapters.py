@@ -12,10 +12,10 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from processforge_core.agent_entry import BOM, EntryError, digest, encoded, load_contract
-from processforge_core.agent_entry_adapters import adapter_guide, apply_adapter, plan_adapter
-from processforge_core.agent_entry_migration import manifest, pending, rollback_entry
-from processforge_core.agent_entry_profiles import adapter_spec, load_profiles
+from processforge_core.agent_entry.contract import BOM, EntryError, digest, encoded, load_contract
+from processforge_core.agent_entry.adapters import adapter_guide, apply_adapter, plan_adapter
+from processforge_core.agent_entry.migration import manifest, pending, rollback_entry
+from processforge_core.agent_entry.profiles import adapter_spec, load_profiles
 
 spec = importlib.util.spec_from_file_location("schema_check", ROOT / "tools/validate-process-forge-schemas.py")
 validator = importlib.util.module_from_spec(spec)

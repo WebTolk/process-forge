@@ -18,8 +18,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 import processforge as core
 from processforge_core import project_initialization as initialization
-from processforge_core import agent_entry_migration as migration
-from processforge_core.agent_entry import BOM, block_span, load_contract
+from processforge_core.agent_entry import migration
+from processforge_core.agent_entry.contract import BOM, block_span, load_contract
 
 
 LEGACY_PREFIX = """# ProcessForge Project Instructions

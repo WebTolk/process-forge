@@ -13,7 +13,7 @@ import re
 
 
 MAX_CONTRACT_BYTES = 4096
-SOURCE_ROOT = Path(__file__).resolve().parents[2]
+SOURCE_ROOT = Path(__file__).resolve().parents[3]
 BOM = b"\xef\xbb\xbf"
 VERSION = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+\Z")
 HASH = re.compile(r"[0-9a-f]{64}\Z")

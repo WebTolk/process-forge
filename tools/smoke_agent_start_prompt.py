@@ -13,9 +13,9 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 import processforge as core
-from processforge_core import agent_entry_migration as migration
-from processforge_core import agent_start_prompt as startup
-from processforge_core.agent_entry import BOM, EntryError, digest, encoded
+from processforge_core.agent_entry import migration
+from processforge_core.agent_entry import start_prompt as startup
+from processforge_core.agent_entry.contract import BOM, EntryError, digest, encoded
 
 
 def tree(root):

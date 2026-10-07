@@ -5376,8 +5376,8 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
         },
     }
 
-    from processforge_core.agent_entry import encoded, load_contract
-    from processforge_core.agent_entry_migration import manifest as entry_manifest
+    from processforge_core.agent_entry.contract import encoded, load_contract
+    from processforge_core.agent_entry.migration import manifest as entry_manifest
 
     entry_contract = load_contract()
     agents = entry_contract.render(extended=True).decode("utf-8")
@@ -5982,7 +5982,7 @@ diagnostic output.
 
 def execute_project_initialization(request: dict[str, Any], files: dict[Path, str]) -> dict[str, Any]:
     """CLI writer adapter used only by project_initialization.initialize_project()."""
-    from processforge_core.agent_entry_migration import TARGETS as entry_targets
+    from processforge_core.agent_entry.migration import TARGETS as entry_targets
 
     project_root = request["project_root"]
     entry_plan = request.get("agent_entry_plan")
@@ -6080,7 +6080,7 @@ def _project_initialization_error(exc: project_initialization.ProjectInitializat
 
 
 def project_entry_budget_input(args: argparse.Namespace) -> Any:
-    from processforge_core.agent_entry import EntryError, decode_json
+    from processforge_core.agent_entry.contract import EntryError, decode_json
 
     name = getattr(args, "entry_budget_file", None)
     if not name:
@@ -6166,27 +6166,27 @@ def gitignore_effectively_protects(project_root: Path, entry: str) -> bool | Non
 
 
 def default_start_agent_here(project_root: Path) -> str:
-    from processforge_core.agent_start_prompt import render_start_prompt
+    from processforge_core.agent_entry.start_prompt import render_start_prompt
     return render_start_prompt()
 
 
 def start_agent_run_block(project_root: Path) -> str:
     """Compatibility helper: no discovery or selection of diagnostic Runs."""
-    from processforge_core.agent_start_prompt import WORK_GUIDANCE
+    from processforge_core.agent_entry.start_prompt import WORK_GUIDANCE
     return WORK_GUIDANCE
 
 
 def refresh_start_agent_run_block(project_root: Path, text: str) -> str:
     """Pure recognized-content refresh; customized text is never spliced away."""
-    from processforge_core.agent_start_prompt import load_start_source, project_start_content
+    from processforge_core.agent_entry.start_prompt import load_start_source, project_start_content
     generated, _source_digest, legacy = load_start_source()
     raw, _action = project_start_content(text.encode("utf-8"), generated, legacy)
     return raw.decode("utf-8")
 
 
 def command_agent_start_prompt(args: argparse.Namespace) -> int:
-    from processforge_core.agent_entry import EntryError
-    from processforge_core.agent_entry_migration import plan_start_prompt, apply_start_prompt
+    from processforge_core.agent_entry.contract import EntryError
+    from processforge_core.agent_entry.migration import plan_start_prompt, apply_start_prompt
     project_root = Path(args.project_root).expanduser().absolute()
     flow_root = require_flow_root(project_root)
     if not getattr(args, "plan", False) and not getattr(args, "apply", False):
@@ -6512,7 +6512,7 @@ def release_required_path_exists(root: Path, archive_path: str) -> bool:
 
 def release_agent_entry_checks(root: Path) -> list[Check]:
     """Verify explicit source projections; packaging never generates instructions."""
-    from processforge_core.agent_entry import EntryError, block_span, load_contract
+    from processforge_core.agent_entry.contract import EntryError, block_span, load_contract
 
     try:
         contract = load_contract(root)
@@ -20671,10 +20671,10 @@ def print_process_execution_result(payload: dict[str, Any], *, as_json: bool = F
 
 
 def command_agent_entry(args: argparse.Namespace) -> int:
-    from processforge_core.agent_entry import EntryError, decode_json
-    from processforge_core.agent_entry_migration import apply_entry, check_entry, plan_entry, rollback_entry
-    from processforge_core.agent_entry_profiles import diagnose_entry, load_profiles
-    from processforge_core.agent_entry_adapters import adapter_guide, apply_adapter, plan_adapter
+    from processforge_core.agent_entry.contract import EntryError, decode_json
+    from processforge_core.agent_entry.migration import apply_entry, check_entry, plan_entry, rollback_entry
+    from processforge_core.agent_entry.profiles import diagnose_entry, load_profiles
+    from processforge_core.agent_entry.adapters import adapter_guide, apply_adapter, plan_adapter
 
     def input_json(name: str, maximum: int):
         with Path(name).expanduser().open("rb") as stream:

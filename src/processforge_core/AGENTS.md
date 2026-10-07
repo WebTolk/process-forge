@@ -9,9 +9,10 @@ govern access and execution.
 - Put new domain and application implementation modules in the package that owns
   their responsibility. Do not add more subject-prefixed implementation files to
   the Core root.
-- Reuse the existing `work`, `configuration`, `process_catalog`, `egress` and
-  `common` packages where their actual ownership fits. Create another package only
-  for a coherent responsibility identified in the current architecture work.
+- Reuse the existing `work`, `agent_entry`, `configuration`, `process_catalog`,
+  `egress` and `common` packages where their actual ownership fits. Create another
+  package only for a coherent responsibility identified in the current architecture
+  work.
 - Keep the tree shallow. A package groups related modules; it is not a directory
   per class. Keep related errors, values and small helpers with their service when
   that makes the module cohesive.

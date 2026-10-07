@@ -4,9 +4,9 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
-from .agent_entry import (EntryError, SOURCE_ROOT, decode_json, digest,
+from .contract import (EntryError, SOURCE_ROOT, decode_json, digest,
                           inspect_projection, load_contract, text_bytes)
-from .agent_entry_migration import manifest, measure, read_file, root_path, safe_path
+from .migration import manifest, measure, read_file, root_path, safe_path
 
 
 PROFILE_FIELDS = {"id", "version", "surface", "route", "client_revision", "selector", "unit", "scope",
