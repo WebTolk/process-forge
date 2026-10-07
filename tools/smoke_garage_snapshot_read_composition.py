@@ -20,7 +20,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 from processforge_core import composition, garage, request_scope
-from processforge_core.project_snapshot_read import ProjectSnapshotReadService
+from processforge_core.project.snapshot import ProjectSnapshotReadService
 
 BASELINE = None
 SCRATCH = None

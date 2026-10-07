@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from .diagnostics import Logger
     from .process_execution import ProcessExecutionService
     from .process_catalog.definition_read import ProcessDefinitionReadService
-    from .project_snapshot_read import ProjectSnapshotReadService
+    from .project.snapshot import ProjectSnapshotReadService
     from .work.context_read import WorkContextReadService
 
 __all__ = ()
@@ -109,7 +109,7 @@ class LegacyProjectSnapshotAdapter:
 def build_project_snapshot_read_service(
     core: Any, *, snapshot_path: Callable[[], Path], sha256_file: Callable[[Path], str],
 ) -> ProjectSnapshotReadService:
-    from .project_snapshot_read import ProjectSnapshotReadService
+    from .project.snapshot import ProjectSnapshotReadService
 
     adapter = LegacyProjectSnapshotAdapter(core)
     return ProjectSnapshotReadService(snapshot_path, adapter.load_document, sha256_file)

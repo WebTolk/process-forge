@@ -26,7 +26,7 @@ from processforge_core import process_execution as execution
 from processforge_core.bootstrap import RuntimeBootstrap
 from processforge_core.composition import build_process_execution_service, build_project_snapshot_read_service
 from processforge_core.process_execution import ProcessExecutionService
-from processforge_core.project_snapshot_read import ProjectSnapshotReadService
+from processforge_core.project.snapshot import ProjectSnapshotReadService
 from processforge_core.work.context import ContextContractError
 
 BASELINE = None
@@ -199,7 +199,7 @@ class SnapshotTests(unittest.TestCase):
 import sys
 from pathlib import Path
 from processforge_core.composition import build_process_execution_service
-from processforge_core.project_snapshot_read import ProjectSnapshotReadService
+from processforge_core.project.snapshot import ProjectSnapshotReadService
 reader = ProjectSnapshotReadService(lambda: Path('unused'), lambda p: {'resolved': {'knowledge_resources': ['b', 'a']}}, lambda p: 'hash')
 service = build_process_execution_service(Path('p'), None, object(), snapshots=reader)
 assert service._selected_resource_ids() == ['a', 'b']
