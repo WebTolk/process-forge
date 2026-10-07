@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .completion_intent_builder import CompletionIntentBuilder
     from .completion_documents import CompletionDocumentService
     from .work_boundary_advisory import WorkBoundaryAdvisoryService
     from .transition_rejection import TransitionRejectionPolicy
@@ -1087,6 +1088,13 @@ class ProcessExecutionService:
     def _completion_intent_path(self, run_id: str) -> Path:
         return self._run_path(run_id).parent / "completion-intent.yaml"
 
+    def _completion_intent_builder(self) -> CompletionIntentBuilder:
+        from .composition import build_completion_intent_builder
+
+        return build_completion_intent_builder(
+            project_root=self.project_root, accumulated_evidence=lambda assignment: self._accumulated_evidence(assignment), set_task_status=lambda run, assignment_id, status: self._set_run_task_status(run, assignment_id, status), run_path=lambda run_id: self._run_path(run_id), assignment_path=lambda assignment_id: self._assignment_path(assignment_id), flow_root=lambda: self._flow_root(), summary=lambda run, assignment: self._render_summary(run, assignment), has_task_index=lambda: hasattr(self.core, 'render_task_index'), task_index=lambda root, run: self.core.render_task_index(root, run), rel=lambda path, root: self.core.rel(path, root), intent_path=lambda run_id: self._completion_intent_path(run_id), project_id=lambda root: self.core.project_id(root), fingerprint=canonical_fingerprint
+        )
+
     def _build_completion_intent(
         self,
         run: dict[str, Any],
@@ -1097,104 +1105,7 @@ class ProcessExecutionService:
         notes: str,
         completed_at: str,
     ) -> dict[str, Any]:
-        """Build every terminal payload before the first terminal write.
-
-        The journal is deliberately self-contained.  A retry therefore does
-        not re-run evidence selection, call ``now_utc`` again, or infer a new
-        outcome from partially written records.
-        """
-        run_id = str(run["id"])
-        assignment_id = str(assignment["id"])
-        final_assignment = copy.deepcopy(assignment)
-        final_assignment["stage_status"] = "completed"
-        final_assignment["status"] = "done"
-        final_assignment["updated_at"] = completed_at
-        artifacts = [
-            str(item.get("path"))
-            for item in self._accumulated_evidence(final_assignment)
-            if isinstance(item, dict) and item.get("path")
-        ]
-        final_assignment["result"] = {
-            "status": "done",
-            "summary": str(notes or f"Completed declarative process with outcome {outcome}."),
-            "artifacts": sorted(set(artifacts)),
-        }
-
-        final_run = copy.deepcopy(run)
-        self._set_run_task_status(final_run, assignment_id, "done")
-        final_run["status"] = "completed"
-        final_run["updated_at"] = completed_at
-        summary_path = self._run_path(run_id).parent / "summary.md"
-        handoff_path = self._flow_root() / "handoffs" / "runs" / f"{run_id}-handoff.md"
-        task_index_path = self._run_path(run_id).parent / "task-index.md"
-        projection_path = self._flow_root() / "artifacts" / "projections" / "process-execution-state.json"
-        summary = self._render_summary(final_run, final_assignment)
-        handoff = f"# Run Handoff: {run_id}\n\nStatus: `completed`\n\nSummary: `{self.core.rel(summary_path, self.project_root)}`\n"
-        final_run["final_artifacts"] = [self.core.rel(summary_path, self.project_root), self.core.rel(handoff_path, self.project_root)]
-        emitted = final_run.setdefault("events", {}).setdefault("emitted", []) if isinstance(final_run.setdefault("events", {}), dict) else []
-        for event_type in ["process.stage.completed", "process.stage.transitioned", "task.completed", "assignment.completed", "run.completed", "run.summary.created"]:
-            if isinstance(emitted, list) and event_type not in emitted:
-                emitted.append(event_type)
-        if hasattr(self.core, "render_task_index"):
-            task_index = self.core.render_task_index(self.project_root, final_run)
-        else:
-            lines = [f"# Task Index: {run_id}", ""]
-            lines.extend(f"- `{item.get('id')}`: `{item.get('status')}`" for item in final_run.get("tasks", []) if isinstance(item, dict))
-            task_index = "\n".join(lines) + "\n"
-
-        stage_id = str(assignment.get("stage") or "")
-        intent_seed = f"{run_id}:{assignment_id}:{completed_at}:{outcome}"
-        intent_id = "completion-" + hashlib.sha256(intent_seed.encode("utf-8")).hexdigest()[:32]
-        event_specs = []
-        for event_type, event_stage in [
-            ("process.stage.completed", stage_id),
-            ("process.stage.transitioned", stage_id),
-            ("task.completed", stage_id),
-            ("assignment.completed", stage_id),
-            ("run.completed", stage_id),
-            ("run.summary.created", stage_id),
-        ]:
-            event_specs.append(
-                {
-                    "event_type": event_type,
-                    "event_id": "evt_" + hashlib.sha256(f"{intent_id}:{event_type}".encode("utf-8")).hexdigest()[:32],
-                    "stage_id": event_stage,
-                    "previous_stage_id": stage_id,
-                    "next_stage_id": "",
-                    "outcome": outcome,
-                }
-            )
-        pin = final_run.get("process_execution") if isinstance(final_run.get("process_execution"), dict) else {}
-        expected_run_path = self.core.rel(self._run_path(run_id), self.project_root)
-        expected_assignment_path = self.core.rel(self._assignment_path(assignment_id), self.project_root)
-        expected_journal_path = self.core.rel(self._completion_intent_path(run_id), self.project_root)
-        intent = {
-            "schema_version": 1,
-            "kind": "pf.process.completion-intent",
-            "intent_id": intent_id,
-            "created_at": completed_at,
-            "completed_at": completed_at,
-            "run_id": run_id,
-            "assignment_id": assignment_id,
-            "journal_path": expected_journal_path,
-            "owner": {
-                "project_id": self.core.project_id(self.project_root),
-                "run_path": expected_run_path,
-                "assignment_path": expected_assignment_path,
-            },
-            "process_execution": copy.deepcopy(pin),
-            "final": {
-                "run": final_run,
-                "assignment": final_assignment,
-                "summary": {"path": self.core.rel(summary_path, self.project_root), "content": summary},
-                "handoff": {"path": self.core.rel(handoff_path, self.project_root), "content": handoff},
-                "task_index": {"path": self.core.rel(task_index_path, self.project_root), "content": task_index},
-                "projection": {"path": self.core.rel(projection_path, self.project_root)},
-                "events": event_specs,
-            },
-        }
-        intent["fingerprint"] = canonical_fingerprint(intent)
-        return intent
+        return self._completion_intent_builder().build(run, assignment, process, outcome=outcome, notes=notes, completed_at=completed_at)
 
     def _load_completion_intent(self, run: dict[str, Any], assignment: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
         run_id = str(run.get("id") or "")

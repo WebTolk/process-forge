@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .completion_intent_builder import CompletionIntentBuilder
     from .completion_documents import CompletionDocumentService
     from .work_boundary_advisory import WorkBoundaryAdvisoryService
     from .transition_rejection import TransitionRejectionPolicy
@@ -313,4 +314,26 @@ def build_completion_document_service(
 
     return CompletionDocumentService(
         project_root=project_root, run_path=run_path, has_task_index=has_task_index, task_index=task_index, atomic_text=atomic_text
+    )
+
+
+def build_completion_intent_builder(
+    *, project_root: Path,
+    accumulated_evidence: Callable[[dict[str, Any]], list[dict[str, Any]]],
+    set_task_status: Callable[[dict[str, Any], str, str], Any],
+    run_path: Callable[[str], Path],
+    assignment_path: Callable[[str], Path],
+    flow_root: Callable[[], Path],
+    summary: Callable[[dict[str, Any], dict[str, Any]], str],
+    has_task_index: Callable[[], bool],
+    task_index: Callable[[Path, dict[str, Any]], str],
+    rel: Callable[[Path, Path], str],
+    intent_path: Callable[[str], Path],
+    project_id: Callable[[Path], Any],
+    fingerprint: Callable[[Any], str]
+) -> CompletionIntentBuilder:
+    from .completion_intent_builder import CompletionIntentBuilder
+
+    return CompletionIntentBuilder(
+        project_root=project_root, accumulated_evidence=accumulated_evidence, set_task_status=set_task_status, run_path=run_path, assignment_path=assignment_path, flow_root=flow_root, summary=summary, has_task_index=has_task_index, task_index=task_index, rel=rel, intent_path=intent_path, project_id=project_id, fingerprint=fingerprint
     )
