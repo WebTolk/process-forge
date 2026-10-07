@@ -11,7 +11,7 @@ from typing import Any
 
 import yaml
 
-from .prepared_input import bounded_read, local_file
+from .prepared.input import bounded_read, local_file
 from .process_execution import (ACTIVE_ASSIGNMENT_STATUSES, ACTIVE_RUN_STATUSES,
                                 SAFE_ID_RE, ProcessExecutionService, canonical_fingerprint)
 from .work.context import scope_allows, validate_execution_contract

@@ -14,15 +14,15 @@ from typing import Any
 
 import yaml
 
-from .garage import load_snapshot
-from .work.resource_material import (
+from ..garage import load_snapshot
+from ..work.resource_material import (
     DEFAULT_LIMITS,
     MaterialBudget,
     MaterialError,
     capture_material,
     metadata_descriptor,
 )
-from .work.resources import WorkResourceError, _root, grant_rows, portable_reference
+from ..work.resources import WorkResourceError, _root, grant_rows, portable_reference
 
 
 MAX_SNAPSHOT_BYTES = 2 * 1024 * 1024
@@ -233,7 +233,7 @@ def _authorize_knowledge(project: Path, workplace: Path, requested: list[Any], c
 
 
 def _fingerprint(value: Any) -> str:
-    from .work.resource_material import canonical_fingerprint
+    from ..work.resource_material import canonical_fingerprint
 
     return canonical_fingerprint(value)
 

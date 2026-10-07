@@ -9906,7 +9906,7 @@ def workspace_ref_matches_resource(resource: dict[str, Any], requested: Any) -> 
 
 
 def workspace_access_runtime_document(project_root: Path, task: dict[str, Any]) -> dict[str, Any]:
-    from processforge_core.prepared_resources import authorize_resources
+    from processforge_core.prepared.resources import authorize_resources
     from processforge_core.work.context import validate_execution_contract
     task_id = safe_id(str(task.get("id") or "task"), "task")
     capsule = load_yaml_document(assignment_capsule_path(project_root, task_id))
@@ -9921,7 +9921,7 @@ def workspace_access_runtime_document(project_root: Path, task: dict[str, Any]) 
 
 
 def write_workspace_access_runtime_file(project_root: Path, task: dict[str, Any]) -> Path:
-    from processforge_core.prepared_input import private_file
+    from processforge_core.prepared.input import private_file
     run_id = safe_id(str(task.get("run_id") or "run"), "run")
     task_id = safe_id(str(task.get("id") or "task"), "task")
     paths = worker_run_paths(project_root, run_id, task_id)
@@ -18555,7 +18555,7 @@ DETACHED_WORKER_PROCESSES: dict[tuple[str, str, str], subprocess.Popen[bytes]] =
 
 @contextlib.contextmanager
 def worker_run_lifecycle_lock(project_root: Path, run_id: str, task_id: str) -> Any:
-    from processforge_core.prepared_input import private_file
+    from processforge_core.prepared.input import private_file
     root = agent_run_root(project_root, run_id, task_id)
     try:
         for path in worker_run_paths(project_root, run_id, task_id).values():
@@ -19035,7 +19035,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
         attempt = max(1, int(previous_state.get("attempt") or 0) + 1)
     except (TypeError, ValueError):
         attempt = 1
-    from processforge_core import prepared_input
+    import processforge_core.prepared.input as prepared_input
     # A failed prepare may have left a manifest but no ready state. Never
     # overwrite it or reuse its identity on the next deliberate attempt.
     attempt_root = paths["root"] / "attempts"
@@ -19144,7 +19144,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
             task, driver, paths = prepare_worker_run(project_root, task_id, getattr(args, "driver", None), getattr(args, "executable", None), getattr(args, "model", None), getattr(args, "reasoning_effort", None))
         run_id = safe_id(str(task.get("run_id") or "run"), "run")
         command = json_read(paths["command"])
-        from processforge_core import prepared_input
+        import processforge_core.prepared.input as prepared_input
         try:
             prepared_input.load(project_root, task, command, sys.modules[__name__])
         except (OSError, ValueError, RuntimeError) as exc:
@@ -19306,7 +19306,7 @@ def _collect_worker_run_locked(project_root: Path, task: dict[str, Any]) -> int:
         write_agent_run_state(project_root, task, driver, "failed", failure_reason="; ".join(reasons), paths=paths)
         print("FAIL: " + "; ".join(reasons))
         return 1
-    from processforge_core import prepared_input
+    import processforge_core.prepared.input as prepared_input
     try:
         report_raw = prepared_input.bounded_read(report_path, 2 * 1024 * 1024)
         report_content = report_raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")

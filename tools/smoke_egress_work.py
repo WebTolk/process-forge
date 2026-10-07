@@ -20,7 +20,7 @@ import process_execution_smoke_support as support
 import prepared_executor
 from processforge_core.egress.contracts import EgressError, binding_for, digest, encoded, require_v2
 from processforge_core.egress.service import work_session
-from processforge_core.prepared_input import semantic_input
+from processforge_core.prepared.input import semantic_input
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.work.context import validate_execution_contract
 from processforge_core.work.resource_material import MaterialError, _resolve_source

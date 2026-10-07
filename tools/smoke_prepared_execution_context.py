@@ -286,7 +286,7 @@ def main() -> int:
         run_before = run_path.read_bytes()
 
         # A failed atomic publication must leave no partial receipt behind.
-        import processforge_core.prepared_input as prepared_module
+        import processforge_core.prepared.input as prepared_module
         original_link = prepared_module.os.link
         prepared_module.os.link = lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("injected link failure"))
         try:

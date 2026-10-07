@@ -101,7 +101,7 @@ def creation_scope_intent(value: Any) -> dict[str, Any]:
 def scope_handoff_predecessor(project: Path, metadata: dict[str, Any], core: Any) -> str:
     """Recognize only the exact immutable predecessor of an explicit local handoff."""
     import yaml
-    from .prepared_input import bounded_read
+    from .prepared.input import bounded_read
     from .work.context import ContextContractError, portable_path
     coordination = metadata.get("coordination_requirements") or {}
     if not isinstance(coordination, dict):
@@ -253,7 +253,7 @@ class ProcessExecutionService:
                 scope_intent = creation_scope_intent(scope_intent)
                 prior = scope_intent.get("predecessor")
                 if prior:
-                    from .prepared_input import bounded_read
+                    from .prepared.input import bounded_read
                     prior_path = self.core.assignment_capsule_path(self.project_root, prior["assignment_id"])
                     raw = bounded_read(prior_path)
                     identity = yaml.safe_load(raw.decode("utf-8-sig"))["execution_contract"]["identity"]
@@ -263,7 +263,7 @@ class ProcessExecutionService:
                             or identity.get("assignment_id") != prior["assignment_id"]):
                         return self._blocked("predecessor_changed")
                 if scope_intent.get("predecessor_handoff"):
-                    from .prepared_input import bounded_read
+                    from .prepared.input import bounded_read
                     handoff = self.project_root / scope_intent["predecessor_handoff"]
                     bounded_read(handoff)
             except ContextContractError as exc:
@@ -277,7 +277,7 @@ class ProcessExecutionService:
                 predecessor = security.get("predecessor")
                 if predecessor:
                     previous_path = self.core.assignment_capsule_path(self.project_root, predecessor["assignment_id"])
-                    from .prepared_input import bounded_read
+                    from .prepared.input import bounded_read
                     if digest(bounded_read(previous_path)) != predecessor["capsule_checksum"]:
                         return self._blocked("predecessor_changed")
             except (EgressError, OSError, ValueError):
@@ -490,7 +490,7 @@ class ProcessExecutionService:
         if intent.get("predecessor"):
             result.setdefault("coordination_requirements", {})["scope_predecessor"] = copy.deepcopy(intent["predecessor"])
         if intent.get("predecessor_handoff"):
-            from .prepared_input import bounded_read
+            from .prepared.input import bounded_read
             raw = bounded_read(self.project_root / intent["predecessor_handoff"])
             result.setdefault("coordination_requirements", {})["scope_handoff"] = {
                 "path": intent["predecessor_handoff"], "checksum": "sha256:" + hashlib.sha256(raw).hexdigest()}

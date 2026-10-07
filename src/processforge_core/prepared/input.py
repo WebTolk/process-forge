@@ -10,7 +10,7 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
-from .work.context import fingerprint, portable_path, scope_allows, stage_view, validate_execution_contract
+from ..work.context import fingerprint, portable_path, scope_allows, stage_view, validate_execution_contract
 
 MAX_BYTES = 4 * 1024 * 1024
 INLINE_FILE_BYTES = 64 * 1024
@@ -99,7 +99,7 @@ def output_records(project: Path, outputs: dict[str, Any], *, required: bool = F
 
 
 def semantic_input(project: Path, task: dict, capsule: dict, core: Any) -> dict:
-    from .prepared_resources import authorize_resources
+    from .resources import authorize_resources
 
     assignment = core.assignment_yaml_path(project, task["id"])
     run = core.load_run(project, task["run_id"])

@@ -10,9 +10,9 @@ import tempfile
 from unittest.mock import patch
 
 import processforge as core
-from processforge_core import prepared_input
+import processforge_core.prepared.input as prepared_input
 from process_execution_smoke_support import fixture
-from processforge_core.prepared_input import private_file
+from processforge_core.prepared.input import private_file
 from processforge_core.process_execution import ProcessExecutionService
 from smoke_garage_mode_not_promoted_by_session import call_mcp
 from smoke_prepared_execution_context import (
@@ -103,7 +103,7 @@ def abrupt_collection_recovery() -> None:
         child = '''import argparse,os,sys
 sys.path.insert(0,sys.argv[1])
 import processforge as core
-from processforge_core import prepared_input
+import processforge_core.prepared.input as prepared_input
 original=prepared_input.write_once
 def interrupted(path,document):
     if path.name=='collection-complete.json': os._exit(77)
