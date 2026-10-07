@@ -289,7 +289,21 @@ def scope_intent_tool_schema() -> dict[str, Any]:
                         "type": "array",
                         "items": {"type": "string", "enum": ["read", "write_artifact", "write_product"]},
                     },
-                    "execution_mode": {"type": "string", "minLength": 1},
+                    "execution_mode": {
+                        "oneOf": [
+                            {"type": "string", "minLength": 1},
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "kind": {"type": "string", "minLength": 1},
+                                    "code_changes_allowed": {"type": "boolean"},
+                                    "artifact_changes_allowed": {"type": "boolean"},
+                                    "requires_review": {"type": "boolean"},
+                                },
+                                "additionalProperties": True,
+                            },
+                        ],
+                    },
                     "required_sources": string_array,
                     "required_outputs": {
                         "type": "array",

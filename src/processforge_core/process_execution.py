@@ -64,7 +64,7 @@ def creation_scope_intent(value: Any) -> dict[str, Any]:
             raise ContextContractError("work_scope_invalid")
     if set(assignment.get("allowed_actions", [])) & set(assignment.get("forbidden_actions", [])):
         raise ContextContractError("work_scope_conflict")
-    if "execution_mode" in assignment and not isinstance(assignment["execution_mode"], str):
+    if "execution_mode" in assignment and not isinstance(assignment["execution_mode"], (str, dict)):
         raise ContextContractError("work_scope_invalid")
     for key, allowed in (("ownership", {"owner_id", "role", "writer"}),
                          ("expected_report", {"artifact", "language", "format"})):
@@ -484,6 +484,8 @@ class ProcessExecutionService:
     def _with_creation_scope(self, assignment: dict[str, Any], intent: dict[str, Any]) -> dict[str, Any]:
         result = copy.deepcopy(assignment)
         result.update(copy.deepcopy(intent["assignment"]))
+        if "execution_mode" in intent["assignment"]:
+            result["execution_mode"] = self.core.normalize_execution_mode(result["execution_mode"])
         if intent.get("predecessor"):
             result.setdefault("coordination_requirements", {})["scope_predecessor"] = copy.deepcopy(intent["predecessor"])
         if intent.get("predecessor_handoff"):

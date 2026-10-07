@@ -64,12 +64,16 @@ Older capsules without `execution_contract` remain readable as legacy records. M
 normal immutable capsule and pinned Run are created. The UTF-8 JSON is at most
 64 KiB, with `schema_version: 1` and an `assignment` object. Supported fields:
 `allowed_files`, `allowed_read_files`, `forbidden_files`, `allowed_actions`,
-`forbidden_actions`, `execution_mode` (mode name), `required_sources`,
+`forbidden_actions`, `execution_mode` (legacy mode name or Assignment mode object), `required_sources`,
 `required_outputs`, `expected_report`, `ownership` (owner_id, role, writer).
 Output records require an id and project-relative path. Actions are read,
 write_artifact and write_product. Existing normalization, readiness and overlap
 checks apply. Omitted input retains conservative defaults; objectives imply no
-file grants. This input does not add an MCP permission surface.
+file grants. MCP `pf.work.start.scope_intent` forwards the same declaration to Core.
+Supplied modes are normalized into the persisted Assignment object before immutable
+capture; omitted modes keep existing creation defaults. Existing legacy Assignments
+and capsules are not rewritten on retry. Object flags retain their boolean values
+and additional mode metadata; effective permissions still follow the shared checks.
 
 Before publishing the new Run, Assignment or capsule, `work-start` also checks
 the effective permission readiness derived from the normalized execution mode
@@ -88,6 +92,9 @@ continues Work; changed scope returns `scope_intent_mismatch` and requires a new
 objective. After a timeout, retry by checking the exact returned identity or by
 reusing the same objective and intent; do not blindly create a wider successor.
 Malformed/unready declarations fail before new Work records publish.
+
+A handoff stored under artifacts may be pinned through `required_sources`; it is
+not a `predecessor_handoff` ownership-transfer document.
 
 ## Request-local YAML parsing
 

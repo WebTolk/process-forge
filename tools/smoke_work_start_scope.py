@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import runpy
 import subprocess
 import sys
 
@@ -17,11 +18,24 @@ import processforge as core
 from processforge_core.process_execution import ProcessExecutionService
 from process_execution_smoke_support import fixture, stage_evidence
 
+validate_instance = runpy.run_path(str(ROOT / "tools/validate-process-forge-schemas.py"))["validate_instance"]
+ASSIGNMENT_SCHEMA = json.loads((ROOT / "schemas/assignment.schema.json").read_text(encoding="utf-8"))
+
 
 def records(project):
     return {str(p.relative_to(project)): p.read_bytes() for folder in
             ("assignments", "runs", "contexts/assignment-capsules")
             for p in (project / ".pf" / folder).rglob("*.yaml")}
+
+
+def assert_saved_mode(project, result, expected):
+    path = project / ".pf/assignments" / (result["assignment_id"] + ".yaml")
+    assignment = yaml.safe_load(path.read_text(encoding="utf-8"))
+    errors = validate_instance(assignment, ASSIGNMENT_SCHEMA, ASSIGNMENT_SCHEMA, "$")
+    assert not errors, errors
+    assert assignment["execution_mode"] == expected, assignment["execution_mode"]
+    assert result["work_state"]["context"]["validation"]["status"] == "valid", result
+    return path
 
 
 def main():
@@ -46,6 +60,13 @@ def main():
             candidate = copy.deepcopy(spec)
             candidate["assignment"][key] = value
             bad.append(candidate)
+        for mode in [None, False, 1, [], {"kind": "unknown"},
+                     {"kind": "assurance", "code_changes_allowed": 1},
+                     {"kind": "assurance", "artifact_changes_allowed": "false"},
+                     {"kind": "assurance", "requires_review": 0}]:
+            candidate = copy.deepcopy(spec)
+            candidate["assignment"]["execution_mode"] = mode
+            bad.append(candidate)
         bad.extend([
             {**spec, "schema_version": True},
             {**spec, "assignment": {"allowed_files": ["example.py"], "forbidden_files": ["example.py"]}},
@@ -62,6 +83,14 @@ def main():
             {**spec, "assignment": {"allowed_files": [], "allowed_read_files": [], "allowed_actions": []}},
             {**spec, "assignment": {"required_sources": ["missing.md"]}},
             {**spec, "assignment": {"required_outputs": [{"id": "x", "path": "no-grant.md"}]}},
+            {**spec, "assignment": {"execution_mode": {"kind": "assurance", "code_changes_allowed": True},
+                                    "allowed_files": ["example.py"], "allowed_actions": ["read", "write_product"]}},
+            {**spec, "assignment": {"execution_mode": {"kind": "implementation", "code_changes_allowed": True},
+                                    "allowed_files": ["example.py"], "allowed_actions": ["read", "write_product"],
+                                    "forbidden_actions": ["write_product"]}},
+            {**spec, "predecessor": {"run_id": initial["run_id"], "assignment_id": initial["assignment_id"],
+                                    "capsule_checksum": initial["context"]["checksum"]},
+             "predecessor_handoff": ".pf/artifacts/delivery-handoff.md"},
         ])
         for i, candidate in enumerate(bad):
             before = records(project)
@@ -83,6 +112,60 @@ def main():
         planning_pin = project / ".pf/contexts/assignment-capsules" / (planned["assignment_id"] + ".capsule.yaml")
         planning_scope = yaml.safe_load(planning_pin.read_text(encoding="utf-8"))["execution_contract"]["scope"]
         assert "write_artifact" in planning_scope["allowed_actions"] and "write_product" not in planning_scope["allowed_actions"]
+        assert_saved_mode(project, planned, {"kind": "planning_only", "code_changes_allowed": False,
+                                           "artifact_changes_allowed": True, "requires_review": True})
+
+        assurance = {"schema_version": 1, "assignment": {
+            "execution_mode": {"kind": "assurance", "code_changes_allowed": False,
+                               "artifact_changes_allowed": True, "requires_review": False,
+                               "legacy_note": {"purpose": "preserved"}},
+            "allowed_files": [".pf/artifacts/assurance/**"], "allowed_read_files": ["example.py"],
+            "allowed_actions": ["read", "write_artifact"], "forbidden_actions": ["write_product"],
+        }}
+        original_assurance = copy.deepcopy(assurance)
+        assured = service.start(objective="Explicit object assurance scope", scope_intent=assurance)
+        assert assured["action"] == "created_new", assured
+        assert assurance == original_assurance
+        assert_saved_mode(project, assured, original_assurance["assignment"]["execution_mode"])
+        readiness = assured["work_state"]["execution_readiness"]
+        assert readiness["status"] == "ready" and "write_product" not in readiness["allowed_actions"], readiness
+        assurance_pin = project / ".pf/contexts/assignment-capsules" / (assured["assignment_id"] + ".capsule.yaml")
+        assurance_raw = assurance_pin.read_bytes()
+        assert service.start(objective="Explicit object assurance scope", scope_intent=assurance)["action"] == "continue_existing"
+        assert assurance_pin.read_bytes() == assurance_raw
+        changed_assurance = copy.deepcopy(assurance)
+        changed_assurance["assignment"]["execution_mode"]["requires_review"] = True
+        assert service.start(objective="Explicit object assurance scope", scope_intent=changed_assurance)["reason"] == "scope_intent_mismatch"
+        assert assurance_pin.read_bytes() == assurance_raw
+
+        # Both public CLI representations publish schema-compatible, restricted Work.
+        canonical_mode = {"kind": "assurance", "code_changes_allowed": False,
+                          "artifact_changes_allowed": True, "requires_review": True}
+        for index, mode in enumerate(["assurance", canonical_mode]):
+            cli_spec = copy.deepcopy(assurance)
+            cli_spec["assignment"]["execution_mode"] = mode
+            cli_spec["assignment"]["allowed_files"] = [f".pf/artifacts/cli-assurance-{index}/**"]
+            cli_path = project / f"scope-assurance-{index}.json"
+            cli_path.write_text(json.dumps(cli_spec), encoding="utf-8")
+            cli_result = subprocess.run([sys.executable, "-B", str(ROOT / "bin/pf.py"), "work-start",
+                "--project-root", str(project), "--workplace", str(workplace), "--objective",
+                f"CLI assurance mode {index}", "--scope-file", str(cli_path), "--json"],
+                capture_output=True, text=True, encoding="utf-8", timeout=30)
+            assert cli_result.returncode == 0, cli_result.stdout + cli_result.stderr
+            started = json.loads(cli_result.stdout)
+            assert started["action"] == "created_new", started
+            assignment_path = assert_saved_mode(project, started, canonical_mode)
+            assert "write_product" not in started["work_state"]["execution_readiness"]["allowed_actions"]
+            cli_pin = project / ".pf/contexts/assignment-capsules" / (started["assignment_id"] + ".capsule.yaml")
+            cli_raw = cli_pin.read_bytes()
+            # Existing legacy Assignment is read/reused, never rewritten on retry.
+            legacy_assignment = yaml.safe_load(assignment_path.read_text(encoding="utf-8"))
+            legacy_assignment["execution_mode"] = "assurance"
+            assignment_path.write_text(yaml.safe_dump(legacy_assignment, sort_keys=False), encoding="utf-8")
+            legacy_raw = assignment_path.read_bytes()
+            reused = service.start(objective=f"CLI assurance mode {index}", scope_intent=cli_spec)
+            assert reused["action"] == "continue_existing", reused
+            assert assignment_path.read_bytes() == legacy_raw and cli_pin.read_bytes() == cli_raw
 
         # The public local CLI forwards input before standard immutable capture.
         path = project / "scope.json"
@@ -138,7 +221,7 @@ def main():
         assert service.start(objective="Serial writer transfer", scope_intent=transfer)["reason"] == "scope_intent_mismatch"
         assert service.start(objective="Third writer", scope_intent=transfer)["reason"] == "write_scope_overlap"
         assert all((project / p).read_bytes() == value for p, value in original.items())
-    print("PASS: explicit scope, negative no-publication cases, overlap, immutable reuse, predecessor and native pinned transition")
+    print("PASS: canonical string/object modes, CLI schema parity, negative no-publication cases, immutable legacy reuse, overlap, predecessor and native transition")
     return 0
 
 
