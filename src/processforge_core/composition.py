@@ -21,8 +21,8 @@ if TYPE_CHECKING:
     from .transition_rejection import TransitionRejectionPolicy
     from .completion.intent_validation import CompletionIntentValidationService
     from .completion.policy import RunCompletionPolicy
-    from .process_pin import ProcessPinReadService
-    from .process_selection import ProcessSelectionService, ResolvedDefinitionView
+    from .process_catalog.pin import ProcessPinReadService
+    from .process_catalog.selection import ProcessSelectionService, ResolvedDefinitionView
     from .work.selection import WorkSelectionService
     from .stage_readiness import StageReadinessPolicy
     from .automation_readiness import AutomationReadinessService
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from .garage import GarageModeService
     from .diagnostics import Logger
     from .process_execution import ProcessExecutionService
-    from .process_definition_read import ProcessDefinitionReadService
+    from .process_catalog.definition_read import ProcessDefinitionReadService
     from .project_snapshot_read import ProjectSnapshotReadService
     from .work.context_read import WorkContextReadService
 
@@ -92,7 +92,7 @@ class LegacyProcessDefinitionAdapter:
 def build_process_definition_read_service(
     project_root: Path, core: Any, *, fingerprint: Callable[[dict[str, Any]], str],
 ) -> ProcessDefinitionReadService:
-    from .process_definition_read import ProcessDefinitionReadService
+    from .process_catalog.definition_read import ProcessDefinitionReadService
 
     adapter = LegacyProcessDefinitionAdapter(project_root, core)
     return ProcessDefinitionReadService(adapter.resolve_definition, fingerprint)
@@ -232,7 +232,7 @@ def build_process_selection_service(
     blocked: Callable[..., dict[str, Any]],
     candidates: Callable[..., list[dict[str, Any]]]
 ) -> ProcessSelectionService:
-    from .process_selection import ProcessSelectionService
+    from .process_catalog.selection import ProcessSelectionService
 
     return ProcessSelectionService(
         project_root=project_root, stable_ids=stable_ids, resolve_definition=resolve_definition, blocked=blocked, candidates=candidates
@@ -246,7 +246,7 @@ def build_process_pin_read_service(
     fingerprint: Callable[[Any], str],
     stable_ids: Callable[[Any], list[str]]
 ) -> ProcessPinReadService:
-    from .process_pin import ProcessPinReadService
+    from .process_catalog.pin import ProcessPinReadService
 
     return ProcessPinReadService(
         project_root=project_root, flow_root=flow_root, snapshots=snapshots, fingerprint=fingerprint, stable_ids=stable_ids

@@ -40,6 +40,16 @@ Work-импорты на текущем dev-этапе не сохраняютс
 сохраняются. Решения о жизненном цикле, защитные проверки и блокировки Run остаются
 у координатора процесса.
 
+Чтение определения процесса, выбор из предложенных процессов и подготовка pin
+размещены в существующем пакете `processforge_core.process_catalog`:
+`definition_read`, `selection`, `pin`, рядом с `models` и `service`. Например,
+`ProcessDefinitionReadService` импортируется из
+`processforge_core.process_catalog.definition_read`. Сборка, выполнение процесса
+и существующие проверки используют новые импорты; старые плоские пути модулей
+на текущем dev-этапе удаляются. Прежние правила, явные зависимости и чтение
+актуальных данных сохраняются; допуск к работе и управление жизненным циклом
+остаются у координатора процесса.
+
 ## Текущие Обязанности
 
 | Модуль | Обязанность |
@@ -52,7 +62,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/document_store.py`, `work/inventory.py` | Чтение YAML и актуальный отсортированный обход без общего изменяемого кеша документов. |
 | `src/processforge_core/work/records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
 | `src/processforge_core/work/context_read.py` | Прежние проверки капсулы и нормализация Assignment с явно переданными функциями путей и проверки. |
-| `src/processforge_core/process_definition_read.py` | Прежние правила чтения effective ProcessDefinition и pin status с явными зависимостями resolver/fingerprint. |
+| `src/processforge_core/process_catalog/` | Модели и разрешение каталога, чтение effective ProcessDefinition, выбор из предложенных процессов и подготовка pin через явные зависимости. |
 | `src/processforge_core/project_snapshot_read.py` | Чтение актуального ProjectContextSnapshot и checksum исходных байтов через переданные функции пути, загрузки и хеширования. |
 | `src/processforge_core/ports.py` | Внутренние типизированные зависимости чтения текущей работы, записей Work и контекста. |
 | `src/processforge_core/composition.py` | Общие фабрики сервисов и узкие адаптеры чтения и контекста legacy-модуля. |

@@ -36,6 +36,15 @@ canonical imports; old flat completion modules are removed during this dev refac
 The existing classes, lazy factories, journal formats and ordered recovery remain
 unchanged. The process coordinator retains lifecycle decisions, guards and run locks.
 
+Process definition reading, offered process selection and pin construction live in
+the existing `processforge_core.process_catalog` package: `definition_read`,
+`selection` and `pin`, alongside `models` and `service`. For example, import
+`ProcessDefinitionReadService` from `processforge_core.process_catalog.definition_read`.
+Composition, process execution and existing checks use canonical imports; old flat
+module paths are removed during this dev refactor. The existing rules, explicit
+dependencies and live reads remain unchanged; admission and lifecycle authority
+remain in the process coordinator.
+
 ## Current Ownership
 
 | Module | Responsibility |
@@ -48,7 +57,7 @@ unchanged. The process coordinator retains lifecycle decisions, guards and run l
 | `src/processforge_core/document_store.py`, `work/inventory.py` | YAML reading and live sorted discovery; no shared mutable document cache. |
 | `src/processforge_core/work/records.py` | Live raw Run/Assignment reader; selection and recovery remain in the application service. |
 | `src/processforge_core/work/context_read.py` | Existing capsule validation and assignment normalization with explicit path/validator callbacks. |
-| `src/processforge_core/process_definition_read.py` | Existing effective ProcessDefinition and pin-status read rules with explicit resolver/fingerprint callbacks. |
+| `src/processforge_core/process_catalog/` | Catalog models/resolution, effective ProcessDefinition reads, offered process selection and pin construction through explicit callbacks. |
 | `src/processforge_core/project_snapshot_read.py` | Live ProjectContextSnapshot loading and raw-byte checksum through explicit path/loader/hash callbacks. |
 | `src/processforge_core/ports.py` | Internal structural current-work, raw Work-record, context-read and process-definition dependencies. |
 | `src/processforge_core/composition.py` | Explicit service factories and narrow legacy read/context/definition adapters. |

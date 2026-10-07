@@ -53,7 +53,7 @@ def suite(cls,root):
     assert svc._select_process({'allowed':['a']},'a')==('a',{})
     return rows
 def direct(root):
-    try:from processforge_core.process_selection import ProcessSelectionService
+    try:from processforge_core.process_catalog.selection import ProcessSelectionService
     except ModuleNotFoundError:return
     svc=ProcessSelectionService(project_root=root,stable_ids=lambda value:value,resolve_definition=lambda *a:SimpleNamespace(process={}),blocked=lambda reason,**kw:{'reason':reason,**kw},candidates=lambda *a,**kw:[])
     assert svc.select({'allowed':['a']},'')==('a',{})

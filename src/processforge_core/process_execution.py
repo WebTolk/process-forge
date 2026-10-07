@@ -25,8 +25,8 @@ if TYPE_CHECKING:
     from .transition_rejection import TransitionRejectionPolicy
     from .completion.intent_validation import CompletionIntentValidationService
     from .completion.policy import RunCompletionPolicy
-    from .process_pin import ProcessPinReadService
-    from .process_selection import ProcessSelectionService
+    from .process_catalog.pin import ProcessPinReadService
+    from .process_catalog.selection import ProcessSelectionService
     from .work.selection import WorkSelectionService
     from .automation_readiness import AutomationReadinessService
     from .stage_readiness import StageReadinessPolicy

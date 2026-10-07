@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 
-from .ports import ProjectSnapshotReadPort
+from ..ports import ProjectSnapshotReadPort
 
 @dataclass(frozen=True, kw_only=True)
 class ProcessPinReadService:

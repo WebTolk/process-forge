@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT / 'src'))
 from processforge_core import process_execution as execution
 from processforge_core.bootstrap import RuntimeBootstrap
 from processforge_core.composition import build_process_definition_read_service, build_process_execution_service
-from processforge_core.process_definition_read import ProcessDefinitionReadService
+from processforge_core.process_catalog.definition_read import ProcessDefinitionReadService
 from processforge_core.process_execution import ProcessExecutionService, canonical_fingerprint
 
 BASELINE = None
@@ -205,7 +205,7 @@ class DefinitionTests(unittest.TestCase):
 
     def test_imports_without_cli_or_eager_legacy(self):
         code = (
-            "import sys; from processforge_core.process_definition_read import ProcessDefinitionReadService; "
+            "import sys; from processforge_core.process_catalog.definition_read import ProcessDefinitionReadService; "
             "from processforge_core.composition import build_process_execution_service; "
             "assert 'processforge' not in sys.modules; "
             "assert 'processforge_core._legacy_processforge' not in sys.modules"
