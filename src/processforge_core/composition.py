@@ -13,14 +13,14 @@ from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
     from .work.transition_commit import WorkTransitionCommitService
-    from .completion_intent_replay import CompletionIntentReplayService
-    from .completion_intent_read import CompletionIntentReadService
-    from .completion_intent_builder import CompletionIntentBuilder
-    from .completion_documents import CompletionDocumentService
+    from .completion.intent_replay import CompletionIntentReplayService
+    from .completion.intent_read import CompletionIntentReadService
+    from .completion.intent_builder import CompletionIntentBuilder
+    from .completion.documents import CompletionDocumentService
     from .work.boundary_advisory import WorkBoundaryAdvisoryService
     from .transition_rejection import TransitionRejectionPolicy
-    from .completion_intent_validation import CompletionIntentValidationService
-    from .run_completion import RunCompletionPolicy
+    from .completion.intent_validation import CompletionIntentValidationService
+    from .completion.policy import RunCompletionPolicy
     from .process_pin import ProcessPinReadService
     from .process_selection import ProcessSelectionService, ResolvedDefinitionView
     from .work.selection import WorkSelectionService
@@ -258,7 +258,7 @@ def build_run_completion_policy(
     string_list: Callable[[Any], list[str]],
     gate_state: Callable[..., dict[str, Any]]
 ) -> RunCompletionPolicy:
-    from .run_completion import RunCompletionPolicy
+    from .completion.policy import RunCompletionPolicy
 
     return RunCompletionPolicy(
         accumulated_evidence=accumulated_evidence, string_list=string_list, gate_state=gate_state
@@ -277,7 +277,7 @@ def build_completion_intent_validation_service(
     has_project_id: Callable[[], bool],
     project_id: Callable[[Path], Any]
 ) -> CompletionIntentValidationService:
-    from .completion_intent_validation import CompletionIntentValidationService
+    from .completion.intent_validation import CompletionIntentValidationService
 
     return CompletionIntentValidationService(
         project_root=project_root, fingerprint=fingerprint, terminal_assignment_statuses=terminal_assignment_statuses, effective_process=effective_process, rel=rel, run_path=run_path, assignment_path=assignment_path, flow_root=flow_root, has_project_id=has_project_id, project_id=project_id
@@ -313,7 +313,7 @@ def build_completion_document_service(
     task_index: Callable[[Path, dict[str, Any]], str],
     atomic_text: Callable[[Path, str], Any]
 ) -> CompletionDocumentService:
-    from .completion_documents import CompletionDocumentService
+    from .completion.documents import CompletionDocumentService
 
     return CompletionDocumentService(
         project_root=project_root, run_path=run_path, has_task_index=has_task_index, task_index=task_index, atomic_text=atomic_text
@@ -335,7 +335,7 @@ def build_completion_intent_builder(
     project_id: Callable[[Path], Any],
     fingerprint: Callable[[Any], str]
 ) -> CompletionIntentBuilder:
-    from .completion_intent_builder import CompletionIntentBuilder
+    from .completion.intent_builder import CompletionIntentBuilder
 
     return CompletionIntentBuilder(
         project_root=project_root, accumulated_evidence=accumulated_evidence, set_task_status=set_task_status, run_path=run_path, assignment_path=assignment_path, flow_root=flow_root, summary=summary, has_task_index=has_task_index, task_index=task_index, rel=rel, intent_path=intent_path, project_id=project_id, fingerprint=fingerprint
@@ -349,7 +349,7 @@ def build_completion_intent_read_service(
     load_document: Callable[[Path], dict[str, Any]],
     validate: Callable[[Any, dict[str, Any], dict[str, Any], Path], str | None]
 ) -> CompletionIntentReadService:
-    from .completion_intent_read import CompletionIntentReadService
+    from .completion.intent_read import CompletionIntentReadService
 
     return CompletionIntentReadService(
         run_path=run_path, intent_path=intent_path, valid_id=valid_id, load_document=load_document, validate=validate
@@ -367,7 +367,7 @@ def build_completion_intent_replay_service(
     emit: Callable[..., Any],
     intent_path: Callable[[str], Path]
 ) -> CompletionIntentReplayService:
-    from .completion_intent_replay import CompletionIntentReplayService
+    from .completion.intent_replay import CompletionIntentReplayService
 
     return CompletionIntentReplayService(
         assignment_path=assignment_path, run_path=run_path, flow_root=flow_root, atomic_yaml=atomic_yaml, atomic_text=atomic_text, state=state, write_projection=write_projection, emit=emit, intent_path=intent_path

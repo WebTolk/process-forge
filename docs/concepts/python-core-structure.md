@@ -28,11 +28,20 @@ CLI and existing checks use canonical imports; old flat entry-module imports are
 removed during this dev refactor. The package groups existing implementations and
 preserves instruction formats, command behavior and transaction guards.
 
+Run completion services live in `processforge_core.completion`: `policy`,
+`documents`, `intent_builder`, `intent_read`, `intent_validation` and `intent_replay`.
+For example, import `CompletionIntentReadService` from
+`processforge_core.completion.intent_read`. Composition and process execution use
+canonical imports; old flat completion modules are removed during this dev refactor.
+The existing classes, lazy factories, journal formats and ordered recovery remain
+unchanged. The process coordinator retains lifecycle decisions, guards and run locks.
+
 ## Current Ownership
 
 | Module | Responsibility |
 | --- | --- |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
+| `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
 | `src/processforge_core/garage.py` | Project/context/read-model services, including `CurrentWorkService`. |
 | `src/processforge_core/process_execution.py`, `continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
 | `src/processforge_core/work/state.py` | I/O-free completion requirements and Work-state action/blocker policy; not lifecycle authority. |

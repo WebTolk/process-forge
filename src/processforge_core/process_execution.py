@@ -17,14 +17,14 @@ from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
     from .work.transition_commit import WorkTransitionCommitService
-    from .completion_intent_replay import CompletionIntentReplayService
-    from .completion_intent_read import CompletionIntentReadService
-    from .completion_intent_builder import CompletionIntentBuilder
-    from .completion_documents import CompletionDocumentService
+    from .completion.intent_replay import CompletionIntentReplayService
+    from .completion.intent_read import CompletionIntentReadService
+    from .completion.intent_builder import CompletionIntentBuilder
+    from .completion.documents import CompletionDocumentService
     from .work.boundary_advisory import WorkBoundaryAdvisoryService
     from .transition_rejection import TransitionRejectionPolicy
-    from .completion_intent_validation import CompletionIntentValidationService
-    from .run_completion import RunCompletionPolicy
+    from .completion.intent_validation import CompletionIntentValidationService
+    from .completion.policy import RunCompletionPolicy
     from .process_pin import ProcessPinReadService
     from .process_selection import ProcessSelectionService
     from .work.selection import WorkSelectionService
