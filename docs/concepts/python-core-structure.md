@@ -2,16 +2,35 @@
 
 The core is evolving incrementally. `tools/processforge.py` is still the active legacy facade, not retired code. Existing CLI, MCP, hook entrypoints and bootstrap aliases remain unchanged.
 
+## Package Placement
+
+New implementation modules belong to a cohesive responsibility package, following
+[the Core placement rule](../../src/processforge_core/AGENTS.md). Packages use short
+lowercase names, modules use `snake_case.py`, and classes use `CapWords`; a module
+may contain a service, its errors and related helpers. There is no class-per-file
+requirement. Keep the package tree shallow and package initializers minimal.
+
+The existing Work modules now live in `processforge_core.work`: `context`,
+`context_read`, `inventory`, `records`, `resources`, `resource_material`,
+`selection`, `state`, `boundary_advisory` and `transition_commit`. For example,
+import `WorkResourceService` from `processforge_core.work.resources`. Current
+Core/CLI/MCP/Host consumers use these paths. Old flat Work module imports are not
+retained during this dev refactor.
+
+Bootstrap/composition/shared seams and remaining legacy modules are still at the
+root; other responsibility groups move in subsequent bounded work. The structure
+uses ordinary Python packages, with no import compatibility layer or new loader.
+
 ## Current Ownership
 
 | Module | Responsibility |
 | --- | --- |
 | `src/processforge_core/garage.py` | Project/context/read-model services, including `CurrentWorkService`. |
 | `src/processforge_core/process_execution.py`, `continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
-| `src/processforge_core/work_state.py` | I/O-free completion requirements and Work-state action/blocker policy; not lifecycle authority. |
-| `src/processforge_core/document_store.py`, `work_inventory.py` | YAML reading and live sorted discovery; no shared mutable document cache. |
-| `src/processforge_core/work_records.py` | Live raw Run/Assignment reader; selection and recovery remain in the application service. |
-| `src/processforge_core/work_context_read.py` | Existing capsule validation and assignment normalization with explicit path/validator callbacks. |
+| `src/processforge_core/work/state.py` | I/O-free completion requirements and Work-state action/blocker policy; not lifecycle authority. |
+| `src/processforge_core/document_store.py`, `work/inventory.py` | YAML reading and live sorted discovery; no shared mutable document cache. |
+| `src/processforge_core/work/records.py` | Live raw Run/Assignment reader; selection and recovery remain in the application service. |
+| `src/processforge_core/work/context_read.py` | Existing capsule validation and assignment normalization with explicit path/validator callbacks. |
 | `src/processforge_core/process_definition_read.py` | Existing effective ProcessDefinition and pin-status read rules with explicit resolver/fingerprint callbacks. |
 | `src/processforge_core/project_snapshot_read.py` | Live ProjectContextSnapshot loading and raw-byte checksum through explicit path/loader/hash callbacks. |
 | `src/processforge_core/ports.py` | Internal structural current-work, raw Work-record, context-read and process-definition dependencies. |
@@ -27,11 +46,11 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 
 `WorkRecordReadPort` exposes `runs`, `load_run` and `load_assignment`. The factory defaults to `YamlWorkRecordReader`, which uses the existing `WorkInventory` and YAML loader. Roots and records are read live; no cross-request result cache is added. Direct legacy construction retains its inventory and private-path fallback, including subclass overrides. Raw readers neither choose Work nor hide duplicate/alias discovery or pending recovery.
 
-`WorkContextReadPort` exposes `validation` and `normalized_assignment`. The default is assembled lazily through `build_work_context_read_service`, using the caller's private path callbacks and the narrow `LegacyWorkContextAdapter`. `WorkContextReadService` does not depend on the monolithic core: its four dependencies resolve paths, validate contracts and normalize assignments. Existing `work_context.py` rules still own signed identity/intent, pins, scope and stage views. Byte limits, symlink/containment checks, raw checksum, safe parsing and original error order remain intact. Default assembly captures no document/root/logger; validation and normalization return live results.
+`WorkContextReadPort` exposes `validation` and `normalized_assignment`. The default is assembled lazily through `build_work_context_read_service`, using the caller's private path callbacks and the narrow `LegacyWorkContextAdapter`. `WorkContextReadService` does not depend on the monolithic core: its four dependencies resolve paths, validate contracts and normalize assignments. Existing `work/context.py` rules still own signed identity/intent, pins, scope and stage views. Byte limits, symlink/containment checks, raw checksum, safe parsing and original error order remain intact. Default assembly captures no document/root/logger; validation and normalization return live results.
 
 `ProcessDefinitionReadPort` exposes `effective_process(run)`. `ProcessDefinitionReadService` receives the legacy definition resolver and existing fingerprint function. By default, `_effective_process` delegates lazily through `build_process_definition_read_service` and the narrow `LegacyProcessDefinitionAdapter`. Valid and corrupt pins do not consult the catalog; legacy definitions are resolved live on each call. Returned copies preserve unknown fields. The existing `pinned`, `corrupt`, `legacy_unpinned`, `missing` statuses and exception boundaries remain unchanged. The reader does not select a process, create pins or authorize transitions; catalog resolution and other legacy dependencies remain.
 
-`ProjectSnapshotReadPort` exposes `load(path=None)` and `checksum(path)`. The default `ProjectSnapshotReadService` is assembled lazily through `build_project_snapshot_read_service` and `LegacyProjectSnapshotAdapter`, preserving the existing YAML loader and private `_flow_root`/`_sha256_file` overrides. Pin creation passes one captured path to loading and checksum; resource selection, start preflight and capsule capture load independently. A missing file produces an empty checksum; load/hash failures retain their original order. No new cache is introduced. Snapshot-generation checks remain in `work_context.py`; its validator compares pinned capsule metadata and does not gain a live snapshot-read dependency.
+`ProjectSnapshotReadPort` exposes `load(path=None)` and `checksum(path)`. The default `ProjectSnapshotReadService` is assembled lazily through `build_project_snapshot_read_service` and `LegacyProjectSnapshotAdapter`, preserving the existing YAML loader and private `_flow_root`/`_sha256_file` overrides. Pin creation passes one captured path to loading and checksum; resource selection, start preflight and capsule capture load independently. A missing file produces an empty checksum; load/hash failures retain their original order. No new cache is introduced. Snapshot-generation checks remain in `work/context.py`; its validator compares pinned capsule metadata and does not gain a live snapshot-read dependency.
 
 `ProcessExecutionService.state()` retains exact selection, context/pin checks, evidence/outcome validation and permission readiness. `WorkStatePolicy` separately computes completion requirements and action/blockers from supplied records. It does not read files, alter records, choose caller identity or advance a process. Terminal, completed, blocked and incomplete precedence remains unchanged; permission readiness stays a separate response field.
 

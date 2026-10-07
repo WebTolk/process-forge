@@ -11,9 +11,9 @@ from typing import Any
 
 import yaml
 
-from .local_resource_search import LocalSearchError, pagination
-from .process_execution import SAFE_ID_RE, canonical_fingerprint
-from .work_resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, capture_material, metadata_descriptor
+from ..local_resource_search import LocalSearchError, pagination
+from ..process_execution import SAFE_ID_RE, canonical_fingerprint
+from .resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, capture_material, metadata_descriptor
 
 
 MAX_STATE_BYTES = 2 * 1024 * 1024
@@ -83,7 +83,7 @@ def portable_reference(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _root(project: Path, workplace: Path | None, core: Any, row: dict[str, Any]) -> tuple[Path, dict[str, Any]]:
-    from .garage import resolve_garage_path_ref
+    from ..garage import resolve_garage_path_ref
 
     reference = portable_reference(row)
     result = resolve_garage_path_ref(project, reference, workplace or project, core)
@@ -95,7 +95,7 @@ def _root(project: Path, workplace: Path | None, core: Any, row: dict[str, Any])
 def build_resource_bindings(project: Path, workplace: Path | None, core: Any,
                             selected_ids: list[str]) -> dict[str, Any]:
     """Pin new material only at capsule creation; never migrate a read request."""
-    from .garage import load_snapshot
+    from ..garage import load_snapshot
 
     result: dict[str, Any] = {"schema_version": 1, "resources": [], "limits": dict(DEFAULT_LIMITS)}
     budget = MaterialBudget()
@@ -201,7 +201,7 @@ class WorkResourceService:
         if set(_ids([item.get("id") for item in resources], "resource_binding_invalid")) != selected_set:
             raise WorkResourceError("resource_binding_invalid")
         if "execution_contract" in capsule:
-            from .work_context import validate_execution_contract
+            from .context import validate_execution_contract
             validation = validate_execution_contract(self.project_root, flow / "assignments" / f"{assignment_id}.yaml", assignment, capsule, self.core)
             if validation["status"] != "valid":
                 raise WorkResourceError(validation.get("reason") or "execution_contract_invalid", remediation="create_successor_work")
@@ -222,8 +222,8 @@ class WorkResourceService:
     def read(self, *, operation: str, run_id: str, assignment_id: str, context_id: str,
              resource_id: str | None = None, query: Any = None, limit: Any = None,
              limitstart: Any = None, offset: Any = None) -> dict[str, Any]:
-        from . import diagnostics
-        from .garage import load_snapshot
+        from .. import diagnostics
+        from ..garage import load_snapshot
 
         payload: dict[str, Any] = {"schema_version": 1, "kind": f"pf.work.{operation}", "scope": "work_context"}
         try:

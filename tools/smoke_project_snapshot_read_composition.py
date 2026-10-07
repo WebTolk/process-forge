@@ -27,7 +27,7 @@ from processforge_core.bootstrap import RuntimeBootstrap
 from processforge_core.composition import build_process_execution_service, build_project_snapshot_read_service
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.project_snapshot_read import ProjectSnapshotReadService
-from processforge_core.work_context import ContextContractError
+from processforge_core.work.context import ContextContractError
 
 BASELINE = None
 SCRATCH = None
@@ -119,7 +119,7 @@ class SnapshotTests(unittest.TestCase):
             self.assertEqual(raised.exception.code, 'immutable_context_exists')
             self.assertEqual(reader.calls, [])
             path.unlink()
-            with patch('processforge_core.work_context.build_context_fields', side_effect=RuntimeError('capture-stop')) as capture:
+            with patch('processforge_core.work.context.build_context_fields', side_effect=RuntimeError('capture-stop')) as capture:
                 with self.assertRaisesRegex(RuntimeError, 'capture-stop'):
                     service._write_capsule({}, {'id': 'a'}, {})
                 self.assertIs(capture.call_args.args[3], reader.document)
@@ -149,8 +149,8 @@ class SnapshotTests(unittest.TestCase):
              patch.object(execution, 'initial_stage_id', return_value='s'), \
              patch.object(execution, 'normalized_outcomes', return_value=[]), \
              patch.object(execution, 'project_specialization_selection', return_value={'active': []}), \
-             patch('processforge_core.work_context.normalized_assignment_contract', return_value={'scope': {'allowed_actions': []}}), \
-             patch('processforge_core.work_context.build_context_fields', side_effect=RuntimeError('preflight-stop')) as capture:
+             patch('processforge_core.work.context.normalized_assignment_contract', return_value={'scope': {'allowed_actions': []}}), \
+             patch('processforge_core.work.context.build_context_fields', side_effect=RuntimeError('preflight-stop')) as capture:
             with self.assertRaisesRegex(RuntimeError, 'preflight-stop'):
                 service._start_locked(objective='snapshot slice', scope_intent={'assignment': {}})
             self.assertIs(capture.call_args.args[3], reader.document)

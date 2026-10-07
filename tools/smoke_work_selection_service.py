@@ -50,7 +50,7 @@ def suite(cls,root):
     records.clear();assert svc._select_work() is None;rows.append(None)
     return rows
 def direct(root):
-    try:from processforge_core.work_selection import WorkSelectionService
+    try:from processforge_core.work.selection import WorkSelectionService
     except ModuleNotFoundError:return
     svc=WorkSelectionService(bound_selection=lambda s:None,valid_selector=lambda s:True,records=lambda **kw:[],prefer=lambda records,s:None,load_run=lambda r:{},load_assignment=lambda a:{})
     assert svc.select(assignment_id='a') is None

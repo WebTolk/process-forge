@@ -10,7 +10,7 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
-from .work_context import fingerprint, portable_path, scope_allows, stage_view, validate_execution_contract
+from .work.context import fingerprint, portable_path, scope_allows, stage_view, validate_execution_contract
 
 MAX_BYTES = 4 * 1024 * 1024
 INLINE_FILE_BYTES = 64 * 1024

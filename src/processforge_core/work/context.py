@@ -17,7 +17,7 @@ from typing import Any
 
 import yaml
 
-from .request_scope import safe_load
+from ..request_scope import safe_load
 
 
 CONTRACT_VERSION = 1
@@ -201,7 +201,7 @@ def assignment_intent(project_root: Path, assignment_path: Path, metadata: dict[
     for key in ("diagnostics", "agent_model", "agent_reasoning_effort", "model", "reasoning_effort", "provider"):
         intent["parameters"].pop(key, None)
     if "egress" in metadata:
-        from .egress.contracts import EgressError, security_intent
+        from ..egress.contracts import EgressError, security_intent
         try:
             security = {"egress": metadata["egress"], "allowed_read_files": intent["scope"]["allowed_read_files"]}
             if "egress_predecessor" in metadata:
@@ -334,7 +334,7 @@ def _assignment_run(project: Path, metadata: dict[str, Any], core: Any) -> dict[
 
 
 def process_pin_for_assignment(project: Path, metadata: dict[str, Any], snapshot: dict[str, Any], core: Any) -> dict[str, Any]:
-    from .process_execution import ProcessExecutionService
+    from ..process_execution import ProcessExecutionService
 
     run_id = str(metadata.get("run_id") or "")
     if run_id:
@@ -365,7 +365,7 @@ def process_pin_for_assignment(project: Path, metadata: dict[str, Any], snapshot
 def build_context_fields(project: Path, assignment_path: Path, metadata: dict[str, Any], snapshot: dict[str, Any],
                          core: Any, *, workplace: Path | None = None, pin: dict[str, Any] | None = None,
                          run_record: dict[str, Any] | None = None) -> dict[str, Any]:
-    from .work_resources import build_resource_bindings
+    from .resources import build_resource_bindings
 
     normalized = normalized_assignment_contract(project, assignment_path, metadata, core)
     intent = assignment_intent(project, assignment_path, metadata, core)
@@ -448,7 +448,7 @@ def validate_execution_contract(project: Path, assignment_path: Path, metadata: 
         if type(contract.get("contract_version")) is not int or contract["contract_version"] not in (1, 2):
             raise ContextContractError("contract_version_unsupported")
         if contract["contract_version"] == 2:
-            from .egress.contracts import EgressError, require_v2
+            from ..egress.contracts import EgressError, require_v2
             try:
                 require_v2(contract)
             except EgressError as exc:

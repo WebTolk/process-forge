@@ -22,8 +22,8 @@ from processforge_core.egress.contracts import EgressError, binding_for, digest,
 from processforge_core.egress.service import work_session
 from processforge_core.prepared_input import semantic_input
 from processforge_core.process_execution import ProcessExecutionService
-from processforge_core.work_context import validate_execution_contract
-from processforge_core.work_resource_material import MaterialError, _resolve_source
+from processforge_core.work.context import validate_execution_contract
+from processforge_core.work.resource_material import MaterialError, _resolve_source
 from smoke_egress_engine import candidate_store, denied, policy_for, recipient
 
 spec = importlib.util.spec_from_file_location("egress_schema_validation", ROOT / "tools/validate-process-forge-schemas.py")

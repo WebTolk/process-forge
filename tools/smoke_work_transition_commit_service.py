@@ -172,7 +172,7 @@ class WorkTransitionCommitTests(unittest.TestCase):
         self.assertTrue(service.commit(**ops.inputs())["replacement"])
 
     def test_leaf_import_has_no_transport_or_legacy_load(self):
-        code = "import sys; import processforge_core.work_transition_commit; assert not ({'processforge_legacy', 'tools.processforge', 'processforge_core.host', 'pf_runtime.service'} & set(sys.modules))"
+        code = "import sys; import processforge_core.work.transition_commit; assert not ({'processforge_legacy', 'tools.processforge', 'processforge_core.host', 'pf_runtime.service'} & set(sys.modules))"
         result = subprocess.run([sys.executable, "-B", "-c", code], cwd=ROOT,
                                 env={**os.environ, "PYTHONPATH": str(ROOT / "src"), "PYTHONDONTWRITEBYTECODE": "1"},
                                 capture_output=True, text=True)

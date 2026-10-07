@@ -11,7 +11,7 @@ import secrets
 import time
 from typing import Callable
 
-from ..work_context import scope_allows
+from ..work.context import scope_allows
 from .contracts import (EgressError, binding_for, bounded_json, digest, encoded, exact,
                         fingerprint, require_v2, validate_policy)
 from .policy import decide, _strings

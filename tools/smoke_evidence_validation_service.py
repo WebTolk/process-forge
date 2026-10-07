@@ -139,7 +139,7 @@ class ValidationTests(unittest.TestCase):
             if BASELINE:self.assertEqual(observed[0],observed[1])
 
     def test_callback_exception_identity_and_deferred_core(self):
-        from processforge_core.work_context import ContextContractError
+        from processforge_core.work.context import ContextContractError
         for source in ['clock','path','rel','hash']:
             error=ContextContractError('required_failure')
             def fail(*args):raise error

@@ -9,21 +9,21 @@ from typing import TYPE_CHECKING, Any, Callable
 
 from .garage import CurrentWorkService
 from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkReadCorePort, WorkRecordReadPort
-from .work_records import YamlWorkRecordReader
+from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
-    from .work_transition_commit import WorkTransitionCommitService
+    from .work.transition_commit import WorkTransitionCommitService
     from .completion_intent_replay import CompletionIntentReplayService
     from .completion_intent_read import CompletionIntentReadService
     from .completion_intent_builder import CompletionIntentBuilder
     from .completion_documents import CompletionDocumentService
-    from .work_boundary_advisory import WorkBoundaryAdvisoryService
+    from .work.boundary_advisory import WorkBoundaryAdvisoryService
     from .transition_rejection import TransitionRejectionPolicy
     from .completion_intent_validation import CompletionIntentValidationService
     from .run_completion import RunCompletionPolicy
     from .process_pin import ProcessPinReadService
     from .process_selection import ProcessSelectionService, ResolvedDefinitionView
-    from .work_selection import WorkSelectionService
+    from .work.selection import WorkSelectionService
     from .stage_readiness import StageReadinessPolicy
     from .automation_readiness import AutomationReadinessService
     from .evidence_validation import EvidenceValidationService
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from .process_execution import ProcessExecutionService
     from .process_definition_read import ProcessDefinitionReadService
     from .project_snapshot_read import ProjectSnapshotReadService
-    from .work_context_read import WorkContextReadService
+    from .work.context_read import WorkContextReadService
 
 __all__ = ()
 
@@ -61,12 +61,12 @@ class LegacyWorkContextAdapter:
     core: Any
 
     def validate_contract(self, path: Path, assignment: dict[str, Any], capsule: dict[str, Any]) -> dict[str, Any]:
-        from .work_context import validate_execution_contract
+        from .work.context import validate_execution_contract
 
         return validate_execution_contract(self.project_root, path, assignment, capsule, self.core, check_sources=False)
 
     def normalize_assignment(self, path: Path, assignment: dict[str, Any]) -> dict[str, Any]:
-        from .work_context import normalized_assignment_contract
+        from .work.context import normalized_assignment_contract
 
         return normalized_assignment_contract(self.project_root, path, assignment, self.core)
 
@@ -74,7 +74,7 @@ class LegacyWorkContextAdapter:
 def build_work_context_read_service(
     project_root: Path, core: Any, *, flow_root: Callable[[], Path], assignment_path: Callable[[str], Path],
 ) -> WorkContextReadService:
-    from .work_context_read import WorkContextReadService
+    from .work.context_read import WorkContextReadService
 
     adapter = LegacyWorkContextAdapter(project_root, core)
     return WorkContextReadService(flow_root, assignment_path, adapter.validate_contract, adapter.normalize_assignment)
@@ -218,7 +218,7 @@ def build_work_selection_service(
     load_run: Callable[[str], dict[str, Any]],
     load_assignment: Callable[[str], dict[str, Any]]
 ) -> WorkSelectionService:
-    from .work_selection import WorkSelectionService
+    from .work.selection import WorkSelectionService
 
     return WorkSelectionService(
         bound_selection=bound_selection, valid_selector=valid_selector, records=records, prefer=prefer, load_run=load_run, load_assignment=load_assignment
@@ -299,7 +299,7 @@ def build_work_boundary_advisory_service(
     stable_ids: Callable[[Any], list[str]],
     load_document: Callable[[Path], dict[str, Any]]
 ) -> WorkBoundaryAdvisoryService:
-    from .work_boundary_advisory import WorkBoundaryAdvisoryService
+    from .work.boundary_advisory import WorkBoundaryAdvisoryService
 
     return WorkBoundaryAdvisoryService(
         flow_root=flow_root, stable_ids=stable_ids, load_document=load_document
@@ -391,7 +391,7 @@ def build_work_transition_commit_service(
     emit: Callable[..., Any],
     next_work_advisory: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]],
 ) -> WorkTransitionCommitService:
-    from .work_transition_commit import WorkTransitionCommitService
+    from .work.transition_commit import WorkTransitionCommitService
 
     return WorkTransitionCommitService(
         now_utc=now_utc,

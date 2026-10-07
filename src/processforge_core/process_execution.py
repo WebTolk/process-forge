@@ -11,23 +11,23 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterator
 
 from .request_scope import safe_load, scoped_request
-from .work_inventory import WorkInventory
-from .work_state import WorkStatePolicy
+from .work.inventory import WorkInventory
+from .work.state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
-    from .work_transition_commit import WorkTransitionCommitService
+    from .work.transition_commit import WorkTransitionCommitService
     from .completion_intent_replay import CompletionIntentReplayService
     from .completion_intent_read import CompletionIntentReadService
     from .completion_intent_builder import CompletionIntentBuilder
     from .completion_documents import CompletionDocumentService
-    from .work_boundary_advisory import WorkBoundaryAdvisoryService
+    from .work.boundary_advisory import WorkBoundaryAdvisoryService
     from .transition_rejection import TransitionRejectionPolicy
     from .completion_intent_validation import CompletionIntentValidationService
     from .run_completion import RunCompletionPolicy
     from .process_pin import ProcessPinReadService
     from .process_selection import ProcessSelectionService
-    from .work_selection import WorkSelectionService
+    from .work.selection import WorkSelectionService
     from .automation_readiness import AutomationReadinessService
     from .stage_readiness import StageReadinessPolicy
     from .evidence_validation import EvidenceValidationService
@@ -44,7 +44,7 @@ SAFE_ID_RE = re.compile(r"^(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])$")
 
 def creation_scope_intent(value: Any) -> dict[str, Any]:
     """Validate explicit local-operator input; never infer grants from an objective."""
-    from .work_context import ContextContractError
+    from .work.context import ContextContractError
 
     fields = {"allowed_files", "allowed_read_files", "forbidden_files", "allowed_actions",
               "forbidden_actions", "required_sources", "required_outputs", "expected_report",
@@ -89,7 +89,7 @@ def creation_scope_intent(value: Any) -> dict[str, Any]:
                 or not re.fullmatch(r"sha256:[a-f0-9]{64}", prior["capsule_checksum"])):
             raise ContextContractError("work_scope_invalid")
     if "predecessor_handoff" in result:
-        from .work_context import portable_path
+        from .work.context import portable_path
         if not result.get("predecessor"):
             raise ContextContractError("work_scope_invalid")
         result["predecessor_handoff"] = portable_path(result["predecessor_handoff"])
@@ -102,7 +102,7 @@ def scope_handoff_predecessor(project: Path, metadata: dict[str, Any], core: Any
     """Recognize only the exact immutable predecessor of an explicit local handoff."""
     import yaml
     from .prepared_input import bounded_read
-    from .work_context import ContextContractError, portable_path
+    from .work.context import ContextContractError, portable_path
     coordination = metadata.get("coordination_requirements") or {}
     if not isinstance(coordination, dict):
         return ""
@@ -246,7 +246,7 @@ class ProcessExecutionService:
         objective = str(objective or "").strip()
         if not objective:
             return self._blocked("objective_required")
-        from .work_context import ContextContractError, assignment_intent, normalized_assignment_contract
+        from .work.context import ContextContractError, assignment_intent, normalized_assignment_contract
         if scope_intent is not None:
             import yaml
             try:
@@ -434,7 +434,7 @@ class ProcessExecutionService:
                 if overlap["status"] != "pass":
                     return self._blocked("write_scope_overlap", conflicts=overlap["conflicts"])
                 # Preflight readiness before the immutable capsule is published.
-                from .work_context import build_context_fields
+                from .work.context import build_context_fields
                 snapshot = self._snapshot_reader().load()
                 fields = build_context_fields(self.project_root, self._assignment_path(assignment_id), assignment,
                                               snapshot, self.core, workplace=self.workplace_root, pin=pin, run_record=run)
@@ -580,7 +580,7 @@ class ProcessExecutionService:
             trace.__exit__(None, None, None)
         decision = policy.decide(run, assignment, contract_validation, incomplete)
         from .continuation import permission_readiness
-        from .work_context import ContextContractError
+        from .work.context import ContextContractError
         try:
             normalized = self._context_reader().normalized_assignment(assignment)
             permissions = permission_readiness(normalized['scope'], normalized['assignment']['execution_mode'])
@@ -1173,7 +1173,7 @@ class ProcessExecutionService:
                                                flow_root=self._flow_root, assignment_path=self._assignment_path)
 
     def _write_capsule(self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]) -> tuple[str, str]:
-        from .work_context import ContextContractError, build_context_fields
+        from .work.context import ContextContractError, build_context_fields
 
         path = self._flow_root() / "contexts" / "assignment-capsules" / f"{assignment['id']}.capsule.yaml"
         if path.exists():

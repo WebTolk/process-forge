@@ -22,7 +22,7 @@ from processforge_core.process_catalog import service as catalog
 from processforge_core.process_catalog.models import ProcessCatalogContext
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.request_scope import request_scope
-from processforge_core.work_inventory import WorkInventory
+from processforge_core.work.inventory import WorkInventory
 
 
 class YamlInventoryTests(unittest.TestCase):

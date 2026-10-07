@@ -20,8 +20,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from processforge_core.local_resource_search import authorized_coverage, build_index, index_status
 from processforge_core.process_execution import ProcessExecutionService, canonical_fingerprint
-from processforge_core.work_resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, capture_material
-from processforge_core.work_resources import WorkResourceService
+from processforge_core.work.resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, capture_material
+from processforge_core.work.resources import WorkResourceService
 import processforge as core
 from process_execution_smoke_support import assignment, fixture, run
 from garage_search_smoke_support import register_fixture_resource, run_cli, select_fixture_resource
@@ -122,7 +122,7 @@ def set_subset(cap: dict, task: dict, run_doc: dict, values: list[str]) -> None:
     # This helper constructs a coherent synthetic context, not a tamper case.
     # T03 additionally binds the process identity inside the complete contract.
     if "execution_contract" in cap:
-        from processforge_core.work_context import fingerprint as contract_fingerprint
+        from processforge_core.work.context import fingerprint as contract_fingerprint
         contract = cap["execution_contract"]
         contract["process"]["fingerprint"] = fingerprint
         contract["contract_checksum"] = contract_fingerprint({key: value for key, value in contract.items() if key != "contract_checksum"})
@@ -200,7 +200,7 @@ def resource_order_checks() -> None:
             else:
                 resources[0]["id"] = None
             # Coherent synthetic fixtures exercise membership, not stale digests.
-            from processforge_core.work_context import fingerprint
+            from processforge_core.work.context import fingerprint
             contract = cap["execution_contract"]
             contract["resources"]["bindings_checksum"] = fingerprint(cap["resource_bindings"])
             contract["contract_checksum"] = fingerprint({k: v for k, v in contract.items() if k != "contract_checksum"})

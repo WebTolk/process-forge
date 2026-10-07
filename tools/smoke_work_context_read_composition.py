@@ -29,8 +29,8 @@ from processforge_core.bootstrap import RuntimeBootstrap
 from processforge_core.composition import build_process_execution_service, build_work_context_read_service
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.request_scope import request_scope
-from processforge_core.work_context import ContextContractError
-from processforge_core.work_context_read import WorkContextReadService
+from processforge_core.work.context import ContextContractError
+from processforge_core.work.context_read import WorkContextReadService
 
 BASELINE = None
 SCRATCH = None
@@ -218,7 +218,7 @@ class InjectedContextTests(unittest.TestCase):
             service = BaselineScenario(Path('p'), None, SimpleNamespace(project_id=lambda p: p.name),
                                        records=records, context=context)
             error = ContextContractError('assignment_contract_changed')
-            with patch('processforge_core.work_context.normalized_assignment_contract',
+            with patch('processforge_core.work.context.normalized_assignment_contract',
                        side_effect=error if failure else lambda *args: copy.deepcopy(context.normalized)), \
                     patch.object(context, 'normalized_assignment',
                                  side_effect=error if failure else lambda *args: copy.deepcopy(context.normalized)):
@@ -255,13 +255,13 @@ class CapsuleTests(unittest.TestCase):
         raw = b'\xef\xbb\xbfexecution_contract: {}\nfuture: [1]\n'
         self.write(raw)
         self.assignment['process_execution'] = {'assignment_capsule_checksum': 'sha256:' + hashlib.sha256(raw).hexdigest()}
-        with patch('processforge_core.work_context.validate_execution_contract', return_value={'status': 'valid'}) as validator:
+        with patch('processforge_core.work.context.validate_execution_contract', return_value={'status': 'valid'}) as validator:
             result = self.validate()
             self.assertEqual(result['stage_view']['id'], 'read')
             validator.assert_called_once_with(self.root, self.flow / 'assignments/a.yaml', self.assignment,
                                                {'execution_contract': {}, 'future': [1]}, self.core, check_sources=False)
         self.assignment['process_execution']['assignment_capsule_checksum'] = 'sha256:' + '0' * 64
-        with patch('processforge_core.work_context.validate_execution_contract', side_effect=AssertionError('checksum first')):
+        with patch('processforge_core.work.context.validate_execution_contract', side_effect=AssertionError('checksum first')):
             self.assertEqual(self.validate()['reason'], 'immutable_context_changed')
 
     def test_invalid_yaml_unicode_nonmapping_and_oversized(self):
@@ -295,10 +295,10 @@ class CapsuleTests(unittest.TestCase):
     def test_validator_exception_tuple_remains_exact(self):
         self.write(b'execution_contract: {}')
         for failure in (OSError('io'), ValueError('bad'), TypeError('bad'), AttributeError('bad'), yaml.YAMLError('bad')):
-            with patch('processforge_core.work_context.validate_execution_contract', side_effect=failure):
+            with patch('processforge_core.work.context.validate_execution_contract', side_effect=failure):
                 self.assertEqual(self.validate()['reason'], 'execution_contract_invalid')
         for failure in (KeyError('not caught'), RuntimeError('not caught')):
-            with patch('processforge_core.work_context.validate_execution_contract', side_effect=failure):
+            with patch('processforge_core.work.context.validate_execution_contract', side_effect=failure):
                 with self.assertRaises(type(failure)) as caught:
                     self.validate()
             self.assertIs(caught.exception, failure)
@@ -308,7 +308,7 @@ class CapsuleTests(unittest.TestCase):
         self.write(b'execution_contract: {}\nfuture: [1]\n')
         def validator(project, path, assignment, capsule, core, **options):
             return {'status': 'valid', 'future': capsule['future']}
-        with patch('processforge_core.work_context.validate_execution_contract', side_effect=validator), request_scope():
+        with patch('processforge_core.work.context.validate_execution_contract', side_effect=validator), request_scope():
             self.validate()['future'].clear()
             self.assertEqual(self.validate()['future'], [1])
             metadata = self.path.stat()
@@ -327,10 +327,10 @@ class CapsuleTests(unittest.TestCase):
             def _assignment_path(inner, identifier):
                 return self.root / 'custom.yaml'
         service = CustomPaths(self.root, None, object())
-        with patch('processforge_core.work_context.validate_execution_contract', return_value={'status': 'valid'}) as validator:
+        with patch('processforge_core.work.context.validate_execution_contract', return_value={'status': 'valid'}) as validator:
             self.assertEqual(service._contract_validation(self.assignment)['status'], 'valid')
             self.assertEqual(validator.call_args.args[1], self.root / 'custom.yaml')
-        with patch('processforge_core.work_context.normalized_assignment_contract', return_value=NORMALIZED) as normalizer:
+        with patch('processforge_core.work.context.normalized_assignment_contract', return_value=NORMALIZED) as normalizer:
             self.assertEqual(service._context_reader().normalized_assignment(self.assignment), NORMALIZED)
             self.assertEqual(normalizer.call_args.args[1], self.root / 'custom.yaml')
 
@@ -350,7 +350,7 @@ class CapsuleTests(unittest.TestCase):
             else:
                 self.write(raw)
             self.assignment['process_execution'] = {'assignment_capsule_checksum': checksum}
-            with patch('processforge_core.work_context.validate_execution_contract', side_effect=lambda *args, **kwargs: copy.deepcopy(result)):
+            with patch('processforge_core.work.context.validate_execution_contract', side_effect=lambda *args, **kwargs: copy.deepcopy(result)):
                 expected = namespace['baseline_contract_validation'](self.service, self.assignment)
                 self.assertEqual(self.validate(), expected)
             count += 1

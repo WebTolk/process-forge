@@ -12,7 +12,7 @@ from .local_resource_search import LocalSearchError, ResourceSearchIndex, author
 from .ports import ProjectSnapshotReadPort, WorkReadCorePort
 from .process_execution import ProcessExecutionService, project_process_selection
 from .request_scope import scoped_request
-from .work_inventory import WorkInventory
+from .work.inventory import WorkInventory
 
 
 @dataclass(frozen=True)

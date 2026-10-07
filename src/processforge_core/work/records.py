@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator
 
-from .ports import WorkReadCorePort
-from .work_inventory import WorkInventory
+from ..ports import WorkReadCorePort
+from .inventory import WorkInventory
 
 __all__ = ()
 

@@ -8,7 +8,7 @@ import subprocess
 import sys
 import time
 
-from ..work_context import validate_execution_contract
+from ..work.context import validate_execution_contract
 from .contracts import (EgressError, binding_for, bounded_json, digest, encoded,
                         fingerprint, require_v2, security_intent, validate_policy)
 from .engine import Session

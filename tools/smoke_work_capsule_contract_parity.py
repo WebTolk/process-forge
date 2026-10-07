@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT / "src"))
 import processforge as core
 import process_execution_smoke_support as support
 from processforge_core.process_execution import ProcessExecutionService, canonical_fingerprint
-from processforge_core.work_context import (
+from processforge_core.work.context import (
     SOURCE_LIMITS,
     ContextContractError,
     _capture_sources,

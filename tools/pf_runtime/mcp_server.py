@@ -79,7 +79,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
     from processforge_core.local_resource_search import LocalSearchError
     from processforge_core.composition import build_process_execution_service, build_project_context_service, build_resource_search_service, build_resource_resolve_service
     from processforge_core.process_execution import creation_scope_intent
-    from processforge_core.work_context import ContextContractError
+    from processforge_core.work.context import ContextContractError
 
     configured_session = str(session_id or "")
     requested_session = str(arguments.get("session_id") or "")
@@ -201,7 +201,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
             context_id=arguments.get("context_id", ""),
         )
     if name in {"pf.work.search", "pf.work.resolve"}:
-        from processforge_core.work_resources import WorkResourceService
+        from processforge_core.work.resources import WorkResourceService
 
         bound_project = resolve_garage_project()
         return WorkResourceService(bound_project, workplace, core).read(

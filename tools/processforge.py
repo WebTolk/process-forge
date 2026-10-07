@@ -9907,7 +9907,7 @@ def workspace_ref_matches_resource(resource: dict[str, Any], requested: Any) -> 
 
 def workspace_access_runtime_document(project_root: Path, task: dict[str, Any]) -> dict[str, Any]:
     from processforge_core.prepared_resources import authorize_resources
-    from processforge_core.work_context import validate_execution_contract
+    from processforge_core.work.context import validate_execution_contract
     task_id = safe_id(str(task.get("id") or "task"), "task")
     capsule = load_yaml_document(assignment_capsule_path(project_root, task_id))
     validation = validate_execution_contract(project_root, assignment_yaml_path(project_root, task_id), task,
@@ -12838,7 +12838,7 @@ def assignment_dependency_set(metadata: dict[str, Any]) -> set[str]:
 
 
 def normalized_assignment_contract(project_root: Path, assignment: Path, metadata: dict[str, Any]) -> dict[str, Any]:
-    from processforge_core.work_context import normalized_assignment_contract as normalize
+    from processforge_core.work.context import normalized_assignment_contract as normalize
     return normalize(project_root, assignment, metadata, sys.modules[__name__])
 
 
@@ -12977,7 +12977,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     snapshot_yaml, _snapshot_md = project_context_snapshot_paths(project_root)
     snapshot_sha = "sha256:" + sha256_file(snapshot_yaml)
     snapshot_meta = snapshot.get("snapshot", {}) if isinstance(snapshot.get("snapshot"), dict) else {}
-    from processforge_core.work_context import ContextContractError, build_context_fields
+    from processforge_core.work.context import ContextContractError, build_context_fields
     try:
         fields = build_context_fields(project_root, assignment, metadata, snapshot, sys.modules[__name__],
             workplace=(resolve_project_workplace_manifest(project_root).parent if resolve_project_workplace_manifest(project_root) else None))
@@ -13116,7 +13116,7 @@ def command_capsule_doctor(args: argparse.Namespace) -> int:
         allowed_live = bool(item.get("non_reproducible_live_resource")) or reproducibility.get("level") == "non_reproducible"
         checks.append(check("FAIL" if uses_latest and not allowed_live else "PASS", f"resource {item.get('id', 'resource')} avoids unpinned latest"))
     if "execution_contract" in capsule:
-        from processforge_core.work_context import validate_execution_contract
+        from processforge_core.work.context import validate_execution_contract
         assignment_ref = str(capsule.get("capsule", {}).get("assignment_path") or "")
         assignment_path = project_root / assignment_ref
         metadata = extract_assignment_front_matter(assignment_path) if assignment_path.is_file() else {}
@@ -19015,7 +19015,7 @@ def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None 
         if status:
             raise SystemExit(status)
     task = load_task(project_root, task_id)
-    from processforge_core.work_context import validate_execution_contract
+    from processforge_core.work.context import validate_execution_contract
     prepared_capsule = load_yaml_document(assignment_capsule_path(project_root, task_id))
     validation = validate_execution_contract(project_root, assignment_yaml_path(project_root, task_id), task,
                                              prepared_capsule, sys.modules[__name__], require_ready=True)
@@ -20728,7 +20728,7 @@ def command_work_start(args: argparse.Namespace) -> int:
     scope_intent = None
     if getattr(args, "scope_file", None):
         from processforge_core.process_execution import creation_scope_intent
-        from processforge_core.work_context import ContextContractError
+        from processforge_core.work.context import ContextContractError
         try:
             with Path(args.scope_file).open("rb") as stream:
                 raw = stream.read(65537)
@@ -20757,7 +20757,7 @@ def command_work_state(args: argparse.Namespace) -> int:
 
 
 def command_work_resource_read(args: argparse.Namespace) -> int:
-    from processforge_core.work_resources import WorkResourceService
+    from processforge_core.work.resources import WorkResourceService
 
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
@@ -21453,7 +21453,7 @@ def existing_capsule_status(project_root: Path, task_id: str) -> tuple[str, str]
         return "missing", rel(capsule_path, project_root)
     capsule = load_yaml_document(capsule_path)
     if isinstance(capsule, dict) and "execution_contract" in capsule:
-        from processforge_core.work_context import validate_execution_contract
+        from processforge_core.work.context import validate_execution_contract
         assignment_path = assignment_yaml_path(project_root, task_id)
         metadata = extract_assignment_front_matter(assignment_path) if assignment_path.is_file() else {}
         validation = validate_execution_contract(project_root, assignment_path, metadata, capsule, sys.modules[__name__])

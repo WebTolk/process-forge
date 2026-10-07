@@ -19,8 +19,8 @@ def _disk_identity():
     root = Path(__file__).parent
     payload = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.glob("*.py"))}
     core_root = root.parents[2]
-    for name in ("src/processforge_core/work_context.py", "src/processforge_core/process_execution.py",
-                 "src/processforge_core/prepared_input.py", "src/processforge_core/work_resource_material.py",
+    for name in ("src/processforge_core/work/context.py", "src/processforge_core/process_execution.py",
+                 "src/processforge_core/prepared_input.py", "src/processforge_core/work/resource_material.py",
                  "tools/processforge.py", "tools/prepared_executor.py", "schemas/execution-contract.schema.json",
                  "tools/smoke_egress_engine.py", "tools/smoke_egress_work.py", "tools/smoke_egress_transport.py"):
         payload[name] = hashlib.sha256((core_root / name).read_bytes()).hexdigest()

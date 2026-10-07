@@ -2,16 +2,37 @@
 
 Ядро развивается поэтапно. `tools/processforge.py` остаётся действующим legacy facade, а не удалённым кодом. CLI, MCP, hooks и aliases bootstrap сохраняются.
 
+## Размещение По Пакетам
+
+Новые модули реализации размещаются в пакетах по ответственности согласно
+[правилу ядра](../../../src/processforge_core/AGENTS.md). Имена пакетов — короткие
+и в нижнем регистре, модулей — `snake_case.py`, классов — `CapWords`. Модуль может
+содержать службу, её исключения и связанные вспомогательные функции; обязательного
+соответствия «один класс — один файл» нет. Дерево пакетов должно быть неглубоким,
+а `__init__.py` — минимальным.
+
+Существующие Work-модули перенесены в `processforge_core.work`: `context`,
+`context_read`, `inventory`, `records`, `resources`, `resource_material`,
+`selection`, `state`, `boundary_advisory`, `transition_commit`. Например,
+`WorkResourceService` импортируется из `processforge_core.work.resources`.
+Текущие потребители Core/CLI/MCP/Host переведены на эти пути. Старые плоские
+Work-импорты на текущем dev-этапе не сохраняются.
+
+Сборка/bootstrap, общие точки входа и оставшиеся прежние модули пока находятся в
+корне. Следующие группы ответственности переносятся отдельными ограниченными Work.
+Используются обычные Python-пакеты; слой совместимости импортов и новый loader
+не добавляются.
+
 ## Текущие Обязанности
 
 | Модуль | Обязанность |
 | --- | --- |
 | `src/processforge_core/garage.py` | Сервисы проекта, контекста и чтения текущей работы, включая `CurrentWorkService`. |
 | `src/processforge_core/process_execution.py`, `continuation.py` | Управляемый lifecycle, выбор работы, pinned execution, evidence, завершение и восстановление. |
-| `src/processforge_core/work_state.py` | Чистые правила требований завершения и action/blockers состояния Work, без ввода-вывода и полномочий на переход. |
-| `src/processforge_core/document_store.py`, `work_inventory.py` | Чтение YAML и актуальный отсортированный обход без общего изменяемого кеша документов. |
-| `src/processforge_core/work_records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
-| `src/processforge_core/work_context_read.py` | Прежние проверки капсулы и нормализация Assignment с явно переданными функциями путей и проверки. |
+| `src/processforge_core/work/state.py` | Чистые правила требований завершения и action/blockers состояния Work, без ввода-вывода и полномочий на переход. |
+| `src/processforge_core/document_store.py`, `work/inventory.py` | Чтение YAML и актуальный отсортированный обход без общего изменяемого кеша документов. |
+| `src/processforge_core/work/records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
+| `src/processforge_core/work/context_read.py` | Прежние проверки капсулы и нормализация Assignment с явно переданными функциями путей и проверки. |
 | `src/processforge_core/process_definition_read.py` | Прежние правила чтения effective ProcessDefinition и pin status с явными зависимостями resolver/fingerprint. |
 | `src/processforge_core/project_snapshot_read.py` | Чтение актуального ProjectContextSnapshot и checksum исходных байтов через переданные функции пути, загрузки и хеширования. |
 | `src/processforge_core/ports.py` | Внутренние типизированные зависимости чтения текущей работы, записей Work и контекста. |
@@ -27,11 +48,11 @@
 
 `WorkRecordReadPort` содержит `runs`, `load_run` и `load_assignment`. По умолчанию фабрика подключает `YamlWorkRecordReader` на существующих `WorkInventory` и YAML loader. Пути и документы читаются актуальными, общего кеша между запросами нет. Прямой старый конструктор сохраняет прежний обход и private path helpers, включая переопределения в подклассах. Читатель не выбирает Work, не скрывает дубликаты и aliases и не решает вопросы восстановления.
 
-`WorkContextReadPort` содержит `validation` и `normalized_assignment`. Сборка по умолчанию выполняется лениво через `build_work_context_read_service`: используются функции путей вызывающего сервиса и узкий `LegacyWorkContextAdapter`. `WorkContextReadService` не зависит от монолитного ядра: четыре зависимости определяют пути, проверяют контракт и нормализуют Assignment. Прежние правила `work_context.py` сохраняют signed identity/intent, pins, scope и stage views. Лимиты байтов, запрет symlink/выхода за root, checksum исходных байтов, безопасный разбор и порядок ошибок сохранены. Сборка не захватывает документ, root или Logger; проверки и нормализация получают актуальные данные.
+`WorkContextReadPort` содержит `validation` и `normalized_assignment`. Сборка по умолчанию выполняется лениво через `build_work_context_read_service`: используются функции путей вызывающего сервиса и узкий `LegacyWorkContextAdapter`. `WorkContextReadService` не зависит от монолитного ядра: четыре зависимости определяют пути, проверяют контракт и нормализуют Assignment. Прежние правила `work/context.py` сохраняют signed identity/intent, pins, scope и stage views. Лимиты байтов, запрет symlink/выхода за root, checksum исходных байтов, безопасный разбор и порядок ошибок сохранены. Сборка не захватывает документ, root или Logger; проверки и нормализация получают актуальные данные.
 
 `ProcessDefinitionReadPort` предоставляет `effective_process(run)`. `ProcessDefinitionReadService` получает прежний resolver определения процесса и существующую функцию fingerprint. По умолчанию `_effective_process` использует ленивую сборку через `build_process_definition_read_service` и узкий `LegacyProcessDefinitionAdapter`. Для валидных и повреждённых pin каталог не читается; legacy определения разрешаются заново при каждом вызове. Возвращаемые копии сохраняют неизвестные поля. Прежние статусы `pinned`, `corrupt`, `legacy_unpinned`, `missing` и границы обработки исключений сохранены. Reader не выбирает процесс, не создаёт pin и не разрешает переходы; остальные зависимости от legacy остаются.
 
-`ProjectSnapshotReadPort` предоставляет `load(path=None)` и `checksum(path)`. Стандартный `ProjectSnapshotReadService` собирается лениво через `build_project_snapshot_read_service` и `LegacyProjectSnapshotAdapter`, сохраняя прежний YAML loader и переопределения `_flow_root`/`_sha256_file`. Создание pin передаёт один захваченный путь загрузке и checksum; selected resources, preflight и capsule capture загружают актуальный документ отдельно. Отсутствующий файл даёт пустой checksum; ошибки загрузки и хеширования сохраняют прежний порядок. Нового кеша нет. Проверки generation в `work_context.py` остаются прежними; validator сравнивает закреплённые metadata capsule и не получает новую зависимость чтения текущего снимка.
+`ProjectSnapshotReadPort` предоставляет `load(path=None)` и `checksum(path)`. Стандартный `ProjectSnapshotReadService` собирается лениво через `build_project_snapshot_read_service` и `LegacyProjectSnapshotAdapter`, сохраняя прежний YAML loader и переопределения `_flow_root`/`_sha256_file`. Создание pin передаёт один захваченный путь загрузке и checksum; selected resources, preflight и capsule capture загружают актуальный документ отдельно. Отсутствующий файл даёт пустой checksum; ошибки загрузки и хеширования сохраняют прежний порядок. Нового кеша нет. Проверки generation в `work/context.py` остаются прежними; validator сравнивает закреплённые metadata capsule и не получает новую зависимость чтения текущего снимка.
 
 `ProcessExecutionService.state()` сохраняет точный выбор Work, проверки контекста и pins, evidence/outcomes и готовность полномочий. `WorkStatePolicy` отдельно вычисляет требования завершения и action/blockers по переданным записям. Она не читает файлы, не меняет записи, не выбирает caller identity и не переводит процесс. Приоритеты конечного состояния, завершения, блокировки и незавершённости прежние; execution_readiness остаётся отдельным полем ответа.
 

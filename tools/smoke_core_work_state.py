@@ -29,7 +29,7 @@ from processforge_core import process_execution as execution
 from processforge_core.bootstrap import RuntimeBootstrap
 from processforge_core.composition import build_process_execution_service
 from processforge_core.process_execution import ProcessExecutionService
-from processforge_core.work_state import WorkStatePolicy
+from processforge_core.work.state import WorkStatePolicy
 
 BASELINE = None
 SCRATCH = None
@@ -86,7 +86,7 @@ def logger(profile='normal', *, sinks=None, **options):
 
 class NormalizedTests(unittest.TestCase):
     def setUp(self):
-        self.normalization = patch('processforge_core.work_context.normalized_assignment_contract', return_value=copy.deepcopy(NORMALIZED))
+        self.normalization = patch('processforge_core.work.context.normalized_assignment_contract', return_value=copy.deepcopy(NORMALIZED))
         self.normalization.start()
         self.addCleanup(self.normalization.stop)
 
@@ -153,8 +153,8 @@ class FixtureTests(NormalizedTests):
         self.assertEqual(service.state()['blockers'], [{'code': 'execution_contract_invalid'}])
 
     def test_permission_readiness_stays_separate(self):
-        from processforge_core.work_context import ContextContractError
-        with patch('processforge_core.work_context.normalized_assignment_contract', side_effect=ContextContractError('scope_invalid')):
+        from processforge_core.work.context import ContextContractError
+        with patch('processforge_core.work.context.normalized_assignment_contract', side_effect=ContextContractError('scope_invalid')):
             state = fixture().state()
         self.assertEqual(state['action'], 'work_ready')
         self.assertEqual(state['execution_readiness'], {'status': 'blocked', 'blockers': ['scope_invalid']})
@@ -196,7 +196,7 @@ class PolicyTests(unittest.TestCase):
         self.assertEqual(assignment['stage_execution']['blockers'][0]['detail'], [1])
 
     def test_policy_isolated_import_without_cli_or_host(self):
-        script = f"import sys; sys.path.insert(0, {str(ROOT / 'src')!r}); from processforge_core.work_state import WorkStatePolicy; assert WorkStatePolicy().decide({{}}, {{}}, {{}}, []).action == 'work_ready'; assert 'processforge' not in sys.modules; assert 'pf_runtime.host' not in sys.modules"
+        script = f"import sys; sys.path.insert(0, {str(ROOT / 'src')!r}); from processforge_core.work.state import WorkStatePolicy; assert WorkStatePolicy().decide({{}}, {{}}, {{}}, []).action == 'work_ready'; assert 'processforge' not in sys.modules; assert 'pf_runtime.host' not in sys.modules"
         result = subprocess.run([sys.executable, '-I', '-B', '-c', script], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
 
@@ -232,7 +232,7 @@ class ObserverTests(NormalizedTests):
         self.assertEqual(validation['identity']['stage_id'], 'read')
 
     def test_original_exception_and_frozen_exception(self):
-        from processforge_core.work_context import ContextContractError
+        from processforge_core.work.context import ContextContractError
         for exception in (OSError('read failed'), ContextContractError('frozen_failure')):
             records = []
             service = fixture(observer=logger('trace', sinks=[records.append]))
@@ -338,7 +338,7 @@ class CompositionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as raw:
             target = Path(raw) / 'src/processforge_core'
             shutil.copytree(ROOT / 'src/processforge_core', target, ignore=shutil.ignore_patterns('__pycache__'))
-            script = f"import sys; sys.path.insert(0, {str(target.parent)!r}); from pathlib import Path; from processforge_core.composition import build_process_execution_service; from processforge_core.work_state import WorkStatePolicy; service=build_process_execution_service(Path('.'), None, object()); assert service.observer is None; assert WorkStatePolicy().decide({{}}, {{}}, {{}}, []).action=='work_ready'; assert 'processforge' not in sys.modules; assert 'pf_runtime.host' not in sys.modules"
+            script = f"import sys; sys.path.insert(0, {str(target.parent)!r}); from pathlib import Path; from processforge_core.composition import build_process_execution_service; from processforge_core.work.state import WorkStatePolicy; service=build_process_execution_service(Path('.'), None, object()); assert service.observer is None; assert WorkStatePolicy().decide({{}}, {{}}, {{}}, []).action=='work_ready'; assert 'processforge' not in sys.modules; assert 'pf_runtime.host' not in sys.modules"
             result = subprocess.run([sys.executable, '-I', '-B', '-c', script], cwd=target.parent, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
 

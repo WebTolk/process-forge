@@ -31,7 +31,7 @@ from processforge_core.common import yaml_io
 from processforge_core.document_store import YamlDocumentReader
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.request_scope import request_scope
-from processforge_core.work_records import YamlWorkRecordReader
+from processforge_core.work.records import YamlWorkRecordReader
 
 BASELINE = None
 SCRATCH = None
@@ -183,7 +183,7 @@ class InjectedReadTests(unittest.TestCase):
     def test_state_observer_noop_trace_and_failing_sink(self):
         normalized = {'scope': {'allowed_actions': ['read']},
                       'assignment': {'execution_mode': {'kind': 'read_only'}}}
-        with patch('processforge_core.work_context.normalized_assignment_contract', return_value=normalized):
+        with patch('processforge_core.work.context.normalized_assignment_contract', return_value=normalized):
             expected = self.service.state(run_id='r', assignment_id='a', context_id='a-capsule')
             self.assertEqual(expected['action'], 'work_ready')
             events = []

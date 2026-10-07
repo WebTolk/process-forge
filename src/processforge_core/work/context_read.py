@@ -7,7 +7,7 @@ import hashlib
 from pathlib import Path
 from typing import Any, Callable
 
-from .request_scope import safe_load
+from ..request_scope import safe_load
 
 __all__ = ()
 
@@ -20,7 +20,7 @@ class WorkContextReadService:
     normalize_assignment: Callable[[Path, dict[str, Any]], dict[str, Any]]
 
     def validation(self, assignment: dict[str, Any]) -> dict[str, Any]:
-        from .work_context import stage_view
+        from .context import stage_view
         import yaml
 
         path = self.flow_root() / "contexts" / "assignment-capsules" / f"{assignment['id']}.capsule.yaml"

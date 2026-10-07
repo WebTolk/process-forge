@@ -139,7 +139,7 @@ class ReadinessTests(unittest.TestCase):
         if BASELINE:self.assertEqual(outcomes[0],outcomes[1])
 
     def test_callback_exception_identity(self):
-        from processforge_core.work_context import ContextContractError
+        from processforge_core.work.context import ContextContractError
         for cls in ([BASELINE] if BASELINE else [])+[process_execution.ProcessExecutionService]:
             error=ContextContractError('required_failure')
             class Override(cls):
