@@ -213,7 +213,7 @@ def collect(workplace, roots, core, instance_id, registration, *, coverage=True,
     result = {"schema_version": 1, "instance_id": instance_id,
               "observed_at": datetime.fromtimestamp(now, timezone.utc).isoformat(), "groups": groups}
     if interval_seconds is not None:
-        from .configuration import MetricsConfig
+        from ..configuration import MetricsConfig
         result["interval_seconds"] = MetricsConfig(interval_seconds).interval_seconds
     return result
 
@@ -227,7 +227,7 @@ def project(snapshot, instance_id, *, now):
         interval = snapshot.get("interval_seconds")
         maximum_age = MAX_AGE
         if "interval_seconds" in snapshot:
-            from .configuration import MetricsConfig
+            from ..configuration import MetricsConfig
             interval = MetricsConfig(interval).interval_seconds
             maximum_age = max(5, 4.5 * interval)
         if not 0 <= age <= maximum_age:

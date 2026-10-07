@@ -31,7 +31,7 @@ from . import host
 
 def metrics_core():
     # The host may be imported before the Core bootstrap by standalone callers.
-    from processforge_core import runtime_metrics
+    import processforge_core.runtime.metrics as runtime_metrics
     return runtime_metrics
 
 

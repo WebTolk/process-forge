@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import processforge as core
-from processforge_core import runtime_metrics as metrics
+import processforge_core.runtime.metrics as metrics
 from pf_runtime import service, monitor
 from processforge_core.configuration import ConfigService, ConfigurationError, PFConfig
 from processforge_core.configuration.yaml_store import YamlConfigStore

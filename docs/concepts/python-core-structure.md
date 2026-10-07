@@ -82,6 +82,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/project/snapshot.py` | Live ProjectContextSnapshot loading and raw-byte checksum through explicit path/loader/hash callbacks. |
 | `src/processforge_core/project/initialization.py` | Existing project onboarding, initialization status and deterministic repair, reusing guarded agent entry transactions. |
 | `src/processforge_core/resources/local_search.py` | Existing authorized local resource index, SQLite/FTS search, coverage and indexing policy helpers. |
+| `src/processforge_core/runtime/metrics.py` | Existing bounded runtime metrics collection, registered project roots, freshness and collection workers; import from `processforge_core.runtime.metrics`. |
 | `src/processforge_core/maintenance/update.py` | Existing Core update plan, controlled apply, status and recovery, preserving manifest and backup guards; import from `processforge_core.maintenance.update`. |
 | `src/processforge_core/prepared/input.py`, `prepared/resources.py` | Existing immutable prepared inputs, worker-attempt manifests, authorized resource material and collection receipts; import from `processforge_core.prepared.input` or `processforge_core.prepared.resources`. |
 | `src/processforge_core/ports.py` | Internal structural current-work, raw Work-record, context-read and process-definition dependencies. |
