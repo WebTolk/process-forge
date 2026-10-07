@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .completion_intent_replay import CompletionIntentReplayService
     from .completion_intent_read import CompletionIntentReadService
     from .completion_intent_builder import CompletionIntentBuilder
     from .completion_documents import CompletionDocumentService
@@ -1134,34 +1135,15 @@ class ProcessExecutionService:
     ) -> str | None:
         return self._completion_intent_validation_service().validate(intent, run, assignment, journal_path)
 
+    def _completion_intent_replay_service(self) -> CompletionIntentReplayService:
+        from .composition import build_completion_intent_replay_service
+
+        return build_completion_intent_replay_service(
+            assignment_path=lambda assignment_id: self._assignment_path(assignment_id), run_path=lambda run_id: self._run_path(run_id), flow_root=lambda: self._flow_root(), atomic_yaml=lambda path, document: self._atomic_yaml(path, document), atomic_text=lambda path, text: self._atomic_text(path, text), state=lambda **selectors: self.state(**selectors), write_projection=lambda state: self._write_projection(state), emit=lambda *args, **kwargs: self._emit(*args, **kwargs), intent_path=lambda run_id: self._completion_intent_path(run_id)
+        )
+
     def _replay_completion_intent(self, intent: dict[str, Any], *, session_id: str = "", remove_intent: bool = True) -> dict[str, Any]:
-        run_id = str(intent["run_id"])
-        assignment_id = str(intent["assignment_id"])
-        final = intent["final"]
-        final_assignment = copy.deepcopy(final["assignment"])
-        final_run = copy.deepcopy(final["run"])
-        self._atomic_yaml(self._assignment_path(assignment_id), final_assignment)
-        self._atomic_yaml(self._run_path(run_id), final_run)
-        self._atomic_text(self._run_path(run_id).parent / "summary.md", str(final["summary"].get("content") or ""))
-        self._atomic_text(self._flow_root() / "handoffs" / "runs" / f"{run_id}-handoff.md", str(final["handoff"].get("content") or ""))
-        self._atomic_text(self._run_path(run_id).parent / "task-index.md", str(final["task_index"].get("content") or ""))
-        result_state = self.state(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
-        self._write_projection(result_state)
-        stage_id = str(final_assignment.get("stage") or "")
-        for event in final["events"]:
-            self._emit(
-                str(event["event_type"]),
-                final_run,
-                final_assignment,
-                str(event.get("stage_id") or stage_id),
-                outcome=str(event.get("outcome") or "completed"),
-                previous_stage_id=str(event.get("previous_stage_id") or stage_id),
-                next_stage_id=str(event.get("next_stage_id") or ""),
-                event_id=str(event["event_id"]),
-            )
-        if remove_intent:
-            self._completion_intent_path(run_id).unlink(missing_ok=True)
-        return {**result_state, "action": "run_completed", "previous_stage_id": stage_id, "next_stage_id": "", "recovered": True}
+        return self._completion_intent_replay_service().replay(intent, session_id=session_id, remove_intent=remove_intent)
 
     def _complete_locked(self, run: dict[str, Any], assignment: dict[str, Any], process: dict[str, Any], *, outcome: str, notes: str, completed_at: str) -> None:
         run_id = str(run["id"])

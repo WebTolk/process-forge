@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .completion_intent_replay import CompletionIntentReplayService
     from .completion_intent_read import CompletionIntentReadService
     from .completion_intent_builder import CompletionIntentBuilder
     from .completion_documents import CompletionDocumentService
@@ -351,4 +352,22 @@ def build_completion_intent_read_service(
 
     return CompletionIntentReadService(
         run_path=run_path, intent_path=intent_path, valid_id=valid_id, load_document=load_document, validate=validate
+    )
+
+
+def build_completion_intent_replay_service(
+    *, assignment_path: Callable[[str], Path],
+    run_path: Callable[[str], Path],
+    flow_root: Callable[[], Path],
+    atomic_yaml: Callable[[Path, dict[str, Any]], Any],
+    atomic_text: Callable[[Path, str], Any],
+    state: Callable[..., dict[str, Any]],
+    write_projection: Callable[[dict[str, Any]], Any],
+    emit: Callable[..., Any],
+    intent_path: Callable[[str], Path]
+) -> CompletionIntentReplayService:
+    from .completion_intent_replay import CompletionIntentReplayService
+
+    return CompletionIntentReplayService(
+        assignment_path=assignment_path, run_path=run_path, flow_root=flow_root, atomic_yaml=atomic_yaml, atomic_text=atomic_text, state=state, write_projection=write_projection, emit=emit, intent_path=intent_path
     )
