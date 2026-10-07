@@ -6004,7 +6004,7 @@ def execute_project_initialization(request: dict[str, Any], files: dict[Path, st
     results = [write_file(path, content, force=force) for path, content in files.items()
                if path not in protected]
     results.append(append_gitignore_entries(project_root / ".gitignore", PROJECT_PRIVATE_GITIGNORE, force=force))
-    from processforge_core.host_integration import optional_host_integration_status
+    from processforge_core.project.host_integration import optional_host_integration_status
     codex_integration = optional_host_integration_status(project_root, sys.modules[__name__])
     emit_process_event(project_root, "project.flow_root.created", process_id="project-onboarding", process_version="1.0.0", payload={"flow_root": PROJECT_FLOW_ROOT})
     emit_process_event(project_root, "project.platform.detected", process_id="project-onboarding", process_version="1.0.0", payload={"project_type": project_type or "auto"})
