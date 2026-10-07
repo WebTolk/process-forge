@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .work_boundary_advisory import WorkBoundaryAdvisoryService
     from .transition_rejection import TransitionRejectionPolicy
     from .completion_intent_validation import CompletionIntentValidationService
     from .run_completion import RunCompletionPolicy
@@ -911,28 +912,15 @@ class ProcessExecutionService:
             sha256_file=self._sha256_file,
         )
 
-    def _next_work_advisory(self, process: dict[str, Any], run: dict[str, Any]) -> dict[str, Any]:
-        pin = run.get("process_execution") if isinstance(run.get("process_execution"), dict) else {}
-        current = str(run.get("process") or "")
-        available = [item for item in _stable_ids(pin.get("allowed_processes")) if item != current]
-        declared = process.get("process_transitions") if isinstance(process.get("process_transitions"), list) else []
-        routed = [str(item.get("to_process") or item.get("target_process") or "") for item in declared if isinstance(item, dict)]
-        route_path = self._flow_root() / "process-routes.yaml"
-        routes = self.core.load_yaml_document(route_path).get("routes", []) if route_path.exists() else []
-        routed.extend(
-            str(item.get("to_process") or item.get("target_process") or "")
-            for item in routes
-            if isinstance(item, dict) and str(item.get("from_process") or "") == current
+    def _work_boundary_advisory_service(self) -> WorkBoundaryAdvisoryService:
+        from .composition import build_work_boundary_advisory_service
+
+        return build_work_boundary_advisory_service(
+            flow_root=lambda: self._flow_root(), stable_ids=_stable_ids, load_document=lambda path: self.core.load_yaml_document(path)
         )
-        recommended = next((item for item in routed if item in available), "")
-        next_work: dict[str, Any] = {"available_processes": available}
-        if recommended:
-            next_work["recommended_process"] = recommended
-        result: dict[str, Any] = {"next": next_work, "session_continuity": {"recommendation": "auto", "reason": "process_boundary"}}
-        handoff = next((str(path) for path in _stable_ids(run.get("final_artifacts")) if path.endswith("-handoff.md")), "")
-        if handoff:
-            result["handoff"] = {"path": handoff}
-        return result
+
+    def _next_work_advisory(self, process: dict[str, Any], run: dict[str, Any]) -> dict[str, Any]:
+        return self._work_boundary_advisory_service().advisory(process, run)
 
     def _effective_process(self, run: dict[str, Any]) -> tuple[dict[str, Any], str]:
         return self._process_reader().effective_process(run)
