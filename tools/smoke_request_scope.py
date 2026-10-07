@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 import yaml
 import processforge as core
-from processforge_core import request_scope as scope
+from processforge_core.common import request_scope as scope
 
 
 class RequestScopeTests(unittest.TestCase):

@@ -11,7 +11,7 @@ from typing import Any
 from .resources.local_search import LocalSearchError, ResourceSearchIndex, authorized_coverage
 from .ports import ProjectSnapshotReadPort, WorkReadCorePort
 from .process_execution import ProcessExecutionService, project_process_selection
-from .request_scope import scoped_request
+from .common.request_scope import scoped_request
 from .work.inventory import WorkInventory
 
 

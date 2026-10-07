@@ -17,7 +17,7 @@ from typing import Any
 
 import yaml
 
-from ..request_scope import safe_load
+from ..common.request_scope import safe_load
 
 
 CONTRACT_VERSION = 1

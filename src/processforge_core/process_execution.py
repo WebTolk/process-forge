@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterator
 
-from .request_scope import safe_load, scoped_request
+from .common.request_scope import safe_load, scoped_request
 from .work.inventory import WorkInventory
 from .work.state import WorkStatePolicy
 from .evidence.collection import EvidenceCollectionPolicy

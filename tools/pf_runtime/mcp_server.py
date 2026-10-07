@@ -67,7 +67,7 @@ def runtime_bootstrap() -> Any:
 
 
 def tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_id: str, runtime: Any) -> dict[str, Any]:
-    from processforge_core.request_scope import scoped_request
+    from processforge_core.common.request_scope import scoped_request
 
     return scoped_request(_tool_result)(name, arguments, workplace, session_id, runtime)
 

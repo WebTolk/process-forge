@@ -28,7 +28,7 @@ from processforge_core import process_execution as execution
 from processforge_core.bootstrap import RuntimeBootstrap
 from processforge_core.composition import build_process_execution_service, build_work_context_read_service
 from processforge_core.process_execution import ProcessExecutionService
-from processforge_core.request_scope import request_scope
+from processforge_core.common.request_scope import request_scope
 from processforge_core.work.context import ContextContractError
 from processforge_core.work.context_read import WorkContextReadService
 

@@ -49,7 +49,7 @@ def scenario(service_type, *, document=None, resource_id=RESOURCE_ID, error='', 
         if error == 'load':
             raise OSError('yaml-load-failure')
         if document_path is not None:
-            from processforge_core.request_scope import safe_load
+            from processforge_core.common.request_scope import safe_load
             return safe_load(document_path.read_text(encoding='utf-8'))
         return copy.deepcopy(document)
     def resolve(root, reference, **kw):

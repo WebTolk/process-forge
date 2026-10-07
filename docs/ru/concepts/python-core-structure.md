@@ -91,6 +91,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/maintenance/update.py` | Существующие plan, контролируемый apply, status и recovery Core update с прежними manifest и backup guards; импорт из `processforge_core.maintenance.update`. |
 | `src/processforge_core/prepared/input.py`, `prepared/resources.py` | Существующие immutable prepared inputs, манифесты worker attempts, авторизованные материалы ресурсов и collection receipts; импорты из `processforge_core.prepared.input` и `processforge_core.prepared.resources`. |
 | `src/processforge_core/project/host_integration.py` | Прежняя ограниченная проверка необязательной интеграции проекта с хостом для подготовки проекта и CLI. |
+| `src/processforge_core/common/request_scope.py` | Прежний общий контекст одного запроса для Garage, lifecycle, YAML/capsule readers и MCP с изоляцией снимков и ограниченным кешем. |
 | `src/processforge_core/ports.py` | Внутренние типизированные зависимости чтения текущей работы, записей Work и контекста. |
 | `src/processforge_core/composition.py` | Общие фабрики сервисов и узкие адаптеры чтения и контекста legacy-модуля. |
 | `src/processforge_core/bootstrap.py` | Существующая сборка runtime-модулей и ленивый доступ к фабрикам сервисов. |

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any, Callable, TypeVar, cast
 
-from . import diagnostics
+from .. import diagnostics
 
 MAX_DOCUMENT_BYTES = 512 * 1024
 MAX_CACHE_BYTES = 8 * 1024 * 1024

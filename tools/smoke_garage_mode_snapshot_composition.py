@@ -44,7 +44,7 @@ def scenario(service_type, *, document=UNSET, supplied=UNSET, session_id='', err
         if error == 'load':
             raise ValueError('snapshot-load-failure')
         if document_path is not None:
-            from processforge_core.request_scope import safe_load
+            from processforge_core.common.request_scope import safe_load
             return safe_load(document_path.read_text(encoding='utf-8'))
         return copy.deepcopy(document)
     core = SimpleNamespace(project_context_snapshot_paths=paths, load_yaml_document=load)

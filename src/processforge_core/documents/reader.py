@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
-from ..request_scope import safe_load
+from ..common.request_scope import safe_load
 
 
 @dataclass(frozen=True)
