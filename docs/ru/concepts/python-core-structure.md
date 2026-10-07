@@ -80,7 +80,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/process_execution.py`, `continuation.py` | Управляемый lifecycle, выбор работы, pinned execution, evidence, завершение и восстановление. |
 | `src/processforge_core/work/state.py` | Чистые правила требований завершения и action/blockers состояния Work, без ввода-вывода и полномочий на переход. |
 | `src/processforge_core/work/automation_readiness.py`, `work/transition_rejection.py` | Прежние проекции готовности автоматизации, чтение актуальных событий Assignment и правила ответа при восстанавливаемом отказе перехода через явные зависимости. |
-| `src/processforge_core/document_store.py`, `work/inventory.py` | Чтение YAML и актуальный отсортированный обход без общего изменяемого кеша документов. |
+| `src/processforge_core/documents/reader.py`, `work/inventory.py` | Чтение YAML и актуальный отсортированный обход без общего изменяемого кеша документов. |
 | `src/processforge_core/work/records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
 | `src/processforge_core/work/context_read.py` | Прежние проверки капсулы и нормализация Assignment с явно переданными функциями путей и проверки. |
 | `src/processforge_core/process_catalog/` | Модели и разрешение каталога, чтение effective ProcessDefinition, выбор из предложенных процессов и подготовка pin через явные зависимости. |

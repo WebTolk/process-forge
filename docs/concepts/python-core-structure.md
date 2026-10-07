@@ -75,7 +75,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/process_execution.py`, `continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
 | `src/processforge_core/work/state.py` | I/O-free completion requirements and Work-state action/blocker policy; not lifecycle authority. |
 | `src/processforge_core/work/automation_readiness.py`, `work/transition_rejection.py` | Existing automation readiness projections, live assignment-event reads and recoverable transition rejection response rules through explicit callbacks. |
-| `src/processforge_core/document_store.py`, `work/inventory.py` | YAML reading and live sorted discovery; no shared mutable document cache. |
+| `src/processforge_core/documents/reader.py`, `work/inventory.py` | YAML reading and live sorted discovery; no shared mutable document cache. |
 | `src/processforge_core/work/records.py` | Live raw Run/Assignment reader; selection and recovery remain in the application service. |
 | `src/processforge_core/work/context_read.py` | Existing capsule validation and assignment normalization with explicit path/validator callbacks. |
 | `src/processforge_core/process_catalog/` | Catalog models/resolution, effective ProcessDefinition reads, offered process selection and pin construction through explicit callbacks. |

@@ -64,7 +64,7 @@ from processforge_core.process_catalog import (
 from processforge_core.process_execution import ProcessExecutionService, project_process_selection, project_specialization_selection
 from processforge_core import project_initialization
 from processforge_core import diagnostics
-from processforge_core.document_store import YamlDocumentReader
+from processforge_core.documents.reader import YamlDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
 PROJECT_FLOW_ROOT = ".pf"

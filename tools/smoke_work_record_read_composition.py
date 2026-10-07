@@ -28,7 +28,7 @@ from processforge_core import process_execution as execution
 from processforge_core.bootstrap import RuntimeBootstrap
 from processforge_core.composition import build_process_execution_service
 from processforge_core.common import yaml_io
-from processforge_core.document_store import YamlDocumentReader
+from processforge_core.documents.reader import YamlDocumentReader
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.request_scope import request_scope
 from processforge_core.work.records import YamlWorkRecordReader

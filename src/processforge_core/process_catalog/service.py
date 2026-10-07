@@ -5,7 +5,7 @@ from typing import Any
 
 from processforge_core.common import rel, safe_id, yaml_error
 from processforge_core.common.yaml_io import _parse_simple_yaml
-from processforge_core.document_store import YamlDocumentReader
+from processforge_core.documents.reader import YamlDocumentReader
 
 from .models import ProcessCatalogContext, ProcessDefinitionRef
 

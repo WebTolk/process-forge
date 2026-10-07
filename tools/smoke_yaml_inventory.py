@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT / "src"))
 import yaml
 import processforge as core
 from processforge_core.common import yaml_io
-from processforge_core.document_store import YamlDocumentReader
+from processforge_core.documents.reader import YamlDocumentReader
 from processforge_core.garage import CurrentWorkService
 from processforge_core.process_catalog import service as catalog
 from processforge_core.process_catalog.models import ProcessCatalogContext
