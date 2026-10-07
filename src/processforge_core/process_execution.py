@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .completion_intent_read import CompletionIntentReadService
     from .completion_intent_builder import CompletionIntentBuilder
     from .completion_documents import CompletionDocumentService
     from .work_boundary_advisory import WorkBoundaryAdvisoryService
@@ -1085,8 +1086,15 @@ class ProcessExecutionService:
     def _run_completion_blockers(self, process: dict[str, Any], run: dict[str, Any], assignment: dict[str, Any]) -> list[dict[str, Any]]:
         return self._run_completion_policy().blockers(process, run, assignment)
 
+    def _completion_intent_read_service(self) -> CompletionIntentReadService:
+        from .composition import build_completion_intent_read_service
+
+        return build_completion_intent_read_service(
+            run_path=lambda run_id: self._run_path(run_id), intent_path=lambda run_id: self._completion_intent_path(run_id), valid_id=lambda value: bool(SAFE_ID_RE.fullmatch(value)), load_document=lambda path: self.core.load_yaml_document(path), validate=lambda intent, run, assignment, path: self._validate_completion_intent(intent, run, assignment, path)
+        )
+
     def _completion_intent_path(self, run_id: str) -> Path:
-        return self._run_path(run_id).parent / "completion-intent.yaml"
+        return self._completion_intent_read_service().path(run_id)
 
     def _completion_intent_builder(self) -> CompletionIntentBuilder:
         from .composition import build_completion_intent_builder
@@ -1108,19 +1116,7 @@ class ProcessExecutionService:
         return self._completion_intent_builder().build(run, assignment, process, outcome=outcome, notes=notes, completed_at=completed_at)
 
     def _load_completion_intent(self, run: dict[str, Any], assignment: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
-        run_id = str(run.get("id") or "")
-        assignment_id = str(assignment.get("id") or "")
-        if not SAFE_ID_RE.fullmatch(run_id) or not SAFE_ID_RE.fullmatch(assignment_id):
-            return None, None
-        path = self._completion_intent_path(run_id)
-        if not path.is_file():
-            return None, None
-        try:
-            intent = self.core.load_yaml_document(path)
-        except (OSError, ValueError, TypeError) as exc:
-            return None, f"journal unreadable: {exc}"
-        error = self._validate_completion_intent(intent, run, assignment, path)
-        return (intent, None) if error is None else (None, error)
+        return self._completion_intent_read_service().load(run, assignment)
 
     def _completion_intent_validation_service(self) -> CompletionIntentValidationService:
         from .composition import build_completion_intent_validation_service

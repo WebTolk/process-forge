@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .completion_intent_read import CompletionIntentReadService
     from .completion_intent_builder import CompletionIntentBuilder
     from .completion_documents import CompletionDocumentService
     from .work_boundary_advisory import WorkBoundaryAdvisoryService
@@ -336,4 +337,18 @@ def build_completion_intent_builder(
 
     return CompletionIntentBuilder(
         project_root=project_root, accumulated_evidence=accumulated_evidence, set_task_status=set_task_status, run_path=run_path, assignment_path=assignment_path, flow_root=flow_root, summary=summary, has_task_index=has_task_index, task_index=task_index, rel=rel, intent_path=intent_path, project_id=project_id, fingerprint=fingerprint
+    )
+
+
+def build_completion_intent_read_service(
+    *, run_path: Callable[[str], Path],
+    intent_path: Callable[[str], Path],
+    valid_id: Callable[[str], bool],
+    load_document: Callable[[Path], dict[str, Any]],
+    validate: Callable[[Any, dict[str, Any], dict[str, Any], Path], str | None]
+) -> CompletionIntentReadService:
+    from .completion_intent_read import CompletionIntentReadService
+
+    return CompletionIntentReadService(
+        run_path=run_path, intent_path=intent_path, valid_id=valid_id, load_document=load_document, validate=validate
     )
