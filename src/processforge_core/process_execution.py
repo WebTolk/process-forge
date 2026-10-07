@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .transition_rejection import TransitionRejectionPolicy
     from .completion_intent_validation import CompletionIntentValidationService
     from .run_completion import RunCompletionPolicy
     from .process_pin import ProcessPinReadService
@@ -871,21 +872,21 @@ class ProcessExecutionService:
     def _process_candidates(self, process_ids: list[str], *, default: str = "") -> list[dict[str, Any]]:
         return self._process_selection_service().process_candidates(process_ids, default=default)
 
+    def _transition_rejection_policy(self) -> TransitionRejectionPolicy:
+        from .composition import build_transition_rejection_policy
+
+        return build_transition_rejection_policy(
+            state=lambda **selectors: self.state(**selectors)
+        )
+
     @staticmethod
     def _is_recoverable_transition_rejection(blocker: Any) -> bool:
-        if not isinstance(blocker, dict):
-            return False
-        return str(blocker.get("code") or "") in {
-            "invalid_evidence",
-            "not_applicable_evidence_incomplete",
-            "artifact_path_missing",
-            "outcome_not_allowed",
-            "invalid_process_definition",
-        }
+        from .transition_rejection import TransitionRejectionPolicy
+
+        return TransitionRejectionPolicy.is_recoverable(blocker)
 
     def _transition_rejected(self, *, run: dict[str, Any], assignment: dict[str, Any], session_id: str, reason: str, blockers: list[dict[str, Any]]) -> dict[str, Any]:
-        state = self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
-        return {**state, "action": "transition_rejected", "reason": reason, "blockers": blockers}
+        return self._transition_rejection_policy().rejected(run=run, assignment=assignment, session_id=session_id, reason=reason, blockers=blockers)
 
     def _process_pin_read_service(self) -> ProcessPinReadService:
         from .composition import build_process_pin_read_service

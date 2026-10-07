@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .transition_rejection import TransitionRejectionPolicy
     from .completion_intent_validation import CompletionIntentValidationService
     from .run_completion import RunCompletionPolicy
     from .process_pin import ProcessPinReadService
@@ -274,4 +275,14 @@ def build_completion_intent_validation_service(
 
     return CompletionIntentValidationService(
         project_root=project_root, fingerprint=fingerprint, terminal_assignment_statuses=terminal_assignment_statuses, effective_process=effective_process, rel=rel, run_path=run_path, assignment_path=assignment_path, flow_root=flow_root, has_project_id=has_project_id, project_id=project_id
+    )
+
+
+def build_transition_rejection_policy(
+    *, state: Callable[..., dict[str, Any]]
+) -> TransitionRejectionPolicy:
+    from .transition_rejection import TransitionRejectionPolicy
+
+    return TransitionRejectionPolicy(
+        state=state
     )
