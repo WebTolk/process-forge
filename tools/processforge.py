@@ -18037,7 +18037,7 @@ def command_continuation_resume(args: argparse.Namespace) -> int:
 
 
 def continuation_command(args: argparse.Namespace, operation: str, **request: Any) -> int:
-    from processforge_core.continuation import ContinuationService
+    from processforge_core.work.continuation import ContinuationService
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     manifest = resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))

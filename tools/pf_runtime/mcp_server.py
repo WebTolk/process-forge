@@ -163,7 +163,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         return build_process_execution_service(bound_project, workplace, core).state(session_id=supplied_session,
             run_id=arguments.get("run_id", ""), assignment_id=arguments.get("assignment_id", ""), context_id=arguments.get("context_id", ""))
     if name.startswith("pf.continuation.") or name == "pf.work.cancel":
-        from processforge_core.continuation import ContinuationService
+        from processforge_core.work.continuation import ContinuationService
         allowed = set(tool_schema(name)["properties"])
         if set(arguments) - allowed:
             raise session_read.SessionReadError("invalid_arguments")

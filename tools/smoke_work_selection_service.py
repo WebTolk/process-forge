@@ -18,7 +18,7 @@ def fixture(cls,root,**dependencies):
     return svc
 def suite(cls,root):
     from unittest.mock import patch
-    from processforge_core.continuation import ContinuationService
+    from processforge_core.work.continuation import ContinuationService
     rows=[]
     records=[{'run_id':'r','assignment_id':'a','active':True,'objective':'A work','created_at':'1','updated_at':'2','session_id':'s'}, {'run_id':'r','assignment_id':'b','active':True,'objective':' B   WORK ','created_at':'1','updated_at':'3'}, {'run_id':'q','assignment_id':'c','active':False,'objective':'a work','created_at':'1','updated_at':'4'}]
     svc=fixture(cls,root,_work_records=lambda **kw:records,_load_run=lambda r:{'id':r},_load_assignment=lambda a:{'id':a})

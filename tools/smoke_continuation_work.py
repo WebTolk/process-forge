@@ -15,7 +15,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tools")]
 import processforge as core
-from processforge_core.continuation import ContinuationService
+from processforge_core.work.continuation import ContinuationService
 from processforge_core.process_execution import ProcessExecutionService
 from process_execution_smoke_support import fixture, stage_evidence
 from smoke_garage_mode_not_promoted_by_session import call_mcp, cli

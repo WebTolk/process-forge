@@ -440,7 +440,7 @@ class ProcessExecutionService:
                                               snapshot, self.core, workplace=self.workplace_root, pin=pin, run_record=run)
                 if fields["execution_contract"]["readiness"]["status"] != "ready":
                     return self._blocked("work_scope_not_ready", blockers=fields["execution_contract"]["readiness"]["blockers"])
-                from .continuation import permission_readiness
+                from .work.continuation import permission_readiness
                 permissions = permission_readiness(fields["execution_contract"]["scope"],
                                                    fields["execution_contract"]["assignment_intent"]["execution_mode"])
                 if permissions["status"] != "ready":
@@ -579,7 +579,7 @@ class ProcessExecutionService:
         finally:
             trace.__exit__(None, None, None)
         decision = policy.decide(run, assignment, contract_validation, incomplete)
-        from .continuation import permission_readiness
+        from .work.continuation import permission_readiness
         from .work.context import ContextContractError
         try:
             normalized = self._context_reader().normalized_assignment(assignment)
@@ -927,7 +927,7 @@ class ProcessExecutionService:
         )
 
     def _bound_work_selection(self, session_id: str) -> dict[str, Any] | None:
-        from .continuation import ContinuationService
+        from .work.continuation import ContinuationService
 
         return ContinuationService(self.project_root, self.workplace_root, self.core).selected(session_id)
 
