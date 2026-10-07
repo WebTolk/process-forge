@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .completion_documents import CompletionDocumentService
     from .work_boundary_advisory import WorkBoundaryAdvisoryService
     from .transition_rejection import TransitionRejectionPolicy
     from .completion_intent_validation import CompletionIntentValidationService
@@ -298,4 +299,18 @@ def build_work_boundary_advisory_service(
 
     return WorkBoundaryAdvisoryService(
         flow_root=flow_root, stable_ids=stable_ids, load_document=load_document
+    )
+
+
+def build_completion_document_service(
+    *, project_root: Path,
+    run_path: Callable[[str], Path],
+    has_task_index: Callable[[], bool],
+    task_index: Callable[[Path, dict[str, Any]], str],
+    atomic_text: Callable[[Path, str], Any]
+) -> CompletionDocumentService:
+    from .completion_documents import CompletionDocumentService
+
+    return CompletionDocumentService(
+        project_root=project_root, run_path=run_path, has_task_index=has_task_index, task_index=task_index, atomic_text=atomic_text
     )

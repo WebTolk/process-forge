@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .completion_documents import CompletionDocumentService
     from .work_boundary_advisory import WorkBoundaryAdvisoryService
     from .transition_rejection import TransitionRejectionPolicy
     from .completion_intent_validation import CompletionIntentValidationService
@@ -1281,13 +1282,15 @@ class ProcessExecutionService:
         self._atomic_text(handoff_path, handoff)
         self._write_task_index(run)
 
+    def _completion_document_service(self) -> CompletionDocumentService:
+        from .composition import build_completion_document_service
+
+        return build_completion_document_service(
+            project_root=self.project_root, run_path=lambda run_id: self._run_path(run_id), has_task_index=lambda: hasattr(self.core, 'render_task_index'), task_index=lambda root, run: self.core.render_task_index(root, run), atomic_text=lambda path, text: self._atomic_text(path, text)
+        )
+
     def _render_summary(self, run: dict[str, Any], assignment: dict[str, Any]) -> str:
-        history = assignment.get("stage_history") if isinstance(assignment.get("stage_history"), list) else []
-        lines = [f"# Run Summary: {run.get('title', run.get('id'))}", "", f"- run_id: `{run.get('id')}`", "- status: `completed`", f"- process: `{run.get('process')}`", "", "## Stage History", ""]
-        lines.extend(f"- `{item.get('stage_id')}`: `{item.get('status')}` (`{item.get('outcome')}`)" for item in history if isinstance(item, dict))
-        if not history:
-            lines.append("- No stage history recorded.")
-        return "\n".join(lines) + "\n"
+        return self._completion_document_service().summary(run, assignment)
 
     def _contract_validation(self, assignment: dict[str, Any]) -> dict[str, Any]:
         return self._context_reader().validation(assignment)
@@ -1331,14 +1334,7 @@ class ProcessExecutionService:
         self._atomic_text(path, json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
 
     def _write_task_index(self, run: dict[str, Any]) -> None:
-        path = self._run_path(str(run["id"])).parent / "task-index.md"
-        if hasattr(self.core, "render_task_index"):
-            text = self.core.render_task_index(self.project_root, run)
-        else:
-            lines = [f"# Task Index: {run['id']}", ""]
-            lines.extend(f"- `{item.get('id')}`: `{item.get('status')}`" for item in run.get("tasks", []) if isinstance(item, dict))
-            text = "\n".join(lines) + "\n"
-        self._atomic_text(path, text)
+        self._completion_document_service().write_task_index(run)
 
     def _emit(self, event_type: str, run: dict[str, Any], assignment: dict[str, Any], stage_id: str, *, outcome: str, previous_stage_id: str = "", next_stage_id: str = "", blockers: list[dict[str, Any]] | None = None, event_id: str | None = None) -> None:
         if not hasattr(self.core, "emit_process_event"):
