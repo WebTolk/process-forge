@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator
 from .request_scope import safe_load, scoped_request
 from .work.inventory import WorkInventory
 from .work.state import WorkStatePolicy
-from .evidence_collection import EvidenceCollectionPolicy
+from .evidence.collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
     from .work.transition_commit import WorkTransitionCommitService
@@ -29,8 +29,8 @@ if TYPE_CHECKING:
     from .process_catalog.selection import ProcessSelectionService
     from .work.selection import WorkSelectionService
     from .work.automation_readiness import AutomationReadinessService
-    from .stage_readiness import StageReadinessPolicy
-    from .evidence_validation import EvidenceValidationService
+    from .evidence.readiness import StageReadinessPolicy
+    from .evidence.validation import EvidenceValidationService
     from .diagnostics import Logger
     from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkRecordReadPort
 

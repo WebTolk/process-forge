@@ -46,7 +46,7 @@ def retained(path):
     ns=dict(vars(process_execution));exec(compile(path.read_text(encoding='utf-8'),str(path),'exec'),ns)
     return ns['ProcessExecutionService']
 
-from processforge_core.evidence_validation import EvidenceValidationService
+from processforge_core.evidence.validation import EvidenceValidationService
 from processforge_core.composition import build_evidence_validation_service
 from dataclasses import FrozenInstanceError
 from unittest.mock import patch

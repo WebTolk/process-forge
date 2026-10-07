@@ -34,7 +34,7 @@ def cases():
 def run_case(service_type,method,args):
     service=service_type(Path('p'),Path('w'),SimpleNamespace())
     return outcome(lambda:getattr(service,method)(*copy.deepcopy(args)))
-from processforge_core.evidence_collection import EvidenceCollectionPolicy
+from processforge_core.evidence.collection import EvidenceCollectionPolicy
 
 class CollectionTests(unittest.TestCase):
     def test_retained_algorithms(self):
@@ -109,7 +109,7 @@ class CollectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
             root=Path(directory)
             shutil.copytree(ROOT/'src/processforge_core',root/'processforge_core',ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
-            code="import sys; from processforge_core.evidence_collection import EvidenceCollectionPolicy; p=EvidenceCollectionPolicy(); assert p.current({})==[]; assert 'processforge' not in sys.modules"
+            code="import sys; from processforge_core.evidence.collection import EvidenceCollectionPolicy; p=EvidenceCollectionPolicy(); assert p.current({})==[]; assert 'processforge' not in sys.modules"
             result=subprocess.run([sys.executable,'-B','-c',code],cwd=root,capture_output=True,text=True,env=dict(os.environ,PYTHONPATH=str(root),PYTHONDONTWRITEBYTECODE='1'))
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)
 

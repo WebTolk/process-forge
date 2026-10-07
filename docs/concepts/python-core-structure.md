@@ -55,12 +55,22 @@ flat paths are removed during this dev refactor. The complete existing classes,
 frozen callback dependencies and lazy factories are unchanged. Lifecycle guards,
 locks, response formats and recovery retain their existing owners.
 
+Evidence collection, validation and stage readiness rules live in
+`processforge_core.evidence`: `collection`, `validation` and `readiness`. For
+example, import `EvidenceValidationService` from
+`processforge_core.evidence.validation`. Composition, process execution and
+existing checks use the owning modules; old flat paths are removed during this
+dev refactor. The complete existing implementations, frozen callbacks, live file
+diagnostics and lazy factories are unchanged. Lifecycle authority, guards, locks
+and transition recovery remain in the process coordinator.
+
 ## Current Ownership
 
 | Module | Responsibility |
 | --- | --- |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
+| `src/processforge_core/evidence/` | Existing evidence collection/identity, normalization and live file diagnostics, requirement/gate satisfaction and ordered readiness blockers through explicit callbacks. |
 | `src/processforge_core/garage.py` | Project/context/read-model services, including `CurrentWorkService`. |
 | `src/processforge_core/process_execution.py`, `continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
 | `src/processforge_core/work/state.py` | I/O-free completion requirements and Work-state action/blocker policy; not lifecycle authority. |

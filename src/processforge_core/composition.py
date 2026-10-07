@@ -24,9 +24,9 @@ if TYPE_CHECKING:
     from .process_catalog.pin import ProcessPinReadService
     from .process_catalog.selection import ProcessSelectionService, ResolvedDefinitionView
     from .work.selection import WorkSelectionService
-    from .stage_readiness import StageReadinessPolicy
+    from .evidence.readiness import StageReadinessPolicy
     from .work.automation_readiness import AutomationReadinessService
-    from .evidence_validation import EvidenceValidationService
+    from .evidence.validation import EvidenceValidationService
     from .garage import ProjectContextService
     from .garage import ResourceSearchService
     from .garage import ResourceResolveService
@@ -177,7 +177,7 @@ def build_evidence_validation_service(
     project_root: Path | Callable[[], Path], *, now_utc: Callable[[], str], relative_path: Callable[[Path], str],
     sha256_file: Callable[[Path], str], path_resolver: Callable[[str], Path | None] | None = None,
 ) -> EvidenceValidationService:
-    from .evidence_validation import EvidenceValidationService
+    from .evidence.validation import EvidenceValidationService
 
     return EvidenceValidationService(project_root, now_utc, relative_path, sha256_file, path_resolver)
 
@@ -188,7 +188,7 @@ def build_stage_readiness_policy(
     stage_definitions: Callable[[dict[str, Any]], list[dict[str, Any]]],
     blocker_callback: Callable[[str, str, dict[str, Any]], dict[str, Any]],
 ) -> StageReadinessPolicy:
-    from .stage_readiness import StageReadinessPolicy
+    from .evidence.readiness import StageReadinessPolicy
 
     return StageReadinessPolicy(file_diagnostic, string_list, stage_definitions, blocker_callback)
 

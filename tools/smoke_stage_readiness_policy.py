@@ -62,7 +62,7 @@ def retained(path):
     return ns['ProcessExecutionService']
 
 from dataclasses import FrozenInstanceError
-from processforge_core.stage_readiness import StageReadinessPolicy
+from processforge_core.evidence.readiness import StageReadinessPolicy
 from processforge_core.composition import build_stage_readiness_policy
 
 def policy(diagnostic=lambda item:None):
@@ -186,7 +186,7 @@ class ReadinessTests(unittest.TestCase):
             self.assertEqual(len(reads),7)
 
     def test_package_without_cli(self):
-        code="import sys; from processforge_core.stage_readiness import StageReadinessPolicy; from processforge_core.composition import build_stage_readiness_policy; p=build_stage_readiness_policy(file_diagnostic=lambda x:None,string_list=lambda x:[],stage_definitions=lambda x:[],blocker_callback=lambda *a:{}); assert p.requirements([],[],[],[],[])==[]; assert not any(n=='processforge' or n.startswith('pf_runtime') for n in sys.modules)"
+        code="import sys; from processforge_core.evidence.readiness import StageReadinessPolicy; from processforge_core.composition import build_stage_readiness_policy; p=build_stage_readiness_policy(file_diagnostic=lambda x:None,string_list=lambda x:[],stage_definitions=lambda x:[],blocker_callback=lambda *a:{}); assert p.requirements([],[],[],[],[])==[]; assert not any(n=='processforge' or n.startswith('pf_runtime') for n in sys.modules)"
         result=subprocess.run([sys.executable,'-B','-c',code],env=dict(os.environ,PYTHONPATH=str(ROOT/'src'),PYTHONDONTWRITEBYTECODE='1'),capture_output=True,text=True,timeout=30)
         self.assertEqual(result.returncode,0,result.stderr)
 
