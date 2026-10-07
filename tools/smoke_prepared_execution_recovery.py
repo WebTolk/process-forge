@@ -7,8 +7,10 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from unittest.mock import patch
 
 import processforge as core
+from processforge_core import prepared_input
 from process_execution_smoke_support import fixture
 from processforge_core.prepared_input import private_file
 from processforge_core.process_execution import ProcessExecutionService
@@ -172,7 +174,64 @@ def private_redirect_refused() -> None:
     print("PASS: real directory redirect refused without private-byte publication", flush=True)
 
 
+def windows_extended_private_paths() -> None:
+    if os.name != "nt":
+        return
+    with tempfile.TemporaryDirectory(prefix="pf-prepared-prefix-") as raw:
+        project = Path(raw).resolve()
+        relative = ".pf/runtime/agent-runs/path-run/path-task/.lifecycle.lock"
+        lock = project / relative
+        lock.parent.mkdir(parents=True)
+        lock.write_text("owner", encoding="utf-8")
+        original_resolve = Path.resolve
+
+        def extended_lock(path: Path, *args, **kwargs) -> Path:
+            resolved = original_resolve(path, *args, **kwargs)
+            if path == lock:
+                return Path("\\\\?\\" + project.drive + "\\$Extend\\$Deleted\\fixture-handle")
+            if path == lock.parent:
+                return Path("\\\\?\\" + str(resolved))
+            return resolved
+
+        # A disappearing regular lock must be located through its parent,
+        # without treating a deleted NTFS handle name as a path redirection.
+        with patch.object(Path, "resolve", extended_lock):
+            require(private_file(project, relative) == lock,
+                    "equivalent extended lock path refused")
+        lock.unlink()
+        with patch.object(Path, "resolve", extended_lock):
+            require(private_file(project, relative) == lock,
+                    "missing transient lock path refused")
+
+        unc = Path("\\\\server\\share\\agent-runs\\lock")
+        with patch.object(Path, "lstat", side_effect=FileNotFoundError), \
+                patch.object(Path, "resolve", return_value=Path("\\\\?\\UNC\\server\\share\\agent-runs")):
+            require(prepared_input._resolved_path(unc) == unc,
+                    "extended UNC path changed its location")
+
+        target = project / ".pf/artifacts/redirected-lock"
+        target.parent.mkdir(parents=True)
+        target.write_text("public fixture", encoding="utf-8")
+
+        def redirected_lock(path: Path, *args, **kwargs) -> Path:
+            if path == lock.parent:
+                return Path("\\\\?\\" + str(target.parent))
+            return original_resolve(path, *args, **kwargs)
+
+        with patch.object(Path, "resolve", redirected_lock):
+            try:
+                private_file(project, relative)
+            except ValueError as exc:
+                require(str(exc) == "prepared_path_redirected", str(exc))
+            else:
+                raise AssertionError("extended redirected lock path accepted")
+        require(target.read_text(encoding="utf-8") == "public fixture",
+                "private bytes published to redirected target")
+    print("PASS: equivalent Windows extended paths accepted; redirects refused", flush=True)
+
+
 def main() -> int:
+    windows_extended_private_paths()
     governed_continuation()
     abrupt_collection_recovery()
     private_redirect_refused()

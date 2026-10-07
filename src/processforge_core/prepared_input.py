@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import os
+import stat
 from pathlib import Path
 import tempfile
 from typing import Any
@@ -32,14 +33,38 @@ def bounded_read(path: Path, maximum: int = MAX_BYTES) -> bytes:
     return raw
 
 
+def _resolved_path(path: Path) -> Path:
+    if os.name == "nt":
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            info = None
+        # Resolving an ordinary file while it is deleted can expose NTFS's
+        # $Deleted handle name. Its location is the resolved parent plus name;
+        # directories, links and other reparse points still resolve fully.
+        ordinary = info is None or (stat.S_ISREG(info.st_mode) and
+                                    not info.st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT)
+        resolved = path.parent.resolve() / path.name if ordinary else path.resolve()
+        # A file removed during Windows realpath's prefix verification can
+        # retain an equivalent extended path. Normalize known drive/UNC forms
+        # before containment checks; do not reinterpret other device namespaces.
+        value = str(resolved)
+        if value.startswith("\\\\?\\UNC\\"):
+            return Path("\\\\" + value[8:])
+        if value.startswith("\\\\?\\") and len(resolved.drive) == 6 and resolved.drive.endswith(":"):
+            return Path(value[4:])
+        return resolved
+    return path.resolve()
+
+
 def local_file(project: Path, relative: str) -> Path:
     path = project / portable_path(relative)
-    if not path.resolve().is_relative_to(project.resolve()) or path.is_symlink():
+    if not _resolved_path(path).is_relative_to(_resolved_path(project)) or path.is_symlink():
         raise ValueError("prepared_path_outside_project")
-    current = project.resolve()
+    current = _resolved_path(project)
     for part in path.relative_to(project).parts:
         current /= part
-        if current.is_symlink() or current.resolve() != current.absolute():
+        if current.is_symlink() or _resolved_path(current) != current.absolute():
             raise ValueError("prepared_path_redirected")
     return path
 
@@ -48,7 +73,7 @@ def private_file(project: Path, relative: str) -> Path:
     path = local_file(project, relative)
     # A lexical runtime prefix is insufficient: even an in-project junction
     # can redirect private delivery bytes into public product/artifact files.
-    path.relative_to(project.resolve() / ".pf" / "runtime" / "agent-runs")
+    path.relative_to(_resolved_path(project) / ".pf" / "runtime" / "agent-runs")
     return path
 
 
