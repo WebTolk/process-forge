@@ -16,6 +16,7 @@ from .work_state import WorkStatePolicy
 from .evidence_collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .work_transition_commit import WorkTransitionCommitService
     from .completion_intent_replay import CompletionIntentReplayService
     from .completion_intent_read import CompletionIntentReadService
     from .completion_intent_builder import CompletionIntentBuilder
@@ -754,59 +755,36 @@ class ProcessExecutionService:
                     self._write_projection(incomplete_state)
                     return {**incomplete_state, "action": "incomplete", "reason": "run_completion_incomplete", "incomplete": completion_blockers}
 
-            now = self.core.now_utc()
-            history = assignment.get("stage_history") if isinstance(assignment.get("stage_history"), list) else []
-            history.append(
-                {
-                    "stage_id": stage_id,
-                    "status": "completed",
-                    "started_at": str(assignment["stage_execution"].get("started_at") or assignment.get("created_at") or ""),
-                    "completed_at": now,
-                    "outcome": outcome,
-                    "next_stage_id": next_stage_id,
-                    "evidence": list(assignment["stage_execution"].get("evidence") or []),
-                    "notes": str(notes or ""),
-                }
+            return self._work_transition_commit_service().commit(
+                run,
+                assignment,
+                process,
+                stage_id=stage_id,
+                next_stage_id=next_stage_id,
+                outcome=outcome,
+                notes=notes,
+                session_id=session_id,
             )
-            assignment["stage_history"] = history
-            previous_stage_id = stage_id
-            if next_stage_id:
-                assignment["stage"] = next_stage_id
-                assignment["stage_status"] = "in_progress"
-                assignment["stage_execution"] = {"started_at": now, "evidence": [], "notes": ""}
-                assignment["updated_at"] = now
-                run["updated_at"] = now
-                self._set_run_task_status(run, str(assignment["id"]), "in_progress")
-                self._atomic_yaml(self._assignment_path(str(assignment["id"])), assignment)
-                self._atomic_yaml(self._run_path(str(run["id"])), run)
-                self._write_task_index(run)
-                action = "stage_transitioned"
-            else:
-                intent = self._build_completion_intent(
-                    run,
-                    assignment,
-                    process,
-                    outcome=outcome,
-                    notes=notes,
-                    completed_at=now,
-                )
-                # JSON is valid YAML and preserves multiline payloads exactly;
-                # the generic YAML formatter folds quoted multiline strings.
-                self._atomic_text(self._completion_intent_path(str(run["id"])), json.dumps(intent, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
-                self._replay_completion_intent(intent, session_id=session_id)
-                action = "run_completed"
 
-            result_state = self.state(run_id=str(run["id"]), assignment_id=str(assignment["id"]), session_id=session_id)
-            if action != "run_completed":
-                self._write_projection(result_state)
-                self._emit("process.stage.completed", run, assignment, previous_stage_id, outcome=outcome, previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
-                self._emit("process.stage.transitioned", run, assignment, next_stage_id or previous_stage_id, outcome=outcome, previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
-                if next_stage_id:
-                    self._emit("process.stage.started", run, assignment, next_stage_id, outcome="started", previous_stage_id=previous_stage_id, next_stage_id=next_stage_id)
-            result = {**result_state, "action": action, "previous_stage_id": previous_stage_id, "next_stage_id": next_stage_id}
-            if action == "run_completed":
-                result.update(self._next_work_advisory(process, run))
-            return result
+    def _work_transition_commit_service(self) -> WorkTransitionCommitService:
+        from .composition import build_work_transition_commit_service
+
+        return build_work_transition_commit_service(
+            now_utc=lambda: self.core.now_utc(),
+            set_run_task_status=lambda run, assignment_id, status: self._set_run_task_status(run, assignment_id, status),
+            assignment_path=lambda assignment_id: self._assignment_path(assignment_id),
+            run_path=lambda run_id: self._run_path(run_id),
+            atomic_yaml=lambda path, document: self._atomic_yaml(path, document),
+            write_task_index=lambda run: self._write_task_index(run),
+            build_completion_intent=lambda *args, **kwargs: self._build_completion_intent(*args, **kwargs),
+            completion_intent_path=lambda run_id: self._completion_intent_path(run_id),
+            atomic_text=lambda path, text: self._atomic_text(path, text),
+            replay_completion_intent=lambda intent, **kwargs: self._replay_completion_intent(intent, **kwargs),
+            state=lambda **selectors: self.state(**selectors),
+            write_projection=lambda state: self._write_projection(state),
+            emit=lambda *args, **kwargs: self._emit(*args, **kwargs),
+            next_work_advisory=lambda process, run: self._next_work_advisory(process, run),
+        )
 
     def can_complete(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
         try:

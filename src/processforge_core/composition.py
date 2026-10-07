@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work_records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work_transition_commit import WorkTransitionCommitService
     from .completion_intent_replay import CompletionIntentReplayService
     from .completion_intent_read import CompletionIntentReadService
     from .completion_intent_builder import CompletionIntentBuilder
@@ -370,4 +371,41 @@ def build_completion_intent_replay_service(
 
     return CompletionIntentReplayService(
         assignment_path=assignment_path, run_path=run_path, flow_root=flow_root, atomic_yaml=atomic_yaml, atomic_text=atomic_text, state=state, write_projection=write_projection, emit=emit, intent_path=intent_path
+    )
+
+
+def build_work_transition_commit_service(
+    *,
+    now_utc: Callable[[], str],
+    set_run_task_status: Callable[[dict[str, Any], str, str], Any],
+    assignment_path: Callable[[str], Path],
+    run_path: Callable[[str], Path],
+    atomic_yaml: Callable[[Path, dict[str, Any]], Any],
+    write_task_index: Callable[[dict[str, Any]], Any],
+    build_completion_intent: Callable[..., dict[str, Any]],
+    completion_intent_path: Callable[[str], Path],
+    atomic_text: Callable[[Path, str], Any],
+    replay_completion_intent: Callable[..., dict[str, Any]],
+    state: Callable[..., dict[str, Any]],
+    write_projection: Callable[[dict[str, Any]], Any],
+    emit: Callable[..., Any],
+    next_work_advisory: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]],
+) -> WorkTransitionCommitService:
+    from .work_transition_commit import WorkTransitionCommitService
+
+    return WorkTransitionCommitService(
+        now_utc=now_utc,
+        set_run_task_status=set_run_task_status,
+        assignment_path=assignment_path,
+        run_path=run_path,
+        atomic_yaml=atomic_yaml,
+        write_task_index=write_task_index,
+        build_completion_intent=build_completion_intent,
+        completion_intent_path=completion_intent_path,
+        atomic_text=atomic_text,
+        replay_completion_intent=replay_completion_intent,
+        state=state,
+        write_projection=write_projection,
+        emit=emit,
+        next_work_advisory=next_work_advisory,
     )
