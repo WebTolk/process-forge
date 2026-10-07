@@ -16,8 +16,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from processforge_core import core_update
-from processforge_core.core_update import CORE_MANIFEST_NAME, CoreUpdateError, apply_update, core_status, make_core_manifest, manifest_bytes, repair_status
+import processforge_core.maintenance.update as core_update
+from processforge_core.maintenance.update import CORE_MANIFEST_NAME, CoreUpdateError, apply_update, core_status, make_core_manifest, manifest_bytes, repair_status
 
 
 def run_pf(*args: str) -> subprocess.CompletedProcess[str]:

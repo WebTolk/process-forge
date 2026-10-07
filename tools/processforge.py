@@ -7481,7 +7481,7 @@ def release_file_content(source_path: Path) -> bytes:
 
 
 def release_core_manifest(files: list[tuple[str, Path]], *, version: str, source: dict[str, Any] | None, generated_at: str | None = None) -> dict[str, Any]:
-    from processforge_core.core_update import CORE_MANIFEST_NAME, make_core_manifest
+    from processforge_core.maintenance.update import CORE_MANIFEST_NAME, make_core_manifest
 
     entries = []
     for archive_path, source_path in files:
@@ -7583,7 +7583,7 @@ def command_release_pack(args: argparse.Namespace) -> int:
             print(f"... {len(files) - 50} more files")
         return 0
     provenance = release_git_provenance(root)
-    from processforge_core.core_update import CORE_MANIFEST_NAME, manifest_bytes
+    from processforge_core.maintenance.update import CORE_MANIFEST_NAME, manifest_bytes
 
     core_manifest = release_core_manifest(files, version=RELEASE_ARCHIVE_VERSION, source=provenance["source"], generated_at=provenance["generated_at"])
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -7781,7 +7781,7 @@ def expected_release_manifest_from_root(root: Path, manifest_data: dict[str, Any
     expected_files = expected_release_files_from_root(root)
     expected = {archive_path: hashlib.sha256(release_file_content(source_path)).hexdigest() for archive_path, source_path in expected_files}
     if manifest_data:
-        from processforge_core.core_update import CORE_MANIFEST_NAME, manifest_bytes
+        from processforge_core.maintenance.update import CORE_MANIFEST_NAME, manifest_bytes
 
         build = manifest_data.get("build") if isinstance(manifest_data.get("build"), dict) else {}
         source = manifest_data.get("source") if isinstance(manifest_data.get("source"), dict) else None
@@ -24173,7 +24173,7 @@ def command_search_index_tick(args: argparse.Namespace) -> int:
 
 
 def command_core_update_status(args: argparse.Namespace) -> int:
-    from processforge_core.core_update import CoreUpdateError, core_status
+    from processforge_core.maintenance.update import CoreUpdateError, core_status
 
     try:
         payload = core_status(Path(args.core_root).expanduser().resolve())
@@ -24185,7 +24185,7 @@ def command_core_update_status(args: argparse.Namespace) -> int:
 
 
 def command_core_update_plan(args: argparse.Namespace) -> int:
-    from processforge_core.core_update import CoreUpdateError, build_plan
+    from processforge_core.maintenance.update import CoreUpdateError, build_plan
 
     try:
         payload = build_plan(
@@ -24202,7 +24202,7 @@ def command_core_update_plan(args: argparse.Namespace) -> int:
 
 
 def command_core_update_apply(args: argparse.Namespace) -> int:
-    from processforge_core.core_update import CoreUpdateError, apply_update
+    from processforge_core.maintenance.update import CoreUpdateError, apply_update
 
     try:
         payload = apply_update(
@@ -24234,7 +24234,7 @@ def command_core_update_apply(args: argparse.Namespace) -> int:
 
 
 def command_core_update_repair(args: argparse.Namespace) -> int:
-    from processforge_core.core_update import repair_status
+    from processforge_core.maintenance.update import repair_status
 
     payload = repair_status(Path(args.core_root).expanduser().resolve())
     print(json.dumps(payload, indent=2, sort_keys=True))

@@ -14,7 +14,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "tools")]
 from processforge_core.agent_entry.contract import encoded, load_contract
-from processforge_core.core_update import CORE_MANIFEST_NAME, manifest_bytes
+from processforge_core.maintenance.update import CORE_MANIFEST_NAME, manifest_bytes
 from smoke_remediation_checksum_surface import load_release_module, load_validator
 
 
