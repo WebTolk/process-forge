@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from .evidence.validation import EvidenceValidationService
     from .garage import ProjectContextService
     from .resources.access import ResourceSearchService
-    from .garage import ResourceResolveService
+    from .resources.access import ResourceResolveService
     from .garage import GarageModeService
     from .diagnostics import Logger
     from .process_execution import ProcessExecutionService
@@ -144,7 +144,7 @@ def build_resource_search_service(
 def build_resource_resolve_service(
     project_root: Path, workplace_root: Path, core: Any, *, snapshots: ProjectSnapshotReadPort | None = None,
 ) -> ResourceResolveService:
-    from .garage import ResourceResolveService
+    from .resources.access import ResourceResolveService
 
     return ResourceResolveService(project_root, workplace_root, core, snapshots=snapshots)
 

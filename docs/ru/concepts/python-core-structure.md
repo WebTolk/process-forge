@@ -93,7 +93,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/project/host_integration.py` | Прежняя ограниченная проверка необязательной интеграции проекта с хостом для подготовки проекта и CLI. |
 | `src/processforge_core/common/request_scope.py` | Прежний общий контекст одного запроса для Garage, lifecycle, YAML/capsule readers и MCP с изоляцией снимков и ограниченным кешем. |
 | `src/processforge_core/resources/snapshot.py` | Прежние search roots, разрешённая selection, path resolution и private navigation ресурсов; чтение snapshot остаётся в project/snapshot.py. |
-| `src/processforge_core/resources/access.py` | Прежний ResourceSearchService: readiness, разрешённый локальный поиск и snapshot injection; сборка через composition. |
+| `src/processforge_core/resources/access.py` | Прежние ResourceSearchService и ResourceResolveService: readiness, разрешённые поиск/разрешение, private navigation и snapshot injection; сборка через composition. |
 | `src/processforge_core/ports.py` | Внутренние типизированные зависимости чтения текущей работы, записей Work и контекста. |
 | `src/processforge_core/composition.py` | Общие фабрики сервисов и узкие адаптеры чтения и контекста legacy-модуля. |
 | `src/processforge_core/bootstrap.py` | Существующая сборка runtime-модулей и ленивый доступ к фабрикам сервисов. |

@@ -18,7 +18,7 @@ for entry in (ROOT / "src", ROOT / "tools"):
         sys.path.insert(0, str(entry))
 
 import processforge as core
-from processforge_core.garage import ResourceResolveService
+from processforge_core.resources.access import ResourceResolveService
 from processforge_core.resources.local_search import search
 
 

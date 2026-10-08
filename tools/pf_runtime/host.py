@@ -1275,7 +1275,7 @@ def command_resolve(args: argparse.Namespace, core: Any) -> int:
 
 
 def resolve_payload(workplace_root: Path, core: Any, *, session: str | None = None, project_root_ref: str | None = None, resource_id: str | None = None) -> dict[str, Any]:
-    from processforge_core.garage import ResourceResolveService
+    from processforge_core.resources.access import ResourceResolveService
 
     project_root = project_for_session(argparse.Namespace(session=session, project_root=project_root_ref), workplace_root, core)
     handle = route_project(str(project_root), workplace_root, core)

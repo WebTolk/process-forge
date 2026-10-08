@@ -13,7 +13,7 @@ from .common.request_scope import scoped_request
 from .work.inventory import WorkInventory
 from .resources.access import ResourceSearchService
 from .project.snapshot import load_snapshot
-from .resources.snapshot import resolve_garage_path_ref, resource_selection_summary, selected_resource, snapshot_with_resolved_search_roots
+from .resources.snapshot import resource_selection_summary, snapshot_with_resolved_search_roots
 
 
 @dataclass(frozen=True)
@@ -108,44 +108,6 @@ class GarageModeService:
             "session": {"status": "bound", "id": session_id} if session_id else {"status": "absent"},
             "blockers": blockers,
         }
-
-
-@dataclass(frozen=True)
-class ResourceResolveService:
-    project_root: Path
-    workplace_root: Path
-    core: Any
-    snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
-
-    def resolve(self, *, resource_id: str | None = None) -> dict[str, Any]:
-        payload: dict[str, Any] = {
-            "schema_version": 1,
-            "kind": "pf.resolve",
-            "scope": "project_context",
-            "project": {"id": self.core.project_id(self.project_root), "root": str(self.project_root)},
-        }
-        if not resource_id:
-            return payload
-        snapshot = load_snapshot(self.project_root, self.core, snapshots=self.snapshots)
-        selected = selected_resource(snapshot, resource_id)
-        if not selected:
-            return {**payload, "resource": {"id": resource_id, "status": "denied", "reason": "not_in_project_snapshot"}}
-        resource = {
-            "id": resource_id,
-            "status": "available",
-            "scope": "project_context",
-            "registry_source": "project-context.snapshot",
-            "reference": selected.get("path_ref") or selected.get("path") or "",
-            "application": selected.get("application") or {"package_id": selected.get("package_id"), "kind": selected.get("kind")},
-        }
-        if isinstance(selected.get("path_ref"), dict):
-            resolution = resolve_garage_path_ref(self.project_root, selected["path_ref"], self.workplace_root, self.core)
-            if resolution.get("status") == "resolved" and resolution.get("path"):
-                resource["local_root"] = str(Path(str(resolution["path"])).resolve())
-                resource["navigation"] = "private_runtime_authorized"
-            else:
-                resource["resolution_status"] = resolution.get("status") or "unresolved"
-        return {**payload, "resource": resource}
 
 
 @dataclass(frozen=True)

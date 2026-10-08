@@ -14,6 +14,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 from processforge_core import composition, garage
+from processforge_core.resources import access
 from processforge_core.common import request_scope
 BASELINE = None
 SCRATCH = None
@@ -77,7 +78,7 @@ class ResolveSnapshotTests(unittest.TestCase):
     def test_retained_resolver_and_failure_order(self):
         options = [{}, {'resource_id': None}, {'resource_id': ''}, {'resource_id': 'absent'}, {'resource_id': 'root'}, {'resource_id': RESOURCE_ID + '@current'}, {'resolution_status': 'missing'}, {'resolution_status': 'unresolved'}, {'document': {}}, {'document': []}, *({'error': name} for name in ('project_id', 'path', 'load', 'resolve'))]
         for config in options:
-            actual = scenario(garage.ResourceResolveService, **config)
+            actual = scenario(access.ResourceResolveService, **config)
             if BASELINE:
                 self.assertEqual(actual, scenario(BASELINE['ResourceResolveService'], **config), config)
             if 'resource_id' in config and not config['resource_id']:
@@ -88,31 +89,31 @@ class ResolveSnapshotTests(unittest.TestCase):
     def test_selection_order_aliases_and_raw_values(self):
         record = {'id': RESOURCE_ID, 'path': 'first', 'application': {'marker': 'kept'}, 'unknown': [1]}
         document = {'resolved': {'knowledge_resources': [None, 'bad', record]}, 'local_search_resources': [{'id': RESOURCE_ID, 'path': 'second'}], 'unknown': True}
-        result, _ = scenario(garage.ResourceResolveService, document=document)
+        result, _ = scenario(access.ResourceResolveService, document=document)
         self.assertEqual(result[1]['resource']['reference'], 'first')
         if BASELINE:
             self.assertEqual((result, _), scenario(BASELINE['ResourceResolveService'], document=document))
         for alias in ('id', 'resource_id', 'instance_id'):
             doc = {'local_search_resources': [{alias: RESOURCE_ID, 'path': 'local', 'package_id': 'fixture', 'kind': 'documentation'}]}
-            result, _ = scenario(garage.ResourceResolveService, document=doc)
+            result, _ = scenario(access.ResourceResolveService, document=doc)
             self.assertEqual(result[1]['resource']['application'], {'package_id': 'fixture', 'kind': 'documentation'})
             self.assertEqual(result[1]['resource']['reference'], 'local')
         memory = MemorySnapshots(document)
-        result, events = scenario(garage.ResourceResolveService, snapshots=memory)
+        result, events = scenario(access.ResourceResolveService, snapshots=memory)
         self.assertIs(result[1]['resource']['application'], record['application'])
         self.assertEqual(memory.calls, [None])
         self.assertFalse(any(event[0] in ('path', 'load') for event in events))
         memory.calls.clear()
         for resource_id in ('', None):
-            self.assertEqual(scenario(garage.ResourceResolveService, snapshots=memory, resource_id=resource_id)[0][0], 'return')
+            self.assertEqual(scenario(access.ResourceResolveService, snapshots=memory, resource_id=resource_id)[0][0], 'return')
         self.assertFalse(memory.calls)
-        self.assertEqual(scenario(garage.ResourceResolveService, snapshots=MemorySnapshots({}))[0][1]['resource']['status'], 'denied')
+        self.assertEqual(scenario(access.ResourceResolveService, snapshots=MemorySnapshots({}))[0][1]['resource']['status'], 'denied')
 
     def test_constructor_factory_without_io(self):
         fail = lambda *a, **k: self.fail('Assembly must not call Core')
         core = SimpleNamespace(project_id=fail, project_context_snapshot_paths=fail, load_yaml_document=fail)
         memory = MemorySnapshots()
-        old = garage.ResourceResolveService(Path('p'), Path('w'), core)
+        old = access.ResourceResolveService(Path('p'), Path('w'), core)
         built = composition.build_resource_resolve_service(Path('p'), Path('w'), core, snapshots=memory)
         self.assertIs(built.snapshots, memory)
         self.assertEqual(old, built)
@@ -123,7 +124,7 @@ class ResolveSnapshotTests(unittest.TestCase):
         self.assertTrue(field.kw_only)
         self.assertFalse(field.compare or field.repr)
         with self.assertRaises(TypeError):
-            garage.ResourceResolveService(Path('p'), Path('w'), core, memory)
+            access.ResourceResolveService(Path('p'), Path('w'), core, memory)
 
     def test_real_yaml_live_reads_and_request_isolation(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
@@ -202,7 +203,7 @@ class ResolveSnapshotTests(unittest.TestCase):
             self.assertEqual(actual['resource']['navigation'], 'private_runtime_authorized')
             self.assertEqual(len(reads), 1)
             if BASELINE:
-                with patch.object(garage, 'ResourceResolveService', BASELINE['ResourceResolveService']):
+                with patch.object(access, 'ResourceResolveService', BASELINE['ResourceResolveService']):
                     self.assertEqual(call(), actual)
             reads.clear()
             self.assertNotIn('resource', pf_host.resolve_payload(Path('w'), core, session='s'))
