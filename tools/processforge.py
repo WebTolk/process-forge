@@ -64,6 +64,7 @@ from processforge_core.process_catalog import (
 from processforge_core.process_execution import ProcessExecutionService, project_process_selection, project_specialization_selection
 from processforge_core.project import initialization as project_initialization
 from processforge_core import diagnostics
+from pf_cli.application import CliApplication
 from processforge_core.documents.reader import YamlDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
@@ -28414,52 +28415,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-    strict_authoring_commands = {
-        "authoring-transaction-recover",
-        "knowledge-add-url",
-        "knowledge-add-resource",
-        "platform-contract-install",
-        "platform-create",
-        "process-authoring-apply",
-        "process-create",
-    }
-    apply_optional = (
-        (args.command == "workplace-setup" and getattr(args, "workplace_setup_command", "") in {"review", "status"})
-        or args.command == "project-context-refresh"
-    )
-    if hasattr(args, "apply") and args.apply and getattr(args, "dry_run", False):
-        parser.error("choose either --dry-run or --apply")
-    if args.command in strict_authoring_commands and not (
-        bool(getattr(args, "apply", False)) ^ bool(getattr(args, "dry_run", False))
-    ):
-        parser.error("choose exactly one of --dry-run or --apply")
-    if (
-        hasattr(args, "apply")
-        and not args.apply
-        and not apply_optional
-        and args.command not in strict_authoring_commands
-    ):
-        if not getattr(args, "dry_run", False):
-            args.mode_implicit = True
-        args.dry_run = True
-    # Initialization owns its post-preflight events. Eager CLI diagnostics must
-    # not turn status, a preview, or an entry refusal into a project write.
-    if args.command in {"agent-entry", "agent-start-prompt", "init-project", "project-init", "project-onboard", "project-init-status", "project-init-repair", "diagnostics-status", "diagnostics-export", "diagnostics-configure", "monitor", "config"} or (args.command == "server" and args.runtime_command == "status"):
-        return args.func(args)
-    project_value = getattr(args, "project_root", None)
-    project = Path(project_value).expanduser().resolve() if isinstance(project_value, str) else None
-    run_id = getattr(args, "run", None)
-    session_id = getattr(args, "session", None)
-    options = diagnostics.invocation_options(args.diagnostic_profile, args.diagnostic_threshold, args.diagnostic_components, args.diagnostic_sink)
-    logger = diagnostics.for_project(project, run_id=run_id, session_id=session_id, invocation=options)
-    with diagnostics.operation(logger, "cli", str(args.command), project_id=project_id(project) if project and (project / ".pf").is_dir() else None,
-                               run_id=run_id, session_id=session_id or None, build=diagnostics.identity_for(logger, __file__)):
-        result = args.func(args)
-        if result:
-            diagnostics.emit("error", "cli.nonzero_exit", {"exit_code": result}, component="cli")
-        return result
+    return CliApplication(
+        parser_factory=build_parser,
+        project_id_resolver=project_id,
+        entry_file=__file__,
+    ).run(argv)
 
 
 if __name__ == "__main__":
