@@ -14,7 +14,7 @@ from typing import Any
 
 import yaml
 
-from ..garage import load_snapshot
+from ..project.snapshot import load_snapshot
 from ..work.resource_material import (
     DEFAULT_LIMITS,
     MaterialBudget,

@@ -87,6 +87,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/prepared/input.py`, `prepared/resources.py` | Existing immutable prepared inputs, worker-attempt manifests, authorized resource material and collection receipts; import from `processforge_core.prepared.input` or `processforge_core.prepared.resources`. |
 | `src/processforge_core/project/host_integration.py` | Existing bounded optional host integration status used by project setup and the CLI. |
 | `src/processforge_core/common/request_scope.py` | Existing per-request parsing scope shared by Garage, lifecycle, YAML/capsule readers and MCP; isolated snapshots and bounded cache. |
+| `src/processforge_core/resources/snapshot.py` | Existing resource snapshot roots, authorized selection, path resolution and private result navigation; snapshot loading remains in project/snapshot.py. |
 | `src/processforge_core/ports.py` | Internal structural current-work, raw Work-record, context-read and process-definition dependencies. |
 | `src/processforge_core/composition.py` | Explicit service factories and narrow legacy read/context/definition adapters. |
 | `src/processforge_core/bootstrap.py` | Existing runtime module assembly and lazy access to the service factories. |

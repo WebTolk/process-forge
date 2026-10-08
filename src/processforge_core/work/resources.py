@@ -83,7 +83,7 @@ def portable_reference(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _root(project: Path, workplace: Path | None, core: Any, row: dict[str, Any]) -> tuple[Path, dict[str, Any]]:
-    from ..garage import resolve_garage_path_ref
+    from ..resources.snapshot import resolve_garage_path_ref
 
     reference = portable_reference(row)
     result = resolve_garage_path_ref(project, reference, workplace or project, core)
@@ -95,7 +95,7 @@ def _root(project: Path, workplace: Path | None, core: Any, row: dict[str, Any])
 def build_resource_bindings(project: Path, workplace: Path | None, core: Any,
                             selected_ids: list[str]) -> dict[str, Any]:
     """Pin new material only at capsule creation; never migrate a read request."""
-    from ..garage import load_snapshot
+    from ..project.snapshot import load_snapshot
 
     result: dict[str, Any] = {"schema_version": 1, "resources": [], "limits": dict(DEFAULT_LIMITS)}
     budget = MaterialBudget()
@@ -223,7 +223,7 @@ class WorkResourceService:
              resource_id: str | None = None, query: Any = None, limit: Any = None,
              limitstart: Any = None, offset: Any = None) -> dict[str, Any]:
         from .. import diagnostics
-        from ..garage import load_snapshot
+        from ..project.snapshot import load_snapshot
 
         payload: dict[str, Any] = {"schema_version": 1, "kind": f"pf.work.{operation}", "scope": "work_context"}
         try:

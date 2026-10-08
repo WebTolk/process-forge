@@ -23868,7 +23868,7 @@ def command_path_resolve(args: argparse.Namespace) -> int:
 
 
 def local_search_runtime_snapshot(project_root: Path, workplace_root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
-    from processforge_core.garage import snapshot_with_resolved_search_roots
+    from processforge_core.resources.snapshot import snapshot_with_resolved_search_roots
 
     context = project_context_check_result(project_root, explicit_workplace=str(workplace_root))
     snapshot_path, _snapshot_md = project_context_snapshot_paths(project_root)
@@ -23934,7 +23934,7 @@ def workplace_search_package_manifest_index(workplace_root: Path) -> dict[str, d
 def workplace_search_runtime_snapshot(workplace_root: Path) -> dict[str, Any]:
     """Resolve the source catalogue for the single Workplace search index."""
 
-    from processforge_core.garage import snapshot_with_resolved_search_roots
+    from processforge_core.resources.snapshot import snapshot_with_resolved_search_roots
 
     manifest = workplace_root / "workplace.yaml"
     package_index = workplace_search_package_manifest_index(workplace_root)

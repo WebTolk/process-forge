@@ -19,7 +19,9 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
-from processforge_core import composition, garage, request_scope
+from processforge_core import composition, garage
+from processforge_core.common import request_scope
+from processforge_core.project import snapshot
 from processforge_core.project.snapshot import ProjectSnapshotReadService
 
 BASELINE = None
@@ -90,7 +92,7 @@ class GarageSnapshotTests(unittest.TestCase):
         self.assertTrue(dependency.kw_only)
         self.assertFalse(dependency.compare or dependency.repr)
         self.assertIs(built.snapshot(), memory.document)
-        self.assertIs(garage.load_snapshot(Path('p'), core, snapshots=memory), memory.document)
+        self.assertIs(snapshot.load_snapshot(Path('p'), core, snapshots=memory), memory.document)
         self.assertEqual(memory.calls, [('load', None)] * 2)
         self.assertFalse(core.calls)
         with self.assertRaises(TypeError):
@@ -107,14 +109,14 @@ class GarageSnapshotTests(unittest.TestCase):
         scenarios += [{'load_error': error} for error in [OSError, ValueError, TypeError, SystemExit]]
         for scenario in scenarios:
             for helper in helpers:
-                for call in [garage.load_snapshot, lambda root, core: garage.ProjectContextService(root, Path('w'), core).snapshot()]:
+                for call in [snapshot.load_snapshot, lambda root, core: garage.ProjectContextService(root, Path('w'), core).snapshot()]:
                     with self.subTest(scenario=scenario, helper=helper, call=call):
                         before, after = Core(**scenario), Core(**scenario)
                         self.assertEqual(outcome(lambda: helper(Path('p'), before)), outcome(lambda: call(Path('p'), after)))
                         self.assertEqual(before.calls, after.calls)
                         if not after.path_error and not after.load_error and len(after.paths) == 2:
                             self.assertIs(call(Path('p'), after), after.document)
-        for call in [old_load, garage.load_snapshot]:
+        for call in [old_load, snapshot.load_snapshot]:
             core = SimpleNamespace(project_context_snapshot_paths=lambda root: None,
                                    load_yaml_document=lambda path: self.fail('Invalid path must stop before loading'))
             self.assertEqual(outcome(lambda: call(Path('p'), core))[1], 'TypeError')
