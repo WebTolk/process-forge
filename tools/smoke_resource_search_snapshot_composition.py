@@ -14,6 +14,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 from processforge_core import composition, garage
+from processforge_core.resources import access
 from processforge_core.common import request_scope
 BASELINE = None
 SCRATCH = None
@@ -55,17 +56,17 @@ def scenario(service_type, kind='search', *, status='fresh', supplied=None, inde
         def status(self, **kw):
             events.append(('status', str(self.root), kw))
             if error == 'index':
-                raise garage.LocalSearchError('index_failure')
+                raise access.LocalSearchError('index_failure')
             return {'status': index_status, 'resource_count': 1, 'document_count': 0 if error == 'empty' else 1}
         def maintenance_tick(self):
             events.append(('maintenance', str(self.root)))
             if error == 'maintenance':
-                raise garage.LocalSearchError('maintenance_failure')
+                raise access.LocalSearchError('maintenance_failure')
             return {'after': {'status': 'fresh', 'resource_count': 1, 'document_count': 1}}
         def search(self, **kw):
             events.append(('query', kw))
             if error == 'query':
-                raise garage.LocalSearchError('invalid_query')
+                raise access.LocalSearchError('invalid_query')
             return {'results': [{'unknown': 'kept'}], 'query': kw}
     def coverage(root, snapshot, **kw):
         events.append(('coverage', copy.deepcopy(snapshot)))
@@ -78,7 +79,7 @@ def scenario(service_type, kind='search', *, status='fresh', supplied=None, inde
         payload['navigation'] = 'private'
     replacements = {'ResourceSearchIndex': Index, 'authorized_coverage': coverage, 'snapshot_with_resolved_search_roots': roots, 'add_private_navigation': navigation}
     with ExitStack() as stack:
-        stack.enter_context(patch.dict(garage.__dict__, replacements))
+        stack.enter_context(patch.dict(access.__dict__, replacements))
         if namespace is not None:
             stack.enter_context(patch.dict(namespace, replacements))
         service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))
@@ -101,7 +102,7 @@ class SearchSnapshotTests(unittest.TestCase):
     def test_default_retained_service_parity(self):
         options = [('readiness', {}), ('readiness', {'supplied': {}}), ('readiness', {'status': 'stale'}), ('readiness', {'index_status': 'stale'}), ('readiness', {'error': 'index'}), ('readiness', {'error': 'empty'}), ('search', {}), ('search', {'status': 'stale'}), ('search', {'status': 'fresh_with_updates'}), ('search', {'index_status': 'missing'}), ('search', {'error': 'load'}), ('search', {'error': 'index'}), ('search', {'index_status': 'stale', 'error': 'maintenance'}), ('search', {'error': 'query'})]
         for kind, config in options:
-            actual = scenario(garage.ResourceSearchService, kind, **config)
+            actual = scenario(access.ResourceSearchService, kind, **config)
             if BASELINE:
                 expected = scenario(BASELINE['ResourceSearchService'], kind, namespace=BASELINE, **config)
                 self.assertEqual(actual, expected, (kind, config))
@@ -111,23 +112,23 @@ class SearchSnapshotTests(unittest.TestCase):
 
     def test_injected_falsey_reader_and_snapshot_override(self):
         memory = MemorySnapshots()
-        result, events = scenario(garage.ResourceSearchService, snapshots=memory)
+        result, events = scenario(access.ResourceSearchService, snapshots=memory)
         self.assertEqual(result[0], 'return')
         self.assertEqual(result[1]['authorized_coverage']['marker'], 'injected')
         self.assertEqual(memory.calls, [None])
         self.assertFalse(any(event[0] in ('path', 'load') for event in events))
         memory.calls.clear()
-        result, _events = scenario(garage.ResourceSearchService, 'readiness', snapshots=memory, supplied={})
+        result, _events = scenario(access.ResourceSearchService, 'readiness', snapshots=memory, supplied={})
         self.assertEqual(result[1]['authorized_coverage']['marker'], None)
         self.assertFalse(memory.calls)
 
     def test_guard_and_blocked_readiness_keep_distinct_order(self):
         memory = MemorySnapshots()
-        result, events = scenario(garage.ResourceSearchService, status='stale', snapshots=memory)
+        result, events = scenario(access.ResourceSearchService, status='stale', snapshots=memory)
         self.assertEqual(result[0], 'error')
         self.assertFalse(memory.calls)
         self.assertEqual([row[0] for row in events], ['check'])
-        result, events = scenario(garage.ResourceSearchService, 'readiness', status='stale', snapshots=memory)
+        result, events = scenario(access.ResourceSearchService, 'readiness', status='stale', snapshots=memory)
         self.assertEqual(result[1]['reason'], 'snapshot_not_fresh')
         self.assertEqual(memory.calls, [None])
         self.assertEqual([row[0] for row in events], ['check', 'coverage'])
@@ -136,7 +137,7 @@ class SearchSnapshotTests(unittest.TestCase):
         fail = lambda *a, **k: self.fail('Assembly must not call Core')
         core = SimpleNamespace(project_context_snapshot_paths=fail, load_yaml_document=fail, project_context_check_result=fail)
         memory = MemorySnapshots()
-        old = garage.ResourceSearchService(Path('p'), Path('w'), core)
+        old = access.ResourceSearchService(Path('p'), Path('w'), core)
         built = composition.build_resource_search_service(Path('p'), Path('w'), core, snapshots=memory)
         self.assertIs(built.snapshots, memory)
         self.assertEqual(old, built)
@@ -147,7 +148,7 @@ class SearchSnapshotTests(unittest.TestCase):
         self.assertTrue(field.kw_only)
         self.assertFalse(field.compare or field.repr)
         with self.assertRaises(TypeError):
-            garage.ResourceSearchService(Path('p'), Path('w'), core, memory)
+            access.ResourceSearchService(Path('p'), Path('w'), core, memory)
 
     def test_real_yaml_live_reads_and_scope_isolation(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
@@ -159,7 +160,7 @@ class SearchSnapshotTests(unittest.TestCase):
                 return request_scope.safe_load(source.read_text(encoding='utf-8'))
             core = SimpleNamespace(project_context_snapshot_paths=lambda root: (path, path.with_suffix('.md')), load_yaml_document=load)
             service = composition.build_resource_search_service(Path(directory), Path('w'), core)
-            with patch.object(garage.ResourceSearchService, '_readiness', return_value={'status': 'ready'}), patch.object(garage, 'authorized_coverage', side_effect=lambda root, document, **kw: document):
+            with patch.object(access.ResourceSearchService, '_readiness', return_value={'status': 'ready'}), patch.object(access, 'authorized_coverage', side_effect=lambda root, document, **kw: document):
                 stat = path.stat()
                 with request_scope.request_scope() as scope:
                     first = service.readiness()['authorized_coverage']
@@ -200,12 +201,12 @@ class SearchSnapshotTests(unittest.TestCase):
             result = mcp_server.tool_result('pf.search', {'project_root': 'bound', 'query': 'needle', 'limit': '2', 'offset': 0}, Path('w'), 's', runtime)
             self.assertEqual(result['query_arguments'], {'query': 'needle', 'limit': '2', 'limitstart': None, 'offset': 0})
         self.assertEqual(calls, [Path('bound')])
-        denied = SimpleNamespace(search=lambda **kw: (_ for _ in ()).throw(garage.LocalSearchError('snapshot_not_fresh')))
+        denied = SimpleNamespace(search=lambda **kw: (_ for _ in ()).throw(access.LocalSearchError('snapshot_not_fresh')))
         with patch.object(composition, 'build_resource_search_service', return_value=denied):
             with self.assertRaises(session_read.SessionReadError) as caught:
                 mcp_server.tool_result('pf.search', {'project_root': 'bound', 'query': 'needle'}, Path('w'), '', runtime)
             self.assertEqual(caught.exception.code, 'snapshot_not_fresh')
-            self.assertIsInstance(caught.exception.__cause__, garage.LocalSearchError)
+            self.assertIsInstance(caught.exception.__cause__, access.LocalSearchError)
         self.assertIsNone(request_scope._CURRENT.get())
 
     def test_package_without_cli(self):

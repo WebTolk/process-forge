@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from .work.automation_readiness import AutomationReadinessService
     from .evidence.validation import EvidenceValidationService
     from .garage import ProjectContextService
-    from .garage import ResourceSearchService
+    from .resources.access import ResourceSearchService
     from .garage import ResourceResolveService
     from .garage import GarageModeService
     from .diagnostics import Logger
@@ -136,7 +136,7 @@ def build_project_context_service(
 def build_resource_search_service(
     project_root: Path, workplace_root: Path, core: Any, *, snapshots: ProjectSnapshotReadPort | None = None,
 ) -> ResourceSearchService:
-    from .garage import ResourceSearchService
+    from .resources.access import ResourceSearchService
 
     return ResourceSearchService(project_root, workplace_root, core, snapshots=snapshots)
 
