@@ -16,6 +16,7 @@ from .work.state import WorkStatePolicy
 from .evidence.collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .project.context_read import ExecutionProjectReadService
     from .work.transition_commit import WorkTransitionCommitService
     from .completion.intent_replay import CompletionIntentReplayService
     from .completion.intent_read import CompletionIntentReadService
@@ -832,14 +833,22 @@ class ProcessExecutionService:
             return {"schema_version": 1, "kind": "pf.work.complete", "action": "blocked", **readiness}
         return self.transition(outcome=outcome, evidence=evidence, notes=notes, run_id=run_id, assignment_id=assignment_id, session_id=session_id)
 
+    def _execution_project_read_service(self) -> ExecutionProjectReadService:
+        from .composition import build_execution_project_read_service
+
+        return build_execution_project_read_service(
+            project_root=self.project_root,
+            workplace_root=self.workplace_root,
+            context_checker=lambda: self.core.project_context_check_result,
+            document_loader=lambda: self.core.load_yaml_document,
+            flow_root=lambda: self._flow_root(),
+        )
+
     def _context_check(self) -> dict[str, Any]:
-        explicit = ""
-        if self.workplace_root and (self.workplace_root / "workplace.yaml").is_file():
-            explicit = str(self.workplace_root)
-        return self.core.project_context_check_result(self.project_root, explicit_workplace=explicit or None)
+        return self._execution_project_read_service().context_check()
 
     def _manifest(self) -> dict[str, Any]:
-        return self.core.load_yaml_document(self._flow_root() / "process-forge.yaml")
+        return self._execution_project_read_service().manifest()
 
     def _project_process_selection(self) -> dict[str, Any]:
         return project_process_selection(self._manifest())

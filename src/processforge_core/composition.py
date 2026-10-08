@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .project.context_read import ExecutionProjectReadService, ProjectContextCheck
     from .work.transition_commit import WorkTransitionCommitService
     from .completion.intent_replay import CompletionIntentReplayService
     from .completion.intent_read import CompletionIntentReadService
@@ -123,6 +124,25 @@ def build_project_context_snapshot_read_service(project_root: Path, core: Any) -
 
     return build_project_snapshot_read_service(
         core, snapshot_path=snapshot_path, sha256_file=lambda path: core.sha256_file(path),
+    )
+
+
+def build_execution_project_read_service(
+    *,
+    project_root: Path,
+    workplace_root: Path | None,
+    context_checker: Callable[[], ProjectContextCheck],
+    document_loader: Callable[[], Callable[[Path], dict[str, Any]]],
+    flow_root: Callable[[], Path],
+) -> ExecutionProjectReadService:
+    from .project.context_read import ExecutionProjectReadService
+
+    return ExecutionProjectReadService(
+        project_root=project_root,
+        workplace_root=workplace_root,
+        context_checker=context_checker,
+        document_loader=document_loader,
+        flow_root=flow_root,
     )
 
 
