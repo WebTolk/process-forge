@@ -30,35 +30,50 @@ def _print_status(payload: dict[str, Any]) -> None:
 
 
 class SearchIndexStatusCommand:
-    """Adapt the existing status operation."""
+    """Adapt the published status operation."""
 
     def __init__(
         self,
         *,
-        index_factory: Callable[[Path], ResourceSearchIndex],
+        index_factory: Callable[[Path, dict[str, Any], Path], ResourceSearchIndex],
+        snapshot_reader: Callable[
+            [Path, Path], tuple[dict[str, Any], dict[str, Any]]
+        ],
     ) -> None:
         self._index_factory = index_factory
+        self._snapshot_reader = snapshot_reader
 
     def execute(self, args: argparse.Namespace) -> int:
+        project_root = Path(args.project_root).expanduser().resolve()
         workplace_root = Path(args.workplace).expanduser().resolve()
-        status = self._index_factory(workplace_root).status(verify_files=bool(getattr(args, "verify_files", False)))
+        _context, snapshot = self._snapshot_reader(project_root, workplace_root)
+        status = self._index_factory(project_root, snapshot, workplace_root).status(verify_files=bool(getattr(args, "verify_files", False)))
         _print_status(status)
         return 1 if status.get("status") == "degraded" else 0
 
 
 class SearchIndexRefreshCommand:
-    """Adapt the existing refresh operation."""
+    """Adapt the published refresh operation."""
 
     def __init__(
         self,
         *,
-        index_factory: Callable[[Path], ResourceSearchIndex],
+        index_factory: Callable[[Path, dict[str, Any], Path], ResourceSearchIndex],
+        snapshot_reader: Callable[
+            [Path, Path], tuple[dict[str, Any], dict[str, Any]]
+        ],
     ) -> None:
         self._index_factory = index_factory
+        self._snapshot_reader = snapshot_reader
 
     def execute(self, args: argparse.Namespace) -> int:
+        project_root = Path(args.project_root).expanduser().resolve()
         workplace_root = Path(args.workplace).expanduser().resolve()
-        result = self._index_factory(workplace_root).refresh()
+        context, snapshot = self._snapshot_reader(project_root, workplace_root)
+        if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+            print(f"FAIL: project context is not fresh: {context.get('status')}")
+            return 1
+        result = self._index_factory(project_root, snapshot, workplace_root).refresh()
         print(f"REFRESHED: {result.get('generation')}")
         print(f"RESOURCES: {result.get('resources')}")
         print(f"DOCUMENTS: {result.get('indexed')}")
@@ -66,18 +81,27 @@ class SearchIndexRefreshCommand:
 
 
 class SearchIndexRebuildCommand:
-    """Adapt the existing rebuild operation."""
+    """Adapt the published rebuild operation."""
 
     def __init__(
         self,
         *,
-        index_factory: Callable[[Path], ResourceSearchIndex],
+        index_factory: Callable[[Path, dict[str, Any], Path], ResourceSearchIndex],
+        snapshot_reader: Callable[
+            [Path, Path], tuple[dict[str, Any], dict[str, Any]]
+        ],
     ) -> None:
         self._index_factory = index_factory
+        self._snapshot_reader = snapshot_reader
 
     def execute(self, args: argparse.Namespace) -> int:
+        project_root = Path(args.project_root).expanduser().resolve()
         workplace_root = Path(args.workplace).expanduser().resolve()
-        result = self._index_factory(workplace_root).rebuild()
+        context, snapshot = self._snapshot_reader(project_root, workplace_root)
+        if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+            print(f"FAIL: project context is not fresh: {context.get('status')}")
+            return 1
+        result = self._index_factory(project_root, snapshot, workplace_root).rebuild()
         print(f"REBUILT: {result.get('generation')}")
         print(f"RESOURCES: {result.get('resources')}")
         print(f"DOCUMENTS: {result.get('indexed')}")
@@ -85,36 +109,51 @@ class SearchIndexRebuildCommand:
 
 
 class SearchIndexDoctorCommand:
-    """Adapt the existing doctor operation."""
+    """Adapt the published doctor operation."""
 
     def __init__(
         self,
         *,
-        index_factory: Callable[[Path], ResourceSearchIndex],
-        doctor_formatter: Callable[[dict[str, Any]], int],
+        index_factory: Callable[[Path, dict[str, Any], Path], ResourceSearchIndex],
+        snapshot_reader: Callable[
+            [Path, Path], tuple[dict[str, Any], dict[str, Any]]
+        ],
+        doctor_formatter: Callable[[dict[str, Any], dict[str, Any]], int],
     ) -> None:
         self._index_factory = index_factory
+        self._snapshot_reader = snapshot_reader
         self._doctor_formatter = doctor_formatter
 
     def execute(self, args: argparse.Namespace) -> int:
+        project_root = Path(args.project_root).expanduser().resolve()
         workplace_root = Path(args.workplace).expanduser().resolve()
-        status = self._index_factory(workplace_root).status()
-        return self._doctor_formatter(status)
+        context, snapshot = self._snapshot_reader(project_root, workplace_root)
+        status = self._index_factory(project_root, snapshot, workplace_root).status()
+        return self._doctor_formatter(status, context)
 
 
 class SearchIndexTickCommand:
-    """Adapt the existing tick operation."""
+    """Adapt the published tick operation."""
 
     def __init__(
         self,
         *,
-        index_factory: Callable[[Path], ResourceSearchIndex],
+        index_factory: Callable[[Path, dict[str, Any], Path], ResourceSearchIndex],
+        snapshot_reader: Callable[
+            [Path, Path], tuple[dict[str, Any], dict[str, Any]]
+        ],
     ) -> None:
         self._index_factory = index_factory
+        self._snapshot_reader = snapshot_reader
 
     def execute(self, args: argparse.Namespace) -> int:
+        project_root = Path(args.project_root).expanduser().resolve()
         workplace_root = Path(args.workplace).expanduser().resolve()
-        payload = self._index_factory(workplace_root).maintenance_tick(verify_files=not bool(getattr(args, "skip_file_verify", False)))
+        context, snapshot = self._snapshot_reader(project_root, workplace_root)
+        if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
+            print(f"FAIL: project context is not fresh: {context.get('status')}")
+            return 1
+        payload = self._index_factory(project_root, snapshot, workplace_root).maintenance_tick(verify_files=not bool(getattr(args, "skip_file_verify", False)))
         print(f"ACTION: {payload.get('action')}")
         after = payload.get("after") if isinstance(payload.get("after"), dict) else {}
         print(f"STATUS: {after.get('status')}")

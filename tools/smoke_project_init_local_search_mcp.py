@@ -115,19 +115,23 @@ def main() -> int:
         assert external_resolution == {"status": "resolved", "path": str(external_docs)}
         escaped_resolution = core.resolve_workspace_path_ref(first, {"registry": "knowledge_roots", "id": "external-docs", "relative_path": "../outside.md"}, workplace_manifest=workplace / "workplace.yaml")
         assert escaped_resolution["status"] == "unresolved"
-        status_output = cli("search-index", "status", "--workplace", str(workplace))
+        context = json.loads(cli("project-context-check", "--project-root", str(first), "--workplace", str(workplace), "--json"))
+        assert context["status"] in {"fresh", "fresh_with_updates"}, context
+        # Establish this project snapshot scope before asserting its index readiness.
+        cli("search-index", "refresh", "--project-root", str(first), "--workplace", str(workplace))
+        status_output = cli("search-index", "status", "--project-root", str(first), "--workplace", str(workplace))
         assert "STATUS: fresh" in status_output
         assert (workplace / "runtime" / "search" / "latest-maintenance.yaml").is_file()
-        refresh_output = cli("search-index", "refresh", "--workplace", str(workplace))
+        refresh_output = cli("search-index", "refresh", "--project-root", str(first), "--workplace", str(workplace))
         assert "REFRESHED:" in refresh_output and "DOCUMENTS:" in refresh_output
-        doctor_output = cli("search-index", "doctor", "--workplace", str(workplace))
+        doctor_output = cli("search-index", "doctor", "--project-root", str(first), "--workplace", str(workplace))
         assert "PASS: SQLite FTS5 available" in doctor_output
-        noop_tick = cli("search-index", "tick", "--workplace", str(workplace))
+        noop_tick = cli("search-index", "tick", "--project-root", str(first), "--workplace", str(workplace))
         assert "ACTION: none" in noop_tick
         (allowed / "guide.md").write_text("MCP snapshot authorized search maintenancetoken", encoding="utf-8")
-        verified_status = cli("search-index", "status", "--workplace", str(workplace), "--verify-files")
+        verified_status = cli("search-index", "status", "--project-root", str(first), "--workplace", str(workplace), "--verify-files")
         assert "STATUS: stale" in verified_status and "document_fingerprint_changed" in verified_status
-        refresh_tick = cli("search-index", "tick", "--workplace", str(workplace))
+        refresh_tick = cli("search-index", "tick", "--project-root", str(first), "--workplace", str(workplace))
         assert "ACTION: refresh" in refresh_tick and "STATUS: fresh" in refresh_tick
         requests = [
             {"jsonrpc": "2.0", "id": 1, "method": "initialize"},

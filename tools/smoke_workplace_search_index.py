@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import sqlite3
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -19,20 +18,7 @@ for entry in (ROOT / "src", ROOT / "tools"):
 
 import processforge as core
 from processforge_core.resources.access import ResourceResolveService
-from processforge_core.resources.local_search import search
-
-
-def cli(*args: str) -> str:
-    result = subprocess.run(
-        [sys.executable, str(ROOT / "tools" / "processforge.py"), *args],
-        cwd=ROOT,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        capture_output=True,
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    return result.stdout
+from processforge_core.resources.local_search import ResourceSearchIndex, search
 
 
 def snapshot(resource_id: str, content_root: Path) -> dict:
@@ -76,12 +62,14 @@ def main() -> int:
             encoding="utf-8",
         )
         guide_id, tree_id = "docs.a:guide", "docs.a:tree"
-        # The maintenance CLI takes only the Workplace: no project, Runtime,
-        # Ledger, or session is necessary to create the physical index.
-        rebuilt = cli("search-index", "rebuild", "--workplace", str(workplace))
-        assert "REBUILT:" in rebuilt and "RESOURCES: 2" in rebuilt, rebuilt
-        assert "STATUS: fresh" in cli("search-index", "status", "--workplace", str(workplace))
-        assert "PASS: workplace resource catalogue resolved without project context" in cli("search-index", "doctor", "--workplace", str(workplace))
+        # Core Workplace maintenance needs no project context, Runtime, Ledger,
+        # or session to create the one physical index.
+        index = ResourceSearchIndex(workplace, core.workplace_search_runtime_snapshot(workplace), workplace)
+        rebuilt = index.rebuild()
+        assert rebuilt["status"] == "fresh" and rebuilt["resources"] == 2, rebuilt
+        status = index.status()
+        assert status["status"] == "fresh", status
+        assert status["sqlite"]["fts5_available"], status
         database = workplace / "runtime" / "search" / "local-resource-search.sqlite"
         assert database.is_file()
         db = sqlite3.connect(database)

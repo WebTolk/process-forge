@@ -71,32 +71,39 @@ index_state
 `indexing_policy_hash`, `root_ref`, and refresh status. `documents` tracks
 `resource_id`, `relative_path`, `kind`, `title`, hashes, and JSON metadata.
 `documents_fts` stores searchable fulltext fields. `index_state` stores the
-current Workplace resource-catalogue state. Project snapshots never create
-index state or duplicate documents: they authorize resource ids per query.
+Workplace catalogue state and project snapshot scopes in the same shared DB.
+Project snapshots authorize resource ids per query; documents are not duplicated
+for each project.
 
 ## CLI
 
 ```bash
-python bin/pf.py search-index status --workplace <workplace>
-python bin/pf.py search-index refresh --workplace <workplace>
-python bin/pf.py search-index rebuild --workplace <workplace>
-python bin/pf.py search-index doctor --workplace <workplace>
-python bin/pf.py search-index tick --workplace <workplace>
+python bin/pf.py search-index status --project-root <project> --workplace <workplace>
+python bin/pf.py search-index refresh --project-root <project> --workplace <workplace>
+python bin/pf.py search-index rebuild --project-root <project> --workplace <workplace>
+python bin/pf.py search-index doctor --project-root <project> --workplace <workplace>
+python bin/pf.py search-index tick --project-root <project> --workplace <workplace>
 ```
 
-`status` is read-only. `status --verify-files` performs explicit fingerprint
-reconciliation and reports stale state when registered Workplace resource
-content changed. `refresh` indexes every registered Workplace package/resource
-once, respecting `indexing.mode`; it does not read a project snapshot. `rebuild`
-deletes the derived DB and builds it again. `tick` is the bounded maintenance
-unit for operators and Runtime scheduling.
+Every command requires a project root and reads its context snapshot. `status`
+is read-only; `status --verify-files` checks authorized file fingerprints and
+reports stale state when their content changed. `refresh` indexes resources
+authorized by that snapshot, respecting `indexing.mode`. `rebuild` deletes the
+derived DB and builds it again; `tick` performs one bounded pass for the project
+snapshot scope.
+
+`refresh`, `rebuild`, and `tick` require context status `fresh` or
+`fresh_with_updates`; otherwise they refuse with exit code 1. `status` and
+`doctor` remain available for other context states. `doctor` reports project
+context freshness as `PASS` for these two states and `WARN` otherwise.
 
 ## Runtime And MCP
 
-Runtime maintenance may run `tick` for the Workplace. It does not enumerate
-projects or depend on Runtime, Ledger, or active sessions. PF-owned resource
-mutations mark existing index state stale; external file changes are detected
-by fingerprint verification during `tick`.
+Runtime scheduling uses the existing Core `maintenance_tick` operation for the
+Workplace catalogue, separately from the project-scoped CLI. This Core operation
+does not enumerate projects or require a running Runtime, Ledger, or active
+sessions. PF-owned resource mutations mark existing index state stale; external
+file changes are detected by fingerprint verification during maintenance.
 
 `pf.search` never reports stale data as `fresh`. If the index is missing, stale,
 or degraded, the result carries that `search_status` and returns no matches

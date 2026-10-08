@@ -24027,19 +24027,20 @@ def configuration_service(configuration_path: Path) -> ConfigService:
     return ConfigService(YamlConfigStore(configuration_path))
 
 
-def resource_search_index(workplace_root: Path) -> ResourceSearchIndex:
+def resource_search_index(
+    project_root: Path, snapshot: dict[str, Any], workplace_root: Path
+) -> ResourceSearchIndex:
     from processforge_core.resources.local_search import ResourceSearchIndex
 
-    snapshot = workplace_search_runtime_snapshot(workplace_root)
-    return ResourceSearchIndex(workplace_root, snapshot, workplace_root)
+    return ResourceSearchIndex(project_root, snapshot, workplace_root)
 
 
-def search_index_doctor_result(status: dict[str, Any]) -> int:
+def search_index_doctor_result(status: dict[str, Any], context: dict[str, Any]) -> int:
     sqlite_info = status.get("sqlite") if isinstance(status.get("sqlite"), dict) else {}
     checks = [
         check("PASS" if sqlite_info.get("fts5_available") else "FAIL", "SQLite FTS5 available"),
         check("PASS" if status.get("status") != "degraded" else "FAIL", "search index readable"),
-        check("PASS", "workplace resource catalogue resolved without project context"),
+        check("PASS" if str(context.get("status") or "") in {"fresh", "fresh_with_updates"} else "WARN", f"project context freshness: {context.get('status')}"),
         check("PASS" if status.get("status") == "fresh" else "WARN", f"search index status: {status.get('status')}"),
         check("PASS" if int(status.get("failed_file_count") or 0) == 0 else "WARN", "failed file count is zero"),
     ]
@@ -26414,12 +26415,25 @@ def build_parser() -> argparse.ArgumentParser:
         path_resolve=command_path_resolve,
         search_index_doctor=SearchIndexDoctorCommand(
             index_factory=resource_search_index,
+            snapshot_reader=local_search_runtime_snapshot,
             doctor_formatter=search_index_doctor_result,
         ).execute,
-        search_index_rebuild=SearchIndexRebuildCommand(index_factory=resource_search_index).execute,
-        search_index_refresh=SearchIndexRefreshCommand(index_factory=resource_search_index).execute,
-        search_index_status=SearchIndexStatusCommand(index_factory=resource_search_index).execute,
-        search_index_tick=SearchIndexTickCommand(index_factory=resource_search_index).execute,
+        search_index_rebuild=SearchIndexRebuildCommand(
+            index_factory=resource_search_index,
+            snapshot_reader=local_search_runtime_snapshot,
+        ).execute,
+        search_index_refresh=SearchIndexRefreshCommand(
+            index_factory=resource_search_index,
+            snapshot_reader=local_search_runtime_snapshot,
+        ).execute,
+        search_index_status=SearchIndexStatusCommand(
+            index_factory=resource_search_index,
+            snapshot_reader=local_search_runtime_snapshot,
+        ).execute,
+        search_index_tick=SearchIndexTickCommand(
+            index_factory=resource_search_index,
+            snapshot_reader=local_search_runtime_snapshot,
+        ).execute,
     )
     navigation_commands.register(sub.add_parser)
 
