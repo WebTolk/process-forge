@@ -36,6 +36,8 @@ from urllib.request import url2pathname, urlopen
 
 if TYPE_CHECKING:
     from processforge_core.work.resources import WorkResourceService
+    from processforge_core.resources.local_search import ResourceSearchIndex
+    from processforge_core.configuration import ConfigService
 
 
 def _bootstrap_repo_src() -> Path:
@@ -70,6 +72,14 @@ from processforge_core.project import initialization as project_initialization
 from processforge_core import diagnostics
 from pf_cli.application import CliApplication
 from pf_cli.commands.agent_entry import AgentEntryCommand, AgentStartPromptCommand
+from pf_cli.commands.configuration import ConfigurationCommand
+from pf_cli.commands.search_index import (
+    SearchIndexStatusCommand,
+    SearchIndexRefreshCommand,
+    SearchIndexRebuildCommand,
+    SearchIndexDoctorCommand,
+    SearchIndexTickCommand,
+)
 from pf_cli.commands.work import (
     WorkStartCommand,
     WorkStateCommand,
@@ -24010,64 +24020,21 @@ def print_search_index_maintenance_summary(payload: dict[str, Any]) -> None:
             print(f"SEARCH_INDEX_ERROR: {project} error={row.get('error')}")
 
 
-def print_search_index_status(payload: dict[str, Any]) -> None:
-    sqlite_info = payload.get("sqlite") if isinstance(payload.get("sqlite"), dict) else {}
-    print(f"STATUS: {payload.get('status')}")
-    print(f"GENERATION: {payload.get('generation') or 'none'}")
-    print(f"SQLITE_VERSION: {sqlite_info.get('sqlite_version') or 'unknown'}")
-    print(f"FTS5: {'available' if sqlite_info.get('fts5_available') else 'unavailable'}")
-    print(f"RESOURCES: {payload.get('resource_count')}")
-    print(f"DOCUMENTS: {payload.get('document_count')}")
-    print(f"STALE_RESOURCES: {payload.get('stale_resource_count')}")
-    print(f"FAILED_FILES: {payload.get('failed_file_count')}")
-    print(f"LAST_SUCCESSFUL_REFRESH: {payload.get('last_successful_refresh') or 'none'}")
-    print(f"LAST_FULL_RECONCILIATION: {payload.get('last_full_reconciliation') or 'none'}")
-    if payload.get("error"):
-        print(f"ERROR: {payload.get('error')}")
-    if payload.get("path"):
-        print(f"INDEX: {payload.get('path')}")
+def configuration_service(configuration_path: Path) -> ConfigService:
+    from processforge_core.configuration import ConfigService
+    from processforge_core.configuration.yaml_store import YamlConfigStore
+
+    return ConfigService(YamlConfigStore(configuration_path))
 
 
-def command_search_index_status(args: argparse.Namespace) -> int:
+def resource_search_index(workplace_root: Path) -> ResourceSearchIndex:
     from processforge_core.resources.local_search import ResourceSearchIndex
 
-    workplace_root = Path(args.workplace).expanduser().resolve()
     snapshot = workplace_search_runtime_snapshot(workplace_root)
-    status = ResourceSearchIndex(workplace_root, snapshot, workplace_root).status(verify_files=bool(getattr(args, "verify_files", False)))
-    print_search_index_status(status)
-    return 1 if status.get("status") == "degraded" else 0
+    return ResourceSearchIndex(workplace_root, snapshot, workplace_root)
 
 
-def command_search_index_refresh(args: argparse.Namespace) -> int:
-    from processforge_core.resources.local_search import ResourceSearchIndex
-
-    workplace_root = Path(args.workplace).expanduser().resolve()
-    snapshot = workplace_search_runtime_snapshot(workplace_root)
-    result = ResourceSearchIndex(workplace_root, snapshot, workplace_root).refresh()
-    print(f"REFRESHED: {result.get('generation')}")
-    print(f"RESOURCES: {result.get('resources')}")
-    print(f"DOCUMENTS: {result.get('indexed')}")
-    return 0
-
-
-def command_search_index_rebuild(args: argparse.Namespace) -> int:
-    from processforge_core.resources.local_search import ResourceSearchIndex
-
-    workplace_root = Path(args.workplace).expanduser().resolve()
-    snapshot = workplace_search_runtime_snapshot(workplace_root)
-    result = ResourceSearchIndex(workplace_root, snapshot, workplace_root).rebuild()
-    print(f"REBUILT: {result.get('generation')}")
-    print(f"RESOURCES: {result.get('resources')}")
-    print(f"DOCUMENTS: {result.get('indexed')}")
-    return 0
-
-
-def command_search_index_doctor(args: argparse.Namespace) -> int:
-    from processforge_core.resources.local_search import ResourceSearchIndex
-
-    workplace_root = Path(args.workplace).expanduser().resolve()
-    snapshot = workplace_search_runtime_snapshot(workplace_root)
-    status = ResourceSearchIndex(workplace_root, snapshot, workplace_root).status()
+def search_index_doctor_result(status: dict[str, Any]) -> int:
     sqlite_info = status.get("sqlite") if isinstance(status.get("sqlite"), dict) else {}
     checks = [
         check("PASS" if sqlite_info.get("fts5_available") else "FAIL", "SQLite FTS5 available"),
@@ -24077,22 +24044,6 @@ def command_search_index_doctor(args: argparse.Namespace) -> int:
         check("PASS" if int(status.get("failed_file_count") or 0) == 0 else "WARN", "failed file count is zero"),
     ]
     return print_checks(checks)
-
-
-def command_search_index_tick(args: argparse.Namespace) -> int:
-    from processforge_core.resources.local_search import ResourceSearchIndex
-
-    workplace_root = Path(args.workplace).expanduser().resolve()
-    snapshot = workplace_search_runtime_snapshot(workplace_root)
-    payload = ResourceSearchIndex(workplace_root, snapshot, workplace_root).maintenance_tick(verify_files=not bool(getattr(args, "skip_file_verify", False)))
-    print(f"ACTION: {payload.get('action')}")
-    after = payload.get("after") if isinstance(payload.get("after"), dict) else {}
-    print(f"STATUS: {after.get('status')}")
-    print(f"GENERATION: {after.get('generation') or 'none'}")
-    print(f"DOCUMENTS: {after.get('document_count')}")
-    if after.get("error"):
-        print(f"ERROR: {after.get('error')}")
-    return 0 if after.get("status") == "fresh" else 1
 
 
 def command_core_update_status(args: argparse.Namespace) -> int:
@@ -26461,11 +26412,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     navigation_commands = ResourceIndexCommandParser(
         path_resolve=command_path_resolve,
-        search_index_doctor=command_search_index_doctor,
-        search_index_rebuild=command_search_index_rebuild,
-        search_index_refresh=command_search_index_refresh,
-        search_index_status=command_search_index_status,
-        search_index_tick=command_search_index_tick,
+        search_index_doctor=SearchIndexDoctorCommand(
+            index_factory=resource_search_index,
+            doctor_formatter=search_index_doctor_result,
+        ).execute,
+        search_index_rebuild=SearchIndexRebuildCommand(index_factory=resource_search_index).execute,
+        search_index_refresh=SearchIndexRefreshCommand(index_factory=resource_search_index).execute,
+        search_index_status=SearchIndexStatusCommand(index_factory=resource_search_index).execute,
+        search_index_tick=SearchIndexTickCommand(index_factory=resource_search_index).execute,
     )
     navigation_commands.register(sub.add_parser)
 
@@ -26646,10 +26600,9 @@ def build_parser() -> argparse.ArgumentParser:
     inspector_commands.register(sub.add_parser)
 
     from pf_runtime.monitor import interval_value
-    from pf_config import command_config
 
     configuration_commands = ConfigurationCommandParser(
-        execute=command_config,
+        execute=ConfigurationCommand(service_factory=configuration_service).execute,
     )
     configuration_commands.register(sub.add_parser)
 
