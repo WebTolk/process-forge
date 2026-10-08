@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 from processforge_core import composition, garage
 from processforge_core.common import request_scope
-from processforge_core.project import snapshot
+from processforge_core.project import mode, snapshot
 from processforge_core.project.snapshot import ProjectSnapshotReadService
 
 BASELINE = None
@@ -193,7 +193,6 @@ class GarageSnapshotTests(unittest.TestCase):
                         return {'status': 'ready', 'resource_count': 1}
                     replacements = {
                         'ResourceSearchService': lambda *a: SimpleNamespace(readiness=readiness),
-                        'GarageModeService': lambda *a: SimpleNamespace(status=lambda **k: {'mode': 'garage', 'session': {'id': k['session_id']}}),
                         'CurrentWorkService': lambda *a: SimpleNamespace(summary=lambda: {'active_work': []}),
                         'DerivedReportLifecycleService': lambda *a: SimpleNamespace(status=lambda **k: {'status': 'same', 'document': k['snapshot']}),
                         'process_summary': lambda snapshot, manifest, **k: {'snapshot': snapshot, 'manifest': manifest},
@@ -201,10 +200,12 @@ class GarageSnapshotTests(unittest.TestCase):
                         'diagnostics_from_check': lambda *a: [],
                         'fresh_session_continuation': lambda *a: {'id': 'continued'},
                     }
+                    mode_service = lambda *a, **k: SimpleNamespace(status=lambda **k: {'mode': 'garage', 'session': {'id': k['session_id']}})
                     with ExitStack() as stack:
+                        stack.enter_context(patch.object(mode, 'GarageModeService', side_effect=mode_service))
                         stack.enter_context(patch.dict(garage.__dict__, replacements))
                         if BASELINE:
-                            stack.enter_context(patch.dict(BASELINE, replacements))
+                            stack.enter_context(patch.dict(BASELINE, {**replacements, 'GarageModeService': mode_service}))
                         result = outcome(lambda: constructor(Path('p'), Path('w'), core).context(session_id='session'))
                     self.assertIsNone(request_scope._CURRENT.get())
                     self.assertEqual(seen, [{}] if broken else [{'unknown': ['kept']}])

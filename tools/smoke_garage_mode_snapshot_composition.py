@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Garage mode snapshot injection and retained-service compatibility."""
+"""Garage mode snapshot injection and retained-body behavior checks."""
 from __future__ import annotations
 import argparse
-from dataclasses import fields
+from dataclasses import MISSING, fields
 import os
 from pathlib import Path
 import shutil
@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 from processforge_core import composition, garage
 from processforge_core.common import request_scope
+from processforge_core.project import mode
 BASELINE = None
 SCRATCH = None
 import copy
@@ -49,7 +50,12 @@ def scenario(service_type, *, document=UNSET, supplied=UNSET, session_id='', err
             return safe_load(document_path.read_text(encoding='utf-8'))
         return copy.deepcopy(document)
     core = SimpleNamespace(project_context_snapshot_paths=paths, load_yaml_document=load)
-    service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))
+    if BASELINE and service_type is BASELINE['GarageModeService']:
+        service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))
+    else:
+        if snapshots is None:
+            snapshots = composition.build_project_context_snapshot_read_service(Path('p'), core)
+        service = service_type(Path('p'), Path('w'), snapshots=snapshots)
     options = {'session_id': session_id}
     if supplied is not UNSET:
         options['snapshot'] = copy.deepcopy(supplied)
@@ -91,50 +97,52 @@ class ModeSnapshotTests(unittest.TestCase):
     def test_retained_mode_policy_and_errors(self):
         options = [{}, {'session_id':'s'}, {'supplied':{}}, {'supplied':{'unknown':'kept'}, 'error':'load'}, {'document':{}}, {'document':[]}, {'document':None}, {'document':{'workplace_coordination':{'effective_mode':'organized'}}}, {'document':{'workplace_coordination':{'director_required':True}}}, {'document':{'workplace_coordination':{'effective_mode':'organized','director_required':False}}}, {'document':{'workplace_coordination':{'effective_mode':'organized','director_office_exists':True}}}, {'error':'path'}, {'error':'load'}]
         for config in options:
-            actual = scenario(garage.GarageModeService, **config)
+            actual = scenario(mode.GarageModeService, **config)
             if BASELINE:
                 self.assertEqual(actual, scenario(BASELINE['GarageModeService'], **config), config)
         for session in ('', 'bound'):
-            result, _ = scenario(garage.GarageModeService, session_id=session, document={'workplace_coordination':{'effective_mode':'simple','director_available_at_workplace':True}})
+            result, _ = scenario(mode.GarageModeService, session_id=session, document={'workplace_coordination':{'effective_mode':'simple','director_available_at_workplace':True}})
             self.assertEqual(result[1]['mode'], 'garage')
             self.assertFalse(result[1]['blockers'])
-        result, _ = scenario(garage.GarageModeService, document={'workplace_coordination':{'effective_mode':'organized'}})
+        result, _ = scenario(mode.GarageModeService, document={'workplace_coordination':{'effective_mode':'organized'}})
         self.assertEqual(result[1]['blockers'][0]['code'], 'forge_runtime_required_but_unavailable')
 
     def test_falsey_injection_and_supplied_snapshot_semantics(self):
         memory = MemorySnapshots({'workplace_coordination':{'effective_mode':'organized','director_office_exists':True}, 'unknown':['kept']})
         for supplied in (UNSET, None, {}):
-            result, events = scenario(garage.GarageModeService, snapshots=memory, supplied=supplied, error='load')
+            result, events = scenario(mode.GarageModeService, snapshots=memory, supplied=supplied, error='load')
             self.assertEqual(result[1]['mode'], 'forge')
             self.assertFalse(events)
         self.assertEqual(memory.calls, [None] * 3)
         memory.calls.clear()
-        result, events = scenario(garage.GarageModeService, snapshots=memory, supplied={'unknown':'override'}, error='load')
+        result, events = scenario(mode.GarageModeService, snapshots=memory, supplied={'unknown':'override'}, error='load')
         self.assertEqual(result[1]['mode'], 'garage')
         self.assertFalse(events or memory.calls)
-        result, _ = scenario(garage.GarageModeService, snapshots=MemorySnapshots({}))
+        result, _ = scenario(mode.GarageModeService, snapshots=MemorySnapshots({}))
         self.assertEqual(result[1]['mode'], 'garage')
 
     def test_constructor_factory_no_io_and_default_substitution(self):
         fail = lambda *a, **k:self.fail('Factory must not call Core')
         core = SimpleNamespace(project_context_snapshot_paths=fail, load_yaml_document=fail)
         memory = MemorySnapshots()
-        old = garage.GarageModeService(Path('p'),Path('w'),core)
+        direct = mode.GarageModeService(Path('p'),Path('w'),snapshots=memory)
         built = composition.build_garage_mode_service(Path('p'),Path('w'),core,snapshots=memory)
         self.assertIs(built.snapshots, memory)
-        self.assertEqual(old, built)
-        self.assertEqual(repr(old), repr(built))
-        self.assertEqual(outcome(lambda:hash(old)), outcome(lambda:hash(built)))
-        self.assertEqual(old.__match_args__, ('project_root','workplace_root','core'))
+        self.assertEqual(direct, built)
+        self.assertEqual(repr(direct), repr(built))
+        self.assertEqual(outcome(lambda:hash(direct)), outcome(lambda:hash(built)))
+        self.assertEqual(direct.__match_args__, ('project_root','workplace_root'))
         field = next(item for item in fields(built) if item.name == 'snapshots')
         self.assertTrue(field.kw_only)
         self.assertFalse(field.compare or field.repr)
+        self.assertIs(field.default, MISSING)
         with self.assertRaises(TypeError):
-            garage.GarageModeService(Path('p'),Path('w'),core,memory)
+            mode.GarageModeService(Path('p'),Path('w'),memory)
         calls = []
-        with patch.object(garage, 'GarageModeService', side_effect=lambda *a:calls.append(a) or 'substitute'):
+        with patch.object(composition, 'build_project_context_snapshot_read_service', return_value=memory) as reader_factory, patch.object(mode, 'GarageModeService', side_effect=lambda *a, **k:calls.append((a,k)) or 'substitute'):
             self.assertEqual(composition.build_garage_mode_service(Path('p'),Path('w'),core), 'substitute')
-        self.assertEqual(calls, [(Path('p'),Path('w'),core)])
+        reader_factory.assert_called_once_with(Path('p'),core)
+        self.assertEqual(calls, [((Path('p'),Path('w')),{'snapshots':memory})])
 
     def test_context_consumer_retained_payload_and_fallback(self):
         for config in [{}, {'document':{}}, {'broken':True}, {'broken':True,'error':'load'}, {'document':{'workplace_coordination':{'effective_mode':'organized'}}}]:
