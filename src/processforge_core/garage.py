@@ -37,7 +37,7 @@ class ProjectContextService:
 
     @scoped_request
     def context(self, *, session_id: str = "") -> dict[str, Any]:
-        from .composition import build_garage_mode_service
+        from .composition import build_derived_report_lifecycle_service, build_garage_mode_service
 
         check = self.check()
         snapshot = self.snapshot() if not check.get("broken") else {}
@@ -69,7 +69,7 @@ class ProjectContextService:
                 "selection": resource_selection_summary(snapshot),
             },
             "work": work,
-            "derived_reports": DerivedReportLifecycleService(self.project_root, self.core).status(snapshot=snapshot),
+            "derived_reports": build_derived_report_lifecycle_service(self.project_root, self.core).status(snapshot=snapshot),
             "session": mode["session"],
             "diagnostics": diagnostics_from_check(check, search, mode),
         }
@@ -179,35 +179,6 @@ class CurrentWorkService:
         return rows
 
 
-@dataclass(frozen=True)
-class DerivedReportLifecycleService:
-    project_root: Path
-    core: Any
-
-    def status(self, *, snapshot: dict[str, Any] | None = None) -> dict[str, Any]:
-        snapshot = snapshot or load_snapshot(self.project_root, self.core)
-        snapshot_time = str((snapshot.get("snapshot") if isinstance(snapshot.get("snapshot"), dict) else {}).get("generated_at") or snapshot.get("generated_at") or "")
-        flow_root = self.core.locate_flow_root(self.project_root)
-        reports = []
-        for rel_path in DERIVED_REPORTS:
-            path = flow_root / rel_path
-            status = "missing"
-            if path.is_file():
-                status = "current"
-                if snapshot_time:
-                    try:
-                        import datetime as _dt
-
-                        generated = _dt.datetime.fromisoformat(snapshot_time.replace("Z", "+00:00")).timestamp()
-                        if path.stat().st_mtime < generated:
-                            status = "stale"
-                    except (OSError, ValueError):
-                        status = "historical"
-            reports.append({"path": f".pf/{rel_path.as_posix()}", "status": status})
-        aggregate = "stale" if any(item["status"] == "stale" for item in reports) else ("missing" if any(item["status"] == "missing" for item in reports) else "current")
-        return {"status": aggregate, "snapshot_generated_at": snapshot_time, "reports": reports}
-
-
 def process_summary(snapshot: dict[str, Any], manifest: dict[str, Any] | None = None, *, project_root: Path | None = None, core: Any = None) -> dict[str, Any]:
     processes = snapshot.get("processes") if isinstance(snapshot.get("processes"), dict) else {}
     current = processes.get("current") if isinstance(processes.get("current"), dict) else {}
@@ -300,13 +271,6 @@ def diagnostics_from_check(check: dict[str, Any], search: dict[str, Any], mode: 
 
 ACTIVE_STATUSES = {"open", "in_progress", "review", "blocked"}
 HISTORICAL_STATUSES = {"done", "completed", "cancelled", "failed"}
-DERIVED_REPORTS = [
-    Path("artifacts/project-classification-report.md"),
-    Path("artifacts/global-resource-matching-report.md"),
-    Path("artifacts/toolchain-detection-report.md"),
-    Path("artifacts/capability-provider-audit.md"),
-    Path("artifacts/project-profile.md"),
-]
 
 
 def selected_process_id(project_root: Path, core: Any) -> str:

@@ -71,7 +71,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
 | `src/processforge_core/evidence/` | Existing evidence collection/identity, normalization and live file diagnostics, requirement/gate satisfaction and ordered readiness blockers through explicit callbacks. |
-| `src/processforge_core/garage.py` | Project/context/read-model services, including `CurrentWorkService`. |
+| `src/processforge_core/garage.py` | Project/context/read-model assembly and `CurrentWorkService`; coordination mode and derived report status live under `project/`. |
 | `src/processforge_core/process_execution.py`, `work/continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
 | `src/processforge_core/work/state.py` | I/O-free completion requirements and Work-state action/blocker policy; not lifecycle authority. |
 | `src/processforge_core/work/automation_readiness.py`, `work/transition_rejection.py` | Existing automation readiness projections, live assignment-event reads and recoverable transition rejection response rules through explicit callbacks. |
@@ -80,6 +80,8 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/work/context_read.py` | Existing capsule validation and assignment normalization with explicit path/validator callbacks. |
 | `src/processforge_core/process_catalog/` | Catalog models/resolution, effective ProcessDefinition reads, offered process selection and pin construction through explicit callbacks. |
 | `src/processforge_core/project/snapshot.py` | Live ProjectContextSnapshot loading and raw-byte checksum through explicit path/loader/hash callbacks. |
+| `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
+| `src/processforge_core/project/reports.py` | Existing `DerivedReportLifecycleService` and fixed derived report paths through required snapshot/flow-root dependencies, without Core. |
 | `src/processforge_core/project/initialization.py` | Existing project onboarding, initialization status and deterministic repair, reusing guarded agent entry transactions. |
 | `src/processforge_core/resources/local_search.py` | Existing authorized local resource index, SQLite/FTS search, coverage and indexing policy helpers. |
 | `src/processforge_core/runtime/metrics.py` | Existing bounded runtime metrics collection, registered project roots, freshness and collection workers; import from `processforge_core.runtime.metrics`. |
@@ -116,7 +118,9 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 
 `ResourceResolveService` accepts a keyword-only `snapshots` port through the same helper. An empty resource id still returns project metadata without reading. `build_resource_resolve_service` assembles the MCP resolver without I/O, after the existing binding and freshness guards. Selection order, aliases, denied results, path reference resolution and private navigation retain their behavior. Host uses the compatible constructor of this shared service; its routing is unchanged.
 
-`GarageModeService` uses the same keyword-only read port. Its existing `snapshot or ...` fallback is preserved: an empty supplied snapshot triggers a read, while a nonempty one bypasses it. `build_garage_mode_service` assembles the existing `ProjectContextService.context` consumer without I/O and preserves the default three-argument constructor call. Context does not forward its own optional reader into the mode fallback. Coordination, session representation, blockers and mode policy retain their behavior; a session alone does not promote Garage to Forge.
+`GarageModeService` belongs to `project/mode.py` and takes `(project_root, workplace_root, *, snapshots)` with a required `ProjectSnapshotReadPort`; it receives no Core. The dependency is excluded from repr/equality. Its existing `snapshot or ...` fallback is preserved: an empty supplied snapshot triggers `snapshots.load()`, while a nonempty one bypasses it. `build_garage_mode_service(project_root, workplace_root, core, *, snapshots=None)` performs no I/O and builds the existing default reader only when the dependency is `None`, preserving a falsey injected reader. Context does not forward its own optional reader into the mode fallback. Coordination, session representation, blockers and mode policy retain their behavior; a session alone does not promote Garage to Forge. No old constructor or module alias is retained.
+
+`DerivedReportLifecycleService` and `DERIVED_REPORTS` belong to `project/reports.py`. The service receives required keyword-only `snapshots` and `flow_root` dependencies, with no Core or implicit reads at construction. `build_derived_report_lifecycle_service(project_root, core, *, snapshots=None)` builds an independent default snapshot reader only for `None` and binds flow-root resolution for the later status call. `ProjectContextService.context` uses this factory without forwarding its own injected reader. An empty supplied snapshot still triggers a read before flow-root lookup. Fixed report order and paths, timestamp fallback, filesystem checks, historical exception handling and aggregate status retain the existing rules.
 
 ## Observation
 
