@@ -16,10 +16,16 @@ python tools/validate-public-cleanliness.py --root .
 `pf_cli.application.CliApplication` owns the existing single-invocation flow:
 argument parsing, mode checks, diagnostic operation and handler dispatch.
 `processforge.py:main` composes it for each call using the existing parser and
-project identity callback. Parser registration and command handlers remain in
+project identity callback. Parser assembly and command handlers remain in
 `processforge.py`; domain services remain in `processforge_core`. CLI modules
 belong to the shallow `pf_cli` package, with explicit imports from their owners
 and a minimal package initializer.
+
+`pf_cli.diagnostics.DiagnosticsCommandParser` registers the existing
+`diagnostics-configure`, `diagnostics-status` and `diagnostics-export` commands.
+`build_parser` constructs it from the existing handlers at their original
+registration position. Command-family argument definitions belong to their
+owning CLI module; diagnostic policy and storage stay in their existing owners.
 
 ```bash
 python bin/pf.py workplace-init --workplace <workplace-root> --dry-run

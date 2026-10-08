@@ -65,6 +65,7 @@ from processforge_core.process_execution import ProcessExecutionService, project
 from processforge_core.project import initialization as project_initialization
 from processforge_core import diagnostics
 from pf_cli.application import CliApplication
+from pf_cli.diagnostics import DiagnosticsCommandParser
 from processforge_core.documents.reader import YamlDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
@@ -26466,28 +26467,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--diagnostic-sink", choices=["jsonl", "stderr", "both", "none"])
     sub = parser.add_subparsers(dest="command", required=True)
 
-    configure = sub.add_parser("diagnostics-configure", help="Plan or apply a bounded diagnostic profile change.")
-    configure.add_argument("--project-root", required=True)
-    configure.add_argument("--profile", choices=list(diagnostics.PROFILES), required=True)
-    configure.add_argument("--duration", type=int, default=600, help="Detailed profile lifetime in seconds (1..900).")
-    configure_scope = configure.add_mutually_exclusive_group()
-    configure_scope.add_argument("--run-id")
-    configure_scope.add_argument("--session-id")
-    configure.add_argument("--apply", action="store_true")
-    configure.set_defaults(func=command_diagnostics_configure)
-    diagnostic_status = sub.add_parser("diagnostics-status", help="Inspect optional diagnostic configuration and local health without repairs.")
-    diagnostic_status.add_argument("--project-root", required=True)
-    diagnostic_status.add_argument("--run-id")
-    diagnostic_status.add_argument("--session-id")
-    diagnostic_status.set_defaults(func=command_diagnostics_status)
-    diagnostic_export = sub.add_parser("diagnostics-export", help="Create a bounded sanitized local diagnostic bundle; no repair or upload.")
-    diagnostic_export.add_argument("--project-root", required=True)
-    diagnostic_export.add_argument("--output", required=True)
-    diagnostic_export.add_argument("--request-id")
-    diagnostic_export.add_argument("--run-id")
-    diagnostic_export.add_argument("--since")
-    diagnostic_export.add_argument("--until")
-    diagnostic_export.set_defaults(func=command_diagnostics_export)
+    DiagnosticsCommandParser(
+        configure=command_diagnostics_configure,
+        status=command_diagnostics_status,
+        export=command_diagnostics_export,
+    ).register(sub.add_parser)
 
     init_workplace = sub.add_parser("init-workplace", help="Initialize a ProcessForge workplace layer.")
     init_workplace.add_argument("--root", required=True, help="Workplace root path.")
