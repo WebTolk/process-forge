@@ -17,8 +17,9 @@ python tools/validate-public-cleanliness.py --root .
 argument parsing, mode checks, diagnostic operation and handler dispatch.
 `processforge.py:main` composes it for each call using the existing parser and
 project identity callback. `processforge.py:build_parser` composes argument
-registrars in their existing order. Command handlers currently remain in
-`processforge.py` and their owning modules; domain services remain in
+registrars in their existing order. Extracted Work and Agent Entry handlers live
+in `pf_cli.commands`; remaining handlers stay in their owning modules. Domain
+services remain in
 `processforge_core`. CLI modules belong to the shallow `pf_cli` package, with
 explicit imports from their owners and minimal package initializers.
 
@@ -38,6 +39,13 @@ existing command implementations retain their Core calls and guards.
 Extracted command adapters belong to `pf_cli.commands`: one concrete class with
 `execute(args)` per independent handler, with related classes sharing a module.
 The [CLI placement rules](pf_cli/AGENTS.md) apply to future classes as well.
+
+`pf_cli.commands.work` contains the existing start, state, resource-read and
+transition adapters, each with its own `execute(args)` class and narrow lazy
+Core factory. `pf_cli.commands.agent_entry` contains `AgentEntryCommand` and
+`AgentStartPromptCommand`. Existing Core guards, use cases, byte budgets and
+result formatting retain their behavior. The root supplies explicit dependencies
+and keeps original CLI module identity in service composition.
 
 ```bash
 python bin/pf.py workplace-init --workplace <workplace-root> --dry-run

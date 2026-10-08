@@ -346,6 +346,7 @@ class CompositionTests(unittest.TestCase):
 class AdapterTests(NormalizedTests):
     def test_cli_factory_and_output_parity(self):
         import processforge as core
+        from pf_cli.commands.work import WorkStateCommand
         service = fixture()
         manifest = Path('workplace/workplace.yaml')
         with patch.object(core, 'resolve_project_workplace_manifest', return_value=manifest), patch('processforge_core.composition.build_process_execution_service', return_value=service) as factory:
@@ -355,7 +356,12 @@ class AdapterTests(NormalizedTests):
         records = []
         arguments = SimpleNamespace(project_root='fixture', json=True)
         with d.operation(logger(sinks=[records.append]), 'cli', 'request', request_id='cli-request'), patch.object(core, 'require_flow_root'), patch.object(core, 'process_execution_service', return_value=service), patch('sys.stdout', output):
-            self.assertEqual(core.command_work_state(arguments), 0)
+            command = WorkStateCommand(
+                execution_factory=core.process_execution_service,
+                require_flow_root=core.require_flow_root,
+                dump_yaml=core.dump_yaml,
+            )
+            self.assertEqual(command.execute(arguments), 0)
         self.assertEqual(json.loads(output.getvalue()), service.state())
         completed = next(r for r in records if r['code'] == 'work.state.completed')
         self.assertEqual(completed['identity']['request_id'], 'cli-request')

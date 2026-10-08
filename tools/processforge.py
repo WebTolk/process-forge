@@ -30,9 +30,13 @@ import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PureWindowsPath
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 from urllib.request import url2pathname, urlopen
+
+if TYPE_CHECKING:
+    from processforge_core.work.resources import WorkResourceService
+
 
 def _bootstrap_repo_src() -> Path:
     repo_root = Path(__file__).resolve().parents[1]
@@ -65,6 +69,13 @@ from processforge_core.process_execution import ProcessExecutionService, project
 from processforge_core.project import initialization as project_initialization
 from processforge_core import diagnostics
 from pf_cli.application import CliApplication
+from pf_cli.commands.agent_entry import AgentEntryCommand, AgentStartPromptCommand
+from pf_cli.commands.work import (
+    WorkStartCommand,
+    WorkStateCommand,
+    WorkResourceReadCommand,
+    WorkTransitionCommand,
+)
 from pf_cli.parsers.agent_entry import AgentEntryCommandParser
 from pf_cli.parsers.agents import (
     AgentPresenceCommandParser,
@@ -6240,27 +6251,6 @@ def refresh_start_agent_run_block(project_root: Path, text: str) -> str:
     return raw.decode("utf-8")
 
 
-def command_agent_start_prompt(args: argparse.Namespace) -> int:
-    from processforge_core.agent_entry.contract import EntryError
-    from processforge_core.agent_entry.migration import plan_start_prompt, apply_start_prompt
-    project_root = Path(args.project_root).expanduser().absolute()
-    flow_root = require_flow_root(project_root)
-    if not getattr(args, "plan", False) and not getattr(args, "apply", False):
-        print(default_start_agent_here(project_root).rstrip())
-        return 0
-    try:
-        if flow_root != project_root / ".pf":
-            raise EntryError("unsupported_flow_root")
-        plan = plan_start_prompt(project_root)
-        result = apply_start_prompt(project_root, plan, apply=True) if getattr(args, "apply", False) else plan
-    except EntryError as exc:
-        print(json.dumps({"status": "conflict", "reason": exc.reason, "path": exc.path}, ensure_ascii=False, indent=2))
-        return 1
-    except OSError:
-        print(json.dumps({"status": "conflict", "reason": "storage_error"}))
-        return 1
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 1 if result.get("action") == "incomplete" or result.get("blockers") else 0
 
 
 def command_first_run(args: argparse.Namespace) -> int:
@@ -20722,134 +20712,11 @@ def process_execution_service(project_root: Path, explicit_workplace: str | None
     return build_process_execution_service(project_root, workplace_root, sys.modules[__name__])
 
 
-def print_process_execution_result(payload: dict[str, Any], *, as_json: bool = False) -> None:
-    print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) if as_json else dump_yaml(payload))
-
-
-def command_agent_entry(args: argparse.Namespace) -> int:
-    from processforge_core.agent_entry.contract import EntryError, decode_json
-    from processforge_core.agent_entry.migration import apply_entry, check_entry, plan_entry, rollback_entry
-    from processforge_core.agent_entry.profiles import diagnose_entry, load_profiles
-    from processforge_core.agent_entry.adapters import adapter_guide, apply_adapter, plan_adapter
-
-    def input_json(name: str, maximum: int):
-        with Path(name).expanduser().open("rb") as stream:
-            return decode_json(stream.read(maximum + 1), maximum)
-
-    try:
-        operation = args.entry_operation
-        project = Path(args.project_root) if args.project_root else None
-        if operation == "profiles":
-            result = load_profiles()
-        elif operation == "adapter-plan":
-            policy = input_json(args.budget_file, 65536) if args.budget_file else None
-            result = plan_adapter(project, profile_id=args.profile, route=args.route, budget_policy=policy)
-        elif operation == "adapter-apply":
-            result = apply_adapter(project, input_json(args.plan_file, 262144), apply=args.apply)
-        elif operation == "adapter-guide":
-            observed = input_json(args.observations_file, 65536) if args.observations_file else None
-            result = adapter_guide(project, profile_id=args.profile, route=args.route, cwd=args.cwd, observation=observed)
-        elif operation == "diagnose":
-            observed = input_json(args.observations_file, 65536) if args.observations_file else None
-            result = diagnose_entry(project, profile_id=args.profile, observation=observed, cwd=args.cwd)
-        elif operation in {"plan", "check"}:
-            policy = input_json(args.budget_file, 65536) if args.budget_file else None
-            result = (plan_entry if operation == "plan" else check_entry)(project, budget_policy=policy)
-        elif operation == "apply":
-            result = apply_entry(project, input_json(args.plan_file, 262144), apply=args.apply)
-        else:
-            result = rollback_entry(project, args.transaction, apply=args.apply)
-    except EntryError as exc:
-        result = {"action": "blocked", "reason": exc.reason}
-        if exc.path:
-            result["path"] = exc.path
-    except OSError:
-        result = {"action": "blocked", "reason": "storage_error"}
-    print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
-    return 1 if result.get("action") in {"blocked", "incomplete"} or result.get("blockers") else 0
-
-
-def command_work_start(args: argparse.Namespace) -> int:
-    project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
-    security = None
-    if getattr(args, "egress_intent", None):
-        from processforge_core.egress.contracts import EgressError, bounded_json, security_intent
-        try:
-            with Path(args.egress_intent).open("rb") as stream:
-                security = security_intent(bounded_json(stream.read(1048577), 1048576))
-        except (EgressError, OSError, ValueError):
-            print_process_execution_result({"action": "blocked", "reason": "egress_contract_invalid"}, as_json=bool(args.json))
-            return 1
-    scope_intent = None
-    if getattr(args, "scope_file", None):
-        from processforge_core.process_execution import creation_scope_intent
-        from processforge_core.work.context import ContextContractError
-        try:
-            with Path(args.scope_file).open("rb") as stream:
-                raw = stream.read(65537)
-            if len(raw) > 65536:
-                raise ValueError("scope input too large")
-            scope_intent = creation_scope_intent(json.loads(raw.decode("utf-8")))
-        except (ContextContractError, OSError, ValueError):
-            print_process_execution_result({"action": "blocked", "reason": "work_scope_invalid"}, as_json=bool(args.json))
-            return 1
-    payload = process_execution_service(project_root, getattr(args, "workplace", None)).start(objective=args.objective, process_id=str(getattr(args, "process_id", None) or ""), security=security, scope_intent=scope_intent)
-    print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
-    return 0 if payload.get("action") in {"created_new", "continue_existing"} else 1
-
-
-def command_work_state(args: argparse.Namespace) -> int:
-    project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
-    payload = process_execution_service(project_root, getattr(args, "workplace", None)).state(
-        run_id=str(getattr(args, "run", None) or ""),
-        assignment_id=str(getattr(args, "assignment", None) or ""),
-        context_id=str(getattr(args, "context_id", None) or ""),
-        session_id=str(getattr(args, "session", None) or ""),
-    )
-    print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
-    return 0
-
-
-def command_work_resource_read(args: argparse.Namespace) -> int:
+def work_resource_service(project_root: Path, explicit_workplace: str | None = None) -> WorkResourceService:
     from processforge_core.work.resources import WorkResourceService
 
-    project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
-    manifest = resolve_project_workplace_manifest(project_root, getattr(args, "workplace", None))
-    payload = WorkResourceService(project_root, manifest.parent if manifest else None, sys.modules[__name__]).read(
-        operation=args.command.removeprefix("work-"), run_id=args.run, assignment_id=args.assignment,
-        context_id=args.context_id, resource_id=getattr(args, "resource_id", None), query=getattr(args, "query", None),
-        limit=getattr(args, "limit", None), limitstart=getattr(args, "limitstart", None), offset=getattr(args, "offset", None))
-    print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
-    return 0 if payload.get("status") == "ready" else 1
-
-
-def command_work_transition(args: argparse.Namespace) -> int:
-    project_root = Path(args.project_root).expanduser().resolve()
-    require_flow_root(project_root)
-    evidence: list[Any] = []
-    evidence_file = str(getattr(args, "evidence_file", None) or "").strip()
-    if evidence_file:
-        loaded = json.loads(Path(evidence_file).expanduser().read_text(encoding="utf-8"))
-        evidence.extend(loaded if isinstance(loaded, list) else [loaded])
-    for raw in getattr(args, "evidence", None) or []:
-        try:
-            evidence.append(json.loads(raw))
-        except json.JSONDecodeError:
-            evidence.append(raw)
-    payload = process_execution_service(project_root, getattr(args, "workplace", None)).transition(
-        outcome=args.outcome,
-        evidence=evidence,
-        notes=str(getattr(args, "notes", None) or ""),
-        run_id=str(getattr(args, "run", None) or ""),
-        assignment_id=str(getattr(args, "assignment", None) or ""),
-        context_id=str(getattr(args, "context_id", None) or ""),
-        session_id=str(getattr(args, "session", None) or ""),
-    )
-    print_process_execution_result(payload, as_json=bool(getattr(args, "json", False)))
-    return 0 if payload.get("action") in {"stage_transitioned", "run_completed"} else 1
+    manifest = resolve_project_workplace_manifest(project_root, explicit_workplace)
+    return WorkResourceService(project_root, manifest.parent if manifest else None, sys.modules[__name__])
 
 
 def command_run_create(args: argparse.Namespace) -> int:
@@ -26543,8 +26410,11 @@ def build_parser() -> argparse.ArgumentParser:
     workplace_commands.register_setup(sub.add_parser)
 
     agent_entry_commands = AgentEntryCommandParser(
-        agent_entry=command_agent_entry,
-        agent_start_prompt=command_agent_start_prompt,
+        agent_entry=AgentEntryCommand().execute,
+        agent_start_prompt=AgentStartPromptCommand(
+            require_flow_root=require_flow_root,
+            start_prompt_renderer=default_start_agent_here,
+        ).execute,
         global_agents_section=command_global_agents_section,
     )
     agent_entry_commands.register_global_section(sub.add_parser)
@@ -26879,10 +26749,26 @@ def build_parser() -> argparse.ArgumentParser:
 
     work_commands = WorkCommandParser(
         work_cancel=command_work_cancel,
-        work_resource_read=command_work_resource_read,
-        work_start=command_work_start,
-        work_state=command_work_state,
-        work_transition=command_work_transition,
+        work_resource_read=WorkResourceReadCommand(
+            resource_factory=work_resource_service,
+            require_flow_root=require_flow_root,
+            dump_yaml=dump_yaml,
+        ).execute,
+        work_start=WorkStartCommand(
+            execution_factory=process_execution_service,
+            require_flow_root=require_flow_root,
+            dump_yaml=dump_yaml,
+        ).execute,
+        work_state=WorkStateCommand(
+            execution_factory=process_execution_service,
+            require_flow_root=require_flow_root,
+            dump_yaml=dump_yaml,
+        ).execute,
+        work_transition=WorkTransitionCommand(
+            execution_factory=process_execution_service,
+            require_flow_root=require_flow_root,
+            dump_yaml=dump_yaml,
+        ).execute,
     )
     work_commands.register_start(sub.add_parser)
 
