@@ -42,19 +42,3 @@ def command_config(args) -> int:
         print(json.dumps({"kind": "pf.configuration", "error": "configuration_path_invalid"}),
               file=sys.stdout if args.json else sys.stderr)
         return 1
-
-
-def register(subparsers) -> None:
-    parser = subparsers.add_parser("config", help="Manage the selected workplace configuration through Core CRUD.")
-    commands = parser.add_subparsers(dest="config_command", required=True)
-    for name in ("create", "read", "update", "delete"):
-        command = commands.add_parser(name)
-        command.add_argument("--workplace", required=True, help="Workplace directory or workplace.yaml.")
-        command.add_argument("--json", action="store_true", help="Return one JSON object.")
-        if name in {"read", "update", "delete"}:
-            command.add_argument("--key", required=name == "update", help="Dotted setting name; delete with a key resets it to its default.")
-        if name == "update":
-            command.add_argument("--value", required=True, help="New value as JSON, for example 2.")
-        if name in {"update", "delete"}:
-            command.add_argument("--if-revision", help="Reject a stale client revision returned by read.")
-        command.set_defaults(func=command_config)

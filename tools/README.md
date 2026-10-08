@@ -16,16 +16,28 @@ python tools/validate-public-cleanliness.py --root .
 `pf_cli.application.CliApplication` owns the existing single-invocation flow:
 argument parsing, mode checks, diagnostic operation and handler dispatch.
 `processforge.py:main` composes it for each call using the existing parser and
-project identity callback. Parser assembly and command handlers remain in
-`processforge.py`; domain services remain in `processforge_core`. CLI modules
-belong to the shallow `pf_cli` package, with explicit imports from their owners
-and a minimal package initializer.
+project identity callback. `processforge.py:build_parser` composes argument
+registrars in their existing order. Command handlers currently remain in
+`processforge.py` and their owning modules; domain services remain in
+`processforge_core`. CLI modules belong to the shallow `pf_cli` package, with
+explicit imports from their owners and minimal package initializers.
 
-`pf_cli.diagnostics.DiagnosticsCommandParser` registers the existing
+`pf_cli.parsers` groups argument registration by responsibility. Registrars
+receive explicitly typed handler and value dependencies; their constructors
+perform no registration or service calls. `build_parser` binds current values
+for each build and supplies the public subparser registration callback.
+
+`pf_cli.parsers.diagnostics.DiagnosticsCommandParser` registers the existing
 `diagnostics-configure`, `diagnostics-status` and `diagnostics-export` commands.
 `build_parser` constructs it from the existing handlers at their original
 registration position. Command-family argument definitions belong to their
 owning CLI module; diagnostic policy and storage stay in their existing owners.
+Configuration and Egress registration also belong to `pf_cli.parsers`; their
+existing command implementations retain their Core calls and guards.
+
+Extracted command adapters belong to `pf_cli.commands`: one concrete class with
+`execute(args)` per independent handler, with related classes sharing a module.
+The [CLI placement rules](pf_cli/AGENTS.md) apply to future classes as well.
 
 ```bash
 python bin/pf.py workplace-init --workplace <workplace-root> --dry-run

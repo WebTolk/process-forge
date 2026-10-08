@@ -65,7 +65,61 @@ from processforge_core.process_execution import ProcessExecutionService, project
 from processforge_core.project import initialization as project_initialization
 from processforge_core import diagnostics
 from pf_cli.application import CliApplication
-from pf_cli.diagnostics import DiagnosticsCommandParser
+from pf_cli.parsers.agent_entry import AgentEntryCommandParser
+from pf_cli.parsers.agents import (
+    AgentPresenceCommandParser,
+    AgentLeaseCommandParser,
+)
+from pf_cli.parsers.authoring import ProcessAuthoringCommandParser
+from pf_cli.parsers.catalog import ProcessCatalogCommandParser
+from pf_cli.parsers.configuration import ConfigurationCommandParser
+from pf_cli.parsers.context import ProjectContextCommandParser
+from pf_cli.parsers.continuation import ContinuationCommandParser
+from pf_cli.parsers.coordination import (
+    DirectorCommandParser,
+    OrchestrationCommandParser,
+    HandoffCommandParser,
+)
+from pf_cli.parsers.diagnostics import DiagnosticsCommandParser
+from pf_cli.parsers.distribution import (
+    DeliveryCommandParser,
+    CoreUpdateCommandParser,
+)
+from pf_cli.parsers.egress import EgressCommandParser
+from pf_cli.parsers.events import (
+    HookCommandParser,
+    ChatCommandParser,
+)
+from pf_cli.parsers.evolution import EvolutionCommandParser
+from pf_cli.parsers.execution import (
+    RuntimeDriverCommandParser,
+    WorkerRunCommandParser,
+    ExecutionInspectorCommandParser,
+)
+from pf_cli.parsers.host import (
+    CodexMcpCommandParser,
+    RuntimeHostCommandParser,
+)
+from pf_cli.parsers.knowledge import KnowledgeCommandParser
+from pf_cli.parsers.lifecycle import (
+    RunCommandParser,
+    TaskCommandParser,
+    IterationCommandParser,
+)
+from pf_cli.parsers.monitor import MonitorCommandParser
+from pf_cli.parsers.navigation import ResourceIndexCommandParser
+from pf_cli.parsers.project import ProjectCommandParser
+from pf_cli.parsers.resources import (
+    TemplateCommandParser,
+    ProviderCommandParser,
+    SpecializationCommandParser,
+    ProjectOverrideCommandParser,
+    PlatformCommandParser,
+)
+from pf_cli.parsers.runtime import RuntimeCommandParser
+from pf_cli.parsers.update import UpdateCommandParser
+from pf_cli.parsers.work import WorkCommandParser
+from pf_cli.parsers.workplace import WorkplaceCommandParser
 from processforge_core.documents.reader import YamlDocumentReader
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
@@ -26473,1928 +26527,418 @@ def build_parser() -> argparse.ArgumentParser:
         export=command_diagnostics_export,
     ).register(sub.add_parser)
 
-    init_workplace = sub.add_parser("init-workplace", help="Initialize a ProcessForge workplace layer.")
-    init_workplace.add_argument("--root", required=True, help="Workplace root path.")
-    init_workplace.add_argument("--answers", help="Optional workplace answers YAML.")
-    init_workplace.add_argument("--profile", help="Opaque workplace profile id used to select bundled process packs from manifest data.")
-    init_workplace.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
-    init_workplace.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    init_workplace.add_argument("--apply", action="store_true", help="Write files.")
-    init_workplace.add_argument("--force", action="store_true", help="Overwrite existing files.")
-    init_workplace.set_defaults(func=command_init_workplace)
-
-    workplace_init = sub.add_parser("workplace-init", help="First-run alias for init-workplace.")
-    workplace_init.add_argument("--workplace", dest="root", required=True, help="Workplace root path.")
-    workplace_init.add_argument("--answers", help="Optional workplace answers YAML.")
-    workplace_init.add_argument("--profile", help="Opaque workplace profile id used to select bundled process packs from manifest data.")
-    workplace_init.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
-    workplace_init.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    workplace_init.add_argument("--apply", action="store_true", help="Write files.")
-    workplace_init.add_argument("--force", action="store_true", help="Overwrite existing files.")
-    workplace_init.set_defaults(func=command_init_workplace)
-
-    workplace_setup = sub.add_parser("workplace-setup", help="Agent-guided workplace setup workflow.")
-    workplace_setup_sub = workplace_setup.add_subparsers(dest="workplace_setup_command", required=True)
-    workplace_setup_start = workplace_setup_sub.add_parser("start", help="Start a guided workplace setup session.")
-    workplace_setup_start.add_argument("--workplace", required=True, help="Workplace root path.")
-    workplace_setup_start.add_argument("--answers", help="Optional guided setup answers YAML.")
-    workplace_setup_start.add_argument("--session-id", default="default", help="Setup session id.")
-    workplace_setup_start.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    workplace_setup_start.add_argument("--apply", action="store_true", help="Write setup session files.")
-    workplace_setup_start.set_defaults(func=command_workplace_setup_start)
-    workplace_setup_review = workplace_setup_sub.add_parser("review", help="Review guided workplace setup answers and proposal.")
-    workplace_setup_review.add_argument("--workplace", required=True, help="Workplace root path.")
-    workplace_setup_review.add_argument("--answers", help="Optional guided setup answers YAML.")
-    workplace_setup_review.add_argument("--session-id", default="default", help="Setup session id.")
-    workplace_setup_review.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    workplace_setup_review.add_argument("--apply", action="store_true", help="Accepted for command symmetry; review writes unless --dry-run is used.")
-    workplace_setup_review.set_defaults(func=command_workplace_setup_review)
-    workplace_setup_apply = workplace_setup_sub.add_parser("apply", help="Apply a guided workplace setup proposal.")
-    workplace_setup_apply.add_argument("--workplace", required=True, help="Workplace root path.")
-    workplace_setup_apply.add_argument("--answers", help="Optional guided setup answers YAML.")
-    workplace_setup_apply.add_argument("--session-id", default="default", help="Setup session id.")
-    workplace_setup_apply.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    workplace_setup_apply.add_argument("--apply", action="store_true", help="Write workplace files.")
-    workplace_setup_apply.set_defaults(func=command_workplace_setup_apply)
-    workplace_setup_status = workplace_setup_sub.add_parser("status", help="Show guided workplace setup session status.")
-    workplace_setup_status.add_argument("--workplace", required=True, help="Workplace root path.")
-    workplace_setup_status.add_argument("--answers", help="Accepted for namespace compatibility.")
-    workplace_setup_status.add_argument("--session-id", default="default", help="Setup session id.")
-    workplace_setup_status.add_argument("--dry-run", action="store_true", help="Accepted for namespace compatibility.")
-    workplace_setup_status.add_argument("--apply", action="store_true", help="Accepted for namespace compatibility.")
-    workplace_setup_status.set_defaults(func=command_workplace_setup_status)
-
-    global_agents = sub.add_parser("global-agents-section", help="Insert or update the bounded ProcessForge section in an agent instructions file.")
-    global_agents.add_argument("--path", required=True, help="Path to AGENTS.md, CODEX.md, or another agent instruction file.")
-    global_agents.add_argument("--dry-run", action="store_true", help="Write a .candidate file instead of changing the target.")
-    global_agents.add_argument("--force", action="store_true", help="Update the target file in place.")
-    global_agents.set_defaults(func=command_global_agents_section)
-
-    doctor_workplace = sub.add_parser("doctor-workplace", help="Validate a ProcessForge workplace layer.")
-    doctor_workplace.add_argument("--root", required=True, help="Workplace root path.")
-    doctor_workplace.set_defaults(func=command_doctor_workplace)
-
-    workplace_mode = sub.add_parser("workplace-mode", help="Inspect or change workplace coordination mode.")
-    workplace_mode_sub = workplace_mode.add_subparsers(dest="workplace_mode_command", required=True)
-    workplace_mode_status = workplace_mode_sub.add_parser("status", help="Show workplace coordination mode.")
-    workplace_mode_status.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    workplace_mode_status.add_argument("--json", action="store_true", help="Print JSON.")
-    workplace_mode_status.set_defaults(func=command_workplace_mode_status)
-    workplace_mode_set = workplace_mode_sub.add_parser("set", help="Set workplace Director capability flags.")
-    workplace_mode_set.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    workplace_mode_set.add_argument("--director-enabled", choices=["true", "false"], help="Enable or disable Director capability.")
-    workplace_mode_set.add_argument("--director-office-enabled", choices=["true", "false"], help="Enable or disable Director Office initialization.")
-    workplace_mode_set.add_argument("--force", action="store_true", help="Allow disabling Director despite active organized sessions.")
-    workplace_mode_set.add_argument("--json", action="store_true", help="Print JSON status after update.")
-    workplace_mode_set.set_defaults(func=command_workplace_mode_set)
-    workplace_mode_default = workplace_mode_sub.add_parser("set-default-project-mode", help="Set workplace default mode for inherit projects.")
-    workplace_mode_default.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    workplace_mode_default.add_argument("--mode", required=True, choices=["simple", "organized"], help="Default mode for projects with coordination.mode=inherit.")
-    workplace_mode_default.add_argument("--json", action="store_true", help="Print JSON status after update.")
-    workplace_mode_default.set_defaults(func=command_workplace_mode_set_default_project_mode)
-    workplace_mode_doctor = workplace_mode_sub.add_parser("doctor", help="Check workplace coordination mode.")
-    workplace_mode_doctor.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    workplace_mode_doctor.set_defaults(func=command_workplace_mode_doctor)
-
-    init_project = sub.add_parser("init-project", help="Initialize a ProcessForge project layer.")
-    init_project.add_argument("--project-root", required=True, help="Project root path.")
-    init_project.add_argument("--workplace", required=True, help="Path to workplace.yaml.")
-    init_project.add_argument("--type", dest="project_type", help="Project type override.")
-    init_project.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
-    init_project.add_argument("--platform", action="append", default=[], help="Explicit platform contract id. Repeatable.")
-    init_project.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
-    init_project.add_argument("--process", help="Explicit active process id.")
-    init_project.add_argument("--answers", help="Optional project answers YAML.")
-    init_project.add_argument("--entry-budget-file", help="Optional JSON array of observed generic entry budget policies.")
-    init_project.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
-    init_project.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    init_project.add_argument("--apply", action="store_true", help="Write files.")
-    init_project.add_argument("--force", action="store_true", help="Overwrite existing files.")
-    init_project.add_argument("--allow-missing-workplace", action="store_true", help="Allow apply mode with a missing workplace manifest.")
-    init_project.set_defaults(func=command_init_project)
-
-    project_init = sub.add_parser("project-init", help="Alias for init-project.")
-    project_init.add_argument("--project-root", required=True, help="Project root path.")
-    project_init.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    project_init.add_argument("--type", dest="project_type", help="Project type override.")
-    project_init.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
-    project_init.add_argument("--platform", action="append", default=[], help="Explicit platform contract id. Repeatable.")
-    project_init.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
-    project_init.add_argument("--process", help="Explicit active process id.")
-    project_init.add_argument("--answers", help="Optional project answers YAML.")
-    project_init.add_argument("--entry-budget-file", help="Optional JSON array of observed generic entry budget policies.")
-    project_init.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
-    project_init.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    project_init.add_argument("--apply", action="store_true", help="Write files.")
-    project_init.add_argument("--force", action="store_true", help="Overwrite existing files.")
-    project_init.add_argument("--allow-missing-workplace", action="store_true", help="Allow apply mode with a missing workplace manifest.")
-    project_init.set_defaults(func=command_init_project)
-
-    project_onboard = sub.add_parser("project-onboard", help="Onboard a project into an existing ProcessForge workplace.")
-    project_onboard.add_argument("--project-root", required=True, help="Project root path.")
-    project_onboard.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    project_onboard.add_argument("--type", dest="project_type", required=True, help="Explicit project type, for example generic or fixture.project-type.a.")
-    project_onboard.add_argument("--coordination-mode", choices=["inherit", "simple", "organized"], help="Project coordination mode.")
-    project_onboard.add_argument("--platform", action="append", default=[], help="Explicit platform contract id. Repeatable.")
-    project_onboard.add_argument("--specialization", action="append", default=[], help="Explicit specialization id. Repeatable.")
-    project_onboard.add_argument("--process", help="Explicit active process id.")
-    project_onboard.add_argument("--answers", help="Optional project answers YAML.")
-    project_onboard.add_argument("--entry-budget-file", help="Optional JSON array of observed generic entry budget policies.")
-    project_onboard.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
-    project_onboard.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    project_onboard.add_argument("--apply", action="store_true", help="Write files.")
-    project_onboard.add_argument("--force", action="store_true", help="Overwrite existing files.")
-    project_onboard.add_argument("--allow-missing-workplace", action="store_true", help="Allow apply mode with a missing workplace manifest.")
-    project_onboard.set_defaults(func=command_init_project)
-
-    project_init_status = sub.add_parser("project-init-status", help="Read the bounded project initialization status.")
-    project_init_status.add_argument("--project-root", required=True, help="Project root path.")
-    project_init_status.add_argument("--workplace", help="Optional workplace root or manifest for context resolution.")
-    project_init_status.add_argument("--json", action="store_true", help="Print JSON.")
-    project_init_status.set_defaults(func=command_project_init_status)
-
-    project_init_repair = sub.add_parser("project-init-repair", help="Repair deterministic project initialization state.")
-    project_init_repair.add_argument("--project-root", required=True, help="Existing PF project root path.")
-    project_init_repair.add_argument("--workplace", help="Optional workplace root or manifest for context resolution.")
-    project_init_repair.add_argument("--repair-action", default="refresh_context", choices=["refresh_context", "restore_deterministic_artifacts", "migrate_agent_entry", "install_codex_hooks"], help="Deterministic repair action.")
-    project_init_repair.add_argument("--entry-budget-file", help="Optional JSON array of observed generic entry budget policies.")
-    project_init_repair.add_argument("--reason", default="manual", help="Repair reason recorded in the event journal.")
-    project_init_repair.add_argument("--apply", action="store_true", help="Perform the repair; omission is a non-mutating plan.")
-    project_init_repair.set_defaults(func=command_project_init_repair)
-
-    doctor_project = sub.add_parser("doctor-project", help="Validate a ProcessForge project layer.")
-    doctor_project.add_argument("--project-root", required=True, help="Project root path.")
-    doctor_project.set_defaults(func=command_doctor_project)
-
-    project_mode_cmd = sub.add_parser("project-mode", help="Inspect or change project effective coordination mode.")
-    project_mode_sub = project_mode_cmd.add_subparsers(dest="project_mode_command", required=True)
-    project_mode_status = project_mode_sub.add_parser("status", help="Show effective project coordination mode.")
-    project_mode_status.add_argument("--project-root", required=True, help="Project root path.")
-    project_mode_status.add_argument("--workplace", help="Workplace root path or workplace.yaml override.")
-    project_mode_status.add_argument("--json", action="store_true", help="Print JSON.")
-    project_mode_status.set_defaults(func=command_project_mode_status)
-    project_mode_set = project_mode_sub.add_parser("set", help="Set project coordination mode.")
-    project_mode_set.add_argument("--project-root", required=True, help="Project root path.")
-    project_mode_set.add_argument("--workplace", help="Workplace root path or workplace.yaml override.")
-    project_mode_set.add_argument("--mode", required=True, choices=["inherit", "simple", "organized"], help="Project coordination mode.")
-    project_mode_set.add_argument("--init-office", action="store_true", help="Initialize workplace Director Office when setting organized mode.")
-    project_mode_set.add_argument("--json", action="store_true", help="Print JSON status after update.")
-    project_mode_set.set_defaults(func=command_project_mode_set)
-    project_mode_doctor = project_mode_sub.add_parser("doctor", help="Check project coordination mode.")
-    project_mode_doctor.add_argument("--project-root", required=True, help="Project root path.")
-    project_mode_doctor.add_argument("--workplace", help="Workplace root path or workplace.yaml override.")
-    project_mode_doctor.set_defaults(func=command_project_mode_doctor)
-
-    director_inbox_submit = sub.add_parser("director-inbox-submit", help="Submit a file-only message to the workplace Director inbox.")
-    director_inbox_submit.add_argument("--project-root", help="Project root for project-scoped messages.")
-    director_inbox_submit.add_argument("--workplace", help="Workplace root or workplace.yaml for workspace messages or override.")
-    director_inbox_submit.add_argument("--message-type", default="worker_report", choices=["worker_report", "error_report", "decision_request", "operator_note"], help="Director inbox message type.")
-    director_inbox_submit.add_argument("--content", default="", help="Short message content.")
-    director_inbox_submit.add_argument("--allow-simple-submit", action="store_true", help="Allow project-scoped submit from simple mode.")
-    director_inbox_submit.add_argument("--json", action="store_true", help="Print JSON.")
-    director_inbox_submit.set_defaults(func=command_director_inbox_submit)
-
-    director_case_refresh = sub.add_parser("director-case-refresh", help="Refresh workplace Director cases from snapshots and inbox messages.")
-    director_case_refresh.add_argument("--workplace", required=True, help="Workplace root or workplace.yaml.")
-    director_case_refresh.add_argument("--include-simple", action="store_true", help="Include simple projects in cases.")
-    director_case_refresh.add_argument("--json", action="store_true", help="Print JSON.")
-    director_case_refresh.set_defaults(func=command_director_case_refresh)
-
-    error_route = sub.add_parser("error-route", help="Record a project error workflow decision respecting effective coordination mode.")
-    error_route.add_argument("--project-root", required=True, help="Project root path.")
-    error_route.add_argument("--workplace", help="Workplace root or workplace.yaml override.")
-    error_route.add_argument("--mode", default="none", choices=["none", "director_inbox", "route_to_process", "needs_operator"], help="Error workflow mode.")
-    error_route.add_argument("--fallback-if-no-director", default="fail_validation", choices=["needs_operator", "fail_validation"], help="Fallback for director_inbox when project is not organized.")
-    error_route.add_argument("--summary", default="", help="Error summary.")
-    error_route.add_argument("--json", action="store_true", help="Print JSON.")
-    error_route.set_defaults(func=command_error_route)
-
-    agent_start_prompt = sub.add_parser("agent-start-prompt", help="Preview current startup guidance; placement requires --apply.")
-    agent_start_prompt.add_argument("--project-root", required=True, help="Project root path.")
-    start_mode = agent_start_prompt.add_mutually_exclusive_group()
-    start_mode.add_argument("--plan", action="store_true", help="Print the read-only placement plan as JSON.")
-    start_mode.add_argument("--apply", action="store_true", help="Explicitly place recognized PF-owned START text with a rollback journal.")
-    agent_start_prompt.set_defaults(func=command_agent_start_prompt)
-
-    first_run = sub.add_parser("first-run", help="Convenience command that runs workplace-init and then project-onboard.")
-    first_run.add_argument("--workplace", required=True, help="Workplace root path.")
-    first_run.add_argument("--project-root", required=True, help="Project root path.")
-    first_run.add_argument("--type", dest="project_type", required=True, help="Project type.")
-    first_run.add_argument("--interactive", action="store_true", help="Accepted for first-run UX; prompts are not required in file-only MVP.")
-    first_run.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    first_run.add_argument("--apply", action="store_true", help="Write files.")
-    first_run.add_argument("--force", action="store_true", help="Overwrite existing files.")
-    first_run.set_defaults(func=command_first_run)
-
-    release_check = sub.add_parser("release-check", help="Run MVP release hygiene checks.")
-    release_check.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
-    release_check.set_defaults(func=command_release_check)
-
-    release_test = sub.add_parser("release-test", help="Run the release validation suite.")
-    release_test.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
-    release_test.add_argument("--public", action="store_true", help="Apply public-release gates in addition to development release checks.")
-    release_test.add_argument("--list", action="store_true", help="List release-test check names without running them.")
-    release_test.add_argument("--only", action="append", default=[], help="Run only a named check. Repeatable.")
-    release_test.add_argument("--skip", action="append", default=[], help="Skip a named check. Repeatable.")
-    release_test.add_argument("--fail-fast", action="store_true", help="Stop after the first failed check.")
-    release_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply per-check timeouts by this finite positive value.")
-    release_test.add_argument("--trace-smokes", action="store_true", help="Write a per-smoke trace report with elapsed and timeout diagnostics.")
-    release_test.add_argument("--no-clean", action="store_true", help="Do not run the clean release artifacts check.")
-    release_test.add_argument("--clean-first", action="store_true", help="Run clean release artifacts before checks. Default unless --no-clean is set.")
-    release_test.set_defaults(func=command_release_test)
-
-    smoke_all = sub.add_parser("smoke-all", help="Alias for release-test.")
-    smoke_all.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
-    smoke_all.add_argument("--public", action="store_true", help="Apply public-release gates in addition to development release checks.")
-    smoke_all.add_argument("--list", action="store_true", help="List release-test check names without running them.")
-    smoke_all.add_argument("--only", action="append", default=[], help="Run only a named check. Repeatable.")
-    smoke_all.add_argument("--skip", action="append", default=[], help="Skip a named check. Repeatable.")
-    smoke_all.add_argument("--fail-fast", action="store_true", help="Stop after the first failed check.")
-    smoke_all.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply per-check timeouts by this finite positive value.")
-    smoke_all.add_argument("--trace-smokes", action="store_true", help="Write a per-smoke trace report with elapsed and timeout diagnostics.")
-    smoke_all.add_argument("--no-clean", action="store_true", help="Do not run the clean release artifacts check.")
-    smoke_all.add_argument("--clean-first", action="store_true", help="Run clean release artifacts before checks. Default unless --no-clean is set.")
-    smoke_all.set_defaults(func=command_release_test)
-
-    dev_test = sub.add_parser("dev-test", help="Run project-local dogfooding tests from .pf/dogfooding.")
-    dev_test.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
-    dev_test.add_argument("--list", action="store_true", help="List dogfooding suites and tests.")
-    dev_test.add_argument("--suite", action="append", default=[], help="Dogfooding suite id to run. Repeatable.")
-    dev_test.add_argument("--test", action="append", default=[], help="Dogfooding test id to run. Repeatable.")
-    dev_test.add_argument("--fail-fast", action="store_true", help="Stop after the first failed dogfooding test.")
-    dev_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply dogfooding test timeouts by this finite positive value.")
-    dev_test.set_defaults(func=command_dev_test)
-
-    dogfood_test = sub.add_parser("dogfood-test", help="Alias for dev-test.")
-    dogfood_test.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
-    dogfood_test.add_argument("--list", action="store_true", help="List dogfooding suites and tests.")
-    dogfood_test.add_argument("--suite", action="append", default=[], help="Dogfooding suite id to run. Repeatable.")
-    dogfood_test.add_argument("--test", action="append", default=[], help="Dogfooding test id to run. Repeatable.")
-    dogfood_test.add_argument("--fail-fast", action="store_true", help="Stop after the first failed dogfooding test.")
-    dogfood_test.add_argument("--timeout-scale", type=float, default=1.0, help="Multiply dogfooding test timeouts by this finite positive value.")
-    dogfood_test.set_defaults(func=command_dev_test)
-
-    clean = sub.add_parser("clean", help="Remove safe generated ProcessForge artifacts.")
-    clean.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
-    clean.add_argument("--release", action="store_true", help="Remove safe generated release artifacts.")
-    clean.set_defaults(func=command_clean)
-
-    release_pack = sub.add_parser("release-pack", help="Build a portable ProcessForge release archive and manifest.")
-    release_pack.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
-    release_pack.add_argument("--output", required=True, help="Release archive path.")
-    release_pack.add_argument("--dry-run", action="store_true", help="Print archive contents without writing files.")
-    release_pack.set_defaults(func=command_release_pack)
-
-    release_archive_test = sub.add_parser("release-archive-test", help="Inspect a release archive and run release-test after extraction.")
-    release_archive_test.add_argument("--archive", required=True, help="Release archive ZIP path.")
-    release_archive_test.add_argument("--manifest", help="Optional release manifest path. Defaults to archive path with .manifest.json suffix.")
-    release_archive_test.add_argument("--root", help="Optional source root; when set, verify archive entries and manifest hashes are current.")
-    release_archive_test.add_argument("--extracted-test", choices=["full", "quick", "skip"], default="full", help="How much release-test coverage to run inside the extracted archive. Default: full.")
-    release_archive_test.add_argument("--timeout-scale", type=float, default=1.0, help="Pass this finite positive scale to the extracted release-test and multiply the outer process timeout by it.")
-    release_archive_test.set_defaults(func=command_release_archive_test)
-
-    examples_check = sub.add_parser("examples-check", help="Validate release examples for portability and stale generated data.")
-    examples_check.add_argument("--root", default=str(ROOT), help="ProcessForge root path.")
-    examples_check.set_defaults(func=command_examples_check)
-
-    version = sub.add_parser("version", help="Print ProcessForge distribution and spec versions.")
-    version.set_defaults(func=command_version)
-
-    path_resolve = sub.add_parser("path-resolve", help="Resolve a workplace path using path_constants.")
-    path_resolve.add_argument("--workplace", required=True, help="Workplace root path.")
-    path_resolve.add_argument("--path", required=True, help="Raw path with optional ${CONST}.")
-    path_resolve.set_defaults(func=command_path_resolve)
-
-    search_index = sub.add_parser("search-index", help="Inspect and maintain the derived workplace local resource search index.")
-    search_index_sub = search_index.add_subparsers(dest="search_index_command", required=True)
-    search_index_status = search_index_sub.add_parser("status", help="Show readiness of the shared Workplace search index.")
-    search_index_status.add_argument("--workplace", required=True, help="Workplace root path.")
-    search_index_status.add_argument("--verify-files", action="store_true", help="Read registered Workplace files and mark the index stale when fingerprints changed.")
-    search_index_status.set_defaults(func=command_search_index_status)
-    search_index_refresh = search_index_sub.add_parser("refresh", help="Refresh all registered Workplace resources in the shared search index.")
-    search_index_refresh.add_argument("--workplace", required=True, help="Workplace root path.")
-    search_index_refresh.set_defaults(func=command_search_index_refresh)
-    search_index_rebuild = search_index_sub.add_parser("rebuild", help="Rebuild the derived shared Workplace search index.")
-    search_index_rebuild.add_argument("--workplace", required=True, help="Workplace root path.")
-    search_index_rebuild.set_defaults(func=command_search_index_rebuild)
-    search_index_doctor = search_index_sub.add_parser("doctor", help="Validate shared Workplace search index capabilities and readiness.")
-    search_index_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
-    search_index_doctor.set_defaults(func=command_search_index_doctor)
-    search_index_tick = search_index_sub.add_parser("tick", help="Run one bounded maintenance pass for the shared Workplace index.")
-    search_index_tick.add_argument("--workplace", required=True, help="Workplace root path.")
-    search_index_tick.add_argument("--skip-file-verify", action="store_true", help="Skip registered-file fingerprint verification and only refresh missing/stale metadata state.")
-    search_index_tick.set_defaults(func=command_search_index_tick)
-
-    core_update = sub.add_parser("core-update", help="Plan and apply manifest-based ProcessForge core archive updates.")
-    core_update_sub = core_update.add_subparsers(dest="core_update_command", required=True)
-    core_update_status = core_update_sub.add_parser("status", help="Read installed core manifest and incomplete update state.")
-    core_update_status.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
-    core_update_status.set_defaults(func=command_core_update_status)
-    core_update_plan = core_update_sub.add_parser("plan", help="Validate an archive and print add/change/remove plan without modifying files.")
-    core_update_plan.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
-    core_update_plan.add_argument("--archive", required=True, help="ProcessForge release archive containing processforge-core.manifest.json.")
-    core_update_plan.add_argument("--workplace-root", help="Existing Workplace to assess for compatible archive-declared migration.")
-    core_update_plan.set_defaults(func=command_core_update_plan)
-    core_update_apply = core_update_sub.add_parser("apply", help="Apply a manifest-based core update from an explicit archive.")
-    core_update_apply.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
-    core_update_apply.add_argument("--archive", required=True, help="ProcessForge release archive containing processforge-core.manifest.json.")
-    core_update_apply.add_argument("--workplace-root", help="Existing Workplace to migrate with the Core update.")
-    core_update_apply.add_argument("--confirm", action="store_true", help="Required confirmation for file changes.")
-    core_update_apply.add_argument("--force-local-modifications", action="store_true", help="Allow replacing locally modified PF-owned files after backup.")
-    core_update_apply.set_defaults(func=command_core_update_apply)
-    core_update_repair = core_update_sub.add_parser("repair", help="Inspect incomplete core update repair state.")
-    core_update_repair.add_argument("--core-root", required=True, help="Installed ProcessForge core root.")
-    core_update_repair.set_defaults(func=command_core_update_repair)
-
-    knowledge_add_url = sub.add_parser("knowledge-add-url", help="Create or apply a proposal to add a URL-backed knowledge resource.")
-    knowledge_add_url.add_argument("--workplace", required=True, help="Workplace root path.")
-    knowledge_add_url.add_argument("--package", required=True, help="Knowledge package id.")
-    knowledge_add_url.add_argument("--package-root", dest="package_root", help="Package root id from registries/package-roots.yaml.")
-    knowledge_add_url.add_argument("--url", required=True, help="External source URL.")
-    knowledge_add_url.add_argument("--kind", default="article", help="Resource kind.")
-    knowledge_add_url.add_argument("--id", help="Resource id override.")
-    knowledge_add_url.add_argument("--title", help="Resource title.")
-    knowledge_add_url.add_argument("--description", help="Resource description.")
-    knowledge_add_url.add_argument("--license", help="License note.")
-    knowledge_add_url.add_argument("--load-policy", dest="load_policy", help="Load policy override.")
-    knowledge_add_url.add_argument("--index-policy", dest="index_policy", help="Index policy override.")
-    knowledge_add_url.add_argument("--dry-run", action="store_true", help="Show the complete transaction plan without writing.")
-    knowledge_add_url.add_argument("--apply", action="store_true", help="Update package manifest and resource index.")
-    knowledge_add_url.set_defaults(func=command_knowledge_add_url)
-
-    knowledge_add_resource = sub.add_parser("knowledge-add-resource", help="Create or apply a proposal to add a YAML resource record.")
-    knowledge_add_resource.add_argument("--workplace", required=True, help="Workplace root path.")
-    knowledge_add_resource.add_argument("--package", required=True, help="Knowledge package id.")
-    knowledge_add_resource.add_argument("--package-root", dest="package_root", help="Package root id from registries/package-roots.yaml.")
-    knowledge_add_resource.add_argument("--resource-file", required=True, help="YAML knowledge resource record.")
-    knowledge_add_resource.add_argument("--dry-run", action="store_true", help="Show the complete transaction plan without writing.")
-    knowledge_add_resource.add_argument("--apply", action="store_true", help="Update package manifest and resource index.")
-    knowledge_add_resource.set_defaults(func=command_knowledge_add_resource)
-
-    knowledge_package_doctor = sub.add_parser("knowledge-package-doctor", help="Validate a knowledge package manifest and resource index.")
-    knowledge_package_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
-    knowledge_package_doctor.add_argument("--package", required=True, help="Knowledge package id.")
-    knowledge_package_doctor.add_argument("--package-root", dest="package_root", help="Package root id from registries/package-roots.yaml.")
-    knowledge_package_doctor.set_defaults(func=command_knowledge_package_doctor)
-
-    knowledge_index_refresh = sub.add_parser("knowledge-index-refresh", help="Refresh a package resource index without loading heavy resources.")
-    knowledge_index_refresh.add_argument("--workplace", required=True, help="Workplace root path.")
-    knowledge_index_refresh.add_argument("--package", required=True, help="Knowledge package id.")
-    knowledge_index_refresh.add_argument("--package-root", dest="package_root", help="Package root id from registries/package-roots.yaml.")
-    knowledge_index_refresh.add_argument("--dry-run", action="store_true", help="Write proposal only.")
-    knowledge_index_refresh.add_argument("--apply", action="store_true", help="Write resource index.")
-    knowledge_index_refresh.set_defaults(func=command_knowledge_index_refresh)
-
-    docs_import_plan = sub.add_parser("docs-import-plan", help="Create a documentation mirror import plan without downloading content.")
-    docs_import_plan.add_argument("--workplace", required=True, help="Workplace root path.")
-    docs_import_plan.add_argument("--source", required=True, help="Documentation source id, for example mdn.")
-    docs_import_plan.add_argument("--topics", required=True, help="Comma-separated topics.")
-    docs_import_plan.add_argument("--package", help="Target documentation package id.")
-    docs_import_plan.add_argument("--id", help="Plan id override.")
-    docs_import_plan.add_argument("--license", help="License note.")
-    docs_import_plan.set_defaults(func=command_docs_import_plan)
-
-    template_add = sub.add_parser("template-add", help="Register a simple workplace template package.")
-    template_add.add_argument("--workplace", required=True, help="Workplace root path.")
-    template_add.add_argument("--type", required=True, choices=["file", "media", "prompt", "directory", "multi-file"], help="Template type.")
-    template_add.add_argument("--id", required=True, help="Template id.")
-    template_add.add_argument("--source", required=True, help="Source folder to copy on apply.")
-    template_add.add_argument("--dry-run", action="store_true", help="Write proposal only.")
-    template_add.add_argument("--apply", action="store_true", help="Copy template payload.")
-    template_add.set_defaults(func=command_template_add)
-
-    template_create = sub.add_parser("template-create", help="Author a reusable workplace template.")
-    template_create.add_argument("--workplace", required=True, help="Workplace root path.")
-    template_create.add_argument("--id", required=True, help="Template id, for example report.audit.basic.")
-    template_create.add_argument("--title", required=True, help="Template title.")
-    template_create.add_argument("--description", help="Template description.")
-    template_create.add_argument("--kind", default="document", choices=["document", "scaffold", "prompt", "assignment", "media_prompt"], help="Template kind.")
-    template_create.add_argument("--template-root", dest="template_root", help="Template root id from registries/templates.yaml.")
-    template_create.add_argument("--dry-run", action="store_true", help="Write proposal only.")
-    template_create.add_argument("--apply", action="store_true", help="Write template files.")
-    template_create.add_argument("--force", action="store_true", help="Overwrite an existing template.")
-    template_create.set_defaults(func=command_template_create)
-
-    template_doctor = sub.add_parser("template-doctor", help="Validate a reusable workplace template.")
-    template_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
-    template_doctor.add_argument("--template", required=True, help="Template id.")
-    template_doctor.set_defaults(func=command_template_doctor)
-
-    tool_register = sub.add_parser("tool-register", help="Register a workplace tool capability provider.")
-    tool_register.add_argument("--workplace", required=True, help="Workplace root path.")
-    tool_register.add_argument("--id", required=True, help="Tool id.")
-    tool_register.add_argument("--name", help="Tool display name.")
-    tool_register.add_argument("--capability", required=True, help="Capability provided by the tool.")
-    tool_register.add_argument("--command", required=True, help="Command without secrets.")
-    tool_register.add_argument("--healthcheck", help="Healthcheck command.")
-    tool_register.add_argument("--status", default="configured", choices=["configured", "optional", "missing", "disabled"], help="Tool status.")
-    tool_register.add_argument("--dry-run", action="store_true", help="Write proposal only.")
-    tool_register.add_argument("--apply", action="store_true", help="Update tools registry.")
-    tool_register.set_defaults(func=command_tool_register)
-
-    mcp_register = sub.add_parser("mcp-register", help="Register a workplace MCP capability provider.")
-    mcp_register.add_argument("--workplace", required=True, help="Workplace root path.")
-    mcp_register.add_argument("--id", required=True, help="MCP id.")
-    mcp_register.add_argument("--name", help="MCP display name.")
-    mcp_register.add_argument("--capability", required=True, help="Capability provided by the MCP server.")
-    mcp_register.add_argument("--command", required=True, help="Command without secrets.")
-    mcp_register.add_argument("--transport", default="stdio", help="MCP transport.")
-    mcp_register.add_argument("--auth-ref", dest="auth_ref", help="Optional auth reference name, never the secret value.")
-    mcp_register.add_argument("--status", default="configured", choices=["configured", "optional", "missing", "disabled"], help="MCP status.")
-    mcp_register.add_argument("--dry-run", action="store_true", help="Write proposal only.")
-    mcp_register.add_argument("--apply", action="store_true", help="Update MCP registry.")
-    mcp_register.set_defaults(func=command_mcp_register)
-
-    specialization_list = sub.add_parser("specialization-list", help="List workplace/project specialization resources.")
-    specialization_list.add_argument("--workplace", required=True, help="Workplace root path.")
-    specialization_list.add_argument("--project-root", help="Project root path for project-local specializations.")
-    specialization_list.add_argument("--json", action="store_true", help="Print JSON.")
-    specialization_list.set_defaults(func=command_specialization_list)
-
-    specialization_show = sub.add_parser("specialization-show", help="Show one specialization resource.")
-    specialization_show.add_argument("--workplace", required=True, help="Workplace root path.")
-    specialization_show.add_argument("--project-root", help="Project root path for project-local specializations.")
-    specialization_show.add_argument("--id", required=True, help="Specialization id.")
-    specialization_show.add_argument("--json", action="store_true", help="Print JSON.")
-    specialization_show.set_defaults(func=command_specialization_show)
-
-    specialization_doctor = sub.add_parser("specialization-doctor", help="Validate one specialization resource.")
-    specialization_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
-    specialization_doctor.add_argument("--id", required=True, help="Specialization id.")
-    specialization_doctor.set_defaults(func=command_specialization_doctor)
-
-    specialization_create = sub.add_parser("specialization-create", help="Create a workplace specialization resource.")
-    specialization_create.add_argument("--workplace", required=True, help="Workplace root path.")
-    specialization_create.add_argument("--id", required=True, help="Specialization id.")
-    specialization_create.add_argument("--title", help="Specialization title.")
-    specialization_create.add_argument("--description", help="Specialization description.")
-    specialization_create.add_argument("--apply", action="store_true", help="Write the specialization resource.")
-    specialization_create.add_argument("--force", action="store_true", help="Overwrite an existing specialization file.")
-    specialization_create.set_defaults(func=command_specialization_create)
-
-    specialization_bind_platform = sub.add_parser("specialization-bind-platform", help="Add a platform binding to a specialization.")
-    specialization_bind_platform.add_argument("--workplace", required=True, help="Workplace root path.")
-    specialization_bind_platform.add_argument("--specialization", required=True, help="Specialization id.")
-    specialization_bind_platform.add_argument("--platform", required=True, help="Platform id.")
-    specialization_bind_platform.add_argument("--platform-stack-includes", action="append", default=[], help="Platform stack id that also activates this binding. Repeatable.")
-    specialization_bind_platform.add_argument("--process", action="append", default=[], help="Deprecated process id filter. Repeatable.")
-    specialization_bind_platform.add_argument("--project-type", action="append", default=[], help="Project type filter. Repeatable.")
-    specialization_bind_platform.add_argument("--requires-knowledge", action="append", default=[], help="Required knowledge package id. Repeatable.")
-    specialization_bind_platform.add_argument("--requires-tool", action="append", default=[], help="Required tool id. Repeatable.")
-    specialization_bind_platform.add_argument("--requires-mcp", action="append", default=[], help="Required MCP id. Repeatable.")
-    specialization_bind_platform.add_argument("--requires-template", action="append", default=[], help="Required template id. Repeatable.")
-    specialization_bind_platform.add_argument("--provides-capability", action="append", default=[], help="Capability id provided by this binding. Repeatable.")
-    specialization_bind_platform.add_argument("--apply", action="store_true", help="Write the binding.")
-    specialization_bind_platform.set_defaults(func=command_specialization_bind_platform)
-
-    project_override_add = sub.add_parser("project-override-add", help="Add or update a project-local override entry.")
-    project_override_add.add_argument("--project-root", required=True, help="Project root path.")
-    project_override_add.add_argument("--kind", required=True, help="Override kind: template, knowledge_package, tool, mcp, specialization.")
-    project_override_add.add_argument("--target", required=True, help="Target resource id.")
-    project_override_add.add_argument("--mode", required=True, choices=sorted(PROJECT_OVERRIDE_MODES), help="Override mode.")
-    project_override_add.add_argument("--path", help="Project-local override file path.")
-    project_override_add.add_argument("--project-package", help="Project-local package id for knowledge package extensions.")
-    project_override_add.add_argument("--param", action="append", default=[], help="Parameter key=value. Repeatable.")
-    project_override_add.add_argument("--reason", required=True, help="Human-readable reason.")
-    project_override_add.add_argument("--apply", action="store_true", help="Write .pf/project-overrides.yaml.")
-    project_override_add.set_defaults(func=command_project_override_add)
-
-    project_override_list = sub.add_parser("project-override-list", help="List project-local overrides.")
-    project_override_list.add_argument("--project-root", required=True, help="Project root path.")
-    project_override_list.add_argument("--json", action="store_true", help="Print JSON.")
-    project_override_list.set_defaults(func=command_project_override_list)
-
-    project_override_doctor = sub.add_parser("project-override-doctor", help="Validate project-local overrides.")
-    project_override_doctor.add_argument("--project-root", required=True, help="Project root path.")
-    project_override_doctor.set_defaults(func=command_project_override_doctor)
-
-    platform_contract_install = sub.add_parser("platform-contract-install", help="Create or update a workplace platform contract.")
-    platform_contract_install.add_argument("--workplace", required=True, help="Workplace root path.")
-    platform_contract_install.add_argument("--id", required=True, help="Platform id, with or without platform. prefix.")
-    platform_contract_install.add_argument("--version", default="1.0.0", help="Contract version.")
-    platform_contract_install.add_argument("--required-capabilities", default="", help="Comma-separated required capabilities.")
-    platform_contract_install.add_argument("--required-packages", default="", help="Comma-separated required knowledge package ids.")
-    platform_contract_install.add_argument("--required-tools", default="", help="Comma-separated required tool ids.")
-    platform_contract_install.add_argument("--required-mcp", default="", help="Comma-separated required MCP ids.")
-    platform_contract_install.add_argument("--required-templates", default="", help="Comma-separated required template ids.")
-    platform_contract_install.add_argument("--recommended-packages", default="", help="Comma-separated recommended knowledge package ids.")
-    platform_contract_install.add_argument("--recommended-tools", default="", help="Comma-separated recommended tool ids.")
-    platform_contract_install.add_argument("--recommended-mcp", default="", help="Comma-separated recommended MCP ids.")
-    platform_contract_install.add_argument("--recommended-templates", default="", help="Comma-separated recommended template ids.")
-    platform_contract_install.add_argument("--dry-run", action="store_true", help="Show the complete transaction plan without writing.")
-    platform_contract_install.add_argument("--apply", action="store_true", help="Write contract and registry entry.")
-    platform_contract_install.set_defaults(func=command_platform_contract_install)
-
-    knowledge_package_create = sub.add_parser("knowledge-package-create", help="Author a workplace knowledge package.")
-    knowledge_package_create.add_argument("--workplace", required=True, help="Workplace root path.")
-    knowledge_package_create.add_argument("--id", required=True, help="Package id.")
-    knowledge_package_create.add_argument("--title", required=True, help="Package title.")
-    knowledge_package_create.add_argument("--description", help="Package description.")
-    knowledge_package_create.add_argument("--package-root", dest="package_root", required=True, help="Package root id from registries/package-roots.yaml.")
-    knowledge_package_create.add_argument("--kind", default="documentation", choices=["documentation", "rules", "source", "project", "platform", "mixed"], help="Package kind.")
-    knowledge_package_create.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    knowledge_package_create.add_argument("--apply", action="store_true", help="Write package files.")
-    knowledge_package_create.add_argument("--force", action="store_true", help="Overwrite an existing package.")
-    knowledge_package_create.set_defaults(func=command_knowledge_package_create)
-
-    platform_create = sub.add_parser("platform-create", help="Author a workplace platform contract.")
-    platform_create.add_argument("--workplace", required=True, help="Workplace root path.")
-    platform_create.add_argument("--id", required=True, help="Platform id, with or without platform. prefix.")
-    platform_create.add_argument("--title", required=True, help="Platform title.")
-    platform_create.add_argument("--platform-root", dest="platform_root", help="Platform contract root id.")
-    platform_create.add_argument("--project-type", action="append", default=[], help="Project type hint. May be repeated.")
-    platform_create.add_argument("--requires-package", action="append", default=[], help="Required knowledge package id. May be repeated.")
-    platform_create.add_argument("--recommends-package", action="append", default=[], help="Recommended knowledge package id. May be repeated.")
-    platform_create.add_argument("--optional-package", action="append", default=[], help="Optional knowledge package id. May be repeated.")
-    platform_create.add_argument("--requires-template", action="append", default=[], help="Required template id. May be repeated.")
-    platform_create.add_argument("--recommends-template", action="append", default=[], help="Recommended template id. May be repeated.")
-    platform_create.add_argument("--optional-template", action="append", default=[], help="Optional template id. May be repeated.")
-    platform_create.add_argument("--requires-tool", action="append", default=[], help="Required tool id. May be repeated.")
-    platform_create.add_argument("--recommends-tool", action="append", default=[], help="Recommended tool id. May be repeated.")
-    platform_create.add_argument("--optional-tool", action="append", default=[], help="Optional tool id. May be repeated.")
-    platform_create.add_argument("--requires-mcp", action="append", default=[], help="Required MCP id. May be repeated.")
-    platform_create.add_argument("--recommends-mcp", action="append", default=[], help="Recommended MCP id. May be repeated.")
-    platform_create.add_argument("--optional-mcp", action="append", default=[], help="Optional MCP id. May be repeated.")
-    platform_create.add_argument("--process", action="append", default=[], help="Referenced process id. May be repeated.")
-    platform_create.add_argument("--dry-run", action="store_true", help="Show the complete transaction plan without writing.")
-    platform_create.add_argument("--apply", action="store_true", help="Write platform contract files.")
-    platform_create.add_argument("--force", action="store_true", help="Overwrite an existing platform contract.")
-    platform_create.set_defaults(func=command_platform_create)
-
-    platform_contract_doctor = sub.add_parser("platform-contract-doctor", help="Validate a workplace platform contract.")
-    platform_contract_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
-    platform_contract_doctor.add_argument("--platform", required=True, help="Platform id, with or without platform. prefix.")
-    platform_contract_doctor.set_defaults(func=command_platform_contract_doctor)
-
-    update = sub.add_parser("update", help="Read and validate ProcessForge update framework state.")
-    update_sub = update.add_subparsers(dest="update_command", required=True)
-
-    bootstrap_source = update_sub.add_parser("bootstrap-source", help="Read global bootstrap update sources.")
-    bootstrap_source_sub = bootstrap_source.add_subparsers(dest="bootstrap_source_command", required=True)
-    bootstrap_source_list = bootstrap_source_sub.add_parser("list", help="List global bootstrap update sources.")
-    bootstrap_source_list.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    bootstrap_source_list.add_argument("--json", action="store_true", help="Print JSON.")
-    bootstrap_source_list.set_defaults(func=command_update_bootstrap_source_list)
-    bootstrap_source_validate = bootstrap_source_sub.add_parser("validate", help="Validate global bootstrap update sources.")
-    bootstrap_source_validate.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    bootstrap_source_validate.set_defaults(func=command_update_bootstrap_source_validate)
-
-    update_sources = update_sub.add_parser("sources", help="Compatibility read surface for global bootstrap update sources.")
-    update_sources.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_sources.add_argument("--list", action="store_true", help="List global bootstrap update sources.")
-    update_sources.add_argument("--validate", action="store_true", help="Validate global bootstrap update sources.")
-    update_sources.add_argument("--json", action="store_true", help="Print JSON for --list.")
-    update_sources.set_defaults(func=command_update_sources)
-
-    update_sources_list = update_sub.add_parser("sources-list", help="List or validate global bootstrap update sources.")
-    update_sources_list.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_sources_list.add_argument("--validate", action="store_true", help="Validate global bootstrap update sources before listing.")
-    update_sources_list.add_argument("--json", action="store_true", help="Print JSON.")
-    update_sources_list.set_defaults(func=command_update_sources, list=True)
-
-    entity_sources = update_sub.add_parser("entity-sources", help="Read derived installed entity update sources.")
-    entity_sources_sub = entity_sources.add_subparsers(dest="entity_sources_command", required=True)
-    entity_sources_rebuild = entity_sources_sub.add_parser("rebuild", help="Rebuild derived entity update sources from installed manifests.")
-    entity_sources_rebuild.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    entity_sources_rebuild.add_argument("--dry-run", action="store_true", help="Print derived registry without writing runtime state.")
-    entity_sources_rebuild.set_defaults(func=command_update_entity_sources_rebuild)
-    entity_sources_list = entity_sources_sub.add_parser("list", help="List derived entity update sources.")
-    entity_sources_list.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    entity_sources_list.add_argument("--subject-type", default="all", help="Subject type filter or all.")
-    entity_sources_list.add_argument("--json", action="store_true", help="Print JSON.")
-    entity_sources_list.set_defaults(func=command_update_entity_sources_list)
-
-    update_candidates = update_sub.add_parser("candidates", help="Manage update candidate cache.")
-    update_candidates_sub = update_candidates.add_subparsers(dest="update_candidates_command", required=True)
-    update_candidates_refresh = update_candidates_sub.add_parser("refresh", help="Fetch update manifests and refresh candidates.")
-    update_candidates_refresh.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_candidates_refresh.add_argument("--channel", default="stable", help="Update channel.")
-    update_candidates_refresh.add_argument("--dry-run", action="store_true", help="Print candidates without writing runtime state.")
-    update_candidates_refresh.set_defaults(func=command_update_candidates_refresh)
-    update_candidates_list = update_candidates_sub.add_parser("list", help="List cached update candidates.")
-    update_candidates_list.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_candidates_list.add_argument("--json", action="store_true", help="Print JSON.")
-    update_candidates_list.set_defaults(func=command_update_candidates_list)
-    update_candidates_show = update_candidates_sub.add_parser("show", help="Show one cached update candidate as JSON.")
-    update_candidates_show.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_candidates_show.add_argument("--candidate", required=True, help="Candidate id.")
-    update_candidates_show.set_defaults(func=command_update_candidates_show)
-    update_candidates_clear = update_candidates_sub.add_parser("clear", help="Clear candidate and notification caches.")
-    update_candidates_clear.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_candidates_clear.add_argument("--dry-run", action="store_true", help="Report what would be cleared.")
-    update_candidates_clear.set_defaults(func=command_update_candidates_clear)
-
-    update_changelog = update_sub.add_parser("changelog", help="Show candidate changelog pointers or local content.")
-    update_changelog_sub = update_changelog.add_subparsers(dest="update_changelog_command", required=True)
-    update_changelog_show = update_changelog_sub.add_parser("show", help="Show candidate changelog.")
-    update_changelog_show.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_changelog_show.add_argument("--candidate", required=True, help="Candidate id.")
-    update_changelog_show.set_defaults(func=command_update_changelog_show)
-
-    update_notifications = update_sub.add_parser("notifications", help="Manage update notifications.")
-    update_notifications_sub = update_notifications.add_subparsers(dest="update_notifications_command", required=True)
-    update_notifications_create = update_notifications_sub.add_parser("create", help="Create notifications from cached candidates.")
-    update_notifications_create.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_notifications_create.set_defaults(func=command_update_notifications_create)
-    update_notifications_list = update_notifications_sub.add_parser("list", help="List update notifications.")
-    update_notifications_list.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_notifications_list.add_argument("--json", action="store_true", help="Print JSON.")
-    update_notifications_list.set_defaults(func=command_update_notifications_list)
-    update_notifications_ack = update_notifications_sub.add_parser("acknowledge", help="Acknowledge one update notification.")
-    update_notifications_ack.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_notifications_ack.add_argument("--notification", required=True, help="Notification id.")
-    update_notifications_ack.set_defaults(func=command_update_notifications_acknowledge)
-
-    update_stage = update_sub.add_parser("stage", help="Stage an installable update candidate.")
-    update_stage.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_stage.add_argument("--candidate", required=True, help="Candidate id.")
-    update_stage.add_argument("--dry-run", action="store_true", help="Report staging target without copying.")
-    update_stage.set_defaults(func=command_update_stage)
-    update_verify = update_sub.add_parser("verify", help="Verify a staged update candidate.")
-    update_verify.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_verify.add_argument("--candidate", required=True, help="Candidate id.")
-    update_verify.set_defaults(func=command_update_verify)
-    update_apply = update_sub.add_parser("apply", help="Apply a staged update candidate.")
-    update_apply.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_apply.add_argument("--candidate", required=True, help="Candidate id.")
-    update_apply.add_argument("--confirm", action="store_true", help="Required confirmation for apply.")
-    update_apply.add_argument("--dry-run", action="store_true", help="Report apply target without writing.")
-    update_apply.add_argument("--allow-custom-command", action="store_true", help="Acknowledge custom command policy; commands are not executed by default.")
-    update_apply.set_defaults(func=command_update_apply)
-    update_rollback = update_sub.add_parser("rollback", help="Rollback an applied update candidate from backup.")
-    update_rollback.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_rollback.add_argument("--candidate", required=True, help="Candidate id.")
-    update_rollback.set_defaults(func=command_update_rollback)
-    update_doctor = update_sub.add_parser("doctor", help="Validate update runtime caches.")
-    update_doctor.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    update_doctor.set_defaults(func=command_update_doctor)
-
-    update_manifest = update_sub.add_parser("manifest", help="Validate normalized update manifest fixtures.")
-    update_manifest_sub = update_manifest.add_subparsers(dest="update_manifest_command", required=True)
-    update_manifest_validate = update_manifest_sub.add_parser("validate", help="Validate a normalized update manifest fixture.")
-    update_manifest_validate.add_argument("--file", required=True, help="JSON or YAML normalized update manifest.")
-    update_manifest_validate.set_defaults(func=command_update_manifest_validate)
-
-    self_update = sub.add_parser("self-update-check", help="Check the current ProcessForge distribution update index.")
-    self_update.add_argument("--distribution-root", help="ProcessForge distribution root. Defaults to this checkout.")
-    self_update.add_argument("--current-version", help="Current ProcessForge version to compare.")
-    self_update.add_argument("--channel", default="stable", help="Update channel.")
-    self_update.set_defaults(func=command_self_update_check)
-
-    project_upgrade = sub.add_parser("project-upgrade-check", help="Write a project update assessment without modifying project files.")
-    project_upgrade.add_argument("--project-root", required=True, help="Project root path.")
-    project_upgrade.add_argument("--current-version", help="Current ProcessForge version override.")
-    project_upgrade.add_argument("--channel", default="stable", help="Update channel.")
-    project_upgrade.set_defaults(func=command_project_upgrade_check)
-
-    session_start = sub.add_parser("session-start", help="Start or inspect a ProcessForge session; with --agent, records an agent check-in.")
-    session_start.add_argument("--mode", choices=["resume", "project_init", "assignment_execute", "context_resolve", "context_compile", "doctor_context"], help="Session bootstrap mode.")
-    session_start.add_argument("--project-root", help="Project root path.")
-    session_start.add_argument("--assignment", help="Optional assignment path loaded for telemetry.")
-    session_start.add_argument("--allow-write", action="store_true", help="Write artifacts/session-status-report.md.")
-    session_start.add_argument("--report-only", action="store_true", help="Do not write public artifacts. Private telemetry is still written.")
-    session_start.add_argument("--rebuild-context-if-stale", action="store_true", help="Run context resolution when context is missing or stale.")
-    session_start.add_argument("--workplace", help="Workplace root path for agent session check-in. Defaults from --project-root when the project is onboarded.")
-    session_start.add_argument("--agent", help="Agent id for agent session check-in.")
-    session_start.add_argument("--session", help="Session id. Defaults to generated id.")
-    session_start.add_argument("--project-id", help="Project id override.")
-    session_start.add_argument("--process", help="Process id.")
-    session_start.add_argument("--run", help="Run id.")
-    session_start.add_argument("--task", help="Task id.")
-    session_start.add_argument("--specialization", action="append", default=[], help="Selected specialization id for this session. Repeatable.")
-    session_start.add_argument("--role", action="append", default=[], help="Checked-in role. Repeatable.")
-    session_start.add_argument("--capability", action="append", default=[], help="Runtime capability. Repeatable.")
-    session_start.add_argument("--supports-specialization", action="append", default=[], help="Specialization id supported by this agent session. Repeatable.")
-    session_start.add_argument("--ttl", type=int, default=300, help="Heartbeat TTL seconds.")
-    session_start.add_argument("--json", action="store_true", help="Print JSON for agent session check-in.")
-    session_start.set_defaults(func=command_session_start)
-
-    project_context_refresh = sub.add_parser("project-context-refresh", help="Refresh the project context snapshot.")
-    project_context_refresh.add_argument("--project-root", required=True, help="Project root path.")
-    project_context_refresh.add_argument("--workplace", help="Workplace root path; accepted for explicit lock-model workflows.")
-    project_context_refresh.add_argument("--reason", default="manual", help="Refresh reason recorded in proposal/telemetry.")
-    project_context_refresh.add_argument("--dry-run", action="store_true", help="Print or write a refresh proposal without updating the current snapshot.")
-    project_context_refresh.add_argument("--write-proposal", help="Write dry-run proposal to this path.")
-    project_context_refresh.add_argument("--apply", action="store_true", help="Accepted for command symmetry; refresh writes by default unless --dry-run is set.")
-    project_context_refresh.add_argument("--force", action="store_true", help="Reserved for explicit operator override.")
-    project_context_refresh.add_argument("--allow-stale", action="store_true", help="Reserved for workflows that intentionally refresh from stale context.")
-    project_context_refresh.set_defaults(func=command_project_context_refresh)
-
-    project_context_check = sub.add_parser("project-context-check", help="Check project context snapshot freshness.")
-    project_context_check.add_argument("--project-root", required=True, help="Project root path.")
-    project_context_check.add_argument("--workplace", help="Workplace root path; accepted for explicit lock-model workflows.")
-    project_context_check.add_argument("--json", action="store_true", help="Print machine-readable check result.")
-    project_context_check.add_argument("--session-start", action="store_true", help="Evaluate policy as a session-start freshness check.")
-    project_context_check.add_argument("--check-update-candidates", choices=["never", "if_due", "always"], default="if_due", help="Update-candidate check policy marker.")
-    project_context_check.add_argument("--strict", action="store_true", help="Return failure unless status is fresh.")
-    project_context_check.add_argument("--write-report", help="Write a Markdown context check report.")
-    project_context_check.set_defaults(func=command_project_context_check)
-
-    project_context_mark_stale = sub.add_parser("project-context-mark-stale", help="Mark the current project context snapshot stale without refreshing it.")
-    project_context_mark_stale.add_argument("--project-root", required=True, help="Project root path.")
-    project_context_mark_stale.add_argument("--subject", required=True, help="Impacted subject or resource id.")
-    project_context_mark_stale.add_argument("--reason", required=True, help="Stale reason.")
-    project_context_mark_stale.set_defaults(func=command_project_context_mark_stale)
-
-    assignment_capsule = sub.add_parser("assignment-capsule", help="Create an assignment capsule from snapshot plus assignment front matter.")
-    assignment_capsule.add_argument("--project-root", required=True, help="Project root path.")
-    assignment_capsule.add_argument("--assignment", required=True, help="Assignment Markdown with YAML front matter or assignment YAML.")
-    assignment_capsule.add_argument("--force", action="store_true", help="Overwrite an existing capsule.")
-    assignment_capsule.set_defaults(func=command_assignment_capsule)
-
-    capsule_doctor = sub.add_parser("capsule-doctor", help="Validate that an assignment capsule pins a context snapshot.")
-    capsule_doctor.add_argument("--project-root", required=True, help="Project root path.")
-    capsule_doctor.add_argument("--capsule", required=True, help="Capsule YAML path.")
-    capsule_doctor.set_defaults(func=command_capsule_doctor)
-
-    process_authoring_start = sub.add_parser("process-authoring-start", help="Start a guided process authoring session.")
-    process_authoring_start.add_argument("--project-root", required=True, help="Project root path.")
-    process_authoring_start.add_argument("--id", help="Process id.")
-    process_authoring_start.add_argument("--title", help="Process title.")
-    process_authoring_start.add_argument("--description", help="Process description.")
-    process_authoring_start.add_argument("--scope", help="Optional process scope recorded in answers.")
-    process_authoring_start.add_argument("--kind", help="Optional process kind recorded in answers.")
-    process_authoring_start.add_argument("--answers", help="Optional process authoring answers YAML.")
-    process_authoring_start.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    process_authoring_start.add_argument("--apply", action="store_true", help="Write authoring session files.")
-    process_authoring_start.set_defaults(func=command_process_authoring_start)
-
-    process_authoring_review = sub.add_parser("process-authoring-review", help="Review a process authoring draft for structural logic issues.")
-    process_authoring_review.add_argument("--project-root", required=True, help="Project root path.")
-    process_authoring_review.add_argument("--process", required=True, help="Process id.")
-    process_authoring_review.set_defaults(func=command_process_authoring_review)
-
-    process_authoring_apply = sub.add_parser("process-authoring-apply", help="Apply a reviewed process authoring draft.")
-    process_authoring_apply.add_argument("--project-root", required=True, help="Project root path.")
-    process_authoring_apply.add_argument("--process", required=True, help="Process id.")
-    process_authoring_apply.add_argument("--output-root", choices=["user", "custom", "core"], help="Process root for generated process YAML. Defaults to user.")
-    process_authoring_apply.add_argument("--core", action="store_true", help="Allow writing generated process YAML to processes/core.")
-    process_authoring_apply.add_argument("--dry-run", action="store_true", help="Show the complete transaction plan without writing.")
-    process_authoring_apply.add_argument("--apply", action="store_true", help="Apply the complete process authoring transaction.")
-    process_authoring_apply.set_defaults(func=command_process_authoring_apply)
-
-    process_authoring_import = sub.add_parser("process-authoring-import", help="Backfill an authoring session from an existing process definition.")
-    process_authoring_import.add_argument("--project-root", required=True, help="Project root path.")
-    process_authoring_import.add_argument("--process", help="Process id.")
-    process_authoring_import.add_argument("--process-file", help="Process YAML path.")
-    process_authoring_import.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    process_authoring_import.add_argument("--apply", action="store_true", help="Write backfill files.")
-    process_authoring_import.set_defaults(func=command_process_authoring_import)
-
-    process_parity_check = sub.add_parser("process-parity-check", help="Check semantic parity between a process and its authoring-import draft.")
-    process_parity_check.add_argument("--project-root", required=True, help="Project root path.")
-    process_parity_check.add_argument("--process", help="Process id.")
-    process_parity_check.add_argument("--process-file", help="Process YAML path.")
-    process_parity_check.add_argument("--candidate-file", help="Optional candidate YAML for diagnostics.")
-    process_parity_check.set_defaults(func=command_process_parity_check)
-
-    process_parity_check_all = sub.add_parser("process-parity-check-all", help="Check semantic authoring parity for every process definition.")
-    process_parity_check_all.add_argument("--project-root", required=True, help="Project root path.")
-    process_parity_check_all.set_defaults(func=command_process_parity_check_all)
-
-    template_parity_check = sub.add_parser("template-parity-check", help="Check template authoring parity or record a SKIP reason.")
-    template_parity_check.add_argument("--project-root", help="Project root path.")
-    template_parity_check.add_argument("--workplace", help="Workplace root path; accepted for future discovery.")
-    template_parity_check.add_argument("--template", required=True, help="Template id.")
-    template_parity_check.set_defaults(func=command_template_parity_check)
-
-    knowledge_package_parity_check = sub.add_parser("knowledge-package-parity-check", help="Check knowledge package authoring parity or record a SKIP reason.")
-    knowledge_package_parity_check.add_argument("--project-root", help="Project root path.")
-    knowledge_package_parity_check.add_argument("--workplace", help="Workplace root path; accepted for future discovery.")
-    knowledge_package_parity_check.add_argument("--package", required=True, help="Package id.")
-    knowledge_package_parity_check.set_defaults(func=command_knowledge_package_parity_check)
-
-    platform_parity_check = sub.add_parser("platform-parity-check", help="Check platform contract authoring parity or record a SKIP reason.")
-    platform_parity_check.add_argument("--project-root", help="Project root path.")
-    platform_parity_check.add_argument("--workplace", help="Workplace root path; accepted for future discovery.")
-    platform_parity_check.add_argument("--platform", required=True, help="Platform id.")
-    platform_parity_check.set_defaults(func=command_platform_parity_check)
-
-    authoring_parity_check_all = sub.add_parser("authoring-parity-check-all", help="Run process and resource authoring parity checks.")
-    authoring_parity_check_all.add_argument("--project-root", required=True, help="Project root path.")
-    authoring_parity_check_all.set_defaults(func=command_authoring_parity_check_all)
-
-    process_create = sub.add_parser("process-create", help="Create a new process from answers in one command.")
-    process_create.add_argument("--project-root", required=True, help="Project root path.")
-    process_create.add_argument("--id", help="Process id when no answers file supplies one.")
-    process_create.add_argument("--title", help="Process title when no answers file supplies one.")
-    process_create.add_argument("--answers", help="Optional process authoring answers YAML.")
-    process_create.add_argument("--output-root", choices=["user", "custom", "core"], help="Process root for generated process YAML. Defaults to user.")
-    process_create.add_argument("--core", action="store_true", help="Allow writing generated process YAML to processes/core.")
-    process_create.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    process_create.add_argument("--apply", action="store_true", help="Write the process, prompt, docs, and example.")
-    process_create.set_defaults(func=command_process_create)
-
-    authoring_transaction_recover = sub.add_parser("authoring-transaction-recover", help="Recover or replay an authoring transaction.")
-    authoring_transaction_recover.add_argument("--runtime-root", required=True, help="Runtime root containing authoring-transactions.")
-    authoring_transaction_recover.add_argument("--transaction", required=True, help="Transaction id.")
-    authoring_transaction_recover.add_argument("--dry-run", action="store_true", help="Show current transaction recovery state without writing.")
-    authoring_transaction_recover.add_argument("--apply", action="store_true", help="Recover rollback state or replay pending post-commit effects.")
-    authoring_transaction_recover.set_defaults(func=command_authoring_transaction_recover)
-
-    process_doctor = sub.add_parser("process-doctor", help="Validate a process definition and its generated companion files.")
-    process_doctor.add_argument("--project-root", required=True, help="Project root path.")
-    process_doctor.add_argument("--process", required=True, help="Process id or YAML path.")
-    process_doctor.add_argument("--force", action="store_true", help="Downgrade project-mode mismatch to WARN for explicit migration/override flows.")
-    process_doctor.add_argument("--contract-only", action="store_true", help="Run strict process definition contract checks in addition to project-context checks.")
-    process_doctor.set_defaults(func=command_process_doctor)
-
-    builtin_process_catalog_doctor = sub.add_parser("builtin-process-catalog-doctor", help="Validate the built-in ProcessForge process catalog contract.")
-    builtin_process_catalog_doctor.add_argument("--root", default=".", help="Repository/project root path.")
-    builtin_process_catalog_doctor.add_argument("--project-root", help="Compatibility alias for --root.")
-    builtin_process_catalog_doctor.add_argument("--public", action="store_true", help="Validate the public catalog surface and skip internal maintenance processes.")
-    builtin_process_catalog_doctor.add_argument("--json", action="store_true", help="Print machine-readable JSON report.")
-    builtin_process_catalog_doctor.add_argument("--write-report", help="Write the JSON report to this path.")
-    builtin_process_catalog_doctor.set_defaults(func=command_builtin_process_catalog_doctor)
-
-    pack_list = sub.add_parser("pack-list", help="List bundled process packs.")
-    pack_list.add_argument("--origin", choices=["official"], default="official", help="Filter by pack origin.")
-    pack_list.add_argument("--available", action="store_true", help="List packs available from the distribution.")
-    pack_list.add_argument("--active", action="store_true", help="List only packs active in the selected workplace.")
-    pack_list.add_argument("--workplace", help="Workplace root used to resolve activation state.")
-    pack_list.add_argument("--project-root", help="Project root used to resolve its linked workplace.")
-    pack_list.set_defaults(func=command_pack_list)
-
-    pack_activate = sub.add_parser("pack-activate", help="Activate a bundled process pack in a workplace.")
-    pack_activate.add_argument("--id", required=True, help="Exact process pack id.")
-    pack_activate.add_argument("--workplace", required=True, help="Workplace root path.")
-    pack_activate.add_argument("--apply", action="store_true", help="Write the activation registry.")
-    pack_activate.set_defaults(func=command_pack_activate)
-
-    process_list = sub.add_parser("process-list", help="List available process definitions.")
-    process_list.add_argument("--project-root", default=".", help="Project root path.")
-    process_list.add_argument("--workplace", help="Workplace root override used to resolve official pack activation.")
-    process_list.add_argument("--origin", choices=["kernel", "core", "official", "workspace", "project", "user", "custom", "examples", "legacy_flat"], help="Filter by process origin/root kind.")
-    process_list.add_argument("--active", action="store_true", help="List only active process definitions.")
-    process_list.add_argument("--available", action="store_true", help="Include bundled official processes that are available but inactive.")
-    process_list.add_argument("--role", help="Filter by catalog role.")
-    process_list.add_argument("--status", help="Filter by process status.")
-    process_list.add_argument("--all", action="store_true", help="Include internal, hidden, and legacy-flat processes.")
-    process_list.set_defaults(func=command_process_list)
-
-    process_describe = sub.add_parser("process-describe", help="Describe a process definition.")
-    process_describe.add_argument("--project-root", required=True, help="Project root path.")
-    process_describe.add_argument("--workplace", help="Workplace root override used to resolve official pack activation.")
-    process_describe.add_argument("--process", required=True, help="Process id or YAML path.")
-    process_describe.set_defaults(func=command_process_describe)
-
-    process_show = sub.add_parser("process-show", help="Show one active or available process definition.")
-    process_show.add_argument("process", help="Process id or YAML path.")
-    process_show.add_argument("--project-root", default=".", help="Project root path.")
-    process_show.add_argument("--workplace", help="Workplace root override used to resolve official pack activation.")
-    process_show.set_defaults(func=command_process_describe)
-
-    process_layout_doctor = sub.add_parser("process-layout-doctor", help="Validate process directory layout roots and collision policy.")
-    process_layout_doctor.add_argument("--root", default=".", help="Repository/project root path.")
-    process_layout_doctor.set_defaults(func=command_process_layout_doctor)
-
-    process_layout_migrate = sub.add_parser("process-layout-migrate", help="Move legacy flat process YAML files into root-aware process directories.")
-    process_layout_migrate.add_argument("--root", default=".", help="Repository/project root path.")
-    process_layout_migrate.add_argument("--custom", action="store_true", help="Move unknown legacy-flat files to processes/custom instead of processes/user.")
-    process_layout_migrate.add_argument("--apply", action="store_true", help="Apply file moves. Default is dry-run.")
-    process_layout_migrate.set_defaults(func=command_process_layout_migrate)
-
-    evolve_run = sub.add_parser("evolve-run", help="Create a run evolution report and optionally queue candidate files.")
-    evolve_run.add_argument("--project-root", required=True, help="Project root path.")
-    evolve_run.add_argument("--workplace", help="Workplace root path for durable learning queue.")
-    evolve_run.add_argument("--process", default="task-batch-execution", help="Process id or YAML path.")
-    evolve_run.add_argument("--run", required=True, help="Run id.")
-    evolve_run.add_argument("--candidate-file", action="append", default=[], help="Candidate YAML file to queue. Repeatable.")
-    evolve_run.set_defaults(func=command_evolve_run)
-
-    evolve_candidate_create = sub.add_parser("evolve-candidate-create", help="Queue a sanitized evolve candidate in a workplace learning queue.")
-    evolve_candidate_create.add_argument("--project-root", required=True, help="Project root path for relative candidate paths.")
-    evolve_candidate_create.add_argument("--workplace", required=True, help="Workplace root path.")
-    evolve_candidate_create.add_argument("--from-file", required=True, help="Knowledge candidate YAML file.")
-    evolve_candidate_create.set_defaults(func=command_evolve_candidate_create)
-
-    evolve_candidate_list = sub.add_parser("evolve-candidate-list", help="List workplace learning queue candidates.")
-    evolve_candidate_list.add_argument("--workplace", required=True, help="Workplace root path.")
-    evolve_candidate_list.set_defaults(func=command_evolve_candidate_list)
-
-    evolve_candidate_export = sub.add_parser("evolve-candidate-export", help="Export sanitized queued candidates to a learning bundle.")
-    evolve_candidate_export.add_argument("--workplace", required=True, help="Workplace root path.")
-    evolve_candidate_export.add_argument("--target", required=True, help="Target package id, for example docs.example.")
-    evolve_candidate_export.add_argument("--output", required=True, help="Output bundle zip path.")
-    evolve_candidate_export.set_defaults(func=command_evolve_candidate_export)
-
-    evolve_candidate_sanitize = sub.add_parser("evolve-candidate-sanitize", help="Write a sanitized copy of a knowledge candidate.")
-    evolve_candidate_sanitize.add_argument("--file", required=True, help="Candidate YAML file.")
-    evolve_candidate_sanitize.set_defaults(func=command_evolve_candidate_sanitize)
-
-    knowledge_hub_init = sub.add_parser("knowledge-hub-init", help="Initialize a file-first knowledge hub.")
-    knowledge_hub_init.add_argument("--hub", required=True, help="Hub root path.")
-    knowledge_hub_init.add_argument("--apply", action="store_true", help="Write hub files.")
-    knowledge_hub_init.set_defaults(func=command_knowledge_hub_init)
-
-    knowledge_hub_import = sub.add_parser("knowledge-hub-import", help="Import a learning export bundle into a knowledge hub.")
-    knowledge_hub_import.add_argument("--hub", required=True, help="Hub root path.")
-    knowledge_hub_import.add_argument("--bundle", required=True, help="Learning export zip path.")
-    knowledge_hub_import.add_argument("--apply", action="store_true", help="Import bundle files.")
-    knowledge_hub_import.set_defaults(func=command_knowledge_hub_import)
-
-    knowledge_package_build_from_candidates = sub.add_parser("knowledge-package-build-from-candidates", help="Build package candidate notes from imported learning candidates.")
-    knowledge_package_build_from_candidates.add_argument("--hub", required=True, help="Hub root path.")
-    knowledge_package_build_from_candidates.add_argument("--package", required=True, help="Package id, for example docs.example.")
-    knowledge_package_build_from_candidates.add_argument("--version", required=True, help="Package version.")
-    knowledge_package_build_from_candidates.add_argument("--apply", action="store_true", help="Write package files.")
-    knowledge_package_build_from_candidates.set_defaults(func=command_knowledge_package_build_from_candidates)
-
-    knowledge_package_release = sub.add_parser("knowledge-package-release", help="Create a package release artifact and local update manifest.")
-    knowledge_package_release.add_argument("--hub", required=True, help="Hub root path.")
-    knowledge_package_release.add_argument("--package", required=True, help="Package id, for example docs.example.")
-    knowledge_package_release.add_argument("--version", required=True, help="Package version.")
-    knowledge_package_release.add_argument("--output", required=True, help="Release zip output path.")
-    knowledge_package_release.set_defaults(func=command_knowledge_package_release)
-
-    runtime_driver = sub.add_parser("runtime-driver", help="List, validate, or describe runtime driver manifests.")
-    runtime_driver_sub = runtime_driver.add_subparsers(dest="runtime_driver_command", required=True)
-    runtime_driver_list = runtime_driver_sub.add_parser("list", help="List runtime drivers.")
-    runtime_driver_list.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
-    runtime_driver_list.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
-    runtime_driver_list.set_defaults(func=command_runtime_driver_list)
-    runtime_driver_validate = runtime_driver_sub.add_parser("validate", help="Validate a runtime driver by id or path.")
-    runtime_driver_validate.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
-    runtime_driver_validate.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
-    runtime_driver_validate.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
-    runtime_driver_validate.add_argument("--executable", help="Executable override used for start-readiness checks.")
-    runtime_driver_validate.set_defaults(func=command_runtime_driver_validate)
-    runtime_driver_describe = runtime_driver_sub.add_parser("describe", help="Describe a runtime driver by id or path.")
-    runtime_driver_describe.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
-    runtime_driver_describe.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
-    runtime_driver_describe.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
-    runtime_driver_describe.set_defaults(func=command_runtime_driver_describe)
-
-    runtime_driver_list_alias = sub.add_parser("runtime-driver-list", help="Flat alias for runtime-driver list.")
-    runtime_driver_list_alias.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
-    runtime_driver_list_alias.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
-    runtime_driver_list_alias.set_defaults(func=command_runtime_driver_list)
-    runtime_driver_validate_alias = sub.add_parser("runtime-driver-validate", help="Flat alias for runtime-driver validate.")
-    runtime_driver_validate_alias.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
-    runtime_driver_validate_alias.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
-    runtime_driver_validate_alias.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
-    runtime_driver_validate_alias.add_argument("--executable", help="Executable override used for start-readiness checks.")
-    runtime_driver_validate_alias.set_defaults(func=command_runtime_driver_validate)
-    runtime_driver_describe_alias = sub.add_parser("runtime-driver-describe", help="Flat alias for runtime-driver describe.")
-    runtime_driver_describe_alias.add_argument("--driver", required=True, help="Runtime driver id or manifest path.")
-    runtime_driver_describe_alias.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
-    runtime_driver_describe_alias.add_argument("--project-root", help="Project root path for local runtime driver overrides.")
-    runtime_driver_describe_alias.set_defaults(func=command_runtime_driver_describe)
-
-    worker_run = sub.add_parser("worker-run", help="Prepare, start, inspect, stop, or collect a worker runtime execution.")
-    worker_run_sub = worker_run.add_subparsers(dest="worker_run_command", required=True)
-    worker_run_prepare = worker_run_sub.add_parser("prepare", help="Create assignment capsule, launch prompt, command, and ready state.")
-    worker_run_prepare.add_argument("--project-root", required=True, help="Project root path.")
-    worker_run_prepare.add_argument("--task", required=True, help="Task id.")
-    worker_run_prepare.add_argument("--driver", help="Runtime driver id or manifest path.")
-    worker_run_prepare.add_argument("--executable", help="Executable override for generic shell drivers.")
-    worker_run_prepare.add_argument("--model", help="Optional agent model for shell runtime drivers.")
-    worker_run_prepare.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
-    worker_run_prepare.set_defaults(func=command_worker_run_prepare)
-    worker_run_start = worker_run_sub.add_parser("start", help="Start a prepared worker command and wait for completion.")
-    worker_run_start.add_argument("--project-root", required=True, help="Project root path.")
-    worker_run_start.add_argument("--task", required=True, help="Task id.")
-    worker_run_start.add_argument("--driver", help="Runtime driver id or manifest path.")
-    worker_run_start.add_argument("--executable", help="Executable override for generic shell drivers.")
-    worker_run_start.add_argument("--model", help="Optional agent model for shell runtime drivers.")
-    worker_run_start.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
-    worker_run_start.add_argument("--detach", action="store_true", help="Start the worker process and return immediately.")
-    worker_run_start.add_argument("--wait", action="store_true", help="Wait for completion. This is the default unless --detach is set.")
-    worker_run_start.set_defaults(func=command_worker_run_start)
-    worker_run_status = worker_run_sub.add_parser("status", help="Print worker runtime state.")
-    worker_run_status.add_argument("--project-root", required=True, help="Project root path.")
-    worker_run_status.add_argument("--task", required=True, help="Task id.")
-    worker_run_status.set_defaults(func=command_worker_run_status)
-    worker_run_stop = worker_run_sub.add_parser("stop", help="Request worker runtime stop.")
-    worker_run_stop.add_argument("--project-root", required=True, help="Project root path.")
-    worker_run_stop.add_argument("--task", required=True, help="Task id.")
-    worker_run_stop.set_defaults(func=command_worker_run_stop)
-    worker_run_collect = worker_run_sub.add_parser("collect", help="Collect worker output and complete the task when outputs exist.")
-    worker_run_collect.add_argument("--project-root", required=True, help="Project root path.")
-    worker_run_collect.add_argument("--task", required=True, help="Task id.")
-    worker_run_collect.set_defaults(func=command_worker_run_collect)
-
-    for alias_name, func, help_text in [
-        ("worker-run-prepare", command_worker_run_prepare, "Flat alias for worker-run prepare."),
-        ("worker-run-start", command_worker_run_start, "Flat alias for worker-run start."),
-        ("worker-run-status", command_worker_run_status, "Flat alias for worker-run status."),
-        ("worker-run-stop", command_worker_run_stop, "Flat alias for worker-run stop."),
-        ("worker-run-collect", command_worker_run_collect, "Flat alias for worker-run collect."),
-    ]:
-        alias = sub.add_parser(alias_name, help=help_text)
-        alias.add_argument("--project-root", required=True, help="Project root path.")
-        alias.add_argument("--task", required=True, help="Task id.")
-        if alias_name in {"worker-run-prepare", "worker-run-start"}:
-            alias.add_argument("--driver", help="Runtime driver id or manifest path.")
-            alias.add_argument("--executable", help="Executable override for generic shell drivers.")
-            alias.add_argument("--model", help="Optional agent model for shell runtime drivers.")
-            alias.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
-        alias.set_defaults(func=func)
-
-    supervisor = sub.add_parser("supervisor", help="Historical technical command for the Process Execution Inspector loop.")
-    supervisor_sub = supervisor.add_subparsers(dest="supervisor_command", required=True)
-    supervisor_tick = supervisor_sub.add_parser("tick", help="Run one execution-inspection pass for task runtime state.")
-    supervisor_tick.add_argument("--project-root", required=True, help="Project root path.")
-    supervisor_tick.add_argument("--run", help="Run id. Defaults to all active runs.")
-    supervisor_tick.add_argument("--profile", help="Supervisor profile path or default.")
-    supervisor_tick.add_argument("--driver", help="Runtime driver override.")
-    supervisor_tick.set_defaults(func=command_supervisor_tick)
-    supervisor_run = supervisor_sub.add_parser("run", help="Run a bounded execution-inspection loop.")
-    supervisor_run.add_argument("--project-root", required=True, help="Project root path.")
-    supervisor_run.add_argument("--run", help="Run id. Defaults to all active runs.")
-    supervisor_run.add_argument("--profile", help="Supervisor profile path or default.")
-    supervisor_run.add_argument("--driver", help="Runtime driver override.")
-    supervisor_run.add_argument("--interval", type=float, help="Seconds between ticks.")
-    supervisor_run.add_argument("--max-ticks", type=int, help="Maximum ticks before exit.")
-    supervisor_run.add_argument("--final-drain-timeout", type=float, help="Maximum seconds for final observe/collect drain after the main tick loop.")
-    supervisor_run.set_defaults(func=command_supervisor_run)
-    supervisor_status = supervisor_sub.add_parser("status", help="Print runtime execution-inspector state.")
-    supervisor_status.add_argument("--project-root", required=True, help="Project root path.")
-    supervisor_status.set_defaults(func=command_supervisor_status)
-    supervisor_stop = supervisor_sub.add_parser("stop", help="Write an execution-inspector stop request file.")
-    supervisor_stop.add_argument("--project-root", required=True, help="Project root path.")
-    supervisor_stop.set_defaults(func=command_supervisor_stop)
-
-    supervisor_tick_alias = sub.add_parser("supervisor-tick", help="Compatibility alias for one execution-inspection pass.")
-    supervisor_tick_alias.add_argument("--project-root", required=True, help="Project root path.")
-    supervisor_tick_alias.add_argument("--run", help="Run id. Defaults to all active runs.")
-    supervisor_tick_alias.add_argument("--profile", help="Supervisor profile path or default.")
-    supervisor_tick_alias.add_argument("--driver", help="Runtime driver override.")
-    supervisor_tick_alias.set_defaults(func=command_supervisor_tick)
-    supervisor_run_alias = sub.add_parser("supervisor-run", help="Compatibility alias for a bounded execution-inspection loop.")
-    supervisor_run_alias.add_argument("--project-root", required=True, help="Project root path.")
-    supervisor_run_alias.add_argument("--run", help="Run id. Defaults to all active runs.")
-    supervisor_run_alias.add_argument("--profile", help="Supervisor profile path or default.")
-    supervisor_run_alias.add_argument("--driver", help="Runtime driver override.")
-    supervisor_run_alias.add_argument("--interval", type=float, help="Seconds between ticks.")
-    supervisor_run_alias.add_argument("--max-ticks", type=int, help="Maximum ticks before exit.")
-    supervisor_run_alias.add_argument("--final-drain-timeout", type=float, help="Maximum seconds for final observe/collect drain after the main tick loop.")
-    supervisor_run_alias.set_defaults(func=command_supervisor_run)
-    supervisor_status_alias = sub.add_parser("supervisor-status", help="Compatibility alias for runtime execution-inspector status.")
-    supervisor_status_alias.add_argument("--project-root", required=True, help="Project root path.")
-    supervisor_status_alias.set_defaults(func=command_supervisor_status)
-    supervisor_stop_alias = sub.add_parser("supervisor-stop", help="Compatibility alias for stopping the execution-inspector loop.")
-    supervisor_stop_alias.add_argument("--project-root", required=True, help="Project root path.")
-    supervisor_stop_alias.set_defaults(func=command_supervisor_stop)
-
-    execution_inspector_tick_alias = sub.add_parser("execution-inspector-tick", help="Thin alias for supervisor tick: one execution-inspection pass.")
-    execution_inspector_tick_alias.add_argument("--project-root", required=True, help="Project root path.")
-    execution_inspector_tick_alias.add_argument("--run", help="Run id. Defaults to all active runs.")
-    execution_inspector_tick_alias.add_argument("--profile", help="Execution inspector profile path or default supervisor-compatible profile.")
-    execution_inspector_tick_alias.add_argument("--driver", help="Runtime driver override.")
-    execution_inspector_tick_alias.set_defaults(func=command_supervisor_tick)
-    execution_inspector_run_alias = sub.add_parser("execution-inspector-run", help="Thin alias for supervisor run: bounded execution-inspection loop.")
-    execution_inspector_run_alias.add_argument("--project-root", required=True, help="Project root path.")
-    execution_inspector_run_alias.add_argument("--run", help="Run id. Defaults to all active runs.")
-    execution_inspector_run_alias.add_argument("--profile", help="Execution inspector profile path or default supervisor-compatible profile.")
-    execution_inspector_run_alias.add_argument("--driver", help="Runtime driver override.")
-    execution_inspector_run_alias.add_argument("--interval", type=float, help="Seconds between inspection ticks.")
-    execution_inspector_run_alias.add_argument("--max-ticks", type=int, help="Maximum ticks before exit.")
-    execution_inspector_run_alias.add_argument("--final-drain-timeout", type=float, help="Maximum seconds for final observe/collect drain after the main tick loop.")
-    execution_inspector_run_alias.set_defaults(func=command_supervisor_run)
-    execution_inspector_status_alias = sub.add_parser("execution-inspector-status", help="Thin alias for supervisor status: runtime execution-inspector state.")
-    execution_inspector_status_alias.add_argument("--project-root", required=True, help="Project root path.")
-    execution_inspector_status_alias.set_defaults(func=command_supervisor_status)
-    execution_inspector_stop_alias = sub.add_parser("execution-inspector-stop", help="Thin alias for supervisor stop: request loop shutdown.")
-    execution_inspector_stop_alias.add_argument("--project-root", required=True, help="Project root path.")
-    execution_inspector_stop_alias.set_defaults(func=command_supervisor_stop)
+    workplace_commands = WorkplaceCommandParser(
+        doctor_workplace=command_doctor_workplace,
+        first_run=command_first_run,
+        init_workplace=command_init_workplace,
+        workplace_mode_doctor=command_workplace_mode_doctor,
+        workplace_mode_set=command_workplace_mode_set,
+        workplace_mode_set_default_project_mode=command_workplace_mode_set_default_project_mode,
+        workplace_mode_status=command_workplace_mode_status,
+        workplace_setup_apply=command_workplace_setup_apply,
+        workplace_setup_review=command_workplace_setup_review,
+        workplace_setup_start=command_workplace_setup_start,
+        workplace_setup_status=command_workplace_setup_status,
+    )
+    workplace_commands.register_setup(sub.add_parser)
+
+    agent_entry_commands = AgentEntryCommandParser(
+        agent_entry=command_agent_entry,
+        agent_start_prompt=command_agent_start_prompt,
+        global_agents_section=command_global_agents_section,
+    )
+    agent_entry_commands.register_global_section(sub.add_parser)
+
+    workplace_commands.register_modes(sub.add_parser)
+
+    project_commands = ProjectCommandParser(
+        doctor_project=command_doctor_project,
+        init_project=command_init_project,
+        project_init_repair=command_project_init_repair,
+        project_init_status=command_project_init_status,
+        project_mode_doctor=command_project_mode_doctor,
+        project_mode_set=command_project_mode_set,
+        project_mode_status=command_project_mode_status,
+    )
+    project_commands.register(sub.add_parser)
+
+    director_commands = DirectorCommandParser(
+        agent_director_run=command_agent_director_run,
+        agent_director_status=command_agent_director_status,
+        agent_director_tick=command_agent_director_tick,
+        director_case_refresh=command_director_case_refresh,
+        director_inbox_submit=command_director_inbox_submit,
+        error_route=command_error_route,
+    )
+    director_commands.register_inbox(sub.add_parser)
+
+    agent_entry_commands.register_prompt(sub.add_parser)
+
+    workplace_commands.register_first_run(sub.add_parser)
+
+    delivery_commands = DeliveryCommandParser(
+        clean=command_clean,
+        dev_test=command_dev_test,
+        examples_check=command_examples_check,
+        release_archive_test=command_release_archive_test,
+        release_check=command_release_check,
+        release_pack=command_release_pack,
+        release_test=command_release_test,
+        version=command_version,
+        distribution_root=ROOT,
+    )
+    delivery_commands.register(sub.add_parser)
+
+    navigation_commands = ResourceIndexCommandParser(
+        path_resolve=command_path_resolve,
+        search_index_doctor=command_search_index_doctor,
+        search_index_rebuild=command_search_index_rebuild,
+        search_index_refresh=command_search_index_refresh,
+        search_index_status=command_search_index_status,
+        search_index_tick=command_search_index_tick,
+    )
+    navigation_commands.register(sub.add_parser)
+
+    core_update_commands = CoreUpdateCommandParser(
+        core_update_apply=command_core_update_apply,
+        core_update_plan=command_core_update_plan,
+        core_update_repair=command_core_update_repair,
+        core_update_status=command_core_update_status,
+    )
+    core_update_commands.register(sub.add_parser)
+
+    knowledge_commands = KnowledgeCommandParser(
+        docs_import_plan=command_docs_import_plan,
+        knowledge_add_resource=command_knowledge_add_resource,
+        knowledge_add_url=command_knowledge_add_url,
+        knowledge_hub_import=command_knowledge_hub_import,
+        knowledge_hub_init=command_knowledge_hub_init,
+        knowledge_index_refresh=command_knowledge_index_refresh,
+        knowledge_package_build_from_candidates=command_knowledge_package_build_from_candidates,
+        knowledge_package_create=command_knowledge_package_create,
+        knowledge_package_doctor=command_knowledge_package_doctor,
+        knowledge_package_release=command_knowledge_package_release,
+    )
+    knowledge_commands.register_resources(sub.add_parser)
+
+    templates_commands = TemplateCommandParser(
+        template_add=command_template_add,
+        template_create=command_template_create,
+        template_doctor=command_template_doctor,
+    )
+    templates_commands.register(sub.add_parser)
+
+    providers_commands = ProviderCommandParser(
+        mcp_register=command_mcp_register,
+        tool_register=command_tool_register,
+    )
+    providers_commands.register(sub.add_parser)
+
+    specializations_commands = SpecializationCommandParser(
+        specialization_bind_platform=command_specialization_bind_platform,
+        specialization_create=command_specialization_create,
+        specialization_doctor=command_specialization_doctor,
+        specialization_list=command_specialization_list,
+        specialization_show=command_specialization_show,
+    )
+    specializations_commands.register(sub.add_parser)
+
+    overrides_commands = ProjectOverrideCommandParser(
+        project_override_add=command_project_override_add,
+        project_override_doctor=command_project_override_doctor,
+        project_override_list=command_project_override_list,
+        override_modes=PROJECT_OVERRIDE_MODES,
+    )
+    overrides_commands.register(sub.add_parser)
+
+    platforms_commands = PlatformCommandParser(
+        platform_contract_doctor=command_platform_contract_doctor,
+        platform_contract_install=command_platform_contract_install,
+        platform_create=command_platform_create,
+    )
+    platforms_commands.register_install(sub.add_parser)
+
+    knowledge_commands.register_create(sub.add_parser)
+
+    platforms_commands.register_authoring(sub.add_parser)
+
+    updates_commands = UpdateCommandParser(
+        project_upgrade_check=command_project_upgrade_check,
+        self_update_check=command_self_update_check,
+        update_apply=command_update_apply,
+        update_bootstrap_source_list=command_update_bootstrap_source_list,
+        update_bootstrap_source_validate=command_update_bootstrap_source_validate,
+        update_candidates_clear=command_update_candidates_clear,
+        update_candidates_list=command_update_candidates_list,
+        update_candidates_refresh=command_update_candidates_refresh,
+        update_candidates_show=command_update_candidates_show,
+        update_changelog_show=command_update_changelog_show,
+        update_doctor=command_update_doctor,
+        update_entity_sources_list=command_update_entity_sources_list,
+        update_entity_sources_rebuild=command_update_entity_sources_rebuild,
+        update_manifest_validate=command_update_manifest_validate,
+        update_notifications_acknowledge=command_update_notifications_acknowledge,
+        update_notifications_create=command_update_notifications_create,
+        update_notifications_list=command_update_notifications_list,
+        update_rollback=command_update_rollback,
+        update_sources=command_update_sources,
+        update_stage=command_update_stage,
+        update_verify=command_update_verify,
+    )
+    updates_commands.register(sub.add_parser)
+
+    presence_commands = AgentPresenceCommandParser(
+        agent_availability=command_agent_availability,
+        agent_checkin=command_agent_checkin,
+        agent_checkout=command_agent_checkout,
+        agent_heartbeat=command_agent_heartbeat,
+        agent_ledger_doctor=command_agent_ledger_doctor,
+        agent_list=command_agent_list,
+        agent_register=command_agent_register,
+        agent_status=command_agent_status,
+        session_start=command_session_start,
+    )
+    presence_commands.register_session_start(sub.add_parser)
+
+    context_commands = ProjectContextCommandParser(
+        assignment_capsule=command_assignment_capsule,
+        capsule_doctor=command_capsule_doctor,
+        context_compile=command_context_compile,
+        context_resolve=command_context_resolve,
+        doctor_context=command_doctor_context,
+        project_context_check=command_project_context_check,
+        project_context_mark_stale=command_project_context_mark_stale,
+        project_context_refresh=command_project_context_refresh,
+    )
+    context_commands.register_snapshot_capsule(sub.add_parser)
+
+    authoring_commands = ProcessAuthoringCommandParser(
+        authoring_parity_check_all=command_authoring_parity_check_all,
+        authoring_transaction_recover=command_authoring_transaction_recover,
+        knowledge_package_parity_check=command_knowledge_package_parity_check,
+        platform_parity_check=command_platform_parity_check,
+        process_authoring_apply=command_process_authoring_apply,
+        process_authoring_import=command_process_authoring_import,
+        process_authoring_review=command_process_authoring_review,
+        process_authoring_start=command_process_authoring_start,
+        process_create=command_process_create,
+        process_parity_check=command_process_parity_check,
+        process_parity_check_all=command_process_parity_check_all,
+        template_parity_check=command_template_parity_check,
+    )
+    authoring_commands.register(sub.add_parser)
+
+    catalog_commands = ProcessCatalogCommandParser(
+        builtin_process_catalog_doctor=command_builtin_process_catalog_doctor,
+        pack_activate=command_pack_activate,
+        pack_list=command_pack_list,
+        process_describe=command_process_describe,
+        process_doctor=command_process_doctor,
+        process_layout_doctor=command_process_layout_doctor,
+        process_layout_migrate=command_process_layout_migrate,
+        process_list=command_process_list,
+    )
+    catalog_commands.register(sub.add_parser)
+
+    evolution_commands = EvolutionCommandParser(
+        evolve_candidate_create=command_evolve_candidate_create,
+        evolve_candidate_export=command_evolve_candidate_export,
+        evolve_candidate_list=command_evolve_candidate_list,
+        evolve_candidate_sanitize=command_evolve_candidate_sanitize,
+        evolve_run=command_evolve_run,
+    )
+    evolution_commands.register(sub.add_parser)
+
+    knowledge_commands.register_hub_release(sub.add_parser)
+
+    drivers_commands = RuntimeDriverCommandParser(
+        runtime_driver_describe=command_runtime_driver_describe,
+        runtime_driver_list=command_runtime_driver_list,
+        runtime_driver_validate=command_runtime_driver_validate,
+    )
+    drivers_commands.register(sub.add_parser)
+
+    workers_commands = WorkerRunCommandParser(
+        worker_run_collect=command_worker_run_collect,
+        worker_run_prepare=command_worker_run_prepare,
+        worker_run_start=command_worker_run_start,
+        worker_run_status=command_worker_run_status,
+        worker_run_stop=command_worker_run_stop,
+    )
+    workers_commands.register(sub.add_parser)
+
+    inspector_commands = ExecutionInspectorCommandParser(
+        supervisor_run=command_supervisor_run,
+        supervisor_status=command_supervisor_status,
+        supervisor_stop=command_supervisor_stop,
+        supervisor_tick=command_supervisor_tick,
+    )
+    inspector_commands.register(sub.add_parser)
 
     from pf_runtime.monitor import interval_value
-    from pf_config import register as register_config_commands
+    from pf_config import command_config
+
+    configuration_commands = ConfigurationCommandParser(
+        execute=command_config,
+    )
+    configuration_commands.register(sub.add_parser)
+
+    monitor_commands = MonitorCommandParser(
+        runtime_monitor=command_runtime_monitor,
+        interval_parser=interval_value,
+    )
+    monitor_commands.register(sub.add_parser)
+
+    runtime_commands = RuntimeCommandParser(
+        runtime_autostart_install=command_runtime_autostart_install,
+        runtime_autostart_remove=command_runtime_autostart_remove,
+        runtime_autostart_status=command_runtime_autostart_status,
+        runtime_doctor=command_runtime_doctor,
+        runtime_event=command_runtime_event,
+        runtime_project_state=command_runtime_project_state,
+        runtime_resolve=command_runtime_resolve,
+        runtime_restart=command_runtime_restart,
+        runtime_serve=command_runtime_serve,
+        runtime_session_register=command_runtime_session_register,
+        runtime_start=command_runtime_start,
+        runtime_status=command_runtime_status,
+        runtime_stop=command_runtime_stop,
+        runtime_tick=command_runtime_tick,
+        runtime_work_state=command_runtime_work_state,
+    )
+    runtime_commands.register(sub.add_parser)
+
+    codex_mcp_commands = CodexMcpCommandParser(
+        codex_mcp_install=command_codex_mcp_install,
+        codex_mcp_remove=command_codex_mcp_remove,
+        codex_mcp_status=command_codex_mcp_status,
+    )
+    codex_mcp_commands.register(sub.add_parser)
+
+    runtime_host_commands = RuntimeHostCommandParser(
+        runtime_host_event=command_runtime_host_event,
+        runtime_host_init=command_runtime_host_init,
+        runtime_host_project_state=command_runtime_host_project_state,
+        runtime_host_projection_doctor=command_runtime_host_projection_doctor,
+        runtime_host_rebuild_projections=command_runtime_host_rebuild_projections,
+        runtime_host_resolve=command_runtime_host_resolve,
+        runtime_host_status=command_runtime_host_status,
+        runtime_host_tick=command_runtime_host_tick,
+        runtime_host_work_state=command_runtime_host_work_state,
+    )
+    runtime_host_commands.register(sub.add_parser)
+
+    orchestration_commands = OrchestrationCommandParser(
+        orchestrator_plan_apply=command_orchestrator_plan_apply,
+        orchestrator_plan_create=command_orchestrator_plan_create,
+        orchestrator_plan_status=command_orchestrator_plan_status,
+        orchestrator_plan_validate=command_orchestrator_plan_validate,
+        worker_launch_prompt_create=command_worker_launch_prompt_create,
+    )
+    orchestration_commands.register_plan_prompt(sub.add_parser)
+
+    presence_commands.register_attendance(sub.add_parser)
+
+    leases_commands = AgentLeaseCommandParser(
+        agent_lease_doctor=command_agent_lease_doctor,
+        agent_lease_grant=command_agent_lease_grant,
+        agent_lease_list=command_agent_lease_list,
+        agent_lease_release=command_agent_lease_release,
+        agent_lease_revoke=command_agent_lease_revoke,
+    )
+    leases_commands.register(sub.add_parser)
+
+    handoffs_commands = HandoffCommandParser(
+        handoff_accept=command_handoff_accept,
+        handoff_create=command_handoff_create,
+        handoff_doctor=command_handoff_doctor,
+        handoff_finalize=command_handoff_finalize,
+        handoff_offer=command_handoff_offer,
+        handoff_return=command_handoff_return,
+        handoff_start_target_run=command_handoff_start_target_run,
+        handoff_status=command_handoff_status,
+        process_route_doctor=command_process_route_doctor,
+        process_route_list=command_process_route_list,
+        process_route_validate=command_process_route_validate,
+    )
+    handoffs_commands.register(sub.add_parser)
+
+    director_commands.register_scheduling(sub.add_parser)
+
+    continuation_commands = ContinuationCommandParser(
+        continuation_create=command_continuation_create,
+        continuation_doctor=command_continuation_doctor,
+        continuation_resume=command_continuation_resume,
+        continuation_status=command_continuation_status,
+    )
+    continuation_commands.register(sub.add_parser)
+
+    orchestration_commands.register_shell_aliases(sub.add_parser)
+
+    agent_entry_commands.register_operations(sub.add_parser)
+
+    work_commands = WorkCommandParser(
+        work_cancel=command_work_cancel,
+        work_resource_read=command_work_resource_read,
+        work_start=command_work_start,
+        work_state=command_work_state,
+        work_transition=command_work_transition,
+    )
+    work_commands.register_start(sub.add_parser)
+
+    import processforge_core.egress.service as egress_service
+    egress_core = sys.modules[__name__]
+
+    egress_commands = EgressCommandParser(
+        execute=lambda args: egress_service.command(args, egress_core),
+    )
+    egress_commands.register(sub.add_parser)
+
+    work_commands.register_state_resources_transition_cancel(sub.add_parser)
+
+    runs_commands = RunCommandParser(
+        run_complete=command_run_complete,
+        run_create=command_run_create,
+        run_doctor=command_run_doctor,
+        run_list=command_run_list,
+        run_status=command_run_status,
+        run_summary=command_run_summary,
+        run_statuses=RUN_STATUSES,
+    )
+    runs_commands.register(sub.add_parser)
+
+    tasks_commands = TaskCommandParser(
+        task_complete=command_task_complete,
+        task_create=command_task_create,
+        task_doctor=command_task_doctor,
+        task_list=command_task_list,
+        task_start=command_task_start,
+    )
+    tasks_commands.register(sub.add_parser)
+
+    iterations_commands = IterationCommandParser(
+        iteration_add=command_iteration_add,
+        iteration_complete=command_iteration_complete,
+        iteration_kinds=ITERATION_KINDS,
+        iteration_statuses=ITERATION_STATUSES,
+    )
+    iterations_commands.register(sub.add_parser)
+
+    hooks_commands = HookCommandParser(
+        events_validate=command_events_validate,
+        hooks_dispatch=command_hooks_dispatch,
+        event_types=REQUIRED_PROCESSFORGE_EVENT_TYPES,
+    )
+    hooks_commands.register(sub.add_parser)
+
+    chat_commands = ChatCommandParser(
+        chat_export=command_chat_export,
+        chat_record=command_chat_record,
+    )
+    chat_commands.register(sub.add_parser)
+
+    context_commands.register_resolution(sub.add_parser)
 
-    register_config_commands(sub)
-
-    monitor = sub.add_parser("monitor", help="Observe local Runtime without starting, stopping, or changing it.")
-    monitor.add_argument("--workplace", required=True, help="Existing workplace root directory.")
-    monitor.add_argument("--once", action="store_true", help="Print one plain snapshot and exit.")
-    monitor.add_argument("--json", action="store_true", help="Print one allowlisted JSON snapshot without terminal controls.")
-    monitor.add_argument("--interval", type=interval_value, default=None, help="Viewer interval override (1 to 60); default follows Runtime configuration.")
-    monitor.add_argument("--details", action="store_true", help="Show detailed scheduler and observation diagnostics.")
-    monitor.add_argument("--ascii", action="store_true", help="Use ASCII-only terminal text.")
-    monitor.add_argument("--no-color", action="store_true", help="Disable color (the monitor is monochrome by default).")
-    monitor.set_defaults(func=command_runtime_monitor)
-
-    runtime = sub.add_parser("runtime", aliases=["server"], help="Run and control the long-lived local PF Runtime process.")
-    runtime_sub = runtime.add_subparsers(dest="runtime_command", required=True)
-
-    runtime_serve = runtime_sub.add_parser("serve", aliases=["run"], help="Run PF Runtime in the foreground for one workplace.")
-    runtime_serve.add_argument("--console", action="store_true", help="Show a foreground banner on an interactive terminal.")
-    runtime_serve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_serve.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
-    runtime_serve.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")
-    runtime_serve.set_defaults(func=command_runtime_serve)
-
-    runtime_start = runtime_sub.add_parser("start", help="Start PF Runtime in the background for one workplace.")
-    runtime_start.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_start.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
-    runtime_start.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")
-    runtime_start.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for readiness.")
-    runtime_start.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_start.set_defaults(func=command_runtime_start)
-
-    runtime_stop = runtime_sub.add_parser("stop", help="Stop PF Runtime for one workplace.")
-    runtime_stop.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_stop.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for graceful shutdown.")
-    runtime_stop.set_defaults(func=command_runtime_stop)
-    runtime_stop.add_argument("--force", action="store_true", help="Explicitly bypass the server busy guard.")
-
-    runtime_restart = runtime_sub.add_parser("restart", help="Restart PF Runtime for one workplace.")
-    runtime_restart.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_restart.add_argument("--port", type=int, default=0, help="Loopback TCP port, or 0 for an ephemeral port.")
-    runtime_restart.add_argument("--interval", type=float, default=2.0, help="Scheduler tick interval in seconds.")
-    runtime_restart.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for stop/start.")
-    runtime_restart.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_restart.set_defaults(func=command_runtime_restart)
-    runtime_restart.add_argument("--force", action="store_true", help="Explicitly bypass the server busy guard.")
-
-    runtime_status = runtime_sub.add_parser("status", help="Print PF Runtime process and projection status.")
-    runtime_status.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_status.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_status.set_defaults(func=command_runtime_status)
-
-    runtime_doctor = runtime_sub.add_parser("doctor", help="Check PF Runtime state, singleton, auth, and protocol compatibility.")
-    runtime_doctor.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_doctor.set_defaults(func=command_runtime_doctor)
-
-    runtime_event = runtime_sub.add_parser("event", help="Send one normalized agent event through the long-lived runtime.")
-    runtime_event.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_event.add_argument("--project-root", help="Project root path override.")
-    runtime_event.add_argument("--input", default="-", help="JSON input path or '-' for stdin.")
-    runtime_event.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_event.set_defaults(func=command_runtime_event)
-
-    runtime_session = runtime_sub.add_parser("session-register", help="Bind a Codex/runtime session id to one project.")
-    runtime_session.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_session.add_argument("--session", required=True, help="Runtime/agent session id.")
-    runtime_session.add_argument("--agent", help="Agent id.")
-    runtime_session.add_argument("--project-root", help="Project root path.")
-    runtime_session.add_argument("--cwd", help="Working directory fallback used by hook adapters.")
-    runtime_session.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_session.set_defaults(func=command_runtime_session_register)
-
-    runtime_project_state = runtime_sub.add_parser("project-state", help="Read project state for a routed Runtime session.")
-    runtime_project_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_project_state.add_argument("--session", help="Runtime/agent session id.")
-    runtime_project_state.add_argument("--project-root", help="Project root path fallback.")
-    runtime_project_state.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_project_state.set_defaults(func=command_runtime_project_state)
-
-    runtime_work_state = runtime_sub.add_parser("work-state", help="Read current work state for a routed Runtime session.")
-    runtime_work_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_work_state.add_argument("--session", help="Runtime/agent session id.")
-    runtime_work_state.add_argument("--project-root", help="Project root path fallback.")
-    runtime_work_state.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_work_state.set_defaults(func=command_runtime_work_state)
-
-    runtime_resolve = runtime_sub.add_parser("resolve", help="Resolve the project handle for a Runtime session.")
-    runtime_resolve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_resolve.add_argument("--session", help="Runtime/agent session id.")
-    runtime_resolve.add_argument("--project-root", help="Project root path fallback.")
-    runtime_resolve.add_argument("--resource", help="Resolved knowledge resource id.")
-    runtime_resolve.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_resolve.set_defaults(func=command_runtime_resolve)
-
-    runtime_tick = runtime_sub.add_parser("tick", help="Request one Runtime scheduler pass for known or explicit projects.")
-    runtime_tick.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_tick.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
-    runtime_tick.add_argument("--director", action="store_true", help="Run hosted Agent Director tick for organized projects.")
-    runtime_tick.add_argument("--inspector", action="store_true", help="Run hosted Execution Inspector tick.")
-    runtime_tick.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_tick.set_defaults(func=command_runtime_tick)
-
-    runtime_autostart = runtime_sub.add_parser("autostart", help="Manage Windows Task Scheduler autostart for PF Runtime.")
-    runtime_autostart_sub = runtime_autostart.add_subparsers(dest="runtime_autostart_command", required=True)
-
-    def add_runtime_autostart_common(parser: argparse.ArgumentParser) -> None:
-        parser.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-        parser.add_argument("--distribution-root", help="Installed ProcessForge distribution root. Defaults to this CLI distribution.")
-        parser.add_argument("--python", help="Python executable stored in the scheduled task. Defaults to the current interpreter.")
-        parser.add_argument("--port", type=int, default=0, help="Runtime loopback port, or 0 for an ephemeral port.")
-        parser.add_argument("--interval", type=float, default=2.0, help="Runtime scheduler tick interval in seconds.")
-        parser.add_argument("--json", action="store_true", help="Print JSON.")
-
-    runtime_autostart_status = runtime_autostart_sub.add_parser("status", help="Inspect the workplace Runtime scheduled task.")
-    add_runtime_autostart_common(runtime_autostart_status)
-    runtime_autostart_status.set_defaults(func=command_runtime_autostart_status)
-    runtime_autostart_install = runtime_autostart_sub.add_parser("install", help="Plan or install the workplace Runtime scheduled task.")
-    add_runtime_autostart_common(runtime_autostart_install)
-    runtime_autostart_install.add_argument("--delay-seconds", type=int, default=10, help="Delay after interactive logon.")
-    runtime_autostart_install.add_argument("--replace", action="store_true", help="Replace a drifted task with the deterministic ProcessForge definition.")
-    runtime_autostart_install.add_argument("--apply", action="store_true", help="Create the task; otherwise show a dry run.")
-    runtime_autostart_install.set_defaults(func=command_runtime_autostart_install)
-    runtime_autostart_remove = runtime_autostart_sub.add_parser("remove", help="Plan or remove the workplace Runtime scheduled task.")
-    add_runtime_autostart_common(runtime_autostart_remove)
-    runtime_autostart_remove.add_argument("--force", action="store_true", help="Remove a drifted task with the deterministic ProcessForge name.")
-    runtime_autostart_remove.add_argument("--apply", action="store_true", help="Delete the task; otherwise show a dry run.")
-    runtime_autostart_remove.set_defaults(func=command_runtime_autostart_remove)
-
-    codex_mcp = sub.add_parser("codex-mcp", help="Manage the host-owned ProcessForge stdio MCP registration in Codex.")
-    codex_mcp_sub = codex_mcp.add_subparsers(dest="codex_mcp_command", required=True)
-
-    def add_codex_mcp_common(parser: argparse.ArgumentParser) -> None:
-        parser.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-        parser.add_argument("--distribution-root", help="Installed ProcessForge distribution root. Defaults to this CLI distribution.")
-        parser.add_argument("--name", default="processforge", help="Codex MCP server name.")
-        parser.add_argument("--python", help="Python command used by Codex. Defaults to the current interpreter.")
-        parser.add_argument("--codex", help="Codex executable. Defaults to the executable on PATH.")
-        parser.add_argument("--json", action="store_true", help="Print JSON.")
-
-    codex_mcp_status = codex_mcp_sub.add_parser("status", help="Inspect the Codex ProcessForge MCP registration.")
-    add_codex_mcp_common(codex_mcp_status)
-    codex_mcp_status.set_defaults(func=command_codex_mcp_status)
-    codex_mcp_install = codex_mcp_sub.add_parser("install", help="Plan or install the Codex ProcessForge MCP registration.")
-    add_codex_mcp_common(codex_mcp_install)
-    codex_mcp_install.add_argument("--replace", action="store_true", help="Replace a drifted registration.")
-    codex_mcp_install.add_argument("--apply", action="store_true", help="Write Codex configuration; otherwise show a dry run.")
-    codex_mcp_install.set_defaults(func=command_codex_mcp_install)
-    codex_mcp_remove = codex_mcp_sub.add_parser("remove", help="Plan or remove the Codex ProcessForge MCP registration.")
-    add_codex_mcp_common(codex_mcp_remove)
-    codex_mcp_remove.add_argument("--force", action="store_true", help="Remove a drifted registration with this name.")
-    codex_mcp_remove.add_argument("--apply", action="store_true", help="Write Codex configuration; otherwise show a dry run.")
-    codex_mcp_remove.set_defaults(func=command_codex_mcp_remove)
-
-    runtime_host = sub.add_parser("runtime-host", help="Host existing PF Core runtime passes through a lazy local Runtime PoC.")
-    runtime_host_sub = runtime_host.add_subparsers(dest="runtime_host_command", required=True)
-
-    runtime_host_init = runtime_host_sub.add_parser("init", help="Initialize or refresh Runtime project handles.")
-    runtime_host_init.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_host_init.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
-    runtime_host_init.set_defaults(func=command_runtime_host_init)
-
-    runtime_host_event = runtime_host_sub.add_parser("event", help="Accept one normalized agent event and append a PF event envelope.")
-    runtime_host_event.add_argument("--workplace", help="Workplace root path or workplace.yaml.")
-    runtime_host_event.add_argument("--project-root", help="Project root path override.")
-    runtime_host_event.add_argument("--input", default="-", help="JSON input path or '-' for stdin.")
-    runtime_host_event.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_host_event.set_defaults(func=command_runtime_host_event)
-
-    runtime_host_status = runtime_host_sub.add_parser("status", help="Print Runtime host status.")
-    runtime_host_status.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_host_status.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
-    runtime_host_status.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_host_status.set_defaults(func=command_runtime_host_status)
-
-    runtime_host_project_state = runtime_host_sub.add_parser("project-state", help="MCP-like read-only project state for a routed Runtime session.")
-    runtime_host_project_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_host_project_state.add_argument("--session", help="Runtime/agent session id.")
-    runtime_host_project_state.add_argument("--project-root", help="Project root path fallback.")
-    runtime_host_project_state.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_host_project_state.set_defaults(func=command_runtime_host_project_state)
-
-    runtime_host_work_state = runtime_host_sub.add_parser("work-state", help="MCP-like read-only work state for a routed Runtime session.")
-    runtime_host_work_state.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_host_work_state.add_argument("--session", help="Runtime/agent session id.")
-    runtime_host_work_state.add_argument("--project-root", help="Project root path fallback.")
-    runtime_host_work_state.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_host_work_state.set_defaults(func=command_runtime_host_work_state)
-
-    runtime_host_resolve = runtime_host_sub.add_parser("resolve", help="Resolve the project handle for a Runtime session.")
-    runtime_host_resolve.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_host_resolve.add_argument("--session", help="Runtime/agent session id.")
-    runtime_host_resolve.add_argument("--project-root", help="Project root path fallback.")
-    runtime_host_resolve.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_host_resolve.set_defaults(func=command_runtime_host_resolve)
-
-    runtime_host_tick = runtime_host_sub.add_parser("tick", help="Run hosted Ledger maintenance plus optional Director/Inspector ticks.")
-    runtime_host_tick.add_argument("--workplace", required=True, help="Workplace root path or workplace.yaml.")
-    runtime_host_tick.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
-    runtime_host_tick.add_argument("--director", action="store_true", help="Host existing agent-director-tick for organized projects.")
-    runtime_host_tick.add_argument("--inspector", action="store_true", help="Host existing execution inspector tick.")
-    runtime_host_tick.add_argument("--run", help="Run id for inspector tick.")
-    runtime_host_tick.add_argument("--profile", help="Supervisor/inspector profile.")
-    runtime_host_tick.add_argument("--driver", help="Runtime driver override.")
-    runtime_host_tick.add_argument("--wait-ttl", type=int, default=3600, help="Director wait TTL seconds.")
-    runtime_host_tick.add_argument("--lease-ttl", type=int, default=3600, help="Director lease TTL seconds.")
-    runtime_host_tick.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_host_tick.set_defaults(func=command_runtime_host_tick)
-
-    runtime_host_rebuild = runtime_host_sub.add_parser("rebuild-projections", help="Rebuild Runtime projections from durable project event journals.")
-    runtime_host_rebuild.add_argument("--project-root", action="append", default=[], help="Project root path. Repeatable.")
-    runtime_host_rebuild.add_argument("--json", action="store_true", help="Print JSON.")
-    runtime_host_rebuild.set_defaults(func=command_runtime_host_rebuild_projections)
-
-    runtime_host_projection_doctor = runtime_host_sub.add_parser("projection-doctor", help="Validate declaration-driven technical projection freshness and readiness.")
-    runtime_host_projection_doctor.add_argument("--project-root", action="append", required=True, help="Project root path. Repeatable.")
-    runtime_host_projection_doctor.set_defaults(func=command_runtime_host_projection_doctor)
-
-    orchestrator_plan = sub.add_parser("orchestrator-plan", help="Create, validate, apply, or inspect a multi-agent orchestration plan.")
-    orchestrator_plan_sub = orchestrator_plan.add_subparsers(dest="orchestrator_plan_command", required=True)
-    orchestrator_plan_create = orchestrator_plan_sub.add_parser("create", help="Create an orchestrator task plan.")
-    orchestrator_plan_create.add_argument("--project-root", required=True, help="Project root path.")
-    orchestrator_plan_create.add_argument("--run", required=True, help="Run id.")
-    orchestrator_plan_create.add_argument("--title", required=True, help="Run title.")
-    orchestrator_plan_create.add_argument("--answers", help="Optional full orchestrator task plan YAML.")
-    orchestrator_plan_create.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    orchestrator_plan_create.add_argument("--apply", action="store_true", help="Write the plan.")
-    orchestrator_plan_create.set_defaults(func=command_orchestrator_plan_create)
-    orchestrator_plan_validate = orchestrator_plan_sub.add_parser("validate", help="Validate an orchestrator task plan.")
-    orchestrator_plan_validate.add_argument("--project-root", required=True, help="Project root path.")
-    orchestrator_plan_validate.add_argument("--plan", help="Plan YAML path.")
-    orchestrator_plan_validate.add_argument("--run", help="Run id when --plan is omitted.")
-    orchestrator_plan_validate.add_argument("--write-normalized", help="Optional normalized plan YAML output path.")
-    orchestrator_plan_validate.set_defaults(func=command_orchestrator_plan_validate)
-    orchestrator_plan_apply = orchestrator_plan_sub.add_parser("apply", help="Apply an orchestrator task plan.")
-    orchestrator_plan_apply.add_argument("--project-root", required=True, help="Project root path.")
-    orchestrator_plan_apply.add_argument("--plan", help="Plan YAML path.")
-    orchestrator_plan_apply.add_argument("--run", help="Run id when --plan is omitted.")
-    orchestrator_plan_apply.add_argument("--workplace", help="Workplace root path for lease grants.")
-    orchestrator_plan_apply.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    orchestrator_plan_apply.add_argument("--apply", action="store_true", help="Create run, tasks, capsules, prompts, and handoff.")
-    orchestrator_plan_apply.set_defaults(func=command_orchestrator_plan_apply, shell_plan=False)
-    orchestrator_plan_status = orchestrator_plan_sub.add_parser("status", help="Show orchestration status.")
-    orchestrator_plan_status.add_argument("--project-root", required=True, help="Project root path.")
-    orchestrator_plan_status.add_argument("--plan", help="Plan YAML path.")
-    orchestrator_plan_status.add_argument("--run", help="Run id when --plan is omitted.")
-    orchestrator_plan_status.set_defaults(func=command_orchestrator_plan_status)
-
-    worker_launch_prompt = sub.add_parser("worker-launch-prompt", help="Create a bounded launch prompt for a worker task.")
-    worker_launch_prompt_sub = worker_launch_prompt.add_subparsers(dest="worker_launch_prompt_command", required=True)
-    worker_launch_prompt_create = worker_launch_prompt_sub.add_parser("create", help="Create a worker launch prompt.")
-    worker_launch_prompt_create.add_argument("--project-root", required=True, help="Project root path.")
-    worker_launch_prompt_create.add_argument("--task", required=True, help="Task id.")
-    worker_launch_prompt_create.add_argument("--output", help="Optional output path.")
-    worker_launch_prompt_create.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    worker_launch_prompt_create.add_argument("--apply", action="store_true", help="Write the prompt.")
-    worker_launch_prompt_create.set_defaults(func=command_worker_launch_prompt_create)
-
-    orchestrator_plan_create_alias = sub.add_parser("orchestrator-plan-create", help="Flat alias for orchestrator-plan create.")
-    orchestrator_plan_create_alias.add_argument("--project-root", required=True, help="Project root path.")
-    orchestrator_plan_create_alias.add_argument("--run", required=True, help="Run id.")
-    orchestrator_plan_create_alias.add_argument("--title", required=True, help="Run title.")
-    orchestrator_plan_create_alias.add_argument("--answers", help="Optional full orchestrator task plan YAML.")
-    orchestrator_plan_create_alias.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    orchestrator_plan_create_alias.add_argument("--apply", action="store_true", help="Write the plan.")
-    orchestrator_plan_create_alias.set_defaults(func=command_orchestrator_plan_create)
-
-    orchestrator_plan_validate_alias = sub.add_parser("orchestrator-plan-validate", help="Flat alias for orchestrator-plan validate.")
-    orchestrator_plan_validate_alias.add_argument("--project-root", required=True, help="Project root path.")
-    orchestrator_plan_validate_alias.add_argument("--plan", help="Plan YAML path.")
-    orchestrator_plan_validate_alias.add_argument("--run", help="Run id when --plan is omitted.")
-    orchestrator_plan_validate_alias.add_argument("--write-normalized", help="Optional normalized plan YAML output path.")
-    orchestrator_plan_validate_alias.set_defaults(func=command_orchestrator_plan_validate)
-
-    orchestrator_plan_apply_alias = sub.add_parser("orchestrator-plan-apply", help="Flat alias for orchestrator-plan apply.")
-    orchestrator_plan_apply_alias.add_argument("--project-root", required=True, help="Project root path.")
-    orchestrator_plan_apply_alias.add_argument("--plan", help="Plan YAML path.")
-    orchestrator_plan_apply_alias.add_argument("--run", help="Run id when --plan is omitted.")
-    orchestrator_plan_apply_alias.add_argument("--workplace", help="Workplace root path for lease grants.")
-    orchestrator_plan_apply_alias.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    orchestrator_plan_apply_alias.add_argument("--apply", action="store_true", help="Create run, tasks, capsules, prompts, and handoff.")
-    orchestrator_plan_apply_alias.set_defaults(func=command_orchestrator_plan_apply, shell_plan=False)
-
-    orchestrator_plan_status_alias = sub.add_parser("orchestrator-plan-status", help="Flat alias for orchestrator-plan status.")
-    orchestrator_plan_status_alias.add_argument("--project-root", required=True, help="Project root path.")
-    orchestrator_plan_status_alias.add_argument("--plan", help="Plan YAML path.")
-    orchestrator_plan_status_alias.add_argument("--run", help="Run id when --plan is omitted.")
-    orchestrator_plan_status_alias.set_defaults(func=command_orchestrator_plan_status)
-
-    worker_launch_prompt_create_alias = sub.add_parser("worker-launch-prompt-create", help="Flat alias for worker-launch-prompt create.")
-    worker_launch_prompt_create_alias.add_argument("--project-root", required=True, help="Project root path.")
-    worker_launch_prompt_create_alias.add_argument("--task", required=True, help="Task id.")
-    worker_launch_prompt_create_alias.add_argument("--output", help="Optional output path.")
-    worker_launch_prompt_create_alias.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-    worker_launch_prompt_create_alias.add_argument("--apply", action="store_true", help="Write the prompt.")
-    worker_launch_prompt_create_alias.set_defaults(func=command_worker_launch_prompt_create)
-
-    agent_register = sub.add_parser("agent-register", help="Register an agent in the workplace agent registry.")
-    agent_register.add_argument("--workplace", required=True, help="Workplace root path.")
-    agent_register.add_argument("--agent", required=True, help="Agent id.")
-    agent_register.add_argument("--title", help="Agent title.")
-    agent_register.add_argument("--kind", default="operator_started_agent", help="Agent kind.")
-    agent_register.add_argument("--role", action="append", default=[], help="Agent role. Repeatable.")
-    agent_register.add_argument("--capability", action="append", default=[], help="Agent capability. Repeatable.")
-    agent_register.add_argument("--supports-specialization", action="append", default=[], help="Specialization id this agent profile supports. Repeatable.")
-    agent_register.set_defaults(func=command_agent_register)
-
-    agent_list = sub.add_parser("agent-list", help="List registered workplace agents.")
-    agent_list.add_argument("--workplace", required=True, help="Workplace root path.")
-    agent_list.add_argument("--json", action="store_true", help="Print JSON.")
-    agent_list.set_defaults(func=command_agent_list)
-
-    agent_checkin = sub.add_parser("agent-checkin", help="Record an agent session check-in and current presence.")
-    agent_checkin.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
-    agent_checkin.add_argument("--agent", required=True, help="Agent id.")
-    agent_checkin.add_argument("--session", help="Session id. Defaults to generated id.")
-    agent_checkin.add_argument("--project-root", help="Project root path.")
-    agent_checkin.add_argument("--project-id", help="Project id override.")
-    agent_checkin.add_argument("--process", help="Process id.")
-    agent_checkin.add_argument("--run", help="Run id.")
-    agent_checkin.add_argument("--task", help="Task id.")
-    agent_checkin.add_argument("--role", action="append", default=[], help="Checked-in role. Repeatable.")
-    agent_checkin.add_argument("--capability", action="append", default=[], help="Runtime capability. Repeatable.")
-    agent_checkin.add_argument("--supports-specialization", action="append", default=[], help="Specialization id supported by this session. Repeatable.")
-    agent_checkin.add_argument("--ttl", type=int, default=300, help="Heartbeat TTL seconds.")
-    agent_checkin.add_argument("--json", action="store_true", help="Print JSON.")
-    agent_checkin.set_defaults(func=command_agent_checkin)
-
-    agent_heartbeat = sub.add_parser("agent-heartbeat", help="Refresh an agent session presence record.")
-    agent_heartbeat.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
-    agent_heartbeat.add_argument("--agent", help="Agent id. Optional when --session or --project-root current session is supplied.")
-    agent_heartbeat.add_argument("--session", help="Session id.")
-    agent_heartbeat.add_argument("--project-root", help="Project root path for current-session lookup.")
-    agent_heartbeat.add_argument("--task", help="Current task id.")
-    agent_heartbeat.set_defaults(func=command_agent_heartbeat)
-
-    agent_checkout = sub.add_parser("agent-checkout", help="Record an agent session checkout.")
-    agent_checkout.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
-    agent_checkout.add_argument("--agent", help="Agent id. Optional when --session or --project-root current session is supplied.")
-    agent_checkout.add_argument("--session", help="Session id.")
-    agent_checkout.add_argument("--project-root", help="Project root path for current-session lookup.")
-    agent_checkout.set_defaults(func=command_agent_checkout)
-
-    agent_status = sub.add_parser("agent-status", help="Show current agent session presence.")
-    agent_status.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
-    agent_status.add_argument("--agent", help="Agent id.")
-    agent_status.add_argument("--session", help="Session id.")
-    agent_status.add_argument("--project-root", help="Project root path filter.")
-    agent_status.add_argument("--project-id", help="Project id filter.")
-    agent_status.add_argument("--json", action="store_true", help="Print JSON.")
-    agent_status.set_defaults(func=command_agent_status)
-
-    session_heartbeat = sub.add_parser("session-heartbeat", help="Thin alias for agent-heartbeat.")
-    session_heartbeat.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
-    session_heartbeat.add_argument("--agent", help="Agent id.")
-    session_heartbeat.add_argument("--session", help="Session id.")
-    session_heartbeat.add_argument("--project-root", help="Project root path for current-session lookup.")
-    session_heartbeat.add_argument("--task", help="Current task id.")
-    session_heartbeat.set_defaults(func=command_agent_heartbeat)
-
-    session_end = sub.add_parser("session-end", help="Thin alias for agent-checkout.")
-    session_end.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
-    session_end.add_argument("--agent", help="Agent id.")
-    session_end.add_argument("--session", help="Session id.")
-    session_end.add_argument("--project-root", help="Project root path for current-session lookup.")
-    session_end.set_defaults(func=command_agent_checkout)
-
-    session_status = sub.add_parser("session-status", help="Thin alias for agent-status.")
-    session_status.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
-    session_status.add_argument("--agent", help="Agent id.")
-    session_status.add_argument("--session", help="Session id.")
-    session_status.add_argument("--project-root", help="Project root path filter.")
-    session_status.add_argument("--project-id", help="Project id filter.")
-    session_status.add_argument("--json", action="store_true", help="Print JSON.")
-    session_status.set_defaults(func=command_agent_status)
-
-    agent_availability = sub.add_parser("agent-availability", help="Answer whether a checked-in agent with a role is available.")
-    agent_availability.add_argument("--workplace", help="Workplace root path. Defaults from --project-root when the project is onboarded.")
-    agent_availability.add_argument("--role", required=True, help="Required role.")
-    agent_availability.add_argument("--project-root", help="Project root path for workplace and project-id filter.")
-    agent_availability.add_argument("--project-id", help="Optional project id filter.")
-    agent_availability.add_argument("--json", action="store_true", help="Print JSON.")
-    agent_availability.set_defaults(func=command_agent_availability)
-
-    agent_ledger_doctor = sub.add_parser("agent-ledger-doctor", help="Validate workplace agent registry, ledger, and presence.")
-    agent_ledger_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
-    agent_ledger_doctor.set_defaults(func=command_agent_ledger_doctor)
-
-    agent_lease_grant = sub.add_parser("agent-lease-grant", help="Grant an agent lease/key.")
-    agent_lease_grant.add_argument("--workplace", required=True, help="Workplace root path.")
-    agent_lease_grant.add_argument("--id", help="Lease id.")
-    agent_lease_grant.add_argument("--agent", required=True, help="Agent id.")
-    agent_lease_grant.add_argument("--session", help="Session id.")
-    agent_lease_grant.add_argument("--project-id", help="Project id.")
-    agent_lease_grant.add_argument("--process", help="Process id.")
-    agent_lease_grant.add_argument("--run", help="Run id.")
-    agent_lease_grant.add_argument("--task", help="Task id.")
-    agent_lease_grant.add_argument("--capsule", help="Assignment capsule path.")
-    agent_lease_grant.add_argument("--allowed-file", action="append", default=[], help="Allowed file/glob. Repeatable.")
-    agent_lease_grant.add_argument("--allowed-read-file", action="append", default=[], help="Allowed read file/glob. Repeatable.")
-    agent_lease_grant.add_argument("--forbidden-file", action="append", default=[], help="Forbidden file/glob. Repeatable.")
-    agent_lease_grant.add_argument("--ttl", type=int, default=3600, help="Lease TTL seconds.")
-    agent_lease_grant.set_defaults(func=command_agent_lease_grant)
-
-    for name, func, help_text in [
-        ("agent-lease-release", command_agent_lease_release, "Release an active agent lease."),
-        ("agent-lease-revoke", command_agent_lease_revoke, "Revoke an agent lease."),
-    ]:
-        lease_status = sub.add_parser(name, help=help_text)
-        lease_status.add_argument("--workplace", required=True, help="Workplace root path.")
-        lease_status.add_argument("--lease", required=True, help="Lease id.")
-        lease_status.set_defaults(func=func)
-
-    agent_lease_list = sub.add_parser("agent-lease-list", help="List agent leases.")
-    agent_lease_list.add_argument("--workplace", required=True, help="Workplace root path.")
-    agent_lease_list.add_argument("--json", action="store_true", help="Print JSON.")
-    agent_lease_list.set_defaults(func=command_agent_lease_list)
-
-    agent_lease_doctor = sub.add_parser("agent-lease-doctor", help="Validate agent leases.")
-    agent_lease_doctor.add_argument("--workplace", required=True, help="Workplace root path.")
-    agent_lease_doctor.set_defaults(func=command_agent_lease_doctor)
-
-    process_route_list = sub.add_parser("process-route-list", help="List process route map entries.")
-    process_route_list.add_argument("--project-root", required=True, help="Project root path.")
-    process_route_list.add_argument("--json", action="store_true", help="Print JSON.")
-    process_route_list.set_defaults(func=command_process_route_list)
-    process_route_validate = sub.add_parser("process-route-validate", help="Validate process routes.")
-    process_route_validate.add_argument("--project-root", required=True, help="Project root path.")
-    process_route_validate.set_defaults(func=command_process_route_validate)
-    process_route_doctor = sub.add_parser("process-route-doctor", help="Doctor process routes.")
-    process_route_doctor.add_argument("--project-root", required=True, help="Project root path.")
-    process_route_doctor.set_defaults(func=command_process_route_doctor)
-
-    handoff_create = sub.add_parser("handoff-create", help="Create a formal process handoff package from a route.")
-    handoff_create.add_argument("--project-root", required=True, help="Project root path.")
-    handoff_create.add_argument("--route", required=True, help="Route id.")
-    handoff_create.add_argument("--from-run", required=True, help="Source run id.")
-    handoff_create.add_argument("--from-stage", help="Source stage id.")
-    handoff_create.add_argument("--id", help="Handoff id.")
-    handoff_create.add_argument("--apply", action="store_true", help="Write the handoff package.")
-    handoff_create.set_defaults(func=command_handoff_create)
-
-    for name, func, help_text in [
-        ("handoff-offer", command_handoff_offer, "Offer/show a handoff to available agents."),
-        ("handoff-status", command_handoff_status, "Show handoff status."),
-    ]:
-        handoff_status = sub.add_parser(name, help=help_text)
-        handoff_status.add_argument("--project-root", required=True, help="Project root path.")
-        handoff_status.add_argument("--handoff", required=True, help="Handoff id.")
-        handoff_status.add_argument("--workplace", help="Workplace root path for availability lookup.")
-        handoff_status.add_argument("--project-id", help="Optional project id filter.")
-        handoff_status.add_argument("--json", action="store_true", help="Print JSON.")
-        handoff_status.set_defaults(func=func)
-
-    handoff_accept = sub.add_parser("handoff-accept", help="Accept a handoff.")
-    handoff_accept.add_argument("--project-root", required=True, help="Project root path.")
-    handoff_accept.add_argument("--handoff", required=True, help="Handoff id.")
-    handoff_accept.add_argument("--agent", required=True, help="Agent id.")
-    handoff_accept.add_argument("--session", help="Session id.")
-    handoff_accept.set_defaults(func=command_handoff_accept)
-
-    handoff_start = sub.add_parser("handoff-start-target-run", help="Start or attach a target run for a handoff.")
-    handoff_start.add_argument("--project-root", required=True, help="Project root path.")
-    handoff_start.add_argument("--handoff", required=True, help="Handoff id.")
-    handoff_start.add_argument("--run", help="Target run id.")
-    handoff_start.set_defaults(func=command_handoff_start_target_run)
-
-    handoff_return = sub.add_parser("handoff-return", help="Return handoff results to the source process.")
-    handoff_return.add_argument("--project-root", required=True, help="Project root path.")
-    handoff_return.add_argument("--handoff", required=True, help="Handoff id.")
-    handoff_return.add_argument("--artifact", action="append", default=[], help="Returned artifact path. Repeatable.")
-    handoff_return.set_defaults(func=command_handoff_return)
-
-    handoff_finalize = sub.add_parser("handoff-finalize", help="Finalize a handoff.")
-    handoff_finalize.add_argument("--project-root", required=True, help="Project root path.")
-    handoff_finalize.add_argument("--handoff", required=True, help="Handoff id.")
-    handoff_finalize.set_defaults(func=command_handoff_finalize)
-
-    handoff_doctor = sub.add_parser("handoff-doctor", help="Validate handoff packages.")
-    handoff_doctor.add_argument("--project-root", required=True, help="Project root path.")
-    handoff_doctor.set_defaults(func=command_handoff_doctor)
-
-    agent_director_tick = sub.add_parser("agent-director-tick", help="Run one Agent Director scheduling tick.")
-    agent_director_tick.add_argument("--workplace", required=True, help="Workplace root path.")
-    agent_director_tick.add_argument("--project-root", required=True, help="Project root path.")
-    agent_director_tick.add_argument("--project-id", help="Optional project id filter.")
-    agent_director_tick.add_argument("--wait-ttl", type=int, default=3600, help="Seconds before waiting handoff needs operator.")
-    agent_director_tick.add_argument("--lease-ttl", type=int, default=3600, help="Lease TTL seconds.")
-    agent_director_tick.set_defaults(func=command_agent_director_tick)
-
-    agent_director_run = sub.add_parser("agent-director-run", help="Run bounded Agent Director ticks.")
-    agent_director_run.add_argument("--workplace", required=True, help="Workplace root path.")
-    agent_director_run.add_argument("--project-root", required=True, help="Project root path.")
-    agent_director_run.add_argument("--project-id", help="Optional project id filter.")
-    agent_director_run.add_argument("--wait-ttl", type=int, default=3600, help="Seconds before waiting handoff needs operator.")
-    agent_director_run.add_argument("--lease-ttl", type=int, default=3600, help="Lease TTL seconds.")
-    agent_director_run.add_argument("--max-ticks", type=int, default=1, help="Maximum ticks.")
-    agent_director_run.add_argument("--interval", type=float, default=0, help="Seconds between ticks.")
-    agent_director_run.set_defaults(func=command_agent_director_run)
-
-    agent_director_status = sub.add_parser("agent-director-status", help="Show Agent Director handoff queue status.")
-    agent_director_status.add_argument("--project-root", required=True, help="Project root path.")
-    agent_director_status.add_argument("--json", action="store_true", help="Print JSON.")
-    agent_director_status.set_defaults(func=command_agent_director_status)
-
-    continuation_create = sub.add_parser("continuation-create", help="Create a continuation capsule.")
-    continuation_create.add_argument("--project-root", required=True, help="Project root path.")
-    continuation_create.add_argument("--id", required=True, help="Continuation id.")
-    continuation_create.add_argument("--agent", help="Agent id.")
-    continuation_create.add_argument("--session", help="Previous session id.")
-    continuation_create.add_argument("--handoff", help="Handoff id.")
-    continuation_create.add_argument("--expected-artifact", action="append", default=[], help="Expected artifact path. Repeatable.")
-    continuation_create.add_argument("--process", help="Resume process id.")
-    continuation_create.add_argument("--run", help="Resume run id.")
-    continuation_create.add_argument("--assignment", help="Exact Work assignment id; creates a v2 continuation.")
-    continuation_create.add_argument("--context-id", help="Exact immutable Work context id.")
-    continuation_create.add_argument("--workplace", help="Workplace root override.")
-    continuation_create.add_argument("--json", action="store_true", help="Print JSON.")
-    continuation_create.add_argument("--stage", help="Resume stage id.")
-    continuation_create.add_argument("--instruction", help="Resume instruction.")
-    continuation_create.add_argument("--apply", action="store_true", help="Write the continuation capsule.")
-    continuation_create.set_defaults(func=command_continuation_create)
-
-    continuation_status = sub.add_parser("continuation-status", help="Show continuation status.")
-    continuation_status.add_argument("--project-root", required=True, help="Project root path.")
-    continuation_status.add_argument("--continuation", help="Continuation id; omit to discover Work candidates without creating anything.")
-    continuation_status.add_argument("--workplace", help="Workplace root override.")
-    continuation_status.add_argument("--json", action="store_true", help="Print JSON.")
-    continuation_status.set_defaults(func=command_continuation_status)
-
-    continuation_resume = sub.add_parser("continuation-resume", help="Resume verified Work, or explicitly mark a legacy wait-only record.")
-    continuation_resume.add_argument("--project-root", required=True, help="Project root path.")
-    continuation_resume.add_argument("--continuation", required=True, help="Continuation id.")
-    continuation_resume.add_argument("--session", help="Bind selection to this session; otherwise return mandatory exact selectors.")
-    continuation_resume.add_argument("--workplace", help="Workplace root override.")
-    continuation_resume.add_argument("--json", action="store_true", help="Print JSON.")
-    continuation_resume.set_defaults(func=command_continuation_resume)
-
-    continuation_doctor = sub.add_parser("continuation-doctor", help="Validate continuation capsules.")
-    continuation_doctor.add_argument("--project-root", required=True, help="Project root path.")
-    continuation_doctor.set_defaults(func=command_continuation_doctor)
-
-    for alias_name, func, help_text in [
-        ("orchestrator-shell-plan-create", command_orchestrator_plan_create, "Flat alias for orchestrator-plan create with shell-agent policy support."),
-        ("orchestrator-shell-plan-validate", command_orchestrator_plan_validate, "Flat alias for orchestrator-plan validate with shell-agent policy support."),
-        ("orchestrator-shell-plan-apply", command_orchestrator_plan_apply, "Flat alias for orchestrator-plan apply with shell-agent policy support."),
-    ]:
-        shell_plan = sub.add_parser(alias_name, help=help_text)
-        shell_plan.add_argument("--project-root", required=True, help="Project root path.")
-        if alias_name.endswith("create"):
-            shell_plan.add_argument("--run", required=True, help="Run id.")
-            shell_plan.add_argument("--title", required=True, help="Run title.")
-            shell_plan.add_argument("--answers", help="Optional full orchestrator shell-agent plan YAML.")
-            shell_plan.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-            shell_plan.add_argument("--apply", action="store_true", help="Write the plan.")
-        else:
-            shell_plan.add_argument("--plan", help="Plan YAML path.")
-            shell_plan.add_argument("--run", help="Run id when --plan is omitted.")
-            if alias_name.endswith("apply"):
-                shell_plan.add_argument("--workplace", help="Workplace root path for lease grants.")
-                shell_plan.add_argument("--model", help="Optional agent model passed to shell workers in this multi-agent plan.")
-                shell_plan.add_argument("--dry-run", action="store_true", help="Show planned files without writing.")
-                shell_plan.add_argument("--apply", action="store_true", help="Create run, tasks, capsules, prompts, leases, and supervisor runs.")
-            else:
-                shell_plan.add_argument("--write-normalized", help="Optional normalized plan YAML output path.")
-        shell_plan.set_defaults(func=func, shell_plan=alias_name.endswith("apply"))
-
-    entry = sub.add_parser("agent-entry", help="Inspect entry profiles, diagnose actual files, or explicitly migrate the startup contract.")
-    entry_commands = entry.add_subparsers(dest="entry_operation", required=True)
-    for operation in ("plan", "check", "apply", "rollback", "diagnose", "profiles", "adapter-plan", "adapter-apply", "adapter-guide"):
-        entry_command = entry_commands.add_parser(operation)
-        entry_command.add_argument("--project-root", required=operation != "profiles")
-        entry_command.add_argument("--json", action="store_true", help="JSON is always emitted by this command.")
-        if operation in {"adapter-plan", "adapter-guide"}:
-            entry_command.add_argument("--profile", required=True, help="Exact id from agent-entry profiles.")
-            entry_command.add_argument("--route", required=True, choices=["root-agents", "native-import", "explicit-read", "prerequisites"])
-        if operation in {"plan", "check", "adapter-plan"}:
-            entry_command.add_argument("--budget-file", help="Explicit generic instruction-accounting policies JSON.")
-        elif operation in {"diagnose", "adapter-guide"}:
-            if operation == "diagnose":
-                entry_command.add_argument("--profile", required=True, help="Exact id from agent-entry profiles.")
-            entry_command.add_argument("--cwd", default=".", help="Project-relative client working directory; no directory change.")
-            entry_command.add_argument("--observations-file", help="Bounded explicit settings/context observations JSON; never host certification.")
-        elif operation in {"apply", "rollback", "adapter-apply"}:
-            entry_command.add_argument("--apply", action="store_true", help="Explicit acknowledgement of filesystem writes.")
-            if operation in {"apply", "adapter-apply"}:
-                entry_command.add_argument("--plan-file", required=True)
-            else:
-                entry_command.add_argument("--transaction", required=True)
-        entry_command.set_defaults(func=command_agent_entry)
-
-    work_start = sub.add_parser("work-start", help="Start or continue declarative governed work.")
-    work_start.add_argument("--project-root", required=True, help="Project root path.")
-    work_start.add_argument("--workplace", help="Workplace root override.")
-    work_start.add_argument("--objective", required=True, help="High-level work objective.")
-    work_start.add_argument("--process-id", help="Optional allowed process id for the new governed work.")
-    work_start.add_argument("--egress-intent", help="Explicit trusted v2 intent JSON created by egress bind; existing capsules stay immutable.")
-    work_start.add_argument("--scope-file", help="Explicit local operator assignment-scope JSON (version 1, max 64 KiB); pinned before creation, never applied to an existing context.")
-    work_start.add_argument("--json", action="store_true", help="Print JSON.")
-    work_start.set_defaults(func=command_work_start)
-    from processforge_core.egress.service import add_parser as add_egress_parser
-    add_egress_parser(sub, sys.modules[__name__])
-
-    work_state = sub.add_parser("work-state", help="Read current declarative governed work state.")
-    work_state.add_argument("--project-root", required=True, help="Project root path.")
-    work_state.add_argument("--workplace", help="Workplace root override.")
-    work_state.add_argument("--run", help="Explicit Run id.")
-    work_state.add_argument("--assignment", help="Explicit Assignment id.")
-    work_state.add_argument("--context-id", help="Expected Work context id.")
-    work_state.add_argument("--session", help="Use this session's explicit continuation selection.")
-    work_state.add_argument("--json", action="store_true", help="Print JSON.")
-    work_state.set_defaults(func=command_work_state)
-
-    for work_read_name in ("work-search", "work-resolve"):
-        work_read = sub.add_parser(work_read_name, help="Read verified resources of an explicitly selected immutable Work context.")
-        work_read.add_argument("--project-root", required=True)
-        work_read.add_argument("--workplace")
-        work_read.add_argument("--run", required=True)
-        work_read.add_argument("--assignment", required=True)
-        work_read.add_argument("--context-id", required=True)
-        work_read.add_argument("--json", action="store_true")
-        if work_read_name == "work-search":
-            work_read.add_argument("--query", required=True)
-            work_read.add_argument("--limit", type=int)
-            work_read.add_argument("--limitstart", type=int)
-            work_read.add_argument("--offset", type=int)
-        else:
-            work_read.add_argument("--resource-id", required=True)
-        work_read.set_defaults(func=command_work_resource_read)
-
-    work_transition = sub.add_parser("work-transition", help="Advance declarative governed work using outcome and evidence.")
-    work_transition.add_argument("--project-root", required=True, help="Project root path.")
-    work_transition.add_argument("--workplace", help="Workplace root override.")
-    work_transition.add_argument("--run", help="Explicit Run id.")
-    work_transition.add_argument("--assignment", help="Explicit Assignment id.")
-    work_transition.add_argument("--context-id", help="Expected Work context id.")
-    work_transition.add_argument("--session", help="Use this session's explicit continuation selection.")
-    work_transition.add_argument("--outcome", required=True, help="Declared stage outcome.")
-    work_transition.add_argument("--evidence", action="append", default=[], help="Evidence JSON object or attestation text. Repeatable.")
-    work_transition.add_argument("--evidence-file", help="JSON file containing one evidence object or an array.")
-    work_transition.add_argument("--notes", help="Optional transition notes.")
-    work_transition.add_argument("--json", action="store_true", help="Print JSON.")
-    work_transition.set_defaults(func=command_work_transition)
-
-    work_cancel = sub.add_parser("work-cancel", help="Preview or apply cancellation of one exact Work; preserve history and capsule.")
-    work_cancel.add_argument("--project-root", required=True)
-    work_cancel.add_argument("--workplace")
-    work_cancel.add_argument("--run", required=True)
-    work_cancel.add_argument("--assignment", required=True)
-    work_cancel.add_argument("--context-id", required=True)
-    work_cancel.add_argument("--capsule-checksum", required=True)
-    work_cancel.add_argument("--reason", required=True)
-    work_cancel.add_argument("--evidence", action="append", default=[])
-    work_cancel.add_argument("--apply", action="store_true")
-    work_cancel.add_argument("--json", action="store_true")
-    work_cancel.set_defaults(func=command_work_cancel)
-
-    run_create = sub.add_parser("run-create", help="Create a project run/work session.")
-    run_create.add_argument("--project-root", required=True, help="Project root path.")
-    run_create.add_argument("--id", required=True, help="Run id.")
-    run_create.add_argument("--title", required=True, help="Run title.")
-    run_create.add_argument("--process", default="task-batch-execution", help="Process definition id.")
-    run_create.add_argument("--platform", help="Selected platform id for this run.")
-    run_create.add_argument("--specialization", action="append", default=[], help="Selected specialization id. Repeatable.")
-    run_create.add_argument("--objective", help="Run objective.")
-    run_create.add_argument("--status", default="in_progress", choices=sorted(RUN_STATUSES), help="Initial run status.")
-    run_create.add_argument("--apply", action="store_true", help="Write run files.")
-    run_create.set_defaults(func=command_run_create)
-
-    run_list = sub.add_parser("run-list", help="List project runs.")
-    run_list.add_argument("--project-root", required=True, help="Project root path.")
-    run_list.set_defaults(func=command_run_list)
-
-    run_status = sub.add_parser("run-status", help="Show run status and task summary.")
-    run_status.add_argument("--project-root", required=True, help="Project root path.")
-    run_status.add_argument("--run", required=True, help="Run id.")
-    run_status.set_defaults(func=command_run_status)
-
-    run_doctor = sub.add_parser("run-doctor", help="Validate run consistency.")
-    run_doctor.add_argument("--project-root", required=True, help="Project root path.")
-    run_doctor.add_argument("--run", required=True, help="Run id.")
-    run_doctor.add_argument("--runtime-events", action="store_true", help="Also check private runtime event logs for this run.")
-    run_doctor.set_defaults(func=command_run_doctor)
-
-    run_summary = sub.add_parser("run-summary", help="Create or refresh run summary and handoff.")
-    run_summary.add_argument("--project-root", required=True, help="Project root path.")
-    run_summary.add_argument("--run", required=True, help="Run id.")
-    run_summary.add_argument("--apply", action="store_true", help="Write summary and handoff files.")
-    run_summary.set_defaults(func=command_run_summary)
-
-    run_complete = sub.add_parser("run-complete", help="Complete a run after blocking tasks are done.")
-    run_complete.add_argument("--project-root", required=True, help="Project root path.")
-    run_complete.add_argument("--run", required=True, help="Run id.")
-    run_complete.add_argument("--apply", action="store_true", help="Mark the run completed.")
-    run_complete.set_defaults(func=command_run_complete)
-
-    task_create = sub.add_parser("task-create", help="Create a task assignment inside a run.")
-    task_create.add_argument("--project-root", required=True, help="Project root path.")
-    task_create.add_argument("--run", required=True, help="Run id.")
-    task_create.add_argument("--id", required=True, help="Task id.")
-    task_create.add_argument("--title", required=True, help="Task title.")
-    task_create.add_argument("--process", required=True, help="Task process id.")
-    task_create.add_argument("--stage", help="Declared Process Stage for this assignment; must exist in the selected Process.")
-    task_create.add_argument("--platform", help="Selected platform id for this task.")
-    task_create.add_argument("--specialization", action="append", default=[], help="Selected specialization id. Repeatable.")
-    task_create.add_argument("--objective", help="Task objective.")
-    task_create.add_argument("--order", type=int, help="Task order override.")
-    task_create.add_argument("--execution-mode", choices=["read_only", "planning_only", "docs_only", "implementation", "assurance", "release_delivery"], help="Assignment execution mode.")
-    task_create.add_argument("--allowed-file", action="append", default=[], help="Repository-relative writable file or simple glob. Repeatable.")
-    task_create.add_argument("--allowed-glob", action="append", default=[], help="Repository-relative writable glob. Stored in allowed_files. Repeatable.")
-    task_create.add_argument("--allowed-read-file", action="append", default=[], help="Repository-relative readable file. Repeatable.")
-    task_create.add_argument("--read-file", action="append", default=[], help="Alias for --allowed-read-file.")
-    task_create.add_argument("--context-artifact", action="append", default=[], help="Repository-relative context artifact. Repeatable.")
-    task_create.add_argument("--required-source", action="append", default=[], help="Required source to include in assignment capsules. Repeatable.")
-    task_create.add_argument("--workspace-knowledge-resource", action="append", default=[], help="Workplace knowledge resource id/ref granted through private runtime access. Repeatable.")
-    task_create.add_argument("--workspace-template", action="append", default=[], help="Workplace template root/id granted through private runtime access. Repeatable.")
-    task_create.add_argument("--workspace-tool", action="append", default=[], help="Workplace tool id granted through private runtime access. Repeatable.")
-    task_create.add_argument("--workspace-mcp", action="append", default=[], help="Workplace MCP server id granted through private runtime access. Repeatable.")
-    task_create.add_argument("--forbidden-file", action="append", default=[], help="Repository-relative forbidden write file or simple glob. Repeatable.")
-    task_create.add_argument("--forbidden-glob", action="append", default=[], help="Repository-relative forbidden write glob. Stored in forbidden_files. Repeatable.")
-    task_create.add_argument("--owner", help="Assignment owner id.")
-    task_create.add_argument("--role", help="Assignment owner role.")
-    task_create.add_argument("--writer", choices=["true", "false"], default="true", help="Whether the assignment owns write scope.")
-    task_create.add_argument("--required-output", action="append", default=[], help="Required output id. Repeatable.")
-    task_create.add_argument("--expected-report-language", help="Expected report language.")
-    task_create.add_argument("--expected-report-artifact", help="Expected durable report artifact.")
-    task_create.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"], help="Optional agent reasoning effort for shell runtime drivers.")
-    task_create.add_argument("--force-with-handoff", action="store_true", help="Allow write-scope overlap and record the overlap check for orchestrator handoff.")
-    task_create.add_argument("--apply", action="store_true", help="Write task files.")
-    task_create.set_defaults(func=command_task_create)
-
-    task_list = sub.add_parser("task-list", help="List tasks in a run.")
-    task_list.add_argument("--project-root", required=True, help="Project root path.")
-    task_list.add_argument("--run", required=True, help="Run id.")
-    task_list.set_defaults(func=command_task_list)
-
-    task_start = sub.add_parser("task-start", help="Mark a task assignment in progress.")
-    task_start.add_argument("--project-root", required=True, help="Project root path.")
-    task_start.add_argument("--task", required=True, help="Task id.")
-    task_start.set_defaults(func=command_task_start)
-
-    task_complete = sub.add_parser("task-complete", help="Complete a task assignment and record its result.")
-    task_complete.add_argument("--project-root", required=True, help="Project root path.")
-    task_complete.add_argument("--task", required=True, help="Task id.")
-    task_complete.add_argument("--summary", required=True, help="Task result summary.")
-    task_complete.add_argument("--artifact", action="append", help="Result artifact path. May be repeated.")
-    task_complete.add_argument("--waive-required-output", action="append", default=[], help="Waive a missing required output as '<id>:<reason>'. Repeatable.")
-    task_complete.add_argument("--apply", action="store_true", help="Mark the task done.")
-    task_complete.set_defaults(func=command_task_complete)
-
-    task_doctor = sub.add_parser("task-doctor", help="Validate task assignment consistency.")
-    task_doctor.add_argument("--project-root", required=True, help="Project root path.")
-    task_doctor.add_argument("--task", required=True, help="Task id.")
-    task_doctor.set_defaults(func=command_task_doctor)
-
-    iteration_add = sub.add_parser("iteration-add", help="Add a work/debug/fix/review iteration to a task.")
-    iteration_add.add_argument("--project-root", required=True, help="Project root path.")
-    iteration_add.add_argument("--task", required=True, help="Task id.")
-    iteration_add.add_argument("--id", help="Iteration id. Defaults to the next iter-NNN value.")
-    iteration_add.add_argument("--kind", required=True, choices=sorted(ITERATION_KINDS), help="Iteration kind.")
-    iteration_add.add_argument("--status", default="completed", choices=sorted(ITERATION_STATUSES), help="Iteration status.")
-    iteration_add.add_argument("--summary", required=True, help="Iteration summary.")
-    iteration_add.add_argument("--apply", action="store_true", help="Write the iteration.")
-    iteration_add.set_defaults(func=command_iteration_add)
-
-    iteration_complete = sub.add_parser("iteration-complete", help="Update an existing iteration status and summary.")
-    iteration_complete.add_argument("--project-root", required=True, help="Project root path.")
-    iteration_complete.add_argument("--task", required=True, help="Task id.")
-    iteration_complete.add_argument("--iteration", required=True, help="Iteration id.")
-    iteration_complete.add_argument("--status", required=True, choices=sorted(ITERATION_STATUSES), help="Final iteration status.")
-    iteration_complete.add_argument("--summary", help="Replacement iteration summary.")
-    iteration_complete.add_argument("--apply", action="store_true", help="Write the iteration update.")
-    iteration_complete.set_defaults(func=command_iteration_complete)
-
-    hooks_dispatch = sub.add_parser("hooks-dispatch", help="Dry-run or enqueue hook delivery for a ProcessForge event.")
-    hooks_dispatch.add_argument("--project-root", required=True, help="Project root path.")
-    hooks_dispatch.add_argument("--event-type", required=True, choices=REQUIRED_PROCESSFORGE_EVENT_TYPES, help="Event type to test or enqueue.")
-    hooks_dispatch.add_argument("--severity", default="info", choices=["info", "warn", "error"], help="Event severity.")
-    hooks_dispatch.add_argument("--session-id", help="Optional session id.")
-    hooks_dispatch.add_argument("--assignment-id", help="Optional assignment id.")
-    hooks_dispatch.add_argument("--dry-run", action="store_true", help="Report selected hooks without writing event/outbox payloads.")
-    hooks_dispatch.add_argument("--outbox", action="store_true", help="Write matching hook payloads to .pf/runtime/hooks/outbox/.")
-    hooks_dispatch.add_argument("--send", action="store_true", help="Reserved future network transport; disabled by default.")
-    hooks_dispatch.add_argument("--since", help="Optional timestamp or event id marker for future event replay.")
-    hooks_dispatch.set_defaults(func=command_hooks_dispatch)
-
-    events_validate = sub.add_parser("events-validate", help="Validate runtime event and chat NDJSON files.")
-    events_validate.add_argument("--project-root", required=True, help="Project root path.")
-    events_validate.set_defaults(func=command_events_validate)
-
-    chat_record = sub.add_parser("chat-record", help="Record one chat message into the private transcript and emit a chat event.")
-    chat_record.add_argument("--project-root", required=True, help="Project root path.")
-    chat_record.add_argument("--session-id", required=True, help="Session id.")
-    chat_record.add_argument("--participant", required=True, help="Participant id, for example operator or subagent-reviewer-1.")
-    chat_record.add_argument("--participant-type", choices=["human", "agent", "subagent", "tool"], help="Participant type.")
-    chat_record.add_argument("--participant-role", help="Participant role; defaults to participant id.")
-    chat_record.add_argument("--role", required=True, choices=["user", "assistant", "system", "tool", "subagent"], help="Message role.")
-    chat_record.add_argument("--content", help="Message content.")
-    chat_record.add_argument("--content-file", help="Read message content from a UTF-8 text file.")
-    chat_record.add_argument("--turn-id", help="Optional turn id.")
-    chat_record.add_argument("--parent-message-id", help="Optional parent message id.")
-    chat_record.add_argument("--process-id", help="Optional process id.")
-    chat_record.add_argument("--stage-id", help="Optional stage id.")
-    chat_record.add_argument("--assignment-id", help="Optional assignment id.")
-    chat_record.add_argument("--include-content", action="store_true", help="Opt in to include redacted content in the emitted event.")
-    chat_record.set_defaults(func=command_chat_record)
-
-    chat_export = sub.add_parser("chat-export", help="Export a chat transcript to an outbox payload without network send.")
-    chat_export.add_argument("--project-root", required=True, help="Project root path.")
-    chat_export.add_argument("--session-id", required=True, help="Session id.")
-    chat_export.add_argument("--target", required=True, choices=["wtaicc"], help="Outbox target.")
-    chat_export.add_argument("--outbox", action="store_true", help="Write .pf/runtime/hooks/outbox/wtaicc payload.")
-    chat_export.add_argument("--include-content", action="store_true", help="Opt in to include redacted transcript content in the outbox payload.")
-    chat_export.set_defaults(func=command_chat_export)
-
-    context_resolve = sub.add_parser("context-resolve", help="Resolve project context or explicit platform/process/specialization resources.")
-    context_resolve.add_argument("--project-root", required=True, help="Project root path.")
-    context_resolve.add_argument("--workplace", help="Workplace root path for explicit specialization resolution.")
-    context_resolve.add_argument("--platform", action="append", default=[], help="Selected platform id. Repeatable.")
-    context_resolve.add_argument("--process", help="Process id.")
-    context_resolve.add_argument("--specialization", action="append", default=[], help="Selected specialization id. Repeatable.")
-    context_resolve.add_argument("--json", action="store_true", help="Print JSON.")
-    context_resolve.set_defaults(func=command_context_resolve)
-
-    context_compile = sub.add_parser("context-compile", help="Deprecated compatibility Execution Context Package command.")
-    context_compile.add_argument("--project-root", default=".", help="Project root path.")
-    context_compile.add_argument("--assignment", required=True, help="Assignment path.")
-    context_compile.add_argument("--capsule", action="store_true", help="Also write a context capsule.")
-    context_compile.add_argument("--supersede", action="store_true", help="Create a versioned ECP when the default immutable ECP already exists.")
-    context_compile.add_argument("--allow-requires-approval", action="store_true", help="Allow ECP creation when assignment context requires approval.")
-    context_compile.set_defaults(func=command_context_compile)
-
-    doctor_context = sub.add_parser("doctor-context", help="Validate context resolution outputs.")
-    doctor_context.add_argument("--project-root", required=True, help="Project root path.")
-    doctor_context.add_argument("--assignment", help="Optional assignment path for ECP freshness check.")
-    doctor_context.set_defaults(func=command_doctor_context)
     return parser
 
 
