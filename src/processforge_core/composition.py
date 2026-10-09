@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from .work.boundary_advisory import FreshSessionBoundaryReadService
     from .process_catalog.summary import ProcessSummaryReadService
     from .project.context_read import ExecutionProjectReadService, ProjectContextCheck
+    from .project.reconciliation import ContextReconciliationService
     from .work.transition_commit import WorkTransitionCommitService
     from .completion.intent_replay import CompletionIntentReplayService
     from .completion.intent_read import CompletionIntentReadService
@@ -207,6 +208,16 @@ def build_project_context_service(
         resource_selection=lambda snapshot: garage.resource_selection_summary(snapshot),
         diagnostics=lambda check, search, mode: garage.diagnostics_from_check(check, search, mode),
         context_readers=context_readers,
+    )
+
+
+def build_context_reconciliation_service(
+    project_root: Path, workplace_root: Path, core: Any,
+) -> ContextReconciliationService:
+    from .project.reconciliation import ContextReconciliationService
+
+    return ContextReconciliationService(
+        project_root, workplace_root, context_checker=lambda: core.project_context_check_result,
     )
 
 

@@ -17,24 +17,6 @@ from .resources.snapshot import resource_selection_summary, snapshot_with_resolv
 
 
 @dataclass(frozen=True)
-class ContextReconciliationService:
-    project_root: Path
-    workplace_root: Path
-    core: Any
-
-    def status(self) -> dict[str, Any]:
-        check = self.core.project_context_check_result(self.project_root, explicit_workplace=str(self.workplace_root))
-        stale_reasons = [str(item.get("reason") or "") for item in check.get("stale_resources", []) if isinstance(item, dict)]
-        technical_only = bool(stale_reasons) and all(reason in {"valid_until expired"} or reason.startswith("source changed:") for reason in stale_reasons)
-        return {
-            "status": check.get("status"),
-            "safe_automatic_refresh": bool(check.get("stale")) and technical_only,
-            "operator_decision_required": bool(check.get("broken")) or (bool(check.get("stale")) and not technical_only),
-            "reasons": stale_reasons,
-        }
-
-
-@dataclass(frozen=True)
 class GovernedWorkBootstrapService:
     project_root: Path
     workplace_root: Path
