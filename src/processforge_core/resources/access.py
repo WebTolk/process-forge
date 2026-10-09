@@ -4,32 +4,43 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Protocol
 
 from ..ports import ProjectSnapshotReadPort
+from ..project.context_read import ProjectContextCheck
 from ..project.snapshot import load_snapshot
 from .local_search import LocalSearchError, ResourceSearchIndex, authorized_coverage
 from .snapshot import add_private_navigation, resolve_garage_path_ref, selected_resource, snapshot_with_resolved_search_roots
+
+
+class ResourceSearchReadPort(Protocol):
+    def read_snapshot(self, snapshots: ProjectSnapshotReadPort | None) -> dict[str, Any]: ...
+
+    def context_checker(self) -> ProjectContextCheck: ...
+
+    def runtime_snapshot_reader(self) -> Callable[[Path], dict[str, Any]]: ...
+
+    def search_roots_resolver(self) -> Callable[[dict[str, Any]], dict[str, Any]]: ...
 
 
 @dataclass(frozen=True)
 class ResourceSearchService:
     project_root: Path
     workplace_root: Path
-    core: Any
+    reads: ResourceSearchReadPort = field(repr=False, compare=False)
     snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     def readiness(self, *, snapshot: dict[str, Any] | None = None, check: dict[str, Any] | None = None) -> dict[str, Any]:
         result = self._readiness(snapshot=snapshot, check=check)
         result["scope"] = "project_context"
-        result["authorized_coverage"] = authorized_coverage(self.project_root, snapshot if snapshot is not None else load_snapshot(self.project_root, self.core, snapshots=self.snapshots), workplace_root=self.workplace_root)
+        result["authorized_coverage"] = authorized_coverage(self.project_root, snapshot if snapshot is not None else self.reads.read_snapshot(self.snapshots), workplace_root=self.workplace_root)
         return result
 
     def _readiness(self, *, snapshot: dict[str, Any] | None = None, check: dict[str, Any] | None = None) -> dict[str, Any]:
-        check = check or self.core.project_context_check_result(self.project_root, explicit_workplace=str(self.workplace_root))
+        check = check or self.reads.context_checker()(self.project_root, explicit_workplace=str(self.workplace_root))
         if str(check.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             return {"status": "blocked", "reason": "snapshot_not_fresh", "resource_count": 0, "document_count": 0}
-        index_snapshot = self.core.workplace_search_runtime_snapshot(self.workplace_root)
+        index_snapshot = self.reads.runtime_snapshot_reader()(self.workplace_root)
         index = ResourceSearchIndex(self.workplace_root, index_snapshot, self.workplace_root)
         try:
             before = index.status(verify_files=True)
@@ -49,11 +60,11 @@ class ResourceSearchService:
         return {"status": "stale" if status == "stale" else "blocked", "reason": str(after.get("error") or status), "resource_count": resource_count, "document_count": document_count, "remediation": "Run safe technical search maintenance or refresh project context when required."}
 
     def search(self, *, query: Any, limit: Any = None, limitstart: Any = None, offset: Any = None) -> dict[str, Any]:
-        check = self.core.project_context_check_result(self.project_root, explicit_workplace=str(self.workplace_root))
+        check = self.reads.context_checker()(self.project_root, explicit_workplace=str(self.workplace_root))
         if str(check.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             raise LocalSearchError("snapshot_not_fresh")
-        runtime_snapshot = snapshot_with_resolved_search_roots(self.project_root, load_snapshot(self.project_root, self.core, snapshots=self.snapshots), self.workplace_root, self.core)
-        index_snapshot = self.core.workplace_search_runtime_snapshot(self.workplace_root)
+        runtime_snapshot = self.reads.search_roots_resolver()(self.reads.read_snapshot(self.snapshots))
+        index_snapshot = self.reads.runtime_snapshot_reader()(self.workplace_root)
         index = ResourceSearchIndex(self.workplace_root, index_snapshot, self.workplace_root)
         state = index.status(verify_files=True)
         if state.get("status") in {"missing", "stale"}:

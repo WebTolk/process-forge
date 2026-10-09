@@ -82,7 +82,10 @@ def scenario(service_type, kind='search', *, status='fresh', supplied=None, inde
         stack.enter_context(patch.dict(access.__dict__, replacements))
         if namespace is not None:
             stack.enter_context(patch.dict(namespace, replacements))
-        service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))
+        if service_type is access.ResourceSearchService:
+            service = composition.build_resource_search_service(Path('p'), Path('w'), core, snapshots=snapshots)
+        else:
+            service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))
         result = outcome(lambda: service.readiness(snapshot=supplied) if kind == 'readiness' else service.search(query='needle', limit='2', limitstart='1', offset=0))
     return result, events
 
@@ -137,18 +140,18 @@ class SearchSnapshotTests(unittest.TestCase):
         fail = lambda *a, **k: self.fail('Assembly must not call Core')
         core = SimpleNamespace(project_context_snapshot_paths=fail, load_yaml_document=fail, project_context_check_result=fail)
         memory = MemorySnapshots()
-        old = access.ResourceSearchService(Path('p'), Path('w'), core)
+        old = composition.build_resource_search_service(Path('p'), Path('w'), core)
         built = composition.build_resource_search_service(Path('p'), Path('w'), core, snapshots=memory)
         self.assertIs(built.snapshots, memory)
         self.assertEqual(old, built)
         self.assertEqual(repr(old), repr(built))
         self.assertEqual(outcome(lambda: hash(old)), outcome(lambda: hash(built)))
-        self.assertEqual(old.__match_args__, ('project_root', 'workplace_root', 'core'))
+        self.assertEqual(old.__match_args__, ('project_root', 'workplace_root', 'reads'))
         field = next(item for item in fields(built) if item.name == 'snapshots')
         self.assertTrue(field.kw_only)
         self.assertFalse(field.compare or field.repr)
         with self.assertRaises(TypeError):
-            access.ResourceSearchService(Path('p'), Path('w'), core, memory)
+            access.ResourceSearchService(Path('p'), Path('w'), old.reads, memory)
 
     def test_real_yaml_live_reads_and_scope_isolation(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:

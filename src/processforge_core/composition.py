@@ -202,7 +202,7 @@ def build_project_context_service(
         context_check=lambda: core.project_context_check_result(project_root, explicit_workplace=str(workplace_root)),
         manifest_reader=lambda: core.load_yaml_document(core.locate_flow_root(project_root) / "process-forge.yaml"),
         runtime_snapshot_resolver=runtime_snapshot_resolver,
-        resource_readiness=lambda *, snapshot, check: garage.ResourceSearchService(project_root, workplace_root, core).readiness(snapshot=snapshot, check=check),
+        resource_readiness=lambda *, snapshot, check: garage.ResourceSearchService(project_root, workplace_root, LegacyResourceSearchReadAdapter(project_root, workplace_root, core)).readiness(snapshot=snapshot, check=check),
         work_summary=lambda: garage.CurrentWorkService(project_root, core).summary(),
         resource_selection=lambda snapshot: garage.resource_selection_summary(snapshot),
         diagnostics=lambda check, search, mode: garage.diagnostics_from_check(check, search, mode),
@@ -210,12 +210,35 @@ def build_project_context_service(
     )
 
 
+@dataclass(frozen=True)
+class LegacyResourceSearchReadAdapter:
+    project_root: Path
+    workplace_root: Path
+    core: Any
+
+    def read_snapshot(self, snapshots: ProjectSnapshotReadPort | None) -> dict[str, Any]:
+        from .resources.access import load_snapshot
+
+        return load_snapshot(self.project_root, self.core, snapshots=snapshots)
+
+    def context_checker(self) -> ProjectContextCheck:
+        return self.core.project_context_check_result
+
+    def runtime_snapshot_reader(self) -> Callable[[Path], dict[str, Any]]:
+        return self.core.workplace_search_runtime_snapshot
+
+    def search_roots_resolver(self) -> Callable[[dict[str, Any]], dict[str, Any]]:
+        from .resources.access import snapshot_with_resolved_search_roots
+
+        return lambda snapshot: snapshot_with_resolved_search_roots(self.project_root, snapshot, self.workplace_root, self.core)
+
+
 def build_resource_search_service(
     project_root: Path, workplace_root: Path, core: Any, *, snapshots: ProjectSnapshotReadPort | None = None,
 ) -> ResourceSearchService:
     from .resources.access import ResourceSearchService
 
-    return ResourceSearchService(project_root, workplace_root, core, snapshots=snapshots)
+    return ResourceSearchService(project_root, workplace_root, LegacyResourceSearchReadAdapter(project_root, workplace_root, core), snapshots=snapshots)
 
 
 def build_resource_resolve_service(
