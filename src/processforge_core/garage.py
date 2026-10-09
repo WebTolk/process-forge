@@ -8,39 +8,11 @@ from pathlib import Path
 from typing import Any
 
 from .ports import ProjectSnapshotReadPort, WorkReadCorePort
-from .process_execution import ProcessExecutionService
 from .common.request_scope import scoped_request
 from .work.inventory import WorkInventory
 from .resources.access import ResourceSearchService
 from .project.snapshot import load_snapshot
 from .resources.snapshot import resource_selection_summary, snapshot_with_resolved_search_roots
-
-
-@dataclass(frozen=True)
-class GovernedWorkBootstrapService:
-    project_root: Path
-    workplace_root: Path
-    core: Any
-
-    def guidance(self, *, objective: str = "") -> dict[str, Any]:
-        summary = CurrentWorkService(self.project_root, self.core).summary()
-        return {
-            "schema_version": 1,
-            "kind": "pf.work.start.guidance",
-            "objective": objective,
-            "work": summary,
-            "recommendation": "continue_governed_work" if summary.get("governed") else "start_work",
-        }
-
-    def start(self, *, objective: str, process_id: str = "", preferred_stage: str = "", session_id: str = "") -> dict[str, Any]:
-        # preferred_stage is retained only as a compatibility-only advanced
-        # override. The public MCP schema no longer advertises it.
-        return ProcessExecutionService(self.project_root, self.workplace_root, self.core).start(
-            objective=objective,
-            process_id=str(process_id or "").strip(),
-            session_id=session_id,
-            stage_override=str(preferred_stage or "").strip(),
-        )
 
 
 @dataclass(frozen=True)

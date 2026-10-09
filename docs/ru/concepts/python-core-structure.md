@@ -76,7 +76,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
 | `src/processforge_core/evidence/` | Прежние правила сбора и identity доказательств, нормализация и актуальная диагностика файлов, удовлетворение требований и gates, порядок blockers готовности через явные зависимости. |
-| `src/processforge_core/garage.py` | Чтение текущей Work, bootstrap и оставшиеся legacy helpers; сборка контекста проекта и reconciliation находятся в `project/`. |
+| `src/processforge_core/garage.py` | Чтение текущей Work и оставшиеся legacy helpers; сборка контекста проекта и reconciliation находятся в `project/`. |
+| `src/processforge_core/work/bootstrap.py` | Прежние guidance/start через явную сводку и отложенную типизированную зависимость запуска. |
 | `src/processforge_core/project/reconciliation.py` | Прежняя проекция reconciliation контекста через обязательный отложенный типизированный checker, без Core. |
 | `src/processforge_core/project/context.py` | Пять существующих операций ProjectContextService и отдельные readers одного вызова через обязательные типизированные зависимости, без Core. |
 | `src/processforge_core/project/context_read.py` | Проверки свежести контекста выполнения и чтение manifest через явные зависимости, без Core. |
@@ -147,6 +148,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 `AssignmentCapsulePublisher` находится в `work/capsule_publication.py`. Обязательные именованные зависимости сохраняют прежний алгоритм immutable capsule; точный `ContextFieldsBuilder` оставляет grants/scope прежнему builder. Сборка не читает файлы. Builder получается из своего модуля при вызове после existing-path guard и snapshot read. Живой `_write_capsule` сохраняет перехват подклассов. Поля/updates, exclusive UTF-8 `open("x")`, cause/remediation `FileExistsError` и relative-path-before-raw-hash return прежние. Обычная атомарная замена, locks и полномочия остаются вне этого publisher.
 
 `ContextReconciliationService` находится в `project/reconciliation.py`. Сервис получает пути проекта/workplace и именованный provider существующего `ProjectContextCheck`, без универсального Core. Фабрика в `composition.py` не выполняет I/O; checker извлекается при каждом вызове `status` до вычисления аргументов. Сохранены порядок причин, признаки безопасного технического обновления и необходимости решения оператора, а также исключения прежнего алгоритма. Внутренний класс удалён из Garage без alias; новые потребители или автоматическое обновление контекста не добавляются.
+
+`GovernedWorkBootstrapService` находится в `work/bootstrap.py`. Обязательные именованные зависимости — получение текущей сводки Work и provider типизированного WorkStart, без универсального Core. Холодная фабрика собирает прежние CurrentWorkService и ProcessExecutionService при вызове; получение start предшествует нормализации параметров. Сохранены guidance, mapping preferred-stage и полномочия прежнего координатора lifecycle. Старый класс/import удалён из Garage без alias; новые маршруты или потребители не добавляются.
 
 ## Диагностика
 
