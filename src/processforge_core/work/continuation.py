@@ -20,6 +20,7 @@ from .resources import WorkResourceError, WorkResourceService
 
 
 if TYPE_CHECKING:
+    from .continuation_work import ContinuationContractValidator, ContinuationWorkReadService
     from .continuation_status import ContinuationStatusReadService
     from .continuation_read import ContinuationRecordReader
 
@@ -77,62 +78,30 @@ class ContinuationService:
 
         ContinuationContractPolicy(error=lambda: ContinuationError).validate_record(record, continuation_id)
 
+    def _work_reader(self) -> ContinuationWorkReadService:
+        from ..composition import build_continuation_work_reader
+
+        def contract_validator() -> ContinuationContractValidator:
+            validator = validate_execution_contract
+
+            def validate(project_root: Path, path: Path, assignment: dict, capsule: dict,
+                         *, check_sources: bool, require_ready: bool) -> dict:
+                return validator(project_root, path, assignment, capsule, self.core,
+                                 check_sources=check_sources, require_ready=require_ready)
+
+            return validate
+
+        return build_continuation_work_reader(
+            selector=lambda: self._id, project_root=lambda: self.project, project_id=lambda: self.core.project_id,
+            resources=lambda: WorkResourceService(self.project, self.workplace, self.core), work=lambda: self.work,
+            path_resolver=lambda: self._path, bounded_reader=lambda: bounded_read, writer_check=lambda: self._writer_check,
+            contract_validator=contract_validator, permission_readiness=lambda: work_permissions.permission_readiness,
+            scope_allows=lambda: scope_allows, active_run_statuses=lambda: ACTIVE_RUN_STATUSES,
+            active_assignment_statuses=lambda: ACTIVE_ASSIGNMENT_STATUSES, error=lambda: ContinuationError,
+        )
+
     def _work(self, binding: dict, *, executable: bool = True, terminal: bool = False) -> tuple[dict, dict, dict, dict]:
-        for key in ("run_id", "assignment_id", "context_id"):
-            self._id(binding.get(key))
-        if binding.get("project_id", self.core.project_id(self.project)) != self.core.project_id(self.project):
-            raise ContinuationError("work_project_mismatch")
-        resources = WorkResourceService(self.project, self.workplace, self.core)
-        run = self.work._load_run(binding["run_id"])
-        assignment = self.work._load_assignment(binding["assignment_id"])
-        if not run or not assignment or assignment.get('run_id') != binding['run_id']:
-            raise ContinuationError('work_not_found')
-        capsule_path = self._path('.pf/contexts/assignment-capsules/' + binding['assignment_id'] + '.capsule.yaml')
-        capsule = resources._load(capsule_path)
-        if executable:
-            self._writer_check({**binding, 'project_id': self.core.project_id(self.project)})
-            identity, bindings, _ = resources._context(binding["run_id"], binding["assignment_id"], binding["context_id"])
-        else:
-            # Operator cancellation needs intact identity, not executable sources or permissions.
-            identity = {'context_id': capsule.get('capsule', {}).get('id'),
-                        'context_checksum': 'sha256:' + hashlib.sha256(bounded_read(capsule_path)).hexdigest()}
-            bindings = []
-            if identity['context_id'] != binding['context_id'] or self.work._effective_process(run)[1] != 'pinned':
-                raise ContinuationError('work_context_mismatch')
-        if binding.get("capsule_checksum", identity["context_checksum"]) != identity["context_checksum"]:
-            raise ContinuationError("work_context_checksum_mismatch")
-        if not terminal and (run.get("status") not in ACTIVE_RUN_STATUSES or assignment.get("status") not in ACTIVE_ASSIGNMENT_STATUSES):
-            raise ContinuationError("work_is_terminal")
-        validation = validate_execution_contract(self.project, self.work._assignment_path(assignment["id"]), assignment, capsule,
-                                                 self.core, check_sources=executable, require_ready=executable)
-        if validation.get("status") != "valid":
-            raise ContinuationError(validation.get("reason", "execution_contract_invalid"))
-        if executable:
-            for pending in self.work._run_path(run['id']).parent.glob('cancellation-*.yaml'):
-                if not pending.with_suffix('.applied.json').is_file():
-                    raise ContinuationError('cancellation_recovery_pending')
-            if self.work._context_check().get("status") not in {"fresh", "fresh_with_updates"}:
-                raise ContinuationError("snapshot_not_fresh")
-            contract = capsule["execution_contract"]
-            permissions = work_permissions.permission_readiness(contract["scope"], contract["assignment_intent"]["execution_mode"])
-            if permissions["status"] != "ready":
-                raise ContinuationError("work_scope_not_executable")
-            for source in contract["required_sources"]:
-                if source.get("required", True) and source.get("path") and not scope_allows(contract["scope"], source["path"], "read"):
-                    raise ContinuationError("required_source_scope_denied")
-            for resource in bindings:
-                result = resources.read(operation="resolve", run_id=binding["run_id"], assignment_id=binding["assignment_id"],
-                                        context_id=binding["context_id"], resource_id=resource["id"])
-                if result.get("status") != "ready":
-                    raise ContinuationError(result.get("reason", "resource_unavailable"))
-            state = self.work.state(run_id=run["id"], assignment_id=assignment["id"])
-            if state.get("blockers"):
-                raise ContinuationError(state["blockers"][0]["code"])
-        else:
-            state = self.work.state(run_id=run["id"], assignment_id=assignment["id"])
-        bound = {"project_id": self.core.project_id(self.project), "run_id": run["id"], "assignment_id": assignment["id"],
-                 "context_id": identity["context_id"], "capsule_checksum": identity["context_checksum"]}
-        return run, assignment, bound, state
+        return self._work_reader().read(binding, executable=executable, terminal=terminal)
 
     def _status_reader(self) -> ContinuationStatusReadService:
         from ..composition import build_continuation_status_reader

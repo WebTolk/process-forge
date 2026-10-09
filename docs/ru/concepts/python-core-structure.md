@@ -85,6 +85,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/work/continuation_read.py` | Прежнее ограниченное чтение control documents и Continuation/selection paths через явные актуальные зависимости. |
 | `src/processforge_core/work/continuation_contract.py` | Прежние проверки версии и привязки записи с явным источником класса ошибки. |
 | `src/processforge_core/work/continuation_status.py` | Прежнее актуальное чтение waiting/status/selected через явные зависимости. |
+| `src/processforge_core/work/continuation_work.py` | Прежнее точное чтение Work Continuation и проверки executable/cancellation через узкие зависимости. |
 | `src/processforge_core/work/resource_context.py` | Прежнее чтение закреплённого контекста ресурсов Work через явные зависимости. |
 | `src/processforge_core/work/permissions.py` | Общая чистая функция готовности прав Work. |
 | `src/processforge_core/project/reconciliation.py` | Прежняя проекция reconciliation контекста через обязательный отложенный типизированный checker, без Core. |
@@ -173,6 +174,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 `ContinuationContractPolicy` в `work/continuation_contract.py` выполняет прежние проверки ID, статуса, точной версии и привязки записи через обязательный отложенный источник класса ошибки. Координатор сохраняет переопределяемую точку проверки и полномочия привязки Work. Общая чистая функция `permission_readiness` находится в `work/permissions.py`; lifecycle start/state использует её без импорта координатора Continuation. Сохранены версии, приоритет ошибок, порядок препятствий, ссылки на списки и внешние результаты.
 
 `ContinuationStatusReadService` в `work/continuation_status.py` выполняет прежние сценарии чтения waiting/status/selected через одиннадцать обязательных отложенных источников операций. Сохранены свежесть discovery, предел 20 кандидатов и 128 артефактов, проверки receipt/version, порядок обращения к зависимостям и результаты. Координатор сохраняет переопределяемые точки вызова, публичный перевод ошибок и полномочия изменения/привязки; холодная сборка не добавляет кеш или права.
+
+`ContinuationWorkReadService` в `work/continuation_work.py` выполняет прежнее точное чтение связи Run/Assignment/Capsule для продолжения и операторской отмены через четырнадцать обязательных отложенных зависимостей и узкие протоколы чтения, без Core. Сохранены executable/terminal flags, повторные обращения, порядок проверок/ошибок, ссылки на результаты и правила identity при отмене. Координатор сохраняет конструктор, переопределяемую точку Work, блокировки, session binding и полномочия изменения/восстановления; холодная сборка не добавляет права или кеш.
 
 `WorkResourceContextReadService` в `work/resource_context.py` выполняет прежнее чтение закреплённого контекста через девять обязательных отложенных зависимостей, без Core. Некорректные селекторы отклоняются до обращения к Core, корню проекта и документам. Сохранены чтение Run/Assignment/Capsule, digest и process/snapshot/resource/stage pins, порядок импорта/вызова execution contract, read scope и ссылки результата. WorkResourceService сохраняет конструктор, ограниченный loader, переопределяемую точку контекста и публичные resource routes; сборка не выполняет I/O.
 

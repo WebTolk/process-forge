@@ -13,6 +13,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.continuation_work import ContinuationContractValidator, ContinuationResourceReads, ContinuationWorkReadService, ContinuationWorkRecords
     from .work.resource_context import WorkContractValidator, WorkControlDocumentReader, WorkResourceContextReadService, WorkResourceErrorFactory
     from .work.continuation_status import ContinuationStatusReadService, WorkCandidateReader
     from .work.continuation_read import ContinuationRecordReader
@@ -78,6 +79,26 @@ def build_work_resource_context_reader(
     return WorkResourceContextReadService(
         project_root=project_root, selector_pattern=selector_pattern, flow_root=flow_root, project_id=project_id,
         load=load, identifiers=identifiers, fingerprint=fingerprint, contract_validator=contract_validator, error=error,
+    )
+
+
+def build_continuation_work_reader(
+    *, selector: Callable[[], Callable[[str], str]], project_root: Callable[[], Path],
+    project_id: Callable[[], Callable[[Path], str]], resources: Callable[[], ContinuationResourceReads],
+    work: Callable[[], ContinuationWorkRecords], path_resolver: Callable[[], Callable[[str], Path]],
+    bounded_reader: Callable[[], Callable[[Path], bytes]], writer_check: Callable[[], Callable[[dict], None]],
+    contract_validator: Callable[[], ContinuationContractValidator],
+    permission_readiness: Callable[[], Callable[[dict, dict], dict]], scope_allows: Callable[[], Callable[[dict, str, str], bool]],
+    active_run_statuses: Callable[[], set[str]], active_assignment_statuses: Callable[[], set[str]],
+    error: Callable[[], type[ValueError]],
+) -> ContinuationWorkReadService:
+    from .work.continuation_work import ContinuationWorkReadService
+
+    return ContinuationWorkReadService(
+        selector=selector, project_root=project_root, project_id=project_id, resources=resources, work=work,
+        path_resolver=path_resolver, bounded_reader=bounded_reader, writer_check=writer_check,
+        contract_validator=contract_validator, permission_readiness=permission_readiness, scope_allows=scope_allows,
+        active_run_statuses=active_run_statuses, active_assignment_statuses=active_assignment_statuses, error=error,
     )
 
 
