@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.boundary_advisory import FreshSessionBoundaryReadService
     from .process_catalog.summary import ProcessSummaryReadService
     from .project.context_read import ExecutionProjectReadService, ProjectContextCheck
     from .work.transition_commit import WorkTransitionCommitService
@@ -156,6 +157,16 @@ def build_process_summary_read_service(
     if core is not None:
         definition_resolver = lambda: core.resolve_process_definition
     return ProcessSummaryReadService(project_root=project_root, definition_resolver=definition_resolver)
+
+
+def build_fresh_session_boundary_read_service(
+    project_root: Path, core: Any,
+) -> FreshSessionBoundaryReadService:
+    from .work.boundary_advisory import FreshSessionBoundaryReadService
+
+    return FreshSessionBoundaryReadService(
+        project_root, LegacyWorkReadAdapter(core), relative_path=lambda path, root: core.rel(path, root),
+    )
 
 
 def build_project_context_service(
