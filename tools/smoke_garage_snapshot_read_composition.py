@@ -84,12 +84,12 @@ class GarageSnapshotTests(unittest.TestCase):
         reader = composition.build_project_context_snapshot_read_service(Path('p'), core)
         self.assertIsInstance(reader, ProjectSnapshotReadService)
         memory = MemorySnapshots()
-        old = garage.ProjectContextService(Path('p'), Path('w'), core)
+        old = composition.build_project_context_service(Path('p'), Path('w'), core)
         built = composition.build_project_context_service(Path('p'), Path('w'), core, snapshots=memory)
         self.assertFalse(core.calls)
         self.assertEqual(old, built)
         self.assertEqual(repr(old), repr(built))
-        self.assertEqual(old.__match_args__, ('project_root', 'workplace_root', 'core'))
+        self.assertEqual(old.__match_args__, ('project_root', 'workplace_root'))
         dependency = next(field for field in fields(built) if field.name == 'snapshots')
         self.assertTrue(dependency.kw_only)
         self.assertFalse(dependency.compare or dependency.repr)
@@ -98,7 +98,7 @@ class GarageSnapshotTests(unittest.TestCase):
         self.assertEqual(memory.calls, [('load', None)] * 2)
         self.assertFalse(core.calls)
         with self.assertRaises(TypeError):
-            garage.ProjectContextService(Path('p'), Path('w'), core, memory)
+            composition.build_project_context_service(Path('p'), Path('w'), core, memory)
 
     def test_default_parity_return_identity_and_errors(self):
         helpers = [old_load]
@@ -111,7 +111,7 @@ class GarageSnapshotTests(unittest.TestCase):
         scenarios += [{'load_error': error} for error in [OSError, ValueError, TypeError, SystemExit]]
         for scenario in scenarios:
             for helper in helpers:
-                for call in [snapshot.load_snapshot, lambda root, core: garage.ProjectContextService(root, Path('w'), core).snapshot()]:
+                for call in [snapshot.load_snapshot, lambda root, core: composition.build_project_context_service(root, Path('w'), core).snapshot()]:
                     with self.subTest(scenario=scenario, helper=helper, call=call):
                         before, after = Core(**scenario), Core(**scenario)
                         self.assertEqual(outcome(lambda: helper(Path('p'), before)), outcome(lambda: call(Path('p'), after)))
@@ -175,7 +175,7 @@ class GarageSnapshotTests(unittest.TestCase):
         self.assertFalse(core.calls)
 
     def test_context_payload_broken_branch_and_scope_cleanup(self):
-        constructors = [garage.ProjectContextService]
+        constructors = [composition.build_project_context_service]
         if BASELINE:
             constructors.insert(0, BASELINE['ProjectContextService'])
         for broken in [False, True]:

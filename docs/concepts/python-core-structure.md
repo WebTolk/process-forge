@@ -13,7 +13,7 @@ requirement. Keep the package tree shallow and package initializers minimal.
 The existing Work modules now live in `processforge_core.work`: `context`,
 `context_read`, `inventory`, `records`, `resources`, `resource_material`,
 `selection`, `state`, `boundary_advisory`, `transition_commit`, `automation_readiness`,
-`transition_rejection`, `publication` and `events`. For example,
+`transition_rejection`, `publication`, `events` and `capsule_publication`. For example,
 import `WorkResourceService` from `processforge_core.work.resources`. Current
 Core/CLI/MCP/Host consumers use these paths. Old flat Work module imports are not
 retained during this dev refactor.
@@ -71,7 +71,8 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
 | `src/processforge_core/evidence/` | Existing evidence collection/identity, normalization and live file diagnostics, requirement/gate satisfaction and ordered readiness blockers through explicit callbacks. |
-| `src/processforge_core/garage.py` | Project/context/read-model assembly and `CurrentWorkService`; coordination mode and derived report status live under `project/`. |
+| `src/processforge_core/garage.py` | Existing current Work, reconciliation/bootstrap reads and remaining legacy helpers; project context assembly lives under `project/`. |
+| `src/processforge_core/project/context.py` | Existing five ProjectContextService operations and context-specific per-dispatch readers through required typed dependencies, without Core. |
 | `src/processforge_core/process_execution.py`, `work/continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
 | `src/processforge_core/work/state.py` | I/O-free completion requirements and Work-state action/blocker policy; not lifecycle authority. |
 | `src/processforge_core/work/automation_readiness.py`, `work/transition_rejection.py` | Existing automation readiness projections, live assignment-event reads and recoverable transition rejection response rules through explicit callbacks. |
@@ -119,7 +120,7 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 
 `ProcessExecutionService.state()` retains exact selection, context/pin checks, evidence/outcome validation and permission readiness. `WorkStatePolicy` separately computes completion requirements and action/blockers from supplied records. It does not read files, alter records, choose caller identity or advance a process. Terminal, completed, blocked and incomplete precedence remains unchanged; permission readiness stays a separate response field.
 
-`ProjectContextService` also accepts the keyword-only `snapshots` dependency. Its snapshot read and the compatible two-argument Garage `load_snapshot` helper reuse the existing reader through `build_project_context_snapshot_read_service`. The legacy path resolver and YAML loader run in their original order on every default call; malformed path pairs and loader errors propagate unchanged. Assembly performs no I/O, and a legacy read does not require a checksum callback. Existing MCP context consumers use `build_project_context_service` after their session/project guards. Freshness checks, context payloads, request scopes and other legacy Garage dependencies remain in their existing owners; composition grants no permissions.
+`ProjectContextService` belongs to `project/context.py` and has no Core field. Its two project/workplace paths and required keyword-only snapshot/read dependencies describe the existing five operations. `build_project_context_service(project_root, workplace_root, core, *, snapshots=None)` retains its consumer-facing signature and performs no I/O; it builds the existing default reader only for `None`, preserving falsey injected readers. Snapshot paths, raw documents and errors remain live; no checksum is required for these reads. Context imports/captures its four mode/report/process-summary/boundary factories once at dispatch entry, before the freshness check, in a context-specific `ProjectContextReaders` value. The other helpers are resolved at their original use sites. `scoped_request`, always-explicit workplace checking, check-before-snapshot and broken-check suppression of the primary read remain unchanged. Mode/report fallback receives independent default readers, rather than the injected context port. Runtime resolution captures the current resolver before evaluating `self.snapshot()`. All context keys, resource values, call order and continuation recommendation mutation retain their form. MCP consumers still use the factory after ingress guards; no old Garage class/import alias, constructor compatibility, cache or authority is introduced.
 
 `ResourceSearchService` accepts the same keyword-only `snapshots` port. Default reads in readiness coverage and search use the compatible Garage helper; an explicitly supplied empty snapshot still bypasses loading. The search freshness guard precedes reading, while blocked readiness retains its existing coverage read. `build_resource_search_service` assembles the existing MCP search consumer without I/O, after ingress guards. Index maintenance, query arguments, navigation, coverage, payloads and error boundaries retain their existing behavior.
 
@@ -175,7 +176,7 @@ Other services still depend on the legacy core. The target separation is domain 
 
 `tools/smoke_project_snapshot_read_composition.py` checks reader substitution at all four read sites, immutable-capsule refusal before loading, equal-size/mtime updates, raw-byte checksums, private path/hash overrides, constructor compatibility and assembly without the CLI. `--baseline` compares retained original helpers, including exceptions and call order; `--scratch-root` scopes temporary fixtures.
 
-`tools/smoke_garage_snapshot_read_composition.py` covers Garage snapshot injection, live paths, constructor compatibility, context/runtime payloads, error order, request isolation and MCP composition after ingress guards. It supports retained original methods through `--baseline` and confines fixtures through `--scratch-root`.
+`tools/smoke_garage_snapshot_read_composition.py` covers Garage snapshot injection, live paths, canonical construction/composition, context/runtime payloads, error order, request isolation and MCP composition after ingress guards. It supports retained original methods through `--baseline` and confines fixtures through `--scratch-root`.
 
 `tools/smoke_resource_search_snapshot_composition.py` covers readiness/search read injection, supplied-empty and stale-context branches, maintenance/error order, live YAML, request scopes, MCP guards/error mapping and package use without CLI. `--baseline` compares the retained original service and `--scratch-root` confines fixtures.
 

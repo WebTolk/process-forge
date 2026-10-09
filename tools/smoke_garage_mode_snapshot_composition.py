@@ -158,7 +158,7 @@ class ModeSnapshotTests(unittest.TestCase):
 
     def test_context_consumer_retained_payload_and_fallback(self):
         for config in [{}, {'document':{}}, {'broken':True}, {'broken':True,'error':'load'}, {'document':{'workplace_coordination':{'effective_mode':'organized'}}}]:
-            actual = context_scenario(garage.ProjectContextService, **config)
+            actual = context_scenario(composition.build_project_context_service, **config)
             if BASELINE and 'ProjectContextService' in BASELINE:
                 self.assertEqual(actual, context_scenario(BASELINE['ProjectContextService'], namespace=BASELINE, **config), config)
             if not config.get('error'):
@@ -166,12 +166,12 @@ class ModeSnapshotTests(unittest.TestCase):
             self.assertIsNone(request_scope._CURRENT.get())
         memory = MemorySnapshots({})
         document = {'workplace_coordination':{'effective_mode':'organized'}}
-        result, events = context_scenario(garage.ProjectContextService, document=document, memory=memory)
+        result, events = context_scenario(composition.build_project_context_service, document=document, memory=memory)
         self.assertEqual(memory.calls, [None])
         self.assertEqual(result[1]['mode'], 'forge')
         self.assertEqual(events, [('load','flow\\process-forge.yaml' if os.name == 'nt' else 'flow/process-forge.yaml'),('load','snapshot.yaml')])
         memory.calls.clear()
-        result, events = context_scenario(garage.ProjectContextService, document=document, broken=True, memory=memory)
+        result, events = context_scenario(composition.build_project_context_service, document=document, broken=True, memory=memory)
         self.assertEqual(result[1]['mode'], 'forge')
         self.assertFalse(memory.calls)
         self.assertEqual(len(events), 2)
@@ -215,7 +215,7 @@ class ModeSnapshotTests(unittest.TestCase):
             calls.append((args,kwargs))
             return factory(*args, **kwargs)
         with patch.object(composition, 'build_garage_mode_service', side_effect=observed):
-            result, _ = context_scenario(garage.ProjectContextService)
+            result, _ = context_scenario(composition.build_project_context_service)
         self.assertEqual(result[0], 'return')
         self.assertEqual(len(calls),1)
         self.assertEqual(len(calls[0][0]),3)

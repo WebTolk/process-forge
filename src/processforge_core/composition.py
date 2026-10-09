@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from .evidence.readiness import StageReadinessPolicy
     from .work.automation_readiness import AutomationReadinessService
     from .evidence.validation import EvidenceValidationService
-    from .garage import ProjectContextService
+    from .project.context import ProjectContextService
     from .resources.access import ResourceSearchService
     from .resources.access import ResourceResolveService
     from .project.mode import GarageModeService
@@ -175,9 +175,39 @@ def build_fresh_session_boundary_read_service(
 def build_project_context_service(
     project_root: Path, workplace_root: Path, core: Any, *, snapshots: ProjectSnapshotReadPort | None = None,
 ) -> ProjectContextService:
-    from .garage import ProjectContextService
+    from . import garage
+    from .project.context import ProjectContextReaders, ProjectContextService
 
-    return ProjectContextService(project_root, workplace_root, core, snapshots=snapshots)
+    if snapshots is None:
+        snapshots = build_project_context_snapshot_read_service(project_root, core)
+
+    def runtime_snapshot_resolver() -> Callable[[dict[str, Any]], dict[str, Any]]:
+        resolver = garage.snapshot_with_resolved_search_roots
+        return lambda snapshot: resolver(project_root, snapshot, workplace_root, core)
+
+    def context_readers() -> ProjectContextReaders:
+        from .composition import build_derived_report_lifecycle_service, build_garage_mode_service, build_process_summary_read_service, build_fresh_session_boundary_read_service
+
+        return ProjectContextReaders(
+            mode=lambda *, snapshot, session_id: build_garage_mode_service(project_root, workplace_root, core).status(snapshot=snapshot, session_id=session_id),
+            process_summary=lambda snapshot, manifest: build_process_summary_read_service(project_root, core).summary(snapshot, manifest),
+            derived_reports=lambda *, snapshot: build_derived_report_lifecycle_service(project_root, core).status(snapshot=snapshot),
+            boundary=lambda work: build_fresh_session_boundary_read_service(project_root, core).read(work),
+        )
+
+    return ProjectContextService(
+        project_root, workplace_root,
+        snapshots=snapshots,
+        project_id_reader=lambda: core.project_id(project_root),
+        context_check=lambda: core.project_context_check_result(project_root, explicit_workplace=str(workplace_root)),
+        manifest_reader=lambda: core.load_yaml_document(core.locate_flow_root(project_root) / "process-forge.yaml"),
+        runtime_snapshot_resolver=runtime_snapshot_resolver,
+        resource_readiness=lambda *, snapshot, check: garage.ResourceSearchService(project_root, workplace_root, core).readiness(snapshot=snapshot, check=check),
+        work_summary=lambda: garage.CurrentWorkService(project_root, core).summary(),
+        resource_selection=lambda snapshot: garage.resource_selection_summary(snapshot),
+        diagnostics=lambda check, search, mode: garage.diagnostics_from_check(check, search, mode),
+        context_readers=context_readers,
+    )
 
 
 def build_resource_search_service(
