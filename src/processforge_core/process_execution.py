@@ -1183,29 +1183,9 @@ class ProcessExecutionService:
                                                flow_root=self._flow_root, assignment_path=self._assignment_path)
 
     def _write_capsule(self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]) -> tuple[str, str]:
-        from .work.context import ContextContractError, build_context_fields
+        from .composition import build_assignment_capsule_publisher
 
-        path = self._flow_root() / "contexts" / "assignment-capsules" / f"{assignment['id']}.capsule.yaml"
-        if path.exists():
-            raise ContextContractError("immutable_context_exists", remediation="create_successor_work")
-        snapshot = self._snapshot_reader().load()
-        fields = build_context_fields(self.project_root, self._assignment_path(assignment["id"]), assignment,
-                                      snapshot, self.core, workplace=self.workplace_root, pin=pin, run_record=run)
-        capsule = {
-            "schema_version": 1,
-            "capsule": {"id": f"{assignment['id']}-capsule", "generated_at": self.core.now_utc(), "assignment_id": assignment["id"], "assignment_path": f".pf/assignments/{assignment['id']}.yaml", "immutable": True, "worker_may_rebuild_context": False},
-            "context_snapshot": {"id": pin["snapshot_id"], "sha256": pin["snapshot_checksum"], "freshness_at_creation": "fresh"},
-            **fields,
-        }
-        capsule["context"].update(freshness="fresh", selected_specializations=_stable_ids(assignment.get("selected_specializations")), applied_project_overrides=[])
-        capsule["assignment"]["stage"] = assignment["stage"]
-        path.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            with path.open("x", encoding="utf-8") as stream:
-                stream.write(self.core.ensure_trailing_newline(self.core.dump_yaml(capsule)))
-        except FileExistsError as exc:
-            raise ContextContractError("immutable_context_exists", remediation="create_successor_work") from exc
-        return self.core.rel(path, self.project_root), "sha256:" + self._sha256_file(path)
+        return build_assignment_capsule_publisher(self, stable_ids=_stable_ids).publish(run, assignment, pin)
 
     def _write_projection(self, state: dict[str, Any]) -> None:
         path = self._flow_root() / "artifacts" / "projections" / "process-execution-state.json"

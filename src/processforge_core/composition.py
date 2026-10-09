@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.capsule_publication import AssignmentCapsulePublisher
     from .work.events import ProcessEventEmitter, WorkEventPublisher
     from .work.publication import WorkDocumentPublisher
     from .work.boundary_advisory import FreshSessionBoundaryReadService
@@ -234,6 +235,37 @@ def build_work_document_publisher(
     from .work.publication import WorkDocumentPublisher
 
     return WorkDocumentPublisher(text_writer=text_writer, yaml_formatter=yaml_formatter)
+
+
+def build_assignment_capsule_publisher(
+    service: ProcessExecutionService, *, stable_ids: Callable[[Any], list[str]],
+) -> AssignmentCapsulePublisher:
+    from .work.capsule_publication import AssignmentCapsulePublisher
+
+    def context_fields(
+        assignment_path: Path, assignment: dict[str, Any], snapshot: dict[str, Any],
+        *, pin: dict[str, Any], run_record: dict[str, Any],
+    ) -> dict[str, Any]:
+        from .work.context import build_context_fields
+
+        return build_context_fields(
+            service.project_root, assignment_path, assignment, snapshot, service.core,
+            workplace=service.workplace_root, pin=pin, run_record=run_record,
+        )
+
+    return AssignmentCapsulePublisher(
+        project_root=service.project_root,
+        flow_root=lambda: service._flow_root(),
+        assignment_path=lambda identity: service._assignment_path(identity),
+        snapshot_reader=lambda: service._snapshot_reader(),
+        build_context_fields=context_fields,
+        now_utc=lambda: service.core.now_utc(),
+        dump_yaml=lambda value: service.core.dump_yaml(value),
+        ensure_trailing_newline=lambda text: service.core.ensure_trailing_newline(text),
+        relative_path=lambda path, root: service.core.rel(path, root),
+        sha256_file=lambda path: service._sha256_file(path),
+        stable_ids=stable_ids,
+    )
 
 
 def build_process_execution_service(
