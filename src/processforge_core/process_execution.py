@@ -360,34 +360,18 @@ class ProcessExecutionService:
         assignment["process_execution"]["assignment_capsule"] = capsule_path
         assignment["process_execution"]["assignment_capsule_checksum"] = capsule_checksum
 
-        run_path = self._run_path(run_id)
-        assignment_path = self._assignment_path(assignment_id)
-        self._atomic_yaml(run_path, run)
-        self._atomic_yaml(assignment_path, assignment)
-        self._atomic_text(run_path.parent / "plan.md", f"# Run Plan: {objective[:80]}\n\nObjective: {objective}\n")
-        self._write_task_index(run)
-        self._emit("run.created", run, assignment, stage_id, outcome="started")
-        self._emit("task.created", run, assignment, stage_id, outcome="started")
-        self._emit("assignment.created", run, assignment, stage_id, outcome="started")
-        self._emit("process.stage.started", run, assignment, stage_id, outcome="started", previous_stage_id="", next_stage_id=stage_id)
-        state = self.state(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
-        self._write_projection(state)
-        return {
-            "schema_version": 1,
-            "kind": "pf.work.start",
-            "action": "created_new",
-            "project": state.get("project", {}),
-            "run_id": run_id,
-            "assignment_id": assignment_id,
-            "stage": stage_id,
-            "valid_stages": [str(item.get("id")) for item in stages],
-            "stage_selection": "preferred" if stage_override else "process_initial_stage",
-            "session": {"status": "bound", "id": session_id} if session_id else {"status": "absent"},
-            "obligations": state.get("obligations", []),
-            "gates": state.get("gates", {}),
-            "work_state": state,
-            "context": state.get("context", {}),
-        }
+        from .composition import build_work_start_publication_service
+
+        return build_work_start_publication_service(
+            run_path=lambda: self._run_path, assignment_path=lambda: self._assignment_path,
+            atomic_yaml=lambda: self._atomic_yaml, atomic_text=lambda: self._atomic_text,
+            write_task_index=lambda: self._write_task_index, emit=lambda: self._emit,
+            state=lambda: self.state, write_projection=lambda: self._write_projection,
+        ).publish(
+            run_id=run_id, assignment_id=assignment_id, run=run, assignment=assignment,
+            stage_id=stage_id, objective=objective, stages=stages,
+            stage_override=stage_override, session_id=session_id,
+        )
 
     def _with_creation_scope(self, assignment: dict[str, Any], intent: dict[str, Any]) -> dict[str, Any]:
         from .composition import build_creation_scope_service

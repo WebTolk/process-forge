@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.start_publication import StartEventWriter, StartStateReader, WorkStartPublicationService
     from .work.creation_scope import CreationScopeService
     from .work.bootstrap import GovernedWorkBootstrapService, WorkStart
     from .work.capsule_publication import AssignmentCapsulePublisher
@@ -59,6 +60,21 @@ class LegacyWorkReadAdapter:
 
     def load_yaml_document(self, path: Path) -> dict[str, Any]:
         return self.core.load_yaml_document(path)
+
+
+def build_work_start_publication_service(
+    *, run_path: Callable[[], Callable[[str], Path]], assignment_path: Callable[[], Callable[[str], Path]],
+    atomic_yaml: Callable[[], Callable[[Path, dict[str, Any]], Any]], atomic_text: Callable[[], Callable[[Path, str], Any]],
+    write_task_index: Callable[[], Callable[[dict[str, Any]], Any]], emit: Callable[[], StartEventWriter],
+    state: Callable[[], StartStateReader], write_projection: Callable[[], Callable[[dict[str, Any]], Any]],
+) -> WorkStartPublicationService:
+    from .work.start_publication import WorkStartPublicationService
+
+    return WorkStartPublicationService(
+        run_path=run_path, assignment_path=assignment_path, atomic_yaml=atomic_yaml,
+        atomic_text=atomic_text, write_task_index=write_task_index, emit=emit,
+        state=state, write_projection=write_projection,
+    )
 
 
 def build_creation_scope_service(project_root: Path, core: Any) -> CreationScopeService:

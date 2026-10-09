@@ -81,6 +81,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/work/bootstrap.py` | Прежние guidance/start через явную сводку и отложенную типизированную зависимость запуска. |
 | `src/processforge_core/work/creation_scope.py` | Прежние проверка scope и наложение на Assignment через явные отложенные зависимости, без полномочий lifecycle. |
 | `src/processforge_core/work/start_documents.py` | Прежнее чистое построение Run/Assignment с сохранением полей и ссылок. |
+| `src/processforge_core/work/start_publication.py` | Прежняя упорядоченная публикация запуска после capsule через отложенные зависимости операций. |
 | `src/processforge_core/project/reconciliation.py` | Прежняя проекция reconciliation контекста через обязательный отложенный типизированный checker, без Core. |
 | `src/processforge_core/project/context.py` | Пять существующих операций ProjectContextService и отдельные readers одного вызова через обязательные типизированные зависимости, без Core. |
 | `src/processforge_core/project/context_read.py` | Проверки свежести контекста выполнения и чтение manifest через явные зависимости, без Core. |
@@ -159,6 +160,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 `CreationScopeService` в `work/creation_scope.py` объединяет прежнюю чистую проверку operator envelope и наложение scope на Assignment. Холодная сборка передаёт отложенные нормализацию режима и ограниченное чтение handoff; сохранены deep copy, predecessor coordination metadata, checksum исходных байтов, ошибки и порядок lookup. CLI/MCP вызывают общую каноническую проверку. Identity predecessor, admission/overlap и полномочия публикации capsule остаются у прежних владельцев; публичная schema scope не меняется.
 
 `WorkStartDocumentBuilder` в `work/start_documents.py` строит прежние словари Run/Assignment без I/O и Core. Сохранены поля, timestamps, порядок сокращения title и общие ссылки на pin/specializations. Координатор lifecycle по-прежнему выбирает IDs/process/stage, привязывает sessions/security/scope, проверяет готовность, публикует immutable capsule и владеет writes/locks/events. Schema и публичное поведение запуска не меняются.
+
+`WorkStartPublicationService` в `work/start_publication.py` выполняет прежнюю публикацию после capsule через восемь обязательных отложенных providers методов. Сохранён порядок Run/Assignment/plan/index, четырёх событий, свежего состояния, проекции и ответа created_new. Lookup метода предшествует вычислению аргументов; сборка не выполняет I/O. Admission, locks и полномочия capsule остаются в ProcessExecutionService, существующие атомарные writers/events используются без новой transaction/recovery policy.
 
 ## Диагностика
 

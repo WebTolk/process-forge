@@ -76,6 +76,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/work/bootstrap.py` | Existing guidance/start delegation through explicit summary and deferred typed start dependencies. |
 | `src/processforge_core/work/creation_scope.py` | Existing scope validation/overlay with explicit deferred dependencies, without lifecycle authority. |
 | `src/processforge_core/work/start_documents.py` | Existing pure Run/Assignment construction, preserving fields and references. |
+| `src/processforge_core/work/start_publication.py` | Existing ordered post-capsule start publication through deferred operation dependencies. |
 | `src/processforge_core/project/reconciliation.py` | Existing context reconciliation projection through the required deferred typed context checker, without Core. |
 | `src/processforge_core/project/context.py` | Existing five ProjectContextService operations and context-specific per-dispatch readers through required typed dependencies, without Core. |
 | `src/processforge_core/process_execution.py`, `work/continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
@@ -154,6 +155,8 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 `CreationScopeService` in `work/creation_scope.py` groups existing pure operator-envelope validation and assignment overlay. Cold composition supplies deferred mode normalization and bounded handoff reads; deep copies, predecessor coordination metadata, raw checksum, errors and lookup order are unchanged. CLI/MCP use the canonical static validator. Actual predecessor identity/admission/overlap/capsule authority remains with existing owners; the public scope schema is unchanged.
 
 `WorkStartDocumentBuilder` in `work/start_documents.py` constructs the existing Run/Assignment dictionaries without I/O or Core. Fields, timestamps, title slicing order and shared pin/specialization references are preserved. The lifecycle coordinator still chooses IDs/process/stage, binds sessions/security/scope, validates readiness, publishes the immutable capsule and owns writes/locks/events. No schema or public start behavior changes.
+
+`WorkStartPublicationService` in `work/start_publication.py` sequences existing post-capsule publication through eight required deferred method providers. Run/Assignment/plan/index writes, four start events, fresh state, projection and created_new response retain their order. Method lookup precedes argument evaluation; construction has no I/O. Admission, locks and capsule authority remain in ProcessExecutionService, and atomic writers/event storage are reused without a new transaction or recovery policy.
 
 ## Observation
 
