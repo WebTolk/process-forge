@@ -6,12 +6,11 @@ import hashlib
 import json
 from pathlib import Path
 import re
-import sqlite3
 from typing import TYPE_CHECKING, Any
 
 import yaml
 
-from ..resources.local_search import LocalSearchError, pagination
+from ..resources.local_search import LocalSearchError, pagination, search_material
 from ..process_execution import SAFE_ID_RE, canonical_fingerprint
 from .resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, capture_material, metadata_descriptor
 
@@ -243,19 +242,4 @@ class WorkResourceService:
 
     @staticmethod
     def _search(documents: list[dict[str, Any]], query: str, limit: int, start: int) -> dict[str, Any]:
-        try:
-            db = sqlite3.connect(":memory:")
-            try:
-                db.execute("CREATE VIRTUAL TABLE material USING fts5(title, content)")
-                db.executemany("INSERT INTO material(rowid,title,content) VALUES(?,?,?)", ((i + 1, doc["title"], doc["content"]) for i, doc in enumerate(documents)))
-                phrase = '"' + query.replace('"', '""') + '"'
-                total = db.execute("SELECT count(*) FROM material WHERE material MATCH ?", (phrase,)).fetchone()[0]
-                matches = db.execute("SELECT rowid FROM material WHERE material MATCH ? ORDER BY bm25(material), rowid LIMIT ? OFFSET ?", (phrase, limit, start)).fetchall()
-            finally:
-                db.close()
-        except sqlite3.Error as exc:
-            raise WorkResourceError("work_search_unavailable") from exc
-        results = [{key: value for key, value in documents[row[0] - 1].items() if key != "content"} for row in matches]
-        return {"query": query, "total": total, "limit": limit, "offset": start, "results": results, "items": results,
-                "page": {"limit": limit, "offset": start, "limitstart": start, "returned": len(results), "total": total,
-                         "next_limitstart": start + len(results) if start + len(results) < total else None}}
+        return search_material(documents, query, limit, start, error=lambda: WorkResourceError)

@@ -106,7 +106,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/process_catalog/` | Модели и разрешение каталога, чтение effective ProcessDefinition, выбор из предложенных процессов и подготовка pin через явные зависимости. |
 | `src/processforge_core/project/snapshot.py` | Чтение актуального ProjectContextSnapshot и checksum исходных байтов через переданные функции пути, загрузки и хеширования. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
-| `src/processforge_core/resources/local_search.py` | Прежние локальный индекс и поиск ресурсов, проверка доступной области и правила индексирования. |
+| `src/processforge_core/resources/local_search.py` | Прежние локальный индекс, SQLite/FTS поиск, поиск проверенного материала Work, coverage и indexing policy helpers. |
 | `src/processforge_core/runtime/metrics.py` | Существующий сбор Runtime metrics с бюджетами, registered project roots, freshness и collection workers; импорт из `processforge_core.runtime.metrics`. |
 | `src/processforge_core/maintenance/update.py` | Существующие plan, контролируемый apply, status и recovery Core update с прежними manifest и backup guards; импорт из `processforge_core.maintenance.update`. |
 | `src/processforge_core/prepared/input.py`, `prepared/resources.py` | Существующие immutable prepared inputs, манифесты worker attempts, авторизованные материалы ресурсов и collection receipts; импорты из `processforge_core.prepared.input` и `processforge_core.prepared.resources`. |
@@ -178,6 +178,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 `ContinuationWorkReadService` в `work/continuation_work.py` выполняет прежнее точное чтение связи Run/Assignment/Capsule для продолжения и операторской отмены через четырнадцать обязательных отложенных зависимостей и узкие протоколы чтения, без Core. Сохранены executable/terminal flags, повторные обращения, порядок проверок/ошибок, ссылки на результаты и правила identity при отмене. Координатор сохраняет конструктор, переопределяемую точку Work, блокировки, session binding и полномочия изменения/восстановления; холодная сборка не добавляет права или кеш.
 
 `WorkResourceContextReadService` в `work/resource_context.py` выполняет прежнее чтение закреплённого контекста через девять обязательных отложенных зависимостей, без Core. Некорректные селекторы отклоняются до обращения к Core, корню проекта и документам. Сохранены чтение Run/Assignment/Capsule, digest и process/snapshot/resource/stage pins, порядок импорта/вызова execution contract, read scope и ссылки результата. WorkResourceService сохраняет конструктор, ограниченный loader, переопределяемую точку контекста и публичные resource routes; сборка не выполняет I/O.
+
+`search_material` в `resources/local_search.py` содержит прежний алгоритм SQLite FTS5 в памяти над уже проверенными документами Work. WorkResourceService сохраняет точку search dispatch и все проверки полномочий/материала; обязательный отложенный error factory сохраняет его тип ошибки без импорта Work в поисковый модуль. SQL, закрытие соединения, цепочки исключений, ранжирование, пагинация и ссылки на результаты/provenance прежние. Общий индекс рабочего места и его обслуживание сохраняют существующий lifetime; адаптеры хранилищ и новые команды не добавлены.
 
 ## Диагностика
 

@@ -101,7 +101,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/project/mode.py` | Existing `GarageModeService` coordination read model through a required snapshot port, without Core. |
 | `src/processforge_core/project/reports.py` | Existing `DerivedReportLifecycleService` and fixed derived report paths through required snapshot/flow-root dependencies, without Core. |
 | `src/processforge_core/project/initialization.py` | Existing project onboarding, initialization status and deterministic repair, reusing guarded agent entry transactions. |
-| `src/processforge_core/resources/local_search.py` | Existing authorized local resource index, SQLite/FTS search, coverage and indexing policy helpers. |
+| `src/processforge_core/resources/local_search.py` | Existing authorized local index, SQLite/FTS search, verified Work material search, coverage and indexing policy helpers. |
 | `src/processforge_core/runtime/metrics.py` | Existing bounded runtime metrics collection, registered project roots, freshness and collection workers; import from `processforge_core.runtime.metrics`. |
 | `src/processforge_core/maintenance/update.py` | Existing Core update plan, controlled apply, status and recovery, preserving manifest and backup guards; import from `processforge_core.maintenance.update`. |
 | `src/processforge_core/prepared/input.py`, `prepared/resources.py` | Existing immutable prepared inputs, worker-attempt manifests, authorized resource material and collection receipts; import from `processforge_core.prepared.input` or `processforge_core.prepared.resources`. |
@@ -173,6 +173,8 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 `ContinuationWorkReadService` in `work/continuation_work.py` performs the existing exact Run/Assignment/Capsule binding read for continuation and operator cancellation through fourteen required deferred dependencies and narrow read protocols, without Core. Executable and terminal flags, repeated lookups, validation/error order, result references and cancellation identity rules are unchanged. The coordinator retains its constructor, overridable Work call, locks, session binding and mutation/recovery authority; cold composition introduces no new permission or cache.
 
 `WorkResourceContextReadService` in `work/resource_context.py` owns the existing pinned context read through nine required deferred dependencies, without Core. Invalid selectors fail before Core/project-root/document access. Run/Assignment/Capsule reads, digest and process/snapshot/resource/stage pins, execution-contract import/call order, read scope and result references remain unchanged. WorkResourceService keeps its constructor, bounded loader, overridable context call and public resource routes; composition is cold.
+
+`search_material` in `resources/local_search.py` owns the existing in-memory SQLite FTS5 algorithm over already verified Work documents. WorkResourceService retains its search dispatch and all authorization/material checks; a required deferred error factory preserves its error type without a Work import in the search module. SQL, connection cleanup, exception chaining, ranking, pagination and result/provenance references are unchanged. The shared workplace index and its maintenance keep their existing lifetime; no storage adapter or new command is introduced.
 
 ## Observation
 
