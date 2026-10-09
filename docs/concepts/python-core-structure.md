@@ -75,6 +75,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/work/projection.py` | Existing pure Work projection/classification rules, without Core or lifecycle authority. |
 | `src/processforge_core/work/bootstrap.py` | Existing guidance/start delegation through explicit summary and deferred typed start dependencies. |
 | `src/processforge_core/work/creation_scope.py` | Existing scope validation/overlay with explicit deferred dependencies, without lifecycle authority. |
+| `src/processforge_core/work/start_documents.py` | Existing pure Run/Assignment construction, preserving fields and references. |
 | `src/processforge_core/project/reconciliation.py` | Existing context reconciliation projection through the required deferred typed context checker, without Core. |
 | `src/processforge_core/project/context.py` | Existing five ProjectContextService operations and context-specific per-dispatch readers through required typed dependencies, without Core. |
 | `src/processforge_core/process_execution.py`, `work/continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
@@ -151,6 +152,8 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 `WorkProjectionPolicy` in `work/projection.py` groups the existing item classification, objective normalization and compact active-run projections without I/O or Core. CurrentWorkService retains its constructor and live WorkInventory discovery; it uses a local stateless policy at the existing projection points. Status/fallback order, bootstrap exclusion, ordered deduplication and ten-item limits are unchanged. The old Garage helper functions/constants are removed without aliases.
 
 `CreationScopeService` in `work/creation_scope.py` groups existing pure operator-envelope validation and assignment overlay. Cold composition supplies deferred mode normalization and bounded handoff reads; deep copies, predecessor coordination metadata, raw checksum, errors and lookup order are unchanged. CLI/MCP use the canonical static validator. Actual predecessor identity/admission/overlap/capsule authority remains with existing owners; the public scope schema is unchanged.
+
+`WorkStartDocumentBuilder` in `work/start_documents.py` constructs the existing Run/Assignment dictionaries without I/O or Core. Fields, timestamps, title slicing order and shared pin/specialization references are preserved. The lifecycle coordinator still chooses IDs/process/stage, binds sessions/security/scope, validates readiness, publishes the immutable capsule and owns writes/locks/events. No schema or public start behavior changes.
 
 ## Observation
 

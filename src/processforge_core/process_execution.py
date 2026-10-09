@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator
 from .common.request_scope import safe_load, scoped_request
 from .work.inventory import WorkInventory
 from .work.state import WorkStatePolicy
+from .work.start_documents import WorkStartDocumentBuilder
 from .evidence.collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
@@ -314,53 +315,11 @@ class ProcessExecutionService:
         active_specializations = specialization_selection["active"]
         selected_resource_ids = self._selected_resource_ids()
         pin = self._process_pin(process, definition.path, active_specializations=active_specializations, selected_resource_ids=selected_resource_ids, allowed_processes=selection["allowed"])
-        run = {
-            "schema_version": 1,
-            "id": run_id,
-            "title": objective[:80],
-            "process": selected_process,
-            "status": "in_progress",
-            "created_at": now,
-            "updated_at": now,
-            "objective": objective,
-            "platform": "",
-            "selected_specializations": active_specializations,
-            "scope": {"type": "project", "project_root": "."},
-            "tasks": [{"id": assignment_id, "assignment": f".pf/assignments/{assignment_id}.yaml", "status": "in_progress", "order": 1, "blocking": True}],
-            "final_artifacts": [],
-            "events": {"emitted": ["run.created", "process.stage.started"]},
-            "privacy": {"public_safe": True},
-            "process_execution": pin,
-        }
-        assignment = {
-            "schema_version": 1,
-            "id": assignment_id,
-            "title": objective[:80],
-            "run_id": run_id,
-            "process": selected_process,
-            "status": "in_progress",
-            "created_at": now,
-            "updated_at": now,
-            "objective": objective,
-            "platform": "",
-            "selected_specializations": active_specializations,
-            "order": 1,
-            "dependencies": {"blocked_by": [], "blocks": []},
-            "iterations": [],
-            "result": {"status": "pending", "summary": "", "artifacts": []},
-            "execution_mode": {"kind": "implementation", "code_changes_allowed": True, "artifact_changes_allowed": True, "requires_review": True},
-            "stage": stage_id,
-            "stage_status": "in_progress",
-            "stage_execution": {"started_at": now, "evidence": [], "notes": ""},
-            "stage_history": [],
-            "process_execution": {
-                "process_id": pin["process_id"],
-                "process_version": pin["process_version"],
-                "process_fingerprint": pin["process_fingerprint"],
-                "snapshot_id": pin["snapshot_id"],
-                "snapshot_checksum": pin["snapshot_checksum"],
-            },
-        }
+        run, assignment = WorkStartDocumentBuilder().build(
+            objective=objective, selected_process=selected_process, now=now,
+            run_id=run_id, assignment_id=assignment_id,
+            active_specializations=active_specializations, pin=pin, stage_id=stage_id,
+        )
         if session_id:
             assignment["session"] = {"status": "bound", "id": session_id}
         if security is not None:
