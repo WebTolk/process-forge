@@ -13,6 +13,10 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .prepared.knowledge_resources import PreparedKnowledgeMaterialCapture, PreparedKnowledgeResourceReader, PreparedKnowledgeRootResolver
+    from .work.resource_declarations import ResourceDeclarationPolicy
+    from .work.resource_material import MaterialBudget, MaterialError
+    from .work.resources import WorkResourceError
     from .prepared.registry_resources import PreparedRegistryPathResolver, PreparedRegistryResourceReader
     from .prepared.resource_selection import PreparedResourceSelectionPolicy
     from .prepared.snapshot_read import PreparedResourceSnapshotReader
@@ -68,6 +72,27 @@ class LegacyWorkReadAdapter:
 
     def load_yaml_document(self, path: Path) -> dict[str, Any]:
         return self.core.load_yaml_document(path)
+
+
+def build_prepared_knowledge_resource_reader(
+    *,
+    selection: Callable[[], PreparedResourceSelectionPolicy],
+    declarations: Callable[[], ResourceDeclarationPolicy],
+    metadata: Callable[[], Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]]],
+    root_resolver: Callable[[], PreparedKnowledgeRootResolver],
+    material_capture: Callable[[], PreparedKnowledgeMaterialCapture],
+    budget: Callable[[], Callable[[], MaterialBudget]],
+    work_error: Callable[[], type[WorkResourceError]],
+    material_error: Callable[[], type[MaterialError]],
+    fail: Callable[[], Callable[[str], None]],
+) -> PreparedKnowledgeResourceReader:
+    from .prepared.knowledge_resources import PreparedKnowledgeResourceReader
+
+    return PreparedKnowledgeResourceReader(
+        selection=selection, declarations=declarations, metadata=metadata,
+        root_resolver=root_resolver, material_capture=material_capture, budget=budget,
+        work_error=work_error, material_error=material_error, fail=fail,
+    )
 
 
 def build_prepared_registry_resource_reader(

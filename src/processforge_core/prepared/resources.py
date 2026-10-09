@@ -71,96 +71,6 @@ def _bounded_yaml(path: Path, flow_root: Path, reason: str) -> tuple[dict[str, A
     return value, _sha256(raw)
 
 
-def _authorize_knowledge(project: Path, workplace: Path, requested: list[Any], capsule: dict[str, Any],
-                         pinned_snapshot: dict[str, Any], current_snapshot: dict[str, Any],
-                         snapshot_id: str, snapshot_checksum: str, selected_ids: list[str],
-                         stage_subset: list[str], core: Any) -> list[dict[str, Any]]:
-    capsule_rows = capsule.get("resolved_resources")
-    selection = PreparedResourceSelectionPolicy(
-        matcher=lambda: core.workspace_ref_matches_resource,
-        fail=lambda: _fail, revoked_statuses=lambda: REVOKED_STATUSES,
-    )
-    pinned_rows = selection.resolved_rows(pinned_snapshot, "knowledge_resources")
-    if not isinstance(capsule_rows, list) or any(not isinstance(item, dict) for item in capsule_rows):
-        _fail("resource_binding_invalid")
-    if capsule_rows != pinned_rows:
-        _fail("snapshot_generation_changed")
-    bindings = selection.resource_bindings(capsule)
-    try:
-        current_rows = ResourceDeclarationPolicy(error=lambda: WorkResourceError).grant_rows(current_snapshot)
-    except WorkResourceError as exc:
-        _fail(exc.code)
-    ids = set(selected_ids)
-    subset = set(stage_subset)
-    unique_by_request: set[str] = set()
-    grants: list[dict[str, Any]] = []
-    budget = MaterialBudget()
-
-    for request in requested:
-        pinned = selection.unique_match(capsule_rows, request, "resource_not_in_snapshot")
-        identifier = str(pinned.get("id") or pinned.get("resource_id") or "")
-        if not identifier or identifier in unique_by_request:
-            _fail("resource_scope_invalid")
-        unique_by_request.add(identifier)
-        if identifier not in ids:
-            _fail("resource_not_selected")
-        if identifier not in subset:
-            _fail("resource_not_in_stage")
-        binding = bindings.get(identifier)
-        if binding is None or binding.get("status") != "available":
-            _fail(str((binding or {}).get("reason") or "resource_material_unavailable"))
-
-        row = selection.current_resource(current_rows, identifier)
-        try:
-            reference = ResourceDeclarationPolicy(error=lambda: WorkResourceError).portable_reference(row)
-            descriptor = metadata_descriptor(row, reference)
-            metadata_fp = _fingerprint(descriptor)
-            if metadata_fp != binding.get("metadata_fingerprint"):
-                _fail("resource_generation_changed")
-            root, resolved_reference = _root(project, workplace, core, row)
-            actual, _ = capture_material(row, root, resolved_reference, include_content=False, budget=budget)
-        except WorkResourceError as exc:
-            _fail(exc.code)
-        except MaterialError as exc:
-            _fail(exc.code)
-        except (OSError, RuntimeError, SystemExit):
-            _fail("resource_material_unavailable")
-
-        if actual.get("metadata_fingerprint") != binding.get("metadata_fingerprint") or actual.get("generation") != binding.get("generation"):
-            _fail("resource_generation_changed")
-        if any(actual.get(key) != binding.get(key) for key in ("material_fingerprint", "material_kind", "manifest")):
-            _fail("resource_material_changed")
-
-        provenance = {
-            "snapshot_id": snapshot_id,
-            "snapshot_checksum": snapshot_checksum,
-            "resource_id": identifier,
-            "generation": actual["generation"],
-            "metadata_fingerprint": actual["metadata_fingerprint"],
-            "material_fingerprint": actual["material_fingerprint"],
-        }
-        material_kind = str(actual.get("material_kind") or "none")
-        grant: dict[str, Any] = {
-            "id": identifier,
-            "path_ref": copy.deepcopy(resolved_reference),
-            "metadata": descriptor,
-            "material_kind": material_kind,
-            "navigation": "verified_declared_material" if material_kind == "fulltext" else "metadata_only",
-            "provenance": provenance,
-            "manifest": copy.deepcopy(actual.get("manifest") or []),
-            "resolution": ({"status": "resolved", "path": str(root.resolve())}
-                           if material_kind == "fulltext" else {"status": "metadata_only"}),
-        }
-        grants.append(grant)
-    return grants
-
-
-def _fingerprint(value: Any) -> str:
-    from ..work.resource_material import canonical_fingerprint
-
-    return canonical_fingerprint(value)
-
-
 def authorize_resources(project: Path, task: dict[str, Any], capsule: dict[str, Any], core: Any) -> dict[str, Any]:
     """Return current-authorized workspace resources for a validated capsule.
 
@@ -257,10 +167,23 @@ def authorize_resources(project: Path, task: dict[str, Any], capsule: dict[str, 
             revoked_statuses=lambda: REVOKED_STATUSES,
             fail=lambda: _fail,
         )
+        from ..composition import build_prepared_knowledge_resource_reader
+
+        knowledge_reader = build_prepared_knowledge_resource_reader(
+            selection=lambda: PreparedResourceSelectionPolicy(
+                matcher=lambda: core.workspace_ref_matches_resource,
+                fail=lambda: _fail, revoked_statuses=lambda: REVOKED_STATUSES,
+            ),
+            declarations=lambda: ResourceDeclarationPolicy(error=lambda: WorkResourceError),
+            metadata=lambda: metadata_descriptor,
+            root_resolver=lambda: lambda project, workplace, row: _root(project, workplace, core, row),
+            material_capture=lambda: capture_material, budget=lambda: MaterialBudget,
+            work_error=lambda: WorkResourceError, material_error=lambda: MaterialError, fail=lambda: _fail,
+        )
         grants = {
-            "knowledge_resources": _authorize_knowledge(
+            "knowledge_resources": knowledge_reader.read(
                 project, workplace, requested["knowledge_resources"], capsule, pinned_snapshot, current_snapshot,
-                snapshot_id, snapshot_checksum, selected_ids, stage_subset, core,
+                snapshot_id, snapshot_checksum, selected_ids, stage_subset,
             ),
             "templates": registry_reader.read(project, requested["templates"], pinned_snapshot, current_snapshot, "templates"),
             "tools": registry_reader.read(project, requested["tools"], pinned_snapshot, current_snapshot, "tools"),
