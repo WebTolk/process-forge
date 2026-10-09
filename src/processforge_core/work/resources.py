@@ -5,13 +5,13 @@ import copy
 import hashlib
 import json
 from pathlib import Path
-import re
 from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from ..resources.local_search import LocalSearchError, pagination, search_material
 from ..process_execution import SAFE_ID_RE, canonical_fingerprint
+from .resource_declarations import ResourceDeclarationPolicy
 from .resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, capture_material, metadata_descriptor
 
 
@@ -20,9 +20,6 @@ if TYPE_CHECKING:
 
 
 MAX_STATE_BYTES = 2 * 1024 * 1024
-LEGACY_INDEX_POLICIES = {"none", "never", "disabled", "metadata", "metadata_first", "index_only",
-                         "source_tree", "symbols", "fulltext", "full_text", "always_index", "snapshot_authorized"}
-LEGACY_POLICY_CANONICAL = {"full_text": "fulltext"}
 
 
 class WorkResourceError(Exception):
@@ -31,64 +28,10 @@ class WorkResourceError(Exception):
         self.code, self.details = code, details
 
 
-def _ids(value: Any, reason: str) -> list[str]:
-    if not isinstance(value, list) or any(not isinstance(item, str) or not item for item in value):
-        raise WorkResourceError(reason)
-    if len(value) != len(set(value)) or len(value) > 64:
-        raise WorkResourceError(reason)
-    return list(value)
-
-
-def _declared_policy(row: dict[str, Any]) -> dict[str, Any]:
-    if isinstance(row.get("indexing"), dict):
-        return {"indexing": copy.deepcopy(row["indexing"])}
-    legacy = str(row.get("index_policy") or "").strip().casefold()
-    if legacy in LEGACY_INDEX_POLICIES:
-        return {"index_policy": LEGACY_POLICY_CANONICAL.get(legacy, legacy)}
-    return {}
-
-
-def grant_rows(snapshot: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """A local-search allowlist, including an empty one, is authoritative."""
-    resolved = snapshot.get("resolved") or {}
-    originals = {item.get("id"): item for item in resolved.get("knowledge_resources", []) if isinstance(item, dict)}
-    raw = snapshot.get("local_search_resources") if "local_search_resources" in snapshot else list(originals.values())
-    if not isinstance(raw, list):
-        raise WorkResourceError("resource_scope_invalid")
-    rows: dict[str, dict[str, Any]] = {}
-    for item in raw:
-        if not isinstance(item, dict):
-            raise WorkResourceError("resource_scope_invalid")
-        identifier = item.get("id") or item.get("resource_id")
-        if not isinstance(identifier, str) or not identifier or identifier in rows:
-            raise WorkResourceError("resource_scope_invalid")
-        original = copy.deepcopy(originals.get(identifier, {}))
-        row = {**original, **copy.deepcopy(item), "id": identifier}
-        policy = _declared_policy(original)
-        if policy:
-            row.pop("indexing", None)
-            row.update(policy)
-        rows[identifier] = row
-    return rows
-
-
-def portable_reference(row: dict[str, Any]) -> dict[str, Any]:
-    reference = row.get("path_ref")
-    if not isinstance(reference, dict) or not reference:
-        raise WorkResourceError("resource_reference_unverifiable")
-    # References are declarations, never a caller-provided absolute root.
-    for key in ("relative_path", "path"):
-        value = reference.get(key)
-        if value is not None and (not isinstance(value, str) or re.match(r"^(?:[A-Za-z]:|[/\\])", value)
-                                  or ".." in value.replace("\\", "/").split("/")):
-            raise WorkResourceError("resource_path_invalid")
-    return copy.deepcopy(reference)
-
-
 def _root(project: Path, workplace: Path | None, core: Any, row: dict[str, Any]) -> tuple[Path, dict[str, Any]]:
     from ..resources.snapshot import resolve_garage_path_ref
 
-    reference = portable_reference(row)
+    reference = ResourceDeclarationPolicy(error=lambda: WorkResourceError).portable_reference(row)
     result = resolve_garage_path_ref(project, reference, workplace or project, core)
     if result.get("status") != "resolved" or not result.get("path"):
         raise WorkResourceError("resource_material_missing", resource_id=row["id"])
@@ -103,8 +46,8 @@ def build_resource_bindings(project: Path, workplace: Path | None, core: Any,
     result: dict[str, Any] = {"schema_version": 1, "resources": [], "limits": dict(DEFAULT_LIMITS)}
     budget = MaterialBudget()
     try:
-        identifiers = _ids(selected_ids, "resource_scope_invalid")
-        rows = grant_rows(load_snapshot(project, core))
+        identifiers = ResourceDeclarationPolicy(error=lambda: WorkResourceError).identifiers(selected_ids, "resource_scope_invalid")
+        rows = ResourceDeclarationPolicy(error=lambda: WorkResourceError).grant_rows(load_snapshot(project, core))
     except WorkResourceError as exc:
         return {**result, "status": "unavailable", "reason": exc.code}
     for identifier in identifiers:
@@ -162,7 +105,7 @@ class WorkResourceService:
         return build_work_resource_context_reader(
             project_root=lambda: self.project_root, selector_pattern=lambda: SAFE_ID_RE,
             flow_root=lambda: self.core.locate_flow_root, project_id=lambda: self.core.project_id,
-            load=lambda: self._load, identifiers=lambda: _ids, fingerprint=lambda: canonical_fingerprint,
+            load=lambda: self._load, identifiers=lambda: ResourceDeclarationPolicy(error=lambda: WorkResourceError).identifiers, fingerprint=lambda: canonical_fingerprint,
             contract_validator=contract_validator, error=lambda: WorkResourceError,
         )
 
@@ -186,7 +129,7 @@ class WorkResourceService:
             check = self.core.project_context_check_result(self.project_root, explicit_workplace=str(self.workplace_root) if self.workplace_root else None)
             if check.get("status") not in {"fresh", "fresh_with_updates"}:
                 raise WorkResourceError("snapshot_not_fresh")
-            rows = grant_rows(load_snapshot(self.project_root, self.core))
+            rows = ResourceDeclarationPolicy(error=lambda: WorkResourceError).grant_rows(load_snapshot(self.project_root, self.core))
             if operation == "resolve":
                 if not isinstance(resource_id, str) or not resource_id:
                     raise WorkResourceError("resource_id_required")
@@ -206,7 +149,7 @@ class WorkResourceService:
                     raise WorkResourceError("resource_access_revoked", resource_id=identifier)
                 if binding.get("status") != "available":
                     raise WorkResourceError(str(binding.get("reason") or "resource_material_unavailable"), resource_id=identifier)
-                reference = portable_reference(rows[identifier])
+                reference = ResourceDeclarationPolicy(error=lambda: WorkResourceError).portable_reference(rows[identifier])
                 if canonical_fingerprint(metadata_descriptor(rows[identifier], reference)) != binding.get("metadata_fingerprint"):
                     raise WorkResourceError("resource_generation_changed", resource_id=identifier)
             documents, provenances, verified = [], [], []

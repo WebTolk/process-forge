@@ -22,7 +22,8 @@ from ..work.resource_material import (
     capture_material,
     metadata_descriptor,
 )
-from ..work.resources import WorkResourceError, _root, grant_rows, portable_reference
+from ..work.resources import WorkResourceError, _root
+from ..work.resource_declarations import ResourceDeclarationPolicy
 
 
 MAX_SNAPSHOT_BYTES = 2 * 1024 * 1024
@@ -164,7 +165,7 @@ def _authorize_knowledge(project: Path, workplace: Path, requested: list[Any], c
         _fail("snapshot_generation_changed")
     bindings = _resource_bindings(capsule)
     try:
-        current_rows = grant_rows(current_snapshot)
+        current_rows = ResourceDeclarationPolicy(error=lambda: WorkResourceError).grant_rows(current_snapshot)
     except WorkResourceError as exc:
         _fail(exc.code)
     ids = set(selected_ids)
@@ -189,7 +190,7 @@ def _authorize_knowledge(project: Path, workplace: Path, requested: list[Any], c
 
         row = _current_resource(current_rows, identifier)
         try:
-            reference = portable_reference(row)
+            reference = ResourceDeclarationPolicy(error=lambda: WorkResourceError).portable_reference(row)
             descriptor = metadata_descriptor(row, reference)
             metadata_fp = _fingerprint(descriptor)
             if metadata_fp != binding.get("metadata_fingerprint"):
