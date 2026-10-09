@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -12,6 +13,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.resource_context import WorkContractValidator, WorkControlDocumentReader, WorkResourceContextReadService, WorkResourceErrorFactory
     from .work.continuation_status import ContinuationStatusReadService, WorkCandidateReader
     from .work.continuation_read import ContinuationRecordReader
     from .work.start_publication import StartEventWriter, StartStateReader, WorkStartPublicationService
@@ -62,6 +64,21 @@ class LegacyWorkReadAdapter:
 
     def load_yaml_document(self, path: Path) -> dict[str, Any]:
         return self.core.load_yaml_document(path)
+
+
+def build_work_resource_context_reader(
+    *, project_root: Callable[[], Path], selector_pattern: Callable[[], re.Pattern[str]],
+    flow_root: Callable[[], Callable[[Path], Path]], project_id: Callable[[], Callable[[Path], str]],
+    load: Callable[[], WorkControlDocumentReader], identifiers: Callable[[], Callable[[Any, str], list[str]]],
+    fingerprint: Callable[[], Callable[[dict], str]], contract_validator: Callable[[], WorkContractValidator],
+    error: Callable[[], WorkResourceErrorFactory],
+) -> WorkResourceContextReadService:
+    from .work.resource_context import WorkResourceContextReadService
+
+    return WorkResourceContextReadService(
+        project_root=project_root, selector_pattern=selector_pattern, flow_root=flow_root, project_id=project_id,
+        load=load, identifiers=identifiers, fingerprint=fingerprint, contract_validator=contract_validator, error=error,
+    )
 
 
 def build_continuation_status_reader(

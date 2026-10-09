@@ -7,13 +7,17 @@ import json
 from pathlib import Path
 import re
 import sqlite3
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from ..resources.local_search import LocalSearchError, pagination
 from ..process_execution import SAFE_ID_RE, canonical_fingerprint
 from .resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, capture_material, metadata_descriptor
+
+
+if TYPE_CHECKING:
+    from .resource_context import WorkContractValidator, WorkResourceContextReadService
 
 
 MAX_STATE_BYTES = 2 * 1024 * 1024
@@ -145,79 +149,26 @@ class WorkResourceService:
             raise WorkResourceError("work_context_invalid")
         return (value, "sha256:" + hashlib.sha256(raw).hexdigest()) if with_digest else value
 
-    def _context(self, run_id: Any, assignment_id: Any, context_id: Any) -> tuple[dict, list, dict]:
-        if any(not isinstance(item, str) or not SAFE_ID_RE.fullmatch(item) for item in (run_id, assignment_id, context_id)):
-            raise WorkResourceError("work_selector_required")
-        flow = self.core.locate_flow_root(self.project_root)
-        run = self._load(flow / "runs" / run_id / "run.yaml")
-        assignment = self._load(flow / "assignments" / f"{assignment_id}.yaml")
-        if (run.get("id") != run_id or assignment.get("id") != assignment_id or assignment.get("run_id") != run_id
-                or not any(isinstance(task, dict) and task.get("id") == assignment_id for task in run.get("tasks", []))):
-            raise WorkResourceError("work_identity_mismatch")
-        pin = run.get("process_execution") or {}
-        assignment_pin = assignment.get("process_execution") or {}
-        expected_path = f".pf/contexts/assignment-capsules/{assignment_id}.capsule.yaml"
-        if assignment_pin.get("assignment_capsule") != expected_path:
-            raise WorkResourceError("legacy_contract_incomplete", remediation="create_successor_work")
-        path = flow / "contexts" / "assignment-capsules" / f"{assignment_id}.capsule.yaml"
-        capsule, digest = self._load(path, with_digest=True)
-        if assignment_pin.get("assignment_capsule_checksum") != digest:
-            raise WorkResourceError("work_context_checksum_mismatch")
-        if capsule.get("capsule", {}).get("id") != context_id:
-            raise WorkResourceError("work_context_mismatch")
-        if (capsule.get("assignment", {}).get("id") != assignment_id
-                or capsule.get("assignment", {}).get("run_id") != run_id
-                or capsule.get("capsule", {}).get("assignment_id") != assignment_id
-                or capsule.get("capsule", {}).get("immutable") is not True):
-            raise WorkResourceError("work_identity_mismatch")
-        capsule_pin = capsule.get("process_execution") or {}
-        definition = capsule_pin.get("definition")
-        if not isinstance(definition, dict) or capsule_pin.get("process_fingerprint") != canonical_fingerprint(definition):
-            raise WorkResourceError("process_pin_invalid")
-        for key in ("process_id", "process_version", "process_fingerprint", "snapshot_id", "snapshot_checksum"):
-            if not capsule_pin.get(key) or capsule_pin.get(key) != pin.get(key) or capsule_pin.get(key) != assignment_pin.get(key):
-                raise WorkResourceError("work_context_mismatch")
-        if pin.get("definition") != definition:
-            raise WorkResourceError("process_pin_invalid")
-        snapshot = capsule.get("context_snapshot") or {}
-        if snapshot.get("id") != capsule_pin["snapshot_id"] or snapshot.get("sha256") != capsule_pin["snapshot_checksum"]:
-            raise WorkResourceError("work_context_mismatch")
-        selected = _ids(capsule.get("context", {}).get("selected_resource_ids"), "resource_scope_invalid")
-        # Older native pins preserve declaration order while their complete
-        # contexts sort it. Grants are membership; validate each list before
-        # comparing so duplicates and malformed pins still fail closed.
-        selected_set = set(selected)
-        if any(set(_ids(item.get("selected_resource_ids"), "resource_scope_invalid")) != selected_set
-               for item in (capsule_pin, pin)):
-            raise WorkResourceError("resource_scope_invalid")
-        bindings = capsule.get("resource_bindings")
-        if not isinstance(bindings, dict):
-            raise WorkResourceError("legacy_contract_incomplete", remediation="create_successor_work")
-        if type(bindings.get("schema_version")) is not int or bindings["schema_version"] != 1:
-            raise WorkResourceError("resource_binding_version_unsupported")
-        resources = bindings.get("resources")
-        if not isinstance(resources, list) or any(not isinstance(item, dict) for item in resources):
-            raise WorkResourceError("resource_binding_invalid")
-        if set(_ids([item.get("id") for item in resources], "resource_binding_invalid")) != selected_set:
-            raise WorkResourceError("resource_binding_invalid")
-        if "execution_contract" in capsule:
+    def _context_reader(self) -> WorkResourceContextReadService:
+        from ..composition import build_work_resource_context_reader
+
+        def contract_validator() -> WorkContractValidator:
             from .context import validate_execution_contract
-            validation = validate_execution_contract(self.project_root, flow / "assignments" / f"{assignment_id}.yaml", assignment, capsule, self.core)
-            if validation["status"] != "valid":
-                raise WorkResourceError(validation.get("reason") or "execution_contract_invalid", remediation="create_successor_work")
-            scope = capsule["execution_contract"]["scope"]
-            if "read" not in scope["allowed_actions"] or "read" in scope["forbidden_actions"]:
-                raise WorkResourceError("scope_denied")
-        stage = next((item for item in definition.get("stages", []) if isinstance(item, dict) and item.get("id") == assignment.get("stage")), None)
-        if stage is None:
-            raise WorkResourceError("work_stage_invalid")
-        subset = _ids(stage["resource_subset"], "stage_resource_subset_invalid") if "resource_subset" in stage else selected
-        if not set(subset).issubset(selected):
-            raise WorkResourceError("stage_resource_subset_invalid")
-        identity = {"project_id": self.core.project_id(self.project_root), "run_id": run_id,
-                    "assignment_id": assignment_id, "context_id": context_id, "context_checksum": digest,
-                    "snapshot_id": snapshot["id"], "snapshot_checksum": snapshot["sha256"], "stage_id": stage["id"]}
-        return identity, [item for item in resources if item["id"] in subset], {"pinned": selected, "stage": subset}
+
+            def validate(project_root: Path, path: Path, assignment: dict, capsule: dict) -> dict:
+                return validate_execution_contract(project_root, path, assignment, capsule, self.core)
+
+            return validate
+
+        return build_work_resource_context_reader(
+            project_root=lambda: self.project_root, selector_pattern=lambda: SAFE_ID_RE,
+            flow_root=lambda: self.core.locate_flow_root, project_id=lambda: self.core.project_id,
+            load=lambda: self._load, identifiers=lambda: _ids, fingerprint=lambda: canonical_fingerprint,
+            contract_validator=contract_validator, error=lambda: WorkResourceError,
+        )
+
+    def _context(self, run_id: Any, assignment_id: Any, context_id: Any) -> tuple[dict, list, dict]:
+        return self._context_reader().read(run_id, assignment_id, context_id)
 
     def read(self, *, operation: str, run_id: str, assignment_id: str, context_id: str,
              resource_id: str | None = None, query: Any = None, limit: Any = None,

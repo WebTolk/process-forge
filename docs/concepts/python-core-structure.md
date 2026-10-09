@@ -80,6 +80,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/work/continuation_read.py` | Existing bounded control-document reads and Continuation/selection paths with explicit live dependencies. |
 | `src/processforge_core/work/continuation_contract.py` | Existing record version and binding validation with an explicit error provider. |
 | `src/processforge_core/work/continuation_status.py` | Existing live waiting/status/selected reads with explicit dependencies. |
+| `src/processforge_core/work/resource_context.py` | Existing pinned Work resource context reads with explicit dependencies. |
 | `src/processforge_core/work/permissions.py` | Shared pure Work permission readiness. |
 | `src/processforge_core/project/reconciliation.py` | Existing context reconciliation projection through the required deferred typed context checker, without Core. |
 | `src/processforge_core/project/context.py` | Existing five ProjectContextService operations and context-specific per-dispatch readers through required typed dependencies, without Core. |
@@ -167,6 +168,8 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 `ContinuationContractPolicy` in `work/continuation_contract.py` owns the existing record ID/status, exact version and binding checks through a required deferred error provider. The coordinator keeps its overridable validation entry and binding authority. The existing pure `permission_readiness` function lives in `work/permissions.py`, shared with lifecycle start/state without importing the Continuation coordinator. Versions, error priority, permission blockers, list references and released results remain unchanged.
 
 `ContinuationStatusReadService` in `work/continuation_status.py` performs the existing waiting/status/selected read workflows through eleven required deferred operation providers. Discovery freshness, the 20-candidate limit, the 128-artifact limit, receipt/version comparisons, callback lookup order and results remain unchanged. The coordinator retains overridable facade methods, public error translation and mutation/binding authority; cold composition introduces no cache or permissions.
+
+`WorkResourceContextReadService` in `work/resource_context.py` owns the existing pinned context read through nine required deferred dependencies, without Core. Invalid selectors fail before Core/project-root/document access. Run/Assignment/Capsule reads, digest and process/snapshot/resource/stage pins, execution-contract import/call order, read scope and result references remain unchanged. WorkResourceService keeps its constructor, bounded loader, overridable context call and public resource routes; composition is cold.
 
 ## Observation
 
