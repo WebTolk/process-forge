@@ -10,6 +10,7 @@ from typing import Any
 from .ports import ProjectSnapshotReadPort, WorkReadCorePort
 from .common.request_scope import scoped_request
 from .work.inventory import WorkInventory
+from .work.projection import WorkProjectionPolicy
 from .resources.access import ResourceSearchService
 from .project.snapshot import load_snapshot
 from .resources.snapshot import resource_selection_summary, snapshot_with_resolved_search_roots
@@ -22,9 +23,10 @@ class CurrentWorkService:
 
     def summary(self) -> dict[str, Any]:
         active = self.active_items()
+        projection = WorkProjectionPolicy()
         return {
             "governed": bool(active),
-            "active_runs": compact_active_runs(active),
+            "active_runs": projection.compact_active_runs(active),
             "active_work": active[:10],
             "recommendation": "continue" if active else "start_work",
         }
@@ -33,11 +35,12 @@ class CurrentWorkService:
         return [item for item in self.items() if item["state"] == "active" and not item["bootstrap_placeholder"]]
 
     def find_by_objective(self, objective: str) -> dict[str, Any]:
-        normalized = normalize_objective(objective)
+        projection = WorkProjectionPolicy()
+        normalized = projection.normalize_objective(objective)
         active: list[dict[str, Any]] = []
         historical: list[dict[str, Any]] = []
         for item in self.items():
-            if item["bootstrap_placeholder"] or normalize_objective(str(item.get("objective") or "")) != normalized:
+            if item["bootstrap_placeholder"] or projection.normalize_objective(str(item.get("objective") or "")) != normalized:
                 continue
             if item["state"] == "active":
                 active.append(item)
@@ -48,24 +51,25 @@ class CurrentWorkService:
     def items(self) -> list[dict[str, Any]]:
         flow_root = self.core.locate_flow_root(self.project_root)
         inventory = WorkInventory(flow_root, self.core.load_yaml_document)
+        projection = WorkProjectionPolicy()
         rows: list[dict[str, Any]] = []
         for run_path, run in inventory.runs():
             run_status = str(run.get("status") or "")
             run_id = str(run.get("id") or run_path.parent.name)
             tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
             if not tasks:
-                rows.append(work_item(run_id=run_id, run_status=run_status, task={}, run=run))
+                rows.append(projection.work_item(run_id=run_id, run_status=run_status, task={}, run=run))
             for entry in tasks:
                 if not isinstance(entry, dict):
                     continue
                 task_id = str(entry.get("id") or "")
                 task_path = inventory.assignment_path(task_id)
                 task = inventory.assignment(task_id) if task_path.is_file() else {"id": task_id, "status": entry.get("status"), "objective": run.get("objective")}
-                rows.append(work_item(run_id=run_id, run_status=run_status, task=task, run=run))
+                rows.append(projection.work_item(run_id=run_id, run_status=run_status, task=task, run=run))
         first = inventory.assignment_path("first-assignment")
         if first.is_file():
             task = inventory.assignment("first-assignment")
-            rows.append(work_item(run_id="", run_status="", task=task, run={}))
+            rows.append(projection.work_item(run_id="", run_status="", task=task, run={}))
         return rows
 
 
@@ -85,10 +89,6 @@ def diagnostics_from_check(check: dict[str, Any], search: dict[str, Any], mode: 
         if isinstance(blocker, dict):
             diagnostics.append({"code": str(blocker.get("code") or "mode_blocker"), "severity": "blocked", "message": str(blocker.get("message") or "")})
     return diagnostics
-
-
-ACTIVE_STATUSES = {"open", "in_progress", "review", "blocked"}
-HISTORICAL_STATUSES = {"done", "completed", "cancelled", "failed"}
 
 
 def selected_process_id(project_root: Path, core: Any) -> str:
@@ -127,35 +127,3 @@ def unique_id(root: Path, seed: str) -> str:
     return candidate
 
 
-def normalize_objective(value: str) -> str:
-    return " ".join(value.casefold().split())
-
-
-def work_item(*, run_id: str, run_status: str, task: dict[str, Any], run: dict[str, Any]) -> dict[str, Any]:
-    task_id = str(task.get("id") or "")
-    task_status = str(task.get("status") or run_status or "")
-    state = "active" if task_status in ACTIVE_STATUSES or run_status in ACTIVE_STATUSES else ("historical" if task_status in HISTORICAL_STATUSES or run_status in HISTORICAL_STATUSES else "other")
-    bootstrap = task_id == "first-assignment" or str(task.get("objective") or "").lower().startswith("verify processforge project onboarding")
-    return {
-        "run_id": run_id,
-        "assignment_id": task_id,
-        "run_status": run_status,
-        "status": task_status,
-        "state": state,
-        "stage": str(task.get("stage") or ""),
-        "process": str(task.get("process") or run.get("process") or ""),
-        "objective": str(task.get("objective") or run.get("objective") or ""),
-        "bootstrap_placeholder": bootstrap,
-    }
-
-
-def compact_active_runs(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    seen: set[str] = set()
-    result: list[dict[str, Any]] = []
-    for item in items:
-        run_id = str(item.get("run_id") or "")
-        if not run_id or run_id in seen:
-            continue
-        seen.add(run_id)
-        result.append({"run_id": run_id, "status": item.get("run_status"), "process": item.get("process")})
-    return result[:10]

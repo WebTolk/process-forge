@@ -72,6 +72,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
 | `src/processforge_core/evidence/` | Existing evidence collection/identity, normalization and live file diagnostics, requirement/gate satisfaction and ordered readiness blockers through explicit callbacks. |
 | `src/processforge_core/garage.py` | Existing current Work and remaining legacy helpers; project context assembly and reconciliation live under `project/`. |
+| `src/processforge_core/work/projection.py` | Existing pure Work projection/classification rules, without Core or lifecycle authority. |
 | `src/processforge_core/work/bootstrap.py` | Existing guidance/start delegation through explicit summary and deferred typed start dependencies. |
 | `src/processforge_core/project/reconciliation.py` | Existing context reconciliation projection through the required deferred typed context checker, without Core. |
 | `src/processforge_core/project/context.py` | Existing five ProjectContextService operations and context-specific per-dispatch readers through required typed dependencies, without Core. |
@@ -145,6 +146,8 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 `ContextReconciliationService` belongs to `project/reconciliation.py`. Its required keyword-only getter returns the existing `ProjectContextCheck` before project/workplace arguments are evaluated. `build_context_reconciliation_service` binds that getter without I/O or early Core attribute lookup. The stale-reason classification, technical refresh advice, broken/operator decision, result fields and exceptions retain their existing form. This existing service has no production consumers in the current source; the relocation adds no route or automatic refresh. The old Garage class/import alias is removed.
 
 `GovernedWorkBootstrapService` lives in `work/bootstrap.py`. Required named current-work summary and typed WorkStart getter dependencies replace Core. Cold composition supplies existing CurrentWorkService and ProcessExecutionService at call time; start lookup precedes option normalization. Existing guidance, preferred-stage mapping and lifecycle authority are preserved. The old Garage class/import is removed without an alias; no new route or consumer is added.
+
+`WorkProjectionPolicy` in `work/projection.py` groups the existing item classification, objective normalization and compact active-run projections without I/O or Core. CurrentWorkService retains its constructor and live WorkInventory discovery; it uses a local stateless policy at the existing projection points. Status/fallback order, bootstrap exclusion, ordered deduplication and ten-item limits are unchanged. The old Garage helper functions/constants are removed without aliases.
 
 ## Observation
 

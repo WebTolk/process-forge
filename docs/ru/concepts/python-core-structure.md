@@ -77,6 +77,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
 | `src/processforge_core/evidence/` | Прежние правила сбора и identity доказательств, нормализация и актуальная диагностика файлов, удовлетворение требований и gates, порядок blockers готовности через явные зависимости. |
 | `src/processforge_core/garage.py` | Чтение текущей Work и оставшиеся legacy helpers; сборка контекста проекта и reconciliation находятся в `project/`. |
+| `src/processforge_core/work/projection.py` | Прежние чистые правила проекций и классификации Work, без Core и полномочий lifecycle. |
 | `src/processforge_core/work/bootstrap.py` | Прежние guidance/start через явную сводку и отложенную типизированную зависимость запуска. |
 | `src/processforge_core/project/reconciliation.py` | Прежняя проекция reconciliation контекста через обязательный отложенный типизированный checker, без Core. |
 | `src/processforge_core/project/context.py` | Пять существующих операций ProjectContextService и отдельные readers одного вызова через обязательные типизированные зависимости, без Core. |
@@ -150,6 +151,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 `ContextReconciliationService` находится в `project/reconciliation.py`. Сервис получает пути проекта/workplace и именованный provider существующего `ProjectContextCheck`, без универсального Core. Фабрика в `composition.py` не выполняет I/O; checker извлекается при каждом вызове `status` до вычисления аргументов. Сохранены порядок причин, признаки безопасного технического обновления и необходимости решения оператора, а также исключения прежнего алгоритма. Внутренний класс удалён из Garage без alias; новые потребители или автоматическое обновление контекста не добавляются.
 
 `GovernedWorkBootstrapService` находится в `work/bootstrap.py`. Обязательные именованные зависимости — получение текущей сводки Work и provider типизированного WorkStart, без универсального Core. Холодная фабрика собирает прежние CurrentWorkService и ProcessExecutionService при вызове; получение start предшествует нормализации параметров. Сохранены guidance, mapping preferred-stage и полномочия прежнего координатора lifecycle. Старый класс/import удалён из Garage без alias; новые маршруты или потребители не добавляются.
+
+`WorkProjectionPolicy` в `work/projection.py` объединяет прежние правила классификации элементов, нормализации objective и краткой проекции активных Run без I/O и Core. Конструктор CurrentWorkService и актуальный обход WorkInventory сохранены; проекции вычисляет локальный сервис без состояния. Прежними остаются порядок статусов/fallbacks, исключение bootstrap, порядок удаления повторов и предел десять элементов. Старые Garage helpers/constants удалены без aliases.
 
 ## Диагностика
 
