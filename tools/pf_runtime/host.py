@@ -1275,11 +1275,11 @@ def command_resolve(args: argparse.Namespace, core: Any) -> int:
 
 
 def resolve_payload(workplace_root: Path, core: Any, *, session: str | None = None, project_root_ref: str | None = None, resource_id: str | None = None) -> dict[str, Any]:
-    from processforge_core.resources.access import ResourceResolveService
+    from processforge_core.composition import build_resource_resolve_service
 
     project_root = project_for_session(argparse.Namespace(session=session, project_root=project_root_ref), workplace_root, core)
     handle = route_project(str(project_root), workplace_root, core)
-    resolved_payload = ResourceResolveService(project_root, workplace_root, core).resolve(resource_id=resource_id)
+    resolved_payload = build_resource_resolve_service(project_root, workplace_root, core).resolve(resource_id=resource_id)
     payload: dict[str, Any] = {"workplace_root": str(workplace_root), "project": handle, "session": session or ""}
     if not resource_id:
         return payload

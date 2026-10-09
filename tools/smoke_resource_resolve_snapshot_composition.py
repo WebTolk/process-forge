@@ -60,7 +60,10 @@ def scenario(service_type, *, document=None, resource_id=RESOURCE_ID, error='', 
             raise ValueError('reference-resolution-failure')
         return {'status': resolution_status, 'path': 'fixture-root' if resolution_status == 'resolved' else ''}
     core = SimpleNamespace(project_id=project_id, project_context_snapshot_paths=paths, load_yaml_document=load, resolve_workspace_path_ref=resolve, locate_flow_root=lambda root: root / '.pf')
-    service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))
+    if service_type is access.ResourceResolveService:
+        service = composition.build_resource_resolve_service(Path('p'), Path('w'), core, snapshots=snapshots)
+    else:
+        service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))
     return outcome(lambda: service.resolve(resource_id=resource_id)), events
 class MemorySnapshots:
     def __init__(self, document=None):
@@ -113,18 +116,18 @@ class ResolveSnapshotTests(unittest.TestCase):
         fail = lambda *a, **k: self.fail('Assembly must not call Core')
         core = SimpleNamespace(project_id=fail, project_context_snapshot_paths=fail, load_yaml_document=fail)
         memory = MemorySnapshots()
-        old = access.ResourceResolveService(Path('p'), Path('w'), core)
+        old = composition.build_resource_resolve_service(Path('p'), Path('w'), core)
         built = composition.build_resource_resolve_service(Path('p'), Path('w'), core, snapshots=memory)
         self.assertIs(built.snapshots, memory)
         self.assertEqual(old, built)
         self.assertEqual(repr(old), repr(built))
         self.assertEqual(outcome(lambda: hash(old)), outcome(lambda: hash(built)))
-        self.assertEqual(old.__match_args__, ('project_root', 'workplace_root', 'core'))
+        self.assertEqual(old.__match_args__, ('project_root', 'workplace_root', 'reads'))
         field = next(item for item in fields(built) if item.name == 'snapshots')
         self.assertTrue(field.kw_only)
         self.assertFalse(field.compare or field.repr)
         with self.assertRaises(TypeError):
-            access.ResourceResolveService(Path('p'), Path('w'), core, memory)
+            access.ResourceResolveService(Path('p'), Path('w'), old.reads, memory)
 
     def test_real_yaml_live_reads_and_request_isolation(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
@@ -203,7 +206,7 @@ class ResolveSnapshotTests(unittest.TestCase):
             self.assertEqual(actual['resource']['navigation'], 'private_runtime_authorized')
             self.assertEqual(len(reads), 1)
             if BASELINE:
-                with patch.object(access, 'ResourceResolveService', BASELINE['ResourceResolveService']):
+                with patch.object(composition, 'build_resource_resolve_service', side_effect=lambda project, workplace, supplied: BASELINE['ResourceResolveService'](project, workplace, supplied)):
                     self.assertEqual(call(), actual)
             reads.clear()
             self.assertNotIn('resource', pf_host.resolve_payload(Path('w'), core, session='s'))

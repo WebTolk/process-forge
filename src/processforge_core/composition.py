@@ -241,12 +241,32 @@ def build_resource_search_service(
     return ResourceSearchService(project_root, workplace_root, LegacyResourceSearchReadAdapter(project_root, workplace_root, core), snapshots=snapshots)
 
 
+@dataclass(frozen=True)
+class LegacyResourceResolveReadAdapter:
+    project_root: Path
+    workplace_root: Path
+    core: Any
+
+    def project_id(self) -> str:
+        return self.core.project_id(self.project_root)
+
+    def read_snapshot(self, snapshots: ProjectSnapshotReadPort | None) -> dict[str, Any]:
+        from .resources.access import load_snapshot
+
+        return load_snapshot(self.project_root, self.core, snapshots=snapshots)
+
+    def path_ref_resolver(self) -> Callable[[dict[str, Any]], dict[str, Any]]:
+        from .resources.access import resolve_garage_path_ref
+
+        return lambda reference: resolve_garage_path_ref(self.project_root, reference, self.workplace_root, self.core)
+
+
 def build_resource_resolve_service(
     project_root: Path, workplace_root: Path, core: Any, *, snapshots: ProjectSnapshotReadPort | None = None,
 ) -> ResourceResolveService:
     from .resources.access import ResourceResolveService
 
-    return ResourceResolveService(project_root, workplace_root, core, snapshots=snapshots)
+    return ResourceResolveService(project_root, workplace_root, LegacyResourceResolveReadAdapter(project_root, workplace_root, core), snapshots=snapshots)
 
 
 def build_garage_mode_service(

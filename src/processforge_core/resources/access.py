@@ -80,11 +80,19 @@ class ResourceSearchService:
         return payload
 
 
+class ResourceResolveReadPort(Protocol):
+    def project_id(self) -> str: ...
+
+    def read_snapshot(self, snapshots: ProjectSnapshotReadPort | None) -> dict[str, Any]: ...
+
+    def path_ref_resolver(self) -> Callable[[dict[str, Any]], dict[str, Any]]: ...
+
+
 @dataclass(frozen=True)
 class ResourceResolveService:
     project_root: Path
     workplace_root: Path
-    core: Any
+    reads: ResourceResolveReadPort = field(repr=False, compare=False)
     snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
 
     def resolve(self, *, resource_id: str | None = None) -> dict[str, Any]:
@@ -92,11 +100,11 @@ class ResourceResolveService:
             "schema_version": 1,
             "kind": "pf.resolve",
             "scope": "project_context",
-            "project": {"id": self.core.project_id(self.project_root), "root": str(self.project_root)},
+            "project": {"id": self.reads.project_id(), "root": str(self.project_root)},
         }
         if not resource_id:
             return payload
-        snapshot = load_snapshot(self.project_root, self.core, snapshots=self.snapshots)
+        snapshot = self.reads.read_snapshot(self.snapshots)
         selected = selected_resource(snapshot, resource_id)
         if not selected:
             return {**payload, "resource": {"id": resource_id, "status": "denied", "reason": "not_in_project_snapshot"}}
@@ -109,7 +117,7 @@ class ResourceResolveService:
             "application": selected.get("application") or {"package_id": selected.get("package_id"), "kind": selected.get("kind")},
         }
         if isinstance(selected.get("path_ref"), dict):
-            resolution = resolve_garage_path_ref(self.project_root, selected["path_ref"], self.workplace_root, self.core)
+            resolution = self.reads.path_ref_resolver()(selected["path_ref"])
             if resolution.get("status") == "resolved" and resolution.get("path"):
                 resource["local_root"] = str(Path(str(resolution["path"])).resolve())
                 resource["navigation"] = "private_runtime_authorized"
