@@ -12,8 +12,8 @@ requirement. Keep the package tree shallow and package initializers minimal.
 
 The existing Work modules now live in `processforge_core.work`: `context`,
 `context_read`, `inventory`, `records`, `resources`, `resource_material`,
-`selection`, `state`, `boundary_advisory`, `transition_commit`, `automation_readiness`
-and `transition_rejection`. For example,
+`selection`, `state`, `boundary_advisory`, `transition_commit`, `automation_readiness`,
+`transition_rejection`, `publication` and `events`. For example,
 import `WorkResourceService` from `processforge_core.work.resources`. Current
 Core/CLI/MCP/Host consumers use these paths. Old flat Work module imports are not
 retained during this dev refactor.
@@ -79,6 +79,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/documents/reader.py`, `work/inventory.py` | YAML reading and live sorted discovery; no shared mutable document cache. |
 | `src/processforge_core/work/records.py` | Live raw Run/Assignment reader; selection and recovery remain in the application service. |
 | `src/processforge_core/work/publication.py` | Existing atomic Work text/YAML publication through explicit deferred formatter/writer dependencies. |
+| `src/processforge_core/work/events.py` | Existing Work event envelope and subsequent diagnostics through a typed, dynamically resolved emitter. |
 | `src/processforge_core/work/context_read.py` | Existing capsule validation and assignment normalization with explicit path/validator callbacks. |
 | `src/processforge_core/process_catalog/` | Catalog models/resolution, effective ProcessDefinition reads, offered process selection and pin construction through explicit callbacks. |
 | `src/processforge_core/process_catalog/summary.py` | Existing allowed-process context summary with an optional typed definition resolver, without Core. |
@@ -133,6 +134,8 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 `FreshSessionBoundaryReadService` is colocated with `WorkBoundaryAdvisoryService` in `work/boundary_advisory.py`. Its three required frozen dependencies are the project path, the existing two-method `WorkReadCorePort` and a relative-path callback. `build_fresh_session_boundary_read_service(project_root, core)` supplies `LegacyWorkReadAdapter` and a deferred relative-path lambda without reading files or resolving `core.rel` at construction. `ProjectContextService.context` calls `read(work)` at the former helper position; the Garage `fresh_session_continuation` function is removed without an alias. Governed Work returns before reads. Glob order and timestamp tie handling, newest completed usable handoff selection, live route-file `is_file` checks, stable available-process de-duplication and the no-older-handoff rule retain their existing behavior. This read model keeps `session_continuity.recommendation` as `fresh`; the neighboring advisory keeps its separate `auto` projection and existing rules.
 
 `WorkDocumentPublisher` belongs to `work/publication.py` and owns the existing atomic text/YAML operations. Its required keyword-only dependencies resolve a text writer and YAML formatter at operation time; `build_work_document_publisher` binds them without I/O or eager Core/private-method lookup. YAML obtains the current `_atomic_text` callable before formatting, preserving subclass/fault interception and exception order, then applies the existing `rstrip()` plus exactly one newline. Text publication retains parent directory creation, UUID temporary name, UTF-8 write and `Path.replace`, with the existing failure behavior. `ProcessExecutionService` keeps its live `_atomic_yaml`/`_atomic_text` operational methods, so Continuation, transition and completion/recovery callbacks still use the same seams. Caller-supplied paths, locks, guards and lifecycle authority retain their current owners. No Core field, compatibility alias, extra cleanup, fsync or retry rule is introduced.
+
+`WorkEventPublisher` belongs to `work/events.py` and owns the existing event publication algorithm. It receives the project path, an availability callback and a provider of the exact keyword `ProcessEventEmitter` protocol; it receives no Core. `build_work_event_publisher` only binds those dependencies. The coordinator supplies the original dynamic `hasattr` policy and a separate late emitter lookup on every operation, before evaluating event arguments. An absent emitter returns before diagnostics, while a present non-callable attribute still raises. Event payloads, assignment paths, correlation/event IDs and `blockers or []` retain their existing form. Journal publication precedes the late import and existing Work diagnostics. `ProcessExecutionService._emit` remains the live operational facade for start, transition, completion/recovery and Continuation callbacks. Journal storage, event security, locks, deduplication and lifecycle authority retain their current owners; no alias or new rule is introduced.
 
 ## Observation
 

@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.events import ProcessEventEmitter, WorkEventPublisher
     from .work.publication import WorkDocumentPublisher
     from .work.boundary_advisory import FreshSessionBoundaryReadService
     from .process_catalog.summary import ProcessSummaryReadService
@@ -212,6 +213,17 @@ def build_derived_report_lifecycle_service(
     if snapshots is None:
         snapshots = build_project_context_snapshot_read_service(project_root, core)
     return DerivedReportLifecycleService(snapshots=snapshots, flow_root=lambda: core.locate_flow_root(project_root))
+
+
+def build_work_event_publisher(
+    *,
+    project_root: Path,
+    has_emitter: Callable[[], bool],
+    emitter: Callable[[], ProcessEventEmitter],
+) -> WorkEventPublisher:
+    from .work.events import WorkEventPublisher
+
+    return WorkEventPublisher(project_root=project_root, has_emitter=has_emitter, emitter=emitter)
 
 
 def build_work_document_publisher(

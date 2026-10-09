@@ -15,6 +15,7 @@ from .work.state import WorkStatePolicy
 from .evidence.collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .work.events import WorkEventPublisher
     from .work.publication import WorkDocumentPublisher
     from .project.context_read import ExecutionProjectReadService
     from .work.transition_commit import WorkTransitionCommitService
@@ -1214,37 +1215,24 @@ class ProcessExecutionService:
     def _write_task_index(self, run: dict[str, Any]) -> None:
         self._completion_document_service().write_task_index(run)
 
+    def _work_event_publisher(self) -> WorkEventPublisher:
+        from .composition import build_work_event_publisher
+
+        return build_work_event_publisher(
+            project_root=self.project_root,
+            has_emitter=lambda: hasattr(self.core, "emit_process_event"),
+            emitter=lambda: self.core.emit_process_event,
+        )
+
     def _emit(self, event_type: str, run: dict[str, Any], assignment: dict[str, Any], stage_id: str, *, outcome: str, previous_stage_id: str = "", next_stage_id: str = "", blockers: list[dict[str, Any]] | None = None, event_id: str | None = None) -> None:
-        if not hasattr(self.core, "emit_process_event"):
-            return
-        self.core.emit_process_event(
-            self.project_root,
-            event_type,
-            process_id=str(run.get("process") or ""),
-            process_version=str((run.get("process_execution") or {}).get("process_version") or ""),
-            stage=stage_id,
-            subject=str(assignment.get("id") or run.get("id") or event_type),
-            assignment_id_value=str(assignment.get("id") or ""),
-            assignment_path=f".pf/assignments/{assignment.get('id')}.yaml" if assignment.get("id") else None,
-            payload={
-                "run_id": str(run.get("id") or ""),
-                "assignment_id": str(assignment.get("id") or ""),
-                "process_id": str(run.get("process") or ""),
-                "stage_id": stage_id,
-                "previous_stage_id": previous_stage_id,
-                "next_stage_id": next_stage_id,
-                "outcome": outcome,
-                "blockers": blockers or [],
-            },
-            correlation_id=f"run-{run.get('id')}",
+        self._work_event_publisher().publish(
+            event_type, run, assignment, stage_id,
+            outcome=outcome,
+            previous_stage_id=previous_stage_id,
+            next_stage_id=next_stage_id,
+            blockers=blockers,
             event_id=event_id,
         )
-        from . import diagnostics
-        diagnostics.select_work(self.project_root, str(run.get("id") or ""), assignment.get("id"))
-        diagnostics.annotate(run_id=run.get("id"), assignment_id=assignment.get("id"), stage_id=stage_id)
-        diagnostics.emit("warning" if blockers else "info", "work.event_recorded", {
-            "event_type": event_type, "outcome": outcome, "blockers": blockers or [],
-        }, component="work")
 
     @contextlib.contextmanager
     def _start_lock(self) -> Iterator[None]:
