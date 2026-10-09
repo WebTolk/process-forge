@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / 'src'))
 from processforge_core import composition, garage
 from processforge_core.common import request_scope
 from processforge_core.project import mode, reports
+from processforge_core.process_catalog import summary
 BASELINE = None
 SCRATCH = None
 import copy
@@ -72,12 +73,15 @@ def context_scenario(service_type, *, document=UNSET, broken=False, memory=None,
             return copy.deepcopy(document)
         return {'manifest': 'retained'}
     core = SimpleNamespace(project_id=lambda root:'fixture', locate_flow_root=lambda root:Path('flow'), project_context_snapshot_paths=lambda root:(Path('snapshot.yaml'),Path('snapshot.md')), load_yaml_document=load, project_context_check_result=lambda *a, **k:{'status':'broken' if broken else 'fresh', 'broken':broken, 'snapshot_id':'fixture', 'policy_action':'continue'})
-    substitutes = {'ResourceSearchService': lambda *a:SimpleNamespace(readiness=lambda **kw:{'status':'ready'}), 'CurrentWorkService': lambda *a:SimpleNamespace(summary=lambda:{}), 'process_summary': lambda *a, **kw:{'process':'same'}, 'resource_selection_summary':lambda *a:{'selection':'same'}, 'fresh_session_continuation':lambda *a:None}
+    substitutes = {'ResourceSearchService': lambda *a:SimpleNamespace(readiness=lambda **kw:{'status':'ready'}), 'CurrentWorkService': lambda *a:SimpleNamespace(summary=lambda:{}), 'resource_selection_summary':lambda *a:{'selection':'same'}, 'fresh_session_continuation':lambda *a:None}
     report_service = lambda *a, **k:SimpleNamespace(status=lambda **kw:{'status':'ok'})
+    process_result = lambda *a, **kw:{'process':'same'}
+    process_service = lambda *a, **k:SimpleNamespace(summary=process_result)
     with ExitStack() as stack:
         stack.enter_context(patch.object(reports, 'DerivedReportLifecycleService', side_effect=report_service))
+        stack.enter_context(patch.object(summary, 'ProcessSummaryReadService', side_effect=process_service))
         if namespace is not None:
-            stack.enter_context(patch.dict(namespace, {'DerivedReportLifecycleService':report_service}))
+            stack.enter_context(patch.dict(namespace, {'DerivedReportLifecycleService':report_service, 'process_summary':process_result}))
         for name, value in substitutes.items():
             if namespace is None:
                 stack.enter_context(patch.object(garage, name, value))

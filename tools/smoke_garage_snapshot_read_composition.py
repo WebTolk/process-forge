@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT / 'src'))
 from processforge_core import composition, garage
 from processforge_core.common import request_scope
 from processforge_core.project import mode, reports, snapshot
+from processforge_core.process_catalog import summary
 from processforge_core.project.snapshot import ProjectSnapshotReadService
 
 BASELINE = None
@@ -194,19 +195,21 @@ class GarageSnapshotTests(unittest.TestCase):
                     replacements = {
                         'ResourceSearchService': lambda *a: SimpleNamespace(readiness=readiness),
                         'CurrentWorkService': lambda *a: SimpleNamespace(summary=lambda: {'active_work': []}),
-                        'process_summary': lambda snapshot, manifest, **k: {'snapshot': snapshot, 'manifest': manifest},
                         'resource_selection_summary': lambda snapshot: {'document': snapshot},
                         'diagnostics_from_check': lambda *a: [],
                         'fresh_session_continuation': lambda *a: {'id': 'continued'},
                     }
+                    process_result = lambda snapshot, manifest, **k: {'snapshot': snapshot, 'manifest': manifest}
+                    process_service = lambda *a, **k: SimpleNamespace(summary=process_result)
                     mode_service = lambda *a, **k: SimpleNamespace(status=lambda **k: {'mode': 'garage', 'session': {'id': k['session_id']}})
                     report_service = lambda *a, **k: SimpleNamespace(status=lambda **k: {'status': 'same', 'document': k['snapshot']})
                     with ExitStack() as stack:
                         stack.enter_context(patch.object(reports, 'DerivedReportLifecycleService', side_effect=report_service))
+                        stack.enter_context(patch.object(summary, 'ProcessSummaryReadService', side_effect=process_service))
                         stack.enter_context(patch.object(mode, 'GarageModeService', side_effect=mode_service))
                         stack.enter_context(patch.dict(garage.__dict__, replacements))
                         if BASELINE:
-                            stack.enter_context(patch.dict(BASELINE, {**replacements, 'GarageModeService': mode_service, 'DerivedReportLifecycleService': report_service}))
+                            stack.enter_context(patch.dict(BASELINE, {**replacements, 'GarageModeService': mode_service, 'DerivedReportLifecycleService': report_service, 'process_summary': process_result}))
                         result = outcome(lambda: constructor(Path('p'), Path('w'), core).context(session_id='session'))
                     self.assertIsNone(request_scope._CURRENT.get())
                     self.assertEqual(seen, [{}] if broken else [{'unknown': ['kept']}])

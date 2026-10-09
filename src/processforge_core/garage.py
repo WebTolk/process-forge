@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .ports import ProjectSnapshotReadPort, WorkReadCorePort
-from .process_execution import ProcessExecutionService, project_process_selection
+from .process_execution import ProcessExecutionService
 from .common.request_scope import scoped_request
 from .work.inventory import WorkInventory
 from .resources.access import ResourceSearchService
@@ -37,7 +37,7 @@ class ProjectContextService:
 
     @scoped_request
     def context(self, *, session_id: str = "") -> dict[str, Any]:
-        from .composition import build_derived_report_lifecycle_service, build_garage_mode_service
+        from .composition import build_derived_report_lifecycle_service, build_garage_mode_service, build_process_summary_read_service
 
         check = self.check()
         snapshot = self.snapshot() if not check.get("broken") else {}
@@ -59,7 +59,7 @@ class ProjectContextService:
                 "policy_action": check.get("policy_action"),
                 "recommended_action": check.get("recommended_action"),
             },
-            "process": process_summary(snapshot, manifest, project_root=self.project_root, core=self.core),
+            "process": build_process_summary_read_service(self.project_root, self.core).summary(snapshot, manifest),
             "resources": {
                 "search_status": search.get("status"),
                 "reason": search.get("reason"),
@@ -177,30 +177,6 @@ class CurrentWorkService:
             task = inventory.assignment("first-assignment")
             rows.append(work_item(run_id="", run_status="", task=task, run={}))
         return rows
-
-
-def process_summary(snapshot: dict[str, Any], manifest: dict[str, Any] | None = None, *, project_root: Path | None = None, core: Any = None) -> dict[str, Any]:
-    processes = snapshot.get("processes") if isinstance(snapshot.get("processes"), dict) else {}
-    current = processes.get("current") if isinstance(processes.get("current"), dict) else {}
-    selection = processes.get("selection") if isinstance(processes.get("selection"), dict) else project_process_selection(manifest or {})
-    allowed = selection.get("allowed") if isinstance(selection.get("allowed"), list) else []
-    candidates = []
-    for process_id in allowed:
-        item = {"id": str(process_id), "title": str(process_id), "purpose": ""}
-        if project_root is not None and core is not None:
-            try:
-                process = core.resolve_process_definition(project_root, str(process_id)).process
-                item["title"] = str(process.get("name") or process_id)
-                item["purpose"] = str(process.get("purpose") or process.get("description") or "")
-            except (OSError, ValueError, SystemExit):
-                pass
-        candidates.append(item)
-    return {
-        "id": str(current.get("id") or ""),
-        "stage_count": len(current.get("stages") or []) if isinstance(current.get("stages"), list) else 0,
-        "default": str(selection.get("default") or ""),
-        "allowed": candidates,
-    }
 
 
 def fresh_session_continuation(project_root: Path, core: Any, work: dict[str, Any]) -> dict[str, Any]:

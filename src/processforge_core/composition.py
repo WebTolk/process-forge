@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .process_catalog.summary import ProcessSummaryReadService
     from .project.context_read import ExecutionProjectReadService, ProjectContextCheck
     from .work.transition_commit import WorkTransitionCommitService
     from .completion.intent_replay import CompletionIntentReplayService
@@ -144,6 +145,17 @@ def build_execution_project_read_service(
         document_loader=document_loader,
         flow_root=flow_root,
     )
+
+
+def build_process_summary_read_service(
+    project_root: Path | None = None, core: Any = None,
+) -> ProcessSummaryReadService:
+    from .process_catalog.summary import ProcessSummaryReadService
+
+    definition_resolver = None
+    if core is not None:
+        definition_resolver = lambda: core.resolve_process_definition
+    return ProcessSummaryReadService(project_root=project_root, definition_resolver=definition_resolver)
 
 
 def build_project_context_service(
