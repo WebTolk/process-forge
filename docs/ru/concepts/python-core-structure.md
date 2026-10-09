@@ -83,6 +83,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/work/start_documents.py` | Прежнее чистое построение Run/Assignment с сохранением полей и ссылок. |
 | `src/processforge_core/work/start_publication.py` | Прежняя упорядоченная публикация запуска после capsule через отложенные зависимости операций. |
 | `src/processforge_core/work/continuation_read.py` | Прежнее ограниченное чтение control documents и Continuation/selection paths через явные актуальные зависимости. |
+| `src/processforge_core/work/continuation_contract.py` | Прежние проверки версии и привязки записи с явным источником класса ошибки. |
+| `src/processforge_core/work/permissions.py` | Общая чистая функция готовности прав Work. |
 | `src/processforge_core/project/reconciliation.py` | Прежняя проекция reconciliation контекста через обязательный отложенный типизированный checker, без Core. |
 | `src/processforge_core/project/context.py` | Пять существующих операций ProjectContextService и отдельные readers одного вызова через обязательные типизированные зависимости, без Core. |
 | `src/processforge_core/project/context_read.py` | Проверки свежести контекста выполнения и чтение manifest через явные зависимости, без Core. |
@@ -165,6 +167,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 `WorkStartPublicationService` в `work/start_publication.py` выполняет прежнюю публикацию после capsule через восемь обязательных отложенных providers методов. Сохранён порядок Run/Assignment/plan/index, четырёх событий, свежего состояния, проекции и ответа created_new. Lookup метода предшествует вычислению аргументов; сборка не выполняет I/O. Admission, locks и полномочия capsule остаются в ProcessExecutionService, существующие атомарные writers/events используются без новой transaction/recovery policy.
 
 `ContinuationRecordReader` в `work/continuation_read.py` выполняет прежнее построение record/selection paths и ограниченное 2 MiB чтение YAML через пять обязательных отложенных providers. Сохранены live reads, UTF-8-sig, проверка словаря, session hash/length и ошибки. Порядок path/selector и YAML/read lookup прежний. ContinuationService сохраняет конструктор, guards, переопределяемые точки чтения и полномочия binding/waiting/resume/cancel; холодная сборка не добавляет кеш, roots или permissions.
+
+`ContinuationContractPolicy` в `work/continuation_contract.py` выполняет прежние проверки ID, статуса, точной версии и привязки записи через обязательный отложенный источник класса ошибки. Координатор сохраняет переопределяемую точку проверки и полномочия привязки Work. Общая чистая функция `permission_readiness` находится в `work/permissions.py`; lifecycle start/state использует её без импорта координатора Continuation. Сохранены версии, приоритет ошибок, порядок препятствий, ссылки на списки и внешние результаты.
 
 ## Диагностика
 

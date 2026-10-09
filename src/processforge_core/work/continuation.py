@@ -14,6 +14,7 @@ import yaml
 from ..prepared.input import bounded_read, local_file
 from ..process_execution import (ACTIVE_ASSIGNMENT_STATUSES, ACTIVE_RUN_STATUSES,
                                 SAFE_ID_RE, ProcessExecutionService, canonical_fingerprint)
+from . import permissions as work_permissions
 from .context import scope_allows, validate_execution_contract
 from .resources import WorkResourceError, WorkResourceService
 
@@ -24,23 +25,6 @@ if TYPE_CHECKING:
 
 class ContinuationError(ValueError):
     pass
-
-
-def permission_readiness(scope: dict, mode: dict) -> dict:
-    actions = set(scope.get("allowed_actions") or []) - set(scope.get("forbidden_actions") or [])
-    reads = scope.get("allowed_read_files") or scope.get("allowed_files") or []
-    writes = scope.get("allowed_files") or []
-    reasons = []
-    if "read" not in actions or not reads:
-        reasons.append("read_scope_missing")
-    if mode.get("code_changes_allowed") and ("write_product" not in actions or not writes):
-        reasons.append("product_write_scope_missing")
-    if mode.get("kind") != "read_only" and mode.get("artifact_changes_allowed") and (not writes or not actions & {"write_product", "write_artifact"}):
-        reasons.append("artifact_write_scope_missing")
-    return {"status": "blocked" if reasons else "ready", "blockers": reasons,
-            "allowed_actions": sorted(actions), "allowed_files": writes,
-            "allowed_read_files": scope.get("allowed_read_files") or [],
-            "remediation": "create_explicitly_scoped_successor" if reasons else "none"}
 
 
 class ContinuationService:
@@ -86,16 +70,9 @@ class ContinuationService:
         return self._record_reader().load(path)
 
     def _validate_record(self, record: dict, continuation_id: str) -> None:
-        if record.get('id') != continuation_id or record.get('status') not in {'waiting', 'ready', 'resumed'}:
-            raise ContinuationError('continuation_not_resumable')
-        if type(record.get('schema_version')) is not int or record['schema_version'] not in (1, 2):
-            raise ContinuationError('continuation_version_unsupported')
-        if record['schema_version'] == 2:
-            binding = record.get('work')
-            if not isinstance(binding, dict) or set(binding) != {'project_id', 'run_id', 'assignment_id', 'context_id', 'capsule_checksum'}:
-                raise ContinuationError('continuation_binding_invalid')
-            if not isinstance(binding['project_id'], str) or not binding['project_id'] or not re.fullmatch(r'sha256:[a-f0-9]{64}', str(binding['capsule_checksum'])):
-                raise ContinuationError('continuation_binding_invalid')
+        from .continuation_contract import ContinuationContractPolicy
+
+        ContinuationContractPolicy(error=lambda: ContinuationError).validate_record(record, continuation_id)
 
     def _work(self, binding: dict, *, executable: bool = True, terminal: bool = False) -> tuple[dict, dict, dict, dict]:
         for key in ("run_id", "assignment_id", "context_id"):
@@ -134,7 +111,7 @@ class ContinuationService:
             if self.work._context_check().get("status") not in {"fresh", "fresh_with_updates"}:
                 raise ContinuationError("snapshot_not_fresh")
             contract = capsule["execution_contract"]
-            permissions = permission_readiness(contract["scope"], contract["assignment_intent"]["execution_mode"])
+            permissions = work_permissions.permission_readiness(contract["scope"], contract["assignment_intent"]["execution_mode"])
             if permissions["status"] != "ready":
                 raise ContinuationError("work_scope_not_executable")
             for source in contract["required_sources"]:
