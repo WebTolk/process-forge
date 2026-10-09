@@ -7,7 +7,7 @@ import json
 import re
 from contextlib import nullcontext
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
@@ -16,6 +16,10 @@ from ..process_execution import (ACTIVE_ASSIGNMENT_STATUSES, ACTIVE_RUN_STATUSES
                                 SAFE_ID_RE, ProcessExecutionService, canonical_fingerprint)
 from .context import scope_allows, validate_execution_contract
 from .resources import WorkResourceError, WorkResourceService
+
+
+if TYPE_CHECKING:
+    from .continuation_read import ContinuationRecordReader
 
 
 class ContinuationError(ValueError):
@@ -66,16 +70,20 @@ class ContinuationService:
     def _path(self, relative: str) -> Path:
         return local_file(self.project, relative)
 
+    def _record_reader(self) -> ContinuationRecordReader:
+        from ..composition import build_continuation_record_reader
+
+        return build_continuation_record_reader(
+            path_resolver=lambda: self._path, selector=lambda: self._id,
+            bounded_reader=lambda: bounded_read, yaml_loader=lambda: yaml.safe_load,
+            error=lambda: ContinuationError,
+        )
+
     def _record_path(self, continuation_id: str) -> Path:
-        return self._path(".pf/continuations/" + self._id(continuation_id) + ".yaml")
+        return self._record_reader().record_path(continuation_id)
 
     def _load(self, path: Path) -> dict:
-        if not path.exists():
-            raise ContinuationError("continuation_not_found")
-        data = yaml.safe_load(bounded_read(path, 2 * 1024 * 1024).decode("utf-8-sig"))
-        if not isinstance(data, dict):
-            raise ContinuationError("continuation_state_invalid")
-        return data
+        return self._record_reader().load(path)
 
     def _validate_record(self, record: dict, continuation_id: str) -> None:
         if record.get('id') != continuation_id or record.get('status') not in {'waiting', 'ready', 'resumed'}:
@@ -217,9 +225,7 @@ class ContinuationService:
                 "continuation_id": continuation_id, "work": binding, "work_readiness": "ready", "work_state": state}
 
     def _selection_path(self, session_id: str) -> Path:
-        if not isinstance(session_id, str) or not session_id or len(session_id) > 256:
-            raise ContinuationError("invalid_session")
-        return self._path(".pf/continuations/selections/" + hashlib.sha256(session_id.encode()).hexdigest() + ".yaml")
+        return self._record_reader().selection_path(session_id)
 
     def selected(self, session_id: str) -> dict | None:
         try:

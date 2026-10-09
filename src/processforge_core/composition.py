@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.continuation_read import ContinuationRecordReader
     from .work.start_publication import StartEventWriter, StartStateReader, WorkStartPublicationService
     from .work.creation_scope import CreationScopeService
     from .work.bootstrap import GovernedWorkBootstrapService, WorkStart
@@ -60,6 +61,19 @@ class LegacyWorkReadAdapter:
 
     def load_yaml_document(self, path: Path) -> dict[str, Any]:
         return self.core.load_yaml_document(path)
+
+
+def build_continuation_record_reader(
+    *, path_resolver: Callable[[], Callable[[str], Path]], selector: Callable[[], Callable[[str], str]],
+    bounded_reader: Callable[[], Callable[[Path, int], bytes]], yaml_loader: Callable[[], Callable[[str], Any]],
+    error: Callable[[], type[ValueError]],
+) -> ContinuationRecordReader:
+    from .work.continuation_read import ContinuationRecordReader
+
+    return ContinuationRecordReader(
+        path_resolver=path_resolver, selector=selector, bounded_reader=bounded_reader,
+        yaml_loader=yaml_loader, error=error,
+    )
 
 
 def build_work_start_publication_service(

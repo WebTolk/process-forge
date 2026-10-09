@@ -82,6 +82,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/work/creation_scope.py` | Прежние проверка scope и наложение на Assignment через явные отложенные зависимости, без полномочий lifecycle. |
 | `src/processforge_core/work/start_documents.py` | Прежнее чистое построение Run/Assignment с сохранением полей и ссылок. |
 | `src/processforge_core/work/start_publication.py` | Прежняя упорядоченная публикация запуска после capsule через отложенные зависимости операций. |
+| `src/processforge_core/work/continuation_read.py` | Прежнее ограниченное чтение control documents и Continuation/selection paths через явные актуальные зависимости. |
 | `src/processforge_core/project/reconciliation.py` | Прежняя проекция reconciliation контекста через обязательный отложенный типизированный checker, без Core. |
 | `src/processforge_core/project/context.py` | Пять существующих операций ProjectContextService и отдельные readers одного вызова через обязательные типизированные зависимости, без Core. |
 | `src/processforge_core/project/context_read.py` | Проверки свежести контекста выполнения и чтение manifest через явные зависимости, без Core. |
@@ -162,6 +163,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 `WorkStartDocumentBuilder` в `work/start_documents.py` строит прежние словари Run/Assignment без I/O и Core. Сохранены поля, timestamps, порядок сокращения title и общие ссылки на pin/specializations. Координатор lifecycle по-прежнему выбирает IDs/process/stage, привязывает sessions/security/scope, проверяет готовность, публикует immutable capsule и владеет writes/locks/events. Schema и публичное поведение запуска не меняются.
 
 `WorkStartPublicationService` в `work/start_publication.py` выполняет прежнюю публикацию после capsule через восемь обязательных отложенных providers методов. Сохранён порядок Run/Assignment/plan/index, четырёх событий, свежего состояния, проекции и ответа created_new. Lookup метода предшествует вычислению аргументов; сборка не выполняет I/O. Admission, locks и полномочия capsule остаются в ProcessExecutionService, существующие атомарные writers/events используются без новой transaction/recovery policy.
+
+`ContinuationRecordReader` в `work/continuation_read.py` выполняет прежнее построение record/selection paths и ограниченное 2 MiB чтение YAML через пять обязательных отложенных providers. Сохранены live reads, UTF-8-sig, проверка словаря, session hash/length и ошибки. Порядок path/selector и YAML/read lookup прежний. ContinuationService сохраняет конструктор, guards, переопределяемые точки чтения и полномочия binding/waiting/resume/cancel; холодная сборка не добавляет кеш, roots или permissions.
 
 ## Диагностика
 
