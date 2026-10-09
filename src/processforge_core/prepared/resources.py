@@ -161,45 +161,6 @@ def _fingerprint(value: Any) -> str:
     return canonical_fingerprint(value)
 
 
-def _authorize_registry_group(project: Path, requested: list[Any], pinned_snapshot: dict[str, Any],
-                              current_snapshot: dict[str, Any], group: str, core: Any, workplace: Path) -> list[dict[str, Any]]:
-    if not requested:
-        return []
-    selection = PreparedResourceSelectionPolicy(
-        matcher=lambda: core.workspace_ref_matches_resource,
-        fail=lambda: _fail, revoked_statuses=lambda: REVOKED_STATUSES,
-    )
-    pinned_rows = selection.resolved_rows(pinned_snapshot, group)
-    current_rows = selection.resolved_rows(current_snapshot, group)
-    manifest = core.resolve_project_workplace_manifest(project)
-    grants: list[dict[str, Any]] = []
-    seen: set[str] = set()
-    for request in requested:
-        pinned = selection.unique_match(pinned_rows, request, "resource_not_in_snapshot")
-        current = selection.unique_match(current_rows, request, "resource_access_revoked")
-        if str(current.get("status") or "available").lower() in REVOKED_STATUSES:
-            _fail("resource_access_revoked")
-        identifier = str(pinned.get("id") or pinned.get("resource_id") or pinned.get("name") or "")
-        if not identifier or identifier in seen:
-            _fail("resource_scope_invalid")
-        seen.add(identifier)
-        if current != pinned:
-            _fail("resource_generation_changed")
-        if isinstance(request, dict) and request.get("path_ref") and request.get("path_ref") != pinned.get("path_ref"):
-            _fail("resource_reference_mismatch")
-        path_ref = pinned.get("path_ref")
-        if not isinstance(path_ref, dict) or not path_ref:
-            _fail("resource_reference_unverifiable")
-        try:
-            resolution = core.resolve_workspace_path_ref(project, path_ref, workplace_manifest=manifest)
-        except (OSError, ValueError, RuntimeError, SystemExit, AttributeError):
-            _fail("resource_material_unavailable")
-        if not isinstance(resolution, dict) or resolution.get("status") != "resolved" or not resolution.get("path"):
-            _fail("resource_material_unavailable")
-        grants.append({"id": identifier, "path_ref": copy.deepcopy(path_ref), "resolution": resolution})
-    return grants
-
-
 def authorize_resources(project: Path, task: dict[str, Any], capsule: dict[str, Any], core: Any) -> dict[str, Any]:
     """Return current-authorized workspace resources for a validated capsule.
 
@@ -284,14 +245,26 @@ def authorize_resources(project: Path, task: dict[str, Any], capsule: dict[str, 
             if not set(stage_subset).issubset(selected_ids):
                 _fail("stage_resource_subset_invalid")
 
+        from ..composition import build_prepared_registry_resource_reader
+
+        registry_reader = build_prepared_registry_resource_reader(
+            selection=lambda: PreparedResourceSelectionPolicy(
+                matcher=lambda: core.workspace_ref_matches_resource,
+                fail=lambda: _fail, revoked_statuses=lambda: REVOKED_STATUSES,
+            ),
+            workplace_manifest=lambda: core.resolve_project_workplace_manifest,
+            path_resolver=lambda: core.resolve_workspace_path_ref,
+            revoked_statuses=lambda: REVOKED_STATUSES,
+            fail=lambda: _fail,
+        )
         grants = {
             "knowledge_resources": _authorize_knowledge(
                 project, workplace, requested["knowledge_resources"], capsule, pinned_snapshot, current_snapshot,
                 snapshot_id, snapshot_checksum, selected_ids, stage_subset, core,
             ),
-            "templates": _authorize_registry_group(project, requested["templates"], pinned_snapshot, current_snapshot, "templates", core, workplace),
-            "tools": _authorize_registry_group(project, requested["tools"], pinned_snapshot, current_snapshot, "tools", core, workplace),
-            "mcp": _authorize_registry_group(project, requested["mcp"], pinned_snapshot, current_snapshot, "mcp", core, workplace),
+            "templates": registry_reader.read(project, requested["templates"], pinned_snapshot, current_snapshot, "templates"),
+            "tools": registry_reader.read(project, requested["tools"], pinned_snapshot, current_snapshot, "tools"),
+            "mcp": registry_reader.read(project, requested["mcp"], pinned_snapshot, current_snapshot, "mcp"),
         }
         return {
             "schema_version": 1,

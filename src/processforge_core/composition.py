@@ -13,6 +13,8 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .prepared.registry_resources import PreparedRegistryPathResolver, PreparedRegistryResourceReader
+    from .prepared.resource_selection import PreparedResourceSelectionPolicy
     from .prepared.snapshot_read import PreparedResourceSnapshotReader
     from .work.continuation_work import ContinuationContractValidator, ContinuationResourceReads, ContinuationWorkReadService, ContinuationWorkRecords
     from .work.resource_context import WorkContractValidator, WorkControlDocumentReader, WorkResourceContextReadService, WorkResourceErrorFactory
@@ -66,6 +68,22 @@ class LegacyWorkReadAdapter:
 
     def load_yaml_document(self, path: Path) -> dict[str, Any]:
         return self.core.load_yaml_document(path)
+
+
+def build_prepared_registry_resource_reader(
+    *,
+    selection: Callable[[], PreparedResourceSelectionPolicy],
+    workplace_manifest: Callable[[], Callable[[Path], Path | None]],
+    path_resolver: Callable[[], PreparedRegistryPathResolver],
+    revoked_statuses: Callable[[], set[str]],
+    fail: Callable[[], Callable[[str], None]],
+) -> PreparedRegistryResourceReader:
+    from .prepared.registry_resources import PreparedRegistryResourceReader
+
+    return PreparedRegistryResourceReader(
+        selection=selection, workplace_manifest=workplace_manifest, path_resolver=path_resolver,
+        revoked_statuses=revoked_statuses, fail=fail,
+    )
 
 
 def build_prepared_resource_snapshot_reader(
