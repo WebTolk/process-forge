@@ -70,46 +70,6 @@ def _bounded_yaml(path: Path, flow_root: Path, reason: str) -> tuple[dict[str, A
     return value, _sha256(raw)
 
 
-def _load_snapshots(project: Path, capsule: dict[str, Any], contract: dict[str, Any], core: Any,
-                    workplace: Path) -> tuple[dict[str, Any], dict[str, Any], str, str]:
-    flow_root = core.locate_flow_root(project).resolve()
-    current_path, _ = core.project_context_snapshot_paths(project)
-    try:
-        current, current_checksum = _bounded_yaml(current_path, flow_root, "snapshot_unavailable")
-        current_from_garage = load_snapshot(project, core)
-    except (OSError, RuntimeError, SystemExit, TypeError, AttributeError):
-        _fail("snapshot_unavailable")
-    if current != current_from_garage:
-        _fail("snapshot_changed_during_preparation")
-
-    check = core.project_context_check_result(project, explicit_workplace=str(workplace))
-    if not isinstance(check, dict) or check.get("status") not in {"fresh", "fresh_with_updates"}:
-        _fail("snapshot_not_fresh")
-
-    pinned = capsule.get("context_snapshot")
-    contract_snapshot = contract.get("snapshot")
-    if not isinstance(pinned, dict) or not isinstance(contract_snapshot, dict):
-        _fail("work_context_mismatch")
-    snapshot_id, expected_checksum = str(pinned.get("id") or ""), str(pinned.get("sha256") or "")
-    if (not SNAPSHOT_ID_RE.fullmatch(snapshot_id) or not expected_checksum.startswith("sha256:")
-            or contract_snapshot != {"id": snapshot_id, "checksum": expected_checksum}):
-        _fail("work_context_mismatch")
-
-    generations = flow_root / "contexts" / "project-context.snapshots"
-    generation_path = generations / f"{snapshot_id}.yaml"
-    if generation_path.exists() or generation_path.is_symlink():
-        pinned_snapshot, pinned_checksum = _bounded_yaml(generation_path, flow_root, "snapshot_generation_changed")
-        if pinned_checksum != expected_checksum:
-            _fail("snapshot_generation_changed")
-    elif current_checksum == expected_checksum:
-        pinned_snapshot = current
-        pinned_checksum = current_checksum
-    else:
-        _fail("snapshot_generation_missing")
-
-    return pinned_snapshot, current, snapshot_id, expected_checksum
-
-
 def _resolved_rows(snapshot: dict[str, Any], group: str) -> list[dict[str, Any]]:
     resolved = snapshot.get("resolved")
     if not isinstance(resolved, dict):
@@ -323,9 +283,17 @@ def authorize_resources(project: Path, task: dict[str, Any], capsule: dict[str, 
         if any(len(requested[group]) > DEFAULT_LIMITS["resources"] for group in RESOURCE_GROUPS):
             _fail("resource_material_budget_exceeded")
 
-        pinned_snapshot, current_snapshot, snapshot_id, snapshot_checksum = _load_snapshots(
-            project, capsule, contract, core, workplace
-        )
+        from ..composition import build_prepared_resource_snapshot_reader
+
+        pinned_snapshot, current_snapshot, snapshot_id, snapshot_checksum = build_prepared_resource_snapshot_reader(
+            flow_root=lambda: core.locate_flow_root,
+            snapshot_paths=lambda: core.project_context_snapshot_paths,
+            bounded_yaml=lambda: _bounded_yaml,
+            current_snapshot=lambda: lambda selected: load_snapshot(selected, core),
+            context_checker=lambda: core.project_context_check_result,
+            selector_pattern=lambda: SNAPSHOT_ID_RE,
+            fail=lambda: _fail,
+        ).load(project, capsule, contract, workplace)
         resources_contract = contract.get("resources")
         selected_ids = resources_contract.get("selected_ids") if isinstance(resources_contract, dict) else None
         capsule_selected = capsule.get("context", {}).get("selected_resource_ids") if isinstance(capsule.get("context"), dict) else None

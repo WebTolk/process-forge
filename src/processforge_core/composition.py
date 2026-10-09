@@ -13,6 +13,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .prepared.snapshot_read import PreparedResourceSnapshotReader
     from .work.continuation_work import ContinuationContractValidator, ContinuationResourceReads, ContinuationWorkReadService, ContinuationWorkRecords
     from .work.resource_context import WorkContractValidator, WorkControlDocumentReader, WorkResourceContextReadService, WorkResourceErrorFactory
     from .work.continuation_status import ContinuationStatusReadService, WorkCandidateReader
@@ -65,6 +66,25 @@ class LegacyWorkReadAdapter:
 
     def load_yaml_document(self, path: Path) -> dict[str, Any]:
         return self.core.load_yaml_document(path)
+
+
+def build_prepared_resource_snapshot_reader(
+    *,
+    flow_root: Callable[[], Callable[[Path], Path]],
+    snapshot_paths: Callable[[], Callable[[Path], tuple[Path, Path]]],
+    bounded_yaml: Callable[[], Callable[[Path, Path, str], tuple[dict[str, Any], str]]],
+    current_snapshot: Callable[[], Callable[[Path], dict[str, Any]]],
+    context_checker: Callable[[], ProjectContextCheck],
+    selector_pattern: Callable[[], re.Pattern[str]],
+    fail: Callable[[], Callable[[str], None]],
+) -> PreparedResourceSnapshotReader:
+    from .prepared.snapshot_read import PreparedResourceSnapshotReader
+
+    return PreparedResourceSnapshotReader(
+        flow_root=flow_root, snapshot_paths=snapshot_paths, bounded_yaml=bounded_yaml,
+        current_snapshot=current_snapshot, context_checker=context_checker,
+        selector_pattern=selector_pattern, fail=fail,
+    )
 
 
 def build_work_resource_context_reader(
