@@ -5,7 +5,6 @@ import copy
 import hashlib
 import json
 import re
-import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterator
@@ -16,6 +15,7 @@ from .work.state import WorkStatePolicy
 from .evidence.collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .work.publication import WorkDocumentPublisher
     from .project.context_read import ExecutionProjectReadService
     from .work.transition_commit import WorkTransitionCommitService
     from .completion.intent_replay import CompletionIntentReplayService
@@ -1265,14 +1265,19 @@ class ProcessExecutionService:
     def _set_run_task_status(self, run: dict[str, Any], assignment_id: str, status: str) -> None:
         self._run_completion_policy().set_task_status(run, assignment_id, status)
 
+    def _work_document_publisher(self) -> WorkDocumentPublisher:
+        from .composition import build_work_document_publisher
+
+        return build_work_document_publisher(
+            text_writer=lambda: self._atomic_text,
+            yaml_formatter=lambda: self.core.dump_yaml,
+        )
+
     def _atomic_yaml(self, path: Path, value: dict[str, Any]) -> None:
-        self._atomic_text(path, self.core.dump_yaml(value).rstrip() + "\n")
+        self._work_document_publisher().write_yaml(path, value)
 
     def _atomic_text(self, path: Path, content: str) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
-        temporary.write_text(content, encoding="utf-8")
-        temporary.replace(path)
+        self._work_document_publisher().write_text(path, content)
 
     def _load_run(self, run_id: str) -> dict[str, Any]:
         if self.records is not None:

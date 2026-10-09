@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.publication import WorkDocumentPublisher
     from .work.boundary_advisory import FreshSessionBoundaryReadService
     from .process_catalog.summary import ProcessSummaryReadService
     from .project.context_read import ExecutionProjectReadService, ProjectContextCheck
@@ -211,6 +212,16 @@ def build_derived_report_lifecycle_service(
     if snapshots is None:
         snapshots = build_project_context_snapshot_read_service(project_root, core)
     return DerivedReportLifecycleService(snapshots=snapshots, flow_root=lambda: core.locate_flow_root(project_root))
+
+
+def build_work_document_publisher(
+    *,
+    text_writer: Callable[[], Callable[[Path, str], None]],
+    yaml_formatter: Callable[[], Callable[[dict[str, Any]], str]],
+) -> WorkDocumentPublisher:
+    from .work.publication import WorkDocumentPublisher
+
+    return WorkDocumentPublisher(text_writer=text_writer, yaml_formatter=yaml_formatter)
 
 
 def build_process_execution_service(
