@@ -24,6 +24,7 @@ from ..work.resource_material import (
 )
 from ..work.resources import WorkResourceError, _root
 from ..work.resource_declarations import ResourceDeclarationPolicy
+from .resource_selection import PreparedResourceSelectionPolicy
 
 
 MAX_SNAPSHOT_BYTES = 2 * 1024 * 1024
@@ -70,60 +71,21 @@ def _bounded_yaml(path: Path, flow_root: Path, reason: str) -> tuple[dict[str, A
     return value, _sha256(raw)
 
 
-def _resolved_rows(snapshot: dict[str, Any], group: str) -> list[dict[str, Any]]:
-    resolved = snapshot.get("resolved")
-    if not isinstance(resolved, dict):
-        return []
-    rows = resolved.get(group)
-    return [item for item in rows if isinstance(item, dict)] if isinstance(rows, list) else []
-
-
-def _unique_match(rows: list[dict[str, Any]], requested: Any, core: Any, reason: str) -> dict[str, Any]:
-    try:
-        matches = [row for row in rows if core.workspace_ref_matches_resource(row, requested)]
-    except (TypeError, ValueError, AttributeError):
-        _fail("resource_scope_invalid")
-    if len(matches) != 1:
-        _fail(reason)
-    return matches[0]
-
-
-def _resource_bindings(capsule: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    bindings = capsule.get("resource_bindings")
-    if not isinstance(bindings, dict) or type(bindings.get("schema_version")) is not int or bindings.get("schema_version") != 1:
-        _fail("legacy_contract_incomplete")
-    rows = bindings.get("resources")
-    if not isinstance(rows, list) or any(not isinstance(item, dict) for item in rows):
-        _fail("resource_binding_invalid")
-    result: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        identifier = row.get("id")
-        if not isinstance(identifier, str) or not identifier or identifier in result:
-            _fail("resource_binding_invalid")
-        result[identifier] = row
-    return result
-
-
-def _current_resource(current_rows: dict[str, dict[str, Any]], identifier: str) -> dict[str, Any]:
-    row = current_rows.get(identifier)
-    if row is None:
-        _fail("resource_access_revoked")
-    if str(row.get("status") or "available").lower() in REVOKED_STATUSES:
-        _fail("resource_access_revoked")
-    return row
-
-
 def _authorize_knowledge(project: Path, workplace: Path, requested: list[Any], capsule: dict[str, Any],
                          pinned_snapshot: dict[str, Any], current_snapshot: dict[str, Any],
                          snapshot_id: str, snapshot_checksum: str, selected_ids: list[str],
                          stage_subset: list[str], core: Any) -> list[dict[str, Any]]:
     capsule_rows = capsule.get("resolved_resources")
-    pinned_rows = _resolved_rows(pinned_snapshot, "knowledge_resources")
+    selection = PreparedResourceSelectionPolicy(
+        matcher=lambda: core.workspace_ref_matches_resource,
+        fail=lambda: _fail, revoked_statuses=lambda: REVOKED_STATUSES,
+    )
+    pinned_rows = selection.resolved_rows(pinned_snapshot, "knowledge_resources")
     if not isinstance(capsule_rows, list) or any(not isinstance(item, dict) for item in capsule_rows):
         _fail("resource_binding_invalid")
     if capsule_rows != pinned_rows:
         _fail("snapshot_generation_changed")
-    bindings = _resource_bindings(capsule)
+    bindings = selection.resource_bindings(capsule)
     try:
         current_rows = ResourceDeclarationPolicy(error=lambda: WorkResourceError).grant_rows(current_snapshot)
     except WorkResourceError as exc:
@@ -135,7 +97,7 @@ def _authorize_knowledge(project: Path, workplace: Path, requested: list[Any], c
     budget = MaterialBudget()
 
     for request in requested:
-        pinned = _unique_match(capsule_rows, request, core, "resource_not_in_snapshot")
+        pinned = selection.unique_match(capsule_rows, request, "resource_not_in_snapshot")
         identifier = str(pinned.get("id") or pinned.get("resource_id") or "")
         if not identifier or identifier in unique_by_request:
             _fail("resource_scope_invalid")
@@ -148,7 +110,7 @@ def _authorize_knowledge(project: Path, workplace: Path, requested: list[Any], c
         if binding is None or binding.get("status") != "available":
             _fail(str((binding or {}).get("reason") or "resource_material_unavailable"))
 
-        row = _current_resource(current_rows, identifier)
+        row = selection.current_resource(current_rows, identifier)
         try:
             reference = ResourceDeclarationPolicy(error=lambda: WorkResourceError).portable_reference(row)
             descriptor = metadata_descriptor(row, reference)
@@ -203,14 +165,18 @@ def _authorize_registry_group(project: Path, requested: list[Any], pinned_snapsh
                               current_snapshot: dict[str, Any], group: str, core: Any, workplace: Path) -> list[dict[str, Any]]:
     if not requested:
         return []
-    pinned_rows = _resolved_rows(pinned_snapshot, group)
-    current_rows = _resolved_rows(current_snapshot, group)
+    selection = PreparedResourceSelectionPolicy(
+        matcher=lambda: core.workspace_ref_matches_resource,
+        fail=lambda: _fail, revoked_statuses=lambda: REVOKED_STATUSES,
+    )
+    pinned_rows = selection.resolved_rows(pinned_snapshot, group)
+    current_rows = selection.resolved_rows(current_snapshot, group)
     manifest = core.resolve_project_workplace_manifest(project)
     grants: list[dict[str, Any]] = []
     seen: set[str] = set()
     for request in requested:
-        pinned = _unique_match(pinned_rows, request, core, "resource_not_in_snapshot")
-        current = _unique_match(current_rows, request, core, "resource_access_revoked")
+        pinned = selection.unique_match(pinned_rows, request, "resource_not_in_snapshot")
+        current = selection.unique_match(current_rows, request, "resource_access_revoked")
         if str(current.get("status") or "available").lower() in REVOKED_STATUSES:
             _fail("resource_access_revoked")
         identifier = str(pinned.get("id") or pinned.get("resource_id") or pinned.get("name") or "")
