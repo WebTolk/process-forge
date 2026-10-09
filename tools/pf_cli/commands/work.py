@@ -50,14 +50,14 @@ class WorkStartCommand:
                 return 1
         scope_intent = None
         if getattr(args, "scope_file", None):
-            from processforge_core.process_execution import creation_scope_intent
+            from processforge_core.work.creation_scope import CreationScopeService
             from processforge_core.work.context import ContextContractError
             try:
                 with Path(args.scope_file).open("rb") as stream:
                     raw = stream.read(65537)
                 if len(raw) > 65536:
                     raise ValueError("scope input too large")
-                scope_intent = creation_scope_intent(json.loads(raw.decode("utf-8")))
+                scope_intent = CreationScopeService.validate(json.loads(raw.decode("utf-8")))
             except (ContextContractError, OSError, ValueError):
                 _print_result({"action": "blocked", "reason": "work_scope_invalid"}, as_json=bool(args.json), dump_yaml=self._dump_yaml)
                 return 1

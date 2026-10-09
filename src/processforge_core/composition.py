@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.creation_scope import CreationScopeService
     from .work.bootstrap import GovernedWorkBootstrapService, WorkStart
     from .work.capsule_publication import AssignmentCapsulePublisher
     from .work.events import ProcessEventEmitter, WorkEventPublisher
@@ -58,6 +59,19 @@ class LegacyWorkReadAdapter:
 
     def load_yaml_document(self, path: Path) -> dict[str, Any]:
         return self.core.load_yaml_document(path)
+
+
+def build_creation_scope_service(project_root: Path, core: Any) -> CreationScopeService:
+    from .work.creation_scope import CreationScopeService
+
+    def handoff_reader() -> Callable[[Path], bytes]:
+        from .prepared.input import bounded_read
+
+        return bounded_read
+
+    return CreationScopeService(
+        project_root, normalizer=lambda: core.normalize_execution_mode, handoff_reader=handoff_reader,
+    )
 
 
 def build_governed_work_bootstrap_service(project_root: Path, workplace_root: Path, core: Any) -> GovernedWorkBootstrapService:

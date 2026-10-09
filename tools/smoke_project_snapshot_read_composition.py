@@ -144,7 +144,7 @@ class SnapshotTests(unittest.TestCase):
              patch.object(ProcessExecutionService, '_process_pin', return_value=pin), \
              patch.object(ProcessExecutionService, '_with_creation_scope', side_effect=lambda assignment, scope: assignment), \
              patch.object(ProcessExecutionService, '_write_capsule', side_effect=AssertionError('Preflight first')), \
-             patch.object(execution, 'creation_scope_intent', side_effect=lambda scope: scope), \
+             patch.object(execution.CreationScopeService, 'validate', side_effect=lambda scope: scope), \
              patch.object(execution, 'executable_stages', return_value=[{'id': 's'}]), \
              patch.object(execution, 'initial_stage_id', return_value='s'), \
              patch.object(execution, 'normalized_outcomes', return_value=[]), \

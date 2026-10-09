@@ -78,7 +78,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
     from pf_runtime import session_read
     from processforge_core.resources.local_search import LocalSearchError
     from processforge_core.composition import build_process_execution_service, build_project_context_service, build_resource_search_service, build_resource_resolve_service
-    from processforge_core.process_execution import creation_scope_intent
+    from processforge_core.work.creation_scope import CreationScopeService
     from processforge_core.work.context import ContextContractError
 
     configured_session = str(session_id or "")
@@ -180,7 +180,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         scope_intent = None
         if "scope_intent" in arguments:
             try:
-                scope_intent = creation_scope_intent(arguments["scope_intent"])
+                scope_intent = CreationScopeService.validate(arguments["scope_intent"])
             except ContextContractError as exc:
                 raise session_read.SessionReadError(str(exc) or "work_scope_invalid") from exc
         return build_process_execution_service(bound_project, workplace, core).start(
