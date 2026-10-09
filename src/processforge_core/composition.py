@@ -12,6 +12,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.continuation_status import ContinuationStatusReadService, WorkCandidateReader
     from .work.continuation_read import ContinuationRecordReader
     from .work.start_publication import StartEventWriter, StartStateReader, WorkStartPublicationService
     from .work.creation_scope import CreationScopeService
@@ -61,6 +62,24 @@ class LegacyWorkReadAdapter:
 
     def load_yaml_document(self, path: Path) -> dict[str, Any]:
         return self.core.load_yaml_document(path)
+
+
+def build_continuation_status_reader(
+    *, path_resolver: Callable[[], Callable[[str], Path]], selector: Callable[[], Callable[[str], str]],
+    load: Callable[[], Callable[[Path], dict]], record_path: Callable[[], Callable[[str], Path]],
+    selection_path: Callable[[], Callable[[str], Path]], validate_record: Callable[[], Callable[[dict, str], None]],
+    waiting_reader: Callable[[], Callable[[dict], dict]],
+    work_resolver: Callable[[], Callable[[dict], tuple[dict, dict, dict, dict]]],
+    context_checker: Callable[[], Callable[[], dict]], work_records: Callable[[], WorkCandidateReader],
+    error: Callable[[], type[ValueError]],
+) -> ContinuationStatusReadService:
+    from .work.continuation_status import ContinuationStatusReadService
+
+    return ContinuationStatusReadService(
+        path_resolver=path_resolver, selector=selector, load=load, record_path=record_path,
+        selection_path=selection_path, validate_record=validate_record, waiting_reader=waiting_reader,
+        work_resolver=work_resolver, context_checker=context_checker, work_records=work_records, error=error,
+    )
 
 
 def build_continuation_record_reader(

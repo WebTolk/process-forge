@@ -20,6 +20,7 @@ from .resources import WorkResourceError, WorkResourceService
 
 
 if TYPE_CHECKING:
+    from .continuation_status import ContinuationStatusReadService
     from .continuation_read import ContinuationRecordReader
 
 
@@ -131,23 +132,20 @@ class ContinuationService:
                  "context_id": identity["context_id"], "capsule_checksum": identity["context_checksum"]}
         return run, assignment, bound, state
 
+    def _status_reader(self) -> ContinuationStatusReadService:
+        from ..composition import build_continuation_status_reader
+
+        return build_continuation_status_reader(
+            path_resolver=lambda: self._path, selector=lambda: self._id,
+            load=lambda: self._load, record_path=lambda: self._record_path,
+            selection_path=lambda: self._selection_path, validate_record=lambda: self._validate_record,
+            waiting_reader=lambda: self._waiting, work_resolver=lambda: self._work,
+            context_checker=lambda: self.work._context_check, work_records=lambda: self.work._work_records,
+            error=lambda: ContinuationError,
+        )
+
     def _waiting(self, record: dict) -> dict:
-        waiting = record.get("waiting_for") or {}
-        paths = waiting.get("expected_artifacts") or []
-        if not isinstance(paths, list) or len(paths) > 128:
-            raise ContinuationError("waiting_conditions_invalid")
-        missing = []
-        for path in paths:
-            target = self._path(path)
-            if not target.is_file():
-                missing.append(path)
-        handoff_id = waiting.get("handoff_id")
-        handoff_ready = True
-        if handoff_id:
-            handoff = self._path(".pf/handoffs/" + self._id(handoff_id) + "/handoff.yaml")
-            handoff_ready = handoff.is_file() and self._load(handoff).get("status") in {"returned", "finalized"}
-        return {"status": "ready" if not missing and handoff_ready else "waiting", "missing_expected_artifacts": missing,
-                "handoff_ready": handoff_ready}
+        return self._status_reader().waiting(record)
 
     def create(self, *, continuation_id: str, run_id: str, assignment_id: str, context_id: str,
                expected_artifacts: list[str] | None = None, handoff_id: str = "", instruction: str = "",
@@ -178,28 +176,7 @@ class ContinuationService:
                 "continuation_id": continuation_id, "work": binding, "waiting": self._waiting(record), "stage": state["stage"]}
 
     def status(self, *, continuation_id: str = "") -> dict:
-        if not continuation_id:
-            if self.work._context_check().get("status") not in {"fresh", "fresh_with_updates"}:
-                raise ContinuationError("snapshot_not_fresh")
-            records = self.work._work_records(include_historical=False)
-            candidates = [{k: row[k] for k in ("run_id", "assignment_id", "stage", "status")} for row in records[:20]]
-            for row in candidates:
-                capsule = self._load(self._path('.pf/contexts/assignment-capsules/' + self._id(row['assignment_id']) + '.capsule.yaml'))
-                row["context_id"] = capsule.get('capsule', {}).get('id')
-            return {"schema_version": 2, "kind": "pf.continuation.status", "status": "discovery",
-                    "action": "choice_required" if len(records) > 1 else "candidate_available" if records else "not_found",
-                    "candidates": candidates, "total": len(records), "selection_required": True}
-        record = self._load(self._record_path(continuation_id))
-        self._validate_record(record, continuation_id)
-        waiting = self._waiting(record)
-        if record.get("schema_version") == 1:
-            return {"schema_version": 1, "kind": "pf.continuation.status", "status": waiting["status"], "waiting": waiting,
-                    "continuation_id": continuation_id, "work_resumed": False, "work_readiness": "legacy_binding_required"}
-        if record.get("schema_version") != 2:
-            raise ContinuationError("continuation_version_unsupported")
-        _, _, binding, state = self._work(record["work"])
-        return {"schema_version": 2, "kind": "pf.continuation.status", "status": waiting["status"], "waiting": waiting,
-                "continuation_id": continuation_id, "work": binding, "work_readiness": "ready", "work_state": state}
+        return self._status_reader().status(continuation_id=continuation_id)
 
     def _selection_path(self, session_id: str) -> Path:
         return self._record_reader().selection_path(session_id)
@@ -215,22 +192,7 @@ class ContinuationService:
             raise ContinuationError('selection_invalid') from exc
 
     def _selected(self, session_id: str) -> dict | None:
-        if not session_id:
-            return None
-        path = self._selection_path(session_id)
-        if not path.exists():
-            return None
-        receipt = self._load(path)
-        if receipt.get("session_id") != session_id or receipt.get("schema_version") != 1:
-            raise ContinuationError("selection_invalid")
-        record = self._load(self._record_path(receipt["continuation_id"]))
-        self._validate_record(record, receipt['continuation_id'])
-        if record.get("work") != receipt.get("work") or record.get("status") == "cancelled":
-            raise ContinuationError("selection_invalid")
-        if self._waiting(record)['status'] != 'ready':
-            raise ContinuationError('continuation_waiting')
-        self._work(receipt["work"])
-        return receipt["work"]
+        return self._status_reader().selected(session_id)
 
     def resume(self, *, continuation_id: str, session_id: str = "") -> dict:
         path = self._record_path(continuation_id)

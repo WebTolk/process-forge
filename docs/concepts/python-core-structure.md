@@ -79,6 +79,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/work/start_publication.py` | Existing ordered post-capsule start publication through deferred operation dependencies. |
 | `src/processforge_core/work/continuation_read.py` | Existing bounded control-document reads and Continuation/selection paths with explicit live dependencies. |
 | `src/processforge_core/work/continuation_contract.py` | Existing record version and binding validation with an explicit error provider. |
+| `src/processforge_core/work/continuation_status.py` | Existing live waiting/status/selected reads with explicit dependencies. |
 | `src/processforge_core/work/permissions.py` | Shared pure Work permission readiness. |
 | `src/processforge_core/project/reconciliation.py` | Existing context reconciliation projection through the required deferred typed context checker, without Core. |
 | `src/processforge_core/project/context.py` | Existing five ProjectContextService operations and context-specific per-dispatch readers through required typed dependencies, without Core. |
@@ -164,6 +165,8 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 `ContinuationRecordReader` in `work/continuation_read.py` performs the existing record/selection path construction and 2 MiB bounded YAML reads through five required deferred providers. Live reads, UTF-8-sig decoding, dictionary checks, session hash/length rules and errors are unchanged. Path/selector and YAML/read lookup order is preserved. ContinuationService retains its constructor, guards, overridable read call points and all binding/waiting/resume/cancel authority; cold composition adds no cache, roots or permissions.
 
 `ContinuationContractPolicy` in `work/continuation_contract.py` owns the existing record ID/status, exact version and binding checks through a required deferred error provider. The coordinator keeps its overridable validation entry and binding authority. The existing pure `permission_readiness` function lives in `work/permissions.py`, shared with lifecycle start/state without importing the Continuation coordinator. Versions, error priority, permission blockers, list references and released results remain unchanged.
+
+`ContinuationStatusReadService` in `work/continuation_status.py` performs the existing waiting/status/selected read workflows through eleven required deferred operation providers. Discovery freshness, the 20-candidate limit, the 128-artifact limit, receipt/version comparisons, callback lookup order and results remain unchanged. The coordinator retains overridable facade methods, public error translation and mutation/binding authority; cold composition introduces no cache or permissions.
 
 ## Observation
 
