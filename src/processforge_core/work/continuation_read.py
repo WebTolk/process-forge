@@ -1,4 +1,4 @@
-"""Existing bounded Continuation control-document and path reads."""
+"""Existing bounded Continuation control-document, path and writer checks."""
 from __future__ import annotations
 
 import hashlib
@@ -14,6 +14,9 @@ class ContinuationRecordReader:
     bounded_reader: Callable[[], Callable[[Path, int], bytes]] = field(repr=False, compare=False)
     yaml_loader: Callable[[], Callable[[str], Any]] = field(repr=False, compare=False)
     error: Callable[[], type[ValueError]] = field(repr=False, compare=False)
+    workplace: Callable[[], Path | None] = field(repr=False, compare=False)
+    leases_directory: Callable[[], Callable[[Path | None], Path]] = field(repr=False, compare=False)
+    control_loader: Callable[[], Callable[[Path], dict]] = field(repr=False, compare=False)
 
     def record_path(self, continuation_id: str) -> Path:
         return self.path_resolver()(".pf/continuations/" + self.selector()(continuation_id) + ".yaml")
@@ -32,3 +35,18 @@ class ContinuationRecordReader:
         if not isinstance(data, dict):
             raise self.error()("continuation_state_invalid")
         return data
+
+    def writer_check(self, binding: dict) -> None:
+        status_path = self.path_resolver()(f".pf/runtime/agent-runs/{binding['run_id']}/{binding['assignment_id']}/status.json")
+        if status_path.exists():
+            status = self.control_loader()(status_path)
+            if status.get("status") not in {"completed", "failed", "timed_out", "cancelled", "collected"}:
+                raise self.error()("worker_not_quiescent")
+        if self.workplace():
+            for path in self.leases_directory()(self.workplace()).glob("*.yaml"):
+                lease = self.control_loader()(path)
+                scope = lease.get("scope") or {}
+                if lease.get("status") == "active" and all(not scope.get(k) or scope[k] == binding[v] for k, v in
+                        (("project_id", "project_id"), ("run_id", "run_id"), ("task_id", "assignment_id"))):
+                    raise self.error()("active_lease")
+

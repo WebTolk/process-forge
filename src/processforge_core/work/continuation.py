@@ -62,6 +62,8 @@ class ContinuationService:
             path_resolver=lambda: self._path, selector=lambda: self._id,
             bounded_reader=lambda: bounded_read, yaml_loader=lambda: yaml.safe_load,
             error=lambda: ContinuationError,
+            workplace=lambda: self.workplace, leases_directory=lambda: self.core.workplace_agent_leases_dir,
+            control_loader=lambda: self._load,
         )
 
     def _record_path(self, continuation_id: str) -> Path:
@@ -239,18 +241,7 @@ class ContinuationService:
                     "selectors": {key: result["work"][key] for key in ("run_id", "assignment_id", "context_id")}}
 
     def _writer_check(self, binding: dict) -> None:
-        status_path = self._path(f".pf/runtime/agent-runs/{binding['run_id']}/{binding['assignment_id']}/status.json")
-        if status_path.exists():
-            status = self._load(status_path)
-            if status.get("status") not in {"completed", "failed", "timed_out", "cancelled", "collected"}:
-                raise ContinuationError("worker_not_quiescent")
-        if self.workplace:
-            for path in self.core.workplace_agent_leases_dir(self.workplace).glob("*.yaml"):
-                lease = self._load(path)
-                scope = lease.get("scope") or {}
-                if lease.get("status") == "active" and all(not scope.get(k) or scope[k] == binding[v] for k, v in
-                        (("project_id", "project_id"), ("run_id", "run_id"), ("task_id", "assignment_id"))):
-                    raise ContinuationError("active_lease")
+        self._record_reader().writer_check(binding)
 
     def cancel_work(self, *, run_id: str, assignment_id: str, context_id: str, capsule_checksum: str,
                     reason: str, evidence: list[str] | None = None, apply: bool = False) -> dict:

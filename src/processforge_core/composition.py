@@ -103,12 +103,15 @@ def build_continuation_record_reader(
     *, path_resolver: Callable[[], Callable[[str], Path]], selector: Callable[[], Callable[[str], str]],
     bounded_reader: Callable[[], Callable[[Path, int], bytes]], yaml_loader: Callable[[], Callable[[str], Any]],
     error: Callable[[], type[ValueError]],
+    workplace: Callable[[], Path | None], leases_directory: Callable[[], Callable[[Path | None], Path]],
+    control_loader: Callable[[], Callable[[Path], dict]],
 ) -> ContinuationRecordReader:
     from .work.continuation_read import ContinuationRecordReader
 
     return ContinuationRecordReader(
         path_resolver=path_resolver, selector=selector, bounded_reader=bounded_reader,
         yaml_loader=yaml_loader, error=error,
+        workplace=workplace, leases_directory=leases_directory, control_loader=control_loader,
     )
 
 
