@@ -1,7 +1,6 @@
 """Explicit immutable Work resource reads, independent of provider and transport."""
 from __future__ import annotations
 
-import copy
 import hashlib
 import json
 from pathlib import Path
@@ -16,6 +15,7 @@ from .resource_material import DEFAULT_LIMITS, MaterialBudget, MaterialError, ca
 
 
 if TYPE_CHECKING:
+    from .material_read import WorkMaterialReadService
     from .resource_context import WorkContractValidator, WorkResourceContextReadService
 
 
@@ -99,6 +99,18 @@ class WorkResourceService:
     def _context(self, run_id: Any, assignment_id: Any, context_id: Any) -> tuple[dict, list, dict]:
         return self._context_reader().read(run_id, assignment_id, context_id)
 
+    def _material_reader(self) -> WorkMaterialReadService:
+        from ..composition import build_work_material_reader
+
+        return build_work_material_reader(
+            project_root=lambda: self.project_root, workplace_root=lambda: self.workplace_root,
+            declarations=lambda: ResourceDeclarationPolicy(error=lambda: WorkResourceError),
+            metadata=lambda: metadata_descriptor, fingerprint=lambda: canonical_fingerprint,
+            root_resolver=lambda: lambda project, workplace, row: _root(project, workplace, self.core, row),
+            material_capture=lambda: capture_material, budget=lambda: MaterialBudget,
+            error=lambda: WorkResourceError,
+        )
+
     def read(self, *, operation: str, run_id: str, assignment_id: str, context_id: str,
              resource_id: str | None = None, query: Any = None, limit: Any = None,
              limitstart: Any = None, offset: Any = None) -> dict[str, Any]:
@@ -129,29 +141,7 @@ class WorkResourceService:
                 if not isinstance(query, str) or not query.strip() or len(query) > 4096:
                     raise WorkResourceError("invalid_query")
                 page_limit, start = pagination(limit=limit, limitstart=limitstart, offset=offset)
-            # Authorization and metadata checks for the whole requested set precede any material read.
-            for binding in bindings:
-                identifier = binding["id"]
-                if identifier not in rows or str(rows[identifier].get("status") or "available") in {"disabled", "denied", "missing", "revoked"}:
-                    raise WorkResourceError("resource_access_revoked", resource_id=identifier)
-                if binding.get("status") != "available":
-                    raise WorkResourceError(str(binding.get("reason") or "resource_material_unavailable"), resource_id=identifier)
-                reference = ResourceDeclarationPolicy(error=lambda: WorkResourceError).portable_reference(rows[identifier])
-                if canonical_fingerprint(metadata_descriptor(rows[identifier], reference)) != binding.get("metadata_fingerprint"):
-                    raise WorkResourceError("resource_generation_changed", resource_id=identifier)
-            documents, provenances, verified = [], [], []
-            budget = MaterialBudget()
-            for binding in bindings:
-                root, reference = _root(self.project_root, self.workplace_root, self.core, rows[binding["id"]])
-                current, docs = capture_material(rows[binding["id"]], root, reference, include_content=operation == "search", budget=budget)
-                if any(current.get(key) != binding.get(key) for key in ("generation", "metadata_fingerprint", "material_fingerprint", "material_kind", "manifest")):
-                    raise WorkResourceError("resource_material_changed", resource_id=binding["id"])
-                provenance = {**identity, "resource_id": binding["id"], **{key: binding[key] for key in ("generation", "metadata_fingerprint", "material_fingerprint", "material_kind")}}
-                provenances.append(provenance)
-                verified.append({**copy.deepcopy(binding), "local_root": str(root.resolve()),
-                                 "navigation": "metadata_only" if binding["material_kind"] != "fulltext" else "verified_declared_material",
-                                 "resource_provenance": provenance})
-                documents.extend({**doc, "resource_id": binding["id"], "resource_provenance": provenance} for doc in docs)
+            documents, provenances, verified = self._material_reader().read(operation, bindings, rows, identity)
             payload.update(status="ready", resource_provenance=provenances,
                            coverage={"source": "verified_work_material", "authorized_resources": len(bindings),
                                      "verified_resources": len(verified), "documents": len(documents) if operation == "search" else None,
