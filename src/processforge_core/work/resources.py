@@ -42,30 +42,17 @@ def build_resource_bindings(project: Path, workplace: Path | None, core: Any,
                             selected_ids: list[str]) -> dict[str, Any]:
     """Pin new material only at capsule creation; never migrate a read request."""
     from ..project.snapshot import load_snapshot
+    from ..composition import build_resource_binding_builder
 
-    result: dict[str, Any] = {"schema_version": 1, "resources": [], "limits": dict(DEFAULT_LIMITS)}
-    budget = MaterialBudget()
-    try:
-        identifiers = ResourceDeclarationPolicy(error=lambda: WorkResourceError).identifiers(selected_ids, "resource_scope_invalid")
-        rows = ResourceDeclarationPolicy(error=lambda: WorkResourceError).grant_rows(load_snapshot(project, core))
-    except WorkResourceError as exc:
-        return {**result, "status": "unavailable", "reason": exc.code}
-    for identifier in identifiers:
-        try:
-            if identifier not in rows:
-                raise WorkResourceError("resource_access_revoked")
-            row = rows[identifier]
-            if str(row.get("status") or "available") in {"disabled", "denied", "missing", "revoked"}:
-                raise WorkResourceError("resource_access_revoked")
-            root, reference = _root(project, workplace, core, row)
-            binding, _ = capture_material(row, root, reference, budget=budget)
-        except (MaterialError, WorkResourceError) as exc:
-            binding = {"id": identifier, "status": "unavailable", "reason": exc.code}
-        except (OSError, ValueError, RuntimeError, SystemExit):
-            binding = {"id": identifier, "status": "unavailable", "reason": "resource_material_unavailable"}
-        result["resources"].append(binding)
-    result["status"] = "available" if all(item["status"] == "available" for item in result["resources"]) else "unavailable"
-    return result
+    builder = build_resource_binding_builder(
+        limits=lambda: DEFAULT_LIMITS, budget=lambda: MaterialBudget,
+        declarations=lambda: ResourceDeclarationPolicy(error=lambda: WorkResourceError),
+        snapshot=lambda: lambda project: load_snapshot(project, core),
+        root_resolver=lambda: lambda project, workplace, row: _root(project, workplace, core, row),
+        material_capture=lambda: capture_material,
+        work_error=lambda: WorkResourceError, material_error=lambda: MaterialError,
+    )
+    return builder.build(project, workplace, selected_ids)
 
 
 class WorkResourceService:

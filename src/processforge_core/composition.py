@@ -13,6 +13,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.resource_bindings import BindingMaterialCapture, ResourceBindingBuilder
     from .prepared.knowledge_resources import PreparedKnowledgeMaterialCapture, PreparedKnowledgeResourceReader, PreparedKnowledgeRootResolver
     from .work.resource_declarations import ResourceDeclarationPolicy
     from .work.resource_material import MaterialBudget, MaterialError
@@ -72,6 +73,26 @@ class LegacyWorkReadAdapter:
 
     def load_yaml_document(self, path: Path) -> dict[str, Any]:
         return self.core.load_yaml_document(path)
+
+
+def build_resource_binding_builder(
+    *,
+    limits: Callable[[], dict[str, int]],
+    budget: Callable[[], Callable[[], MaterialBudget]],
+    declarations: Callable[[], ResourceDeclarationPolicy],
+    snapshot: Callable[[], Callable[[Path], dict[str, Any]]],
+    root_resolver: Callable[[], Callable[[Path, Path | None, dict[str, Any]], tuple[Path, dict[str, Any]]]],
+    material_capture: Callable[[], BindingMaterialCapture],
+    work_error: Callable[[], type[WorkResourceError]],
+    material_error: Callable[[], type[MaterialError]],
+) -> ResourceBindingBuilder:
+    from .work.resource_bindings import ResourceBindingBuilder
+
+    return ResourceBindingBuilder(
+        limits=limits, budget=budget, declarations=declarations, snapshot=snapshot,
+        root_resolver=root_resolver, material_capture=material_capture,
+        work_error=work_error, material_error=material_error,
+    )
 
 
 def build_prepared_knowledge_resource_reader(
