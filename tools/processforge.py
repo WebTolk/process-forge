@@ -56,6 +56,9 @@ ROOT = _bootstrap_repo_src()
 from processforge_core.agents.presence import AgentPresenceReader
 from processforge_core.chat.transcripts import ChatTranscriptReader
 from processforge_core.common.ndjson import NdjsonReader
+from processforge_core.work.context_documents import ContextContractInputs
+
+_context_contract_inputs = ContextContractInputs()
 from processforge_core.process_catalog import (
     PROCESS_CATALOG_CLASSIFICATIONS as CATALOG_PROCESS_CATALOG_CLASSIFICATIONS,
     ProcessCatalogContext,
@@ -1273,8 +1276,7 @@ def looks_like_processforge_distribution(path: Path) -> bool:
 
 
 def path_string_is_absolute(value: str) -> bool:
-    text = value.strip().replace("\\", "/")
-    return bool(re.match(r"^[A-Za-z]:/", text) or text.startswith("/") or text.startswith("//"))
+    return _context_contract_inputs.path_string_is_absolute(value)
 
 
 def normalize_path_string(value: str) -> str:
@@ -1373,7 +1375,7 @@ def path_resolution_to_path(resolution: dict[str, Any]) -> Path:
 
 
 def locate_flow_root(project_root: Path, *, prefer_pf: bool = True) -> Path:
-    return project_root / PROJECT_FLOW_ROOT
+    return _context_contract_inputs.locate_flow_root(project_root, prefer_pf=prefer_pf)
 
 
 def require_flow_root(project_root: Path) -> Path:
@@ -10162,8 +10164,7 @@ def capability_records(required: list[str], optional: list[str], providers: dict
 
 
 def project_context_snapshot_paths(project_root: Path) -> tuple[Path, Path]:
-    contexts = locate_flow_root(project_root) / "contexts"
-    return contexts / "project-context.snapshot.yaml", contexts / "project-context.snapshot.md"
+    return _context_contract_inputs.project_context_snapshot_paths(project_root)
 
 
 def project_context_snapshot_generations_dir(project_root: Path) -> Path:
@@ -11192,12 +11193,7 @@ def resolve_runtime_config_path(project_root: Path, value: str | None, default: 
 
 
 def project_id(project_root: Path) -> str:
-    manifest = locate_flow_root(project_root) / "process-forge.yaml"
-    data = load_yaml_document(manifest)
-    project = data.get("project") if isinstance(data, dict) else None
-    if isinstance(project, dict) and project.get("id"):
-        return str(project["id"])
-    return safe_id(project_root.name, "project")
+    return _context_contract_inputs.project_id(project_root)
 
 
 def processforge_event(
@@ -12490,11 +12486,7 @@ def as_list(value: Any) -> list[Any]:
 
 
 def normalize_assignment_path(value: Any) -> str:
-    text = str(value or "").strip().replace("\\", "/")
-    while text.startswith("./"):
-        text = text[2:]
-    text = re.sub(r"/+", "/", text)
-    return text.rstrip("/") if text not in {"", "/"} else text
+    return _context_contract_inputs.normalize_assignment_path(value)
 
 
 def assignment_path_key(value: Any) -> str:
@@ -12503,78 +12495,15 @@ def assignment_path_key(value: Any) -> str:
 
 
 def assignment_scope_items(value: Any) -> list[str]:
-    items: list[str] = []
-    seen: set[str] = set()
-    for item in as_list(value):
-        raw: Any = item
-        if isinstance(item, dict):
-            raw = item.get("path") or item.get("glob") or item.get("pattern") or item.get("file")
-        text = normalize_assignment_path(raw)
-        if text and text not in seen:
-            items.append(text)
-            seen.add(text)
-    return items
+    return _context_contract_inputs.assignment_scope_items(value)
 
 
 def normalize_context_artifacts(value: Any) -> list[dict[str, Any]]:
-    artifacts: list[dict[str, Any]] = []
-    for item in as_list(value):
-        if isinstance(item, dict):
-            path = normalize_assignment_path(item.get("path"))
-            if not path:
-                continue
-            artifacts.append(
-                {
-                    "path": path,
-                    "role": str(item.get("role", "input")),
-                    "required": bool(item.get("required", True)),
-                    "mutable_by_worker": bool(item.get("mutable_by_worker", False)),
-                }
-            )
-        else:
-            path = normalize_assignment_path(item)
-            if path:
-                artifacts.append({"path": path, "role": "input", "required": True, "mutable_by_worker": False})
-    return artifacts
+    return _context_contract_inputs.normalize_context_artifacts(value)
 
 
 def normalize_required_outputs(value: Any) -> list[dict[str, Any]]:
-    outputs: list[dict[str, Any]] = []
-    for item in as_list(value):
-        if isinstance(item, dict):
-            output_id = str(item.get("id") or item.get("name") or "").strip()
-            if not output_id:
-                continue
-            record = dict(item)
-            record["id"] = output_id
-            record.setdefault("type", "unspecified")
-            record.setdefault("required", True)
-            outputs.append(record)
-        else:
-            text = str(item or "").strip()
-            if not text:
-                continue
-            if "=" in text:
-                record: dict[str, Any] = {}
-                for part in text.split(","):
-                    if "=" not in part:
-                        continue
-                    key, raw_value = part.split("=", 1)
-                    key = key.strip()
-                    raw_value = raw_value.strip()
-                    if key == "required":
-                        record[key] = raw_value.lower() not in {"0", "false", "no"}
-                    else:
-                        record[key] = raw_value
-                output_id = str(record.get("id") or record.get("name") or "").strip()
-                if output_id:
-                    record["id"] = output_id
-                    record.setdefault("type", "unspecified")
-                    record.setdefault("required", True)
-                    outputs.append(record)
-                continue
-            outputs.append({"id": text, "type": "unspecified", "required": True})
-    return outputs
+    return _context_contract_inputs.normalize_required_outputs(value)
 
 
 def parse_required_output_waivers(value: Any) -> dict[str, str]:
@@ -12659,69 +12588,15 @@ def required_output_checks(project_root: Path, task: dict[str, Any], waivers: di
 
 
 def normalize_execution_mode(value: Any) -> dict[str, Any]:
-    if isinstance(value, dict):
-        mode = dict(value)
-    elif isinstance(value, str) and value.strip():
-        mode = {"kind": value.strip()}
-    else:
-        return {}
-    kind = str(mode.get("kind", "")).strip()
-    if kind:
-        mode["kind"] = kind
-    mode.setdefault("code_changes_allowed", False)
-    mode.setdefault("artifact_changes_allowed", True)
-    mode.setdefault("requires_review", True)
-    return mode
+    return _context_contract_inputs.normalize_execution_mode(value)
 
 
 def normalize_ownership(metadata: dict[str, Any], allowed_files: list[str]) -> dict[str, Any]:
-    raw = metadata.get("ownership") if isinstance(metadata.get("ownership"), dict) else {}
-    owner_id = str(raw.get("owner_id") or metadata.get("id") or "assignment")
-    owned_files = assignment_scope_items(raw.get("owned_files"))
-    owned_globs = assignment_scope_items(raw.get("owned_globs"))
-    if not owned_files and allowed_files:
-        owned_files = list(allowed_files)
-    return {
-        "owner_id": safe_id(owner_id, "assignment"),
-        "owner_label": str(raw.get("owner_label") or f"worker-{safe_id(owner_id, 'assignment')}"),
-        "role": str(raw.get("role") or metadata.get("role") or ""),
-        "writer": bool(raw.get("writer", bool(allowed_files or owned_files or owned_globs))),
-        "owned_files": owned_files,
-        "owned_globs": owned_globs,
-    }
+    return _context_contract_inputs.normalize_ownership(metadata, allowed_files)
 
 
 def normalize_non_overlap(value: Any, current_write_scope: list[str]) -> dict[str, Any]:
-    if not isinstance(value, dict):
-        value = {}
-    result = dict(value)
-    active = result.get("active_parallel_tasks")
-    if not isinstance(active, list):
-        active = []
-    if result.get("active_parallel_task"):
-        active.append(
-            {
-                "id": result.get("active_parallel_task"),
-                "owner": result.get("active_parallel_owner"),
-                "write_scope": assignment_scope_items(result.get("active_parallel_scope")),
-            }
-        )
-    normalized_active: list[dict[str, Any]] = []
-    for item in active:
-        if isinstance(item, dict):
-            record = dict(item)
-            if "write_scope" in record:
-                record["write_scope"] = assignment_scope_items(record.get("write_scope"))
-            normalized_active.append(record)
-        elif item:
-            normalized_active.append({"id": str(item), "write_scope": []})
-    result["policy"] = str(result.get("policy") or "block_on_write_overlap")
-    result["active_parallel_tasks"] = normalized_active
-    result["current_write_scope"] = current_write_scope
-    result.pop("active_parallel_task", None)
-    result.pop("active_parallel_owner", None)
-    result.pop("active_parallel_scope", None)
-    return result
+    return _context_contract_inputs.normalize_non_overlap(value, current_write_scope)
 
 
 def assignment_write_scope(metadata: dict[str, Any]) -> list[str]:
@@ -12883,62 +12758,11 @@ WORKSPACE_ACCESS_KEYS = ("knowledge_resources", "templates", "tools", "mcp")
 
 
 def normalize_workspace_access(value: Any) -> dict[str, list[Any]]:
-    raw = value if isinstance(value, dict) else {}
-    aliases = {
-        "knowledge": "knowledge_resources",
-        "resources": "knowledge_resources",
-        "knowledge_resource_refs": "knowledge_resources",
-        "template_refs": "templates",
-        "tool_refs": "tools",
-        "mcp_refs": "mcp",
-        "mcp_servers": "mcp",
-    }
-    result: dict[str, list[Any]] = {key: [] for key in WORKSPACE_ACCESS_KEYS}
-    for key, target in aliases.items():
-        if key in raw:
-            result[target].extend(as_list(raw.get(key)))
-    for key in WORKSPACE_ACCESS_KEYS:
-        result[key].extend(as_list(raw.get(key)))
-    cleaned: dict[str, list[Any]] = {}
-    for key, items in result.items():
-        normalized: list[Any] = []
-        seen: set[str] = set()
-        for item in items:
-            if isinstance(item, dict):
-                marker = json.dumps(item, sort_keys=True, ensure_ascii=False)
-                normalized_item: Any = {str(k): v for k, v in item.items()}
-            else:
-                text = str(item).strip()
-                if not text:
-                    continue
-                marker = text
-                normalized_item = text
-            if marker in seen:
-                continue
-            seen.add(marker)
-            normalized.append(normalized_item)
-        cleaned[key] = normalized
-    return cleaned
+    return _context_contract_inputs.normalize_workspace_access(value)
 
 
 def workspace_access_public_path_issues(access: dict[str, list[Any]]) -> list[str]:
-    issues: list[str] = []
-    for group, items in access.items():
-        for index, item in enumerate(items):
-            if isinstance(item, str):
-                if path_string_is_absolute(item) or PATH_CONSTANT_PATTERN.search(item):
-                    issues.append(f"workspace_access.{group}[{index}] must be an id/path_ref, not a private path")
-                continue
-            if not isinstance(item, dict):
-                continue
-            if "path" in item or "resolved_path" in item or "absolute_path" in item:
-                issues.append(f"workspace_access.{group}[{index}] must not include raw path fields")
-            for key, value in item.items():
-                if str(key) == "path_ref":
-                    continue
-                if isinstance(value, str) and (path_string_is_absolute(value) or PATH_CONSTANT_PATTERN.search(value)):
-                    issues.append(f"workspace_access.{group}[{index}].{key} must not include a private path")
-    return issues
+    return _context_contract_inputs.workspace_access_public_path_issues(access)
 
 
 def validate_assignment_required_sources(project_root: Path, contract: dict[str, Any]) -> list[str]:
@@ -18061,17 +17885,7 @@ def command_continuation_doctor(args: argparse.Namespace) -> int:
 
 
 def normalize_subagent_policy(raw: Any) -> dict[str, Any]:
-    source = raw if isinstance(raw, dict) else {}
-    allow = bool(source.get("allow", source.get("allow_subagents", False)))
-    max_subagents = int(source["max_subagents"]) if "max_subagents" in source else (1 if allow else 0)
-    reports_dir = normalize_assignment_path(str(source.get("reports_dir") or ""))
-    return {
-        "allow": allow,
-        "max_subagents": max_subagents,
-        "allowed_roles": [str(item) for item in as_list(source.get("allowed_roles"))],
-        "require_reports": bool(source.get("require_reports", source.get("require_subagent_reports", allow))),
-        "reports_dir": reports_dir,
-    }
+    return _context_contract_inputs.normalize_subagent_policy(raw)
 
 
 def worker_subagent_policy(worker: dict[str, Any]) -> dict[str, Any]:
@@ -18659,25 +18473,11 @@ def emit_worker_run_skip(project_root: Path, task: dict[str, Any], driver: dict[
 
 
 def normalize_agent_model(value: Any) -> str:
-    if value in (None, ""):
-        return ""
-    text = str(value).strip()
-    if not text:
-        return ""
-    if any(char in text for char in "\r\n\0"):
-        raise SystemExit("FAIL: agent model contains unsupported control characters")
-    return text
+    return _context_contract_inputs.normalize_agent_model(value)
 
 
 def normalize_agent_reasoning_effort(value: Any) -> str:
-    if value in (None, ""):
-        return ""
-    text = str(value).strip().lower()
-    if not text:
-        return ""
-    if text not in {"minimal", "low", "medium", "high"}:
-        raise SystemExit(f"FAIL: agent reasoning effort must be one of minimal, low, medium, high; got {text}")
-    return text
+    return _context_contract_inputs.normalize_agent_reasoning_effort(value)
 
 
 def worker_sandbox_for_task(task: dict[str, Any]) -> str:

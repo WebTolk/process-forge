@@ -108,7 +108,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/work/record_catalog.py` | Прежний проверяемый каталог активных и исторических Run/Assignment с учётом незавершённого completion и явными актуальными зависимостями. |
 | `src/processforge_core/documents/reader.py`, `work/inventory.py` | Чтение YAML и актуальный отсортированный обход без общего изменяемого кеша документов. |
 | `src/processforge_core/work/records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
-| `src/processforge_core/work/context_read.py` | Прежние проверки капсулы и нормализация Assignment с явно переданными функциями путей и проверки. |
+| `src/processforge_core/work/context_read.py` | Актуальная проверка капсулы и нормализация Assignment через конкретные зависимости Core. |
+| `src/processforge_core/work/context_documents.py` | Нормализация полей и конкретное чтение документов, путей и идентификаторов для Work context. |
 | `src/processforge_core/process_catalog/` | Модели и разрешение каталога, чтение effective ProcessDefinition, выбор из предложенных процессов и подготовка pin через явные зависимости. |
 | `src/processforge_core/project/snapshot.py` | Чтение актуального ProjectContextSnapshot и checksum исходных байтов через переданные функции пути, загрузки и хеширования. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
@@ -137,7 +138,16 @@ Work-импорты на текущем dev-этапе не сохраняютс
 
 `WorkRecordReadPort` содержит `runs`, `load_run` и `load_assignment`. По умолчанию фабрика подключает `YamlWorkRecordReader` на существующих `WorkInventory` и YAML loader. Пути и документы читаются актуальными, общего кеша между запросами нет. Прямой старый конструктор сохраняет прежний обход и private path helpers, включая переопределения в подклассах. Читатель не выбирает Work, не скрывает дубликаты и aliases и не решает вопросы восстановления.
 
-`WorkContextReadPort` содержит `validation` и `normalized_assignment`. Сборка по умолчанию выполняется лениво через `build_work_context_read_service`: используются функции путей вызывающего сервиса и узкий `LegacyWorkContextAdapter`. `WorkContextReadService` не зависит от монолитного ядра: четыре зависимости определяют пути, проверяют контракт и нормализуют Assignment. Прежние правила `work/context.py` сохраняют signed identity/intent, pins, scope и stage views. Лимиты байтов, запрет symlink/выхода за root, checksum исходных байтов, безопасный разбор и порядок ошибок сохранены. Сборка не захватывает документ, root или Logger; проверки и нормализация получают актуальные данные.
+`WorkContextReadPort` остаётся точкой внедрения для чтения контекста работы.
+По умолчанию `WorkContextReadService` получает только корень проекта и конкретный
+`work.context_documents.ContextContractInputs`, которому принадлежит исходная логика
+нормализации и чтения через Core YAML, IDs и пути. `LegacyWorkContextAdapter` и
+обратные вызовы в старый Core удалены. Прежние функции монолита вызывают методы
+Core. Общие правила `work.context` проверяют identity/intent, pins, scope и stage
+views; сохранены проверки размера, пути, checksum, порядок отказов и актуальное
+чтение файлов. Старый Core не передаётся в стандартный читатель. Общая сборка
+контракта и проверки capability в режиме require-ready остаются отдельными
+незавершёнными переносами; владение всем validation/bootstrap здесь не заявляется.
 
 `ProcessDefinitionReadPort` предоставляет `effective_process(run)`. `ProcessDefinitionReadService` получает прежний resolver определения процесса и существующую функцию fingerprint. По умолчанию `_effective_process` использует ленивую сборку через `build_process_definition_read_service` и узкий `LegacyProcessDefinitionAdapter`. Для валидных и повреждённых pin каталог не читается; legacy определения разрешаются заново при каждом вызове. Возвращаемые копии сохраняют неизвестные поля. Прежние статусы `pinned`, `corrupt`, `legacy_unpinned`, `missing` и границы обработки исключений сохранены. Reader не выбирает процесс, не создаёт pin и не разрешает переходы; остальные зависимости от legacy остаются.
 

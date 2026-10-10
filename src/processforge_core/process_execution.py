@@ -967,8 +967,7 @@ class ProcessExecutionService:
             return self.context
         from .composition import build_work_context_read_service
 
-        return build_work_context_read_service(self.project_root, self.core,
-                                               flow_root=self._flow_root, assignment_path=self._assignment_path)
+        return build_work_context_read_service(self.project_root)
 
     def _write_capsule(self, run: dict[str, Any], assignment: dict[str, Any], pin: dict[str, Any]) -> tuple[str, str]:
         from .composition import build_assignment_capsule_publisher

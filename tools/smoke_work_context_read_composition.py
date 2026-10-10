@@ -12,6 +12,7 @@ import hashlib
 import itertools
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -29,8 +30,9 @@ from processforge_core.bootstrap import RuntimeBootstrap
 from processforge_core.composition import build_process_execution_service, build_work_context_read_service
 from processforge_core.process_execution import ProcessExecutionService
 from processforge_core.common.request_scope import request_scope
-from processforge_core.work.context import ContextContractError
+from processforge_core.work.context import ContextContractError, SOURCE_LIMITS, assignment_intent, fingerprint
 from processforge_core.work.context_read import WorkContextReadService
+from processforge_core.work.context_documents import ContextContractInputs
 
 BASELINE = None
 SCRATCH = None
@@ -101,8 +103,7 @@ class CompositionTests(unittest.TestCase):
             def __getattr__(self, name):
                 raise AssertionError('Construction must not access core')
         core, context = NoCore(), MemoryContext()
-        fail = lambda *args: (_ for _ in ()).throw(AssertionError('No path access during construction'))
-        reader = build_work_context_read_service(Path('p'), core, flow_root=fail, assignment_path=fail)
+        reader = build_work_context_read_service(Path('p'))
         self.assertIsInstance(reader, WorkContextReadService)
         service = build_process_execution_service(Path('p'), None, core, context=context)
         self.assertIs(service._context_reader(), context)
@@ -121,7 +122,7 @@ class CompositionTests(unittest.TestCase):
         code = """from pathlib import Path
 import sys
 from processforge_core.composition import build_process_execution_service, build_work_context_read_service
-reader = build_work_context_read_service(Path('p'), object(), flow_root=lambda: Path('flow'), assignment_path=lambda i: Path(i))
+reader = build_work_context_read_service(Path('p'))
 build_process_execution_service(Path('p'), None, object(), context=reader)
 assert 'processforge' not in sys.modules
 assert 'processforge_core._legacy_processforge' not in sys.modules
@@ -259,7 +260,8 @@ class CapsuleTests(unittest.TestCase):
             result = self.validate()
             self.assertEqual(result['stage_view']['id'], 'read')
             validator.assert_called_once_with(self.root, self.flow / 'assignments/a.yaml', self.assignment,
-                                               {'execution_contract': {}, 'future': [1]}, self.core, check_sources=False)
+                                               {'execution_contract': {}, 'future': [1]}, validator.call_args.args[4], check_sources=False)
+            self.assertIsInstance(validator.call_args.args[4], ContextContractInputs)
         self.assignment['process_execution']['assignment_capsule_checksum'] = 'sha256:' + '0' * 64
         with patch('processforge_core.work.context.validate_execution_contract', side_effect=AssertionError('checksum first')):
             self.assertEqual(self.validate()['reason'], 'immutable_context_changed')
@@ -319,7 +321,7 @@ class CapsuleTests(unittest.TestCase):
             self.path.unlink()
             self.assertEqual(self.validate()['status'], 'legacy')
 
-    def test_default_preserves_private_path_callbacks(self):
+    def test_default_owns_paths_without_private_callbacks(self):
         self.write(b'execution_contract: {}')
         class CustomPaths(ProcessExecutionService):
             def _flow_root(inner):
@@ -329,10 +331,12 @@ class CapsuleTests(unittest.TestCase):
         service = CustomPaths(self.root, None, object())
         with patch('processforge_core.work.context.validate_execution_contract', return_value={'status': 'valid'}) as validator:
             self.assertEqual(service._contract_validation(self.assignment)['status'], 'valid')
-            self.assertEqual(validator.call_args.args[1], self.root / 'custom.yaml')
+            self.assertEqual(validator.call_args.args[1], self.flow / 'assignments/a.yaml')
+            self.assertIsInstance(validator.call_args.args[4], ContextContractInputs)
         with patch('processforge_core.work.context.normalized_assignment_contract', return_value=NORMALIZED) as normalizer:
             self.assertEqual(service._context_reader().normalized_assignment(self.assignment), NORMALIZED)
-            self.assertEqual(normalizer.call_args.args[1], self.root / 'custom.yaml')
+            self.assertEqual(normalizer.call_args.args[1], self.flow / 'assignments/a.yaml')
+            self.assertIsInstance(normalizer.call_args.args[3], ContextContractInputs)
 
     def test_baseline_validation_corpus(self):
         if BASELINE is None:
@@ -357,6 +361,107 @@ class CapsuleTests(unittest.TestCase):
         print('Original capsule validation comparisons:', count)
 
 
+class DefaultCoreTests(unittest.TestCase):
+    def test_real_default_inputs_and_copied_core_without_cli(self):
+        with tempfile.TemporaryDirectory(dir=SCRATCH) as raw:
+            root = Path(raw)
+            flow = root / '.pf'
+            flow.mkdir()
+            manifest = flow / 'process-forge.yaml'
+            manifest.write_text('project:\n  id: fixture\n', encoding='utf-8')
+            metadata = {'id': 'a', 'run_id': 'r', 'process': 'p', 'stage': 'read',
+                        'objective': 'context fixture', 'allowed_actions': [], 'allowed_read_files': [],
+                        'required_outputs': [{'id': 'report', 'future': {'tag': 'kept'}}]}
+            reader = build_work_context_read_service(root)
+            normalized = reader.normalized_assignment(metadata)
+            self.assertEqual(normalized['scope']['allowed_actions'], [])
+            self.assertEqual(normalized['scope']['allowed_read_files'], [])
+            self.assertEqual(normalized['outputs']['required_outputs'][0]['future'], {'tag': 'kept'})
+            definition = {'id': 'p', 'version': '1', 'stages': [{'id': 'read'}]}
+            process_pin = {'process_id': 'p', 'process_version': '1',
+                           'process_fingerprint': fingerprint(definition), 'definition': definition}
+            intent = assignment_intent(root, flow / 'assignments/a.yaml', metadata, reader.inputs)
+            contract = {'contract_version': 1,
+                        'identity': {'kind': 'work', 'project_id': 'fixture', 'assignment_id': 'a', 'run_id': 'r', 'context_id': 'a-capsule'},
+                        'assignment_intent': intent, 'assignment_intent_checksum': fingerprint(intent),
+                        'snapshot': {'id': 'ctx', 'checksum': 'sha256:' + '0' * 64},
+                        'process': {'id': 'p', 'version': '1', 'fingerprint': fingerprint(definition)},
+                        'resources': {'selected_ids': [], 'bindings_checksum': fingerprint([])},
+                        'scope': intent['scope'], 'outputs': intent['outputs'],
+                        'capabilities': {'required': [], 'optional': []}, 'workspace_access': intent['workspace_access'],
+                        'parameters': {}, 'coordination': {}, 'source_limits': SOURCE_LIMITS,
+                        'readiness': {'status': 'ready', 'blockers': []}, 'required_sources': [],
+                        'worker_may_rebuild_context': False}
+            contract['contract_checksum'] = fingerprint(contract)
+            capsule = {'capsule': {'id': 'a-capsule'}, 'execution_contract': contract,
+                       'context_snapshot': {'id': 'ctx', 'sha256': 'sha256:' + '0' * 64},
+                       'process_execution': process_pin, 'context': {'selected_resource_ids': []},
+                       'resource_bindings': [], 'future': {'tag': 'kept'}}
+            path = flow / 'contexts/assignment-capsules/a.capsule.yaml'
+            path.parent.mkdir(parents=True)
+            raw_capsule = yaml.safe_dump(capsule, sort_keys=False).encode('utf-8')
+            path.write_bytes(raw_capsule)
+            metadata['process_execution'] = {'assignment_capsule': '.pf/contexts/assignment-capsules/a.capsule.yaml',
+                                             'assignment_capsule_checksum': 'sha256:' + hashlib.sha256(raw_capsule).hexdigest()}
+            run = {'id': 'r', 'process': 'p', 'tasks': [{'id': 'a'}], 'process_execution': process_pin}
+            run_path = flow / 'runs/r/run.yaml'
+            run_path.parent.mkdir(parents=True)
+            run_path.write_text(yaml.safe_dump(run), encoding='utf-8')
+            self.assertEqual(reader.validation(metadata)['status'], 'valid')
+
+            class NoLegacy:
+                def __getattr__(self, name):
+                    raise AssertionError('Default context read reached legacy: ' + name)
+
+            service = ProcessExecutionService(root, None, NoLegacy())
+            self.assertEqual(service._contract_validation(metadata)['status'], 'valid')
+            self.assertEqual(service._context_reader().normalized_assignment(metadata), normalized)
+            with request_scope():
+                stamp = manifest.stat()
+                manifest.write_text('project:\n  id: changed\n', encoding='utf-8')
+                os.utime(manifest, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+                self.assertEqual(manifest.stat().st_size, stamp.st_size)
+                self.assertEqual(reader.validation(metadata)['reason'], 'work_context_mismatch')
+                manifest.write_text('project:\n  id: fixture\n', encoding='utf-8')
+                self.assertEqual(reader.validation(metadata)['status'], 'valid')
+            run['tasks'].append({'id': 'a'})
+            run_path.write_text(yaml.safe_dump(run), encoding='utf-8')
+            self.assertEqual(reader.validation(metadata)['reason'], 'work_identity_mismatch')
+            run['tasks'].pop()
+            run_path.write_text(yaml.safe_dump(run), encoding='utf-8')
+            self.assertEqual(reader.validation(metadata)['status'], 'valid')
+            checksum = metadata['process_execution']['assignment_capsule_checksum']
+            metadata['process_execution']['assignment_capsule_checksum'] = 'sha256:' + '0' * 64
+            self.assertEqual(reader.validation(metadata)['reason'], 'immutable_context_changed')
+            metadata['process_execution']['assignment_capsule_checksum'] = checksum
+            self.assertEqual(reader.validation({'id': 'missing'})['status'], 'legacy')
+            self.assertEqual(reader.validation({'id': 'missing', 'process_execution': {'assignment_capsule': 'pinned'}})['reason'],
+                             'work_context_unavailable')
+
+            package = root / 'copied-package'
+            shutil.copytree(ROOT / 'src/processforge_core', package / 'processforge_core', ignore=shutil.ignore_patterns('__pycache__'))
+            metadata_path = root / 'metadata.yaml'
+            metadata_path.write_text(yaml.safe_dump(metadata), encoding='utf-8')
+            code = """import sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import yaml
+from processforge_core.work.context_read import WorkContextReadService
+from processforge_core.work.context_documents import ContextContractInputs
+reader = WorkContextReadService(Path(sys.argv[2]))
+assert isinstance(reader.inputs, ContextContractInputs)
+metadata = yaml.safe_load(Path(sys.argv[3]).read_text(encoding='utf-8'))
+assert reader.validation(metadata)['status'] == 'valid'
+assert not reader.normalized_assignment(metadata)['scope']['allowed_actions']
+assert not any(name == 'processforge' or name.startswith(('pf_cli', 'pf_runtime')) for name in sys.modules)
+print('PASS: real copied Core context without CLI/Host')
+"""
+            result = subprocess.run([sys.executable, '-I', '-B', '-c', code, str(package), str(root), str(metadata_path)],
+                                    cwd=package, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            print(result.stdout.strip())
+
+
 def main():
     global BASELINE, SCRATCH
     parser = argparse.ArgumentParser()
@@ -367,7 +472,7 @@ def main():
     if SCRATCH is not None:
         SCRATCH.mkdir(parents=True, exist_ok=True)
     suite = unittest.TestSuite()
-    for case in (CompositionTests, InjectedContextTests, CapsuleTests):
+    for case in (CompositionTests, InjectedContextTests, CapsuleTests, DefaultCoreTests):
         suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(case))
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     return 0 if result.wasSuccessful() else 1

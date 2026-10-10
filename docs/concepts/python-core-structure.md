@@ -99,7 +99,8 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/work/records.py` | Live raw Run/Assignment reader; selection and recovery remain in the application service. |
 | `src/processforge_core/work/publication.py` | Existing atomic Work text/YAML publication through explicit deferred formatter/writer dependencies. |
 | `src/processforge_core/work/events.py` | Existing Work event envelope and subsequent diagnostics through a typed, dynamically resolved emitter. |
-| `src/processforge_core/work/context_read.py` | Existing capsule validation and assignment normalization with explicit path/validator callbacks. |
+| `src/processforge_core/work/context_read.py` | Live capsule validation and assignment normalization through concrete Core contract inputs. |
+| `src/processforge_core/work/context_documents.py` | Concrete field normalization and document/path/identity inputs for Work context reads. |
 | `src/processforge_core/process_catalog/` | Catalog models/resolution, effective ProcessDefinition reads, offered process selection and pin construction through explicit callbacks. |
 | `src/processforge_core/process_catalog/summary.py` | Existing allowed-process context summary with an optional typed definition resolver, without Core. |
 | `src/processforge_core/project/snapshot.py` | Live ProjectContextSnapshot loading and raw-byte checksum through explicit path/loader/hash callbacks. |
@@ -132,7 +133,16 @@ The existing `CurrentWorkService(project_root, core)` constructor and module pat
 
 `WorkRecordReadPort` exposes `runs`, `load_run` and `load_assignment`. The factory defaults to `YamlWorkRecordReader`, which uses the existing `WorkInventory` and YAML loader. Roots and records are read live; no cross-request result cache is added. Direct legacy construction retains its inventory and private-path fallback, including subclass overrides. Raw readers neither choose Work nor hide duplicate/alias discovery or pending recovery.
 
-`WorkContextReadPort` exposes `validation` and `normalized_assignment`. The default is assembled lazily through `build_work_context_read_service`, using the caller's private path callbacks and the narrow `LegacyWorkContextAdapter`. `WorkContextReadService` does not depend on the monolithic core: its four dependencies resolve paths, validate contracts and normalize assignments. Existing `work/context.py` rules still own signed identity/intent, pins, scope and stage views. Byte limits, symlink/containment checks, raw checksum, safe parsing and original error order remain intact. Default assembly captures no document/root/logger; validation and normalization return live results.
+`WorkContextReadPort` exposes genuine context-result injection. The default
+`WorkContextReadService` is bound to the explicit project root and concrete
+`work.context_documents.ContextContractInputs`, which owns the original field
+normalizers and document/identity inputs through Core YAML, IDs and paths.
+`LegacyWorkContextAdapter` and the factory Core/path callback arguments are removed.
+Monolithic helper functions call actual Core methods. Shared `work.context` rules
+retain signed identity/intent, pins, scope and stage views; byte/path/checksum,
+parse/error order and live reads are preserved. The reader captures no legacy Core.
+Generic contract creation and require-ready capability dependencies remain separate
+migration work; whole coordinator/bootstrap independence is not claimed.
 
 `ProcessDefinitionReadPort` exposes `effective_process(run)`. `ProcessDefinitionReadService` receives the legacy definition resolver and existing fingerprint function. By default, `_effective_process` delegates lazily through `build_process_definition_read_service` and the narrow `LegacyProcessDefinitionAdapter`. Valid and corrupt pins do not consult the catalog; legacy definitions are resolved live on each call. Returned copies preserve unknown fields. The existing `pinned`, `corrupt`, `legacy_unpinned`, `missing` statuses and exception boundaries remain unchanged. The reader does not select a process, create pins or authorize transitions; catalog resolution and other legacy dependencies remain.
 

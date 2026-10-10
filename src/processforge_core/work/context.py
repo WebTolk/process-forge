@@ -139,7 +139,7 @@ def normalized_assignment_contract(project_root: Path, assignment: Path, metadat
     raw_artifacts = metadata.get("context_artifacts") or []
     for i, item in enumerate(artifacts):
         item["path"] = portable_path(item["path"])
-        # Preserve an operator-declared checksum omitted by the legacy adapter.
+        # Preserve an operator-declared checksum omitted by field normalization.
         raw = raw_artifacts[i] if isinstance(raw_artifacts, list) and i < len(raw_artifacts) else None
         if isinstance(raw, dict) and raw.get("checksum"):
             item["checksum"] = str(raw["checksum"])

@@ -286,29 +286,10 @@ def build_current_work_service(
     return CurrentWorkService(project_root, documents)
 
 
-@dataclass(frozen=True)
-class LegacyWorkContextAdapter:
-    project_root: Path
-    core: Any
-
-    def validate_contract(self, path: Path, assignment: dict[str, Any], capsule: dict[str, Any]) -> dict[str, Any]:
-        from .work.context import validate_execution_contract
-
-        return validate_execution_contract(self.project_root, path, assignment, capsule, self.core, check_sources=False)
-
-    def normalize_assignment(self, path: Path, assignment: dict[str, Any]) -> dict[str, Any]:
-        from .work.context import normalized_assignment_contract
-
-        return normalized_assignment_contract(self.project_root, path, assignment, self.core)
-
-
-def build_work_context_read_service(
-    project_root: Path, core: Any, *, flow_root: Callable[[], Path], assignment_path: Callable[[str], Path],
-) -> WorkContextReadService:
+def build_work_context_read_service(project_root: Path) -> WorkContextReadService:
     from .work.context_read import WorkContextReadService
 
-    adapter = LegacyWorkContextAdapter(project_root, core)
-    return WorkContextReadService(flow_root, assignment_path, adapter.validate_contract, adapter.normalize_assignment)
+    return WorkContextReadService(project_root)
 
 
 @dataclass(frozen=True)
