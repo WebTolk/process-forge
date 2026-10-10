@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 __all__ = ()
 
@@ -53,3 +53,46 @@ class WorkStatePolicy:
         else:
             action = "work_ready"
         return WorkStateDecision(action, blockers)
+
+    def project_state(
+        self, *, action: str, permissions: dict[str, Any], project_id: str,
+        run: dict[str, Any], assignment: dict[str, Any], process: dict[str, Any], pin_status: str,
+        stage_id: str, stage: dict[str, Any], decision: WorkStateDecision,
+        contract_validation: dict[str, Any], required_inputs: list[dict[str, Any]],
+        required_evidence: list[dict[str, Any]], obligations: list[dict[str, Any]],
+        artifacts: list[dict[str, Any]], entry_gates: list[dict[str, Any]], exit_gates: list[dict[str, Any]],
+        outcomes: list[dict[str, Any]], incomplete: list[dict[str, Any]], current_evidence: list[dict[str, Any]],
+        fingerprint: Callable[[dict[str, Any]], str], stable_ids: Callable[[Any], list[str]],
+    ) -> dict[str, Any]:
+        return {
+            "schema_version": 1,
+            "kind": "pf.work.state",
+            "action": action,
+            "execution_readiness": permissions,
+            "project": {"id": project_id},
+            "process": {
+                "id": str(process.get("id") or run.get("process") or ""),
+                "version": str(process.get("version") or ""),
+                "fingerprint": str((run.get("process_execution") or {}).get("process_fingerprint") or fingerprint(process)),
+                "pin_status": pin_status,
+            },
+            "work": {
+                "active_specializations": stable_ids(assignment.get("selected_specializations") or run.get("selected_specializations")),
+                "selected_resource_ids": stable_ids((run.get("process_execution") or {}).get("selected_resource_ids")),
+            },
+            "context": {"id": f"{assignment['id']}-capsule", "checksum": (assignment.get("process_execution") or {}).get("assignment_capsule_checksum"),
+                        "identity_source": "assignment_process_pin", "validation": contract_validation},
+            "run": {"id": str(run.get("id") or ""), "status": str(run.get("status") or "")},
+            "assignment": {"id": str(assignment.get("id") or ""), "status": str(assignment.get("status") or "")},
+            "stage": {"id": stage_id, "title": str(stage.get("title") or stage_id), "status": str(assignment.get("stage_status") or "in_progress")},
+            "required_inputs": required_inputs,
+            "required_evidence": required_evidence,
+            "obligations": obligations,
+            "artifacts": artifacts,
+            "gates": {"entry": entry_gates, "exit": exit_gates},
+            "allowed_outcomes": outcomes,
+            "blockers": decision.blockers,
+            "incomplete": incomplete,
+            "completion": {"status": "complete" if not incomplete else "incomplete", "requirements": incomplete},
+            "evidence": current_evidence,
+        }

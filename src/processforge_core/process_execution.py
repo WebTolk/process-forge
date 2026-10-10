@@ -468,38 +468,16 @@ class ProcessExecutionService:
             permissions = permission_readiness(normalized['scope'], normalized['assignment']['execution_mode'])
         except ContextContractError as exc:
             permissions = {"status": "blocked", "blockers": [exc.code]}
-        return {
-            "schema_version": 1,
-            "kind": "pf.work.state",
-            "action": decision.action,
-            "execution_readiness": permissions,
-            "project": {"id": self.core.project_id(self.project_root)},
-            "process": {
-                "id": str(process.get("id") or run.get("process") or ""),
-                "version": str(process.get("version") or ""),
-                "fingerprint": str((run.get("process_execution") or {}).get("process_fingerprint") or canonical_fingerprint(process)),
-                "pin_status": pin_status,
-            },
-            "work": {
-                "active_specializations": _stable_ids(assignment.get("selected_specializations") or run.get("selected_specializations")),
-                "selected_resource_ids": _stable_ids((run.get("process_execution") or {}).get("selected_resource_ids")),
-            },
-            "context": {"id": f"{assignment['id']}-capsule", "checksum": (assignment.get("process_execution") or {}).get("assignment_capsule_checksum"),
-                        "identity_source": "assignment_process_pin", "validation": contract_validation},
-            "run": {"id": str(run.get("id") or ""), "status": str(run.get("status") or "")},
-            "assignment": {"id": str(assignment.get("id") or ""), "status": str(assignment.get("status") or "")},
-            "stage": {"id": stage_id, "title": str(stage.get("title") or stage_id), "status": str(assignment.get("stage_status") or "in_progress")},
-            "required_inputs": required_inputs,
-            "required_evidence": required_evidence,
-            "obligations": obligations,
-            "artifacts": artifacts,
-            "gates": {"entry": entry_gates, "exit": exit_gates},
-            "allowed_outcomes": outcomes,
-            "blockers": decision.blockers,
-            "incomplete": incomplete,
-            "completion": {"status": "complete" if not incomplete else "incomplete", "requirements": incomplete},
-            "evidence": current_evidence,
-        }
+        return policy.project_state(
+            action=decision.action, permissions=permissions,
+            project_id=self.core.project_id(self.project_root),
+            run=run, assignment=assignment, process=process, pin_status=pin_status,
+            stage_id=stage_id, stage=stage, decision=decision, contract_validation=contract_validation,
+            required_inputs=required_inputs, required_evidence=required_evidence, obligations=obligations,
+            artifacts=artifacts, entry_gates=entry_gates, exit_gates=exit_gates, outcomes=outcomes,
+            incomplete=incomplete, current_evidence=current_evidence,
+            fingerprint=lambda value: canonical_fingerprint(value), stable_ids=lambda value: _stable_ids(value),
+        )
 
     def allowed_transitions(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
         state = self.state(run_id=run_id, assignment_id=assignment_id, session_id=session_id)

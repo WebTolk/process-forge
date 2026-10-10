@@ -90,7 +90,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/project/reconciliation.py` | Existing context reconciliation projection through the required deferred typed context checker, without Core. |
 | `src/processforge_core/project/context.py` | Existing five ProjectContextService operations and context-specific per-dispatch readers through required typed dependencies, without Core. |
 | `src/processforge_core/process_execution.py`, `work/continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
-| `src/processforge_core/work/state.py` | I/O-free completion requirements and Work-state action/blocker policy; not lifecycle authority. |
+| `src/processforge_core/work/state.py` | I/O-free completion/action/blocker rules and existing Work-state response projection; not lifecycle authority. |
 | `src/processforge_core/work/automation_readiness.py`, `work/transition_rejection.py` | Existing automation readiness projections, live assignment-event reads and recoverable transition rejection response rules through explicit callbacks. |
 | `src/processforge_core/work/boundary_advisory.py` | Existing Work boundary advisory and fresh-session completed-boundary reads with their distinct route/handoff rules and explicit read dependencies. |
 | `src/processforge_core/work/record_catalog.py` | Existing validated active/historical Run/Assignment catalog with pending completion and explicit live dependencies. |
@@ -248,6 +248,8 @@ Other services still depend on the legacy core. The target separation is domain 
 `tools/smoke_garage_mode_snapshot_composition.py` covers retained mode and context behavior, empty-snapshot fallback, injected readers, constructor substitutions, session policy, live YAML and request isolation, and package use without CLI. `--baseline` compares the retained mode service, `--context-baseline` compares its retained context consumer, and `--scratch-root` confines fixtures.
 
 `AutomationReadinessService` extracts existing automation readiness projections and live assignment-event reads. It uses explicit frozen operation dependencies without Core or transport imports. Existing private facade methods and callback overrides remain compatible; writes, locks, access checks and recovery retain their owners. `tools/smoke_automation_readiness.py` checks retained behavior and injected dependencies.
+
+`WorkStatePolicy.project_state` also owns the existing full selected-state response projection, from supplied records and two explicit fingerprint/stable-id calculation callbacks. The coordinator retains request scope, guards, validation/readiness/diagnostics and obtains action and project identity in their original order. Field/evaluation order, fallback, exceptions and original references remain unchanged; the policy gains no Core, filesystem reads, cache, constructor dependency or lifecycle authority. Existing decision and completion methods are unchanged.
 
 `WorkRecordCatalogService` in `work/record_catalog.py` owns existing Work record enumeration and active/historical projection through eight required deferred providers, using WorkRecordReadPort or the unchanged WorkInventory fallback. Safe identity filtering before assignment loading, run binding, pending-completion activity, fallback field order, duplicate rows, exceptions and repeated live reads are preserved. ProcessExecutionService retains its private facade and selection/completion override points. Cold frozen composition adds no selection policy or shared cache.
 
