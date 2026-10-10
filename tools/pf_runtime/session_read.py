@@ -231,7 +231,9 @@ def session_chat_payload(
         role_filter = set(roles)
         if not role_filter.issubset({"user", "assistant", "system"}):
             raise SessionReadError("invalid_roles")
-    messages = core.load_chat_messages(project_root, session_id)
+    from processforge_core.chat.transcripts import ChatTranscriptReader
+
+    messages = ChatTranscriptReader(project_root).messages(session_id)
     if role_filter:
         messages = [item for item in messages if str((item.get("message") or {}).get("role") or "") in role_filter]
     end = len(messages)

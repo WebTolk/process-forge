@@ -877,7 +877,7 @@ def _worker_session_authorized(envelope: dict[str, Any], project_root: Path, cor
         return False
 
 
-def _is_session_end_fallback_duplicate(envelope: dict[str, Any], item: dict[str, Any], project_root: Path, core: Any,
+def _is_session_end_fallback_duplicate(envelope: dict[str, Any], item: dict[str, Any], project_root: Path,
                                       registry: AdapterRegistry = DEFAULT_ADAPTER_REGISTRY) -> bool:
     policy = registry.resolve(envelope)
     identifiers, types = policy.fallback_participants(envelope, item) if policy else ((), ())
@@ -888,7 +888,9 @@ def _is_session_end_fallback_duplicate(envelope: dict[str, Any], item: dict[str,
     session_id = str(envelope.get("source_session_id") or "")
     if not isinstance(content, str) or not content.strip() or not session_id:
         return False
-    for existing in core.load_chat_messages(project_root, session_id):
+    from processforge_core.chat.transcripts import ChatTranscriptReader
+
+    for existing in ChatTranscriptReader(project_root).messages(session_id):
         body = existing.get("message") if isinstance(existing.get("message"), dict) else {}
         participant = existing.get("participant") if isinstance(existing.get("participant"), dict) else {}
         existing_primary = str(participant.get("id") or "") in identifiers or str(participant.get("type") or "") in types
@@ -941,7 +943,7 @@ def _conversation_messages(
             return _conversation_denial("invalid_message", sequence=sequence)
         if not _allowed_conversation_message(envelope, item, registry):
             return _conversation_denial("untrusted_conversation_provenance", sequence=sequence)
-        if _is_session_end_fallback_duplicate(envelope, item, project_root, core, registry):
+        if _is_session_end_fallback_duplicate(envelope, item, project_root, registry):
             continue
         # A PF-owned expected report has already passed task/attempt/path and
         # exact-content authorization, then native-id/hash/provenance checks.

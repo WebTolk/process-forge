@@ -54,7 +54,8 @@ def _bootstrap_repo_src() -> Path:
 ROOT = _bootstrap_repo_src()
 
 from processforge_core.agents.presence import AgentPresenceReader
-from processforge_core.common.ids import opaque_identity_digest
+from processforge_core.chat.transcripts import ChatTranscriptReader
+from processforge_core.common.ndjson import NdjsonReader
 from processforge_core.process_catalog import (
     PROCESS_CATALOG_CLASSIFICATIONS as CATALOG_PROCESS_CATALOG_CLASSIFICATIONS,
     ProcessCatalogContext,
@@ -11445,25 +11446,15 @@ def validate_chat_message_object(message: Any, label: str) -> list[str]:
 
 
 def iter_ndjson(path: Path) -> list[tuple[int, Any, str | None]]:
-    rows: list[tuple[int, Any, str | None]] = []
-    if not path.is_file():
-        return rows
-    for line_number, line in enumerate(path.read_text(encoding="utf-8-sig", errors="replace").splitlines(), start=1):
-        if not line.strip():
-            continue
-        try:
-            rows.append((line_number, json.loads(line), None))
-        except json.JSONDecodeError as exc:
-            rows.append((line_number, None, str(exc)))
-    return rows
+    return NdjsonReader().read(path)
 
 
 def chat_transcript_path(project_root: Path, session_id: str) -> Path:
-    return locate_flow_root(project_root) / "runtime" / "chat" / "transcripts" / f"session-{opaque_identity_digest(session_id)}.ndjson"
+    return ChatTranscriptReader(project_root).path(session_id)
 
 
 def legacy_chat_transcript_path(project_root: Path, session_id: str) -> Path:
-    return locate_flow_root(project_root) / "runtime" / "chat" / "transcripts" / f"{safe_id(session_id, 'session')}.ndjson"
+    return ChatTranscriptReader(project_root).legacy_path(session_id)
 
 
 def sha256_text(value: str) -> str:
@@ -11608,19 +11599,7 @@ def append_chat_message(
 
 
 def load_chat_messages(project_root: Path, session_id: str) -> list[dict[str, Any]]:
-    transcript = chat_transcript_path(project_root, session_id)
-    messages: list[dict[str, Any]] = []
-    seen: set[str] = set()
-    for path in (legacy_chat_transcript_path(project_root, session_id), transcript):
-        for _line_number, data, error in iter_ndjson(path):
-            if error is None and isinstance(data, dict) and data.get("session_id") == session_id:
-                message_id = str(data.get("message_id") or "")
-                if message_id and message_id in seen:
-                    continue
-                if message_id:
-                    seen.add(message_id)
-                messages.append(data)
-    return messages
+    return ChatTranscriptReader(project_root).messages(session_id)
 
 
 def chat_export_messages(messages: list[dict[str, Any]], *, include_content: bool) -> list[dict[str, Any]]:

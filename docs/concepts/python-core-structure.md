@@ -300,3 +300,13 @@ does not depend on the CLI, Host or legacy callbacks. The shared opaque identity
 digest in `common.ids` also serves chat transcript paths. Presence formats,
 ambiguity, unknown fields and read failures are retained. Attendance writes,
 expiry, binding, leases and bounded Runtime observation keep their current owners.
+
+`chat.transcripts.ChatTranscriptReader` owns the existing transcript paths and live
+exact-session message reads. Its concrete default `common.ndjson.NdjsonReader`
+owns the shared NDJSON parser, including original line numbers and parse-error
+records. The monolithic path/message/parser functions call Core methods;
+Runtime session reads and fallback duplicate detection use the Chat reader directly.
+Legacy-before-canonical message order, first-ID deduplication, unknown fields,
+opaque identities and decoding/error behavior are preserved. Session authorization,
+paging, message writes, export shaping and ingress provenance retain their existing
+owners; this slice does not establish independence of the whole pipeline.

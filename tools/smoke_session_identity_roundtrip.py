@@ -17,7 +17,7 @@ PF = ROOT / "tools" / "processforge.py"
 sys.path.insert(0, str(ROOT / "tools"))
 
 import processforge as core
-from pf_runtime.session_read import session_chat_payload, session_context_payload
+from pf_runtime.session_read import SessionReadError, session_chat_payload, session_context_payload
 
 
 def cli(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
@@ -120,6 +120,108 @@ print('PASS: copied Core presence reader without CLI or Host')
     print(result.stdout.strip())
 
 
+def check_core_chat(workplace: Path, project: Path, root: Path) -> None:
+    from processforge_core.chat.transcripts import ChatTranscriptReader
+    from processforge_core.common.ndjson import NdjsonReader
+    from pf_runtime.host import _is_session_end_fallback_duplicate
+
+    reader = ChatTranscriptReader(project)
+    expected = reader.messages("Case-Session")
+    assert len(expected) == 1 and isinstance(reader.documents, NdjsonReader)
+
+    def legacy_dependency(*_args, **_kwargs):
+        raise AssertionError("chat reader called a legacy read dependency")
+
+    originals = {name: getattr(core, name) for name in
+                 ("iter_ndjson", "chat_transcript_path", "legacy_chat_transcript_path", "load_chat_messages")}
+    try:
+        for name in originals:
+            if name != "load_chat_messages":
+                setattr(core, name, legacy_dependency)
+        assert core.load_chat_messages(project, "Case-Session") == expected
+        core.load_chat_messages = legacy_dependency
+        chat = session_chat_payload(workplace, core, session_id="Case-Session")
+        assert chat["messages"] == core.chat_export_messages(expected, include_content=True)
+    finally:
+        for name, value in originals.items():
+            setattr(core, name, value)
+
+    for role, content, participant in (("user", "reader request", "user"), ("assistant", "reader answer", "codex")):
+        core.append_chat_message(project, session_id="Case-Session", participant_id=participant,
+                                 participant_role="worker", message_role=role, content=content, turn_id="reader-turn")
+    messages = reader.messages("Case-Session")
+    assert len(messages) == 3
+    latest = session_chat_payload(workplace, core, session_id="Case-Session", limit=1)
+    assert latest["messages"][0]["message_id"] == messages[-1]["message_id"]
+    assert latest["page"]["next_before"] == messages[-1]["message_id"]
+    previous = session_chat_payload(workplace, core, session_id="Case-Session", before=latest["page"]["next_before"], limit=1)
+    assert previous["messages"][0]["message_id"] == messages[-2]["message_id"]
+    filtered = session_chat_payload(workplace, core, session_id="Case-Session", roles=["user"])
+    assert [item["message_id"] for item in filtered["messages"]] == [messages[-2]["message_id"]]
+    for arguments, code in (({"limit": False, "roles": "bad"}, "invalid_limit"),
+                            ({"before": "a", "cursor": "b", "roles": "bad"}, "ambiguous_cursor"),
+                            ({"roles": "bad", "before": "unknown"}, "invalid_roles"),
+                            ({"before": "unknown"}, "invalid_cursor")):
+        try:
+            session_chat_payload(workplace, core, session_id="Case-Session", **arguments)
+        except SessionReadError as error:
+            assert error.code == code
+        else:
+            raise AssertionError("session chat did not retain its validation error")
+
+    envelope = {"provider": "codex", "adapter": "codex-hooks", "native_event_type": "SessionEnd", "source_session_id": "Case-Session"}
+    item = {"message_role": "assistant", "content": "reader answer", "turn_id": "reader-turn"}
+    core.load_chat_messages = legacy_dependency
+    try:
+        assert _is_session_end_fallback_duplicate(envelope, item, project)
+        assert not _is_session_end_fallback_duplicate(envelope, {**item, "content": "other answer"}, project)
+        assert not _is_session_end_fallback_duplicate({**envelope, "source_session_id": "case-session"}, item, project)
+        assert not _is_session_end_fallback_duplicate({**envelope, "native_event_type": "Stop"}, item, project)
+    finally:
+        core.load_chat_messages = originals["load_chat_messages"]
+
+    isolated = ChatTranscriptReader(root / "transcript-cases")
+    assert isolated.messages("Opaque/Session") == []
+    legacy, canonical = isolated.legacy_path("Opaque/Session"), isolated.path("Opaque/Session")
+    legacy.parent.mkdir(parents=True)
+    shared = {"session_id": "Opaque/Session", "message_id": "shared", "future": {"tag": "alpha"}}
+    legacy.write_text(json.dumps({**shared, "source": "legacy"}) + "\n", encoding="utf-8")
+    canonical.write_text("\ufeff\n{bad\n" + json.dumps(shared) + "\n" + json.dumps({**shared, "message_id": "unique"}) + "\n", encoding="utf-8")
+    rows = NdjsonReader().read(canonical)
+    assert [row[0] for row in rows] == [2, 3, 4] and rows[0][2] is not None
+    result = isolated.messages("Opaque/Session")
+    assert len(result) == 2 and result[0]["source"] == "legacy"
+    assert not isolated.messages("opaque/session")
+    stamp = canonical.stat()
+    canonical.write_bytes(canonical.read_bytes().replace(b"alpha", b"omega"))
+    os.utime(canonical, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+    assert canonical.stat().st_size == stamp.st_size
+    assert isolated.messages("Opaque/Session")[1]["future"]["tag"] == "omega"
+    assert reader.messages("Case-Session") == messages
+    canonical.unlink()
+    assert isolated.messages("Opaque/Session") == [{**shared, "source": "legacy"}]
+    legacy.unlink()
+    assert isolated.messages("Opaque/Session") == []
+
+    package = root / "copied-presence-package"
+    source = """import sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from processforge_core.chat.transcripts import ChatTranscriptReader
+from processforge_core.common.ndjson import NdjsonReader
+reader = ChatTranscriptReader(Path(sys.argv[2]))
+assert isinstance(reader.documents, NdjsonReader)
+assert len(reader.messages('Case-Session')) == 3
+assert not reader.messages('case-session')
+assert not any(name == 'processforge' or name.startswith(('pf_cli', 'pf_runtime')) for name in sys.modules)
+print('PASS: copied Core chat reader without CLI or Host')
+"""
+    result = subprocess.run([sys.executable, "-I", "-B", "-c", source, str(package), str(project)],
+                            cwd=package, text=True, encoding="utf-8", capture_output=True, timeout=30)
+    assert result.returncode == 0, result.stdout + result.stderr
+    print(result.stdout.strip())
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-session-identity-") as raw:
         root = Path(raw)
@@ -213,6 +315,7 @@ def main() -> int:
         assert not core.find_agent_presence(workplace, agent_id="forged-agent", session_id="other-session")
 
         check_core_presence(workplace, root)
+        check_core_chat(workplace, project, root)
 
     print("PASS: exact opaque session identity round trip")
     return 0
