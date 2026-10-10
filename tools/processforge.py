@@ -53,6 +53,8 @@ def _bootstrap_repo_src() -> Path:
 
 ROOT = _bootstrap_repo_src()
 
+from processforge_core.agents.presence import AgentPresenceReader
+from processforge_core.common.ids import opaque_identity_digest
 from processforge_core.process_catalog import (
     PROCESS_CATALOG_CLASSIFICATIONS as CATALOG_PROCESS_CATALOG_CLASSIFICATIONS,
     ProcessCatalogContext,
@@ -17196,7 +17198,7 @@ def workplace_agent_ledger_path(workplace_root: Path) -> Path:
 
 
 def workplace_agent_presence_dir(workplace_root: Path) -> Path:
-    return workplace_root / "runtime" / "agent-presence"
+    return AgentPresenceReader(workplace_root).directory
 
 
 def workplace_agent_leases_dir(workplace_root: Path) -> Path:
@@ -17238,17 +17240,11 @@ def append_agent_ledger_event(workplace_root: Path, payload: dict[str, Any]) -> 
 
 
 def legacy_agent_presence_path(workplace_root: Path, agent_id: str) -> Path:
-    return workplace_agent_presence_dir(workplace_root) / f"{safe_id(agent_id, 'agent')}.json"
-
-
-def opaque_identity_digest(identity: str) -> str:
-    """Return a filesystem-safe key without normalizing the opaque identity."""
-
-    return hashlib.sha256(identity.encode("utf-8")).hexdigest()
+    return AgentPresenceReader(workplace_root).legacy_path(agent_id)
 
 
 def agent_presence_path(workplace_root: Path, agent_id: str, session_id: str) -> Path:
-    return workplace_agent_presence_dir(workplace_root) / safe_id(agent_id, "agent") / f"session-{opaque_identity_digest(session_id)}.json"
+    return AgentPresenceReader(workplace_root).path(agent_id, session_id)
 
 
 def project_current_session_path(project_root: Path) -> Path:
@@ -17260,27 +17256,11 @@ def workplace_current_session_path(workplace_root: Path, project_id: str) -> Pat
 
 
 def iter_agent_presence_paths(workplace_root: Path) -> list[Path]:
-    presence_dir = workplace_agent_presence_dir(workplace_root)
-    if not presence_dir.is_dir():
-        return []
-    return sorted([*presence_dir.glob("*.json"), *presence_dir.glob("*/*.json")])
+    return AgentPresenceReader(workplace_root).paths()
 
 
 def iter_agent_presence(workplace_root: Path) -> list[dict[str, Any]]:
-    rows: dict[tuple[str, str], tuple[bool, dict[str, Any]]] = {}
-    for path in iter_agent_presence_paths(workplace_root):
-        item = json_read(path)
-        if isinstance(item, dict) and item:
-            agent_id, session_id = str(item.get("agent_id") or ""), str(item.get("session_id") or "")
-            canonical = agent_presence_path(workplace_root, agent_id, session_id)
-            legacy = workplace_agent_presence_dir(workplace_root) / safe_id(agent_id, "agent") / f"{safe_id(session_id, 'session')}.json"
-            if path not in {canonical, legacy, legacy_agent_presence_path(workplace_root, agent_id)}:
-                continue
-            key = (agent_id, session_id)
-            is_canonical = path == canonical
-            if key not in rows or is_canonical:
-                rows[key] = (is_canonical, item)
-    return [item for _canonical, item in rows.values()]
+    return AgentPresenceReader(workplace_root).records()
 
 
 def read_current_project_session(project_root: Path) -> dict[str, Any]:
@@ -17309,32 +17289,11 @@ def write_current_session_refs(workplace_root: Path, project_root: Path | None, 
 
 
 def find_agent_presence(workplace_root: Path, *, agent_id: str | None = None, session_id: str | None = None, project_id: str | None = None) -> dict[str, Any]:
-    requested_agent_id = safe_id(agent_id, "agent") if agent_id is not None else None
-    requested_session_id = str(session_id) if session_id is not None else None
-    matches: list[dict[str, Any]] = []
-    for item in iter_agent_presence(workplace_root):
-        if requested_agent_id is not None and item.get("agent_id") != requested_agent_id:
-            continue
-        if requested_session_id is not None and item.get("session_id") != requested_session_id:
-            continue
-        if project_id and str(item.get("project_id") or "") != project_id:
-            continue
-        matches.append(item)
-    if len(matches) == 1:
-        return matches[0]
-    if not matches and requested_agent_id is not None and requested_session_id is None:
-        legacy = json_read(legacy_agent_presence_path(workplace_root, requested_agent_id))
-        if (
-            isinstance(legacy, dict)
-            and legacy.get("agent_id") == requested_agent_id
-            and (not project_id or str(legacy.get("project_id") or "") == project_id)
-        ):
-            return legacy
-    return {}
+    return AgentPresenceReader(workplace_root).find(agent_id=agent_id, session_id=session_id, project_id=project_id)
 
 
 def read_agent_presence(workplace_root: Path, agent_id: str) -> dict[str, Any]:
-    return find_agent_presence(workplace_root, agent_id=agent_id)
+    return AgentPresenceReader(workplace_root).find(agent_id=agent_id)
 
 
 def write_agent_presence(workplace_root: Path, payload: dict[str, Any]) -> None:

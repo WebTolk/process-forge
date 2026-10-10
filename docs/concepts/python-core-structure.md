@@ -291,3 +291,12 @@ path implementations. The coordinator's raw Run/Assignment reads also use Core Y
 its remaining lifecycle/admission/completion callbacks still need later migration.
 Public CLI/MCP/Daemon contracts are retained. This is a bounded dependency removal,
 not proof that the entire bootstrap or coordinator is independent of legacy.
+
+`agents.presence.AgentPresenceReader` owns existing live Agent presence paths,
+JSON reads, canonical/legacy record deduplication and exact session selection.
+It receives a workplace root and uses concrete Core identity and filesystem
+implementations. The monolithic presence functions call its methods; the reader
+does not depend on the CLI, Host or legacy callbacks. The shared opaque identity
+digest in `common.ids` also serves chat transcript paths. Presence formats,
+ambiguity, unknown fields and read failures are retained. Attendance writes,
+expiry, binding, leases and bounded Runtime observation keep their current owners.

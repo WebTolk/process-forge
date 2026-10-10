@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -45,6 +47,77 @@ def presence_payload(agent_id: str, session_id: str, project: Path) -> dict[str,
         "last_seen_at": now,
         "heartbeat_ttl_seconds": 300,
     }
+
+
+def check_core_presence(workplace: Path, root: Path) -> None:
+    from processforge_core.agents.presence import AgentPresenceReader
+
+    reader = AgentPresenceReader(workplace)
+    expected = reader.find(session_id="Case-Session")
+    assert expected["session_id"] == "Case-Session"
+    assert not reader.find(agent_id="fixture-agent"), "ambiguous sessions must remain unselected"
+
+    def legacy_dependency(*_args, **_kwargs):
+        raise AssertionError("presence reader called a legacy read dependency")
+
+    original_json, original_paths = core.json_read, core.iter_agent_presence_paths
+    try:
+        core.json_read = core.iter_agent_presence_paths = legacy_dependency
+        assert core.find_agent_presence(workplace, session_id="Case-Session") == expected
+        assert core.iter_agent_presence(workplace) == reader.records()
+        assert core.read_agent_presence(workplace, "fixture-agent") == {}
+    finally:
+        core.json_read, core.iter_agent_presence_paths = original_json, original_paths
+
+    isolated = AgentPresenceReader(root / "reader-cases")
+    assert isolated.paths() == [] and isolated.records() == [] and isolated.find() == {}
+    payload = {"agent_id": "reader-agent", "session_id": "Opaque/Session", "project_id": "one", "future": {"tag": "alpha"}}
+    canonical = isolated.path("reader-agent", "Opaque/Session")
+    legacy = isolated.directory / "reader-agent" / "opaque-session.json"
+    legacy.parent.mkdir(parents=True)
+    legacy.write_text(json.dumps({**payload, "source": "legacy"}), encoding="utf-8")
+    canonical.write_text(json.dumps(payload), encoding="utf-8")
+    assert isolated.records() == [payload], "canonical data must win over legacy duplicate"
+    assert isolated.find(session_id="Opaque/Session", project_id="one") == payload
+    assert not isolated.find(session_id="opaque/session")
+    assert not isolated.find(project_id="other")
+    before = canonical.stat()
+    payload["future"]["tag"] = "omega"
+    canonical.write_text(json.dumps(payload), encoding="utf-8")
+    assert canonical.stat().st_size == before.st_size
+    os.utime(canonical, ns=(before.st_atime_ns, before.st_mtime_ns))
+    assert isolated.find(session_id="Opaque/Session")["future"]["tag"] == "omega"
+    assert reader.find(session_id="Case-Session") == expected, "workplaces must stay isolated"
+    canonical.unlink()
+    assert isolated.find(session_id="Opaque/Session")["source"] == "legacy"
+    legacy.unlink()
+    assert isolated.records() == []
+    for data, error in ((b"{", json.JSONDecodeError), (b"\xff", UnicodeDecodeError)):
+        canonical.write_bytes(data)
+        try:
+            isolated.records()
+        except error:
+            pass
+        else:
+            raise AssertionError("invalid presence data did not retain its read error")
+    canonical.unlink()
+
+    package = root / "copied-presence-package"
+    shutil.copytree(ROOT / "src/processforge_core", package / "processforge_core", ignore=shutil.ignore_patterns("__pycache__"))
+    source = """import sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from processforge_core.agents.presence import AgentPresenceReader
+reader = AgentPresenceReader(Path(sys.argv[2]))
+assert reader.find(session_id='Case-Session')['session_id'] == 'Case-Session'
+assert len(reader.records()) >= 4
+assert not any(name == 'processforge' or name.startswith(('pf_cli', 'pf_runtime')) for name in sys.modules)
+print('PASS: copied Core presence reader without CLI or Host')
+"""
+    result = subprocess.run([sys.executable, "-I", "-B", "-c", source, str(package), str(workplace)],
+                            cwd=package, text=True, encoding="utf-8", capture_output=True, timeout=30)
+    assert result.returncode == 0, result.stdout + result.stderr
+    print(result.stdout.strip())
 
 
 def main() -> int:
@@ -138,6 +211,8 @@ def main() -> int:
         if core.find_agent_presence(workplace, agent_id="forged-agent", session_id="forged-session"):
             raise AssertionError("forged legacy metadata was accepted for the filename identity")
         assert not core.find_agent_presence(workplace, agent_id="forged-agent", session_id="other-session")
+
+        check_core_presence(workplace, root)
 
     print("PASS: exact opaque session identity round trip")
     return 0
