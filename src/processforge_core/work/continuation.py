@@ -17,6 +17,7 @@ from .resources import WorkResourceError, WorkResourceService
 
 
 if TYPE_CHECKING:
+    from .continuation_publication import ContinuationPublicationService
     from .cancellation_replay import CancellationReplayService
     from .continuation_work import ContinuationContractValidator, ContinuationWorkReadService
     from .continuation_status import ContinuationStatusReadService
@@ -116,33 +117,27 @@ class ContinuationService:
     def _waiting(self, record: dict) -> dict:
         return self._status_reader().waiting(record)
 
+    def _continuation_publisher(self) -> ContinuationPublicationService:
+        from ..composition import build_continuation_publication_service
+
+        return build_continuation_publication_service(
+            record_path=lambda: self._record_path, selection_path=lambda: self._selection_path,
+            validate_id=lambda: self._id, record_loader=lambda: self._load,
+            binding_reader=lambda: self._work, waiting_reader=lambda: self._waiting,
+            status_reader=lambda: self.status, run_lock=lambda: self.work._run_lock,
+            record_lock=lambda: self.core.registry_file_lock,
+            publish_document=lambda: self.work._atomic_yaml, clock=lambda: self.core.now_utc,
+            error=lambda: ContinuationError,
+        )
+
     def create(self, *, continuation_id: str, run_id: str, assignment_id: str, context_id: str,
                expected_artifacts: list[str] | None = None, handoff_id: str = "", instruction: str = "",
                apply: bool = False, **unused: Any) -> dict:
-        if unused:
-            raise ContinuationError("invalid_arguments")
-        path = self._record_path(continuation_id)
-        self._id(run_id)
-        with self.work._run_lock(run_id):
-            run, assignment, binding, state = self._work(dict(run_id=run_id, assignment_id=assignment_id, context_id=context_id))
-            record = {"schema_version": 2, "id": continuation_id, "work": binding,
-                      "waiting_for": {"handoff_id": handoff_id, "expected_artifacts": expected_artifacts or []},
-                      "resume": {"instruction": instruction}, "status": "waiting"}
-            self._waiting(record)
-            with self.core.registry_file_lock(path):
-                if path.exists():
-                    existing = self._load(path)
-                    if any(existing.get(key) != record[key] for key in ("schema_version", "id", "work", "waiting_for", "resume")):
-                        raise ContinuationError("continuation_exists_with_different_intent")
-                    action = "existing"
-                elif apply is True:
-                    record["created_at"] = self.core.now_utc()
-                    self.work._atomic_yaml(path, record)
-                    action = "created"
-                else:
-                    action = "preview"
-        return {"schema_version": 2, "kind": "pf.continuation.create", "status": "ready", "action": action,
-                "continuation_id": continuation_id, "work": binding, "waiting": self._waiting(record), "stage": state["stage"]}
+        return self._continuation_publisher().create(
+            continuation_id=continuation_id, run_id=run_id, assignment_id=assignment_id,
+            context_id=context_id, expected_artifacts=expected_artifacts, handoff_id=handoff_id,
+            instruction=instruction, apply=apply, **unused,
+        )
 
     def status(self, *, continuation_id: str = "") -> dict:
         return self._status_reader().status(continuation_id=continuation_id)
@@ -164,48 +159,7 @@ class ContinuationService:
         return self._status_reader().selected(session_id)
 
     def resume(self, *, continuation_id: str, session_id: str = "") -> dict:
-        path = self._record_path(continuation_id)
-        record = self._load(path)
-        if record.get("schema_version") == 1:
-            # Preserve old wait-only operation, but never imply a Work was selected.
-            with self.core.registry_file_lock(path):
-                record = self._load(path)
-                result = self.status(continuation_id=continuation_id)
-                if result["status"] != "ready":
-                    raise ContinuationError("continuation_waiting")
-                if record.get("status") != "resumed":
-                    record.update(status="resumed", resumed_at=self.core.now_utc())
-                    self.work._atomic_yaml(path, record)
-                return {**result, "action": "legacy_wait_resumed", "work_resumed": False, "remediation": "create_explicit_v2_binding"}
-        binding = record.get("work") or {}
-        self._id(binding.get("run_id"))
-        with self.work._run_lock(binding["run_id"]), self.core.registry_file_lock(path):
-            result = self.status(continuation_id=continuation_id)
-            if result["status"] != "ready":
-                raise ContinuationError("continuation_waiting")
-            record = self._load(path)
-            if session_id:
-                selection = self._selection_path(session_id)
-                with self.core.registry_file_lock(selection):
-                    receipt = {"schema_version": 1, "session_id": session_id, "continuation_id": continuation_id, "work": result["work"]}
-                    existing = self._load(selection) if selection.exists() else {}
-                    if any(existing.get(key) != value for key, value in receipt.items()):
-                        receipt["selected_at"] = self.core.now_utc()
-                        self.work._atomic_yaml(selection, receipt)
-            if record.get("status") != "resumed":
-                record.update(status="resumed", resumed_at=self.core.now_utc())
-                try:
-                    self.work._atomic_yaml(path, record)
-                except OSError:
-                    if not session_id:
-                        raise
-                    return {**result, "kind": "pf.continuation.resume", "action": "selection_committed",
-                            "work_resumed": True, "selection": "session_bound", "marker_recovery_required": True,
-                            "remediation": "retry_same_resume",
-                            "selectors": {key: result["work"][key] for key in ("run_id", "assignment_id", "context_id")}}
-            return {**result, "kind": "pf.continuation.resume", "action": "continued", "work_resumed": True,
-                    "selection": "session_bound" if session_id else "explicit_selectors_required",
-                    "selectors": {key: result["work"][key] for key in ("run_id", "assignment_id", "context_id")}}
+        return self._continuation_publisher().resume(continuation_id=continuation_id, session_id=session_id)
 
     def _writer_check(self, binding: dict) -> None:
         self._record_reader().writer_check(binding)

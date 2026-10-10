@@ -13,6 +13,8 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from contextlib import AbstractContextManager
+    from .work.continuation_publication import ContinuationBindingReader, ContinuationDocumentWriter, ContinuationPublicationService, ContinuationStatusReader
     from .work.cancellation_replay import CancellationBindingReader, CancellationEventReader, CancellationReplayService, CancellationWorkWriter
     from .work.material_read import WorkMaterialCapture, WorkMaterialReadService
     from .work.resource_bindings import BindingMaterialCapture, ResourceBindingBuilder
@@ -843,4 +845,24 @@ def build_cancellation_replay_service(
         fingerprint=fingerprint, error=error, writer_check=writer_check, binding_reader=binding_reader,
         work=work, record_loader=record_loader, project_root=project_root, event_paths=event_paths,
         event_reader=event_reader, event_id=event_id,
+    )
+
+
+def build_continuation_publication_service(
+    *, record_path: Callable[[], Callable[[str], Path]], selection_path: Callable[[], Callable[[str], Path]],
+    validate_id: Callable[[], Callable[[object], str]], record_loader: Callable[[], Callable[[Path], dict]],
+    binding_reader: Callable[[], ContinuationBindingReader], waiting_reader: Callable[[], Callable[[dict], dict]],
+    status_reader: Callable[[], ContinuationStatusReader],
+    run_lock: Callable[[], Callable[[str], AbstractContextManager[Any]]],
+    record_lock: Callable[[], Callable[[Path], AbstractContextManager[Any]]],
+    publish_document: Callable[[], ContinuationDocumentWriter], clock: Callable[[], Callable[[], str]],
+    error: Callable[[], type[ValueError]],
+) -> ContinuationPublicationService:
+    from .work.continuation_publication import ContinuationPublicationService
+
+    return ContinuationPublicationService(
+        record_path=record_path, selection_path=selection_path, validate_id=validate_id,
+        record_loader=record_loader, binding_reader=binding_reader, waiting_reader=waiting_reader,
+        status_reader=status_reader, run_lock=run_lock, record_lock=record_lock,
+        publish_document=publish_document, clock=clock, error=error,
     )
