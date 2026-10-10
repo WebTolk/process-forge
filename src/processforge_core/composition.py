@@ -13,6 +13,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .work.cancellation_replay import CancellationBindingReader, CancellationEventReader, CancellationReplayService, CancellationWorkWriter
     from .work.material_read import WorkMaterialCapture, WorkMaterialReadService
     from .work.resource_bindings import BindingMaterialCapture, ResourceBindingBuilder
     from .prepared.knowledge_resources import PreparedKnowledgeMaterialCapture, PreparedKnowledgeResourceReader, PreparedKnowledgeRootResolver
@@ -826,4 +827,20 @@ def build_work_transition_commit_service(
         write_projection=write_projection,
         emit=emit,
         next_work_advisory=next_work_advisory,
+    )
+
+
+def build_cancellation_replay_service(
+    *, fingerprint: Callable[[], Callable[[dict], str]], error: Callable[[], type[ValueError]],
+    writer_check: Callable[[], Callable[[dict], None]], binding_reader: Callable[[], CancellationBindingReader],
+    work: Callable[[], CancellationWorkWriter], record_loader: Callable[[], Callable[[Path], dict]],
+    project_root: Callable[[], Path], event_paths: Callable[[], Callable[[Path], tuple[Path, ...]]],
+    event_reader: Callable[[], CancellationEventReader], event_id: Callable[[], Callable[[dict], str | None]],
+) -> CancellationReplayService:
+    from .work.cancellation_replay import CancellationReplayService
+
+    return CancellationReplayService(
+        fingerprint=fingerprint, error=error, writer_check=writer_check, binding_reader=binding_reader,
+        work=work, record_loader=record_loader, project_root=project_root, event_paths=event_paths,
+        event_reader=event_reader, event_id=event_id,
     )

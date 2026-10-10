@@ -1,9 +1,6 @@
 """Explicit continuation of pinned Work; waiting records never grant access."""
 from __future__ import annotations
 
-import copy
-import hashlib
-import json
 import re
 from contextlib import nullcontext
 from pathlib import Path
@@ -20,6 +17,7 @@ from .resources import WorkResourceError, WorkResourceService
 
 
 if TYPE_CHECKING:
+    from .cancellation_replay import CancellationReplayService
     from .continuation_work import ContinuationContractValidator, ContinuationWorkReadService
     from .continuation_status import ContinuationStatusReadService
     from .continuation_read import ContinuationRecordReader
@@ -261,41 +259,16 @@ class ContinuationService:
                 return {"schema_version": 1, "kind": "pf.work.cancel", "status": "ready", "action": "preview", "work": binding}
             return self._replay_cancel(path, intent)
 
+    def _cancellation_replayer(self) -> CancellationReplayService:
+        from ..composition import build_cancellation_replay_service
+
+        return build_cancellation_replay_service(
+            fingerprint=lambda: canonical_fingerprint, error=lambda: ContinuationError,
+            writer_check=lambda: self._writer_check, binding_reader=lambda: self._work,
+            work=lambda: self.work, record_loader=lambda: self._load,
+            project_root=lambda: self.project, event_paths=lambda: self.core.event_runtime_paths,
+            event_reader=lambda: self.core.iter_ndjson, event_id=lambda: self.core.event_id_value,
+        )
+
     def _replay_cancel(self, path: Path, intent: dict) -> dict:
-        if intent.get("checksum") != canonical_fingerprint({k: v for k, v in intent.items() if k != "checksum"}):
-            raise ContinuationError("cancellation_intent_invalid")
-        binding = intent["work"]
-        self._writer_check(binding)
-        before_run, before_assignment = intent["before_run"], intent["before_assignment"]
-        # Recheck the capsule even on a partially applied retry.
-        self._work(binding, executable=False, terminal=True)
-        run, assignment = copy.deepcopy(before_run), copy.deepcopy(before_assignment)
-        assignment.update(status="cancelled", updated_at=intent["cancelled_at"])
-        assignment["result"] = {"status": "cancelled", "summary": intent["reason"], "artifacts": intent["evidence"]}
-        self.work._set_run_task_status(run, assignment["id"], "cancelled")
-        if all(t.get("status") in {"done", "completed", "cancelled", "failed"} for t in run["tasks"]):
-            run["status"] = "cancelled"
-        run["updated_at"] = intent["cancelled_at"]
-        for target, previous, after in ((self.work._assignment_path(assignment["id"]), before_assignment, assignment),
-                                        (self.work._run_path(run["id"]), before_run, run)):
-            current = self._load(target)
-            if current not in (previous, after):
-                raise ContinuationError("cancellation_concurrent_change")
-        for target, after in ((self.work._assignment_path(assignment["id"]), assignment), (self.work._run_path(run["id"]), run)):
-            if self._load(target) != after:
-                self.work._atomic_yaml(target, after)
-        self.work._write_task_index(run)
-        events = ["task.cancelled"] + (["run.cancelled"] if run["status"] == "cancelled" else [])
-        for event in events:
-            event_id = "evt_" + hashlib.sha256((intent["checksum"] + event).encode()).hexdigest()[:32]
-            present = any(not error and isinstance(value, dict) and self.core.event_id_value(value) == event_id
-                          for _line, value, error in self.core.iter_ndjson(self.core.event_runtime_paths(self.project)[0]))
-            if not present:
-                self.work._emit(event, run, assignment, assignment["stage"], outcome="cancelled", event_id=event_id)
-        state = self.work.state(run_id=run["id"], assignment_id=assignment["id"])
-        self.work._write_projection(state)
-        done = path.with_suffix(".applied.json")
-        if not done.exists():
-            self.work._atomic_text(done, json.dumps({"checksum": intent["checksum"], "status": "applied"}) + "\n")
-        return {"schema_version": 1, "kind": "pf.work.cancel", "status": "cancelled", "action": "cancelled",
-                "work": binding, "run_status": run["status"], "work_state": state}
+        return self._cancellation_replayer().replay(path, intent)
