@@ -13,6 +13,8 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from typing import Collection, Pattern
+    from .work.record_catalog import CompletionIntentLookup, WorkCatalogInventoryFactory, WorkRecordCatalogService
     from contextlib import AbstractContextManager
     from .work.continuation_publication import ContinuationBindingReader, ContinuationDocumentWriter, ContinuationPublicationService, ContinuationStatusReader
     from .work.cancellation_replay import CancellationBindingReader, CancellationEventReader, CancellationReplayService, CancellationWorkWriter
@@ -865,4 +867,20 @@ def build_continuation_publication_service(
         record_loader=record_loader, binding_reader=binding_reader, waiting_reader=waiting_reader,
         status_reader=status_reader, run_lock=run_lock, record_lock=record_lock,
         publish_document=publish_document, clock=clock, error=error,
+    )
+
+
+def build_work_record_catalog_service(
+    *, record_reader: Callable[[], WorkRecordReadPort | None],
+    inventory_factory: Callable[[], WorkCatalogInventoryFactory], flow_root: Callable[[], Callable[[], Path]],
+    document_loader: Callable[[], Callable[[Path], dict[str, Any]]], identifier_pattern: Callable[[], Pattern[str]],
+    intent_reader: Callable[[], CompletionIntentLookup],
+    active_assignment_statuses: Callable[[], Collection[str]], active_run_statuses: Callable[[], Collection[str]],
+) -> WorkRecordCatalogService:
+    from .work.record_catalog import WorkRecordCatalogService
+
+    return WorkRecordCatalogService(
+        record_reader=record_reader, inventory_factory=inventory_factory, flow_root=flow_root,
+        document_loader=document_loader, identifier_pattern=identifier_pattern, intent_reader=intent_reader,
+        active_assignment_statuses=active_assignment_statuses, active_run_statuses=active_run_statuses,
     )

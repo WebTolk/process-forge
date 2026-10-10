@@ -104,6 +104,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/process_execution.py`, `work/continuation.py` | Управляемый lifecycle, выбор работы, pinned execution, evidence, завершение и восстановление. |
 | `src/processforge_core/work/state.py` | Чистые правила требований завершения и action/blockers состояния Work, без ввода-вывода и полномочий на переход. |
 | `src/processforge_core/work/automation_readiness.py`, `work/transition_rejection.py` | Прежние проекции готовности автоматизации, чтение актуальных событий Assignment и правила ответа при восстанавливаемом отказе перехода через явные зависимости. |
+| `src/processforge_core/work/record_catalog.py` | Прежний проверяемый каталог активных и исторических Run/Assignment с учётом незавершённого completion и явными актуальными зависимостями. |
 | `src/processforge_core/documents/reader.py`, `work/inventory.py` | Чтение YAML и актуальный отсортированный обход без общего изменяемого кеша документов. |
 | `src/processforge_core/work/records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
 | `src/processforge_core/work/context_read.py` | Прежние проверки капсулы и нормализация Assignment с явно переданными функциями путей и проверки. |
@@ -252,6 +253,8 @@ CLI/MCP сохраняют внешнюю диагностику и провер
 `tools/smoke_garage_mode_snapshot_composition.py` проверяет прежнее поведение mode и context, fallback пустого snapshot, инъекцию reader, подмены конструктора, правила session, актуальность YAML и изоляцию request, а также пакет без CLI. `--baseline` сравнивает сохранённый mode service, `--context-baseline` — сохранённого context consumer, `--scratch-root` ограничивает fixtures.
 
 `AutomationReadinessService` выделяет существующую ответственность: готовность автоматизаций и живое чтение последнего события Assignment. Зависимости передаются явно и закреплены на одну операцию; импорт Core или транспорта не требуется. Приватные методы фасада и переопределения callbacks сохранены; запись, locks, access checks и recovery остаются у прежних владельцев. Проверки: `tools/smoke_automation_readiness.py`.
+
+`WorkRecordCatalogService` в `work/record_catalog.py` выполняет прежнее перечисление записей Work и построение активного/исторического списка через восемь обязательных отложенных зависимостей, используя WorkRecordReadPort либо прежний WorkInventory fallback. Сохранены отбор безопасной identity до загрузки Assignment, связь с Run, активность при pending completion, порядок fallback полей, дубликаты, исключения и повторные обращения к живым зависимостям. ProcessExecutionService сохраняет приватный фасад и существующие переопределяемые точки выбора/completion. Холодная frozen сборка не добавляет правила выбора или общий кеш.
 
 `WorkSelectionService` выделяет существующую ответственность: выбор точной Work, session preference и сопоставление objective. Зависимости передаются явно и закреплены на одну операцию; импорт Core или транспорта не требуется. Приватные методы фасада и переопределения callbacks сохранены; запись, locks, access checks и recovery остаются у прежних владельцев. Проверки: `tools/smoke_work_selection_service.py`.
 

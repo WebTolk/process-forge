@@ -16,6 +16,7 @@ from .work.start_documents import WorkStartDocumentBuilder
 from .evidence.collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .work.record_catalog import WorkRecordCatalogService
     from .work.events import WorkEventPublisher
     from .work.publication import WorkDocumentPublisher
     from .project.context_read import ExecutionProjectReadService
@@ -826,52 +827,19 @@ class ProcessExecutionService:
     def _preferred_record(self, records: list[dict[str, Any]], session_id: str) -> dict[str, Any] | None:
         return self._work_selection_service().preferred_record(records, session_id)
 
+    def _work_record_catalog_service(self) -> WorkRecordCatalogService:
+        from .composition import build_work_record_catalog_service
+
+        return build_work_record_catalog_service(
+            record_reader=lambda: self.records, inventory_factory=lambda: WorkInventory,
+            flow_root=lambda: self._flow_root, document_loader=lambda: self.core.load_yaml_document,
+            identifier_pattern=lambda: SAFE_ID_RE, intent_reader=lambda: self._load_completion_intent,
+            active_assignment_statuses=lambda: ACTIVE_ASSIGNMENT_STATUSES,
+            active_run_statuses=lambda: ACTIVE_RUN_STATUSES,
+        )
+
     def _work_records(self, *, include_historical: bool) -> list[dict[str, Any]]:
-        records: list[dict[str, Any]] = []
-        if self.records is None:
-            inventory = WorkInventory(self._flow_root(), self.core.load_yaml_document)
-            run_documents, load_assignment = inventory.runs(), inventory.assignment
-        else:
-            run_documents, load_assignment = self.records.runs(), self.records.load_assignment
-        for path, run in run_documents:
-            run_id = str(run.get("id") or path.parent.name)
-            if not SAFE_ID_RE.fullmatch(run_id):
-                continue
-            for entry in run.get("tasks", []) if isinstance(run.get("tasks"), list) else []:
-                if not isinstance(entry, dict) or not entry.get("id"):
-                    continue
-                entry_id = str(entry["id"])
-                if not SAFE_ID_RE.fullmatch(entry_id):
-                    continue
-                task = load_assignment(entry_id)
-                if not task:
-                    continue
-                task_id = str(task.get("id") or entry_id)
-                if not SAFE_ID_RE.fullmatch(task_id) or str(task.get("run_id") or run_id) != run_id:
-                    continue
-                status = str(task.get("status") or entry.get("status") or "")
-                pending_completion, _intent_error = self._load_completion_intent(run, task)
-                has_pending_completion = pending_completion is not None
-                active = has_pending_completion or (status in ACTIVE_ASSIGNMENT_STATUSES and str(run.get("status") or "") in ACTIVE_RUN_STATUSES)
-                if not active and not include_historical:
-                    continue
-                session = task.get("session") if isinstance(task.get("session"), dict) else {}
-                records.append(
-                    {
-                        "run_id": run_id,
-                        "assignment_id": task_id,
-                        "objective": str(task.get("objective") or run.get("objective") or ""),
-                        "status": status,
-                        "run_status": str(run.get("status") or ""),
-                        "stage": str(task.get("stage") or ""),
-                        "active": active,
-                        "session_id": str(session.get("id") or ""),
-                        "created_at": str(task.get("created_at") or run.get("created_at") or ""),
-                        "updated_at": str(task.get("updated_at") or run.get("updated_at") or ""),
-                        "pending_completion": has_pending_completion,
-                    }
-                )
-        return records
+        return self._work_record_catalog_service().records(include_historical=include_historical)
 
     def _find_by_objective(self, objective: str) -> dict[str, Any]:
         return self._work_selection_service().find_by_objective(objective)
