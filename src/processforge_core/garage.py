@@ -7,74 +7,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .ports import ProjectSnapshotReadPort, WorkReadCorePort
+from .ports import ProjectSnapshotReadPort
 from .common.request_scope import scoped_request
-from .work.inventory import WorkInventory
-from .work.projection import WorkProjectionPolicy
 from .resources.access import ResourceSearchService
 from .project.snapshot import load_snapshot
 from .resources.snapshot import resource_selection_summary, snapshot_with_resolved_search_roots
-
-
-@dataclass(frozen=True)
-class CurrentWorkService:
-    project_root: Path
-    core: WorkReadCorePort
-
-    def summary(self) -> dict[str, Any]:
-        active = self.active_items()
-        projection = WorkProjectionPolicy()
-        return {
-            "governed": bool(active),
-            "active_runs": projection.compact_active_runs(active),
-            "active_work": active[:10],
-            "recommendation": "continue" if active else "start_work",
-        }
-
-    def active_items(self) -> list[dict[str, Any]]:
-        return [item for item in self.items() if item["state"] == "active" and not item["bootstrap_placeholder"]]
-
-    def find_by_objective(self, objective: str) -> dict[str, Any]:
-        projection = WorkProjectionPolicy()
-        normalized = projection.normalize_objective(objective)
-        active: list[dict[str, Any]] = []
-        historical: list[dict[str, Any]] = []
-        for item in self.items():
-            if item["bootstrap_placeholder"] or projection.normalize_objective(str(item.get("objective") or "")) != normalized:
-                continue
-            if item["state"] == "active":
-                active.append(item)
-            elif item["state"] == "historical":
-                historical.append(item)
-        return {"active": active[0] if active else None, "historical": historical}
-
-    def items(self) -> list[dict[str, Any]]:
-        flow_root = self.core.locate_flow_root(self.project_root)
-        inventory = WorkInventory(flow_root, self.core.load_yaml_document)
-        projection = WorkProjectionPolicy()
-        rows: list[dict[str, Any]] = []
-        for run_path, run in inventory.runs():
-            run_status = str(run.get("status") or "")
-            run_id = str(run.get("id") or run_path.parent.name)
-            tasks = run.get("tasks") if isinstance(run.get("tasks"), list) else []
-            if not tasks:
-                rows.append(projection.work_item(run_id=run_id, run_status=run_status, task={}, run=run))
-            for entry in tasks:
-                if not isinstance(entry, dict):
-                    continue
-                task_id = str(entry.get("id") or "")
-                task_path = inventory.assignment_path(task_id)
-                task = inventory.assignment(task_id) if task_path.is_file() else {"id": task_id, "status": entry.get("status"), "objective": run.get("objective")}
-                rows.append(projection.work_item(run_id=run_id, run_status=run_status, task=task, run=run))
-        first = inventory.assignment_path("first-assignment")
-        if first.is_file():
-            task = inventory.assignment("first-assignment")
-            rows.append(projection.work_item(run_id="", run_status="", task=task, run={}))
-        return rows
-
-
-def governed_work_summary(project_root: Path, core: Any) -> dict[str, Any]:
-    return CurrentWorkService(project_root, core).summary()
 
 
 def diagnostics_from_check(check: dict[str, Any], search: dict[str, Any], mode: dict[str, Any] | None = None) -> list[dict[str, str]]:

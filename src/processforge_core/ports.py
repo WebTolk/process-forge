@@ -22,12 +22,6 @@ class ProcessDefinitionReadPort(Protocol):
     def effective_process(self, run: dict[str, Any]) -> tuple[dict[str, Any], str]: ...
 
 
-class WorkReadCorePort(Protocol):
-    def locate_flow_root(self, project_root: Path) -> Path: ...
-
-    def load_yaml_document(self, path: Path) -> dict[str, Any]: ...
-
-
 class WorkRecordReadPort(Protocol):
     """Raw live records; consumers validate identity and select Work."""
 

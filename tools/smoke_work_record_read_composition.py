@@ -213,7 +213,7 @@ class LiveReaderTests(unittest.TestCase):
         self.document_reader = YamlDocumentReader(fallback=yaml_io._parse_simple_yaml)
         self.core = SimpleNamespace(locate_flow_root=lambda _: self.flow,
                                     load_yaml_document=self.document_reader.load)
-        self.reader = YamlWorkRecordReader(self.root, self.core)
+        self.reader = YamlWorkRecordReader(self.root, self.document_reader)
         self.service = build_process_execution_service(self.root, None, self.core)
 
     def write(self, path, document):
@@ -240,13 +240,17 @@ class LiveReaderTests(unittest.TestCase):
         self.assertEqual([p.parent.name for p, _ in self.reader.runs()], ['b', 'r'])
         self.assertEqual(self.reader.load_run('b'), {'future': [1]})
 
-    def test_live_root_per_operation(self):
+    def test_live_records_disappear_and_reappear(self):
         self.seed()
         self.assertEqual(self.reader.load_run('r')['id'], 'r')
-        self.flow = self.root / 'other'
+        self.run_path().unlink()
+        self.assignment_path().unlink()
         self.assertEqual(self.reader.load_run('r'), {})
         self.assertEqual(self.reader.load_assignment('a'), {})
         self.assertEqual(list(self.reader.runs()), [])
+        self.seed()
+        self.assertEqual(self.reader.load_run('r')['id'], 'r')
+        self.assertEqual(self.reader.load_assignment('a')['id'], 'a')
 
     def test_same_metadata_change_is_visible_within_request_and_after_write(self):
         self.seed()
@@ -280,7 +284,7 @@ class LiveReaderTests(unittest.TestCase):
         for index in range(2):
             root = self.root / ('project-' + str(index))
             self.write(root / '.pf/assignments/a.yaml', {'project': index, 'values': [index]})
-            readers.append(YamlWorkRecordReader(root, core))
+            readers.append(YamlWorkRecordReader(root))
         def read(index):
             with request_scope():
                 first = readers[index].load_assignment('a')

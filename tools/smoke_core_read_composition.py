@@ -18,20 +18,17 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from processforge_core.documents.reader import YamlDocumentReader
-from processforge_core.garage import CurrentWorkService, governed_work_summary
+from processforge_core.work.records import CurrentWorkService
+from processforge_core.common import yaml_io
 
 
-class FakeReadCore:
+class FakeDocuments:
     def __init__(self):
         self.calls = []
-        self.reader = YamlDocumentReader(lambda text: {})
+        self.reader = YamlDocumentReader(yaml_io._parse_simple_yaml)
 
-    def locate_flow_root(self, project_root: Path) -> Path:
-        self.calls.append(("root", project_root))
-        return project_root / ".pf"
-
-    def load_yaml_document(self, path: Path) -> dict:
-        self.calls.append(("load", path))
+    def load(self, path: Path) -> dict:
+        self.calls.append(path)
         return self.reader.load(path)
 
 
@@ -40,8 +37,8 @@ class Fixture(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="pf-read-composition-")
         self.addCleanup(self.temp.cleanup)
         self.project = Path(self.temp.name)
-        self.core = FakeReadCore()
-        self.service = CurrentWorkService(self.project, self.core)
+        self.documents = FakeDocuments()
+        self.service = CurrentWorkService(self.project, self.documents)
 
     def document(self, relative: str, data: object) -> Path:
         path = self.project / ".pf" / relative
@@ -107,7 +104,7 @@ class CurrentWorkCharacterization(Fixture):
     def test_invalid_yaml_preserves_read_behavior(self):
         path = self.run_document()
         path.write_text("key: [", encoding="utf-8")
-        self.assertIn("__yaml_error__", self.core.load_yaml_document(path))
+        self.assertIn("__yaml_error__", self.documents.load(path))
         self.assertEqual(self.service.items()[0]["run_id"], "r1")
 
     def test_scalar_yaml(self):
@@ -122,71 +119,70 @@ class CurrentWorkCharacterization(Fixture):
 
     def test_existing_facade_parity(self):
         self.run_document()
-        self.assertEqual(governed_work_summary(self.project, self.core), self.service.summary())
+        from processforge_core.composition import build_current_work_service
+        self.assertEqual(build_current_work_service(self.project, documents=self.documents).summary(), self.service.summary())
 
 
 class CompositionTests(Fixture):
     def setUp(self):
         super().setUp()
-        from processforge_core.composition import LegacyWorkReadAdapter, build_current_work_service
-        self.adapter_type = LegacyWorkReadAdapter
+        from processforge_core.composition import build_current_work_service
         self.build = build_current_work_service
 
     def test_factory_has_no_io_and_injects_exact_port(self):
-        service = self.build(self.project, self.core)
-        self.assertEqual(self.core.calls, [])
-        self.assertIs(service.core, self.core)
+        service = self.build(self.project, documents=self.documents)
+        self.assertEqual(self.documents.calls, [])
+        self.assertIs(service.documents, self.documents)
         self.assertEqual(service.summary(), self.service.summary())
         self.assertNotIn("processforge", sys.modules)
 
     def test_independent_instances(self):
-        first = self.build(self.project, self.core)
-        other = FakeReadCore()
-        second = self.build(self.project, other)
+        first = self.build(self.project, documents=self.documents)
+        other = FakeDocuments()
+        second = self.build(self.project, documents=other)
         self.assertIsNot(first, second)
-        self.assertIs(second.core, other)
+        self.assertIs(second.documents, other)
 
-    def test_adapter_preserves_values_and_exception(self):
-        module = ModuleType("fake_legacy")
-        module.locate_flow_root = self.core.locate_flow_root
-        payload = {"__yaml_error__": "sentinel"}
-        module.load_yaml_document = lambda path: payload
-        adapter = self.adapter_type(module)
-        self.assertIs(adapter.load_yaml_document(self.project), payload)
-        self.assertEqual(adapter.locate_flow_root(self.project), self.project / ".pf")
-        def fail(path):
-            raise ValueError("sentinel")
-        module.load_yaml_document = fail
-        with self.assertRaisesRegex(ValueError, "sentinel"):
-            adapter.load_yaml_document(self.project)
+    def test_default_core_documents_are_live_and_preserve_parser_errors(self):
+        service = self.build(self.project)
+        path = self.run_document()
+        self.assertTrue(service.summary()['governed'])
+        path.write_text('key: [', encoding='utf-8')
+        self.assertIn('__yaml_error__', service.documents.load(path))
+        path.unlink()
+        self.assertFalse(service.summary()['governed'])
 
     def test_bootstrap_additive_method_and_fields(self):
         from processforge_core.bootstrap import RuntimeBootstrap
         module = ModuleType("fake_legacy")
-        module.locate_flow_root = self.core.locate_flow_root
-        module.load_yaml_document = self.core.load_yaml_document
+        def denied(*args):
+            raise AssertionError("Work reader must not call legacy Core")
+        module.locate_flow_root = denied
+        module.load_yaml_document = denied
         runtime = RuntimeBootstrap(self.project, module, ModuleType("host"), ModuleType("service"))
         self.assertEqual([f.name for f in fields(runtime)], ["repo_root", "core", "host", "service"])
         self.assertEqual(runtime.current_work_service(self.project).summary(), self.service.summary())
         self.assertIs(runtime.core, module)
         self.assertNotIn("processforge", sys.modules)
 
-    def test_port_members_only(self):
-        from processforge_core.ports import WorkReadCorePort
-        methods = {name for name in vars(WorkReadCorePort) if not name.startswith("_")}
-        self.assertEqual(methods, {"locate_flow_root", "load_yaml_document"})
+    def test_default_record_reader_owns_core_documents(self):
+        from processforge_core.work.records import YamlWorkRecordReader
+        reader = YamlWorkRecordReader(self.project)
+        self.assertEqual(reader.flow_root, self.project / '.pf')
+        self.assertIsInstance(reader.documents, YamlDocumentReader)
+        self.assertNotIn('core', {f.name for f in fields(reader)})
 
     def test_installed_shaped_package_without_cli(self):
+        self.run_document("copied")
         target = self.project / "installed" / "src" / "processforge_core"
         shutil.copytree(ROOT / "src" / "processforge_core", target, ignore=shutil.ignore_patterns("__pycache__"))
         script = "\n".join([
             "import sys", f"sys.path.insert(0, {str(target.parent)!r})",
             "from pathlib import Path",
             "from processforge_core.composition import build_current_work_service",
-            "class Port:", "    def locate_flow_root(self, project): return project / '.pf'",
-            "    def load_yaml_document(self, path): return {}",
-            "service = build_current_work_service(Path('.'), Port())",
-            "assert not service.summary()['governed']",
+            f"service = build_current_work_service(Path({str(self.project)!r}))",
+            "assert service.summary()['governed']",
+            "assert service.summary()['active_work'][0]['run_id'] == 'copied'",
             "assert 'processforge' not in sys.modules",
             "assert 'pf_runtime.host' not in sys.modules",
         ])

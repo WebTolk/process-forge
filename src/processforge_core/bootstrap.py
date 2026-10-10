@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .diagnostics import Logger
-    from .garage import CurrentWorkService
+    from .work.records import CurrentWorkService
     from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkRecordReadPort
     from .process_execution import ProcessExecutionService
 
@@ -28,9 +28,9 @@ class RuntimeBootstrap:
     service: ModuleType
 
     def current_work_service(self, project_root: Path) -> CurrentWorkService:
-        from .composition import LegacyWorkReadAdapter, build_current_work_service
+        from .composition import build_current_work_service
 
-        return build_current_work_service(project_root, LegacyWorkReadAdapter(self.core))
+        return build_current_work_service(project_root)
 
     def process_execution_service(
         self, project_root: Path, workplace_root: Path | None, *, observer: Logger | None = None,

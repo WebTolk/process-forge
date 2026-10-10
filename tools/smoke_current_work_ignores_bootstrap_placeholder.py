@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 
 import processforge as core
-from processforge_core.garage import CurrentWorkService
+from processforge_core.work.records import CurrentWorkService
 
 
 def main() -> int:
@@ -21,7 +21,7 @@ def main() -> int:
         project = root / "project"
         cli("workplace-init", "--workplace", str(workplace), "--apply")
         cli("project-onboard", "--project-root", str(project), "--workplace", str(workplace), "--type", "generic", "--apply")
-        summary = CurrentWorkService(project, core).summary()
+        summary = CurrentWorkService(project).summary()
         if summary.get("governed") or summary.get("active_work"):
             raise AssertionError(summary)
     print("PASS: bootstrap first-assignment is not current substantive work")

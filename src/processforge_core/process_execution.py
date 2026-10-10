@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterator
 
 from .common.request_scope import safe_load, scoped_request
+from .common.yaml_io import _parse_simple_yaml
+from .documents.reader import YamlDocumentReader
 from .work.inventory import WorkInventory
 from .work.state import WorkStatePolicy
 from .work.start_documents import WorkStartDocumentBuilder
@@ -771,7 +773,7 @@ class ProcessExecutionService:
 
         return build_work_record_catalog_service(
             record_reader=lambda: self.records, inventory_factory=lambda: WorkInventory,
-            flow_root=lambda: self._flow_root, document_loader=lambda: self.core.load_yaml_document,
+            flow_root=lambda: self._flow_root, document_loader=lambda: self._work_documents().load,
             identifier_pattern=lambda: SAFE_ID_RE, intent_reader=lambda: self._load_completion_intent,
             active_assignment_statuses=lambda: ACTIVE_ASSIGNMENT_STATUSES,
             active_run_statuses=lambda: ACTIVE_RUN_STATUSES,
@@ -1033,15 +1035,18 @@ class ProcessExecutionService:
     def _atomic_text(self, path: Path, content: str) -> None:
         self._work_document_publisher().write_text(path, content)
 
+    def _work_documents(self) -> YamlDocumentReader:
+        return YamlDocumentReader(_parse_simple_yaml)
+
     def _load_run(self, run_id: str) -> dict[str, Any]:
         if self.records is not None:
             return self.records.load_run(self._validated_id(run_id, "run"))
-        return self.core.load_yaml_document(self._run_path(run_id))
+        return self._work_documents().load(self._run_path(run_id))
 
     def _load_assignment(self, assignment_id: str) -> dict[str, Any]:
         if self.records is not None:
             return self.records.load_assignment(self._validated_id(assignment_id, "assignment"))
-        return self.core.load_yaml_document(self._assignment_path(assignment_id))
+        return self._work_documents().load(self._assignment_path(assignment_id))
 
     def _run_path(self, run_id: str) -> Path:
         return self._flow_root() / "runs" / self._validated_id(run_id, "run") / "run.yaml"
@@ -1056,7 +1061,7 @@ class ProcessExecutionService:
         return identifier
 
     def _flow_root(self) -> Path:
-        return self.core.locate_flow_root(self.project_root)
+        return self.project_root / ".pf"
 
     def _unique_id(self, root: Path, seed: str) -> str:
         base = "-".join(str(seed or "work").lower().split())[:72].strip("-") or "work"

@@ -71,7 +71,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |
 | `src/processforge_core/completion/` | Run completion policy, summary/index documents and durable completion intent construction, reading, validation and replay. |
 | `src/processforge_core/evidence/` | Existing evidence collection/identity, normalization and live file diagnostics, requirement/gate satisfaction and ordered readiness blockers through explicit callbacks. |
-| `src/processforge_core/garage.py` | Existing current Work and remaining legacy helpers; project context assembly and reconciliation live under `project/`. |
+| `src/processforge_core/garage.py` | Remaining legacy helpers; current Work readers live under `work/records.py` and project context under `project/`. |
 | `src/processforge_core/work/projection.py` | Existing pure Work projection/classification rules, without Core or lifecycle authority. |
 | `src/processforge_core/work/bootstrap.py` | Existing guidance/start delegation through explicit summary and deferred typed start dependencies. |
 | `src/processforge_core/work/creation_scope.py` | Existing scope validation/overlay with explicit deferred dependencies, without lifecycle authority. |
@@ -279,3 +279,15 @@ Other services still depend on the legacy core. The target separation is domain 
 `CompletionIntentReplayService` extracts existing ordered completion intent replay through existing storage and event operations. It uses explicit frozen operation dependencies without Core or transport imports. Existing private facade methods and callback overrides remain compatible; coordinator decisions, locks and access checks remain in the facade; storage and event operations retain their adapters. `tools/smoke_completion_intent_replay_service.py` checks retained behavior and injected dependencies.
 
 `WorkTransitionCommitService` publishes an already permitted transition through explicit operation callbacks. It preserves stage history, ordered Run/Assignment publication, completion intent/replay, fresh state, projections, events and boundary advice. `ProcessExecutionService.transition` retains admission, access checks and the enclosing run lock; its constructor and transport entrypoints remain unchanged. `build_work_transition_commit_service` assembles dependencies without I/O. `tools/smoke_work_transition_commit_service.py` checks publication order, required failures and late facade overrides.
+
+
+`work.records` owns `YamlWorkRecordReader` and `CurrentWorkService`. Their normal
+composition uses the Core `YamlDocumentReader` and YAML fallback directly, with
+project-bound paths and live `WorkInventory`; it no longer accepts monolithic Core.
+`LegacyWorkReadAdapter`, `WorkReadCorePort`, and the unused internal
+`governed_work_summary` facade are removed. Bootstrap/context/start consumers call
+these Core readers. `FreshSessionBoundaryReadService` uses Core document and relative
+path implementations. The coordinator's raw Run/Assignment reads also use Core YAML;
+its remaining lifecycle/admission/completion callbacks still need later migration.
+Public CLI/MCP/Daemon contracts are retained. This is a bounded dependency removal,
+not proof that the entire bootstrap or coordinator is independent of legacy.

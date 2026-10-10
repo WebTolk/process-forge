@@ -5,14 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 import re
-from types import ModuleType
 from typing import TYPE_CHECKING, Any, Callable
 
-from .garage import CurrentWorkService
-from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkReadCorePort, WorkRecordReadPort
-from .work.records import YamlWorkRecordReader
+from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkContextReadPort, WorkRecordReadPort
+from .work.records import CurrentWorkService, YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .documents.reader import YamlDocumentReader
     from .completion.request import CompletionIntentReader, CompletionReadinessReader, CompletionStateReader, CompletionTransition, CompletionWorkSelector, WorkCompletionRequestService
     from typing import Collection, Pattern
     from .work.record_catalog import CompletionIntentLookup, WorkCatalogInventoryFactory, WorkRecordCatalogService
@@ -69,17 +68,6 @@ if TYPE_CHECKING:
     from .work.context_read import WorkContextReadService
 
 __all__ = ()
-
-
-@dataclass(frozen=True)
-class LegacyWorkReadAdapter:
-    core: ModuleType
-
-    def locate_flow_root(self, project_root: Path) -> Path:
-        return self.core.locate_flow_root(project_root)
-
-    def load_yaml_document(self, path: Path) -> dict[str, Any]:
-        return self.core.load_yaml_document(path)
 
 
 def build_work_material_reader(
@@ -285,13 +273,17 @@ def build_governed_work_bootstrap_service(project_root: Path, workplace_root: Pa
         return ProcessExecutionService(project_root, workplace_root, core).start
 
     return GovernedWorkBootstrapService(
-        current_work_summary=lambda: CurrentWorkService(project_root, core).summary(),
+        current_work_summary=lambda: build_current_work_service(project_root).summary(),
         work_start=work_start,
     )
 
 
-def build_current_work_service(project_root: Path, core: WorkReadCorePort) -> CurrentWorkService:
-    return CurrentWorkService(project_root, core)
+def build_current_work_service(
+    project_root: Path, *, documents: YamlDocumentReader | None = None,
+) -> CurrentWorkService:
+    if documents is None:
+        return CurrentWorkService(project_root)
+    return CurrentWorkService(project_root, documents)
 
 
 @dataclass(frozen=True)
@@ -395,13 +387,11 @@ def build_process_summary_read_service(
 
 
 def build_fresh_session_boundary_read_service(
-    project_root: Path, core: Any,
+    project_root: Path,
 ) -> FreshSessionBoundaryReadService:
     from .work.boundary_advisory import FreshSessionBoundaryReadService
 
-    return FreshSessionBoundaryReadService(
-        project_root, LegacyWorkReadAdapter(core), relative_path=lambda path, root: core.rel(path, root),
-    )
+    return FreshSessionBoundaryReadService(project_root)
 
 
 def build_project_context_service(
@@ -424,7 +414,7 @@ def build_project_context_service(
             mode=lambda *, snapshot, session_id: build_garage_mode_service(project_root, workplace_root, core).status(snapshot=snapshot, session_id=session_id),
             process_summary=lambda snapshot, manifest: build_process_summary_read_service(project_root, core).summary(snapshot, manifest),
             derived_reports=lambda *, snapshot: build_derived_report_lifecycle_service(project_root, core).status(snapshot=snapshot),
-            boundary=lambda work: build_fresh_session_boundary_read_service(project_root, core).read(work),
+            boundary=lambda work: build_fresh_session_boundary_read_service(project_root).read(work),
         )
 
     return ProjectContextService(
@@ -435,7 +425,7 @@ def build_project_context_service(
         manifest_reader=lambda: core.load_yaml_document(core.locate_flow_root(project_root) / "process-forge.yaml"),
         runtime_snapshot_resolver=runtime_snapshot_resolver,
         resource_readiness=lambda *, snapshot, check: garage.ResourceSearchService(project_root, workplace_root, LegacyResourceSearchReadAdapter(project_root, workplace_root, core)).readiness(snapshot=snapshot, check=check),
-        work_summary=lambda: garage.CurrentWorkService(project_root, core).summary(),
+        work_summary=lambda: build_current_work_service(project_root).summary(),
         resource_selection=lambda snapshot: garage.resource_selection_summary(snapshot),
         diagnostics=lambda check, search, mode: garage.diagnostics_from_check(check, search, mode),
         context_readers=context_readers,
@@ -593,7 +583,7 @@ def build_process_execution_service(
     from .process_execution import ProcessExecutionService
 
     if records is None:
-        records = YamlWorkRecordReader(project_root, core)
+        records = YamlWorkRecordReader(project_root)
     return ProcessExecutionService(project_root, workplace_root, core, observer=observer, records=records, context=context, definitions=definitions, snapshots=snapshots)
 
 

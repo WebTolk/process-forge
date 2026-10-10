@@ -210,7 +210,8 @@ class GarageSnapshotTests(unittest.TestCase):
                         stack.enter_context(patch.object(summary, 'ProcessSummaryReadService', side_effect=process_service))
                         stack.enter_context(patch.object(boundary_advisory, 'FreshSessionBoundaryReadService', side_effect=boundary_service))
                         stack.enter_context(patch.object(mode, 'GarageModeService', side_effect=mode_service))
-                        stack.enter_context(patch.dict(garage.__dict__, replacements))
+                        stack.enter_context(patch.object(composition, 'CurrentWorkService', replacements['CurrentWorkService']))
+                        stack.enter_context(patch.dict(garage.__dict__, {k:v for k,v in replacements.items() if k != 'CurrentWorkService'}))
                         if BASELINE:
                             stack.enter_context(patch.dict(BASELINE, {**replacements, 'GarageModeService': mode_service, 'DerivedReportLifecycleService': report_service, 'process_summary': process_result, 'fresh_session_continuation': boundary_result}))
                         result = outcome(lambda: constructor(Path('p'), Path('w'), core).context(session_id='session'))

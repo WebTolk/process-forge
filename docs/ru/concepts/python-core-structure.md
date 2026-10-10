@@ -76,7 +76,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/agent_entry/` | Контракт входа, профили, клиентские адаптеры, стартовая подсказка, защищённое размещение инструкций и восстановление. |
 | `src/processforge_core/completion/` | Правила завершения Run, итоговые документы и индекс задач, подготовка, чтение, проверка и восстановление по записи о завершении. |
 | `src/processforge_core/evidence/` | Прежние правила сбора и identity доказательств, нормализация и актуальная диагностика файлов, удовлетворение требований и gates, порядок blockers готовности через явные зависимости. |
-| `src/processforge_core/garage.py` | Чтение текущей Work и оставшиеся legacy helpers; сборка контекста проекта и reconciliation находятся в `project/`. |
+| `src/processforge_core/garage.py` | Оставшиеся legacy helpers; текущие Work readers находятся в `work/records.py`, контекст проекта и reconciliation — в `project/`. |
 | `src/processforge_core/work/projection.py` | Прежние чистые правила проекций и классификации Work, без Core и полномочий lifecycle. |
 | `src/processforge_core/work/bootstrap.py` | Прежние guidance/start через явную сводку и отложенную типизированную зависимость запуска. |
 | `src/processforge_core/work/creation_scope.py` | Прежние проверка scope и наложение на Assignment через явные отложенные зависимости, без полномочий lifecycle. |
@@ -284,3 +284,15 @@ CLI/MCP сохраняют внешнюю диагностику и провер
 `CompletionIntentReplayService` выделяет существующую ответственность: упорядоченный replay completion-intent через существующие операции хранения и events. Зависимости передаются явно и закреплены на одну операцию; импорт Core или транспорта не требуется. Приватные методы фасада и переопределения callbacks сохранены; решение о восстановлении, блокировки и проверки доступа остаются у прежнего координатора; запись и события выполняются прежними адаптерами. Проверки: `tools/smoke_completion_intent_replay_service.py`.
 
 `WorkTransitionCommitService` фиксирует уже разрешённый переход через явные callbacks существующих операций. Сохранены история этапа, порядок записи Run/Assignment, completion intent/replay, повторное чтение state, проекции, события и рекомендации на границе процесса. `ProcessExecutionService.transition` остаётся владельцем проверок доступа и охватывающей run lock; его конструктор и входы транспортов не меняются. `build_work_transition_commit_service` собирает зависимости без I/O. Проверки порядка публикации, обязательных отказов и поздних переопределений фасада: `tools/smoke_work_transition_commit_service.py`.
+
+
+`work.records` владеет `YamlWorkRecordReader` и `CurrentWorkService`. Обычная сборка
+напрямую использует Core `YamlDocumentReader`, YAML fallback, привязанные к проекту
+пути и актуальный `WorkInventory`; универсальный старый Core читателям не передаётся.
+`LegacyWorkReadAdapter`, `WorkReadCorePort` и неиспользуемая внутренняя facade
+`governed_work_summary` удалены. Bootstrap/context/start вызывают методы этих
+читателей Core. `FreshSessionBoundaryReadService` использует Core документы и rel.
+Raw чтение Run/Assignment координатора также использует Core YAML; оставшиеся
+lifecycle/admission/completion callbacks требуют следующих переносов. Внешний
+CLI/MCP/Daemon контракт сохранён. Этот срез не доказывает независимость всего
+bootstrap или координатора от legacy.

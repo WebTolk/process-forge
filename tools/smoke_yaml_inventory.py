@@ -17,7 +17,7 @@ import yaml
 import processforge as core
 from processforge_core.common import yaml_io
 from processforge_core.documents.reader import YamlDocumentReader
-from processforge_core.garage import CurrentWorkService
+from processforge_core.work.records import CurrentWorkService
 from processforge_core.process_catalog import service as catalog
 from processforge_core.process_catalog.models import ProcessCatalogContext
 from processforge_core.process_execution import ProcessExecutionService
@@ -37,7 +37,7 @@ class YamlInventoryTests(unittest.TestCase):
         self.inventory = WorkInventory(self.flow, self.reader.load)
         adapter = SimpleNamespace(locate_flow_root=lambda _: self.flow,
                                   load_yaml_document=self.reader.load)
-        self.garage = CurrentWorkService(self.root, adapter)
+        self.garage = CurrentWorkService(self.root, self.reader)
         self.lifecycle = ProcessExecutionService(self.root, self.root, adapter)
 
     def write(self, path, value):

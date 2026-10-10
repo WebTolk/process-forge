@@ -5,7 +5,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from ..ports import WorkReadCorePort
+from ..common.paths import rel
+from ..common.yaml_io import _parse_simple_yaml
+from ..documents.reader import YamlDocumentReader
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,17 +39,17 @@ class WorkBoundaryAdvisoryService:
 @dataclass(frozen=True)
 class FreshSessionBoundaryReadService:
     project_root: Path
-    core: WorkReadCorePort
-    relative_path: Callable[[Path, Path], str]
+    documents: YamlDocumentReader = field(default_factory=lambda: YamlDocumentReader(_parse_simple_yaml))
+    relative_path: Callable[[Path, Path], str] = rel
 
     def read(self, work: dict[str, Any]) -> dict[str, Any]:
         """Return the newest usable completed Work boundary, never an older one."""
         if work.get("governed"):
             return {}
-        flow_root = self.core.locate_flow_root(self.project_root)
+        flow_root = self.project_root / ".pf"
         candidates: list[tuple[str, dict[str, Any], Path]] = []
         for run_path in (flow_root / "runs").glob("*/run.yaml"):
-            run = self.core.load_yaml_document(run_path)
+            run = self.documents.load(run_path)
             if str(run.get("status") or "") != "completed":
                 continue
             artifacts = run.get("final_artifacts") if isinstance(run.get("final_artifacts"), list) else []
@@ -70,7 +72,7 @@ class FreshSessionBoundaryReadService:
         routed = [str(item.get("to_process") or item.get("target_process") or "") for item in definition.get("process_transitions", []) if isinstance(item, dict)]
         routes_path = flow_root / "process-routes.yaml"
         if routes_path.is_file():
-            routes = self.core.load_yaml_document(routes_path).get("routes", [])
+            routes = self.documents.load(routes_path).get("routes", [])
             routed.extend(str(item.get("to_process") or item.get("target_process") or "") for item in routes if isinstance(item, dict) and str(item.get("from_process") or "") == previous_process)
         recommended = next((item for item in routed if item in available), "")
         # The newest completed boundary is authoritative. If it has no route, do

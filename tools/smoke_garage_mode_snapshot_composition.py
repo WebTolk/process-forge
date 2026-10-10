@@ -88,7 +88,7 @@ def context_scenario(service_type, *, document=UNSET, broken=False, memory=None,
             stack.enter_context(patch.dict(namespace, {'DerivedReportLifecycleService':report_service, 'process_summary':process_result, 'fresh_session_continuation':boundary_result}))
         for name, value in substitutes.items():
             if namespace is None:
-                stack.enter_context(patch.object(garage, name, value))
+                stack.enter_context(patch.object(composition if name == "CurrentWorkService" else garage, name, value))
             else:
                 stack.enter_context(patch.dict(namespace, {name:value}))
         result = outcome(lambda: service_type(Path('p'),Path('w'),core, **({'snapshots':memory} if memory is not None else {})).context(session_id='s'))
