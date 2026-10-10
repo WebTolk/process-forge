@@ -13,6 +13,7 @@ from .ports import ProcessDefinitionReadPort, ProjectSnapshotReadPort, WorkConte
 from .work.records import YamlWorkRecordReader
 
 if TYPE_CHECKING:
+    from .completion.request import CompletionIntentReader, CompletionReadinessReader, CompletionStateReader, CompletionTransition, CompletionWorkSelector, WorkCompletionRequestService
     from typing import Collection, Pattern
     from .work.record_catalog import CompletionIntentLookup, WorkCatalogInventoryFactory, WorkRecordCatalogService
     from contextlib import AbstractContextManager
@@ -883,4 +884,23 @@ def build_work_record_catalog_service(
         record_reader=record_reader, inventory_factory=inventory_factory, flow_root=flow_root,
         document_loader=document_loader, identifier_pattern=identifier_pattern, intent_reader=intent_reader,
         active_assignment_statuses=active_assignment_statuses, active_run_statuses=active_run_statuses,
+    )
+
+
+def build_work_completion_request_service(
+    *, work_selector: Callable[[], CompletionWorkSelector],
+    blocked_result: Callable[[], Callable[[str], dict[str, Any]]],
+    process_reader: Callable[[], Callable[[dict[str, Any]], tuple[dict[str, Any], str]]],
+    outcomes_reader: Callable[[], Callable[[dict[str, Any], str], list[dict[str, Any]]]],
+    state_reader: Callable[[], CompletionStateReader],
+    run_blockers: Callable[[], Callable[[dict[str, Any], dict[str, Any], dict[str, Any]], list[dict[str, Any]]]],
+    intent_reader: Callable[[], CompletionIntentReader], completion_readiness: Callable[[], CompletionReadinessReader],
+    transition: Callable[[], CompletionTransition],
+) -> WorkCompletionRequestService:
+    from .completion.request import WorkCompletionRequestService
+
+    return WorkCompletionRequestService(
+        work_selector=work_selector, blocked_result=blocked_result, process_reader=process_reader,
+        outcomes_reader=outcomes_reader, state_reader=state_reader, run_blockers=run_blockers,
+        intent_reader=intent_reader, completion_readiness=completion_readiness, transition=transition,
     )

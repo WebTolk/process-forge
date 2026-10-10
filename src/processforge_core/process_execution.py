@@ -16,6 +16,7 @@ from .work.start_documents import WorkStartDocumentBuilder
 from .evidence.collection import EvidenceCollectionPolicy
 
 if TYPE_CHECKING:
+    from .completion.request import WorkCompletionRequestService
     from .work.record_catalog import WorkRecordCatalogService
     from .work.events import WorkEventPublisher
     from .work.publication import WorkDocumentPublisher
@@ -647,50 +648,10 @@ class ProcessExecutionService:
         )
 
     def can_complete(self, *, run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
-        try:
-            selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
-        except ValueError as exc:
-            return {"can_complete": False, "blockers": [{"code": str(exc)}]}
-        if not selected:
-            return {"can_complete": False, "blockers": [{"code": "active_work_not_found"}]}
-        run, assignment = selected
-        process, pin_status = self._effective_process(run)
-        stage_id = str(assignment.get("stage") or "")
-        outcomes = normalized_outcomes(process, stage_id)
-        final = any(not str(item.get("next_stage") or "") for item in outcomes)
-        state = self.state(run_id=str(run.get("id") or ""), assignment_id=str(assignment.get("id") or ""), session_id=session_id)
-        blockers = [*list(state.get("blockers") or []), *list(state.get("incomplete") or [])]
-        if pin_status != "pinned":
-            blockers.append({"code": "process_not_pinned"})
-        if not final:
-            blockers.append({"code": "not_final_stage", "stage_id": stage_id})
-        blockers.extend(self._run_completion_blockers(process, run, assignment))
-        return {"can_complete": not blockers, "blockers": blockers, "run": state.get("run"), "assignment": state.get("assignment"), "stage": state.get("stage")}
+        return self._completion_request_service().can_complete(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
 
     def complete(self, *, outcome: str = "completed", evidence: Any = None, notes: str = "", run_id: str = "", assignment_id: str = "", session_id: str = "") -> dict[str, Any]:
-        try:
-            selected = self._select_work(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
-        except ValueError as exc:
-            return self._blocked(str(exc))
-        if selected:
-            run, assignment = selected
-            pending, _error = self._load_completion_intent(run, assignment)
-            if pending is not None:
-                # A committed intent is authoritative.  Do not make a retry
-                # depend on mutable evidence or on the caller repeating the
-                # original outcome/notes.
-                return self.transition(
-                    outcome=outcome,
-                    evidence=evidence,
-                    notes=notes,
-                    run_id=run_id,
-                    assignment_id=assignment_id,
-                    session_id=session_id,
-                )
-        readiness = self.can_complete(run_id=run_id, assignment_id=assignment_id, session_id=session_id)
-        if readiness["blockers"] and not evidence:
-            return {"schema_version": 1, "kind": "pf.work.complete", "action": "blocked", **readiness}
-        return self.transition(outcome=outcome, evidence=evidence, notes=notes, run_id=run_id, assignment_id=assignment_id, session_id=session_id)
+        return self._completion_request_service().complete(outcome=outcome, evidence=evidence, notes=notes, run_id=run_id, assignment_id=assignment_id, session_id=session_id)
 
     def _execution_project_read_service(self) -> ExecutionProjectReadService:
         from .composition import build_execution_project_read_service
@@ -1115,3 +1076,15 @@ class ProcessExecutionService:
 
     def _blocked(self, reason: str, *, action: str = "blocked", **extra: Any) -> dict[str, Any]:
         return {"schema_version": 1, "kind": "pf.work.execution", "action": action, "reason": reason, **extra}
+
+
+    def _completion_request_service(self) -> WorkCompletionRequestService:
+        from .composition import build_work_completion_request_service
+
+        return build_work_completion_request_service(
+            work_selector=lambda: self._select_work, blocked_result=lambda: self._blocked,
+            process_reader=lambda: self._effective_process, outcomes_reader=lambda: normalized_outcomes,
+            state_reader=lambda: self.state, run_blockers=lambda: self._run_completion_blockers,
+            intent_reader=lambda: self._load_completion_intent, completion_readiness=lambda: self.can_complete,
+            transition=lambda: self.transition,
+        )

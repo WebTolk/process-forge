@@ -90,6 +90,7 @@ and transition recovery remain in the process coordinator.
 | `src/processforge_core/project/reconciliation.py` | Existing context reconciliation projection through the required deferred typed context checker, without Core. |
 | `src/processforge_core/project/context.py` | Existing five ProjectContextService operations and context-specific per-dispatch readers through required typed dependencies, without Core. |
 | `src/processforge_core/process_execution.py`, `work/continuation.py` | Governed lifecycle, selection, pinned execution, evidence and completion/recovery. |
+| `src/processforge_core/completion/request.py` | Existing completion readiness and completion request orchestration, with live facade callbacks. |
 | `src/processforge_core/work/state.py` | I/O-free completion/action/blocker rules and existing Work-state response projection; not lifecycle authority. |
 | `src/processforge_core/work/automation_readiness.py`, `work/transition_rejection.py` | Existing automation readiness projections, live assignment-event reads and recoverable transition rejection response rules through explicit callbacks. |
 | `src/processforge_core/work/boundary_advisory.py` | Existing Work boundary advisory and fresh-session completed-boundary reads with their distinct route/handoff rules and explicit read dependencies. |
@@ -258,6 +259,8 @@ Other services still depend on the legacy core. The target separation is domain 
 `ProcessSelectionService` extracts existing offered process selection and bounded candidate descriptions. It uses explicit frozen operation dependencies without Core or transport imports. Existing private facade methods and callback overrides remain compatible; writes, locks, access checks and recovery retain their owners. `tools/smoke_process_selection_service.py` checks retained behavior and injected dependencies.
 
 `ProcessPinReadService` extracts existing live snapshot reads and process pin construction. It uses explicit frozen operation dependencies without Core or transport imports. Existing private facade methods and callback overrides remain compatible; writes, locks, access checks and recovery retain their owners. `tools/smoke_process_pin_read_service.py` checks retained behavior and injected dependencies.
+
+`WorkCompletionRequestService` in `completion/request.py` owns the existing `can_complete` and `complete` request orchestration. Nine required deferred providers retain selection, pinned/final-stage checks, blocker order, state references and the committed-intent retry path. The public coordinator methods keep their signatures and live `can_complete`/`transition` overrides. The frozen service and lazy factory perform no construction I/O; intent storage, locks, guards, transition and recovery retain their owners.
 
 `RunCompletionPolicy` extracts existing run completion blockers and in-memory task status updates. It uses explicit frozen operation dependencies without Core or transport imports. Existing private facade methods and callback overrides remain compatible; writes, locks, access checks and recovery retain their owners. `tools/smoke_run_completion_policy.py` checks retained behavior and injected dependencies.
 
