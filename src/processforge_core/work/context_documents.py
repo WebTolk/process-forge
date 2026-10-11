@@ -10,8 +10,8 @@ from ..common.ids import safe_id
 from ..common.paths import rel
 from ..common.yaml_io import _parse_simple_yaml
 from ..documents.reader import YamlDocumentReader
+from ..project.metadata import PROJECT_FLOW_ROOT, ProjectMetadataReader
 
-PROJECT_FLOW_ROOT = ".pf"
 WORKSPACE_ACCESS_KEYS = ("knowledge_resources", "templates", "tools", "mcp")
 PATH_CONSTANT_PATTERN = re.compile(r"\$\{([A-Z][A-Z0-9_]*)\}")
 ASSIGNMENT_ID_PATTERN = re.compile(r"^(?:[a-z0-9]|[a-z0-9][a-z0-9-]*[a-z0-9])$")
@@ -241,16 +241,11 @@ class ContextContractInputs:
         return bool(re.match('^[A-Za-z]:/', text) or text.startswith('/') or text.startswith('//'))
 
     def locate_flow_root(self, project_root: Path, *, prefer_pf: bool = True) -> Path:
-        return project_root / PROJECT_FLOW_ROOT
+        return ProjectMetadataReader(project_root, self.documents).flow_root(prefer_pf=prefer_pf)
 
     def project_context_snapshot_paths(self, project_root: Path) -> tuple[Path, Path]:
         contexts = self.locate_flow_root(project_root) / 'contexts'
         return (contexts / 'project-context.snapshot.yaml', contexts / 'project-context.snapshot.md')
 
     def project_id(self, project_root: Path) -> str:
-        manifest = self.locate_flow_root(project_root) / 'process-forge.yaml'
-        data = self.load_yaml_document(manifest)
-        project = data.get('project') if isinstance(data, dict) else None
-        if isinstance(project, dict) and project.get('id'):
-            return str(project['id'])
-        return safe_id(project_root.name, 'project')
+        return ProjectMetadataReader(project_root, self.documents).project_id()

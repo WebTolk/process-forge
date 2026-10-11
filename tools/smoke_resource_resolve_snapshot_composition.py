@@ -61,7 +61,14 @@ def scenario(service_type, *, document=None, resource_id=RESOURCE_ID, error='', 
         return {'status': resolution_status, 'path': 'fixture-root' if resolution_status == 'resolved' else ''}
     core = SimpleNamespace(project_id=project_id, project_context_snapshot_paths=paths, load_yaml_document=load, resolve_workspace_path_ref=resolve, locate_flow_root=lambda root: root / '.pf')
     if service_type is access.ResourceResolveService:
-        service = composition.build_resource_resolve_service(Path('p'), Path('w'), core, snapshots=snapshots if snapshots is not None else FixtureSnapshots(paths, load))
+        class FixtureReads:
+            def project_id(self):
+                return project_id(Path('p'))
+            def read_snapshot(self, injected):
+                return injected.load() if injected is not None else FixtureSnapshots(paths, load).load()
+            def path_ref_resolver(self):
+                return lambda reference: resolve(Path('p'), reference, explicit_workplace=str(Path('w')))
+        service = access.ResourceResolveService(Path('p'), Path('w'), FixtureReads(), snapshots=snapshots)
     else:
         service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))
     return outcome(lambda: service.resolve(resource_id=resource_id)), events
@@ -131,8 +138,8 @@ class ResolveSnapshotTests(unittest.TestCase):
         fail = lambda *a, **k: self.fail('Assembly must not call Core')
         core = SimpleNamespace(project_id=fail, project_context_snapshot_paths=fail, load_yaml_document=fail)
         memory = MemorySnapshots()
-        old = composition.build_resource_resolve_service(Path('p'), Path('w'), core)
-        built = composition.build_resource_resolve_service(Path('p'), Path('w'), core, snapshots=memory)
+        old = composition.build_resource_resolve_service(Path('p'), Path('w'))
+        built = composition.build_resource_resolve_service(Path('p'), Path('w'), snapshots=memory)
         self.assertIs(built.snapshots, memory)
         self.assertEqual(old, built)
         self.assertEqual(repr(old), repr(built))
@@ -153,7 +160,7 @@ class ResolveSnapshotTests(unittest.TestCase):
             def load(*args):
                 self.fail('Default reader must not call the legacy loader or paths')
             core = SimpleNamespace(project_id=lambda root: 'fixture', project_context_snapshot_paths=load, load_yaml_document=load)
-            service = composition.build_resource_resolve_service(Path(directory), Path('w'), core)
+            service = composition.build_resource_resolve_service(Path(directory), Path('w'))
             stat = path.stat()
             with request_scope.request_scope() as scope:
                 first = service.resolve(resource_id=RESOURCE_ID)['resource']
@@ -184,7 +191,7 @@ class ResolveSnapshotTests(unittest.TestCase):
         core = SimpleNamespace(project_id=lambda root: str(root), project_context_check_result=check)
         host = SimpleNamespace(resolve_project=lambda reference, core: Path(reference), project_for_session=lambda *a: Path('bound'))
         runtime = SimpleNamespace(core=core, host=host)
-        def factory(root, workplace, supplied):
+        def factory(root, workplace):
             events.append('factory')
             return SimpleNamespace(resolve=lambda **kw: kw)
         with patch.object(composition, 'build_resource_resolve_service', side_effect=factory):
@@ -214,13 +221,20 @@ class ResolveSnapshotTests(unittest.TestCase):
         core = SimpleNamespace(project_id=lambda root: 'fixture', project_context_snapshot_paths=lambda root: (Path('snapshot.yaml'), Path('snapshot.md')), load_yaml_document=lambda path: reads.append(path) or copy.deepcopy(DEFAULT_DOCUMENT), resolve_workspace_path_ref=lambda *a, **kw: {'status': 'resolved', 'path': 'fixture-root'})
         factory = composition.build_resource_resolve_service
         injected = FixtureSnapshots(core.project_context_snapshot_paths, core.load_yaml_document)
-        with patch.object(pf_host, 'project_for_session', return_value=Path('bound')), patch.object(pf_host, 'route_project', return_value={'id': 'fixture'}), patch.object(composition, 'build_resource_resolve_service', side_effect=lambda project, workplace, supplied: factory(project, workplace, supplied, snapshots=injected)):
+        class FixtureReads:
+            def project_id(self):
+                return 'fixture'
+            def read_snapshot(self, snapshots):
+                return snapshots.load()
+            def path_ref_resolver(self):
+                return lambda reference: {'status': 'resolved', 'path': 'fixture-root'}
+        with patch.object(pf_host, 'project_for_session', return_value=Path('bound')), patch.object(pf_host, 'route_project', return_value={'id': 'fixture'}), patch.object(composition, 'build_resource_resolve_service', side_effect=lambda project, workplace: access.ResourceResolveService(project, workplace, FixtureReads(), snapshots=injected)):
             call = lambda: pf_host.resolve_payload(Path('w'), core, session='s', resource_id=RESOURCE_ID)
             actual = call()
             self.assertEqual(actual['resource']['navigation'], 'private_runtime_authorized')
             self.assertEqual(len(reads), 1)
             if BASELINE:
-                with patch.object(composition, 'build_resource_resolve_service', side_effect=lambda project, workplace, supplied: BASELINE['ResourceResolveService'](project, workplace, supplied)):
+                with patch.object(composition, 'build_resource_resolve_service', side_effect=lambda project, workplace: BASELINE['ResourceResolveService'](project, workplace, core)):
                     self.assertEqual(call(), actual)
             reads.clear()
             self.assertNotIn('resource', pf_host.resolve_payload(Path('w'), core, session='s'))
@@ -234,8 +248,7 @@ class ResolveSnapshotTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
             root = Path(directory)
             shutil.copytree(ROOT / 'src/processforge_core', root / 'processforge_core', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-            code = "from pathlib import Path; from processforge_core.composition import build_resource_resolve_service; from types import SimpleNamespace; assert build_resource_resolve_service(Path('p'),Path('w'),SimpleNamespace()).resolve() == {'schema_version':1,'kind':'pf.resolve','scope':'project_context','project':{'id':'fixture','root':'p'}}"
-            code = code.replace('SimpleNamespace()).resolve()', "SimpleNamespace(project_id=lambda root:'fixture')).resolve()")
+            code = "from pathlib import Path; from processforge_core.composition import build_resource_resolve_service; assert build_resource_resolve_service(Path('p'),Path('w')).resolve() == {'schema_version':1,'kind':'pf.resolve','scope':'project_context','project':{'id':'p','root':'p'}}"
             result = subprocess.run([sys.executable, '-B', '-c', code], cwd=root, capture_output=True, text=True, env=dict(os.environ, PYTHONPATH=str(root), PYTHONDONTWRITEBYTECODE='1'))
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 

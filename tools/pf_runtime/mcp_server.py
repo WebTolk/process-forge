@@ -213,7 +213,7 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
         context = core.project_context_check_result(bound_project, explicit_workplace=str(workplace))
         if str(context.get("status") or "") not in {"fresh", "fresh_with_updates"}:
             raise session_read.SessionReadError("snapshot_not_fresh")
-        return build_resource_resolve_service(bound_project, workplace, core).resolve(resource_id=str(arguments.get("resource_id") or "") or None)
+        return build_resource_resolve_service(bound_project, workplace).resolve(resource_id=str(arguments.get("resource_id") or "") or None)
     if name == "pf.search":
         bound_project = resolve_garage_project()
         try:

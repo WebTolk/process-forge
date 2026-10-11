@@ -197,7 +197,7 @@ class GarageSnapshotTests(unittest.TestCase):
         service = composition.build_project_context_service(Path('p'), Path('w'), core, snapshots=memory)
         with patch.object(garage, 'snapshot_with_resolved_search_roots', return_value={'runtime': 'same'}) as resolve:
             self.assertEqual(service.runtime_snapshot(), {'runtime': 'same'})
-            resolve.assert_called_once_with(Path('p'), memory.document, Path('w'), core)
+            resolve.assert_called_once_with(Path('p'), memory.document, Path('w'))
         self.assertFalse(core.calls)
 
     def test_context_payload_broken_branch_and_scope_cleanup(self):

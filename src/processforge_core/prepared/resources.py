@@ -176,7 +176,7 @@ def authorize_resources(project: Path, task: dict[str, Any], capsule: dict[str, 
             ),
             declarations=lambda: ResourceDeclarationPolicy(error=lambda: WorkResourceError),
             metadata=lambda: metadata_descriptor,
-            root_resolver=lambda: lambda project, workplace, row: _root(project, workplace, core, row),
+            root_resolver=lambda: lambda project, workplace, row: _root(project, workplace, row),
             material_capture=lambda: capture_material, budget=lambda: MaterialBudget,
             work_error=lambda: WorkResourceError, material_error=lambda: MaterialError, fail=lambda: _fail,
         )

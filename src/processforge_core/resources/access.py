@@ -92,8 +92,14 @@ class ResourceResolveReadPort(Protocol):
 class ResourceResolveService:
     project_root: Path
     workplace_root: Path
-    reads: ResourceResolveReadPort = field(repr=False, compare=False)
+    reads: ResourceResolveReadPort | None = field(default=None, repr=False, compare=False)
     snapshots: ProjectSnapshotReadPort | None = field(default=None, kw_only=True, repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        if self.reads is None:
+            from .resolve_read import ResourceResolveReadService
+
+            object.__setattr__(self, "reads", ResourceResolveReadService(self.project_root, self.workplace_root))
 
     def resolve(self, *, resource_id: str | None = None) -> dict[str, Any]:
         payload: dict[str, Any] = {

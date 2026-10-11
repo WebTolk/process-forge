@@ -1,20 +1,26 @@
-"""Existing allowed-process summary through an optional catalog resolver."""
+"""Live allowed-process summary through the concrete Core catalog reader."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from ..process_execution import project_process_selection
+from .catalog_read import ProcessCatalogReadService
 from .models import ProcessDefinitionRef
+
+
+class ProcessSummaryCatalogReadPort(Protocol):
+    """The definition lookup needed by the summary projection."""
+
+    def resolve_definition(self, process_id: str, /) -> ProcessDefinitionRef: ...
 
 
 @dataclass(frozen=True, kw_only=True)
 class ProcessSummaryReadService:
     project_root: Path | None = None
-    definition_resolver: Callable[[], Callable[[Path, str], ProcessDefinitionRef]] | None = field(
+    catalog: ProcessSummaryCatalogReadPort | None = field(
         default=None, repr=False, compare=False,
     )
 
@@ -26,9 +32,10 @@ class ProcessSummaryReadService:
         candidates = []
         for process_id in allowed:
             item = {"id": str(process_id), "title": str(process_id), "purpose": ""}
-            if self.project_root is not None and self.definition_resolver is not None:
+            if self.project_root is not None:
                 try:
-                    process = self.definition_resolver()(self.project_root, str(process_id)).process
+                    catalog = self.catalog if self.catalog is not None else ProcessCatalogReadService(self.project_root)
+                    process = catalog.resolve_definition(str(process_id)).process
                     item["title"] = str(process.get("name") or process_id)
                     item["purpose"] = str(process.get("purpose") or process.get("description") or "")
                 except (OSError, ValueError, SystemExit):

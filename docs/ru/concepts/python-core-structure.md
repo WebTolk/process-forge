@@ -2,6 +2,10 @@
 
 Ядро развивается поэтапно. `tools/processforge.py` остаётся действующим legacy facade, а не удалённым кодом. CLI, MCP, hooks и aliases bootstrap сохраняются.
 
+Цель миграции — тонкий фасад совместимости: точки входа разбирают и оформляют транспортные данные, затем вызывают ООП-ядро, которому принадлежат поведение, состояние и правила. Каждая перенесённая обязанность использует конкретных владельцев Core без импорта или вызова монолита. Оставшиеся обратные вызовы учитываются как незавершённый перенос.
+
+**pf-app-server** — долгоживущий фоновый процесс-приложение/сервер ProcessForge, запускаемый существующими командами runtime/server. Он обслуживает Runtime-планировщик и общие прикладные службы; CLI и MCP являются отдельными входными адаптерами. Термин обозначает работающий процесс и срок его жизни; названия команд, API и конфигурации сохраняют совместимость.
+
 ## Размещение По Пакетам
 
 Новые модули реализации размещаются в пакетах по ответственности согласно
@@ -97,7 +101,7 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/project/context_read.py` | Проверки свежести контекста выполнения и чтение manifest через явные зависимости, без Core. |
 | `src/processforge_core/project/mode.py` | Прежний GarageModeService: модель координации через обязательный порт чтения snapshot, без Core. |
 | `src/processforge_core/project/reports.py` | Прежний DerivedReportLifecycleService и фиксированные пути отчётов через обязательные snapshot/flow-root зависимости, без Core. |
-| `src/processforge_core/process_catalog/summary.py` | Прежнее описание разрешённых процессов с необязательным типизированным resolver, без Core. |
+| `src/processforge_core/process_catalog/summary.py` | Описание разрешённых процессов с конкретным каталогом по умолчанию и необязательным узким портом каталога для внедрения, без обратного вызова монолита. |
 | `src/processforge_core/work/publication.py` | Прежняя атомарная публикация текста/YAML через отложенные зависимости форматирования и записи. |
 | `src/processforge_core/work/events.py` | Прежняя структура события Work и последующая диагностика через типизированный динамический emitter. |
 | `src/processforge_core/work/capsule_publication.py` | Прежняя неизменяемая публикация capsule с отложенными зависимостями и сохранённым exclusive open. |
@@ -110,7 +114,8 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/work/records.py` | Чтение актуальных Run/Assignment; выбор работы и восстановление остаются в прикладном сервисе. |
 | `src/processforge_core/work/context_read.py` | Актуальная проверка капсулы и нормализация Assignment через конкретные зависимости Core. |
 | `src/processforge_core/work/context_documents.py` | Нормализация полей и конкретное чтение документов, путей и идентификаторов для Work context. |
-| `src/processforge_core/process_catalog/` | Модели и разрешение каталога, чтение effective ProcessDefinition, выбор из предложенных процессов и подготовка pin через явные зависимости. |
+| `src/processforge_core/process_catalog/` | Конкретные читатели каталога и effective ProcessDefinition; выбор из предложенных процессов и подготовка pin сохраняют явные зависимости операций. |
+| `src/processforge_core/project/metadata.py` | Живое чтение ID проекта, manifest и корня .pf через Core YAML; общий владелец для контекста, каталога и ресурсов. |
 | `src/processforge_core/project/snapshot.py` | Чтение актуального ProjectContextSnapshot через конкретные читатели YAML и файловых хешей Core, привязанные к корню проекта. |
 | `src/processforge_core/common/digests.py` | Прежнее чтение SHA256 исходных байтов файла, общее для snapshot, фасадов монолита и maintenance update. |
 | `src/processforge_core/project/initialization.py` | Прежние подготовка проекта, состояние и восстановление с использованием защищённых операций размещения инструкций. |
@@ -127,13 +132,13 @@ Work-импорты на текущем dev-этапе не сохраняютс
 | `src/processforge_core/resources/snapshot.py` | Прежние search roots, разрешённая selection, path resolution и private navigation ресурсов; чтение snapshot остаётся в project/snapshot.py. |
 | `src/processforge_core/resources/access.py` | ResourceSearchService и ResourceResolveService с узкими типизированными портами чтения: прежние readiness, разрешённые поиск/resolve, navigation и внедрение снимка. |
 | `src/processforge_core/ports.py` | Внутренние типизированные зависимости чтения текущей работы, записей Work и контекста. |
-| `src/processforge_core/composition.py` | Общие фабрики сервисов и узкие адаптеры чтения и контекста legacy-модуля. |
+| `src/processforge_core/composition.py` | Общие фабрики сервисов и оставшийся LegacyResourceSearchReadAdapter; перенесённые читатели текущей работы, контекста, определений процессов и разрешения ресурсов используют конкретных владельцев Core. |
 | `src/processforge_core/bootstrap.py` | Существующая сборка runtime-модулей и ленивый доступ к фабрикам сервисов. |
 | `tools/processforge.py`, `tools/pf_runtime/` | Legacy CLI facade, транспортные адаптеры, host и provider policies. |
 
-`build_current_work_service(project_root, port)` создаёт прежний сервис с любой структурно подходящей зависимостью, без загрузки CLI и без ввода-вывода при сборке. `RuntimeBootstrap.current_work_service(project_root)` использует уже загруженное ядро через `LegacyWorkReadAdapter`. Глобальный реестр сервисов, общий кеш и DI-контейнер не вводятся.
+`build_current_work_service(project_root, *, documents=None)` создаёт конкретный CurrentWorkService с читателями YAML и inventory из Core. RuntimeBootstrap, контекст и start вызывают этого владельца напрямую; LegacyWorkReadAdapter и WorkReadCorePort удалены. При сборке ввод-вывод не выполняется, общий кеш сервисов и DI-контейнер не вводятся. Оставшиеся обратные вызовы bootstrap/lifecycle требуют отдельных переносов.
 
-Конструктор `CurrentWorkService(project_root, core)` и путь класса сохранены. Порядок обхода, fallback отсутствующего assignment, исключение bootstrap placeholders, форма summary и обработка ошибок не меняются. Прежним потребителям не требуется немедленная миграция.
+`CurrentWorkService(project_root, documents=...)` получает читатель YAML, а не монолитный Core. Читатель по умолчанию, inventory и правила проекции принадлежат Core; текущие потребители используют конкретного владельца. Путь класса, порядок обхода, fallback отсутствующего assignment, исключение bootstrap placeholders, форма summary и обработка ошибок сохраняются.
 
 `build_process_execution_service(project_root, workplace_root, core, *, observer=None, records=None, context=None, definitions=None, snapshots=None)` используется CLI, MCP и Host/Daemon. Метод `RuntimeBootstrap.process_execution_service(...)` вызывает ту же фабрику. Сборка не загружает CLI, не выбирает проект, не читает конфигурацию и не выполняет ввод-вывод. Прежний конструктор `ProcessExecutionService` с тремя аргументами сохранён; дополнительные зависимости передаются только по имени и не входят в equality/repr. Оставшиеся зависимости от legacy явные, без универсального интерфейса Core.
 
@@ -150,7 +155,7 @@ views; сохранены проверки размера, пути, checksum, �
 контракта и проверки capability в режиме require-ready остаются отдельными
 незавершёнными переносами; владение всем validation/bootstrap здесь не заявляется.
 
-`ProcessDefinitionReadPort` предоставляет `effective_process(run)`. `ProcessDefinitionReadService` получает прежний resolver определения процесса и существующую функцию fingerprint. По умолчанию `_effective_process` использует ленивую сборку через `build_process_definition_read_service` и узкий `LegacyProcessDefinitionAdapter`. Для валидных и повреждённых pin каталог не читается; legacy определения разрешаются заново при каждом вызове. Возвращаемые копии сохраняют неизвестные поля. Прежние статусы `pinned`, `corrupt`, `legacy_unpinned`, `missing` и границы обработки исключений сохранены. Reader не выбирает процесс, не создаёт pin и не разрешает переходы; остальные зависимости от legacy остаются.
+`ProcessDefinitionReadPort` предоставляет `effective_process(run)`. Конкретный `ProcessCatalogReadService(project_root)` читает контекст каталога проекта/рабочего места и активные пакеты через владельцев документов и путей Core, затем использует прежние алгоритмы каталога. `ProcessDefinitionReadService(project_root, *, catalog=None)` обращается к этому владельцу и существующей канонической функции fingerprint. Ленивой фабрике `build_process_definition_read_service(project_root)` и координатору больше не передаётся resolver монолита; `LegacyProcessDefinitionAdapter` удалён. Фасад контекста каталога в монолите вызывает владельца Core. Для валидных и повреждённых pin каталог не читается; определения без pin читаются заново при каждом вызове, копии сохраняют неизвестные поля. Статусы `pinned`, `corrupt`, `legacy_unpinned`, `missing`, границы исключений и полномочия lifecycle прежние.
 
 `ProjectSnapshotReadPort` предоставляет `load(path=None)` и `checksum(path)` для явного внедрения читателя. Стандартный `ProjectSnapshotReadService` получает корень проекта и конкретные реализации Core: `YamlDocumentReader` и `FileDigestReader`. `LegacyProjectSnapshotAdapter` удалён; обе фабрики snapshot принимают только корень проекта. Обычные потребители — контекст проекта, process execution, Garage mode, отчёты, поиск и разрешение ресурсов, Work resources и prepared resources — читают snapshot без обратного вызова старого Core. Создание pin по-прежнему передаёт один захваченный путь загрузке и checksum; выбор ресурсов, preflight и capsule capture читают документ отдельно. Сохранены канонические пути, маркеры ошибок YAML, поведение отсутствующего файла, хеш исходных байтов и изоляция разбора внутри запроса. `FileDigestReader` также обслуживает оба фасада `sha256_file` монолита и фасад maintenance update. Проверки generation остаются в `work/context.py`; validator не получает новую зависимость чтения актуального снимка. Остальные адаптеры lifecycle, ресурсов и bootstrap требуют дальнейшего переноса.
 
@@ -160,7 +165,7 @@ views; сохранены проверки размера, пути, checksum, �
 
 `ResourceSearchService` требует узкий `ResourceSearchReadPort` вместо общего объекта Core и сохраняет необязательное keyword-only внедрение `snapshots`. `LegacyResourceSearchReadAdapter` на границе composition выполняет прежние чтения Core и сохраняет позднее получение вызываемых функций. Явно переданный пустой snapshot исключает загрузку, а falsey внедрённый reader сохраняет свою identity. Freshness guard поиска предшествует чтению, а blocked readiness сохраняет существующее чтение для coverage. `build_resource_search_service` сохраняет опубликованную сигнатуру и собирает существующего MCP потребителя поиска без I/O после ingress guards. Проектный контекст сохраняет прежнюю заменяемую привязку сервиса и передаёт тот же read adapter. Index maintenance, аргументы запроса, navigation, coverage, payload и границы обработки ошибок сохраняют прежнее поведение.
 
-`ResourceResolveService` требует `ResourceResolveReadPort` вместо общего Core и сохраняет необязательный именованный `snapshots`. `LegacyResourceResolveReadAdapter` на границе composition связывает прежние операции ID проекта, снимка и path reference без I/O при сборке. ID читается первым; пустой идентификатор ресурса возвращает сведения о проекте без чтения снимка. Falsey внедрённый reader сохраняется, а стандартное чтение остаётся актуальным. Resolver пути получается до вычисления его reference argument. `build_resource_resolve_service` сохраняет опубликованную сигнатуру и собирает MCP и Host потребителей; прежний порядок MCP binding/freshness guards и Host routing сохранён. Выбор, aliases, denied results, исходные поля ресурса, разрешение пути, private navigation, payload и ошибки прежние. Совместимый конструктор и новые полномочия не вводятся.
+`ResourceResolveService(project_root, workplace_root, reads=None, *, snapshots=None)` по умолчанию использует конкретный `ResourceResolveReadService`. ID проекта, живые снимки и переносимые ссылки на пути читаются через владельцев Core; `LegacyResourceResolveReadAdapter` удалён. Общая фабрика Host и MCP — `build_resource_resolve_service(project_root, workplace_root, *, snapshots=None)`. ID читается первым; пустой ID ресурса возвращает сведения о проекте без чтения снимка. Ложные в логическом контексте внедрённые читатели и снимки сохраняют identity; порядок вычисления resolver прежний. `WorkspacePathReferenceReader` владеет разрешением реестров, пакетов и констант путей; общие helpers поиска/Garage/Work вызывают его без объекта монолита. Selection, aliases, исходные поля, navigation, ошибки и порядок Host/MCP binding/freshness guards сохранены. Зависимости ResourceSearchService от контекста и Runtime требуют последующего переноса; независимость всей подсистемы ресурсов здесь не заявляется.
 
 `GarageModeService` находится в `project/mode.py` и принимает `(project_root, workplace_root, *, snapshots)` с обязательным `ProjectSnapshotReadPort`, без Core. Зависимость исключена из repr/equality. Прежний fallback `snapshot or ...` сохранён: пустой snapshot вызывает `snapshots.load()`, непустой исключает чтение. `build_garage_mode_service(project_root, workplace_root, core, *, snapshots=None)` создаёт стандартный reader только при `None`, сохраняя falsey reader, и не выполняет I/O. Context не передаёт собственный порт в mode fallback. Координация, session, blockers и политика mode прежние; одной session недостаточно для Forge. Старый конструктор и module alias не сохраняются.
 
@@ -168,9 +173,9 @@ views; сохранены проверки размера, пути, checksum, �
 
 `ExecutionProjectReadService` находится в `project/context_read.py`. Обязательные именованные зависимости — пути проекта/workplace, resolver типизированной проверки контекста, resolver document loader и отложенный flow root. Каждая приватная `_context_check`/`_manifest` собирает сервис без I/O и кеша. Execution передаёт workplace явно только при наличии `workplace.yaml`; `ProjectContextService.check` всегда передаёт его явно. Loader получается до переопределяемого `_flow_root`, сохраняя порядок чтения и исключений. Приватные операции, проверки доступа и lifecycle authority остаются у координатора.
 
-`ProcessSummaryReadService` находится в `process_catalog/summary.py`; прежняя Garage-функция `process_summary` удалена без alias. Сохранены выбор из snapshot или manifest, порядок процессов, текущий id/stage count и fallbacks title/purpose/description. Необязательные project/resolver зависимости сохраняют пути без проекта или resolver. Фабрика привязывает provider только при Core не `None`, без I/O. Внутри прежнего `try` каждый resolver получается до преобразования argument в строку; только `OSError`, `ValueError`, `SystemExit` дают прежний fallback.
+`ProcessSummaryReadService(project_root=None, catalog=None)` владеет описаниями разрешённых процессов и по умолчанию обращается к конкретному каталогу; для проверки доступен узкий порт его чтения. Сохранены выбор из snapshot/manifest, порядок и дубликаты кандидатов, текущий ID/stage count, fallbacks name/purpose/description и обработка только OSError/ValueError/SystemExit. Без корня проекта определения не читаются. `build_process_summary_read_service(project_root=None)` не выполняет ввод-вывод при сборке и не передаёт resolver монолита или общий Core. ProjectContextService вызывает её в прежнем месте построения ответа. Поле definition_resolver удалено; перенос проверяется на настоящих файлах и стандартном пути скопированного Core.
 
-`FreshSessionBoundaryReadService` находится рядом с `WorkBoundaryAdvisoryService` в `work/boundary_advisory.py`. Обязательные зависимости — путь проекта, узкий двухметодный `WorkReadCorePort` и relative-path callback. Фабрика использует `LegacyWorkReadAdapter` и отложенную lambda для `core.rel`. Governed Work возвращает результат до чтения. Сохранены glob order, timestamp tie, последний пригодный completed handoff, проверка route `is_file`, стабильная дедупликация процессов и запрет возврата к старому handoff при отсутствии маршрута. Его рекомендация `fresh` отличается от прежней advisory-проекции `auto`; Garage helper удалён без alias.
+`FreshSessionBoundaryReadService` расположен рядом с WorkBoundaryAdvisoryService в work/boundary_advisory.py. Корень проекта, конкретный читатель документов Core и существующая реализация относительного пути обеспечивают чтение границы завершённой работы для новой сессии без адаптера монолита. `build_fresh_session_boundary_read_service(project_root)` собирает этого стандартного владельца. Governed Work возвращается до чтения. Сохранены glob order, совпадающие timestamps, последний пригодный completed handoff, актуальная проверка route, стабильная дедупликация процессов и запрет возврата к старому handoff. Рекомендация fresh отличается от соседней advisory-проекции auto.
 
 `WorkDocumentPublisher` находится в `work/publication.py` и содержит прежнюю атомарную запись текста/YAML. Обязательные именованные providers получают `_atomic_text` до formatter, сохраняя перехват подклассом и порядок исключений, затем применяют `rstrip()` и ровно один newline. Текст сохраняет mkdir, UUID temporary name, UTF-8 и `Path.replace`, без дополнительных cleanup/fsync/retry. Фабрика не выполняет I/O и не получает Core helpers заранее. Живые `_atomic_yaml`/`_atomic_text` у координатора сохраняют callbacks Continuation/transition/completion/recovery; пути, locks, guards и полномочия остаются у прежних владельцев.
 
@@ -317,12 +322,13 @@ bootstrap или координатора от legacy.
 attendance, expiry, binding, leases и ограниченное наблюдение Runtime остаются
 у действующих владельцев.
 
-`chat.transcripts.ChatTranscriptReader` ??????? ????????????? ?????? transcripts
-? ????? ??????? ????????? ?????? ??????. ??? ?????????? ??????????? ?? ?????????
-`common.ndjson.NdjsonReader` ??????? ????? NDJSON-????????, ???????? ?????? ?????
-? ?????? ??????. ??????? ???????? ???????? ?????? Core; ?????? Runtime ? ?????
-fallback-?????????? ?????????? ? Chat reader ????????. ????????? ???????
-legacy-before-canonical, ???????????? ?? ??????? ID, ??????????? ????, ??????
-???????????? ? ??????? ??????? ?????????????/??????. ??????????? ??????,
-?????????, ?????? ?????????, ????? ???????? ? ingress provenance ????????
-? ??????????? ??????????; ????????????? ???? ??????? ???? ?????? ?? ????????.
+`chat.transcripts.ChatTranscriptReader` владеет существующими путями transcripts
+и живым чтением сообщений точно выбранной сессии. Его конкретный стандартный
+`common.ndjson.NdjsonReader` владеет общим разбором NDJSON, включая исходные номера
+строк и записи об ошибках разбора. Функции путей, сообщений и разбора в монолите
+вызывают методы Core; чтение сессии Runtime и резервная проверка дубликатов
+обращаются к Chat reader напрямую. Сохранены порядок legacy-before-canonical,
+дедупликация по первому ID, неизвестные поля, непрозрачные идентификаторы,
+декодирование и обработка ошибок. Авторизация сессии, страницы, запись сообщений,
+оформление экспорта и ingress provenance остаются у действующих владельцев;
+независимость всей цепочки здесь не заявляется.

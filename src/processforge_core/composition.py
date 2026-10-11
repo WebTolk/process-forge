@@ -292,22 +292,12 @@ def build_work_context_read_service(project_root: Path) -> WorkContextReadServic
     return WorkContextReadService(project_root)
 
 
-@dataclass(frozen=True)
-class LegacyProcessDefinitionAdapter:
-    project_root: Path
-    core: Any
-
-    def resolve_definition(self, process_id: str) -> dict[str, Any]:
-        return self.core.resolve_process_definition(self.project_root, process_id).process
-
-
 def build_process_definition_read_service(
-    project_root: Path, core: Any, *, fingerprint: Callable[[dict[str, Any]], str],
+    project_root: Path,
 ) -> ProcessDefinitionReadService:
     from .process_catalog.definition_read import ProcessDefinitionReadService
 
-    adapter = LegacyProcessDefinitionAdapter(project_root, core)
-    return ProcessDefinitionReadService(adapter.resolve_definition, fingerprint)
+    return ProcessDefinitionReadService(project_root)
 
 
 def build_project_snapshot_read_service(project_root: Path) -> ProjectSnapshotReadService:
@@ -340,14 +330,11 @@ def build_execution_project_read_service(
 
 
 def build_process_summary_read_service(
-    project_root: Path | None = None, core: Any = None,
+    project_root: Path | None = None,
 ) -> ProcessSummaryReadService:
     from .process_catalog.summary import ProcessSummaryReadService
 
-    definition_resolver = None
-    if core is not None:
-        definition_resolver = lambda: core.resolve_process_definition
-    return ProcessSummaryReadService(project_root=project_root, definition_resolver=definition_resolver)
+    return ProcessSummaryReadService(project_root=project_root)
 
 
 def build_fresh_session_boundary_read_service(
@@ -369,14 +356,14 @@ def build_project_context_service(
 
     def runtime_snapshot_resolver() -> Callable[[dict[str, Any]], dict[str, Any]]:
         resolver = garage.snapshot_with_resolved_search_roots
-        return lambda snapshot: resolver(project_root, snapshot, workplace_root, core)
+        return lambda snapshot: resolver(project_root, snapshot, workplace_root)
 
     def context_readers() -> ProjectContextReaders:
         from .composition import build_derived_report_lifecycle_service, build_garage_mode_service, build_process_summary_read_service, build_fresh_session_boundary_read_service
 
         return ProjectContextReaders(
             mode=lambda *, snapshot, session_id: build_garage_mode_service(project_root, workplace_root, core).status(snapshot=snapshot, session_id=session_id),
-            process_summary=lambda snapshot, manifest: build_process_summary_read_service(project_root, core).summary(snapshot, manifest),
+            process_summary=lambda snapshot, manifest: build_process_summary_read_service(project_root).summary(snapshot, manifest),
             derived_reports=lambda *, snapshot: build_derived_report_lifecycle_service(project_root, core).status(snapshot=snapshot),
             boundary=lambda work: build_fresh_session_boundary_read_service(project_root).read(work),
         )
@@ -426,7 +413,7 @@ class LegacyResourceSearchReadAdapter:
     def search_roots_resolver(self) -> Callable[[dict[str, Any]], dict[str, Any]]:
         from .resources.access import snapshot_with_resolved_search_roots
 
-        return lambda snapshot: snapshot_with_resolved_search_roots(self.project_root, snapshot, self.workplace_root, self.core)
+        return lambda snapshot: snapshot_with_resolved_search_roots(self.project_root, snapshot, self.workplace_root)
 
 
 def build_resource_search_service(
@@ -437,32 +424,12 @@ def build_resource_search_service(
     return ResourceSearchService(project_root, workplace_root, LegacyResourceSearchReadAdapter(project_root, workplace_root, core), snapshots=snapshots)
 
 
-@dataclass(frozen=True)
-class LegacyResourceResolveReadAdapter:
-    project_root: Path
-    workplace_root: Path
-    core: Any
-
-    def project_id(self) -> str:
-        return self.core.project_id(self.project_root)
-
-    def read_snapshot(self, snapshots: ProjectSnapshotReadPort | None) -> dict[str, Any]:
-        from .resources.access import load_snapshot
-
-        return load_snapshot(self.project_root, snapshots=snapshots)
-
-    def path_ref_resolver(self) -> Callable[[dict[str, Any]], dict[str, Any]]:
-        from .resources.access import resolve_garage_path_ref
-
-        return lambda reference: resolve_garage_path_ref(self.project_root, reference, self.workplace_root, self.core)
-
-
 def build_resource_resolve_service(
-    project_root: Path, workplace_root: Path, core: Any, *, snapshots: ProjectSnapshotReadPort | None = None,
+    project_root: Path, workplace_root: Path, *, snapshots: ProjectSnapshotReadPort | None = None,
 ) -> ResourceResolveService:
     from .resources.access import ResourceResolveService
 
-    return ResourceResolveService(project_root, workplace_root, LegacyResourceResolveReadAdapter(project_root, workplace_root, core), snapshots=snapshots)
+    return ResourceResolveService(project_root, workplace_root, snapshots=snapshots)
 
 
 def build_garage_mode_service(

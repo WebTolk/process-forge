@@ -71,7 +71,7 @@ def scenario(service_type, kind='search', *, status='fresh', supplied=None, inde
     def coverage(root, snapshot, **kw):
         events.append(('coverage', copy.deepcopy(snapshot)))
         return {'marker': snapshot.get('marker'), 'scope': 'authorized'}
-    def roots(root, snapshot, workplace, core):
+    def roots(root, snapshot, workplace, core=None):
         events.append(('roots', copy.deepcopy(snapshot)))
         return {**snapshot, 'runtime': 'resolved'}
     def navigation(payload, snapshot):

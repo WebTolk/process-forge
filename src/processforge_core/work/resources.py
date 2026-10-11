@@ -28,11 +28,11 @@ class WorkResourceError(Exception):
         self.code, self.details = code, details
 
 
-def _root(project: Path, workplace: Path | None, core: Any, row: dict[str, Any]) -> tuple[Path, dict[str, Any]]:
+def _root(project: Path, workplace: Path | None, row: dict[str, Any]) -> tuple[Path, dict[str, Any]]:
     from ..resources.snapshot import resolve_garage_path_ref
 
     reference = ResourceDeclarationPolicy(error=lambda: WorkResourceError).portable_reference(row)
-    result = resolve_garage_path_ref(project, reference, workplace or project, core)
+    result = resolve_garage_path_ref(project, reference, workplace or project)
     if result.get("status") != "resolved" or not result.get("path"):
         raise WorkResourceError("resource_material_missing", resource_id=row["id"])
     return Path(result["path"]), reference
@@ -48,7 +48,7 @@ def build_resource_bindings(project: Path, workplace: Path | None, core: Any,
         limits=lambda: DEFAULT_LIMITS, budget=lambda: MaterialBudget,
         declarations=lambda: ResourceDeclarationPolicy(error=lambda: WorkResourceError),
         snapshot=lambda: lambda project: load_snapshot(project),
-        root_resolver=lambda: lambda project, workplace, row: _root(project, workplace, core, row),
+        root_resolver=lambda: lambda project, workplace, row: _root(project, workplace, row),
         material_capture=lambda: capture_material,
         work_error=lambda: WorkResourceError, material_error=lambda: MaterialError,
     )
@@ -106,7 +106,7 @@ class WorkResourceService:
             project_root=lambda: self.project_root, workplace_root=lambda: self.workplace_root,
             declarations=lambda: ResourceDeclarationPolicy(error=lambda: WorkResourceError),
             metadata=lambda: metadata_descriptor, fingerprint=lambda: canonical_fingerprint,
-            root_resolver=lambda: lambda project, workplace, row: _root(project, workplace, self.core, row),
+            root_resolver=lambda: lambda project, workplace, row: _root(project, workplace, row),
             material_capture=lambda: capture_material, budget=lambda: MaterialBudget,
             error=lambda: WorkResourceError,
         )

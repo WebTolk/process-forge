@@ -90,7 +90,7 @@ def main() -> int:
         # resource and remains a project-snapshot authorization operation.
         project_snapshot = {"local_search_resources": [{"id": guide_id, "package_id": "docs.a", "kind": "documentation", "path_ref": {"registry": "package_roots", "id": "local", "relative_path": "docs.a/guide"}}]}
         (project_a / ".pf" / "contexts" / "project-context.snapshot.yaml").write_text(yaml.safe_dump(project_snapshot, sort_keys=False), encoding="utf-8")
-        resolved = build_resource_resolve_service(project_a, workplace, core).resolve(resource_id=guide_id)
+        resolved = build_resource_resolve_service(project_a, workplace).resolve(resource_id=guide_id)
         assert Path(resolved["resource"]["local_root"]) == (packages / "guide").resolve(), resolved
     print("PASS: workplace-wide local resource index smoke")
     return 0

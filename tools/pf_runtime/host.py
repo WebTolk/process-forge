@@ -1281,7 +1281,7 @@ def resolve_payload(workplace_root: Path, core: Any, *, session: str | None = No
 
     project_root = project_for_session(argparse.Namespace(session=session, project_root=project_root_ref), workplace_root, core)
     handle = route_project(str(project_root), workplace_root, core)
-    resolved_payload = build_resource_resolve_service(project_root, workplace_root, core).resolve(resource_id=resource_id)
+    resolved_payload = build_resource_resolve_service(project_root, workplace_root).resolve(resource_id=resource_id)
     payload: dict[str, Any] = {"workplace_root": str(workplace_root), "project": handle, "session": session or ""}
     if not resource_id:
         return payload

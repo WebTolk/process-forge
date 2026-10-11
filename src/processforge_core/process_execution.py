@@ -742,7 +742,7 @@ class ProcessExecutionService:
             return self.definitions
         from .composition import build_process_definition_read_service
 
-        return build_process_definition_read_service(self.project_root, self.core, fingerprint=canonical_fingerprint)
+        return build_process_definition_read_service(self.project_root)
 
     def _stage(self, process: dict[str, Any], stage_id: str) -> dict[str, Any]:
         return next((stage for stage in executable_stages(process) if str(stage.get("id")) == stage_id), {"id": stage_id})

@@ -6436,7 +6436,8 @@ def release_path_is_forbidden(rel_path: str) -> str | None:
         return "private local config"
     if "runtime/hooks/outbox" in rel_path or "hooks/outbox" in rel_path:
         return "hook outbox payload"
-    if "runtime/chat/transcripts" in rel_path or "chat/transcripts" in rel_path:
+    transcript_parts = Path(normalized).parts
+    if any(left == "chat" and right == "transcripts" for left, right in zip(transcript_parts, transcript_parts[1:])):
         return "local chat transcript"
     return None
 
@@ -9873,64 +9874,12 @@ def workplace_registry_entry(workplace_manifest: Path | None, registry: str, ref
 
 
 def resolve_workspace_path_ref(project_root: Path, path_ref: dict[str, Any], *, workplace_manifest: Path | None = None) -> dict[str, Any]:
+    from processforge_core.resources.snapshot import WorkspacePathReferenceReader
+
     manifest = normalize_workplace_manifest(workplace_manifest or project_workplace_manifest(project_root))
-    workplace_root = manifest.parent if manifest else None
-    package_id = str(path_ref.get("package") or "")
-    relative_path = str(path_ref.get("relative_path") or "").strip()
-    if package_id:
-        bases: list[Path] = []
-        if package_id == "self":
-            bases.append(project_root)
-        else:
-            bases.append(locate_flow_root(project_root) / "packages" / package_id)
-            if workplace_root:
-                manifest_path, _manifest, _package_root = load_workplace_package_manifest(workplace_root, package_id, mode="read")
-                if manifest_path:
-                    bases.append(manifest_path.parent)
-        for base in bases:
-            resolved_base = base.resolve()
-            candidate = (resolved_base / relative_path).resolve() if relative_path else resolved_base
-            try:
-                candidate.relative_to(resolved_base)
-            except ValueError:
-                return {"status": "unresolved", "reason": "invalid_path_ref: relative_path escapes declared package root"}
-            if candidate.exists():
-                return {"status": "resolved", "path": str(candidate)}
-        return {"status": "unresolved", "reason": f"package path not found: {package_id}/{relative_path}".rstrip("/")}
-    registry = str(path_ref.get("registry") or "")
-    ref_id = str(path_ref.get("id") or "")
-    if registry == "external_resources":
-        return {"status": "external", "url": path_ref.get("url") or ""}
-    if not registry or not ref_id:
-        return {"status": "unresolved", "reason": "path_ref must include package or registry/id"}
-    if not manifest or not workplace_root:
-        return {"status": "unresolved", "reason": "workplace manifest is not configured"}
-    entry = workplace_registry_entry(manifest, registry, ref_id)
-    if not entry:
-        return {"status": "unresolved", "reason": f"registry target missing: {registry}/{ref_id}"}
-    raw_path = entry.get("path")
-    if not raw_path:
-        return {"status": "descriptor", "entry": {str(key): value for key, value in entry.items() if str(key) != "path"}}
-    root_resolution = workplace_path_resolution(workplace_root, str(raw_path))
-    if root_resolution.get("errors"):
-        return {"status": "unresolved", "reason": "; ".join(str(item) for item in root_resolution.get("errors", []))}
-    base = path_resolution_to_path(root_resolution).resolve()
-    # A knowledge root is an explicit workplace trust boundary.  Local heavy
-    # documentation is intentionally allowed to live outside the workplace
-    # directory (for example, in a shared device documentation root); deny
-    # every other registry path outside the workplace unless it is the
-    # dedicated private-resource mechanism.
-    if registry not in {"private_resource_paths", "knowledge_roots"}:
-        try:
-            base.relative_to(workplace_root.resolve())
-        except ValueError:
-            return {"status": "unresolved", "reason": "invalid_path_ref: registry path escapes workplace root"}
-    candidate = (base / relative_path).resolve() if relative_path else base
-    try:
-        candidate.relative_to(base)
-    except ValueError:
-        return {"status": "unresolved", "reason": "invalid_path_ref: relative_path escapes declared registry root"}
-    return {"status": "resolved" if candidate.exists() else "missing", "path": str(candidate)}
+    return WorkspacePathReferenceReader(
+        project_root, manifest.parent if manifest else None, workplace_manifest=manifest,
+    ).resolve(path_ref)
 
 
 def workspace_ref_matches_resource(resource: dict[str, Any], requested: Any) -> bool:
@@ -13463,16 +13412,11 @@ def _process_catalog_context(
     *,
     workplace_manifest: Path | None = None,
 ) -> ProcessCatalogContext:
-    resolved_project_root = project_root.expanduser().resolve()
-    effective_workplace_manifest = workplace_manifest
-    if effective_workplace_manifest is None:
-        effective_workplace_manifest = resolve_project_workplace_manifest(resolved_project_root)
-    return ProcessCatalogContext(
-        project_root=resolved_project_root,
-        flow_root=locate_flow_root(resolved_project_root),
-        distribution_root=ROOT.resolve(),
-        active_official_pack_ids=frozenset(active_process_pack_ids(effective_workplace_manifest)),
-    )
+    from processforge_core.process_catalog.catalog_read import ProcessCatalogReadService
+
+    return ProcessCatalogReadService(
+        project_root, distribution_root=ROOT, workplace_manifest=workplace_manifest,
+    ).context()
 
 
 def process_catalog_role(process: dict[str, Any]) -> str:
@@ -23542,7 +23486,6 @@ def local_search_runtime_snapshot(project_root: Path, workplace_root: Path) -> t
         project_root,
         snapshot if isinstance(snapshot, dict) else {},
         workplace_root,
-        sys.modules[__name__],
     )
     return context, runtime_snapshot
 
@@ -23644,7 +23587,7 @@ def workplace_search_runtime_snapshot(workplace_root: Path) -> dict[str, Any]:
     }
     # Use the Workplace root only as the path-ref resolver's neutral anchor;
     # no project context, Runtime, Ledger, or session participates here.
-    return snapshot_with_resolved_search_roots(workplace_root, snapshot, workplace_root, sys.modules[__name__])
+    return snapshot_with_resolved_search_roots(workplace_root, snapshot, workplace_root)
 
 
 def search_index_project_label(project_root: Path, workplace_root: Path) -> str:

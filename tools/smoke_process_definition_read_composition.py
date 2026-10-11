@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import copy
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from dataclasses import fields
 import importlib.util
 import inspect
@@ -13,15 +14,15 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
+from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 
-from processforge_core import process_execution as execution
+from processforge_core.process_catalog import definition_read as definition_reader
 from processforge_core.bootstrap import RuntimeBootstrap
 from processforge_core.composition import build_process_definition_read_service, build_process_execution_service
 from processforge_core.process_catalog.definition_read import ProcessDefinitionReadService
@@ -39,6 +40,41 @@ class Core:
     def resolve_process_definition(self, root, identifier):
         self.calls.append((root, identifier))
         return SimpleNamespace(process=self.document)
+
+
+class CatalogFixture:
+    """A narrow catalog reader fixture, independent of the CLI and coordinator."""
+
+    def __init__(self, document=None, error=None):
+        self.document = Core().document if document is None else document
+        self.error = error
+        self.calls = []
+
+    def resolve_definition(self, identifier):
+        self.calls.append(identifier)
+        if self.error is not None:
+            raise self.error
+        return SimpleNamespace(process=self.document)
+
+
+@contextmanager
+def workspace():
+    base = (SCRATCH or ROOT / '.pf/tmp/process-definition-smoke').resolve()
+    base.mkdir(parents=True, exist_ok=True)
+    directory = base / ('case-' + uuid4().hex)
+    directory.mkdir()
+    try:
+        yield directory
+    finally:
+        directory.resolve().relative_to(base)
+        shutil.rmtree(directory)
+
+
+def project_definition(root, values):
+    path = root / '.pf/processes/p.process.yaml'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('id: p\nversion: "1"\nstages: []\nfuture:\n  values: ' + str(values) + '\n', encoding='utf-8')
+    return path
 
 
 def pinned(definition):
@@ -75,8 +111,8 @@ class MemoryState(ProcessExecutionService):
 
 class DefinitionTests(unittest.TestCase):
     def test_pinned_and_corrupt_do_not_resolve(self):
-        fail = lambda ident: (_ for _ in ()).throw(AssertionError('Pin must not consult catalog'))
-        reader = ProcessDefinitionReadService(fail, canonical_fingerprint)
+        catalog = CatalogFixture(error=AssertionError('Pin must not consult catalog'))
+        reader = ProcessDefinitionReadService(Path('p'), catalog=catalog)
         source = Core().document
         run = pinned(source)
         result, status = reader.effective_process(run)
@@ -90,29 +126,25 @@ class DefinitionTests(unittest.TestCase):
         self.assertEqual(source['future']['values'], [1])
         self.assertEqual(reader.effective_process({'process': 7, 'process_execution': {'x': 1}}),
                          ({'id': '7', 'stages': []}, 'corrupt'))
+        self.assertEqual(catalog.calls, [])
 
     def test_empty_definition_can_be_pinned(self):
-        reader = ProcessDefinitionReadService(lambda ident: self.fail('No resolver'), canonical_fingerprint)
+        reader = ProcessDefinitionReadService(Path('p'), catalog=CatalogFixture(error=AssertionError('No catalog read')))
         self.assertEqual(reader.effective_process(pinned({})), ({}, 'pinned'))
 
     def test_exact_exception_boundaries(self):
         for error in [OSError('io'), SystemExit('exit'), ValueError('value')]:
             with self.subTest(error=type(error).__name__):
-                def resolve(ident):
-                    raise error
-                reader = ProcessDefinitionReadService(resolve, canonical_fingerprint)
+                reader = ProcessDefinitionReadService(Path('p'), catalog=CatalogFixture(error=error))
                 self.assertEqual(reader.effective_process({'process': 'p'}), ({'id': 'p', 'stages': []}, 'missing'))
         for error in [TypeError('type'), RuntimeError('unexpected'), KeyboardInterrupt()]:
-            def resolve(ident):
-                raise error
             with self.assertRaises(type(error)) as caught:
-                ProcessDefinitionReadService(resolve, canonical_fingerprint).effective_process({'process': 'p'})
+                ProcessDefinitionReadService(Path('p'), catalog=CatalogFixture(error=error)).effective_process({'process': 'p'})
             self.assertIs(caught.exception, error)
         error = ValueError('fingerprint failure')
-        def fingerprint(definition):
-            raise error
-        with self.assertRaises(ValueError) as caught:
-            ProcessDefinitionReadService(lambda ident: {}, fingerprint).effective_process(pinned({}))
+        run = pinned({})
+        with patch.object(definition_reader, 'canonical_fingerprint', side_effect=error), self.assertRaises(ValueError) as caught:
+            ProcessDefinitionReadService(Path('p')).effective_process(run)
         self.assertIs(caught.exception, error)
 
     def test_deepcopy_failure_keeps_original_boundary(self):
@@ -120,36 +152,35 @@ class DefinitionTests(unittest.TestCase):
             def __deepcopy__(self, memo):
                 raise ValueError('copy failed')
         definition = {'future': BadCopy()}
-        reader = ProcessDefinitionReadService(lambda ident: definition, lambda value: 'pin')
+        reader = ProcessDefinitionReadService(Path('p'), catalog=CatalogFixture(document=definition))
         self.assertEqual(reader.effective_process({'process': 'p'}), ({'id': 'p', 'stages': []}, 'missing'))
         for fingerprint in ['pin', 'bad']:
-            with self.assertRaisesRegex(ValueError, 'copy failed'):
+            with patch.object(definition_reader, 'canonical_fingerprint', return_value='pin'), self.assertRaisesRegex(ValueError, 'copy failed'):
                 reader.effective_process({'process': 'p', 'process_execution': {
                     'definition': definition, 'process_fingerprint': fingerprint}})
 
-    def test_live_legacy_resolution_and_independent_results(self):
-        core = Core()
-        reader = build_process_definition_read_service(Path('p'), core, fingerprint=canonical_fingerprint)
-        first, status = reader.effective_process({'process': 'p'})
-        self.assertEqual(status, 'legacy_unpinned')
-        first['future']['values'].append(2)
-        core.document['future']['values'] = [9]
-        second, _ = reader.effective_process({'process': 'p'})
-        self.assertEqual(second['future']['values'], [9])
-        self.assertEqual(core.calls, [(Path('p'), 'p')] * 2)
+    def test_live_catalog_resolution_and_independent_results(self):
+        with workspace() as root:
+            project_definition(root, [1])
+            reader = build_process_definition_read_service(root)
+            first, status = reader.effective_process({'process': 'p'})
+            self.assertEqual(status, 'legacy_unpinned')
+            first['future']['values'].append(2)
+            project_definition(root, [9])
+            second, _ = reader.effective_process({'process': 'p'})
+            self.assertEqual(second['future']['values'], [9])
 
-    def test_default_is_lazy_and_uses_live_core_and_fingerprint(self):
-        core = Core()
-        service = ProcessExecutionService(Path('first'), None, core)
-        service._effective_process({'process': 'p'})
-        self.assertEqual(core.calls, [(Path('first'), 'p')])
-        other = Core()
-        core.resolve_process_definition = other.resolve_process_definition
-        service._effective_process({'process': 'p'})
-        self.assertEqual(other.calls, [(Path('first'), 'p')])
-        with patch.object(execution, 'canonical_fingerprint', return_value='custom'):
-            result = service._effective_process({'process_execution': {'definition': {}, 'process_fingerprint': 'custom'}})
-            self.assertEqual(result, ({}, 'pinned'))
+    def test_default_uses_live_catalog_without_core(self):
+        class NoCore:
+            def __getattr__(self, name):
+                raise AssertionError('No monolith callback: ' + name)
+        with workspace() as root:
+            project_definition(root, [1])
+            service = ProcessExecutionService(root, None, NoCore())
+            self.assertEqual(service._effective_process({'process': 'p'})[0]['future']['values'], [1])
+            project_definition(root, [9])
+            self.assertEqual(service._effective_process({'process': 'p'})[0]['future']['values'], [9])
+            self.assertEqual(service._effective_process(pinned({})), ({}, 'pinned'))
 
     def test_injection_factory_bootstrap_no_io_and_falsey_port(self):
         class NoCore:
@@ -157,7 +188,7 @@ class DefinitionTests(unittest.TestCase):
                 raise AssertionError('No core access: ' + name)
         core, definitions = NoCore(), MemoryDefinitions()
         with patch.object(Path, 'is_file', side_effect=AssertionError('No filesystem probe')):
-            build_process_definition_read_service(Path('p'), core, fingerprint=canonical_fingerprint)
+            build_process_definition_read_service(Path('p'))
             service = build_process_execution_service(Path('p'), None, core, definitions=definitions)
             built = RuntimeBootstrap(Path('distribution'), core, None, None).process_execution_service(
                 Path('p'), None, definitions=definitions)
@@ -195,7 +226,7 @@ class DefinitionTests(unittest.TestCase):
         self.assertEqual(len(definitions.calls), 3)
 
     def test_threads_do_not_share_mutable_results(self):
-        reader = ProcessDefinitionReadService(lambda ident: Core().document, canonical_fingerprint)
+        reader = ProcessDefinitionReadService(Path('p'), catalog=CatalogFixture())
         def read(index):
             result, _ = reader.effective_process({'process': str(index)})
             result['future']['values'].append(index)
@@ -215,8 +246,7 @@ class DefinitionTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_isolated_package_without_cli(self):
-        with tempfile.TemporaryDirectory(prefix='pf-process-read-', dir=SCRATCH) as folder:
-            target = Path(folder)
+        with workspace() as target:
             shutil.copytree(ROOT / 'src/processforge_core', target / 'processforge_core',
                             ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
             code = (
@@ -244,9 +274,10 @@ class DefinitionTests(unittest.TestCase):
                 left, right = Core(), Core()
                 run = {'process': 'p', 'process_execution': pin}
                 expected = BASELINE(ProcessExecutionService(Path('p'), None, left), copy.deepcopy(run))
-                actual = ProcessExecutionService(Path('p'), None, right)._effective_process(copy.deepcopy(run))
+                catalog = CatalogFixture(document=right.document)
+                actual = ProcessDefinitionReadService(Path('p'), catalog=catalog).effective_process(copy.deepcopy(run))
                 self.assertEqual(expected, actual)
-                self.assertEqual(left.calls, right.calls)
+                self.assertEqual(left.calls, [(Path('p'), ident) for ident in catalog.calls])
                 comparisons += 1
         print('Original helper comparisons:', comparisons)
 
@@ -261,6 +292,7 @@ def main():
     if args.baseline:
         spec = importlib.util.spec_from_file_location('retained_effective', args.baseline)
         module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
         spec.loader.exec_module(module)
         BASELINE = module._effective_process
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(DefinitionTests)
