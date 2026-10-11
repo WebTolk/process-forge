@@ -722,10 +722,7 @@ class ProcessExecutionService:
             return self.snapshots
         from .composition import build_project_snapshot_read_service
 
-        return build_project_snapshot_read_service(
-            self.core, snapshot_path=lambda: self._flow_root() / "contexts" / "project-context.snapshot.yaml",
-            sha256_file=self._sha256_file,
-        )
+        return build_project_snapshot_read_service(self.project_root)
 
     def _work_boundary_advisory_service(self) -> WorkBoundaryAdvisoryService:
         from .composition import build_work_boundary_advisory_service

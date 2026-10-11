@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import copy
 from dataclasses import fields
 import hashlib
 import inspect
@@ -17,8 +16,6 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
-
-import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
@@ -50,22 +47,6 @@ class MemorySnapshots:
         return 'sha256:memory'
 
 
-class Core:
-    def __init__(self, root, document, error=None):
-        self.root, self.document, self.error = root, document, error
-        self.calls = []
-
-    def locate_flow_root(self, root):
-        self.calls.append(('root', root))
-        return self.root
-
-    def load_yaml_document(self, path):
-        self.calls.append(('load', path))
-        if self.error:
-            raise self.error('load-error')
-        return copy.deepcopy(self.document)
-
-
 def outcome(call):
     try:
         return ('return', call())
@@ -77,7 +58,7 @@ class SnapshotTests(unittest.TestCase):
     def test_construction_and_forwarding_without_io(self):
         fail = lambda *args: self.fail('Construction must not perform I/O')
         core = SimpleNamespace(load_yaml_document=fail, locate_flow_root=fail)
-        reader = build_project_snapshot_read_service(core, snapshot_path=fail, sha256_file=fail)
+        reader = build_project_snapshot_read_service(Path('p'))
         self.assertIsInstance(reader, ProjectSnapshotReadService)
         memory = MemorySnapshots()
         old = ProcessExecutionService(Path('p'), None, core)
@@ -111,7 +92,7 @@ class SnapshotTests(unittest.TestCase):
             root = Path(folder)
             reader = MemorySnapshots()
             service = ProcessExecutionService(root, None, SimpleNamespace(locate_flow_root=lambda _: root), snapshots=reader)
-            path = root / 'contexts/assignment-capsules/a.capsule.yaml'
+            path = root / '.pf/contexts/assignment-capsules/a.capsule.yaml'
             path.parent.mkdir(parents=True)
             path.write_text('immutable', encoding='utf-8')
             with self.assertRaises(ContextContractError) as raised:
@@ -158,10 +139,11 @@ class SnapshotTests(unittest.TestCase):
 
     def test_live_reads_and_raw_checksums_equal_size_mtime(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as folder:
-            path = Path(folder) / 'snapshot.yaml'
+            root = Path(folder)
+            path = root / '.pf/contexts/project-context.snapshot.yaml'
+            path.parent.mkdir(parents=True)
             path.write_bytes(b'snapshot: {id: a}\n')
-            reader = ProjectSnapshotReadService(lambda: path, lambda p: yaml.safe_load(p.read_bytes()),
-                                               lambda p: hashlib.sha256(p.read_bytes()).hexdigest())
+            reader = ProjectSnapshotReadService(root)
             stamp = path.stat().st_mtime_ns
             first = reader.checksum(path)
             self.assertEqual(reader.load()['snapshot']['id'], 'a')
@@ -172,86 +154,79 @@ class SnapshotTests(unittest.TestCase):
             self.assertEqual(reader.checksum(path), 'sha256:' + hashlib.sha256(path.read_bytes()).hexdigest())
             path.unlink()
             self.assertEqual(reader.checksum(path), '')
-            with self.assertRaises(FileNotFoundError):
-                reader.load()
+            self.assertEqual(reader.load(), {})
 
-    def test_default_path_and_hash_overrides_and_single_pin_path(self):
+    def test_default_core_hash_and_single_pin_path(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as folder:
             root = Path(folder)
-            path = root / 'contexts/project-context.snapshot.yaml'
-            path.parent.mkdir()
-            path.touch()
-            core = Core(Path('unused'), {'snapshot': {'id': 's'}})
-            service = ProcessExecutionService(Path('p'), None, core)
-            with patch.object(ProcessExecutionService, '_flow_root', side_effect=[root, AssertionError('Repeated root')]) as flow, \
-                 patch.object(ProcessExecutionService, '_sha256_file', return_value='override') as digest:
+            path = root / '.pf/contexts/project-context.snapshot.yaml'
+            path.parent.mkdir(parents=True)
+            path.write_text('snapshot: {id: s}\n', encoding='utf-8')
+            fail = lambda *a: self.fail('Default snapshot reader must not call old Core')
+            core = SimpleNamespace(load_yaml_document=fail, locate_flow_root=fail, sha256_file=fail)
+            service = ProcessExecutionService(root, None, core)
+            with patch.object(ProcessExecutionService, '_flow_root', side_effect=[root / '.pf', AssertionError('Repeated root')]) as flow, \
+                 patch.object(ProcessExecutionService, '_sha256_file', side_effect=fail) as digest:
                 pin = service._process_pin({}, Path('p.yaml'), active_specializations=[], selected_resource_ids=[], allowed_processes=[])
             self.assertEqual(flow.call_count, 1)
-            digest.assert_called_once_with(path)
-            self.assertEqual(core.calls, [('load', path)])
-            self.assertEqual(pin['snapshot_checksum'], 'sha256:override')
+            digest.assert_not_called()
+            self.assertEqual(pin['snapshot_id'], 's')
+            self.assertEqual(pin['snapshot_checksum'], 'sha256:' + hashlib.sha256(path.read_bytes()).hexdigest())
 
     def test_imports_and_isolated_package_without_cli(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as folder:
             target = Path(folder)
             shutil.copytree(ROOT / 'src/processforge_core', target / 'processforge_core', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+            path = target / '.pf/contexts/project-context.snapshot.yaml'
+            path.parent.mkdir(parents=True)
+            path.write_text('snapshot: {id: copied}\nresolved: {knowledge_resources: [b, a]}\n', encoding='utf-8')
             code = """
-import sys
-from pathlib import Path
-from processforge_core.composition import build_process_execution_service
-from processforge_core.project.snapshot import ProjectSnapshotReadService
-reader = ProjectSnapshotReadService(lambda: Path('unused'), lambda p: {'resolved': {'knowledge_resources': ['b', 'a']}}, lambda p: 'hash')
-service = build_process_execution_service(Path('p'), None, object(), snapshots=reader)
-assert service._selected_resource_ids() == ['a', 'b']
-assert 'processforge' not in sys.modules
-assert 'processforge_core._legacy_processforge' not in sys.modules
-"""
-            result = subprocess.run([sys.executable, '-B', '-c', code], cwd=target, capture_output=True, text=True)
+    import sys, hashlib
+    from pathlib import Path
+    sys.path.insert(0, str(Path.cwd()))
+    from processforge_core.composition import build_process_execution_service
+    service = build_process_execution_service(Path.cwd(), None, object())
+    assert service._selected_resource_ids() == ['a', 'b']
+    pin = service._process_pin({'id':'p'}, Path('p.yaml'), active_specializations=[], selected_resource_ids=[], allowed_processes=[])
+    assert pin['snapshot_id'] == 'copied'
+    assert pin['snapshot_checksum'] == 'sha256:' + hashlib.sha256(Path('.pf/contexts/project-context.snapshot.yaml').read_bytes()).hexdigest()
+    assert not any(name in sys.modules for name in ('processforge', 'processforge_core._legacy_processforge', 'pf_cli', 'pf_runtime'))
+    """
+            result = subprocess.run([sys.executable, '-I', '-B', '-c', code], cwd=target, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_original_method_differential(self):
         if BASELINE is None:
             self.skipTest('No retained baseline supplied')
-        docs = [{}, {'snapshot': None}, {'snapshot': []}, {'snapshot': {'id': 0}},
-                {'snapshot': {'id': 's'}, 'resolved': {'knowledge_resources': ['z', 'a', 'a']}},
-                {'resolved': []}, {'resolved': {'knowledge_resources': [{'id': 'r'}, 'x']}}, [], None]
-        errors = [None, OSError, ValueError, UnicodeError, SystemExit]
+        from processforge_core.documents.reader import YamlDocumentReader
+        from processforge_core.common.yaml_io import _parse_simple_yaml
+        documents = [None, b'', b'{}\n', b'snapshot: null\n', b'snapshot: []\n', b'snapshot: {id: 0}\n',
+                     b'snapshot: {id: s}\nresolved: {knowledge_resources: [z, a, a]}\nunknown: retained\n',
+                     b'resolved: []\n', b'resolved: {knowledge_resources: [{id: r}, x]}\n',
+                     b'[]\n', b'null\n', b'marker: [\n', b'\xef\xbb\xbfsnapshot: {id: bom}\n', b'marker: \xff\n']
         count = 0
         with tempfile.TemporaryDirectory(dir=SCRATCH) as folder:
             root = Path(folder)
-            path = root / 'contexts/project-context.snapshot.yaml'
-            path.parent.mkdir()
-            for exists in (False, True):
-                if exists:
-                    path.touch()
-                for doc in docs:
-                    for error in errors:
-                        for hash_error in (False, True):
-                            for process in ({'id': 'p', 'future': ['x']}, {'invalid': object()}):
-                                left, right = Core(root, doc, error), Core(root, doc, error)
-                                calls = []
-                                def digest(service, selected):
-                                    calls.append(selected)
-                                    if hash_error:
-                                        raise OSError('hash-error')
-                                    return 'raw'
-                                kwargs = dict(active_specializations=['x'], selected_resource_ids=['r'], allowed_processes=['p'])
-                                with patch.object(ProcessExecutionService, '_sha256_file', digest):
-                                    expected = outcome(lambda: BASELINE(Path('p'), None, left)._process_pin(process, Path('external.yaml'), **kwargs))
-                                    expected_hash = calls[:]
-                                    calls.clear()
-                                    actual = outcome(lambda: ProcessExecutionService(Path('p'), None, right)._process_pin(process, Path('external.yaml'), **kwargs))
-                                self.assertEqual(expected, actual)
-                                self.assertEqual(left.calls, right.calls)
-                                self.assertEqual(expected_hash, calls)
-                                count += 1
-                        left, right = Core(root, doc, error), Core(root, doc, error)
-                        expected = outcome(lambda: BASELINE(Path('p'), None, left)._selected_resource_ids())
-                        actual = outcome(lambda: ProcessExecutionService(Path('p'), None, right)._selected_resource_ids())
-                        self.assertEqual(expected, actual)
-                        self.assertEqual(left.calls, right.calls)
-                        count += 1
-        print('Original snapshot method comparisons:', count)
+            path = root / '.pf/contexts/project-context.snapshot.yaml'
+            path.parent.mkdir(parents=True)
+            loader = YamlDocumentReader(_parse_simple_yaml)
+            old_core = SimpleNamespace(load_yaml_document=loader.load)
+            for raw in documents:
+                if path.exists():
+                    path.unlink()
+                if raw is not None:
+                    path.write_bytes(raw)
+                for process in ({'id': 'p', 'future': ['x']}, {'invalid': object()}):
+                    kwargs = dict(active_specializations=['x'], selected_resource_ids=['r'], allowed_processes=['p'])
+                    expected = outcome(lambda: BASELINE(root, None, old_core)._process_pin(process, Path('external.yaml'), **kwargs))
+                    actual = outcome(lambda: ProcessExecutionService(root, None, object())._process_pin(process, Path('external.yaml'), **kwargs))
+                    self.assertEqual(expected, actual, raw)
+                    count += 1
+                expected = outcome(lambda: BASELINE(root, None, old_core)._selected_resource_ids())
+                actual = outcome(lambda: ProcessExecutionService(root, None, object())._selected_resource_ids())
+                self.assertEqual(expected, actual, raw)
+                count += 1
+        print('Original snapshot filesystem comparisons:', count)
 
 
 def main():

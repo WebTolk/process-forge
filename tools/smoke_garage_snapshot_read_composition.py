@@ -50,6 +50,21 @@ class Core:
         return self.document
 
 
+
+class FixtureSnapshots:
+    """Injected test port for policy traces; never the production default."""
+    def __init__(self, paths, load):
+        self.paths, self.read = paths, load
+
+    def load(self, path=None):
+        if path is None:
+            path, _ = self.paths(Path('p'))
+        return self.read(path)
+
+    def checksum(self, path):
+        raise AssertionError('Policy snapshot reads must not hash')
+
+
 class MemorySnapshots:
     def __init__(self):
         self.calls = []
@@ -81,7 +96,7 @@ def outcome(fn):
 class GarageSnapshotTests(unittest.TestCase):
     def test_no_io_constructor_and_falsey_injection(self):
         core = Core()
-        reader = composition.build_project_context_snapshot_read_service(Path('p'), core)
+        reader = composition.build_project_context_snapshot_read_service(Path('p'))
         self.assertIsInstance(reader, ProjectSnapshotReadService)
         memory = MemorySnapshots()
         old = composition.build_project_context_service(Path('p'), Path('w'), core)
@@ -94,55 +109,68 @@ class GarageSnapshotTests(unittest.TestCase):
         self.assertTrue(dependency.kw_only)
         self.assertFalse(dependency.compare or dependency.repr)
         self.assertIs(built.snapshot(), memory.document)
-        self.assertIs(snapshot.load_snapshot(Path('p'), core, snapshots=memory), memory.document)
+        self.assertIs(snapshot.load_snapshot(Path('p'), snapshots=memory), memory.document)
         self.assertEqual(memory.calls, [('load', None)] * 2)
         self.assertFalse(core.calls)
         with self.assertRaises(TypeError):
             composition.build_project_context_service(Path('p'), Path('w'), core, memory)
 
     def test_default_parity_return_identity_and_errors(self):
-        helpers = [old_load]
-        if BASELINE:
-            helpers += [BASELINE['load_snapshot'], lambda root, core: BASELINE['ProjectContextService'](root, Path('w'), core).snapshot()]
-        documents = [{}, {'unknown': {'value': [1, 2]}}, None, ['raw'], 'raw']
-        scenarios = [{'document': document} for document in documents]
-        scenarios += [{'paths': paths} for paths in [(), (Path('a'),), (Path('a'), Path('b'), Path('c'))]]
-        scenarios += [{'path_error': error} for error in [OSError, ValueError, SystemExit]]
-        scenarios += [{'load_error': error} for error in [OSError, ValueError, TypeError, SystemExit]]
-        for scenario in scenarios:
-            for helper in helpers:
-                for call in [snapshot.load_snapshot, lambda root, core: composition.build_project_context_service(root, Path('w'), core).snapshot()]:
-                    with self.subTest(scenario=scenario, helper=helper, call=call):
-                        before, after = Core(**scenario), Core(**scenario)
-                        self.assertEqual(outcome(lambda: helper(Path('p'), before)), outcome(lambda: call(Path('p'), after)))
-                        self.assertEqual(before.calls, after.calls)
-                        if not after.path_error and not after.load_error and len(after.paths) == 2:
-                            self.assertIs(call(Path('p'), after), after.document)
-        for call in [old_load, snapshot.load_snapshot]:
-            core = SimpleNamespace(project_context_snapshot_paths=lambda root: None,
-                                   load_yaml_document=lambda path: self.fail('Invalid path must stop before loading'))
-            self.assertEqual(outcome(lambda: call(Path('p'), core))[1], 'TypeError')
+        from processforge_core.documents.reader import YamlDocumentReader
+        from processforge_core.common.yaml_io import _parse_simple_yaml
+        with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
+            root = Path(directory)
+            path = root / '.pf/contexts/project-context.snapshot.yaml'
+            path.parent.mkdir(parents=True)
+            loader = YamlDocumentReader(_parse_simple_yaml)
+            old_core = SimpleNamespace(project_context_snapshot_paths=lambda r: (path, path.with_suffix('.md')), load_yaml_document=loader.load)
+            fail = lambda *a: self.fail('Default snapshot read must be owned by Core')
+            core = SimpleNamespace(project_context_snapshot_paths=fail, load_yaml_document=fail)
+            for raw in (None, b'', b'unknown: {value: [1, 2]}\n', b'null\n', b'[raw]\n', b'raw\n', b'broken: [\n', b'\xef\xbb\xbfvalue: bom\n'):
+                if path.exists():
+                    path.unlink()
+                if raw is not None:
+                    path.write_bytes(raw)
+                expected = old_load(root, old_core)
+                self.assertEqual(snapshot.load_snapshot(root), expected)
+                service = composition.build_project_context_service(root, Path('w'), core)
+                self.assertEqual(service.snapshot(), expected)
+                if 'unknown' in expected:
+                    result = service.snapshot()
+                    result['unknown']['value'].append('caller mutation')
+                    self.assertEqual(service.snapshot(), expected)
+        # Raw values and failures remain properties of explicit injected ports.
+        for document in (None, ['raw'], 'raw'):
+            core = Core(document)
+            reader = FixtureSnapshots(core.project_context_snapshot_paths, core.load_yaml_document)
+            self.assertIs(snapshot.load_snapshot(Path('p'), snapshots=reader), document)
+        for error in (OSError, ValueError, TypeError, SystemExit):
+            core = Core(load_error=error)
+            reader = FixtureSnapshots(core.project_context_snapshot_paths, core.load_yaml_document)
+            self.assertEqual(outcome(lambda: old_load(Path('p'), core)), outcome(lambda: snapshot.load_snapshot(Path('p'), snapshots=reader)))
 
     def test_live_path_changes_and_deferred_hash(self):
-        core = Core({'value': 'a'})
-        reader = composition.build_project_context_snapshot_read_service(Path('p'), core)
-        self.assertEqual(reader.load(), {'value': 'a'})
-        core.paths, core.document = (Path('other.yaml'), Path('other.md')), {'value': 'b'}
-        self.assertEqual(reader.load(), {'value': 'b'})
-        self.assertEqual(core.calls, [('path', Path('p')), ('load', Path('snapshot.yaml')),
-                                     ('path', Path('p')), ('load', Path('other.yaml'))])
-        # This minimal legacy core deliberately has no sha256_file attribute.
-        self.assertFalse(hasattr(core, 'sha256_file'))
+        with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
+            root = Path(directory)
+            path = root / '.pf/contexts/project-context.snapshot.yaml'
+            path.parent.mkdir(parents=True)
+            path.write_text('value: a\n', encoding='utf-8')
+            reader = composition.build_project_context_snapshot_read_service(root)
+            with patch.object(type(reader.digests), 'sha256_file', side_effect=AssertionError('Snapshot load must not hash')):
+                self.assertEqual(reader.load(), {'value': 'a'})
+                other = root / 'other.yaml'
+                other.write_text('value: b\n', encoding='utf-8')
+                self.assertEqual(reader.load(other), {'value': 'b'})
+                self.assertEqual(reader.load(), {'value': 'a'})
 
     def test_read_after_write_same_size_mtime_and_request_isolation(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
-            path = Path(directory) / 'snapshot.yaml'
+            path = Path(directory) / '.pf/contexts/project-context.snapshot.yaml'
+            path.parent.mkdir(parents=True)
             path.write_text('value: aa\n', encoding='utf-8')
-            reads = []
-            def load(source):
-                reads.append(source)
-                return request_scope.safe_load(source.read_text(encoding='utf-8'))
-            core = SimpleNamespace(project_context_snapshot_paths=lambda root: (path, path.with_suffix('.md')), load_yaml_document=load)
+            def load(*args):
+                self.fail('Default reader must not call the legacy loader or paths')
+            core = SimpleNamespace(project_context_snapshot_paths=load, load_yaml_document=load)
             service = composition.build_project_context_service(Path(directory), Path('w'), core)
             stat = path.stat()
             with request_scope.request_scope() as scope:
@@ -159,11 +187,9 @@ class GarageSnapshotTests(unittest.TestCase):
                 self.assertEqual(service.snapshot(), {'value': 'bb'})
                 self.assertEqual((second.loads, second.parses, second.hits), (1, 1, 0))
             path.write_text('value: [\n', encoding='utf-8')
-            with self.assertRaises(Exception):
-                with request_scope.request_scope():
-                    service.snapshot()
+            with request_scope.request_scope():
+                self.assertIn('__yaml_error__', service.snapshot())
             self.assertIsNone(request_scope._CURRENT.get())
-            self.assertEqual(len(reads), 5)
 
     def test_runtime_snapshot_uses_injected_document(self):
         memory = MemorySnapshots()
@@ -214,7 +240,7 @@ class GarageSnapshotTests(unittest.TestCase):
                         stack.enter_context(patch.dict(garage.__dict__, {k:v for k,v in replacements.items() if k != 'CurrentWorkService'}))
                         if BASELINE:
                             stack.enter_context(patch.dict(BASELINE, {**replacements, 'GarageModeService': mode_service, 'DerivedReportLifecycleService': report_service, 'process_summary': process_result, 'fresh_session_continuation': boundary_result}))
-                        result = outcome(lambda: constructor(Path('p'), Path('w'), core).context(session_id='session'))
+                        result = outcome(lambda: constructor(Path('p'), Path('w'), core, snapshots=FixtureSnapshots(core.project_context_snapshot_paths, core.load_yaml_document)).context(session_id='session'))
                     self.assertIsNone(request_scope._CURRENT.get())
                     self.assertEqual(seen, [{}] if broken else [{'unknown': ['kept']}])
                     self.assertEqual(sum(row[0] == 'path' for row in core.calls), 0 if broken else 1)
@@ -260,9 +286,11 @@ class GarageSnapshotTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
             root = Path(directory)
             shutil.copytree(ROOT / 'src/processforge_core', root / 'processforge_core', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-            code = "from pathlib import Path; from types import SimpleNamespace; from processforge_core.composition import build_project_context_service; core=SimpleNamespace(project_context_snapshot_paths=lambda root:(Path('s'),Path('m')),load_yaml_document=lambda path:{'value':1}); assert build_project_context_service(Path('p'),Path('w'),core).snapshot()=={'value':1}"
-            environment = dict(os.environ, PYTHONPATH=str(root), PYTHONDONTWRITEBYTECODE='1')
-            result = subprocess.run([sys.executable, '-B', '-c', code], cwd=root, capture_output=True, text=True, env=environment)
+            path = root / '.pf/contexts/project-context.snapshot.yaml'
+            path.parent.mkdir(parents=True)
+            path.write_text('value: 1\n', encoding='utf-8')
+            code = "import sys; from pathlib import Path; sys.path.insert(0,str(Path.cwd())); from processforge_core.composition import build_project_context_service; assert build_project_context_service(Path.cwd(),Path('w'),object()).snapshot()=={'value':1}; assert 'processforge_core._legacy_processforge' not in sys.modules"
+            result = subprocess.run([sys.executable, '-I', '-B', '-c', code], cwd=root, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 

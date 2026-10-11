@@ -310,31 +310,14 @@ def build_process_definition_read_service(
     return ProcessDefinitionReadService(adapter.resolve_definition, fingerprint)
 
 
-@dataclass(frozen=True)
-class LegacyProjectSnapshotAdapter:
-    core: Any
-
-    def load_document(self, path: Path) -> dict[str, Any]:
-        return self.core.load_yaml_document(path)
-
-
-def build_project_snapshot_read_service(
-    core: Any, *, snapshot_path: Callable[[], Path], sha256_file: Callable[[Path], str],
-) -> ProjectSnapshotReadService:
+def build_project_snapshot_read_service(project_root: Path) -> ProjectSnapshotReadService:
     from .project.snapshot import ProjectSnapshotReadService
 
-    adapter = LegacyProjectSnapshotAdapter(core)
-    return ProjectSnapshotReadService(snapshot_path, adapter.load_document, sha256_file)
+    return ProjectSnapshotReadService(project_root)
 
 
-def build_project_context_snapshot_read_service(project_root: Path, core: Any) -> ProjectSnapshotReadService:
-    def snapshot_path() -> Path:
-        path, _snapshot_md = core.project_context_snapshot_paths(project_root)
-        return path
-
-    return build_project_snapshot_read_service(
-        core, snapshot_path=snapshot_path, sha256_file=lambda path: core.sha256_file(path),
-    )
+def build_project_context_snapshot_read_service(project_root: Path) -> ProjectSnapshotReadService:
+    return build_project_snapshot_read_service(project_root)
 
 
 def build_execution_project_read_service(
@@ -382,7 +365,7 @@ def build_project_context_service(
     from .project.context import ProjectContextReaders, ProjectContextService
 
     if snapshots is None:
-        snapshots = build_project_context_snapshot_read_service(project_root, core)
+        snapshots = build_project_context_snapshot_read_service(project_root)
 
     def runtime_snapshot_resolver() -> Callable[[dict[str, Any]], dict[str, Any]]:
         resolver = garage.snapshot_with_resolved_search_roots
@@ -432,7 +415,7 @@ class LegacyResourceSearchReadAdapter:
     def read_snapshot(self, snapshots: ProjectSnapshotReadPort | None) -> dict[str, Any]:
         from .resources.access import load_snapshot
 
-        return load_snapshot(self.project_root, self.core, snapshots=snapshots)
+        return load_snapshot(self.project_root, snapshots=snapshots)
 
     def context_checker(self) -> ProjectContextCheck:
         return self.core.project_context_check_result
@@ -466,7 +449,7 @@ class LegacyResourceResolveReadAdapter:
     def read_snapshot(self, snapshots: ProjectSnapshotReadPort | None) -> dict[str, Any]:
         from .resources.access import load_snapshot
 
-        return load_snapshot(self.project_root, self.core, snapshots=snapshots)
+        return load_snapshot(self.project_root, snapshots=snapshots)
 
     def path_ref_resolver(self) -> Callable[[dict[str, Any]], dict[str, Any]]:
         from .resources.access import resolve_garage_path_ref
@@ -488,7 +471,7 @@ def build_garage_mode_service(
     from .project.mode import GarageModeService
 
     if snapshots is None:
-        snapshots = build_project_context_snapshot_read_service(project_root, core)
+        snapshots = build_project_context_snapshot_read_service(project_root)
     return GarageModeService(project_root, workplace_root, snapshots=snapshots)
 
 
@@ -498,7 +481,7 @@ def build_derived_report_lifecycle_service(
     from .project.reports import DerivedReportLifecycleService
 
     if snapshots is None:
-        snapshots = build_project_context_snapshot_read_service(project_root, core)
+        snapshots = build_project_context_snapshot_read_service(project_root)
     return DerivedReportLifecycleService(snapshots=snapshots, flow_root=lambda: core.locate_flow_root(project_root))
 
 

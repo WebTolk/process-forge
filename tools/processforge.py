@@ -57,7 +57,9 @@ from processforge_core.agents.presence import AgentPresenceReader
 from processforge_core.chat.transcripts import ChatTranscriptReader
 from processforge_core.common.ndjson import NdjsonReader
 from processforge_core.work.context_documents import ContextContractInputs
+from processforge_core.common.digests import FileDigestReader
 
+_file_digests = FileDigestReader()
 _context_contract_inputs = ContextContractInputs()
 from processforge_core.process_catalog import (
     PROCESS_CATALOG_CLASSIFICATIONS as CATALOG_PROCESS_CATALOG_CLASSIFICATIONS,
@@ -8094,11 +8096,7 @@ def now_utc() -> str:
 
 
 def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(65536), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    return _file_digests.sha256_file(path)
 
 
 def yaml_list_values(text: str, key: str) -> list[str]:
@@ -23172,11 +23170,7 @@ def command_update_changelog_show(args: argparse.Namespace) -> int:
 
 
 def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    return _file_digests.sha256_file(path)
 
 
 def copy_or_download_update_artifact(candidate: dict[str, Any], target: Path, workplace_root: Path) -> Path:

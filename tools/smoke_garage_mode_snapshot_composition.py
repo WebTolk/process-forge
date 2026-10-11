@@ -56,14 +56,14 @@ def scenario(service_type, *, document=UNSET, supplied=UNSET, session_id='', err
         service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))
     else:
         if snapshots is None:
-            snapshots = composition.build_project_context_snapshot_read_service(Path('p'), core)
+            snapshots = FixtureSnapshots(paths, load)
         service = service_type(Path('p'), Path('w'), snapshots=snapshots)
     options = {'session_id': session_id}
     if supplied is not UNSET:
         options['snapshot'] = copy.deepcopy(supplied)
     return outcome(lambda: service.status(**options)), events
 
-def context_scenario(service_type, *, document=UNSET, broken=False, memory=None, namespace=None, error=''):
+def context_scenario(service_type, *, document=UNSET, broken=False, memory=None, namespace=None, error='', mode_fallback=True):
     events = []
     document = copy.deepcopy(DEFAULT_DOCUMENT if document is UNSET else document)
     def load(path):
@@ -84,6 +84,8 @@ def context_scenario(service_type, *, document=UNSET, broken=False, memory=None,
         stack.enter_context(patch.object(reports, 'DerivedReportLifecycleService', side_effect=report_service))
         stack.enter_context(patch.object(summary, 'ProcessSummaryReadService', side_effect=process_service))
         stack.enter_context(patch.object(boundary_advisory, 'FreshSessionBoundaryReadService', side_effect=boundary_service))
+        if namespace is None and mode_fallback:
+            stack.enter_context(patch.object(composition, 'build_garage_mode_service', side_effect=lambda root, workplace, given_core: mode.GarageModeService(root, workplace, snapshots=FixtureSnapshots(given_core.project_context_snapshot_paths, load))))
         if namespace is not None:
             stack.enter_context(patch.dict(namespace, {'DerivedReportLifecycleService':report_service, 'process_summary':process_result, 'fresh_session_continuation':boundary_result}))
         for name, value in substitutes.items():
@@ -91,8 +93,23 @@ def context_scenario(service_type, *, document=UNSET, broken=False, memory=None,
                 stack.enter_context(patch.object(composition if name == "CurrentWorkService" else garage, name, value))
             else:
                 stack.enter_context(patch.dict(namespace, {name:value}))
-        result = outcome(lambda: service_type(Path('p'),Path('w'),core, **({'snapshots':memory} if memory is not None else {})).context(session_id='s'))
+        result = outcome(lambda: service_type(Path('p'),Path('w'),core, snapshots=memory if memory is not None else FixtureSnapshots(core.project_context_snapshot_paths, load)).context(session_id='s'))
     return result, events
+
+class FixtureSnapshots:
+    """Injected test port for policy traces; never the production default."""
+    def __init__(self, paths, load):
+        self.paths, self.read = paths, load
+
+    def load(self, path=None):
+        if path is None:
+            path, _ = self.paths(Path('p'))
+        return self.read(path)
+
+    def checksum(self, path):
+        raise AssertionError('Policy snapshot reads must not hash')
+
+
 class MemorySnapshots:
     def __init__(self, document=None):
         self.document = DEFAULT_DOCUMENT if document is None else document
@@ -153,7 +170,7 @@ class ModeSnapshotTests(unittest.TestCase):
         calls = []
         with patch.object(composition, 'build_project_context_snapshot_read_service', return_value=memory) as reader_factory, patch.object(mode, 'GarageModeService', side_effect=lambda *a, **k:calls.append((a,k)) or 'substitute'):
             self.assertEqual(composition.build_garage_mode_service(Path('p'),Path('w'),core), 'substitute')
-        reader_factory.assert_called_once_with(Path('p'),core)
+        reader_factory.assert_called_once_with(Path('p'))
         self.assertEqual(calls, [((Path('p'),Path('w')),{'snapshots':memory})])
 
     def test_context_consumer_retained_payload_and_fallback(self):
@@ -178,14 +195,13 @@ class ModeSnapshotTests(unittest.TestCase):
 
     def test_real_yaml_live_reads_and_scope_isolation(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
-            path = Path(directory) / 'snapshot.yaml'
+            path = Path(directory) / '.pf/contexts/project-context.snapshot.yaml'
+            path.parent.mkdir(parents=True)
             text = 'workplace_coordination: {effective_mode: simple}\nunknown: retained\n'
             path.write_text(text, encoding='utf-8')
-            reads = []
-            def load(source):
-                reads.append(source)
-                return request_scope.safe_load(source.read_text(encoding='utf-8'))
-            core = SimpleNamespace(project_context_snapshot_paths=lambda root:(path,path.with_suffix('.md')), load_yaml_document=load)
+            def load(*args):
+                self.fail('Default reader must not call the legacy loader or paths')
+            core = SimpleNamespace(project_context_snapshot_paths=load, load_yaml_document=load)
             service = composition.build_garage_mode_service(Path(directory),Path('w'),core)
             stat = path.stat()
             with request_scope.request_scope() as scope:
@@ -202,11 +218,9 @@ class ModeSnapshotTests(unittest.TestCase):
                 self.assertEqual(service.status()['coordination']['effective_mode'], 'manual')
                 self.assertEqual((scope.loads,scope.parses,scope.hits),(1,1,0))
             path.write_text('coordination: [\n', encoding='utf-8')
-            with self.assertRaises(Exception):
-                with request_scope.request_scope():
-                    service.status()
+            with request_scope.request_scope():
+                self.assertEqual(service.status()['mode'], 'garage')
             self.assertIsNone(request_scope._CURRENT.get())
-            self.assertEqual(len(reads),5)
 
     def test_context_calls_factory_with_legacy_arguments(self):
         factory = composition.build_garage_mode_service
@@ -215,7 +229,7 @@ class ModeSnapshotTests(unittest.TestCase):
             calls.append((args,kwargs))
             return factory(*args, **kwargs)
         with patch.object(composition, 'build_garage_mode_service', side_effect=observed):
-            result, _ = context_scenario(composition.build_project_context_service)
+            result, _ = context_scenario(composition.build_project_context_service, mode_fallback=False)
         self.assertEqual(result[0], 'return')
         self.assertEqual(len(calls),1)
         self.assertEqual(len(calls[0][0]),3)

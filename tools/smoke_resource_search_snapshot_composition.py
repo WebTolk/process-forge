@@ -83,11 +83,26 @@ def scenario(service_type, kind='search', *, status='fresh', supplied=None, inde
         if namespace is not None:
             stack.enter_context(patch.dict(namespace, replacements))
         if service_type is access.ResourceSearchService:
-            service = composition.build_resource_search_service(Path('p'), Path('w'), core, snapshots=snapshots)
+            service = composition.build_resource_search_service(Path('p'), Path('w'), core, snapshots=snapshots if snapshots is not None else FixtureSnapshots(paths, load))
         else:
             service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))
         result = outcome(lambda: service.readiness(snapshot=supplied) if kind == 'readiness' else service.search(query='needle', limit='2', limitstart='1', offset=0))
     return result, events
+
+
+class FixtureSnapshots:
+    """Injected test port for policy traces; never the production default."""
+    def __init__(self, paths, load):
+        self.paths, self.read = paths, load
+
+    def load(self, path=None):
+        if path is None:
+            path, _ = self.paths(Path('p'))
+        return self.read(path)
+
+    def checksum(self, path):
+        raise AssertionError('Policy snapshot reads must not hash')
+
 
 class MemorySnapshots:
     def __init__(self):
@@ -155,13 +170,12 @@ class SearchSnapshotTests(unittest.TestCase):
 
     def test_real_yaml_live_reads_and_scope_isolation(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
-            path = Path(directory) / 'snapshot.yaml'
+            path = Path(directory) / '.pf/contexts/project-context.snapshot.yaml'
+            path.parent.mkdir(parents=True)
             path.write_text('marker: aa\n', encoding='utf-8')
-            reads = []
-            def load(source):
-                reads.append(source)
-                return request_scope.safe_load(source.read_text(encoding='utf-8'))
-            core = SimpleNamespace(project_context_snapshot_paths=lambda root: (path, path.with_suffix('.md')), load_yaml_document=load)
+            def load(*args):
+                self.fail('Default reader must not call the legacy loader or paths')
+            core = SimpleNamespace(project_context_snapshot_paths=load, load_yaml_document=load)
             service = composition.build_resource_search_service(Path(directory), Path('w'), core)
             with patch.object(access.ResourceSearchService, '_readiness', return_value={'status': 'ready'}), patch.object(access, 'authorized_coverage', side_effect=lambda root, document, **kw: document):
                 stat = path.stat()
@@ -179,11 +193,9 @@ class SearchSnapshotTests(unittest.TestCase):
                     self.assertEqual(service.readiness()['authorized_coverage'], {'marker': 'bb'})
                     self.assertEqual((scope.loads, scope.parses, scope.hits), (1, 1, 0))
                 path.write_text('marker: [\n', encoding='utf-8')
-                with self.assertRaises(Exception):
-                    with request_scope.request_scope():
-                        service.readiness()
+                with request_scope.request_scope():
+                    self.assertIn('__yaml_error__', service.readiness()['authorized_coverage'])
                 self.assertIsNone(request_scope._CURRENT.get())
-            self.assertEqual(len(reads), 5)
 
     def test_mcp_composition_guards_and_error_mapping(self):
         sys.path.insert(0, str(ROOT / 'tools'))

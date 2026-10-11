@@ -47,7 +47,7 @@ def build_resource_bindings(project: Path, workplace: Path | None, core: Any,
     builder = build_resource_binding_builder(
         limits=lambda: DEFAULT_LIMITS, budget=lambda: MaterialBudget,
         declarations=lambda: ResourceDeclarationPolicy(error=lambda: WorkResourceError),
-        snapshot=lambda: lambda project: load_snapshot(project, core),
+        snapshot=lambda: lambda project: load_snapshot(project),
         root_resolver=lambda: lambda project, workplace, row: _root(project, workplace, core, row),
         material_capture=lambda: capture_material,
         work_error=lambda: WorkResourceError, material_error=lambda: MaterialError,
@@ -128,7 +128,7 @@ class WorkResourceService:
             check = self.core.project_context_check_result(self.project_root, explicit_workplace=str(self.workplace_root) if self.workplace_root else None)
             if check.get("status") not in {"fresh", "fresh_with_updates"}:
                 raise WorkResourceError("snapshot_not_fresh")
-            rows = ResourceDeclarationPolicy(error=lambda: WorkResourceError).grant_rows(load_snapshot(self.project_root, self.core))
+            rows = ResourceDeclarationPolicy(error=lambda: WorkResourceError).grant_rows(load_snapshot(self.project_root))
             if operation == "resolve":
                 if not isinstance(resource_id, str) or not resource_id:
                     raise WorkResourceError("resource_id_required")

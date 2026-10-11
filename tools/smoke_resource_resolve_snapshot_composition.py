@@ -61,10 +61,25 @@ def scenario(service_type, *, document=None, resource_id=RESOURCE_ID, error='', 
         return {'status': resolution_status, 'path': 'fixture-root' if resolution_status == 'resolved' else ''}
     core = SimpleNamespace(project_id=project_id, project_context_snapshot_paths=paths, load_yaml_document=load, resolve_workspace_path_ref=resolve, locate_flow_root=lambda root: root / '.pf')
     if service_type is access.ResourceResolveService:
-        service = composition.build_resource_resolve_service(Path('p'), Path('w'), core, snapshots=snapshots)
+        service = composition.build_resource_resolve_service(Path('p'), Path('w'), core, snapshots=snapshots if snapshots is not None else FixtureSnapshots(paths, load))
     else:
         service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))
     return outcome(lambda: service.resolve(resource_id=resource_id)), events
+
+class FixtureSnapshots:
+    """Injected test port for policy traces; never the production default."""
+    def __init__(self, paths, load):
+        self.paths, self.read = paths, load
+
+    def load(self, path=None):
+        if path is None:
+            path, _ = self.paths(Path('p'))
+        return self.read(path)
+
+    def checksum(self, path):
+        raise AssertionError('Policy snapshot reads must not hash')
+
+
 class MemorySnapshots:
     def __init__(self, document=None):
         self.document = DEFAULT_DOCUMENT if document is None else document
@@ -131,14 +146,13 @@ class ResolveSnapshotTests(unittest.TestCase):
 
     def test_real_yaml_live_reads_and_request_isolation(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
-            path = Path(directory) / 'snapshot.yaml'
+            path = Path(directory) / '.pf/contexts/project-context.snapshot.yaml'
+            path.parent.mkdir(parents=True)
             text = 'local_search_resources:\n- id: fixture.knowledge:root\n  path: aa\n  application: {marker: aa}\n'
             path.write_text(text, encoding='utf-8')
-            reads = []
-            def load(source):
-                reads.append(source)
-                return request_scope.safe_load(source.read_text(encoding='utf-8'))
-            core = SimpleNamespace(project_id=lambda root: 'fixture', project_context_snapshot_paths=lambda root: (path, path.with_suffix('.md')), load_yaml_document=load)
+            def load(*args):
+                self.fail('Default reader must not call the legacy loader or paths')
+            core = SimpleNamespace(project_id=lambda root: 'fixture', project_context_snapshot_paths=load, load_yaml_document=load)
             service = composition.build_resource_resolve_service(Path(directory), Path('w'), core)
             stat = path.stat()
             with request_scope.request_scope() as scope:
@@ -155,11 +169,9 @@ class ResolveSnapshotTests(unittest.TestCase):
                 self.assertEqual(service.resolve(resource_id=RESOURCE_ID)['resource']['reference'], 'bb')
                 self.assertEqual((scope.loads, scope.parses, scope.hits), (1, 1, 0))
             path.write_text('marker: [\n', encoding='utf-8')
-            with self.assertRaises(Exception):
-                with request_scope.request_scope():
-                    service.resolve(resource_id=RESOURCE_ID)
+            with request_scope.request_scope():
+                self.assertEqual(service.resolve(resource_id=RESOURCE_ID)['resource']['status'], 'denied')
             self.assertIsNone(request_scope._CURRENT.get())
-            self.assertEqual(len(reads), 5)
 
     def test_mcp_guards_precede_factory(self):
         sys.path.insert(0, str(ROOT / 'tools'))
@@ -200,7 +212,9 @@ class ResolveSnapshotTests(unittest.TestCase):
         from pf_runtime import host as pf_host
         reads = []
         core = SimpleNamespace(project_id=lambda root: 'fixture', project_context_snapshot_paths=lambda root: (Path('snapshot.yaml'), Path('snapshot.md')), load_yaml_document=lambda path: reads.append(path) or copy.deepcopy(DEFAULT_DOCUMENT), resolve_workspace_path_ref=lambda *a, **kw: {'status': 'resolved', 'path': 'fixture-root'})
-        with patch.object(pf_host, 'project_for_session', return_value=Path('bound')), patch.object(pf_host, 'route_project', return_value={'id': 'fixture'}):
+        factory = composition.build_resource_resolve_service
+        injected = FixtureSnapshots(core.project_context_snapshot_paths, core.load_yaml_document)
+        with patch.object(pf_host, 'project_for_session', return_value=Path('bound')), patch.object(pf_host, 'route_project', return_value={'id': 'fixture'}), patch.object(composition, 'build_resource_resolve_service', side_effect=lambda project, workplace, supplied: factory(project, workplace, supplied, snapshots=injected)):
             call = lambda: pf_host.resolve_payload(Path('w'), core, session='s', resource_id=RESOURCE_ID)
             actual = call()
             self.assertEqual(actual['resource']['navigation'], 'private_runtime_authorized')

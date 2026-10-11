@@ -16,8 +16,10 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
+from ..common.digests import FileDigestReader
 
 
+_file_digests = FileDigestReader()
 CORE_MANIFEST_NAME = "processforge-core.manifest.json"
 CORE_MANIFEST_SCHEMA_VERSION = 1
 WORKPLACE_MIGRATION_KIND = "processforge.workplace_migration"
@@ -38,11 +40,7 @@ def sha256_bytes(content: bytes) -> str:
 
 
 def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    return _file_digests.sha256_file(path)
 
 
 def safe_relative_path(raw: Any) -> str:
