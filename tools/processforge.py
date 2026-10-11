@@ -8794,34 +8794,9 @@ def package_manifest_index(project_root: Path, distribution_root: Path | None, w
 
 
 def resource_record_from_package(package_id: str, resource: dict[str, Any], requirement: str, package_root_id: str | None = None) -> dict[str, Any]:
-    resource_id = str(resource.get("id", "resource"))
-    record: dict[str, Any] = {
-        "id": f"{package_id}:{resource_id}",
-        "resource_id": resource_id,
-        "package": package_id,
-        "requirement": requirement,
-        "kind": str(resource.get("kind", "reference")),
-        "title": str(resource.get("title", resource_id)),
-        "load_policy": str(resource.get("load_policy", "on_demand")),
-        "index_policy": str(resource.get("index_policy", "metadata")),
-        "status": "indexed",
-    }
-    if "path_ref" in resource:
-        record["path_ref"] = resource["path_ref"]
-    elif "path" in resource:
-        raw_path = str(resource.get("path", ""))
-        if raw_path and Path(raw_path).is_absolute():
-            record["path_ref"] = {"registry": "private_resource_paths", "id": resource_id}
-            record["path_status"] = "private_absolute_path_redacted"
-        elif raw_path:
-            if package_root_id:
-                record["path_ref"] = {"registry": "package_roots", "id": package_root_id, "relative_path": f"{package_id}/{raw_path}"}
-            else:
-                record["path_ref"] = {"package": package_id, "relative_path": raw_path}
-    for key in ["version", "description", "versioning", "retention", "snapshot_behavior", "generation", "fingerprint", "instance_id", "current_marker_path_ref", "indexing", "selection"]:
-        if key in resource:
-            record[key] = resource[key]
-    return record
+    from processforge_core.resources.catalog_read import resource_record_from_package as project_resource
+
+    return project_resource(package_id, resource, requirement, package_root_id)
 
 
 def resolve_package_resources(
@@ -8831,6 +8806,8 @@ def resolve_package_resources(
     package_ids: list[str],
     required_package_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
+    from processforge_core.resources.catalog_read import resource_record_from_package as project_resource
+
     package_index = package_manifest_index(project_root, distribution_root, workplace_manifest)
     resources: list[dict[str, Any]] = []
     required_set = set(required_package_ids or [])
@@ -8844,7 +8821,7 @@ def resolve_package_resources(
             continue
         for resource in package_resources:
             if isinstance(resource, dict):
-                resources.append(resource_record_from_package(package_id, resource, requirement, manifest.get("__package_root_id")))
+                resources.append(project_resource(package_id, resource, requirement, manifest.get("__package_root_id")))
     return resources
 
 
@@ -13429,19 +13406,9 @@ def process_override_declared(process: dict[str, Any], overridden_process_id: st
 
 
 def official_pack_manifest_records(root: Path | None = None) -> list[tuple[Path, dict[str, Any]]]:
-    distribution_root = (root or ROOT).resolve()
-    records: list[tuple[Path, dict[str, Any]]] = []
-    for path in sorted((distribution_root / "packs" / "official").glob("*/package.yaml")):
-        data = load_yaml_document(path)
-        if (
-            isinstance(data, dict)
-            and not yaml_error(data)
-            and data.get("kind") == "processforge.pack"
-            and data.get("origin") == "official"
-            and data.get("id")
-        ):
-            records.append((path, data))
-    return records
+    from processforge_core.process_catalog.service import official_pack_manifest_records as read_official_packs
+
+    return read_official_packs(root or ROOT)
 
 
 def official_pack_registry_entries_for_profile(profile: str) -> list[dict[str, Any]]:
@@ -23491,103 +23458,17 @@ def local_search_runtime_snapshot(project_root: Path, workplace_root: Path) -> t
 
 
 def workplace_search_package_manifest_index(workplace_root: Path) -> dict[str, dict[str, Any]]:
-    """Return one deterministic manifest record for every registered package.
+    """Compatible facade for the concrete physical Workplace catalogue."""
+    from processforge_core.resources.catalog_read import WorkplaceSearchCatalogReader
 
-    This deliberately starts at Workplace registries rather than a project
-    flow root.  Project manifests select resources at query time; they are not
-    an input to physical Workplace index maintenance.
-    """
-
-    workplace_manifest = workplace_root / "workplace.yaml"
-    candidates: list[Path] = []
-    roots = workplace_package_roots(workplace_manifest)
-    if not roots:
-        roots = [resolve_package_root(workplace_root, None, mode="read")]
-    for root in roots:
-        if root.warnings or not root.resolved_path.is_dir():
-            continue
-        candidates.extend(sorted(root.resolved_path.glob("*.yaml")))
-        candidates.extend(sorted(root.resolved_path.glob("*.yml")))
-        candidates.extend(sorted(root.resolved_path.glob("*/package.yaml")))
-        candidates.extend(sorted(root.resolved_path.glob("*/package.yml")))
-    for process_pack_path, process_pack in active_official_pack_records(workplace_manifest):
-        provided = process_pack.get("provides") if isinstance(process_pack.get("provides"), dict) else {}
-        for package_id in as_list(provided.get("knowledge_packages")):
-            package_path = process_pack_path.parent / "knowledge-packages" / f"{package_id}.yaml"
-            if package_path.is_file():
-                candidates.append(package_path)
-    index: dict[str, dict[str, Any]] = {}
-    for path in candidates:
-        data = load_yaml_document(path)
-        if not isinstance(data, dict) or yaml_error(data) or not data.get("id"):
-            continue
-        package_id = str(data["id"])
-        # The first registered manifest wins deterministically.  A duplicate
-        # does not create a second physical copy of a package's resources.
-        if package_id in index:
-            continue
-        record = dict(data)
-        record["__manifest_path"] = path
-        for root in roots:
-            try:
-                path.relative_to(root.resolved_path)
-                record["__package_root_id"] = root.root_id
-                break
-            except ValueError:
-                continue
-        index[package_id] = record
-    return index
+    return WorkplaceSearchCatalogReader(workplace_root, distribution_root=ROOT).package_manifest_index()
 
 
 def workplace_search_runtime_snapshot(workplace_root: Path) -> dict[str, Any]:
-    """Resolve the source catalogue for the single Workplace search index."""
+    """Compatible facade for the concrete physical Workplace search snapshot."""
+    from processforge_core.resources.catalog_read import WorkplaceSearchCatalogReader
 
-    from processforge_core.resources.snapshot import snapshot_with_resolved_search_roots
-
-    manifest = workplace_root / "workplace.yaml"
-    package_index = workplace_search_package_manifest_index(workplace_root)
-    resources: list[dict[str, Any]] = []
-    for package_id in sorted(package_index):
-        package = package_index[package_id]
-        for resource in package.get("resources", []) if isinstance(package.get("resources"), list) else []:
-            if isinstance(resource, dict):
-                resources.append(resource_record_from_package(package_id, resource, "registered", package.get("__package_root_id")))
-    templates = load_workplace_registry(manifest, "templates", "templates.yaml") if manifest.is_file() else {}
-    for entry in templates.get("templates", []) if isinstance(templates, dict) else []:
-        if not isinstance(entry, dict) or not entry.get("id") or str(entry.get("status") or "available") in {"missing", "disabled"}:
-            continue
-        template_id = str(entry["id"])
-        resources.append(
-            {
-                "id": template_id,
-                "resource_id": template_id,
-                "package_id": str(entry.get("template_root") or ""),
-                "kind": "template",
-                "title": str(entry.get("title") or template_id),
-                "description": str(entry.get("description") or ""),
-                "version": str(entry.get("version") or ""),
-                "path_ref": {"registry": "templates", "id": template_id},
-                "status": str(entry.get("status") or "available"),
-                "indexing": entry.get("indexing") if isinstance(entry.get("indexing"), dict) else {
-                    "enabled": True,
-                    "mode": "metadata",
-                    "fields": ["title", "description", "version", "path"],
-                    "sources": [
-                        {"path": "README.md", "mode": "fulltext", "include": ["README.md"], "role": "description"},
-                        {"path": ".", "mode": "metadata", "role": "template_root"},
-                    ],
-                },
-            }
-        )
-    fingerprint = hashlib.sha256(json.dumps(resources, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
-    snapshot = {
-        "search_index_scope": "workplace",
-        "snapshot": {"id": "workplace-resource-catalogue", "checksum": f"sha256:{fingerprint}"},
-        "local_search_resources": resources,
-    }
-    # Use the Workplace root only as the path-ref resolver's neutral anchor;
-    # no project context, Runtime, Ledger, or session participates here.
-    return snapshot_with_resolved_search_roots(workplace_root, snapshot, workplace_root)
+    return WorkplaceSearchCatalogReader(workplace_root, distribution_root=ROOT).runtime_snapshot()
 
 
 def search_index_project_label(project_root: Path, workplace_root: Path) -> str:
@@ -23633,7 +23514,9 @@ def search_index_maintenance_for_known_projects(
     assert isinstance(results, list)
     row: dict[str, Any] = {"scope": "workplace", "status": "pending"}
     try:
-        snapshot = workplace_search_runtime_snapshot(workplace_root)
+        from processforge_core.resources.catalog_read import WorkplaceSearchCatalogReader
+
+        snapshot = WorkplaceSearchCatalogReader(workplace_root, distribution_root=ROOT).runtime_snapshot()
         tick = ResourceSearchIndex(workplace_root, snapshot, workplace_root).maintenance_tick(verify_files=verify_files)
         after = tick.get("after") if isinstance(tick.get("after"), dict) else {}
         row.update(

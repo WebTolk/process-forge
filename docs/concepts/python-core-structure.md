@@ -326,3 +326,20 @@ Legacy-before-canonical message order, first-ID deduplication, unknown fields,
 opaque identities and decoding/error behavior are preserved. Session authorization,
 paging, message writes, export shaping and ingress provenance retain their existing
 owners; this slice does not establish independence of the whole pipeline.
+
+`resources.catalog_read.WorkplaceSearchCatalogReader` owns the live physical
+Workplace search catalogue: registered package manifests, active official-pack
+knowledge packages, resource projection, templates and the deterministic snapshot
+fingerprint. Its concrete inputs are Workplace/distribution paths and
+`YamlDocumentReader`; it reuses `WorkspacePathReferenceReader` and the single
+official-pack traversal in `process_catalog.service`. Construction performs no
+document reads or scans. It accepts no monolithic Core, Runtime or Ledger object.
+
+The compatible monolithic catalogue/projection functions delegate to Core.
+Workplace maintenance, session search-status projection and ResourceSearch
+composition use the concrete catalogue directly. Project-snapshot authorization,
+freshness guards, query/error order and physical SQLite ownership are retained.
+`LegacyResourceSearchReadAdapter` still supplies the separate legacy
+`project_context_check_result` dependency; catalogue extraction does not make the
+whole ResourceSearch service or the remaining monolith independent of legacy.
+The reader and shared projection remain provisional internal interfaces.

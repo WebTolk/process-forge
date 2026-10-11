@@ -69,11 +69,15 @@ def _process_override_declared(process: dict[str, Any], overridden_process_id: s
     return str(override.get("overrides") or "") == overridden_process_id and bool(str(override.get("reason") or "").strip())
 
 
-def _official_pack_manifest_records(context: ProcessCatalogContext) -> list[tuple[Path, dict[str, Any]]]:
-    distribution_root = context.distribution_root.resolve()
+def official_pack_manifest_records(
+    distribution_root: Path, *, documents: YamlDocumentReader | None = None,
+) -> list[tuple[Path, dict[str, Any]]]:
+    """One owner for the existing ordered official-pack manifest traversal."""
+    distribution_root = distribution_root.resolve()
+    load = documents.load if documents is not None else load_yaml_document
     records: list[tuple[Path, dict[str, Any]]] = []
     for path in sorted((distribution_root / "packs" / "official").glob("*/package.yaml")):
-        data = load_yaml_document(path)
+        data = load(path)
         if (
             isinstance(data, dict)
             and not yaml_error(data)
@@ -83,6 +87,10 @@ def _official_pack_manifest_records(context: ProcessCatalogContext) -> list[tupl
         ):
             records.append((path, data))
     return records
+
+
+def _official_pack_manifest_records(context: ProcessCatalogContext) -> list[tuple[Path, dict[str, Any]]]:
+    return official_pack_manifest_records(context.distribution_root)
 
 
 def _official_process_definition_refs(

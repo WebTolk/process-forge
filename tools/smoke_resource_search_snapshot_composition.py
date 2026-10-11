@@ -83,6 +83,9 @@ def scenario(service_type, kind='search', *, status='fresh', supplied=None, inde
         if namespace is not None:
             stack.enter_context(patch.dict(namespace, replacements))
         if service_type is access.ResourceSearchService:
+            # Policy traces substitute the concrete catalogue at its own seam.
+            # The production default is exercised by the Workplace index smoke.
+            stack.enter_context(patch('processforge_core.resources.catalog_read.WorkplaceSearchCatalogReader', side_effect=lambda root: SimpleNamespace(runtime_snapshot=lambda: runtime(root))))
             service = composition.build_resource_search_service(Path('p'), Path('w'), core, snapshots=snapshots if snapshots is not None else FixtureSnapshots(paths, load))
         else:
             service = service_type(Path('p'), Path('w'), core, **({'snapshots': snapshots} if snapshots is not None else {}))

@@ -18,6 +18,7 @@ for entry in (ROOT / "src", ROOT / "tools"):
 
 import processforge as core
 from processforge_core.composition import build_resource_resolve_service
+from processforge_core.resources.catalog_read import WorkplaceSearchCatalogReader
 from processforge_core.resources.local_search import ResourceSearchIndex, search
 
 
@@ -64,7 +65,9 @@ def main() -> int:
         guide_id, tree_id = "docs.a:guide", "docs.a:tree"
         # Core Workplace maintenance needs no project context, Runtime, Ledger,
         # or session to create the one physical index.
-        index = ResourceSearchIndex(workplace, core.workplace_search_runtime_snapshot(workplace), workplace)
+        catalog = WorkplaceSearchCatalogReader(workplace)
+        assert catalog.runtime_snapshot() == core.workplace_search_runtime_snapshot(workplace)
+        index = ResourceSearchIndex(workplace, catalog.runtime_snapshot(), workplace)
         rebuilt = index.rebuild()
         assert rebuilt["status"] == "fresh" and rebuilt["resources"] == 2, rebuilt
         status = index.status()

@@ -457,7 +457,9 @@ def main() -> int:
                 link.unlink()
 
             # A fresh Workplace index and an unindexed project grant are different facts.
-            workplace_snapshot = core.workplace_search_runtime_snapshot(workplace)
+            from processforge_core.resources.catalog_read import WorkplaceSearchCatalogReader
+
+            workplace_snapshot = WorkplaceSearchCatalogReader(workplace).runtime_snapshot()
             build_index(workplace, workplace_snapshot, workplace_root=workplace)
             global_status = index_status(workplace, workplace_snapshot, workplace_root=workplace)
             grant_snapshot = {"local_search_resources": [{"id": aid}, {"id": "project-local-unindexed"}]}

@@ -408,7 +408,9 @@ class LegacyResourceSearchReadAdapter:
         return self.core.project_context_check_result
 
     def runtime_snapshot_reader(self) -> Callable[[Path], dict[str, Any]]:
-        return self.core.workplace_search_runtime_snapshot
+        from .resources.catalog_read import WorkplaceSearchCatalogReader
+
+        return lambda root: WorkplaceSearchCatalogReader(root).runtime_snapshot()
 
     def search_roots_resolver(self) -> Callable[[dict[str, Any]], dict[str, Any]]:
         from .resources.access import snapshot_with_resolved_search_roots
