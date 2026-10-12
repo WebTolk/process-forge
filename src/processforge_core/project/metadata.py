@@ -26,6 +26,23 @@ class ProjectMetadataReader:
     def manifest(self) -> dict[str, Any]:
         return self.documents.load(self.flow_root() / "process-forge.yaml")
 
+    def resolve_reference(self, value: str) -> Path:
+        path = Path(value)
+        if path.is_absolute():
+            return path
+        return (self.flow_root() / path).resolve()
+
+    def manifest_path_refs(self, key: str) -> list[Path]:
+        data = self.manifest()
+        refs = data.get(key) if isinstance(data, dict) else None
+        paths: list[Path] = []
+        if not isinstance(refs, list):
+            return paths
+        for item in refs:
+            if isinstance(item, dict) and item.get("path"):
+                paths.append(self.resolve_reference(str(item["path"])))
+        return paths
+
     def project_id(self) -> str:
         data = self.manifest()
         project = data.get("project") if isinstance(data, dict) else None

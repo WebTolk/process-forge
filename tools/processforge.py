@@ -58,6 +58,9 @@ from processforge_core.chat.transcripts import ChatTranscriptReader
 from processforge_core.common.ndjson import NdjsonReader
 from processforge_core.work.context_documents import ContextContractInputs
 from processforge_core.common.digests import FileDigestReader
+from processforge_core.project.metadata import ProjectMetadataReader as _ProjectMetadataReader
+from processforge_core.project.snapshot_sources import ProjectSnapshotSourcesReader as _ProjectSnapshotSourcesReader, local_workplace_manifest_reference as _local_workplace_manifest_reference
+from processforge_core.process_catalog.official_read import OfficialProcessPackReader as _OfficialProcessPackReader
 
 _file_digests = FileDigestReader()
 _context_contract_inputs = ContextContractInputs()
@@ -7954,12 +7957,7 @@ def command_release_archive_test(args: argparse.Namespace) -> int:
 
 
 def find_local_workplace_manifest(local_text: str) -> Path | None:
-    manifest_pattern = r"(?m)^\s*" + "manifest:" + r"\s*(.+?)\s*$"
-    match = re.search(manifest_pattern, local_text)
-    if not match:
-        return None
-    value = match.group(1).strip().strip('"').strip("'")
-    return Path(value)
+    return _local_workplace_manifest_reference(local_text)
 
 
 def resolve_workplace_manifest(local_manifest: Path) -> Path | None:
@@ -8147,23 +8145,11 @@ def source_record(path: Path, root: Path, kind: str, required: bool, selection_r
 
 
 def resolve_flow_reference(project_root: Path, value: str) -> Path:
-    path = Path(value)
-    if path.is_absolute():
-        return path
-    return (locate_flow_root(project_root) / path).resolve()
+    return _ProjectMetadataReader(project_root).resolve_reference(value)
 
 
 def manifest_path_refs(project_root: Path, key: str) -> list[Path]:
-    manifest = locate_flow_root(project_root) / "process-forge.yaml"
-    data = load_yaml_document(manifest)
-    refs = data.get(key) if isinstance(data, dict) else None
-    paths: list[Path] = []
-    if not isinstance(refs, list):
-        return paths
-    for item in refs:
-        if isinstance(item, dict) and item.get("path"):
-            paths.append(resolve_flow_reference(project_root, str(item["path"])))
-    return paths
+    return _ProjectMetadataReader(project_root).manifest_path_refs(key)
 
 
 def collect_context_sources(project_root: Path, assignment: Path | None = None) -> list[dict[str, Any]]:
@@ -8346,134 +8332,11 @@ def policy_id_matches(identifier: str, entry: dict[str, Any]) -> bool:
 
 
 def fingerprint_record(path: Path, project_root: Path, source_id: str, kind: str, *, private: bool = False, display_path: str | None = None) -> dict[str, Any]:
-    exists = path.is_file()
-    record: dict[str, Any] = {
-        "id": source_id,
-        "path": display_path or rel(path, project_root),
-        "kind": kind,
-        "checksum": sha256_file(path) if exists else "missing",
-    }
-    if private:
-        record["private"] = True
-    if not exists:
-        record["exists"] = False
-    return record
+    return _ProjectSnapshotSourcesReader(project_root).fingerprint(path, source_id, kind, private=private, display_path=display_path)
 
 
 def collect_project_snapshot_sources(project_root: Path) -> list[dict[str, Any]]:
-    flow_root = locate_flow_root(project_root)
-    sources: list[dict[str, Any]] = [
-        fingerprint_record(flow_root / "process-forge.yaml", project_root, "project_manifest", "manifest"),
-    ]
-    local_config = flow_root / "process-forge.local.yaml"
-    if local_config.is_file():
-        sources.append(fingerprint_record(local_config, project_root, "local_config", "local-config", private=True))
-        workplace = find_local_workplace_manifest(local_config.read_text(encoding="utf-8", errors="replace"))
-        if workplace:
-            workplace_path = workplace.expanduser()
-            if not workplace_path.is_absolute():
-                workplace_path = (local_config.parent / workplace_path).resolve()
-            sources.append(
-                fingerprint_record(
-                    workplace_path,
-                    project_root,
-                    "workplace_manifest",
-                    "workplace",
-                    private=True,
-                    display_path="<private-workplace-manifest-ref>",
-                )
-            )
-            workplace_root = workplace_path.parent
-            for rel_path, kind in [
-                ("registries/specializations.yaml", "workplace-specialization-registry"),
-                ("registries/project-classifiers.yaml", "workplace-project-classifier-registry"),
-                ("registries/process-packs.yaml", "workplace-process-pack-registry"),
-                ("registries/tools.yaml", "workplace-tool-registry"),
-                ("registries/mcp.yaml", "workplace-mcp-registry"),
-                ("registries/templates.yaml", "workplace-template-registry"),
-                ("registries/parameters.yaml", "workplace-parameter-registry"),
-            ]:
-                path = workplace_root / rel_path
-                if path.is_file():
-                    sources.append(
-                        fingerprint_record(
-                            path,
-                            project_root,
-                            safe_id(f"{kind}-{rel_path}", kind),
-                            kind,
-                            private=True,
-                            display_path=f"<private-workplace-ref>/{rel_path}",
-                        )
-                    )
-            for manifest_path, manifest in active_official_pack_records(workplace_path):
-                pack_id = str(manifest.get("id") or manifest_path.parent.name)
-                pack_sources = [manifest_path]
-                pack_sources.extend(sorted((manifest_path.parent / "project-classifiers").glob("*.yaml")))
-                for path in pack_sources:
-                    sources.append(
-                        fingerprint_record(
-                            path,
-                            project_root,
-                            safe_id(f"official-pack-{pack_id}-{path.stem}", "official-pack"),
-                            "official-process-pack",
-                            private=True,
-                            display_path=f"<distribution-pack>/{pack_id}/{path.relative_to(manifest_path.parent).as_posix()}",
-                        )
-                    )
-            for dirname, kind in [
-                ("specializations", "workplace-specialization"),
-                ("specializations/user", "workplace-specialization"),
-                ("specializations/custom", "workplace-specialization"),
-                ("project-classifiers", "workplace-project-classifier"),
-            ]:
-                root = workplace_root / dirname
-                if root.is_dir():
-                    for path in sorted(item for item in root.glob("*.y*ml") if item.is_file()):
-                        sources.append(
-                            fingerprint_record(
-                                path,
-                                project_root,
-                                safe_id(f"{kind}-{dirname}-{path.name}", kind),
-                                kind,
-                                private=True,
-                                display_path=f"<private-workplace-ref>/{dirname}/{path.name}",
-                            )
-                        )
-
-    for path in manifest_path_refs(project_root, "processes"):
-        source_id = safe_id(f"process-{rel(path, project_root)}", "process-source")
-        sources.append(fingerprint_record(path, project_root, source_id, "process"))
-    for path in manifest_path_refs(project_root, "packages"):
-        source_id = safe_id(f"package-{rel(path, project_root)}", "package-source")
-        sources.append(fingerprint_record(path, project_root, source_id, "package"))
-
-    if project_overrides_path(project_root).is_file():
-        sources.append(fingerprint_record(project_overrides_path(project_root), project_root, "project-overrides", "project-overrides"))
-    for parameter_path_candidate, source_id, private in [
-        (flow_root / "parameters.yaml", "project-parameters", False),
-        (flow_root / "parameters.local.yaml", "project-local-parameters", True),
-    ]:
-        if parameter_path_candidate.is_file():
-            sources.append(fingerprint_record(parameter_path_candidate, project_root, source_id, "project-parameters", private=private))
-    for dirname, kind in [
-        ("processes", "process-override"),
-        ("packages", "package-override"),
-        ("registries", "registry"),
-        ("project-classifiers", "project-classifier"),
-        ("templates", "template-override"),
-        ("specializations", "specialization"),
-        ("specializations/overrides", "specialization-override"),
-        ("tools/overrides", "tool-override"),
-        ("mcp/overrides", "mcp-override"),
-        ("knowledge", "project-knowledge"),
-        ("rules", "project-rules"),
-    ]:
-        root = flow_root / dirname
-        if root.is_dir():
-            for path in sorted(item for item in root.rglob("*") if item.is_file() and item.suffix.lower() in {".yaml", ".yml", ".json", ".md"}):
-                source_id = safe_id(f"{kind}-{rel(path, flow_root)}", f"{kind}-source")
-                sources.append(fingerprint_record(path, project_root, source_id, kind))
-    return sources
+    return _ProjectSnapshotSourcesReader(project_root, distribution_root=ROOT).read()
 
 
 def scan_policy_from_manifest(manifest_data: dict[str, Any]) -> dict[str, Any]:
@@ -10280,7 +10143,7 @@ def _project_context_check_result(project_root: Path, *, explicit_workplace: str
         for item in fingerprints:
             if isinstance(item, dict) and "id" in item:
                 recorded_sources[str(item["id"])] = str(item.get("checksum", "missing"))
-    current_sources = collect_project_snapshot_sources(project_root)
+    current_sources = _ProjectSnapshotSourcesReader(project_root, distribution_root=ROOT).read()
     current_by_id = {str(item["id"]): str(item.get("checksum", "missing")) for item in current_sources}
     for source_id, checksum in current_by_id.items():
         if source_id.startswith("package-"):
@@ -10384,7 +10247,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         raise SystemExit(f"FAIL: process-forge manifest not found: {rel(manifest, project_root)}")
     manifest_data = load_yaml_document(manifest)
     manifest_text = manifest.read_text(encoding="utf-8", errors="replace")
-    sources = collect_project_snapshot_sources(project_root)
+    sources = _ProjectSnapshotSourcesReader(project_root, distribution_root=ROOT).read()
     required = sorted(
         set(yaml_list_values(manifest_text, "required_capabilities")).union(
             str(item)
@@ -13430,30 +13293,15 @@ def official_pack_registry_entries_for_profile(profile: str) -> list[dict[str, A
 
 
 def workplace_process_pack_registry(workplace_manifest: Path | None) -> dict[str, Any]:
-    if not workplace_manifest or not workplace_manifest.is_file():
-        return {"schema_version": 1, "process_packs": []}
-    registry = load_workplace_registry(workplace_manifest, "process_packs", "process-packs.yaml")
-    return registry if isinstance(registry, dict) else {"schema_version": 1, "process_packs": []}
+    return _OfficialProcessPackReader(workplace_manifest, distribution_root=ROOT).registry()
 
 
 def active_process_pack_ids(workplace_manifest: Path | None) -> set[str]:
-    active: set[str] = set()
-    for entry in as_list(workplace_process_pack_registry(workplace_manifest).get("process_packs")):
-        if not isinstance(entry, dict):
-            continue
-        status = str(entry.get("status") or "active")
-        if entry.get("id") and status in {"active", "enabled", "configured"}:
-            active.add(str(entry["id"]))
-    return active
+    return _OfficialProcessPackReader(workplace_manifest, distribution_root=ROOT).active_ids()
 
 
 def active_official_pack_records(workplace_manifest: Path | None) -> list[tuple[Path, dict[str, Any]]]:
-    active_ids = active_process_pack_ids(workplace_manifest)
-    return [
-        (path, manifest)
-        for path, manifest in official_pack_manifest_records()
-        if str(manifest.get("id") or "") in active_ids
-    ]
+    return _OfficialProcessPackReader(workplace_manifest, distribution_root=ROOT).active_records()
 
 
 def official_pack_capability_providers(

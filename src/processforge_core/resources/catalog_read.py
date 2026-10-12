@@ -10,7 +10,7 @@ from typing import Any
 from ..common import yaml_error
 from ..common.yaml_io import _parse_simple_yaml
 from ..documents.reader import YamlDocumentReader
-from ..process_catalog.service import official_pack_manifest_records
+from ..process_catalog.official_read import OfficialProcessPackReader
 from ..work.context_documents import ContextContractInputs
 from .snapshot import WorkspacePathReferenceReader, snapshot_with_resolved_search_roots
 
@@ -86,15 +86,10 @@ class WorkplaceSearchCatalogReader:
             candidates.extend(sorted(root.resolved_path.glob("*.yml")))
             candidates.extend(sorted(root.resolved_path.glob("*/package.yaml")))
             candidates.extend(sorted(root.resolved_path.glob("*/package.yml")))
-        registry = paths.load_workplace_registry(workplace_manifest, "process_packs", "process-packs.yaml")
-        entries = registry.get("process_packs") if isinstance(registry, dict) else None
-        active_ids = {
-            str(entry["id"]) for entry in entries if isinstance(entry, dict)
-            and entry.get("id") and str(entry.get("status") or "active") in {"active", "enabled", "configured"}
-        } if isinstance(entries, list) else set()
-        for process_pack_path, process_pack in official_pack_manifest_records(self.distribution_root, documents=self.documents):
-            if str(process_pack.get("id") or "") not in active_ids:
-                continue
+        packs = OfficialProcessPackReader(
+            workplace_manifest, distribution_root=self.distribution_root, documents=self.documents,
+        )
+        for process_pack_path, process_pack in packs.active_records():
             provided = process_pack.get("provides") if isinstance(process_pack.get("provides"), dict) else {}
             package_ids = provided.get("knowledge_packages")
             for package_id in package_ids if isinstance(package_ids, list) else []:

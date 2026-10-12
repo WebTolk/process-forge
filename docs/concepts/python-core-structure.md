@@ -343,3 +343,21 @@ freshness guards, query/error order and physical SQLite ownership are retained.
 `project_context_check_result` dependency; catalogue extraction does not make the
 whole ResourceSearch service or the remaining monolith independent of legacy.
 The reader and shared projection remain provisional internal interfaces.
+
+`project.snapshot_sources.ProjectSnapshotSourcesReader` owns the ordered live
+source fingerprints consumed by project snapshot assembly and freshness checks.
+It uses concrete project metadata, document and raw-byte digest readers. The
+related manifest reference operations belong to `ProjectMetadataReader`.
+`process_catalog.official_read.OfficialProcessPackReader` owns the existing
+list-only active official-pack selection and reuses the single manifest
+traversal. Snapshot sources, the Workplace catalogue and Runtime process
+resolution use this owner; scalar normalization in other catalog rules remains
+unchanged. Their constructors perform no filesystem reads or scans.
+
+The eight compatible monolithic source/reference/pack helpers delegate to Core.
+The two actual snapshot collection sites and Runtime active-pack consumer use
+the concrete readers directly. These readers accept no monolithic Core or
+transport callbacks. Overall snapshot assembly, freshness policy/readiness and
+other Runtime bindings still have legacy dependencies; this bounded extraction
+does not complete those services or any OOP epic. The new readers are provisional
+internal interfaces and preserve existing record formats, errors and live reads.

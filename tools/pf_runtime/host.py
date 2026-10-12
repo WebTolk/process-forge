@@ -123,12 +123,14 @@ def resolved_process(project_root: Path, process_id: str, core: Any) -> dict[str
             resolve_process_definition as resolve_process_definition_core,
         )
 
+        from processforge_core.process_catalog.official_read import OfficialProcessPackReader
+
         workplace_manifest = core.resolve_project_workplace_manifest(resolved_project_root)
         context = ProcessCatalogContext(
             project_root=resolved_project_root,
             flow_root=core.locate_flow_root(resolved_project_root),
             distribution_root=core.ROOT.resolve(),
-            active_official_pack_ids=frozenset(core.active_process_pack_ids(workplace_manifest)),
+            active_official_pack_ids=frozenset(OfficialProcessPackReader(workplace_manifest, distribution_root=core.ROOT).active_ids()),
         )
         definition = resolve_process_definition_core(context, process_id)
     except SystemExit:

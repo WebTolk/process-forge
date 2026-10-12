@@ -59,3 +59,18 @@ stale/fresh_with_updates согласно policy.
 
 Runtime workplace snapshot может содержать local availability state для tools и
 MCP. Он лежит в `.pf/runtime/cache/` и остается private.
+
+## Конкретное чтение источников
+
+Core `ProjectSnapshotSourcesReader` собирает прежние упорядоченные fingerprints
+источников для сборки snapshot и проверки свежести. Каждая операция читает
+текущее содержимое; missing records, private display refs, повторные записи и
+фильтры расширений сохранены. Ссылка на Workplace manifest из local config
+сохраняет прежний контракт разбора raw text. Выбор active official packs общий
+для потребителей и принадлежит `OfficialProcessPackReader` с прежней list-only
+семантикой реестра.
+
+Reader поставляет входы. Создание и сохранение snapshot, проверка resource
+generations, readiness и freshness policy сохраняют своих действующих владельцев.
+Он не выдаёт доступ, не обновляет контекст и не изменяет immutable capsules.
+Совместимые CLI helpers делегируют Core; схемы snapshot и команды не меняются.

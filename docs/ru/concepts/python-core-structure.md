@@ -350,3 +350,23 @@ Workplace/distribution и `YamlDocumentReader`. Он использует сущ
 `project_context_check_result`: перенос каталога не завершает миграцию всего
 ResourceSearch или монолита. Reader и общая проекция остаются предварительными
 внутренними интерфейсами.
+
+`project.snapshot_sources.ProjectSnapshotSourcesReader` владеет упорядоченными
+живыми fingerprints источников, которые используют сборка снимка проекта и
+проверка свежести. Его зависимости — конкретные readers метаданных проекта,
+документов и raw-byte digests. Разрешение связанных manifest references
+принадлежит `ProjectMetadataReader`. Выбор активных официальных пакетов с прежней
+list-only семантикой принадлежит
+`process_catalog.official_read.OfficialProcessPackReader`, который использует
+единственный существующий обход manifests. Этот owner общий для источников
+снимка, каталога Workplace и Runtime process resolution. Нормализация scalar
+entries в других правилах каталога не меняется. Конструкторы не читают файлы и
+не сканируют каталоги.
+
+Восемь совместимых функций источников, ссылок и пакетов в монолите делегируют
+Core. Две реальные точки сбора источников и Runtime consumer активных пакетов
+обращаются к конкретным readers напрямую. Эти readers не принимают монолитный
+Core или transport callbacks. Общая сборка snapshot, freshness policy/readiness
+и другие Runtime bindings ещё имеют легаси-зависимости: срез не завершает эти
+службы или какой-либо OOP-эпик. Новые readers — предварительные внутренние
+интерфейсы; форматы записей, ошибки и чтение текущего содержимого сохранены.
