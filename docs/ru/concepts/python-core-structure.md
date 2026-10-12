@@ -397,5 +397,17 @@ checker вызывает его напрямую на месте прежнег�
 конкретный `ProjectSnapshotSourcesReader`; конструктор не выполняет I/O, а каждое
 сравнение читает источники после нормализации записанных значений. Порядок причин,
 дубликаты, исключение package-источников и исходные ошибки сохранены. Построение
-snapshot сохраняет самостоятельное чтение источников. Полный checker, classification,
-сравнение ресурсов, публикация и их legacy callbacks ещё требуют переноса.
+snapshot сохраняет самостоятельное чтение источников. Общая координация и policy
+полного checker, определение classification, разрешение ресурсов, построение и
+публикация snapshot ещё сохраняют свои legacy bindings.
+
+
+`project.resolved_comparison.ProjectSnapshotResolvedComparison` владеет прежним
+сравнением classification и resolved resources двух переданных snapshots.
+Конкретный `resources.versioning.ResourceVersionPolicy` без состояния владеет
+общим числовым и лексическим алгоритмом версий для comparison, selection,
+constraints и update candidates. Все найденные consumers используют этих
+владельцев; старые внутренние key/index/version helpers удалены. Конструкторы
+не выполняют I/O; порядок, дубликаты, warnings и исходные ошибки сохранены.
+Сбор источников, полный checker status/policy, построение и публикация snapshot
+ещё сохраняют существующих владельцев и legacy bindings.

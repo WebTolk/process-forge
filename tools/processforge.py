@@ -62,10 +62,14 @@ from processforge_core.project.metadata import ProjectMetadataReader as _Project
 from processforge_core.project.readiness import ProjectContextReadinessPolicy as _ProjectContextReadinessPolicy
 from processforge_core.project.snapshot_sources import ProjectSnapshotSourcesReader as _ProjectSnapshotSourcesReader, local_workplace_manifest_reference as _local_workplace_manifest_reference
 from processforge_core.project.source_check import ProjectSnapshotSourceCheckService
+from processforge_core.resources.versioning import ResourceVersionPolicy
+from processforge_core.project.resolved_comparison import ProjectSnapshotResolvedComparison
 from processforge_core.process_catalog.official_read import OfficialProcessPackReader as _OfficialProcessPackReader
 
 _file_digests = FileDigestReader()
 _context_contract_inputs = ContextContractInputs()
+_resource_version_policy = ResourceVersionPolicy()
+_project_snapshot_resolved_comparison = ProjectSnapshotResolvedComparison(versions=_resource_version_policy)
 from processforge_core.process_catalog import (
     PROCESS_CATALOG_CLASSIFICATIONS as CATALOG_PROCESS_CATALOG_CLASSIFICATIONS,
     ProcessCatalogContext,
@@ -9127,30 +9131,30 @@ def version_satisfies_simple_constraint(version: str, constraint: str) -> bool:
     text = (constraint or "").strip()
     if not text or text in {"*", "latest"}:
         return True
-    version_key = semantic_version_key(version)
+    version_key = _resource_version_policy.key(version)
     if version_key[0] != 0:
         return version == text
     version_tuple = version_key[1]
     assert isinstance(version_tuple, tuple)
     for part in text.split():
         if part.startswith(">="):
-            other = semantic_version_key(part[2:])[1]
+            other = _resource_version_policy.key(part[2:])[1]
             if isinstance(other, tuple) and version_tuple < other:
                 return False
         elif part.startswith(">"):
-            other = semantic_version_key(part[1:])[1]
+            other = _resource_version_policy.key(part[1:])[1]
             if isinstance(other, tuple) and version_tuple <= other:
                 return False
         elif part.startswith("<="):
-            other = semantic_version_key(part[2:])[1]
+            other = _resource_version_policy.key(part[2:])[1]
             if isinstance(other, tuple) and version_tuple > other:
                 return False
         elif part.startswith("<"):
-            other = semantic_version_key(part[1:])[1]
+            other = _resource_version_policy.key(part[1:])[1]
             if isinstance(other, tuple) and version_tuple >= other:
                 return False
         elif part.startswith("^"):
-            base = semantic_version_key(part[1:])[1]
+            base = _resource_version_policy.key(part[1:])[1]
             if isinstance(base, tuple) and (version_tuple < base or version_tuple[0] != base[0]):
                 return False
         elif part == "||":
@@ -9161,7 +9165,7 @@ def version_satisfies_simple_constraint(version: str, constraint: str) -> bool:
 
 
 def version_prefix(version: str) -> str:
-    key = semantic_version_key(version)
+    key = _resource_version_policy.key(version)
     if key[0] != 0 or not isinstance(key[1], tuple) or len(key[1]) < 2:
         return ""
     return f"{key[1][0]}.{key[1][1]}"
@@ -9202,7 +9206,7 @@ def legacy_resource_requirements(
         if target_versions and version_prefix(version) in target_versions:
             logical_id = str(resource.get("resource_id") or resource_id)
             previous = compatible.get(logical_id)
-            if previous is None or semantic_version_key(version) > semantic_version_key(str(previous.get("version") or previous.get("generation") or "")):
+            if previous is None or _resource_version_policy.key(version) > _resource_version_policy.key(str(previous.get("version") or previous.get("generation") or "")):
                 compatible[logical_id] = resource
     for resource in compatible.values():
         requirements.append(
@@ -9249,7 +9253,7 @@ def select_resolved_knowledge_resources(
             candidates = [resource for resource in candidates if str(resource.get("version") or "") == preferred]
         if constraint:
             candidates = [resource for resource in candidates if version_satisfies_simple_constraint(str(resource.get("version") or ""), constraint)]
-        candidates.sort(key=lambda resource: semantic_version_key(str(resource.get("version") or resource_generation(resource) or "")))
+        candidates.sort(key=lambda resource: _resource_version_policy.key(str(resource.get("version") or resource_generation(resource) or "")))
         if candidates:
             selected = candidates[-1]
             selected = dict(selected)
@@ -9981,23 +9985,8 @@ def project_context_policy_action(status: str, policy: dict[str, Any]) -> str:
     return "block"
 
 
-def resolved_resource_key(resource: dict[str, Any]) -> tuple[str, str, str]:
-    return (str(resource.get("package_id") or ""), str(resource.get("id") or ""), str(resource.get("instance_id") or ""))
 
 
-def current_resolved_resource_indexes(current_snapshot: dict[str, Any]) -> tuple[dict[tuple[str, str, str], dict[str, Any]], dict[tuple[str, str], list[dict[str, Any]]]]:
-    resolved = current_snapshot.get("resolved") if isinstance(current_snapshot.get("resolved"), dict) else {}
-    resources = resolved.get("available_knowledge_resources") if isinstance(resolved.get("available_knowledge_resources"), list) else []
-    if not resources:
-        resources = resolved.get("knowledge_resources") if isinstance(resolved.get("knowledge_resources"), list) else []
-    by_instance: dict[tuple[str, str, str], dict[str, Any]] = {}
-    by_subject: dict[tuple[str, str], list[dict[str, Any]]] = {}
-    for item in resources:
-        if not isinstance(item, dict):
-            continue
-        by_instance[resolved_resource_key(item)] = item
-        by_subject.setdefault((str(item.get("package_id") or ""), str(item.get("id") or "")), []).append(item)
-    return by_instance, by_subject
 
 
 def project_context_check_result(project_root: Path, *, explicit_workplace: str | None = None) -> dict[str, Any]:
@@ -10064,44 +10053,11 @@ def _project_context_check_result(project_root: Path, *, explicit_workplace: str
                         "type": item.get("type") or "resource_readiness_blocked",
                     }
                 )
-    old_classification = snapshot.get("project_classification")
-    current_classification = current.get("project_classification")
-    if json.dumps(old_classification or {}, ensure_ascii=False, sort_keys=True) != json.dumps(
-        current_classification or {}, ensure_ascii=False, sort_keys=True
-    ):
-        reasons.append("project classification changed")
-    old_resolved = snapshot.get("resolved") if isinstance(snapshot.get("resolved"), dict) else {}
-    old_resources = old_resolved.get("knowledge_resources") if isinstance(old_resolved.get("knowledge_resources"), list) else []
-    current_by_instance, current_by_subject = current_resolved_resource_indexes(current)
-    for old in old_resources:
-        if not isinstance(old, dict):
-            continue
-        mode = str(old.get("versioning_mode") or "rolling_index")
-        key = resolved_resource_key(old)
-        subject_key = (key[0], key[1])
-        current_same_subject = current_by_subject.get(subject_key, [])
-        current_instance = current_by_instance.get(key)
-        if mode == "multi_version":
-            if current_instance is None:
-                broken_refs.append({"id": old.get("id"), "instance_id": old.get("instance_id"), "reason": "pinned multi_version resource instance missing"})
-                continue
-            old_version = str(old.get("resolved_version") or "")
-            for current_resource in current_same_subject:
-                current_version = str(current_resource.get("resolved_version") or "")
-                is_newer, _warning = version_is_newer(current_version, old_version)
-                if is_newer:
-                    updates_available.append({"id": old.get("id"), "type": "knowledge_resource", "snapshot_version": old_version, "available_version": current_version, "snapshot_stale": False, "reason": "multi_version resource has newer version but pinned instance still exists"})
-        else:
-            current_resource = current_same_subject[-1] if current_same_subject else None
-            if current_resource is None:
-                broken_refs.append({"id": old.get("id"), "instance_id": old.get("instance_id"), "reason": "current resource missing"})
-                continue
-            old_generation = str(old.get("resolved_generation") or old.get("fingerprint", {}).get("value") or "")
-            current_generation = str(current_resource.get("resolved_generation") or current_resource.get("fingerprint", {}).get("value") or "")
-            old_fingerprint = str(old.get("fingerprint", {}).get("value") or "")
-            current_fingerprint = str(current_resource.get("fingerprint", {}).get("value") or "")
-            if old_generation != current_generation or old_fingerprint != current_fingerprint:
-                stale_resources.append({"id": old.get("id"), "snapshot_generation": old_generation, "current_generation": current_generation, "reason": f"{mode} resource generation changed"})
+    comparison_reasons, comparison_stale, comparison_updates, comparison_broken = _project_snapshot_resolved_comparison.compare(snapshot, current)
+    reasons.extend(comparison_reasons)
+    stale_resources.extend(comparison_stale)
+    updates_available.extend(comparison_updates)
+    broken_refs.extend(comparison_broken)
     if broken_refs:
         status = "broken"
     elif stale_resources or reasons:
@@ -22414,25 +22370,8 @@ def fetch_update_manifest(source: dict[str, Any], workplace_root: Path) -> tuple
     return {}, [f"manifest_url scheme is unsupported: {scheme}"]
 
 
-def semantic_version_key(value: str) -> tuple[int, tuple[int, ...] | str]:
-    text = value.strip()
-    match = re.fullmatch(r"v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:[-+][A-Za-z0-9.-]+)?", text)
-    if not match:
-        return (1, text)
-    parts = tuple(int(part) for part in match.groups(default="0"))
-    return (0, parts)
 
 
-def version_is_newer(available: str, installed: str | None) -> tuple[bool, str | None]:
-    if not installed:
-        return True, None
-    available_key = semantic_version_key(available)
-    installed_key = semantic_version_key(installed)
-    warning = None
-    if available_key[0] or installed_key[0]:
-        warning = "non-semver version compared lexically"
-        return str(available) > str(installed), warning
-    return available_key[1] > installed_key[1], warning
 
 
 def normalize_manifest_versions(raw: dict[str, Any], site: dict[str, Any], channel: str) -> list[dict[str, Any]]:
@@ -22514,14 +22453,14 @@ def selected_update_version(versions: list[dict[str, Any]], installed: str | Non
     warnings: list[str] = []
     newer: list[dict[str, Any]] = []
     for item in versions:
-        is_newer, warning = version_is_newer(str(item.get("version") or ""), installed)
+        is_newer, warning = _resource_version_policy.is_newer(str(item.get("version") or ""), installed)
         if warning:
             warnings.append(warning)
         if is_newer:
             newer.append(item)
     if not newer:
         return None, warnings
-    newer.sort(key=lambda item: semantic_version_key(str(item.get("version") or "")))
+    newer.sort(key=lambda item: _resource_version_policy.key(str(item.get("version") or "")))
     return newer[-1], sorted(set(warnings))
 
 
@@ -22608,8 +22547,8 @@ def command_update_candidates_refresh(args: argparse.Namespace) -> int:
             conflicts.append({"site_id": site.get("site_id"), "reason": f"candidate {selected.get('version')} blocked by pin_version {pinned}"})
             continue
         if source_policy.get("allow_major") is False and installed_version:
-            installed_major = semantic_version_key(installed_version)[1]
-            selected_major = semantic_version_key(str(selected.get("version")))[1]
+            installed_major = _resource_version_policy.key(installed_version)[1]
+            selected_major = _resource_version_policy.key(str(selected.get("version")))[1]
             if isinstance(installed_major, tuple) and isinstance(selected_major, tuple) and installed_major[0] != selected_major[0]:
                 conflicts.append({"site_id": site.get("site_id"), "reason": f"candidate {selected.get('version')} blocked by allow_major=false"})
                 continue

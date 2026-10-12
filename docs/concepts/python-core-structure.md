@@ -388,5 +388,17 @@ checker calls it directly at the former inline comparison site. It reuses the
 concrete `ProjectSnapshotSourcesReader`; construction performs no I/O, and each
 comparison reads current sources after recorded normalization. Ordered reasons,
 duplicate handling, package exclusions and native errors are preserved. Snapshot
-assembly retains its separate source read. Full checker policy, classification,
-resource comparison, publication and their legacy callbacks remain migration work.
+assembly retains its separate source read. Full checker orchestration and policy,
+classification discovery, resource resolution, snapshot assembly and publication
+keep their existing legacy bindings.
+
+
+`project.resolved_comparison.ProjectSnapshotResolvedComparison` owns the existing
+classification and resolved-resource comparison of two supplied snapshots. It
+uses the concrete stateless `resources.versioning.ResourceVersionPolicy`, which
+also owns the shared numeric/lexical version algorithm used by selection,
+constraints and update candidates. All known callers use these owners; obsolete
+internal key/index/version helpers are removed. Construction performs no I/O,
+and comparisons retain ordering, duplicates, warnings and native failures.
+Collection, full checker status/policy, snapshot assembly and publication remain
+with their existing owners and legacy bindings.
