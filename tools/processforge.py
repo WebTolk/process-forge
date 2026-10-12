@@ -59,6 +59,7 @@ from processforge_core.common.ndjson import NdjsonReader
 from processforge_core.work.context_documents import ContextContractInputs
 from processforge_core.common.digests import FileDigestReader
 from processforge_core.project.metadata import ProjectMetadataReader as _ProjectMetadataReader
+from processforge_core.project.readiness import ProjectContextReadinessPolicy as _ProjectContextReadinessPolicy
 from processforge_core.project.snapshot_sources import ProjectSnapshotSourcesReader as _ProjectSnapshotSourcesReader, local_workplace_manifest_reference as _local_workplace_manifest_reference
 from processforge_core.process_catalog.official_read import OfficialProcessPackReader as _OfficialProcessPackReader
 
@@ -9979,97 +9980,6 @@ def project_context_policy_action(status: str, policy: dict[str, Any]) -> str:
     return "block"
 
 
-def execution_readiness_payload(
-    required_records: list[dict[str, Any]],
-    capability_resolution: dict[str, Any] | None = None,
-    *,
-    coordination_blocked: bool = False,
-) -> dict[str, Any]:
-    missing_capabilities: list[dict[str, Any]] = []
-    blockers: list[dict[str, Any]] = []
-    seen_capabilities: set[tuple[str, str]] = set()
-
-    for item in required_records:
-        if not isinstance(item, dict) or item.get("status") != "missing":
-            continue
-        capability = str(item.get("id") or "")
-        if not capability:
-            continue
-        key = (capability, "project.required_capabilities")
-        if key in seen_capabilities:
-            continue
-        seen_capabilities.add(key)
-        missing = {
-            "capability": capability,
-            "required_by": "project.required_capabilities",
-            "availability": "missing",
-            "reason": "no active project registry provider declared the required capability",
-            "expected_provider_scope": "project or workplace tool/MCP registry",
-        }
-        missing_capabilities.append(missing)
-        blockers.append({"type": "capability_missing", **missing})
-
-    resolution = capability_resolution if isinstance(capability_resolution, dict) else {}
-    for item in resolution.get("unsatisfied", []) if isinstance(resolution.get("unsatisfied"), list) else []:
-        if not isinstance(item, dict):
-            continue
-        capability = str(item.get("capability") or "")
-        required_by = str(item.get("required_by") or "execution_route")
-        if not capability:
-            continue
-        key = (capability, required_by)
-        if key in seen_capabilities:
-            continue
-        seen_capabilities.add(key)
-        missing = {
-            "capability": capability,
-            "required_by": required_by,
-            "availability": "missing",
-            "reason": str(item.get("reason") or "selected execution resources do not provide the capability"),
-            "expected_provider_scope": "specialization resource profile, active process pack, or workplace registry",
-        }
-        missing_capabilities.append(missing)
-        blockers.append({"type": "capability_missing", **missing})
-
-    if coordination_blocked:
-        blockers.append(
-            {
-                "type": "coordination_unavailable",
-                "reason": "organized coordination is selected but the workplace Director is unavailable",
-                "required_by": "project.coordination",
-            }
-        )
-
-    return {
-        "status": "blocked" if blockers else "ready",
-        "missing_capabilities": missing_capabilities,
-        "blockers": blockers,
-    }
-
-
-def resource_readiness_payload(
-    *,
-    platform_resolution: dict[str, Any],
-    required_resource_missing: list[str],
-    specialization_conflicts: list[dict[str, Any]],
-    parameter_conflicts: list[dict[str, Any]],
-) -> dict[str, Any]:
-    blockers: list[dict[str, Any]] = []
-    for item in platform_resolution.get("missing_required_contracts", []):
-        blockers.append({"type": "platform_contract_missing", "id": str(item)})
-    for item in platform_resolution.get("circular_platforms", []):
-        blockers.append({"type": "platform_contract_cycle", "id": str(item)})
-    for item in required_resource_missing:
-        blockers.append({"type": "required_resource_missing", "id": str(item)})
-    for item in specialization_conflicts:
-        if isinstance(item, dict):
-            blockers.append({"type": "specialization_conflict", **item})
-    for item in parameter_conflicts:
-        if isinstance(item, dict):
-            blockers.append({"type": "parameter_conflict", **item})
-    return {"status": "blocked" if blockers else "fresh", "blockers": blockers}
-
-
 def resolved_resource_key(resource: dict[str, Any]) -> tuple[str, str, str]:
     return (str(resource.get("package_id") or ""), str(resource.get("id") or ""), str(resource.get("instance_id") or ""))
 
@@ -10436,12 +10346,13 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         not coordination_status["workplace_director_enabled"] or not coordination_status["director_office_exists"]
     )
     health_status = "blocked" if any(item["severity"] == "fail" for item in required_records) or platform_resolution["missing_required_contracts"] or platform_resolution["circular_platforms"] or required_resource_missing or specialization_context["conflicts"] or parameter_resolution["conflicts"] or coordination_blocked else ("warn" if any(item["severity"] == "warn" for item in optional_records) or recommended_resource_missing else "pass")
-    execution_readiness = execution_readiness_payload(
+    readiness_policy = _ProjectContextReadinessPolicy()
+    execution_readiness = readiness_policy.execution(
         required_records,
         specialization_context.get("capability_resolution") if isinstance(specialization_context.get("capability_resolution"), dict) else {},
         coordination_blocked=coordination_blocked,
     )
-    resource_readiness = resource_readiness_payload(
+    resource_readiness = readiness_policy.resources(
         platform_resolution=platform_resolution,
         required_resource_missing=required_resource_missing,
         specialization_conflicts=specialization_context["conflicts"],

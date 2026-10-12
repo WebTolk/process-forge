@@ -370,3 +370,15 @@ Core или transport callbacks. Общая сборка snapshot, freshness pol
 и другие Runtime bindings ещё имеют легаси-зависимости: срез не завершает эти
 службы или какой-либо OOP-эпик. Новые readers — предварительные внутренние
 интерфейсы; форматы записей, ошибки и чтение текущего содержимого сохранены.
+
+## Правила готовности проекта
+
+`project.readiness.ProjectContextReadinessPolicy` владеет существующими алгоритмами
+execution и resource readiness. Построитель snapshot прямо вызывает методы
+`execution` и `resources`. Обычный экземпляр не выполняет I/O и не хранит данные
+запроса; его можно импортировать без CLI и Runtime. Порядок blockers, устранение
+повторов capabilities, ошибки и поверхностное копирование conflict values сохраняются.
+
+Полный freshness checker, classification и resource resolution, построение и
+публикация snapshot ещё содержат legacy обязанности и callbacks. Этот ограниченный
+перенос не завершает этих владельцев или какой-либо OOP эпик.

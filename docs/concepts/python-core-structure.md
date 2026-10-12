@@ -361,3 +361,15 @@ transport callbacks. Overall snapshot assembly, freshness policy/readiness and
 other Runtime bindings still have legacy dependencies; this bounded extraction
 does not complete those services or any OOP epic. The new readers are provisional
 internal interfaces and preserve existing record formats, errors and live reads.
+
+## Project readiness rules
+
+`project.readiness.ProjectContextReadinessPolicy` owns the existing execution and
+resource readiness algorithms. Snapshot assembly calls its `execution` and
+`resources` methods directly. The default instance has no I/O or retained request
+state and can be imported without the CLI or Runtime. Ordered blockers, capability
+deduplication, errors and shallow conflict values keep their existing semantics.
+
+The full freshness checker, classification and resource resolution, snapshot
+assembly and publication still have legacy responsibilities and callbacks. This
+bounded migration does not complete those owners or any OOP epic.
