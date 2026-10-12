@@ -428,7 +428,9 @@ def ledger_session(session_id: str, workplace_root: Path, core: Any) -> dict[str
     if not session_id:
         return {}
     core.update_stale_agent_presence(workplace_root)
-    return core.find_agent_presence(workplace_root, session_id=session_id)
+    from processforge_core.agents.presence import AgentPresenceReader
+
+    return AgentPresenceReader(workplace_root).find(session_id=session_id)
 
 
 def load_input(args: argparse.Namespace) -> dict[str, Any]:
@@ -495,11 +497,15 @@ def ledger_from_event(raw: dict[str, Any], project_root: Path, workplace_root: P
     if event_type in {"agent.session.started", "agent.session.resumed"}:
         call_quiet(core.command_agent_checkin, argparse.Namespace(**common, project_id=handle["project_id"], role=roles, capability=[], supports_specialization=[], ttl=int(raw.get("ttl") or 300), json=False))
     elif event_type in {"agent.heartbeat", "agent.command.completed", "agent.tool.completed"} and session_id:
-        presence = core.find_agent_presence(workplace_root, agent_id=agent_id, session_id=session_id)
+        from processforge_core.agents.presence import AgentPresenceReader
+
+        presence = AgentPresenceReader(workplace_root).find(agent_id=agent_id, session_id=session_id)
         if presence:
             call_quiet(core.command_agent_heartbeat, argparse.Namespace(**common))
     elif event_type in {"agent.session.ended", "agent.session.stopped"} and session_id:
-        presence = core.find_agent_presence(workplace_root, agent_id=agent_id, session_id=session_id)
+        from processforge_core.agents.presence import AgentPresenceReader
+
+        presence = AgentPresenceReader(workplace_root).find(agent_id=agent_id, session_id=session_id)
         if presence:
             call_quiet(core.command_agent_checkout, argparse.Namespace(**common))
 
@@ -1121,6 +1127,8 @@ def status_payload(workplace_root: Path, project_roots: list[Path], core: Any) -
         for project_root in project_roots:
             remember_project(state, route_project(str(project_root), workplace_root, core))
         core.update_stale_agent_presence(workplace_root)
+        from processforge_core.agents.presence import AgentPresenceReader
+
         payload = {
             "schema_version": 1,
             "runtime_protocol_version": RUNTIME_PROTOCOL_VERSION,
@@ -1129,7 +1137,7 @@ def status_payload(workplace_root: Path, project_roots: list[Path], core: Any) -
             "workplace_root": str(workplace_root),
             "projects": state.get("projects", []),
             "sessions": state.get("sessions", {}),
-            "ledger_sessions": len(core.iter_agent_presence(workplace_root)),
+            "ledger_sessions": len(AgentPresenceReader(workplace_root).records()),
         }
         save_state(workplace_root, state, core)
         return payload
@@ -1211,6 +1219,7 @@ def command_work_state(args: argparse.Namespace, core: Any) -> int:
 
 def work_state_payload(workplace_root: Path, core: Any, *, session: str | None = None, project_root_ref: str | None = None) -> dict[str, Any]:
     from processforge_core.composition import build_process_execution_service
+    from processforge_core.agents.presence import AgentPresenceReader
 
     project_root = project_for_session(argparse.Namespace(session=session, project_root=project_root_ref), workplace_root, core)
     handle = route_project(str(project_root), workplace_root, core)
@@ -1224,7 +1233,7 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
     event_rows = journal_events(project_root, core)
     current_work_state = {
         "project": handle["project_id"],
-        "active_sessions": [str(item.get("session_id") or "") for item in core.iter_agent_presence(workplace_root) if str(item.get("project_id") or "") == handle["project_id"]],
+        "active_sessions": [str(item.get("session_id") or "") for item in AgentPresenceReader(workplace_root).records() if str(item.get("project_id") or "") == handle["project_id"]],
         "active_process": str(active.get("process_id") or ""),
         "active_stage": str(active.get("stage_id") or ""),
         "run": str(active.get("run_id") or ""),
@@ -1262,7 +1271,7 @@ def work_state_payload(workplace_root: Path, core: Any, *, session: str | None =
     return {
         "project": handle,
         "current_session": core.read_current_project_session(project_root),
-        "agent_presence": [item for item in core.iter_agent_presence(workplace_root) if str(item.get("project_id") or "") == handle["project_id"]],
+        "agent_presence": [item for item in AgentPresenceReader(workplace_root).records() if str(item.get("project_id") or "") == handle["project_id"]],
         "events_path": core.rel(events_path, project_root),
         "event_count": len(events_path.read_text(encoding="utf-8", errors="replace").splitlines()) if events_path.is_file() else 0,
         "supervisor": supervisor,
@@ -1292,7 +1301,9 @@ def resolve_payload(workplace_root: Path, core: Any, *, session: str | None = No
 
 def workplace_state_payload(workplace_root: Path, core: Any) -> dict[str, Any]:
     core.update_stale_agent_presence(workplace_root)
-    presence = core.iter_agent_presence(workplace_root)
+    from processforge_core.agents.presence import AgentPresenceReader
+
+    presence = AgentPresenceReader(workplace_root).records()
     projects: dict[str, dict[str, Any]] = {}
     for item in presence:
         project_id = str(item.get("project_id") or "")

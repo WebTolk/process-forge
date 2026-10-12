@@ -502,7 +502,9 @@ class RuntimeProcess:
             payload["health"] = "degraded"
             payload["last_scheduler_error"] = "scheduler thread is not running"
         payload["known_projects"] = runtime_host.get("projects", [])
-        payload["active_agent_sessions"] = len(self.core.iter_agent_presence(self.workplace_root))
+        from processforge_core.agents.presence import AgentPresenceReader
+
+        payload["active_agent_sessions"] = len(AgentPresenceReader(self.workplace_root).records())
         payload["active_workers"] = self.active_worker_count(roots)
         payload["pending_runtime_jobs"] = 0
         payload["last_event"] = self.last_event(roots)

@@ -321,6 +321,13 @@ bootstrap или координатора от legacy.
 Форматы, неоднозначность, неизвестные поля и ошибки чтения сохранены. Запись
 attendance, expiry, binding, leases и ограниченное наблюдение Runtime остаются
 у действующих владельцев.
+Runtime Host, session read models и `RuntimeProcess.status_payload` вызывают
+reader напрямую в десяти местах чтения presence. Импорты остаются внутри
+операций: адаптеры по-прежнему загружаются до Core bootstrap. Stale-обновления
+и их внутренние чтения сохраняют своего владельца; два чтения Work state
+остаются самостоятельными живыми чтениями. CLI wrappers, bounded metrics,
+attendance mutations и наблюдательный обход organized sessions остаются
+явными следующими областями миграции.
 
 `chat.transcripts.ChatTranscriptReader` владеет существующими путями transcripts
 и живым чтением сообщений точно выбранной сессии. Его конкретный стандартный

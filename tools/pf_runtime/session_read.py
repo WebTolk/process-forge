@@ -47,7 +47,9 @@ def _authorized_project(
         raise SessionReadError("missing_session")
     # Read models must not mutate stale-presence status or emit Ledger expiry
     # events. A direct Core lookup is the authority for this access check.
-    presence = core.find_agent_presence(workplace_root, session_id=session_id)
+    from processforge_core.agents.presence import AgentPresenceReader
+
+    presence = AgentPresenceReader(workplace_root).find(session_id=session_id)
     if not presence:
         raise SessionReadError("unknown_session")
     project_ref = str(presence.get("project_root") or "")
@@ -112,6 +114,8 @@ def session_context_payload(
     active = execution[0] if execution else {}
     context = core.project_context_check_result(project_root, explicit_workplace=str(workplace_root))
     project_id = core.project_id(project_root)
+    from processforge_core.agents.presence import AgentPresenceReader
+
     agents = [
         {
             "agent_id": item.get("agent_id"),
@@ -120,7 +124,7 @@ def session_context_payload(
             "status": item.get("status"),
             "last_seen_at": item.get("last_seen_at"),
         }
-        for item in core.iter_agent_presence(workplace_root)
+        for item in AgentPresenceReader(workplace_root).records()
         if str(item.get("project_id") or "") == project_id
     ]
     blockers = [

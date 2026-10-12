@@ -316,6 +316,13 @@ does not depend on the CLI, Host or legacy callbacks. The shared opaque identity
 digest in `common.ids` also serves chat transcript paths. Presence formats,
 ambiguity, unknown fields and read failures are retained. Attendance writes,
 expiry, binding, leases and bounded Runtime observation keep their current owners.
+The Runtime Host, session read models and `RuntimeProcess.status_payload` call
+this reader directly at their ten presence read sites. Imports remain local to
+operations so adapter modules can still load before Core bootstrap. Stale
+updates and their internal reads keep their existing owner; the two Work-state
+reads remain separate live reads. CLI presence wrappers, bounded metrics,
+attendance mutations and the observational organized-session scan remain
+explicit migration work.
 
 `chat.transcripts.ChatTranscriptReader` owns the existing transcript paths and live
 exact-session message reads. Its concrete default `common.ndjson.NdjsonReader`
