@@ -62,6 +62,7 @@ from processforge_core.project.metadata import ProjectMetadataReader as _Project
 from processforge_core.project.readiness import ProjectContextReadinessPolicy as _ProjectContextReadinessPolicy
 from processforge_core.project.snapshot_sources import ProjectSnapshotSourcesReader as _ProjectSnapshotSourcesReader, local_workplace_manifest_reference as _local_workplace_manifest_reference
 from processforge_core.project.source_check import ProjectSnapshotSourceCheckService
+from processforge_core.project.context_sources import ProjectContextSourcesReader
 from processforge_core.resources.versioning import ResourceVersionPolicy
 from processforge_core.project.resolved_comparison import ProjectSnapshotResolvedComparison
 from processforge_core.process_catalog.official_read import OfficialProcessPackReader as _OfficialProcessPackReader
@@ -8130,24 +8131,6 @@ def yaml_list_values(text: str, key: str) -> list[str]:
     return values
 
 
-def source_record(path: Path, root: Path, kind: str, required: bool, selection_reason: str, load_policy: str) -> dict[str, Any]:
-    exists = path.is_file()
-    record: dict[str, Any] = {
-        "path": rel(path, root),
-        "kind": kind,
-        "required": required,
-        "exists": exists,
-        "selection_reason": selection_reason,
-        "load_policy": load_policy,
-    }
-    if exists:
-        checksum = sha256_file(path)
-        record["checksum"] = checksum
-        record["fingerprint"] = checksum
-    else:
-        record["checksum"] = "missing"
-        record["fingerprint"] = "missing"
-    return record
 
 
 def resolve_flow_reference(project_root: Path, value: str) -> Path:
@@ -8158,57 +8141,6 @@ def manifest_path_refs(project_root: Path, key: str) -> list[Path]:
     return _ProjectMetadataReader(project_root).manifest_path_refs(key)
 
 
-def collect_context_sources(project_root: Path, assignment: Path | None = None) -> list[dict[str, Any]]:
-    flow_root = locate_flow_root(project_root)
-    root_boot = project_root / "AGENTS.md"
-    has_root_boot = root_boot.is_file()
-    candidates: list[tuple[Path, str, bool]] = [
-        (root_boot if has_root_boot else flow_root / "AGENTS.md", "agent-boot", True),
-        (flow_root / "process-forge.yaml", "project-flow", True),
-        (flow_root / "process-forge.local.yaml", "local-config", False),
-        (project_root / "tools" / "processforge.py", "tool", False),
-    ]
-    if has_root_boot:
-        candidates.append((flow_root / "AGENTS.md", "agent-extended", False))
-    candidates.extend((path, "process", False) for path in manifest_path_refs(project_root, "processes"))
-    candidates.extend((path, "package", False) for path in manifest_path_refs(project_root, "packages"))
-    for dirname, kind in [("processes", "process"), ("packages", "package")]:
-        root = flow_root / dirname
-        if root.is_dir():
-            candidates.extend((path, kind, False) for path in sorted(root.glob("*.yaml")))
-    template_root = flow_root / "templates"
-    if template_root.is_dir():
-        candidates.extend((path, "template", False) for path in sorted(template_root.glob("*.yaml")))
-        candidates.extend((path, "template", False) for path in sorted(template_root.glob("*.md")))
-    if assignment is not None:
-        candidates.append((assignment, "assignment", True))
-
-    seen: set[Path] = set()
-    records: list[dict[str, Any]] = []
-    for path, kind, required in candidates:
-        resolved = path.resolve()
-        if resolved in seen:
-            continue
-        seen.add(resolved)
-        if required:
-            reason = "required for session bootstrap" if kind != "assignment" else "required by context compile assignment"
-            if kind == "agent-boot" and not has_root_boot:
-                reason = "legacy compatibility entry; root AGENTS.md is absent"
-            policy = "read_required"
-        elif kind == "agent-extended":
-            reason = "extended PF instructions; load when current obligations require them"
-            policy = "available"
-        elif kind in {"process", "package", "template"}:
-            reason = "available in broad project context; not loaded by default for workers"
-            policy = "available"
-        elif kind == "local-config":
-            reason = "optional private local config"
-            policy = "recommended_if_present"
-        else:
-            reason = "supporting context source"
-            policy = "recommended"
-        records.append(source_record(path, project_root, kind, required, reason, policy))
-    return records
 
 
 def source_fingerprints(sources: list[dict[str, Any]]) -> dict[str, str]:
@@ -11330,7 +11262,7 @@ def collect_action_rules(texts: dict[str, str]) -> tuple[list[str], list[str]]:
 
 def build_context_payload(project_root: Path, assignment: Path | None = None) -> tuple[dict[str, Any], dict[str, Any], str, str]:
     flow_root = locate_flow_root(project_root)
-    sources = collect_context_sources(project_root, assignment)
+    sources = ProjectContextSourcesReader(project_root).read(assignment)
     fingerprints = source_fingerprints(sources)
     texts = source_texts(project_root, sources)
     capabilities = resolve_capabilities(texts, project_root)
@@ -11522,7 +11454,7 @@ def context_freshness(project_root: Path) -> tuple[str, list[str]]:
     if not index_path.is_file():
         return "missing", []
     text = index_path.read_text(encoding="utf-8", errors="replace")
-    current_sources = collect_context_sources(project_root)
+    current_sources = ProjectContextSourcesReader(project_root).read()
     stale: list[str] = []
     for item in current_sources:
         path = str(item["path"])

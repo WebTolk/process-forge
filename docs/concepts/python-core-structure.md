@@ -402,3 +402,13 @@ internal key/index/version helpers are removed. Construction performs no I/O,
 and comparisons retain ordering, duplicates, warnings and native failures.
 Collection, full checker status/policy, snapshot assembly and publication remain
 with their existing owners and legacy bindings.
+
+
+`project.context_sources.ProjectContextSourcesReader` owns the existing broad
+context source records and ordered live inventory. Context resolution/compilation
+and the existing startup smoke use it directly; the two obsolete internal source
+helpers are removed. It reuses concrete project metadata, YAML, digest and path
+owners, with no constructor I/O or retained parsed documents. Root AGENTS preference,
+PF fallback, optional records, first-resolved-path deduplication, ordering, live
+checksums and native failures are preserved. Source text/fingerprint projections,
+full checker, snapshot assembly and publication retain their existing owners.

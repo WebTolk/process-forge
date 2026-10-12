@@ -411,3 +411,14 @@ constraints и update candidates. Все найденные consumers испол
 не выполняют I/O; порядок, дубликаты, warnings и исходные ошибки сохранены.
 Сбор источников, полный checker status/policy, построение и публикация snapshot
 ещё сохраняют существующих владельцев и legacy bindings.
+
+
+`project.context_sources.ProjectContextSourcesReader` владеет прежними записями
+источников широкого контекста и их упорядоченным живым сбором. Context resolution,
+compilation и существующий startup smoke вызывают его напрямую; два устаревших
+внутренних source helpers удалены. Reader использует конкретные metadata/YAML,
+digest и path owners; конструктор без I/O, parsed documents не удерживаются.
+Предпочтение root AGENTS, PF fallback, optional records, дедупликация по первому
+resolved path, порядок, живые hashes и исходные ошибки сохранены. Проекции текста
+и fingerprints, полный checker, построение и публикация snapshot сохраняют
+существующих владельцев.

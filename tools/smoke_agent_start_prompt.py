@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 import processforge as core
 from processforge_core.agent_entry import migration
+from processforge_core.project.context_sources import ProjectContextSourcesReader
 from processforge_core.agent_entry import start_prompt as startup
 from processforge_core.agent_entry.contract import BOM, EntryError, digest, encoded
 
@@ -156,7 +157,7 @@ def recovery(base):
 def references(base):
     root=fixture(base,'references')
     before=tree(root)
-    legacy=core.collect_context_sources(root)
+    legacy=ProjectContextSourcesReader(root).read()
     boot=next(row for row in legacy if row['kind']=='agent-boot')
     assert boot['path']=='.pf/AGENTS.md' and 'legacy' in boot['selection_reason']
     snapshot=core.build_project_context_snapshot(root)
@@ -164,7 +165,7 @@ def references(base):
     assert tree(root)==before
     (root/'AGENTS.md').write_text('Root startup contract\n',encoding='utf-8')
     before=tree(root)
-    records=core.collect_context_sources(root)
+    records=ProjectContextSourcesReader(root).read()
     boot=next(row for row in records if row['kind']=='agent-boot')
     extended=next(row for row in records if row['kind']=='agent-extended')
     assert boot['path']=='AGENTS.md' and boot['required']
