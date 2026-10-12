@@ -8143,17 +8143,8 @@ def manifest_path_refs(project_root: Path, key: str) -> list[Path]:
 
 
 
-def source_fingerprints(sources: list[dict[str, Any]]) -> dict[str, str]:
-    return {str(item["path"]): str(item.get("fingerprint", "missing")) for item in sources}
 
 
-def source_texts(project_root: Path, sources: list[dict[str, Any]]) -> dict[str, str]:
-    texts: dict[str, str] = {}
-    for item in sources:
-        path = project_root / str(item["path"])
-        if path.is_file():
-            texts[str(item["path"])] = path.read_text(encoding="utf-8", errors="replace")
-    return texts
 
 
 def values_from_registry_entry(entry: Any) -> list[str]:
@@ -11262,9 +11253,10 @@ def collect_action_rules(texts: dict[str, str]) -> tuple[list[str], list[str]]:
 
 def build_context_payload(project_root: Path, assignment: Path | None = None) -> tuple[dict[str, Any], dict[str, Any], str, str]:
     flow_root = locate_flow_root(project_root)
-    sources = ProjectContextSourcesReader(project_root).read(assignment)
-    fingerprints = source_fingerprints(sources)
-    texts = source_texts(project_root, sources)
+    source_reader = ProjectContextSourcesReader(project_root)
+    sources = source_reader.read(assignment)
+    fingerprints = source_reader.fingerprints(sources)
+    texts = source_reader.texts(sources)
     capabilities = resolve_capabilities(texts, project_root)
     allowed_actions, forbidden_actions = collect_action_rules(texts)
 

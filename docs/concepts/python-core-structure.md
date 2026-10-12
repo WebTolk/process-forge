@@ -410,5 +410,13 @@ and the existing startup smoke use it directly; the two obsolete internal source
 helpers are removed. It reuses concrete project metadata, YAML, digest and path
 owners, with no constructor I/O or retained parsed documents. Root AGENTS preference,
 PF fallback, optional records, first-resolved-path deduplication, ordering, live
-checksums and native failures are preserved. Source text/fingerprint projections,
-full checker, snapshot assembly and publication retain their existing owners.
+checksums and native failures are preserved. Full checker, snapshot assembly
+and publication retain their existing owners.
+
+
+The same reader owns the existing `fingerprints` and `texts` projections.
+Context payload assembly uses one operation-local reader for inventory and both
+views; the two obsolete projection helpers are removed. Ordered keys, duplicate
+replacement, original string conversions, UTF-8 replacement and native error
+precedence are preserved. Text files are read live after inventory fingerprints;
+the reader retains neither inputs nor results and adds no atomic snapshot claim.

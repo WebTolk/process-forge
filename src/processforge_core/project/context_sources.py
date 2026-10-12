@@ -80,3 +80,15 @@ class ProjectContextSourcesReader:
                 policy = 'recommended'
             records.append(self.record(path, kind, required, reason, policy))
         return records
+
+    def fingerprints(self, sources: list[dict[str, Any]]) -> dict[str, str]:
+        return {str(item['path']): str(item.get('fingerprint', 'missing')) for item in sources}
+
+    def texts(self, sources: list[dict[str, Any]]) -> dict[str, str]:
+        project_root = self.project_root
+        texts: dict[str, str] = {}
+        for item in sources:
+            path = project_root / str(item['path'])
+            if path.is_file():
+                texts[str(item['path'])] = path.read_text(encoding='utf-8', errors='replace')
+        return texts
