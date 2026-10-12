@@ -380,3 +380,13 @@ deduplication, errors and shallow conflict values keep their existing semantics.
 The full freshness checker, classification and resource resolution, snapshot
 assembly and publication still have legacy responsibilities and callbacks. This
 bounded migration does not complete those owners or any OOP epic.
+
+
+`project.source_check.ProjectSnapshotSourceCheckService` owns the existing
+comparison of recorded fingerprints with current source bytes. The freshness
+checker calls it directly at the former inline comparison site. It reuses the
+concrete `ProjectSnapshotSourcesReader`; construction performs no I/O, and each
+comparison reads current sources after recorded normalization. Ordered reasons,
+duplicate handling, package exclusions and native errors are preserved. Snapshot
+assembly retains its separate source read. Full checker policy, classification,
+resource comparison, publication and their legacy callbacks remain migration work.

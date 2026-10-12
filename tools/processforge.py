@@ -61,6 +61,7 @@ from processforge_core.common.digests import FileDigestReader
 from processforge_core.project.metadata import ProjectMetadataReader as _ProjectMetadataReader
 from processforge_core.project.readiness import ProjectContextReadinessPolicy as _ProjectContextReadinessPolicy
 from processforge_core.project.snapshot_sources import ProjectSnapshotSourcesReader as _ProjectSnapshotSourcesReader, local_workplace_manifest_reference as _local_workplace_manifest_reference
+from processforge_core.project.source_check import ProjectSnapshotSourceCheckService
 from processforge_core.process_catalog.official_read import OfficialProcessPackReader as _OfficialProcessPackReader
 
 _file_digests = FileDigestReader()
@@ -10046,26 +10047,7 @@ def _project_context_check_result(project_root: Path, *, explicit_workplace: str
         except json.JSONDecodeError:
             marker = {"reason": "stale marker invalid"}
         stale_resources.append({"id": marker.get("subject") or "project-context", "reason": marker.get("reason") or "snapshot stale marker exists"})
-    recorded_sources = {}
-    sources = snapshot.get("sources", {}) if isinstance(snapshot.get("sources"), dict) else {}
-    fingerprints = sources.get("fingerprints", []) if isinstance(sources, dict) else []
-    if isinstance(fingerprints, list):
-        for item in fingerprints:
-            if isinstance(item, dict) and "id" in item:
-                recorded_sources[str(item["id"])] = str(item.get("checksum", "missing"))
-    current_sources = _ProjectSnapshotSourcesReader(project_root, distribution_root=ROOT).read()
-    current_by_id = {str(item["id"]): str(item.get("checksum", "missing")) for item in current_sources}
-    for source_id, checksum in current_by_id.items():
-        if source_id.startswith("package-"):
-            continue
-        if source_id not in recorded_sources:
-            reasons.append(f"source added: {source_id}")
-        elif recorded_sources[source_id] != checksum:
-            reasons.append(f"source changed: {source_id}")
-    for source_id in sorted(set(recorded_sources) - set(current_by_id)):
-        if source_id.startswith("package-"):
-            continue
-        reasons.append(f"source removed: {source_id}")
+    reasons.extend(ProjectSnapshotSourceCheckService(project_root, distribution_root=ROOT).compare(snapshot))
 
     current = build_project_context_snapshot(project_root, explicit_workplace=explicit_workplace)
     execution_readiness = current.get("execution_readiness") if isinstance(current.get("execution_readiness"), dict) else {}

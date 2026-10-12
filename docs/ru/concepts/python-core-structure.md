@@ -389,3 +389,13 @@ execution и resource readiness. Построитель snapshot прямо вы
 Полный freshness checker, classification и resource resolution, построение и
 публикация snapshot ещё содержат legacy обязанности и callbacks. Этот ограниченный
 перенос не завершает этих владельцев или какой-либо OOP эпик.
+
+
+`project.source_check.ProjectSnapshotSourceCheckService` владеет существующим
+сравнением сохранённых fingerprints с текущим содержимым источников. Freshness
+checker вызывает его напрямую на месте прежнего inline алгоритма. Сервис использует
+конкретный `ProjectSnapshotSourcesReader`; конструктор не выполняет I/O, а каждое
+сравнение читает источники после нормализации записанных значений. Порядок причин,
+дубликаты, исключение package-источников и исходные ошибки сохранены. Построение
+snapshot сохраняет самостоятельное чтение источников. Полный checker, classification,
+сравнение ресурсов, публикация и их legacy callbacks ещё требуют переноса.
