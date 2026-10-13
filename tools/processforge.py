@@ -62,6 +62,7 @@ from processforge_core.project.metadata import ProjectMetadataReader as _Project
 from processforge_core.project.readiness import ProjectContextReadinessPolicy as _ProjectContextReadinessPolicy
 from processforge_core.project.snapshot_sources import ProjectSnapshotSourcesReader as _ProjectSnapshotSourcesReader, local_workplace_manifest_reference as _local_workplace_manifest_reference
 from processforge_core.project.source_check import ProjectSnapshotSourceCheckService
+from processforge_core.project.context_rules import ProjectContextRules as _ProjectContextRules
 from processforge_core.project.context_sources import ProjectContextSourcesReader
 from processforge_core.resources.versioning import ResourceVersionPolicy
 from processforge_core.project.resolved_comparison import ProjectSnapshotResolvedComparison
@@ -8105,34 +8106,6 @@ def sha256_file(path: Path) -> str:
     return _file_digests.sha256_file(path)
 
 
-def yaml_list_values(text: str, key: str) -> list[str]:
-    values: list[str] = []
-    lines = text.splitlines()
-    key_pattern = re.compile(rf"^(\s*){re.escape(key)}\s*:\s*$")
-    inline_pattern = re.compile(rf"^\s*{re.escape(key)}\s*:\s*\[(.*?)\]\s*$")
-    for index, line in enumerate(lines):
-        inline = inline_pattern.match(line)
-        if inline:
-            values.extend(item.strip().strip('"').strip("'") for item in inline.group(1).split(",") if item.strip())
-            continue
-        match = key_pattern.match(line)
-        if not match:
-            continue
-        indent = len(match.group(1))
-        for child in lines[index + 1 :]:
-            if not child.strip():
-                continue
-            child_indent = len(child) - len(child.lstrip(" "))
-            if child_indent <= indent:
-                break
-            stripped = child.strip()
-            if stripped.startswith("- "):
-                values.append(stripped[2:].strip().strip('"').strip("'"))
-    return values
-
-
-
-
 def resolve_flow_reference(project_root: Path, value: str) -> Path:
     return _ProjectMetadataReader(project_root).resolve_reference(value)
 
@@ -8202,8 +8175,8 @@ def resolve_capabilities(texts: dict[str, str], project_root: Path) -> dict[str,
     required: list[str] = []
     optional: list[str] = []
     for text in texts.values():
-        required.extend(yaml_list_values(text, "required_capabilities"))
-        optional.extend(yaml_list_values(text, "optional_capabilities"))
+        required.extend(_ProjectContextRules().list_values(text, "required_capabilities"))
+        optional.extend(_ProjectContextRules().list_values(text, "optional_capabilities"))
     required = sorted(set(item for item in required if item))
     optional = sorted(set(item for item in optional if item))
     registry_providers = load_registry_capability_providers(project_root)
@@ -10020,14 +9993,14 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     manifest_text = manifest.read_text(encoding="utf-8", errors="replace")
     sources = _ProjectSnapshotSourcesReader(project_root, distribution_root=ROOT).read()
     required = sorted(
-        set(yaml_list_values(manifest_text, "required_capabilities")).union(
+        set(_ProjectContextRules().list_values(manifest_text, "required_capabilities")).union(
             str(item)
             for item in as_list(manifest_data.get("required_capabilities"))
             if str(item)
         )
     )
     optional = sorted(
-        set(yaml_list_values(manifest_text, "optional_capabilities")).union(
+        set(_ProjectContextRules().list_values(manifest_text, "optional_capabilities")).union(
             str(item)
             for item in as_list(manifest_data.get("optional_capabilities"))
             if str(item)
@@ -11242,15 +11215,6 @@ def write_session_metadata(project_root: Path, session_id: str, mode: str, snaps
     return session_path
 
 
-def collect_action_rules(texts: dict[str, str]) -> tuple[list[str], list[str]]:
-    allowed = {"read_required_sources"}
-    forbidden = {"edit_forbidden_files", "rebuild_context_without_approval"}
-    for text in texts.values():
-        allowed.update(yaml_list_values(text, "allowed_actions"))
-        forbidden.update(yaml_list_values(text, "forbidden_actions"))
-    return sorted(allowed), sorted(forbidden)
-
-
 def build_context_payload(project_root: Path, assignment: Path | None = None) -> tuple[dict[str, Any], dict[str, Any], str, str]:
     flow_root = locate_flow_root(project_root)
     source_reader = ProjectContextSourcesReader(project_root)
@@ -11258,7 +11222,7 @@ def build_context_payload(project_root: Path, assignment: Path | None = None) ->
     fingerprints = source_reader.fingerprints(sources)
     texts = source_reader.texts(sources)
     capabilities = resolve_capabilities(texts, project_root)
-    allowed_actions, forbidden_actions = collect_action_rules(texts)
+    allowed_actions, forbidden_actions = _ProjectContextRules().action_rules(texts)
 
     conflicts: list[dict[str, str]] = []
     for item in sources:
@@ -11361,49 +11325,8 @@ def build_context_payload(project_root: Path, assignment: Path | None = None) ->
         },
         "source_fingerprints": fingerprints,
     }
-    report = render_conflict_report(status, conflicts, fingerprints)
+    report = _ProjectContextRules().conflict_report(status, conflicts, fingerprints)
     return index, resolved, report, status
-
-
-def render_conflict_report(status: str, conflicts: list[dict[str, str]], fingerprints: dict[str, str]) -> str:
-    blocking = [item for item in conflicts if item["status"] == "blocked"]
-    warnings = [item for item in conflicts if item["status"] == "warn"]
-    approvals = [item for item in conflicts if item["status"] == "requires_approval"]
-    resolved = [item for item in conflicts if item["status"] == "resolved"]
-
-    def lines(items: list[dict[str, str]]) -> list[str]:
-        return [f"- {item['message']} ({item.get('source', 'unknown')})" for item in items] or ["- None."]
-
-    output: list[str] = [
-        "schema_version: 1",
-        f"status: {status}",
-        f"blocking_conflicts: {len(blocking)}",
-        f"warnings: {len(warnings)}",
-        f"requires_approval: {len(approvals)}",
-        "",
-        "# Context Conflict Report",
-        "",
-        "## Blocking Conflicts",
-        "",
-        *lines(blocking),
-        "",
-        "## Warnings",
-        "",
-        *lines(warnings),
-        "",
-        "## Requires Approval",
-        "",
-        *lines(approvals),
-        "",
-        "## Resolved",
-        "",
-        *lines(resolved),
-        "",
-        "## Source Fingerprints",
-        "",
-    ]
-    output.extend(f"- {path}: {fingerprint}" for path, fingerprint in fingerprints.items())
-    return "\n".join(output) + "\n"
 
 
 def write_context_outputs(project_root: Path, assignment: Path | None = None) -> tuple[str, dict[str, Path]]:

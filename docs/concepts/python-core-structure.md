@@ -420,3 +420,11 @@ views; the two obsolete projection helpers are removed. Ordered keys, duplicate
 replacement, original string conversions, UTF-8 replacement and native error
 precedence are preserved. Text files are read live after inventory fingerprints;
 the reader retains neither inputs nor results and adds no atomic snapshot claim.
+
+`project.context_rules.ProjectContextRules` owns the existing text-list parsing,
+allowed/forbidden action aggregation and conflict-report rendering. Capability
+readers, snapshot construction and broad context assembly call it directly;
+the three obsolete internal helpers are removed. The owner performs no I/O and
+retains no inputs or results. Text matching, defaults, ordering, native failures
+and report bytes keep their existing behavior. Capability registry reads, full
+context orchestration, freshness and publication retain their existing owners.
