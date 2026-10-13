@@ -446,3 +446,30 @@ Workplace-before-project reads, overwrite and insertion order, status filtering,
 string conversions and the narrow `SystemExit` skip remain unchanged. Every read
 returns current data without retaining documents or results. Availability still
 does not grant permission to execute a provider.
+
+## Project context policy and resource selection
+
+`project.context_policy.ProjectContextPolicy` owns the existing nested override
+merge, context defaults and freshness action mapping. Project initialization,
+snapshot assembly and freshness checks call the owner directly. The existing
+coordination defaults, override order, shallow value sharing and action fallbacks
+remain unchanged.
+
+`project.resource_snapshot.ResourceSnapshotRules` owns resource versioning and
+retention values, declared version and generation, fingerprints, instance ids,
+resolved resource projections, indexing defaults and aggregate reproducibility.
+It preserves the original field order, fallback values, native errors and the
+distinction between borrowed values and copied metadata. It performs no I/O.
+
+`project.knowledge_selection.KnowledgeResourceSelector` owns context requirement
+projection, version constraints and prefixes, inferred platform versions, legacy
+requirements and explicit resource selection. Its default composition uses
+per-instance concrete `ResourceVersionPolicy` and `ResourceSnapshotRules` owners.
+Construction performs no I/O; no request documents or results are retained.
+The CLI and existing narrowing/search smoke call these owners directly; the
+17 internal helpers and two resource policy sets have moved out of the CLI.
+
+These are provisional internal Core interfaces. Full context/snapshot assembly,
+freshness state collection and publication still retain legacy responsibilities.
+This bounded source migration does not complete any OOP epic or qualify archive,
+installed Core, Runtime, connected hosts or performance.

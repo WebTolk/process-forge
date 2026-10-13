@@ -60,6 +60,9 @@ from processforge_core.work.context_documents import ContextContractInputs
 from processforge_core.common.digests import FileDigestReader
 from processforge_core.project.metadata import ProjectMetadataReader as _ProjectMetadataReader
 from processforge_core.project.readiness import ProjectContextReadinessPolicy as _ProjectContextReadinessPolicy
+from processforge_core.project.context_policy import ProjectContextPolicy as _ProjectContextPolicy
+from processforge_core.project.resource_snapshot import ResourceSnapshotRules as _ResourceSnapshotRules
+from processforge_core.project.knowledge_selection import KnowledgeResourceSelector as _KnowledgeResourceSelector
 from processforge_core.project.snapshot_sources import ProjectSnapshotSourcesReader as _ProjectSnapshotSourcesReader, local_workplace_manifest_reference as _local_workplace_manifest_reference
 from processforge_core.project.source_check import ProjectSnapshotSourceCheckService
 from processforge_core.project.context_rules import ProjectContextRules as _ProjectContextRules
@@ -5358,7 +5361,7 @@ def build_project_files(project_root: Path, workplace_manifest: Path, answers: d
         "tools": [{"id": item, "required": item in platform_resolution["required_tools"]} for item in sorted(set(platform_resolution["required_tools"] + platform_resolution["recommended_tools"]))],
         "platform_contracts": [{"id": item, "required": True} for item in sorted(set(detected["platforms"]))],
     }
-    context_policy = answers.get("context_policy") if isinstance(answers.get("context_policy"), dict) else default_context_policy({})
+    context_policy = answers.get("context_policy") if isinstance(answers.get("context_policy"), dict) else _ProjectContextPolicy().build({})
     project_parameters = answers.get("parameters") if isinstance(answers.get("parameters"), dict) else {}
 
     public_manifest = {
@@ -8520,19 +8523,9 @@ def resolve_package_resources(
     return resources
 
 
-RESOURCE_VERSIONING_MODES = {"multi_version", "single_current", "rolling_index", "external_live"}
-RESOURCE_RETENTION_POLICIES = {"keep_versions", "keep_last_n", "replace_in_place", "external_only"}
 SNAPSHOT_FRESHNESS_STATUSES = {"fresh", "fresh_with_updates", "stale", "broken"}
 
 
-def deep_merge_dicts(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
-    result = dict(base)
-    for key, value in override.items():
-        if isinstance(value, dict) and isinstance(result.get(key), dict):
-            result[key] = deep_merge_dicts(result[key], value)
-        else:
-            result[key] = value
-    return result
 
 
 def parameter_path(base: str, key: str) -> str:
@@ -8794,35 +8787,6 @@ def resolve_assignment_parameters(project_root: Path, snapshot: dict[str, Any], 
     return result
 
 
-def default_context_policy(manifest_data: dict[str, Any]) -> dict[str, Any]:
-    coordination = manifest_data.get("coordination") if isinstance(manifest_data.get("coordination"), dict) else {}
-    organized = str(coordination.get("mode") or "inherit") == "organized"
-    policy = {
-        "on_session_start": {
-            "check_freshness": True,
-            "check_update_candidates": "if_due",
-            "if_fresh": "continue",
-            "if_fresh_with_updates": "notify",
-            "if_stale": "notify_director" if organized else "ask_operator",
-            "if_broken": "block",
-        },
-        "auto_refresh": {
-            "enabled": False,
-            "allow_patch": True,
-            "allow_minor": False,
-            "allow_major": False,
-            "allow_rolling_resources": False,
-        },
-        "active_run_behavior": {
-            "existing_capsules": "pin_existing",
-            "new_capsules": "require_fresh_snapshot",
-        },
-        "organized_mode": {
-            "stale_snapshot_action": "notify_director" if organized else "needs_operator",
-        },
-    }
-    project_policy = manifest_data.get("context_policy") if isinstance(manifest_data.get("context_policy"), dict) else {}
-    return deep_merge_dicts(policy, project_policy)
 
 
 def requirements_fingerprints(flow_root: Path, project_root: Path) -> dict[str, str]:
@@ -8835,316 +8799,32 @@ def requirements_fingerprints(flow_root: Path, project_root: Path) -> dict[str, 
     return result
 
 
-def resource_versioning_policy(resource: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-    versioning = resource.get("versioning") if isinstance(resource.get("versioning"), dict) else {}
-    mode = str(versioning.get("mode") or ("multi_version" if resource.get("version") else "rolling_index"))
-    if mode not in RESOURCE_VERSIONING_MODES:
-        mode = "rolling_index"
-    versioning = {
-        "mode": mode,
-        "version_field": str(versioning.get("version_field") or "version"),
-        "instance_id_template": str(versioning.get("instance_id_template") or "{id}@{version}"),
-    }
-    retention = resource.get("retention") if isinstance(resource.get("retention"), dict) else {}
-    default_retention = "keep_versions" if mode == "multi_version" else ("external_only" if mode == "external_live" else "replace_in_place")
-    policy = str(retention.get("policy") or default_retention)
-    if policy not in RESOURCE_RETENTION_POLICIES:
-        policy = default_retention
-    retention = {"policy": policy, "keep_last_n": retention.get("keep_last_n")}
-    behavior = resource.get("snapshot_behavior") if isinstance(resource.get("snapshot_behavior"), dict) else {}
-    reproducibility = "exact" if mode == "multi_version" and policy == "keep_versions" else ("non_reproducible" if mode == "external_live" else "best_effort")
-    snapshot_behavior = {
-        "on_new_version": str(behavior.get("on_new_version") or ("notify_only" if mode == "multi_version" else "mark_stale")),
-        "on_current_generation_changed": str(behavior.get("on_current_generation_changed") or ("notify_only" if mode == "multi_version" else "mark_stale")),
-        "on_instance_missing": str(behavior.get("on_instance_missing") or "broken"),
-        "reproducibility": str(behavior.get("reproducibility") or reproducibility),
-    }
-    return versioning, retention, snapshot_behavior
 
 
-def resource_declared_version(resource: dict[str, Any], versioning: dict[str, Any]) -> str:
-    field = str(versioning.get("version_field") or "version")
-    value = resource.get(field)
-    if value is None:
-        value = resource.get("version") or resource.get("resolved_version")
-    return str(value or "")
 
 
-def resource_generation(resource: dict[str, Any]) -> str:
-    for key in ["generation", "resolved_generation", "updated_at", "generated_at"]:
-        if resource.get(key) is not None:
-            return str(resource.get(key))
-    fingerprint = resource.get("fingerprint") if isinstance(resource.get("fingerprint"), dict) else {}
-    if fingerprint.get("value"):
-        return str(fingerprint.get("value"))
-    return ""
 
 
-def resource_fingerprint(resource: dict[str, Any], versioning: dict[str, Any], generation: str) -> dict[str, str]:
-    fingerprint = resource.get("fingerprint") if isinstance(resource.get("fingerprint"), dict) else {}
-    if fingerprint.get("value"):
-        value = str(fingerprint.get("value"))
-        return {"type": str(fingerprint.get("type") or "declared"), "value": value if value.startswith("sha256:") else "sha256:" + value}
-    stable = {
-        "id": resource.get("id"),
-        "kind": resource.get("kind"),
-        "version": resource_declared_version(resource, versioning),
-        "generation": generation,
-        "path_ref": resource.get("path_ref"),
-    }
-    return {"type": "resource_record_sha256", "value": "sha256:" + hashlib.sha256(json.dumps(stable, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()}
 
 
-def resource_instance_id(resource: dict[str, Any], versioning: dict[str, Any], version: str, generation: str) -> str:
-    explicit = resource.get("instance_id")
-    if isinstance(explicit, str) and explicit.strip():
-        return explicit
-    template = str(versioning.get("instance_id_template") or "{id}@{version}")
-    token_value = version or generation or "current"
-    try:
-        return template.format(id=resource.get("id"), version=token_value, generation=generation or token_value)
-    except (KeyError, ValueError):
-        return f"{resource.get('id')}@{token_value}"
 
 
-def resolved_resource_instance(resource: dict[str, Any]) -> dict[str, Any]:
-    versioning, retention, behavior = resource_versioning_policy(resource)
-    public_id = str(resource.get("id") or resource.get("resource_id") or "")
-    version = resource_declared_version(resource, versioning)
-    generation = resource_generation(resource)
-    fingerprint = resource_fingerprint(resource, versioning, generation)
-    reproducibility = str(behavior.get("reproducibility") or "best_effort")
-    result: dict[str, Any] = {
-        "id": public_id,
-        "kind": str(resource.get("kind") or "reference"),
-        "package_id": str(resource.get("package") or resource.get("package_id") or ""),
-        "requirement": str(resource.get("requirement") or "recommended"),
-        "versioning_mode": versioning["mode"],
-        "retention_policy": retention["policy"],
-        "instance_id": resource_instance_id({**resource, "id": public_id}, versioning, version, generation),
-        "path_ref": resource.get("path_ref"),
-        "fingerprint": fingerprint,
-        "reproducibility": {"level": reproducibility},
-        "snapshot_behavior": behavior,
-    }
-    if version:
-        result["resolved_version"] = version
-    if generation:
-        result["resolved_generation"] = generation
-        result["current_marker_path_ref"] = resource.get("current_marker_path_ref") or resource.get("path_ref")
-    if reproducibility != "exact":
-        result["reproducibility"]["reason"] = f"resource retention policy is {retention['policy']}"
-    for key in ("resource_id", "title", "description", "load_policy", "index_policy", "indexing", "selection"):
-        if key in resource:
-            result[key] = copy.deepcopy(resource[key])
-    return result
 
 
-def context_requirements_from_manifest(manifest_data: dict[str, Any]) -> dict[str, Any]:
-    requirements = manifest_data.get("context_requirements") if isinstance(manifest_data.get("context_requirements"), dict) else {}
-    return {
-        "knowledge_packages": requirements.get("knowledge_packages", []) if isinstance(requirements.get("knowledge_packages"), list) else [],
-        "knowledge_resources": requirements.get("knowledge_resources", []) if isinstance(requirements.get("knowledge_resources"), list) else [],
-        "resource_selection": requirements.get("resource_selection", {}) if isinstance(requirements.get("resource_selection"), dict) else {},
-        "template_packages": requirements.get("template_packages", []) if isinstance(requirements.get("template_packages"), list) else [],
-        "templates": requirements.get("templates", []) if isinstance(requirements.get("templates"), list) else [],
-        "tools": requirements.get("tools", []) if isinstance(requirements.get("tools"), list) else [],
-        "platform_contracts": requirements.get("platform_contracts", []) if isinstance(requirements.get("platform_contracts"), list) else [],
-    }
 
 
-def version_satisfies_simple_constraint(version: str, constraint: str) -> bool:
-    text = (constraint or "").strip()
-    if not text or text in {"*", "latest"}:
-        return True
-    version_key = _resource_version_policy.key(version)
-    if version_key[0] != 0:
-        return version == text
-    version_tuple = version_key[1]
-    assert isinstance(version_tuple, tuple)
-    for part in text.split():
-        if part.startswith(">="):
-            other = _resource_version_policy.key(part[2:])[1]
-            if isinstance(other, tuple) and version_tuple < other:
-                return False
-        elif part.startswith(">"):
-            other = _resource_version_policy.key(part[1:])[1]
-            if isinstance(other, tuple) and version_tuple <= other:
-                return False
-        elif part.startswith("<="):
-            other = _resource_version_policy.key(part[2:])[1]
-            if isinstance(other, tuple) and version_tuple > other:
-                return False
-        elif part.startswith("<"):
-            other = _resource_version_policy.key(part[1:])[1]
-            if isinstance(other, tuple) and version_tuple >= other:
-                return False
-        elif part.startswith("^"):
-            base = _resource_version_policy.key(part[1:])[1]
-            if isinstance(base, tuple) and (version_tuple < base or version_tuple[0] != base[0]):
-                return False
-        elif part == "||":
-            continue
-        elif version != part:
-            return False
-    return True
 
 
-def version_prefix(version: str) -> str:
-    key = _resource_version_policy.key(version)
-    if key[0] != 0 or not isinstance(key[1], tuple) or len(key[1]) < 2:
-        return ""
-    return f"{key[1][0]}.{key[1][1]}"
 
 
-def inferred_platform_versions(package_ids: list[str], selection: dict[str, Any]) -> list[str]:
-    configured = selection.get("platform_versions") if isinstance(selection.get("platform_versions"), dict) else {}
-    versions = [str(value).strip() for value in configured.values() if str(value).strip()]
-    if versions:
-        return sorted(set(versions))
-    inferred: list[str] = []
-    for package_id in package_ids:
-        match = re.search(r"(?:^|[-_.])v?(\d+)[-_.](\d+)(?:$|[-_.])", package_id)
-        if match:
-            inferred.append(f"{match.group(1)}.{match.group(2)}")
-    return sorted(set(inferred))
 
 
-def legacy_resource_requirements(
-    package_resources: list[dict[str, Any]],
-    *,
-    direct_package_ids: list[str],
-    selection: dict[str, Any],
-) -> list[dict[str, Any]]:
-    """Derive a narrow migration set for manifests created before selectors existed."""
-
-    direct = set(direct_package_ids)
-    target_versions = inferred_platform_versions(direct_package_ids, selection)
-    requirements: list[dict[str, Any]] = []
-    compatible: dict[str, dict[str, Any]] = {}
-    for resource in package_resources:
-        package_id = str(resource.get("package") or resource.get("package_id") or "")
-        resource_id = str(resource.get("id") or resource.get("resource_id") or "")
-        version = str(resource.get("version") or resource.get("generation") or "")
-        if package_id in direct or package_id.startswith("project."):
-            requirements.append({"id": resource_id, "preferred_version": version, "required": True, "selection_reason": "legacy_direct_package"})
-            continue
-        if target_versions and version_prefix(version) in target_versions:
-            logical_id = str(resource.get("resource_id") or resource_id)
-            previous = compatible.get(logical_id)
-            if previous is None or _resource_version_policy.key(version) > _resource_version_policy.key(str(previous.get("version") or previous.get("generation") or "")):
-                compatible[logical_id] = resource
-    for resource in compatible.values():
-        requirements.append(
-            {
-                "id": str(resource.get("id") or resource.get("resource_id") or ""),
-                "preferred_version": str(resource.get("version") or resource.get("generation") or ""),
-                "required": True,
-                "selection_reason": "legacy_compatible_version",
-            }
-        )
-    return requirements
 
 
-def select_resolved_knowledge_resources(
-    package_resources: list[dict[str, Any]],
-    requirements: dict[str, Any],
-    *,
-    direct_package_ids: list[str] | None = None,
-) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    resource_requirements = [item for item in requirements.get("knowledge_resources", []) if isinstance(item, dict)]
-    selection = requirements.get("resource_selection") if isinstance(requirements.get("resource_selection"), dict) else {}
-    if not resource_requirements:
-        resource_requirements = legacy_resource_requirements(
-            package_resources,
-            direct_package_ids=direct_package_ids or [],
-            selection=selection,
-        )
-        mode = "legacy_narrow"
-    else:
-        mode = "explicit"
-    resolved: list[dict[str, Any]] = []
-    used_keys: set[tuple[str, str]] = set()
-    provenance: list[dict[str, Any]] = []
-    for requirement in resource_requirements:
-        resource_id = str(requirement.get("id") or "")
-        candidates = [
-            resource
-            for resource in package_resources
-            if resource_id in {str(resource.get("resource_id") or ""), str(resource.get("id") or "")}
-        ]
-        preferred = str(requirement.get("preferred_version") or "")
-        constraint = str(requirement.get("constraint") or "")
-        if preferred:
-            candidates = [resource for resource in candidates if str(resource.get("version") or "") == preferred]
-        if constraint:
-            candidates = [resource for resource in candidates if version_satisfies_simple_constraint(str(resource.get("version") or ""), constraint)]
-        candidates.sort(key=lambda resource: _resource_version_policy.key(str(resource.get("version") or resource_generation(resource) or "")))
-        if candidates:
-            selected = candidates[-1]
-            selected = dict(selected)
-            selected["requirement"] = "required" if bool(requirement.get("required", True)) else "recommended"
-            instance = resolved_resource_instance(selected)
-            key = (instance["id"], instance["instance_id"])
-            if key not in used_keys:
-                instance["selection"] = {
-                    "mode": mode,
-                    "reason": str(requirement.get("selection_reason") or "explicit_selector"),
-                    "preferred_version": preferred or None,
-                    "constraint": constraint or None,
-                }
-                resolved.append(instance)
-                used_keys.add(key)
-            provenance.append({
-                "selector": {key: value for key, value in requirement.items() if key in {"id", "preferred_version", "constraint", "required", "selection_reason"}},
-                "resource_id": instance["id"],
-                "instance_id": instance["instance_id"],
-                "status": "selected",
-            })
-        else:
-            provenance.append({"selector": {key: value for key, value in requirement.items() if key in {"id", "preferred_version", "constraint", "required", "selection_reason"}}, "status": "unresolved"})
-    return resolved, {
-        "mode": mode,
-        "status": "unresolved" if any(item.get("status") == "unresolved" and item.get("selector", {}).get("required", True) is not False for item in provenance) else "resolved",
-        "target_versions": inferred_platform_versions(direct_package_ids or [], selection),
-        "selected_count": len(resolved),
-        "available_count": len(package_resources),
-        "provenance": provenance,
-    }
 
 
-def selected_resource_indexing(resource: dict[str, Any], selection: dict[str, Any]) -> dict[str, Any]:
-    indexing = resource.get("indexing") if isinstance(resource.get("indexing"), dict) else {}
-    if indexing:
-        return copy.deepcopy(indexing)
-    if str(selection.get("mode") or "") == "legacy_narrow" and str(resource.get("kind") or "") == "documentation":
-        return {
-            "enabled": True,
-            "mode": "fulltext",
-            "fields": ["title", "description", "version", "path"],
-            "sources": [{"path": ".", "mode": "fulltext", "include": ["**/*.md", "**/*.txt", "**/*.rst"], "role": "documentation"}],
-            "migration": "legacy_documentation_fulltext",
-        }
-    return {
-        "enabled": True,
-        "mode": "metadata",
-        "fields": ["title", "description", "version", "path"],
-        "sources": [{"path": ".", "mode": "metadata", "role": str(resource.get("kind") or "knowledge")}],
-    }
 
 
-def aggregate_reproducibility(resources: list[dict[str, Any]]) -> dict[str, Any]:
-    levels = [str(item.get("reproducibility", {}).get("level", "best_effort")) for item in resources if isinstance(item, dict)]
-    reasons = sorted({str(item.get("reproducibility", {}).get("reason")) for item in resources if isinstance(item, dict) and item.get("reproducibility", {}).get("reason")})
-    if not levels or all(level == "exact" for level in levels):
-        level = "exact"
-    elif any(level == "non_reproducible" for level in levels):
-        level = "non_reproducible"
-    elif any(level == "best_effort" for level in levels):
-        level = "best_effort"
-    else:
-        level = "mixed"
-    return {"level": level, "reasons": reasons}
 
 
 HEAVY_RESOURCE_KINDS = {
@@ -9339,7 +9019,7 @@ def normalize_resource_record(resource: dict[str, Any], package_id: str, workpla
         record["source"] = {"type": "url", "url": source_url}
     if "update_policy" not in record:
         record["update_policy"] = {"mode": "manual"}
-    versioning, retention, snapshot_behavior = resource_versioning_policy(record)
+    versioning, retention, snapshot_behavior = _ResourceSnapshotRules().versioning_policy(record)
     record.setdefault("versioning", versioning)
     record.setdefault("retention", retention)
     record.setdefault("snapshot_behavior", snapshot_behavior)
@@ -9798,17 +9478,6 @@ def project_context_report_path(project_root: Path) -> Path:
     return locate_flow_root(project_root) / "artifacts" / "project-context-refresh-report.md"
 
 
-def project_context_policy_action(status: str, policy: dict[str, Any]) -> str:
-    session_policy = policy.get("on_session_start") if isinstance(policy.get("on_session_start"), dict) else {}
-    if status == "fresh":
-        return str(session_policy.get("if_fresh") or "continue")
-    if status == "fresh_with_updates":
-        return str(session_policy.get("if_fresh_with_updates") or "notify")
-    if status == "stale":
-        return str(session_policy.get("if_stale") or "ask_operator")
-    if status == "broken":
-        return str(session_policy.get("if_broken") or "block")
-    return "block"
 
 
 
@@ -9892,8 +9561,8 @@ def _project_context_check_result(project_root: Path, *, explicit_workplace: str
         status = "fresh_with_updates"
     else:
         status = "fresh"
-    policy = snapshot.get("context_policy") if isinstance(snapshot.get("context_policy"), dict) else default_context_policy({})
-    policy_action = project_context_policy_action(status, policy)
+    policy = snapshot.get("context_policy") if isinstance(snapshot.get("context_policy"), dict) else _ProjectContextPolicy().build({})
+    policy_action = _ProjectContextPolicy().action(status, policy)
     return {
         "snapshot_id": snapshot_id,
         "snapshot_sha256": "sha256:" + sha256_file(snapshot_yaml),
@@ -10024,8 +9693,8 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
         sorted(set(package_ids)),
         required_package_ids,
     )
-    context_requirements = context_requirements_from_manifest(manifest_data)
-    context_policy = default_context_policy(manifest_data)
+    context_requirements = _KnowledgeResourceSelector().requirements(manifest_data)
+    context_policy = _ProjectContextPolicy().build(manifest_data)
     direct_platform_package_ids = sorted(
         {
             str(package_id)
@@ -10038,12 +9707,12 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             if str(package_id)
         }
     )
-    resolved_knowledge_resources, resource_selection = select_resolved_knowledge_resources(
+    resolved_knowledge_resources, resource_selection = _KnowledgeResourceSelector().select(
         package_resources,
         context_requirements,
         direct_package_ids=direct_platform_package_ids,
     )
-    available_knowledge_resources = [resolved_resource_instance(resource) for resource in package_resources]
+    available_knowledge_resources = [_ResourceSnapshotRules().instance(resource) for resource in package_resources]
     local_search_resources = [
         {
             "id": str(item.get("id") or ""),
@@ -10057,7 +9726,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             "path_ref": item.get("path_ref") if isinstance(item.get("path_ref"), dict) else {},
             "status": str(item.get("status") or "available"),
             "load_policy": "snapshot_authorized",
-            "indexing": selected_resource_indexing(item, resource_selection),
+            "indexing": _ResourceSnapshotRules().indexing(item, resource_selection),
         }
         for item in resolved_knowledge_resources
         if str(item.get("id") or "")
@@ -10094,7 +9763,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
                     },
                 }
             )
-    reproducibility = aggregate_reproducibility(resolved_knowledge_resources)
+    reproducibility = _ResourceSnapshotRules().reproducibility(resolved_knowledge_resources)
     parameter_resolution = resolve_project_parameters(
         project_root,
         workplace_manifest_path,

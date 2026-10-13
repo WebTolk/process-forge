@@ -14,6 +14,8 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from processforge_core.resources.snapshot import resource_selection_summary, selected_resource
 from processforge_core.resources.local_search import maintenance_tick, search
+from processforge_core.project.resource_snapshot import ResourceSnapshotRules as _ResourceSnapshotRules
+from processforge_core.project.knowledge_selection import KnowledgeResourceSelector as _KnowledgeResourceSelector
 
 
 def load_pf_module():
@@ -45,7 +47,7 @@ def resource(package: str, version: str, *, kind: str = "source_tree") -> dict:
 
 def smoke_project_selects_current_platform_resources() -> None:
     resources = [resource("knowledge.platform-core.v5-4-5", "5.4.5"), resource("knowledge.platform-core.v6-1-2", "6.1.2")]
-    selected, report = PF.select_resolved_knowledge_resources(
+    selected, report = _KnowledgeResourceSelector().select(
         resources,
         {"knowledge_resources": [], "resource_selection": {"platform_versions": {"cms": "6.1"}}},
         direct_package_ids=["knowledge.platform-guide-6-1"],
@@ -56,7 +58,7 @@ def smoke_project_selects_current_platform_resources() -> None:
 
 def smoke_project_does_not_select_all_platform_versions() -> None:
     resources = [resource("knowledge.platform-core.v5-4-5", "5.4.5"), resource("knowledge.platform-core.v6-1-1", "6.1.1"), resource("knowledge.platform-core.v6-1-2", "6.1.2")]
-    selected, _report = PF.select_resolved_knowledge_resources(
+    selected, _report = _KnowledgeResourceSelector().select(
         resources,
         {"knowledge_resources": [], "resource_selection": {"platform_versions": {"cms": "6.1"}}},
         direct_package_ids=["knowledge.platform-guide-6-1"],
@@ -66,7 +68,7 @@ def smoke_project_does_not_select_all_platform_versions() -> None:
 
 def smoke_platform_version_compatibility_resolution() -> None:
     resources = [resource("knowledge.platform-core", "6.1.1"), resource("knowledge.platform-core", "6.1.2")]
-    selected, report = PF.select_resolved_knowledge_resources(
+    selected, report = _KnowledgeResourceSelector().select(
         resources,
         {"knowledge_resources": [{"id": "root", "constraint": ">=6.1 <6.2", "required": True}]},
     )
@@ -76,11 +78,11 @@ def smoke_platform_version_compatibility_resolution() -> None:
 
 def smoke_explicit_resource_mismatch_stays_unresolved() -> None:
     resources = [resource("knowledge.platform-core", "6.1.2")]
-    constrained, constrained_report = PF.select_resolved_knowledge_resources(
+    constrained, constrained_report = _KnowledgeResourceSelector().select(
         resources,
         {"knowledge_resources": [{"id": "root", "constraint": ">=6.2 <6.3", "required": True}]},
     )
-    preferred, preferred_report = PF.select_resolved_knowledge_resources(
+    preferred, preferred_report = _KnowledgeResourceSelector().select(
         resources,
         {"knowledge_resources": [{"id": "root", "preferred_version": "6.2.0", "required": True}]},
     )
@@ -136,19 +138,19 @@ def smoke_search_historical_versions_hidden() -> None:
 
 def smoke_migration_project_can_select_old_and_new_versions() -> None:
     resources = [resource("knowledge.platform-core.v5-4-5", "5.4.5"), resource("knowledge.platform-core.v6-1-2", "6.1.2")]
-    old, _ = PF.select_resolved_knowledge_resources(resources, {"knowledge_resources": [], "resource_selection": {"platform_versions": {"cms": "5.4"}}}, direct_package_ids=["knowledge.platform-guide-5-4"])
-    new, _ = PF.select_resolved_knowledge_resources(resources, {"knowledge_resources": [], "resource_selection": {"platform_versions": {"cms": "6.1"}}}, direct_package_ids=["knowledge.platform-guide-6-1"])
+    old, _ = _KnowledgeResourceSelector().select(resources, {"knowledge_resources": [], "resource_selection": {"platform_versions": {"cms": "5.4"}}}, direct_package_ids=["knowledge.platform-guide-5-4"])
+    new, _ = _KnowledgeResourceSelector().select(resources, {"knowledge_resources": [], "resource_selection": {"platform_versions": {"cms": "6.1"}}}, direct_package_ids=["knowledge.platform-guide-6-1"])
     assert [item["resolved_version"] for item in old] == ["5.4.5"]
     assert [item["resolved_version"] for item in new] == ["6.1.2"]
 
 
 def smoke_resource_selection_provenance() -> None:
-    selected, report = PF.select_resolved_knowledge_resources([resource("knowledge.platform-core.v6-1-2", "6.1.2")], {"knowledge_resources": [], "resource_selection": {"platform_versions": {"cms": "6.1"}}}, direct_package_ids=["knowledge.platform-guide-6-1"])
+    selected, report = _KnowledgeResourceSelector().select([resource("knowledge.platform-core.v6-1-2", "6.1.2")], {"knowledge_resources": [], "resource_selection": {"platform_versions": {"cms": "6.1"}}}, direct_package_ids=["knowledge.platform-guide-6-1"])
     assert selected[0]["selection"]["reason"] == "legacy_compatible_version"
     assert report["provenance"][0]["selector"]["selection_reason"] == "legacy_compatible_version"
     documentation = resource("knowledge.platform-guide-6-1", "6.1", kind="documentation")
     documentation.pop("indexing")
-    indexing = PF.selected_resource_indexing(documentation, report)
+    indexing = _ResourceSnapshotRules().indexing(documentation, report)
     assert indexing["mode"] == "fulltext" and indexing["migration"] == "legacy_documentation_fulltext"
 
 
