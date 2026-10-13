@@ -13,6 +13,7 @@ from typing import Any, Callable
 
 from ..agent_entry.contract import EntryError
 from ..agent_entry import migration as entry_migration
+from ..documents.answers import AnswersDocumentReader
 from .host_integration import optional_host_integration_status
 
 
@@ -132,7 +133,7 @@ def _initialization_request(request: dict[str, Any], core: Any) -> dict[str, Any
     if workplace.is_dir():
         workplace = workplace / "workplace.yaml"
     answers_path = request.get("answers_path")
-    answers = core.load_answers(Path(str(answers_path)).expanduser().resolve() if answers_path else None)
+    answers = AnswersDocumentReader().read(Path(str(answers_path)).expanduser().resolve() if answers_path else None)
     supplied_answers = request.get("answers")
     if isinstance(supplied_answers, dict):
         answers.update(supplied_answers)

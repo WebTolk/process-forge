@@ -426,5 +426,23 @@ allowed/forbidden action aggregation and conflict-report rendering. Capability
 readers, snapshot construction and broad context assembly call it directly;
 the three obsolete internal helpers are removed. The owner performs no I/O and
 retains no inputs or results. Text matching, defaults, ordering, native failures
-and report bytes keep their existing behavior. Capability registry reads, full
-context orchestration, freshness and publication retain their existing owners.
+and report bytes keep their existing behavior. Full context orchestration,
+freshness and publication retain their existing owners.
+
+`documents.answers.AnswersDocumentReader` owns the existing strict answers read:
+missing-file and secret-value refusals, strict UTF-8 decoding, mapping-only YAML
+results and the existing `ModuleNotFoundError` fallback through Core's simple
+parser. All answers consumers, including project initialization, use it directly;
+the old internal loader is removed. CLI secret checks and redaction reuse the
+same pattern definitions. This reader keeps its distinct error behavior rather
+than using the tolerant `YamlDocumentReader` policy.
+
+`project.capability_registry.CapabilityRegistryReader` owns capability values
+and the ordered provider map from workplace and project tools/MCP registries.
+All value and provider-map consumers call it directly; the two old helpers are
+removed. Its concrete default uses `AnswersDocumentReader` and
+`ProjectMetadataReader`, with no CLI dependency or construction-time I/O.
+Workplace-before-project reads, overwrite and insertion order, status filtering,
+string conversions and the narrow `SystemExit` skip remain unchanged. Every read
+returns current data without retaining documents or results. Availability still
+does not grant permission to execute a provider.

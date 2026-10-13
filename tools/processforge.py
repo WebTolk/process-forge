@@ -63,6 +63,7 @@ from processforge_core.project.readiness import ProjectContextReadinessPolicy as
 from processforge_core.project.snapshot_sources import ProjectSnapshotSourcesReader as _ProjectSnapshotSourcesReader, local_workplace_manifest_reference as _local_workplace_manifest_reference
 from processforge_core.project.source_check import ProjectSnapshotSourceCheckService
 from processforge_core.project.context_rules import ProjectContextRules as _ProjectContextRules
+from processforge_core.project.capability_registry import CapabilityRegistryReader as _CapabilityRegistryReader
 from processforge_core.project.context_sources import ProjectContextSourcesReader
 from processforge_core.resources.versioning import ResourceVersionPolicy
 from processforge_core.project.resolved_comparison import ProjectSnapshotResolvedComparison
@@ -161,6 +162,8 @@ from pf_cli.parsers.update import UpdateCommandParser
 from pf_cli.parsers.work import WorkCommandParser
 from pf_cli.parsers.workplace import WorkplaceCommandParser
 from processforge_core.documents.reader import YamlDocumentReader
+from processforge_core.documents.answers import AnswersDocumentReader as _AnswersDocumentReader
+from processforge_core.documents.answers import SECRET_VALUE_PATTERNS
 from processforge_subprocess import diagnostic_text, format_command as format_subprocess_command, run_command as run_subprocess_command
 
 PROJECT_FLOW_ROOT = ".pf"
@@ -467,11 +470,6 @@ LOCAL_PATH_PATTERNS = [
     re.compile("/" + "home" + "/[A-Za-z0-9_.-]+/"),
     re.compile("/" + "Users" + "/[A-Za-z0-9_.-]+/"),
     re.compile("/" + "srv" + "/"),
-]
-
-SECRET_VALUE_PATTERNS = [
-    re.compile(r"(?i)(api[_-]?key|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{8,}"),
-    re.compile(r"-----BEGIN [A-Z ]+PRIVATE KEY-----"),
 ]
 
 EVOLVE_MODES = {"disabled", "optional", "required"}
@@ -1476,23 +1474,6 @@ def parse_simple_yaml(text: str) -> dict[str, Any]:
     return root
 
 
-def load_answers(path: Path | None) -> dict[str, Any]:
-    if path is None:
-        return {}
-    if not path.is_file():
-        raise SystemExit(f"FAIL: answers file not found: {path}")
-    text = path.read_text(encoding="utf-8")
-    if contains_secret_value(text):
-        raise SystemExit("FAIL: answers file appears to contain a secret value")
-    try:
-        import yaml  # type: ignore
-
-        data = yaml.safe_load(text)
-        return data if isinstance(data, dict) else {}
-    except ModuleNotFoundError:
-        return parse_simple_yaml(text)
-
-
 def format_scalar(value: Any) -> str:
     if value is True:
         return "true"
@@ -2474,7 +2455,7 @@ def append_workplace_event(root: Path, event_type: str, *, payload: dict[str, An
 
 def command_init_workplace(args: argparse.Namespace) -> int:
     root = Path(args.root).expanduser().resolve()
-    answers = load_answers(Path(args.answers).expanduser().resolve() if args.answers else None)
+    answers = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve() if args.answers else None)
     profile = str(getattr(args, "profile", "") or "").strip()
     if profile:
         answers = dict(answers)
@@ -2601,7 +2582,7 @@ def load_guided_workplace_answers(session_dir: Path, answers_path: Path | None =
     defaults = default_guided_workplace_answers(workplace or session_dir, session_id)
     existing = session_dir / "answers.yaml"
     source = answers_path if answers_path and answers_path.is_file() else existing if existing.is_file() else None
-    supplied = load_answers(source) if source else {}
+    supplied = _AnswersDocumentReader().read(source) if source else {}
     return merge_guided_answers(defaults, supplied)
 
 
@@ -5005,7 +4986,7 @@ def active_registry_capability_providers(
                 continue
             if str(entry.get("status") or "available") in {"disabled", "missing"}:
                 continue
-            provided = values_from_registry_entry(entry)
+            provided = _CapabilityRegistryReader.values(entry)
             capabilities.update(provided)
             for capability in provided:
                 providers.setdefault(capability, []).append({"provider": "registry", provider_key: resource_id})
@@ -8120,57 +8101,6 @@ def manifest_path_refs(project_root: Path, key: str) -> list[Path]:
 
 
 
-def values_from_registry_entry(entry: Any) -> list[str]:
-    values: list[str] = []
-    if not isinstance(entry, dict):
-        return values
-    for key in ("capability", "capabilities", "provides", "provides_capabilities"):
-        value = entry.get(key)
-        if isinstance(value, str):
-            values.append(value)
-        elif isinstance(value, list):
-            values.extend(str(item) for item in value if isinstance(item, (str, int, float)))
-        elif isinstance(value, dict):
-            nested = value.get("capabilities")
-            if isinstance(nested, list):
-                values.extend(str(item) for item in nested if isinstance(item, (str, int, float)))
-    return values
-
-
-def load_registry_capability_providers(project_root: Path, workplace_manifest: Path | None = None) -> dict[str, str]:
-    providers: dict[str, str] = {}
-
-    def collect(registry_root: Path, scope: str) -> None:
-        for rel_path, collection_key in [
-            ("registries/tools.yaml", "tools"),
-            ("registries/mcp.yaml", "mcp_servers"),
-        ]:
-            path = registry_root / rel_path
-            if not path.is_file():
-                continue
-            try:
-                data = load_answers(path)
-            except SystemExit:
-                continue
-            entries = data.get(collection_key) if isinstance(data, dict) else None
-            if not isinstance(entries, list):
-                continue
-            for entry in entries:
-                if not isinstance(entry, dict):
-                    continue
-                if str(entry.get("status") or "available") in {"disabled", "missing"}:
-                    continue
-                provider_id = str(entry.get("id", rel_path))
-                provider_ref = provider_id if scope == "project" else f"{scope}:{provider_id}"
-                for capability in values_from_registry_entry(entry):
-                    providers[capability] = provider_ref
-
-    if workplace_manifest and workplace_manifest.is_file():
-        collect(workplace_manifest.parent, "workplace")
-    collect(locate_flow_root(project_root), "project")
-    return providers
-
-
 def resolve_capabilities(texts: dict[str, str], project_root: Path) -> dict[str, Any]:
     required: list[str] = []
     optional: list[str] = []
@@ -8179,7 +8109,7 @@ def resolve_capabilities(texts: dict[str, str], project_root: Path) -> dict[str,
         optional.extend(_ProjectContextRules().list_values(text, "optional_capabilities"))
     required = sorted(set(item for item in required if item))
     optional = sorted(set(item for item in optional if item))
-    registry_providers = load_registry_capability_providers(project_root)
+    registry_providers = _CapabilityRegistryReader(project_root).read()
     available = set(registry_providers)
     missing_required = [item for item in required if item not in available]
     missing_optional = [item for item in optional if item not in available]
@@ -10024,7 +9954,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
             distribution_root = resolve_distribution_path(workplace_manifest_path, "processforge")
     elif isinstance(manifest_data.get("workplace"), dict) and manifest_data["workplace"].get("reference") == "auto":
         distribution_root = project_root
-    providers = load_registry_capability_providers(project_root, workplace_manifest_path)
+    providers = _CapabilityRegistryReader(project_root).read(workplace_manifest_path)
     required_records, optional_records = capability_records(required, optional, providers)
     classification = classify_project(project_root, workplace_manifest_path)
     manifest_platform_contracts = manifest_data.get("platform_contracts") if isinstance(manifest_data.get("platform_contracts"), list) else []
@@ -12309,7 +12239,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
         raise SystemExit("FAIL: pinned_context_unavailable; create_successor_work or restore the exact recorded context")
     required = [str(item) for item in metadata.get("required_capabilities", [])] if isinstance(metadata.get("required_capabilities"), list) else []
     optional = [str(item) for item in metadata.get("optional_capabilities", [])] if isinstance(metadata.get("optional_capabilities"), list) else []
-    providers = load_registry_capability_providers(project_root, resolve_project_workplace_manifest(project_root))
+    providers = _CapabilityRegistryReader(project_root).read(resolve_project_workplace_manifest(project_root))
     required_records, optional_records = capability_records(required, optional, providers)
     missing_required = [item["id"] for item in required_records if item.get("status") == "missing"]
     if missing_required:
@@ -13011,7 +12941,7 @@ def official_pack_capability_providers(
         declared = {str(item) for item in as_list(provided.get("capabilities")) if str(item)}
         for tool in as_list(provided.get("tools")):
             if isinstance(tool, dict):
-                declared.update(values_from_registry_entry(tool))
+                declared.update(_CapabilityRegistryReader.values(tool))
         capabilities.update(declared)
         for capability in declared:
             providers.setdefault(capability, []).append(
@@ -14114,7 +14044,7 @@ def validate_process_authoring_logic(process: dict[str, Any], answers: dict[str,
 def command_process_authoring_start(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
-    raw_answers = load_answers(Path(args.answers).expanduser().resolve()) if args.answers else {}
+    raw_answers = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve()) if args.answers else {}
     if args.answers and "evolve" not in raw_answers:
         raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
     fallback_id = args.id or str((raw_answers.get("process") or {}).get("id") if isinstance(raw_answers.get("process"), dict) else raw_answers.get("id") or "new-process")
@@ -14544,7 +14474,7 @@ def command_process_create(args: argparse.Namespace) -> int:
     project_root = Path(args.project_root).expanduser().resolve()
     require_flow_root(project_root)
     mode = authoring_mode(args)
-    raw_answers = load_answers(Path(args.answers).expanduser().resolve()) if args.answers else {}
+    raw_answers = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve()) if args.answers else {}
     if args.answers and "evolve" not in raw_answers:
         raise SystemExit("FAIL: process authoring answers must include explicit evolve enabled/disabled decision")
     fallback_id = args.id or str((raw_answers.get("process") or {}).get("id") if isinstance(raw_answers.get("process"), dict) else raw_answers.get("id") or "new-process")
@@ -19675,7 +19605,7 @@ def command_orchestrator_plan_create(args: argparse.Namespace) -> int:
     require_flow_root(project_root)
     run_id = safe_id(args.run, "run")
     path = orchestrator_plan_path(project_root, run_id)
-    plan = load_answers(Path(args.answers).expanduser().resolve() if args.answers else None) if args.answers else default_orchestrator_task_plan(run_id, args.title)
+    plan = _AnswersDocumentReader().read(Path(args.answers).expanduser().resolve() if args.answers else None) if args.answers else default_orchestrator_task_plan(run_id, args.title)
     if not plan.get("run"):
         plan["run"] = {"id": run_id, "title": args.title, "process": "multi-agent-task-orchestration"}
     if not args.apply or getattr(args, "dry_run", False):
@@ -20657,7 +20587,7 @@ def command_doctor_context(args: argparse.Namespace) -> int:
             ecp_text = ecp.read_text(encoding="utf-8", errors="replace")
             checksum = sha256_file(assignment) if assignment.is_file() else "missing"
             checks.append(check("PASS" if checksum in ecp_text else "FAIL", f"assignment ECP is fresh ({rel(ecp, project_root)})"))
-            ecp_data = load_answers(ecp)
+            ecp_data = _AnswersDocumentReader().read(ecp)
             ecp_status = ecp_data.get("context_status") if isinstance(ecp_data, dict) else None
             checks.append(check("PASS" if ecp_status == context_status else "FAIL", f"assignment ECP context_status is {ecp_status}"))
             report_ref = ecp_data.get("conflict_report") if isinstance(ecp_data, dict) else None

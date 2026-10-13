@@ -18,6 +18,7 @@ from typing import Any
 import yaml
 
 from ..common.request_scope import safe_load
+from ..project.capability_registry import CapabilityRegistryReader
 
 
 CONTRACT_VERSION = 1
@@ -385,7 +386,7 @@ def build_context_fields(project: Path, assignment_path: Path, metadata: dict[st
     # The full process and its stage requirements remain in the process pin.
     required = intent["required_capabilities"]
     optional = sorted(set(intent["optional_capabilities"]) - set(required))
-    providers = core.load_registry_capability_providers(project, core.resolve_project_workplace_manifest(project))
+    providers = CapabilityRegistryReader(project).read(core.resolve_project_workplace_manifest(project))
     required_records, optional_records = core.capability_records(required, optional, providers)
     sources, blockers = _capture_sources(project, assignment_path, intent, core)
     blockers.extend({"code": "source_scope_denied", "path": item["path"]} for item in sources
@@ -534,7 +535,7 @@ def validate_execution_contract(project: Path, assignment_path: Path, metadata: 
                 raise ContextContractError(blockers[0]["code"], blockers=blockers)
             if contract["readiness"]["status"] != "ready":
                 raise ContextContractError("execution_contract_not_ready")
-            providers = core.load_registry_capability_providers(project, core.resolve_project_workplace_manifest(project))
+            providers = CapabilityRegistryReader(project).read(core.resolve_project_workplace_manifest(project))
             missing = [item["id"] for item in contract["capabilities"]["required"] if item["id"] not in providers]
             if missing:
                 raise ContextContractError("capability_missing", capabilities=missing)
