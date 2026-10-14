@@ -57,6 +57,7 @@ if TYPE_CHECKING:
     from .work.automation_readiness import AutomationReadinessService
     from .evidence.validation import EvidenceValidationService
     from .project.context import ProjectContextService
+    from .project.metadata import ProjectMetadataReader
     from .resources.access import ResourceSearchService
     from .resources.access import ResourceResolveService
     from .project.mode import GarageModeService
@@ -347,12 +348,16 @@ def build_fresh_session_boundary_read_service(
 
 def build_project_context_service(
     project_root: Path, workplace_root: Path, core: Any, *, snapshots: ProjectSnapshotReadPort | None = None,
+    metadata: ProjectMetadataReader | None = None,
 ) -> ProjectContextService:
     from . import garage
     from .project.context import ProjectContextReaders, ProjectContextService
+    from .project.metadata import ProjectMetadataReader
 
     if snapshots is None:
         snapshots = build_project_context_snapshot_read_service(project_root)
+    if metadata is None:
+        metadata = ProjectMetadataReader(project_root)
 
     def runtime_snapshot_resolver() -> Callable[[dict[str, Any]], dict[str, Any]]:
         resolver = garage.snapshot_with_resolved_search_roots
@@ -371,9 +376,8 @@ def build_project_context_service(
     return ProjectContextService(
         project_root, workplace_root,
         snapshots=snapshots,
-        project_id_reader=lambda: core.project_id(project_root),
+        metadata=metadata,
         context_check=lambda: core.project_context_check_result(project_root, explicit_workplace=str(workplace_root)),
-        manifest_reader=lambda: core.load_yaml_document(core.locate_flow_root(project_root) / "process-forge.yaml"),
         runtime_snapshot_resolver=runtime_snapshot_resolver,
         resource_readiness=lambda *, snapshot, check: garage.ResourceSearchService(project_root, workplace_root, LegacyResourceSearchReadAdapter(project_root, workplace_root, core)).readiness(snapshot=snapshot, check=check),
         work_summary=lambda: build_current_work_service(project_root).summary(),

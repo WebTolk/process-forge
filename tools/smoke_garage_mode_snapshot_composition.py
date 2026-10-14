@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / 'src'))
 from processforge_core import composition, garage
 from processforge_core.common import request_scope
 from processforge_core.project import mode, reports
+from processforge_core.project.metadata import ProjectMetadataReader
 from processforge_core.process_catalog import summary
 from processforge_core.work import boundary_advisory
 BASELINE = None
@@ -72,8 +73,9 @@ def context_scenario(service_type, *, document=UNSET, broken=False, memory=None,
             if error:
                 raise OSError('snapshot-error')
             return copy.deepcopy(document)
-        return {'manifest': 'retained'}
-    core = SimpleNamespace(project_id=lambda root:'fixture', locate_flow_root=lambda root:Path('flow'), project_context_snapshot_paths=lambda root:(Path('snapshot.yaml'),Path('snapshot.md')), load_yaml_document=load, project_context_check_result=lambda *a, **k:{'status':'broken' if broken else 'fresh', 'broken':broken, 'snapshot_id':'fixture', 'policy_action':'continue'})
+        return {'project': {'id': 'fixture'}, 'manifest': 'retained'}
+    metadata = ProjectMetadataReader(Path('p'), SimpleNamespace(load=load))
+    core = SimpleNamespace(project_id=lambda root:metadata.project_id(), locate_flow_root=lambda root:metadata.flow_root(), project_context_snapshot_paths=lambda root:(Path('snapshot.yaml'),Path('snapshot.md')), load_yaml_document=load, project_context_check_result=lambda *a, **k:{'status':'broken' if broken else 'fresh', 'broken':broken, 'snapshot_id':'fixture', 'policy_action':'continue'})
     substitutes = {'ResourceSearchService': lambda *a:SimpleNamespace(readiness=lambda **kw:{'status':'ready'}), 'CurrentWorkService': lambda *a:SimpleNamespace(summary=lambda:{}), 'resource_selection_summary':lambda *a:{'selection':'same'}}
     report_service = lambda *a, **k:SimpleNamespace(status=lambda **kw:{'status':'ok'})
     process_result = lambda *a, **kw:{'process':'same'}
@@ -93,7 +95,10 @@ def context_scenario(service_type, *, document=UNSET, broken=False, memory=None,
                 stack.enter_context(patch.object(composition if name == "CurrentWorkService" else garage, name, value))
             else:
                 stack.enter_context(patch.dict(namespace, {name:value}))
-        result = outcome(lambda: service_type(Path('p'),Path('w'),core, snapshots=memory if memory is not None else FixtureSnapshots(core.project_context_snapshot_paths, load)).context(session_id='s'))
+        options = {'snapshots': memory if memory is not None else FixtureSnapshots(core.project_context_snapshot_paths, load)}
+        if namespace is None:
+            options['metadata'] = metadata
+        result = outcome(lambda: service_type(Path('p'),Path('w'),core, **options).context(session_id='s'))
     return result, events
 
 class FixtureSnapshots:
@@ -186,12 +191,13 @@ class ModeSnapshotTests(unittest.TestCase):
         result, events = context_scenario(composition.build_project_context_service, document=document, memory=memory)
         self.assertEqual(memory.calls, [None])
         self.assertEqual(result[1]['mode'], 'forge')
-        self.assertEqual(events, [('load','flow\\process-forge.yaml' if os.name == 'nt' else 'flow/process-forge.yaml'),('load','snapshot.yaml')])
+        manifest_event = ('load', str(Path('p') / '.pf/process-forge.yaml'))
+        self.assertEqual(events, [manifest_event, ('load','snapshot.yaml'), manifest_event])
         memory.calls.clear()
         result, events = context_scenario(composition.build_project_context_service, document=document, broken=True, memory=memory)
         self.assertEqual(result[1]['mode'], 'forge')
         self.assertFalse(memory.calls)
-        self.assertEqual(len(events), 2)
+        self.assertEqual(events, [manifest_event, ('load','snapshot.yaml'), manifest_event])
 
     def test_real_yaml_live_reads_and_scope_isolation(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:

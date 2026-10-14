@@ -25,6 +25,7 @@ from processforge_core.project import mode, reports, snapshot
 from processforge_core.process_catalog import summary
 from processforge_core.work import boundary_advisory
 from processforge_core.project.snapshot import ProjectSnapshotReadService
+from processforge_core.project.metadata import ProjectMetadataReader
 
 BASELINE = None
 SCRATCH = None
@@ -209,8 +210,16 @@ class GarageSnapshotTests(unittest.TestCase):
                 results = []
                 for constructor in constructors:
                     core = Core({'unknown': ['kept']})
-                    core.project_id = lambda root: 'p'
-                    core.locate_flow_root = lambda root: Path('.pf')
+                    snapshot_load = core.load_yaml_document
+                    def load(path):
+                        if path.name == 'process-forge.yaml':
+                            core.calls.append(('load', path))
+                            return {'project': {'id': 'p'}, 'unknown': ['kept']}
+                        return snapshot_load(path)
+                    metadata = ProjectMetadataReader(Path('p'), SimpleNamespace(load=load))
+                    core.project_id = lambda root: metadata.project_id()
+                    core.locate_flow_root = lambda root: metadata.flow_root()
+                    core.load_yaml_document = load
                     core.project_context_check_result = lambda *a, **k: {'broken': broken, 'status': 'broken' if broken else 'fresh', 'snapshot_id': 's'}
                     seen = []
                     def readiness(*, snapshot, check):
@@ -240,10 +249,14 @@ class GarageSnapshotTests(unittest.TestCase):
                         stack.enter_context(patch.dict(garage.__dict__, {k:v for k,v in replacements.items() if k != 'CurrentWorkService'}))
                         if BASELINE:
                             stack.enter_context(patch.dict(BASELINE, {**replacements, 'GarageModeService': mode_service, 'DerivedReportLifecycleService': report_service, 'process_summary': process_result, 'fresh_session_continuation': boundary_result}))
-                        result = outcome(lambda: constructor(Path('p'), Path('w'), core, snapshots=FixtureSnapshots(core.project_context_snapshot_paths, core.load_yaml_document)).context(session_id='session'))
+                        options = {'snapshots': FixtureSnapshots(core.project_context_snapshot_paths, core.load_yaml_document)}
+                        if constructor is composition.build_project_context_service:
+                            options['metadata'] = metadata
+                        result = outcome(lambda: constructor(Path('p'), Path('w'), core, **options).context(session_id='session'))
                     self.assertIsNone(request_scope._CURRENT.get())
                     self.assertEqual(seen, [{}] if broken else [{'unknown': ['kept']}])
                     self.assertEqual(sum(row[0] == 'path' for row in core.calls), 0 if broken else 1)
+                    self.assertEqual(core.calls.count(('load', Path('p') / '.pf/process-forge.yaml')), 1 if failure else 2)
                     results.append((result, core.calls))
                 self.assertTrue(all(result == results[0] for result in results))
                 if not failure:

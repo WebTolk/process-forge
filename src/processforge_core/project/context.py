@@ -9,6 +9,7 @@ from typing import Any, Protocol
 
 from ..common.request_scope import scoped_request
 from ..ports import ProjectSnapshotReadPort
+from .metadata import ProjectMetadataReader
 
 
 class ContextResourceReadiness(Protocol):
@@ -36,9 +37,8 @@ class ProjectContextService:
     project_root: Path
     workplace_root: Path
     snapshots: ProjectSnapshotReadPort = field(kw_only=True, repr=False, compare=False)
-    project_id_reader: Callable[[], str] = field(kw_only=True, repr=False, compare=False)
+    metadata: ProjectMetadataReader = field(kw_only=True, repr=False, compare=False)
     context_check: Callable[[], dict[str, Any]] = field(kw_only=True, repr=False, compare=False)
-    manifest_reader: Callable[[], dict[str, Any]] = field(kw_only=True, repr=False, compare=False)
     runtime_snapshot_resolver: Callable[[], Callable[[dict[str, Any]], dict[str, Any]]] = field(kw_only=True, repr=False, compare=False)
     resource_readiness: ContextResourceReadiness = field(kw_only=True, repr=False, compare=False)
     work_summary: Callable[[], dict[str, Any]] = field(kw_only=True, repr=False, compare=False)
@@ -47,7 +47,7 @@ class ProjectContextService:
     context_readers: Callable[[], ProjectContextReaders] = field(kw_only=True, repr=False, compare=False)
 
     def project_id(self) -> str:
-        return str(self.project_id_reader())
+        return str(self.metadata.project_id())
 
     def snapshot(self) -> dict[str, Any]:
         return self.snapshots.load()
@@ -64,7 +64,7 @@ class ProjectContextService:
 
         check = self.check()
         snapshot = self.snapshot() if not check.get("broken") else {}
-        manifest = self.manifest_reader()
+        manifest = self.metadata.manifest()
         search = self.resource_readiness(snapshot=snapshot, check=check)
         mode = readers.mode(snapshot=snapshot, session_id=session_id)
         work = self.work_summary()
