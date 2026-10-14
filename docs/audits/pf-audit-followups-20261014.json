@@ -1,0 +1,992 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-14",
+  "status": "planning_tasks_registered_not_started",
+  "audited_source_commit": "9d7cd54fd53caff003c4c46bff3a7e51e8ed8afa",
+  "audit_publication_commit": "d9930f30246f214f69bbf10c70cc093dcd0037f5",
+  "backlog": {
+    "run_id": "pf-audit-followups-backlog-20261014",
+    "run_status": "draft",
+    "new_task_count": 10,
+    "reused_concrete_task_count": 1,
+    "reused_epic_count": 5,
+    "planning_only": true,
+    "product_changes": false,
+    "future_execution_requires_separate_exact_Work": true,
+    "deduplication_snapshot_count": 813,
+    "all_snapshot_intents_rechecked_before_registration": true,
+    "native_task_doctors_passed": 10,
+    "native_run_doctor_passed": true
+  },
+  "tasks": [
+    {
+      "id": "pf-filesystem-path-unicode-20261014",
+      "title": "UTF-8 и допустимые Unicode-пути в MCP; отдельная проверка CLI",
+      "priority": "P1",
+      "finding": "PF-AUDIT-01",
+      "registration": "existing_reused",
+      "status": "open",
+      "implementation_started": false,
+      "execution_mode": "planning_only",
+      "writer": false,
+      "product_write_grants": false,
+      "acceptance": [
+        "Оба stdio направления явно UTF-8 при UTF-8/cp1251 окружении, raw и JSON escaped input.",
+        "ASCII, кириллица, пробелы, смешанные имена, пунктуация, CJK/emoji, NFC/NFD сохраняются без транслитерации и ослабления containment.",
+        "CLI проверять отдельно: общий отказ CLI аудитом не подтверждён.",
+        "Раздельные source/archive/installed/fresh stdio/actual connected seals; reconnect/install только в отдельном разрешённом delivery scope.",
+        "Зафиксировать round-trip точных code points/байтов путей: NFC и NFD не объединять или транслитерировать. Использовать допустимые для платформы имена и отдельные отрицательные containment контроли.",
+        "Сравнить UTF-8 и cp1251 окружение, raw и escaped JSON, request и response. Успех означает валидные UTF-8 bytes обоих направлений и тот же путь/результат.",
+        "Для каждой source/archive/installed/fresh-stdio/connected границы указать собственный loaded-code seal либо unknown; общий дефект CLI и текущая кодировка старого host не доказаны."
+      ],
+      "severity_or_evidence_class": "high_confirmed",
+      "related_snapshot_tasks": [
+        {
+          "id": "codex-mcp-session-read-implementation-20260821",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "codex-worker-utf8-fix",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "pf-1-1-0-final-release-windows-containment-20260831",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "pf-filesystem-path-unicode-20261014",
+          "status": "open",
+          "relation": "exact_existing_reuse"
+        },
+        {
+          "id": "project-init-local-search-mcp-producer-and-stdio-20260821",
+          "status": "done",
+          "relation": "related_completed_history"
+        }
+      ],
+      "scope_reconciliation_condition": "Primary current-registry recheck; future execution requires separate exact Work and inputs.",
+      "evidence_source": "docs/audits/pf-audit-20261014.md"
+    },
+    {
+      "id": "pf-audit-mcp-schema-bounds-20261014",
+      "title": "[P1] Проверять опубликованные ограничения массивов MCP до dispatch",
+      "priority": "P1",
+      "finding": "PF-AUDIT-02",
+      "registration": "new_registered",
+      "status": "open",
+      "implementation_started": false,
+      "execution_mode": "planning_only",
+      "writer": false,
+      "product_write_grants": false,
+      "acceptance": [
+        "32/128 элементов принимаются, 33/129 отклоняются до business dispatch как -32602.",
+        "Проверить все реально объявленные ограничения и отрицательные типовые контроли; не устанавливать новую библиотеку без обоснования.",
+        "Сохранить реальные Core guards/authorization и ошибки валидных запросов; обход разрешений не считается доказанным аудитом.",
+        "Составить конечный список реально опубликованных ограниченных array fields на pinned schemas. Для каждого проверить N-1/N/N+1; доказанные исходные N: 128/128/32/32.",
+        "В валидной инертной фикстуре N допускается до business dispatch, N+1 даёт -32602 и ноль вызовов dispatch/эффектов. Это не обещание business success запроса с произвольным evidence.",
+        "Проверить неверные типы и nested объявленные ограничения; сохранить errors/guards валидных запросов. Не заявлять authorization bypass по одному inert dispatch."
+      ],
+      "severity_or_evidence_class": "medium_confirmed",
+      "related_snapshot_tasks": [
+        {
+          "id": "a08-jsonrpc",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "audit-process-contracts",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "pf-mcp-codex-contract-remediation-20260829",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "t04-pf-vision-alignment-r02-implement-trusted-provider-adapters-and-prov",
+          "status": "done",
+          "relation": "related_completed_history"
+        }
+      ],
+      "scope_reconciliation_condition": "Primary current-registry recheck; future execution requires separate exact Work and inputs.",
+      "evidence_source": "docs/audits/pf-audit-20261014.md"
+    },
+    {
+      "id": "pf-audit-runtime-http-body-20261014",
+      "title": "[P1] Ограничить чтение и проверить framing/JSON тела Runtime POST",
+      "priority": "P1",
+      "finding": "PF-AUDIT-03",
+      "registration": "new_registered",
+      "status": "open",
+      "implementation_started": false,
+      "execution_mode": "planning_only",
+      "writer": false,
+      "product_write_grants": false,
+      "acceptance": [
+        "Отрицательная/некорректная/слишком большая длина отклоняется до read; чтение ограничено заявленной допустимой длиной.",
+        "Неполное тело, NaN и Infinity не принимаются; корректные существующие JSON запросы сохраняют поведение.",
+        "Инертные и изолированные HTTP фикстуры; bearer, loopback и отказные причины сохраняются.",
+        "Существующий stable/current дефект не объявлять регрессией рефакторинга без отдельного доказательства.",
+        "Закрепить существующий предел Bmax и byte framing. Проверить отсутствующую/некорректную/отрицательную длину согласно принятому HTTP контракту, допустимые 0/Bmax, Bmax+1 и truncated body; rejected length вызывает ноль reader calls.",
+        "Reader не получает -1 или число выше допустимой заявленной длины; короткое тело отвергается до JSON/business handler. Проверить NaN/Infinity/-Infinity и не-finite результат overflow при принятом finite-number контракте.",
+        "Сохранить существующие bearer/loopback и причины отказов, корректные payloads. Реальные socket stall/DoS/запись не доказаны; stable/current совпадение reader означает отсутствие доказанной regression."
+      ],
+      "severity_or_evidence_class": "medium_confirmed",
+      "related_snapshot_tasks": [
+        {
+          "id": "long-lived-runtime-20260813",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "runtime-correctness-implementation",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "runtime-daemon-lifecycle-implementation",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "runtime-liveness-remediation",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "runtime-readonly-review",
+          "status": "blocked",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "subagent-runtime-auditor",
+          "status": "blocked",
+          "relation": "underspecified_metadata_only_comparison"
+        }
+      ],
+      "scope_reconciliation_condition": "Primary current-registry recheck; future execution requires separate exact Work and inputs.",
+      "evidence_source": "docs/audits/pf-audit-20261014.md"
+    },
+    {
+      "id": "pf-audit-terminal-work-admission-20261014",
+      "title": "[P1] Отклонять терминальную governed Work до preparation и provider launch",
+      "priority": "P1",
+      "finding": "PF-AUDIT-04",
+      "registration": "new_registered",
+      "status": "open",
+      "implementation_started": false,
+      "execution_mode": "planning_only",
+      "writer": false,
+      "product_write_grants": false,
+      "acceptance": [
+        "done/completed/failed/cancelled Work отклоняются до подготовки и запуска провайдера с явной причиной.",
+        "Сохранить отдельно штатные повторные worker attempts действующей Work и поддержанные legacy retries.",
+        "Проверить одинаковую политику нижнего CLI и существующих Host/MCP entrypoints; чужие histories/capsules не менять.",
+        "Закрепить поддерживаемые native terminal статусы/aliases Work и отдельно worker-attempt status. Проверить done/completed/failed/cancelled, где они поддерживаются, до prepare/load provider input/launch.",
+        "Инертные spies фиксируют ноль preparation/provider calls и отсутствие новых attempt/output/event эффектов; collect/status/history существующего результата не запрещать этой задачей.",
+        "Активная Work с failed worker attempt и поддержанный legacy retry остаются положительными контролями. CLI/Host/MCP сохраняют одинаковую согласованную политику и прежние downstream guards."
+      ],
+      "severity_or_evidence_class": "medium_confirmed",
+      "related_snapshot_tasks": [
+        {
+          "id": "evolve-20261002-01",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261002-17",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "finish-work-resume-01-entry-integration-and-pending-cancellation-worker",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "implement-evolve-20261002-01-preflight-execution-mode-and-effective-perm",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "implement-worker-run-lifecycle",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "implement-worker-run-shell-regressions",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "plan-concurrency-start-guard",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "t05-pf-vision-alignment-r02-prepare-bounded-authorized-immutable-executi",
+          "status": "done",
+          "relation": "related_completed_history"
+        }
+      ],
+      "scope_reconciliation_condition": "Primary current-registry recheck; future execution requires separate exact Work and inputs.",
+      "evidence_source": "docs/audits/pf-audit-20261014.md"
+    },
+    {
+      "id": "pf-audit-runtime-session-registration-20261014",
+      "title": "[P2] Локализовать отказ long-lived Runtime при регистрации сессии",
+      "priority": "P2",
+      "finding": "PF-AUDIT-05",
+      "registration": "new_registered",
+      "status": "open",
+      "implementation_started": false,
+      "execution_mode": "planning_only",
+      "writer": false,
+      "product_write_grants": false,
+      "acceptance": [
+        "Повторить существующий smoke без profiler на свободном устройстве, сохранить startup и HTTP session-register raw evidence.",
+        "Отделить code defect, timeout, нагрузку устройства и инфраструктуру; прежняя runtime-liveness-remediation выполнена и не возобновляется.",
+        "Причина локализована и ограниченное решение обосновано; 240 секунд — значение checkpoint; перед исполнением pin/read исходную команду и её штатный лимит, отсутствие orphan-owned процессов.",
+        "Фактический Runtime/MCP не ремонтировать и не перезапускать без отдельного scope.",
+        "Сначала диагноз: pinned unchanged existing smoke, без profiler, описанная нагрузка/параллелизм, raw startup/HTTP/session-register результаты, длительность и первый отказ. Не считать free device предположением без наблюдений.",
+        "240 с — критерий checkpoint; исходный smoke/registry budget не включён в объявленные fulltext inputs. До исполнения независимо pin/read точную команду и её штатный лимит; не выдавать это число за новый проверенный source факт.",
+        "Локализованная причина, затем отдельное bounded решение; cleanup касается только fixture-owned процессов и проверяется. Настоящие Runtime/MCP restart/repair остаются отдельным scope."
+      ],
+      "severity_or_evidence_class": "unlocalized_observation",
+      "related_snapshot_tasks": [
+        {
+          "id": "evolve-20261002-04",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "long-lived-runtime-20260813",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "pf-runtime-status-timeout-remediation-20260829",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "runtime-correctness-implementation",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "runtime-daemon-lifecycle-implementation",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "runtime-daemon-lifecycle-orphaned-instance",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "runtime-lifecycle-clean-smoke",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "runtime-liveness-remediation",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "runtime-readonly-review",
+          "status": "blocked",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "subagent-runtime-auditor",
+          "status": "blocked",
+          "relation": "underspecified_metadata_only_comparison"
+        },
+        {
+          "id": "verification-runtime-lifecycle-investigation",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "verification-runtime-lifecycle-isolated-repro",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "verification-runtime-lifecycle-temp-rerun",
+          "status": "done",
+          "relation": "related_completed_history"
+        }
+      ],
+      "scope_reconciliation_condition": "Primary current-registry recheck; future execution requires separate exact Work and inputs.",
+      "evidence_source": "docs/audits/pf-audit-20261014.md"
+    },
+    {
+      "id": "pf-audit-task-batch-budget-20261014",
+      "title": "[P2] Восстановить штатный временной бюджет task-batch проверки",
+      "priority": "P2",
+      "finding": "PF-AUDIT-06",
+      "registration": "new_registered",
+      "status": "open",
+      "implementation_started": false,
+      "execution_mode": "planning_only",
+      "writer": false,
+      "product_write_grants": false,
+      "acceptance": [
+        "Повторить существующий smoke без profiler на свободном устройстве; зафиксировать стабильный корпус и не менее пяти измерений при необходимости оптимизации.",
+        "Функциональный PASS за 223 секунды при лимите 180 не считается штатным PASS; бюджет не увеличивать ради скрытия FAIL.",
+        "Сохранить payload/order/locks/live reads/recovery; оптимизировать только локализованную причину.",
+        "Gate требует функциональный PASS и завершение внутри исходных 180 с. PASS за 223,10 с с увеличенным внешним timeout сохраняется как budget failure.",
+        "Зафиксировать одинаковый corpus/hashes, параметры, platform/load и профиль наблюдения. При предложенной оптимизации выполнить не менее пяти сопоставимых before/after измерений и сохранить все результаты.",
+        "Сначала локализовать вклад I/O/parsing/locks/processes; не повышать лимит для скрытия FAIL. Payload/order/live reads/identity/atomicity/recovery входят в characterization/parity выбранного остатка."
+      ],
+      "severity_or_evidence_class": "unlocalized_budget_observation",
+      "related_snapshot_tasks": [
+        {
+          "id": "evolve-20261002-04",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261002-28",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261005-yaml-loading-refactor",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "implement-evolve-20261002-04-mcp-perf-02-with-measured-request-local-reu",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "implement-evolve-20261002-28-clarify-and-fix-timeout-scale-propagation-f",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "implement-evolve-20261005-yaml-loading-refactor-with-measured-request-sc",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "release-smoke-isolation-20260821",
+          "status": "blocked",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "subagent-release-auditor",
+          "status": "blocked",
+          "relation": "underspecified_metadata_only_comparison"
+        },
+        {
+          "id": "t09-pf-vision-alignment-r02-implement-provider-neutral-optional-diagnost",
+          "status": "done",
+          "relation": "related_completed_history"
+        }
+      ],
+      "scope_reconciliation_condition": "Primary current-registry recheck; future execution requires separate exact Work and inputs.",
+      "evidence_source": "docs/audits/pf-audit-20261014.md"
+    },
+    {
+      "id": "pf-audit-agent-startup-compatibility-20261014",
+      "title": "[P2] Явно квалифицировать изменённый default agent-start-prompt",
+      "priority": "P2",
+      "finding": "S2-C01",
+      "registration": "new_registered",
+      "status": "open",
+      "implementation_started": false,
+      "execution_mode": "planning_only",
+      "writer": false,
+      "product_write_grants": false,
+      "acceptance": [
+        "Сравнить stable/current observable exit/stdout/stderr/events/files default и явных plan/apply сценариев.",
+        "Зафиксировать намеренное изменение поведения отдельно от behavior-preserving рефакторинга, обновить миграционные сведения EN/RU при необходимости.",
+        "Не возвращать старые побочные эффекты автоматически и не объявлять неизменное имя команды доказательством паритета.",
+        "Stable baseline v1.1.0@06acea7 и audited current 9d7 описывать отдельно от publication d993. Зафиксировать default, explicit preview/plan/apply и отказы с observable exit/stdout/stderr/events/files.",
+        "Default preview — отдельное намеренное behavior change. Матрица указывает ожидаемое отсутствие/наличие write/refresh эффектов по согласованному контракту и миграционные EN/RU сведения.",
+        "Название команды и сохранённые flags не доказывают parity; не восстанавливать прежние побочные эффекты автоматически."
+      ],
+      "severity_or_evidence_class": "intentional_behavior_change",
+      "related_snapshot_tasks": [
+        {
+          "id": "evolve-20261002-25",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261002-29",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "implement-e01-and-e02-of-the-approved-portable-agent-entry-plan-with-r13",
+          "status": "in_progress",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "implement-e04-governed-agent-startup-prompts-resource-references-and-new",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "implement-e05-versioned-agent-entry-profiles-and-read-only-diagnostics-w",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "implement-e07-active-agent-entry-documentation-and-compatibility-policy",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "stop-automatic-start-generation-and-restoration-for-new-projects-while-p",
+          "status": "done",
+          "relation": "related_completed_history"
+        }
+      ],
+      "scope_reconciliation_condition": "Primary current-registry recheck; future execution requires separate exact Work and inputs.",
+      "evidence_source": "docs/audits/pf-audit-20261014.md"
+    },
+    {
+      "id": "pf-audit-egress-public-check-registration-20261014",
+      "title": "[P2] Включить существующие egress проверки в штатную public приёмку",
+      "priority": "P2",
+      "finding": "audit assurance gap: native267 omitted three existing egress checks",
+      "registration": "new_registered",
+      "status": "open",
+      "implementation_started": false,
+      "execution_mode": "planning_only",
+      "writer": false,
+      "product_write_grants": false,
+      "acceptance": [
+        "Существующие smoke_egress_engine/transport/work входят в именованный public список либо явно указан отдельный обязательный профиль.",
+        "35+8+10 случаев, статусы и бюджеты не смешиваются с историческими 267 проверками.",
+        "Синтетические и loopback fixtures, без отправки реальных данных внешнему провайдеру; содержательные существующие проверки, без зеркальных тестов.",
+        "Именованный default public список либо явно обязательный профиль содержит smoke_egress_engine, smoke_egress_transport, smoke_egress_work с исходными бюджетами и failure propagation.",
+        "Сохранить отдельные denominators: saved native suite 267 (264 PASS/3 FAIL) и supplemental три checks/53 cases (35+8+10); новую регистрацию подтверждать новым прогоном, не переписывать прошлый результат.",
+        "Повторно использовать синтетические/loopback проверки, без реального внешнего провайдера, новых зеркальных unit tests и installation."
+      ],
+      "severity_or_evidence_class": "assurance_registration_gap",
+      "related_snapshot_tasks": [
+        {
+          "id": "align-source-delivery-of-the-existing-oop-read-refactors-with-the-approv",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "implement-the-t07-provider-neutral-egress-engine-qualify-a-bounded-enfor",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "project-init-local-search-mcp-release-smoke-registration-20260821",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "release-docs-correction-20260821",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "subagent-release-auditor",
+          "status": "blocked",
+          "relation": "underspecified_metadata_only_comparison"
+        }
+      ],
+      "scope_reconciliation_condition": "Primary current-registry recheck; future execution requires separate exact Work and inputs.",
+      "evidence_source": "docs/audits/pf-audit-20261014.md"
+    },
+    {
+      "id": "pf-audit-oop-project-context-ownership-20261014",
+      "title": "[P2] Выделить следующий существующий owner сборки и проверки project context",
+      "priority": "P2",
+      "finding": "S2-D01 / OOP-01,02,03,05 remaining ownership",
+      "registration": "new_registered",
+      "status": "open",
+      "implementation_started": false,
+      "execution_mode": "planning_only",
+      "writer": false,
+      "product_write_grants": false,
+      "acceptance": [
+        "Перед исполнением выбрать один небольшой алгоритм/I/O остаток build_project_context_service и core callbacks; не переписывать всю программу в одной Work.",
+        "Переиспользовать существующие readers/ProjectContextRules/ProjectContextPolicy/ResourceSnapshotRules/KnowledgeResourceSelector; перевести всех затронутых consumers.",
+        "В выбранном принятом срезе отсутствуют прямые/косвенные пути обратно в tools/processforge.py, включая callback/Any/adapter.",
+        "Проверить normal default composition без монолита, exact guards/order/errors/live reads и необходимые существующие проверки; все пять эпиков не закрывать этим срезом.",
+        "Перед implementation выбрать точный один остаток: existing symbol/algorithm/I/O → concrete owner → все фактические consumers; проверить его непересечение с freshness/search/journal designs и DONE результатами. Совпавший existing task/scope переиспользовать.",
+        "Reuse existing readers, ProjectContextRules/Policy, ResourceSnapshotRules, KnowledgeResourceSelector; запретить прямой и косвенный путь принятого среза обратно в tools/processforge.py через callback/Any/adapter/deferred import.",
+        "Проверить normal default composition и import/caller graph без монолита/transport, characterization guards/order/errors/unknown fields/live reads/current access/required publication failures. Test fake отдельно недостаточен.",
+        "Одного owner/consumer среза недостаточно для закрытия OOP-01..05. Новые DI/Kernel/plugin/lifetime системы не становятся prerequisites; source/copied/archive/installed/Runtime/connected и performance proof раздельны."
+      ],
+      "severity_or_evidence_class": "remaining_architecture_scope",
+      "related_snapshot_tasks": [
+        {
+          "id": "core-c09-project-context-application-service-composed-from-narrow-existi",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "core-c10-refactor-existing-resourcesearchservice-with-narrow-typed-depen",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "core-c11-refactor-existing-resourceresolveservice-with-a-narrow-typed-re",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "evolve-20261002-25",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261005-oop-01",
+          "status": "open",
+          "relation": "existing_open_epic_reuse"
+        },
+        {
+          "id": "evolve-20261005-oop-02",
+          "status": "open",
+          "relation": "existing_open_epic_reuse"
+        },
+        {
+          "id": "evolve-20261005-oop-03",
+          "status": "open",
+          "relation": "existing_open_epic_reuse"
+        },
+        {
+          "id": "evolve-20261005-oop-04",
+          "status": "open",
+          "relation": "existing_open_epic_reuse"
+        },
+        {
+          "id": "evolve-20261005-oop-05",
+          "status": "open",
+          "relation": "existing_open_epic_reuse"
+        },
+        {
+          "id": "implement-one-bounded-oop-01-shared-core-composition-step-route-existing",
+          "status": "cancelled",
+          "relation": "terminal_attempt_or_cancelled_history_no_resume"
+        },
+        {
+          "id": "oop-context-resource-policy-20261013-source-continuation-after-abccb16-m",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "oop-context-rules-20261013-continue-delivered97a9f2f-with-primary-orches",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "oop-context-source-projections-20261012-autonomous-pair-mode-continuatio",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "oop-existing-process-event-journal-ownership-design-20261012-user-reques",
+          "status": "in_progress",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "oop-independent-checkpoint-acceptance-20261011-review-completed-source-a",
+          "status": "in_progress",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "oop-matrix-20261011-remaining-real-core-ownership-and-architecture-progr",
+          "status": "in_progress",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "oop-matrix-final-20261011-final-architecture-matrix-of-finished-frozen-r",
+          "status": "in_progress",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "oop-next-project-freshness-ownership-design-20261012-complete-body-succe",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "oop-next-project-freshness-ownership-design-20261012-user-requested-cont",
+          "status": "in_progress",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "oop-project-readiness-policy-20261012-concrete-core-ownership-of-executi",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "oop-project-snapshot-sources-20261012-real-concrete-core-ownership-of-so",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "oop-resolved-comparison-20261012-autonomous-pair-mode-continuation-on-pu",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "oop-snapshot-renderer-source-s2-20261014-after-e744d35-and-reboot-correc",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "oop-source-comparison-20261012-autonomous-continuation-on-published1596a",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "oop-summary-20261011-concrete-process-summary-reader-without-monolith-ca",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "oop-workplace-search-design-successor-20261011-bounded-concrete-catalog",
+          "status": "in_progress",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "refactor-one-existing-oop-02-garage-projectcontextsnapshot-read-responsi",
+          "status": "done",
+          "relation": "related_completed_history"
+        }
+      ],
+      "scope_reconciliation_condition": "Primary current-registry recheck; future execution requires separate exact Work and inputs.",
+      "evidence_source": "docs/audits/pf-audit-20261014.md"
+    },
+    {
+      "id": "pf-audit-critical-function-qualification-20261014",
+      "title": "[P2] Закрыть критические пробелы функциональной приёмки по имеющейся матрице",
+      "priority": "P2",
+      "finding": "579/2399 production definitions unobserved; line/branch not measured",
+      "registration": "new_registered",
+      "status": "open",
+      "implementation_started": false,
+      "execution_mode": "planning_only",
+      "writer": false,
+      "product_write_grants": false,
+      "acceptance": [
+        "На основе 4036 записей и 22 capabilities выбрать критические непроверенные сценарии, отрицательные/concurrency/recovery входы и связанные существующие checks.",
+        "Calls и test names не считать индивидуальным semantic PASS; сохранять прямую check attribution и неизвестные связи.",
+        "Измерение line/branch требует отдельного решения о доступных средствах; не создавать по зеркальному unit test на каждую из 579 функций.",
+        "Для независимого raw/live/нового attribution readback заранее объявить нужные материалы в новом immutable prepared input; прежний reviewer denial не обходить.",
+        "Нужен конечный согласованный список критических сценариев/входов и критерий каждого результата; приоритет зависит от риска identity/access/evidence/recovery/concurrency и реальных callers, не от 579 как плана создания unit tests.",
+        "4036 definitions, 2399 production, 1820 observed production и 579 unobserved — AST/call denominators. Calls, test names и direct attribution 1775 не доказывают semantic PASS функции или branch/line coverage.",
+        "До будущего выполнения объявить fulltext matrix/raw/trace/new attribution/live материалы в новом prepared input. Здесь machine audit JSON и raw bodies не выданы; прежний reviewer denial не обходится.",
+        "Прямая check attribution, unknown child-process links, реальный observed outcome и неопределённые входы сохраняются. Line/branch measurement — отдельное решение о средствах, не выдуманный процент покрытия."
+      ],
+      "severity_or_evidence_class": "semantic_qualification_gap",
+      "related_snapshot_tasks": [
+        {
+          "id": "audit-quality-public-surface",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "complete-evolve-20261002-23-api-classification-for-python-oop-prerequisi",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "complete-evolve-20261002-25-legacy-facade-compatibility-and-decompositio",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "evolve-20261002-21",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261002-22",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261002-23",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261002-25",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261002-29",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261005-oop-01",
+          "status": "open",
+          "relation": "existing_open_epic_reuse"
+        },
+        {
+          "id": "evolve-20261005-oop-02",
+          "status": "open",
+          "relation": "existing_open_epic_reuse"
+        },
+        {
+          "id": "evolve-20261005-oop-03",
+          "status": "open",
+          "relation": "existing_open_epic_reuse"
+        },
+        {
+          "id": "evolve-20261005-oop-04",
+          "status": "open",
+          "relation": "existing_open_epic_reuse"
+        },
+        {
+          "id": "evolve-20261005-oop-05",
+          "status": "open",
+          "relation": "existing_open_epic_reuse"
+        },
+        {
+          "id": "full-current-pf-audit-independent-reviewer-20261014-review-frozen-comple",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "full-current-pf-audit-static-executor-20261014-independently-inspect-all",
+          "status": "failed",
+          "relation": "terminal_attempt_or_cancelled_history_no_resume"
+        },
+        {
+          "id": "full-current-pf-audit-static-executor-s2-20261014-fresh-disjoint-success",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "full-current-processforge-code-audit-20261014-concrete-oop-ownership-and",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "oop-independent-checkpoint-acceptance-20261011-review-completed-source-a",
+          "status": "in_progress",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "prepare-the-finite-oop-01-acceptance-matrix-against-the-original-epic-re",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "reconcile-the-oop-01-acceptance-matrix-against-all-architectural-plans-i",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "runtime-readonly-review",
+          "status": "blocked",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "subagent-docs-auditor",
+          "status": "blocked",
+          "relation": "underspecified_metadata_only_comparison"
+        },
+        {
+          "id": "subagent-release-auditor",
+          "status": "blocked",
+          "relation": "underspecified_metadata_only_comparison"
+        },
+        {
+          "id": "subagent-runtime-auditor",
+          "status": "blocked",
+          "relation": "underspecified_metadata_only_comparison"
+        }
+      ],
+      "scope_reconciliation_condition": "Primary current-registry recheck; future execution requires separate exact Work and inputs.",
+      "evidence_source": "docs/audits/pf-audit-20261014.md"
+    },
+    {
+      "id": "pf-audit-lease-doc-alignment-20261014",
+      "title": "[P3] Согласовать limitations с существующей ручной lease координацией",
+      "priority": "P3",
+      "finding": "S2-D02",
+      "registration": "new_registered",
+      "status": "open",
+      "implementation_started": false,
+      "execution_mode": "planning_only",
+      "writer": false,
+      "product_write_grants": false,
+      "acceptance": [
+        "Уточнить docs/known-limitations.md: grant/release/revoke и scopes уже есть; автономный claim/scheduler отдельно не реализован.",
+        "Согласовать EN/RU и capability формулировки с фактическим CLI и session model.",
+        "Новые механизмы leases или обязательные ручные leases не добавлять.",
+        "Исправить конкретные EN/RU limitations и связанные reference/capability формулировки: manual grant/release/revoke/scopes существуют, autonomous claim/scheduler отдельно не реализован.",
+        "Закрепить code/CLI/session-model references до docs-only execution; проверить взаимное соответствие EN/RU и ссылок без новой тотальной lease обязанности для single-agent.",
+        "Связать с evolve-20261002-15/18/21, исключить повтор уже принятых docs corrections. Новый product mechanism не входит в эту карточку."
+      ],
+      "severity_or_evidence_class": "documentation_drift",
+      "related_snapshot_tasks": [
+        {
+          "id": "agent-activity-automation-20261009",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261002-15",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261002-18",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "evolve-20261002-21",
+          "status": "open",
+          "relation": "related_nonterminal_scope"
+        },
+        {
+          "id": "pf-runtime-mcp-docs-remediation-20260829",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "plan-and-implement-documentation-audit-d01-d08-fixes-for-pf-1-1-1-using",
+          "status": "done",
+          "relation": "related_completed_history"
+        },
+        {
+          "id": "subagent-docs-auditor",
+          "status": "blocked",
+          "relation": "underspecified_metadata_only_comparison"
+        }
+      ],
+      "scope_reconciliation_condition": "Primary current-registry recheck; future execution requires separate exact Work and inputs.",
+      "evidence_source": "docs/audits/pf-audit-20261014.md"
+    }
+  ],
+  "oop_epics": [
+    {
+      "id": "evolve-20261005-oop-01",
+      "area": "Core boundaries and composition",
+      "status": "open",
+      "achieved": "Concrete bounded read owners, factories and consumer migrations exist.",
+      "remaining": "Normal complete application composition still depends on legacy module, Any and callbacks."
+    },
+    {
+      "id": "evolve-20261005-oop-02",
+      "area": "Documents and state repositories",
+      "status": "open",
+      "achieved": "Concrete YAML/work/material/process/context readers and several snapshot sources migrated.",
+      "remaining": "Not all storage/write/journal/lock/recovery responsibilities have independent owning Core implementations."
+    },
+    {
+      "id": "evolve-20261005-oop-03",
+      "area": "Lifecycle rules and use cases",
+      "status": "open",
+      "achieved": "Bounded selection/readiness/evidence/publication/continuation responsibilities extracted.",
+      "remaining": "Full ProcessExecution and all consumers still have legacy dependencies; full recovery/conformance not accepted."
+    },
+    {
+      "id": "evolve-20261005-oop-04",
+      "area": "Existing extensibility contracts",
+      "status": "open",
+      "achieved": "Existing catalog/package/registry/read/selection boundaries partly formalized.",
+      "remaining": "Complete typed contracts and conformance for every existing extension mechanism remain unaccepted."
+    },
+    {
+      "id": "evolve-20261005-oop-05",
+      "area": "CLI/MCP/Daemon adapters",
+      "status": "open",
+      "achieved": "Several real callers/parser boundaries migrated while existing declarations inventoried.",
+      "remaining": "Legacy/bootstrap and full payload/error/default parity plus actual connected qualification remain open."
+    }
+  ],
+  "refactoring_progress": {
+    "closed_epics": 0,
+    "total_epics": 5,
+    "percent_complete": null,
+    "percent_reason": "No agreed weighted denominator of accepted responsibilities and consumers.",
+    "latest_policy_slice": {
+      "commit": "e744d35e23c051e5cc2afe7ca10e05220e062947",
+      "algorithms": 17,
+      "data_sets": 2,
+      "migrated_call_occurrences": 34,
+      "scope": "one separately accepted bounded slice, not programme completion"
+    },
+    "remaining_witnesses": [
+      "src/processforge_core/bootstrap.py:93",
+      "src/processforge_core/composition.py:348",
+      "src/processforge_core/composition.py:378",
+      "src/processforge_core/composition.py:509"
+    ]
+  },
+  "architecture_alignment": {
+    "contract_revision": "2026-10-10",
+    "task_approach": "existing responsibilities, concrete owners and all affected consumers",
+    "principles": [
+      "KISS",
+      "SRP",
+      "OCP",
+      "LSP",
+      "ISP",
+      "DIP",
+      "explicit dependencies",
+      "composition"
+    ],
+    "accepted_slice_rule": "No direct or indirect path back to tools/processforge.py, including callbacks/Any/adapters.",
+    "speculative_new_subsystems": "D04/D05/D08 DI/Kernel/plugin/lifetime proposals not mandatory implementation.",
+    "reread_requirement": "All participants reread original architecture decisions and compare overall direction after each completed task.",
+    "delivery_requirement": "Each completed task has its own scoped commit and identical two-remote dev readbacks."
+  },
+  "saved_audit_qualification": {
+    "native_public_suite": {
+      "pass": 264,
+      "fail": 3,
+      "total": 267
+    },
+    "supplemental_egress": {
+      "checks_passed": 3,
+      "cases": 53
+    },
+    "confirmed_contract_defects": [
+      "PF-AUDIT-01",
+      "PF-AUDIT-02",
+      "PF-AUDIT-03",
+      "PF-AUDIT-04"
+    ],
+    "unlocalized_observations": [
+      "PF-AUDIT-05",
+      "PF-AUDIT-06"
+    ],
+    "production_definitions": 2399,
+    "production_definitions_without_exact_call_record": 579,
+    "line_branch_coverage_measured": false,
+    "call_records_are_semantic_acceptance": false,
+    "framing_refactor_regression_proven": false,
+    "general_CLI_Unicode_failure_proven": false,
+    "startup_default_behavior_change_is_pure_refactor": false,
+    "proof_layers": [
+      "source",
+      "archive",
+      "installed",
+      "Runtime",
+      "actual connected host"
+    ],
+    "audit_rerun_in_this_docs_task": false,
+    "independent_review_boundary": "Original frozen source pass_with_conditions; supplemental raw/live/attribution/egress evidence retains disclosed primary-only boundary."
+  },
+  "stop_boundary": "Planning cards and progress report only; no product fixes, provider sessions for those cards, installation or actual infrastructure repair/restart."
+}
