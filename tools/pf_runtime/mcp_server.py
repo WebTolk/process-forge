@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import codecs
 import importlib.util
 import json
 import math
@@ -591,11 +592,26 @@ def reject_json_constant(value: str) -> Any:
     raise ValueError(f"invalid JSON constant: {value}")
 
 
+def _configure_stdio_utf8() -> None:
+    for stream in (sys.stdin, sys.stdout):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            encoding = getattr(stream, "encoding", None)
+            if isinstance(encoding, str):
+                try:
+                    if codecs.lookup(encoding).name == "utf-8":
+                        continue
+                except LookupError:
+                    pass
+            reconfigure(encoding="utf-8", errors=getattr(stream, "errors", None))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--workplace", required=True)
     parser.add_argument("--session", default=os.environ.get("PF_MCP_SESSION_ID", ""))
     args = parser.parse_args()
+    _configure_stdio_utf8()
     runtime = runtime_bootstrap()
     core = runtime.core
     workplace = core.resolve_workplace_root(args.workplace)

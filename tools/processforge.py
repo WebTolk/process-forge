@@ -6967,6 +6967,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_expected_report_containment", [sys.executable, str(root / "tools" / "smoke_expected_report_containment.py")], 180),
         ReleaseCommand("smoke_authenticated_report_content", [sys.executable, str(root / "tools" / "smoke_authenticated_report_content.py")], 180),
         ReleaseCommand("smoke_mcp_jsonrpc_validation", [sys.executable, str(root / "tools" / "smoke_mcp_jsonrpc_validation.py")], 120),
+        ReleaseCommand("smoke_mcp_stdio_unicode", [sys.executable, str(root / "tools" / "smoke_mcp_stdio_unicode.py")], 120),
         ReleaseCommand("smoke_diagnostics", [sys.executable, str(root / "tools" / "smoke_diagnostics.py")], 180),
         ReleaseCommand("smoke_diagnostics_process_invariance", [sys.executable, str(root / "tools" / "smoke_diagnostics_process_invariance.py")], 240),
         ReleaseCommand("smoke_work_resource_binding", [sys.executable, str(root / "tools" / "smoke_work_resource_binding.py")], 300),

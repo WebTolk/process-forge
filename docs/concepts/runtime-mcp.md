@@ -14,6 +14,15 @@ host-owned: Codex starts the Python process from Codex MCP configuration and
 owns the stdin/stdout pipes. It is not registered as a Windows scheduled task or
 detached background service.
 
+At startup, the server configures standard stdin and stdout text codecs as UTF-8,
+independently of the locale and `PYTHONIOENCODING`. Streams already using UTF-8
+keep their codec, including input that was read before startup. Unicode path
+code points are preserved; filenames are not transliterated or normalized.
+Embedded text streams without `reconfigure` retain their behavior and ownership.
+A non-UTF-8 input stream must be configured before reading; any provided
+`reconfigure` must accept the standard `encoding` and `errors` keywords.
+Configuration failures propagate.
+
 The native transport validates JSON-RPC 2.0 envelopes and advertised tool
 argument schemas before dispatch. Parse errors, invalid requests, and invalid
 parameters return distinct protocol errors. Notifications have no response,
