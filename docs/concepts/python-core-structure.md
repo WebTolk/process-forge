@@ -473,3 +473,16 @@ These are provisional internal Core interfaces. Full context/snapshot assembly,
 freshness state collection and publication still retain legacy responsibilities.
 This bounded source migration does not complete any OOP epic or qualify archive,
 installed Core, Runtime, connected hosts or performance.
+
+## Project context snapshot presentation
+
+`project.snapshot_rendering.ProjectContextSnapshotRenderer` owns the existing
+Markdown presentation of a project context snapshot. Snapshot publication and
+the existing agent-start smoke call its `render` method directly; the old
+internal renderer is removed. The stateless owner preserves section and item
+order, defaults, Unicode, trailing newline, native malformed-input errors and
+input nonmutation. It performs no document reads and retains no inputs or results.
+
+Snapshot assembly, freshness decisions and durable publication keep their
+existing responsibilities. This presentation move does not make those paths
+independent of the legacy composition or complete any OOP epic.

@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT / 'src'))
 import processforge as core
 from processforge_core.agent_entry import migration
 from processforge_core.project.context_sources import ProjectContextSourcesReader
+from processforge_core.project.snapshot_rendering import ProjectContextSnapshotRenderer
 from processforge_core.agent_entry import start_prompt as startup
 from processforge_core.agent_entry.contract import BOM, EntryError, digest, encoded
 
@@ -173,12 +174,12 @@ def references(base):
     current=core.build_project_context_snapshot(root)
     assert current['session']['startup_read_order'][0]=='AGENTS.md'
     assert any('pf.work.resolve' in x for x in current['session']['startup_read_order'])
-    rendered=core.render_project_context_snapshot_md(current)
+    rendered=ProjectContextSnapshotRenderer().render(current)
     assert '1. AGENTS.md' in rendered
     old=copy.deepcopy(snapshot)
     old['session']['startup_read_order']=['pinned legacy entry','pinned capsule']
     original=copy.deepcopy(old)
-    rendered=core.render_project_context_snapshot_md(old)
+    rendered=ProjectContextSnapshotRenderer().render(old)
     assert '1. pinned legacy entry' in rendered and old==original
     assert tree(root)==before,'source/render changed a capsule or snapshot'
 
