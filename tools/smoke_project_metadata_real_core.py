@@ -342,7 +342,7 @@ with request_scope.request_scope() as initial:
     document=service.metadata.manifest()
     document['unknown'].append('caller mutation')
     assert service.metadata.manifest()['unknown']==['retained']
-    manifest.write_text('project:\\n  id: copied-next\\nunknown: [retained]\\n',encoding='utf8')
+    manifest.write_text('project:' + chr(10) + '  id: copied-next' + chr(10) + 'unknown: [retained]' + chr(10),encoding='utf8')
     os.utime(manifest,ns=(stat.st_atime_ns,stat.st_mtime_ns))
     assert (manifest.stat().st_size,manifest.stat().st_mtime_ns)==(stat.st_size,stat.st_mtime_ns)
     assert service.project_id()=='copied-next'
