@@ -6,8 +6,8 @@ load Python modules, register callbacks, or provide executable plugins.
 
 The ordinary agent workflow is:
 
-`pf.context -> pf.work.start(objective[, process_id]) -> pf.work.state -> work ->
-pf.work.transition(outcome, evidence, notes?) -> pf.work.state -> ... -> run_completed`
+`pf.context -> pf.work.start(objective[, process_id]) -> current Work state -> work ->
+pf.work.transition(outcome, evidence, notes?) -> returned current state -> ... -> run_completed`
 
 `pf.work.start` selects the declared `initial_stage`, or the first executable
 stage when no explicit initial stage exists. It pins the effective Process
@@ -71,15 +71,31 @@ Artifact evidence identifies an existing file; gate evidence is an attestation
 of a check actually performed, not independent proof of semantic quality.
 Never invent checks or use `not_applicable` merely to bypass a required gate.
 
-The successful response is `stage_transitioned` here. Call `pf.work.state` and
-continue through all remaining stages until `action: run_completed`; one
-successful intermediate transition does not complete the work.
+The successful response is `stage_transitioned` here. When the response includes
+the complete current Work projection, use it for the next action. Call
+`pf.work.state` when that projection is absent or after uncertainty, reconnect,
+or concurrent changes; a second identical read is not required after every
+successful transition. Continue until `action: run_completed`; an intermediate
+transition does not complete the work.
 
 Each successful transition updates `Assignment.stage`, appends durable stage
 history, refreshes the execution projection, and emits `process.stage.*`
 events. The final successful transition from the last stage completes the
 Assignment and Run automatically and writes the summary and handoff without a
 separate terminal completion command.
+
+## Internal iterations and nested work
+
+A Run can contain repeated investigation, domain/architecture reasoning, approved
+revisions, implementation and focused checks for one cohesive result. This does
+not imply a transition after every edit or final acceptance/publication for every
+iteration. Use only the actions and outcomes allowed by the current contract;
+this guidance adds no backward route or edit permission. See
+[Run boundaries and iterations](process-definition-run-task-iteration.md#choosing-a-run-boundary).
+
+A substantial worker package may use its own complete process nested within the
+parent cycle. Its output is reviewed and integrated by the primary; child
+completion does not finish or publish the parent automatically.
 
 ## Executor results and continuation
 
