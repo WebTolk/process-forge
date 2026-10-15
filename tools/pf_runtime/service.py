@@ -11,6 +11,7 @@ import argparse
 import contextlib
 import hmac
 import json
+import math
 import os
 import secrets
 import signal
@@ -649,11 +650,30 @@ class RuntimeProcess:
                 return False
 
             def read_body(self) -> dict[str, Any]:
-                length = int(self.headers.get("Content-Length", "0") or "0")
+                declared = (self.headers.get("Content-Length", "0") or "0").strip()
+                if not declared.isascii() or not declared.isdecimal():
+                    raise ValueError("invalid Content-Length")
+                try:
+                    length = int(declared)
+                except ValueError:
+                    raise ValueError("invalid Content-Length") from None
                 if length > MAX_BODY_BYTES:
                     raise ValueError("request body too large")
                 raw = self.rfile.read(length) if length else b"{}"
-                payload = json.loads(raw.decode("utf-8"))
+                if length and len(raw) != length:
+                    raise ValueError("incomplete request body")
+
+                def finite_number(value: str) -> float:
+                    number = float(value)
+                    if not math.isfinite(number):
+                        raise ValueError("request JSON numbers must be finite")
+                    return number
+
+                payload = json.loads(
+                    raw.decode("utf-8"),
+                    parse_float=finite_number,
+                    parse_constant=finite_number,
+                )
                 if not isinstance(payload, dict):
                     raise ValueError("request JSON must be an object")
                 return payload

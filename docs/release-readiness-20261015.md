@@ -1,7 +1,7 @@
 # PF Public Release Checkpoint — 2026-10-15
 
 The development checkpoint is **not ready for a new stable public release**.
-Preserve the reviewed source checkpoint and continue bounded work. The unfinished
+Preserve the reviewed source checkpoint and continue bounded work toward 1.2.0. The unfinished
 OOP programme alone is not a release blocker: supported behavior, contracts and
 delivery evidence define readiness.
 
@@ -12,11 +12,13 @@ qualification for every subsequent change.
 
 ## Current Findings
 
-- Runtime HTTP `read_body` still permits negative Content-Length to reach
-  `read(-1)`, accepts a shorter body containing complete JSON, and accepts
-  non-finite JSON numbers. The exact current method with inert streams reproduces
-  these cases; valid, oversize and invalid-length controls distinguish behavior.
-  This proves reader behavior, not a network attack, socket hang or DoS.
+- Runtime HTTP `read_body` now rejects invalid/negative/excessive lengths before
+  reading, short bodies before decoding and non-finite JSON numbers, including
+  float overflow. Focused inert-reader and isolated HTTP controls cover the
+  source correction, valid byte framing, authorization and dispatch recovery.
+  Run `python tools/smoke_runtime_http_body.py` alongside the cumulative candidate
+  gates. Full candidate, installed Runtime and connected-host qualification
+  remain separate; no network attack, socket stall or DoS is claimed.
 - Native worker prepare/start still needs the terminal governed Work versus
   failed worker-attempt policy identified as PF-AUDIT-04. The new MCP facade
   rejects terminal Work before native invocation; this does not repair the older
@@ -38,11 +40,12 @@ qualification for every subsequent change.
 
 ## Stable Release Conditions
 
-1. Resolve framing and terminal-admission defects with retained positive,
-   negative and retry controls; classify remaining supported-surface defects.
+1. Qualify the framing correction in the accumulated candidate and resolve
+   terminal-admission defects with retained positive, negative and retry
+   controls; classify remaining supported-surface defects.
 2. Reproduce or localize the prior Runtime registration and native task-batch
    budget failures. Increasing a timeout does not pass the published budget.
-3. Choose a new version and prepare changelog, migration notes and the source
+3. Prepare the 1.2.0 changelog, migration notes and the source
    commit. Preserve immutable existing release assets and tags.
 4. Qualify one clean accumulated candidate: required schema/cleanliness/checksums,
    full source suite, archive/hash/provenance and full extracted tests, then

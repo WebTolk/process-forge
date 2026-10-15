@@ -133,3 +133,21 @@ requires current worker/request/scheduler idleness and a compatible owner;
 [monitor](runtime-monitor.md) projection. These commands control the workplace
 Runtime, not the host-owned MCP stdio process; updating Core on disk does not
 reload a connected host.
+
+## Runtime HTTP request bodies
+
+The existing loopback Runtime POST adapter accepts a JSON object within a
+1 MiB byte limit. `Content-Length` must contain ASCII decimal digits, with
+surrounding whitespace allowed. Missing, empty or zero length retains the
+existing empty-object behavior. Invalid or excessive lengths are rejected
+before reading; a shorter body is rejected before JSON parsing or dispatch.
+JSON numbers must remain finite after float conversion: `NaN`, `Infinity`,
+`-Infinity` and numeric overflow are rejected, including nested values.
+Finite numbers, integers and strings keep their normal JSON behavior.
+
+These failures use the existing HTTP 400 error mapping. The parser reports
+`invalid Content-Length`, `incomplete request body` or
+`request JSON numbers must be finite`; the existing oversize and non-object
+errors remain unchanged. Bearer authorization and stopping checks precede
+body reading. Run `python tools/smoke_runtime_http_body.py` for focused inert
+reader and isolated HTTP checks; this does not qualify an installed Runtime.
