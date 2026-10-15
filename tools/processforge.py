@@ -17618,8 +17618,24 @@ def observe_worker_run(project_root: Path, task: dict[str, Any], driver: dict[st
     return state
 
 
+def worker_run_work_is_terminal(project_root: Path, task: dict[str, Any]) -> bool:
+    from processforge_core.process_execution import TERMINAL_ASSIGNMENT_STATUSES, TERMINAL_RUN_STATUSES
+
+    status = str(task.get("status") or "")
+    if status == "cancelled" or ("process_execution" in task and status in TERMINAL_ASSIGNMENT_STATUSES):
+        return True
+    run_id = safe_id(str(task.get("run_id") or "run"), "run")
+    path = run_root(project_root, run_id) / "run.yaml"
+    run = load_yaml_document(path) if path.is_file() else {}
+    if "process_execution" not in task and "process_execution" not in run:
+        return False
+    return status in TERMINAL_ASSIGNMENT_STATUSES or str(run.get("status") or "") in TERMINAL_RUN_STATUSES
+
+
 def prepare_worker_run(project_root: Path, task_id: str, driver_arg: str | None = None, executable_override: str | None = None, model_arg: str | None = None, reasoning_effort_arg: str | None = None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path]]:
     task = load_task(project_root, task_id)
+    if worker_run_work_is_terminal(project_root, task):
+        raise SystemExit("FAIL: work_is_terminal")
     agent_model = normalize_agent_model(model_arg or task.get("agent_model") or task.get("model") or "")
     agent_reasoning_effort = normalize_agent_reasoning_effort(reasoning_effort_arg or task.get("agent_reasoning_effort") or task.get("reasoning_effort") or "")
     if agent_model and task.get("agent_model") != agent_model:
@@ -17713,7 +17729,7 @@ def command_worker_run_prepare(args: argparse.Namespace) -> int:
                (locate_flow_root(project_root) / "runs" / run_id).glob("cancellation-*.yaml")):
             print("FAIL: cancellation_recovery_pending")
             return 1
-        if task.get("status") == "cancelled":
+        if worker_run_work_is_terminal(project_root, task):
             print("FAIL: work_is_terminal")
             return 1
         running = existing_running_worker_run(project_root, task, getattr(args, "driver", None))
@@ -17741,7 +17757,7 @@ def command_worker_run_start(args: argparse.Namespace) -> int:
                (locate_flow_root(project_root) / "runs" / run_id).glob("cancellation-*.yaml")):
             print("FAIL: cancellation_recovery_pending")
             return 1
-        if task.get("status") == "cancelled":
+        if worker_run_work_is_terminal(project_root, task):
             print("FAIL: work_is_terminal")
             return 1
         running = existing_running_worker_run(project_root, task, getattr(args, "driver", None))
@@ -18028,6 +18044,9 @@ def sync_failed_worker_lifecycle(project_root: Path, task: dict[str, Any], state
     task_id = safe_id(str(task.get("id") or state.get("task_id") or "task"), "task")
     run_id = safe_id(str(task.get("run_id") or state.get("run_id") or "run"), "run")
     if str(task.get("status")) in {"done", "completed", "failed", "cancelled"}:
+        return
+    run_path = run_root(project_root, run_id) / "run.yaml"
+    if "process_execution" in task or (run_path.is_file() and "process_execution" in load_yaml_document(run_path)):
         return
     runtime_status = str(state.get("status") or "failed")
     failure_reason = str(state.get("failure_reason") or runtime_status)

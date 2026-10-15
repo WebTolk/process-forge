@@ -69,6 +69,19 @@ duplicate completion events. Governed collection records the result while the
 primary Work stays on its current stage. The primary agent reviews evidence and
 calls `pf.work.transition` to advance the process.
 
+For governed Work, native prepare/start reject terminal assignments
+(`done`, `completed`, `failed`, `cancelled`) and runs (`completed`, `failed`,
+`cancelled`) with `work_is_terminal` before preparation or provider launch.
+Direct native preparation also checks this before launch-preference writes.
+Pending cancellation recovery keeps its existing priority. Reading status and
+collecting an existing result remain available.
+
+A failed worker attempt is separate from the governed Work lifecycle: supervision
+retains the attempt failure without marking the assignment failed. An active,
+ready Work can be prepared for another attempt; an already terminal Work needs a
+separate successor. Supported legacy retries are preserved, including the existing
+legacy rejection of `cancelled` tasks.
+
 ## Codex Exec
 
 `codex-exec` is the built-in driver for launching shell-agents through the

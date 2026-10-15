@@ -2,12 +2,17 @@
 """Real prepared-executor recovery and governed continuation in isolated fixtures."""
 from __future__ import annotations
 
+import argparse
+import copy
+import io
+import json
 import os
+from contextlib import ExitStack, nullcontext, redirect_stdout
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import processforge as core
 import processforge_core.prepared.input as prepared_input
@@ -19,6 +24,146 @@ from smoke_prepared_execution_context import (
     ROOT, RUN_ID, call, create_task, event_rows, make_shell_driver,
     pf, require, setup_basic_project,
 )
+
+
+def terminal_worker_admission() -> None:
+    failures = []
+    count = 0
+    real_prepare = core.prepare_worker_run
+
+    def check(name, test):
+        nonlocal count
+        count += 1
+        try:
+            test()
+        except (AssertionError, SystemExit) as exc:
+            failures.append(f'{name}: {exc}')
+
+    with tempfile.TemporaryDirectory(prefix='pf-terminal-admission-') as temporary:
+        project = Path(temporary)
+        run_dir = project / '.pf/runs/fixture'
+        run_dir.mkdir(parents=True)
+
+        def records(task_status='open', run_status='in_progress', marker='task'):
+            task = {'id': 'fixture', 'run_id': 'fixture', 'status': task_status}
+            run = {'id': 'fixture', 'status': run_status}
+            if marker == 'task':
+                task['process_execution'] = {}
+            elif marker == 'run':
+                run['process_execution'] = {}
+            (run_dir / 'run.yaml').write_text(json.dumps(run), encoding='utf-8')
+            return task
+
+        def files():
+            return {p.relative_to(project).as_posix(): p.read_bytes() for p in project.rglob('*') if p.is_file()}
+
+        forbidden = ('save_task', 'existing_capsule_status', 'existing_running_worker_run',
+                     'load_agent_run_state', 'runtime_driver_for_task', 'emit_process_event',
+                     'emit_worker_run_skip', 'build_worker_process_command')
+
+        def rejected(task_status, run_status, marker, operation):
+            task = records(task_status, run_status, marker)
+            original = copy.deepcopy(task)
+            before = files()
+            spies = {name: Mock(side_effect=AssertionError('unexpected ' + name)) for name in forbidden}
+            prepare = Mock(side_effect=AssertionError('unexpected preparation'))
+            provider = Mock(side_effect=AssertionError('unexpected prepared/provider load'))
+            launch = Mock(side_effect=AssertionError('unexpected process launch'))
+            stdout = io.StringIO()
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(core, 'require_flow_root'))
+                stack.enter_context(patch.object(core, 'load_task', return_value=task))
+                stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
+                stack.enter_context(patch.multiple(core, **spies))
+                stack.enter_context(patch.object(core, 'prepare_worker_run', prepare))
+                stack.enter_context(patch.object(prepared_input, 'load', provider))
+                stack.enter_context(patch.object(core.subprocess, 'Popen', launch))
+                with redirect_stdout(stdout):
+                    if operation == 'direct':
+                        try:
+                            real_prepare(project, 'fixture', model_arg='fixture-model')
+                        except SystemExit as exc:
+                            assert 'work_is_terminal' in str(exc), exc
+                        else:
+                            raise AssertionError('direct prepare admitted terminal Work')
+                    else:
+                        code = getattr(core, 'command_worker_run_' + operation)(argparse.Namespace(project_root=str(project), task='fixture'))
+                        assert code == 1 and 'work_is_terminal' in stdout.getvalue(), stdout.getvalue()
+            assert all(not spy.called for spy in [*spies.values(), prepare, provider, launch])
+            assert task == original and files() == before, 'terminal admission changed records/attempt/output files'
+
+        cases = [(status, 'in_progress', marker) for status in ('done', 'completed', 'failed', 'cancelled') for marker in ('task', 'run')]
+        cases += [('open', status, marker) for status in ('completed', 'failed', 'cancelled') for marker in ('task', 'run')]
+        cases += [('cancelled', 'in_progress', 'legacy')]
+        for task_status, run_status, marker in cases:
+            for operation in ('prepare', 'start', 'direct'):
+                check(f'{operation}/{marker}/{task_status}/{run_status}',
+                      lambda t=task_status, r=run_status, m=marker, o=operation: rejected(t, r, m, o))
+
+        def admitted(task_status, marker, operation):
+            task = records(task_status, marker=marker)
+            paths = {'status': project / 'status.json', 'command': project / 'command.json'}
+            prepare = Mock(return_value=(task, {'id': 'manual', 'kind': 'manual'}, paths))
+            provider = Mock(return_value={})
+            launch = Mock(side_effect=AssertionError('manual fixture launched process'))
+            before = files()
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(core, 'require_flow_root'))
+                stack.enter_context(patch.object(core, 'load_task', return_value=task))
+                stack.enter_context(patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()))
+                stack.enter_context(patch.object(core, 'existing_running_worker_run', return_value=None))
+                stack.enter_context(patch.object(core, 'load_agent_run_state', return_value={'status': 'failed', 'attempt': 1}))
+                stack.enter_context(patch.object(core, 'prepare_worker_run', prepare))
+                stack.enter_context(patch.object(core, 'json_read', return_value={'status': 'ready'}))
+                stack.enter_context(patch.object(prepared_input, 'load', provider))
+                stack.enter_context(patch.object(core.subprocess, 'Popen', launch))
+                with redirect_stdout(io.StringIO()):
+                    code = getattr(core, 'command_worker_run_' + operation)(argparse.Namespace(project_root=str(project), task='fixture'))
+            assert code == 0 and prepare.call_count == 1
+            assert provider.call_count == (1 if operation == 'start' else 0)
+            assert not launch.called and files() == before
+
+        for status, marker in [('open', 'task'), ('open', 'run'), ('open', 'legacy'), ('failed', 'legacy'), ('done', 'legacy'), ('completed', 'legacy')]:
+            for operation in ('prepare', 'start'):
+                check(f'retry/{marker}/{status}/{operation}', lambda s=status, m=marker, o=operation: admitted(s, m, o))
+
+        def cancellation_priority(operation):
+            task = records('cancelled')
+            intent = run_dir / 'cancellation-fixture.yaml'
+            intent.write_text('pending\n', encoding='utf-8')
+            try:
+                stdout = io.StringIO()
+                with patch.object(core, 'require_flow_root'), patch.object(core, 'load_task', return_value=task), \
+                     patch.object(core, 'worker_run_lifecycle_lock', return_value=nullcontext()), \
+                     patch.object(core, 'prepare_worker_run', side_effect=AssertionError('unexpected prepare')), redirect_stdout(stdout):
+                    code = getattr(core, 'command_worker_run_' + operation)(argparse.Namespace(project_root=str(project), task='fixture'))
+                assert code == 1 and 'cancellation_recovery_pending' in stdout.getvalue(), stdout.getvalue()
+            finally:
+                intent.unlink()
+
+        for operation in ('prepare', 'start'):
+            check('pending cancellation/' + operation, lambda o=operation: cancellation_priority(o))
+
+        def failure_sync(marker, attempt_status):
+            task = records(marker=marker)
+            before = copy.deepcopy(task)
+            saved, updated, emitted = Mock(), Mock(), Mock()
+            with patch.object(core, 'save_task', saved), patch.object(core, 'update_run_task_status', updated), patch.object(core, 'emit_process_event', emitted):
+                core.sync_failed_worker_lifecycle(project, task, {'status': attempt_status, 'failure_reason': 'fixture failure'})
+            if marker == 'legacy':
+                assert task['status'] == 'failed' and task['result']['status'] == 'failed'
+                assert saved.call_count == updated.call_count == emitted.call_count == 1
+            else:
+                assert task == before and not any(x.called for x in (saved, updated, emitted)), 'worker failure terminalized governed Work'
+
+        for marker in ('task', 'run', 'legacy'):
+            for status in sorted(core.AGENT_RUN_FAILURE_TERMINAL_STATUSES):
+                check('failure sync/' + marker + '/' + status, lambda m=marker, s=status: failure_sync(m, s))
+
+    for failure in failures:
+        print('FAIL: ' + failure, flush=True)
+    print(f'Terminal admission: {count - len(failures)}/{count} cases passed', flush=True)
+    assert not failures, '\n'.join(failures)
 
 
 def governed_continuation() -> None:
@@ -231,6 +376,7 @@ def windows_extended_private_paths() -> None:
 
 
 def main() -> int:
+    terminal_worker_admission()
     windows_extended_private_paths()
     governed_continuation()
     abrupt_collection_recovery()

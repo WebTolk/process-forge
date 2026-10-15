@@ -19,10 +19,13 @@ qualification for every subsequent change.
   Run `python tools/smoke_runtime_http_body.py` alongside the cumulative candidate
   gates. Full candidate, installed Runtime and connected-host qualification
   remain separate; no network attack, socket stall or DoS is claimed.
-- Native worker prepare/start still needs the terminal governed Work versus
-  failed worker-attempt policy identified as PF-AUDIT-04. The new MCP facade
-  rejects terminal Work before native invocation; this does not repair the older
-  CLI path or establish atomic cross-lifecycle admission.
+- Native worker prepare/start now reject terminal governed Work before
+  preparation/provider launch. Supervision keeps failed worker attempts separate
+  from the governed assignment lifecycle, while active and supported legacy
+  retries remain available. The existing prepared-execution recovery smoke
+  covers the source correction and its side-effect boundaries. Atomic admission
+  across different lifecycle locks is not established by this bounded fix;
+  accumulated candidate, installed and connected proof remain separate.
 - Current MCP changes enforce declared array bounds before business dispatch
   while preserving existing schemas. Focused counterexamples and controls cover
   the fix. They do not replace full accumulated release qualification.
@@ -40,9 +43,9 @@ qualification for every subsequent change.
 
 ## Stable Release Conditions
 
-1. Qualify the framing correction in the accumulated candidate and resolve
-   terminal-admission defects with retained positive, negative and retry
-   controls; classify remaining supported-surface defects.
+1. Qualify the framing and terminal-admission corrections in the accumulated
+   candidate with retained positive, negative and retry controls; classify
+   remaining supported-surface defects.
 2. Reproduce or localize the prior Runtime registration and native task-batch
    budget failures. Increasing a timeout does not pass the published budget.
 3. Prepare the 1.2.0 changelog, migration notes and the source
