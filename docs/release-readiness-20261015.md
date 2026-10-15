@@ -49,6 +49,20 @@ qualification for every subsequent change.
 
 ## Stable Release Conditions
 
+The scope repair has since been installed from its exact development archive.
+Owned bytes, backups and protected history matched; ordinary independent installed
+stdio/context checks passed. Two isolated native checks now pass their unchanged
+budgets: task batch 57.00s/180s and long-lived Runtime 67.84s/240s. The real shared
+Runtime remains degraded and consumed almost one CPU core in a bounded OS sample.
+These targeted results do not replace the accumulated public suite or actual
+connected-host qualification.
+
+The [bounded prepared YAML report](audits/prepared-resource-yaml-latency-20261015.md)
+records another source correction, exact guard controls and a modest five-pair
+native collect improvement. Installed/live Runtime acceptance of that newer
+source remains separate. A detailed readiness report and separate operator
+approval are required before public 1.2.0 tags, assets or stable-channel updates.
+
 1. Qualify the framing and terminal-admission corrections in the accumulated
    candidate with retained positive, negative and retry controls; classify
    remaining supported-surface defects.

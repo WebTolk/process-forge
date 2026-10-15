@@ -124,9 +124,70 @@ def mutate_resource_indexing(workplace: Path, package: str, resource_id: str, mo
     return path
 
 
+def bounded_snapshot_reads(temp_root: Path) -> None:
+    from unittest.mock import patch
+
+    import yaml
+    from processforge_core.common.request_scope import request_scope
+    from processforge_core.prepared import resources
+
+    flow = temp_root / "bounded-snapshot-flow"
+    flow.mkdir()
+    path = flow / "snapshot.yaml"
+    reason = "snapshot_fixture_denied"
+    raw = b"\xef\xbb\xbfopaque: {day: 2026-10-15, binary: !!binary YWJj}\na: &x [1, 2]\nb: *x\n"
+    path.write_bytes(raw)
+    value, seal = resources._bounded_yaml(path, flow, reason)
+    require(value == yaml.safe_load(raw.decode("utf-8-sig")) and value["a"] is value["b"], value)
+    require(seal == "sha256:" + hashlib.sha256(raw).hexdigest(), seal)
+    with request_scope():
+        first, _ = resources._bounded_yaml(path, flow, reason)
+        first["a"].append(3)
+        second, _ = resources._bounded_yaml(path, flow, reason)
+        require(second["a"] == [1, 2] and second["a"] is second["b"], second)
+    c_loader = getattr(yaml, "CSafeLoader", None)
+    try:
+        if c_loader is not None:
+            del yaml.CSafeLoader
+        fallback, fallback_seal = resources._bounded_yaml(path, flow, reason)
+        require(fallback == value and fallback_seal == seal, fallback)
+    finally:
+        if c_loader is not None:
+            yaml.CSafeLoader = c_loader
+
+    def denied(target: Path) -> None:
+        try:
+            resources._bounded_yaml(target, flow, reason)
+        except ValueError as exc:
+            require(str(exc) == reason, exc)
+        else:
+            raise AssertionError("bounded snapshot was admitted: " + str(target))
+
+    for rejected in (b"value: [\n", b"!!python/object/apply:os.system [exit]\n", b"- list\n", b"", b"value: \xff\n"):
+        path.write_bytes(rejected)
+        denied(path)
+    outside = temp_root / "outside-bounded-snapshot.yaml"
+    outside.write_bytes(b"value: outside\n")
+    denied(outside)
+    denied(flow)
+    path.write_bytes(b"value: old\n")
+    with patch.object(resources, "MAX_SNAPSHOT_BYTES", 4), patch.object(Path, "read_bytes", side_effect=AssertionError("oversized snapshot body read")):
+        denied(path)
+    metadata = path.stat()
+    with request_scope():
+        require(resources._bounded_yaml(path, flow, reason)[0] == {"value": "old"}, "initial snapshot")
+        path.write_bytes(b"value: new\n")
+        os.utime(path, ns=(metadata.st_atime_ns, metadata.st_mtime_ns))
+        require(path.stat().st_size == metadata.st_size, "same-size fixture")
+        require(resources._bounded_yaml(path, flow, reason)[0] == {"value": "new"}, "same-metadata edit hidden")
+        path.unlink()
+        denied(path)
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="pf-prepared-context-") as raw_root:
         temp_root = Path(raw_root)
+        bounded_snapshot_reads(temp_root)
         workplace, project = setup_basic_project(temp_root, "prepared-project")
 
         full_package, meta_package = "prepared-full", "prepared-meta"

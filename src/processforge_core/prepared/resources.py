@@ -14,6 +14,7 @@ from typing import Any
 
 import yaml
 
+from ..common.request_scope import safe_load as _safe_load_yaml
 from ..project.snapshot import load_snapshot
 from ..work.resource_material import (
     DEFAULT_LIMITS,
@@ -63,7 +64,7 @@ def _bounded_yaml(path: Path, flow_root: Path, reason: str) -> tuple[dict[str, A
         raw = target.read_bytes()
         if len(raw) > MAX_SNAPSHOT_BYTES:
             _fail(reason)
-        value = yaml.safe_load(raw.decode("utf-8-sig"))
+        value = _safe_load_yaml(raw.decode("utf-8-sig"))
     except (OSError, UnicodeError, yaml.YAMLError):
         _fail(reason)
     if not isinstance(value, dict):
