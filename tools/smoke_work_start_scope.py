@@ -2,12 +2,16 @@
 from __future__ import annotations
 
 import copy
+import fnmatch
 import hashlib
 import json
 from pathlib import Path
+import re
 import runpy
 import subprocess
 import sys
+import tempfile
+from unittest.mock import patch
 
 import yaml
 
@@ -16,6 +20,7 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 import processforge as core
 from processforge_core.process_execution import ProcessExecutionService
+from processforge_core.work.scope_conflicts import ScopeConflictService
 from process_execution_smoke_support import fixture, stage_evidence
 
 validate_instance = runpy.run_path(str(ROOT / "tools/validate-process-forge-schemas.py"))["validate_instance"]
@@ -38,7 +43,117 @@ def assert_saved_mode(project, result, expected):
     return path
 
 
+def prior_overlap(left, right, files):
+    """Frozen pre-repair decisions/reasons, independent of the optimized owner."""
+    left, right = core.assignment_path_key(left), core.assignment_path_key(right)
+    left_glob, right_glob = any(c in left for c in "*?["), any(c in right for c in "*?[")
+    if not left_glob and not right_glob:
+        return left == right, "same_file"
+    if left_glob and not right_glob:
+        return fnmatch.fnmatch(right, left), "glob_matches_file"
+    if right_glob and not left_glob:
+        return fnmatch.fnmatch(left, right), "file_matches_glob"
+    if left == right:
+        return True, "same_glob"
+    if any(fnmatch.fnmatch(core.assignment_path_key(p), left) and
+           fnmatch.fnmatch(core.assignment_path_key(p), right) for p in files):
+        return True, "glob_matches_same_file"
+    lp, rp = (re.split(r"[*?\[]", p, maxsplit=1)[0] for p in (left, right))
+    if lp and rp and (lp.startswith(rp) or rp.startswith(lp)):
+        return True, "possible_glob_overlap"
+    return False, ""
+
+
+def assert_scope_conflict_contract():
+    with tempfile.TemporaryDirectory(prefix="pf-scope-contract-") as directory:
+        project = Path(directory)
+        files = ["a/real.txt", "a/deep/real.py", "b/one.txt", "UPPER/CASE.TXT",
+                 "space name.txt", "bracket/[x].txt"]
+        for name in files + [".git/ignored.txt", "__pycache__/ignored.txt",
+                             ".mypy_cache/ignored.txt", ".pytest_cache/ignored.txt"]:
+            p = project / name
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text("scope contract\n", encoding="utf-8")
+        patterns = ["", "/", "./a//real.txt", "a/real.txt", "a/*.txt", "a/**", "a/deep/*.py",
+                    "a/missing-*", "b/*.txt", "*.txt", "?/*", "[ab]/*", "[!a]/*", "[", "[[]*",
+                    "UPPER/*.TXT", "upper/*.txt", "a/../*", "a\\*.txt", "./a/**/", "*", "*/real.*"]
+        service = ScopeConflictService(project)
+        for left in patterns:
+            for right in patterns:
+                assert service.overlap(left, right) == prior_overlap(left, right, files), (left, right)
+        assert service.overlap("a/*.txt", "a/**") == (True, "glob_matches_same_file")
+        assert service.overlap("a/missing-*", "a/*.none") == (True, "possible_glob_overlap")
+        # Decisions that can be made from declarations must never traverse disk.
+        with patch.object(Path, "rglob", side_effect=AssertionError("unnecessary repository traversal")):
+            fast = ScopeConflictService(project)
+            assert fast.overlap("a/*.txt", "b/**") == (False, "")
+            assert fast.overlap("a/**", "a/**") == (True, "same_glob")
+            assert fast.overlap("a/real.txt", "a/**") == (True, "file_matches_glob")
+            assert fast.overlap("missing.txt", "other.txt") == (False, "same_file")
+            assert fast.conflicts("a", [], "b", ["**"]) == []
+        original_rglob = Path.rglob
+        scans = []
+        def counted_rglob(path, pattern):
+            scans.append(path)
+            return original_rglob(path, pattern)
+        with patch.object(Path, "rglob", counted_rglob):
+            indexed = ScopeConflictService(project)
+            first = indexed.overlap("a/*.txt", "a/**")
+            assert indexed.overlap("b/*.txt", "b/**")[0]
+            assert indexed.overlap("a/*.txt", "a/**") == first
+        assert scans == [project], scans
+        # A later operation must see new files and retain the precise reason.
+        assert ScopeConflictService(project).overlap("later/*.txt", "later/**") == (True, "possible_glob_overlap")
+        (project / "later").mkdir()
+        (project / "later/now.txt").write_text("new\n", encoding="utf-8")
+        assert ScopeConflictService(project).overlap("later/*.txt", "later/**") == (True, "glob_matches_same_file")
+        ordered = service.conflicts("left", ["a/real.txt", "a/*.txt"], "right",
+                                    ["a/**", "a/real.txt"], reason_prefix="forbidden:")
+        assert [(x["current_scope"], x["other_scope"], x["reason"]) for x in ordered] == [
+            ("a/real.txt", "a/**", "forbidden:file_matches_glob"),
+            ("a/real.txt", "a/real.txt", "forbidden:same_file"),
+            ("a/*.txt", "a/**", "forbidden:glob_matches_same_file"),
+            ("a/*.txt", "a/real.txt", "forbidden:glob_matches_file"),
+        ]
+        for directory in (".git", "__pycache__", ".mypy_cache", ".pytest_cache"):
+            assert service.overlap(directory + "/*.txt", "*.txt") == (False, "")
+        assignments = project / ".pf/assignments"
+        assignments.mkdir(parents=True)
+        current = {"id": "current", "allowed_files": ["a/*.txt"], "forbidden_files": ["a/real.txt"]}
+        other = {"id": "other", "status": "in_progress", "allowed_files": ["a/**"]}
+        other_path = assignments / "a-other.yaml"
+        def write_other():
+            other_path.write_text(yaml.safe_dump(other), encoding="utf-8")
+        write_other()
+        (assignments / "b-broken.yaml").write_text("schema: [\n", encoding="utf-8")
+        (assignments / "c-completed.yaml").write_text(yaml.safe_dump({
+            "id": "finished", "status": "completed", "allowed_files": ["a/**"]}), encoding="utf-8")
+        result = core.validate_assignment_scope_overlaps(project, current)
+        assert result["status"] == "fail"
+        assert [(x["other_assignment"], x["reason"]) for x in result["conflicts"]] == [
+            ("current", "assignment_forbidden_wins:glob_matches_file"), ("other", "glob_matches_same_file")]
+        for left, right in ((current, other), (other, current)):
+            left["dependencies"] = {"blocked_by": [right["id"]]}
+            write_other()
+            assert len(core.validate_assignment_scope_overlaps(project, current)["conflicts"]) == 1
+            del left["dependencies"]
+        other["allowed_files"] = ["b/**"]
+        write_other()
+        current["forbidden_files"] = []
+        assert core.validate_assignment_scope_overlaps(project, current) == {"status": "pass", "conflicts": []}
+        other["allowed_files"] = ["a/**"]
+        write_other()
+        assert core.validate_assignment_scope_overlaps(project, current)["conflicts"][0]["other_assignment"] == "other"
+        try:
+            (project / "linked").symlink_to(project / "a", target_is_directory=True)
+        except (OSError, NotImplementedError):
+            print("SKIP: directory symlink qualification unavailable")
+        else:
+            assert ScopeConflictService(project).overlap("linked/*.txt", "*.txt") == (False, "")
+
+
 def main():
+    assert_scope_conflict_contract()
     with fixture() as (workplace, project, initial):
         service = ProcessExecutionService(project, workplace, core)
         original = records(project)
@@ -221,7 +336,7 @@ def main():
         assert service.start(objective="Serial writer transfer", scope_intent=transfer)["reason"] == "scope_intent_mismatch"
         assert service.start(objective="Third writer", scope_intent=transfer)["reason"] == "write_scope_overlap"
         assert all((project / p).read_bytes() == value for p, value in original.items())
-    print("PASS: canonical string/object modes, CLI schema parity, negative no-publication cases, immutable legacy reuse, overlap, predecessor and native transition")
+    print("PASS: 484 scope pairs, exact reasons/order, lazy per-operation inventory, live file reads, canonical modes, CLI schema parity, no-publication cases, immutable reuse, predecessor and native transition")
     return 0
 
 

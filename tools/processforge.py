@@ -57,6 +57,7 @@ from processforge_core.agents.presence import AgentPresenceReader
 from processforge_core.chat.transcripts import ChatTranscriptReader
 from processforge_core.common.ndjson import NdjsonReader
 from processforge_core.work.context_documents import ContextContractInputs
+from processforge_core.work.scope_conflicts import ScopeConflictService
 from processforge_core.common.digests import FileDigestReader
 from processforge_core.project.metadata import ProjectMetadataReader as _ProjectMetadataReader
 from processforge_core.project.readiness import ProjectContextReadinessPolicy as _ProjectContextReadinessPolicy
@@ -11480,66 +11481,6 @@ def assignment_has_glob(value: str) -> bool:
     return any(char in value for char in "*?[")
 
 
-def iter_repo_files(project_root: Path) -> list[str]:
-    files: list[str] = []
-    skipped = {".git", "__pycache__", ".mypy_cache", ".pytest_cache"}
-    for path in project_root.rglob("*"):
-        if any(part in skipped for part in path.parts):
-            continue
-        if path.is_file():
-            files.append(rel(path, project_root))
-    return files
-
-
-def assignment_patterns_overlap(left: str, right: str, repo_files: list[str]) -> tuple[bool, str]:
-    left_key = assignment_path_key(left)
-    right_key = assignment_path_key(right)
-    left_glob = assignment_has_glob(left_key)
-    right_glob = assignment_has_glob(right_key)
-    if not left_glob and not right_glob:
-        return (left_key == right_key, "same_file")
-    if left_glob and not right_glob:
-        return (fnmatch.fnmatch(right_key, left_key), "glob_matches_file")
-    if right_glob and not left_glob:
-        return (fnmatch.fnmatch(left_key, right_key), "file_matches_glob")
-    if left_key == right_key:
-        return True, "same_glob"
-    files = [assignment_path_key(item) for item in repo_files]
-    if any(fnmatch.fnmatch(item, left_key) and fnmatch.fnmatch(item, right_key) for item in files):
-        return True, "glob_matches_same_file"
-    left_prefix = re.split(r"[*?\[]", left_key, maxsplit=1)[0]
-    right_prefix = re.split(r"[*?\[]", right_key, maxsplit=1)[0]
-    if left_prefix and right_prefix and (left_prefix.startswith(right_prefix) or right_prefix.startswith(left_prefix)):
-        return True, "possible_glob_overlap"
-    return False, ""
-
-
-def assignment_scope_conflicts(
-    current_id: str,
-    current_scope: list[str],
-    other_id: str,
-    other_scope: list[str],
-    repo_files: list[str],
-    *,
-    reason_prefix: str = "",
-) -> list[dict[str, str]]:
-    conflicts: list[dict[str, str]] = []
-    for current_item in current_scope:
-        for other_item in other_scope:
-            overlaps, reason = assignment_patterns_overlap(current_item, other_item, repo_files)
-            if overlaps:
-                conflicts.append(
-                    {
-                        "current_assignment": current_id,
-                        "current_scope": current_item,
-                        "other_assignment": other_id,
-                        "other_scope": other_item,
-                        "reason": reason_prefix + reason,
-                    }
-                )
-    return conflicts
-
-
 def validate_assignment_scope_overlaps(
     project_root: Path,
     metadata: dict[str, Any],
@@ -11551,13 +11492,12 @@ def validate_assignment_scope_overlaps(
     handed_off_predecessor = scope_handoff_predecessor(project_root, metadata, sys.modules[__name__])
     current_scope = assignment_write_scope(metadata)
     forbidden_scope = assignment_scope_items(metadata.get("forbidden_files"))
-    repo_files = iter_repo_files(project_root)
-    conflicts = assignment_scope_conflicts(
+    scope_conflicts = ScopeConflictService(project_root)
+    conflicts = scope_conflicts.conflicts(
         current_id,
         current_scope,
         current_id,
         forbidden_scope,
-        repo_files,
         reason_prefix="assignment_forbidden_wins:",
     )
     flow_root = locate_flow_root(project_root)
@@ -11581,7 +11521,7 @@ def validate_assignment_scope_overlaps(
         other_deps = assignment_dependency_set(other)
         if other_id in current_deps or current_id in other_deps:
             continue
-        conflicts.extend(assignment_scope_conflicts(current_id, current_scope, other_id, other_scope, repo_files))
+        conflicts.extend(scope_conflicts.conflicts(current_id, current_scope, other_id, other_scope))
     return {"status": "fail" if conflicts else "pass", "conflicts": conflicts}
 
 
@@ -18180,7 +18120,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
     defaults = profile.get("defaults") if isinstance(profile.get("defaults"), dict) else {}
     max_parallel = int(scheduling.get("max_parallel_workers") or defaults.get("max_parallel_workers") or 1)
     start_allowed = bool(getattr(args, "start_allowed", True))
-    repo_files = iter_repo_files(project_root)
+    scope_conflicts = ScopeConflictService(project_root)
     running_scopes: dict[str, list[str]] = {}
     for run_id in run_ids:
         run = load_run(project_root, run_id)
@@ -18250,7 +18190,7 @@ def command_supervisor_tick(args: argparse.Namespace) -> int:
             conflict = False
             if not allow_write_scope_overlap:
                 for other_id, other_scope in running_scopes.items():
-                    if assignment_scope_conflicts(task_id, current_scope, other_id, other_scope, repo_files, reason_prefix="supervisor_"):
+                    if scope_conflicts.conflicts(task_id, current_scope, other_id, other_scope, reason_prefix="supervisor_"):
                         conflict = True
                         break
             if conflict:
@@ -18697,7 +18637,7 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
     checks.append(check("PASS" if default_driver in {item[0] for item in runtime_driver_id_list(project_root=project_root)} else "FAIL", f"runtime.default_driver registered: {default_driver}"))
     checks.append(check("PASS" if start_policy in {"manual", "prepare", "supervisor"} else "FAIL", f"runtime.start_policy valid: {start_policy}"))
     seen: set[str] = set()
-    repo_files = iter_repo_files(project_root)
+    scope_conflicts = ScopeConflictService(project_root)
     write_scopes: list[tuple[str, list[str]]] = []
     workers_by_id = {
         safe_id(str(worker.get("id") or "worker"), "worker"): worker
@@ -18734,7 +18674,7 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
             checks.append(check("PASS" if dep_id in workers_by_id else "FAIL", f"{worker_id} dependency exists: {dep_id}"))
         has_workspace_access = any(workspace_access[key] for key in WORKSPACE_ACCESS_KEYS)
         checks.append(check("PASS" if read_allowed or raw_worker.get("required_sources") or has_workspace_access else "WARN", f"{worker_id} has bounded read/context scope"))
-        forbidden_conflicts = assignment_scope_conflicts(worker_id, allowed, worker_id, forbidden, repo_files, reason_prefix="forbidden_wins:")
+        forbidden_conflicts = scope_conflicts.conflicts(worker_id, allowed, worker_id, forbidden, reason_prefix="forbidden_wins:")
         checks.append(check("PASS" if not forbidden_conflicts else "FAIL", f"{worker_id} forbidden_files do not overlap allowed_files"))
         subagent_policy = worker_subagent_policy(raw_worker)
         reports_dir = str(subagent_policy.get("reports_dir") or "")
@@ -18765,7 +18705,7 @@ def validate_orchestrator_task_plan(project_root: Path, plan: dict[str, Any]) ->
             for right_id, right_scope in write_scopes[index + 1 :]:
                 if worker_depends_on(workers_by_id, left_id, right_id) or worker_depends_on(workers_by_id, right_id, left_id):
                     continue
-                conflicts = assignment_scope_conflicts(left_id, left_scope, right_id, right_scope, repo_files)
+                conflicts = scope_conflicts.conflicts(left_id, left_scope, right_id, right_scope)
                 if conflicts:
                     checks.append(check("FAIL", f"parallel write scopes overlap: {left_id} <-> {right_id}"))
     integration = plan.get("integration") if isinstance(plan.get("integration"), dict) else {}

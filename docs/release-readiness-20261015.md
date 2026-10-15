@@ -40,6 +40,12 @@ qualification for every subsequent change.
   in prepared worker input were observed. Verified PF knowledge copies allowed
   the contribution within existing scope. Correct and measure these paths without
   claiming an unmeasured universal performance cause or bypassing permissions.
+- The measured scope-overlap bottleneck now has a concrete Core owner shared by
+  admission, supervisor and plan validation. Literal-prefix exclusion and one
+  lazy normalized inventory preserve conflict decisions/reasons/order. Five
+  current-project scope checks have a 1.782s median; full admission and installed
+  profiling remain separate. See the [scope latency report](audits/work-start-scope-latency-20261015.md)
+  for repeated comparable timings, controls and residual catalog/ambiguous-glob costs.
 
 ## Stable Release Conditions
 
