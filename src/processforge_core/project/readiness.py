@@ -8,6 +8,26 @@ from typing import Any
 class ProjectContextReadinessPolicy:
     """Build ordered execution and resource readiness projections."""
 
+    def capabilities(
+        self,
+        required: list[str],
+        optional: list[str],
+        providers: dict[str, str],
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        available = set(providers)
+
+        def record(capability: str, required_capability: bool) -> dict[str, Any]:
+            is_available = capability in available
+            provider = providers.get(capability)
+            return {
+                "id": capability,
+                "status": "available" if is_available else "missing",
+                "provider": provider if is_available else None,
+                "severity": "fail" if required_capability and not is_available else ("warn" if not required_capability and not is_available else "info"),
+            }
+
+        return [record(item, True) for item in required], [record(item, False) for item in optional]
+
     def execution(
         self,
         required_records: list[dict[str, Any]],

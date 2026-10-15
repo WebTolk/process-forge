@@ -19,6 +19,7 @@ import yaml
 
 from ..common.request_scope import safe_load
 from ..project.capability_registry import CapabilityRegistryReader
+from ..project.readiness import ProjectContextReadinessPolicy
 
 
 CONTRACT_VERSION = 1
@@ -387,7 +388,7 @@ def build_context_fields(project: Path, assignment_path: Path, metadata: dict[st
     required = intent["required_capabilities"]
     optional = sorted(set(intent["optional_capabilities"]) - set(required))
     providers = CapabilityRegistryReader(project).read(core.resolve_project_workplace_manifest(project))
-    required_records, optional_records = core.capability_records(required, optional, providers)
+    required_records, optional_records = ProjectContextReadinessPolicy().capabilities(required, optional, providers)
     sources, blockers = _capture_sources(project, assignment_path, intent, core)
     blockers.extend({"code": "source_scope_denied", "path": item["path"]} for item in sources
                     if item.get("required") and item.get("status") == "available" and not scope_allows(normalized["scope"], item["path"], "read"))

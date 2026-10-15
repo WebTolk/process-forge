@@ -7093,6 +7093,7 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_project_context_snapshot_lock_model", [sys.executable, str(root / "tools" / "smoke_project_context_snapshot_lock_model.py")], 120),
         ReleaseCommand("smoke_project_context_freshness_policies", [sys.executable, str(root / "tools" / "smoke_project_context_freshness_policies.py")], 120),
         ReleaseCommand("smoke_context_freshness_vs_execution_readiness", [sys.executable, str(root / "tools" / "smoke_context_freshness_vs_execution_readiness.py")], 180),
+        ReleaseCommand("smoke_project_context_capability_records_real_core", [sys.executable, str(root / "tools" / "smoke_project_context_capability_records_real_core.py")], 120),
         ReleaseCommand("smoke_continuation_work", [sys.executable, str(root / "tools" / "smoke_continuation_work.py")], 240),
         ReleaseCommand("smoke_process_catalog_not_implicit_execution_route", [sys.executable, str(root / "tools" / "smoke_process_catalog_not_implicit_execution_route.py")], 180),
         ReleaseCommand("smoke_project_init_local_search_mcp", [sys.executable, str(root / "tools" / "smoke_project_init_local_search_mcp.py")], 180),
@@ -9448,22 +9449,6 @@ def project_knowledge_resource_index_checks(project_root: Path, distribution_roo
     return checks
 
 
-def capability_records(required: list[str], optional: list[str], providers: dict[str, str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    available = set(providers)
-
-    def record(capability: str, required_capability: bool) -> dict[str, Any]:
-        is_available = capability in available
-        provider = providers.get(capability)
-        return {
-            "id": capability,
-            "status": "available" if is_available else "missing",
-            "provider": provider if is_available else None,
-            "severity": "fail" if required_capability and not is_available else ("warn" if not required_capability and not is_available else "info"),
-        }
-
-    return [record(item, True) for item in required], [record(item, False) for item in optional]
-
-
 def project_context_snapshot_paths(project_root: Path) -> tuple[Path, Path]:
     return _context_contract_inputs.project_context_snapshot_paths(project_root)
 
@@ -9626,7 +9611,7 @@ def build_project_context_snapshot(project_root: Path, *, max_age_days: int = 7,
     elif isinstance(manifest_data.get("workplace"), dict) and manifest_data["workplace"].get("reference") == "auto":
         distribution_root = project_root
     providers = _CapabilityRegistryReader(project_root).read(workplace_manifest_path)
-    required_records, optional_records = capability_records(required, optional, providers)
+    required_records, optional_records = _ProjectContextReadinessPolicy().capabilities(required, optional, providers)
     classification = classify_project(project_root, workplace_manifest_path)
     manifest_platform_contracts = manifest_data.get("platform_contracts") if isinstance(manifest_data.get("platform_contracts"), list) else []
     manifest_platform_ids = [
@@ -11699,7 +11684,7 @@ def command_assignment_capsule(args: argparse.Namespace) -> int:
     required = [str(item) for item in metadata.get("required_capabilities", [])] if isinstance(metadata.get("required_capabilities"), list) else []
     optional = [str(item) for item in metadata.get("optional_capabilities", [])] if isinstance(metadata.get("optional_capabilities"), list) else []
     providers = _CapabilityRegistryReader(project_root).read(resolve_project_workplace_manifest(project_root))
-    required_records, optional_records = capability_records(required, optional, providers)
+    required_records, optional_records = _ProjectContextReadinessPolicy().capabilities(required, optional, providers)
     missing_required = [item["id"] for item in required_records if item.get("status") == "missing"]
     if missing_required:
         for capability in missing_required:
