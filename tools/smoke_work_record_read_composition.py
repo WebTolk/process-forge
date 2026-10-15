@@ -138,11 +138,21 @@ class InjectedReadTests(unittest.TestCase):
 
     def test_falsey_port_selected_and_documents_reread(self):
         selected = self.service._select_work(run_id='r', assignment_id='a')
-        self.assertEqual(self.records.calls, [('runs',), ('assignment', 'a'), ('run', 'r'), ('assignment', 'a')])
+        # These legacy records omit process identity: the canonical preflight
+        # fails, so the existing catalog and final raw reloads still run.
+        self.assertEqual(self.records.calls, [('run', 'r'), ('assignment', 'a'), ('runs',),
+                                              ('assignment', 'a'), ('run', 'r'), ('assignment', 'a')])
         self.assertEqual(selected[0]['future'], {'values': [1]})
         selected[1]['future']['values'].clear()
         self.records.assignment['future']['values'].append(3)
         self.assertEqual(self.service._select_work(assignment_id='a')[1]['future']['values'], [2, 3])
+
+    def test_falsey_port_canonical_pair_uses_four_live_reads(self):
+        self.records.run['process'] = self.records.assignment['process'] = 'p'
+        selected = self.service._select_work(run_id='r', assignment_id='a')
+        self.assertEqual(selected, (self.records.run, self.records.assignment))
+        self.assertEqual(self.records.calls, [('run', 'r'), ('assignment', 'a'),
+                                              ('run', 'r'), ('assignment', 'a')])
 
     def test_ids_checked_before_reader(self):
         for method in (self.service._load_run, self.service._load_assignment):
@@ -230,6 +240,89 @@ class LiveReaderTests(unittest.TestCase):
     def seed(self):
         self.write(self.run_path(), {'id': 'r', 'status': 'open', 'tasks': [{'id': 'a'}]})
         self.write(self.assignment_path(), {'id': 'a', 'run_id': 'r', 'status': 'open'})
+
+    def seed_canonical(self):
+        self.write(self.run_path(), {'id': 'r', 'process': 'p', 'status': 'open',
+                                    'tasks': [{'id': 'a'}], 'future': {'values': [1]}})
+        self.write(self.assignment_path(), {'id': 'a', 'run_id': 'r', 'process': 'p',
+                                           'status': 'open', 'future': {'values': [2]}})
+
+    def test_default_canonical_pair_is_authoritative_over_foreign_alias(self):
+        self.seed_canonical()
+        self.write(self.run_path('a-poison'), {'id': 'a-poison', 'process': 'p', 'status': 'open',
+                                             'tasks': [{'id': 'alias'}]})
+        self.write(self.assignment_path('alias'), {'id': 'a', 'run_id': 'a-poison',
+                                                  'process': 'p', 'status': 'open'})
+        run, task = self.service._select_work(run_id='r', assignment_id='a')
+        self.assertEqual((run['id'], task['id'], task['run_id']), ('r', 'a', 'r'))
+        self.assertEqual((run['future'], task['future']), ({'values': [1]}, {'values': [2]}))
+        # Assignment-only selection retains historical first-match semantics.
+        self.assertEqual(self.service._select_work(assignment_id='a')[0]['id'], 'a-poison')
+        self.assertNotIn('processforge', sys.modules)
+        self.assertNotIn('processforge_core._legacy_processforge', sys.modules)
+
+    def test_canonical_pair_isolated_from_unrelated_history_read_failure(self):
+        self.seed_canonical()
+        foreign = self.assignment_path('broken')
+        self.write(self.run_path('z-history'), {'id': 'z-history', 'process': 'p',
+                                              'tasks': [{'id': 'broken'}]})
+        self.write(foreign, {'id': 'broken', 'run_id': 'z-history', 'process': 'p'})
+        original = YamlDocumentReader.load
+        failure = OSError('unrelated historical document')
+        def load(reader, path):
+            if path == foreign:
+                raise failure
+            return original(reader, path)
+        with patch.object(YamlDocumentReader, 'load', load):
+            self.assertEqual(self.service._select_work(run_id='r', assignment_id='a')[1]['id'], 'a')
+            for selectors in ({'assignment_id': 'a'}, {'run_id': 'r'}, {}):
+                with self.assertRaises(OSError) as caught:
+                    self.service._select_work(**selectors)
+                self.assertIs(caught.exception, failure)
+
+    def test_final_canonical_read_sees_same_metadata_change_within_request(self):
+        self.seed_canonical()
+        original = YamlDocumentReader.load
+        calls = []
+        def load(reader, path):
+            value = original(reader, path)
+            calls.append(path)
+            if calls == [self.run_path(), self.assignment_path()]:
+                metadata = path.stat()
+                path.write_text(path.read_text(encoding='utf-8').replace('open', 'done'), encoding='utf-8')
+                os.utime(path, ns=(metadata.st_atime_ns, metadata.st_mtime_ns))
+                self.assertEqual(path.stat().st_size, metadata.st_size)
+            return value
+        with request_scope(), patch.object(YamlDocumentReader, 'load', load):
+            selected = self.service._select_work(run_id='r', assignment_id='a')
+        self.assertEqual(selected[1]['status'], 'done')
+        self.assertEqual(calls, [self.run_path(), self.assignment_path()] * 2)
+
+    def test_final_canonical_identity_change_or_deletion_is_rejected(self):
+        original = YamlDocumentReader.load
+        for change in ('owner', 'membership', 'assignment-deleted', 'run-deleted', 'malformed'):
+            with self.subTest(change=change):
+                self.seed_canonical()
+                calls = []
+                def load(reader, path):
+                    value = original(reader, path)
+                    calls.append(path)
+                    if calls == [self.run_path(), self.assignment_path()]:
+                        if change == 'owner':
+                            self.write(path, {**value, 'run_id': 'other'})
+                        elif change == 'membership':
+                            self.write(self.run_path(), {'id': 'r', 'process': 'p', 'tasks': []})
+                        elif change == 'assignment-deleted':
+                            path.unlink()
+                        elif change == 'run-deleted':
+                            self.run_path().unlink()
+                        else:
+                            path.write_text('value: [', encoding='utf-8')
+                    return value
+                with request_scope(), patch.object(YamlDocumentReader, 'load', load):
+                    with self.assertRaisesRegex(ValueError, '^work_identity_mismatch$'):
+                        self.service._select_work(run_id='r', assignment_id='a')
+                self.assertEqual(calls, [self.run_path(), self.assignment_path()] * 2)
 
     def test_sorted_inventory_missing_and_unknown_fields(self):
         self.assertEqual(list(self.reader.runs()), [])

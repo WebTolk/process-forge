@@ -27,6 +27,15 @@ class WorkSelectionService:
         for value in (run_id, assignment_id):
             if value and (not isinstance(value, str) or not self.valid_selector(value)):
                 raise ValueError('invalid_work_selector')
+        if run_id and assignment_id:
+            run, assignment = self.load_run(run_id), self.load_assignment(assignment_id)
+            if self._canonical_pair(run, assignment, run_id, assignment_id):
+                # Exact canonical identity is authoritative only after proof.
+                # Keep the final live reads; never return the preflight bodies.
+                run, assignment = self.load_run(run_id), self.load_assignment(assignment_id)
+                if not self._canonical_pair(run, assignment, run_id, assignment_id):
+                    raise ValueError('work_identity_mismatch')
+                return run, assignment
         records = self.records(include_historical=True)
         if assignment_id:
             record = next((item for item in records if item['assignment_id'] == assignment_id), None)
@@ -43,6 +52,21 @@ class WorkSelectionService:
         if run_id and record['run_id'] != run_id:
             raise ValueError('work_identity_mismatch')
         return (self.load_run(record['run_id']), self.load_assignment(record['assignment_id']))
+
+    def _canonical_pair(self, run: dict[str, Any], assignment: dict[str, Any], run_id: str, assignment_id: str) -> bool:
+        if not (isinstance(run, dict) and isinstance(assignment, dict)
+                and run.get('id') == run_id and assignment.get('id') == assignment_id
+                and isinstance(run.get('tasks'), list)):
+            return False
+        try:
+            from .context import _run_matches
+        except ModuleNotFoundError as exc:
+            # Optional PyYAML is needed by the shared context module. Without
+            # that proof, keep the existing raw-reader/catalog fallback.
+            if exc.name != 'yaml':
+                raise
+            return False
+        return _run_matches(run, assignment)
 
     def preferred_record(self, records: list[dict[str, Any]], session_id: str) -> dict[str, Any] | None:
         if session_id:

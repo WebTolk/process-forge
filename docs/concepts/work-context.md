@@ -120,8 +120,46 @@ location formatting can differ between safe loader implementations.
 `WorkInventory` shares sorted raw Run discovery and Assignment reads between
 Garage and lifecycle. It does not cache directories or documents, select Work,
 interpret permissions or merge their different missing/legacy record rules.
-Every inventory call sees current files; catalog precedence and full-history
-identity/ambiguity checks remain unchanged.
+Every inventory call sees current files. Selection uses the canonical exact-pair
+rule below; other requests retain catalog precedence and full-history
+identity/ambiguity checks.
+
+### Canonical exact Work selection
+
+After the existing session-binding and selector validation, a complete Run and
+Assignment pair can be selected without enumerating historical Work. This also
+applies to a pair returned by verified session binding; explicit selectors still
+take precedence over session lookup. The canonical documents must declare the
+requested IDs, the Assignment must belong to that Run, and the existing shared
+membership validator must confirm exactly one matching task reference, its
+canonical Assignment path if recorded, and compatible processes. Its existing
+unpinned legacy-container process exception is preserved.
+
+A positively verified pair is authoritative over inconsistent aliases in other
+historical Runs and is isolated from unrelated historical read failures. This is
+an intentional correction to historical first-match behavior for a verified
+exact pair. An incomplete selector or unsuccessful canonical proof uses the
+existing complete catalog, including legacy identity derivation, duplicate
+ambiguity, activity/pending-completion handling, and historical first matches.
+If the shared validator cannot load because optional PyYAML is absent, canonical
+authority remains unproved and the existing catalog path is used.
+
+Successful canonical selection performs four live reads: Run, Assignment, then
+Run and Assignment again. The final full documents, including unknown fields,
+are returned only after repeating the identity, membership and process proof.
+Non-identity changes visible in those final reads are returned. A missing,
+malformed or incompatible final document fails with `work_identity_mismatch`;
+it cannot return a preflight body or restart catalog discovery. Selected-reader
+exceptions propagate unchanged at either read boundary. They are not swallowed
+as speculative failures or converted into successful selection through fallback.
+Consequently, failed canonical proof can add two raw reads before the old catalog
+path, while a verified pair avoids inventory enumeration even with an injected
+reader. There is no persistent index or cross-request cache.
+
+Selection proves the pair only. State still checks the requested context and
+current intent/access after selection. Transition retains its Run lock, locked
+document reloads, contract and process-pin checks, cancellation recovery and
+pending-completion replay/error handling in their existing owners.
 
 ## Qualification boundary
 
