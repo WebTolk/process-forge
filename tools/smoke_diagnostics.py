@@ -16,6 +16,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import processforge as core
@@ -335,6 +336,77 @@ print(json.dumps(logger.health))
             assert record["identity"]["request_id"] == record["identity"]["session_id"]
 
 
+def mcp_project_binding(root):
+    from pf_runtime import mcp_server, session_read
+
+    cases = [
+        ("same-id-foreign", "foreign", "bound", None, False),
+        ("argument-session-foreign", "foreign", "", "bound", False),
+        ("bound-root", "bound", "bound", None, True),
+        ("normalized-bound-root", "normalized", "bound", None, True),
+        ("argument-bound-root", "bound", "", "bound", True),
+        ("session-only", None, "bound", None, True),
+        ("different-id", "different", "bound", None, False),
+        ("session-mismatch", "bound", "bound", "other", False),
+        ("invalid-session", "bound", "invalid", None, False),
+        ("invalid-root", "missing", "bound", None, False),
+        ("garage-no-session", "foreign", "", None, True),
+    ]
+    for label, selector, configured, requested, expected_logging in cases:
+        base = root / label
+        projects = {}
+        for name in ("bound", "foreign", "different"):
+            project = base / name
+            (project / ".pf").mkdir(parents=True)
+            project_id = "different" if name == "different" else "same-id"
+            (project / ".pf/process-forge.yaml").write_text(
+                f"schema_version: 1\nproject:\n  id: {project_id}\n", encoding="utf-8")
+            projects[name] = project
+        (projects["bound"] / "child").mkdir()
+        projects["normalized"] = projects["bound"] / "child" / ".."
+        projects["missing"] = base / "missing"
+
+        def resolve_project(raw, _core):
+            path = Path(raw)
+            if path == projects["missing"]:
+                raise session_read.SessionReadError("project_not_found")
+            return path
+
+        def project_for_session(args, _workplace, _core):
+            if args.session != "bound":
+                raise session_read.SessionReadError("session_not_found")
+            return projects["bound"]
+
+        # Real wrapper, dispatcher and file sink; explicit session/freshness ports.
+        runtime = SimpleNamespace(
+            host=SimpleNamespace(resolve_project=resolve_project, project_for_session=project_for_session),
+            core=SimpleNamespace(project_id=core.project_id,
+                project_context_check_result=lambda *args, **kwargs: {"status": "broken"}))
+        arguments = {"resource_id": "fixture:root"}
+        if selector is not None:
+            arguments["project_root"] = str(projects[selector])
+        if requested is not None:
+            arguments["session_id"] = requested
+        request = {"jsonrpc": "2.0", "id": label, "method": "tools/call",
+            "params": {"name": "pf.resolve", "arguments": arguments}}
+        expected = mcp_server._respond(request, base, configured, runtime)
+        with patch.dict(os.environ, {"PF_DIAGNOSTICS": json.dumps({"profile": "normal", "sink": "jsonl"})}):
+            actual = mcp_server.respond(request, base, configured, runtime)
+        assert actual == expected, (label, actual, expected)
+        written, records = [], []
+        for name in ("bound", "foreign", "different"):
+            directory = projects[name] / ".pf/runtime/diagnostics"
+            if directory.exists():
+                written.append(name)
+                for file in d.log_files(directory):
+                    if file.is_file():
+                        records.extend(json.loads(line) for line in file.read_text(encoding="utf-8").splitlines())
+        assert bool(written) == expected_logging, (label, written)
+        if written:
+            assert written == ["foreign" if label == "garage-no-session" else "bound"], (label, written)
+            assert records and all(row["identity"]["request_id"] == label for row in records), (label, records)
+
+
 def main():
     with tempfile.TemporaryDirectory(prefix="pf-diagnostics-") as raw:
         root = Path(raw)
@@ -343,9 +415,10 @@ def main():
         levels_config_privacy(root)
         failure_correlation_journal(root)
         protocol(root)
+        mcp_project_binding(root / "mcp-binding")
         metrics = storage_export_performance(root)
         multiprocess_storage(root)
-    print(json.dumps({"result": "PASS", "checks": ["severity/profile/config", "privacy", "journal invariance", "sink failures", "parallel correlation", "hook protocol", "rotation/retention/export", "performance"], "metrics": metrics}))
+    print(json.dumps({"result": "PASS", "checks": ["severity/profile/config", "privacy", "journal invariance", "sink failures", "parallel correlation", "hook protocol", "MCP diagnostic project binding", "rotation/retention/export", "performance"], "metrics": metrics}))
     return 0
 
 

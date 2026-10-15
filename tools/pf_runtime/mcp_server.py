@@ -559,7 +559,7 @@ def respond(request: Any, workplace: Path, session_id: str, runtime: Any) -> dic
                 raise ValueError("session mismatch")
             if supplied_session:
                 bound = runtime.host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, runtime.core)
-                if runtime.core.project_id(bound) != runtime.core.project_id(candidate):
+                if runtime.core.project_id(bound) != runtime.core.project_id(candidate) or bound.resolve() != candidate.resolve():
                     raise ValueError("session project mismatch")
             project = candidate
         elif supplied_session:

@@ -29,10 +29,15 @@ qualification for every subsequent change.
 - Current MCP changes enforce declared array bounds before business dispatch
   while preserving existing schemas. Focused counterexamples and controls cover
   the fix. They do not replace full accumulated release qualification.
-- Older MCP operations retain optional diagnostic routing based on project ID.
-  A current isolated `pf.resolve` control creates diagnostics in a different
-  same-ID directory before business validation. New action tools avoid that
-  wrapper until their own admission checks; legacy routing still needs repair.
+- The legacy MCP optional diagnostic wrapper now checks canonical session-root
+  identity as well as project ID. Eleven real-sink/dispatcher fixture controls
+  retain exact responses and prevent the two observed foreign same-ID writes.
+  See the [bounded report](audits/mcp-diagnostic-root-20261016.md). Installed and
+  actual connected-host qualification remain separate.
+- The general diagnostics smoke currently fails its multiprocess-storage
+  assertion. The unchanged preceding check also fails; native child observations
+  locate Windows lock-acquisition failures within the existing 50 ms budget.
+  This remains open; no timeout or assertion was relaxed.
 - Source, clean candidate/archive, installed Core, Runtime and the application's
   actual connected MCP require separate proof. A connected process can disagree
   with current source context or retain older loaded tools after a disk update.
