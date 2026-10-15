@@ -54,26 +54,24 @@ qualification for every subsequent change.
 
 ## Stable Release Conditions
 
-The user-approved [canonical Work selection](audits/canonical-work-selection-20261016.md)
-now avoids unrelated history for a verified complete pair, retaining four live
-reads and the old fallback elsewhere. Seven original focused checks passed in
-independent primary replay. Five alternating actual-project direct CLI pairs
-preserved full results/documents, with medians 6.352s before and 1.350s in source.
-Installed-new/Runtime/actual-host and cumulative packaging remain separate.
+The cumulative reviewed corrections are now installed from executable source
+`61a7b74cfa7b1812641d7cef85760449dccb06be`. Exact archive and native update,
+installed original checks and measurements are recorded in the
+[development delivery report](releases/dev-fast-work-20261016.md). Ordinary CLI
+Work state has a 1.355501s median; fresh independent persistent stdio has a
+0.0493904s median, with different process-start conditions. Native task batch
+52.82s/180s and long-lived Runtime 54.54s/240s pass unchanged budgets. Source,
+archive and installed targeted proof are complete for that development slice.
 
-The scope repair has since been installed from its exact development archive.
-Owned bytes, backups and protected history matched; ordinary independent installed
-stdio/context checks passed. Two isolated native checks now pass their unchanged
-budgets: task batch 57.00s/180s and long-lived Runtime 67.84s/240s. The real shared
-Runtime remains degraded and consumed almost one CPU core in a bounded OS sample.
-These targeted results do not replace the accumulated public suite or actual
-connected-host qualification.
+Stable blockers remain: original diagnostics fails even with the shared Runtime
+stopped, restored shared Runtime consumes almost one CPU core and stays degraded,
+full Work admission still takes about 19s, accumulated full suites/version/changelog
+and actual connected-host proof remain outstanding. The new live profile centers
+on HTTP event ingestion and stage-obligation rebuilding. No timeout/assertion was
+weakened. Canonical selection and prepared YAML improvements do not close those
+independent paths. Full OOP epics remain open. Public 1.2.0 still requires the
+detailed ready-candidate report and separate user approval.
 
-The [bounded prepared YAML report](audits/prepared-resource-yaml-latency-20261015.md)
-records another source correction, exact guard controls and a modest five-pair
-native collect improvement. Installed/live Runtime acceptance of that newer
-source remains separate. A detailed readiness report and separate operator
-approval are required before public 1.2.0 tags, assets or stable-channel updates.
 
 1. Qualify the framing and terminal-admission corrections in the accumulated
    candidate with retained positive, negative and retry controls; classify
