@@ -54,6 +54,13 @@ qualification for every subsequent change.
 
 ## Stable Release Conditions
 
+The user-approved [canonical Work selection](audits/canonical-work-selection-20261016.md)
+now avoids unrelated history for a verified complete pair, retaining four live
+reads and the old fallback elsewhere. Seven original focused checks passed in
+independent primary replay. Five alternating actual-project direct CLI pairs
+preserved full results/documents, with medians 6.352s before and 1.350s in source.
+Installed-new/Runtime/actual-host and cumulative packaging remain separate.
+
 The scope repair has since been installed from its exact development archive.
 Owned bytes, backups and protected history matched; ordinary independent installed
 stdio/context checks passed. Two isolated native checks now pass their unchanged
