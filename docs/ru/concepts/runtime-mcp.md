@@ -6,6 +6,9 @@
 Точные идентификаторы Work/контекста, проверка материала и текущего доступа
 описаны в [чтении ресурсов Work](work-resources.md).
 
+Карта загруженных CLI/MCP-операций, точные параметры и дополнительные нативные
+операции воркеров и сессий описаны в [карте действий](action-discovery.md).
+
 Уровни детализации, защиту данных и локальный экспорт описывает
 [контракт диагностики](diagnostics.md). Stdout MCP содержит только JSON-RPC.
 
@@ -42,8 +45,15 @@ Forge sessions.
 `pf.project_initialization.status`, `pf.project_initialization.initialize`,
 `pf.project_initialization.repair`, `pf.work_state`, `pf.work.state`,
 `pf.work.start`, `pf.work.transition`, `pf.work.search`, `pf.work.resolve`,
+`pf.continuation.create`, `pf.continuation.status`, `pf.continuation.resume`,
+`pf.work.cancel`,
 `pf.resolve`, `pf.search`, `pf.workplace_state`, `pf.session_context`,
 `pf.session_chat` и `pf.session_activity`.
+
+Дополнительные `pf.actions.*`, `pf.runtime_driver.*`, `pf.worker.*`,
+`pf.session.heartbeat` и `pf.chat.record` описаны в [карте действий](action-discovery.md).
+Полный фактический реестр доступен через `pf.actions.list`. Наличие операции
+и право её выполнить — разные сведения.
 
 `pf.context`, `pf.project_state`, `pf.project_initialization.status`,
 `pf.work_state`, `pf.work.state`, `pf.resolve` и `pf.search` являются Garage

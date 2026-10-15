@@ -70,6 +70,14 @@ and transition recovery remain in the process coordinator.
 
 ## Current Ownership
 
+Action discovery lives in `processforge_core.operations.catalogue`. Its
+`ActionCatalog` receives descriptor data and optional explicit Work facts;
+it does not import argparse, Runtime or the monolithic CLI, invoke handlers or
+grant permissions. CLI/MCP registration inspection belongs to
+`tools/pf_runtime/action_catalog.py`. Native MCP execution remains an adapter
+over existing owners, not a claim that legacy worker implementation is migrated.
+See [supported actions](action-discovery.md).
+
 | Module | Responsibility |
 | --- | --- |
 | `src/processforge_core/agent_entry/` | Entry contract, profiles, client adapters, start prompt and guarded instruction placement/recovery. |

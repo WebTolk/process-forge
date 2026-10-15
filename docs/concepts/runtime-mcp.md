@@ -6,6 +6,9 @@ For a read-only terminal view of the existing workplace service, see the
 For exact Work/context resource selectors, material verification and current
 authorization, see [Work-scoped resource reads](work-resources.md).
 
+For the loaded CLI/MCP action catalogue, exact arguments and additional native
+worker/session operations, see [supported action discovery](action-discovery.md).
+
 For bounded request logging, privacy, profiles and local exports, see
 [optional diagnostics](diagnostics.md). MCP stdout remains JSON-RPC only.
 
@@ -40,9 +43,15 @@ explicit host integration for operators who need Forge session capture.
 Available tools are `pf.context`, `pf.project_state`, `pf.project_initialization.status`,
 `pf.project_initialization.initialize`, `pf.project_initialization.repair`,
 `pf.work_state`, `pf.work.state`, `pf.work.start`, `pf.work.transition`,
+`pf.continuation.create`, `pf.continuation.status`, `pf.continuation.resume`,
+`pf.work.cancel`,
 `pf.work.search`, `pf.work.resolve`, `pf.resolve`, `pf.search`,
 `pf.workplace_state`, `pf.session_context`, `pf.session_chat`, and
-`pf.session_activity`. `pf.context`, `pf.project_state`,
+`pf.session_activity`. The additional `pf.actions.*`, `pf.runtime_driver.*`,
+`pf.worker.*`, `pf.session.heartbeat` and `pf.chat.record` tools are specified in
+[action discovery](action-discovery.md). The complete actual registry is available
+through `pf.actions.list`; support and current permission remain separate facts.
+`pf.context`, `pf.project_state`,
 `pf.project_initialization.status`, `pf.work_state`, `pf.work.state`, `pf.resolve`, and
 `pf.search` are Garage reads and can run from `project_root`. The Work read
 routes additionally require exact `run_id`, `assignment_id`, and `context_id`;

@@ -96,6 +96,7 @@ from processforge_core.project import initialization as project_initialization
 from processforge_core import diagnostics
 from pf_cli.application import CliApplication
 from pf_cli.commands.agent_entry import AgentEntryCommand, AgentStartPromptCommand
+from pf_cli.commands.agent_actions import ActionsCommand
 from pf_cli.commands.configuration import ConfigurationCommand
 from pf_cli.commands.search_index import (
     SearchIndexStatusCommand,
@@ -111,6 +112,7 @@ from pf_cli.commands.work import (
     WorkTransitionCommand,
 )
 from pf_cli.parsers.agent_entry import AgentEntryCommandParser
+from pf_cli.parsers.agent_actions import ActionsCommandParser
 from pf_cli.parsers.agents import (
     AgentPresenceCommandParser,
     AgentLeaseCommandParser,
@@ -6967,6 +6969,8 @@ def release_test_commands(root: Path, *, clean_first: bool = True, public: bool 
         ReleaseCommand("smoke_expected_report_containment", [sys.executable, str(root / "tools" / "smoke_expected_report_containment.py")], 180),
         ReleaseCommand("smoke_authenticated_report_content", [sys.executable, str(root / "tools" / "smoke_authenticated_report_content.py")], 180),
         ReleaseCommand("smoke_mcp_jsonrpc_validation", [sys.executable, str(root / "tools" / "smoke_mcp_jsonrpc_validation.py")], 120),
+        ReleaseCommand("smoke_action_discovery", [sys.executable, str(root / "tools" / "smoke_action_discovery.py")], 120),
+        ReleaseCommand("smoke_mcp_action_tools", [sys.executable, str(root / "tools" / "smoke_mcp_action_tools.py")], 120),
         ReleaseCommand("smoke_mcp_stdio_unicode", [sys.executable, str(root / "tools" / "smoke_mcp_stdio_unicode.py")], 120),
         ReleaseCommand("smoke_diagnostics", [sys.executable, str(root / "tools" / "smoke_diagnostics.py")], 180),
         ReleaseCommand("smoke_diagnostics_process_invariance", [sys.executable, str(root / "tools" / "smoke_diagnostics_process_invariance.py")], 240),
@@ -16908,6 +16912,18 @@ def load_runtime_driver_by_path(path: Path) -> dict[str, Any]:
     return data
 
 
+def registered_runtime_driver_path(driver_id: str, *, workplace_manifest: Path | None = None, project_root: Path | None = None) -> Path | None:
+    """Select the existing registry path by exact ID without path fallback."""
+    for registry_path in runtime_driver_registry_paths(workplace_manifest, project_root):
+        for entry in runtime_driver_entries(registry_path):
+            if str(entry.get("id")) != driver_id:
+                continue
+            path = runtime_driver_entry_path(registry_path, entry)
+            if path and path.is_file():
+                return path
+    return None
+
+
 def resolve_runtime_driver(driver_ref: str, *, workplace_manifest: Path | None = None, project_root: Path | None = None) -> dict[str, Any]:
     direct = Path(driver_ref).expanduser()
     if direct.suffix in {".yaml", ".yml", ".json"} or direct.is_file():
@@ -16916,13 +16932,9 @@ def resolve_runtime_driver(driver_ref: str, *, workplace_manifest: Path | None =
             direct = (base / direct).resolve()
         return load_runtime_driver_by_path(direct)
     driver_id = safe_id(driver_ref, "manual")
-    for registry_path in runtime_driver_registry_paths(workplace_manifest, project_root):
-        for entry in runtime_driver_entries(registry_path):
-            if str(entry.get("id")) != driver_id:
-                continue
-            path = runtime_driver_entry_path(registry_path, entry)
-            if path and path.is_file():
-                return load_runtime_driver_by_path(path)
+    path = registered_runtime_driver_path(driver_id, workplace_manifest=workplace_manifest, project_root=project_root)
+    if path is not None:
+        return load_runtime_driver_by_path(path)
     builtin = default_runtime_driver_documents().get(driver_id)
     if builtin:
         result = json.loads(json.dumps(builtin))
@@ -24798,6 +24810,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--diagnostic-components", help="Comma-separated optional diagnostic components.")
     parser.add_argument("--diagnostic-sink", choices=["jsonl", "stderr", "both", "none"])
     sub = parser.add_subparsers(dest="command", required=True)
+
+    ActionsCommandParser(execute=ActionsCommand(
+        parser_factory=build_parser,
+        execution_factory=process_execution_service,
+        require_flow_root=require_flow_root,
+        dump_yaml=dump_yaml,
+        version=PROCESSFORGE_VERSION,
+    ).execute).register(sub.add_parser)
 
     DiagnosticsCommandParser(
         configure=command_diagnostics_configure,

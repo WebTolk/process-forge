@@ -1,4 +1,4 @@
-"""Small read-oriented stdio MCP facade over PF Runtime/Core services."""
+"""Stdio MCP facade over PF reads, lifecycle and explicitly bound native actions."""
 
 from __future__ import annotations
 
@@ -11,6 +11,14 @@ import os
 import sys
 from pathlib import Path
 from typing import Any
+
+if not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from pf_runtime.action_tools import (
+    ActionToolDependencies, ActionToolError, ActionToolService, MUTATING_TOOL_NAMES,
+    TOOL_DESCRIPTIONS, action_tool_schema,
+)
 
 _RUNTIME_BOOTSTRAP: Any | None = None
 
@@ -47,6 +55,9 @@ MUTATING_TOOLS = {
     "pf.continuation.resume",
     "pf.work.cancel",
 }
+
+TOOLS.update(TOOL_DESCRIPTIONS)
+MUTATING_TOOLS.update(MUTATING_TOOL_NAMES)
 
 
 def runtime_bootstrap() -> Any:
@@ -89,17 +100,40 @@ def _tool_result(name: str, arguments: dict[str, Any], workplace: Path, session_
     supplied_session = configured_session or requested_session
     project_root = arguments.get("project_root")
 
-    def resolve_garage_project() -> Path:
+    def resolve_garage_project(*, strict_binding: bool = False) -> Path:
         if project_root:
             candidate = host.resolve_project(str(project_root), core)
             if supplied_session:
                 bound = host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, core)
                 if core.project_id(bound) != core.project_id(candidate):
                     raise session_read.SessionReadError("session_project_mismatch")
+                if strict_binding and bound.resolve() != candidate.resolve():
+                    raise session_read.SessionReadError("session_project_mismatch")
             return candidate
         if supplied_session:
             return host.project_for_session(argparse.Namespace(session=supplied_session, project_root=None), workplace, core)
         raise session_read.SessionReadError("missing_project_root")
+
+    if name in TOOL_DESCRIPTIONS:
+        bound_project = resolve_garage_project(strict_binding=True)
+
+        def registered_driver_ref(driver_id: str) -> str:
+            if core.safe_id(driver_id, "manual") != driver_id:
+                raise ActionToolError("driver_id_required")
+            path = core.registered_runtime_driver_path(driver_id, workplace_manifest=core.normalize_workplace_manifest(workplace), project_root=bound_project)
+            if path is None:
+                raise ActionToolError("registered_driver_manifest_unavailable")
+            return str(path.resolve())
+
+        dependencies = ActionToolDependencies(
+            parser_factory=core.build_parser,
+            native_command=core.main,
+            registered_driver_ref=registered_driver_ref,
+            work_state=lambda **selectors: build_process_execution_service(bound_project, workplace, core).state(session_id=supplied_session, **selectors),
+            session_record=lambda: host.ledger_session(supplied_session, workplace, core),
+            version=str(getattr(core, "PROCESSFORGE_VERSION", "unknown")),
+        )
+        return ActionToolService(dependencies, bound_project, workplace, supplied_session).execute(name, arguments)
 
     if name == "pf.session_context":
         return session_read.session_context_payload(workplace, core, session_id=supplied_session, project_root_ref=project_root)
@@ -345,6 +379,8 @@ def scope_intent_tool_schema() -> dict[str, Any]:
 
 
 def tool_schema(name: str) -> dict[str, Any]:
+    if name in TOOL_DESCRIPTIONS:
+        return action_tool_schema(name)
     properties: dict[str, Any] = {"session_id": {"type": "string"}, "project_root": {"type": "string"}}
     required: list[str] = []
     if name in {"pf.work.state", "pf.work.transition", "pf.work.cancel", "pf.continuation.create"}:
@@ -405,9 +441,9 @@ def tool_annotations(name: str) -> dict[str, bool]:
     mutating = name in MUTATING_TOOLS
     return {
         "readOnlyHint": not mutating,
-        "destructiveHint": False,
+        "destructiveHint": name == "pf.worker.start",
         "idempotentHint": not mutating,
-        "openWorldHint": False,
+        "openWorldHint": name == "pf.worker.start",
     }
 
 
@@ -462,8 +498,9 @@ def schema_accepts(value: Any, schema: dict[str, Any]) -> bool:
         return False
     if "enum" in schema and value not in schema["enum"]:
         return False
-    if isinstance(value, str) and len(value) < schema.get("minLength", 0):
-        return False
+    if isinstance(value, str):
+        if len(value) < schema.get("minLength", 0) or len(value) > schema.get("maxLength", len(value)):
+            return False
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         if value < schema.get("minimum", value) or value > schema.get("maximum", value):
             return False
@@ -475,8 +512,11 @@ def schema_accepts(value: Any, schema: dict[str, Any]) -> bool:
             return False
         if any(key in value and not schema_accepts(value[key], item) for key, item in properties.items()):
             return False
-    if isinstance(value, list) and "items" in schema:
-        return all(schema_accepts(item, schema["items"]) for item in value)
+    if isinstance(value, list):
+        if len(value) < schema.get("minItems", 0) or len(value) > schema.get("maxItems", len(value)):
+            return False
+        if "items" in schema:
+            return all(schema_accepts(item, schema["items"]) for item in value)
     return True
 
 
@@ -490,13 +530,14 @@ def respond(request: Any, workplace: Path, session_id: str, runtime: Any) -> dic
         method = request.get("method")
         if method in ("initialize", "tools/list", "notifications/initialized") or (
             method == "tools/call" and isinstance(params, dict)
-            and params.get("name") in (
+            and (params.get("name") in (
                 "pf.project_initialization.status",
                 "pf.project_initialization.initialize",
                 "pf.project_initialization.repair",
-            )
+            ) or params.get("name") in TOOL_DESCRIPTIONS)
         ):
-            # Protocol reads and initialization preflight must not create logs.
+            # Protocol reads, initialization and new action preflight create no logs.
+            # Native CLI diagnostics follow the new tools' binding/schema checks.
             # The dispatcher still validates schemas, sessions and apply; the
             # initializer owns durable events after its entry preflight passes.
             return _respond(request, workplace, session_id, runtime)
