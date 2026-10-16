@@ -105,3 +105,7 @@ Accepted ordered error-row replay and bounded service-state publication are incl
 ## Installed ordered replay checkpoint
 
 The [current installed private dev](releases/dev-journal-replay-20261016.md) passes targeted archive/install/diagnostics and both original public budgets. Actual Runtime still uses95.066percent of one core and is degraded; current stacks point mainly at repeated prepared collection/semantic_input. Earlier approximately19s creation measurement predates this installation; current useful admission is measured separately. Full source/archive/version/changelog/host and approval gates remain open.
+
+## Historical capture observation candidate, 2026-10-16
+
+The accepted supervisor correction is included in the [next private development delivery](releases/dev-historical-observation-20261016.md). Source timings improve; actual installed Runtime profiling follows. Full public release and connected-host gates remain open.
